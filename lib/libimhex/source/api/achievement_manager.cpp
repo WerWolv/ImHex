@@ -237,8 +237,7 @@ namespace hex {
         for (const auto &directory : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             auto path = directory / AchievementsFile;
 
-            wolv::io::File file(path, wolv::io::File::Mode::Write);
-
+            wolv::io::File file(path, wolv::io::File::Mode::Create);
             if (!file.isValid()) {
                 continue;
             }
@@ -254,7 +253,6 @@ namespace hex {
             }
 
             const auto result = json.dump(4);
-            file.setSize(0);
             file.writeString(result);
             break;
         }

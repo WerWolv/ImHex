@@ -130,10 +130,9 @@ namespace hex {
                         return;
                     }
                     for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                        wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Write);
+                        wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
 
                         if (file.isValid()) {
-                            file.setSize(0);
                             file.writeString(result);
                             break;
                         }

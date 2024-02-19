@@ -83,15 +83,7 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::resizeRaw(u64 newSize) {
-        this->close();
-
-        {
-            wolv::io::File file(m_path, wolv::io::File::Mode::Write);
-
-            file.setSize(newSize);
-        }
-
-        (void)this->open();
+        m_file.setSize(newSize);
     }
 
     void FileProvider::insertRaw(u64 offset, u64 size) {
