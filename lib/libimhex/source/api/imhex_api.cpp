@@ -471,6 +471,16 @@ namespace hex {
                 return s_windowResizable;
             }
 
+            static std::vector<AutoResetBase*> s_autoResetObjects;
+            void addAutoResetObject(AutoResetBase *object) {
+                s_autoResetObjects.emplace_back(object);
+            }
+
+            void cleanup() {
+                for (const auto &object : s_autoResetObjects)
+                    object->reset();
+            }
+
 
         }
 

@@ -19,6 +19,8 @@ struct GLFWwindow;
 
 namespace hex {
 
+    class AutoResetBase;
+
     namespace prv {
         class Provider;
     }
@@ -406,6 +408,9 @@ namespace hex {
                 void setLastFrameTime(double time);
 
                 bool isWindowResizable();
+
+                void addAutoResetObject(AutoResetBase *object);
+                void cleanup();
 
             }
 

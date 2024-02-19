@@ -106,13 +106,15 @@ namespace hex {
                     if (!loaded)
                         store();
 
-                    for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
-                        for (const auto &[name, callbacks] : rest) {
-                            for (const auto &[id, callback] : callbacks) {
-                                callback(getSetting(category, name, {}));
+                    TaskManager::doLater([] {
+                        for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
+                            for (const auto &[name, callbacks] : rest) {
+                                for (const auto &[id, callback] : callbacks) {
+                                    callback(getSetting(category, name, {}));
+                                }
                             }
                         }
-                    }
+                    });
                 }
 
                 void store() {
