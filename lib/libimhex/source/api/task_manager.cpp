@@ -72,6 +72,12 @@ namespace hex {
             throw TaskInterruptor();
     }
 
+    void Task::update() const {
+        if (m_shouldInterrupt.load(std::memory_order_relaxed)) [[unlikely]]
+            throw TaskInterruptor();
+    }
+
+
     void Task::setMaxValue(u64 value) {
         m_maxValue = value;
     }

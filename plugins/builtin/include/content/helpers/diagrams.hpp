@@ -302,7 +302,7 @@ namespace hex {
         void draw(ImVec2 size, ImPlotFlags flags, bool updateHandle = false) {
 
             if (!m_processing && ImPlot::BeginPlot("##ChunkBasedAnalysis", size, flags)) {
-                ImPlot::SetupAxes("hex.ui.common.address"_lang, "hex.builtin.view.information.entropy"_lang,
+                ImPlot::SetupAxes("hex.ui.common.address"_lang, "hex.builtin.information_section.info_analysis.entropy"_lang,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
                 ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, (void*)("0x%04llX"));
@@ -682,7 +682,7 @@ namespace hex {
         u64 m_endAddress = 0;
 
         // Hold the result of the byte distribution analysis 
-        std::array<ImU64, 256> m_valueCounts;
+        std::array<ImU64, 256> m_valueCounts = { };
         std::atomic<bool> m_processing = false;
     };
 

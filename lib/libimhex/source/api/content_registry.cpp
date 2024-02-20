@@ -1255,4 +1255,21 @@ namespace hex {
 
     }
 
+    namespace ContentRegistry::DataInformation {
+
+        namespace impl {
+
+            static AutoReset<std::vector<CreateCallback>> s_informationSectionConstructors;
+            const std::vector<CreateCallback>& getInformationSectionConstructors() {
+                return *s_informationSectionConstructors;
+            }
+
+            void addInformationSectionCreator(const CreateCallback &callback) {
+                s_informationSectionConstructors->emplace_back(callback);
+            }
+
+        }
+
+    }
+
 }

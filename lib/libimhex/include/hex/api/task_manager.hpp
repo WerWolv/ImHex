@@ -31,7 +31,8 @@ namespace hex {
          * @brief Updates the current process value of the task
          * @param value Current value
          */
-        void update(u64 value = 0);
+        void update(u64 value);
+        void update() const;
 
         /**
          * @brief Sets the maximum value of the task

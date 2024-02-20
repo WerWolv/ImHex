@@ -5,14 +5,18 @@
 
 namespace hex {
 
-    class AutoResetBase {
-    public:
-        virtual ~AutoResetBase() = default;
-        virtual void reset() = 0;
-    };
+    namespace impl {
+
+        class AutoResetBase {
+        public:
+            virtual ~AutoResetBase() = default;
+            virtual void reset() = 0;
+        };
+
+    }
 
     template<typename T>
-    class AutoReset : AutoResetBase {
+    class AutoReset : public impl::AutoResetBase {
     public:
         using Type = T;
 

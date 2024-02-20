@@ -19,7 +19,9 @@ struct GLFWwindow;
 
 namespace hex {
 
-    class AutoResetBase;
+    namespace impl {
+        class AutoResetBase;
+    }
 
     namespace prv {
         class Provider;
@@ -409,7 +411,7 @@ namespace hex {
 
                 bool isWindowResizable();
 
-                void addAutoResetObject(AutoResetBase *object);
+                void addAutoResetObject(hex::impl::AutoResetBase *object);
                 void cleanup();
 
             }
