@@ -2,6 +2,7 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/project_file_manager.hpp>
 
 #include <hex/providers/provider.hpp>
 
@@ -19,6 +20,34 @@ namespace hex::plugin::builtin {
 
             for (const auto &informationSectionConstructor : ContentRegistry::DataInformation::impl::getInformationSectionConstructors()) {
                 data.informationSections.push_back(informationSectionConstructor());
+            }
+        });
+
+        ProjectFile::registerPerProviderHandler({
+            .basePath = "data_information.json",
+            .required = false,
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
+                std::string save = tar.readString(basePath);
+                nlohmann::json input = nlohmann::json::parse(save);
+
+                for (const auto &section : m_analysisData.get(provider).informationSections) {
+                    if (!input.contains(section->getUnlocalizedName().get()))
+                        continue;
+
+                    section->load(input[section->getUnlocalizedName().get()]);
+                }
+
+                return true;
+            },
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
+                nlohmann::json output;
+                for (const auto &section : m_analysisData.get(provider).informationSections) {
+                    output[section->getUnlocalizedName().get()] = section->store();
+                }
+
+                tar.writeString(basePath, output.dump(4));
+
+                return true;
             }
         });
     }
