@@ -188,7 +188,7 @@ namespace hex::plugin::builtin {
 
                             // Draw the section content
                             ImGui::BeginDisabled(!enabled);
-                            {
+                            if (section->isEnabled()) {
                                 if (section->isValid())
                                     section->drawContent();
                                 else if (section->isAnalyzing())

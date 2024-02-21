@@ -73,7 +73,7 @@ namespace hex::plugin::yara {
         return results.rule->isInterrupted() ? CALLBACK_ABORT : CALLBACK_CONTINUE;
     }
 
-    wolv::util::Expected<YaraRule::Result, YaraRule::Error> YaraRule::match(prv::Provider *provider, u64 address, size_t size) {
+    wolv::util::Expected<YaraRule::Result, YaraRule::Error> YaraRule::match(prv::Provider *provider, Region region) {
         YR_COMPILER *compiler = nullptr;
         yr_compiler_create(&compiler);
         ON_SCOPE_EXIT {
@@ -126,7 +126,7 @@ namespace hex::plugin::yara {
         ScanContext context;
 
         context.provider             = provider;
-        context.region            = { address, size };
+        context.region               = region;
         context.currBlock.base       = 0;
         context.currBlock.fetch_data = [](YR_MEMORY_BLOCK *block) -> const u8 * {
             auto &context = *static_cast<ScanContext *>(block->context);

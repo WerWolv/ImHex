@@ -264,7 +264,7 @@ namespace hex::plugin::yara {
                     rule.interrupt();
                 });
 
-                auto result = rule.match(provider, provider->getBaseAddress(), provider->getSize());
+                auto result = rule.match(provider, { provider->getBaseAddress(), provider->getSize() });
                 if (!result.has_value()) {
                     TaskManager::doLater([this, error = result.error()] {
                         m_consoleMessages->emplace_back(error.message);

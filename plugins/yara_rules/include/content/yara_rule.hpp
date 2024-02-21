@@ -38,7 +38,7 @@ namespace hex::plugin::yara {
             std::string message;
         };
 
-        wolv::util::Expected<Result, Error> match(prv::Provider *provider, u64 address, size_t size);
+        wolv::util::Expected<Result, Error> match(prv::Provider *provider, Region region);
         void interrupt();
         [[nodiscard]] bool isInterrupted() const;
 
