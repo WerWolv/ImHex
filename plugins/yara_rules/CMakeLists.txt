@@ -15,6 +15,7 @@ add_imhex_plugin(
     SOURCES
         source/plugin_yara.cpp
 
+        source/content/yara_rule.cpp
         source/content/views/view_yara.cpp
     INCLUDES
         include
