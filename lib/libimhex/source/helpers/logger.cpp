@@ -18,7 +18,7 @@ namespace hex::log {
 
         wolv::io::File s_loggerFile;
         bool s_colorOutputEnabled = false;
-        std::mutex s_loggerMutex;
+        std::recursive_mutex s_loggerMutex;
         bool s_loggingSuspended = false;
 
     }
@@ -33,7 +33,7 @@ namespace hex::log {
 
     namespace impl {
 
-        std::mutex& getLoggerMutex() {
+        std::recursive_mutex& getLoggerMutex() {
             return s_loggerMutex;
         }
 

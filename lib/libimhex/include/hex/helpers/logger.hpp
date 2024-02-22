@@ -19,7 +19,7 @@ namespace hex::log {
         [[maybe_unused]] void redirectToFile();
         [[maybe_unused]] void enableColorPrinting();
 
-        [[nodiscard]] std::mutex& getLoggerMutex();
+        [[nodiscard]] std::recursive_mutex& getLoggerMutex();
         [[nodiscard]] bool isLoggingSuspended();
 
         struct LogEntry {
