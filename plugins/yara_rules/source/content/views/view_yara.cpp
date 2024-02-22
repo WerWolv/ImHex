@@ -242,8 +242,8 @@ namespace hex::plugin::yara {
                 this->clearResult();
 
                 for (auto &result : results) {
-                    m_matchedRules->append_range(std::move(result.matchedRules));
-                    m_consoleMessages->append_range(std::move(result.consoleMessages));
+                    m_matchedRules->insert(m_matchedRules->end(), result.matchedRules.begin(), result.matchedRules.end());
+                    m_consoleMessages->insert(m_consoleMessages->end(), result.consoleMessages.begin(), result.consoleMessages.end());
                 }
 
                 constexpr static color_t YaraColor = 0x70B4771F;
