@@ -13,10 +13,10 @@ CC=$(brew --prefix llvm)/bin/clang        \
 CXX=$(brew --prefix llvm)/bin/clang++     \
 OBJC=$(brew --prefix llvm)/bin/clang      \
 OBJCXX=$(brew --prefix llvm)/bin/clang++  \
-cmake                                     \
+cmake -G "Ninja"                          \
   -DCMAKE_BUILD_TYPE=Release              \
   -DCMAKE_INSTALL_PREFIX=./install        \
   -DIMHEX_GENERATE_PACKAGE=ON             \
   ..
-make -j4 install
+ninja install
 ```
