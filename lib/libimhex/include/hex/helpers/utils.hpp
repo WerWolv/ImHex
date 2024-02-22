@@ -294,10 +294,12 @@ namespace hex {
     [[nodiscard]] std::optional<std::string> getEnvironmentVariable(const std::string &env);
 
     [[nodiscard]] inline std::string limitStringLength(const std::string &string, size_t maxLength) {
-        if (string.length() <= maxLength)
-            return string;
+        if (string.size() < maxLength) return string;
 
-        return string.substr(0, maxLength - 3) + "...";
+        auto it = string.begin() + maxLength;
+        while (it != string.begin() && !std::isspace(*it)) --it;
+
+        return std::string(string.begin(), it) + "...";
     }
 
     [[nodiscard]] std::optional<std::fs::path> getInitialFilePath();
