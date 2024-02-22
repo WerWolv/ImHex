@@ -853,6 +853,7 @@
         "hex.builtin.information_section.info_analysis.lowest_entropy": "Informationsanalyse",
         "hex.builtin.information_section.info_analysis": "Schichtverteilung",
         "hex.builtin.information_section.info_analysis.layered_distribution": "Tiefste Blockentropie",
+        "hex.builtin.view.information.error_processing_section": "Auswerten von Informationssektion {0} fehlgeschlagen: '{1}'",
         "hex.builtin.information_section.magic": "Magic Informationen",
         "hex.builtin.view.information.magic_db_added": "Magic Datenbank hinzugefügt!",
         "hex.builtin.information_section.magic.mime": "MIME Typ",

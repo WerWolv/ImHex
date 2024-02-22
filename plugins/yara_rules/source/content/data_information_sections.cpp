@@ -11,10 +11,10 @@
 
 namespace hex::plugin::yara {
 
-    class InformationYaraRules : public ContentRegistry::DataInformation::InformationSection {
+    class InformationAdvancedFileInformation : public ContentRegistry::DataInformation::InformationSection {
     public:
-        InformationYaraRules() : InformationSection("hex.yara.information_section.yara_rules") { }
-        ~InformationYaraRules() override = default;
+        InformationAdvancedFileInformation() : InformationSection("hex.yara.information_section.advanced_file_info") { }
+        ~InformationAdvancedFileInformation() override = default;
 
         struct Category {
             struct Comperator {
@@ -86,7 +86,7 @@ namespace hex::plugin::yara {
     };
 
     void registerDataInformationSections() {
-        ContentRegistry::DataInformation::addInformationSection<InformationYaraRules>();
+        ContentRegistry::DataInformation::addInformationSection<InformationAdvancedFileInformation>();
     }
 
 }
