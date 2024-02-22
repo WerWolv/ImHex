@@ -18,14 +18,21 @@ namespace hex::plugin::yara {
         static void cleanup();
 
         struct Match {
-            std::string identifier;
             std::string variable;
             Region region;
             bool wholeDataMatch;
         };
 
-        struct Result {
+        struct Rule {
+            std::string identifier;
+            std::map<std::string, std::string> metadata;
+            std::vector<std::string> tags;
+
             std::vector<Match> matches;
+        };
+
+        struct Result {
+            std::vector<Rule> matchedRules;
             std::vector<std::string> consoleMessages;
         };
 

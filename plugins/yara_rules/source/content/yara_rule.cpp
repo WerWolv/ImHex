@@ -17,7 +17,7 @@ namespace hex::plugin::yara {
 
     struct ResultContext {
         YaraRule *rule;
-        std::vector<YaraRule::Match> newMatches;
+        std::vector<YaraRule::Rule> matchedRules;
         std::vector<std::string> consoleMessages;
 
         std::string includeBuffer;
@@ -42,35 +42,52 @@ namespace hex::plugin::yara {
     }
 
     static int scanFunction(YR_SCAN_CONTEXT *context, int message, void *data, void *userData) {
-        auto &results = *static_cast<ResultContext *>(userData);
+        auto &resultContext = *static_cast<ResultContext *>(userData);
 
         switch (message) {
             case CALLBACK_MSG_RULE_MATCHING: {
-                auto rule = static_cast<YR_RULE *>(data);
+                const auto *rule = static_cast<const YR_RULE *>(data);
 
                 if (rule->strings != nullptr) {
-                    YR_STRING *string = nullptr;
-                    YR_MATCH  *match  = nullptr;
+                    YR_STRING *string;
                     yr_rule_strings_foreach(rule, string) {
+                        YaraRule::Rule newRule;
+                        newRule.identifier = rule->identifier;
+
+                        YR_MATCH *match;
                         yr_string_matches_foreach(context, string, match) {
-                            results.newMatches.push_back({ rule->identifier, string->identifier, Region { u64(match->offset), size_t(match->match_length) }, false });
+                            newRule.matches.push_back({ string->identifier, Region { u64(match->offset), size_t(match->match_length) }, false });
                         }
+
+                        YR_META *meta;
+                        yr_rule_metas_foreach(rule, meta) {
+                            newRule.metadata[meta->identifier] = meta->string;
+                        }
+
+                        const char *tag;
+                        yr_rule_tags_foreach(rule, tag) {
+                            newRule.tags.emplace_back(tag);
+                        }
+
+                        resultContext.matchedRules.emplace_back(std::move(newRule));
                     }
                 } else {
-                    results.newMatches.push_back({ rule->identifier, "", Region::Invalid(), true });
+                    YaraRule::Rule newRule;
+                    newRule.identifier = rule->identifier;
+                    newRule.matches.push_back({ "", Region::Invalid(), true });
                 }
 
                 break;
             }
             case CALLBACK_MSG_CONSOLE_LOG: {
-                results.consoleMessages.emplace_back(static_cast<const char *>(data));
+                resultContext.consoleMessages.emplace_back(static_cast<const char *>(data));
                 break;
             }
             default:
                 break;
         }
 
-        return results.rule->isInterrupted() ? CALLBACK_ABORT : CALLBACK_CONTINUE;
+        return resultContext.rule->isInterrupted() ? CALLBACK_ABORT : CALLBACK_CONTINUE;
     }
 
     wolv::util::Expected<YaraRule::Result, YaraRule::Error> YaraRule::match(prv::Provider *provider, Region region) {
@@ -183,7 +200,7 @@ namespace hex::plugin::yara {
         if (m_interrupted)
             return wolv::util::Unexpected(Error { Error::Type::Interrupted, "" });
 
-        return Result { resultContext.newMatches, resultContext.consoleMessages };
+        return Result { resultContext.matchedRules, resultContext.consoleMessages };
     }
 
     void YaraRule::interrupt() {

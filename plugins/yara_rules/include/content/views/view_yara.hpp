@@ -18,19 +18,12 @@ namespace hex::plugin::yara {
         void drawContent() override;
 
     private:
-        struct YaraMatch {
-            YaraRule::Match match;
-
-            mutable u32 highlightId;
-            mutable u32 tooltipId;
-        };
-
-    private:
         PerProvider<std::vector<std::pair<std::fs::path, std::fs::path>>> m_rulePaths;
-        PerProvider<std::vector<YaraMatch>> m_matches;
-        PerProvider<std::vector<YaraMatch*>> m_sortedMatches;
+        PerProvider<std::vector<YaraRule::Rule>> m_matchedRules;
         PerProvider<std::vector<std::string>> m_consoleMessages;
         PerProvider<u32> m_selectedRule;
+
+        PerProvider<std::vector<u32>> m_tooltipIds, m_highlightingIds;
 
         TaskHolder m_matcherTask;
 

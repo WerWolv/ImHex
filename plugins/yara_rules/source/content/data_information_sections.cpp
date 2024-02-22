@@ -16,6 +16,16 @@ namespace hex::plugin::yara {
         InformationYaraRules() : InformationSection("hex.yara.information_section.yara_rules") { }
         ~InformationYaraRules() override = default;
 
+        struct Category {
+            struct Comperator {
+                bool operator()(const YaraRule::Rule &a, const YaraRule::Rule &b) const {
+                    return a.identifier < b.identifier;
+                }
+            };
+
+            std::set<YaraRule::Rule, Comperator> matchedRules;
+        };
+
         void process(Task &task, prv::Provider *provider, Region region) override {
             const auto &ruleFilePaths = romfs::list("rules");
             task.setMaxValue(ruleFilePaths.size());
@@ -24,10 +34,16 @@ namespace hex::plugin::yara {
             for (const auto &ruleFilePath : ruleFilePaths) {
                 const std::string fileContent = romfs::get(ruleFilePath).data<const char>();
 
-                YaraRule rule(fileContent);
-                auto result = rule.match(provider, region);
+                YaraRule yaraRule(fileContent);
+                const auto result = yaraRule.match(provider, region);
                 if (result.has_value()) {
-                    m_matches[ruleFilePath.filename().string()] = result.value().matches;
+                    const auto &rules = result.value().matchedRules;
+                    for (const auto &rule : rules) {
+                        if (!rule.metadata.contains("category")) continue;
+
+                        const auto &categoryName = rule.metadata.at("category");
+                        m_categories[categoryName].matchedRules.insert(rule);
+                    }
                 }
 
                 task.update(progress);
@@ -36,7 +52,7 @@ namespace hex::plugin::yara {
         }
 
         void reset() override {
-            m_matches.clear();
+            m_categories.clear();
         }
 
         void drawContent() override {
@@ -46,15 +62,16 @@ namespace hex::plugin::yara {
 
                 ImGui::TableNextRow();
 
-                for (auto &[name, matches] : m_matches) {
-                    if (matches.empty())
+                for (auto &[categoryName, category] : m_categories) {
+                    if (category.matchedRules.empty())
                         continue;
 
                     ImGui::TableNextColumn();
-                    ImGuiExt::BeginSubWindow(name.c_str());
+                    ImGuiExt::BeginSubWindow(categoryName.c_str());
                     {
-                        for (const auto &match : matches) {
-                            ImGui::TextUnformatted(match.identifier.c_str());
+                        for (const auto &match : category.matchedRules) {
+                            const auto &ruleName = match.metadata.contains("name") ? match.metadata.at("name") : match.identifier;
+                            ImGui::TextUnformatted(ruleName.c_str());
                         }
                     }
                     ImGuiExt::EndSubWindow();
@@ -65,7 +82,7 @@ namespace hex::plugin::yara {
         }
 
     private:
-        std::map<std::string, std::vector<YaraRule::Match>> m_matches;
+        std::map<std::string, Category> m_categories;
     };
 
     void registerDataInformationSections() {

@@ -48,7 +48,7 @@ namespace hex::plugin::yara {
                 if (!rules.is_array())
                     return false;
 
-                m_matches.get(provider).clear();
+                m_matchedRules.get(provider).clear();
 
                 for (auto &rule : rules) {
                     if (!rule.contains("name") || !rule.contains("path"))
@@ -130,7 +130,6 @@ namespace hex::plugin::yara {
 
         ImGui::NewLine();
         if (ImGui::Button("hex.yara_rules.view.yara.match"_lang)) this->applyRules();
-        ImGui::SameLine();
 
         if (m_matcherTask.isRunning()) {
             ImGui::SameLine();
@@ -143,76 +142,34 @@ namespace hex::plugin::yara {
         matchesTableSize.y *= 3.75 / 5.0;
         matchesTableSize.y -= ImGui::GetTextLineHeightWithSpacing();
 
-        if (ImGui::BeginTable("matches", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, matchesTableSize)) {
+        if (ImGui::BeginTable("matches", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, matchesTableSize)) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.yara_rules.view.yara.matches.identifier"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("identifier"));
             ImGui::TableSetupColumn("hex.yara_rules.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("variable"));
             ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("address"));
             ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
 
             ImGui::TableHeadersRow();
 
-            auto sortSpecs = ImGui::TableGetSortSpecs();
-            if (!m_matches->empty() && (sortSpecs->SpecsDirty || m_sortedMatches->empty())) {
-                m_sortedMatches->clear();
-                std::transform(m_matches->begin(), m_matches->end(), std::back_inserter(*m_sortedMatches), [](auto &match) {
-                    return &match;
-                });
-
-                std::sort(m_sortedMatches->begin(), m_sortedMatches->end(), [&sortSpecs](const YaraMatch *left, const YaraMatch *right) -> bool {
-                    if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("identifier"))
-                        return left->match.identifier < right->match.identifier;
-                    else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("variable"))
-                        return left->match.variable < right->match.variable;
-                    else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("address"))
-                        return left->match.region.getStartAddress() < right->match.region.getStartAddress();
-                    else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size"))
-                        return left->match.region.getSize() < right->match.region.getSize();
-                    else
-                        return false;
-                });
-
-                if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Descending)
-                    std::reverse(m_sortedMatches->begin(), m_sortedMatches->end());
-
-                sortSpecs->SpecsDirty = false;
-            }
-
             if (!m_matcherTask.isRunning()) {
-                ImGuiListClipper clipper;
-                clipper.Begin(m_sortedMatches->size());
+                for (const auto &rule : *m_matchedRules) {
+                    if (rule.matches.empty()) continue;
 
-                while (clipper.Step()) {
-                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        auto &[match, highlightId, tooltipId] = *(*m_sortedMatches)[i];
-                        auto &[identifier, variableName, region, wholeDataMatch] = match;
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGui::PushID(i);
-                        if (ImGui::Selectable("match", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
-                            ImHexApi::HexEditor::setSelection(region.getStartAddress(), region.getSize());
-                        }
-                        ImGui::PopID();
-                        ImGui::SameLine();
-                        ImGui::TextUnformatted(identifier.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(variableName.c_str());
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
 
-                        if (!wholeDataMatch) {
+                    if (ImGui::TreeNode(rule.identifier.c_str())) {
+                        for (const auto &match : rule.matches) {
+                            ImGui::TableNextRow();
                             ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("0x{0:X} : 0x{1:X}", region.getStartAddress(), region.getEndAddress());
+                            ImGui::TextUnformatted(match.variable.c_str());
                             ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("0x{0:X}", region.getSize());
-                        } else {
+                            ImGui::TextUnformatted(hex::format("0x{0:08X}", match.region.getStartAddress()).c_str());
                             ImGui::TableNextColumn();
-                            ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.yara_rules.view.yara.whole_data"_lang);
-                            ImGui::TableNextColumn();
-                            ImGui::TextUnformatted("");
+                            ImGui::TextUnformatted(hex::format("0x{0:08X}", match.region.getSize()).c_str());
                         }
+                        ImGui::TreePop();
                     }
                 }
-
-                clipper.End();
             }
 
             ImGui::EndTable();
@@ -237,12 +194,14 @@ namespace hex::plugin::yara {
     }
 
     void ViewYara::clearResult() {
-        for (const auto &match : *m_matches) {
-            ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
-            ImHexApi::HexEditor::removeTooltip(match.tooltipId);
-        }
+        for (const auto &id : *m_highlightingIds)
+            ImHexApi::HexEditor::removeBackgroundHighlight(id);
+        for (const auto &id : *m_tooltipIds)
+            ImHexApi::HexEditor::removeTooltip(id);
 
-        m_matches->clear();
+        m_highlightingIds->clear();
+        m_tooltipIds->clear();
+        m_matchedRules->clear();
         m_consoleMessages->clear();
     }
 
@@ -280,33 +239,19 @@ namespace hex::plugin::yara {
             }
 
             TaskManager::doLater([this, results = std::move(results)] {
-                for (const auto &match : *m_matches) {
-                    ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
-                    ImHexApi::HexEditor::removeTooltip(match.tooltipId);
-                }
+                this->clearResult();
 
                 for (auto &result : results) {
-                    for (auto &match : result.matches) {
-                        m_matches->emplace_back(YaraMatch { std::move(match), 0, 0 });
-                    }
-
-                    m_consoleMessages->append_range(result.consoleMessages);
+                    m_matchedRules->append_range(std::move(result.matchedRules));
+                    m_consoleMessages->append_range(std::move(result.consoleMessages));
                 }
 
-                auto uniques = std::set(m_matches->begin(), m_matches->end(), [](const auto &leftMatch, const auto &rightMatch) {
-                    const auto &l = leftMatch.match;
-                    const auto &r = rightMatch.match;
-                    return std::tie(l.region.address, l.wholeDataMatch, l.identifier, l.variable) <
-                           std::tie(r.region.address, r.wholeDataMatch, r.identifier, r.variable);
-                });
-
-                m_matches->clear();
-                std::move(uniques.begin(), uniques.end(), std::back_inserter(*m_matches));
-
                 constexpr static color_t YaraColor = 0x70B4771F;
-                for (const YaraMatch &yaraMatch : uniques) {
-                    yaraMatch.highlightId = ImHexApi::HexEditor::addBackgroundHighlight(yaraMatch.match.region, YaraColor);
-                    yaraMatch.tooltipId = ImHexApi::HexEditor::addTooltip(yaraMatch.match.region, hex::format("{0} [{1}]", yaraMatch.match.identifier, yaraMatch.match.variable), YaraColor);
+                for (YaraRule::Rule &rule : *m_matchedRules) {
+                    for (auto &match : rule.matches) {
+                        m_highlightingIds->push_back(ImHexApi::HexEditor::addBackgroundHighlight(match.region, YaraColor));
+                        m_tooltipIds->push_back(ImHexApi::HexEditor::addTooltip(match.region, hex::format("{0} : {1}   [{2}]", rule.identifier, fmt::join(rule.tags, ", "), match.variable), YaraColor));
+                    }
                 }
             });
         });
