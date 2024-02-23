@@ -143,8 +143,15 @@ namespace hex::plugin::builtin {
 
     class InformationByteAnalysis : public ContentRegistry::DataInformation::InformationSection {
     public:
-        InformationByteAnalysis() : InformationSection("hex.builtin.information_section.info_analysis", "", true) { }
-        ~InformationByteAnalysis() override = default;
+        InformationByteAnalysis() : InformationSection("hex.builtin.information_section.info_analysis", "", true) {
+            EventRegionSelected::subscribe(this, [this](const ImHexApi::HexEditor::ProviderRegion &region) {
+                m_byteTypesDistribution.setHandlePosition(region.getStartAddress());
+                m_chunkBasedEntropy.setHandlePosition(region.getStartAddress());
+            });
+        }
+        ~InformationByteAnalysis() override {
+            EventRegionSelected::unsubscribe(this);
+        }
 
         void process(Task &task, prv::Provider *provider, Region region) override {
             if (m_inputChunkSize == 0)
