@@ -7,6 +7,7 @@
 #include <hex/api/task_manager.hpp>
 
 #include <content/yara_rule.hpp>
+#include <wolv/container/interval_tree.hpp>
 
 namespace hex::plugin::yara {
 
@@ -22,8 +23,7 @@ namespace hex::plugin::yara {
         PerProvider<std::vector<YaraRule::Rule>> m_matchedRules;
         PerProvider<std::vector<std::string>> m_consoleMessages;
         PerProvider<u32> m_selectedRule;
-
-        PerProvider<std::vector<u32>> m_tooltipIds, m_highlightingIds;
+        PerProvider<wolv::container::IntervalTree<std::string>> m_highlights;
 
         TaskHolder m_matcherTask;
 

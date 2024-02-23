@@ -82,6 +82,47 @@ namespace hex::plugin::yara {
                 return true;
             }
         });
+
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *, size_t size, bool) -> std::optional<color_t> {
+            auto &highlights = m_highlights.get();
+            const auto regions = highlights.overlapping({ address, address + (size - 1) });
+
+            constexpr static color_t YaraColor = 0x70B4771F;
+            if (regions.empty())
+                return std::nullopt;
+            else
+                return YaraColor;
+        });
+
+        ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *, size_t size) {
+            if (m_matcherTask.isRunning())
+                return;
+
+            auto occurrences = m_highlights->overlapping({ address, (address + size - 1) });
+            if (occurrences.empty())
+                return;
+
+            ImGui::BeginTooltip();
+
+            for (const auto &occurrence : occurrences) {
+                ImGui::PushID(&occurrence);
+                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
+                    {
+                        const auto &tooltipValue = *occurrence.value;
+
+                        ImGuiExt::TextFormatted("{}", tooltipValue);
+                    }
+
+                    ImGui::EndTable();
+                }
+                ImGui::PopID();
+            }
+
+            ImGui::EndTooltip();
+        });
     }
 
     ViewYara::~ViewYara() {
@@ -194,13 +235,6 @@ namespace hex::plugin::yara {
     }
 
     void ViewYara::clearResult() {
-        for (const auto &id : *m_highlightingIds)
-            ImHexApi::HexEditor::removeBackgroundHighlight(id);
-        for (const auto &id : *m_tooltipIds)
-            ImHexApi::HexEditor::removeTooltip(id);
-
-        m_highlightingIds->clear();
-        m_tooltipIds->clear();
         m_matchedRules->clear();
         m_consoleMessages->clear();
     }
@@ -229,7 +263,7 @@ namespace hex::plugin::yara {
                         m_consoleMessages->emplace_back(error.message);
                     });
 
-                    break;
+                    return;
                 }
 
                 results.emplace_back(result.value());
@@ -246,11 +280,17 @@ namespace hex::plugin::yara {
                     m_consoleMessages->insert(m_consoleMessages->end(), result.consoleMessages.begin(), result.consoleMessages.end());
                 }
 
-                constexpr static color_t YaraColor = 0x70B4771F;
                 for (YaraRule::Rule &rule : *m_matchedRules) {
                     for (auto &match : rule.matches) {
-                        m_highlightingIds->push_back(ImHexApi::HexEditor::addBackgroundHighlight(match.region, YaraColor));
-                        m_tooltipIds->push_back(ImHexApi::HexEditor::addTooltip(match.region, hex::format("{0} : {1}   [{2}]", rule.identifier, fmt::join(rule.tags, ", "), match.variable), YaraColor));
+                        auto tags = hex::format("{}", fmt::join(rule.tags, ", "));
+                        m_highlights->insert(
+                            { match.region.getStartAddress(), match.region.getEndAddress() },
+                            hex::format("rule {0}{1} {{ {2} }}",
+                                rule.identifier,
+                                tags.empty() ? "" : hex::format(" : {}", tags),
+                                match.variable
+                            )
+                        );
                     }
                 }
             });
