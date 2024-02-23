@@ -120,7 +120,7 @@ namespace hex::plugin::yara {
             &resultContext
         );
 
-        if (yr_compiler_add_bytes(compiler, m_content.c_str(), m_content.size(), nullptr) != ERROR_SUCCESS) {
+        if (yr_compiler_add_string(compiler, m_content.c_str(), nullptr) != ERROR_SUCCESS) {
             std::string errorMessage(0xFFFF, '\x00');
             yr_compiler_get_error_message(compiler, errorMessage.data(), errorMessage.size());
 
