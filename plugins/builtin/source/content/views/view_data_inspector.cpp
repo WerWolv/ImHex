@@ -264,11 +264,10 @@ namespace hex::plugin::builtin {
                         }
 
                         // Enter editing mode when double-clicking the row
-                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && editingFunction.has_value()) {
-                            editing              = true;
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && editingFunction.has_value() && m_selectedProvider->isWritable()) {
+                            editing        = true;
                             m_editingValue = copyValue;
                         }
-
                     } else {
                         // Handle editing mode
 

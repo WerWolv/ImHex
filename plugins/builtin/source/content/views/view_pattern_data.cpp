@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
            (*m_patternDrawer)->jumpToPattern(pattern);
         });
 
-        m_patternDrawer.setOnCreateCallback([this](prv::Provider *, auto &drawer) {
+        m_patternDrawer.setOnCreateCallback([this](prv::Provider *provider, auto &drawer) {
             drawer = std::make_unique<ui::PatternDrawer>();
 
             drawer->setSelectionCallback([](const pl::ptrn::Pattern *pattern) {
@@ -47,6 +47,7 @@ namespace hex::plugin::builtin {
 
             drawer->setTreeStyle(m_treeStyle);
             drawer->enableRowColoring(m_rowColoring);
+            drawer->enablePatternEditing(provider->isWritable());
         });
     }
 

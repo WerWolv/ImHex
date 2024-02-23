@@ -411,7 +411,7 @@ namespace hex::ui {
             }
         }
 
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editingEnabled) {
             m_editingPattern = &pattern;
             m_editingPatternOffset = pattern.getOffset();
             AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");

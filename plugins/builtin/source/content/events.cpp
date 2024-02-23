@@ -89,8 +89,12 @@ namespace hex::plugin::builtin {
         });
 
         EventProviderOpened::subscribe([](hex::prv::Provider *provider) {
-            if (provider != nullptr && ImHexApi::Provider::get() == provider)
+            if (provider != nullptr && ImHexApi::Provider::get() == provider) {
                 RequestUpdateWindowTitle::post();
+
+                if (!provider->isWritable())
+                    ui::ToastInfo::open("hex.builtin.popup.error.read_only"_lang);
+            }
         });
 
         RequestOpenFile::subscribe(openFile);
