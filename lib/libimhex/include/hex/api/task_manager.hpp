@@ -9,6 +9,7 @@
 #include <memory>
 #include <list>
 #include <condition_variable>
+#include <source_location>
 
 namespace hex {
 
@@ -33,6 +34,7 @@ namespace hex {
          */
         void update(u64 value);
         void update() const;
+        void increment();
 
         /**
          * @brief Sets the maximum value of the task
@@ -148,6 +150,13 @@ namespace hex {
          * @param function Function to be executed
          */
         static void doLater(const std::function<void()> &function);
+
+        /**
+         * @brief Creates a new synchronous task that will execute the given function at the start of the next frame
+         * @param function Function to be executed
+         * @param location Source location of the function call. This is used to make sure repeated calls to the function at the same location are only executed once
+         */
+        static void doLaterOnce(const std::function<void()> &function, std::source_location location = std::source_location::current());
 
         /**
          * @brief Creates a callback that will be executed when all tasks are finished
