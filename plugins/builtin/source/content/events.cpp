@@ -129,7 +129,7 @@ namespace hex::plugin::builtin {
                         }
 
                     }
-                });
+                }, {}, true);
             } else if (name == "Open Project") {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                     [](const auto &path) {
