@@ -313,9 +313,12 @@ namespace hex::plugin::builtin {
                 };
 
                 static u32 menuEndPos = 0;
-                if (menuEndPos <= s_searchBarPosition || ImGui::GetTime() < 0.2F) {
+                if (menuEndPos <= s_searchBarPosition) {
                     drawMenu();
-                    menuEndPos = ImGui::GetCursorPosX();
+
+                    // Only initialize the menu end position if the language is already loaded
+                    if (!LocalizationManager::getSelectedLanguage().empty())
+                        menuEndPos = ImGui::GetCursorPosX();
                 } else {
                     if (ImGui::BeginMenu(ICON_VS_MENU)) {
                         drawMenu();
