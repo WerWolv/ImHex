@@ -247,8 +247,6 @@ namespace hex::plugin::yara {
             return;
 
         m_matcherTask = TaskManager::createTask("hex.yara_rules.view.yara.matching", 0, [this, provider](auto &task) {
-            u32 progress = 0;
-
             std::vector<YaraRule::Result> results;
             for (const auto &[fileName, filePath] : *m_rulePaths) {
                 YaraRule rule(filePath);
@@ -268,8 +266,7 @@ namespace hex::plugin::yara {
 
                 results.emplace_back(result.value());
 
-                task.update(progress);
-                progress += 1;
+                task.increment();
             }
 
             TaskManager::doLater([this, results = std::move(results)] {

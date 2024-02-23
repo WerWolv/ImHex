@@ -30,7 +30,6 @@ namespace hex::plugin::yara {
             const auto &ruleFilePaths = romfs::list("rules");
             task.setMaxValue(ruleFilePaths.size());
 
-            u32 progress = 0;
             for (const auto &ruleFilePath : ruleFilePaths) {
                 const std::string fileContent = romfs::get(ruleFilePath).data<const char>();
 
@@ -46,8 +45,7 @@ namespace hex::plugin::yara {
                     }
                 }
 
-                task.update(progress);
-                progress += 1;
+                task.increment();
             }
         }
 

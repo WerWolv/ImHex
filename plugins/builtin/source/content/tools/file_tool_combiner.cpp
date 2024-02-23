@@ -120,10 +120,8 @@ namespace hex::plugin::builtin {
 
                         task.setMaxValue(files.size());
 
-                        u64 fileIndex = 0;
                         for (const auto &file : files) {
-                            task.update(fileIndex);
-                            fileIndex++;
+                            task.increment();
 
                             wolv::io::File input(file, wolv::io::File::Mode::Read);
                             if (!input.isValid()) {
