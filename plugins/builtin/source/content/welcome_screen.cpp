@@ -525,6 +525,15 @@ namespace hex::plugin::builtin {
                 auto backupFilePath = path / BackupFileName;
                 bool hasBackupFile = wolv::io::fs::exists(backupFilePath);
 
+                if (!hasProject && !hasBackupFile) {
+                    log::warn("No project file or backup file found in crash.json file");
+
+                    crashFile.close();
+                    wolv::io::fs::remove(crashFilePath);
+                    wolv::io::fs::remove(backupFilePath);
+                    continue;
+                }
+
                 PopupRestoreBackup::open(
                     // Path of log file
                     crashFileData.value("logFile", ""),
