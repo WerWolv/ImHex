@@ -83,7 +83,7 @@ namespace hex {
                 id, Highlighting { region, color }
             });
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
 
             return id;
         }
@@ -91,7 +91,7 @@ namespace hex {
         void removeBackgroundHighlight(u32 id) {
             impl::s_backgroundHighlights->erase(id);
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
         }
 
         u32 addBackgroundHighlightingProvider(const impl::HighlightingFunction &function) {
@@ -101,7 +101,7 @@ namespace hex {
 
             impl::s_backgroundHighlightingFunctions->insert({ id, function });
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
 
             return id;
         }
@@ -109,7 +109,7 @@ namespace hex {
         void removeBackgroundHighlightingProvider(u32 id) {
             impl::s_backgroundHighlightingFunctions->erase(id);
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
         }
 
         u32 addForegroundHighlight(const Region &region, color_t color) {
@@ -121,7 +121,7 @@ namespace hex {
                 id, Highlighting { region, color }
             });
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
 
             return id;
         }
@@ -129,7 +129,7 @@ namespace hex {
         void removeForegroundHighlight(u32 id) {
             impl::s_foregroundHighlights->erase(id);
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
         }
 
         u32 addForegroundHighlightingProvider(const impl::HighlightingFunction &function) {
@@ -139,7 +139,7 @@ namespace hex {
 
             impl::s_foregroundHighlightingFunctions->insert({ id, function });
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
 
             return id;
         }
@@ -147,7 +147,7 @@ namespace hex {
         void removeForegroundHighlightingProvider(u32 id) {
             impl::s_foregroundHighlightingFunctions->erase(id);
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
         }
 
         static u32 tooltipId = 0;
