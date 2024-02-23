@@ -74,6 +74,10 @@
         NSString* urlString = [url absoluteString];
         const char* utf8String = [urlString UTF8String];
 
+        const char *prefix = "file://";
+        if (strncmp(utf8String, prefix, strlen(prefix)) == 0)
+            utf8String += strlen(prefix);
+
         openFile(utf8String);
 
         return YES;
