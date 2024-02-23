@@ -152,6 +152,7 @@ namespace hex {
             this->frameEnd();
         } catch (...) {
             ImGui::ErrorCheckEndFrameRecover(errorRecoverLogCallback, nullptr);
+            ImGui::EndFrame();
             handleException();
         }
     }
