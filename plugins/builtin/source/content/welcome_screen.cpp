@@ -279,6 +279,11 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.plugins.title"_lang, "hex.builtin.welcome.learn.plugins.desc"_lang, size))
                             hex::openWebpage("hex.builtin.welcome.learn.plugins.link"_lang);
 
+                        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3_scaled);
+
+                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.interactive_tutorial.title"_lang, "hex.builtin.welcome.learn.interactive_tutorial.desc"_lang, size)) {
+                            RequestOpenWindow::post("Tutorials");
+                        }
                         if (auto [unlocked, total] = AchievementManager::getProgress(); unlocked != total) {
                             if (ImGuiExt::DescriptionButtonProgress("hex.builtin.welcome.learn.achievements.title"_lang, "hex.builtin.welcome.learn.achievements.desc"_lang, float(unlocked) / float(total), size)) {
                                 RequestOpenWindow::post("Achievements");
