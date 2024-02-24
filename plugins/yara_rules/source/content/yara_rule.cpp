@@ -182,7 +182,7 @@ namespace hex::plugin::yara {
 
             iterator->last_error      = ERROR_SUCCESS;
             context.currBlock.base    = address;
-            context.currBlock.size    = std::min<size_t>(context.region.size - address, 10_MiB);
+            context.currBlock.size    = std::min<size_t>(context.region.size - (address - context.region.address), 10_MiB);
             context.currBlock.context = &context;
 
             if (context.currBlock.size == 0) return nullptr;
