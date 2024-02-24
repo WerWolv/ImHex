@@ -38,6 +38,8 @@ namespace hex {
         if (!isatty(STDOUT_FILENO)) {
             log::impl::redirectToFile();
         }
+
+        enumerateFontsMacos();
     }
 
     void Window::setupNativeWindow() {
@@ -62,7 +64,6 @@ namespace hex {
         });
 
         setupMacosWindowStyle(m_window, ImHexApi::System::isBorderlessWindowModeEnabled());
-        enumerateFontsMacos();
     }
 
     void Window::beginNativeWindowFrame() {

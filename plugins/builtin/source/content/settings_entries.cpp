@@ -603,6 +603,50 @@ namespace hex::plugin::builtin {
             i32 m_currIndex = 0;
         };
 
+        class FontFilePicker : public ContentRegistry::Settings::Widgets::FilePicker {
+        public:
+            bool draw(const std::string &name) {
+                bool changed = false;
+
+                const auto &fonts = hex::getFonts();
+
+                bool customFont = false;
+                std::string pathPreview = "";
+                if (m_path.empty()) {
+                    pathPreview = "Default Font";
+                } else if (fonts.contains(m_path)) {
+                    pathPreview = fonts.at(m_path);
+                } else {
+                    pathPreview = wolv::util::toUTF8String(m_path.filename());
+                    customFont = true;
+                }
+
+                if (ImGui::BeginCombo(name.c_str(), pathPreview.c_str())) {
+                    if (ImGui::Selectable("Default Font", m_path.empty())) {
+                        m_path.clear();
+                        changed = true;
+                    }
+
+                    if (ImGui::Selectable("Custom Font", customFont)) {
+                        changed = fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } }, [this](const std::fs::path &path) {
+                            m_path = path;
+                        });
+                    }
+
+                    for (const auto &[path, fontName] : fonts) {
+                        if (ImGui::Selectable(fontName.c_str(), m_path == path)) {
+                            m_path = path;
+                            changed = true;
+                        }
+                    }
+
+                    ImGui::EndCombo();
+                }
+
+                return changed;
+            }
+        };
+
 
         bool getDefaultBorderlessWindowMode() {
             bool result = false;
@@ -739,7 +783,7 @@ namespace hex::plugin::builtin {
                 return customFontsEnabled.isChecked();
             };
 
-            auto customFontPathSetting = ContentRegistry::Settings::add<Widgets::FilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
+            auto customFontPathSetting = ContentRegistry::Settings::add<FontFilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
                     .requiresRestart()
                     .setEnabledCallback(customFontsEnabled);
 

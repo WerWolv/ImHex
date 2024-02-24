@@ -12,6 +12,7 @@
 #include <concepts>
 #include <functional>
 #include <limits>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -32,11 +33,6 @@ namespace hex {
     namespace prv {
         class Provider;
     }
-
-    struct Font {
-        std::string name;
-        std::fs::path path;
-    };
 
     template<typename T>
     [[nodiscard]] std::vector<T> sampleData(const std::vector<T> &data, size_t count) {
@@ -82,7 +78,7 @@ namespace hex {
     void openWebpage(std::string url);
 
     extern "C" void registerFont(const char *fontName, const char *fontPath);
-    const std::vector<Font>& getFonts();
+    const std::map<std::fs::path, std::string>& getFonts();
 
     [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);
     [[nodiscard]] std::vector<u8> decodeByteString(const std::string &string);
