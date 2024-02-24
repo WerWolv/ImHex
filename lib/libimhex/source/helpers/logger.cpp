@@ -131,6 +131,16 @@ namespace hex::log {
             }
         }
 
+        namespace color {
+
+            fmt::color debug() { return fmt::color::medium_sea_green; }
+            fmt::color info()  { return fmt::color::steel_blue; }
+            fmt::color warn()  { return fmt::color::orange; }
+            fmt::color error() { return fmt::color::indian_red; }
+            fmt::color fatal() { return fmt::color::medium_purple; }
+
+        }
+
     }
 
 }
