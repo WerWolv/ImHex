@@ -160,8 +160,6 @@ namespace hex::plugin::builtin {
             m_blockSize = std::max<u32>(std::ceil(region.getSize() / 2048.0F), 256);
 
             m_byteDistribution.reset();
-            m_digram.reset(region.getSize());
-            m_layeredDistribution.reset(region.getSize());
             m_byteTypesDistribution.reset(region.getStartAddress(), region.getEndAddress(), provider->getBaseAddress(), provider->getActualSize());
             m_chunkBasedEntropy.reset(m_inputChunkSize, region.getStartAddress(), region.getEndAddress(),
                 provider->getBaseAddress(), provider->getActualSize());
@@ -177,8 +175,6 @@ namespace hex::plugin::builtin {
                 m_byteDistribution.update(byte);
                 m_byteTypesDistribution.update(byte);
                 m_chunkBasedEntropy.update(byte);
-                m_layeredDistribution.update(byte);
-                m_digram.update(byte);
                 task.update();
             }
 
@@ -318,21 +314,6 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndTable();
             }
-
-            auto availableWidth = ImGui::GetContentRegionAvail().x;
-            ImGui::BeginGroup();
-            {
-                ImGui::TextUnformatted("hex.builtin.information_section.info_analysis.digram"_lang);
-                m_digram.draw({ availableWidth, availableWidth });
-            }
-            ImGui::EndGroup();
-
-            ImGui::BeginGroup();
-            {
-                ImGui::TextUnformatted("hex.builtin.information_section.info_analysis.layered_distribution"_lang);
-                m_layeredDistribution.draw({ availableWidth, availableWidth });
-            }
-            ImGui::EndGroup();
         }
 
         void load(const nlohmann::json &data) override {
@@ -360,17 +341,119 @@ namespace hex::plugin::builtin {
         u64 m_lowestBlockEntropyAddress = 0x00;
         double m_plainTextCharacterPercentage = -1.0;
 
-        DiagramDigram m_digram;
-        DiagramLayeredDistribution m_layeredDistribution;
         DiagramByteDistribution m_byteDistribution;
         DiagramByteTypesDistribution m_byteTypesDistribution;
         DiagramChunkBasedEntropyAnalysis m_chunkBasedEntropy;
+    };
+
+class InformationByteRelationshipAnalysis : public ContentRegistry::DataInformation::InformationSection {
+    public:
+        InformationByteRelationshipAnalysis() : InformationSection("hex.builtin.information_section.relationship_analysis", "", true) {
+
+        }
+        ~InformationByteRelationshipAnalysis() override {
+        }
+
+        void process(Task &task, prv::Provider *provider, Region region) override {
+            updateSettings();
+            m_digram.reset(region.getSize());
+            m_layeredDistribution.reset(region.getSize());
+
+            // Create a handle to the file
+            auto reader = prv::ProviderReader(provider);
+            reader.seek(region.getStartAddress());
+            reader.setEndAddress(region.getEndAddress());
+
+            // Loop over each byte of the selection and update each analysis
+            // one byte at a time to process the file only once
+            for (u8 byte : reader) {
+                m_layeredDistribution.update(byte);
+                m_digram.update(byte);
+                task.update();
+            }
+        }
+
+        void reset() override {
+            m_digram.reset(0);
+            m_layeredDistribution.reset(0);
+            updateSettings();
+        }
+
+        void drawSettings() override {
+            if (ImGuiExt::InputHexadecimal("hex.builtin.information_section.relationship_analysis.sample_size"_lang, &m_sampleSize)) {
+                updateSettings();
+            }
+
+            if (ImGui::SliderFloat("hex.builtin.information_section.relationship_analysis.brightness"_lang, &m_brightness, 0.0F, 1.0F)) {
+                updateSettings();
+            }
+
+            if (ImGui::Combo("hex.builtin.information_section.relationship_analysis.filter"_lang, reinterpret_cast<int*>(&m_filter), "Nearest\0Linear\0\0")) {
+                updateSettings();
+            }
+        }
+
+        void drawContent() override {
+            auto availableWidth = ImGui::GetContentRegionAvail().x;
+            ImGui::BeginGroup();
+            {
+                ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.digram"_lang);
+                m_digram.draw({ availableWidth, availableWidth });
+            }
+            ImGui::EndGroup();
+
+            ImGui::BeginGroup();
+            {
+                ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.layered_distribution"_lang);
+                m_layeredDistribution.draw({ availableWidth, availableWidth });
+            }
+            ImGui::EndGroup();
+        }
+
+        void load(const nlohmann::json &data) override {
+            InformationSection::load(data);
+
+            m_filter = data.value("filter", ImGuiExt::Texture::Filter::Nearest);
+            m_sampleSize = data.value("sample_size", 0x9000);
+            m_brightness = data.value("brightness", 0.5F);
+
+            updateSettings();
+        }
+
+        nlohmann::json store() override {
+            auto result = InformationSection::store();
+            result["sample_size"] = m_sampleSize;
+            result["brightness"] = m_brightness;
+            result["filter"] = m_filter;
+
+            return result;
+        }
+
+    private:
+        void updateSettings() {
+            m_digram.setFiltering(m_filter);
+            m_digram.setSampleSize(m_sampleSize);
+            m_digram.setBrightness(m_brightness);
+
+            m_layeredDistribution.setFiltering(m_filter);
+            m_layeredDistribution.setSampleSize(m_sampleSize);
+            m_layeredDistribution.setBrightness(m_brightness);
+        }
+
+    private:
+        ImGuiExt::Texture::Filter m_filter = ImGuiExt::Texture::Filter::Nearest;
+        u64 m_sampleSize = 0x9000;
+        float m_brightness = 0.5F;
+
+        DiagramDigram m_digram;
+        DiagramLayeredDistribution m_layeredDistribution;
     };
 
     void registerDataInformationSections() {
         ContentRegistry::DataInformation::addInformationSection<InformationProvider>();
         ContentRegistry::DataInformation::addInformationSection<InformationMagic>();
         ContentRegistry::DataInformation::addInformationSection<InformationByteAnalysis>();
+        ContentRegistry::DataInformation::addInformationSection<InformationByteRelationshipAnalysis>();
     }
 
 }

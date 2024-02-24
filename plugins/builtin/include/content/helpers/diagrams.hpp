@@ -107,7 +107,7 @@ namespace hex {
 
     class DiagramDigram {
     public:
-        explicit DiagramDigram(size_t sampleSize = 0x9000) : m_sampleSize(sampleSize) { }
+        explicit DiagramDigram() { }
 
         void draw(ImVec2 size) {
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
@@ -131,7 +131,7 @@ namespace hex {
                             pixels[x * 0xFF + y] = ImAlphaBlendColors(pixels[x * 0xFF + y], ImColor(color));
                         }
 
-                        m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, ImGuiExt::Texture::Filter::Nearest, 0xFF, 0xFF);
+                        m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, m_filter, 0xFF, 0xFF);
                     }
 
                     auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F);
@@ -145,14 +145,14 @@ namespace hex {
 
         void process(prv::Provider *provider, u64 address, size_t size) {
             m_processing = true;
-            m_buffer = impl::getSampleSelection(provider, address, size, m_sampleSize);
+            m_buffer = impl::getSampleSelection(provider, address, size, m_sampleSize == 0 ? size : m_sampleSize);
             processImpl();
             m_processing = false;
         }
 
         void process(const std::vector<u8> &buffer) {
             m_processing = true;
-            m_buffer = impl::getSampleSelection(buffer, m_sampleSize);
+            m_buffer = impl::getSampleSelection(buffer, m_sampleSize == 0 ? buffer.size() : m_sampleSize);
             processImpl();
             m_processing = false;
         }
@@ -160,7 +160,7 @@ namespace hex {
         void reset(u64 size) {
             m_processing = true;
             m_buffer.clear();
-            m_buffer.reserve(m_sampleSize);
+            m_buffer.reserve(m_sampleSize == 0 ? size : m_sampleSize);
             m_byteCount = 0;
             m_fileSize  = size;
             m_texture = ImGuiExt::Texture();
@@ -169,7 +169,7 @@ namespace hex {
         void update(u8 byte) {
             // Check if there is some space left
             if (m_byteCount < m_fileSize) {
-                if ((m_byteCount % u64(std::ceil(double(m_fileSize) / double(m_sampleSize)))) == 0)
+                if (m_sampleSize == 0 || (m_byteCount % u64(std::ceil(double(m_fileSize) / double(m_sampleSize)))) == 0)
                     m_buffer.push_back(byte);
                 ++m_byteCount;
                 if (m_byteCount == m_fileSize) {
@@ -179,6 +179,17 @@ namespace hex {
             } 
         }
 
+        void setFiltering(ImGuiExt::Texture::Filter filter) {
+            m_filter = filter;
+        }
+
+        void setBrightness(float brightness) {
+            m_brightness = brightness;
+        }
+
+        void setSampleSize(size_t sampleSize) {
+            m_sampleSize = sampleSize;
+        }
  
     private:
         void processImpl() {
@@ -195,10 +206,12 @@ namespace hex {
                 m_glowBuffer[i] = std::min<float>(0.2F + (float(heatMap[m_buffer[i] << 8 | m_buffer[i + 1]]) / float(m_highestCount / 1000)), 1.0F);
             }
 
-            m_opacity = (log10(float(m_sampleSize)) / log10(float(m_highestCount))) / 10.0F;
+            m_opacity = (log10(float(m_sampleSize == 0 ? m_buffer.size() : m_sampleSize)) / log10(float(m_highestCount))) / (100.0F * m_brightness);
         }
 
     private:
+        ImGuiExt::Texture::Filter m_filter = ImGuiExt::Texture::Filter::Nearest;
+        float m_brightness = 0.5F;
         size_t m_sampleSize = 0;
 
         // The number of bytes processed and the size of
@@ -215,7 +228,7 @@ namespace hex {
 
     class DiagramLayeredDistribution {
     public:
-        explicit DiagramLayeredDistribution(size_t sampleSize = 0x9000) : m_sampleSize(sampleSize) { }
+        explicit DiagramLayeredDistribution() { }
 
         void draw(ImVec2 size) {
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
@@ -236,7 +249,7 @@ namespace hex {
                             pixels[x * 0xFF + y] = ImAlphaBlendColors(pixels[x * 0xFF + y], ImColor(color));
                         }
 
-                        m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, ImGuiExt::Texture::Filter::Nearest, 0xFF, 0xFF);
+                        m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, m_filter, 0xFF, 0xFF);
                     }
 
                     const auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F);
@@ -249,14 +262,14 @@ namespace hex {
 
         void process(prv::Provider *provider, u64 address, size_t size) {
             m_processing = true;
-            m_buffer = impl::getSampleSelection(provider, address, size, m_sampleSize);
+            m_buffer = impl::getSampleSelection(provider, address, size, m_sampleSize == 0 ? size : m_sampleSize);
             processImpl();
             m_processing = false;
         }
 
         void process(const std::vector<u8> &buffer) {
             m_processing = true;
-            m_buffer = impl::getSampleSelection(buffer, m_sampleSize);
+            m_buffer = impl::getSampleSelection(buffer, m_sampleSize == 0 ? buffer.size() : m_sampleSize);
             processImpl();
             m_processing = false;
         }
@@ -264,7 +277,7 @@ namespace hex {
         void reset(u64 size) {
             m_processing = true;
             m_buffer.clear();
-            m_buffer.reserve(m_sampleSize);
+            m_buffer.reserve(m_sampleSize == 0 ? size : m_sampleSize);
             m_byteCount = 0;
             m_fileSize  = size;
             m_texture = ImGuiExt::Texture();
@@ -273,7 +286,7 @@ namespace hex {
         void update(u8 byte) {
             // Check if there is some space left
             if (m_byteCount < m_fileSize) {
-                if ((m_byteCount % u64(std::ceil(double(m_fileSize) / double(m_sampleSize)))) == 0)
+                if (m_sampleSize == 0 || (m_byteCount % u64(std::ceil(double(m_fileSize) / double(m_sampleSize)))) == 0)
                     m_buffer.push_back(byte);
                 ++m_byteCount;
                 if (m_byteCount == m_fileSize) {
@@ -281,6 +294,18 @@ namespace hex {
                     m_processing = false;
                 }
             } 
+        }
+
+        void setFiltering(ImGuiExt::Texture::Filter filter) {
+            m_filter = filter;
+        }
+
+        void setBrightness(float brightness) {
+            m_brightness = brightness;
+        }
+
+        void setSampleSize(size_t sampleSize) {
+            m_sampleSize = sampleSize;
         }
 
     private:
@@ -298,11 +323,14 @@ namespace hex {
                 m_glowBuffer[i] = std::min<float>(0.2F + (float(heatMap[m_buffer[i] << 8 | m_buffer[i + 1]]) / float(m_highestCount / 1000)), 1.0F);
             }
 
-            m_opacity = (log10(float(m_sampleSize)) / log10(float(m_highestCount))) / 10.0F;
+            m_opacity = (log10(float(m_sampleSize == 0 ? m_buffer.size() : m_sampleSize)) / log10(float(m_highestCount))) / (100.0F * m_brightness);
         }
+
     private:
+        ImGuiExt::Texture::Filter m_filter = ImGuiExt::Texture::Filter::Nearest;
+        float m_brightness = 0.5F;
         size_t m_sampleSize = 0;
-    
+
         // The number of bytes processed and the size of
         // the file to analyze (useful for iterative analysis)
         u64 m_byteCount = 0;
