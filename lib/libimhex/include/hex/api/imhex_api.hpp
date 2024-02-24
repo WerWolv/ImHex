@@ -289,7 +289,13 @@ namespace hex {
              * @brief Sets the currently selected data provider
              * @param index Index of the provider to select
              */
-            void setCurrentProvider(u32 index);
+            void setCurrentProvider(i64 index);
+
+            /**
+             * @brief Sets the currently selected data provider
+             * @param provider The provider to select
+             */
+            void setCurrentProvider(NonNull<prv::Provider*> provider);
 
             /**
              * @brief Gets the index of the currently selected data provider

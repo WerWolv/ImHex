@@ -22,6 +22,8 @@
 
 namespace hex::plugin::builtin {
 
+    std::set<FileProvider*> FileProvider::s_openedFiles;
+
     bool FileProvider::isAvailable() const {
         return true;
     }
@@ -226,11 +228,26 @@ namespace hex::plugin::builtin {
         m_fileStats = m_file.getFileInfo();
         m_fileSize  = m_file.getSize();
 
+        // Make sure the current file is not already opened
+        {
+            auto alreadyOpenedFileProvider = std::ranges::find_if(s_openedFiles, [this](const FileProvider *provider) {
+                return provider->m_path == m_path;
+            });
+
+            if (alreadyOpenedFileProvider != s_openedFiles.end()) {
+                ImHexApi::Provider::setCurrentProvider(*alreadyOpenedFileProvider);
+                return false;
+            } else {
+                s_openedFiles.insert(this);
+            }
+        }
+
         return true;
     }
 
     void FileProvider::close() {
         m_file.close();
+        s_openedFiles.erase(this);
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {

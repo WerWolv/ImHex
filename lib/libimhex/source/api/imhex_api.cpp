@@ -259,15 +259,28 @@ namespace hex {
             return result;
         }
 
-        void setCurrentProvider(u32 index) {
+        void setCurrentProvider(i64 index) {
             if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
-            if (index < s_providers->size() && s_currentProvider != index) {
+            if (std::cmp_less(index, s_providers->size()) && s_currentProvider != index) {
                 auto oldProvider  = get();
                 s_currentProvider = index;
                 EventProviderChanged::post(oldProvider, get());
             }
+
+            RequestUpdateWindowTitle::post();
+        }
+
+        void setCurrentProvider(NonNull<prv::Provider*> provider) {
+            if (TaskManager::getRunningTaskCount() > 0)
+                return;
+
+            const auto providers = getProviders();
+            auto it = std::ranges::find(providers, provider.get());
+
+            auto index = std::distance(providers.begin(), it);
+            setCurrentProvider(index);
         }
 
         i64 getCurrentProviderIndex() {
@@ -352,7 +365,7 @@ namespace hex {
                     if (currentIt != s_providers->end()) {
                         auto newIndex = std::distance(s_providers->begin(), currentIt);
 
-                        if (s_currentProvider == newIndex)
+                        if (s_currentProvider == newIndex && newIndex != 0)
                             newIndex -= 1;
 
                         setCurrentProvider(newIndex);

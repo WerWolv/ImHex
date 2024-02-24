@@ -9,6 +9,7 @@
 #include <bit>
 #include <cstring>
 #include <cctype>
+#include <concepts>
 #include <functional>
 #include <limits>
 #include <memory>
