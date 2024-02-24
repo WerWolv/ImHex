@@ -67,6 +67,10 @@ exit_ok &= check_langs("./main", ui_langs, None)
 
 for plugin in os.listdir("./plugins"):
     if plugin == "ui": continue
-    exit_ok &= check_langs(f"./plugins/{plugin}", ui_langs, f"./plugins/{plugin}/romfs/lang/en_US.json")
+
+    path = f"./plugins/{plugin}"
+    if not os.path.isdir(path): continue
+
+    exit_ok &= check_langs(path, ui_langs, f"./plugins/{plugin}/romfs/lang/en_US.json")
 
 sys.exit(0 if exit_ok else 1)

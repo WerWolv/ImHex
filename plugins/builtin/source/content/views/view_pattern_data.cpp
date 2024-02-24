@@ -12,12 +12,15 @@ namespace hex::plugin::builtin {
 
     ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name", ICON_VS_DATABASE) {
         // Handle tree style setting changes
-        EventSettingsChanged::subscribe(this, [this] {
-            m_treeStyle = ui::PatternDrawer::TreeStyle(ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0));
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_treeStyle = ui::PatternDrawer::TreeStyle(value.get<int>(0));
             for (auto &drawer : m_patternDrawer.all())
                 drawer->setTreeStyle(m_treeStyle);
+        });
 
-            m_rowColoring = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_data_row_bg", false);
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_data_row_bg", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_rowColoring = bool(value.get<int>(false));
             for (auto &drawer : m_patternDrawer.all())
                 drawer->enableRowColoring(m_rowColoring);
         });
@@ -34,7 +37,7 @@ namespace hex::plugin::builtin {
            (*m_patternDrawer)->jumpToPattern(pattern);
         });
 
-        m_patternDrawer.setOnCreateCallback([this](prv::Provider *, auto &drawer) {
+        m_patternDrawer.setOnCreateCallback([this](prv::Provider *provider, auto &drawer) {
             drawer = std::make_unique<ui::PatternDrawer>();
 
             drawer->setSelectionCallback([](const pl::ptrn::Pattern *pattern) {
@@ -44,11 +47,11 @@ namespace hex::plugin::builtin {
 
             drawer->setTreeStyle(m_treeStyle);
             drawer->enableRowColoring(m_rowColoring);
+            drawer->enablePatternEditing(provider->isWritable());
         });
     }
 
     ViewPatternData::~ViewPatternData() {
-        EventSettingsChanged::unsubscribe(this);
         EventPatternEvaluating::unsubscribe(this);
         EventPatternExecuted::unsubscribe(this);
     }
@@ -60,12 +63,15 @@ namespace hex::plugin::builtin {
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             const auto height = std::max(ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetStyle().FramePadding.y * 2, ImGui::GetTextLineHeightWithSpacing() * 5);
-            if (!runtime.arePatternsValid()) {
-                (*m_patternDrawer)->draw({ }, nullptr, height);
-            } else {
-                // If the runtime has finished evaluating, draw the patterns
-                if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                    (*m_patternDrawer)->draw(runtime.getPatterns(), &runtime, height);
+
+            if (*m_patternDrawer != nullptr) {
+                if (!runtime.arePatternsValid()) {
+                    (*m_patternDrawer)->draw({ }, nullptr, height);
+                } else {
+                    // If the runtime has finished evaluating, draw the patterns
+                    if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                        (*m_patternDrawer)->draw(runtime.getPatterns(), &runtime, height);
+                    }
                 }
             }
         }

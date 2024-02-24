@@ -9,7 +9,7 @@ namespace hex::plugin::builtin {
     class ViewPatches : public View::Window {
     public:
         explicit ViewPatches();
-        ~ViewPatches() override = default;
+        ~ViewPatches() override;
 
         void drawContent() override;
         void drawAlwaysVisibleContent() override;
@@ -17,6 +17,7 @@ namespace hex::plugin::builtin {
     private:
         u64 m_selectedPatch = 0x00;
         PerProvider<u32> m_numOperations;
+        PerProvider<u32> m_savedOperations;
     };
 
 }

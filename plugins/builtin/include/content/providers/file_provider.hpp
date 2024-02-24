@@ -4,7 +4,7 @@
 
 #include <wolv/io/file.hpp>
 
-#include <mutex>
+#include <set>
 #include <string_view>
 
 namespace hex::plugin::builtin {
@@ -66,6 +66,8 @@ namespace hex::plugin::builtin {
         std::optional<struct stat> m_fileStats;
 
         bool m_readable = false, m_writable = false;
+
+        static std::set<FileProvider*> s_openedFiles;
     };
 
 }

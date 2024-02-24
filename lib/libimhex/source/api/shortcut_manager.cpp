@@ -57,7 +57,7 @@ namespace hex {
         }
     }
 
-    void ShortcutManager::process(const std::unique_ptr<View> &currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
+    void ShortcutManager::process(const View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
         const Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, focused, keyCode);
         if (keyCode != 0)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());

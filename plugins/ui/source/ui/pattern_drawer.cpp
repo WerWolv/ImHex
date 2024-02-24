@@ -411,7 +411,7 @@ namespace hex::ui {
             }
         }
 
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editingEnabled) {
             m_editingPattern = &pattern;
             m_editingPatternOffset = pattern.getOffset();
             AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
@@ -466,6 +466,7 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -478,6 +479,7 @@ namespace hex::ui {
                     pattern.setValue(boolValue);
                 }
             } else if (std::holds_alternative<i128>(value)) {
+                ImGui::SetKeyboardFocusHere();
                 if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     wolv::math_eval::MathEvaluator<i128> mathEvaluator;
 
@@ -487,6 +489,7 @@ namespace hex::ui {
                     this->resetEditing();
                 }
             } else if (std::holds_alternative<u128>(value)) {
+                ImGui::SetKeyboardFocusHere();
                 if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     wolv::math_eval::MathEvaluator<u128> mathEvaluator;
 
@@ -548,6 +551,7 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -569,8 +573,11 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SetKeyboardFocusHere();
+
             auto value = hex::encodeByteString(pattern.getBytes());
             if (ImGui::InputText("##Character", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                 if (!value.empty()) {
@@ -598,6 +605,7 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -631,8 +639,10 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SetKeyboardFocusHere();
 
             auto value = pattern.toString();
             if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -683,8 +693,10 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SetKeyboardFocusHere();
 
             auto value = pattern.getFormattedValue();
             if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -710,8 +722,10 @@ namespace hex::ui {
             if (!this->isEditingPattern(pattern)) {
                 drawValueColumn(pattern);
             } else {
+                ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                ImGui::SetKeyboardFocusHere();
 
                 auto value = pattern.toString();
                 if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -741,8 +755,11 @@ namespace hex::ui {
             drawTypeNameColumn(pattern, "struct");
 
             if (this->isEditingPattern(pattern) && !pattern.getWriteFormatterFunction().empty()) {
+                ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                ImGui::SetKeyboardFocusHere();
+
                 auto value = pattern.toString();
                 if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     pattern.setValue(value);
@@ -786,8 +803,11 @@ namespace hex::ui {
             drawTypeNameColumn(pattern, "union");
 
             if (this->isEditingPattern(pattern) && !pattern.getWriteFormatterFunction().empty()) {
+                ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                ImGui::SetKeyboardFocusHere();
+
                 auto value = pattern.toString();
                 if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     pattern.setValue(value);
@@ -824,8 +844,11 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SetKeyboardFocusHere();
+
             auto value = pattern.toString();
             if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                 wolv::math_eval::MathEvaluator<u128> mathEvaluator;

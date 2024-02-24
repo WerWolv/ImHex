@@ -44,16 +44,19 @@
         return [[NSScreen mainScreen] backingScaleFactor];
     }
 
-    void setupMacosWindowStyle(GLFWwindow *window) {
+    void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode) {
         NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
 
         cocoaWindow.titleVisibility = NSWindowTitleHidden;
-        cocoaWindow.titlebarAppearsTransparent = YES;
-        cocoaWindow.styleMask |= NSWindowStyleMaskFullSizeContentView;
 
-        [cocoaWindow setOpaque:NO];
-        [cocoaWindow setHasShadow:YES];
-        [cocoaWindow setBackgroundColor:[NSColor colorWithWhite: 0 alpha: 0.001f]];
+        if (borderlessWindowMode) {
+            cocoaWindow.titlebarAppearsTransparent = YES;
+            cocoaWindow.styleMask |= NSWindowStyleMaskFullSizeContentView;
+
+            [cocoaWindow setOpaque:NO];
+            [cocoaWindow setHasShadow:YES];
+            [cocoaWindow setBackgroundColor:[NSColor colorWithWhite: 0 alpha: 0.001f]];
+        }
     }
 
     bool isMacosFullScreenModeEnabled(GLFWwindow *window) {
@@ -70,6 +73,10 @@
     - (BOOL) readFromURL:(NSURL *)url ofType:(NSString *)typeName error:(NSError **)outError {
         NSString* urlString = [url absoluteString];
         const char* utf8String = [urlString UTF8String];
+
+        const char *prefix = "file://";
+        if (strncmp(utf8String, prefix, strlen(prefix)) == 0)
+            utf8String += strlen(prefix);
 
         openFile(utf8String);
 

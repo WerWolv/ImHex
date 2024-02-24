@@ -20,6 +20,8 @@
         "hex.hashes.hash.common.key": "Key",
         "hex.hashes.hash.common.security_level": "Security Level",
         "hex.hashes.hash.common.size": "Hash Size",
+        "hex.hashes.hash.common.input_size": "Input Size",
+        "hex.hashes.hash.common.output_size": "Output Size",
         "hex.hashes.hash.common.rounds": "Hash Rounds",
         "hex.hashes.hash.common.salt": "Salt",
         "hex.hashes.hash.common.standard": "Standard",
@@ -27,6 +29,8 @@
         "hex.hashes.hash.common.personalization": "Personalization",
         "hex.hashes.hash.common.refl_in": "Reflect In",
         "hex.hashes.hash.common.refl_out": "Reflect Out",
-        "hex.hashes.hash.common.xor_out": "XOR Out"
+        "hex.hashes.hash.common.xor_out": "XOR Out",
+        "hex.hashes.hash.sum": "Sum",
+        "hex.hashes.hash.sum.fold": "Fold result"
     }
 }

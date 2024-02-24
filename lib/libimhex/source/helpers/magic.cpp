@@ -113,9 +113,9 @@ namespace hex::magic {
         return "";
     }
 
-    std::string getDescription(prv::Provider *provider, size_t size, bool firstEntryOnly) {
+    std::string getDescription(prv::Provider *provider, u64 address, size_t size, bool firstEntryOnly) {
         std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
-        provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
+        provider->read(provider->getBaseAddress() + address, buffer.data(), buffer.size());
 
         return getDescription(buffer, firstEntryOnly);
     }
@@ -138,16 +138,16 @@ namespace hex::magic {
         return "";
     }
 
-    std::string getMIMEType(prv::Provider *provider, size_t size, bool firstEntryOnly) {
+    std::string getMIMEType(prv::Provider *provider, u64 address, size_t size, bool firstEntryOnly) {
         std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
-        provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
+        provider->read(provider->getBaseAddress() + address, buffer.data(), buffer.size());
 
         return getMIMEType(buffer, firstEntryOnly);
     }
 
-    std::string getExtensions(prv::Provider *provider, size_t size, bool firstEntryOnly) {
+    std::string getExtensions(prv::Provider *provider, u64 address, size_t size, bool firstEntryOnly) {
         std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
-        provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
+        provider->read(provider->getBaseAddress() + address, buffer.data(), buffer.size());
 
         return getExtensions(buffer, firstEntryOnly);
     }
@@ -170,9 +170,9 @@ namespace hex::magic {
         return "";
     }
 
-    std::string getAppleCreatorType(prv::Provider *provider, size_t size, bool firstEntryOnly) {
+    std::string getAppleCreatorType(prv::Provider *provider, u64 address, size_t size, bool firstEntryOnly) {
         std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
-        provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
+        provider->read(provider->getBaseAddress() + address, buffer.data(), buffer.size());
 
         return getAppleCreatorType(buffer, firstEntryOnly);
     }

@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <concepts>
+
 using u8   = std::uint8_t;
 using u16  = std::uint16_t;
 using u32  = std::uint32_t;
@@ -59,6 +61,25 @@ namespace hex {
         constexpr static Region Invalid() {
             return { 0, 0 };
         }
+    };
+
+
+    template<typename T>
+    concept Pointer = std::is_pointer_v<T>;
+
+    template<Pointer T>
+    struct NonNull {
+        NonNull(T ptr) : pointer(ptr) { }
+        NonNull(std::nullptr_t) = delete;
+        NonNull(std::integral auto) = delete;
+        NonNull(bool) = delete;
+
+        [[nodiscard]] T get()        const { return pointer; }
+        [[nodiscard]] T operator->() const { return pointer; }
+        [[nodiscard]] T operator*()  const { return *pointer; }
+        [[nodiscard]] operator T()   const { return pointer; }
+
+        T pointer;
     };
 
 }

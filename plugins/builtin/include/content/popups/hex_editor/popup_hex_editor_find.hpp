@@ -19,9 +19,8 @@ namespace hex::plugin::builtin {
         void drawSearchDirectionButtons();
         void drawTabContents();
 
-        std::optional<Region> findByteSequence(const std::vector<u8> &sequence);
+        std::optional<Region> findByteSequence(const std::vector<u8> &sequence) const;
 
-        std::string m_inputString;
         std::vector<u8> m_searchByteSequence;
         std::optional<Region> m_foundRegion = std::nullopt;
 
@@ -46,9 +45,11 @@ namespace hex::plugin::builtin {
             String
         };
 
+        static PerProvider<std::string> s_inputString;
+        static PerProvider<SearchMode> s_searchMode;
+
         std::atomic<Encoding> m_stringEncoding = Encoding::UTF8;
         std::atomic<Endianness> m_stringEndianness = Endianness::Little;
-        std::atomic<SearchMode> m_searchMode = SearchMode::ByteSequence;
 
         TaskHolder m_searchTask;
 

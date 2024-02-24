@@ -143,6 +143,8 @@ namespace hex::plugin::builtin {
                     for (const auto &pathString : pathStrings) {
                         m_paths.emplace_back(pathString);
                     }
+
+                    ImHexApi::System::setAdditionalFolderPaths(m_paths);
                 }
             }
 
@@ -601,6 +603,28 @@ namespace hex::plugin::builtin {
             i32 m_currIndex = 0;
         };
 
+
+        bool getDefaultBorderlessWindowMode() {
+            bool result = false;
+
+            #if defined (OS_WINDOWS) || defined(OS_MACOS)
+                result = true;
+            #endif
+
+            // Intel's OpenGL driver has weird bugs that cause the drawn window to be offset to the bottom right.
+            // This can be fixed by either using Mesa3D's OpenGL Software renderer or by simply disabling it.
+            // If you want to try if it works anyways on your GPU, set the hex.builtin.setting.interface.force_borderless_window_mode setting to 1
+            if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+                const bool isIntelGPU = hex::containsIgnoreCase(ImHexApi::System::getGPUVendor(), "Intel");
+
+                result = !isIntelGPU;
+                if (isIntelGPU)
+                    log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please try the Mesa3D Software Renderer");
+            }
+
+            return result;
+        }
+
     }
 
     void registerSettings() {
@@ -665,6 +689,7 @@ namespace hex::plugin::builtin {
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.pattern_data_row_bg", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.always_show_provider_tabs", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.show_header_command_palette", true);
 
             std::vector<std::string> languageNames;
             std::vector<nlohmann::json> languageCodes;
@@ -686,17 +711,23 @@ namespace hex::plugin::builtin {
             #endif
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.multi_windows", MultiWindowSupportEnabledDefault).requiresRestart();
+
+            #if !defined(OS_WEB)
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.native_window_decorations", !getDefaultBorderlessWindowMode()).requiresRestart();
+            #endif
+
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.restore_window_pos", false);
 
             ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.highlight_color", ImColor(0x80, 0x80, 0xC0, 0x60));
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.sync_scrolling", false);
             ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.byte_padding", 0, 0, 50);
             ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.char_padding", 0, 0, 50);
+
+
         }
 
         /* Fonts */
         {
-
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false)
                 .requiresRestart();
 
@@ -823,6 +854,9 @@ namespace hex::plugin::builtin {
             ImHexApi::System::enableSystemThemeDetection(false);
             ThemeManager::changeTheme(theme);
         }
+
+        auto borderlessWindowMode = !ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.native_window_decorations", !getDefaultBorderlessWindowMode());
+        ImHexApi::System::impl::setBorderlessWindowMode(borderlessWindowMode);
     }
 
     static void loadFolderSettings() {

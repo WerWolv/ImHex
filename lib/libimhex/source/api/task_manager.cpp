@@ -16,14 +16,41 @@
     #include <pthread.h>
 #endif
 
+namespace {
+
+    struct SourceLocationWrapper {
+        std::source_location location;
+
+        bool operator==(const SourceLocationWrapper &other) const {
+            return location.file_name() == other.location.file_name() &&
+                   location.function_name() == other.location.function_name() &&
+                   location.column() == other.location.column() &&
+                   location.line() == other.location.line();
+        }
+    };
+
+}
+
+template<>
+struct std::hash<SourceLocationWrapper> {
+    std::size_t operator()(const SourceLocationWrapper& s) const noexcept {
+        auto h1 = std::hash<std::string>{}(s.location.file_name());
+        auto h2 = std::hash<std::string>{}(s.location.function_name());
+        auto h3 = std::hash<u32>{}(s.location.column());
+        auto h4 = std::hash<u32>{}(s.location.line());
+        return (h1 << 0) ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3);
+    }
+};
+
 namespace hex {
 
     namespace {
 
-        std::mutex s_deferredCallsMutex, s_tasksFinishedMutex;
+        std::recursive_mutex s_deferredCallsMutex, s_tasksFinishedMutex;
 
         std::list<std::shared_ptr<Task>> s_tasks, s_taskQueue;
         std::list<std::function<void()>> s_deferredCalls;
+        std::unordered_map<SourceLocationWrapper, std::function<void()>> s_onceDeferredCalls;
         std::list<std::function<void()>> s_tasksFinishedCallbacks;
 
         std::mutex s_queueMutex;
@@ -71,6 +98,19 @@ namespace hex {
         if (m_shouldInterrupt.load(std::memory_order_relaxed)) [[unlikely]]
             throw TaskInterruptor();
     }
+
+    void Task::update() const {
+        if (m_shouldInterrupt.load(std::memory_order_relaxed)) [[unlikely]]
+            throw TaskInterruptor();
+    }
+
+    void Task::increment() {
+        m_currValue.fetch_add(1, std::memory_order_relaxed);
+
+        if (m_shouldInterrupt.load(std::memory_order_relaxed)) [[unlikely]]
+            throw TaskInterruptor();
+    }
+
 
     void Task::setMaxValue(u64 value) {
         m_maxValue = value;
@@ -283,6 +323,7 @@ namespace hex {
         s_taskQueue.clear();
 
         s_deferredCalls.clear();
+        s_onceDeferredCalls.clear();
         s_tasksFinishedCallbacks.clear();
     }
 
@@ -362,13 +403,22 @@ namespace hex {
         s_deferredCalls.push_back(function);
     }
 
+    void TaskManager::doLaterOnce(const std::function<void()> &function, std::source_location location) {
+        std::scoped_lock lock(s_deferredCallsMutex);
+
+        s_onceDeferredCalls[SourceLocationWrapper{ location }] = function;
+    }
+
     void TaskManager::runDeferredCalls() {
         std::scoped_lock lock(s_deferredCallsMutex);
 
         for (const auto &call : s_deferredCalls)
             call();
+        for (const auto &[location, call] : s_onceDeferredCalls)
+            call();
 
         s_deferredCalls.clear();
+        s_onceDeferredCalls.clear();
     }
 
     void TaskManager::runWhenTasksFinished(const std::function<void()> &function) {

@@ -1,22 +1,27 @@
 #pragma once
 
 #include <hex/api/event_manager.hpp>
+#include <hex/api/imhex_api.hpp>
 
 namespace hex {
 
+    namespace impl {
+
+        class AutoResetBase {
+        public:
+            virtual ~AutoResetBase() = default;
+            virtual void reset() = 0;
+        };
+
+    }
+
     template<typename T>
-    class AutoReset {
+    class AutoReset : public impl::AutoResetBase {
     public:
         using Type = T;
 
         AutoReset() {
-            EventImHexClosing::subscribe(this, [this] {
-                this->reset();
-            });
-        }
-
-        ~AutoReset() {
-            EventImHexClosing::unsubscribe(this);
+            ImHexApi::System::impl::addAutoResetObject(this);
         }
 
         T* operator->() {
@@ -53,8 +58,16 @@ namespace hex {
             return m_value;
         }
 
-        void reset() {
-            m_value = T();
+        void reset() override {
+            if constexpr (requires { m_value.reset(); }) {
+                m_value.reset();
+            } else if constexpr (requires { m_value.clear(); }) {
+                m_value.clear();
+            } else if constexpr (requires(T t) { t = nullptr; }) {
+                m_value = nullptr;
+            } else {
+                m_value = { };
+            }
         }
 
     private:

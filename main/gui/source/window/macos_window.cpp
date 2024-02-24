@@ -41,8 +41,6 @@ namespace hex {
     }
 
     void Window::setupNativeWindow() {
-        ImHexApi::System::impl::setBorderlessWindowMode(true);
-
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
         EventOSThemeChanged::subscribe(this, [themeFollowSystem] {
             if (!themeFollowSystem) return;
@@ -63,7 +61,7 @@ namespace hex {
             }
         });
 
-        setupMacosWindowStyle(m_window);
+        setupMacosWindowStyle(m_window, ImHexApi::System::isBorderlessWindowModeEnabled());
     }
 
     void Window::beginNativeWindowFrame() {

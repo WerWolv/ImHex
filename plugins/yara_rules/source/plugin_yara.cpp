@@ -10,8 +10,9 @@
 using namespace hex;
 using namespace hex::plugin::yara;
 
-namespace {
+namespace hex::plugin::yara {
 
+    void registerDataInformationSections();
     void registerViews() {
         ContentRegistry::Views::add<ViewYara>();
     }
@@ -24,4 +25,5 @@ IMHEX_PLUGIN_SETUP("Yara Rules", "WerWolv", "Support for matching Yara rules") {
         hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 
     registerViews();
+    registerDataInformationSections();
 }

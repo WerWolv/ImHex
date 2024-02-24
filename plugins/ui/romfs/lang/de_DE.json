@@ -96,6 +96,7 @@
         "hex.ui.hex_editor.uppercase_hex": "Hex Zeichen als Grossbuchstaben",
         "hex.ui.hex_editor.visualizer": "Daten Anzeige",
         "hex.ui.pattern_drawer.color": "Farbe",
+        "hex.ui.pattern_drawer.comment": "Kommentar",
         "hex.ui.pattern_drawer.double_click": "Doppelklicken um mehr Einträge zu sehen",
         "hex.ui.pattern_drawer.end": "Ende",
         "hex.ui.pattern_drawer.export": "Pattern exportieren als...",

@@ -47,6 +47,10 @@ namespace hex::plugin::builtin {
                 return square / (2.0F * (square - t) + 1.0F);
             }
 
+            void reset() {
+                m_time = 0;
+            }
+
         private:
             float m_time;
             float m_start, m_end;
@@ -201,10 +205,16 @@ namespace hex::plugin::builtin {
                         ImGui::NewLine();
                         ImGui::NewLine();
 
+                        static Blend textFadeOut(2.5F, 2.9F);
+                        static Blend textFadeIn(0.1F, 0.5F);
+
                         auto currTime = ImGui::GetTime();
                         if ((currTime - prevTime) > 3) {
                             prevTime = currTime;
                             ++currLanguage;
+
+                            textFadeIn.reset();
+                            textFadeOut.reset();
                         }
 
                         if (currLanguage == languages.end())
@@ -224,7 +234,7 @@ namespace hex::plugin::builtin {
 
                         const auto availableWidth = ImGui::GetContentRegionAvail().x;
                         if (ImGui::BeginChild("##language_text", ImVec2(availableWidth, 30_scaled))) {
-                            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_Text, std::cos((currTime / 3) * 2 * std::numbers::pi) * 3 + 2));
+                            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_Text, textFadeIn - textFadeOut));
                             ImGuiExt::TextFormattedCentered("{}", LocalizationManager::getLocalizedString("hex.builtin.setting.interface.language", currLanguage->first));
                             ImGui::PopStyleColor();
                         }

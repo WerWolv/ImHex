@@ -16,6 +16,8 @@
         "hex.hashes.hash.common.salt": "Salt",
         "hex.hashes.hash.common.security_level": "Sicherheitsstufe",
         "hex.hashes.hash.common.size": "Grösse",
+        "hex.hashes.hash.common.input_size": "Input Grösse",
+        "hex.hashes.hash.common.output_size": "Output Grösse",
         "hex.hashes.hash.common.standard": "Standart",
         "hex.hashes.hash.common.standard.custom": "Benutzerdefiniert",
         "hex.hashes.hash.common.xor_out": "XOR Out",
@@ -27,6 +29,8 @@
         "hex.hashes.view.hashes.remove": "Hash entfernen",
         "hex.hashes.view.hashes.table.name": "Name",
         "hex.hashes.view.hashes.table.result": "Resultat",
-        "hex.hashes.view.hashes.table.type": "Typ"
+        "hex.hashes.view.hashes.table.type": "Typ",
+        "hex.hashes.hash.sum": "Summe",
+        "hex.hashes.hash.sum.fold": "Resultat zusammenfalten"
     }
 }

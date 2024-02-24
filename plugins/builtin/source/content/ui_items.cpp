@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
                 if (progress < 0)
                     progressString = "";
                 else
-                    progressString = hex::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), progress * 100.0F);
+                    progressString = hex::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), std::min(progress, 1.0F) * 100.0F);
 
                 ImGuiExt::InfoTooltip(hex::format("{}{}", progressString, Lang(frontTask->getUnlocalizedName())).c_str());
 
@@ -286,8 +286,8 @@ namespace hex::plugin::builtin {
         });
 
         static bool alwaysShowProviderTabs = false;
-        EventSettingsChanged::subscribe([] {
-            alwaysShowProviderTabs = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.always_show_provider_tabs", false);
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.always_show_provider_tabs", [](const ContentRegistry::Settings::SettingsValue &value) {
+            alwaysShowProviderTabs = value.get<bool>(false);
         });
 
         ContentRegistry::Interface::addToolbarItem([] {
@@ -423,19 +423,6 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save", ImGuiCustomCol_ToolbarBlue);
         ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save_as", ImGuiCustomCol_ToolbarBlue);
         ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.bookmark.create", ImGuiCustomCol_ToolbarGreen);
-    }
-
-    void handleBorderlessWindowMode() {
-        // Intel's OpenGL driver has weird bugs that cause the drawn window to be offset to the bottom right.
-        // This can be fixed by either using Mesa3D's OpenGL Software renderer or by simply disabling it.
-        // If you want to try if it works anyways on your GPU, set the hex.builtin.setting.interface.force_borderless_window_mode setting to 1
-        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
-            bool isIntelGPU = hex::containsIgnoreCase(ImHexApi::System::getGPUVendor(), "Intel");
-            ImHexApi::System::impl::setBorderlessWindowMode(!isIntelGPU);
-
-            if (isIntelGPU)
-                log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please try the Mesa3D Software Renderer");
-        }
     }
 
 }

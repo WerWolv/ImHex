@@ -137,7 +137,7 @@ namespace hex::plugin::hashes {
     class HashCRC : public ContentRegistry::Hashes::Hash {
     public:
         HashCRC() : Hash("Cyclic Redundancy Check (CRC)") {
-            m_crcs.push_back(HashFactory::Checksum::CreateCRC(3, 0, 0, false, false, 0, 0, { "hex.hashes.hash.common.standard.custom"_lang }));
+            m_crcs.push_back(HashFactory::Checksum::CreateCRC(3, 0, 0, false, false, 0, 0, { "hex.hashes.hash.common.standard.custom" }));
 
             for (CRCStandard standard = CRC3_GSM; standard < CRC64_XZ; standard = CRCStandard(int(standard) + 1)) {
                 m_crcs.push_back(HashFactory::Checksum::CreateCRC(standard));
@@ -145,10 +145,10 @@ namespace hex::plugin::hashes {
         }
 
         void draw() override {
-            if (ImGui::BeginCombo("hex.hashes.hash.common.standard"_lang, m_crcs[m_selectedCrc]->GetName().c_str())) {
+            if (ImGui::BeginCombo("hex.hashes.hash.common.standard"_lang, Lang(m_crcs[m_selectedCrc]->GetName()))) {
                 for (size_t i = 0; i < m_crcs.size(); i++) {
                     const bool selected = m_selectedCrc == i;
-                    if (ImGui::Selectable(m_crcs[i]->GetName().c_str(), selected))
+                    if (ImGui::Selectable(Lang(m_crcs[i]->GetName()), selected))
                         m_selectedCrc = i;
                     if (selected)
                         ImGui::SetItemDefaultFocus();
@@ -459,34 +459,54 @@ namespace hex::plugin::hashes {
         HashSum() : Hash("hex.hashes.hash.sum") {}
 
         Function create(std::string name) override {
-            return Hash::create(name, [this](const Region& region, prv::Provider *provider) -> std::vector<u8> {
+            return Hash::create(name, [hash = *this](const Region& region, prv::Provider *provider) -> std::vector<u8> {
                 std::array<u8, 8> result = { 0x00 };
 
                 auto reader = prv::ProviderReader(provider);
                 reader.seek(region.getStartAddress());
                 reader.setEndAddress(region.getEndAddress());
 
-                u64 sum = m_initialValue;
+                u64 sum = hash.m_initialValue;
+
+                u8 progress = 0;
                 for (u8 byte : reader) {
-                    sum += byte;
+                    sum += (byte << (8 * progress));
+                    progress += 1;
+
+                    progress = progress % hash.m_inputSize;
                 }
 
-                std::memcpy(result.data(), &sum, m_size);
+                u64 foldedSum = sum;
+                if (hash.m_foldOutput) {
+                    while (foldedSum >= (1LLU << (hash.m_outputSize * 8))) {
+                        u64 partialSum = 0;
+                        for (size_t i = 0; i < sizeof(u64); i += hash.m_inputSize) {
+                            u64 value = 0;
+                            std::memcpy(&value, reinterpret_cast<const u8*>(&foldedSum) + i, hash.m_inputSize);
+                            partialSum += value;
+                        }
+                        foldedSum = partialSum;
+                    }
+                }
 
-                return { result.begin(), result.begin() + m_size };
+                std::memcpy(result.data(), &foldedSum, hash.m_outputSize);
+
+                return { result.begin(), result.begin() + hash.m_outputSize };
             });
         }
 
         void draw() override {
             ImGuiExt::InputHexadecimal("hex.hashes.hash.common.iv"_lang, &m_initialValue);
-            ImGui::SliderInt("hex.hashes.hash.common.size"_lang, &m_size, 1, 8, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderInt("hex.hashes.hash.common.input_size"_lang, &m_inputSize, 1, 8, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderInt("hex.hashes.hash.common.output_size"_lang, &m_outputSize, 1, 8, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::Checkbox("hex.hashes.hash.sum.fold"_lang, &m_foldOutput);
         }
 
         [[nodiscard]] nlohmann::json store() const override {
             nlohmann::json result;
 
             result["iv"] = m_initialValue;
-            result["size"] = m_size;
+            result["size"] = m_outputSize;
 
             return result;
         }
@@ -494,13 +514,15 @@ namespace hex::plugin::hashes {
         void load(const nlohmann::json &data) override {
             try {
                 m_initialValue = data.at("iv").get<int>();
-                m_size = data.at("size").get<int>();
+                m_outputSize = data.at("size").get<int>();
             } catch (std::exception&) { }
         }
 
     private:
         u64 m_initialValue = 0x00;
-        int m_size = 1;
+        int m_inputSize = 1;
+        int m_outputSize = 1;
+        bool m_foldOutput = false;
     };
 
     class HashSnefru : public ContentRegistry::Hashes::Hash {

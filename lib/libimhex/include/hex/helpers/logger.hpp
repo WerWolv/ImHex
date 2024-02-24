@@ -20,7 +20,8 @@ namespace hex::log {
         [[maybe_unused]] void redirectToFile();
         [[maybe_unused]] void enableColorPrinting();
 
-        extern std::mutex g_loggerMutex;
+        [[nodiscard]] std::recursive_mutex& getLoggerMutex();
+        [[nodiscard]] bool isLoggingSuspended();
 
         struct LogEntry {
             std::string project;
@@ -34,7 +35,10 @@ namespace hex::log {
         [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level, const char *projectName);
 
         [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto && ... args) {
-            std::scoped_lock lock(g_loggerMutex);
+            if (isLoggingSuspended()) [[unlikely]]
+                return;
+
+            std::scoped_lock lock(getLoggerMutex());
 
             auto dest = getDestination();
             printPrefix(dest, ts, level, IMHEX_PROJECT_NAME);
@@ -49,31 +53,43 @@ namespace hex::log {
         void showWarning(const std::string &message);
         void showError(const std::string &message);
 
+        namespace color {
+
+            fmt::color debug();
+            fmt::color info();
+            fmt::color warn();
+            fmt::color error();
+            fmt::color fatal();
+
+        }
 
     }
 
+    void suspendLogging();
+    void resumeLogging();
+
     [[maybe_unused]] void debug(const std::string &fmt, auto && ... args) {
         #if defined(DEBUG)
-            hex::log::impl::print(fg(fmt::color::light_green) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
+            hex::log::impl::print(fg(impl::color::debug()) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
         #else
             impl::addLogEntry(IMHEX_PROJECT_NAME, "[DEBUG]", fmt::format(fmt::runtime(fmt), args...));
         #endif
     }
 
     [[maybe_unused]] void info(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(fmt::color::cadet_blue) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
+        hex::log::impl::print(fg(impl::color::info()) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
     }
 
     [[maybe_unused]] void warn(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(fmt::color::orange) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
+        hex::log::impl::print(fg(impl::color::warn()) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
     }
 
     [[maybe_unused]] void error(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(fmt::color::red) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
+        hex::log::impl::print(fg(impl::color::error()) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
     }
 
     [[maybe_unused]] void fatal(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(fmt::color::purple) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
+        hex::log::impl::print(fg(impl::color::fatal()) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
     }
 
     /**
@@ -91,7 +107,7 @@ namespace hex::log {
     };
 
     [[maybe_unused]] void print(const std::string &fmt, auto && ... args) {
-        std::scoped_lock lock(impl::g_loggerMutex);
+        std::scoped_lock lock(impl::getLoggerMutex());
 
         auto dest = impl::getDestination();
         auto message = fmt::format(fmt::runtime(fmt), args...);
@@ -100,7 +116,7 @@ namespace hex::log {
     }
 
     [[maybe_unused]] void println(const std::string &fmt, auto && ... args) {
-        std::scoped_lock lock(impl::g_loggerMutex);
+        std::scoped_lock lock(impl::getLoggerMutex());
 
         auto dest = impl::getDestination();
         auto message = fmt::format(fmt::runtime(fmt), args...);

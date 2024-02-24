@@ -33,6 +33,7 @@ namespace hex::ui {
         void setTreeStyle(TreeStyle style) { m_treeStyle = style; }
         void setSelectionCallback(std::function<void(const pl::ptrn::Pattern *)> callback) { m_selectionCallback = std::move(callback); }
         void enableRowColoring(bool enabled) { m_rowColoring = enabled; }
+        void enablePatternEditing(bool enabled) { m_editingEnabled = enabled; }
         void reset();
 
         void jumpToPattern(const pl::ptrn::Pattern *pattern) { m_jumpToPattern = pattern; }
@@ -103,6 +104,7 @@ namespace hex::ui {
 
         TreeStyle m_treeStyle = TreeStyle::Default;
         bool m_rowColoring = false;
+        bool m_editingEnabled = false;
         pl::ptrn::Pattern *m_currVisualizedPattern = nullptr;
         const pl::ptrn::Pattern *m_jumpToPattern = nullptr;
 

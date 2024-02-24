@@ -89,8 +89,12 @@ namespace hex::plugin::builtin {
         });
 
         EventProviderOpened::subscribe([](hex::prv::Provider *provider) {
-            if (provider != nullptr && ImHexApi::Provider::get() == provider)
+            if (provider != nullptr && ImHexApi::Provider::get() == provider) {
                 RequestUpdateWindowTitle::post();
+
+                if (!provider->isWritable())
+                    ui::ToastInfo::open("hex.builtin.popup.error.read_only"_lang);
+            }
         });
 
         RequestOpenFile::subscribe(openFile);
@@ -125,7 +129,7 @@ namespace hex::plugin::builtin {
                         }
 
                     }
-                });
+                }, {}, true);
             } else if (name == "Open Project") {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                     [](const auto &path) {
@@ -233,22 +237,24 @@ namespace hex::plugin::builtin {
             if (ctx == nullptr)
                 return;
 
-            // Get the currently focused window
-            const auto window = ctx->NavWindow;
-            if (window == nullptr)
-                return;
-
-            static ImGuiWindow *lastFocusedWindow = window;
+            static ImGuiWindow *lastFocusedWindow = nullptr;
 
             if (focused) {
                 // If the main window gains focus again, restore the last focused window
+                ImGui::FocusWindow(lastFocusedWindow);
                 ImGui::FocusWindow(lastFocusedWindow, ImGuiFocusRequestFlags_RestoreFocusedChild);
+
+                if (lastFocusedWindow != nullptr)
+                    log::debug("Restoring focus on window '{}'", lastFocusedWindow->Name ? lastFocusedWindow->Name : "Unknown Window");
             } else {
                 // If the main window loses focus, store the currently focused window
                 // and remove focus from it so it doesn't look like it's focused and
                 // cursor blink animations don't play
-                lastFocusedWindow = window;
+                lastFocusedWindow =  ctx->NavWindow;
                 ImGui::FocusWindow(nullptr);
+
+                if (lastFocusedWindow != nullptr)
+                    log::debug("Removing focus from window '{}'", lastFocusedWindow->Name ? lastFocusedWindow->Name : "Unknown Window");
             }
         });
 

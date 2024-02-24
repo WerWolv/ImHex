@@ -679,6 +679,7 @@ namespace hex {
 
     static std::optional<std::fs::path> fileToOpen;
     extern "C" void openFile(const char *path) {
+        log::info("Opening file: {0}", path);
         fileToOpen = path;
     }
 

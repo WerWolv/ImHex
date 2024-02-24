@@ -40,6 +40,7 @@ namespace hex {
         wolv::io::File file(path, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
             log::error("Failed to load workspace from file '{}'", path.string());
+            file.remove();
             return;
         }
 
@@ -56,6 +57,7 @@ namespace hex {
             };
         } catch (nlohmann::json::exception &e) {
             log::error("Failed to load workspace from file '{}': {}", path.string(), e.what());
+            file.remove();
         }
     }
 

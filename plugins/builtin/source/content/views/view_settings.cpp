@@ -35,6 +35,7 @@ namespace hex::plugin::builtin {
                             widget->onChanged();
                         } catch (const std::exception &e) {
                             log::error("Failed to load setting [{} / {}]: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+                            widget->store();
                         }
                     }
                 }
@@ -100,7 +101,6 @@ namespace hex::plugin::builtin {
                                         log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName.get(), setting.unlocalizedName.get(), nlohmann::to_string(newValue));
 
                                         // Signal that the setting was changed
-                                        EventSettingsChanged::post();
                                         widget->onChanged();
 
                                         // Request a restart if the setting requires it

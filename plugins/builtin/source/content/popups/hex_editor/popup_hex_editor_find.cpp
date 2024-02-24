@@ -13,6 +13,9 @@
 
 namespace hex::plugin::builtin {
 
+    PerProvider<std::string> PopupFind::s_inputString;
+    PerProvider<PopupFind::SearchMode> PopupFind::s_searchMode;
+
     PopupFind::PopupFind(ViewHexEditor *editor) noexcept {
         EventRegionSelected::subscribe(this, [this](Region region) {
             m_foundRegion = region;
@@ -28,20 +31,26 @@ namespace hex::plugin::builtin {
     void PopupFind::draw(ViewHexEditor *editor) {
         ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.search"_lang);
 
+        auto lastMode = *s_searchMode;
         if (ImGui::BeginTabBar("##find_tabs")) {
             if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.hex"_lang)) {
-                m_searchMode = SearchMode::ByteSequence;
+                s_searchMode = SearchMode::ByteSequence;
                 this->drawTabContents();
                 ImGui::EndTabItem();
             }
 
             if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.string"_lang)) {
-                m_searchMode = SearchMode::String;
+                s_searchMode = SearchMode::String;
                 this->drawTabContents();
                 ImGui::EndTabItem();
             }
 
             ImGui::EndTabBar();
+        }
+
+        if (lastMode != *s_searchMode) {
+            m_requestFocus = true;
+            s_inputString->clear();
         }
 
         const auto doSearch = [this, editor](auto &) {
@@ -124,7 +133,7 @@ namespace hex::plugin::builtin {
         ImGuiInputTextFlags searchInputFlags = 0;
 
         // Set search input icon and flags
-        switch (m_searchMode) {
+        switch (*s_searchMode) {
             case SearchMode::ByteSequence:
                 searchInputIcon = ICON_VS_SYMBOL_NUMERIC;
                 searchInputFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll |
@@ -134,23 +143,25 @@ namespace hex::plugin::builtin {
                 searchInputIcon = ICON_VS_SYMBOL_KEY;
                 searchInputFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
                 break;
+            default:
+                break;
         }
 
         // Draw search input
-        if (ImGuiExt::InputTextIcon("##input", searchInputIcon, m_inputString, searchInputFlags)) {
-            if (!m_inputString.empty()) {
+        if (ImGuiExt::InputTextIcon("##input", searchInputIcon, s_inputString, searchInputFlags)) {
+            if (!s_inputString->empty()) {
                 m_requestSearch = true;
                 m_searchBackwards = ImGui::GetIO().KeyShift;
             }
         }
 
         // Draw search direction buttons
-        ImGui::BeginDisabled(m_inputString.empty());
+        ImGui::BeginDisabled(s_inputString->empty());
         this->drawSearchDirectionButtons();
         ImGui::EndDisabled();
 
         // Draw search options for string search
-        if (m_searchMode == SearchMode::String) {
+        if (*s_searchMode == SearchMode::String) {
             if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.encoding"_lang, Lang(EncodingNames[std::to_underlying<Encoding>(m_stringEncoding.load())]))) {
                 if (ImGui::Selectable(Lang(EncodingNames[0]), m_stringEncoding == Encoding::UTF8)) {
                     m_stringEncoding = Encoding::UTF8;
@@ -191,7 +202,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    std::optional<Region> PopupFind::findByteSequence(const std::vector<u8> &sequence) {
+    std::optional<Region> PopupFind::findByteSequence(const std::vector<u8> &sequence) const {
         auto provider = ImHexApi::Provider::get();
         prv::ProviderReader reader(provider);
 
@@ -244,23 +255,21 @@ namespace hex::plugin::builtin {
             }
         };
 
-        switch (m_searchMode) {
+        switch (*s_searchMode) {
             case SearchMode::ByteSequence: {
-                m_searchByteSequence = crypt::decode16(m_inputString);
-            }
+                m_searchByteSequence = crypt::decode16(s_inputString);
                 break;
-
+            }
             case SearchMode::String: {
                 switch (m_stringEncoding) {
                     case Encoding::UTF8: {
-                        std::copy(m_inputString.data(), m_inputString.data() + m_inputString.size(),
+                        std::copy_n(s_inputString->data(), s_inputString->size(),
                                   std::back_inserter(m_searchByteSequence));
-                    }
                         break;
-
+                    }
                     case Encoding::UTF16: {
                         std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> convert16;
-                        auto utf16 = convert16.from_bytes(m_inputString);
+                        auto utf16 = convert16.from_bytes(s_inputString);
 
                         for (auto &c: utf16) {
                             swapEndianness(c, Encoding::UTF16, m_stringEndianness);
@@ -269,12 +278,11 @@ namespace hex::plugin::builtin {
                         std::copy(reinterpret_cast<const u8 *>(utf16.data()),
                                   reinterpret_cast<const u8 *>(utf16.data() + utf16.size()),
                                   std::back_inserter(m_searchByteSequence));
-                    }
                         break;
-
+                    }
                     case Encoding::UTF32: {
                         std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert32;
-                        auto utf32 = convert32.from_bytes(m_inputString);
+                        auto utf32 = convert32.from_bytes(s_inputString);
 
                         for (auto &c: utf32) {
                             swapEndianness(c, Encoding::UTF32, m_stringEndianness);
@@ -283,10 +291,14 @@ namespace hex::plugin::builtin {
                         std::copy(reinterpret_cast<const u8 *>(utf32.data()),
                                   reinterpret_cast<const u8 *>(utf32.data() + utf32.size()),
                                   std::back_inserter(m_searchByteSequence));
+                        break;
                     }
+                    default:
                         break;
                 }
+                break;
             }
+            default:
                 break;
         }
     }

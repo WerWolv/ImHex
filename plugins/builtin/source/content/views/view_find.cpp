@@ -909,7 +909,7 @@ namespace hex::plugin::builtin {
 
         auto &currOccurrences = *m_sortedOccurrences;
 
-        ImGui::PushItemWidth(-1);
+        ImGui::PushItemWidth(-30_scaled);
         auto prevFilterLength = m_currFilter->length();
         if (ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, *m_currFilter)) {
             if (prevFilterLength > m_currFilter->length())
@@ -931,6 +931,25 @@ namespace hex::plugin::builtin {
             }
         }
         ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+
+        ImGui::BeginDisabled(m_sortedOccurrences->empty());
+        if (ImGuiExt::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            fs::openFileBrowser(fs::DialogMode::Save, {}, [this](const std::fs::path &path) {
+                if (path.empty())
+                    return;
+
+                wolv::io::File file(path, wolv::io::File::Mode::Create);
+                if (!file.isValid())
+                    return;
+
+                for (const auto &occurrence : *m_sortedOccurrences) {
+                    file.writeString(hex::format("0x{:08X}\t{}\n", occurrence.region.getStartAddress(), this->decodeValue(ImHexApi::Provider::get(), occurrence)));
+                }
+            });
+        }
+        ImGui::EndDisabled();
 
         if (ImGui::BeginTable("##entries", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImMax(ImGui::GetContentRegionAvail(), ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5)))) {
             ImGui::TableSetupScrollFreeze(0, 1);

@@ -24,7 +24,6 @@ namespace hex::plugin::builtin {
     ViewDataInspector::ViewDataInspector() : View::Window("hex.builtin.view.data_inspector.name", ICON_VS_INSPECT) {
         // Handle region selection
         EventRegionSelected::subscribe(this, [this](const auto &region) {
-
             // Save current selection
             if (!ImHexApi::Provider::isValid() || region == Region::Invalid()) {
                 m_validBytes = 0;
@@ -39,13 +38,17 @@ namespace hex::plugin::builtin {
             m_shouldInvalidate = true;
         });
 
+        EventDataChanged::subscribe(this, [this](const auto &provider) {
+            if (provider == m_selectedProvider)
+                m_shouldInvalidate = true;
+        });
+
         EventProviderClosed::subscribe(this, [this](const auto*) {
             m_selectedProvider = nullptr;
         });
 
-        EventSettingsChanged::subscribe(this, [this] {
-            auto filterValues = ContentRegistry::Settings::read<std::vector<std::string>>("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", { });
-
+        ContentRegistry::Settings::onChange("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            auto filterValues = value.get<std::vector<std::string>>({});
             m_hiddenValues = std::set(filterValues.begin(), filterValues.end());
         });
     }
@@ -53,7 +56,6 @@ namespace hex::plugin::builtin {
     ViewDataInspector::~ViewDataInspector() {
         EventRegionSelected::unsubscribe(this);
         EventProviderClosed::unsubscribe(this);
-        EventSettingsChanged::unsubscribe(this);
     }
 
 
@@ -262,11 +264,10 @@ namespace hex::plugin::builtin {
                         }
 
                         // Enter editing mode when double-clicking the row
-                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && editingFunction.has_value()) {
-                            editing              = true;
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && editingFunction.has_value() && m_selectedProvider->isWritable()) {
+                            editing        = true;
                             m_editingValue = copyValue;
                         }
-
                     } else {
                         // Handle editing mode
 

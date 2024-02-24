@@ -29,7 +29,9 @@ namespace hex::plugin::builtin {
         };
 
     private:
+        void invalidateData();
         void updateInspectorRows();
+
 
     private:
         bool m_shouldInvalidate = true;

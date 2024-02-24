@@ -43,11 +43,17 @@ namespace hex::prv {
     }
 
     void Provider::write(u64 offset, const void *buffer, size_t size) {
+        if (!this->isWritable())
+            return;
+
         EventProviderDataModified::post(this, offset, size, static_cast<const u8*>(buffer));
         this->markDirty();
     }
 
     void Provider::save() {
+        if (!this->isWritable())
+            return;
+        
         EventProviderSaved::post(this);
     }
     void Provider::saveAs(const std::fs::path &path) {

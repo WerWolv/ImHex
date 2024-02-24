@@ -86,9 +86,12 @@ namespace hex::plugin::builtin {
     }
 
     void registerBackgroundServices() {
-        EventSettingsChanged::subscribe([]{
-            networkInterfaceServiceEnabled = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", false);
-            autoBackupTime = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.auto_backup_time", 0) * 30;
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", [](const ContentRegistry::Settings::SettingsValue &value) {
+            networkInterfaceServiceEnabled = value.get<bool>(false);
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.auto_backup_time", [](const ContentRegistry::Settings::SettingsValue &value) {
+            autoBackupTime = value.get<int>(0) * 30;
         });
 
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface", handleNetworkInterfaceService);

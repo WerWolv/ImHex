@@ -25,6 +25,7 @@
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
 //  2023-XX-XX: Platform: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2023-12-19: Emscripten: Added ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback() to register canvas selector and auto-resize GLFW window.
 //  2023-10-05: Inputs: Added support for extra ImGuiKey values: F13 to F24 function keys.
 //  2023-07-18: Inputs: Revert ignoring mouse data on GLFW_CURSOR_DISABLED as it can be used differently. User may set ImGuiConfigFLags_NoMouse if desired. (#5625, #6609)
 //  2023-06-12: Accept glfwGetTime() not returning a monotonically increasing value. This seems to happens on some Windows setup when peripherals disconnect, and is likely to also happen on browser + Emscripten. (#6491)
@@ -106,6 +107,11 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/html5.h>
+// IMHEX PATCH BEGIN
+#include <emscripten_browser_clipboard.h>
+
+static std::string clipboardContent;
+// IMHEX PATCH END
 #endif
 
 // We gather version tests as define in order to easily see which features are version-dependent.
@@ -137,14 +143,12 @@
 #define GLFW_HAS_GETKEYNAME             (GLFW_VERSION_COMBINED >= 3200) // 3.2+ glfwGetKeyName()
 #define GLFW_HAS_GETERROR               (GLFW_VERSION_COMBINED >= 3300) // 3.3+ glfwGetError()
 
-#undef GLFW_HAS_VULKAN
-
 // GLFW data
 enum GlfwClientApi
 {
     GlfwClientApi_Unknown,
     GlfwClientApi_OpenGL,
-    GlfwClientApi_Vulkan
+    GlfwClientApi_Vulkan,
 };
 
 struct ImGui_ImplGlfw_Data
@@ -159,6 +163,9 @@ struct ImGui_ImplGlfw_Data
     bool                    InstalledCallbacks;
     bool                    CallbacksChainForAllWindows;
     bool                    WantUpdateMonitors;
+#ifdef __EMSCRIPTEN__
+    const char*             CanvasSelector;
+#endif
 
     // Chain GLFW callbacks: our callbacks will call the user's previously installed callbacks, if any.
     GLFWwindowfocusfun      PrevUserCallbackWindowFocus;
@@ -196,12 +203,24 @@ static void ImGui_ImplGlfw_ShutdownPlatformInterface();
 // Functions
 static const char* ImGui_ImplGlfw_GetClipboardText(void* user_data)
 {
+// IMHEX PATCH BEGIN
+#ifdef __EMSCRIPTEN__
+    return clipboardContent.c_str();
+#else
     return glfwGetClipboardString((GLFWwindow*)user_data);
+#endif
+// IMHEX PATCH END
 }
 
 static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text)
 {
     glfwSetClipboardString((GLFWwindow*)user_data, text);
+// IMHEX PATCH BEGIN
+#ifdef __EMSCRIPTEN__
+    clipboardContent = text;
+    emscripten_browser_clipboard::copy(clipboardContent);
+#endif
+// IMHEX PATCH END
 }
 
 static ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int key)
@@ -592,6 +611,15 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     bd->Time = 0.0;
     bd->WantUpdateMonitors = true;
 
+// IMHEX PATCH BEGIN
+#ifdef __EMSCRIPTEN__
+    // Callback to handle clipboard paste from browser
+    emscripten_browser_clipboard::paste([](std::string const &paste_data, void *callback_data [[maybe_unused]]) {
+        clipboardContent = std::move(paste_data);
+    });
+#endif
+// IMHEX PATCH END
+
     io.SetClipboardTextFn = ImGui_ImplGlfw_SetClipboardText;
     io.GetClipboardTextFn = ImGui_ImplGlfw_GetClipboardText;
     io.ClipboardUserData = bd->Window;
@@ -654,9 +682,9 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
 
     // Windows: register a WndProc hook so we can intercept some messages.
 #ifdef _WIN32
-    bd->PrevWndProc = (WNDPROC)::GetWindowLongPtr((HWND)main_viewport->PlatformHandleRaw, GWLP_WNDPROC);
+    bd->PrevWndProc = (WNDPROC)::GetWindowLongPtrW((HWND)main_viewport->PlatformHandleRaw, GWLP_WNDPROC);
     IM_ASSERT(bd->PrevWndProc != nullptr);
-    ::SetWindowLongPtr((HWND)main_viewport->PlatformHandleRaw, GWLP_WNDPROC, (LONG_PTR)ImGui_ImplGlfw_WndProc);
+    ::SetWindowLongPtrW((HWND)main_viewport->PlatformHandleRaw, GWLP_WNDPROC, (LONG_PTR)ImGui_ImplGlfw_WndProc);
 #endif
 
     bd->ClientApi = client_api;
@@ -698,7 +726,7 @@ void ImGui_ImplGlfw_Shutdown()
     // Windows: restore our WndProc hook
 #ifdef _WIN32
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-    ::SetWindowLongPtr((HWND)main_viewport->PlatformHandleRaw, GWLP_WNDPROC, (LONG_PTR)bd->PrevWndProc);
+    ::SetWindowLongPtrW((HWND)main_viewport->PlatformHandleRaw, GWLP_WNDPROC, (LONG_PTR)bd->PrevWndProc);
     bd->PrevWndProc = nullptr;
 #endif
 
@@ -713,7 +741,6 @@ static void ImGui_ImplGlfw_UpdateMouseData()
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
     ImGuiIO& io = ImGui::GetIO();
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-
 
     ImGuiID mouse_viewport_id = 0;
     const ImVec2 mouse_pos_prev = io.MousePos;
@@ -944,6 +971,43 @@ void ImGui_ImplGlfw_NewFrame()
     ImGui_ImplGlfw_UpdateGamepads();
 }
 
+#ifdef __EMSCRIPTEN__
+static EM_BOOL ImGui_ImplGlfw_OnCanvasSizeChange(int event_type, const EmscriptenUiEvent* event, void* user_data)
+{
+    ImGui_ImplGlfw_Data* bd = (ImGui_ImplGlfw_Data*)user_data;
+    double canvas_width, canvas_height;
+    emscripten_get_element_css_size(bd->CanvasSelector, &canvas_width, &canvas_height);
+    glfwSetWindowSize(bd->Window, (int)canvas_width, (int)canvas_height);
+    return true;
+}
+
+static EM_BOOL ImGui_ImplEmscripten_FullscreenChangeCallback(int event_type, const EmscriptenFullscreenChangeEvent* event, void* user_data)
+{
+    ImGui_ImplGlfw_Data* bd = (ImGui_ImplGlfw_Data*)user_data;
+    double canvas_width, canvas_height;
+    emscripten_get_element_css_size(bd->CanvasSelector, &canvas_width, &canvas_height);
+    glfwSetWindowSize(bd->Window, (int)canvas_width, (int)canvas_height);
+    return true;
+}
+
+// 'canvas_selector' is a CSS selector. The event listener is applied to the first element that matches the query.
+// STRING MUST PERSIST FOR THE APPLICATION DURATION. PLEASE USE A STRING LITERAL OR ENSURE POINTER WILL STAY VALID.
+void ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback(const char* canvas_selector)
+{
+    IM_ASSERT(canvas_selector != nullptr);
+    ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
+    IM_ASSERT(bd != nullptr && "Did you call ImGui_ImplGlfw_InitForXXX()?");
+
+    bd->CanvasSelector = canvas_selector;
+    emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, bd, false, ImGui_ImplGlfw_OnCanvasSizeChange);
+    emscripten_set_fullscreenchange_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, bd, false, ImGui_ImplEmscripten_FullscreenChangeCallback);
+
+    // Change the size of the GLFW window according to the size of the canvas
+    ImGui_ImplGlfw_OnCanvasSizeChange(EMSCRIPTEN_EVENT_RESIZE, {}, bd);
+}
+#endif
+
+
 //--------------------------------------------------------------------------------------------------------
 // MULTI-VIEWPORT / PLATFORM INTERFACE SUPPORT
 // This is an _advanced_ and _optional_ feature, allowing the backend to create and handle multiple viewports simultaneously.
@@ -1070,9 +1134,10 @@ static void ImGui_ImplGlfw_DestroyWindow(ImGuiViewport* viewport)
 
             // Release any keys that were pressed in the window being destroyed and are still held down,
             // because we will not receive any release events after window is destroyed.
-            for (int i = 0; i < IM_ARRAYSIZE(bd->KeyOwnerWindows); i++)
+            for (int i = 0; i < IM_ARRAYSIZE(bd->KeyOwnerWindows); i++) {
                 if (bd->KeyOwnerWindows[i] == vd->Window)
                     ImGui_ImplGlfw_KeyCallback(vd->Window, i, 0, GLFW_RELEASE, 0); // Later params are only used for main viewport, on which this function is never called.
+            }
 
             glfwDestroyWindow(vd->Window);
         }
@@ -1100,8 +1165,8 @@ static void ImGui_ImplGlfw_ShowWindow(ImGuiViewport* viewport)
     // GLFW hack: install hook for WM_NCHITTEST message handler
 #if !GLFW_HAS_MOUSE_PASSTHROUGH && GLFW_HAS_WINDOW_HOVERED && defined(_WIN32)
     ::SetPropA(hwnd, "IMGUI_VIEWPORT", viewport);
-    vd->PrevWndProc = (WNDPROC)::GetWindowLongPtr(hwnd, GWLP_WNDPROC);
-    ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)ImGui_ImplGlfw_WndProc);
+    vd->PrevWndProc = (WNDPROC)::GetWindowLongPtrW(hwnd, GWLP_WNDPROC);
+    ::SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)ImGui_ImplGlfw_WndProc);
 #endif
 
 #if !GLFW_HAS_FOCUS_ON_SHOW
@@ -1288,7 +1353,7 @@ static void ImGui_ImplGlfw_ShutdownPlatformInterface()
 
 //-----------------------------------------------------------------------------
 
-// WndProc hook (declared here because we will need access to ImGui_ImplGlfw_ViewportData) 
+// WndProc hook (declared here because we will need access to ImGui_ImplGlfw_ViewportData)
 #ifdef _WIN32
 static ImGuiMouseSource GetMouseSourceFromMessageExtraInfo()
 {
@@ -1335,7 +1400,7 @@ static LRESULT CALLBACK ImGui_ImplGlfw_WndProc(HWND hWnd, UINT msg, WPARAM wPara
     }
 #endif
     }
-    return ::CallWindowProc(prev_wndproc, hWnd, msg, wParam, lParam);
+    return ::CallWindowProcW(prev_wndproc, hWnd, msg, wParam, lParam);
 }
 #endif // #ifdef _WIN32
 

@@ -40,7 +40,6 @@ Provides:       bundled(capstone) = 5.0-rc2
 Provides:       bundled(imgui)
 Provides:       bundled(libromfs)
 Provides:       bundled(microtar)
-Provides:       bundled(libpl)
 Provides:       bundled(xdgpp)
 
 # ftbfs on these arches.  armv7hl might compile when capstone 5.x
@@ -124,7 +123,6 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %{_datadir}/pixmaps/%{name}.png
 %{_datadir}/applications/%{name}.desktop
 %{_libdir}/libimhex.so*
-%{_libdir}/libpl.so*
 %{_libdir}/%{name}/
 %{_metainfodir}/net.werwolv.%{name}.metainfo.xml
 

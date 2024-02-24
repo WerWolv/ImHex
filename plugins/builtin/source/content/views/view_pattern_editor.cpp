@@ -1657,9 +1657,11 @@ namespace hex::plugin::builtin {
             m_hasUnevaluatedChanges = true;
         });
 
-        EventSettingsChanged::subscribe(this, [this] {
-            m_sourceCode.enableSync(ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", false));
-            m_autoLoadPatterns = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", true);
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_sourceCode.enableSync(value.get<bool>(false));
+        });
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_autoLoadPatterns = value.get<bool>(true);
         });
 
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {

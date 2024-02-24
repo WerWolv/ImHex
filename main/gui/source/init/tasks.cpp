@@ -80,6 +80,7 @@ namespace hex::init {
             log::fatal("To the person fixing this, read the comment above this message for more information.");
         });
 
+        ImHexApi::System::impl::cleanup();
         EventImHexClosing::post();
         EventManager::clear();
 
