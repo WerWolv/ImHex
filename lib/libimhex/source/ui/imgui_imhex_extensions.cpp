@@ -74,7 +74,7 @@ namespace ImGuiExt {
         #endif
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-        stbi_image_free(imageData);
+        STBI_FREE(imageData);
 
         m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
     }
@@ -100,7 +100,7 @@ namespace ImGuiExt {
         #endif
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-        stbi_image_free(imageData);
+        STBI_FREE(imageData);
 
         m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
     }

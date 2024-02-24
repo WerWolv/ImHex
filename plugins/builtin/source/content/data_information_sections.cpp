@@ -351,8 +351,6 @@ class InformationByteRelationshipAnalysis : public ContentRegistry::DataInformat
         InformationByteRelationshipAnalysis() : InformationSection("hex.builtin.information_section.relationship_analysis", "", true) {
 
         }
-        ~InformationByteRelationshipAnalysis() override {
-        }
 
         void process(Task &task, prv::Provider *provider, Region region) override {
             updateSettings();
@@ -367,15 +365,15 @@ class InformationByteRelationshipAnalysis : public ContentRegistry::DataInformat
             // Loop over each byte of the selection and update each analysis
             // one byte at a time to process the file only once
             for (u8 byte : reader) {
-                m_layeredDistribution.update(byte);
                 m_digram.update(byte);
+                m_layeredDistribution.update(byte);
                 task.update();
             }
         }
 
         void reset() override {
-            m_digram.reset(0);
-            m_layeredDistribution.reset(0);
+            m_digram.reset(m_sampleSize);
+            m_layeredDistribution.reset(m_sampleSize);
             updateSettings();
         }
 
@@ -395,19 +393,12 @@ class InformationByteRelationshipAnalysis : public ContentRegistry::DataInformat
 
         void drawContent() override {
             auto availableWidth = ImGui::GetContentRegionAvail().x;
-            ImGui::BeginGroup();
-            {
-                ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.digram"_lang);
-                m_digram.draw({ availableWidth, availableWidth });
-            }
-            ImGui::EndGroup();
 
-            ImGui::BeginGroup();
-            {
-                ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.layered_distribution"_lang);
-                m_layeredDistribution.draw({ availableWidth, availableWidth });
-            }
-            ImGui::EndGroup();
+            ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.digram"_lang);
+            m_digram.draw({ availableWidth, availableWidth });
+
+            ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.layered_distribution"_lang);
+            m_layeredDistribution.draw({ availableWidth, availableWidth });
         }
 
         void load(const nlohmann::json &data) override {
@@ -442,7 +433,7 @@ class InformationByteRelationshipAnalysis : public ContentRegistry::DataInformat
 
     private:
         ImGuiExt::Texture::Filter m_filter = ImGuiExt::Texture::Filter::Nearest;
-        u64 m_sampleSize = 0x90000;
+        u64 m_sampleSize = 0x9000;
         float m_brightness = 0.5F;
 
         DiagramDigram m_digram;

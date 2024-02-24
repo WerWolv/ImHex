@@ -115,23 +115,25 @@ namespace hex {
                 auto drawList = ImGui::GetWindowDrawList();
 
                 if (!m_processing) {
-                    if (!m_texture.isValid()) {
+                    if (!m_textureValid) {
                         std::vector<u32> pixels;
-                        pixels.resize(0xFF * 0xFF, 0x00);
+                        pixels.resize(0x100 * 0x100, 0x00);
                         for (size_t i = 0; i < (m_buffer.empty() ? 0 : m_buffer.size() - 1); i++) {
-                            const auto x = m_buffer[i];
-                            const auto y = m_buffer[i + 1];
+                            const u8 x = m_buffer[i];
+                            const u8 y = m_buffer[i + 1];
 
                             auto color = ImLerp(
                                 ImColor(0xFF, 0x6D, 0x01).Value,
                                 ImColor(0x01, 0x93, 0xFF).Value,
                                 float(i) / m_buffer.size()) + ImVec4(m_glowBuffer[i], m_glowBuffer[i], m_glowBuffer[i], 0.0F);
-                            color.w    = m_opacity;
+                            color.w = m_opacity;
 
-                            pixels[x * 0xFF + y] = ImAlphaBlendColors(pixels[x * 0xFF + y], ImColor(color));
+                            auto &pixel = pixels[x * 0xFF + y];
+                            pixel = ImAlphaBlendColors(pixel, ImColor(color));
                         }
 
                         m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, m_filter, 0xFF, 0xFF);
+                        m_textureValid = m_texture.isValid();
                     }
 
                     auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F);
@@ -163,7 +165,7 @@ namespace hex {
             m_buffer.reserve(m_sampleSize == 0 ? size : m_sampleSize);
             m_byteCount = 0;
             m_fileSize  = size;
-            m_texture = ImGuiExt::Texture();
+            m_textureValid = false;
         }
 
         void update(u8 byte) {
@@ -206,7 +208,7 @@ namespace hex {
                 m_glowBuffer[i] = std::min<float>(0.2F + (float(heatMap[m_buffer[i] << 8 | m_buffer[i + 1]]) / float(m_highestCount / 1000)), 1.0F);
             }
 
-            m_opacity = (log10(float(m_sampleSize == 0 ? m_buffer.size() : m_sampleSize)) / log10(float(m_highestCount))) / (100.0F * m_brightness);
+            m_opacity = (log10(float(m_sampleSize == 0 ? m_buffer.size() : m_sampleSize)) / log10(float(m_highestCount))) / (100.0F * (1.0F - m_brightness));
         }
 
     private:
@@ -223,6 +225,8 @@ namespace hex {
         float m_opacity = 0.0F;
         size_t m_highestCount = 0;
         std::atomic<bool> m_processing = false;
+
+        bool m_textureValid = false;
         ImGuiExt::Texture m_texture;
     };
 
@@ -236,20 +240,22 @@ namespace hex {
                 auto drawList = ImGui::GetWindowDrawList();
 
                 if (!m_processing) {
-                    if (!m_texture.isValid()) {
+                    if (!m_textureValid) {
                         std::vector<u32> pixels;
-                        pixels.resize(0xFF * 0xFF, 0x00);
+                        pixels.resize(0x100 * 0x100, 0x00);
                         for (size_t i = 0; i < (m_buffer.empty() ? 0 : m_buffer.size() - 1); i++) {
-                            const auto x = m_buffer[i];
-                            const auto y = (float(i) / m_buffer.size()) * 0xFF;
+                            const u8 x = m_buffer[i];
+                            const u8 y = (float(i) / m_buffer.size()) * 0xFF;
 
                             auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / m_buffer.size()) + ImVec4(m_glowBuffer[i], m_glowBuffer[i], m_glowBuffer[i], 0.0F);
-                            color.w    = m_opacity;
+                            color.w = m_opacity;
 
-                            pixels[x * 0xFF + y] = ImAlphaBlendColors(pixels[x * 0xFF + y], ImColor(color));
+                            auto &pixel = pixels[x * 0xFF + y];
+                            pixel = ImAlphaBlendColors(pixel, ImColor(color));
                         }
 
                         m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, m_filter, 0xFF, 0xFF);
+                        m_textureValid = m_texture.isValid();
                     }
 
                     const auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F);
@@ -280,7 +286,7 @@ namespace hex {
             m_buffer.reserve(m_sampleSize == 0 ? size : m_sampleSize);
             m_byteCount = 0;
             m_fileSize  = size;
-            m_texture = ImGuiExt::Texture();
+            m_textureValid = false;
         }
 
         void update(u8 byte) {
@@ -323,7 +329,7 @@ namespace hex {
                 m_glowBuffer[i] = std::min<float>(0.2F + (float(heatMap[m_buffer[i] << 8 | m_buffer[i + 1]]) / float(m_highestCount / 1000)), 1.0F);
             }
 
-            m_opacity = (log10(float(m_sampleSize == 0 ? m_buffer.size() : m_sampleSize)) / log10(float(m_highestCount))) / (100.0F * m_brightness);
+            m_opacity = (log10(float(m_sampleSize == 0 ? m_buffer.size() : m_sampleSize)) / log10(float(m_highestCount))) / (100.0F * (1.0F - m_brightness));
         }
 
     private:
@@ -341,6 +347,8 @@ namespace hex {
         float m_opacity = 0.0F;
         size_t m_highestCount = 0;
         std::atomic<bool> m_processing = false;
+
+        bool m_textureValid = false;
         ImGuiExt::Texture m_texture;
     };
 
