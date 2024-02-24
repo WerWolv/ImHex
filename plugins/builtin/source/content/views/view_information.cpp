@@ -151,13 +151,6 @@ namespace hex::plugin::builtin {
                 ImGuiExt::EndSubWindow();
                 ImGui::EndDisabled();
 
-                // Draw the analyzing spinner
-                if (analysis.task.isRunning()) {
-                    ImGuiExt::TextSpinner("hex.builtin.view.information.analyzing"_lang);
-                } else {
-                    ImGui::NewLine();
-                }
-
                 if (analysis.analyzedProvider != nullptr) {
                     for (const auto &section : analysis.informationSections) {
                         ImGui::TableNextColumn();
