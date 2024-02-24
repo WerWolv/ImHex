@@ -3,8 +3,9 @@
     #include <CoreFoundation/CFBundle.h>
     #include <ApplicationServices/ApplicationServices.h>
     #include <Foundation/NSUserDefaults.h>
-    #include <Foundation/Foundation.h>
     #include <AppKit/NSScreen.h>
+    #include <CoreFoundation/CoreFoundation.h>
+    #include <CoreText/CoreText.h>
 
     #include <string.h>
     #include <stdlib.h>
@@ -23,6 +24,7 @@
     }
 
     void openFile(const char *path);
+    void registerFont(const char *fontName, const char *fontPath);
 
     void openWebpageMacos(const char *url) {
         CFURLRef urlRef = CFURLCreateWithBytes(NULL, (uint8_t*)(url), strlen(url), kCFStringEncodingASCII, NULL);
@@ -62,6 +64,28 @@
     bool isMacosFullScreenModeEnabled(GLFWwindow *window) {
         NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
         return (cocoaWindow.styleMask & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen;
+    }
+
+    void enumerateFontsMacos(void) {
+        CFArrayRef fontDescriptors = CTFontManagerCopyAvailableFontFamilyNames();
+        CFIndex count = CFArrayGetCount(fontDescriptors);
+
+        for (CFIndex i = 0; i < count; i++) {
+            CFStringRef fontName = (CFStringRef)CFArrayGetValueAtIndex(fontDescriptors, i);
+
+            // Get font path
+            CFDictionaryRef attributes = (__bridge CFDictionaryRef)@{ (__bridge NSString *)kCTFontNameAttribute : (__bridge NSString *)fontName };
+            CTFontDescriptorRef descriptor = CTFontDescriptorCreateWithAttributes(attributes);
+            CFURLRef fontURL = CTFontDescriptorCopyAttribute(descriptor, kCTFontURLAttribute);
+            CFStringRef fontPath = CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
+
+            registerFont([(__bridge NSString *)fontName UTF8String], [(__bridge NSString *)fontPath UTF8String]);
+
+            CFRelease(descriptor);
+            CFRelease(fontURL);
+        }
+
+        CFRelease(fontDescriptors);
     }
 
     @interface HexDocument : NSDocument

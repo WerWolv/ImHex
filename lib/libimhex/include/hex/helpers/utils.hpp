@@ -33,6 +33,11 @@ namespace hex {
         class Provider;
     }
 
+    struct Font {
+        std::string name;
+        std::fs::path path;
+    };
+
     template<typename T>
     [[nodiscard]] std::vector<T> sampleData(const std::vector<T> &data, size_t count) {
         size_t stride = std::max(1.0, double(data.size()) / count);
@@ -75,6 +80,9 @@ namespace hex {
     void startProgram(const std::string &command);
     int executeCommand(const std::string &command);
     void openWebpage(std::string url);
+
+    extern "C" void registerFont(const char *fontName, const char *fontPath);
+    const std::vector<Font>& getFonts();
 
     [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);
     [[nodiscard]] std::vector<u8> decodeByteString(const std::string &string);

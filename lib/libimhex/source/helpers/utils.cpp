@@ -683,6 +683,15 @@ namespace hex {
         fileToOpen = path;
     }
 
+    static std::vector<Font> fonts;
+    extern "C" void registerFont(const char *fontName, const char *fontPath) {
+        fonts.push_back(Font { fontName, fontPath });
+    }
+
+    const std::vector<Font>& getFonts() {
+        return fonts;
+    }
+
     std::optional<std::fs::path> getInitialFilePath() {
         return fileToOpen;
     }

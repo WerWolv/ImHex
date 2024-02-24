@@ -62,6 +62,7 @@ namespace hex {
         });
 
         setupMacosWindowStyle(m_window, ImHexApi::System::isBorderlessWindowModeEnabled());
+        enumerateFontsMacos();
     }
 
     void Window::beginNativeWindowFrame() {
