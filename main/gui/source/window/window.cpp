@@ -539,7 +539,7 @@ namespace hex {
 
                 // Pass on currently pressed keys to the shortcut handler
                 for (const auto &key : m_pressedKeys) {
-                    ShortcutManager::process(view, io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
+                    ShortcutManager::process(view.get(), io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
                 }
             }
         }
