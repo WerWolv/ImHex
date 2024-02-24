@@ -34,6 +34,10 @@ namespace hex::plugin::yara {
                 const std::string fileContent = romfs::get(ruleFilePath).data<const char>();
 
                 YaraRule yaraRule(fileContent);
+                task.setInterruptCallback([&yaraRule] {
+                    yaraRule.interrupt();
+                });
+
                 const auto result = yaraRule.match(provider, region);
                 if (result.has_value()) {
                     const auto &rules = result.value().matchedRules;
