@@ -754,7 +754,7 @@ function(generateSDKDirectory)
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/cmake/sdk/ DESTINATION "${SDK_BUILD_PATH}")
     install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_BUILD_PATH}/lib")
 
-    install(CODE "file(ARCHIVE_CREATE OUTPUT \"${CMAKE_INSTALL_PREFIX}/sdk.zip\" PATHS \"${SDK_BUILD_PATH}/\" FORMAT zip)")
+    install(CODE "file(ARCHIVE_CREATE OUTPUT \"$ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/sdk.zip\" PATHS \"${SDK_BUILD_PATH}/\" FORMAT zip)")
 endfunction()
 
 function(addIncludesFromLibrary target library)
