@@ -388,7 +388,7 @@ class InformationByteRelationshipAnalysis : public ContentRegistry::DataInformat
                 updateSettings();
             }
 
-            if (ImGui::Combo("hex.builtin.information_section.relationship_analysis.filter"_lang, reinterpret_cast<int*>(&m_filter), "Nearest\0Linear\0\0")) {
+            if (ImGui::Combo("hex.builtin.information_section.relationship_analysis.filter"_lang, reinterpret_cast<int*>(&m_filter), "Linear Interpolation\0Nearest Neighbour\0\0")) {
                 updateSettings();
             }
         }
@@ -442,7 +442,7 @@ class InformationByteRelationshipAnalysis : public ContentRegistry::DataInformat
 
     private:
         ImGuiExt::Texture::Filter m_filter = ImGuiExt::Texture::Filter::Nearest;
-        u64 m_sampleSize = 0x9000;
+        u64 m_sampleSize = 0x90000;
         float m_brightness = 0.5F;
 
         DiagramDigram m_digram;
