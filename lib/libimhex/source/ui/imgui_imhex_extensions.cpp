@@ -110,7 +110,9 @@ namespace ImGuiExt {
     }
 
     Texture::Texture(Texture&& other) noexcept {
-        glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+        if (m_textureId != nullptr)
+            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+
         m_textureId = other.m_textureId;
         m_width = other.m_width;
         m_height = other.m_height;
@@ -119,7 +121,9 @@ namespace ImGuiExt {
     }
 
     Texture& Texture::operator=(Texture&& other) noexcept {
-        glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+        if (m_textureId != nullptr)
+            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+
         m_textureId = other.m_textureId;
         m_width = other.m_width;
         m_height = other.m_height;
