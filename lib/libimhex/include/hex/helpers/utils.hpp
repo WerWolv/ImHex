@@ -12,6 +12,7 @@
 #include <concepts>
 #include <functional>
 #include <limits>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -75,6 +76,9 @@ namespace hex {
     void startProgram(const std::string &command);
     int executeCommand(const std::string &command);
     void openWebpage(std::string url);
+
+    extern "C" void registerFont(const char *fontName, const char *fontPath);
+    const std::map<std::fs::path, std::string>& getFonts();
 
     [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);
     [[nodiscard]] std::vector<u8> decodeByteString(const std::string &string);

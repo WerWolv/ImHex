@@ -141,7 +141,7 @@ namespace hex {
 
                     [[nodiscard]] bool isChecked() const { return m_value; }
 
-                private:
+                protected:
                     bool m_value;
                 };
 
@@ -155,7 +155,7 @@ namespace hex {
 
                     [[nodiscard]] i32 getValue() const { return m_value; }
 
-                private:
+                protected:
                     int m_value;
                     i32 m_min, m_max;
                 };
@@ -170,7 +170,7 @@ namespace hex {
 
                     [[nodiscard]] float getValue() const { return m_value; }
 
-                private:
+                protected:
                     float m_value;
                     float m_min, m_max;
                 };
@@ -186,7 +186,7 @@ namespace hex {
 
                     [[nodiscard]] ImColor getColor() const;
 
-                private:
+                protected:
                     std::array<float, 4> m_value{};
                 };
 
@@ -202,7 +202,7 @@ namespace hex {
                     [[nodiscard]]
                     const nlohmann::json& getValue() const;
 
-                private:
+                protected:
                     std::vector<std::string> m_items;
                     std::vector<nlohmann::json> m_settingsValues;
                     nlohmann::json m_defaultItem;
@@ -222,7 +222,7 @@ namespace hex {
                     [[nodiscard]]
                     const std::string& getValue() const { return m_value; }
 
-                private:
+                protected:
                     std::string m_value;
                 };
 
@@ -233,12 +233,12 @@ namespace hex {
                     void load(const nlohmann::json &data) override;
                     nlohmann::json store() override;
 
-                    [[nodiscard]] std::fs::path getPath() const {
-                        return m_value;
+                    [[nodiscard]] const std::fs::path& getPath() const {
+                        return m_path;
                     }
 
-                private:
-                    std::string m_value;
+                protected:
+                    std::fs::path m_path;
                 };
 
                 class Label : public Widget {

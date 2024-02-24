@@ -38,6 +38,8 @@ namespace hex {
         if (!isatty(STDOUT_FILENO)) {
             log::impl::redirectToFile();
         }
+
+        enumerateFontsMacos();
     }
 
     void Window::setupNativeWindow() {

@@ -268,6 +268,46 @@ namespace hex {
         dup2(unboundFd, stdFileDescriptor);
     }
 
+    void enumerateFonts() {
+        constexpr static auto FontRegistryPath = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts";
+
+        static const std::array RegistryLocations = {
+            HKEY_LOCAL_MACHINE,
+            HKEY_CURRENT_USER
+        };
+
+        for (const auto location : RegistryLocations) {
+            HKEY key;
+            if (RegOpenKeyExW(location, FontRegistryPath, 0, KEY_READ, &key) != ERROR_SUCCESS) {
+                continue;
+            }
+
+            DWORD index = 0;
+            std::wstring valueName(0xFFF, L'\0');
+            DWORD valueNameSize = valueName.size() * sizeof(wchar_t);
+            std::wstring valueData(0xFFF, L'\0');
+            DWORD valueDataSize = valueData.size() * sizeof(wchar_t);
+            DWORD valueType;
+
+            while (RegEnumValueW(key, index, valueName.data(), &valueNameSize, nullptr, &valueType, reinterpret_cast<BYTE *>(valueData.data()), &valueDataSize) == ERROR_SUCCESS) {
+                if (valueType == REG_SZ) {
+                    auto fontName = hex::utf16ToUtf8(valueName.c_str());
+                    auto fontPath = std::fs::path(valueData);
+                    if (fontPath.is_relative())
+                        fontPath = std::fs::path("C:\\Windows\\Fonts") / fontPath;
+
+                    registerFont(fontName.c_str(), wolv::util::toUTF8String(fontPath).c_str());
+                }
+
+                valueNameSize = valueName.size();
+                valueDataSize = valueData.size();
+                index++;
+            }
+
+            RegCloseKey(key);
+        }
+    }
+
 
     void Window::initNative() {
         if (ImHexApi::System::isDebugBuild()) {
@@ -301,6 +341,8 @@ namespace hex {
             if (std::fs::exists(path))
                 AddDllDirectory(path.c_str());
         }
+
+        enumerateFonts();
     }
 
     class DropManager : public IDropTarget {
@@ -486,7 +528,6 @@ namespace hex {
         });
 
         ImGui::GetIO().ConfigDebugIsDebuggerPresent = ::IsDebuggerPresent();
-
     }
 
     void Window::beginNativeWindowFrame() {

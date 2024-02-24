@@ -413,16 +413,18 @@ namespace hex {
 
             bool FilePicker::draw(const std::string &name) {
                 bool changed = false;
-                if (ImGui::InputText("##font_path", m_value)) {
+
+                auto pathString = wolv::util::toUTF8String(m_path);
+                if (ImGui::InputText("##font_path", pathString)) {
                     changed = true;
                 }
 
                 ImGui::SameLine();
 
                 if (ImGuiExt::IconButton("...", ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    return fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } },
+                    changed = fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } },
                                                [&](const std::fs::path &path) {
-                                                   m_value = wolv::util::toUTF8String(path);
+                                                   pathString = wolv::util::toUTF8String(path);
                                                });
                 }
 
@@ -430,19 +432,23 @@ namespace hex {
 
                 ImGuiExt::TextFormatted("{}", name);
 
+                if (changed) {
+                    m_path = pathString;
+                }
+
                 return changed;
             }
 
             void FilePicker::load(const nlohmann::json &data) {
                 if (data.is_string()) {
-                    m_value = data.get<std::string>();
+                    m_path = data.get<std::fs::path>();
                 } else {
                     log::warn("Invalid data type loaded from settings for file picker!");
                 }
             }
 
             nlohmann::json FilePicker::store() {
-                return m_value;
+                return m_path;
             }
 
             bool Label::draw(const std::string& name) {
