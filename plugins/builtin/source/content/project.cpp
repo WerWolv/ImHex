@@ -13,6 +13,7 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
+#include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -21,26 +22,29 @@ namespace hex::plugin::builtin {
 
     bool load(const std::fs::path &filePath) {
         if (!wolv::io::fs::exists(filePath) || !wolv::io::fs::isRegularFile(filePath)) {
-            log::showError(hex::format("hex.builtin.popup.error.project.load"_lang,
+            ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang,
                 hex::format("hex.builtin.popup.error.project.load.file_not_found"_lang,
                     wolv::util::toUTF8String(filePath)
             )));
+
             return false;
         }
 
         Tar tar(filePath, Tar::Mode::Read);
         if (!tar.isValid()) {
-            log::showError(hex::format("hex.builtin.popup.error.project.load"_lang,
+            ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang,
                 hex::format("hex.builtin.popup.error.project.load.invalid_tar"_lang,
                     tar.getOpenErrorString()
             )));
+
             return false;
         }
 
         if (!tar.contains(MetadataPath)) {
-            log::showError(hex::format("hex.builtin.popup.error.project.load"_lang,
+            ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang,
                 hex::format("hex.builtin.popup.error.project.load.invalid_magic"_lang)
             ));
+
             return false;
         }
 
@@ -48,9 +52,10 @@ namespace hex::plugin::builtin {
             const auto metadataContent = tar.readVector(MetadataPath);
 
             if (!std::string(metadataContent.begin(), metadataContent.end()).starts_with(MetadataHeaderMagic)) {
-                log::showError(hex::format("hex.builtin.popup.error.project.load"_lang,
+                ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang,
                     hex::format("hex.builtin.popup.error.project.load.invalid_magic"_lang)
                 ));
+
                 return false;
             }
         }

@@ -144,14 +144,4 @@ namespace hex::log {
 
     }
 
-    void showWarning(const std::string &message) {
-        log::warn(message);
-        ShowToast::post(false, message);
-    }
-
-    void showError(const std::string &message) {
-        log::error(message);
-        ShowToast::post(true, message);
-    }
-
 }

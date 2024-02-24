@@ -309,10 +309,5 @@ namespace hex {
      * The 'from' provider should not have any per provider data after this, and should be immediately deleted
     */
     EVENT_DEF(MovePerProviderData, prv::Provider *, prv::Provider *);
-    
-    /**
-     * Show the specified toast to the user
-     * Only supports warning and error toasts for now, TODO improve this ?
-    */
-    EVENT_DEF(ShowToast, bool, std::string);
+
 }

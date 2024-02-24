@@ -17,6 +17,7 @@
 #include <hex/helpers/fmt.hpp>
 
 #include <nlohmann/json.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <wolv/utils/guards.hpp>
 
@@ -69,9 +70,11 @@ namespace hex::plugin::builtin {
                     if (newProvider == nullptr) {
                         // If a provider is not created, it will be overwritten when saving the project,
                         // so we should prevent the project from loading at all
-                        log::showError(hex::format("hex.builtin.popup.error.project.load"_lang,
-                            hex::format("hex.builtin.popup.error.project.load.create_provider"_lang, providerType)
-                        ));
+                        ui::ToastError::open(
+                            hex::format("hex.builtin.popup.error.project.load"_lang,
+                                hex::format("hex.builtin.popup.error.project.load.create_provider"_lang, providerType)
+                            )
+                        );
                         success = false;
                         break;
                     }
@@ -93,29 +96,27 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                std::string warningMsg;
+                std::string warningMessage;
                 for (const auto &warning : providerWarnings){
                     ImHexApi::Provider::remove(warning.first);
-                    warningMsg.append(
+                    warningMessage.append(
                         hex::format("\n - {} : {}", warning.first->getName(), warning.second));
                 }
 
                 // If no providers were opened, display an error with
                 // the warnings that happened when opening them 
-                if (ImHexApi::Provider::getProviders().size() == 0) {
-                    log::showError(hex::format("hex.builtin.popup.error.project.load"_lang,
-                        hex::format("hex.builtin.popup.error.project.load.no_providers"_lang)) + warningMsg);
+                if (ImHexApi::Provider::getProviders().empty()) {
+                    ui::ToastError::open(hex::format("{}{}", "hex.builtin.popup.error.project.load"_lang, "hex.builtin.popup.error.project.load.no_providers"_lang, warningMessage));
 
                     return false;
-                 } else {
-
-                    // Else, if are warnings, still display them
-                    if (warningMsg.empty()) {
+                } else {
+                    // Else, if there are warnings, still display them
+                    if (warningMessage.empty()) {
                         return true;
                     } else {
-                        log::showWarning(
-                            hex::format("hex.builtin.popup.error.project.load.some_providers_failed"_lang, warningMsg));
+                        ui::ToastWarning::open(hex::format("hex.builtin.popup.error.project.load.some_providers_failed"_lang, warningMessage));
                     }
+
                     return success;
                 }
             },

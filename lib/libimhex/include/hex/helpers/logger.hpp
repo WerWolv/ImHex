@@ -50,9 +50,6 @@ namespace hex::log {
             addLogEntry(IMHEX_PROJECT_NAME, level, std::move(message));
         }
 
-        void showWarning(const std::string &message);
-        void showError(const std::string &message);
-
         namespace color {
 
             fmt::color debug();
@@ -91,20 +88,6 @@ namespace hex::log {
     [[maybe_unused]] void fatal(const std::string &fmt, auto && ... args) {
         hex::log::impl::print(fg(impl::color::fatal()) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
     }
-
-    /**
-     * Print a warning to the console and show a toast to the user
-    */
-    void showWarning(const std::string &fmt, auto && ... args) {
-        impl::showWarning(hex::format(fmt, args...));
-    };
-
-    /**
-     * Print an error to the console and show a toast to the user
-    */
-    void showError(const std::string &fmt, auto && ... args) {
-        impl::showError(hex::format(fmt, args...));
-    };
 
     [[maybe_unused]] void print(const std::string &fmt, auto && ... args) {
         std::scoped_lock lock(impl::getLoggerMutex());
