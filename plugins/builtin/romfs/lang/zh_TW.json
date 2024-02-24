@@ -849,7 +849,7 @@
         "hex.builtin.information_section.info_analysis": "資訊分析",
         "hex.builtin.information_section.info_analysis.layered_distribution": "",
         "hex.builtin.information_section.info_analysis.lowest_entropy": "",
-        "hex.builtin.information_section.magic": "Magic information",
+        "hex.builtin.information_section.magic": "Magic Information",
         "hex.builtin.view.information.magic_db_added": "Magic database added!",
         "hex.builtin.information_section.magic.mime": "MIME 類型",
         "hex.builtin.view.information.name": "資料資訊",

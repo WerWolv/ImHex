@@ -843,7 +843,7 @@
         "hex.builtin.information_section.info_analysis.lowest_entropy": "Lowest block entropy",
         "hex.builtin.information_section.info_analysis": "Information analysis",
         "hex.builtin.information_section.info_analysis.layered_distribution": "Layered distribution",
-        "hex.builtin.information_section.magic": "Magic information",
+        "hex.builtin.information_section.magic": "Magic Information",
         "hex.builtin.view.information.error_processing_section": "Failed to process information section {0}: '{1}'",
         "hex.builtin.view.information.magic_db_added": "Magic database added!",
         "hex.builtin.information_section.magic.mime": "MIME Type",
