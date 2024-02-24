@@ -515,7 +515,7 @@ namespace hex {
 
         // Return the highest entropy value among all of the blocks
         double getHighestEntropyBlockValue() {
-            double result = 0.0f;
+            double result = 0.0F;
             if (!m_yBlockEntropy.empty())
                 result = *std::ranges::max_element(m_yBlockEntropy);
             return result;
@@ -531,7 +531,7 @@ namespace hex {
 
         // Return the highest entropy value among all of the blocks
         double getLowestEntropyBlockValue() {
-            double result = 0.0f;
+            double result = 0.0F;
             if (m_yBlockEntropy.size() > 1)
                 result = *std::min_element(m_yBlockEntropy.begin(), m_yBlockEntropy.end() - 1);
             return result;

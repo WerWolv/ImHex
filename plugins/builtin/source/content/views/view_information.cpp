@@ -158,7 +158,7 @@ namespace hex::plugin::builtin {
 
                         bool enabled = section->isEnabled();
 
-                        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+                        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
                         if (ImGui::BeginChild(Lang(section->getUnlocalizedName()), ImVec2(0, 0), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_MenuBar)) {
                             if (ImGui::BeginMenuBar()) {
 

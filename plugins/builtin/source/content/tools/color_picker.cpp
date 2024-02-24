@@ -63,10 +63,10 @@ namespace hex::plugin::builtin {
 
                 static auto drawBitsSlider = [&](BitValue *bitValue) {
                     // Change slider color
-                    ImGui::PushStyleColor(ImGuiCol_FrameBg,         ImColor::HSV(bitValue->color, 0.5f * bitValue->saturationMultiplier, 0.5f).Value);
-                    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,  ImColor::HSV(bitValue->color, 0.6f * bitValue->saturationMultiplier, 0.5f).Value);
-                    ImGui::PushStyleColor(ImGuiCol_FrameBgActive,   ImColor::HSV(bitValue->color, 0.7f * bitValue->saturationMultiplier, 0.5f).Value);
-                    ImGui::PushStyleColor(ImGuiCol_SliderGrab,      ImColor::HSV(bitValue->color, 0.9f * bitValue->saturationMultiplier, 0.9f).Value);
+                    ImGui::PushStyleColor(ImGuiCol_FrameBg,         ImColor::HSV(bitValue->color, 0.5F * bitValue->saturationMultiplier, 0.5F).Value);
+                    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,  ImColor::HSV(bitValue->color, 0.6F * bitValue->saturationMultiplier, 0.5F).Value);
+                    ImGui::PushStyleColor(ImGuiCol_FrameBgActive,   ImColor::HSV(bitValue->color, 0.7F * bitValue->saturationMultiplier, 0.5F).Value);
+                    ImGui::PushStyleColor(ImGuiCol_SliderGrab,      ImColor::HSV(bitValue->color, 0.9F * bitValue->saturationMultiplier, 0.9F).Value);
 
                     // Draw slider
                     ImGui::PushID(&bitValue->bits);
@@ -91,7 +91,7 @@ namespace hex::plugin::builtin {
                         ImGui::SetDragDropPayload("BIT_VALUE", &index, sizeof(u32));
 
                         // Draw a color button to show the color being dragged
-                        ImGui::ColorButton("##color_button", ImColor::HSV(bitValue.color, 0.5f * bitValue.saturationMultiplier, 0.5f).Value);
+                        ImGui::ColorButton("##color_button", ImColor::HSV(bitValue.color, 0.5F * bitValue.saturationMultiplier, 0.5F).Value);
 
                         ImGui::EndDragDropSource();
                     }

@@ -326,13 +326,13 @@ namespace hex::plugin::builtin {
                                            labelSize.y + style.FramePadding.y * 2.0F + style.WindowPadding.y + 3 });
 
                 // 2 * 11 spacings in between elements
-                popupSize.x += style.FramePadding.x * 22.0f;
+                popupSize.x += style.FramePadding.x * 22.0F;
 
                 // Text input fields are set to 12 characters wide
-                popupSize.x += ImGui::GetFontSize() * 12.0f;
+                popupSize.x += ImGui::GetFontSize() * 12.0F;
 
                 // IndexOfCount text
-                popupSize.x +=  ImGui::CalcTextSize("2000 of 2000").x + 2.0f;
+                popupSize.x +=  ImGui::CalcTextSize("2000 of 2000").x + 2.0F;
                 popupSize.x += scrollbarSize;
 
                 // Position of popup relative to parent window

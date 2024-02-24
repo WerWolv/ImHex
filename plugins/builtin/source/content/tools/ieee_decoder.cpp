@@ -118,25 +118,25 @@ namespace hex::plugin::builtin {
                                  ImGuiTableFlags_ScrollX | ImGuiTableFlags_NoPadInnerX;
 
         const static auto IndentBoxOrLabel = [](u32 startBit, u32 bitIndex, u32 count, bool isLabel) {
-            auto checkBoxWidth = ImGui::CalcTextSize("0").x + ImGui::GetStyle().FramePadding.x * 2.0f;
+            auto checkBoxWidth = ImGui::CalcTextSize("0").x + ImGui::GetStyle().FramePadding.x * 2.0F;
             auto columnWidth = ImGui::GetColumnWidth();
             float boxesPerColumn=columnWidth/checkBoxWidth;
             float result;
             if (isLabel) {
                 std::string labelString = fmt::format("{}", bitIndex);
                 auto labelWidth = ImGui::CalcTextSize(labelString.c_str()).x;
-                auto leadingBoxes = (boxesPerColumn-count)/2.0f;
-                if (leadingBoxes < 0.0f)
-                   leadingBoxes = 0.0f;
-                result = checkBoxWidth*(leadingBoxes + startBit - bitIndex + 0.5f)-labelWidth/2.0f;
+                auto leadingBoxes = (boxesPerColumn-count) / 2.0F;
+                if (leadingBoxes < 0.0F)
+                   leadingBoxes = 0.0F;
+                result = checkBoxWidth*(leadingBoxes + startBit - bitIndex + 0.5F) - labelWidth / 2.0F;
             } else {
                 if (count < boxesPerColumn)
-                    result = (columnWidth - count * checkBoxWidth) / 2.0f;
+                    result = (columnWidth - count * checkBoxWidth) / 2.0F;
                 else
-                    result = 0.0;
+                    result = 0.0F;
             }
-            if (result <= 0.0f)
-                result = 0.05;
+            if (result <= 0.0F)
+                result = 0.05F;
             return result;
         };
 
@@ -189,7 +189,7 @@ namespace hex::plugin::builtin {
 
         const static auto BitCheckbox = [](u8 bit) {
             bool checkbox = false;
-            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0F);
             checkbox = (ieee754statics.value & (u128(1) << bit)) != 0;
             ImGuiExt::BitCheckbox("##checkbox", &checkbox);
             ieee754statics.value = (ieee754statics.value & ~(u128(1) << bit)) | (u128(checkbox) << bit);
@@ -642,7 +642,7 @@ namespace hex::plugin::builtin {
 
             auto style = ImGui::GetStyle();
             inputFieldWidth = std::fmax(inputFieldWidth,
-                                        ImGui::CalcTextSize(maskString.c_str()).x + style.FramePadding.x * 2.0f);
+                                        ImGui::CalcTextSize(maskString.c_str()).x + style.FramePadding.x * 2.0F);
             ImGui::PushItemWidth(inputFieldWidth);
 
             u64 newValue = ieee754statics.value & mask;
