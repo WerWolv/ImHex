@@ -110,36 +110,37 @@ namespace hex {
         explicit DiagramDigram() { }
 
         void draw(ImVec2 size) {
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
-            if (ImGui::BeginChild("##digram", size, true)) {
-                auto drawList = ImGui::GetWindowDrawList();
+            if (!m_processing) {
+                if (!m_textureValid) {
+                    std::vector<u32> pixels;
+                    pixels.resize(0x100 * 0x100, 0x00);
+                    for (size_t i = 0; i < (m_buffer.empty() ? 0 : m_buffer.size() - 1); i++) {
+                        const u8 x = m_buffer[i];
+                        const u8 y = m_buffer[i + 1];
 
-                if (!m_processing) {
-                    if (!m_textureValid) {
-                        std::vector<u32> pixels;
-                        pixels.resize(0x100 * 0x100, 0x00);
-                        for (size_t i = 0; i < (m_buffer.empty() ? 0 : m_buffer.size() - 1); i++) {
-                            const u8 x = m_buffer[i];
-                            const u8 y = m_buffer[i + 1];
+                        auto color = ImLerp(
+                            ImColor(0xFF, 0x6D, 0x01).Value,
+                            ImColor(0x01, 0x93, 0xFF).Value,
+                            float(i) / m_buffer.size()) + ImVec4(m_glowBuffer[i], m_glowBuffer[i], m_glowBuffer[i], 0.0F);
+                        color.w = m_opacity;
 
-                            auto color = ImLerp(
-                                ImColor(0xFF, 0x6D, 0x01).Value,
-                                ImColor(0x01, 0x93, 0xFF).Value,
-                                float(i) / m_buffer.size()) + ImVec4(m_glowBuffer[i], m_glowBuffer[i], m_glowBuffer[i], 0.0F);
-                            color.w = m_opacity;
-
-                            auto &pixel = pixels[x * 0xFF + y];
-                            pixel = ImAlphaBlendColors(pixel, ImColor(color));
-                        }
-
-                        m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, m_filter, 0xFF, 0xFF);
-                        m_textureValid = m_texture.isValid();
+                        auto &pixel = pixels[x * 0xFF + y];
+                        pixel = ImAlphaBlendColors(pixel, ImColor(color));
                     }
 
+                    m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, m_filter, 0xFF, 0xFF);
+                    m_textureValid = m_texture.isValid();
+                }
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
+            if (ImGui::BeginChild("##digram", size, ImGuiChildFlags_Border)) {
+                auto drawList = ImGui::GetWindowDrawList();
+
+                if (m_textureValid) {
                     auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F);
                     drawList->AddImage(m_texture, pos, pos + size * 0.95F);
                 }
-
             }
             ImGui::EndChild();
             ImGui::PopStyleColor();
@@ -235,29 +236,31 @@ namespace hex {
         explicit DiagramLayeredDistribution() { }
 
         void draw(ImVec2 size) {
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
-            if (ImGui::BeginChild("##layered_distribution", size, true)) {
-                auto drawList = ImGui::GetWindowDrawList();
+            if (!m_processing) {
+                if (!m_textureValid) {
+                    std::vector<u32> pixels;
+                    pixels.resize(0x100 * 0x100, 0x00);
+                    for (size_t i = 0; i < (m_buffer.empty() ? 0 : m_buffer.size() - 1); i++) {
+                        const u8 x = m_buffer[i];
+                        const u8 y = (float(i) / m_buffer.size()) * 0xFF;
 
-                if (!m_processing) {
-                    if (!m_textureValid) {
-                        std::vector<u32> pixels;
-                        pixels.resize(0x100 * 0x100, 0x00);
-                        for (size_t i = 0; i < (m_buffer.empty() ? 0 : m_buffer.size() - 1); i++) {
-                            const u8 x = m_buffer[i];
-                            const u8 y = (float(i) / m_buffer.size()) * 0xFF;
+                        auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / m_buffer.size()) + ImVec4(m_glowBuffer[i], m_glowBuffer[i], m_glowBuffer[i], 0.0F);
+                        color.w = m_opacity;
 
-                            auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / m_buffer.size()) + ImVec4(m_glowBuffer[i], m_glowBuffer[i], m_glowBuffer[i], 0.0F);
-                            color.w = m_opacity;
-
-                            auto &pixel = pixels[x * 0xFF + y];
-                            pixel = ImAlphaBlendColors(pixel, ImColor(color));
-                        }
-
-                        m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, m_filter, 0xFF, 0xFF);
-                        m_textureValid = m_texture.isValid();
+                        auto &pixel = pixels[x * 0xFF + y];
+                        pixel = ImAlphaBlendColors(pixel, ImColor(color));
                     }
 
+                    m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, m_filter, 0xFF, 0xFF);
+                    m_textureValid = m_texture.isValid();
+                }
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
+            if (ImGui::BeginChild("##layered_distribution", size, ImGuiChildFlags_Border)) {
+                auto drawList = ImGui::GetWindowDrawList();
+
+                if (m_textureValid) {
                     const auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F);
                     drawList->AddImage(m_texture, pos, pos + size * 0.95F);
                 }
