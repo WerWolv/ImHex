@@ -27,29 +27,28 @@ namespace hex::plugin::yara {
         };
 
         void process(Task &task, prv::Provider *provider, Region region) override {
-            const auto &ruleFilePaths = romfs::list("rules");
-            task.setMaxValue(ruleFilePaths.size());
+            for (const auto &yaraSignaturePath : fs::getDefaultPaths(fs::ImHexPath::YaraAdvancedAnalysis)) {
+                for (const auto &ruleFilePath : std::fs::recursive_directory_iterator(yaraSignaturePath)) {
+                    const std::string fileContent = romfs::get(ruleFilePath).data<const char>();
 
-            for (const auto &ruleFilePath : ruleFilePaths) {
-                const std::string fileContent = romfs::get(ruleFilePath).data<const char>();
+                    YaraRule yaraRule(fileContent);
+                    task.setInterruptCallback([&yaraRule] {
+                        yaraRule.interrupt();
+                    });
 
-                YaraRule yaraRule(fileContent);
-                task.setInterruptCallback([&yaraRule] {
-                    yaraRule.interrupt();
-                });
+                    const auto result = yaraRule.match(provider, region);
+                    if (result.has_value()) {
+                        const auto &rules = result.value().matchedRules;
+                        for (const auto &rule : rules) {
+                            if (!rule.metadata.contains("category")) continue;
 
-                const auto result = yaraRule.match(provider, region);
-                if (result.has_value()) {
-                    const auto &rules = result.value().matchedRules;
-                    for (const auto &rule : rules) {
-                        if (!rule.metadata.contains("category")) continue;
-
-                        const auto &categoryName = rule.metadata.at("category");
-                        m_categories[categoryName].matchedRules.insert(rule);
+                            const auto &categoryName = rule.metadata.at("category");
+                            m_categories[categoryName].matchedRules.insert(rule);
+                        }
                     }
-                }
 
-                task.increment();
+                    task.update();
+                }
             }
         }
 
