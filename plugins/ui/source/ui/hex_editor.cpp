@@ -9,6 +9,7 @@
 #include <wolv/utils/guards.hpp>
 
 #include <fonts/codicons_font.h>
+#include <hex/providers/buffered_reader.hpp>
 
 namespace hex::ui {
 
@@ -421,6 +422,7 @@ namespace hex::ui {
             ImGuiExt::TextFormattedCentered("{}", "hex.ui.hex_editor.no_bytes"_lang);
         }
 
+        Region hoveredCell = Region::Invalid();
         if (ImGui::BeginChild("Hex View", size, ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             this->drawScrollbar(CharacterSize);
 
@@ -596,6 +598,11 @@ namespace hex::ui {
                                     this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered, CellType::Hex);
                                 else
                                     ImGuiExt::TextFormatted("{}", std::string(maxCharsPerCell, '?'));
+
+                                if (cellHovered) {
+                                    hoveredCell = { byteAddress, bytesPerCell };
+                                }
+
                                 ImGui::PopItemWidth();
                                 ImGui::PopStyleVar();
                             }
@@ -650,6 +657,11 @@ namespace hex::ui {
                                             ImGuiExt::TextFormattedDisabled("{}", m_unknownDataCharacter);
                                         else
                                             this->drawCell(byteAddress, &bytes[x], 1, cellHovered, CellType::ASCII);
+
+                                        if (cellHovered) {
+                                            hoveredCell = { byteAddress, bytesPerCell };
+                                        }
+
                                         ImGui::PopItemWidth();
                                         ImGui::PopStyleVar();
                                     }
@@ -733,6 +745,10 @@ namespace hex::ui {
                                             ImGui::Dummy({ 0, 0 });
 
                                             this->handleSelection(address, data.advance, &bytes[address % m_bytesPerRow], cellHovered);
+
+                                            if (cellHovered) {
+                                                hoveredCell = { address, data.advance };
+                                            }
                                         }
                                     }
 
@@ -797,6 +813,8 @@ namespace hex::ui {
             }
         }
         ImGui::EndChild();
+
+        ImHexApi::HexEditor::impl::setHoveredRegion(m_provider, hoveredCell);
 
         m_shouldScrollToSelection = false;
     }

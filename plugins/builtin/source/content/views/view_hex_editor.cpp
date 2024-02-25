@@ -19,6 +19,8 @@
 #include <popups/popup_file_chooser.hpp>
 #include <content/popups/popup_blocking_task.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
+#include <wolv/utils/lock.hpp>
+#include <pl/patterns/pattern.hpp>
 
 using namespace std::literals::string_literals;
 
@@ -404,8 +406,20 @@ namespace hex::plugin::builtin {
         });
 
         m_hexEditor.setBackgroundHighlightCallback([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
-            if (auto highlight = m_backgroundHighlights->find(address); highlight != m_backgroundHighlights->end())
-                return highlight->second;
+            bool hovered = false;
+            for (const auto &[id, hoverFunction] : ImHexApi::HexEditor::impl::getHoveringFunctions()) {
+                if (hoverFunction(m_hexEditor.getProvider(), address, data, size)) {
+                    hovered = true;
+                    break;
+                }
+            }
+
+            if (auto highlight = m_backgroundHighlights->find(address); highlight != m_backgroundHighlights->end()) {
+                if (hovered)
+                    return ImAlphaBlendColors(highlight->second, 0xA0FFFFFF);
+                else
+                    return highlight->second;
+            }
 
             std::optional<color_t> result;
             for (const auto &[id, callback] : ImHexApi::HexEditor::impl::getBackgroundHighlightingFunctions()) {

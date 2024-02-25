@@ -73,15 +73,18 @@ namespace hex {
             namespace impl {
 
                 using HighlightingFunction = std::function<std::optional<color_t>(u64, const u8*, size_t, bool)>;
+                using HoveringFunction = std::function<bool(const prv::Provider *, u64, const u8*, size_t)>;
 
                 const std::map<u32, Highlighting>& getBackgroundHighlights();
                 const std::map<u32, HighlightingFunction>& getBackgroundHighlightingFunctions();
                 const std::map<u32, Highlighting>& getForegroundHighlights();
                 const std::map<u32, HighlightingFunction>& getForegroundHighlightingFunctions();
+                const std::map<u32, HoveringFunction>& getHoveringFunctions();
                 const std::map<u32, Tooltip>& getTooltips();
                 const std::map<u32, TooltipFunction>& getTooltipFunctions();
 
                 void setCurrentSelection(const std::optional<ProviderRegion> &region);
+                void setHoveredRegion(const prv::Provider *provider, const Region &region);
             }
 
             /**
@@ -171,6 +174,19 @@ namespace hex {
             void removeForegroundHighlightingProvider(u32 id);
 
             /**
+             * @brief Adds a hovering provider to the Hex Editor using a callback function
+             * @param function Function that draws the highlighting based on the hovered region
+             * @return Unique ID used to remove the highlighting again later
+             */
+            u32 addHoverHighlightProvider(const impl::HoveringFunction &function);
+
+            /**
+             * @brief Removes a hovering color highlighting from the Hex Editor
+             * @param id The ID of the highlighting to remove
+             */
+            void removeHoverHighlightProvider(u32 id);
+
+            /**
              * @brief Checks if there's a valid selection in the Hex Editor right now
              */
             bool isSelectionValid();
@@ -214,6 +230,12 @@ namespace hex {
              * @param region The location of the file in the Hex Editor if available
              */
             void addVirtualFile(const std::fs::path &path, std::vector<u8> data, Region region = Region::Invalid());
+
+            /**
+             * @brief Gets the currently hovered cell region in the Hex Editor
+             * @return
+             */
+            const std::optional<Region>& getHoveredRegion(const prv::Provider *provider);
 
         }
 

@@ -2,10 +2,11 @@
 
 #include <hex/api/event_manager.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/providers/provider_data.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -67,9 +68,22 @@ namespace hex {
                 return *s_tooltipFunctions;
             }
 
+            static AutoReset<std::map<u32, HoveringFunction>> s_hoveringFunctions;
+            const std::map<u32, HoveringFunction>& getHoveringFunctions() {
+                return *s_hoveringFunctions;
+            }
+
             static AutoReset<std::optional<ProviderRegion>> s_currentSelection;
             void setCurrentSelection(const std::optional<ProviderRegion> &region) {
                 *s_currentSelection = region;
+            }
+
+            static PerProvider<std::optional<Region>> s_hoveredRegion;
+            void setHoveredRegion(const prv::Provider *provider, const Region &region) {
+                if (region == Region::Invalid())
+                    s_hoveredRegion.get(provider).reset();
+                else
+                    s_hoveredRegion.get(provider) = region;
             }
 
         }
@@ -150,6 +164,20 @@ namespace hex {
             TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
         }
 
+        u32 addHoverHighlightProvider(const impl::HoveringFunction &function) {
+            static u32 id = 0;
+
+            id++;
+
+            impl::s_hoveringFunctions->insert({ id, function });
+
+            return id;
+        }
+
+        void removeHoverHighlightProvider(u32 id) {
+            impl::s_hoveringFunctions->erase(id);
+        }
+
         static u32 tooltipId = 0;
         u32 addTooltip(Region region, std::string value, color_t color) {
             tooltipId++;
@@ -202,6 +230,11 @@ namespace hex {
         void addVirtualFile(const std::fs::path &path, std::vector<u8> data, Region region) {
             RequestAddVirtualFile::post(path, std::move(data), region);
         }
+
+        const std::optional<Region>& getHoveredRegion(const prv::Provider *provider) {
+            return impl::s_hoveredRegion.get(provider);
+        }
+
     }
 
 

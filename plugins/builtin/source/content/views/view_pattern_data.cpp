@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
            (*m_patternDrawer)->jumpToPattern(pattern);
         });
 
-        m_patternDrawer.setOnCreateCallback([this](prv::Provider *provider, auto &drawer) {
+        m_patternDrawer.setOnCreateCallback([this](const prv::Provider *provider, auto &drawer) {
             drawer = std::make_unique<ui::PatternDrawer>();
 
             drawer->setSelectionCallback([](const pl::ptrn::Pattern *pattern) {

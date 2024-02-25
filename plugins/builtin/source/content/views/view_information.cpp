@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
     using namespace hex::literals;
 
     ViewInformation::ViewInformation() : View::Window("hex.builtin.view.information.name", ICON_VS_GRAPH_LINE) {
-        m_analysisData.setOnCreateCallback([](prv::Provider *provider, AnalysisData &data) {
+        m_analysisData.setOnCreateCallback([](const prv::Provider *provider, AnalysisData &data) {
             data.analyzedProvider = provider;
 
             for (const auto &informationSectionConstructor : ContentRegistry::DataInformation::impl::getInformationSectionConstructors()) {

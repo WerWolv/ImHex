@@ -278,24 +278,24 @@ namespace hex::plugin::builtin {
             bool openFindPopup = false;
             ImGui::PushID(&this->m_textEditor);
             if (clickedMenuFind) {
-                replace = false;
+                m_replaceMode = false;
                 openFindPopup = true;
             }
 
             if (clickedMenuReplace) {
-                replace = true;
+                m_replaceMode = true;
                 openFindPopup = true;
             }
 
             // shortcuts to open the find/replace popup
             if (ImGui::IsItemHovered()) {
                 if (ImGui::IsKeyPressed(ImGuiKey_F, false) && ImGui::GetIO().KeyCtrl) {
-                    replace = false;
+                    m_replaceMode = false;
                     openFindPopup = true;
                 }
 
                 if (ImGui::IsKeyPressed(ImGuiKey_H, false) && ImGui::GetIO().KeyCtrl) {
-                    replace = true;
+                    m_replaceMode = true;
                     openFindPopup = true;
                 }
             }
@@ -350,7 +350,7 @@ namespace hex::plugin::builtin {
                 windowPosForPopup.x += windowSize.x - popupSize.x;
                 findReplaceHandler->SetFindWindowPos(windowPosForPopup);
 
-                if (replace) {
+                if (m_replaceMode) {
                     // Remove one window padding
                     popupSize.y -= style.WindowPadding.y;
                     // Add the replace window height
@@ -604,10 +604,10 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                bool oldReplace = replace;
-                ImGuiExt::DimmedIconToggle(ICON_VS_TRIANGLE_DOWN, ICON_VS_TRIANGLE_RIGHT, &replace);
-                if (oldReplace != replace) {
-                    if (replace)
+                bool oldReplace = m_replaceMode;
+                ImGuiExt::DimmedIconToggle(ICON_VS_TRIANGLE_DOWN, ICON_VS_TRIANGLE_RIGHT, &m_replaceMode);
+                if (oldReplace != m_replaceMode) {
+                    if (m_replaceMode)
                         requestFocusReplace = true;
                     else
                         requestFocusFind = true;
@@ -644,7 +644,7 @@ namespace hex::plugin::builtin {
                     findReplaceHandler->SetFindWord(&m_textEditor,findWord);
                 }
 
-                if ((!replace && requestFocus) || requestFocusFind) {
+                if ((!m_replaceMode && requestFocus) || requestFocusFind) {
                     ImGui::SetKeyboardFocusHere(-1);
                     requestFocus = false;
                     requestFocusFind = false;
@@ -755,7 +755,7 @@ namespace hex::plugin::builtin {
                 if (ImGuiExt::IconButton(ICON_VS_ARROW_UP, ImVec4(1, 1, 1, 1)))
                     upArrowFind = true;
 
-                if (replace) {
+                if (m_replaceMode) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
@@ -1837,6 +1837,10 @@ namespace hex::plugin::builtin {
             }
         });
 
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.parent_highlighting", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_parentHighlightingEnabled = bool(value.get<int>(false));
+        });
+
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {
             hex::unused(data, size);
 
@@ -1857,6 +1861,26 @@ namespace hex::plugin::builtin {
             }
 
             return color;
+        });
+
+        ImHexApi::HexEditor::addHoverHighlightProvider([this](const prv::Provider *provider, u64 address, const u8 *, size_t) {
+            if (!m_parentHighlightingEnabled) return false;
+
+            const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+
+            if (auto hoveredRegion = ImHexApi::HexEditor::getHoveredRegion(provider)) {
+                for (const auto &pattern : runtime.getPatternsAtAddress(hoveredRegion->getStartAddress())) {
+                    const pl::ptrn::Pattern * checkPattern = pattern;
+                    if (auto parent = checkPattern->getParent(); parent != nullptr)
+                        checkPattern = parent;
+
+                    if (checkPattern->getOffset() <= address && checkPattern->getOffset() + checkPattern->getSize() > address) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
