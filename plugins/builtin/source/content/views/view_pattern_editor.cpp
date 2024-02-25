@@ -124,6 +124,8 @@ namespace hex::plugin::builtin {
             langDef.mCommentStart = "";
             langDef.mCommentEnd = "";
             langDef.mSingleLineComment = "";
+            langDef.mDocComment = "";
+            langDef.mGlobalDocComment = "";
 
             initialized = true;
         }
@@ -1589,14 +1591,16 @@ namespace hex::plugin::builtin {
                 std::scoped_lock lock(m_logMutex);
 
                 for (auto line : wolv::util::splitString(message, "\n")) {
-                    switch (level) {
-                        using enum pl::core::LogConsole::Level;
+                    if (!wolv::util::trim(line).empty()) {
+                        switch (level) {
+                            using enum pl::core::LogConsole::Level;
 
-                        case Debug:     line = hex::format("D: {}", line); break;
-                        case Info:      line = hex::format("I: {}", line); break;
-                        case Warning:   line = hex::format("W: {}", line); break;
-                        case Error:     line = hex::format("E: {}", line); break;
-                        default: break;
+                            case Debug:     line = hex::format("D: {}", line); break;
+                            case Info:      line = hex::format("I: {}", line); break;
+                            case Warning:   line = hex::format("W: {}", line); break;
+                            case Error:     line = hex::format("E: {}", line); break;
+                            default: break;
+                        }
                     }
 
                     m_console->emplace_back(line);
