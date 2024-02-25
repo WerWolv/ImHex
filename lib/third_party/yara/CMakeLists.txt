@@ -92,8 +92,6 @@ set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/dotnet/dotnet.c
         ${LIBYARA_SOURCE_PATH}/modules/elf/elf.c
         ${LIBYARA_SOURCE_PATH}/modules/hash/hash.c
-        ${LIBYARA_SOURCE_PATH}/modules/lnk/lnk.c
-        ${LIBYARA_SOURCE_PATH}/modules/lnk/lnk_utils.c
         ${LIBYARA_SOURCE_PATH}/modules/macho/macho.c
         ${LIBYARA_SOURCE_PATH}/modules/magic/magic.c
         ${LIBYARA_SOURCE_PATH}/modules/math/math.c
