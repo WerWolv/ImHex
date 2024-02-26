@@ -25,6 +25,13 @@
 namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {
+        if (path.extension() == ".hexproj") {
+            if (!ProjectFile::load(path)) {
+                ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+            }
+            return;
+        }
+
         auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
         if (auto *fileProvider = dynamic_cast<FileProvider*>(provider); fileProvider != nullptr) {
             fileProvider->setPath(path);
