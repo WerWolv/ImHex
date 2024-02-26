@@ -133,14 +133,18 @@ namespace hex {
 
     void errorRecoverLogCallback(void*, const char* fmt, ...) {
         va_list args;
-        va_start(args, fmt);
 
         std::string message;
-        message.resize(std::vsnprintf(nullptr, 0, fmt, args));
-        std::vsnprintf(message.data(), message.size(), fmt, args);
-        message.resize(message.size() - 1);
 
+        va_start(args, fmt);
+        message.resize(std::vsnprintf(nullptr, 0, fmt, args));
         va_end(args);
+
+        va_start(args, fmt);
+        std::vsnprintf(message.data(), message.size(), fmt, args);
+        va_end(args);
+
+        message.resize(message.size() - 1);
 
         log::error("{}", message);
     }
