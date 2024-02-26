@@ -1,3 +1,4 @@
+#include <hex/api/event_manager.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/fmt.hpp>

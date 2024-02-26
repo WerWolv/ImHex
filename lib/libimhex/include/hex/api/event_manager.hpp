@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <list>
+#include <mutex>
 #include <map>
 #include <string_view>
 #include <functional>
@@ -308,4 +309,5 @@ namespace hex {
      * The 'from' provider should not have any per provider data after this, and should be immediately deleted
     */
     EVENT_DEF(MovePerProviderData, prv::Provider *, prv::Provider *);
+
 }

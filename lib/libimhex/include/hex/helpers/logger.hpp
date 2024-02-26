@@ -8,6 +8,7 @@
 #include <fmt/color.h>
 
 #include <wolv/io/file.hpp>
+#include <hex/helpers/fmt.hpp>
 
 namespace hex::log {
 
@@ -87,7 +88,6 @@ namespace hex::log {
     [[maybe_unused]] void fatal(const std::string &fmt, auto && ... args) {
         hex::log::impl::print(fg(impl::color::fatal()) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
     }
-
 
     [[maybe_unused]] void print(const std::string &fmt, auto && ... args) {
         std::scoped_lock lock(impl::getLoggerMutex());

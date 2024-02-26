@@ -74,7 +74,11 @@ namespace hex::prv {
         }
     }
 
-    void Provider::resize(u64 newSize) {
+    bool Provider::resize(u64 newSize) {
+        if (newSize >> 63) {
+            log::error("new provider size is very large ({}). Is it a negative number ?", newSize);
+            return false;
+        }
         i64 difference = newSize - this->getActualSize();
 
         if (difference > 0)
@@ -83,6 +87,7 @@ namespace hex::prv {
             EventProviderDataRemoved::post(this, this->getActualSize() + difference, -difference);
 
         this->markDirty();
+        return true;
     }
 
     void Provider::insert(u64 offset, u64 size) {

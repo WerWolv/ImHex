@@ -321,6 +321,15 @@ namespace hex {
         return plugins;
     }
 
+    Plugin* PluginManager::getPlugin(const std::string &name) {
+        for (auto &plugin : getPluginsMutable()) {
+            if (plugin.getPluginName() == name)
+                return &plugin;
+        }
+
+        return nullptr;
+    }
+
     const std::vector<std::fs::path>& PluginManager::getPluginPaths() {
         return s_pluginPaths;
     }
