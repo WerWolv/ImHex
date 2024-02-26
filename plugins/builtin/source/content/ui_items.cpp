@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
                 if (progress < 0)
                     progressString = "";
                 else
-                    progressString = hex::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), progress * 100.0F);
+                    progressString = hex::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), std::min(progress, 1.0F) * 100.0F);
 
                 ImGuiExt::InfoTooltip(hex::format("{}{}", progressString, Lang(frontTask->getUnlocalizedName())).c_str());
 
@@ -286,8 +286,8 @@ namespace hex::plugin::builtin {
         });
 
         static bool alwaysShowProviderTabs = false;
-        EventSettingsChanged::subscribe([] {
-            alwaysShowProviderTabs = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.always_show_provider_tabs", false);
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.always_show_provider_tabs", [](const ContentRegistry::Settings::SettingsValue &value) {
+            alwaysShowProviderTabs = value.get<bool>(false);
         });
 
         ContentRegistry::Interface::addToolbarItem([] {

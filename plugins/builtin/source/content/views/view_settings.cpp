@@ -101,7 +101,6 @@ namespace hex::plugin::builtin {
                                         log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName.get(), setting.unlocalizedName.get(), nlohmann::to_string(newValue));
 
                                         // Signal that the setting was changed
-                                        EventSettingsChanged::post();
                                         widget->onChanged();
 
                                         // Request a restart if the setting requires it

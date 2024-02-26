@@ -89,14 +89,12 @@ namespace hex::plugin::builtin {
 
                     auto provider = ImHexApi::Provider::get();
 
-                    u64 count = 0;
                     for (auto &[address, value] : patch->get()) {
                         provider->write(address, &value, sizeof(value));
-                        count += 1;
-                        task.update(count);
+                        task.increment();
                     }
 
-                    provider->getUndoStack().groupOperations(count, "hex.builtin.undo_operation.patches");
+                    provider->getUndoStack().groupOperations(patch->get().size(), "hex.builtin.undo_operation.patches");
                 });
             });
         }
@@ -115,14 +113,12 @@ namespace hex::plugin::builtin {
 
                     auto provider = ImHexApi::Provider::get();
 
-                    u64 count = 0;
                     for (auto &[address, value] : patch->get()) {
                         provider->write(address, &value, sizeof(value));
-                        count += 1;
-                        task.update(count);
+                        task.increment();
                     }
 
-                    provider->getUndoStack().groupOperations(count, "hex.builtin.undo_operation.patches");
+                    provider->getUndoStack().groupOperations(patch->get().size(), "hex.builtin.undo_operation.patches");
                 });
             });
         }
@@ -151,14 +147,12 @@ namespace hex::plugin::builtin {
 
                     task.setMaxValue(patches.size());
 
-                    u64 count = 0;
                     for (auto &[address, value] : patches) {
                         provider->write(address, &value, sizeof(value));
-                        count += 1;
-                        task.update(count);
+                        task.increment();
                     }
 
-                    provider->getUndoStack().groupOperations(count, "hex.builtin.undo_operation.patches");
+                    provider->getUndoStack().groupOperations(patches.size(), "hex.builtin.undo_operation.patches");
                 });
             });
         }
@@ -397,6 +391,8 @@ namespace hex::plugin::builtin {
             provider->close();
             if (!provider->open())
                 ImHexApi::Provider::remove(provider, true);
+
+            EventDataChanged::post(provider);
         }, noRunningTaskAndValidProvider);
 
 
@@ -550,7 +546,9 @@ namespace hex::plugin::builtin {
             }, []{ return true; }, []{ return glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr; });
         #endif
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.view" }, 3000);
+        #if !defined(OS_WEB)
+            ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.view" }, 3000);
+        #endif
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.view" }, 4000, [] {
             for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {

@@ -17,13 +17,13 @@ namespace hex::magic {
 
     bool compile();
     std::string getDescription(const std::vector<u8> &data, bool firstEntryOnly = false);
-    std::string getDescription(prv::Provider *provider, size_t size = 100_KiB, bool firstEntryOnly = false);
+    std::string getDescription(prv::Provider *provider, u64 address = 0x00, size_t size = 100_KiB, bool firstEntryOnly = false);
     std::string getMIMEType(const std::vector<u8> &data, bool firstEntryOnly = false);
-    std::string getMIMEType(prv::Provider *provider, size_t size = 100_KiB, bool firstEntryOnly = false);
+    std::string getMIMEType(prv::Provider *provider, u64 address = 0x00, size_t size = 100_KiB, bool firstEntryOnly = false);
     std::string getExtensions(const std::vector<u8> &data, bool firstEntryOnly = false);
-    std::string getExtensions(prv::Provider *provider, size_t size = 100_KiB, bool firstEntryOnly = false);
+    std::string getExtensions(prv::Provider *provider, u64 address = 0x00, size_t size = 100_KiB, bool firstEntryOnly = false);
     std::string getAppleCreatorType(const std::vector<u8> &data, bool firstEntryOnly = false);
-    std::string getAppleCreatorType(prv::Provider *provider, size_t size = 100_KiB, bool firstEntryOnly = false);
+    std::string getAppleCreatorType(prv::Provider *provider, u64 address = 0x00, size_t size = 100_KiB, bool firstEntryOnly = false);
 
     bool isValidMIMEType(const std::string &mimeType);
 

@@ -33,7 +33,7 @@ void main() {
     float specular = vertexData.lightBrightness.z * reflectionIntensity;
 
     float dst = distance(vertexData.lightPosition, vertexData.fragPosition);
-    float attn = 1./(1.0f + 0.1f*dst + 0.01f*dst*dst) ;
+    float attn = 1./(1.0F + 0.1F*dst + 0.01f*dst*dst) ;
     vec3 color = ((diffuse + specular)*attn + ambient) * vertexData.lightColor;
     outColor = (texture(modelTexture, vertexData.texCoord) + vertexData.fragColor) * vec4(color, 1.0);
 }

@@ -14,6 +14,7 @@
 
         void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode);
 
+        void enumerateFontsMacos();
     }
 
 #endif

@@ -2,17 +2,11 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/project_file_manager.hpp>
 
 #include <hex/providers/provider.hpp>
-#include <hex/providers/buffered_reader.hpp>
 
-#include <hex/helpers/fs.hpp>
 #include <hex/helpers/magic.hpp>
-
-#include <cmath>
-#include <filesystem>
-
-#include <implot.h>
 
 #include <toasts/toast_notification.hpp>
 
@@ -21,153 +15,81 @@ namespace hex::plugin::builtin {
     using namespace hex::literals;
 
     ViewInformation::ViewInformation() : View::Window("hex.builtin.view.information.name", ICON_VS_GRAPH_LINE) {
-        EventDataChanged::subscribe(this, [this](prv::Provider *provider) {
-            auto &analysis = m_analysis.get(provider);
+        m_analysisData.setOnCreateCallback([](const prv::Provider *provider, AnalysisData &data) {
+            data.analyzedProvider = provider;
 
-            analysis.dataValid = false;
-            analysis.plainTextCharacterPercentage = -1.0;
-            analysis.averageEntropy = -1.0;
-            analysis.highestBlockEntropy = -1.0;
-            analysis.blockSize = 0;
-            analysis.dataMimeType.clear();
-            analysis.dataDescription.clear();
-            analysis.dataAppleCreatorType.clear();
-            analysis.dataExtensions.clear();
-            analysis.analyzedRegion = { 0, 0 };
-        });
-
-        EventRegionSelected::subscribe(this, [this](ImHexApi::HexEditor::ProviderRegion region) {
-            auto &analysis = m_analysis.get(region.getProvider());
-
-            // Set the position of the diagram relative to the place where 
-            // the user clicked inside the hex editor view 
-            if (analysis.blockSize != 0) {
-                analysis.byteTypesDistribution->setHandlePosition(region.getStartAddress());
-                analysis.chunkBasedEntropy->setHandlePosition(region.getStartAddress());
-            } 
-        });
-
-        ContentRegistry::FileHandler::add({ ".mgc" }, [](const auto &path) {
-            for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
-                if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    ui::ToastInfo::open("hex.builtin.view.information.magic_db_added"_lang);
-                    return true;
-                }
+            for (const auto &informationSectionConstructor : ContentRegistry::DataInformation::impl::getInformationSectionConstructors()) {
+                data.informationSections.push_back(informationSectionConstructor());
             }
-
-            return false;
-
         });
 
-        m_analysis.setOnCreateCallback([](prv::Provider *provider, AnalysisData &analysis) {
-            analysis.dataValid = false;
-            analysis.blockSize = 0;
-            analysis.averageEntropy = -1.0;
+        ProjectFile::registerPerProviderHandler({
+            .basePath = "data_information.json",
+            .required = false,
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
+                std::string save = tar.readString(basePath);
+                nlohmann::json input = nlohmann::json::parse(save);
 
-            analysis.lowestBlockEntropy     = -1.0;
-            analysis.highestBlockEntropy    = -1.0;
-            analysis.lowestBlockEntropyAddress  = 0x00;
-            analysis.highestBlockEntropyAddress = 0x00;
+                for (const auto &section : m_analysisData.get(provider).informationSections) {
+                    if (!input.contains(section->getUnlocalizedName().get()))
+                        continue;
 
-            analysis.plainTextCharacterPercentage = -1.0;
+                    section->load(input[section->getUnlocalizedName().get()]);
+                }
 
-            analysis.analysisRegion = { 0, 0 };
-            analysis.analyzedRegion = { 0, 0 };
-            analysis.analyzedProvider = provider;
+                return true;
+            },
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
+                nlohmann::json output;
+                for (const auto &section : m_analysisData.get(provider).informationSections) {
+                    output[section->getUnlocalizedName().get()] = section->store();
+                }
 
-            analysis.inputChunkSize = 0;
-            analysis.selectionType = ui::RegionType::EntireData;
+                tar.writeString(basePath, output.dump(4));
 
-            analysis.digram                 = std::make_shared<DiagramDigram>();
-            analysis.layeredDistribution    = std::make_shared<DiagramLayeredDistribution>();
-            analysis.byteDistribution       = std::make_shared<DiagramByteDistribution>();
-            analysis.byteTypesDistribution  = std::make_shared<DiagramByteTypesDistribution>();
-            analysis.chunkBasedEntropy      = std::make_shared<DiagramChunkBasedEntropyAnalysis>();
+                return true;
+            }
         });
-    }
-
-    ViewInformation::~ViewInformation() {
-        EventDataChanged::unsubscribe(this);
-        EventRegionSelected::unsubscribe(this);
-        EventProviderOpened::unsubscribe(this);
     }
 
     void ViewInformation::analyze() {
         AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.analyze_file.name");
 
         auto provider = ImHexApi::Provider::get();
+        auto &analysis = m_analysisData.get(provider);
 
-        m_analysis.get(provider).analyzerTask = TaskManager::createTask("hex.builtin.view.information.analyzing", 0, [this, provider](auto &task) {
-            auto &analysis = m_analysis.get(provider);
-            const auto &region = analysis.analysisRegion;
+        // Reset all sections
+        for (const auto &section : analysis.informationSections) {
+            section->reset();
+            section->markValid(false);
+        }
 
-            analysis.analyzedProvider = provider;
+        // Run analyzers for each section
+        analysis.task = TaskManager::createTask("hex.builtin.view.information.analyzing"_lang, analysis.informationSections.size(), [provider, &analysis](Task &task) {
+            u32 progress = 0;
+            for (const auto &section : analysis.informationSections) {
+                // Only process the section if it is enabled
+                if (section->isEnabled()) {
+                    // Set the section as analyzing so a spinner can be drawn
+                    section->setAnalyzing(true);
+                    ON_SCOPE_EXIT { section->setAnalyzing(false); };
 
-            if ((region.getStartAddress() >= region.getEndAddress()) || (region.getEndAddress() > provider->getActualSize())) {
-                analysis.analyzedRegion = { provider->getBaseAddress(), provider->getActualSize() };
-            }
+                    try {
+                        // Process the section
+                        section->process(task, provider, analysis.analysisRegion);
 
-            if (analysis.inputChunkSize == 0) {
-                analysis.inputChunkSize = 256;
-            }
-
-            task.setMaxValue(analysis.analyzedRegion.getSize());
-
-            {
-                magic::compile();
-
-                analysis.dataDescription       = magic::getDescription(provider);
-                analysis.dataMimeType          = magic::getMIMEType(provider);
-                analysis.dataAppleCreatorType  = magic::getAppleCreatorType(provider);
-                analysis.dataExtensions        = magic::getExtensions(provider);
-            }
-
-            {
-                analysis.blockSize = std::max<u32>(std::ceil(provider->getActualSize() / 2048.0F), 256);
-
-                analysis.averageEntropy = -1.0;
-                analysis.highestBlockEntropy = -1.0;
-                analysis.plainTextCharacterPercentage = -1.0;
-
-                // Setup / start each analysis
-
-                analysis.byteDistribution->reset();
-                analysis.digram->reset(region.getSize());
-                analysis.layeredDistribution->reset(region.getSize());
-                analysis.byteTypesDistribution->reset(region.getStartAddress(), region.getEndAddress(), provider->getBaseAddress(), provider->getActualSize());
-                analysis.chunkBasedEntropy->reset(analysis.inputChunkSize, region.getStartAddress(), region.getEndAddress(),
-                    provider->getBaseAddress(), provider->getActualSize());
-
-                // Create a handle to the file
-                auto reader = prv::ProviderReader(provider);
-                reader.seek(region.getStartAddress());
-                reader.setEndAddress(region.getEndAddress());
-
-                analysis.analyzedRegion = region;
-
-                u64 count = 0;
-
-                // Loop over each byte of the selection and update each analysis
-                // one byte at a time to process the file only once
-                for (u8 byte : reader) {
-                    analysis.byteDistribution->update(byte);
-                    analysis.byteTypesDistribution->update(byte);
-                    analysis.chunkBasedEntropy->update(byte);
-                    analysis.layeredDistribution->update(byte);
-                    analysis.digram->update(byte);
-                    ++count;
-                    task.update(count);
+                        // Mark the section as valid
+                        section->markValid();
+                    } catch (const std::exception &e) {
+                        // Show a toast with the error if the section failed to process
+                        ui::ToastError::open(hex::format("hex.builtin.view.information.error_processing_section"_lang, Lang(section->getUnlocalizedName()), e.what()));
+                    }
                 }
 
-                analysis.averageEntropy = analysis.chunkBasedEntropy->calculateEntropy(analysis.byteDistribution->get(), analysis.analyzedRegion.getSize());
-                analysis.highestBlockEntropy = analysis.chunkBasedEntropy->getHighestEntropyBlockValue();
-                analysis.highestBlockEntropyAddress = analysis.chunkBasedEntropy->getHighestEntropyBlockAddress();
-                analysis.lowestBlockEntropy = analysis.chunkBasedEntropy->getLowestEntropyBlockValue();
-                analysis.lowestBlockEntropyAddress = analysis.chunkBasedEntropy->getLowestEntropyBlockAddress();
-                analysis.plainTextCharacterPercentage = analysis.byteTypesDistribution->getPlainTextCharacterPercentage();
+                // Update the task progress
+                progress += 1;
+                task.update(progress);
             }
-
-            analysis.dataValid = true;
         });
     }        
 
@@ -176,25 +98,52 @@ namespace hex::plugin::builtin {
 
             auto provider = ImHexApi::Provider::get();
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
-                auto &analysis = m_analysis.get(provider);
+                auto &analysis = m_analysisData.get(provider);
 
-                ImGui::BeginDisabled(analysis.analyzerTask.isRunning());
+                // Draw settings window
+                ImGui::BeginDisabled(analysis.task.isRunning());
                 ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang);
                 {
-                    if (ImGui::BeginTable("SettingsTable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingFixedSame, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-                        ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5F);
-                        ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.5F);
+                    // Create a table so we can draw global settings on the left and section specific settings on the right
+                    if (ImGui::BeginTable("SettingsTable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingStretchProp, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                        ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.3F);
+                        ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.7F);
+
                         ImGui::TableNextRow();
+
+                        // Draw global settings
                         ImGui::TableNextColumn();
                         ui::regionSelectionPicker(&analysis.analysisRegion, provider, &analysis.selectionType, false);
 
+                        // Draw analyzed section names
                         ImGui::TableNextColumn();
-                        ImGuiExt::InputHexadecimal("hex.builtin.view.information.block_size"_lang, &analysis.inputChunkSize);
+                        if (ImGui::BeginTable("AnalyzedSections", 1, ImGuiTableFlags_BordersInnerH, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * 5))) {
+                            for (const auto &section : analysis.informationSections | std::views::reverse) {
+                                if (section->isEnabled() && (section->isValid() || section->isAnalyzing())) {
+                                    ImGui::TableNextRow();
+                                    ImGui::TableNextColumn();
+
+                                    ImGui::BeginDisabled();
+                                    {
+                                        ImGui::TextUnformatted(Lang(section->getUnlocalizedName()));
+
+                                        if (section->isAnalyzing()) {
+                                            ImGui::SameLine();
+                                            ImGuiExt::TextSpinner("");
+                                        }
+                                    }
+                                    ImGui::EndDisabled();
+                                }
+                            }
+
+                            ImGui::EndTable();
+                        }
 
                         ImGui::EndTable();
                     }
                     ImGui::NewLine();
 
+                    // Draw the analyze button
                     ImGui::SetCursorPosX(50_scaled);
                     if (ImGuiExt::DimmedButton("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x - 50_scaled, 0)))
                         this->analyze();
@@ -202,238 +151,82 @@ namespace hex::plugin::builtin {
                 ImGuiExt::EndSubWindow();
                 ImGui::EndDisabled();
 
-                if (analysis.analyzerTask.isRunning()) {
-                    ImGuiExt::TextSpinner("hex.builtin.view.information.analyzing"_lang);
-                } else {
-                    ImGui::NewLine();
-                }
-
-                if (!analysis.analyzerTask.isRunning() && analysis.dataValid && analysis.analyzedProvider != nullptr) {
-
-                    // Provider information
-                    ImGuiExt::Header("hex.builtin.view.information.provider_information"_lang, true);
-
-                    if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible)) {
-                        ImGui::TableSetupColumn("type");
-                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
-
-                        ImGui::TableNextRow();
-
-                        for (auto &[name, value] : analysis.analyzedProvider->getDataDescription()) {
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{}", name);
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormattedWrapped("{}", value);
-                        }
-
+                if (analysis.analyzedProvider != nullptr) {
+                    for (const auto &section : analysis.informationSections) {
                         ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.region"_lang);
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("0x{:X} - 0x{:X}", analysis.analyzedRegion.getStartAddress(), analysis.analyzedRegion.getEndAddress());
+                        ImGui::PushID(section.get());
 
-                        ImGui::EndTable();
-                    }
+                        bool enabled = section->isEnabled();
 
-                    // Magic information
-                    if (!(analysis.dataDescription.empty() && analysis.dataMimeType.empty())) {
-                        ImGuiExt::Header("hex.builtin.view.information.magic"_lang);
+                        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
+                        if (ImGui::BeginChild(Lang(section->getUnlocalizedName()), ImVec2(0, 0), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_MenuBar)) {
+                            if (ImGui::BeginMenuBar()) {
 
-                        if (ImGui::BeginTable("magic", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-                            ImGui::TableSetupColumn("type");
-                            ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
-
-                            ImGui::TableNextRow();
-
-                            if (!analysis.dataDescription.empty()) {
-                                ImGui::TableNextColumn();
-                                ImGui::TextUnformatted("hex.builtin.view.information.description"_lang);
-                                ImGui::TableNextColumn();
-
-                                if (analysis.dataDescription == "data") {
-                                    ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, analysis.dataDescription);
-                                } else {
-                                    ImGuiExt::TextFormattedWrapped("{}", analysis.dataDescription);
-                                }
-                            }
-
-                            if (!analysis.dataMimeType.empty()) {
-                                ImGui::TableNextColumn();
-                                ImGui::TextUnformatted("hex.builtin.view.information.mime"_lang);
-                                ImGui::TableNextColumn();
-
-                                if (analysis.dataMimeType.contains("application/octet-stream")) {
-                                    ImGuiExt::TextFormatted("{}", analysis.dataMimeType);
-                                    ImGui::SameLine();
+                                // Draw the enable checkbox of the section
+                                // This is specifically split out so the checkbox does not get disabled when the section is disabled
+                                ImGui::BeginGroup();
+                                {
+                                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
                                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                                    ImGuiExt::HelpHover("hex.builtin.view.information.octet_stream_warning"_lang);
+                                    {
+                                        if (ImGui::Checkbox("##enabled", &enabled)) {
+                                            section->setEnabled(enabled);
+                                        }
+                                    }
                                     ImGui::PopStyleVar();
-                                } else {
-                                    ImGuiExt::TextFormatted("{}", analysis.dataMimeType);
                                 }
+                                ImGui::EndGroup();
+
+                                ImGui::SameLine();
+
+                                // Draw the rest of the section header
+                                ImGui::BeginDisabled(!enabled);
+                                {
+                                    ImGui::TextUnformatted(Lang(section->getUnlocalizedName()));
+                                    ImGui::SameLine();
+                                    if (auto description = section->getUnlocalizedDescription(); !description.empty()) {
+                                        ImGui::SameLine();
+                                        ImGuiExt::HelpHover(Lang(description));
+                                    }
+
+                                    // Draw settings gear on the right
+                                    if (section->hasSettings()) {
+                                        ImGui::SameLine(0, ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(ICON_VS_SETTINGS_GEAR).x);
+                                        if (ImGuiExt::DimmedIconButton(ICON_VS_SETTINGS_GEAR, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                                            ImGui::OpenPopup("SectionSettings");
+                                        }
+
+                                        if (ImGui::BeginPopup("SectionSettings")) {
+                                            ImGuiExt::Header("hex.ui.common.settings"_lang, true);
+                                            section->drawSettings();
+                                            ImGui::EndPopup();
+                                        }
+                                    }
+                                }
+                                ImGui::EndDisabled();
+
+                                ImGui::EndMenuBar();
                             }
 
-                            if (!analysis.dataAppleCreatorType.empty()) {
-                                ImGui::TableNextColumn();
-                                ImGui::TextUnformatted("hex.builtin.view.information.apple_type"_lang);
-                                ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("{}", analysis.dataAppleCreatorType);
+                            // Draw the section content
+                            ImGui::BeginDisabled(!enabled);
+                            if (section->isEnabled()) {
+                                if (section->isValid())
+                                    section->drawContent();
+                                else if (section->isAnalyzing())
+                                    ImGuiExt::TextSpinner("hex.builtin.view.information.analyzing"_lang);
+                                else
+                                    ImGuiExt::TextFormattedCenteredHorizontal("hex.builtin.view.information.not_analyzed"_lang);
                             }
-
-                            if (!analysis.dataExtensions.empty()) {
-                                ImGui::TableNextColumn();
-                                ImGui::TextUnformatted("hex.builtin.view.information.extension"_lang);
-                                ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("{}", analysis.dataExtensions);
-                            }
-
-                            ImGui::EndTable();
+                            ImGui::EndDisabled();
                         }
+                        ImGui::EndChild();
+                        ImGui::PopStyleVar();
+
+                        ImGui::PopID();
 
                         ImGui::NewLine();
                     }
-
-                    // Information analysis
-                    if (analysis.analyzedRegion.getSize() > 0) {
-
-                        ImGuiExt::Header("hex.builtin.view.information.info_analysis"_lang);
-
-                        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
-                        ImPlot::PushStyleColor(ImPlotCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
-
-                        // Display byte distribution analysis
-                        ImGui::TextUnformatted("hex.builtin.view.information.distribution"_lang);
-                        analysis.byteDistribution->draw(
-                            ImVec2(-1, 0),
-                            ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect
-                        );
-
-                        // Display byte types distribution analysis
-                        ImGui::TextUnformatted("hex.builtin.view.information.byte_types"_lang);
-                        analysis.byteTypesDistribution->draw(
-                                ImVec2(-1, 0),
-                                ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
-                                true
-                        );
-
-                        // Display chunk-based entropy analysis
-                        ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
-                        analysis.chunkBasedEntropy->draw(
-                            ImVec2(-1, 0),
-                            ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
-                            true
-                        );
-
-                        ImPlot::PopStyleColor();
-                        ImGui::PopStyleColor();
-
-                        ImGui::NewLine();
-                    }
-
-                    // Entropy information
-                    if (ImGui::BeginTable("entropy_info", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-                        ImGui::TableSetupColumn("type");
-                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
-
-                        ImGui::TableNextRow();
-
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.block_size"_lang);
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("hex.builtin.view.information.block_size.desc"_lang, analysis.chunkBasedEntropy->getSize(), analysis.chunkBasedEntropy->getChunkSize());
-
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
-                        ImGui::TableNextColumn();
-                        if (analysis.averageEntropy < 0) {
-                            ImGui::TextUnformatted("???");
-                        } else {
-                            auto entropy = std::abs(analysis.averageEntropy);
-                            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.1F);
-                            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
-                            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor::HSV(0.3F - (0.3F * entropy), 0.6F, 0.8F, 1.0F).Value);
-                            ImGui::ProgressBar(entropy, ImVec2(200_scaled, ImGui::GetTextLineHeight()), hex::format("{:.5f}", entropy).c_str());
-                            ImGui::PopStyleColor(2);
-                            ImGui::PopStyleVar();
-                        }
-
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.highest_entropy"_lang);
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{:.5f} @", analysis.highestBlockEntropy);
-                        ImGui::SameLine();
-                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                        if (ImGui::Button(hex::format("0x{:06X}", analysis.highestBlockEntropyAddress).c_str())) {
-                            ImHexApi::HexEditor::setSelection(analysis.highestBlockEntropyAddress, analysis.inputChunkSize);
-                        }
-                        ImGui::PopStyleColor();
-                        ImGui::PopStyleVar();
-
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.lowest_entropy"_lang);
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{:.5f} @", analysis.lowestBlockEntropy);
-                        ImGui::SameLine();
-                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                        if (ImGui::Button(hex::format("0x{:06X}", analysis.lowestBlockEntropyAddress).c_str())) {
-                            ImHexApi::HexEditor::setSelection(analysis.lowestBlockEntropyAddress, analysis.inputChunkSize);
-                        }
-                        ImGui::PopStyleColor();
-                        ImGui::PopStyleVar();
-
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);
-                        ImGui::TableNextColumn();
-                        if (analysis.plainTextCharacterPercentage < 0) {
-                            ImGui::TextUnformatted("???");
-                        } else {
-                            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.1F);
-                            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
-                            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor::HSV(0.3F * (analysis.plainTextCharacterPercentage / 100.0F), 0.8F, 0.6F, 1.0F).Value);
-                            ImGui::ProgressBar(analysis.plainTextCharacterPercentage / 100.0F, ImVec2(200_scaled, ImGui::GetTextLineHeight()));
-                            ImGui::PopStyleColor(2);
-                            ImGui::PopStyleVar();
-                        }
-
-                        ImGui::EndTable();
-                    }
-
-                    ImGui::NewLine();
-
-                    // General information
-                    if (ImGui::BeginTable("info", 1, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
-                        ImGui::TableNextRow();
-
-                        if (analysis.averageEntropy > 0.83 && analysis.highestBlockEntropy > 0.9) {
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
-                        }
-
-                        if (analysis.plainTextCharacterPercentage > 95) {
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.plain_text"_lang);
-                        }
-
-                        ImGui::EndTable();
-                    }
-
-                    ImGui::BeginGroup();
-                    {
-                        ImGui::TextUnformatted("hex.builtin.view.information.digram"_lang);
-                        analysis.digram->draw(scaled(ImVec2(300, 300)));
-                    }
-                    ImGui::EndGroup();
-
-                    ImGui::SameLine();
-
-                    ImGui::BeginGroup();
-                    {
-                        ImGui::TextUnformatted("hex.builtin.view.information.layered_distribution"_lang);
-                        analysis.layeredDistribution->draw(scaled(ImVec2(300, 300)));
-                    }
-                    ImGui::EndGroup();
                 }
             }
         }

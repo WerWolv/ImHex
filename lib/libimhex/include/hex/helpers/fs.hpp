@@ -37,6 +37,7 @@ namespace hex::fs {
         Magic,
         Plugins,
         Yara,
+        YaraAdvancedAnalysis,
         Config,
         Backups,
         Resources,

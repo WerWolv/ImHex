@@ -1,7 +1,7 @@
 {
-    "code": "en-US",
-    "country": "United States",
-    "language": "English",
+    "code": "de-DE",
+    "country": "Germany",
+    "language": "German",
     "translations": {
         "hex.script_loader.menu.run_script": "Skript ausführen",
         "hex.script_loader.menu.loading": "Laden...",

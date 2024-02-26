@@ -98,6 +98,7 @@
         "hex.ui.hex_editor.uppercase_hex": "Upper case Hex characters",
         "hex.ui.hex_editor.visualizer": "Data visualizer",
         "hex.ui.pattern_drawer.color": "Color",
+        "hex.ui.pattern_drawer.comment": "Comment",
         "hex.ui.pattern_drawer.double_click": "Double-click to see more items",
         "hex.ui.pattern_drawer.end": "End",
         "hex.ui.pattern_drawer.export": "Export Patterns as...",
@@ -114,6 +115,8 @@
         "hex.ui.pattern_drawer.value": "Value",
         "hex.ui.pattern_drawer.var_name": "Name",
         "hex.ui.pattern_drawer.visualizer.unknown": "Unknown visualizer",
-        "hex.ui.pattern_drawer.visualizer.invalid_parameter_count": "Invalid parameter count"
+        "hex.ui.pattern_drawer.visualizer.invalid_parameter_count": "Invalid parameter count",
+        "hex.ui.diagram.byte_type_distribution.plain_text": "Plain Text",
+        "hex.ui.diagram.byte_type_distribution.similar_bytes": "Similar Bytes"
     }
 }

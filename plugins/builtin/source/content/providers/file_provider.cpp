@@ -22,6 +22,8 @@
 
 namespace hex::plugin::builtin {
 
+    std::set<FileProvider*> FileProvider::s_openedFiles;
+
     bool FileProvider::isAvailable() const {
         return true;
     }
@@ -57,15 +59,16 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::save() {
+        m_file.flush();
+
         #if defined(OS_WINDOWS)
             FILETIME ft;
             SYSTEMTIME st;
 
-            wolv::io::File file(m_path, wolv::io::File::Mode::Write);
-            if (file.isValid()) {
+            if (m_file.isValid()) {
                 GetSystemTime(&st);
                 if (SystemTimeToFileTime(&st, &ft)) {
-                    auto fileHandle = HANDLE(_get_osfhandle(_fileno(file.getHandle())));
+                    auto fileHandle = HANDLE(_get_osfhandle(_fileno(m_file.getHandle())));
                     SetFileTime(fileHandle, nullptr, nullptr, &ft);
                 }
             }
@@ -82,15 +85,7 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::resizeRaw(u64 newSize) {
-        this->close();
-
-        {
-            wolv::io::File file(m_path, wolv::io::File::Mode::Write);
-
-            file.setSize(newSize);
-        }
-
-        (void)this->open();
+        m_file.setSize(newSize);
     }
 
     void FileProvider::insertRaw(u64 offset, u64 size) {
@@ -233,11 +228,26 @@ namespace hex::plugin::builtin {
         m_fileStats = m_file.getFileInfo();
         m_fileSize  = m_file.getSize();
 
+        // Make sure the current file is not already opened
+        {
+            auto alreadyOpenedFileProvider = std::ranges::find_if(s_openedFiles, [this](const FileProvider *provider) {
+                return provider->m_path == m_path;
+            });
+
+            if (alreadyOpenedFileProvider != s_openedFiles.end()) {
+                ImHexApi::Provider::setCurrentProvider(*alreadyOpenedFileProvider);
+                return false;
+            } else {
+                s_openedFiles.insert(this);
+            }
+        }
+
         return true;
     }
 
     void FileProvider::close() {
         m_file.close();
+        s_openedFiles.erase(this);
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {

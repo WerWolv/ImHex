@@ -19,6 +19,8 @@
 #include <popups/popup_file_chooser.hpp>
 #include <content/popups/popup_blocking_task.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
+#include <wolv/utils/lock.hpp>
+#include <pl/patterns/pattern.hpp>
 
 using namespace std::literals::string_literals;
 
@@ -404,8 +406,20 @@ namespace hex::plugin::builtin {
         });
 
         m_hexEditor.setBackgroundHighlightCallback([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
-            if (auto highlight = m_backgroundHighlights->find(address); highlight != m_backgroundHighlights->end())
-                return highlight->second;
+            bool hovered = false;
+            for (const auto &[id, hoverFunction] : ImHexApi::HexEditor::impl::getHoveringFunctions()) {
+                if (hoverFunction(m_hexEditor.getProvider(), address, data, size)) {
+                    hovered = true;
+                    break;
+                }
+            }
+
+            if (auto highlight = m_backgroundHighlights->find(address); highlight != m_backgroundHighlights->end()) {
+                if (hovered)
+                    return ImAlphaBlendColors(highlight->second, 0xA0FFFFFF);
+                else
+                    return highlight->second;
+            }
 
             std::optional<color_t> result;
             for (const auto &[id, callback] : ImHexApi::HexEditor::impl::getBackgroundHighlightingFunctions()) {
@@ -462,7 +476,6 @@ namespace hex::plugin::builtin {
         EventProviderChanged::unsubscribe(this);
         EventProviderOpened::unsubscribe(this);
         EventHighlightingChanged::unsubscribe(this);
-        EventSettingsChanged::unsubscribe(this);
 
         ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow());
     }
@@ -878,11 +891,17 @@ namespace hex::plugin::builtin {
         });
 
         m_hexEditor.setBytesPerRow(ContentRegistry::Settings::read<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow()));
-        EventSettingsChanged::subscribe(this, [this] {
-            m_hexEditor.setSelectionColor(ContentRegistry::Settings::read<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080));
-            m_hexEditor.enableSyncScrolling(ContentRegistry::Settings::read<bool>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", false));
-            m_hexEditor.setByteCellPadding(ContentRegistry::Settings::read<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", 0));
-            m_hexEditor.setCharacterCellPadding(ContentRegistry::Settings::read<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding", 0));
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.highlight_color", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.setSelectionColor(value.get<int>(0x60C08080));
+        });
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.enableSyncScrolling(value.get<bool>(false));
+        });
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.setByteCellPadding(value.get<int>(0));
+        });
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.setCharacterCellPadding(value.get<int>(0));
         });
     }
 

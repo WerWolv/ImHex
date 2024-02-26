@@ -9,8 +9,10 @@
 #include <bit>
 #include <cstring>
 #include <cctype>
+#include <concepts>
 #include <functional>
 #include <limits>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -74,6 +76,9 @@ namespace hex {
     void startProgram(const std::string &command);
     int executeCommand(const std::string &command);
     void openWebpage(std::string url);
+
+    extern "C" void registerFont(const char *fontName, const char *fontPath);
+    const std::map<std::fs::path, std::string>& getFonts();
 
     [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);
     [[nodiscard]] std::vector<u8> decodeByteString(const std::string &string);
@@ -294,10 +299,29 @@ namespace hex {
     [[nodiscard]] std::optional<std::string> getEnvironmentVariable(const std::string &env);
 
     [[nodiscard]] inline std::string limitStringLength(const std::string &string, size_t maxLength) {
-        if (string.length() <= maxLength)
+        // If the string is shorter than the max length, return it as is
+        if (string.size() < maxLength)
             return string;
 
-        return string.substr(0, maxLength - 3) + "...";
+        // If the string is longer than the max length, find the last space before the max length
+        auto it = string.begin() + maxLength;
+        while (it != string.begin() && !std::isspace(*it)) --it;
+
+        // If there's no space before the max length, just cut the string
+        if (it == string.begin()) {
+            it = string.begin() + maxLength;
+
+            // Try to find a UTF-8 character boundary
+            while (it != string.begin() && (*it & 0x80) != 0x00) --it;
+            ++it;
+        }
+
+        // If we still didn't find a valid boundary, just return the string as is
+        if (it == string.begin())
+            return string;
+
+        // Append
+        return std::string(string.begin(), it) + "…";
     }
 
     [[nodiscard]] std::optional<std::fs::path> getInitialFilePath();

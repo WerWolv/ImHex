@@ -5,19 +5,23 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <wolv/utils/string.hpp>
+#include <fonts/codicons_font.h>
 
 #include <functional>
 #include <string>
 
 namespace hex::ui {
 
-    class PopupFileChooser : public Popup<PopupFileChooser> {
+    template<typename T>
+    class PopupNamedFileChooserBase : public Popup<T> {
     public:
-        PopupFileChooser(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
-                : hex::Popup<PopupFileChooser>("hex.ui.common.choose_file"),
-                  m_indices({ }),
+        PopupNamedFileChooserBase(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<std::string(const std::fs::path &)> &nameCallback, const std::function<void(std::fs::path)> &callback)
+                : hex::Popup<T>("hex.ui.common.choose_file"),
+                  m_selectedFiles({ }),
+                  m_nameCallback(nameCallback),
                   m_openCallback(callback),
-                  m_validExtensions(validExtensions), m_multiple(multiple) {
+                  m_validExtensions(validExtensions),
+                  m_multiple(multiple) {
 
             for (const auto &path : files) {
                 std::fs::path adjustedPath;
@@ -42,21 +46,35 @@ namespace hex::ui {
         void drawContent() override {
             bool doubleClicked = false;
 
-            if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
-                u32 index = 0;
-                for (auto &[path, pathName] : m_files) {
-                    ImGui::PushID(index);
+            if (m_justOpened) {
+                ImGui::SetKeyboardFocusHere();
+                m_justOpened = false;
+            }
 
-                    bool selected = m_indices.contains(index);
-                    if (ImGui::Selectable(wolv::util::toUTF8String(pathName).c_str(), selected, ImGuiSelectableFlags_DontClosePopups)) {
+            ImGui::PushItemWidth(-1);
+            ImGuiExt::InputTextIcon("##search", ICON_VS_FILTER, m_filter);
+            ImGui::PopItemWidth();
+
+            if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
+                for (auto fileIt = m_files.begin(); fileIt != m_files.end(); ++fileIt) {
+                    const auto &[path, pathName] = *fileIt;
+
+                    const auto &pathNameString = m_nameCallback(pathName);
+                    if (!m_filter.empty() && !pathNameString.contains(m_filter))
+                        continue;
+
+                    ImGui::PushID(&*fileIt);
+
+                    bool selected = m_selectedFiles.contains(fileIt);
+                    if (ImGui::Selectable(pathNameString.c_str(), selected, ImGuiSelectableFlags_DontClosePopups)) {
                         if (!m_multiple) {
-                            m_indices.clear();
-                            m_indices.insert(index);
+                            m_selectedFiles.clear();
+                            m_selectedFiles.insert(fileIt);
                         } else {
                             if (selected) {
-                                m_indices.erase(index);
+                                m_selectedFiles.erase(fileIt);
                             } else {
-                                m_indices.insert(index);
+                                m_selectedFiles.insert(fileIt);
                             }
                         }
                     }
@@ -67,16 +85,15 @@ namespace hex::ui {
                     ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
                     ImGui::PopID();
-                    index++;
                 }
 
                 ImGui::EndListBox();
             }
 
             if (ImGui::Button("hex.ui.common.open"_lang) || doubleClicked) {
-                for (const auto &index : m_indices)
-                    m_openCallback(m_files[index].first);
-                Popup::close();
+                for (const auto &it : m_selectedFiles)
+                    m_openCallback(it->first);
+                Popup<T>::close();
             }
 
             ImGui::SameLine();
@@ -84,7 +101,7 @@ namespace hex::ui {
             if (ImGui::Button("hex.ui.common.browse"_lang)) {
                 fs::openFileBrowser(fs::DialogMode::Open, m_validExtensions, [this](const auto &path) {
                     m_openCallback(path);
-                    Popup::close();
+                    Popup<T>::close();
                 }, {}, m_multiple);
             }
 
@@ -104,11 +121,30 @@ namespace hex::ui {
         }
 
     private:
-        std::set<u32> m_indices;
+        std::string m_filter;
         std::vector<std::pair<std::fs::path, std::fs::path>> m_files;
+        std::set<std::vector<std::pair<std::fs::path, std::fs::path>>::const_iterator> m_selectedFiles;
+        std::function<std::string(const std::fs::path &)> m_nameCallback;
         std::function<void(std::fs::path)> m_openCallback;
         std::vector<hex::fs::ItemFilter> m_validExtensions;
         bool m_multiple = false;
+        bool m_justOpened = true;
+    };
+
+    class PopupNamedFileChooser : public PopupNamedFileChooserBase<PopupNamedFileChooser> {
+    public:
+        PopupNamedFileChooser(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<std::string(const std::fs::path &)> &nameCallback, const std::function<void(std::fs::path)> &callback)
+        : PopupNamedFileChooserBase(basePaths, files, validExtensions, multiple, nameCallback, callback) { }
+    };
+
+    class PopupFileChooser : public PopupNamedFileChooserBase<PopupFileChooser> {
+    public:
+        PopupFileChooser(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
+        : PopupNamedFileChooserBase(basePaths, files, validExtensions, multiple, nameCallback, callback) { }
+
+        static std::string nameCallback(const std::fs::path &path) {
+            return wolv::util::toUTF8String(path);
+        }
     };
 
 }

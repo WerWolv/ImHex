@@ -223,7 +223,10 @@ namespace hex::plugin::builtin {
 
         std::array<AccessData, 512> m_accessHistory = {};
         u32 m_accessHistoryIndex = 0;
-        bool replace = false;
+        bool m_parentHighlightingEnabled = true;
+        bool m_replaceMode = false;
+
+
         static inline std::array<std::string,256> m_findHistory;
         static inline u32 m_findHistorySize = 0;
         static inline u32 m_findHistoryIndex = 0;

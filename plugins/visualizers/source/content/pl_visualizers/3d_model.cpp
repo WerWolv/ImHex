@@ -92,7 +92,7 @@ namespace hex::plugin::visualizers {
         gl::Vector<float, 3> s_rotation         = { {  0.0F, 0.0F,  0.0F } };
         gl::Vector<float, 3> s_lightPosition    = { { -0.7F, 0.0F,  0.0F } };
         gl::Vector<float, 4> s_lightBrightness  = { {  0.5F, 0.5F,  0.5F, 32.0F } };
-        gl::Vector<float, 3> s_lightColor       = { {  1.0F, 1.0F,  1.0f } };
+        gl::Vector<float, 3> s_lightColor       = { {  1.0F, 1.0F,  1.0F } };
         gl::Matrix<float, 4, 4> s_rotate        = gl::Matrix<float, 4, 4>::identity();
 
         ImGuiExt::Texture s_texture;
@@ -140,10 +140,10 @@ namespace hex::plugin::visualizers {
             gl::Vector<float, 4> minCamera = minWorld, maxCamera = maxWorld;
 
             if (maxCamera[3] != 0)
-                maxCamera = maxCamera * (1.0f / maxCamera[3]);
+                maxCamera = maxCamera * (1.0F / maxCamera[3]);
 
             if (minCamera[3] != 0)
-                minCamera = minCamera * (1.0f / minCamera[3]);
+                minCamera = minCamera * (1.0F / minCamera[3]);
 
             float maxx = std::max(std::fabs(minCamera[0]), std::fabs(maxCamera[0]));
             float maxy = std::max(std::fabs(minCamera[1]), std::fabs(maxCamera[1]));
@@ -445,21 +445,21 @@ namespace hex::plugin::visualizers {
 
                 if (s_drawAxes) {
                     gl::Matrix<float, 4, 4> axes = gl::Matrix<float, 4, 4>::identity();
-                    axes(0, 3) = 1.0f;
-                    axes(1, 3) = 1.0f;
-                    axes(2, 3) = 1.0f;
+                    axes(0, 3) = 1.0F;
+                    axes(1, 3) = 1.0F;
+                    axes(2, 3) = 1.0F;
 
                     axes = axes * mvp;
-                    bool showX = axes(0, 3) > 0.0f;
-                    bool showY = axes(1, 3) > 0.0f;
-                    bool showZ = axes(2, 3) > 0.0f;
+                    bool showX = axes(0, 3) > 0.0F;
+                    bool showY = axes(1, 3) > 0.0F;
+                    bool showZ = axes(2, 3) > 0.0F;
 
-                    axes.updateRow(0, axes.getRow(0) * (1.0f / axes(0, 3)));
-                    axes.updateRow(1, axes.getRow(1) * (1.0f / axes(1, 3)));
-                    axes.updateRow(2, axes.getRow(2) * (1.0f / axes(2, 3)));
+                    axes.updateRow(0, axes.getRow(0) * (1.0F / axes(0, 3)));
+                    axes.updateRow(1, axes.getRow(1) * (1.0F / axes(1, 3)));
+                    axes.updateRow(2, axes.getRow(2) * (1.0F / axes(2, 3)));
 
-                    auto axesPosx = (axes.getColumn(0) + 1.0f) * (textureWidth / 2.0f);
-                    auto axesPosy = (axes.getColumn(1) + 1.0f) * (-textureHeight / 2.0f) + textureHeight;
+                    auto axesPosx = (axes.getColumn(0) + 1.0F) * (textureWidth / 2.0F);
+                    auto axesPosy = (axes.getColumn(1) + 1.0F) * (-textureHeight / 2.0F) + textureHeight;
 
                     ImDrawList *drawList = ImGui::GetWindowDrawList();
 
@@ -727,8 +727,8 @@ namespace hex::plugin::visualizers {
             gl::Matrix<float, 4, 4> translate = gl::Matrix<float, 4, 4>::identity();
 
             float totalScale;
-            float viewWidth =  s_renderingWindowSize.x / 500.0f;
-            float viewHeight = s_renderingWindowSize.y / 500.0f;
+            float viewWidth =  s_renderingWindowSize.x / 500.0F;
+            float viewHeight = s_renderingWindowSize.y / 500.0F;
             glViewport(0,0 , GLsizei(renderTexture.getWidth()), GLsizei(renderTexture.getHeight()));
             glDepthRangef(s_nearLimit, s_farLimit);
             glClearColor(0.00F, 0.00F, 0.00F, 0.00f);
@@ -757,7 +757,7 @@ namespace hex::plugin::visualizers {
                 translate(3, 1) = s_translation[1];
                 translate(3, 2) = s_translation[2];
             }
-            totalScale /= (3.0f * s_max);
+            totalScale /= (3.0F * s_max);
             scaleForVertices(0, 0) = totalScale;
             scaleForVertices(1, 1) = totalScale;
             scaleForVertices(2, 2) = totalScale;

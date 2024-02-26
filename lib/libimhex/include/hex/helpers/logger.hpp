@@ -8,6 +8,7 @@
 #include <fmt/color.h>
 
 #include <wolv/io/file.hpp>
+#include <hex/helpers/fmt.hpp>
 
 namespace hex::log {
 
@@ -19,7 +20,7 @@ namespace hex::log {
         [[maybe_unused]] void redirectToFile();
         [[maybe_unused]] void enableColorPrinting();
 
-        [[nodiscard]] std::mutex& getLoggerMutex();
+        [[nodiscard]] std::recursive_mutex& getLoggerMutex();
         [[nodiscard]] bool isLoggingSuspended();
 
         struct LogEntry {
@@ -49,6 +50,16 @@ namespace hex::log {
             addLogEntry(IMHEX_PROJECT_NAME, level, std::move(message));
         }
 
+        namespace color {
+
+            fmt::color debug();
+            fmt::color info();
+            fmt::color warn();
+            fmt::color error();
+            fmt::color fatal();
+
+        }
+
     }
 
     void suspendLogging();
@@ -56,28 +67,27 @@ namespace hex::log {
 
     [[maybe_unused]] void debug(const std::string &fmt, auto && ... args) {
         #if defined(DEBUG)
-            hex::log::impl::print(fg(fmt::color::light_green) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
+            hex::log::impl::print(fg(impl::color::debug()) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
         #else
             impl::addLogEntry(IMHEX_PROJECT_NAME, "[DEBUG]", fmt::format(fmt::runtime(fmt), args...));
         #endif
     }
 
     [[maybe_unused]] void info(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(fmt::color::cadet_blue) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
+        hex::log::impl::print(fg(impl::color::info()) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
     }
 
     [[maybe_unused]] void warn(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(fmt::color::orange) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
+        hex::log::impl::print(fg(impl::color::warn()) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
     }
 
     [[maybe_unused]] void error(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(fmt::color::red) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
+        hex::log::impl::print(fg(impl::color::error()) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
     }
 
     [[maybe_unused]] void fatal(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(fmt::color::purple) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
+        hex::log::impl::print(fg(impl::color::fatal()) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
     }
-
 
     [[maybe_unused]] void print(const std::string &fmt, auto && ... args) {
         std::scoped_lock lock(impl::getLoggerMutex());

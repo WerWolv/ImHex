@@ -18,5 +18,5 @@ void main() {
     float diffuse = dotLN * 0.5;
 
     vec3 color = (diffuse+0.7)*vertexData.color.xyz;
-    outColor = vec4(color, 1.0f);
+    outColor = vec4(color, 1.0F);
 }

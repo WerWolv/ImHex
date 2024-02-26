@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <list>
+#include <mutex>
 #include <map>
 #include <string_view>
 #include <functional>
@@ -72,7 +73,11 @@ namespace hex {
             explicit Event(Callback func) noexcept : m_func(std::move(func)) { }
 
             void operator()(Params... params) const noexcept {
-                m_func(params...);
+                try {
+                    m_func(params...);
+                } catch (const std::exception &e) {
+                    log::error("An exception occurred while handling event: {}", e.what());
+                }
             }
 
         private:
@@ -173,11 +178,7 @@ namespace hex {
 
             for (const auto &[id, event] : getEvents()) {
                 if (id == E::Id) {
-                    try {
-                        (*static_cast<E *const>(event.get()))(std::forward<decltype(args)>(args)...);
-                    } catch (const std::exception &e) {
-                        log::error("Event '{}' threw {}: {}", wolv::type::getTypeName<decltype(e)>(), wolv::type::getTypeName<E>(), e.what());
-                    }
+                    (*static_cast<E *const>(event.get()))(std::forward<decltype(args)>(args)...);
                 }
             }
 
@@ -215,7 +216,6 @@ namespace hex {
     EVENT_DEF(EventHighlightingChanged);
     EVENT_DEF(EventWindowClosing, GLFWwindow *);
     EVENT_DEF(EventRegionSelected, ImHexApi::HexEditor::ProviderRegion);
-    EVENT_DEF(EventSettingsChanged);
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventThemeChanged);
     EVENT_DEF(EventOSThemeChanged);
@@ -309,4 +309,5 @@ namespace hex {
      * The 'from' provider should not have any per provider data after this, and should be immediately deleted
     */
     EVENT_DEF(MovePerProviderData, prv::Provider *, prv::Provider *);
+
 }

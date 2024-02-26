@@ -252,6 +252,8 @@ macro(createPackage)
 
             install(FILES ${IMHEX_ICON} DESTINATION "${IMHEX_BUNDLE_PATH}/Contents/Resources")
             install(TARGETS main BUNDLE DESTINATION ".")
+        install(FILES $<TARGET_FILE:main> DESTINATION "${IMHEX_BUNDLE_PATH}")
+        install(FILES $<TARGET_FILE:updater> DESTINATION "${IMHEX_BUNDLE_PATH}")
 
             # Update library references to make the bundle portable
             postprocess_bundle(imhex_all main)
@@ -609,17 +611,25 @@ macro(addBundledLibraries)
     endif()
 
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)
-    set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "" FORCE)
+
+    if (WIN32)
+        set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "" FORCE)
+    else()
+        set(LIBPL_SHARED_LIBRARY OFF CACHE BOOL "" FORCE)
+    endif()
+
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
 
-    install(
-        TARGETS
-            libpl
-        DESTINATION
-            "${CMAKE_INSTALL_LIBDIR}"
-        PERMISSIONS
-            OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-    )
+    if (LIBPL_SHARED_LIBRARY)
+        install(
+            TARGETS
+                libpl
+            DESTINATION
+                "${CMAKE_INSTALL_LIBDIR}"
+            PERMISSIONS
+                OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )
+    endif()
 
     if (WIN32)
         set_target_properties(
@@ -727,8 +737,10 @@ function(generateSDKDirectory)
         set(SDK_PATH "share/imhex/sdk")
     endif()
 
+    set(SDK_BUILD_PATH "${CMAKE_BINARY_DIR}/sdk")
+
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex DESTINATION "${SDK_PATH}/lib" PATTERN "**/source/*" EXCLUDE)
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib" PATTERN "**/source/*" EXCLUDE)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/imgui DESTINATION "${SDK_PATH}/lib/third_party" PATTERN "**/source/*" EXCLUDE)
     if (NOT USE_SYSTEM_FMT)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/fmt DESTINATION "${SDK_PATH}/lib/third_party")

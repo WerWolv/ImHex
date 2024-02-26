@@ -70,7 +70,7 @@ namespace ImGuiExt {
 
     class Texture {
     public:
-        enum class Filter {
+        enum class Filter : int {
             Linear,
             Nearest
         };

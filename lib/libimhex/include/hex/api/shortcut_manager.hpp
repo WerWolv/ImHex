@@ -425,7 +425,7 @@ namespace hex {
          * @param focused Whether the current view is focused
          * @param keyCode The key code of the key that was pressed
          */
-        static void process(const std::unique_ptr<View> &currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode);
+        static void process(const View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode);
 
         /**
          * @brief Process a key event. This should be called from the main loop.

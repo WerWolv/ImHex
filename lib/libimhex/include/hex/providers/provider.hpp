@@ -161,7 +161,7 @@ namespace hex::prv {
          */
         [[nodiscard]] virtual std::string getName() const = 0;
 
-        void resize(u64 newSize);
+        bool resize(u64 newSize);
         void insert(u64 offset, u64 size);
         void remove(u64 offset, u64 size);
 

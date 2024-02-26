@@ -10,33 +10,19 @@
 <p align="center">A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.</p>
 
 <p align="center">
-  <a title="'Build' workflow Status" href="https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild">
-    <img alt="'Build' workflow Status" src="https://img.shields.io/github/actions/workflow/status/WerWolv/ImHex/build.yml?longCache=true&style=for-the-badge&label=Build&logoColor=fff&logo=GitHub%20Actions&branch=master">
-  </a>
-  <a title="Discord Server" href="https://discord.gg/X63jZ36xBY">
-    <img alt="Discord Server" src="https://img.shields.io/discord/789833418631675954?label=Discord&logo=Discord&logoColor=fff&style=for-the-badge">
-  </a>
-  <a title="Total Downloads" href="https://github.com/WerWolv/ImHex/releases/latest">
-    <img alt="Total Downloads" src="https://img.shields.io/github/downloads/WerWolv/ImHex/total?longCache=true&style=for-the-badge&label=Downloads&logoColor=fff&logo=GitHub">
-  </a>
-  <a title="Code Quality" href="https://www.codefactor.io/repository/github/werwolv/imhex">
-    <img alt="Code Quality" src="https://img.shields.io/codefactor/grade/github/WerWolv/ImHex?longCache=true&style=for-the-badge&label=Code%20Quality&logoColor=fff&logo=CodeFactor&branch=master">
-  </a>
-  <a title="Translation" href="https://weblate.werwolv.net/projects/imhex/">
-    <img alt="Translation" src="https://img.shields.io/weblate/progress/imhex?logo=weblate&logoColor=%23FFFFFF&server=https%3A%2F%2Fweblate.werwolv.net&style=for-the-badge">
-  </a>
-  <a title="Documentation" href="https://imhex.werwolv.net/docs">
-    <img alt="Documentation" src="https://img.shields.io/badge/Docs-Available-brightgreen?logo=gitbook&logoColor=%23FFFFFF&style=for-the-badge">
-  </a>
-  <a title="Plugins" href="https://github.com/WerWolv/ImHex/blob/master/PLUGINS.md">
-    <img alt="Plugins" src="https://img.shields.io/badge/Plugins-Supported-brightgreen?logo=stackedit&logoColor=%23FFFFFF&style=for-the-badge">
-  </a>
+  <a title="'Build' workflow Status" href="https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild"><img alt="'Build' workflow Status" src="https://img.shields.io/github/actions/workflow/status/WerWolv/ImHex/build.yml?longCache=true&style=for-the-badge&label=Build&logoColor=fff&logo=GitHub%20Actions&branch=master"></a>
+  <a title="Discord Server" href="https://discord.gg/X63jZ36xBY"><img alt="Discord Server" src="https://img.shields.io/discord/789833418631675954?label=Discord&logo=Discord&logoColor=fff&style=for-the-badge"></a>
+  <a title="Total Downloads" href="https://github.com/WerWolv/ImHex/releases/latest"><img alt="Total Downloads" src="https://img.shields.io/github/downloads/WerWolv/ImHex/total?longCache=true&style=for-the-badge&label=Downloads&logoColor=fff&logo=GitHub"></a>
+  <a title="Code Quality" href="https://www.codefactor.io/repository/github/werwolv/imhex"><img alt="Code Quality" src="https://img.shields.io/codefactor/grade/github/WerWolv/ImHex?longCache=true&style=for-the-badge&label=Code%20Quality&logoColor=fff&logo=CodeFactor&branch=master"></a>
+  <a title="Translation" href="https://weblate.werwolv.net/projects/imhex/"><img alt="Translation" src="https://img.shields.io/weblate/progress/imhex?logo=weblate&logoColor=%23FFFFFF&server=https%3A%2F%2Fweblate.werwolv.net&style=for-the-badge"></a>
+  <a title="Plugins" href="https://github.com/WerWolv/ImHex/blob/master/PLUGINS.md"><img alt="Plugins" src="https://img.shields.io/badge/Plugins-Supported-brightgreen?logo=stackedit&logoColor=%23FFFFFF&style=for-the-badge"></a>
 </p>
 
 <p align="center">
-  <a title="Use the Web version of ImHex right in your browser!" href="https://web.imhex.werwolv.net">
-    <img alt="Use the Web version of ImHex right in your browser!" src="resources/dist/common/try_online_banner.png">
-  </a>
+  <a title="Download the latest version of ImHex" href="https://imhex.download"><img alt="Download the latest version of ImHex!" src="resources/dist/common/get_release_banner.png"></a>
+  <a title="Download the latest nightly pre-release version of ImHex" href="https://imhex.download/#nightly"><img alt="Download the latest nightly pre-release version of ImHex" src="resources/dist/common/get_nightly_banner.png"></a>
+  <a title="Use the Web version of ImHex right in your browser!" href="https://web.imhex.werwolv.net"><img alt="Use the Web version of ImHex right in your browser!" src="resources/dist/common/try_online_banner.png"></a>
+  <a title="Read the documentation of ImHex!" href="https://docs.werwolv.net"><img alt="Read the documentation of ImHex!" src="resources/dist/common/read_docs_banner.png"></a>
 </p>
 
 ## Supporting
@@ -44,9 +30,9 @@
 If you like my work, please consider supporting me on GitHub Sponsors, Patreon or PayPal. Thanks a lot!
 
 <p align="center">
-<a href="https://github.com/sponsors/WerWolv"><img src="https://werwolv.net/assets/github_banner.png" alt="GitHub donate button" /> </a>
-<a href="https://www.patreon.com/werwolv"><img src="https://c5.patreon.com/external/logo/become_a_patron_button.png" alt="Patreon donate button" /> </a>
-<a href="https://werwolv.net/donate"><img src="https://werwolv.net/assets/paypal_banner.png" alt="PayPal donate button" /> </a>
+<a href="https://github.com/sponsors/WerWolv"><img src="https://werwolv.net/assets/github_banner.png" alt="GitHub donate button" /></a>
+<a href="https://www.patreon.com/werwolv"><img src="https://c5.patreon.com/external/logo/become_a_patron_button.png" alt="Patreon donate button" /></a>
+<a href="https://werwolv.net/donate"><img src="https://werwolv.net/assets/paypal_banner.png" alt="PayPal donate button" /></a>
 </p>
 
 ## Screenshots

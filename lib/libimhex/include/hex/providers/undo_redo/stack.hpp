@@ -33,8 +33,10 @@ namespace hex::prv::undo {
 
         template<std::derived_from<Operation> T>
         bool add(auto && ... args) {
+            auto result = this->add(std::make_unique<T>(std::forward<decltype(args)>(args)...));
             EventDataChanged::post(m_provider);
-            return this->add(std::make_unique<T>(std::forward<decltype(args)>(args)...));
+
+            return result;
         }
 
         bool add(std::unique_ptr<Operation> &&operation);

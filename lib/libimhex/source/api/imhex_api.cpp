@@ -2,10 +2,11 @@
 
 #include <hex/api/event_manager.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/providers/provider_data.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -67,9 +68,22 @@ namespace hex {
                 return *s_tooltipFunctions;
             }
 
+            static AutoReset<std::map<u32, HoveringFunction>> s_hoveringFunctions;
+            const std::map<u32, HoveringFunction>& getHoveringFunctions() {
+                return *s_hoveringFunctions;
+            }
+
             static AutoReset<std::optional<ProviderRegion>> s_currentSelection;
             void setCurrentSelection(const std::optional<ProviderRegion> &region) {
                 *s_currentSelection = region;
+            }
+
+            static PerProvider<std::optional<Region>> s_hoveredRegion;
+            void setHoveredRegion(const prv::Provider *provider, const Region &region) {
+                if (region == Region::Invalid())
+                    s_hoveredRegion.get(provider).reset();
+                else
+                    s_hoveredRegion.get(provider) = region;
             }
 
         }
@@ -83,7 +97,7 @@ namespace hex {
                 id, Highlighting { region, color }
             });
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
 
             return id;
         }
@@ -91,7 +105,7 @@ namespace hex {
         void removeBackgroundHighlight(u32 id) {
             impl::s_backgroundHighlights->erase(id);
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
         }
 
         u32 addBackgroundHighlightingProvider(const impl::HighlightingFunction &function) {
@@ -101,7 +115,7 @@ namespace hex {
 
             impl::s_backgroundHighlightingFunctions->insert({ id, function });
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
 
             return id;
         }
@@ -109,7 +123,7 @@ namespace hex {
         void removeBackgroundHighlightingProvider(u32 id) {
             impl::s_backgroundHighlightingFunctions->erase(id);
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
         }
 
         u32 addForegroundHighlight(const Region &region, color_t color) {
@@ -121,7 +135,7 @@ namespace hex {
                 id, Highlighting { region, color }
             });
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
 
             return id;
         }
@@ -129,7 +143,7 @@ namespace hex {
         void removeForegroundHighlight(u32 id) {
             impl::s_foregroundHighlights->erase(id);
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
         }
 
         u32 addForegroundHighlightingProvider(const impl::HighlightingFunction &function) {
@@ -139,7 +153,7 @@ namespace hex {
 
             impl::s_foregroundHighlightingFunctions->insert({ id, function });
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
 
             return id;
         }
@@ -147,7 +161,21 @@ namespace hex {
         void removeForegroundHighlightingProvider(u32 id) {
             impl::s_foregroundHighlightingFunctions->erase(id);
 
-            EventHighlightingChanged::post();
+            TaskManager::doLaterOnce([]{ EventHighlightingChanged::post(); });
+        }
+
+        u32 addHoverHighlightProvider(const impl::HoveringFunction &function) {
+            static u32 id = 0;
+
+            id++;
+
+            impl::s_hoveringFunctions->insert({ id, function });
+
+            return id;
+        }
+
+        void removeHoverHighlightProvider(u32 id) {
+            impl::s_hoveringFunctions->erase(id);
         }
 
         static u32 tooltipId = 0;
@@ -202,6 +230,11 @@ namespace hex {
         void addVirtualFile(const std::fs::path &path, std::vector<u8> data, Region region) {
             RequestAddVirtualFile::post(path, std::move(data), region);
         }
+
+        const std::optional<Region>& getHoveredRegion(const prv::Provider *provider) {
+            return impl::s_hoveredRegion.get(provider);
+        }
+
     }
 
 
@@ -259,15 +292,28 @@ namespace hex {
             return result;
         }
 
-        void setCurrentProvider(u32 index) {
+        void setCurrentProvider(i64 index) {
             if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
-            if (index < s_providers->size() && s_currentProvider != index) {
+            if (std::cmp_less(index, s_providers->size()) && s_currentProvider != index) {
                 auto oldProvider  = get();
                 s_currentProvider = index;
                 EventProviderChanged::post(oldProvider, get());
             }
+
+            RequestUpdateWindowTitle::post();
+        }
+
+        void setCurrentProvider(NonNull<prv::Provider*> provider) {
+            if (TaskManager::getRunningTaskCount() > 0)
+                return;
+
+            const auto providers = getProviders();
+            auto it = std::ranges::find(providers, provider.get());
+
+            auto index = std::distance(providers.begin(), it);
+            setCurrentProvider(index);
         }
 
         i64 getCurrentProviderIndex() {
@@ -352,7 +398,7 @@ namespace hex {
                     if (currentIt != s_providers->end()) {
                         auto newIndex = std::distance(s_providers->begin(), currentIt);
 
-                        if (s_currentProvider == newIndex)
+                        if (s_currentProvider == newIndex && newIndex != 0)
                             newIndex -= 1;
 
                         setCurrentProvider(newIndex);
@@ -469,6 +515,16 @@ namespace hex {
             static bool s_windowResizable = true;
             bool isWindowResizable() {
                 return s_windowResizable;
+            }
+
+            static std::vector<hex::impl::AutoResetBase*> s_autoResetObjects;
+            void addAutoResetObject(hex::impl::AutoResetBase *object) {
+                s_autoResetObjects.emplace_back(object);
+            }
+
+            void cleanup() {
+                for (const auto &object : s_autoResetObjects)
+                    object->reset();
             }
 
 

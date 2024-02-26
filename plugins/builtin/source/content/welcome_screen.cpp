@@ -279,6 +279,11 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.plugins.title"_lang, "hex.builtin.welcome.learn.plugins.desc"_lang, size))
                             hex::openWebpage("hex.builtin.welcome.learn.plugins.link"_lang);
 
+                        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3_scaled);
+
+                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.interactive_tutorial.title"_lang, "hex.builtin.welcome.learn.interactive_tutorial.desc"_lang, size)) {
+                            RequestOpenWindow::post("Tutorials");
+                        }
                         if (auto [unlocked, total] = AchievementManager::getProgress(); unlocked != total) {
                             if (ImGuiExt::DescriptionButtonProgress("hex.builtin.welcome.learn.achievements.title"_lang, "hex.builtin.welcome.learn.achievements.desc"_lang, float(unlocked) / float(total), size)) {
                                 RequestOpenWindow::post("Achievements");
@@ -443,45 +448,38 @@ namespace hex::plugin::builtin {
         recent::registerEventHandlers();
         recent::updateRecentEntries();
 
-        (void)EventFrameBegin::subscribe(drawWelcomeScreen);
+        EventFrameBegin::subscribe(drawWelcomeScreen);
 
         // Sets a background when they are no views
-        (void)EventFrameBegin::subscribe([]{
+        EventFrameBegin::subscribe([]{
             if (ImHexApi::Provider::isValid() && !isAnyViewOpen())
                 drawNoViewsBackground();
         });
 
-        (void)EventSettingsChanged::subscribe([] {
-            {
-                auto theme = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", [](const ContentRegistry::Settings::SettingsValue &value) {
+            auto theme = value.get<std::string>("Dark");
+            if (theme != ThemeManager::NativeTheme) {
+                static std::string lastTheme;
 
-                if (theme != ThemeManager::NativeTheme) {
-                    static std::string lastTheme;
-
-                    if (theme != lastTheme) {
-                        RequestChangeTheme::post(theme);
-                        lastTheme = theme;
-                    }
+                if (theme != lastTheme) {
+                    RequestChangeTheme::post(theme);
+                    lastTheme = theme;
                 }
-
-                s_simplifiedWelcomeScreen = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", false);
-            }
-
-            {
-                auto language = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US");
-
-                if (language != LocalizationManager::getSelectedLanguage())
-                    LocalizationManager::loadLanguage(language);
-            }
-
-            {
-                auto targetFps = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 14);
-
-                ImHexApi::System::setTargetFPS(static_cast<float>(targetFps));
             }
         });
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", [](const ContentRegistry::Settings::SettingsValue &value) {
+            s_simplifiedWelcomeScreen = value.get<bool>(false);
+        });
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", [](const ContentRegistry::Settings::SettingsValue &value) {
+            auto language = value.get<std::string>("en-US");
+            if (language != LocalizationManager::getSelectedLanguage())
+                LocalizationManager::loadLanguage(language);
+        });
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", [](const ContentRegistry::Settings::SettingsValue &value) {
+            ImHexApi::System::setTargetFPS(static_cast<float>(value.get<int>(14)));
+        });
 
-        (void)RequestChangeTheme::subscribe([](const std::string &theme) {
+        RequestChangeTheme::subscribe([](const std::string &theme) {
             auto changeTexture = [&](const std::string &path) {
                 return ImGuiExt::Texture(romfs::get(path).span(), ImGuiExt::Texture::Filter::Linear);
             };
@@ -531,6 +529,15 @@ namespace hex::plugin::builtin {
 
                 auto backupFilePath = path / BackupFileName;
                 bool hasBackupFile = wolv::io::fs::exists(backupFilePath);
+
+                if (!hasProject && !hasBackupFile) {
+                    log::warn("No project file or backup file found in crash.json file");
+
+                    crashFile.close();
+                    wolv::io::fs::remove(crashFilePath);
+                    wolv::io::fs::remove(backupFilePath);
+                    continue;
+                }
 
                 PopupRestoreBackup::open(
                     // Path of log file

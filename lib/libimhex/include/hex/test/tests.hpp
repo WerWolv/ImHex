@@ -5,6 +5,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/api/plugin_manager.hpp>
 
 #include <wolv/utils/preproc.hpp>
 
@@ -28,16 +29,20 @@
         }                                                              \
     } while (0)
 
+#define INIT_PLUGIN(name) \
+    if (!hex::test::initPluginImpl(name)) TEST_FAIL();
+
 namespace hex::test {
 
+    using Function = int(*)();
     struct Test {
-        std::function<int()> function;
+        Function function;
         bool shouldFail;
     };
 
     class Tests {
     public:
-        static auto addTest(const std::string &name, const std::function<int()> &func, bool shouldFail) noexcept {
+        static auto addTest(const std::string &name, Function func, bool shouldFail) noexcept {
             s_tests.insert({
                 name, {func, shouldFail}
             });
@@ -50,7 +55,7 @@ namespace hex::test {
         }
 
     private:
-        static inline std::map<std::string, Test> s_tests;
+        static std::map<std::string, Test> s_tests;
     };
 
     template<class F>
@@ -86,4 +91,5 @@ namespace hex::test {
         return TestSequence<F>(executor.getName(), std::forward<F>(f), executor.shouldFail());
     }
 
+    bool initPluginImpl(std::string name);
 }

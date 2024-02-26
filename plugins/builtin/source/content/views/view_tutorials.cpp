@@ -2,6 +2,7 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/tutorial_manager.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <fonts/codicons_font.h>
 
@@ -12,6 +13,14 @@ namespace hex::plugin::builtin {
     ViewTutorials::ViewTutorials() : View::Floating("hex.builtin.view.tutorials.name") {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.tutorials.name" }, ICON_VS_COMPASS, 4000, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
+        });
+
+        RequestOpenWindow::subscribe(this, [this](const std::string &name) {
+            if (name == "Tutorials") {
+                TaskManager::doLater([this] {
+                    this->getWindowOpenState() = true;
+                });
+            }
         });
     }
 

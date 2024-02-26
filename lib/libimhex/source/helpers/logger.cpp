@@ -1,3 +1,4 @@
+#include <hex/api/event_manager.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -18,7 +19,7 @@ namespace hex::log {
 
         wolv::io::File s_loggerFile;
         bool s_colorOutputEnabled = false;
-        std::mutex s_loggerMutex;
+        std::recursive_mutex s_loggerMutex;
         bool s_loggingSuspended = false;
 
     }
@@ -33,7 +34,7 @@ namespace hex::log {
 
     namespace impl {
 
-        std::mutex& getLoggerMutex() {
+        std::recursive_mutex& getLoggerMutex() {
             return s_loggerMutex;
         }
 
@@ -129,6 +130,16 @@ namespace hex::log {
                     std::abort();
                 #endif
             }
+        }
+
+        namespace color {
+
+            fmt::color debug() { return fmt::color::medium_sea_green; }
+            fmt::color info()  { return fmt::color::steel_blue; }
+            fmt::color warn()  { return fmt::color::orange; }
+            fmt::color error() { return fmt::color::indian_red; }
+            fmt::color fatal() { return fmt::color::medium_purple; }
+
         }
 
     }

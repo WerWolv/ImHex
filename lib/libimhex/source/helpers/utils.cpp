@@ -677,13 +677,23 @@ namespace hex {
             return value;
     }
 
-    static std::optional<std::fs::path> fileToOpen;
+    static std::optional<std::fs::path> s_fileToOpen;
     extern "C" void openFile(const char *path) {
-        fileToOpen = path;
+        log::info("Opening file: {0}", path);
+        s_fileToOpen = path;
     }
 
     std::optional<std::fs::path> getInitialFilePath() {
-        return fileToOpen;
+        return s_fileToOpen;
+    }
+
+    static std::map<std::fs::path, std::string> s_fonts;
+    extern "C" void registerFont(const char *fontName, const char *fontPath) {
+        s_fonts[fontPath] = fontName;
+    }
+
+    const std::map<std::fs::path, std::string>& getFonts() {
+        return s_fonts;
     }
 
     namespace {

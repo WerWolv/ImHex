@@ -38,7 +38,12 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ImHexApi::HexEditor::addForegroundHighlightingProvider([](u64 offset, const u8* buffer, size_t, bool) -> std::optional<color_t> {
+        MovePerProviderData::subscribe(this, [this](prv::Provider *from, prv::Provider *to) {
+             m_savedOperations.get(from) = 0;
+             m_savedOperations.get(to)   = 0;
+        });
+
+        ImHexApi::HexEditor::addForegroundHighlightingProvider([this](u64 offset, const u8* buffer, size_t, bool) -> std::optional<color_t> {
             hex::unused(buffer);
 
             if (!ImHexApi::Provider::isValid())
@@ -49,18 +54,34 @@ namespace hex::plugin::builtin {
             offset -= provider->getBaseAddress();
 
             const auto &undoStack = provider->getUndoStack();
-            for (const auto &operation : undoStack.getAppliedOperations()) {
-                if (!operation->shouldHighlight())
-                    continue;
+            const auto stackSize = undoStack.getAppliedOperations().size();
+            const auto savedStackSize = m_savedOperations.get(provider);
 
-                if (operation->getRegion().overlaps(Region { offset, 1}))
-                    return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
+            if (stackSize == savedStackSize) {
+                // Do nothing
+            } else if (stackSize > savedStackSize) {
+                for (const auto &operation : undoStack.getAppliedOperations() | std::views::drop(savedStackSize)) {
+                    if (!operation->shouldHighlight())
+                        continue;
+
+                    if (operation->getRegion().overlaps(Region { offset, 1}))
+                        return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
+                }
+            } else {
+                for (const auto &operation : undoStack.getUndoneOperations() | std::views::reverse | std::views::take(savedStackSize - stackSize)) {
+                    if (!operation->shouldHighlight())
+                        continue;
+
+                    if (operation->getRegion().overlaps(Region { offset, 1}))
+                        return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
+                }
             }
 
             return std::nullopt;
         });
 
-        EventProviderSaved::subscribe([](auto *) {
+        EventProviderSaved::subscribe([this](prv::Provider *provider) {
+            m_savedOperations.get(provider) = provider->getUndoStack().getAppliedOperations().size();
             EventHighlightingChanged::post();
         });
 
@@ -87,6 +108,15 @@ namespace hex::plugin::builtin {
             provider->getUndoStack().add<undo::OperationRemove>(offset, size);
         });
     }
+
+    ViewPatches::~ViewPatches() {
+        MovePerProviderData::unsubscribe(this);
+        EventProviderSaved::unsubscribe(this);
+        EventProviderDataModified::unsubscribe(this);
+        EventProviderDataInserted::unsubscribe(this);
+        EventProviderDataRemoved::unsubscribe(this);
+    }
+
 
     void ViewPatches::drawContent() {
         auto provider = ImHexApi::Provider::get();

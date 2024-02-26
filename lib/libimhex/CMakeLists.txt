@@ -38,6 +38,8 @@ set(LIBIMHEX_SOURCES
         source/helpers/tar.cpp
         source/helpers/debugging.cpp
 
+        source/test/tests.cpp
+
         source/providers/provider.cpp
         source/providers/memory_provider.cpp
         source/providers/undo/stack.cpp

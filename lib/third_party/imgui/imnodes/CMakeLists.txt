@@ -4,13 +4,16 @@ project(imgui_imnodes)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(imgui_imnodes OBJECT
-    source/imnodes.cpp
-)
+if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
+    add_library(imgui_imnodes OBJECT
+        source/imnodes.cpp
+    )
 
-target_include_directories(imgui_imnodes PUBLIC
-    include
-)
+    target_include_directories(imgui_imnodes PUBLIC
+        include
+    )
 
-target_link_libraries(imgui_imnodes PRIVATE imgui_includes)
+    target_link_libraries(imgui_imnodes PRIVATE imgui_includes)
+endif()
+
 target_include_directories(imgui_all_includes INTERFACE include)

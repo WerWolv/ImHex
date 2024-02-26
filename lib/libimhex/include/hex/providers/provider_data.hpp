@@ -32,19 +32,19 @@ namespace hex {
             return &this->get();
         }
 
-        T& get(prv::Provider *provider = ImHexApi::Provider::get()) {
+        T& get(const prv::Provider *provider = ImHexApi::Provider::get()) {
             return m_data[provider];
         }
 
-        const T& get(prv::Provider *provider = ImHexApi::Provider::get()) const {
+        const T& get(const prv::Provider *provider = ImHexApi::Provider::get()) const {
             return m_data.at(provider);
         }
 
-        void set(const T &data, prv::Provider *provider = ImHexApi::Provider::get()) {
+        void set(const T &data, const prv::Provider *provider = ImHexApi::Provider::get()) {
             m_data[provider] = data;
         }
 
-        void set(T &&data, prv::Provider *provider = ImHexApi::Provider::get()) {
+        void set(T &&data, const prv::Provider *provider = ImHexApi::Provider::get()) {
             m_data[provider] = std::move(data);
         }
 
@@ -74,7 +74,7 @@ namespace hex {
             return m_data | std::views::values;
         }
 
-        void setOnCreateCallback(std::function<void(prv::Provider *, T&)> callback) {
+        void setOnCreateCallback(std::function<void(const prv::Provider *, T&)> callback) {
             m_onCreateCallback = std::move(callback);
         }
 
@@ -120,8 +120,8 @@ namespace hex {
         }
 
     private:
-        std::map<prv::Provider *, T> m_data;
-        std::function<void(prv::Provider *, T&)> m_onCreateCallback;
+        std::map<const prv::Provider *, T> m_data;
+        std::function<void(const prv::Provider *, T&)> m_onCreateCallback;
     };
 
 }

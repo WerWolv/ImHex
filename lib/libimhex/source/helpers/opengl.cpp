@@ -434,16 +434,16 @@ namespace hex::gl {
         int k = 0;
         int l = 0;
         for (u32 j = 0; j <= m_slices; ++j) {
-            float z = 2.0f * float(j) / float(m_slices) - 1.0f;
+            float z = 2.0F * float(j) / float(m_slices) - 1.0F;
             for (u32 i = 0; i <= m_slices; ++i) {
-                m_vertices[k   ] = 2.0f * float(i) / float(m_slices) - 1.0f;
-                m_vertices[k + 1] = 0.0f;
+                m_vertices[k   ] = 2.0F * float(i) / float(m_slices) - 1.0F;
+                m_vertices[k + 1] = 0.0F;
                 m_vertices[k + 2] = z;
                 k += 3;
-                m_colors[l    ] = 0.5f;
-                m_colors[l + 1] = 0.5f;
-                m_colors[l + 2] = 0.5f;
-                m_colors[l + 3] = 0.3f;
+                m_colors[l    ] = 0.5F;
+                m_colors[l + 1] = 0.5F;
+                m_colors[l + 2] = 0.5F;
+                m_colors[l + 3] = 0.3F;
                 l += 4;
             }
         }
@@ -540,10 +540,10 @@ namespace hex::gl {
                 m_vertices[n + 2] = m_radius * z;
 
                 n = (i * m_resolution + j + 1) * 4;
-                m_colors[n] = 1.0f;
-                m_colors[n + 1] = 1.0f;
-                m_colors[n + 2] = 1.0f;
-                m_colors[n + 3] = 1.0f;
+                m_colors[n] = 1.0F;
+                m_colors[n + 1] = 1.0F;
+                m_colors[n + 2] = 1.0F;
+                m_colors[n + 3] = 1.0F;
             }
         }
 
