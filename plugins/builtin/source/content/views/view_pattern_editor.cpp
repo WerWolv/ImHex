@@ -228,9 +228,9 @@ namespace hex::plugin::builtin {
             bool clickedMenuReplace = false;
             if (ImGui::BeginPopup("##pattern_editor_context_menu")) {
                 // no shortcut for this
-                if (ImGui::MenuItem("hex.builtin.menu.file.import.patternFile"_lang, nullptr, false))
+                if (ImGui::MenuItem("hex.builtin.menu.file.import.pattern_file"_lang, nullptr, false))
                     importPatternFile();
-                if (ImGui::MenuItem("hex.builtin.menu.file.export.patternFile"_lang, nullptr, false))
+                if (ImGui::MenuItem("hex.builtin.menu.file.export.pattern_file"_lang, nullptr, false))
                     exportPatternFile();
 
                 ImGui::Separator();
