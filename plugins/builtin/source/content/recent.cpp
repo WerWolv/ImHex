@@ -219,7 +219,9 @@ namespace hex::plugin::builtin::recent {
     void loadRecentEntry(const RecentEntry &recentEntry) {
         if (recentEntry.type == "project") {
             std::fs::path projectPath = recentEntry.data["path"].get<std::string>();
-            ProjectFile::load(projectPath);
+            if (!ProjectFile::load(projectPath)) {
+                ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(projectPath)));
+            }
             return;
         }
         auto *provider = ImHexApi::Provider::createProvider(recentEntry.type, true);
