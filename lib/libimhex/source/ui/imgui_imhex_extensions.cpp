@@ -74,7 +74,7 @@ namespace ImGuiExt {
         #endif
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-        stbi_image_free(imageData);
+        STBI_FREE(imageData);
 
         m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
     }
@@ -100,7 +100,7 @@ namespace ImGuiExt {
         #endif
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-        stbi_image_free(imageData);
+        STBI_FREE(imageData);
 
         m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
     }
@@ -110,7 +110,9 @@ namespace ImGuiExt {
     }
 
     Texture::Texture(Texture&& other) noexcept {
-        glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+        if (m_textureId != nullptr)
+            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+
         m_textureId = other.m_textureId;
         m_width = other.m_width;
         m_height = other.m_height;
@@ -119,7 +121,9 @@ namespace ImGuiExt {
     }
 
     Texture& Texture::operator=(Texture&& other) noexcept {
-        glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+        if (m_textureId != nullptr)
+            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+
         m_textureId = other.m_textureId;
         m_width = other.m_width;
         m_height = other.m_height;
@@ -222,7 +226,7 @@ namespace ImGuiExt {
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         ImVec2 pos  = window->DC.CursorPos;
-        ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y) + ImVec2(g.FontSize + style.FramePadding.x * 2, 0.0f);
+        ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y) + ImVec2(g.FontSize + style.FramePadding.x * 2, 0.0F);
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, 0);
@@ -237,8 +241,8 @@ namespace ImGuiExt {
         // Render
         const ImU32 col = hovered ? GetColorU32(ImGuiCol_ButtonHovered) : GetColorU32(ImGuiCol_ButtonActive);
         PushStyleColor(ImGuiCol_Text, ImU32(col));
-        RenderBullet(window->DrawList, bb.Min + ImVec2(style.FramePadding.x, g.FontSize * 0.5f), col);
-        RenderText(bb.Min + ImVec2(g.FontSize * 0.5 + style.FramePadding.x, 0.0f), label, nullptr, false);
+        RenderBullet(window->DrawList, bb.Min + ImVec2(style.FramePadding.x, g.FontSize * 0.5F), col);
+        RenderText(bb.Min + ImVec2(g.FontSize * 0.5 + style.FramePadding.x, 0.0F), label, nullptr, false);
         GetWindowDrawList()->AddLine(bb.Min + ImVec2(g.FontSize * 0.5 + style.FramePadding.x, size.y), pos + size - ImVec2(g.FontSize * 0.5 + style.FramePadding.x, 0), ImU32(col));
         PopStyleColor();
 
@@ -260,7 +264,7 @@ namespace ImGuiExt {
         ImVec2 pos = window->DC.CursorPos;
         if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset)    // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
             pos.y += window->DC.CurrLineTextBaseOffset - style.FramePadding.y;
-        ImVec2 size = CalcItemSize(size_arg, text_size.x + style.FramePadding.x * 4.0f, text_size.y + style.FramePadding.y * 4.0f);
+        ImVec2 size = CalcItemSize(size_arg, text_size.x + style.FramePadding.x * 4.0F, text_size.y + style.FramePadding.y * 4.0F);
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);
@@ -313,7 +317,7 @@ namespace ImGuiExt {
         ImVec2 pos = window->DC.CursorPos;
         if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset)    // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
             pos.y += window->DC.CurrLineTextBaseOffset - style.FramePadding.y;
-        ImVec2 size = CalcItemSize(size_arg, text_size.x + style.FramePadding.x * 4.0f, text_size.y + style.FramePadding.y * 6.0f);
+        ImVec2 size = CalcItemSize(size_arg, text_size.x + style.FramePadding.x * 4.0F, text_size.y + style.FramePadding.y * 6.0F);
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);
@@ -460,7 +464,7 @@ namespace ImGuiExt {
             case ImGuiCustomStyle_WindowBlur:
                 return customData.styles.WindowBlur;
             default:
-                return 0.0f;
+                return 0.0F;
         }
     }
 
@@ -556,7 +560,7 @@ namespace ImGuiExt {
 
         ImVec2 pos = window->DC.CursorPos;
 
-        ImVec2 size = CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+        ImVec2 size = CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);
@@ -595,7 +599,7 @@ namespace ImGuiExt {
 
         ImVec2 pos = window->DC.CursorPos;
 
-        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight(), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight(), label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);
@@ -638,7 +642,7 @@ namespace ImGuiExt {
 
         ImVec2 pos = window->DC.CursorPos;
 
-        ImVec2 size = CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+        ImVec2 size = CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);
@@ -674,7 +678,7 @@ namespace ImGuiExt {
 
 
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
-        const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), CalcTextSize(prefix).x, label_size.y + style.FramePadding.y * 2.0f);
+        const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), CalcTextSize(prefix).x, label_size.y + style.FramePadding.y * 2.0F);
         const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
 
         SetCursorPosX(GetCursorPosX() + frame_size.x);
@@ -683,7 +687,7 @@ namespace ImGuiExt {
         DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, format);
 
         bool value_changed = false;
-        if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0f), flags))
+        if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0F), flags))
             value_changed = DataTypeApplyFromText(buf, type, value, format);
 
         if (value_changed)
@@ -716,7 +720,7 @@ namespace ImGuiExt {
         const ImGuiStyle &style = g.Style;
 
         ImVec2 pos  = window->DC.CursorPos + ImVec2(0, yOffset);
-        ImVec2 size = CalcItemSize(ImVec2(100, 5) * hex::ImHexApi::System::getGlobalScale(), 100, g.FontSize + style.FramePadding.y * 2.0f);
+        ImVec2 size = CalcItemSize(ImVec2(100, 5) * hex::ImHexApi::System::getGlobalScale(), 100, g.FontSize + style.FramePadding.y * 2.0F);
         ImRect bb(pos, pos + size);
         ItemSize(size, 0);
         if (!ItemAdd(bb, 0))
@@ -732,7 +736,7 @@ namespace ImGuiExt {
             auto time = (fmod(ImGui::GetTime() * 2, 1.8) - 0.4);
             RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), ImSaturate(time), ImSaturate(time + 0.2), style.FrameRounding);
         } else {
-            RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
+            RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0F, fraction, style.FrameRounding);
         }
     }
 
@@ -761,13 +765,13 @@ namespace ImGuiExt {
 
 
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
-        const ImVec2 icon_frame_size = CalcTextSize(icon) + style.FramePadding * 2.0f;
-        const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), icon_frame_size.x, label_size.y + style.FramePadding.y * 2.0f);
+        const ImVec2 icon_frame_size = CalcTextSize(icon) + style.FramePadding * 2.0F;
+        const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), icon_frame_size.x, label_size.y + style.FramePadding.y * 2.0F);
         const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
 
         SetCursorPosX(GetCursorPosX() + frame_size.x);
 
-        bool value_changed = InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth(), label_size.y + style.FramePadding.y * 2.0f), ImGuiInputTextFlags_CallbackResize | flags, UpdateStringSizeCallback, &buffer);
+        bool value_changed = InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth(), label_size.y + style.FramePadding.y * 2.0F), ImGuiInputTextFlags_CallbackResize | flags, UpdateStringSizeCallback, &buffer);
 
         if (value_changed)
             MarkItemEdited(GImGui->LastItemData.ID);
@@ -854,7 +858,7 @@ namespace ImGuiExt {
         RenderText(check_bb.Min + style.FramePadding, *v ? "1" : "0");
 
         ImVec2 label_pos = ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
-        if (label_size.x > 0.0f)
+        if (label_size.x > 0.0F)
             RenderText(label_pos, label);
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
@@ -981,7 +985,7 @@ namespace ImGuiExt {
     void BeginSubWindow(const char *label, ImVec2 size, ImGuiChildFlags flags) {
         const bool hasMenuBar = !std::string_view(label).empty();
 
-        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
         if (ImGui::BeginChild(hex::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
             if (hasMenuBar && ImGui::BeginMenuBar()) {
                 ImGui::TextUnformatted(label);
@@ -998,9 +1002,9 @@ namespace ImGuiExt {
     bool VSliderAngle(const char* label, const ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags) {
         if (format == nullptr)
             format = "%.0f deg";
-        float v_deg = (*v_rad) * 360.0f / (2 * IM_PI);
+        float v_deg = (*v_rad) * 360.0F / (2 * IM_PI);
         bool value_changed = ImGui::VSliderFloat(label, size, &v_deg, v_degrees_min, v_degrees_max, format, flags);
-        *v_rad = v_deg * (2 * IM_PI) / 360.0f;
+        *v_rad = v_deg * (2 * IM_PI) / 360.0F;
         return value_changed;
     }
 
@@ -1048,7 +1052,7 @@ namespace ImGuiExt {
 
         const ImVec2 size = ImVec2(GetFrameHeight() * 2.0F, GetFrameHeight());
         const ImVec2 pos = window->DC.CursorPos;
-        const ImRect total_bb(pos, pos + ImVec2(size.x + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f), label_size.y + style.FramePadding.y * 2.0f));
+        const ImRect total_bb(pos, pos + ImVec2(size.x + (label_size.x > 0.0F ? style.ItemInnerSpacing.x + label_size.x : 0.0F), label_size.y + style.FramePadding.y * 2.0F));
         ItemSize(total_bb, style.FramePadding.y);
         if (!ItemAdd(total_bb, id))
         {
@@ -1076,7 +1080,7 @@ namespace ImGuiExt {
         ImVec2 label_pos = ImVec2(knob_bb.Max.x + style.ItemInnerSpacing.x, knob_bb.Min.y + style.FramePadding.y);
         if (g.LogEnabled)
             LogRenderedText(&label_pos, *v ? "((*)  )" : "(  (*))");
-        if (label_size.x > 0.0f)
+        if (label_size.x > 0.0F)
             RenderText(label_pos, label);
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));

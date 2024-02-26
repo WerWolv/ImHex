@@ -237,6 +237,9 @@ namespace hex::plugin::builtin {
             if (ctx == nullptr)
                 return;
 
+            if (ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup))
+                return;
+
             static ImGuiWindow *lastFocusedWindow = nullptr;
 
             if (focused) {

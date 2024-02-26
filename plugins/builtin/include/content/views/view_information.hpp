@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
             bool valid = false;
 
             TaskHolder task;
-            prv::Provider *analyzedProvider = nullptr;
+            const prv::Provider *analyzedProvider = nullptr;
             Region analysisRegion = { 0, 0 };
 
             ui::RegionType selectionType  = ui::RegionType::EntireData;

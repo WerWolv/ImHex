@@ -124,6 +124,8 @@ namespace hex::plugin::builtin {
             langDef.mCommentStart = "";
             langDef.mCommentEnd = "";
             langDef.mSingleLineComment = "";
+            langDef.mDocComment = "";
+            langDef.mGlobalDocComment = "";
 
             initialized = true;
         }
@@ -276,24 +278,24 @@ namespace hex::plugin::builtin {
             bool openFindPopup = false;
             ImGui::PushID(&this->m_textEditor);
             if (clickedMenuFind) {
-                replace = false;
+                m_replaceMode = false;
                 openFindPopup = true;
             }
 
             if (clickedMenuReplace) {
-                replace = true;
+                m_replaceMode = true;
                 openFindPopup = true;
             }
 
             // shortcuts to open the find/replace popup
             if (ImGui::IsItemHovered()) {
                 if (ImGui::IsKeyPressed(ImGuiKey_F, false) && ImGui::GetIO().KeyCtrl) {
-                    replace = false;
+                    m_replaceMode = false;
                     openFindPopup = true;
                 }
 
                 if (ImGui::IsKeyPressed(ImGuiKey_H, false) && ImGui::GetIO().KeyCtrl) {
-                    replace = true;
+                    m_replaceMode = true;
                     openFindPopup = true;
                 }
             }
@@ -326,13 +328,13 @@ namespace hex::plugin::builtin {
                                            labelSize.y + style.FramePadding.y * 2.0F + style.WindowPadding.y + 3 });
 
                 // 2 * 11 spacings in between elements
-                popupSize.x += style.FramePadding.x * 22.0f;
+                popupSize.x += style.FramePadding.x * 22.0F;
 
                 // Text input fields are set to 12 characters wide
-                popupSize.x += ImGui::GetFontSize() * 12.0f;
+                popupSize.x += ImGui::GetFontSize() * 12.0F;
 
                 // IndexOfCount text
-                popupSize.x +=  ImGui::CalcTextSize("2000 of 2000").x + 2.0f;
+                popupSize.x +=  ImGui::CalcTextSize("2000 of 2000").x + 2.0F;
                 popupSize.x += scrollbarSize;
 
                 // Position of popup relative to parent window
@@ -348,7 +350,7 @@ namespace hex::plugin::builtin {
                 windowPosForPopup.x += windowSize.x - popupSize.x;
                 findReplaceHandler->SetFindWindowPos(windowPosForPopup);
 
-                if (replace) {
+                if (m_replaceMode) {
                     // Remove one window padding
                     popupSize.y -= style.WindowPadding.y;
                     // Add the replace window height
@@ -602,10 +604,10 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                bool oldReplace = replace;
-                ImGuiExt::DimmedIconToggle(ICON_VS_TRIANGLE_DOWN, ICON_VS_TRIANGLE_RIGHT, &replace);
-                if (oldReplace != replace) {
-                    if (replace)
+                bool oldReplace = m_replaceMode;
+                ImGuiExt::DimmedIconToggle(ICON_VS_TRIANGLE_DOWN, ICON_VS_TRIANGLE_RIGHT, &m_replaceMode);
+                if (oldReplace != m_replaceMode) {
+                    if (m_replaceMode)
                         requestFocusReplace = true;
                     else
                         requestFocusFind = true;
@@ -642,7 +644,7 @@ namespace hex::plugin::builtin {
                     findReplaceHandler->SetFindWord(&m_textEditor,findWord);
                 }
 
-                if ((!replace && requestFocus) || requestFocusFind) {
+                if ((!m_replaceMode && requestFocus) || requestFocusFind) {
                     ImGui::SetKeyboardFocusHere(-1);
                     requestFocus = false;
                     requestFocusFind = false;
@@ -753,7 +755,7 @@ namespace hex::plugin::builtin {
                 if (ImGuiExt::IconButton(ICON_VS_ARROW_UP, ImVec4(1, 1, 1, 1)))
                     upArrowFind = true;
 
-                if (replace) {
+                if (m_replaceMode) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
@@ -1589,14 +1591,16 @@ namespace hex::plugin::builtin {
                 std::scoped_lock lock(m_logMutex);
 
                 for (auto line : wolv::util::splitString(message, "\n")) {
-                    switch (level) {
-                        using enum pl::core::LogConsole::Level;
+                    if (!wolv::util::trim(line).empty()) {
+                        switch (level) {
+                            using enum pl::core::LogConsole::Level;
 
-                        case Debug:     line = hex::format("D: {}", line); break;
-                        case Info:      line = hex::format("I: {}", line); break;
-                        case Warning:   line = hex::format("W: {}", line); break;
-                        case Error:     line = hex::format("E: {}", line); break;
-                        default: break;
+                            case Debug:     line = hex::format("D: {}", line); break;
+                            case Info:      line = hex::format("I: {}", line); break;
+                            case Warning:   line = hex::format("W: {}", line); break;
+                            case Error:     line = hex::format("E: {}", line); break;
+                            default: break;
+                        }
                     }
 
                     m_console->emplace_back(line);
@@ -1833,6 +1837,10 @@ namespace hex::plugin::builtin {
             }
         });
 
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.pattern_parent_highlighting", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_parentHighlightingEnabled = bool(value.get<int>(false));
+        });
+
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {
             hex::unused(data, size);
 
@@ -1853,6 +1861,26 @@ namespace hex::plugin::builtin {
             }
 
             return color;
+        });
+
+        ImHexApi::HexEditor::addHoverHighlightProvider([this](const prv::Provider *provider, u64 address, const u8 *, size_t) {
+            if (!m_parentHighlightingEnabled) return false;
+
+            const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+
+            if (auto hoveredRegion = ImHexApi::HexEditor::getHoveredRegion(provider)) {
+                for (const auto &pattern : runtime.getPatternsAtAddress(hoveredRegion->getStartAddress())) {
+                    const pl::ptrn::Pattern * checkPattern = pattern;
+                    if (auto parent = checkPattern->getParent(); parent != nullptr)
+                        checkPattern = parent;
+
+                    if (checkPattern->getOffset() <= address && checkPattern->getOffset() + checkPattern->getSize() > address) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {

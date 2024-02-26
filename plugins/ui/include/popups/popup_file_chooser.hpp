@@ -46,6 +46,11 @@ namespace hex::ui {
         void drawContent() override {
             bool doubleClicked = false;
 
+            if (m_justOpened) {
+                ImGui::SetKeyboardFocusHere();
+                m_justOpened = false;
+            }
+
             ImGui::PushItemWidth(-1);
             ImGuiExt::InputTextIcon("##search", ICON_VS_FILTER, m_filter);
             ImGui::PopItemWidth();
@@ -123,6 +128,7 @@ namespace hex::ui {
         std::function<void(std::fs::path)> m_openCallback;
         std::vector<hex::fs::ItemFilter> m_validExtensions;
         bool m_multiple = false;
+        bool m_justOpened = true;
     };
 
     class PopupNamedFileChooser : public PopupNamedFileChooserBase<PopupNamedFileChooser> {

@@ -9,6 +9,7 @@
 #include <wolv/utils/guards.hpp>
 
 #include <fonts/codicons_font.h>
+#include <hex/providers/buffered_reader.hpp>
 
 namespace hex::ui {
 
@@ -421,6 +422,7 @@ namespace hex::ui {
             ImGuiExt::TextFormattedCentered("{}", "hex.ui.hex_editor.no_bytes"_lang);
         }
 
+        Region hoveredCell = Region::Invalid();
         if (ImGui::BeginChild("Hex View", size, ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             this->drawScrollbar(CharacterSize);
 
@@ -578,7 +580,7 @@ namespace hex::ui {
                                     this->drawSelectionFrame(x, y, selection, byteAddress, bytesPerCell, cellStartPos, cellSize, backgroundColor.value());
                                 }
 
-                                const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false);
+                                const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false) && ImGui::IsWindowHovered();
 
                                 this->handleSelection(byteAddress, bytesPerCell, &bytes[x * bytesPerCell], cellHovered);
 
@@ -596,6 +598,11 @@ namespace hex::ui {
                                     this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered, CellType::Hex);
                                 else
                                     ImGuiExt::TextFormatted("{}", std::string(maxCharsPerCell, '?'));
+
+                                if (cellHovered) {
+                                    hoveredCell = { byteAddress, bytesPerCell };
+                                }
+
                                 ImGui::PopItemWidth();
                                 ImGui::PopStyleVar();
                             }
@@ -622,7 +629,7 @@ namespace hex::ui {
                                     const auto cellStartPos = getCellPosition();
                                     const auto cellSize = CharacterSize + scaled(ImVec2(m_characterCellPadding, 0));
 
-                                    const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
+                                    const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true) && ImGui::IsWindowHovered();
 
                                     if (x < validBytes) {
                                         this->handleSelection(byteAddress, bytesPerCell, &bytes[x], cellHovered);
@@ -650,6 +657,11 @@ namespace hex::ui {
                                             ImGuiExt::TextFormattedDisabled("{}", m_unknownDataCharacter);
                                         else
                                             this->drawCell(byteAddress, &bytes[x], 1, cellHovered, CellType::ASCII);
+
+                                        if (cellHovered) {
+                                            hoveredCell = { byteAddress, bytesPerCell };
+                                        }
+
                                         ImGui::PopItemWidth();
                                         ImGui::PopStyleVar();
                                     }
@@ -713,7 +725,7 @@ namespace hex::ui {
 
                                         const auto cellStartPos = getCellPosition();
                                         const auto cellSize = ImGui::CalcTextSize(data.displayValue.c_str()) * ImVec2(1, 0) + ImVec2(m_characterCellPadding * 1_scaled, CharacterSize.y);
-                                        const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
+                                        const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true) && ImGui::IsWindowHovered();
 
                                         const auto x = address % m_bytesPerRow;
                                         if (x < validBytes && isCurrRegionValid(address)) {
@@ -733,6 +745,10 @@ namespace hex::ui {
                                             ImGui::Dummy({ 0, 0 });
 
                                             this->handleSelection(address, data.advance, &bytes[address % m_bytesPerRow], cellHovered);
+
+                                            if (cellHovered) {
+                                                hoveredCell = { address, data.advance };
+                                            }
                                         }
                                     }
 
@@ -798,6 +814,8 @@ namespace hex::ui {
         }
         ImGui::EndChild();
 
+        ImHexApi::HexEditor::impl::setHoveredRegion(m_provider, hoveredCell);
+
         m_shouldScrollToSelection = false;
     }
 
@@ -807,7 +825,7 @@ namespace hex::ui {
 
         if (ImGui::BeginChild("##footer", size, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             if (ImGui::BeginTable("##footer_table", 3, ImGuiTableFlags_SizingFixedFit)) {
-                ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5f);
+                ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5F);
                 ImGui::TableSetupColumn("Center", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
                 ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.5F);
                 ImGui::TableNextRow();

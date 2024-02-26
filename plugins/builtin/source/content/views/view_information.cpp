@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
     using namespace hex::literals;
 
     ViewInformation::ViewInformation() : View::Window("hex.builtin.view.information.name", ICON_VS_GRAPH_LINE) {
-        m_analysisData.setOnCreateCallback([](prv::Provider *provider, AnalysisData &data) {
+        m_analysisData.setOnCreateCallback([](const prv::Provider *provider, AnalysisData &data) {
             data.analyzedProvider = provider;
 
             for (const auto &informationSectionConstructor : ContentRegistry::DataInformation::impl::getInformationSectionConstructors()) {
@@ -151,13 +151,6 @@ namespace hex::plugin::builtin {
                 ImGuiExt::EndSubWindow();
                 ImGui::EndDisabled();
 
-                // Draw the analyzing spinner
-                if (analysis.task.isRunning()) {
-                    ImGuiExt::TextSpinner("hex.builtin.view.information.analyzing"_lang);
-                } else {
-                    ImGui::NewLine();
-                }
-
                 if (analysis.analyzedProvider != nullptr) {
                     for (const auto &section : analysis.informationSections) {
                         ImGui::TableNextColumn();
@@ -165,7 +158,7 @@ namespace hex::plugin::builtin {
 
                         bool enabled = section->isEnabled();
 
-                        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+                        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
                         if (ImGui::BeginChild(Lang(section->getUnlocalizedName()), ImVec2(0, 0), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_MenuBar)) {
                             if (ImGui::BeginMenuBar()) {
 

@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <random>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex {
 
@@ -53,12 +54,12 @@ namespace hex {
                 buffer.reserve(sampleSize);
 
                 u64 lastEnd = 0x00;
-                for (const auto &[offset, sequence] : orderedData) {
+                for (auto &[offset, sequence] : orderedData) {
                     if (offset < lastEnd)
                         buffer.resize(buffer.size() - (lastEnd - offset));
 
-                    std::copy(sequence.begin(), sequence.end(), std::back_inserter(buffer));
-                    lastEnd = offset + sequence.size();
+                    buffer = std::move(sequence);
+                    lastEnd = offset + buffer.size();
                 }
             }
 
@@ -90,12 +91,12 @@ namespace hex {
                 buffer.reserve(sampleSize);
 
                 u64 lastEnd = 0x00;
-                for (const auto &[offset, sequence] : orderedData) {
+                for (auto &[offset, sequence] : orderedData) {
                     if (offset < lastEnd)
                         buffer.resize(buffer.size() - (lastEnd - offset));
 
-                    std::copy(sequence.begin(), sequence.end(), std::back_inserter(buffer));
-                    lastEnd = offset + sequence.size();
+                    buffer = std::move(sequence);
+                    lastEnd = offset + buffer.size();
                 }
             }
 
@@ -106,27 +107,40 @@ namespace hex {
 
     class DiagramDigram {
     public:
-        explicit DiagramDigram(size_t sampleSize = 0x9000) : m_sampleSize(sampleSize) { }
+        explicit DiagramDigram() { }
 
         void draw(ImVec2 size) {
+            if (!m_processing) {
+                if (!m_textureValid) {
+                    std::vector<u32> pixels;
+                    pixels.resize(0x100 * 0x100, 0x00);
+                    for (size_t i = 0; i < (m_buffer.empty() ? 0 : m_buffer.size() - 1); i++) {
+                        const u8 x = m_buffer[i];
+                        const u8 y = m_buffer[i + 1];
+
+                        auto color = ImLerp(
+                            ImColor(0xFF, 0x6D, 0x01).Value,
+                            ImColor(0x01, 0x93, 0xFF).Value,
+                            float(i) / m_buffer.size()) + ImVec4(m_glowBuffer[i], m_glowBuffer[i], m_glowBuffer[i], 0.0F);
+                        color.w = m_opacity;
+
+                        auto &pixel = pixels[x * 0xFF + y];
+                        pixel = ImAlphaBlendColors(pixel, ImColor(color));
+                    }
+
+                    m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, m_filter, 0xFF, 0xFF);
+                    m_textureValid = m_texture.isValid();
+                }
+            }
+
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
-            if (ImGui::BeginChild("##digram", size, true)) {
+            if (ImGui::BeginChild("##digram", size, ImGuiChildFlags_Border)) {
                 auto drawList = ImGui::GetWindowDrawList();
 
-                float xStep = (size.x * 0.95F) / 0xFF;
-                float yStep = (size.y * 0.95F) / 0xFF;
-
-                if (!m_processing)
-                    for (size_t i = 0; i < (m_buffer.empty() ? 0 : m_buffer.size() - 1); i++) {
-                        auto x = m_buffer[i] * xStep;
-                        auto y = m_buffer[i + 1] * yStep;
-
-                        auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / m_buffer.size()) + ImVec4(m_glowBuffer[i], m_glowBuffer[i], m_glowBuffer[i], 0.0F);
-                        color.w    = m_opacity;
-
-                        auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F) + ImVec2(x, y);
-                        drawList->AddRectFilled(pos, pos + ImVec2(xStep, yStep), ImColor(color));
-                    }
+                if (m_textureValid) {
+                    auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F);
+                    drawList->AddImage(m_texture, pos, pos + size * 0.95F);
+                }
             }
             ImGui::EndChild();
             ImGui::PopStyleColor();
@@ -134,14 +148,14 @@ namespace hex {
 
         void process(prv::Provider *provider, u64 address, size_t size) {
             m_processing = true;
-            m_buffer = impl::getSampleSelection(provider, address, size, m_sampleSize);
+            m_buffer = impl::getSampleSelection(provider, address, size, m_sampleSize == 0 ? size : m_sampleSize);
             processImpl();
             m_processing = false;
         }
 
         void process(const std::vector<u8> &buffer) {
             m_processing = true;
-            m_buffer = impl::getSampleSelection(buffer, m_sampleSize);
+            m_buffer = impl::getSampleSelection(buffer, m_sampleSize == 0 ? buffer.size() : m_sampleSize);
             processImpl();
             m_processing = false;
         }
@@ -149,15 +163,16 @@ namespace hex {
         void reset(u64 size) {
             m_processing = true;
             m_buffer.clear();
-            m_buffer.reserve(m_sampleSize);
+            m_buffer.reserve(m_sampleSize == 0 ? size : m_sampleSize);
             m_byteCount = 0;
             m_fileSize  = size;
+            m_textureValid = false;
         }
 
         void update(u8 byte) {
             // Check if there is some space left
             if (m_byteCount < m_fileSize) {
-                if ((m_byteCount % u64(std::ceil(double(m_fileSize) / double(m_sampleSize)))) == 0)
+                if (m_sampleSize == 0 || (m_byteCount % u64(std::ceil(double(m_fileSize) / double(m_sampleSize)))) == 0)
                     m_buffer.push_back(byte);
                 ++m_byteCount;
                 if (m_byteCount == m_fileSize) {
@@ -167,6 +182,17 @@ namespace hex {
             } 
         }
 
+        void setFiltering(ImGuiExt::Texture::Filter filter) {
+            m_filter = filter;
+        }
+
+        void setBrightness(float brightness) {
+            m_brightness = brightness;
+        }
+
+        void setSampleSize(size_t sampleSize) {
+            m_sampleSize = sampleSize;
+        }
  
     private:
         void processImpl() {
@@ -183,10 +209,12 @@ namespace hex {
                 m_glowBuffer[i] = std::min<float>(0.2F + (float(heatMap[m_buffer[i] << 8 | m_buffer[i + 1]]) / float(m_highestCount / 1000)), 1.0F);
             }
 
-            m_opacity = (log10(float(m_sampleSize)) / log10(float(m_highestCount))) / 10.0F;
+            m_opacity = (log10(float(m_sampleSize == 0 ? m_buffer.size() : m_sampleSize)) / log10(float(m_highestCount))) / (100.0F * (1.0F - m_brightness));
         }
 
     private:
+        ImGuiExt::Texture::Filter m_filter = ImGuiExt::Texture::Filter::Nearest;
+        float m_brightness = 0.5F;
         size_t m_sampleSize = 0;
 
         // The number of bytes processed and the size of
@@ -198,31 +226,44 @@ namespace hex {
         float m_opacity = 0.0F;
         size_t m_highestCount = 0;
         std::atomic<bool> m_processing = false;
+
+        bool m_textureValid = false;
+        ImGuiExt::Texture m_texture;
     };
 
     class DiagramLayeredDistribution {
     public:
-        explicit DiagramLayeredDistribution(size_t sampleSize = 0x9000) : m_sampleSize(sampleSize) { }
+        explicit DiagramLayeredDistribution() { }
 
         void draw(ImVec2 size) {
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
-            if (ImGui::BeginChild("##layered_distribution", size, true)) {
-                auto drawList = ImGui::GetWindowDrawList();
-
-                float xStep = (size.x * 0.95F) / 0xFF;
-                float yStep = (size.y * 0.95F) / 0xFF;
-
-                if (!m_processing)
-                    for (size_t i = 0; i < (m_buffer.empty() ? 0 : m_buffer.size()); i++) {
-                        auto x = m_buffer[i] * xStep;
-                        auto y = yStep * ((float(i) / m_buffer.size()) * 0xFF);
+            if (!m_processing) {
+                if (!m_textureValid) {
+                    std::vector<u32> pixels;
+                    pixels.resize(0x100 * 0x100, 0x00);
+                    for (size_t i = 0; i < (m_buffer.empty() ? 0 : m_buffer.size() - 1); i++) {
+                        const u8 x = m_buffer[i];
+                        const u8 y = (float(i) / m_buffer.size()) * 0xFF;
 
                         auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / m_buffer.size()) + ImVec4(m_glowBuffer[i], m_glowBuffer[i], m_glowBuffer[i], 0.0F);
-                        color.w    = m_opacity;
+                        color.w = m_opacity;
 
-                        auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F) + ImVec2(x, y);
-                        drawList->AddRectFilled(pos, pos + ImVec2(xStep, yStep), ImColor(color));
+                        auto &pixel = pixels[x * 0xFF + y];
+                        pixel = ImAlphaBlendColors(pixel, ImColor(color));
                     }
+
+                    m_texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size() * 4, m_filter, 0xFF, 0xFF);
+                    m_textureValid = m_texture.isValid();
+                }
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
+            if (ImGui::BeginChild("##layered_distribution", size, ImGuiChildFlags_Border)) {
+                auto drawList = ImGui::GetWindowDrawList();
+
+                if (m_textureValid) {
+                    const auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F);
+                    drawList->AddImage(m_texture, pos, pos + size * 0.95F);
+                }
             }
             ImGui::EndChild();
             ImGui::PopStyleColor();
@@ -230,14 +271,14 @@ namespace hex {
 
         void process(prv::Provider *provider, u64 address, size_t size) {
             m_processing = true;
-            m_buffer = impl::getSampleSelection(provider, address, size, m_sampleSize);
+            m_buffer = impl::getSampleSelection(provider, address, size, m_sampleSize == 0 ? size : m_sampleSize);
             processImpl();
             m_processing = false;
         }
 
         void process(const std::vector<u8> &buffer) {
             m_processing = true;
-            m_buffer = impl::getSampleSelection(buffer, m_sampleSize);
+            m_buffer = impl::getSampleSelection(buffer, m_sampleSize == 0 ? buffer.size() : m_sampleSize);
             processImpl();
             m_processing = false;
         }
@@ -245,15 +286,16 @@ namespace hex {
         void reset(u64 size) {
             m_processing = true;
             m_buffer.clear();
-            m_buffer.reserve(m_sampleSize);
+            m_buffer.reserve(m_sampleSize == 0 ? size : m_sampleSize);
             m_byteCount = 0;
             m_fileSize  = size;
+            m_textureValid = false;
         }
 
         void update(u8 byte) {
             // Check if there is some space left
             if (m_byteCount < m_fileSize) {
-                if ((m_byteCount % u64(std::ceil(double(m_fileSize) / double(m_sampleSize)))) == 0)
+                if (m_sampleSize == 0 || (m_byteCount % u64(std::ceil(double(m_fileSize) / double(m_sampleSize)))) == 0)
                     m_buffer.push_back(byte);
                 ++m_byteCount;
                 if (m_byteCount == m_fileSize) {
@@ -261,6 +303,18 @@ namespace hex {
                     m_processing = false;
                 }
             } 
+        }
+
+        void setFiltering(ImGuiExt::Texture::Filter filter) {
+            m_filter = filter;
+        }
+
+        void setBrightness(float brightness) {
+            m_brightness = brightness;
+        }
+
+        void setSampleSize(size_t sampleSize) {
+            m_sampleSize = sampleSize;
         }
 
     private:
@@ -278,11 +332,14 @@ namespace hex {
                 m_glowBuffer[i] = std::min<float>(0.2F + (float(heatMap[m_buffer[i] << 8 | m_buffer[i + 1]]) / float(m_highestCount / 1000)), 1.0F);
             }
 
-            m_opacity = (log10(float(m_sampleSize)) / log10(float(m_highestCount))) / 10.0F;
+            m_opacity = (log10(float(m_sampleSize == 0 ? m_buffer.size() : m_sampleSize)) / log10(float(m_highestCount))) / (100.0F * (1.0F - m_brightness));
         }
+
     private:
+        ImGuiExt::Texture::Filter m_filter = ImGuiExt::Texture::Filter::Nearest;
+        float m_brightness = 0.5F;
         size_t m_sampleSize = 0;
-    
+
         // The number of bytes processed and the size of
         // the file to analyze (useful for iterative analysis)
         u64 m_byteCount = 0;
@@ -293,6 +350,9 @@ namespace hex {
         float m_opacity = 0.0F;
         size_t m_highestCount = 0;
         std::atomic<bool> m_processing = false;
+
+        bool m_textureValid = false;
+        ImGuiExt::Texture m_texture;
     };
 
     class DiagramChunkBasedEntropyAnalysis {
@@ -435,7 +495,7 @@ namespace hex {
 
         // Method used to compute the entropy of a block of size `blockSize`
         // using the byte occurrences from `valueCounts` array.
-        double calculateEntropy(const std::array<ImU64, 256> &valueCounts, size_t blockSize) const {
+        static double calculateEntropy(const std::array<ImU64, 256> &valueCounts, size_t blockSize) {
             double entropy = 0;
 
             u8 processedValueCount = 0;
@@ -458,9 +518,9 @@ namespace hex {
 
         // Return the highest entropy value among all of the blocks
         double getHighestEntropyBlockValue() {
-            double result = 0.0f;
+            double result = 0.0F;
             if (!m_yBlockEntropy.empty())
-                result = *std::max_element(m_yBlockEntropy.begin(), m_yBlockEntropy.end());
+                result = *std::ranges::max_element(m_yBlockEntropy);
             return result;
         }
 
@@ -468,13 +528,13 @@ namespace hex {
         u64 getHighestEntropyBlockAddress() {
             u64 address = 0x00;
             if (!m_yBlockEntropy.empty())
-                address = (std::max_element(m_yBlockEntropy.begin(), m_yBlockEntropy.end()) - m_yBlockEntropy.begin()) * m_blockSize;
+                address = (std::ranges::max_element(m_yBlockEntropy) - m_yBlockEntropy.begin()) * m_blockSize;
             return m_startAddress + address;
         }
 
         // Return the highest entropy value among all of the blocks
         double getLowestEntropyBlockValue() {
-            double result = 0.0f;
+            double result = 0.0F;
             if (m_yBlockEntropy.size() > 1)
                 result = *std::min_element(m_yBlockEntropy.begin(), m_yBlockEntropy.end() - 1);
             return result;
@@ -602,7 +662,7 @@ namespace hex {
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
-                ImPlot::SetupAxesLimits(-1, 256, 1, double(*std::max_element(m_valueCounts.begin(), m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
+                ImPlot::SetupAxesLimits(-1, 256, 1, double(*std::ranges::max_element(m_valueCounts)) * 1.1F, ImGuiCond_Always);
                 ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, (void*)("0x%02llX"));
                 ImPlot::SetupAxisTicks(ImAxis_X1, 0, 255, 17);
                 ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
@@ -839,7 +899,7 @@ namespace hex {
         }
 
     private:
-        std::array<float, 12> calculateTypeDistribution(const std::array<ImU64, 256> &valueCounts, size_t blockSize) const {
+        static std::array<float, 12> calculateTypeDistribution(const std::array<ImU64, 256> &valueCounts, size_t blockSize) {
             std::array<ImU64, 12> counts = {};
 
             for (u16 value = 0x00; value < u16(valueCounts.size()); value++) {

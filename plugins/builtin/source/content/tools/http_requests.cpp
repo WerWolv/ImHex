@@ -31,6 +31,13 @@ namespace hex::plugin::builtin {
             auto languageDef = TextEditor::LanguageDefinition();
             for (auto &[name, identifier] : languageDef.mIdentifiers)
                 identifier.mDeclaration = "";
+            languageDef.mCaseSensitive   = false;
+            languageDef.mAutoIndentation = false;
+            languageDef.mCommentStart = "";
+            languageDef.mCommentEnd = "";
+            languageDef.mSingleLineComment = "";
+            languageDef.mDocComment = "";
+            languageDef.mGlobalDocComment = "";
 
             responseEditor.SetLanguageDefinition(languageDef);
 

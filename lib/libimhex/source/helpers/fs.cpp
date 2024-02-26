@@ -410,6 +410,9 @@ namespace hex::fs {
             case ImHexPath::Yara:
                 result = appendPath(getDataPaths(), "yara");
                 break;
+            case ImHexPath::YaraAdvancedAnalysis:
+                result = appendPath(getDefaultPaths(ImHexPath::Yara), "advanced_analysis");
+                break;
             case ImHexPath::Recent:
                 result = appendPath(getConfigPaths(), "recent");
                 break;

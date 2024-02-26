@@ -47,6 +47,31 @@ namespace hex {
         } // Hopefully one of these commands is installed
     }
 
+    void enumerateFonts() {
+        const std::array FontDirectories = {
+            "/usr/share/fonts",
+            "/usr/local/share/fonts",
+            "~/.fonts",
+            "~/.local/share/fonts"
+        };
+
+        for (const auto &directory : FontDirectories) {
+            if (!std::fs::exists(directory))
+                continue;
+
+            for (const auto &entry : std::fs::recursive_directory_iterator(directory)) {
+                if (!entry.exists())
+                    continue;
+                if (!entry.is_regular_file())
+                    continue;
+                if (entry.path().extension() != ".ttf" && entry.path().extension() != ".otf")
+                    continue;
+
+                registerFont(entry.path().stem().c_str(), entry.path().c_str());
+            }
+        }
+    }
+
     void Window::initNative() {
         log::impl::enableColorPrinting();
 
@@ -65,6 +90,8 @@ namespace hex {
         if (!isatty(STDOUT_FILENO)) {
             log::impl::redirectToFile();
         }
+
+        enumerateFonts();
     }
 
     void Window::setupNativeWindow() {
