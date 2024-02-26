@@ -16,6 +16,7 @@
 #include <imgui_internal.h>
 
 #include <atomic>
+#include <implot_internal.h>
 #include <random>
 #include <hex/ui/imgui_imhex_extensions.h>
 
@@ -747,6 +748,20 @@ namespace hex {
     };
 
     class DiagramByteTypesDistribution {
+    private:
+        struct AnnotationRegion {
+            UnlocalizedString unlocalizedName;
+            Region region;
+            ImColor color;
+        };
+
+        struct Tag {
+            UnlocalizedString unlocalizedName;
+            ImU64 value;
+            ImAxis axis;
+            ImGuiCol color;
+        };
+
     public:
         explicit DiagramByteTypesDistribution(u64 blockSize = 256, size_t sampleSize = 0x1000) : m_blockSize(blockSize), m_sampleSize(sampleSize){ }
 
@@ -771,8 +786,40 @@ namespace hex {
                                                       "isupper", "islower", "isdigit", "isxdigit" 
                                                     };
 
+
                 for (u32 i = 0; i < Names.size(); i++) {
                     ImPlot::PlotLine(Names[i], m_xBlockTypeDistributions.data(), m_yBlockTypeDistributionsSampled[i].data(), m_xBlockTypeDistributions.size());
+                }
+
+                u32 id = 1;
+                for (const auto &annotation : m_annotationRegions) {
+                    const auto &region = annotation.region;
+                    double xMin = region.getStartAddress();
+                    double xMax = region.getEndAddress();
+                    double yMin = 0.0F;
+                    double yMax = 100.0F;
+
+                    ImPlot::DragRect(id, &xMin, &yMin, &xMax, &yMax, annotation.color, ImPlotDragToolFlags_NoFit | ImPlotDragToolFlags_NoInputs);
+
+                    const auto min = ImPlot::PlotToPixels(xMin, yMax);
+                    const auto max = ImPlot::PlotToPixels(xMax, yMin);
+                    const auto mousePos = ImPlot::PixelsToPlot(ImGui::GetMousePos());
+                    if (ImGui::IsMouseHoveringRect(min, max)) {
+                        ImPlot::Annotation(xMin + (xMax - xMin) / 2, mousePos.y, annotation.color, ImVec2(), false, Lang(annotation.unlocalizedName));
+
+                        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                            ImHexApi::HexEditor::setSelection(annotation.region);
+                        }
+                    }
+
+                    id += 1;
+                }
+
+                for (const auto &tag : m_tags) {
+                    if (tag.axis == ImAxis_X1)
+                        ImPlot::TagX(tag.value, ImGui::GetStyleColorVec4(tag.color), Lang(tag.unlocalizedName));
+                    else if (tag.axis == ImAxis_Y1)
+                        ImPlot::TagY(tag.value, ImGui::GetStyleColorVec4(tag.color), Lang(tag.unlocalizedName));
                 }
 
                 // The parameter updateHandle is used when using the pattern language since we don't have a provider 
@@ -870,6 +917,12 @@ namespace hex {
                     auto typeDist = calculateTypeDistribution(m_blockValueCounts, m_blockSize);
                     for (size_t i = 0; i < typeDist.size(); i++)
                         m_yBlockTypeDistributions[i].push_back(typeDist[i] * 100);
+
+                    if (m_yBlockTypeDistributions[2].back() + m_yBlockTypeDistributions[4].back() >= 95) {
+                        this->addRegion("hex.ui.diagram.byte_type_distribution.plain_text"_lang, Region { m_byteCount, m_blockSize }, 0x80FF00FF);
+                    } else if (std::ranges::any_of(m_blockValueCounts, [&](auto count) { return count >= m_blockSize * 0.95F; })) {
+                        this->addRegion("hex.ui.diagram.byte_type_distribution.similar_bytes"_lang, Region { m_byteCount, m_blockSize }, 0x8000FF00);
+                    }
 
                     m_blockCount += 1;
                     m_blockValueCounts = { 0 };
@@ -988,6 +1041,22 @@ namespace hex {
             m_xBlockTypeDistributions.push_back(m_endAddress);
         }
 
+        void addRegion(const UnlocalizedString &name, Region region, ImColor color) {
+            auto existingRegion = std::ranges::find_if(m_annotationRegions, [&region](const AnnotationRegion &annotation) {
+                return annotation.region.getEndAddress() + 1 == region.getStartAddress();
+            });
+
+            if (existingRegion != m_annotationRegions.end()) {
+                existingRegion->region.size += region.size;
+            } else {
+                m_annotationRegions.push_back({ name, region, color });
+            }
+        }
+
+        void addTag(const UnlocalizedString &name, u64 value, ImAxis axis, ImGuiCol color) {
+            m_tags.push_back({ name, value, axis, color });
+        }
+
     private:
         // Variables used to store the parameters to process
 
@@ -1024,5 +1093,8 @@ namespace hex {
         // Hold the result of the byte distribution analysis 
         std::array<std::vector<float>, 12> m_yBlockTypeDistributions, m_yBlockTypeDistributionsSampled;
         std::atomic<bool> m_processing = false;
+
+        std::vector<AnnotationRegion> m_annotationRegions;
+        std::vector<Tag> m_tags;
     };
 }
