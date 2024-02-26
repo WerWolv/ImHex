@@ -206,11 +206,11 @@ namespace hex::ui {
         constexpr auto roundingCorners = ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight;
         constexpr auto axis = ImGuiAxis_Y;
 
-        constexpr static u64 RowCount = 256;
-        const auto rowHeight = innerRect.GetSize().y / RowCount;
+        const auto rowHeight = 4_scaled;
+        const u64 rowCount = innerRect.GetSize().y / rowHeight;
         const ImS64 scrollPos = m_scrollPosition.get();
         const auto grabSize = rowHeight * m_visibleRowCount;
-        const ImS64 grabPos = (RowCount - m_visibleRowCount) * (double(scrollPos) / numRows);
+        const ImS64 grabPos = (rowCount - m_visibleRowCount) * (double(scrollPos) / numRows);
 
         auto drawList = ImGui::GetWindowDrawList();
 
@@ -239,7 +239,7 @@ namespace hex::ui {
 
         std::vector<u8> rowData(m_bytesPerRow);
         const auto drawStart = std::max<ImS64>(0, scrollPos - grabPos);
-        for (ImS64 y = drawStart; y < std::min<ImS64>(drawStart + RowCount, m_provider->getSize() / m_bytesPerRow); y += 1) {
+        for (ImS64 y = drawStart; y < std::min<ImS64>(drawStart + rowCount, m_provider->getSize() / m_bytesPerRow); y += 1) {
             const auto rowStart = bb.Min + ImVec2(0, (y - drawStart) * rowHeight);
             const auto rowEnd = rowStart + ImVec2(bb.GetSize().x, rowHeight);
 
