@@ -842,6 +842,7 @@
         "hex.builtin.information_section.info_analysis.highest_entropy": "Highest block entropy",
         "hex.builtin.information_section.info_analysis.lowest_entropy": "Lowest block entropy",
         "hex.builtin.information_section.info_analysis": "Information analysis",
+        "hex.builtin.information_section.info_analysis.show_annotations": "Show annotations",
         "hex.builtin.information_section.relationship_analysis": "Byte Relationship",
         "hex.builtin.information_section.relationship_analysis.sample_size": "Sample size",
         "hex.builtin.information_section.relationship_analysis.brightness": "Brightness",

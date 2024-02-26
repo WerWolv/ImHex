@@ -164,6 +164,8 @@ namespace hex::plugin::builtin {
             m_chunkBasedEntropy.reset(m_inputChunkSize, region.getStartAddress(), region.getEndAddress(),
                 provider->getBaseAddress(), provider->getActualSize());
 
+            m_byteTypesDistribution.enableAnnotations(m_showAnnotations);
+
             // Create a handle to the file
             auto reader = prv::ProviderReader(provider);
             reader.seek(region.getStartAddress());
@@ -194,6 +196,7 @@ namespace hex::plugin::builtin {
 
         void drawSettings() override {
             ImGuiExt::InputHexadecimal("hex.builtin.information_section.info_analysis.block_size"_lang, &m_inputChunkSize);
+            ImGui::Checkbox("hex.builtin.information_section.info_analysis.show_annotations"_lang, &m_showAnnotations);
         }
 
         void drawContent() override {
@@ -319,12 +322,14 @@ namespace hex::plugin::builtin {
         void load(const nlohmann::json &data) override {
             InformationSection::load(data);
 
-            m_inputChunkSize = data.value("block_size", 0);
+            m_inputChunkSize  = data.value("block_size", 0);
+            m_showAnnotations = data.value("annotations", true);
         }
 
         nlohmann::json store() override {
             auto result = InformationSection::store();
-            result["block_size"] = m_inputChunkSize;
+            result["block_size"]  = m_inputChunkSize;
+            result["annotations"] = m_showAnnotations;
 
             return result;
         }
@@ -340,6 +345,8 @@ namespace hex::plugin::builtin {
         double m_lowestBlockEntropy = -1.0;
         u64 m_lowestBlockEntropyAddress = 0x00;
         double m_plainTextCharacterPercentage = -1.0;
+
+        bool m_showAnnotations = true;
 
         DiagramByteDistribution m_byteDistribution;
         DiagramByteTypesDistribution m_byteTypesDistribution;
