@@ -919,9 +919,9 @@ namespace hex {
                         m_yBlockTypeDistributions[i].push_back(typeDist[i] * 100);
 
                     if (m_yBlockTypeDistributions[2].back() + m_yBlockTypeDistributions[4].back() >= 95) {
-                        this->addRegion("hex.ui.diagram.byte_type_distribution.plain_text"_lang, Region { m_byteCount, m_blockSize }, 0x80FF00FF);
+                        this->addRegion("hex.ui.diagram.byte_type_distribution.plain_text", Region { m_byteCount, m_blockSize }, 0x80FF00FF);
                     } else if (std::ranges::any_of(m_blockValueCounts, [&](auto count) { return count >= m_blockSize * 0.95F; })) {
-                        this->addRegion("hex.ui.diagram.byte_type_distribution.similar_bytes"_lang, Region { m_byteCount, m_blockSize }, 0x8000FF00);
+                        this->addRegion("hex.ui.diagram.byte_type_distribution.similar_bytes", Region { m_byteCount, m_blockSize }, 0x8000FF00);
                     }
 
                     m_blockCount += 1;
