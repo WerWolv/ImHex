@@ -25,6 +25,14 @@
 namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {
+        if (path.extension() == ".hexproj") {
+            if (!ProjectFile::load(path)) {
+                ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+            } else {
+                return;
+            }
+        }
+
         auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
         if (auto *fileProvider = dynamic_cast<FileProvider*>(provider); fileProvider != nullptr) {
             fileProvider->setPath(path);
@@ -111,23 +119,24 @@ namespace hex::plugin::builtin {
                     if (path.extension() == ".hexproj") {
                         if (!ProjectFile::load(path)) {
                             ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
-                        }
-                    } else {
-                        auto newProvider = static_cast<FileProvider*>(
-                            ImHexApi::Provider::createProvider("hex.builtin.provider.file", true)
-                        );
-
-                        if (newProvider == nullptr)
-                            return;
-
-                        newProvider->setPath(path);
-                        if (!newProvider->open()) {
-                            hex::ImHexApi::Provider::remove(newProvider);
                         } else {
-                            EventProviderOpened::post(newProvider);
-                            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
+                            return;
                         }
+                    }
 
+                    auto newProvider = static_cast<FileProvider*>(
+                        ImHexApi::Provider::createProvider("hex.builtin.provider.file", true)
+                    );
+
+                    if (newProvider == nullptr)
+                        return;
+
+                    newProvider->setPath(path);
+                    if (!newProvider->open()) {
+                        hex::ImHexApi::Provider::remove(newProvider);
+                    } else {
+                        EventProviderOpened::post(newProvider);
+                        AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
                     }
                 }, {}, true);
             } else if (name == "Open Project") {

@@ -1,5 +1,6 @@
 #include <hex.hpp>
-#include <hex/helpers/http_requests.hpp>
+
+#include <hex/api/workspace_manager.hpp>
 #include <hex/api/event_manager.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
@@ -7,7 +8,11 @@
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api_urls.hpp>
+
 #include <hex/ui/view.hpp>
+#include <toasts/toast_notification.hpp>
+
+#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 
@@ -28,8 +33,6 @@
 
 #include <string>
 #include <random>
-#include <popups/popup_question.hpp>
-#include <hex/api/workspace_manager.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -546,14 +549,17 @@ namespace hex::plugin::builtin {
                     // Restore callback
                     [crashFileData, backupFilePath, hasProject, hasBackupFile] {
                         if (hasBackupFile) {
-                            ProjectFile::load(backupFilePath);
-                            if (hasProject) {
-                                ProjectFile::setPath(crashFileData["project"].get<std::string>());
+                            if (ProjectFile::load(backupFilePath)) {
+                                if (hasProject) {
+                                    ProjectFile::setPath(crashFileData["project"].get<std::string>());
+                                } else {
+                                    ProjectFile::setPath("");
+                                }
+                                RequestUpdateWindowTitle::post();
                             } else {
-                                ProjectFile::setPath("");
+                                ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(backupFilePath)));
                             }
-                            RequestUpdateWindowTitle::post();
-                        }else{
+                        } else {
                             if (hasProject) {
                                 ProjectFile::setPath(crashFileData["project"].get<std::string>());
                             }
