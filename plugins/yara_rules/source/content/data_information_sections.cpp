@@ -29,9 +29,11 @@ namespace hex::plugin::yara {
         void process(Task &task, prv::Provider *provider, Region region) override {
             for (const auto &yaraSignaturePath : fs::getDefaultPaths(fs::ImHexPath::YaraAdvancedAnalysis)) {
                 for (const auto &ruleFilePath : std::fs::recursive_directory_iterator(yaraSignaturePath)) {
-                    const std::string fileContent = romfs::get(ruleFilePath).data<const char>();
+                    wolv::io::File file(ruleFilePath.path(), wolv::io::File::Mode::Read);
+                    if (!file.isValid())
+                        continue;
 
-                    YaraRule yaraRule(fileContent);
+                    YaraRule yaraRule(file.readString());
                     task.setInterruptCallback([&yaraRule] {
                         yaraRule.interrupt();
                     });
