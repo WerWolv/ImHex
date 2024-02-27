@@ -1,12 +1,12 @@
 #include "content/providers/file_provider.hpp"
 #include "content/providers/memory_file_provider.hpp"
 
-#include <cstring>
-
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
+
+#include <toasts/toast_notification.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -15,6 +15,7 @@
 #include <wolv/utils/string.hpp>
 
 #include <nlohmann/json.hpp>
+#include <cstring>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -222,6 +223,8 @@ namespace hex::plugin::builtin {
                 this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), ::strerror(errno)));
                 return false;
             }
+
+            ui::ToastInfo::open("hex.builtin.popup.error.read_only"_lang);
         }
 
         m_file      = std::move(file);
