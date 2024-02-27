@@ -567,27 +567,47 @@ namespace hex {
         // Finalize ImGui frame
         ImGui::Render();
 
-        // Hash the draw data to determine if anything changed on the screen
+        // Compare the previous frame buffer to the current one to determine if the window content has changed
         // If not, there's no point in sending the draw data off to the GPU and swapping buffers
+        // NOTE: For anybody looking at this code and thinking "why not just hash the buffer and compare the hashes",
+        // the reason is that hashing the buffer is significantly slower than just comparing the buffers directly.
+        // The buffer might become quite large if there's a lot of vertices on the screen but it's still usually less than
+        // 10MB (out of which only the active portion needs to actually be compared) which is worth the ~60x speedup.
         bool shouldRender = false;
         {
-            u32 drawDataHash = 0;
-            static u32 previousDrawDataHash = 0;
+            static std::vector<u8> previousVtxData;
+            static size_t previousVtxDataSize = 0;
+
+            size_t offset = 0;
+            size_t vtxDataSize = 0;
 
             for (const auto viewPort : ImGui::GetPlatformIO().Viewports) {
                 auto drawData = viewPort->DrawData;
                 for (int n = 0; n < drawData->CmdListsCount; n++) {
-                    const ImDrawList *cmdList = drawData->CmdLists[n];
-                    drawDataHash = ImHashData(cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert), drawDataHash);
+                    vtxDataSize += drawData->CmdLists[n]->VtxBuffer.size() * sizeof(ImDrawVert);
                 }
+            }
+            for (const auto viewPort : ImGui::GetPlatformIO().Viewports) {
+                auto drawData = viewPort->DrawData;
                 for (int n = 0; n < drawData->CmdListsCount; n++) {
                     const ImDrawList *cmdList = drawData->CmdLists[n];
-                    drawDataHash = ImHashData(cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx), drawDataHash);
+
+                    if (vtxDataSize == previousVtxDataSize) {
+                        shouldRender = shouldRender || std::memcmp(previousVtxData.data() + offset, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.size() * sizeof(ImDrawVert)) != 0;
+                    } else {
+                        shouldRender = true;
+                    }
+
+                    if (previousVtxData.size() < offset + cmdList->VtxBuffer.size() * sizeof(ImDrawVert)) {
+                        previousVtxData.resize(offset + cmdList->VtxBuffer.size() * sizeof(ImDrawVert));
+                    }
+
+                    std::memcpy(previousVtxData.data() + offset, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.size() * sizeof(ImDrawVert));
+                    offset += cmdList->VtxBuffer.size() * sizeof(ImDrawVert);
                 }
             }
 
-            shouldRender = drawDataHash != previousDrawDataHash;
-            previousDrawDataHash = drawDataHash;
+            previousVtxDataSize = vtxDataSize;
         }
 
         if (shouldRender) {
