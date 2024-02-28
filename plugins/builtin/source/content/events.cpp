@@ -245,6 +245,8 @@ namespace hex::plugin::builtin {
 
             if (ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup))
                 return;
+            if (ImGui::IsAnyItemHovered())
+                return;
 
             static ImGuiWindow *lastFocusedWindow = nullptr;
 
