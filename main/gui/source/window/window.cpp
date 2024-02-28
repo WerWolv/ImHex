@@ -183,7 +183,6 @@ namespace hex {
                 glfwWaitEvents();
             } else {
                 // If the application is visible, render a frame
-                glfwPollEvents();
 
                 // If the application is in long sleep mode, only render a frame every 200ms
                 // Long sleep mode is enabled automatically after a few frames if the window content hasn't changed
@@ -193,10 +192,9 @@ namespace hex {
                     constexpr static auto LongSleepFPS = 5.0;
                     const double timeout = std::max(0.0, (1.0 / LongSleepFPS) - (glfwGetTime() - m_lastStartFrameTime));
 
-                    auto endTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(i64(timeout * 1000));
-                    while (!m_unlockFrameRate && std::chrono::steady_clock::now() < endTime) {
-                        std::this_thread::sleep_for(std::chrono::microseconds(100));
-                    }
+                    glfwWaitEventsTimeout(timeout);
+                } else {
+                    glfwPollEvents();
                 }
             }
 
@@ -222,11 +220,13 @@ namespace hex {
             } else if (targetFPS > 200) {
                 glfwSwapInterval(0);
             } else {
-                glfwSwapInterval(0);
-                const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
-                const auto targetFrameTime = 1.0 / targetFPS;
-                if (frameTime < targetFrameTime) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(i64((targetFrameTime - frameTime) * 1000)));
+                if (!shouldLongSleep) {
+                    glfwSwapInterval(0);
+                    const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
+                    const auto targetFrameTime = 1.0 / targetFPS;
+                    if (frameTime < targetFrameTime) {
+                        glfwWaitEventsTimeout(targetFrameTime - frameTime);
+                    }
                 }
             }
 
@@ -610,7 +610,13 @@ namespace hex {
             previousVtxDataSize = vtxDataSize;
         }
 
+        ImGui::UpdatePlatformWindows();
+
         if (shouldRender) {
+            GLFWwindow *backupContext = glfwGetCurrentContext();
+            ImGui::RenderPlatformWindowsDefault();
+            glfwMakeContextCurrent(backupContext);
+
             int displayWidth, displayHeight;
             glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
             glViewport(0, 0, displayWidth, displayHeight);
@@ -623,10 +629,7 @@ namespace hex {
             m_unlockFrameRate = true;
         }
 
-        GLFWwindow *backupContext = glfwGetCurrentContext();
-        ImGui::UpdatePlatformWindows();
-        ImGui::RenderPlatformWindowsDefault();
-        glfwMakeContextCurrent(backupContext);
+        glfwPollEvents();
 
         // Process layout load requests
         // NOTE: This needs to be done before a new frame is started, otherwise ImGui won't handle docking correctly
@@ -769,11 +772,6 @@ namespace hex {
         glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
             if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->m_unlockFrameRate = true;
-        });
-
-        glfwSetMouseButtonCallback(m_window, [](GLFWwindow *window, int, int, int) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
         });
