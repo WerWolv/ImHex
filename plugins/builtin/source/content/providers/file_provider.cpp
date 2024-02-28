@@ -87,6 +87,7 @@ namespace hex::plugin::builtin {
 
     void FileProvider::resizeRaw(u64 newSize) {
         m_file.setSize(newSize);
+        m_fileSize = newSize;
     }
 
     void FileProvider::insertRaw(u64 offset, u64 size) {
