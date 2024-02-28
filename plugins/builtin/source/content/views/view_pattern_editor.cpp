@@ -1305,7 +1305,7 @@ namespace hex::plugin::builtin {
                 pl::PatternLanguage runtime;
                 ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
 
-                auto mimeType = magic::getMIMEType(provider, true);
+                auto mimeType = magic::getMIMEType(provider, 0, 100_KiB, true);
 
                 bool foundCorrectType = false;
                 runtime.addPragma("MIME", [&mimeType, &foundCorrectType](const pl::PatternLanguage &runtime, const std::string &value) {
