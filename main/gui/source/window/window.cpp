@@ -165,10 +165,9 @@ namespace hex {
             bool shouldLongSleep = !m_unlockFrameRate;
 
             // Wait 5 frames before actually enabling the long sleep mode to make animations not stutter
-            constexpr static auto LongSleepTimeout = 5;
             static i32 lockTimeout = 0;
             if (!shouldLongSleep) {
-                lockTimeout = LongSleepTimeout;
+                lockTimeout = m_lastFrameTime * 10'000;
             } else if (lockTimeout > 0) {
                 lockTimeout -= 1;
             }
@@ -610,13 +609,12 @@ namespace hex {
             previousVtxDataSize = vtxDataSize;
         }
 
+        GLFWwindow *backupContext = glfwGetCurrentContext();
         ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backupContext);
 
         if (shouldRender) {
-            GLFWwindow *backupContext = glfwGetCurrentContext();
-            ImGui::RenderPlatformWindowsDefault();
-            glfwMakeContextCurrent(backupContext);
-
             int displayWidth, displayHeight;
             glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
             glViewport(0, 0, displayWidth, displayHeight);
