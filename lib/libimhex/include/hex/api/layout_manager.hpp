@@ -46,7 +46,13 @@ namespace hex {
          * @brief Get a list of all layouts
          * @return List of all added layouts
          */
-        static std::vector<Layout> getLayouts();
+        static const std::vector<Layout> &getLayouts();
+
+        /**
+         * @brief Removes the layout with the given name
+         * @param name Name of the layout
+         */
+        static void removeLayout(const std::string &name);
 
         /**
          * @brief Handles loading of layouts if needed

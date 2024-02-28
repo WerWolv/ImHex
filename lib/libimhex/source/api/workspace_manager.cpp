@@ -9,22 +9,28 @@
 #include <nlohmann/json.hpp>
 
 #include <imgui.h>
+#include <wolv/utils/string.hpp>
 
 namespace hex {
 
     AutoReset<std::map<std::string, WorkspaceManager::Workspace>> WorkspaceManager::s_workspaces;
     decltype(WorkspaceManager::s_workspaces)::Type::iterator WorkspaceManager::s_currentWorkspace  = s_workspaces->end();
     decltype(WorkspaceManager::s_workspaces)::Type::iterator WorkspaceManager::s_previousWorkspace = s_workspaces->end();
+    decltype(WorkspaceManager::s_workspaces)::Type::iterator WorkspaceManager::s_workspaceToRemove = s_workspaces->end();
 
     void WorkspaceManager::createWorkspace(const std::string& name, const std::string &layout) {
         s_currentWorkspace = s_workspaces->insert_or_assign(name, Workspace {
-            .layout = layout.empty() ? LayoutManager::saveToString() : layout,
-            .path = {}
+            .layout  = layout.empty() ? LayoutManager::saveToString() : layout,
+            .path    = {},
+            .builtin = false
         }).first;
 
-        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Workspaces)) {
-            if (exportToFile(path / (name + ".hexws")))
+        for (const auto &workspaceFolder : fs::getDefaultPaths(fs::ImHexPath::Workspaces)) {
+            const auto workspacePath = workspaceFolder / (name + ".hexws");
+            if (exportToFile(workspacePath)) {
+                s_currentWorkspace->second.path = workspacePath;
                 break;
+            }
         }
     }
 
@@ -37,6 +43,9 @@ namespace hex {
     }
 
     void WorkspaceManager::importFromFile(const std::fs::path& path) {
+        if (std::ranges::any_of(*s_workspaces, [path](const auto &pair) { return pair.second.path == path; }))
+            return;
+
         wolv::io::File file(path, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
             log::error("Failed to load workspace from file '{}'", path.string());
@@ -50,10 +59,12 @@ namespace hex {
 
             const std::string name = json["name"];
             std::string layout = json["layout"];
+            const bool builtin = json.value("builtin", false);
 
             (*s_workspaces)[name] = Workspace {
                 .layout = std::move(layout),
-                .path = path
+                .path = path,
+                .builtin = builtin
             };
         } catch (nlohmann::json::exception &e) {
             log::error("Failed to load workspace from file '{}': {}", path.string(), e.what());
@@ -61,7 +72,7 @@ namespace hex {
         }
     }
 
-    bool WorkspaceManager::exportToFile(std::fs::path path, std::string workspaceName) {
+    bool WorkspaceManager::exportToFile(std::fs::path path, std::string workspaceName, bool builtin) {
         if (path.empty()) {
             if (s_currentWorkspace == s_workspaces->end())
                 return false;
@@ -80,22 +91,46 @@ namespace hex {
         nlohmann::json json;
         json["name"]    = workspaceName;
         json["layout"]  = LayoutManager::saveToString();
+        json["builtin"] = builtin;
 
         file.writeString(json.dump(4));
 
         return true;
     }
 
+    void WorkspaceManager::removeWorkspace(const std::string& name) {
+        for (const auto &[workspaceName, workspace] : *s_workspaces) {
+            if (workspaceName == name) {
+                log::info("{}", wolv::util::toUTF8String(workspace.path));
+                if (wolv::io::File(workspace.path, wolv::io::File::Mode::Write).remove()) {
+                    log::info("Removed workspace '{}'", name);
+
+                    switchWorkspace(s_workspaces->begin()->first);
+                    s_workspaces->erase(workspaceName);
+                } else {
+                    log::error("Failed to remove workspace '{}'", name);
+                }
+                return;
+            }
+        }
+    }
+
 
     void WorkspaceManager::process() {
         if (s_previousWorkspace != s_currentWorkspace) {
+            log::info("Updating workspace");
             if (s_previousWorkspace != s_workspaces->end())
-                exportToFile(s_previousWorkspace->second.path, s_previousWorkspace->first);
+                exportToFile(s_previousWorkspace->second.path, s_previousWorkspace->first, s_previousWorkspace->second.builtin);
 
             LayoutManager::closeAllViews();
             ImGui::LoadIniSettingsFromMemory(s_currentWorkspace->second.layout.c_str());
 
             s_previousWorkspace = s_currentWorkspace;
+
+            if (s_workspaceToRemove != s_workspaces->end()) {
+                s_workspaces->erase(s_workspaceToRemove);
+                s_workspaceToRemove = s_workspaces->end();
+            }
         }
     }
 
@@ -105,6 +140,24 @@ namespace hex {
         s_currentWorkspace  = s_workspaces->end();
         s_previousWorkspace = s_workspaces->end();
     }
+
+    void WorkspaceManager::reload() {
+        WorkspaceManager::reset();
+
+        for (const auto &defaultPath : fs::getDefaultPaths(fs::ImHexPath::Workspaces)) {
+            for (const auto &entry : std::fs::directory_iterator(defaultPath)) {
+                if (!entry.is_regular_file())
+                    continue;
+
+                const auto &path = entry.path();
+                if (path.extension() != ".hexws")
+                    continue;
+
+                WorkspaceManager::importFromFile(path);
+            }
+        }
+    }
+
 
 
 

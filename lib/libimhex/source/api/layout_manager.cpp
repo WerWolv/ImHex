@@ -64,9 +64,24 @@ namespace hex {
     }
 
 
-    std::vector<LayoutManager::Layout> LayoutManager::getLayouts() {
+    const std::vector<LayoutManager::Layout>& LayoutManager::getLayouts() {
         return s_layouts;
     }
+
+    void LayoutManager::removeLayout(const std::string& name) {
+        for (const auto &layout : *s_layouts) {
+            if (layout.name == name) {
+                if (wolv::io::File(layout.path, wolv::io::File::Mode::Write).remove()) {
+                    log::info("Removed layout '{}'", name);
+                    LayoutManager::reload();
+                } else {
+                    log::error("Failed to remove layout '{}'", name);
+                }
+                return;
+            }
+        }
+    }
+
 
     void LayoutManager::closeAllViews() {
         for (const auto &[name, view] : ContentRegistry::Views::impl::getEntries())
