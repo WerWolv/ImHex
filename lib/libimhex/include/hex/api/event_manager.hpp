@@ -72,11 +72,11 @@ namespace hex {
 
             explicit Event(Callback func) noexcept : m_func(std::move(func)) { }
 
-            void operator()(Params... params) const noexcept {
+            void operator()(std::string_view evtName, Params... params) const noexcept {
                 try {
                     m_func(params...);
                 } catch (const std::exception &e) {
-                    log::error("An exception occurred while handling event: {}", e.what());
+                    log::error("An exception occurred while handling event {}: {}", evtName, e.what());
                 }
             }
 
@@ -178,7 +178,7 @@ namespace hex {
 
             for (const auto &[id, event] : getEvents()) {
                 if (id == E::Id) {
-                    (*static_cast<E *const>(event.get()))(std::forward<decltype(args)>(args)...);
+                    (*static_cast<E *const>(event.get()))(wolv::type::getTypeName<E>(), std::forward<decltype(args)>(args)...);
                 }
             }
 
