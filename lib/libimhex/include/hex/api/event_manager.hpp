@@ -311,4 +311,5 @@ namespace hex {
     */
     EVENT_DEF(MovePerProviderData, prv::Provider *, prv::Provider *);
 
+    EVENT_DEF(CrashRecovered, const std::exception &);
 }

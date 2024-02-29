@@ -374,6 +374,7 @@
         "hex.builtin.popup.exit_application.desc": "You have unsaved changes made to your Project.\nAre you sure you want to exit?",
         "hex.builtin.popup.exit_application.title": "Exit Application?",
         "hex.builtin.popup.waiting_for_tasks.title": "Waiting for Tasks",
+        "hex.builtin.popup.crash_recover.title": "Crash recovery",
         "hex.builtin.popup.blocking_task.title": "Running Task",
         "hex.builtin.popup.blocking_task.desc": "A task is currently executing.",
         "hex.builtin.popup.save_layout.title": "Save Layout",

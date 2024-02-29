@@ -126,6 +126,7 @@ namespace hex {
             throw;
         } catch (const std::exception &e) {
             log::fatal("Unhandled exception: {}", e.what());
+            CrashRecovered::post(e);
         } catch (...) {
             log::fatal("Unhandled exception: Unknown exception");
         }
