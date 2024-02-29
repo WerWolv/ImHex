@@ -2,7 +2,9 @@ name: Build for the web
 
 on:
   push:
-    branches: ["*"]
+    branches:
+      - 'master'
+      - 'releases/**'
   pull_request:
   workflow_dispatch:
 
