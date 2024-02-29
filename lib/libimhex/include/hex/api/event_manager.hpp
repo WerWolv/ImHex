@@ -77,7 +77,7 @@ namespace hex {
                     m_func(params...);
                 } catch (const std::exception &e) {
                     log::error("An exception occurred while handling event {}: {}", evtName, e.what());
-                    throw e;
+                    throw;
                 }
             }
 
