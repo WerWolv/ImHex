@@ -46,6 +46,9 @@ function(addDefineToSource SOURCE DEFINE)
             APPEND
             PROPERTY COMPILE_DEFINITIONS "${DEFINE}"
     )
+
+    # Disable precompiled headers for this file
+    set_source_files_properties(${SOURCE} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 endfunction()
 
 # Detect current OS / System
