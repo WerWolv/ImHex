@@ -23,7 +23,7 @@
         static void subscribe(void *token, Event::Callback function) { EventManager::subscribe<event_name>(token, function); }                  \
         static void unsubscribe(const EventManager::EventList::iterator &token) noexcept { EventManager::unsubscribe(token); }                  \
         static void unsubscribe(void *token) noexcept { EventManager::unsubscribe<event_name>(token); }                                         \
-        static void post(auto &&...args) noexcept { EventManager::post<event_name>(std::forward<decltype(args)>(args)...); }                    \
+        static void post(auto &&...args) { EventManager::post<event_name>(std::forward<decltype(args)>(args)...); }                    \
     };
 
 #define EVENT_DEF(event_name, ...)          EVENT_DEF_IMPL(event_name, #event_name, true, __VA_ARGS__)
@@ -72,11 +72,12 @@ namespace hex {
 
             explicit Event(Callback func) noexcept : m_func(std::move(func)) { }
 
-            void operator()(std::string_view evtName, Params... params) const noexcept {
+            void operator()(std::string_view evtName, Params... params) const {
                 try {
                     m_func(params...);
                 } catch (const std::exception &e) {
                     log::error("An exception occurred while handling event {}: {}", evtName, e.what());
+                    throw e;
                 }
             }
 
@@ -173,7 +174,7 @@ namespace hex {
          * @param args Arguments to pass to the event
          */
         template<impl::EventType E>
-        static void post(auto &&...args) noexcept {
+        static void post(auto &&...args) {
             std::scoped_lock lock(getEventMutex());
 
             for (const auto &[id, event] : getEvents()) {
