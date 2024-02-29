@@ -15,6 +15,9 @@ namespace hex::plugin::builtin {
 
         void drawContent() override {
             ImGuiExt::TextFormattedWrapped("hex.builtin.popup.crash_recover.msg"_lang);
+
+            ImGuiExt::TextFormattedWrapped(hex::format("Error: {}", m_error.what()));
+
             if (ImGui::Button("hex.ui.common.okay"_lang)) {
                 this->close();
             }
