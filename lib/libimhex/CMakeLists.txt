@@ -63,16 +63,6 @@ if (APPLE)
     set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_macos.m)
 endif ()
 
-if (GIT_COMMIT_HASH_LONG STREQUAL "" OR GIT_BRANCH STREQUAL "")
-    message(WARNING "Failed to to determine commit hash/branch")
-else()
-    addDefineToSource(source/api/imhex_api.cpp "GIT_COMMIT_HASH_LONG=\"${GIT_COMMIT_HASH_LONG}\"")
-    addDefineToSource(source/api/imhex_api.cpp "GIT_BRANCH=\"${GIT_BRANCH}\"")
-endif ()
-
-addDefineToSource(source/api/imhex_api.cpp "IMHEX_VERSION=\"${IMHEX_VERSION_STRING}\"")
-
-
 if (IMHEX_EXTERNAL_PLUGIN_BUILD)
     add_library(libimhex IMPORTED SHARED GLOBAL)
     set(LIBIMHEX_LIBRARY_TYPE INTERFACE)
@@ -85,9 +75,41 @@ else()
 
     set(LIBIMHEX_LIBRARY_TYPE PUBLIC)
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
-
-    precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
+
+
+if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_BRANCH)
+    set(GIT_COMMIT_HASH_LONG "${IMHEX_COMMIT_HASH_LONG}")
+    set(GIT_BRANCH "${IMHEX_COMMIT_BRANCH}")
+else()
+    # Get the current working branch
+    execute_process(
+            COMMAND git rev-parse --abbrev-ref HEAD
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_BRANCH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE RESULT_BRANCH
+            ERROR_QUIET
+    )
+
+    execute_process(
+            COMMAND git log -1 --format=%H
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_COMMIT_HASH_LONG
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE RESULT_HASH_LONG
+            ERROR_QUIET
+    )
+endif ()
+
+if (GIT_COMMIT_HASH_LONG STREQUAL "" OR GIT_BRANCH STREQUAL "")
+    message(WARNING "Failed to to determine commit hash/branch")
+else()
+    addDefineToSource(source/api/imhex_api.cpp "GIT_COMMIT_HASH_LONG=\"${GIT_COMMIT_HASH_LONG}\"")
+    addDefineToSource(source/api/imhex_api.cpp "GIT_BRANCH=\"${GIT_BRANCH}\"")
+endif ()
+
+addDefineToSource(source/api/imhex_api.cpp "IMHEX_VERSION=\"${IMHEX_VERSION_STRING}\"")
 
 enableUnityBuild(libimhex)
 setupCompilerFlags(libimhex)
@@ -115,34 +137,12 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
 
     target_link_libraries(libimhex PRIVATE microtar libwolv ${NFD_LIBRARIES} magic dl ${JTHREAD_LIBRARIES})
     target_link_libraries(libimhex PUBLIC libpl ${IMGUI_LIBRARIES})
+
+    precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
 
 target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES})
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
-
-if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_BRANCH)
-    set(GIT_COMMIT_HASH_LONG "${IMHEX_COMMIT_HASH_LONG}")
-    set(GIT_BRANCH "${IMHEX_COMMIT_BRANCH}")
-else()
-    # Get the current working branch
-    execute_process(
-            COMMAND git rev-parse --abbrev-ref HEAD
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-            OUTPUT_VARIABLE GIT_BRANCH
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            RESULT_VARIABLE RESULT_BRANCH
-            ERROR_QUIET
-    )
-
-    execute_process(
-            COMMAND git log -1 --format=%H
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-            OUTPUT_VARIABLE GIT_COMMIT_HASH_LONG
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            RESULT_VARIABLE RESULT_HASH_LONG
-            ERROR_QUIET
-    )
-endif ()
 
 add_dependencies(imhex_all libimhex)
