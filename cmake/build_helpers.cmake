@@ -506,7 +506,7 @@ macro(setupCompilerFlags target)
         set(IMHEX_CXX_FLAGS "-fexceptions -frtti")
 
         # Disable some warnings
-        set(IMHEX_C_CXX_FLAGS "-Wno-unknown-warning-option -Wno-array-bounds -Wno-deprecated-declarations")
+        set(IMHEX_C_CXX_FLAGS "-Wno-unknown-warning-option -Wno-array-bounds -Wno-deprecated-declarations -Wno-unknown-pragmas")
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
