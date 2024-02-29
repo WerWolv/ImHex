@@ -63,6 +63,16 @@ if (APPLE)
     set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_macos.m)
 endif ()
 
+if (GIT_COMMIT_HASH_LONG STREQUAL "" OR GIT_BRANCH STREQUAL "")
+    message(WARNING "Failed to to determine commit hash/branch")
+else()
+    addDefineToSource(source/api/imhex_api.cpp "GIT_COMMIT_HASH_LONG=\"${GIT_COMMIT_HASH_LONG}\"")
+    addDefineToSource(source/api/imhex_api.cpp "GIT_BRANCH=\"${GIT_BRANCH}\"")
+endif ()
+
+addDefineToSource(source/api/imhex_api.cpp "IMHEX_VERSION=\"${IMHEX_VERSION_STRING}\"")
+
+
 if (IMHEX_EXTERNAL_PLUGIN_BUILD)
     add_library(libimhex IMPORTED SHARED GLOBAL)
     set(LIBIMHEX_LIBRARY_TYPE INTERFACE)
@@ -134,14 +144,5 @@ else()
             ERROR_QUIET
     )
 endif ()
-
-if (GIT_COMMIT_HASH_LONG STREQUAL "" OR GIT_BRANCH STREQUAL "")
-    message(WARNING "Failed to to determine commit hash/branch")
-else()
-    addDefineToSource(source/api/imhex_api.cpp "GIT_COMMIT_HASH_LONG=\"${GIT_COMMIT_HASH_LONG}\"")
-    addDefineToSource(source/api/imhex_api.cpp "GIT_BRANCH=\"${GIT_BRANCH}\"")
-endif ()
-
-addDefineToSource(source/api/imhex_api.cpp "IMHEX_VERSION=\"${IMHEX_VERSION_STRING}\"")
 
 add_dependencies(imhex_all libimhex)
