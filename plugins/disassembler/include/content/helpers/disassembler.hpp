@@ -2,6 +2,8 @@
 
 #include <hex.hpp>
 
+#include <array>
+
 #include <capstone/capstone.h>
 
 namespace hex::plugin::disasm {
