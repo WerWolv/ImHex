@@ -311,5 +311,8 @@ namespace hex {
     */
     EVENT_DEF(MovePerProviderData, prv::Provider *, prv::Provider *);
 
+    /**
+     * Called when ImHex managed to catch an error in a general try/catch to prevent/recover from a crash
+    */
     EVENT_DEF(CrashRecovered, const std::exception &);
 }
