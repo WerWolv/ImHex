@@ -36,8 +36,10 @@ macro(add_imhex_plugin)
 
     # Add include directories and link libraries
     target_include_directories(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_INCLUDES})
-    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${IMHEX_PLUGIN_LIBRARIES} ${FMT_LIBRARIES} imgui_all_includes libwolv)
+    target_link_libraries(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_LIBRARIES})
+    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${FMT_LIBRARIES} imgui_all_includes libwolv)
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl)
+    addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl-gen)
 
     # Add IMHEX_PROJECT_NAME and IMHEX_VERSION define
     target_compile_definitions(${IMHEX_PLUGIN_NAME} PRIVATE IMHEX_PROJECT_NAME="${IMHEX_PLUGIN_NAME}")
@@ -88,6 +90,14 @@ macro(add_imhex_plugin)
     elseif (UNIX)
         set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH_USE_ORIGIN ON INSTALL_RPATH "$ORIGIN/")
     endif()
+
+    if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt AND IMHEX_ENABLE_UNIT_TESTS)
+        add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
+        target_link_libraries(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_NAME}_tests)
+        target_compile_definitions(${IMHEX_PLUGIN_NAME}_tests PRIVATE IMHEX_PROJECT_NAME="${IMHEX_PLUGIN_NAME}-tests")
+    endif()
+
+    precompileHeaders(${IMHEX_PLUGIN_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endmacro()
 
 macro(add_romfs_resource input output)

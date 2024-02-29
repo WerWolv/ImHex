@@ -75,6 +75,8 @@ else()
 
     set(LIBIMHEX_LIBRARY_TYPE PUBLIC)
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
+
+    precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
 
 enableUnityBuild(libimhex)

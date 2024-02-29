@@ -759,3 +759,14 @@ function(addIncludesFromLibrary target library)
     get_target_property(library_include_dirs ${library} INTERFACE_INCLUDE_DIRECTORIES)
     target_include_directories(${target} PRIVATE ${library_include_dirs})
 endfunction()
+
+function(precompileHeaders target includeFolder)
+    file(GLOB_RECURSE TARGET_INCLUDES "${includeFolder}/**/*.hpp")
+    set(SYSTEM_INCLUDES "<algorithm>;<array>;<atomic>;<chrono>;<cmath>;<cstddef>;<cstdint>;<cstdio>;<cstdlib>;<cstring>;<exception>;<filesystem>;<functional>;<iterator>;<limits>;<list>;<map>;<memory>;<optional>;<ranges>;<set>;<stdexcept>;<string>;<string_view>;<thread>;<tuple>;<type_traits>;<unordered_map>;<unordered_set>;<utility>;<variant>;<vector>")
+    set(INCLUDES "${SYSTEM_INCLUDES};${TARGET_INCLUDES}")
+    string(REPLACE ">" "$<ANGLE-R>" INCLUDES "${INCLUDES}")
+    target_precompile_headers(${target}
+            PUBLIC
+            "$<$<COMPILE_LANGUAGE:CXX>:${INCLUDES}>"
+    )
+endfunction()

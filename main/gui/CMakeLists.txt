@@ -63,6 +63,8 @@ else ()
     target_link_libraries(main PRIVATE pthread)
 endif ()
 
+precompileHeaders(main ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 if (APPLE)
     add_compile_definitions(GL_SILENCE_DEPRECATION)
 endif ()
