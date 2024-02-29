@@ -2,7 +2,9 @@ name: Build
 
 on:
   push:
-    branches: ["*"]
+    branches:
+      - 'master'
+      - 'releases/**'
   pull_request:
   workflow_dispatch:
 
