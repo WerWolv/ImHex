@@ -416,7 +416,7 @@ namespace hex::plugin::builtin {
 
         /* Import */
         {
-            ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, ICON_VS_SIGN_IN, 2140, []{}, noRunningTaskAndWritableProvider);
+            ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, ICON_VS_SIGN_IN, 2140, []{}, noRunningTaskAndValidProvider);
 
             /* IPS */
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips"}, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 2150,
@@ -573,8 +573,6 @@ namespace hex::plugin::builtin {
     static void createLayoutMenu() {
         LayoutManager::reload();
 
-        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.workspace", 4000);
-
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, ICON_VS_LAYOUT, 1050, []{}, ImHexApi::Provider::isValid);
 
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout", "hex.builtin.menu.workspace.layout.save" }, 1100, Shortcut::None, [] {
@@ -600,12 +598,12 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            bool shift = ImGui::GetIO().KeyShift;
+            bool shiftPressed = ImGui::GetIO().KeyShift;
             for (auto &[name, path] : LayoutManager::getLayouts()) {
-                if (ImGui::MenuItem(hex::format("{}{}", name, shift ? " " ICON_VS_X : "").c_str(), "", false, ImHexApi::Provider::isValid())) {
-                    if (shift) {
-                        wolv::io::fs::remove(path);
-                        LayoutManager::reload();
+                if (ImGui::MenuItem(hex::format("{}{}", name, shiftPressed ? " " ICON_VS_X : "").c_str(), "", false, ImHexApi::Provider::isValid())) {
+                    if (shiftPressed) {
+                        LayoutManager::removeLayout(name);
+                        break;
                     } else {
                         LayoutManager::load(path);
                     }
@@ -615,6 +613,8 @@ namespace hex::plugin::builtin {
     }
 
     static void createWorkspaceMenu() {
+        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.workspace", 4000);
+
         createLayoutMenu();
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.workspace" }, 3000);
@@ -627,11 +627,19 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace" }, 3200, [] {
             const auto &workspaces = WorkspaceManager::getWorkspaces();
+
+            bool shiftPressed = ImGui::GetIO().KeyShift;
             for (auto it = workspaces.begin(); it != workspaces.end(); ++it) {
                 const auto &[name, workspace] = *it;
 
-                if (ImGui::MenuItem(name.c_str(), "", it == WorkspaceManager::getCurrentWorkspace(), ImHexApi::Provider::isValid())) {
-                    WorkspaceManager::switchWorkspace(name);
+                bool canRemove = shiftPressed && !workspace.builtin;
+                if (ImGui::MenuItem(hex::format("{}{}", name, canRemove ? " " ICON_VS_X : "").c_str(), "", it == WorkspaceManager::getCurrentWorkspace(), ImHexApi::Provider::isValid())) {
+                    if (canRemove) {
+                        WorkspaceManager::removeWorkspace(name);
+                        break;
+                    } else {
+                        WorkspaceManager::switchWorkspace(name);
+                    }
                 }
             }
         });

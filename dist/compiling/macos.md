@@ -15,7 +15,7 @@ OBJC=$(brew --prefix llvm)/bin/clang      \
 OBJCXX=$(brew --prefix llvm)/bin/clang++  \
 cmake -G "Ninja"                          \
   -DCMAKE_BUILD_TYPE=Release              \
-  -DCMAKE_INSTALL_PREFIX=./install        \
+  -DCMAKE_INSTALL_PREFIX="./install"      \
   -DIMHEX_GENERATE_PACKAGE=ON             \
   ..
 ninja install

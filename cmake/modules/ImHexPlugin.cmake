@@ -36,8 +36,12 @@ macro(add_imhex_plugin)
 
     # Add include directories and link libraries
     target_include_directories(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_INCLUDES})
-    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${IMHEX_PLUGIN_LIBRARIES} ${FMT_LIBRARIES} imgui_all_includes libwolv)
+    target_link_libraries(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_LIBRARIES})
+    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${FMT_LIBRARIES} imgui_all_includes libwolv)
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl)
+    addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl-gen)
+
+    precompileHeaders(${IMHEX_PLUGIN_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
     # Add IMHEX_PROJECT_NAME and IMHEX_VERSION define
     target_compile_definitions(${IMHEX_PLUGIN_NAME} PRIVATE IMHEX_PROJECT_NAME="${IMHEX_PLUGIN_NAME}")

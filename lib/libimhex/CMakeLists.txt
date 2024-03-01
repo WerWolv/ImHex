@@ -79,37 +79,6 @@ else()
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
 
-enableUnityBuild(libimhex)
-setupCompilerFlags(libimhex)
-
-include(GenerateExportHeader)
-generate_export_header(libimhex)
-
-target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIR} ${MAGIC_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${LIBBACKTRACE_INCLUDE_DIRS})
-target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR} ${MAGIC_LIBRARY_DIRS})
-
-if (NOT EMSCRIPTEN)
-    # curl is only used in non-emscripten builds
-    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${CURL_LIBRARIES})
-endif()
-
-
-if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
-    if (WIN32)
-        set_target_properties(libimhex PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-        target_link_options(libimhex PRIVATE -Wl,--export-all-symbols)
-    elseif (APPLE)
-        find_library(FOUNDATION NAMES Foundation)
-        target_link_libraries(libimhex PUBLIC ${FOUNDATION})
-    endif ()
-
-    target_link_libraries(libimhex PRIVATE microtar libwolv ${NFD_LIBRARIES} magic dl ${JTHREAD_LIBRARIES})
-    target_link_libraries(libimhex PUBLIC libpl ${IMGUI_LIBRARIES})
-endif()
-
-target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES})
-
-set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 
 if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_BRANCH)
     set(GIT_COMMIT_HASH_LONG "${IMHEX_COMMIT_HASH_LONG}")
@@ -143,5 +112,39 @@ else()
 endif ()
 
 addDefineToSource(source/api/imhex_api.cpp "IMHEX_VERSION=\"${IMHEX_VERSION_STRING}\"")
+
+enableUnityBuild(libimhex)
+setupCompilerFlags(libimhex)
+
+include(GenerateExportHeader)
+generate_export_header(libimhex)
+
+target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIR} ${MAGIC_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${LIBBACKTRACE_INCLUDE_DIRS})
+target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR} ${MAGIC_LIBRARY_DIRS})
+
+if (NOT EMSCRIPTEN)
+    # curl is only used in non-emscripten builds
+    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${CURL_LIBRARIES})
+endif()
+
+
+if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
+    if (WIN32)
+        set_target_properties(libimhex PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+        target_link_options(libimhex PRIVATE -Wl,--export-all-symbols)
+    elseif (APPLE)
+        find_library(FOUNDATION NAMES Foundation)
+        target_link_libraries(libimhex PUBLIC ${FOUNDATION})
+    endif ()
+
+    target_link_libraries(libimhex PRIVATE microtar libwolv ${NFD_LIBRARIES} magic dl ${JTHREAD_LIBRARIES})
+    target_link_libraries(libimhex PUBLIC libpl ${IMGUI_LIBRARIES})
+
+    precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
+endif()
+
+target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES})
+
+set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 
 add_dependencies(imhex_all libimhex)

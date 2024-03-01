@@ -14,7 +14,7 @@ mkdir build
 cd build
 cmake -G "Ninja"                          \
   -DCMAKE_BUILD_TYPE=Release              \
-  -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
+  -DCMAKE_INSTALL_PREFIX="./install"      \
   -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON   \
   ..
 ninja install

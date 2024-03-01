@@ -46,6 +46,9 @@ function(addDefineToSource SOURCE DEFINE)
             APPEND
             PROPERTY COMPILE_DEFINITIONS "${DEFINE}"
     )
+
+    # Disable precompiled headers for this file
+    set_source_files_properties(${SOURCE} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 endfunction()
 
 # Detect current OS / System
@@ -503,7 +506,7 @@ macro(setupCompilerFlags target)
         set(IMHEX_CXX_FLAGS "-fexceptions -frtti")
 
         # Disable some warnings
-        set(IMHEX_C_CXX_FLAGS "-Wno-unknown-warning-option -Wno-array-bounds -Wno-deprecated-declarations")
+        set(IMHEX_C_CXX_FLAGS "-Wno-unknown-warning-option -Wno-array-bounds -Wno-deprecated-declarations -Wno-unknown-pragmas")
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -758,4 +761,15 @@ endfunction()
 function(addIncludesFromLibrary target library)
     get_target_property(library_include_dirs ${library} INTERFACE_INCLUDE_DIRECTORIES)
     target_include_directories(${target} PRIVATE ${library_include_dirs})
+endfunction()
+
+function(precompileHeaders target includeFolder)
+    file(GLOB_RECURSE TARGET_INCLUDES "${includeFolder}/**/*.hpp")
+    set(SYSTEM_INCLUDES "<algorithm>;<array>;<atomic>;<chrono>;<cmath>;<cstddef>;<cstdint>;<cstdio>;<cstdlib>;<cstring>;<exception>;<filesystem>;<functional>;<iterator>;<limits>;<list>;<map>;<memory>;<optional>;<ranges>;<set>;<stdexcept>;<string>;<string_view>;<thread>;<tuple>;<type_traits>;<unordered_map>;<unordered_set>;<utility>;<variant>;<vector>")
+    set(INCLUDES "${SYSTEM_INCLUDES};${TARGET_INCLUDES}")
+    string(REPLACE ">" "$<ANGLE-R>" INCLUDES "${INCLUDES}")
+    target_precompile_headers(${target}
+            PUBLIC
+            "$<$<COMPILE_LANGUAGE:CXX>:${INCLUDES}>"
+    )
 endfunction()

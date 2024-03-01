@@ -806,7 +806,7 @@ namespace hex {
                         const auto max = ImPlot::PlotToPixels(xMax, yMin);
                         const auto mousePos = ImPlot::PixelsToPlot(ImGui::GetMousePos());
                         if (ImGui::IsMouseHoveringRect(min, max)) {
-                            ImPlot::Annotation(xMin + (xMax - xMin) / 2, mousePos.y, annotation.color, ImVec2(), false, Lang(annotation.unlocalizedName));
+                            ImPlot::Annotation(xMin + (xMax - xMin) / 2, mousePos.y, annotation.color, ImVec2(), false, "%s", Lang(annotation.unlocalizedName).get().c_str());
 
                             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                                 ImHexApi::HexEditor::setSelection(annotation.region);
@@ -818,9 +818,9 @@ namespace hex {
 
                     for (const auto &tag : m_tags) {
                         if (tag.axis == ImAxis_X1)
-                            ImPlot::TagX(tag.value, ImGui::GetStyleColorVec4(tag.color), Lang(tag.unlocalizedName));
+                            ImPlot::TagX(tag.value, ImGui::GetStyleColorVec4(tag.color), "%s", Lang(tag.unlocalizedName).get().c_str());
                         else if (tag.axis == ImAxis_Y1)
-                            ImPlot::TagY(tag.value, ImGui::GetStyleColorVec4(tag.color), Lang(tag.unlocalizedName));
+                            ImPlot::TagY(tag.value, ImGui::GetStyleColorVec4(tag.color), "%s", Lang(tag.unlocalizedName).get().c_str());
                     }
                 }
 

@@ -126,6 +126,7 @@ namespace hex {
             throw;
         } catch (const std::exception &e) {
             log::fatal("Unhandled exception: {}", e.what());
+            EventCrashRecovered::post(e);
         } catch (...) {
             log::fatal("Unhandled exception: Unknown exception");
         }
@@ -133,14 +134,18 @@ namespace hex {
 
     void errorRecoverLogCallback(void*, const char* fmt, ...) {
         va_list args;
-        va_start(args, fmt);
 
         std::string message;
-        message.resize(std::vsnprintf(nullptr, 0, fmt, args));
-        std::vsnprintf(message.data(), message.size(), fmt, args);
-        message.resize(message.size() - 1);
 
+        va_start(args, fmt);
+        message.resize(std::vsnprintf(nullptr, 0, fmt, args));
         va_end(args);
+
+        va_start(args, fmt);
+        std::vsnprintf(message.data(), message.size(), fmt, args);
+        va_end(args);
+
+        message.resize(message.size() - 1);
 
         log::error("{}", message);
     }
@@ -165,10 +170,9 @@ namespace hex {
             bool shouldLongSleep = !m_unlockFrameRate;
 
             // Wait 5 frames before actually enabling the long sleep mode to make animations not stutter
-            constexpr static auto LongSleepTimeout = 5;
             static i32 lockTimeout = 0;
             if (!shouldLongSleep) {
-                lockTimeout = LongSleepTimeout;
+                lockTimeout = m_lastFrameTime * 10'000;
             } else if (lockTimeout > 0) {
                 lockTimeout -= 1;
             }
@@ -567,28 +571,53 @@ namespace hex {
         // Finalize ImGui frame
         ImGui::Render();
 
-        // Hash the draw data to determine if anything changed on the screen
+        // Compare the previous frame buffer to the current one to determine if the window content has changed
         // If not, there's no point in sending the draw data off to the GPU and swapping buffers
+        // NOTE: For anybody looking at this code and thinking "why not just hash the buffer and compare the hashes",
+        // the reason is that hashing the buffer is significantly slower than just comparing the buffers directly.
+        // The buffer might become quite large if there's a lot of vertices on the screen but it's still usually less than
+        // 10MB (out of which only the active portion needs to actually be compared) which is worth the ~60x speedup.
         bool shouldRender = false;
         {
-            u32 drawDataHash = 0;
-            static u32 previousDrawDataHash = 0;
+            static std::vector<u8> previousVtxData;
+            static size_t previousVtxDataSize = 0;
+
+            size_t offset = 0;
+            size_t vtxDataSize = 0;
 
             for (const auto viewPort : ImGui::GetPlatformIO().Viewports) {
                 auto drawData = viewPort->DrawData;
                 for (int n = 0; n < drawData->CmdListsCount; n++) {
-                    const ImDrawList *cmdList = drawData->CmdLists[n];
-                    drawDataHash = ImHashData(cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert), drawDataHash);
+                    vtxDataSize += drawData->CmdLists[n]->VtxBuffer.size() * sizeof(ImDrawVert);
                 }
+            }
+            for (const auto viewPort : ImGui::GetPlatformIO().Viewports) {
+                auto drawData = viewPort->DrawData;
                 for (int n = 0; n < drawData->CmdListsCount; n++) {
                     const ImDrawList *cmdList = drawData->CmdLists[n];
-                    drawDataHash = ImHashData(cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx), drawDataHash);
+
+                    if (vtxDataSize == previousVtxDataSize) {
+                        shouldRender = shouldRender || std::memcmp(previousVtxData.data() + offset, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.size() * sizeof(ImDrawVert)) != 0;
+                    } else {
+                        shouldRender = true;
+                    }
+
+                    if (previousVtxData.size() < offset + cmdList->VtxBuffer.size() * sizeof(ImDrawVert)) {
+                        previousVtxData.resize(offset + cmdList->VtxBuffer.size() * sizeof(ImDrawVert));
+                    }
+
+                    std::memcpy(previousVtxData.data() + offset, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.size() * sizeof(ImDrawVert));
+                    offset += cmdList->VtxBuffer.size() * sizeof(ImDrawVert);
                 }
             }
 
-            shouldRender = drawDataHash != previousDrawDataHash;
-            previousDrawDataHash = drawDataHash;
+            previousVtxDataSize = vtxDataSize;
         }
+
+        GLFWwindow *backupContext = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backupContext);
 
         if (shouldRender) {
             int displayWidth, displayHeight;
@@ -603,10 +632,7 @@ namespace hex {
             m_unlockFrameRate = true;
         }
 
-        GLFWwindow *backupContext = glfwGetCurrentContext();
-        ImGui::UpdatePlatformWindows();
-        ImGui::RenderPlatformWindowsDefault();
-        glfwMakeContextCurrent(backupContext);
+        glfwPollEvents();
 
         // Process layout load requests
         // NOTE: This needs to be done before a new frame is started, otherwise ImGui won't handle docking correctly

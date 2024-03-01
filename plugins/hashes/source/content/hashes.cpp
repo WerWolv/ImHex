@@ -183,6 +183,9 @@ namespace hex::plugin::hashes {
         Function create(std::string name) override {
             return Hash::create(name, [hash = *this](const Region& region, prv::Provider *provider) -> std::vector<u8> {
                 auto crc = HashFactory::Checksum::CreateCRC(hash.m_width, hash.m_polynomial, hash.m_initialValue, hash.m_reflectIn, hash.m_reflectOut, hash.m_xorOut, 0, { "CRC" });
+
+                crc->Initialize();
+
                 auto bytes = hashProviderRegionWithHashLib(region, provider, crc);
 
                 return bytes;

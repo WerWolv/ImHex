@@ -21,6 +21,7 @@
 #include <popups/popup_question.hpp>
 #include <content/popups/popup_tasks_waiting.hpp>
 #include <content/popups/popup_unsaved_changes.hpp>
+#include <content/popups/popup_crash_recovered.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -48,6 +49,10 @@ namespace hex::plugin::builtin {
     void registerEventHandlers() {
 
         static bool imhexClosing = false;
+        EventCrashRecovered::subscribe([](const std::exception &e) {
+            PopupCrashRecovered::open(e);
+        });
+
         EventWindowClosing::subscribe([](GLFWwindow *window) {
             imhexClosing = false;
             if (ImHexApi::Provider::isDirty() && !imhexClosing) {
@@ -99,9 +104,6 @@ namespace hex::plugin::builtin {
         EventProviderOpened::subscribe([](hex::prv::Provider *provider) {
             if (provider != nullptr && ImHexApi::Provider::get() == provider) {
                 RequestUpdateWindowTitle::post();
-
-                if (!provider->isWritable())
-                    ui::ToastInfo::open("hex.builtin.popup.error.read_only"_lang);
             }
         });
 
@@ -247,6 +249,8 @@ namespace hex::plugin::builtin {
                 return;
 
             if (ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup))
+                return;
+            if (ImGui::IsAnyItemHovered())
                 return;
 
             static ImGuiWindow *lastFocusedWindow = nullptr;
