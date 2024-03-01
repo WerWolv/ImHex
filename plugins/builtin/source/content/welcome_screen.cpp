@@ -150,6 +150,22 @@ namespace hex::plugin::builtin {
                 });
         }
 
+        void drawWelcomeScreenBackground() {
+            const auto position = ImGui::GetWindowPos();
+            const auto size = ImGui::GetWindowSize();
+            auto drawList = ImGui::GetWindowDrawList();
+
+            const auto lineDistance = 20_scaled;
+            const auto lineColor = ImGui::GetColorU32(ImGuiCol_Text, 0.03F);
+
+            for (auto x = position.x; x < position.x + size.x + lineDistance; x += lineDistance) {
+                drawList->AddLine({ x, position.y }, { x, position.y + size.y }, lineColor);
+            }
+            for (auto y = position.y; y < position.y + size.y + lineDistance; y += lineDistance) {
+                drawList->AddLine({ position.x, y }, { position.x + size.x, y }, lineColor);
+            }
+        }
+
         void drawWelcomeScreenContentSimplified() {
             const ImVec2 backdropSize = scaled({ 350, 350 });
             ImGui::SetCursorPos((ImGui::GetContentRegionAvail() - backdropSize) / 2);
@@ -361,6 +377,9 @@ namespace hex::plugin::builtin {
                         ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
                         if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                             ImGui::BringWindowToDisplayBack(ImGui::GetCurrentWindowRead());
+
+                            drawWelcomeScreenBackground();
+
                             if (s_simplifiedWelcomeScreen)
                                 drawWelcomeScreenContentSimplified();
                             else
