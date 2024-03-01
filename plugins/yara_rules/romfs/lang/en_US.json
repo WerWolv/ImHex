@@ -5,6 +5,7 @@
     "fallback": true,
     "translations": {
         "hex.yara.information_section.advanced_data_info": "Advanced Data Information",
+        "hex.yara.information_section.advanced_data_info.no_information": "No further information found",
         "hex.yara_rules.view.yara.error": "Yara Compiler error: {0}",
         "hex.yara_rules.view.yara.header.matches": "Matches",
         "hex.yara_rules.view.yara.header.rules": "Rules",

@@ -1,6 +1,4 @@
 #include <hex/api/content_registry.hpp>
-#include <hex/helpers/magic.hpp>
-#include <hex/providers/provider.hpp>
 
 #include <imgui.h>
 #include <hex/api/task_manager.hpp>
@@ -59,28 +57,39 @@ namespace hex::plugin::yara {
         }
 
         void drawContent() override {
-            if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoKeepColumnsVisible)) {
-                ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5F);
-                ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.5F);
+            const auto empty = std::ranges::any_of(m_categories, [](const auto &entry) {
+                const auto &[categoryName, category] = entry;
+                return !category.matchedRules.empty();
+            });
 
-                ImGui::TableNextRow();
+            if (!empty) {
+                if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoKeepColumnsVisible)) {
+                    ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5F);
+                    ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.5F);
 
-                for (auto &[categoryName, category] : m_categories) {
-                    if (category.matchedRules.empty())
-                        continue;
+                    ImGui::TableNextRow();
 
-                    ImGui::TableNextColumn();
-                    ImGuiExt::BeginSubWindow(categoryName.c_str());
-                    {
-                        for (const auto &match : category.matchedRules) {
-                            const auto &ruleName = match.metadata.contains("name") ? match.metadata.at("name") : match.identifier;
-                            ImGui::TextUnformatted(ruleName.c_str());
+                    for (auto &[categoryName, category] : m_categories) {
+                        if (category.matchedRules.empty())
+                            continue;
+
+                        ImGui::TableNextColumn();
+                        ImGuiExt::BeginSubWindow(categoryName.c_str());
+                        {
+                            for (const auto &match : category.matchedRules) {
+                                const auto &ruleName = match.metadata.contains("name") ? match.metadata.at("name") : match.identifier;
+                                ImGui::TextUnformatted(ruleName.c_str());
+                            }
                         }
+                        ImGuiExt::EndSubWindow();
                     }
-                    ImGuiExt::EndSubWindow();
-                }
 
-                ImGui::EndTable();
+                    ImGui::EndTable();
+                }
+            } else {
+                ImGui::NewLine();
+                ImGuiExt::TextFormattedCenteredHorizontal("{}", "hex.yara.information_section.advanced_data_info.no_information"_lang);
+                ImGui::NewLine();
             }
         }
 

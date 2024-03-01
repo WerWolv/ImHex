@@ -5,6 +5,7 @@
     "language": "German",
     "translations": {
         "hex.yara.information_section.advanced_data_info": "Erweiterte Dateninformationen",
+        "hex.yara.information_section.advanced_data_info.no_information": "Kein erweiterten Informationen gefunden",
         "hex.yara_rules.view.yara.error": "Yara Kompilerfehler: {0}",
         "hex.yara_rules.view.yara.header.matches": "Treffer",
         "hex.yara_rules.view.yara.header.rules": "Regeln",
