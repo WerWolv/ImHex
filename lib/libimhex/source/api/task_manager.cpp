@@ -412,13 +412,15 @@ namespace hex {
     void TaskManager::runDeferredCalls() {
         std::scoped_lock lock(s_deferredCallsMutex);
 
-        for (const auto &call : s_deferredCalls)
-            call();
-        for (const auto &[location, call] : s_onceDeferredCalls)
-            call();
-
-        s_deferredCalls.clear();
-        s_onceDeferredCalls.clear();
+        while (!s_deferredCalls.empty()) {
+            auto callback = s_deferredCalls.front();
+            s_deferredCalls.pop_front();
+            callback();
+        }
+        while (!s_onceDeferredCalls.empty()) {
+            auto node = s_onceDeferredCalls.extract(s_onceDeferredCalls.begin());
+            node.mapped()();
+        }
     }
 
     void TaskManager::runWhenTasksFinished(const std::function<void()> &function) {
