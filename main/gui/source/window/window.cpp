@@ -158,6 +158,7 @@ namespace hex {
         } catch (...) {
             ImGui::ErrorCheckEndFrameRecover(errorRecoverLogCallback, nullptr);
             ImGui::EndFrame();
+            ImGui::UpdatePlatformWindows();
             handleException();
         }
     }
