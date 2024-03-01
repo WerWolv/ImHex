@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
         PopupCrashRecovered(const std::exception &e)
             : hex::Popup<PopupCrashRecovered>("hex.builtin.popup.crash_recover.title", false),
               m_errorType(typeid(e).name()),
-              m_errorMessage(e.what) { }
+              m_errorMessage(e.what()) { }
 
         void drawContent() override {
             ImGuiExt::TextFormattedWrapped("hex.builtin.popup.crash_recover.message"_lang);
