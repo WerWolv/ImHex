@@ -500,7 +500,7 @@
         "hex.builtin.setting.toolbar.icons": "Toolbar Icons",
         "hex.builtin.shortcut.next_provider": "Select next provider",
         "hex.builtin.shortcut.prev_provider": "Select previous provider",
-        "hex.builtin.title_bar_button.debug_build": "Debug build\nShift+Click to crash using exception\nCtrl+Click to crash using signal",
+        "hex.builtin.title_bar_button.debug_build": "Debug build\n\nSHIFT + Click to open Debug Menu",
         "hex.builtin.title_bar_button.feedback": "Leave Feedback",
         "hex.builtin.tools.ascii_table": "ASCII table",
         "hex.builtin.tools.ascii_table.octal": "Show octal",

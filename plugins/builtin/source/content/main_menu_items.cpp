@@ -28,8 +28,6 @@ using namespace wolv::literals;
 
 namespace hex::plugin::builtin {
 
-    static bool s_demoWindowOpen = false;
-
     namespace {
 
         bool noRunningTasks() {
@@ -559,13 +557,6 @@ namespace hex::plugin::builtin {
                         state = !state;
                 }
             }
-
-            #if defined(DEBUG)
-                ImGui::Separator();
-
-                ImGui::MenuItem("hex.builtin.menu.view.demo"_lang, "", &s_demoWindowOpen);
-                ImGui::MenuItem("hex.builtin.menu.view.debug"_lang, "", &hex::dbg::impl::getDebugWindowState());
-            #endif
         });
 
     }
@@ -661,13 +652,6 @@ namespace hex::plugin::builtin {
         createWorkspaceMenu();
         createExtrasMenu();
         createHelpMenu();
-
-        (void)EventFrameEnd::subscribe([] {
-            if (s_demoWindowOpen) {
-                ImGui::ShowDemoWindow(&s_demoWindowOpen);
-                ImPlot::ShowDemoWindow(&s_demoWindowOpen);
-            }
-        });
     }
 
 }

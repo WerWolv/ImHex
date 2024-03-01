@@ -16,21 +16,15 @@
 
 #include <toasts/toast_notification.hpp>
 
+#include <csignal>
+
 namespace hex::plugin::builtin {
 
     void addTitleBarButtons() {
         #if defined(DEBUG)
             ContentRegistry::Interface::addTitleBarButton(ICON_VS_DEBUG, "hex.builtin.title_bar_button.debug_build", []{
-                if (ImGui::GetIO().KeyCtrl) {
-                    // Explicitly trigger a segfault by writing to an invalid memory location
-                    // Used for debugging crashes
-                    *reinterpret_cast<u8 *>(0x10) = 0x10;
-                    std::unreachable();
-                } else if (ImGui::GetIO().KeyShift) {
-                    // Explicitly trigger an abort by throwing an uncaught exception
-                    // Used for debugging exception errors
-                    throw std::runtime_error("Debug Error");
-                    std::unreachable();
+                if (ImGui::GetIO().KeyShift) {
+                    RequestOpenPopup::post("DebugMenu");
                 } else {
                     hex::openWebpage("https://imhex.werwolv.net/debug");
                 }
@@ -52,6 +46,82 @@ namespace hex::plugin::builtin {
                 break;
             }
         }
+    }
+
+    static void drawDebugPopup() {
+        static bool showImGuiDemo = false;
+        static bool showImPlotDemo = false;
+
+        ImGui::SetNextWindowSize(scaled({ 300, 150 }), ImGuiCond_Always);
+        if (ImGui::BeginPopup("DebugMenu")) {
+            if (ImGui::BeginTabBar("DebugTabBar")) {
+                if (ImGui::BeginTabItem("ImHex")) {
+                    if (ImGui::BeginChild("Scrolling", ImGui::GetContentRegionAvail())) {
+                        ImGui::Checkbox("Show Debug Variables", &dbg::impl::getDebugWindowState());
+
+                        ImGuiExt::Header("Information");
+                        ImGuiExt::TextFormatted("Running Tasks: {0}", TaskManager::getRunningTaskCount());
+                        ImGuiExt::TextFormatted("Running Background Tasks: {0}", TaskManager::getRunningBackgroundTaskCount());
+                        ImGuiExt::TextFormatted("Last Frame Time: {0:.3f}ms", ImHexApi::System::getLastFrameTime() * 1000.0F);
+                    }
+                    ImGui::EndChild();
+
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("ImGui")) {
+                    if (ImGui::BeginChild("Scrolling", ImGui::GetContentRegionAvail())) {
+                        auto ctx = ImGui::GetCurrentContext();
+                        ImGui::Checkbox("Show ImGui Demo", &showImGuiDemo);
+                        ImGui::Checkbox("Show ImPlot Demo", &showImPlotDemo);
+
+                        if (ImGui::Button("Trigger Breakpoint in Item") || ctx->DebugItemPickerActive)
+                            ImGui::DebugStartItemPicker();
+                    }
+                    ImGui::EndChild();
+
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("Crashes")) {
+                    if (ImGui::BeginChild("Scrolling", ImGui::GetContentRegionAvail())) {
+                        if (ImGui::Button("Throw Exception")) {
+                            TaskManager::doLater([] {
+                                throw std::runtime_error("Test exception");
+                            });
+                        }
+                        if (ImGui::Button("Access Invalid Memory")) {
+                            TaskManager::doLater([] {
+                                *reinterpret_cast<u32*>(0x10) = 0x10;
+                                std::unreachable();
+                            });
+                        }
+                        if (ImGui::Button("Raise SIGSEGV")) {
+                            TaskManager::doLater([] {
+                                raise(SIGSEGV);
+                            });
+                        }
+                        if (ImGui::Button("Corrupt Memory")) {
+                            TaskManager::doLater([] {
+                                auto bytes = new u8[0xFFFFF];
+
+                                delete[] bytes;
+                                delete[] bytes;
+                            });
+                        }
+                    }
+                    ImGui::EndChild();
+
+                    ImGui::EndTabItem();
+                }
+
+                ImGui::EndTabBar();
+            }
+            ImGui::EndPopup();
+        }
+
+        if (showImGuiDemo)
+            ImGui::ShowDemoWindow(&showImGuiDemo);
+        if (showImPlotDemo)
+            ImPlot::ShowDemoWindow(&showImPlotDemo);
     }
 
     static bool s_drawDragDropOverlay = false;
@@ -97,6 +167,10 @@ namespace hex::plugin::builtin {
     void addGlobalUIItems() {
         EventFrameEnd::subscribe(drawGlobalPopups);
         EventFrameEnd::subscribe(drawDragNDropOverlay);
+
+        #if defined(DEBUG)
+            EventFrameEnd::subscribe(drawDebugPopup);
+        #endif
 
         EventFileDragged::subscribe([](bool entered) {
             s_drawDragDropOverlay = entered;
