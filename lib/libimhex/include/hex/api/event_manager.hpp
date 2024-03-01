@@ -72,11 +72,11 @@ namespace hex {
 
             explicit Event(Callback func) noexcept : m_func(std::move(func)) { }
 
-            void operator()(std::string_view evtName, Params... params) const {
+            void operator()(std::string_view eventName, Params... params) const {
                 try {
                     m_func(params...);
                 } catch (const std::exception &e) {
-                    log::error("An exception occurred while handling event {}: {}", evtName, e.what());
+                    log::error("An exception occurred while handling event {}: {}", eventName, e.what());
                     throw;
                 }
             }
@@ -174,7 +174,7 @@ namespace hex {
          * @param args Arguments to pass to the event
          */
         template<impl::EventType E>
-        static void post(auto &&...args) {
+        static void post(auto && ...args) {
             std::scoped_lock lock(getEventMutex());
 
             for (const auto &[id, event] : getEvents()) {
@@ -314,5 +314,5 @@ namespace hex {
     /**
      * Called when ImHex managed to catch an error in a general try/catch to prevent/recover from a crash
     */
-    EVENT_DEF(CrashRecovered, const std::exception &);
+    EVENT_DEF(EventCrashRecovered, const std::exception &);
 }

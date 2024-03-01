@@ -49,7 +49,7 @@ namespace hex::plugin::builtin {
     void registerEventHandlers() {
 
         static bool imhexClosing = false;
-        CrashRecovered::subscribe([](const std::exception &e) {
+        EventCrashRecovered::subscribe([](const std::exception &e) {
             PopupCrashRecovered::open(e);
         });
 

@@ -13,15 +13,14 @@ namespace hex::plugin::builtin {
     class PopupCrashRecovered : public Popup<PopupCrashRecovered> {
     public:
         PopupCrashRecovered(const std::exception &e)
-            : hex::Popup<PopupCrashRecovered>("hex.builtin.popup.crash_recover.title", false) {
-                this->m_error_type = typeid(e).name();
-                this->m_error_msg = e.what();
-            }
+            : hex::Popup<PopupCrashRecovered>("hex.builtin.popup.crash_recover.title", false),
+              m_errorType(typeid(e).name()),
+              m_errorMessage(e.what) { }
 
         void drawContent() override {
-            ImGuiExt::TextFormattedWrapped("hex.builtin.popup.crash_recover.msg"_lang);
+            ImGuiExt::TextFormattedWrapped("hex.builtin.popup.crash_recover.message"_lang);
 
-            ImGuiExt::TextFormattedWrapped(hex::format("Error: {}: {}", llvm::itaniumDemangle(this->m_error_type), this->m_error_msg));
+            ImGuiExt::TextFormattedWrapped(hex::format("Error: {}: {}", llvm::itaniumDemangle(this->m_errorType), this->m_errorMessage));
 
             if (ImGui::Button("hex.ui.common.okay"_lang)) {
                 this->close();
@@ -41,8 +40,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::string m_error_type;
-        std::string m_error_msg;
+        std::string m_errorType, m_errorMessage;
     };
 
 }
