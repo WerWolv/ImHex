@@ -41,8 +41,6 @@ macro(add_imhex_plugin)
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl)
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl-gen)
 
-    precompileHeaders(${IMHEX_PLUGIN_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/include")
-
     # Add IMHEX_PROJECT_NAME and IMHEX_VERSION define
     target_compile_definitions(${IMHEX_PLUGIN_NAME} PRIVATE IMHEX_PROJECT_NAME="${IMHEX_PLUGIN_NAME}")
     target_compile_definitions(${IMHEX_PLUGIN_NAME} PRIVATE IMHEX_VERSION="${IMHEX_VERSION_STRING}")
