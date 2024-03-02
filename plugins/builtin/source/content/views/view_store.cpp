@@ -207,7 +207,11 @@ namespace hex::plugin::builtin {
                                 continue;
 
                             m_download.wait();
-                            this->handleDownloadFinished(category, entry);
+
+                            while (m_download.valid()) {
+                                std::this_thread::sleep_for(10ms);
+                            }
+
                             task.update(progress);
                         }
                     }
@@ -368,7 +372,6 @@ namespace hex::plugin::builtin {
         } else {
             log::error("Download failed! HTTP Code {}", response.getStatusCode());
         }
-
 
         m_download = {};
     }
