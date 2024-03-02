@@ -7,6 +7,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/debugging.hpp>
 
 #include <fonts/codicons_font.h>
 #include <imgui.h>
