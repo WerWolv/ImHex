@@ -151,14 +151,30 @@ namespace hex {
     }
 
     void Window::fullFrame() {
+        static u32 crashWatchdog = 0;
+
         try {
             this->frameBegin();
             this->frame();
             this->frameEnd();
+
+            // Feed the watchdog
+            crashWatchdog = 0;
         } catch (...) {
+            // If an exception keeps being thrown, abort the application after 10 frames
+            // This is done to avoid the application getting stuck in an infinite loop of exceptions
+            crashWatchdog += 1;
+            if (crashWatchdog > 10) {
+                log::fatal("Crash watchdog triggered, aborting");
+                std::abort();
+            }
+
+            // Try to recover from the exception by bringing ImGui back into a working state
             ImGui::ErrorCheckEndFrameRecover(errorRecoverLogCallback, nullptr);
             ImGui::EndFrame();
             ImGui::UpdatePlatformWindows();
+
+            // Handle the exception
             handleException();
         }
     }
