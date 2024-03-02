@@ -13,7 +13,6 @@ add_imhex_plugin(
     INCLUDES
         include
     LIBRARIES
-        libpl
         libpl-gen
         fonts
     LIBRARY_PLUGIN
