@@ -20,6 +20,7 @@ option(IMHEX_GENERATE_PDBS              "Enable generating PDB files in non-debu
 option(IMHEX_REPLACE_DWARF_WITH_PDB     "Remove DWARF information from binaries when generating PDBS (Windows only)"            OFF)
 option(IMHEX_ENABLE_STD_ASSERTS         "Enable debug asserts in the C++ std library. (Breaks Plugin ABI!)"                     OFF)
 option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                            OFF)
+option(IMHEX_ENABLE_PRECOMPILED_HEADERS "Enable precompiled headers"                                                            OFF)
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
