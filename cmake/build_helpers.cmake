@@ -614,6 +614,7 @@ macro(addBundledLibraries)
     endif()
 
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)
+    set(LIBPL_ENABLE_PRECOMPILED_HEADERS ${IMHEX_ENABLE_PRECOMPILED_HEADERS} CACHE BOOL "" FORCE)
 
     if (WIN32)
         set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "" FORCE)
@@ -764,6 +765,10 @@ function(addIncludesFromLibrary target library)
 endfunction()
 
 function(precompileHeaders target includeFolder)
+    if (NOT IMHEX_ENABLE_PRECOMPILED_HEADERS)
+        return()
+    endif()
+
     file(GLOB_RECURSE TARGET_INCLUDES "${includeFolder}/**/*.hpp")
     set(SYSTEM_INCLUDES "<algorithm>;<array>;<atomic>;<chrono>;<cmath>;<cstddef>;<cstdint>;<cstdio>;<cstdlib>;<cstring>;<exception>;<filesystem>;<functional>;<iterator>;<limits>;<list>;<map>;<memory>;<optional>;<ranges>;<set>;<stdexcept>;<string>;<string_view>;<thread>;<tuple>;<type_traits>;<unordered_map>;<unordered_set>;<utility>;<variant>;<vector>")
     set(INCLUDES "${SYSTEM_INCLUDES};${TARGET_INCLUDES}")
