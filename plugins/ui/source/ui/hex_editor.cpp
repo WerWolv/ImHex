@@ -834,6 +834,9 @@ namespace hex::ui {
                     const auto pageCount = std::max<u32>(1, m_provider->getPageCount());
                     constexpr static u32 MinPage = 1;
 
+                    const auto pageAddress = m_provider->getCurrentPageAddress();
+                    const auto pageSize    = m_provider->getSize();
+
                     // Page slider
                     ImGui::TableNextColumn();
                     {
@@ -845,7 +848,11 @@ namespace hex::ui {
                         ImGui::BeginDisabled(pageCount <= 1);
                         {
                             ImGui::PushItemWidth(-1);
-                            if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount, hex::format("0x%02llX / 0x{:02X}", pageCount).c_str()))
+                            if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount,
+                                hex::format("0x%02llX / 0x{0:02X} [0x{1:04X} - 0x{2:04X}]",
+                                    pageCount,
+                                    pageAddress,
+                                    pageSize == 0 ? 0 : (pageAddress + pageSize - 1)).c_str()))
                                 m_provider->setCurrentPage(page - 1);
                             ImGui::PopItemWidth();
                         }
@@ -859,43 +866,42 @@ namespace hex::ui {
                             m_footerCollapsed = !m_footerCollapsed;
                     }
 
-                    // Page Address
+                    // Selection
                     ImGui::TableNextColumn();
                     {
-                        const auto pageAddress = m_provider->getCurrentPageAddress();
-                        const auto pageSize    = m_provider->getSize();
-                        ImGuiExt::TextFormatted("{}:", "hex.ui.hex_editor.region"_lang);
+                        auto selection = getSelection();
+                        std::string value;
+                        if (isSelectionValid()) {
+                            value = hex::format("0x{0:08X} - 0x{1:08X} (0x{2:X} | {3})",
+                                                selection.getStartAddress(),
+                                                selection.getEndAddress(),
+                                                selection.getSize(),
+                                                m_showHumanReadableUnits
+                                                    ? hex::toByteString(selection.getSize())
+                                                    : hex::format("{}", selection.getSize())
+                            );
+                        } else {
+                            value = std::string("hex.ui.hex_editor.selection.none"_lang);
+                        }
+
+                        ImGuiExt::TextFormatted("{}:", "hex.ui.hex_editor.selection"_lang);
                         ImGui::SameLine();
-                        ImGuiExt::TextFormattedSelectable("0x{0:08X} - 0x{1:08X} ({0} - {1})",
-                                                       pageAddress,
-                                                       pageSize == 0 ? 0 : (pageAddress + pageSize - 1)
-                       );
+                        ImGuiExt::TextFormattedSelectable(value);
                     }
 
                     if (!m_footerCollapsed) {
                         ImGui::TableNextRow();
 
-                        // Selection
+                        // Page Address
                         ImGui::TableNextColumn();
                         {
-                            auto selection = getSelection();
-                            std::string value;
-                            if (isSelectionValid()) {
-                                value = hex::format("0x{0:08X} - 0x{1:08X} (0x{2:X} | {3})",
-                                                    selection.getStartAddress(),
-                                                    selection.getEndAddress(),
-                                                    selection.getSize(),
-                                                    m_showHumanReadableUnits
-                                                        ? hex::toByteString(selection.getSize())
-                                                        : hex::format("{}", selection.getSize())
-                                );
-                            } else {
-                                value = std::string("hex.ui.hex_editor.selection.none"_lang);
-                            }
 
-                            ImGuiExt::TextFormatted("{}:", "hex.ui.hex_editor.selection"_lang);
+                            ImGuiExt::TextFormatted("{}:", "hex.ui.hex_editor.region"_lang);
                             ImGui::SameLine();
-                            ImGuiExt::TextFormattedSelectable(value);
+                            ImGuiExt::TextFormattedSelectable("0x{0:08X} - 0x{1:08X} ({0} - {1})",
+                                                           pageAddress,
+                                                           pageSize == 0 ? 0 : (pageAddress + pageSize - 1)
+                           );
                         }
 
                         ImGui::TableNextColumn();

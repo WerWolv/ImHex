@@ -1409,12 +1409,8 @@ namespace hex::plugin::builtin {
                         if (!file.isValid())
                             continue;
 
-                        auto &preprocessor = runtime.getInternals().preprocessor;
-
-                        pl::api::Source source(file.readString());
-
-                        auto ret = preprocessor->preprocess(&runtime, &source);
-                        if (ret.hasErrs()) {
+                        auto result = runtime.preprocessString(file.readString(), pl::api::Source::DefaultSource);
+                        if (!result.has_value()) {
                             log::warn("Failed to preprocess file {} during MIME analysis", entry.path().string());
                         }
 
