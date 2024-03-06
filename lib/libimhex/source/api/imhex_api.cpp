@@ -658,7 +658,7 @@ namespace hex {
             #if defined(OS_WINDOWS)
                 return "Windows";
             #elif defined(OS_LINUX)
-                #if defined(__FreeBSD__)
+                #if defined(OS_FREEBSD)
                     return "FreeBSD";
                 #else
                     return "Linux";

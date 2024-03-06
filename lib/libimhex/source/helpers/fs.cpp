@@ -13,7 +13,7 @@
     #include <shellapi.h>
 #elif defined(OS_LINUX) || defined(OS_WEB)
     #include <xdg.hpp>
-# if defined(__FreeBSD__)
+# if defined(OS_FREEBSD)
     #include <sys/syslimits.h>
 # else
     #include <limits.h>
