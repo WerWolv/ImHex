@@ -27,6 +27,7 @@ namespace hex::prv::undo {
 
         void groupOperations(u32 count, const UnlocalizedString &unlocalizedName);
         void apply(const Stack &otherStack);
+        void reapply();
 
         [[nodiscard]] bool canUndo() const;
         [[nodiscard]] bool canRedo() const;

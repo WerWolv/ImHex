@@ -16,6 +16,7 @@
 
 #include <nlohmann/json.hpp>
 #include <cstring>
+#include <popups/popup_question.hpp>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -42,25 +43,37 @@ namespace hex::plugin::builtin {
     }
 
     bool FileProvider::isSavable() const {
-        return m_undoRedoStack.canUndo();
+        return m_loadedIntoMemory;
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
         if (m_fileSize == 0 || (offset + size) > m_fileSize || buffer == nullptr || size == 0)
             return;
 
-        m_file.readBufferAtomic(offset, static_cast<u8*>(buffer), size);
+        if (m_loadedIntoMemory)
+            std::memcpy(buffer, m_data.data() + offset, size);
+        else
+            m_file.readBufferAtomic(offset, static_cast<u8*>(buffer), size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
-        m_file.writeBufferAtomic(offset, static_cast<const u8*>(buffer), size);
+        if (m_loadedIntoMemory)
+            std::memcpy(m_data.data() + offset, buffer, size);
+        else
+            m_file.writeBufferAtomic(offset, static_cast<const u8*>(buffer), size);
     }
 
     void FileProvider::save() {
-        m_file.flush();
+        if (m_loadedIntoMemory) {
+            m_file.open();
+            m_file.writeVectorAtomic(0x00, m_data);
+            m_file.setSize(m_data.size());
+        } else {
+            m_file.flush();
+        }
 
         #if defined(OS_WINDOWS)
             FILETIME ft;
@@ -75,6 +88,9 @@ namespace hex::plugin::builtin {
             }
         #endif
 
+        if (m_loadedIntoMemory)
+            m_file.close();
+
         Provider::save();
     }
 
@@ -86,52 +102,12 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::resizeRaw(u64 newSize) {
-        m_file.setSize(newSize);
+        if (m_loadedIntoMemory)
+            m_data.resize(newSize);
+        else
+            m_file.setSize(newSize);
+
         m_fileSize = newSize;
-    }
-
-    void FileProvider::insertRaw(u64 offset, u64 size) {
-        auto oldSize = this->getActualSize();
-        this->resizeRaw(oldSize + size);
-
-        std::vector<u8> buffer(0x1000);
-        const std::vector<u8> zeroBuffer(0x1000);
-
-        auto position = oldSize;
-        while (position > offset) {
-            const auto readSize = std::min<size_t>(position - offset, buffer.size());
-
-            position -= readSize;
-
-            this->readRaw(position, buffer.data(), readSize);
-            this->writeRaw(position, zeroBuffer.data(), readSize);
-            this->writeRaw(position + size, buffer.data(), readSize);
-        }
-    }
-
-    void FileProvider::removeRaw(u64 offset, u64 size) {
-        if (offset > this->getActualSize() || size == 0)
-            return;
-
-        if ((offset + size) > this->getActualSize())
-            size = this->getActualSize() - offset;
-
-        auto oldSize = this->getActualSize();
-
-        std::vector<u8> buffer(0x1000);
-
-        const auto newSize = oldSize - size;
-        auto position = offset;
-        while (position < newSize) {
-            const auto readSize = std::min<size_t>(newSize - position, buffer.size());
-
-            this->readRaw(position + size, buffer.data(), readSize);
-            this->writeRaw(position, buffer.data(), readSize);
-
-            position += readSize;
-        }
-
-        this->resizeRaw(newSize);
     }
 
     u64 FileProvider::getActualSize() const {
@@ -246,12 +222,36 @@ namespace hex::plugin::builtin {
             }
         }
 
+        if (m_writable) {
+            if (m_fileSize < MaxMemoryFileSize && !m_writable) {
+                m_data = m_file.readVectorAtomic(0x00, m_fileSize);
+                if (!m_data.empty()) {
+                    m_changeTracker = wolv::io::ChangeTracker(m_file);
+                    m_changeTracker.startTracking(std::bind_front(FileProvider::handleFileChange, this));
+                    m_file.close();
+                    m_loadedIntoMemory = true;
+                }
+            } else {
+                m_writable = false;
+                ui::PopupQuestion::open("hex.builtin.provider.file.too_large"_lang,
+                    [this] {
+                        m_writable = false;
+                    },
+                    [this] {
+                        m_writable = true;
+                        RequestUpdateWindowTitle::post();
+                    });
+            }
+        }
+
         return true;
     }
 
     void FileProvider::close() {
         m_file.close();
+        m_data.clear();
         s_openedFiles.erase(this);
+        m_changeTracker.stopTracking();
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
@@ -331,5 +331,15 @@ namespace hex::plugin::builtin {
             }
         }
     }
+
+    void FileProvider::handleFileChange() {
+        ui::PopupQuestion::open("hex.builtin.provider.file.reload_changes"_lang, [this] {
+            this->close();
+            (void)this->open();
+            getUndoStack().reapply();
+        },
+        []{});
+    }
+
 
 }

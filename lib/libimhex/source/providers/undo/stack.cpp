@@ -93,6 +93,13 @@ namespace hex::prv::undo {
         }
     }
 
+    void Stack::reapply() {
+        for (const auto &operation : m_undoStack) {
+            operation->redo(m_provider);
+        }
+    }
+
+
 
 
     bool Stack::add(std::unique_ptr<Operation> &&operation) {
