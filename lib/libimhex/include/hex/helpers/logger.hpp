@@ -22,6 +22,7 @@ namespace hex::log {
 
         [[nodiscard]] std::recursive_mutex& getLoggerMutex();
         [[nodiscard]] bool isLoggingSuspended();
+        [[nodiscard]] bool isDebugLoggingEnabled();
 
         struct LogEntry {
             std::string project;
@@ -64,13 +65,14 @@ namespace hex::log {
 
     void suspendLogging();
     void resumeLogging();
+    void enableDebugLogging();
 
     [[maybe_unused]] void debug(const std::string &fmt, auto && ... args) {
-        #if defined(DEBUG)
+        if (impl::isDebugLoggingEnabled()) [[unlikely]] {
             hex::log::impl::print(fg(impl::color::debug()) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
-        #else
+        } else {
             impl::addLogEntry(IMHEX_PROJECT_NAME, "[DEBUG]", fmt::format(fmt::runtime(fmt), args...));
-        #endif
+        }
     }
 
     [[maybe_unused]] void info(const std::string &fmt, auto && ... args) {

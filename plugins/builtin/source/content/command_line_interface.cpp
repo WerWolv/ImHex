@@ -139,6 +139,10 @@ namespace hex::plugin::builtin {
         ImHexApi::System::impl::addInitArgument("language", args[0]);
     }
 
+    void handleVerboseCommand(const std::vector<std::string> &) {
+        hex::log::enableDebugLogging();
+    }
+
     void handleHashCommand(const std::vector<std::string> &args) {
         if (args.size() != 2) {
             hex::log::println("usage: imhex --hash <algorithm> <file>");

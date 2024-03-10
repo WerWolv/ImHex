@@ -1,5 +1,6 @@
-#include <hex/api/event_manager.hpp>
 #include <hex/helpers/logger.hpp>
+
+#include <hex/api/event_manager.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/fmt.hpp>
 
@@ -21,6 +22,7 @@ namespace hex::log {
         bool s_colorOutputEnabled = false;
         std::recursive_mutex s_loggerMutex;
         bool s_loggingSuspended = false;
+        bool s_debugLoggingEnabled = false;
 
     }
 
@@ -32,6 +34,10 @@ namespace hex::log {
         s_loggingSuspended = false;
     }
 
+    void enableDebugLogging() {
+        s_debugLoggingEnabled = true;
+    }
+
     namespace impl {
 
         std::recursive_mutex& getLoggerMutex() {
@@ -40,6 +46,14 @@ namespace hex::log {
 
         bool isLoggingSuspended() {
             return s_loggingSuspended;
+        }
+
+        bool isDebugLoggingEnabled() {
+            #if defined(DEBUG)
+                return true;
+            #else
+                return s_debugLoggingEnabled;
+            #endif
         }
 
         FILE *getDestination() {

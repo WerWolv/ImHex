@@ -61,7 +61,8 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "help",       "Print help about this command",                hex::plugin::builtin::handleHelpCommand             },
     { "version",    "Print ImHex version",                          hex::plugin::builtin::handleVersionCommand          },
     { "plugins",    "Lists all plugins that have been installed",   hex::plugin::builtin::handlePluginsCommand          },
-    { "language",   "Changes the language ImHex uses",                hex::plugin::builtin::handleLanguageCommand         },
+    { "language",   "Changes the language ImHex uses",              hex::plugin::builtin::handleLanguageCommand         },
+    { "verbose",    "Enables verbose debug logging",                hex::plugin::builtin::handleVerboseCommand          },
 
     { "open",       "Open files passed as argument. [default]",     hex::plugin::builtin::handleOpenCommand             },
 
