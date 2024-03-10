@@ -198,7 +198,6 @@ namespace hex::plugin::builtin {
         ImGui::BeginDisabled(m_updateAllTask.isRunning() || m_updateCount == 0);
         if (ImGuiExt::IconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
             m_updateAllTask = TaskManager::createTask("Update All...", m_updateCount, [this](auto &task) {
-                u32 progress = 0;
                 for (auto &category : m_categories) {
                     for (auto &entry : category.entries) {
                         if (entry.hasUpdate) {
@@ -212,7 +211,7 @@ namespace hex::plugin::builtin {
                                 std::this_thread::sleep_for(10ms);
                             }
 
-                            task.update(progress);
+                            task.increment();
                         }
                     }
                 }
