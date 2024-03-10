@@ -223,7 +223,7 @@ namespace hex::plugin::builtin {
         }
 
         if (m_writable) {
-            if (m_fileSize < MaxMemoryFileSize && !m_writable) {
+            if (m_fileSize < MaxMemoryFileSize) {
                 m_data = m_file.readVectorAtomic(0x00, m_fileSize);
                 if (!m_data.empty()) {
                     m_changeTracker = wolv::io::ChangeTracker(m_file);

@@ -101,8 +101,28 @@ namespace hex::plugin::builtin {
             return m_provider->getDataDescription();
         }
 
-        void loadSettings(const nlohmann::json &settings) override { hex::unused(settings); }
-        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }
+        void loadSettings(const nlohmann::json &settings) override {
+            auto id = settings.at("id").get<u64>();
+            m_startAddress = settings.at("start_address").get<u64>();
+            m_size = settings.at("size").get<size_t>();
+
+            const auto &providers = ImHexApi::Provider::getProviders();
+            auto provider = std::ranges::find_if(providers, [id](const prv::Provider *provider) {
+                return provider->getID() == id;
+            });
+
+            if (provider == providers.end())
+                return;
+
+            m_provider = *provider;
+        }
+
+        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override {
+            settings["id"] = m_provider->getID();
+            settings["start_address"] = m_startAddress;
+            settings["size"] = m_size;
+            return settings;
+        }
 
         [[nodiscard]] std::string getTypeName() const override {
             return "hex.builtin.provider.view";
