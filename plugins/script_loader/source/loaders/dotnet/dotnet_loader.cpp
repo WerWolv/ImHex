@@ -179,8 +179,19 @@ namespace hex::script::loader {
                 continue;
             }
 
-            m_loadAssembly = [entryPoint](const std::fs::path &path) -> bool {
-                auto string = wolv::util::toUTF8String(path);
+            m_runMethod = [entryPoint](const std::string &methodName, bool keepLoaded, const std::fs::path &path) -> int {
+                auto pathString = wolv::util::toUTF8String(path);
+
+                auto string = hex::format("{}||{}||{}", keepLoaded ? "LOAD" : "EXEC", methodName, pathString);
+                auto result = entryPoint(string.data(), string.size());
+
+                return result;
+            };
+
+            m_methodExists = [entryPoint](const std::string &methodName, const std::fs::path &path) -> bool {
+                auto pathString = wolv::util::toUTF8String(path);
+
+                auto string = hex::format("CHECK||{}||{}", methodName, pathString);
                 auto result = entryPoint(string.data(), string.size());
 
                 return result == 0;
@@ -211,9 +222,15 @@ namespace hex::script::loader {
                 if (!std::fs::exists(scriptPath))
                     continue;
 
-                this->addScript(entry.path().stem().string(), [this, scriptPath] {
-                    hex::unused(m_loadAssembly(scriptPath));
-                });
+                if (m_methodExists("Main", scriptPath)) {
+                    this->addScript(entry.path().stem().string(), [this, scriptPath] {
+                        hex::unused(m_runMethod("Main", false, scriptPath));
+                    });
+                }
+
+                if (m_methodExists("OnLoad", scriptPath)) {
+                    hex::unused(m_runMethod("OnLoad", true, scriptPath));
+                }
             }
         }
 

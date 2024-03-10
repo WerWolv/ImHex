@@ -5,8 +5,42 @@ using System.Runtime.InteropServices;
 
 namespace ImHex
 {
+    public interface IProvider
+    {
+        void readRaw(UInt64 address, IntPtr buffer, UInt64 size)
+        {
+            unsafe
+            {
+                Span<byte> data = new(buffer.ToPointer(), (int)size);
+                read(address, data);
+            }
+        }
+        
+        void writeRaw(UInt64 address, IntPtr buffer, UInt64 size)
+        {
+            unsafe
+            {
+                ReadOnlySpan<byte> data = new(buffer.ToPointer(), (int)size);
+                write(address, data);
+            }
+        }
+        
+        void read(UInt64 address, Span<byte> data);
+        void write(UInt64 address, ReadOnlySpan<byte> data);
+
+        UInt64 getSize();
+
+        string getTypeName();
+        string getName();
+    }
     public class Memory
     {
+        private static List<IProvider> _registeredProviders = new();
+        private static List<Delegate> _registeredProviderDelegates = new();
+
+        private delegate void DataAccessDelegate(UInt64 address, IntPtr buffer, UInt64 size);
+        private delegate UInt64 GetSizeDelegate();
+        
         [DllImport(Library.Name)]
         private static extern void readMemoryV1(UInt64 address, UInt64 size, IntPtr buffer);
 
@@ -15,6 +49,9 @@ namespace ImHex
 
         [DllImport(Library.Name)]
         private static extern bool getSelectionV1(IntPtr start, IntPtr end);
+        
+        [DllImport(Library.Name)]
+        private static extern int registerProviderV1([MarshalAs(UnmanagedType.LPStr)] string typeName, [MarshalAs(UnmanagedType.LPStr)] string name, IntPtr readFunction, IntPtr writeFunction, IntPtr getSizeFunction);
 
 
         public static byte[] Read(ulong address, ulong size)
@@ -56,6 +93,25 @@ namespace ImHex
 
                 return (start, end);
             }
+        }
+        
+        public static int RegisterProvider<T>() where T : IProvider, new()
+        {
+            _registeredProviders.Add(new T());
+            
+            ref var provider = ref CollectionsMarshal.AsSpan(_registeredProviders)[^1];
+            
+            _registeredProviderDelegates.Add(new DataAccessDelegate(provider.readRaw));
+            _registeredProviderDelegates.Add(new DataAccessDelegate(provider.writeRaw));
+            _registeredProviderDelegates.Add(new GetSizeDelegate(provider.getSize));
+            
+            return registerProviderV1(
+                _registeredProviders[^1].getTypeName(), 
+                _registeredProviders[^1].getName(), 
+                Marshal.GetFunctionPointerForDelegate(_registeredProviderDelegates[^3]), 
+                Marshal.GetFunctionPointerForDelegate(_registeredProviderDelegates[^2]),
+                Marshal.GetFunctionPointerForDelegate(_registeredProviderDelegates[^1])
+            );
         }
 
     }

@@ -17,7 +17,8 @@ namespace hex::script::loader {
         bool loadAll() override;
 
     private:
-        std::function<bool(const std::fs::path&)> m_loadAssembly;
+        std::function<int(const std::string &, bool, const std::fs::path&)>  m_runMethod;
+        std::function<bool(const std::string &, const std::fs::path&)> m_methodExists;
         std::fs::path::string_type m_assemblyLoaderPathString;
     };
 
