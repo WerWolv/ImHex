@@ -61,6 +61,8 @@ std::optional<std::fs::path> downloadUpdate(const std::string &url) {
             return std::nullopt;
         }
 
+        hex::log::info("Writing update to file: {}", file.getPath().string());
+
         // Write the downloaded update data to the file
         file.writeVector(data);
 
@@ -97,7 +99,7 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
     };
 
     constexpr static auto UpdateHandlers = {
-        UpdateHandler { "win-msi",          ".msi",  "msiexec /fa {} /passive"                                  },
+        UpdateHandler { "win-msi",          ".msi",  "msiexec /passive /package {}"                             },
         UpdateHandler { "macos-dmg",        ".dmg",  "hdiutil attach {}"                                        },
         UpdateHandler { "linux-deb-22.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
         UpdateHandler { "linux-deb-23.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
@@ -108,10 +110,14 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
             // Rename the update file to the correct extension
             const auto originalPath = updatePath;
             updatePath.replace_extension(handler.extension);
+
+            hex::log::info("Moving update package from {} to {}", originalPath.string(), updatePath.string());
             std::fs::rename(originalPath, updatePath);
 
             // Install the update using the correct command
-            hex::startProgram(hex::format(handler.command, updatePath.string()));
+            const auto command = hex::format(handler.command, updatePath.string());
+            hex::log::info("Starting update process with command: '{}'", command);
+            hex::startProgram(command);
 
             return EXIT_SUCCESS;
         }
@@ -162,6 +168,8 @@ int main(int argc, char **argv) {
     const auto updatePath = downloadUpdate(updateUrl);
     if (!updatePath.has_value())
         return EXIT_FAILURE;
+
+    hex::log::info("Downloaded update successfully");
 
     // Install the update
     return installUpdate(updateType, *updatePath);
