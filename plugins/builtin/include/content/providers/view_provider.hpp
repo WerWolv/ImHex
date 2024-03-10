@@ -102,6 +102,8 @@ namespace hex::plugin::builtin {
         }
 
         void loadSettings(const nlohmann::json &settings) override {
+            Provider::loadSettings(settings);
+
             auto id = settings.at("id").get<u64>();
             m_startAddress = settings.at("start_address").get<u64>();
             m_size = settings.at("size").get<size_t>();
@@ -121,7 +123,8 @@ namespace hex::plugin::builtin {
             settings["id"] = m_provider->getID();
             settings["start_address"] = m_startAddress;
             settings["size"] = m_size;
-            return settings;
+
+            return Provider::storeSettings(settings);
         }
 
         [[nodiscard]] std::string getTypeName() const override {
