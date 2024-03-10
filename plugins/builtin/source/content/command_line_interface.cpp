@@ -9,11 +9,11 @@
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/literals.hpp>
+#include <hex/helpers/utils.hpp>
 #include <romfs/romfs.hpp>
 
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/subcommands/subcommands.hpp>
 
 #include <wolv/utils/string.hpp>
