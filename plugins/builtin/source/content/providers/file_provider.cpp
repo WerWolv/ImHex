@@ -227,7 +227,7 @@ namespace hex::plugin::builtin {
                 m_data = m_file.readVectorAtomic(0x00, m_fileSize);
                 if (!m_data.empty()) {
                     m_changeTracker = wolv::io::ChangeTracker(m_file);
-                    m_changeTracker.startTracking(std::bind_front(FileProvider::handleFileChange, this));
+                    m_changeTracker.startTracking([this]{ this->handleFileChange(); });
                     m_file.close();
                     m_loadedIntoMemory = true;
                 }
