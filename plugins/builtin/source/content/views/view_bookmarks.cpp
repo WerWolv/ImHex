@@ -313,8 +313,8 @@ namespace hex::plugin::builtin {
                             u64 droppedBookmarkId = *static_cast<const u64*>(payload->Data);
 
                             // Find the correct bookmark with that id
-                            auto droppedIter = std::ranges::find_if(m_bookmarks->begin(), m_bookmarks->end(), [droppedBookmarkId](const auto &bookmark) {
-                                return bookmark.entry.id == droppedBookmarkId;
+                            auto droppedIter = std::ranges::find_if(m_bookmarks->begin(), m_bookmarks->end(), [droppedBookmarkId](const auto &bookmarkItem) {
+                                return bookmarkItem.entry.id == droppedBookmarkId;
                             });
 
                             // Swap the two bookmarks
@@ -412,16 +412,25 @@ namespace hex::plugin::builtin {
                         u64 end   = region.getEndAddress();
 
                         if (!locked) {
+                            bool updated = false;
+
                             ImGui::PushItemWidth(100_scaled);
-                            ImGuiExt::InputHexadecimal("##begin", &begin);
+                            if (ImGuiExt::InputHexadecimal("##begin", &begin))
+                                updated = true;
+
                             ImGui::SameLine(0, 0);
                             ImGui::TextUnformatted(" - ");
                             ImGui::SameLine(0, 0);
-                            ImGuiExt::InputHexadecimal("##end", &end);
+
+                            if (ImGuiExt::InputHexadecimal("##end", &end))
+                                updated = true;
+
                             ImGui::PopItemWidth();
 
-                            if (end > begin)
+                            if (updated && end > begin) {
                                 region = Region(begin, end - begin + 1);
+                                EventHighlightingChanged::post();
+                            }
                         } else {
                             ImGuiExt::TextFormatted("0x{:02X} - 0x{:02X}", begin, end);
                         }
