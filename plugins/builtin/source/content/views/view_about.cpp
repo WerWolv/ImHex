@@ -275,6 +275,7 @@ namespace hex::plugin::builtin {
         constexpr static std::array Contributors = {
             Contributor { "iTrooz", "A huge amount of help maintaining ImHex and the CI", "https://github.com/iTrooz", true },
             Contributor { "jumanji144", "A ton of help with the Pattern Language, API and usage stats", "https://github.com/jumanji144", true },
+            Contributor { "AxCut", "A ton of great pattern language improvements and help with the issue tracker", "https://github.com/paxcut", false },
             Contributor { "Mary", "Porting ImHex to macOS originally", "https://github.com/marysaka", false },
             Contributor { "Roblabla", "Adding the MSI Windows installer", "https://github.com/roblabla", false },
             Contributor { "jam1garner", "Adding support for Rust plugins", "https://github.com/jam1garner", false },
