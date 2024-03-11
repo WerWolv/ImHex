@@ -64,8 +64,15 @@ namespace ImHex
                     {
                         continue;
                     }
-                    
-                    context.LoadFromStream(new MemoryStream(File.ReadAllBytes(file)));
+
+                    try
+                    {
+                        context.LoadFromStream(new MemoryStream(File.ReadAllBytes(file)));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("[.NET Script] Failed to load assembly: " + file + " - " + e.ToString());
+                    }
                 }
 
                 // Load the script assembly

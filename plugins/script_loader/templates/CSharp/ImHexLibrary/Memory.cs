@@ -2,6 +2,7 @@
 
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ImHex
 {
@@ -36,7 +37,7 @@ namespace ImHex
     public class Memory
     {
         private static List<IProvider> _registeredProviders = new();
-        private static List<Delegate> _registeredProviderDelegates = new();
+        private static List<Delegate> _registeredDelegates = new();
 
         private delegate void DataAccessDelegate(UInt64 address, IntPtr buffer, UInt64 size);
         private delegate UInt64 GetSizeDelegate();
@@ -51,7 +52,7 @@ namespace ImHex
         private static extern bool getSelectionV1(IntPtr start, IntPtr end);
         
         [DllImport(Library.Name)]
-        private static extern int registerProviderV1([MarshalAs(UnmanagedType.LPStr)] string typeName, [MarshalAs(UnmanagedType.LPStr)] string name, IntPtr readFunction, IntPtr writeFunction, IntPtr getSizeFunction);
+        private static extern void registerProviderV1(byte[] typeName, byte[] name, IntPtr readFunction, IntPtr writeFunction, IntPtr getSizeFunction);
 
 
         public static byte[] Read(ulong address, ulong size)
@@ -95,22 +96,22 @@ namespace ImHex
             }
         }
         
-        public static int RegisterProvider<T>() where T : IProvider, new()
+        public static void RegisterProvider<T>() where T : IProvider, new()
         {
             _registeredProviders.Add(new T());
             
             ref var provider = ref CollectionsMarshal.AsSpan(_registeredProviders)[^1];
             
-            _registeredProviderDelegates.Add(new DataAccessDelegate(provider.readRaw));
-            _registeredProviderDelegates.Add(new DataAccessDelegate(provider.writeRaw));
-            _registeredProviderDelegates.Add(new GetSizeDelegate(provider.getSize));
+            _registeredDelegates.Add(new DataAccessDelegate(provider.readRaw));
+            _registeredDelegates.Add(new DataAccessDelegate(provider.writeRaw));
+            _registeredDelegates.Add(new GetSizeDelegate(provider.getSize));
             
-            return registerProviderV1(
-                _registeredProviders[^1].getTypeName(), 
-                _registeredProviders[^1].getName(), 
-                Marshal.GetFunctionPointerForDelegate(_registeredProviderDelegates[^3]), 
-                Marshal.GetFunctionPointerForDelegate(_registeredProviderDelegates[^2]),
-                Marshal.GetFunctionPointerForDelegate(_registeredProviderDelegates[^1])
+            registerProviderV1(
+                Encoding.UTF8.GetBytes(provider.getTypeName()), 
+                Encoding.UTF8.GetBytes(provider.getName()), 
+                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^3]), 
+                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^2]),
+                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^1])
             );
         }
 

@@ -15,11 +15,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="ImGui.NET" Version="1.89.7.1" />
+      <ProjectReference Include="..\ImHexLibrary\ImHexLibrary.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ImHexLibrary\ImHexLibrary.csproj" />
+      <PackageReference Include="ImGui.NET" Version="1.90.1.1" />
     </ItemGroup>
 
 </Project>

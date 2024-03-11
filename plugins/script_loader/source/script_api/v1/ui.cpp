@@ -1,4 +1,5 @@
 #include <script_api.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event_manager.hpp>
@@ -7,8 +8,10 @@
 #include <hex/ui/popup.hpp>
 
 #include <hex/helpers/utils.hpp>
+#include <hex/ui/view.hpp>
 
 #include <popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 
 using namespace hex;
 
@@ -140,4 +143,40 @@ SCRIPT_API(void showYesNoQuestionBox, const char *title, const char *message, bo
 
     *result = s_yesNoQuestionBoxResult.value();
     s_yesNoQuestionBoxResult.reset();
+}
+
+SCRIPT_API(void showToast, const char *message, u32 type) {
+    switch (type) {
+        case 0:
+            ui::ToastInfo::open(message);
+            break;
+        case 1:
+            ui::ToastWarning::open(message);
+            break;
+        case 2:
+            ui::ToastError::open(message);
+            break;
+        default:
+            break;
+    }
+}
+
+SCRIPT_API(void* getImGuiContext) {
+    return ImGui::GetCurrentContext();
+}
+
+class ScriptView : public View::Window {
+public:
+    using DrawFunction = void(*)();
+    ScriptView(const char *icon, const char *name, DrawFunction function) : View::Window(UnlocalizedString(name), icon), m_drawFunction(function) { }
+    void drawContent() override {
+        m_drawFunction();
+    }
+
+private:
+    DrawFunction m_drawFunction;
+};
+
+SCRIPT_API(void registerView, const char *icon, const char *name, void *drawFunction) {
+    ContentRegistry::Views::add<ScriptView>(icon, name, ScriptView::DrawFunction(drawFunction));
 }
