@@ -40,6 +40,9 @@ project(imhex
         HOMEPAGE_URL    "https://imhex.werwolv.net"
 )
 
+# Add ImHex sources
+add_custom_target(imhex_all ALL)
+
 # Make sure project is configured correctly
 setDefaultBuiltTypeIfUnset()
 detectBadClone()
@@ -56,10 +59,8 @@ configurePackingResources()
 setUninstallTarget()
 addBundledLibraries()
 
-# Add ImHex sources
-add_custom_target(imhex_all ALL)
-
 add_subdirectory(lib/libimhex)
+addPluginDirectories()
 add_subdirectory(main)
 
 # Add unit tests

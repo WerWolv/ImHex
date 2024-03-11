@@ -89,6 +89,8 @@ macro(detectOS)
 endmacro()
 
 macro(configurePackingResources)
+    set(LIBRARY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
     if (WIN32)
         if (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
             set(APPLICATION_TYPE WIN32)
@@ -142,9 +144,7 @@ macro(configurePackingResources)
     endif()
 endmacro()
 
-macro(createPackage)
-    set(LIBRARY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-
+macro(addPluginDirectories)
     file(MAKE_DIRECTORY "plugins")
     foreach (plugin IN LISTS PLUGINS)
         add_subdirectory("plugins/${plugin}")
@@ -175,9 +175,9 @@ macro(createPackage)
             add_dependencies(imhex_all ${plugin})
         endif ()
     endforeach()
+endmacro()
 
-    set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-
+macro(createPackage)
     if (WIN32)
         # Install binaries directly in the prefix, usually C:\Program Files\ImHex.
         set(CMAKE_INSTALL_BINDIR ".")
@@ -214,7 +214,6 @@ macro(createPackage)
         endforeach()
         ]])
 
-        install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
         downloadImHexPatternsFiles("./")
     elseif(UNIX AND NOT APPLE)
 
@@ -225,7 +224,6 @@ macro(createPackage)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/imhex)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.png)
-        install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
         downloadImHexPatternsFiles("./share/imhex")
 
         # install AppStream file

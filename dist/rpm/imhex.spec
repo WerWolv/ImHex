@@ -123,6 +123,7 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %{_datadir}/pixmaps/%{name}.png
 %{_datadir}/applications/%{name}.desktop
 %{_libdir}/libimhex.so*
+%{_libdir}/cimgui.so*
 %{_libdir}/%{name}/
 %{_metainfodir}/net.werwolv.%{name}.metainfo.xml
 
