@@ -6,10 +6,10 @@ using System.Text;
 
 namespace ImHex
 {
-    public class Bookmarks
+    public partial class Bookmarks
     {
-        [DllImport(Library.Name)]
-        private static extern void createBookmarkV1(UInt64 address, UInt64 size, UInt32 color, byte[] name, byte[] description);
+        [LibraryImport("ImHex")]
+        private static partial void createBookmarkV1(UInt64 address, UInt64 size, UInt32 color, byte[] name, byte[] description);
 
         public static void CreateBookmark(long address, long size, Color color, string name = "", string description = "")
         {

@@ -1,6 +1,5 @@
 ﻿#pragma warning disable SYSLIB1054
 
-using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -34,7 +33,7 @@ namespace ImHex
         string getTypeName();
         string getName();
     }
-    public class Memory
+    public partial class Memory
     {
         private static List<IProvider> _registeredProviders = new();
         private static List<Delegate> _registeredDelegates = new();
@@ -42,17 +41,17 @@ namespace ImHex
         private delegate void DataAccessDelegate(UInt64 address, IntPtr buffer, UInt64 size);
         private delegate UInt64 GetSizeDelegate();
         
-        [DllImport(Library.Name)]
-        private static extern void readMemoryV1(UInt64 address, UInt64 size, IntPtr buffer);
+        [LibraryImport("ImHex")]
+        private static partial void readMemoryV1(UInt64 address, UInt64 size, IntPtr buffer);
 
-        [DllImport(Library.Name)]
-        private static extern void writeMemoryV1(UInt64 address, UInt64 size, IntPtr buffer);
+        [LibraryImport("ImHex")]
+        private static partial void writeMemoryV1(UInt64 address, UInt64 size, IntPtr buffer);
 
-        [DllImport(Library.Name)]
-        private static extern bool getSelectionV1(IntPtr start, IntPtr end);
+        [LibraryImport("ImHex")]
+        private static partial int getSelectionV1(IntPtr start, IntPtr end);
         
-        [DllImport(Library.Name)]
-        private static extern void registerProviderV1(byte[] typeName, byte[] name, IntPtr readFunction, IntPtr writeFunction, IntPtr getSizeFunction);
+        [LibraryImport("ImHex")]
+        private static partial void registerProviderV1(byte[] typeName, byte[] name, IntPtr readFunction, IntPtr writeFunction, IntPtr getSizeFunction);
 
 
         public static byte[] Read(ulong address, ulong size)
@@ -87,7 +86,7 @@ namespace ImHex
             unsafe
             {
                 UInt64 start = 0, end = 0;
-                if (!getSelectionV1((nint)(&start), (nint)(&end)))
+                if (getSelectionV1((nint)(&start), (nint)(&end)) == 0)
                 {
                     return null;
                 }

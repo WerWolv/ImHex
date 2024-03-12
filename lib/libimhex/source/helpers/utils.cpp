@@ -16,9 +16,11 @@
     #include <wolv/utils/guards.hpp>
 #elif defined(OS_LINUX)
     #include <unistd.h>
+    #include <dlfcn.h>
     #include <hex/helpers/utils_linux.hpp>
 #elif defined(OS_MACOS)
     #include <unistd.h>
+    #include <dlfcn.h>
     #include <hex/helpers/utils_macos.hpp>
 #elif defined(OS_WEB)
     #include "emscripten.h"
@@ -781,6 +783,25 @@ namespace hex {
             return result;
         #else
             return std::system_category().message(error);
+        #endif
+    }
+
+
+    void* getContainingModule(void* symbol) {
+        #if defined(OS_WINDOWS)
+            MEMORY_BASIC_INFORMATION mbi;
+            if (VirtualQuery(symbol, &mbi, sizeof(mbi)))
+                return mbi.AllocationBase;
+
+            return nullptr;
+        #elif !defined(OS_WEB)
+            Dl_info info;
+            if (dladdr(symbol, nullptr) == 0)
+                return nullptr;
+
+            return dlopen(info.dli_fname, RTLD_LAZY);
+        #else
+            return nullptr;
         #endif
     }
 

@@ -1,33 +1,31 @@
-﻿#pragma warning disable SYSLIB1054
-
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ImHex
 {
-    public class UI
+    public partial class UI
     {
         private delegate void DrawContentDelegate();
 
         private static List<Delegate> _registeredDelegates = new();
 
-        [DllImport(Library.Name)]
-        private static extern void showMessageBoxV1(byte[] message);
+        [LibraryImport("ImHex")]
+        private static partial void showMessageBoxV1(byte[] message);
 
-        [DllImport(Library.Name)]
-        private static extern void showInputTextBoxV1(byte[] title, byte[] message, StringBuilder buffer, int bufferSize);
+        [LibraryImport("ImHex")]
+        private static unsafe partial void showInputTextBoxV1(byte[] title, byte[] message, IntPtr buffer, int bufferSize);
 
-        [DllImport(Library.Name)]
-        private static extern unsafe void showYesNoQuestionBoxV1(byte[] title, byte[] message, bool* result);
+        [LibraryImport("ImHex")]
+        private static unsafe partial void showYesNoQuestionBoxV1(byte[] title, byte[] message, bool* result);
         
-        [DllImport(Library.Name)]
-        private static extern void showToastV1(byte[] message, UInt32 type);
+        [LibraryImport("ImHex")]
+        private static partial void showToastV1(byte[] message, UInt32 type);
         
-        [DllImport(Library.Name)]
-        private static extern IntPtr getImGuiContextV1();
+        [LibraryImport("ImHex")]
+        private static partial IntPtr getImGuiContextV1();
         
-        [DllImport(Library.Name)]
-        private static extern void registerViewV1(byte[] icon, byte[] name, IntPtr drawFunction);
+        [LibraryImport("ImHex")]
+        private static partial void registerViewV1(byte[] icon, byte[] name, IntPtr drawFunction);
 
         public static void ShowMessageBox(string message)
         {
@@ -46,13 +44,22 @@ namespace ImHex
 
         public static string? ShowInputTextBox(string title, string message, int maxSize)
         {
-            StringBuilder buffer = new(maxSize);
-            showInputTextBoxV1(Encoding.UTF8.GetBytes(title), Encoding.UTF8.GetBytes(message), buffer, buffer.Capacity);
+            unsafe
+            {
+                var buffer = new byte[maxSize];
+                GCHandle pinnedArray = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+                showInputTextBoxV1(Encoding.UTF8.GetBytes(title), Encoding.UTF8.GetBytes(message), pinnedArray.AddrOfPinnedObject(), maxSize);
+                pinnedArray.Free();
 
-            if (buffer.Length == 0 || buffer[0] == '\x00')
-                return null;
-            else
-                return buffer.ToString();
+                if (buffer.Length == 0 || buffer[0] == '\x00')
+                {
+                    return null;
+                }
+                else
+                {
+                    return Encoding.UTF8.GetString(buffer);
+                }
+            }
         }
 
         public enum ToastType

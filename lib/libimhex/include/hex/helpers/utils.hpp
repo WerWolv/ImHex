@@ -331,4 +331,14 @@ namespace hex {
 
     [[nodiscard]] std::string formatSystemError(i32 error);
 
+    /**
+     * Gets the shared library handle for a given pointer
+     * @param symbol Pointer to any function or variable in the shared library
+     * @return The module handle
+     * @warning Important! Calling this function on functions defined in other modules will return the handle of the current module!
+     *          This is because you're not actually passing a pointer to the function in the other module but rather a pointer to a thunk
+     *          that is defined in the current module.
+     */
+    [[nodiscard]] void* getContainingModule(void* symbol);
+
 }
