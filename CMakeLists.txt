@@ -60,8 +60,8 @@ setUninstallTarget()
 addBundledLibraries()
 
 add_subdirectory(lib/libimhex)
-addPluginDirectories()
 add_subdirectory(main)
+addPluginDirectories()
 
 # Add unit tests
 if (IMHEX_ENABLE_UNIT_TESTS)

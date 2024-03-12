@@ -4,8 +4,12 @@ project(imgui_cimgui)
 
 set(CMAKE_CXX_STANDARD 17)
 
+if (IMHEX_STATIC_LINK_PLUGINS)
+    return()
+endif()
+
 if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
-    add_library(imgui_cimgui SHARED
+    add_library(imgui_cimgui ${LIBRARY_TYPE}
         source/cimgui.cpp
     )
 
@@ -18,7 +22,8 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     set_target_properties(imgui_cimgui PROPERTIES OUTPUT_NAME "cimgui")
     set_target_properties(imgui_cimgui PROPERTIES PREFIX "")
     add_dependencies(imhex_all imgui_cimgui)
+
+    install(FILES "$<TARGET_FILE:imgui_cimgui>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
+    set_target_properties(imgui_cimgui PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
 
-install(FILES "$<TARGET_FILE:imgui_cimgui>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
-set_target_properties(imgui_cimgui PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
