@@ -9,7 +9,7 @@ if (IMHEX_STATIC_LINK_PLUGINS)
 endif()
 
 if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
-    add_library(imgui_cimgui ${LIBRARY_TYPE}
+    add_library(imgui_cimgui SHARED
         source/cimgui.cpp
     )
 
