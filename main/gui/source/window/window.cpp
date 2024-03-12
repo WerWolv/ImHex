@@ -213,6 +213,7 @@ namespace hex {
                     constexpr static auto LongSleepFPS = 5.0;
                     const double timeout = std::max(0.0, (1.0 / LongSleepFPS) - (glfwGetTime() - m_lastStartFrameTime));
 
+                    glfwPollEvents();
                     glfwWaitEventsTimeout(timeout);
                 } else {
                     glfwPollEvents();
@@ -648,8 +649,6 @@ namespace hex {
 
             m_unlockFrameRate = true;
         }
-
-        glfwPollEvents();
 
         // Process layout load requests
         // NOTE: This needs to be done before a new frame is started, otherwise ImGui won't handle docking correctly
