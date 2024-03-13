@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
                 m_validBytes = 0;
                 m_selectedProvider = nullptr;
             } else {
-                m_validBytes   = u64(region.getProvider()->getActualSize() - region.address);
+                m_validBytes   = u64((region.getProvider()->getBaseAddress() + region.getProvider()->getActualSize()) - region.address);
                 m_startAddress = region.address;
                 m_selectedProvider = region.getProvider();
             }
