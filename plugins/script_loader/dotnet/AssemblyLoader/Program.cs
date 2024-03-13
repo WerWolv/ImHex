@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Loader;
 
 namespace ImHex
@@ -47,6 +46,7 @@ namespace ImHex
             {
                 if (type is "LOAD")
                 {
+                    // If the script has been loaded already, don't do it again
                     if (loadedPlugins.Contains(path))
                     {
                         return 0;
@@ -65,19 +65,49 @@ namespace ImHex
                         continue;
                     }
 
+                    // Load the Assembly
                     try
                     {
                         context.LoadFromStream(new MemoryStream(File.ReadAllBytes(file)));
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("[.NET Script] Failed to load assembly: " + file + " - " + e.ToString());
+                        Console.WriteLine("[.NET Script] Failed to load assembly: " + file + " - " + e);
                     }
                 }
 
                 // Load the script assembly
                 var assembly = context.LoadFromStream(new MemoryStream(File.ReadAllBytes(path)));
 
+                // Find ImHexLibrary module
+                var libraryModule = Array.Find(context.Assemblies.ToArray(), module => module.GetName().Name == "ImHexLibrary");
+                if (libraryModule == null)
+                {
+                    Console.WriteLine("[.NET Script] Refusing to load non-ImHex script");
+                    return 1;
+                }
+                else
+                {
+                    // Load Library type
+                    var libraryType = libraryModule.GetType("Library");
+                    if (libraryType == null)
+                    {
+                        Console.WriteLine("[.NET Script] Failed to find Library type in ImHexLibrary");
+                        return 1;
+                    }
+                    
+                    // Load Initialize function in the Library type
+                    var initMethod = libraryType.GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
+                    if (initMethod == null)
+                    {
+                        Console.WriteLine("[.NET Script] Failed to find Initialize method");
+                        return 1;
+                    }
+
+                    // Execute it
+                    initMethod.Invoke(null, null);
+                }
+                
                 // Find a class named "Script"
                 var entryPointType = assembly.GetType("Script");
                 if (entryPointType == null)
@@ -96,10 +126,11 @@ namespace ImHex
                     }
 
                     // Execute it
-                    method.Invoke(null, null);   
+                    method.Invoke(null, null);
                 }
                 else if (type == "CHECK")
                 {
+                    // Check if the method exists
                     return entryPointType.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public) != null ? 0 : 1;
                 }
                 else
@@ -109,7 +140,7 @@ namespace ImHex
             }
             catch (Exception e)
             {
-                Console.WriteLine("[.NET Script] Exception in AssemblyLoader: " + e.ToString());
+                Console.WriteLine("[.NET Script] Exception in AssemblyLoader: " + e);
                 return 3;
             }
             finally

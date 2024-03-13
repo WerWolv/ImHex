@@ -1,6 +1,4 @@
-﻿#pragma warning disable SYSLIB1054
-
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ImHex
