@@ -6,6 +6,7 @@ namespace ImHex
     public partial class UI
     {
         private delegate void DrawContentDelegate();
+        private delegate void ActionDelegate();
 
         private static List<Delegate> _registeredDelegates = new();
 
@@ -26,6 +27,9 @@ namespace ImHex
         
         [LibraryImport("ImHex")]
         private static partial void registerViewV1(byte[] icon, byte[] name, IntPtr drawFunction);
+
+        [LibraryImport("ImHex")]
+        private static partial void addMenuItemV1(byte[] icon, byte[] menuName, byte[] itemName, IntPtr drawFunction);
 
         public static void ShowMessageBox(string message)
         {
@@ -85,6 +89,17 @@ namespace ImHex
             registerViewV1(
                 icon,
                 Encoding.UTF8.GetBytes(name),
+                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^1])
+            );
+        }
+
+        public static void AddMenuItem(byte[] icon, string menuName, string itemName, Action function)
+        {
+            _registeredDelegates.Add(new ActionDelegate(function));
+            addMenuItemV1(
+                icon,
+                Encoding.UTF8.GetBytes(menuName),
+                Encoding.UTF8.GetBytes(itemName),
                 Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^1])
             );
         }
