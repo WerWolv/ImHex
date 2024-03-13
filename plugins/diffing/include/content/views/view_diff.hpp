@@ -18,6 +18,7 @@ namespace hex::plugin::diffing {
         ~ViewDiff() override;
 
         void drawContent() override;
+        void drawAlwaysVisibleContent() override;
         ImGuiWindowFlags getWindowFlags() const override { return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse; }
 
     public:
