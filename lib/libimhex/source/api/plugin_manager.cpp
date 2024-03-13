@@ -18,24 +18,48 @@
 
 namespace hex {
 
+    static uintptr_t loadLibrary(const std::fs::path &path) {
+        #if defined(OS_WINDOWS)
+            auto handle = uintptr_t(LoadLibraryW(path.c_str()));
+
+            if (handle == uintptr_t(INVALID_HANDLE_VALUE) || handle == 0) {
+                log::error("Loading library '{}' failed: {} {}!", wolv::util::toUTF8String(path.filename()), ::GetLastError(), hex::formatSystemError(::GetLastError()));
+                return 0;
+            }
+
+            return handle;
+        #else
+            auto handle = uintptr_t(dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY));
+
+            if (handle == 0) {
+                log::error("Loading library '{}' failed: {}!", wolv::util::toUTF8String(path.filename()), dlerror());
+                return 0;
+            }
+
+            return handle;
+        #endif
+    }
+
+    static void unloadLibrary(uintptr_t handle, const std::fs::path &path) {
+        #if defined(OS_WINDOWS)
+            if (handle != 0) {
+                if (FreeLibrary(HMODULE(handle)) == FALSE) {
+                    log::error("Error when unloading library '{}': {}!", wolv::util::toUTF8String(path.filename()), hex::formatSystemError(::GetLastError()));
+                }
+            }
+        #else
+            if (handle != 0) {
+                dlclose(reinterpret_cast<void*>(handle));
+            }
+        #endif
+    }
+
     Plugin::Plugin(const std::fs::path &path) : m_path(path) {
         log::info("Loading plugin '{}'", wolv::util::toUTF8String(path.filename()));
 
-        #if defined(OS_WINDOWS)
-            m_handle = uintptr_t(LoadLibraryW(path.c_str()));
-
-            if (m_handle == uintptr_t(INVALID_HANDLE_VALUE) || m_handle == 0) {
-                log::error("Loading plugin '{}' failed: {} {}!", wolv::util::toUTF8String(path.filename()), ::GetLastError(), hex::formatSystemError(::GetLastError()));
-                return;
-            }
-        #else
-            m_handle = uintptr_t(dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY));
-
-            if (m_handle == 0) {
-                log::error("Loading plugin '{}' failed: {}!", wolv::util::toUTF8String(path.filename()), dlerror());
-                return;
-            }
-        #endif
+        m_handle = loadLibrary(path);
+        if (m_handle == 0)
+            return;
 
         const auto fileName = path.stem().string();
 
@@ -89,15 +113,7 @@ namespace hex {
             log::info("Trying to unload plugin '{}'", getPluginName());
         }
 
-        #if defined(OS_WINDOWS)
-            if (m_handle != 0)
-                if (FreeLibrary(HMODULE(m_handle)) == FALSE) {
-                    log::error("Error when unloading plugin '{}': {}!", wolv::util::toUTF8String(m_path.filename()), hex::formatSystemError(::GetLastError()));
-                }
-        #else
-            if (m_handle != 0)
-                dlclose(reinterpret_cast<void*>(m_handle));
-        #endif
+        unloadLibrary(m_handle, m_path);
     }
 
     bool Plugin::initializePlugin() const {
@@ -284,6 +300,35 @@ namespace hex {
         return true;
     }
 
+    AutoReset<std::vector<uintptr_t>> PluginManager::s_loadedLibraries;
+
+    bool PluginManager::loadLibraries() {
+        bool success = true;
+        for (const auto &loadPath : fs::getDefaultPaths(fs::ImHexPath::Libraries))
+            success = PluginManager::loadLibraries(loadPath) && success;
+
+        return success;
+    }
+
+    bool PluginManager::loadLibraries(const std::fs::path& pluginFolder) {
+        bool success = true;
+        for (const auto &entry : std::fs::recursive_directory_iterator(pluginFolder)) {
+            if (!(entry.path().extension() == ".dll" || entry.path().extension() == ".so" || entry.path().extension() == ".dylib"))
+                continue;
+
+            auto handle = loadLibrary(entry);
+            if (handle == 0) {
+                success = false;
+            }
+
+            PluginManager::s_loadedLibraries->push_back(handle);
+        }
+
+        return success;
+    }
+
+
+
     void PluginManager::initializeNewPlugins() {
         for (const auto &plugin : getPlugins()) {
             if (!plugin.isLoaded())
@@ -302,6 +347,11 @@ namespace hex {
             if (plugins.back().wasAddedManually())
                 savedPlugins.emplace_front(std::move(plugins.back()));
             plugins.pop_back();
+        }
+
+        while (!s_loadedLibraries->empty()) {
+            unloadLibrary(s_loadedLibraries->back(), "");
+            s_loadedLibraries->pop_back();
         }
 
         getPluginsMutable() = std::move(savedPlugins);

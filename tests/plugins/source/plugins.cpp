@@ -10,6 +10,7 @@ public:
             PluginManager::addLoadPath(dir);
         }
 
+        PluginManager::loadLibraries();
         PluginManager::load();
     }
 };

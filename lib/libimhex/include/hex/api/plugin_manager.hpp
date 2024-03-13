@@ -104,6 +104,10 @@ namespace hex {
 
         static bool load();
         static bool load(const std::fs::path &pluginFolder);
+
+        static bool loadLibraries();
+        static bool loadLibraries(const std::fs::path &pluginFolder);
+
         static void unload();
         static void reload();
         static void initializeNewPlugins();
@@ -122,6 +126,7 @@ namespace hex {
         static std::list<Plugin>& getPluginsMutable();
 
         static AutoReset<std::vector<std::fs::path>> s_pluginPaths, s_pluginLoadPaths;
+        static AutoReset<std::vector<uintptr_t>> s_loadedLibraries;
     };
 
 }

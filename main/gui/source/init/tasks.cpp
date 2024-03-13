@@ -94,6 +94,7 @@ namespace hex::init {
                 PluginManager::addLoadPath(dir);
             }
 
+            PluginManager::loadLibraries();
             PluginManager::load();
         #endif
 

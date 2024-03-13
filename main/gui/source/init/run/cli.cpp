@@ -59,6 +59,7 @@ namespace hex::init {
 
 
         // Load all plugins but don't initialize them
+        PluginManager::loadLibraries();
         for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
             PluginManager::load(dir);
         }
