@@ -801,6 +801,7 @@ namespace hex {
 
             return dlopen(info.dli_fname, RTLD_LAZY);
         #else
+            hex::unused(symbol);
             return nullptr;
         #endif
     }

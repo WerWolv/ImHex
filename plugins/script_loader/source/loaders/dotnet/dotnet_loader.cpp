@@ -133,11 +133,11 @@ namespace hex::script::loader {
             }
 
             hostfxr_set_error_writer([] HOSTFXR_CALLTYPE (const char_t *message) {
-                if constexpr (std::same_as<char_t, wchar_t>) {
+                #if defined(OS_WINDOWS)
                     log::error("{}", utf16ToUtf8(message));
-                } else {
+                #else
                     log::error("{}", message);
-                }
+                #endif
             });
 
             return
