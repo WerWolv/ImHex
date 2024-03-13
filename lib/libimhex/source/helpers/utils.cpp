@@ -795,8 +795,8 @@ namespace hex {
 
             return nullptr;
         #elif !defined(OS_WEB)
-            Dl_info info;
-            if (dladdr(symbol, nullptr) == 0)
+            Dl_info info = {};
+            if (dladdr(symbol, &info) == 0)
                 return nullptr;
 
             return dlopen(info.dli_fname, RTLD_LAZY);

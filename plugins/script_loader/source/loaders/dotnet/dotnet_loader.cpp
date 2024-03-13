@@ -77,8 +77,7 @@ namespace hex::script::loader {
             if (library == "cimgui") {
                 return getExport<void*>(ImHexApi::System::getLibImHexModuleHandle(), symbolName);
             } else if (library == "ImHex") {
-                auto address = getExport<void*>(hex::getContainingModule((void*)&pInvokeOverride), symbolName);
-                return address;
+                return getExport<void*>(hex::getContainingModule((void*)&pInvokeOverride), symbolName);
             }
 
             return nullptr;
