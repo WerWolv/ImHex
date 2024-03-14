@@ -15,8 +15,10 @@ struct ImGuiContext;
 namespace hex {
 
     struct SubCommand {
-        std::string commandKey;
-        std::string commandDesc;
+        std::string commandLong;
+        std::string commandShort;
+
+        std::string commandDescription;
         std::function<void(const std::vector<std::string>&)> callback;
     };
 
