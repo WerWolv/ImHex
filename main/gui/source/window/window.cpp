@@ -186,12 +186,11 @@ namespace hex {
             // Determine if the application should be in long sleep mode
             bool shouldLongSleep = !m_unlockFrameRate;
 
-            // Wait 5 frames before actually enabling the long sleep mode to make animations not stutter
-            static i32 lockTimeout = 0;
+            static double lockTimeout = 0;
             if (!shouldLongSleep) {
-                lockTimeout = m_lastFrameTime * 10'000;
+                lockTimeout = 0.05;
             } else if (lockTimeout > 0) {
-                lockTimeout -= 1;
+                lockTimeout -= m_lastFrameTime;
             }
 
             if (shouldLongSleep && lockTimeout > 0)
@@ -209,6 +208,7 @@ namespace hex {
                 // Long sleep mode is enabled automatically after a few frames if the window content hasn't changed
                 // and no events have been received
                 if (shouldLongSleep) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     // Calculate the time until the next frame
                     constexpr static auto LongSleepFPS = 5.0;
                     const double timeout = std::max(0.0, (1.0 / LongSleepFPS) - (glfwGetTime() - m_lastStartFrameTime));
@@ -244,6 +244,7 @@ namespace hex {
             } else {
                 if (!shouldLongSleep) {
                     glfwSwapInterval(0);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
                     const auto targetFrameTime = 1.0 / targetFPS;
                     if (frameTime < targetFrameTime) {
