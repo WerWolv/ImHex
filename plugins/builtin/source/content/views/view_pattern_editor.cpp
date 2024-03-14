@@ -133,6 +133,9 @@ namespace hex::plugin::builtin {
     }
 
     static void drawVirtualFileTree(const std::vector<const ViewPatternEditor::VirtualFile*> &virtualFiles, u32 level = 0) {
+        ImGui::PushID(level + 1);
+        ON_SCOPE_EXIT { ImGui::PopID(); };
+
         std::map<std::string, std::vector<const ViewPatternEditor::VirtualFile*>> currFolderEntries;
         for (const auto &file : virtualFiles) {
             const auto &path = file->path;
@@ -146,8 +149,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 ImGui::TreeNodeEx(currSegment.c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
-
-                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered()) {
                     ImHexApi::Provider::add<prv::MemoryProvider>(file->data, wolv::util::toUTF8String(file->path.filename()));
                 }
 
@@ -157,6 +159,7 @@ namespace hex::plugin::builtin {
             currFolderEntries[currSegment].emplace_back(file);
         }
 
+        int id = 1;
         for (const auto &[segment, entries] : currFolderEntries) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -167,11 +170,16 @@ namespace hex::plugin::builtin {
                 ImGui::TextUnformatted(ICON_VS_FOLDER);
             }
 
+            ImGui::PushID(id);
+
             ImGui::SameLine();
             if (ImGui::TreeNodeEx(segment.c_str(), ImGuiTreeNodeFlags_SpanFullWidth)) {
                 drawVirtualFileTree(entries, level + 1);
                 ImGui::TreePop();
             }
+
+            ImGui::PopID();
+            id += 1;
         }
     }
 
@@ -1158,7 +1166,7 @@ namespace hex::plugin::builtin {
         for (const auto &file : virtualFiles)
             virtualFilePointers.emplace_back(&file);
 
-        if (ImGui::BeginTable("Virtual File Tree", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_RowBg, size)) {
+        if (ImGui::BeginTable("Virtual File Tree", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
             ImGui::TableSetupColumn("##path", ImGuiTableColumnFlags_WidthStretch);
 
             drawVirtualFileTree(virtualFilePointers);
@@ -1538,6 +1546,7 @@ namespace hex::plugin::builtin {
 
         m_sectionWindowDrawer.clear();
         m_consoleEditor.SetText("");
+        m_virtualFiles->clear();
 
         m_accessHistory = {};
         m_accessHistoryIndex = 0;
