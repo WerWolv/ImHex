@@ -86,7 +86,6 @@ private:
     ReadFunction m_readFunction = nullptr;
     WriteFunction m_writeFunction = nullptr;
     GetSizeFunction m_getSizeFunction = nullptr;
-    GetNameFunction m_getNameFunction = nullptr;
 
     std::string m_typeName, m_name;
 };
