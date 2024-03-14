@@ -1050,7 +1050,7 @@ namespace hex::ui {
                 this->setSelection(selectionStart.value_or(address), endAddress);
                 this->scrollToSelection();
             }
-            else if (ImGui::IsMouseDown(ImGuiMouseButton_Left) || (ImGui::IsMouseDown(ImGuiMouseButton_Right) && (address < m_selectionStart || address > m_selectionEnd))) {
+            else if (ImGui::IsMouseDown(ImGuiMouseButton_Left) || (ImGui::IsMouseDown(ImGuiMouseButton_Right) && (address < std::min(m_selectionStart, m_selectionEnd) || address > std::max(m_selectionStart, m_selectionEnd)))) {
                 if (ImGui::GetIO().KeyShift)
                     this->setSelection(selectionStart.value_or(address), endAddress);
                 else
