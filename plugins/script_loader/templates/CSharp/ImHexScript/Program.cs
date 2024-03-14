@@ -1,5 +1,6 @@
 ﻿using ImHex;
 using ImGuiNET;
+
 class Script {
     
     public static void OnLoad()

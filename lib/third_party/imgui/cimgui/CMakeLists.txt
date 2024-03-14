@@ -4,10 +4,6 @@ project(imgui_cimgui)
 
 set(CMAKE_CXX_STANDARD 17)
 
-if (IMHEX_STATIC_LINK_PLUGINS)
-    return()
-endif()
-
 if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     add_library(imgui_cimgui OBJECT
         source/cimgui.cpp
