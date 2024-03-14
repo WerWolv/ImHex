@@ -86,7 +86,7 @@ namespace hex::script::loader {
         bool loadHostfxr() {
             #if defined(OS_WINDOWS)
                 auto netHostLibrary = loadLibrary(L"nethost.dll");
-            #elif  defined(OS_LINUX)
+            #elif defined(OS_LINUX)
                 auto netHostLibrary = loadLibrary("libnethost.so");
             #elif defined(OS_MACOS)
                 void *netHostLibrary = nullptr;
@@ -162,7 +162,11 @@ namespace hex::script::loader {
                 throw std::runtime_error(hex::format("Failed to initialize command line {:X}", result));
             }
 
-            hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), utf8ToUtf16(hex::format("{}", (void*)pInvokeOverride)).c_str());
+            #if defined (OS_WINDOWS)
+                hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), utf8ToUtf16(hex::format("{}", (void*)pInvokeOverride)).c_str());
+            #else
+                hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), hex::format("{}", (void*)pInvokeOverride).c_str());
+            #endif
 
             result = hostfxr_get_runtime_delegate(
                 ctx,

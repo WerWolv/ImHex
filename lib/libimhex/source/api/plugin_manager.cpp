@@ -49,7 +49,9 @@ namespace hex {
             }
         #else
             if (handle != 0) {
-                dlclose(reinterpret_cast<void*>(handle));
+                if (dlclose(reinterpret_cast<void*>(handle)) != 0) {
+                    log::error("Error when unloading library '{}': {}!", path.filename().string(), dlerror());
+                }
             }
         #endif
     }
