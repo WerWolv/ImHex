@@ -185,7 +185,7 @@ namespace hex::plugin::builtin {
 
         void exportSelectionToFile() {
             fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
-                TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [path](auto &) {
+                TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [path](auto &task) {
                     wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
                     if (!outputFile.isValid()) {
                         TaskManager::doLater([] {
@@ -203,6 +203,7 @@ namespace hex::plugin::builtin {
                         provider->read(address, bytes.data(), bytes.size());
 
                         outputFile.writeVector(bytes);
+                        task.update();
                     }
                 });
             });
