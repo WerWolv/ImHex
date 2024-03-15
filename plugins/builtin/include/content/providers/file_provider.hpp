@@ -67,6 +67,7 @@ namespace hex::plugin::builtin {
         wolv::io::ChangeTracker m_changeTracker;
         std::vector<u8> m_data;
         bool m_loadedIntoMemory = false;
+        bool m_ignoreNextChangeEvent = false;
 
         std::optional<struct stat> m_fileStats;
 
