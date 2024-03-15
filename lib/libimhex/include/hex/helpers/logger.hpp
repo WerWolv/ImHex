@@ -42,13 +42,15 @@ namespace hex::log {
             std::scoped_lock lock(getLoggerMutex());
 
             auto dest = getDestination();
-            printPrefix(dest, ts, level, IMHEX_PROJECT_NAME);
+            try {
+                printPrefix(dest, ts, level, IMHEX_PROJECT_NAME);
 
-            auto message = fmt::format(fmt::runtime(fmt), args...);
-            fmt::print(dest, "{}\n", message);
-            fflush(dest);
+                auto message = fmt::format(fmt::runtime(fmt), args...);
+                fmt::print(dest, "{}\n", message);
+                fflush(dest);
 
-            addLogEntry(IMHEX_PROJECT_NAME, level, std::move(message));
+                addLogEntry(IMHEX_PROJECT_NAME, level, std::move(message));
+            } catch (const std::exception&) { }
         }
 
         namespace color {
@@ -94,19 +96,23 @@ namespace hex::log {
     [[maybe_unused]] void print(const std::string &fmt, auto && ... args) {
         std::scoped_lock lock(impl::getLoggerMutex());
 
-        auto dest = impl::getDestination();
-        auto message = fmt::format(fmt::runtime(fmt), args...);
-        fmt::print(dest, "{}", message);
-        fflush(dest);
+        try {
+            auto dest = impl::getDestination();
+            auto message = fmt::format(fmt::runtime(fmt), args...);
+            fmt::print(dest, "{}", message);
+            fflush(dest);
+        } catch (const std::exception&) { }
     }
 
     [[maybe_unused]] void println(const std::string &fmt, auto && ... args) {
         std::scoped_lock lock(impl::getLoggerMutex());
 
-        auto dest = impl::getDestination();
-        auto message = fmt::format(fmt::runtime(fmt), args...);
-        fmt::print(dest, "{}\n", message);
-        fflush(dest);
+        try {
+            auto dest = impl::getDestination();
+            auto message = fmt::format(fmt::runtime(fmt), args...);
+            fmt::print(dest, "{}\n", message);
+            fflush(dest);
+        } catch (const std::exception&) { }
     }
 
 }
