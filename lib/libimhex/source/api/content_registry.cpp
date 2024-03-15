@@ -533,6 +533,11 @@ namespace hex {
 
         pl::PatternLanguage& getRuntime() {
             static PerProvider<pl::PatternLanguage> runtime;
+            AT_FIRST_TIME {
+                runtime.setOnCreateCallback([](prv::Provider *provider, pl::PatternLanguage &runtime) {
+                    configureRuntime(runtime, provider);
+                });
+            };
 
             return *runtime;
         }
