@@ -1686,12 +1686,8 @@ namespace hex::plugin::builtin {
 
             if (newProvider != nullptr)
                 m_textEditor.SetText(m_sourceCode.get(newProvider));
-        });
-
-        EventProviderClosed::subscribe(this, [this](prv::Provider *) {
-            if (ImHexApi::Provider::getProviders().empty()) {
+            else
                 m_textEditor.SetText("");
-            }
         });
 
         RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
