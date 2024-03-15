@@ -312,9 +312,9 @@ namespace hex {
         return success;
     }
 
-    bool PluginManager::loadLibraries(const std::fs::path& pluginFolder) {
+    bool PluginManager::loadLibraries(const std::fs::path& libraryFolder) {
         bool success = true;
-        for (const auto &entry : std::fs::recursive_directory_iterator(pluginFolder)) {
+        for (const auto &entry : std::fs::directory_iterator(libraryFolder)) {
             if (!(entry.path().extension() == ".dll" || entry.path().extension() == ".so" || entry.path().extension() == ".dylib"))
                 continue;
 

@@ -108,7 +108,7 @@ namespace hex {
         static bool load(const std::fs::path &pluginFolder);
 
         static bool loadLibraries();
-        static bool loadLibraries(const std::fs::path &pluginFolder);
+        static bool loadLibraries(const std::fs::path &libraryFolder);
 
         static void unload();
         static void reload();
