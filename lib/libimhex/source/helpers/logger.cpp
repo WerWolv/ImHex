@@ -80,7 +80,7 @@ namespace hex::log {
                 s_loggerFile.disableBuffering();
 
                 if (s_loggerFile.isValid()) {
-                    s_colorOutputEnabled = true;
+                    s_colorOutputEnabled = false;
                     break;
                 }
             }
