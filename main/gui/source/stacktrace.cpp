@@ -107,77 +107,85 @@ namespace {
 
 #elif defined(HEX_HAS_EXECINFO)
 
-    #include BACKTRACE_HEADER
-    #include <hex/helpers/utils.hpp>
-    #include <dlfcn.h>
+    #if __has_include(BACKTRACE_HEADER)
 
-    namespace hex::stacktrace {
+        #include BACKTRACE_HEADER
+        #include <hex/helpers/utils.hpp>
+        #include <dlfcn.h>
 
-        void initialize() {
+        namespace hex::stacktrace {
 
-        }
-
-        std::vector<StackFrame> getStackTrace() {
-            static std::vector<StackFrame> result;
-
-            std::array<void*, 128> addresses = {};
-            const size_t count = backtrace(addresses.data(), addresses.size());
-
-            Dl_info info;
-            for (size_t i = 0; i < count; i += 1) {
-                dladdr(addresses[i], &info);
-
-                auto fileName = info.dli_fname != nullptr ? std::fs::path(info.dli_fname).filename().string() : "??";
-                auto demangledName = info.dli_sname != nullptr ? tryDemangle(info.dli_sname) : "??";
-
-                result.push_back(StackFrame { std::move(fileName), std::move(demangledName), 0 });
-            }
-
-            return result;
-        }
-
-    }
-
-#elif defined(HEX_HAS_BACKTRACE) && __has_include(BACKTRACE_HEADER)
-
-    #include BACKTRACE_HEADER
-    #include <hex/helpers/logger.hpp>
-    #include <hex/helpers/utils.hpp>
-
-    namespace hex::stacktrace {
-
-        static struct backtrace_state *s_backtraceState;
-
-
-        void initialize() {
-            if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value()) {
-                static std::string path = executablePath->string();
-                s_backtraceState = backtrace_create_state(path.c_str(), 1, [](void *, const char *msg, int) { log::error("{}", msg); }, nullptr);
-            }
-        }
-
-        std::vector<StackFrame> getStackTrace() {
-            static std::vector<StackFrame> result;
-
-            result.clear();
-            if (s_backtraceState != nullptr) {
-                backtrace_full(s_backtraceState, 0, [](void *, uintptr_t, const char *fileName, int lineNumber, const char *function) -> int {
-                    if (fileName == nullptr)
-                        fileName = "??";
-                    if (function == nullptr)
-                        function = "??";
-
-                    result.push_back(StackFrame { std::fs::path(fileName).filename().string(), tryDemangle(function), u32(lineNumber) });
-
-                    return 0;
-                }, nullptr, nullptr);
+            void initialize() {
 
             }
 
-            return result;
+            std::vector<StackFrame> getStackTrace() {
+                static std::vector<StackFrame> result;
+
+                std::array<void*, 128> addresses = {};
+                const size_t count = backtrace(addresses.data(), addresses.size());
+
+                Dl_info info;
+                for (size_t i = 0; i < count; i += 1) {
+                    dladdr(addresses[i], &info);
+
+                    auto fileName = info.dli_fname != nullptr ? std::fs::path(info.dli_fname).filename().string() : "??";
+                    auto demangledName = info.dli_sname != nullptr ? tryDemangle(info.dli_sname) : "??";
+
+                    result.push_back(StackFrame { std::move(fileName), std::move(demangledName), 0 });
+                }
+
+                return result;
+            }
+
         }
 
-    }
+    #endif
+
+#elif defined(HEX_HAS_BACKTRACE)
+
+    #if __has_include(BACKTRACE_HEADER)
+
+        #include BACKTRACE_HEADER
+        #include <hex/helpers/logger.hpp>
+        #include <hex/helpers/utils.hpp>
+
+        namespace hex::stacktrace {
+
+            static struct backtrace_state *s_backtraceState;
+
+
+            void initialize() {
+                if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value()) {
+                    static std::string path = executablePath->string();
+                    s_backtraceState = backtrace_create_state(path.c_str(), 1, [](void *, const char *msg, int) { log::error("{}", msg); }, nullptr);
+                }
+            }
+
+            std::vector<StackFrame> getStackTrace() {
+                static std::vector<StackFrame> result;
+
+                result.clear();
+                if (s_backtraceState != nullptr) {
+                    backtrace_full(s_backtraceState, 0, [](void *, uintptr_t, const char *fileName, int lineNumber, const char *function) -> int {
+                        if (fileName == nullptr)
+                            fileName = "??";
+                        if (function == nullptr)
+                            function = "??";
+
+                        result.push_back(StackFrame { std::fs::path(fileName).filename().string(), tryDemangle(function), u32(lineNumber) });
+
+                        return 0;
+                    }, nullptr, nullptr);
+
+                }
+
+                return result;
+            }
+
+        }
+
+    #endif
 
 #else
 
