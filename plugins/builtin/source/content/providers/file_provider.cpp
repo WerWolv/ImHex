@@ -209,7 +209,7 @@ namespace hex::plugin::builtin {
         m_readable = true;
         m_writable = true;
 
-        if (!std::fs::exists(m_path)) {
+        if (!wolv::io::fs::exists(m_path)) {
             this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), ::strerror(ENOENT)));
             return false;
         }
