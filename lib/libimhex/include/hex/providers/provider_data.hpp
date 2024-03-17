@@ -74,7 +74,7 @@ namespace hex {
             return m_data | std::views::values;
         }
 
-        void setOnCreateCallback(std::function<void(const prv::Provider *, T&)> callback) {
+        void setOnCreateCallback(std::function<void(prv::Provider *, T&)> callback) {
             m_onCreateCallback = std::move(callback);
         }
 
@@ -84,7 +84,7 @@ namespace hex {
                 auto [it, inserted] = m_data.emplace(provider, T());
                 auto &[key, value] = *it;
                 if (m_onCreateCallback)
-                    m_onCreateCallback(key, value);
+                    m_onCreateCallback(provider, value);
             });
 
             EventProviderDeleted::subscribe(this, [this](prv::Provider *provider){
@@ -121,7 +121,7 @@ namespace hex {
 
     private:
         std::map<const prv::Provider *, T> m_data;
-        std::function<void(const prv::Provider *, T&)> m_onCreateCallback;
+        std::function<void(prv::Provider *, T&)> m_onCreateCallback;
     };
 
 }

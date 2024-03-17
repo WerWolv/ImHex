@@ -68,6 +68,7 @@ namespace hex::plugin::builtin {
 
     void FileProvider::save() {
         if (m_loadedIntoMemory) {
+            m_ignoreNextChangeEvent = true;
             m_file.open();
             m_file.writeVectorAtomic(0x00, m_data);
             m_file.setSize(m_data.size());
@@ -185,7 +186,7 @@ namespace hex::plugin::builtin {
         m_readable = true;
         m_writable = true;
 
-        if (!std::fs::exists(m_path)) {
+        if (!wolv::io::fs::exists(m_path)) {
             this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), ::strerror(ENOENT)));
             return false;
         }
@@ -333,6 +334,11 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::handleFileChange() {
+        if (m_ignoreNextChangeEvent) {
+            m_ignoreNextChangeEvent = false;
+            return;
+        }
+
         ui::PopupQuestion::open("hex.builtin.provider.file.reload_changes"_lang, [this] {
             this->close();
             (void)this->open();

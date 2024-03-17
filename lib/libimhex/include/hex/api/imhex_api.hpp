@@ -664,6 +664,12 @@ namespace hex {
              */
             std::optional<InitialWindowProperties> getInitialWindowProperties();
 
+            /**
+             * @brief Gets the module handle of libimhex
+             * @return Module handle
+             */
+            void* getLibImHexModuleHandle();
+
         }
 
         /**

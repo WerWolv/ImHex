@@ -65,7 +65,7 @@ namespace hex::crash {
     static void printStackTrace() {
         for (const auto &stackFrame : stacktrace::getStackTrace()) {
             if (stackFrame.line == 0)
-                log::fatal("  {}", stackFrame.function);
+                log::fatal("  ({}) | {}", stackFrame.file, stackFrame.function);
             else
                 log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
         }

@@ -1,5 +1,5 @@
 Name:           imhex
-Version:        1.26.2
+Version:        VERSION
 Release:        0%{?dist}
 Summary:        A hex editor for reverse engineers and programmers
 
@@ -123,7 +123,6 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %{_datadir}/pixmaps/%{name}.png
 %{_datadir}/applications/%{name}.desktop
 %{_libdir}/libimhex.so*
-%{_libdir}/cimgui.so*
 %{_libdir}/%{name}/
 %{_metainfodir}/net.werwolv.%{name}.metainfo.xml
 

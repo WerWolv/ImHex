@@ -1,7 +1,10 @@
 ﻿using ImHex;
+using ImGuiNET;
+
 class Script {
     
-    public static void OnLoad() {
+    public static void OnLoad()
+    {
         // This function is executed the first time the Plugin is loaded
     }
 

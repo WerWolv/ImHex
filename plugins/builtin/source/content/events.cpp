@@ -42,6 +42,7 @@ namespace hex::plugin::builtin {
                 TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
             } else {
                 EventProviderOpened::post(fileProvider);
+                AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
             }
         }
     }

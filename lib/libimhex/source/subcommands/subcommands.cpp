@@ -15,7 +15,7 @@ namespace hex::subcommands {
     std::optional<SubCommand> findSubCommand(const std::string &arg) {
         for (auto &plugin : PluginManager::getPlugins()) {
             for (auto &subCommand : plugin.getSubCommands()) {
-                if (hex::format("--{}", subCommand.commandKey) == arg) {
+                if (hex::format("--{}", subCommand.commandLong) == arg || hex::format("-{}", subCommand.commandShort) == arg) {
                     return subCommand;
                 }
             }
@@ -112,8 +112,8 @@ namespace hex::subcommands {
 
             std::vector<std::string> args;
 
-            for (const auto &arg_view : std::views::split(string, char(0x00))) {
-                std::string arg(arg_view.data(), arg_view.size());
+            for (const auto &argument : std::views::split(string, char(0x00))) {
+                std::string arg(argument.data(), argument.size());
                 args.push_back(arg);
             }
 

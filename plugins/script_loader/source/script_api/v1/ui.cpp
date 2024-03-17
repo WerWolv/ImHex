@@ -180,3 +180,8 @@ private:
 SCRIPT_API(void registerView, const char *icon, const char *name, void *drawFunction) {
     ContentRegistry::Views::add<ScriptView>(icon, name, ScriptView::DrawFunction(drawFunction));
 }
+
+SCRIPT_API(void addMenuItem, const char *icon, const char *menuName, const char *itemName, void *function) {
+    using MenuFunction = void(*)();
+    ContentRegistry::Interface::addMenuItem({ menuName, itemName }, icon, 9999, Shortcut::None, reinterpret_cast<MenuFunction>(function));
+}

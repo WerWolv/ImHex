@@ -4,6 +4,7 @@
 #include <imgui_internal.h>
 #include <implot.h>
 #include <implot_internal.h>
+#include <cimgui.h>
 #include <opengl_support.h>
 
 #undef IMGUI_DEFINE_MATH_OPERATORS

@@ -186,12 +186,11 @@ namespace hex {
             // Determine if the application should be in long sleep mode
             bool shouldLongSleep = !m_unlockFrameRate;
 
-            // Wait 5 frames before actually enabling the long sleep mode to make animations not stutter
-            static i32 lockTimeout = 0;
+            static double lockTimeout = 0;
             if (!shouldLongSleep) {
-                lockTimeout = m_lastFrameTime * 10'000;
+                lockTimeout = 0.05;
             } else if (lockTimeout > 0) {
-                lockTimeout -= 1;
+                lockTimeout -= m_lastFrameTime;
             }
 
             if (shouldLongSleep && lockTimeout > 0)
@@ -236,14 +235,28 @@ namespace hex {
 
             // Limit frame rate
             // If the target FPS are below 15, use the monitor refresh rate, if it's above 200, don't limit the frame rate
-            const auto targetFPS = ImHexApi::System::getTargetFPS();
-            if (targetFPS < 15) {
-                glfwSwapInterval(1);
-            } else if (targetFPS > 200) {
-                glfwSwapInterval(0);
+            auto targetFPS = ImHexApi::System::getTargetFPS();
+            if (targetFPS >= 200) {
+                // Let it rip
             } else {
+                // If the target frame rate is below 15, use the current monitor's refresh rate
+                if (targetFPS < 15) {
+                    // Fall back to 60 FPS if the monitor refresh rate cannot be determined
+                    targetFPS = 60;
+
+                    if (auto monitor = glfwGetWindowMonitor(m_window); monitor != nullptr) {
+                        if (auto videoMode = glfwGetVideoMode(monitor); videoMode != nullptr) {
+                            targetFPS = videoMode->refreshRate;
+                        }
+                    }
+                }
+
+                // Sleep if we're not in long sleep mode
                 if (!shouldLongSleep) {
-                    glfwSwapInterval(0);
+                    // If anything goes wrong with these checks, make sure that we're sleeping for at least 1ms
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+                    // Sleep for the remaining time if the frame rate is above the target frame rate
                     const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
                     const auto targetFrameTime = 1.0 / targetFPS;
                     if (frameTime < targetFrameTime) {
@@ -717,7 +730,9 @@ namespace hex {
         glfwSetWindowOpacity(m_window, 1.0F);
 
         glfwMakeContextCurrent(m_window);
-        glfwSwapInterval(1);
+
+        // Disable VSync. Not like any graphics driver actually cares
+        glfwSwapInterval(0);
 
         // Center window
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
