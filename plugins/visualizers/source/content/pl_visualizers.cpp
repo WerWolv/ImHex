@@ -13,6 +13,7 @@ namespace hex::plugin::visualizers {
     void drawSoundVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments);
     void drawCoordinateVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments);
     void drawTimestampVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments);
+    void drawTableVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments);
 
     void registerPatternLanguageVisualizers() {
         using ParamCount = pl::api::FunctionParameterCount;
@@ -25,6 +26,7 @@ namespace hex::plugin::visualizers {
         ContentRegistry::PatternLanguage::addVisualizer("sound",            drawSoundVisualizer,                ParamCount::exactly(3));
         ContentRegistry::PatternLanguage::addVisualizer("coordinates",      drawCoordinateVisualizer,           ParamCount::exactly(2));
         ContentRegistry::PatternLanguage::addVisualizer("timestamp",        drawTimestampVisualizer,            ParamCount::exactly(1));
+        ContentRegistry::PatternLanguage::addVisualizer("table",            drawTableVisualizer,                ParamCount::exactly(3));
     }
 
 }
