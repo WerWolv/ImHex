@@ -76,6 +76,7 @@ if(TARGET glfw)
         get_target_property(GLFW_DLL_RELEASE glfw IMPORTED_LOCATION_RELEASE)
     endif()
 
+    set(GLFW_LIBRARIES "GLFW::GLFW")
     return()
 endif()
 
