@@ -623,6 +623,38 @@ void TextEditor::HandleKeyboardInputs() {
     auto shift  = io.KeyShift;
     auto ctrl   = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
     auto alt    = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+    auto up = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow));
+    auto down = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow));
+    auto left = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow));
+    auto right = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow));
+    auto home = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home));
+    auto end = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End));
+    if(io.ConfigMacOSXBehaviors) {
+        if(io.KeySuper && up) {
+            home = true;
+            up = false;
+            ctrl = true;
+        }
+        else if(io.KeySuper && down) {
+            end = true;
+            down = false;
+            ctrl = true;
+        }
+        else if(left) {
+            if(io.KeySuper) {
+                home = true;
+                left = false;
+            }
+            ctrl = io.KeyAlt;
+        }
+        else if(right) {
+            if(io.KeySuper) {
+                end = true;
+                right = false;
+            }
+            ctrl = io.KeyAlt;
+        }       
+    }
 
     if (ImGui::IsWindowFocused()) {
         if (ImGui::IsWindowHovered())
@@ -638,25 +670,25 @@ void TextEditor::HandleKeyboardInputs() {
             Undo();
         else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Y)))
             Redo();
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)))
+        else if (!ctrl && !alt && up)
             MoveUp(1, shift);
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)))
+        else if (!ctrl && !alt && down)
             MoveDown(1, shift);
-        else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)))
+        else if (!alt && left)
             MoveLeft(1, shift, ctrl);
-        else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)))
+        else if (!alt && right)
             MoveRight(1, shift, ctrl);
         else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp)))
             MoveUp(GetPageSize() - 4, shift);
         else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown)))
             MoveDown(GetPageSize() - 4, shift);
-        else if (!alt && ctrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)))
+        else if (!alt && ctrl && home)
             MoveTop(shift);
-        else if (ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)))
+        else if (ctrl && !alt && end)
             MoveBottom(shift);
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)))
+        else if (!ctrl && !alt && home)
             MoveHome(shift);
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)))
+        else if (!ctrl && !alt && end)
             MoveEnd(shift);
         else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)))
             Delete();
