@@ -1647,6 +1647,7 @@ void TextEditor::TextEditor::MoveBottom(bool aSelect) {
     } else
         mInteractiveStart = mInteractiveEnd = newPos;
     SetSelection(mInteractiveStart, mInteractiveEnd);
+    MoveEnd(aSelect);
 }
 
 void TextEditor::MoveHome(bool aSelect) {
