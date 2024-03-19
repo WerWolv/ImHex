@@ -1654,40 +1654,36 @@ void TextEditor::MoveHome(bool aSelect) {
     auto oldPos = mState.mCursorPosition;
     SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, 0));
 
-    if (mState.mCursorPosition != oldPos) {
-        if (aSelect) {
-            if (oldPos == mInteractiveStart)
-                mInteractiveStart = mState.mCursorPosition;
-            else if (oldPos == mInteractiveEnd)
-                mInteractiveEnd = mState.mCursorPosition;
-            else {
-                mInteractiveStart = mState.mCursorPosition;
-                mInteractiveEnd   = oldPos;
-            }
-        } else
-            mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-        SetSelection(mInteractiveStart, mInteractiveEnd);
-    }
+    if (aSelect) {
+        if (oldPos == mInteractiveStart)
+            mInteractiveStart = mState.mCursorPosition;
+        else if (oldPos == mInteractiveEnd)
+            mInteractiveEnd = mState.mCursorPosition;
+        else {
+            mInteractiveStart = mState.mCursorPosition;
+            mInteractiveEnd   = oldPos;
+        }
+    } else
+        mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
+    SetSelection(mInteractiveStart, mInteractiveEnd);
 }
 
 void TextEditor::MoveEnd(bool aSelect) {
     auto oldPos = mState.mCursorPosition;
     SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, GetLineMaxColumn(oldPos.mLine)));
 
-    if (mState.mCursorPosition != oldPos) {
-        if (aSelect) {
-            if (oldPos == mInteractiveEnd)
-                mInteractiveEnd = mState.mCursorPosition;
-            else if (oldPos == mInteractiveStart)
-                mInteractiveStart = mState.mCursorPosition;
-            else {
-                mInteractiveStart = oldPos;
-                mInteractiveEnd   = mState.mCursorPosition;
-            }
-        } else
-            mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-        SetSelection(mInteractiveStart, mInteractiveEnd);
-    }
+    if (aSelect) {
+        if (oldPos == mInteractiveEnd)
+            mInteractiveEnd = mState.mCursorPosition;
+        else if (oldPos == mInteractiveStart)
+            mInteractiveStart = mState.mCursorPosition;
+        else {
+            mInteractiveStart = oldPos;
+            mInteractiveEnd   = mState.mCursorPosition;
+        }
+    } else
+        mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
+    SetSelection(mInteractiveStart, mInteractiveEnd);
 }
 
 void TextEditor::Delete() {
