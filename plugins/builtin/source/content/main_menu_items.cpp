@@ -185,7 +185,7 @@ namespace hex::plugin::builtin {
 
         void exportSelectionToFile() {
             fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
-                TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [path](auto &) {
+                TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [path](auto &task) {
                     wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
                     if (!outputFile.isValid()) {
                         TaskManager::doLater([] {
@@ -198,11 +198,12 @@ namespace hex::plugin::builtin {
                     std::vector<u8> bytes(5_MiB);
 
                     auto selection = ImHexApi::HexEditor::getSelection();
-                    for (u64 address = selection->getStartAddress(); address <= selection->getEndAddress(); address += bytes.size()) {
+                    for (u64 address = selection->getStartAddress(); address < selection->getEndAddress(); address += bytes.size()) {
                         bytes.resize(std::min<u64>(bytes.size(), selection->getEndAddress() - address));
                         provider->read(address, bytes.data(), bytes.size());
 
                         outputFile.writeVector(bytes);
+                        task.update();
                     }
                 });
             });

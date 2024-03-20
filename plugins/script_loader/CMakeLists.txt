@@ -38,6 +38,7 @@ if (CoreClrEmbed_FOUND)
             source/script_api/v1/mem.cpp
             source/script_api/v1/bookmarks.cpp
             source/script_api/v1/ui.cpp
+            source/script_api/v1/logger.cpp
     )
 
     set(EXTRA_BUNDLE_LIBRARY_PATHS "${CoreClrEmbed_FOLDER}" PARENT_SCOPE)

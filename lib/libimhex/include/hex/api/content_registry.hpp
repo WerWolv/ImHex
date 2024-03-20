@@ -931,7 +931,7 @@ namespace hex {
 
                 void addProviderName(const UnlocalizedString &unlocalizedName);
 
-                using ProviderCreationFunction = std::unique_ptr<prv::Provider>(*)();
+                using ProviderCreationFunction = std::function<std::unique_ptr<prv::Provider>()>;
                 void add(const std::string &typeName, ProviderCreationFunction creationFunction);
 
                 const std::vector<std::string>& getEntries();

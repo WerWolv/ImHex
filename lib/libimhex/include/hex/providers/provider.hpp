@@ -166,8 +166,8 @@ namespace hex::prv {
         void remove(u64 offset, u64 size);
 
         virtual void resizeRaw(u64 newSize) { hex::unused(newSize); }
-        virtual void insertRaw(u64 offset, u64 size) { hex::unused(offset, size); }
-        virtual void removeRaw(u64 offset, u64 size) { hex::unused(offset, size); }
+        virtual void insertRaw(u64 offset, u64 size);
+        virtual void removeRaw(u64 offset, u64 size);
 
         virtual void save();
         virtual void saveAs(const std::fs::path &path);

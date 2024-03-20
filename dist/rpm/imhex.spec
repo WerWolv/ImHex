@@ -1,5 +1,5 @@
 Name:           imhex
-Version:        1.26.2
+Version:        VERSION
 Release:        0%{?dist}
 Summary:        A hex editor for reverse engineers and programmers
 

@@ -348,6 +348,8 @@ namespace hex::plugin::builtin {
                             // Draw deny button
                             ImGui::SetCursorPosX(buttonPos(2));
                             if (ImGui::Button("hex.ui.common.deny"_lang, buttonSize)) {
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 0);
                                 page += 1;
                             }
 

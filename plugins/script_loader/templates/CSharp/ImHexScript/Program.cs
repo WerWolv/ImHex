@@ -1,10 +1,16 @@
 ﻿using ImHex;
-using System.Drawing;
+using ImGuiNET;
 
-class Script
-{
+class Script {
+    
+    public static void OnLoad()
+    {
+        // This function is executed the first time the Plugin is loaded
+    }
+
     public static void Main()
     {
-        UI.ShowMessageBox("Hello World!");
+        // This function is executed when the plugin is selected in the "Run Script..." menu
     }
+    
 }

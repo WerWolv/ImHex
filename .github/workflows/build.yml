@@ -627,11 +627,11 @@ jobs:
       - name: ✒️ Modify spec file
         run: |
           sed -i \
-          -e 's/Version:        [0-9]*\.[0-9]*\.[0-9]*$/Version:        ${{env.IMHEX_VERSION}}/g' \
-          -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'                                 \
-          -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\'                     \
-          -e '/BuildRequires:  cmake/a BuildRequires:  git-core'                                  \
-          -e '/%files/a %{_datadir}/%{name}/'                                                     \
+          -e 's/Version:        VERSION$/Version:        ${{env.IMHEX_VERSION}}/g' \
+          -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'                  \
+          -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\'      \
+          -e '/BuildRequires:  cmake/a BuildRequires:  git-core'                   \
+          -e '/%files/a %{_datadir}/%{name}/'                                      \
           $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
 
       - name: 📜 Fix ccache on EL9

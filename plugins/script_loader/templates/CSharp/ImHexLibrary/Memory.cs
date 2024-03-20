@@ -1,20 +1,55 @@
-﻿#pragma warning disable SYSLIB1054
-
-using System.Drawing;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ImHex
 {
-    public class Memory
+    public interface IProvider
     {
-        [DllImport(Library.Name)]
-        private static extern void readMemoryV1(UInt64 address, UInt64 size, IntPtr buffer);
+        void readRaw(UInt64 address, IntPtr buffer, UInt64 size)
+        {
+            unsafe
+            {
+                Span<byte> data = new(buffer.ToPointer(), (int)size);
+                read(address, data);
+            }
+        }
+        
+        void writeRaw(UInt64 address, IntPtr buffer, UInt64 size)
+        {
+            unsafe
+            {
+                ReadOnlySpan<byte> data = new(buffer.ToPointer(), (int)size);
+                write(address, data);
+            }
+        }
+        
+        void read(UInt64 address, Span<byte> data);
+        void write(UInt64 address, ReadOnlySpan<byte> data);
 
-        [DllImport(Library.Name)]
-        private static extern void writeMemoryV1(UInt64 address, UInt64 size, IntPtr buffer);
+        UInt64 getSize();
 
-        [DllImport(Library.Name)]
-        private static extern bool getSelectionV1(IntPtr start, IntPtr end);
+        string getTypeName();
+        string getName();
+    }
+    public partial class Memory
+    {
+        private static List<IProvider> _registeredProviders = new();
+        private static List<Delegate> _registeredDelegates = new();
+
+        private delegate void DataAccessDelegate(UInt64 address, IntPtr buffer, UInt64 size);
+        private delegate UInt64 GetSizeDelegate();
+        
+        [LibraryImport("ImHex")]
+        private static partial void readMemoryV1(UInt64 address, UInt64 size, IntPtr buffer);
+
+        [LibraryImport("ImHex")]
+        private static partial void writeMemoryV1(UInt64 address, UInt64 size, IntPtr buffer);
+
+        [LibraryImport("ImHex")]
+        private static partial int getSelectionV1(IntPtr start, IntPtr end);
+        
+        [LibraryImport("ImHex")]
+        private static partial void registerProviderV1(byte[] typeName, byte[] name, IntPtr readFunction, IntPtr writeFunction, IntPtr getSizeFunction);
 
 
         public static byte[] Read(ulong address, ulong size)
@@ -49,13 +84,32 @@ namespace ImHex
             unsafe
             {
                 UInt64 start = 0, end = 0;
-                if (!getSelectionV1((nint)(&start), (nint)(&end)))
+                if (getSelectionV1((nint)(&start), (nint)(&end)) == 0)
                 {
                     return null;
                 }
 
                 return (start, end);
             }
+        }
+        
+        public static void RegisterProvider<T>() where T : IProvider, new()
+        {
+            _registeredProviders.Add(new T());
+            
+            ref var provider = ref CollectionsMarshal.AsSpan(_registeredProviders)[^1];
+            
+            _registeredDelegates.Add(new DataAccessDelegate(provider.readRaw));
+            _registeredDelegates.Add(new DataAccessDelegate(provider.writeRaw));
+            _registeredDelegates.Add(new GetSizeDelegate(provider.getSize));
+            
+            registerProviderV1(
+                Encoding.UTF8.GetBytes(provider.getTypeName()), 
+                Encoding.UTF8.GetBytes(provider.getName()), 
+                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^3]), 
+                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^2]),
+                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^1])
+            );
         }
 
     }

@@ -22,6 +22,7 @@ namespace hex::log {
 
         [[nodiscard]] std::recursive_mutex& getLoggerMutex();
         [[nodiscard]] bool isLoggingSuspended();
+        [[nodiscard]] bool isDebugLoggingEnabled();
 
         struct LogEntry {
             std::string project;
@@ -41,13 +42,15 @@ namespace hex::log {
             std::scoped_lock lock(getLoggerMutex());
 
             auto dest = getDestination();
-            printPrefix(dest, ts, level, IMHEX_PROJECT_NAME);
+            try {
+                printPrefix(dest, ts, level, IMHEX_PROJECT_NAME);
 
-            auto message = fmt::format(fmt::runtime(fmt), args...);
-            fmt::print(dest, "{}\n", message);
-            fflush(dest);
+                auto message = fmt::format(fmt::runtime(fmt), args...);
+                fmt::print(dest, "{}\n", message);
+                fflush(dest);
 
-            addLogEntry(IMHEX_PROJECT_NAME, level, std::move(message));
+                addLogEntry(IMHEX_PROJECT_NAME, level, std::move(message));
+            } catch (const std::exception&) { }
         }
 
         namespace color {
@@ -64,13 +67,14 @@ namespace hex::log {
 
     void suspendLogging();
     void resumeLogging();
+    void enableDebugLogging();
 
     [[maybe_unused]] void debug(const std::string &fmt, auto && ... args) {
-        #if defined(DEBUG)
+        if (impl::isDebugLoggingEnabled()) [[unlikely]] {
             hex::log::impl::print(fg(impl::color::debug()) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
-        #else
+        } else {
             impl::addLogEntry(IMHEX_PROJECT_NAME, "[DEBUG]", fmt::format(fmt::runtime(fmt), args...));
-        #endif
+        }
     }
 
     [[maybe_unused]] void info(const std::string &fmt, auto && ... args) {
@@ -92,19 +96,23 @@ namespace hex::log {
     [[maybe_unused]] void print(const std::string &fmt, auto && ... args) {
         std::scoped_lock lock(impl::getLoggerMutex());
 
-        auto dest = impl::getDestination();
-        auto message = fmt::format(fmt::runtime(fmt), args...);
-        fmt::print(dest, "{}", message);
-        fflush(dest);
+        try {
+            auto dest = impl::getDestination();
+            auto message = fmt::format(fmt::runtime(fmt), args...);
+            fmt::print(dest, "{}", message);
+            fflush(dest);
+        } catch (const std::exception&) { }
     }
 
     [[maybe_unused]] void println(const std::string &fmt, auto && ... args) {
         std::scoped_lock lock(impl::getLoggerMutex());
 
-        auto dest = impl::getDestination();
-        auto message = fmt::format(fmt::runtime(fmt), args...);
-        fmt::print(dest, "{}\n", message);
-        fflush(dest);
+        try {
+            auto dest = impl::getDestination();
+            auto message = fmt::format(fmt::runtime(fmt), args...);
+            fmt::print(dest, "{}\n", message);
+            fflush(dest);
+        } catch (const std::exception&) { }
     }
 
 }

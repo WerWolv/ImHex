@@ -24,8 +24,6 @@ namespace hex::plugin::builtin {
         [[nodiscard]] u64 getActualSize() const override { return m_data.size(); }
 
         void resizeRaw(u64 newSize) override;
-        void insertRaw(u64 offset, u64 size) override;
-        void removeRaw(u64 offset, u64 size) override;
 
         void save() override;
 

@@ -1050,7 +1050,7 @@ namespace hex::plugin::builtin {
                     ImGui::SetClipboardText(
                             callback(
                                     provider,
-                                    selection->getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(),
+                                    selection->getStartAddress(),
                                     selection->size
                             ).c_str()
                     );

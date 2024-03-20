@@ -50,6 +50,8 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
 
             auto provider = ImHexApi::Provider::get();
+            if (!provider->isSavable())
+                return std::nullopt;
 
             offset -= provider->getBaseAddress();
 

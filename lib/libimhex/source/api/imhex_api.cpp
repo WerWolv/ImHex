@@ -599,6 +599,11 @@ namespace hex {
             return impl::s_initialWindowProperties;
         }
 
+        void* getLibImHexModuleHandle() {
+            return hex::getContainingModule((void*)&getLibImHexModuleHandle);
+        }
+
+
         const std::map<std::string, std::string>& getInitArguments() {
             return *impl::s_initArguments;
         }

@@ -18,11 +18,11 @@ docker buildx build . -f <DOCKERFILE_PATH> --progress plain --build-arg 'JOBS=4'
 
 where `<DOCKERFILE_PATH>` should be replaced by the wanted Dockerfile base d on the build you want to do:
 
-| Wanted build | Dockerfile path             |
-|--------------|-----------------------------|
-| MacOS M1     | dist/macOS/arm64.Dockerfile |
-| AppImage     | dist/appimage/Dockerfile    |
-| Web version  | dist/web/Dockerfile         |
+| Wanted build | Dockerfile path             | Target |
+|--------------|-----------------------------|--------|
+| MacOS M1     | dist/macOS/arm64.Dockerfile | -      |
+| AppImage     | dist/appimage/Dockerfile    | -      |
+| Web version  | dist/web/Dockerfile         | raw    |
 
 We'll explain this command in the next section
 
@@ -43,6 +43,7 @@ In the command saw earlier:
 - `.` is the base folder that the Dockerfile will be allowed to see
 - `-f <path>` is to specify the Dockerfile path
 - `--progress plain` is to allow you to see the output of instructions
-- `--build-arg <key>=<value>` is to allow to to specify arguments to the build (like -DKEY=VALUE in CMake)
+- `--build-arg <key>=<value>` is to allow to specify arguments to the build (like -DKEY=VALUE in CMake)
 - `--build-context key=<folder>` is to specify folders other than the base folder that the Dockerfile is allowed to see
 - `--output <path>` is the path to write the output package to. If not specified, Docker will create an image as the output (probably not what you want)
+- `--target <target>` specifies which docker target to build

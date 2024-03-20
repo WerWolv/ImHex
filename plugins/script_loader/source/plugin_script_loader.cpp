@@ -69,10 +69,10 @@ namespace {
     }
 
     void addScriptsMenu() {
+        static std::vector<const Script*> scripts;
         static TaskHolder runnerTask, updaterTask;
         hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
             static bool menuJustOpened = true;
-            static std::vector<const Script*> scripts;
 
             if (ImGui::BeginMenu("hex.script_loader.menu.run_script"_lang)) {
                 if (menuJustOpened) {
@@ -107,6 +107,10 @@ namespace {
         }, [] {
             return !runnerTask.isRunning();
         });
+
+        updaterTask = TaskManager::createBackgroundTask("Updating Scripts...", [] (auto&) {
+            scripts = loadAllScripts();
+        });
     }
 
 }
@@ -119,5 +123,4 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
     if (initializeAllLoaders()) {
         addScriptsMenu();
     }
-
 }

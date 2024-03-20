@@ -48,22 +48,22 @@ namespace hex::ui {
     }
 
     struct ToastInfo : impl::ToastNotification<ToastInfo> {
-        ToastInfo(std::string message)
-            : ToastNotification(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerInfo), ICON_VS_INFO, "hex.ui.common.info", std::move(message)) {
+        explicit ToastInfo(std::string message)
+            : ToastNotification(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerInfo), ICON_VS_INFO, "hex.ui.common.info", message) {
             log::info("{}", message);
         }
     };
 
     struct ToastWarning : impl::ToastNotification<ToastWarning> {
-        ToastWarning(std::string message)
-            : ToastNotification(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerWarning), ICON_VS_WARNING, "hex.ui.common.warning", std::move(message)) {
+        explicit ToastWarning(std::string message)
+            : ToastNotification(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerWarning), ICON_VS_WARNING, "hex.ui.common.warning", message) {
             log::warn("{}", message);
         }
     };
 
     struct ToastError : impl::ToastNotification<ToastError> {
-        ToastError(std::string message)
-            : ToastNotification(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerError), ICON_VS_ERROR, "hex.ui.common.error", std::move(message)) {
+        explicit ToastError(std::string message)
+            : ToastNotification(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerError), ICON_VS_ERROR, "hex.ui.common.error", message) {
             log::error("{}", message);
         }
     };

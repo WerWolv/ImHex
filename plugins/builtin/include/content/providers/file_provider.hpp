@@ -11,6 +11,8 @@ namespace hex::plugin::builtin {
 
     class FileProvider : public hex::prv::Provider {
     public:
+        constexpr static u64 MaxMemoryFileSize = 128 * 1024 * 1024;
+
         FileProvider() = default;
         ~FileProvider() override = default;
 
@@ -21,8 +23,6 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isSavable() const override;
 
         void resizeRaw(u64 newSize) override;
-        void insertRaw(u64 offset, u64 size) override;
-        void removeRaw(u64 offset, u64 size) override;
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
@@ -57,11 +57,17 @@ namespace hex::plugin::builtin {
 
     private:
         void convertToMemoryFile();
+        void handleFileChange();
 
     protected:
         std::fs::path m_path;
         wolv::io::File m_file;
         size_t m_fileSize = 0;
+
+        wolv::io::ChangeTracker m_changeTracker;
+        std::vector<u8> m_data;
+        bool m_loadedIntoMemory = false;
+        bool m_ignoreNextChangeEvent = false;
 
         std::optional<struct stat> m_fileStats;
 

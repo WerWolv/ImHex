@@ -9,11 +9,11 @@
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/literals.hpp>
+#include <hex/helpers/utils.hpp>
 #include <romfs/romfs.hpp>
 
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/subcommands/subcommands.hpp>
 
 #include <wolv/utils/string.hpp>
@@ -47,16 +47,30 @@ namespace hex::plugin::builtin {
                 "Available subcommands:\n"
         );
 
-        size_t longestCommand = 0;
+        size_t longestLongCommand = 0, longestShortCommand = 0;
         for (const auto &plugin : PluginManager::getPlugins()) {
             for (const auto &subCommand : plugin.getSubCommands()) {
-                longestCommand = std::max(longestCommand, subCommand.commandKey.size());
+                longestLongCommand = std::max(longestLongCommand, subCommand.commandLong.size());
+                longestShortCommand = std::max(longestShortCommand, subCommand.commandShort.size());
             }
         }
 
         for (const auto &plugin : PluginManager::getPlugins()) {
             for (const auto &subCommand : plugin.getSubCommands()) {
-                hex::log::println("    --{}{: <{}}        {}", subCommand.commandKey, "", longestCommand - subCommand.commandKey.size(), subCommand.commandDesc);
+                hex::log::println("    "
+                        "{}"
+                        "{: <{}}"
+                        "{}"
+                        "{}"
+                        "{: <{}}"
+                        "{}",
+                        subCommand.commandShort.empty() ? " " : "-",
+                        subCommand.commandShort, longestShortCommand,
+                        subCommand.commandShort.empty() ? "  " : ", ",
+                        subCommand.commandLong.empty() ? " " : "--",
+                        subCommand.commandLong, longestLongCommand + 5,
+                        subCommand.commandDescription
+                );
             }
         }
 
@@ -137,6 +151,10 @@ namespace hex::plugin::builtin {
         }
 
         ImHexApi::System::impl::addInitArgument("language", args[0]);
+    }
+
+    void handleVerboseCommand(const std::vector<std::string> &) {
+        hex::log::enableDebugLogging();
     }
 
     void handleHashCommand(const std::vector<std::string> &args) {

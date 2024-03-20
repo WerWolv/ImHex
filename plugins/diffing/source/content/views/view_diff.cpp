@@ -192,14 +192,12 @@ namespace hex::plugin::diffing {
             ImGui::TableSetupColumn("hex.diffing.view.diff.provider_b"_lang);
             ImGui::TableHeadersRow();
 
-            ImVec2 buttonPos;
             ImGui::BeginDisabled(m_diffTask.isRunning());
             {
                 // Draw settings button
                 ImGui::TableNextColumn();
                 if (ImGuiExt::DimmedIconButton(ICON_VS_SETTINGS_GEAR, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
-                    ImGui::OpenPopup("DiffingAlgorithmSettings");
-                buttonPos = ImGui::GetCursorScreenPos();
+                    RequestOpenPopup::post("##DiffingAlgorithmSettings");
 
                 ImGui::SameLine();
 
@@ -211,41 +209,6 @@ namespace hex::plugin::diffing {
                 if (drawProviderSelector(b)) m_analyzed = false;
             }
             ImGui::EndDisabled();
-
-            ImGui::SetNextWindowPos(buttonPos);
-            if (ImGui::BeginPopup("DiffingAlgorithmSettings")) {
-                ImGuiExt::Header("hex.diffing.view.diff.algorithm"_lang, true);
-                ImGui::PushItemWidth(300_scaled);
-                if (ImGui::BeginCombo("##Algorithm", m_algorithm == nullptr ? "" : Lang(m_algorithm->getUnlocalizedName()))) {
-                    for (const auto &algorithm : ContentRegistry::Diffing::impl::getAlgorithms()) {
-                        ImGui::PushID(algorithm.get());
-                        if (ImGui::Selectable(Lang(algorithm->getUnlocalizedName()))) {
-                            m_algorithm = algorithm.get();
-                            m_analyzed  = false;
-                        }
-                        ImGui::PopID();
-                    }
-                    ImGui::EndCombo();
-                }
-                ImGui::PopItemWidth();
-
-                if (m_algorithm != nullptr) {
-                    ImGuiExt::TextFormattedWrapped("{}", Lang(m_algorithm->getUnlocalizedDescription()));
-                }
-
-                ImGuiExt::Header("hex.diffing.view.diff.settings"_lang);
-                if (m_algorithm != nullptr) {
-                    auto drawList = ImGui::GetWindowDrawList();
-                    auto prevIdx = drawList->_VtxCurrentIdx;
-                    m_algorithm->drawSettings();
-                    auto currIdx = drawList->_VtxCurrentIdx;
-
-                    if (prevIdx == currIdx)
-                        ImGuiExt::TextFormatted("hex.diffing.view.diff.settings.no_settings"_lang);
-                }
-
-                ImGui::EndPopup();
-            }
 
             ImGui::TableNextRow();
 
@@ -336,5 +299,43 @@ namespace hex::plugin::diffing {
             ImGui::EndTable();
         }
     }
+
+    void ViewDiff::drawAlwaysVisibleContent() {
+        ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(400_scaled, 600_scaled));
+        if (ImGui::BeginPopup("##DiffingAlgorithmSettings")) {
+            ImGuiExt::Header("hex.diffing.view.diff.algorithm"_lang, true);
+            ImGui::PushItemWidth(300_scaled);
+            if (ImGui::BeginCombo("##Algorithm", m_algorithm == nullptr ? "" : Lang(m_algorithm->getUnlocalizedName()))) {
+                for (const auto &algorithm : ContentRegistry::Diffing::impl::getAlgorithms()) {
+                    ImGui::PushID(algorithm.get());
+                    if (ImGui::Selectable(Lang(algorithm->getUnlocalizedName()))) {
+                        m_algorithm = algorithm.get();
+                        m_analyzed  = false;
+                    }
+                    ImGui::PopID();
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::PopItemWidth();
+
+            if (m_algorithm != nullptr) {
+                ImGuiExt::TextFormattedWrapped("{}", Lang(m_algorithm->getUnlocalizedDescription()));
+            }
+
+            ImGuiExt::Header("hex.diffing.view.diff.settings"_lang);
+            if (m_algorithm != nullptr) {
+                auto drawList = ImGui::GetWindowDrawList();
+                auto prevIdx = drawList->_VtxCurrentIdx;
+                m_algorithm->drawSettings();
+                auto currIdx = drawList->_VtxCurrentIdx;
+
+                if (prevIdx == currIdx)
+                    ImGuiExt::TextFormatted("hex.diffing.view.diff.settings.no_settings"_lang);
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+
 
 }

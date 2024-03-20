@@ -57,7 +57,7 @@ namespace hex::plugin::yara {
         }
 
         void drawContent() override {
-            const auto empty = std::ranges::any_of(m_categories, [](const auto &entry) {
+            const auto empty = !std::ranges::any_of(m_categories, [](const auto &entry) {
                 const auto &[categoryName, category] = entry;
                 return !category.matchedRules.empty();
             });
