@@ -289,7 +289,7 @@ jobs:
           path: out
 
       - name: 🗑️ Delete artifact
-        uses: geekyeggo/delete-artifact@v4
+        uses: geekyeggo/delete-artifact@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: macos_arm64_intermediate
