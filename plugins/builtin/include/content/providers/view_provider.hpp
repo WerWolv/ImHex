@@ -46,11 +46,13 @@ namespace hex::plugin::builtin {
                 return m_provider->isSavable();
         }
 
+        [[nodiscard]] bool isSavableAsRecent() const override { return false; }
+
         void save() override {
             m_provider->save();
         }
 
-        [[nodiscard]] bool open() override { return true; }
+        [[nodiscard]] bool open() override { return m_provider != this; }
         void close() override { }
 
         void resizeRaw(u64 newSize) override {
