@@ -823,7 +823,9 @@ namespace hex::ui {
         const auto windowEndPos = ImGui::GetWindowPos() + size - ImGui::GetStyle().WindowPadding;
         ImGui::GetWindowDrawList()->AddLine(windowEndPos - ImVec2(0, size.y - 1_scaled), windowEndPos - size + ImVec2(0, 1_scaled), ImGui::GetColorU32(ImGuiCol_Separator), 2.0_scaled);
 
-        if (ImGui::BeginChild("##footer", size, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+        if (ImGui::BeginChild("##footer", size, ImGuiChildFlags_Border, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 8_scaled);
+            ImGui::Dummy({});
             if (ImGui::BeginTable("##footer_table", 3, ImGuiTableFlags_SizingFixedFit)) {
                 ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5F);
                 ImGui::TableSetupColumn("Center", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
@@ -837,26 +839,65 @@ namespace hex::ui {
                     const auto pageAddress = m_provider->getCurrentPageAddress();
                     const auto pageSize    = m_provider->getSize();
 
-                    // Page slider
+                    ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     {
-                        u32 page = m_provider->getCurrentPage() + 1;
+                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 2_scaled);
 
-                        ImGuiExt::TextFormatted("{}: ", "hex.ui.hex_editor.page"_lang);
+                        // Upper/lower case hex
+                        ImGuiExt::DimmedIconToggle(ICON_VS_CASE_SENSITIVE, &m_upperCaseHex);
+                        ImGuiExt::InfoTooltip("hex.ui.hex_editor.uppercase_hex"_lang);
+
                         ImGui::SameLine();
 
-                        ImGui::BeginDisabled(pageCount <= 1);
-                        {
-                            ImGui::PushItemWidth(-1);
-                            if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount,
-                                hex::format("0x%02llX / 0x{0:02X} [0x{1:04X} - 0x{2:04X}]",
-                                    pageCount,
-                                    pageAddress,
-                                    pageSize == 0 ? 0 : (pageAddress + pageSize - 1)).c_str()))
-                                m_provider->setCurrentPage(page - 1);
-                            ImGui::PopItemWidth();
-                        }
+                        // Grayed out zeros
+                        ImGuiExt::DimmedIconToggle(ICON_VS_LIGHTBULB, &m_grayOutZero);
+                        ImGuiExt::InfoTooltip("hex.ui.hex_editor.gray_out_zero"_lang);
+
+                        ImGui::SameLine();
+
+                        // ASCII view
+                        ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_KEY, &m_showAscii);
+                        ImGuiExt::InfoTooltip("hex.ui.hex_editor.ascii_view"_lang);
+
+                        ImGui::SameLine(0, 1_scaled);
+
+                        // Custom encoding view
+                        ImGui::BeginDisabled(!m_currCustomEncoding.has_value());
+                        ImGuiExt::DimmedIconToggle(ICON_VS_WHITESPACE, &m_showCustomEncoding);
+                        ImGuiExt::InfoTooltip("hex.ui.hex_editor.custom_encoding_view"_lang);
                         ImGui::EndDisabled();
+
+                        ImGui::SameLine(0, 1_scaled);
+
+                        // Minimap
+                        ImGuiExt::DimmedIconToggle(ICON_VS_MAP, &m_showMiniMap);
+                        ImGuiExt::InfoTooltip("hex.ui.hex_editor.minimap"_lang);
+                        if (ImGui::IsItemClicked(ImGuiMouseButton_Right) && m_miniMapVisualizer != nullptr)
+                            ImGui::OpenPopup("MiniMapOptions");
+
+                        if (ImGui::BeginPopup("MiniMapOptions")) {
+                            ImGui::SliderInt("hex.ui.hex_editor.minimap.width"_lang, &m_miniMapWidth, 1, 25, "%d", ImGuiSliderFlags_AlwaysClamp);
+
+                            if (ImGui::BeginCombo("##minimap_visualizer", Lang(m_miniMapVisualizer->unlocalizedName))) {
+
+                                for (const auto &visualizer : ContentRegistry::HexEditor::impl::getMiniMapVisualizers()) {
+                                    if (ImGui::Selectable(Lang(visualizer->unlocalizedName))) {
+                                        m_miniMapVisualizer = visualizer;
+                                    }
+                                }
+
+                                ImGui::EndCombo();
+                            }
+
+                            ImGui::EndPopup();
+                        }
+
+                        ImGui::SameLine();
+
+                        // Human-readable units
+                        ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_NUMERIC, &m_showHumanReadableUnits);
+                        ImGuiExt::InfoTooltip("hex.ui.hex_editor.human_readable_units_footer"_lang);
                     }
 
                     // Collapse button
@@ -866,42 +907,78 @@ namespace hex::ui {
                             m_footerCollapsed = !m_footerCollapsed;
                     }
 
-                    // Selection
                     ImGui::TableNextColumn();
+
+                    // Visualizer
                     {
-                        auto selection = getSelection();
-                        std::string value;
-                        if (isSelectionValid()) {
-                            value = hex::format("0x{0:08X} - 0x{1:08X} (0x{2:X} | {3})",
-                                                selection.getStartAddress(),
-                                                selection.getEndAddress(),
-                                                selection.getSize(),
-                                                m_showHumanReadableUnits
-                                                    ? hex::toByteString(selection.getSize())
-                                                    : hex::format("{}", selection.getSize())
-                            );
-                        } else {
-                            value = std::string("hex.ui.hex_editor.selection.none"_lang);
+                        auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
+
+                        {
+                            bool hasEndianess = m_currDataVisualizer->getBytesPerCell() > 1;
+
+                            if (!hasEndianess)
+                                m_dataVisualizerEndianness = std::endian::native;
+
+                            ImGui::BeginDisabled(!hasEndianess);
+                            {
+                                int sliderPos = m_dataVisualizerEndianness == std::endian::little ? 0 : 1;
+                                ImGui::PushItemWidth(60_scaled);
+                                ImGui::SliderInt("##visualizer_endianness", &sliderPos, 0, 1, sliderPos == 0 ? "hex.ui.common.little"_lang : "hex.ui.common.big"_lang);
+                                ImGui::PopItemWidth();
+                                m_dataVisualizerEndianness = sliderPos == 0 ? std::endian::little : std::endian::big;
+                            }
+                            ImGui::EndDisabled();
                         }
 
-                        ImGuiExt::TextFormatted("{}:", "hex.ui.hex_editor.selection"_lang);
-                        ImGui::SameLine();
-                        ImGuiExt::TextFormattedSelectable(value);
-                    }
+                        ImGui::SameLine(0, 2_scaled);
+                        ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x / 3) * 2);
+                        if (ImGui::BeginCombo("##visualizer", Lang(m_currDataVisualizer->getUnlocalizedName()))) {
 
+                            for (const auto &visualizer : visualizers) {
+                                if (ImGui::Selectable(Lang(visualizer->getUnlocalizedName()))) {
+                                    m_currDataVisualizer = visualizer;
+                                    m_encodingLineStartAddresses.clear();
+
+                                    if (m_bytesPerRow < visualizer->getBytesPerCell())
+                                        m_bytesPerRow = visualizer->getBytesPerCell();
+                                }
+                            }
+
+                            ImGui::EndCombo();
+                        }
+                        ImGui::PopItemWidth();
+
+                        ImGui::SameLine(0, 2_scaled);
+                        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                        int bytesPerRow = m_bytesPerRow / this->getBytesPerCell();
+                        if (ImGui::SliderInt("##row_size", &bytesPerRow, 1, 128 / this->getBytesPerCell(), hex::format("{} {}", bytesPerRow * this->getBytesPerCell(), "hex.ui.hex_editor.columns"_lang).c_str())) {
+                            m_bytesPerRow = bytesPerRow * this->getBytesPerCell();
+                            m_encodingLineStartAddresses.clear();
+                        }
+                        ImGui::PopItemWidth();
+                    }
                     if (!m_footerCollapsed) {
+                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3_scaled);
+                        ImGui::Dummy({});
                         ImGui::TableNextRow();
 
-                        // Page Address
+                        // Page slider
                         ImGui::TableNextColumn();
                         {
+                            u32 page = m_provider->getCurrentPage() + 1;
 
-                            ImGuiExt::TextFormatted("{}:", "hex.ui.hex_editor.region"_lang);
-                            ImGui::SameLine();
-                            ImGuiExt::TextFormattedSelectable("0x{0:08X} - 0x{1:08X} ({0} - {1})",
-                                                           pageAddress,
-                                                           pageSize == 0 ? 0 : (pageAddress + pageSize - 1)
-                           );
+                            ImGui::BeginDisabled(pageCount <= 1);
+                            {
+                                ImGui::PushItemWidth(-1);
+                                if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount,
+                                    hex::format("%llu / {0}  [0x{1:04X} - 0x{2:04X}]",
+                                        pageCount,
+                                        pageAddress,
+                                        pageSize == 0 ? 0 : (pageAddress + pageSize - 1)).c_str()))
+                                    m_provider->setCurrentPage(page - 1);
+                                ImGui::PopItemWidth();
+                            }
+                            ImGui::EndDisabled();
                         }
 
                         ImGui::TableNextColumn();
@@ -909,8 +986,6 @@ namespace hex::ui {
                         // Loaded data size
                         ImGui::TableNextColumn();
                         {
-                            ImGuiExt::TextFormatted("{}:", "hex.ui.hex_editor.data_size"_lang);
-                            ImGui::SameLine();
                             ImGuiExt::TextFormattedSelectable("0x{0:08X} (0x{1:X} | {2})",
                                                            m_provider->getBaseAddress(),
                                                            m_provider->getBaseAddress() + m_provider->getActualSize(),
@@ -918,123 +993,7 @@ namespace hex::ui {
                                                                ? hex::toByteString(m_provider->getActualSize())
                                                                : hex::format("{}", m_provider->getActualSize())
                             );
-                        }
-
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        {
-                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 2_scaled);
-
-                            // Upper/lower case hex
-                            ImGuiExt::DimmedIconToggle(ICON_VS_CASE_SENSITIVE, &m_upperCaseHex);
-                            ImGuiExt::InfoTooltip("hex.ui.hex_editor.uppercase_hex"_lang);
-
-                            ImGui::SameLine();
-
-                            // Grayed out zeros
-                            ImGuiExt::DimmedIconToggle(ICON_VS_LIGHTBULB, &m_grayOutZero);
-                            ImGuiExt::InfoTooltip("hex.ui.hex_editor.gray_out_zero"_lang);
-
-                            ImGui::SameLine();
-
-                            // ASCII view
-                            ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_KEY, &m_showAscii);
-                            ImGuiExt::InfoTooltip("hex.ui.hex_editor.ascii_view"_lang);
-
-                            ImGui::SameLine(0, 1_scaled);
-
-                            // Custom encoding view
-                            ImGui::BeginDisabled(!m_currCustomEncoding.has_value());
-                            ImGuiExt::DimmedIconToggle(ICON_VS_WHITESPACE, &m_showCustomEncoding);
-                            ImGuiExt::InfoTooltip("hex.ui.hex_editor.custom_encoding_view"_lang);
-                            ImGui::EndDisabled();
-
-                            ImGui::SameLine(0, 1_scaled);
-
-                            // Minimap
-                            ImGuiExt::DimmedIconToggle(ICON_VS_MAP, &m_showMiniMap);
-                            ImGuiExt::InfoTooltip("hex.ui.hex_editor.minimap"_lang);
-                            if (ImGui::IsItemClicked(ImGuiMouseButton_Right) && m_miniMapVisualizer != nullptr)
-                                ImGui::OpenPopup("MiniMapOptions");
-
-                            if (ImGui::BeginPopup("MiniMapOptions")) {
-                                ImGui::SliderInt("hex.ui.hex_editor.minimap.width"_lang, &m_miniMapWidth, 1, 25, "%d", ImGuiSliderFlags_AlwaysClamp);
-
-                                if (ImGui::BeginCombo("##minimap_visualizer", Lang(m_miniMapVisualizer->unlocalizedName))) {
-
-                                    for (const auto &visualizer : ContentRegistry::HexEditor::impl::getMiniMapVisualizers()) {
-                                        if (ImGui::Selectable(Lang(visualizer->unlocalizedName))) {
-                                            m_miniMapVisualizer = visualizer;
-                                        }
-                                    }
-
-                                    ImGui::EndCombo();
-                                }
-
-                                ImGui::EndPopup();
-                            }
-
-                            ImGui::SameLine();
-
-                            // Human-readable units
-                            ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_NUMERIC, &m_showHumanReadableUnits);
-                            ImGuiExt::InfoTooltip("hex.ui.hex_editor.human_readable_units_footer"_lang);
-                        }
-
-                        ImGui::TableNextColumn();
-                        ImGui::TableNextColumn();
-
-                        // Visualizer
-                        {
-                            auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
-
-                            ImGuiExt::TextFormatted("{}: ", "hex.ui.hex_editor.visualizer"_lang);
-
-                            ImGui::SameLine(0, 0);
-
-                            {
-                                bool hasEndianess = m_currDataVisualizer->getBytesPerCell() > 1;
-
-                                if (!hasEndianess)
-                                    m_dataVisualizerEndianness = std::endian::native;
-
-                                ImGui::BeginDisabled(!hasEndianess);
-                                {
-                                    int sliderPos = m_dataVisualizerEndianness == std::endian::little ? 0 : 1;
-                                    ImGui::PushItemWidth(60_scaled);
-                                    ImGui::SliderInt("##visualizer_endianness", &sliderPos, 0, 1, sliderPos == 0 ? "hex.ui.common.little"_lang : "hex.ui.common.big"_lang);
-                                    ImGui::PopItemWidth();
-                                    m_dataVisualizerEndianness = sliderPos == 0 ? std::endian::little : std::endian::big;
-                                }
-                                ImGui::EndDisabled();
-                            }
-
-                            ImGui::SameLine(0, 2_scaled);
-                            ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x / 3) * 2);
-                            if (ImGui::BeginCombo("##visualizer", Lang(m_currDataVisualizer->getUnlocalizedName()))) {
-
-                                for (const auto &visualizer : visualizers) {
-                                    if (ImGui::Selectable(Lang(visualizer->getUnlocalizedName()))) {
-                                        m_currDataVisualizer = visualizer;
-                                        m_encodingLineStartAddresses.clear();
-
-                                        if (m_bytesPerRow < visualizer->getBytesPerCell())
-                                            m_bytesPerRow = visualizer->getBytesPerCell();
-                                    }
-                                }
-
-                                ImGui::EndCombo();
-                            }
-                            ImGui::PopItemWidth();
-
-                            ImGui::SameLine(0, 2_scaled);
-                            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                            int bytesPerRow = m_bytesPerRow / this->getBytesPerCell();
-                            if (ImGui::SliderInt("##row_size", &bytesPerRow, 1, 32 / this->getBytesPerCell(), hex::format("{}", bytesPerRow * this->getBytesPerCell()).c_str())) {
-                                m_bytesPerRow = bytesPerRow * this->getBytesPerCell();
-                                m_encodingLineStartAddresses.clear();
-                            }
-                            ImGui::PopItemWidth();
+                            ImGui::SetItemTooltip("%s", "hex.ui.hex_editor.data_size"_lang.get().c_str());
                         }
                     }
                 }
@@ -1072,9 +1031,9 @@ namespace hex::ui {
 
         auto footerSize = ImVec2(width, 0);
         if (!m_footerCollapsed)
-            footerSize.y = ImGui::GetTextLineHeightWithSpacing() * 3.6F;
+            footerSize.y = ImGui::GetTextLineHeightWithSpacing() * 4.0F;
         else
-            footerSize.y = ImGui::GetTextLineHeightWithSpacing() * 1.4F;
+            footerSize.y = ImGui::GetTextLineHeightWithSpacing() * 2.4F;
 
         auto tableSize  = ImVec2(width, height - footerSize.y);
         if (tableSize.y <= 0)

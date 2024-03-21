@@ -75,7 +75,11 @@ namespace hex {
 
             static AutoReset<std::optional<ProviderRegion>> s_currentSelection;
             void setCurrentSelection(const std::optional<ProviderRegion> &region) {
-                *s_currentSelection = region;
+                if (region == Region::Invalid()) {
+                    clearSelection();
+                } else {
+                    *s_currentSelection = region;
+                }
             }
 
             static PerProvider<std::optional<Region>> s_hoveredRegion;
