@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(OS_WINDOWS) || defined (OS_LINUX)
+#if defined(OS_WINDOWS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
 
 #include <hex/providers/provider.hpp>
 #include <hex/api/localization_manager.hpp>

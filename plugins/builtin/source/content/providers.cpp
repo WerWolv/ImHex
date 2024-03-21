@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<MemoryFileProvider>(false);
         ContentRegistry::Provider::add<ViewProvider>(false);
 
-        #if defined(OS_WINDOWS) ||defined (OS_LINUX)
+        #if defined(OS_WINDOWS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
             ContentRegistry::Provider::add<ProcessMemoryProvider>();
         #endif
 

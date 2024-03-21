@@ -28,7 +28,9 @@
 #elif defined(OS_LINUX)
     #include <fcntl.h>
     #include <unistd.h>
-    #include <linux/fs.h>
+    #if !defined(OS_FREEBSD)
+        #include <linux/fs.h>
+    #endif
     #include <sys/stat.h>
     #include <sys/ioctl.h>
     #include <sys/types.h>
@@ -41,8 +43,11 @@
     #include <sys/disk.h>
 #endif
 
-#if defined(OS_LINUX)
-#define lseek lseek64
+#if defined(OS_LINUX) && !defined(OS_FREEBSD)
+    #define lseek lseek64
+#elif defined(OS_FREEBSD)
+    #include <sys/disk.h>
+    #define DEFAULT_SECTOR_SIZE 512
 #endif
 
 namespace hex::plugin::builtin {
@@ -83,6 +88,12 @@ namespace hex::plugin::builtin {
                 return -1;
             return 0;
         }
+    #elif defined(OS_FREEBSD) && defined(DIOCGSECTORSIZE)
+        int blkdev_get_sector_size(int fd, int *sector_size) {
+            if (ioctl(fd, DIOCGSECTORSIZE, sector_size) < 0)
+                return -1;
+            return 0;
+        }
     #else
         int blkdev_get_sector_size(int fd, int *sector_size) {
             (void)fd;
@@ -94,6 +105,12 @@ namespace hex::plugin::builtin {
     #ifdef BLKGETSIZE64
         int blkdev_get_size(int fd, u64 *bytes) {
             if (ioctl(fd, BLKGETSIZE64, bytes) < 0)
+                return -1;
+            return 0;
+        }
+    #elif defined(OS_FREEBSD) && defined(DIOCGMEDIASIZE)
+        int blkdev_get_size(int fd, u64 *bytes) {
+            if (ioctl(fd, DIOCGMEDIASIZE, bytes) < 0)
                 return -1;
             return 0;
         }
