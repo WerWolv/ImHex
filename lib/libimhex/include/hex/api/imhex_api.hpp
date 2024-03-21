@@ -704,6 +704,7 @@ namespace hex {
                 std::vector<GlyphRange> glyphRanges;
                 Offset offset;
                 u32 flags;
+                std::optional<u32> defaultSize;
             };
 
             namespace impl {
@@ -722,8 +723,8 @@ namespace hex {
             GlyphRange range(const char *glyphBegin, const char *glyphEnd);
             GlyphRange range(u32 codepointBegin, u32 codepointEnd);
 
-            void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0);
-            void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0);
+            void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<u32> defaultSize = std::nullopt);
+            void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<u32> defaultSize = std::nullopt);
 
             constexpr static float DefaultFontSize = 13.0;
 

@@ -18,15 +18,15 @@ namespace hex::fonts {
          *  efficient when packing the glyphs into the font atlas and therefor make the atlas much smaller.
          */
 
-        ImHexApi::Fonts::loadFont("Blender Icons",  romfs::get("fonts/blendericons.ttf").span<u8>(),{ { ICON_MIN_BI, ICON_MAX_BI } }, { -1_scaled, -1_scaled });
+        ImHexApi::Fonts::loadFont("Blender Icons",  romfs::get("fonts/blendericons.ttf").span<u8>(),{ { ICON_MIN_BI, ICON_MAX_BI } }, { -1_scaled, -1_scaled }, 0, 13);
 
         ImHexApi::Fonts::loadFont("VS Codicons", romfs::get("fonts/codicons.ttf").span<u8>(),
             {
                 { ICON_MIN_VS, ICON_MAX_VS }
             },
-            { -1_scaled, -1_scaled });
+            { -1_scaled, -1_scaled }, 0, 13);
 
-        ImHexApi::Fonts::loadFont("Unifont", romfs::get("fonts/unifont.otf").span<u8>());
+        ImHexApi::Fonts::loadFont("Unifont", romfs::get("fonts/unifont.otf").span<u8>(), {}, {}, 0, 16);
     }
 
 }

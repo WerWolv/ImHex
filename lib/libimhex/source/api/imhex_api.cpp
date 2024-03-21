@@ -920,7 +920,7 @@ namespace hex {
             };
         }
 
-        void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags) {
+        void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags, std::optional<u32> defaultSize) {
             wolv::io::File fontFile(path, wolv::io::File::Mode::Read);
             if (!fontFile.isValid()) {
                 log::error("Failed to load font from file '{}'", wolv::util::toUTF8String(path));
@@ -932,17 +932,19 @@ namespace hex {
                 fontFile.readVector(),
                 glyphRanges,
                 offset,
-                flags
+                flags,
+                defaultSize
             });
         }
 
-        void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags) {
+        void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags, std::optional<u32> defaultSize) {
             impl::s_fonts->emplace_back(Font {
                 name,
                 { data.begin(), data.end() },
                 glyphRanges,
                 offset,
-                flags
+                flags,
+                defaultSize
             });
         }
 
