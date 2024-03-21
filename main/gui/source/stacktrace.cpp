@@ -6,7 +6,7 @@
 
 namespace {
 
-    std::string tryDemangle(const std::string &symbolName) {
+    [[maybe_unused]] std::string tryDemangle(const std::string &symbolName) {
         if (auto variant1 = llvm::demangle(symbolName); variant1 != symbolName)
             return variant1;
 
