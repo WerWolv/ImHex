@@ -663,7 +663,11 @@ namespace hex {
             #if defined(OS_WINDOWS)
                 return "Windows";
             #elif defined(OS_LINUX)
-                return "Linux";
+                #if defined(OS_FREEBSD)
+                    return "FreeBSD";
+                #else
+                    return "Linux";
+                #endif
             #elif defined(OS_MACOS)
                 return "macOS";
             #elif defined(OS_WEB)
