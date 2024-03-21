@@ -278,6 +278,7 @@ namespace hex::plugin::builtin {
 
                     // Disable merge mode for this font but retain the rest of the configuration
                     cfg.MergeMode = false;
+                    cfg.SizePixels = font.defaultSize.value_or(fontSize);
                     ON_SCOPE_EXIT { cfg.MergeMode = true; };
 
                     // Construct a range that only contains the first glyph of the font
