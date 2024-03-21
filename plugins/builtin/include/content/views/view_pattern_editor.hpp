@@ -14,6 +14,8 @@
 #include <functional>
 
 #include <TextEditor.h>
+#include "popups/popup_file_chooser.hpp"
+#include "hex/api/achievement_manager.hpp"
 
 namespace pl::ptrn { class Pattern; }
 
@@ -254,6 +256,39 @@ namespace hex::plugin::builtin {
         void registerEvents();
         void registerMenuItems();
         void registerHandlers();
+
+        std::function<void()> importPatternFile = [&] {
+            auto provider = ImHexApi::Provider::get();
+            const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Patterns);
+            std::vector<std::fs::path> paths;
+
+            for (const auto &imhexPath : basePaths) {
+                if (!wolv::io::fs::exists(imhexPath)) continue;
+
+                std::error_code error;
+                for (auto &entry : std::fs::recursive_directory_iterator(imhexPath, error)) {
+                    if (entry.is_regular_file() && entry.path().extension() == ".hexpat")
+                        paths.push_back(entry.path());
+                }
+            }
+            ui::PopupFileChooser::open(
+                    basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
+                    [this, provider](const std::fs::path &path) {
+                        this->loadPatternFile(path, provider);
+                        AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
+                    }
+            );
+        };
+
+        std::function<void()> exportPatternFile = [&] {
+            fs::openFileBrowser(
+                    fs::DialogMode::Save, { {"Pattern", "hexpat"} },
+                    [this](const auto &path) {
+                        wolv::io::File file(path, wolv::io::File::Mode::Create);
+                        file.writeString(wolv::util::trim(m_textEditor.GetText()));
+                    }
+            );
+        };
 
         void appendEditorText(const std::string &text);
         void appendVariable(const std::string &type);

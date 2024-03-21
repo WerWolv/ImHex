@@ -604,7 +604,7 @@ ImU32 TextEditor::GetGlyphColor(const Glyph &aGlyph) const {
         return mPalette[(int)PaletteIndex::Comment];
     if (aGlyph.mMultiLineComment)
         return mPalette[(int)PaletteIndex::MultiLineComment];
-    if (aGlyph.mDeactivated && !aGlyph.mPreprocessor)
+    if (aGlyph.mDeactivated)
         return mPalette[(int)PaletteIndex::PreprocessorDeactivated];
     auto const color = mPalette[(int)aGlyph.mColorIndex];
     if (aGlyph.mPreprocessor) {
@@ -619,10 +619,20 @@ ImU32 TextEditor::GetGlyphColor(const Glyph &aGlyph) const {
 }
 
 void TextEditor::HandleKeyboardInputs() {
-    ImGuiIO &io = ImGui::GetIO();
-    auto shift  = io.KeyShift;
-    auto ctrl   = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-    auto alt    = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+    ImGuiIO &io   = ImGui::GetIO();
+    auto shift    = io.KeyShift;
+    auto left     = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow));
+    auto right    = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow));
+    auto up       = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow));
+    auto down     = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow));
+    auto ctrl     = io.ConfigMacOSXBehaviors ? io.KeyAlt : io.KeyCtrl;
+    auto alt      = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+    auto home     = io.ConfigMacOSXBehaviors ? io.KeySuper && left : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home));
+    auto end      = io.ConfigMacOSXBehaviors ? io.KeySuper && right : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End));
+    auto top      = io.ConfigMacOSXBehaviors ? io.KeySuper && up : ctrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home));
+    auto bottom   = io.ConfigMacOSXBehaviors ? io.KeySuper && down : ctrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End));
+    auto pageUp   = io.ConfigMacOSXBehaviors ? ctrl && up : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp));
+    auto pageDown = io.ConfigMacOSXBehaviors ? ctrl && down : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown));
 
     if (ImGui::IsWindowFocused()) {
         if (ImGui::IsWindowHovered())
@@ -638,25 +648,25 @@ void TextEditor::HandleKeyboardInputs() {
             Undo();
         else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Y)))
             Redo();
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)))
+        else if (!ctrl && !alt && up)
             MoveUp(1, shift);
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)))
+        else if (!ctrl && !alt && down)
             MoveDown(1, shift);
-        else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)))
+        else if (!alt && left)
             MoveLeft(1, shift, ctrl);
-        else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)))
+        else if (!alt && right)
             MoveRight(1, shift, ctrl);
-        else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp)))
+        else if (!alt && pageUp)
             MoveUp(GetPageSize() - 4, shift);
-        else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown)))
+        else if (!alt && pageDown)
             MoveDown(GetPageSize() - 4, shift);
-        else if (!alt && ctrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)))
+        else if (!alt && top)
             MoveTop(shift);
-        else if (ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)))
+        else if (!alt && bottom)
             MoveBottom(shift);
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)))
+        else if (!ctrl && !alt && home)
             MoveHome(shift);
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)))
+        else if (!ctrl && !alt && end)
             MoveEnd(shift);
         else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)))
             Delete();
@@ -722,7 +732,7 @@ void TextEditor::HandleKeyboardInputs() {
 void TextEditor::HandleMouseInputs() {
     ImGuiIO &io = ImGui::GetIO();
     auto shift  = io.KeyShift;
-    auto ctrl   = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+    auto ctrl   = io.ConfigMacOSXBehaviors ? io.KeyAlt : io.KeyCtrl;
     auto alt    = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
     if (ImGui::IsWindowHovered()) {
@@ -905,7 +915,10 @@ void TextEditor::Render() {
             }
 
             if (mState.mCursorPosition.mLine == lineNo && mShowCursor) {
-                auto focused = ImGui::IsWindowFocused();
+                bool focused = false;
+                ImGuiViewport *viewport = ImGui::GetWindowViewport();
+                if (viewport->PlatformUserData != NULL && ImGui::GetPlatformIO().Platform_GetWindowFocus(viewport))
+                    focused = ImGui::IsWindowFocused();
 
                 // Highlight the current line (where the cursor is)
                 if (!HasSelection()) {
@@ -2505,6 +2518,7 @@ void TextEditor::ColorizeInternal() {
         auto firstChar               = true;     // there is no other non-whitespace characters in the line before
         auto currentLine             = 0;
         auto currentIndex            = 0;
+        auto commentLength           = 0;
         auto &startStr               = mLanguageDefinition.mCommentStart;
         auto &singleStartStr         = mLanguageDefinition.mSingleLineComment;
         auto &docStartStr            = mLanguageDefinition.mDocComment;
@@ -2515,6 +2529,14 @@ void TextEditor::ColorizeInternal() {
 
         while (currentLine < endLine || currentIndex < endIndex) {
             auto &line = mLines[currentLine];
+
+            auto setGlyphFlags = [&](int index) {
+                line[index].mMultiLineComment = withinComment;
+                line[index].mComment          = withinSingleLineComment;
+                line[index].mDocComment       = withinDocComment;
+                line[index].mGlobalDocComment = withinGlobalDocComment;
+                line[index].mDeactivated      = withinNotDef;
+            };
 
             if (currentIndex == 0) {
                 withinSingleLineComment = false;
@@ -2532,24 +2554,12 @@ void TextEditor::ColorizeInternal() {
                 bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
 
                 if (withinString) {
-                    line[currentIndex].mMultiLineComment = withinComment;
-                    line[currentIndex].mComment          = withinSingleLineComment;
-                    line[currentIndex].mDocComment       = withinDocComment;
-                    line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
-                    line[currentIndex].mDeactivated      = withinNotDef;
-                    if (c == '\"') {
-                        if (currentIndex > 2 && line[currentIndex - 1].mChar == '\\'  && line[currentIndex - 2].mChar != '\\') {
-                            currentIndex += 1;
-                            if (currentIndex < (int)line.size()) {
-                                line[currentIndex].mMultiLineComment = withinComment;
-                                line[currentIndex].mComment          = withinSingleLineComment;
-                                line[currentIndex].mDocComment       = withinDocComment;
-                                line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
-                                line[currentIndex].mDeactivated      = withinNotDef;
-                            }
-                        } else
-                            withinString = false;
-                    }
+                   setGlyphFlags(currentIndex);
+                    if (c == '\\') {
+                        currentIndex++;
+                        setGlyphFlags(currentIndex);
+                    } else if (c == '\"')
+                        withinString = false;
                 } else {
                     if (firstChar && c == mLanguageDefinition.mPreprocChar) {
                         withinPreproc = true;
@@ -2594,7 +2604,6 @@ void TextEditor::ColorizeInternal() {
                                     }
                                     if (!withinNotDef) {
                                         bool isConditionMet = std::find(mDefines.begin(),mDefines.end(),identifier) != mDefines.end();
-                                        withinNotDef = !isConditionMet;
                                         ifDefs.push_back(isConditionMet);
                                     } else
                                         ifDefs.push_back(false);
@@ -2608,7 +2617,6 @@ void TextEditor::ColorizeInternal() {
                                     }
                                     if (!withinNotDef) {
                                         bool isConditionMet =  std::find(mDefines.begin(),mDefines.end(),identifier) == mDefines.end();
-                                        withinNotDef = !isConditionMet;
                                         ifDefs.push_back(isConditionMet);
                                     } else
                                         ifDefs.push_back(false);
@@ -2616,20 +2624,17 @@ void TextEditor::ColorizeInternal() {
                             }
                         } else {
                             if (directive == "endif") {
-                                if (ifDefs.size() > 1)
+                                if (ifDefs.size() > 1) {
                                     ifDefs.pop_back();
-                                withinNotDef = !ifDefs.back();
+                                    withinNotDef = !ifDefs.back();
+                                }
                             }
                         }
                     }
 
                     if (c == '\"') {
                         withinString                         = true;
-                        line[currentIndex].mMultiLineComment = withinComment;
-                        line[currentIndex].mComment          = withinSingleLineComment;
-                        line[currentIndex].mDocComment       = withinDocComment;
-                        line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
-                        line[currentIndex].mDeactivated      = withinNotDef;
+                        setGlyphFlags(currentIndex);
                     } else {
                         auto pred            = [](const char &a, const Glyph &b) { return a == b.mChar; };
 
@@ -2653,29 +2658,30 @@ void TextEditor::ColorizeInternal() {
                                 if (isGlobalDocComment || isDocComment || isComment) {
                                     commentStartLine = currentLine;
                                     commentStartIndex = currentIndex;
-                                    if (isGlobalDocComment)
+                                    if (isGlobalDocComment) {
                                         withinGlobalDocComment = true;
-                                    else if (isDocComment)
+                                        commentLength = 3;
+                                    } else if (isDocComment) {
                                         withinDocComment = true;
-                                    else
+                                        commentLength = 3;
+                                    } else {
                                         withinComment = true;
+                                        commentLength = 2;
+                                    }
                                 }
                             }
                             inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
                         }
-                        line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
-                        line[currentIndex].mDocComment       = withinDocComment;
-                        line[currentIndex].mMultiLineComment = withinComment;
-                        line[currentIndex].mComment          = withinSingleLineComment;
-                        line[currentIndex].mDeactivated      = withinNotDef;
+                        setGlyphFlags(currentIndex);
 
                         auto &endStr = mLanguageDefinition.mCommentEnd;
-                        if (compareBack(endStr, line)) {
-                            withinComment = false;
-                            withinDocComment = false;
-                            withinGlobalDocComment = false;
-                            commentStartLine  = endLine;
-                            commentStartIndex = endIndex;
+                        if (compareBack(endStr, line) && ((commentStartLine != currentLine) || (commentStartIndex + commentLength < currentIndex))) {
+                            withinComment          = false;
+                            withinDocComment        = false;
+                            withinGlobalDocComment  = false;
+                            commentStartLine        = endLine;
+                            commentStartIndex       = endIndex;
+                            commentLength           = 0;
                         }
                     }
                 }
@@ -2684,6 +2690,7 @@ void TextEditor::ColorizeInternal() {
                 
                 currentIndex += UTF8CharLength(c);
                 if (currentIndex >= (int)line.size()) {
+                    withinNotDef = !ifDefs.back();
                     currentIndex = 0;
                     ++currentLine;
                 }

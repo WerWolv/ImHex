@@ -175,7 +175,7 @@ public:
 		bool mCaseSensitive;
 
 		LanguageDefinition()
-			:  mGlobalDocComment("/*!"), mDocComment("/**"), mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
+			: mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
 		{
 		}
 
