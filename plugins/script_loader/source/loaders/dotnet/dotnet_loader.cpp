@@ -106,10 +106,12 @@ namespace hex::script::loader {
 
             auto get_hostfxr_path_ptr = getExport<get_hostfxr_path_fn>(netHostLibrary, "get_hostfxr_path");
 
-            std::array<char_t, 300> buffer = { 0 };
+            std::array<char_t, 300> buffer = { };
             size_t bufferSize = buffer.size();
-            if (get_hostfxr_path_ptr(buffer.data(), &bufferSize, nullptr) != 0) {
-                log::error("Could not get hostfxr path!");
+
+            auto result = get_hostfxr_path_ptr(buffer.data(), &bufferSize, nullptr);
+            if (result != 0) {
+                log::error(hex::format("Could not get hostfxr path! 0x{:X}", result));
                 return false;
             }
 
@@ -159,7 +161,7 @@ namespace hex::script::loader {
             };
 
             if (result > 2 || ctx == nullptr) {
-                throw std::runtime_error(hex::format("Failed to initialize command line {:X}", result));
+                throw std::runtime_error(hex::format("Failed to initialize command line 0x{:X}", result));
             }
 
             #if defined (OS_WINDOWS)
@@ -175,7 +177,7 @@ namespace hex::script::loader {
             );
 
             if (result != 0 || loadAssemblyFunction == nullptr) {
-                throw std::runtime_error("Failed to get load_assembly_and_get_function_pointer delegate");
+                throw std::runtime_error(hex::format("Failed to get load_assembly_and_get_function_pointer delegate 0x{:X}", result));
             }
 
             return loadAssemblyFunction;
@@ -212,7 +214,7 @@ namespace hex::script::loader {
             );
 
             if (result != 0 || entryPoint == nullptr) {
-                log::error("Failed to load assembly loader '{}'", assemblyLoader.string());
+                log::error("Failed to load assembly loader '{}'! 0x{:X}", assemblyLoader.string(), result);
                 continue;
             }
 
