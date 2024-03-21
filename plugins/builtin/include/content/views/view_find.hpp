@@ -101,6 +101,7 @@ namespace hex::plugin::builtin {
         using OccurrenceTree = wolv::container::IntervalTree<Occurrence>;
 
         PerProvider<std::vector<Occurrence>> m_foundOccurrences, m_sortedOccurrences;
+        PerProvider<Occurrence*> m_lastSelectedOccurrence;
         PerProvider<OccurrenceTree> m_occurrenceTree;
         PerProvider<std::string> m_currFilter;
 

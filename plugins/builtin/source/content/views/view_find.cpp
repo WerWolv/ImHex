@@ -531,6 +531,7 @@ namespace hex::plugin::builtin {
             }
 
             m_sortedOccurrences.get(provider) = m_foundOccurrences.get(provider);
+            m_lastSelectedOccurrence = nullptr;
 
             for (const auto &occurrence : m_foundOccurrences.get(provider))
                 m_occurrenceTree->insert({ occurrence.region.getStartAddress(), occurrence.region.getEndAddress() }, occurrence);
@@ -895,6 +896,7 @@ namespace hex::plugin::builtin {
                     m_foundOccurrences->clear();
                     m_sortedOccurrences->clear();
                     m_occurrenceTree->clear();
+                    m_lastSelectedOccurrence = nullptr;
 
                     EventHighlightingChanged::post();
                 }
@@ -1007,7 +1009,11 @@ namespace hex::plugin::builtin {
                     ImGuiExt::TextFormatted("{}", value);
                     ImGui::SameLine();
                     if (ImGui::Selectable("##line", foundItem.selected, ImGuiSelectableFlags_SpanAllColumns)) {
-                        if (ImGui::GetIO().KeyCtrl) {
+                        if (ImGui::GetIO().KeyShift && m_lastSelectedOccurrence != nullptr) {
+                            for (auto start = std::min(&foundItem, m_lastSelectedOccurrence.get(provider)); start <= std::max(&foundItem, m_lastSelectedOccurrence.get(provider)); start += 1)
+                                start->selected = true;
+
+                        } else if (ImGui::GetIO().KeyCtrl) {
                             foundItem.selected = !foundItem.selected;
                         } else {
                             for (auto &occurrence : *m_sortedOccurrences)
@@ -1015,6 +1021,8 @@ namespace hex::plugin::builtin {
                             foundItem.selected = true;
                             ImHexApi::HexEditor::setSelection(foundItem.region.getStartAddress(), foundItem.region.getSize());
                         }
+
+                        m_lastSelectedOccurrence = &foundItem;
                     }
                     drawContextMenu(foundItem, value);
 
