@@ -279,8 +279,6 @@ jobs:
     needs: macos-arm64-build
     env:
       IMHEX_VERSION: ${{ needs.macos-arm64-build.outputs.IMHEX_VERSION }}
-    permissions:
-      actions: write
     steps:
       - name: ⬇️ Download artifact
         uses: actions/download-artifact@v4
