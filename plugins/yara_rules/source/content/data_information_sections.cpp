@@ -1,6 +1,4 @@
 #include <hex/api/content_registry.hpp>
-#include <hex/helpers/magic.hpp>
-#include <hex/providers/provider.hpp>
 
 #include <imgui.h>
 #include <hex/api/task_manager.hpp>
