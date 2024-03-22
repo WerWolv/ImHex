@@ -213,14 +213,37 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache                                                   \
+          -DCMAKE_INSTALL_PREFIX="./install"                                                        \
           -DIMHEX_PATTERNS_PULL_MASTER=ON                                                           \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                  \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                 \
-          -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64"   \
           ..
       
     - name: 🛠️ Build
-      run: cd build && ninja package
+      run: cd build && ninja install
+
+    - name: ✒️ Fix Signature
+      run: |
+        set -x
+        cd out
+        codesign --remove-signature ImHex.app
+        codesign --force --deep --sign - ImHex.app
+
+    - name: 📁 Fix permissions
+      run: |
+        set -x
+        cd build/install
+        chmod -R 755 ImHex.app/
+
+    - name: 📦 Create DMG
+      run: |
+        set -x
+        mkdir bundle
+        mv build/install/ImHex.app bundle
+        cd bundle
+        ln -s /Applications Applications
+        cd ..
+        hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64.dmg
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v4
