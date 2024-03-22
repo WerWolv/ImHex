@@ -118,7 +118,7 @@ macro(configurePackingResources)
         endif()
     elseif (APPLE OR ${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
         set(IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/dist/macos/AppIcon.icns")
-        set(BUNDLE_NAME "ImHex.app")
+        set(BUNDLE_NAME "imhex.app")
 
         if (IMHEX_GENERATE_PACKAGE)
             set(APPLICATION_TYPE MACOSX_BUNDLE)
@@ -256,8 +256,6 @@ macro(createPackage)
 
             install(FILES ${IMHEX_ICON} DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/Resources")
             install(TARGETS main BUNDLE DESTINATION ".")
-
-            install(DIRECTORY "${CMAKE_INSTALL_PREFIX}/imhex.app/" DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/" OPTIONAL)
 
             # Update library references to make the bundle portable
             postprocess_bundle(imhex_all main)

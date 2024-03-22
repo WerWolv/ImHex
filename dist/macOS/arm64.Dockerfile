@@ -170,4 +170,4 @@ EOF
 
 
 FROM scratch
-COPY --from=build /mnt/ImHex/build/install/ImHex.app ImHex.app
+COPY --from=build /mnt/ImHex/build/install/imhex.app imhex.app
