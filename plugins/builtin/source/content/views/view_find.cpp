@@ -160,7 +160,7 @@ namespace hex::plugin::builtin {
         T value = 0x00;
         std::memcpy(&value, bytes.data(), bytes.size());
 
-        value = hex::changeEndianess(value, bytes.size(), endian);
+        value = hex::changeEndianness(value, bytes.size(), endian);
 
         if (std::signed_integral<T>)
             value = hex::signExtend(bytes.size() * 8, value);
@@ -456,7 +456,7 @@ namespace hex::plugin::builtin {
 
                 DecayedType value = 0;
                 reader.read(address, reinterpret_cast<u8*>(&value), size);
-                value = hex::changeEndianess(value, size, settings.endian);
+                value = hex::changeEndianness(value, size, settings.endian);
 
                 return value >= minValue && value <= maxValue;
             }, min);

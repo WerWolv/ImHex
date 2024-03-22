@@ -914,12 +914,12 @@ namespace hex::ui {
                         auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
 
                         {
-                            bool hasEndianess = m_currDataVisualizer->getBytesPerCell() > 1;
+                            bool hasEndianness = m_currDataVisualizer->getBytesPerCell() > 1;
 
-                            if (!hasEndianess)
+                            if (!hasEndianness)
                                 m_dataVisualizerEndianness = std::endian::native;
 
-                            ImGui::BeginDisabled(!hasEndianess);
+                            ImGui::BeginDisabled(!hasEndianness);
                             {
                                 int sliderPos = m_dataVisualizerEndianness == std::endian::little ? 0 : 1;
                                 ImGui::PushItemWidth(60_scaled);

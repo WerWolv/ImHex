@@ -138,7 +138,7 @@ namespace hex {
                 result.push_back(addressBytes[2]);
                 result.push_back(addressBytes[1]);
                 result.push_back(addressBytes[0]);
-                pushBytesBack<u16>(result, changeEndianess<u16>(bytes.size(), std::endian::big));
+                pushBytesBack<u16>(result, changeEndianness<u16>(bytes.size(), std::endian::big));
 
                 for (auto byte : bytes)
                     result.push_back(byte);
@@ -189,7 +189,7 @@ namespace hex {
                 result.push_back(addressBytes[2]);
                 result.push_back(addressBytes[1]);
                 result.push_back(addressBytes[0]);
-                pushBytesBack<u16>(result, changeEndianess<u16>(bytes.size(), std::endian::big));
+                pushBytesBack<u16>(result, changeEndianness<u16>(bytes.size(), std::endian::big));
 
                 for (auto byte : bytes)
                     result.push_back(byte);

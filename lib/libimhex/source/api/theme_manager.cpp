@@ -66,7 +66,7 @@ namespace hex {
         if (color == 0x00000000)
             return ImVec4(0, 0, 0, -1);
 
-        return ImColor(hex::changeEndianess(color, std::endian::big));
+        return ImColor(hex::changeEndianness(color, std::endian::big));
     }
 
     nlohmann::json ThemeManager::exportCurrentTheme(const std::string &name) {
@@ -83,7 +83,7 @@ namespace hex {
 
             for (const auto &[key, value] : handler.colorMap) {
                 auto color = handler.getFunction(value);
-                theme["colors"][type][key] = fmt::format("#{:08X}", hex::changeEndianess(u32(color), std::endian::big));
+                theme["colors"][type][key] = fmt::format("#{:08X}", hex::changeEndianness(u32(color), std::endian::big));
             }
         }
 

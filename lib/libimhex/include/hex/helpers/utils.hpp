@@ -152,7 +152,7 @@ namespace hex {
     using SizeType = typename SizeTypeImpl<Size>::Type;
 
     template<typename T>
-    [[nodiscard]] constexpr T changeEndianess(const T &value, size_t size, std::endian endian) {
+    [[nodiscard]] constexpr T changeEndianness(const T &value, size_t size, std::endian endian) {
         if (endian == std::endian::native)
             return value;
 
@@ -172,8 +172,8 @@ namespace hex {
     }
 
     template<typename T>
-    [[nodiscard]] constexpr T changeEndianess(const T &value, std::endian endian) {
-        return changeEndianess(value, sizeof(value), endian);
+    [[nodiscard]] constexpr T changeEndianness(const T &value, std::endian endian) {
+        return changeEndianness(value, sizeof(value), endian);
     }
 
     [[nodiscard]] constexpr u128 bitmask(u8 bits) {

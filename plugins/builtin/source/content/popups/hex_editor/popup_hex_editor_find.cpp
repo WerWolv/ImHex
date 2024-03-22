@@ -251,7 +251,7 @@ namespace hex::plugin::builtin {
                 std::endian endian = (endianness == Endianness::Little)
                                      ? std::endian::little
                                      : std::endian::big;
-                value = hex::changeEndianess(value, endian);
+                value = hex::changeEndianness(value, endian);
             }
         };
 
