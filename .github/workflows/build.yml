@@ -225,7 +225,7 @@ jobs:
     - name: ✒️ Fix Signature
       run: |
         set -x
-        cd out
+        cd build/install
         codesign --remove-signature ImHex.app
         codesign --force --deep --sign - ImHex.app
 
