@@ -35,7 +35,6 @@ message(STATUS "Fixing up application bundle: ${BUNDLE_PATH}")
 
 # Make sure to fix up any included ImHex plugin.
 file(GLOB_RECURSE plugins "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexplug")
-list(APPEND plugins "${BUNDLE_PATH}/Contents/Frameworks/libimhex.dylib")
 
 
 # BundleUtilities doesn't support DYLD_FALLBACK_LIBRARY_PATH behavior, which
