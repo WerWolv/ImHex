@@ -14,12 +14,11 @@ if(CMAKE_GENERATOR)
 	# Being called as include(PostprocessBundle), so define a helper function.
 	set(_POSTPROCESS_BUNDLE_MODULE_LOCATION "${CMAKE_CURRENT_LIST_FILE}")
 	function(postprocess_bundle out_target in_target)
-		add_custom_command(TARGET ${out_target} POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -DBUNDLE_PATH="$<TARGET_FILE_DIR:${in_target}>/../.."
-				-DCODE_SIGN_CERTIFICATE_ID="${CODE_SIGN_CERTIFICATE_ID}"
-				-DEXTRA_BUNDLE_LIBRARY_PATHS="${EXTRA_BUNDLE_LIBRARY_PATHS}"
-				-P "${_POSTPROCESS_BUNDLE_MODULE_LOCATION}"
-		)
+
+		install(CODE "set(BUNDLE_PATH ${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME})")
+		install(CODE "set(CODE_SIGN_CERTIFICATE_ID ${CODE_SIGN_CERTIFICATE_ID})")
+		install(CODE "set(EXTRA_BUNDLE_LIBRARY_PATHS ${EXTRA_BUNDLE_LIBRARY_PATHS})")
+		install(SCRIPT ${_POSTPROCESS_BUNDLE_MODULE_LOCATION})
 	endfunction()
 	return()
 endif()
@@ -36,13 +35,14 @@ message(STATUS "Fixing up application bundle: ${BUNDLE_PATH}")
 
 # Make sure to fix up any included ImHex plugin.
 file(GLOB_RECURSE plugins "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexplug")
+list(APPEND plugins "${BUNDLE_PATH}/Contents/Frameworks/libimhex.dylib")
 
 
 # BundleUtilities doesn't support DYLD_FALLBACK_LIBRARY_PATH behavior, which
 # makes it sometimes break on libraries that do weird things with @rpath. Specify
 # equivalent search directories until https://gitlab.kitware.com/cmake/cmake/issues/16625
 # is fixed and in our minimum CMake version.
-set(extra_dirs "/usr/local/lib" "/lib" "/usr/lib" ${EXTRA_BUNDLE_LIBRARY_PATHS} "${BUNDLE_PATH}/Contents/MacOS/plugins")
+set(extra_dirs "/usr/local/lib" "/lib" "/usr/lib" ${EXTRA_BUNDLE_LIBRARY_PATHS} "${BUNDLE_PATH}/Contents/MacOS/plugins" "${BUNDLE_PATH}/Contents/Frameworks")
 message(STATUS "Fixing up application bundle: ${extra_dirs}")
 
 # BundleUtilities is overly verbose, so disable most of its messages
