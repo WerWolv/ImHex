@@ -80,9 +80,10 @@ namespace hex::plugin::decompress {
                     if (stream.avail_out != 0)
                         break;
 
-                    section.resize(section.size() * 2);
-                    stream.next_out  = section.data();
-                    stream.avail_out = section.size();
+                    const auto prevSectionSize = section.size();
+                    section.resize(prevSectionSize * 2);
+                    stream.next_out  = section.data() + prevSectionSize;
+                    stream.avail_out = prevSectionSize;
                 }
 
                 return true;
@@ -126,9 +127,10 @@ namespace hex::plugin::decompress {
                     if (stream.avail_out != 0)
                         break;
 
-                    section.resize(section.size() * 2);
-                    stream.next_out  = reinterpret_cast<char*>(section.data());
-                    stream.avail_out = section.size();
+                    const auto prevSectionSize = section.size();
+                    section.resize(prevSectionSize * 2);
+                    stream.next_out  = reinterpret_cast<char*>(section.data()) + prevSectionSize;
+                    stream.avail_out = prevSectionSize;
                 }
 
                 return true;
@@ -173,9 +175,10 @@ namespace hex::plugin::decompress {
                     if (stream.avail_out != 0)
                         break;
 
-                    section.resize(section.size() * 2);
-                    stream.next_out = compressedData.data();
-                    stream.avail_out = compressedData.size();
+                    const auto prevSectionSize = section.size();
+                    section.resize(prevSectionSize * 2);
+                    stream.next_out  = section.data() + prevSectionSize;
+                    stream.avail_out = prevSectionSize;
                 }
 
                 return true;
