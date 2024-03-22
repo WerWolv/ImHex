@@ -250,7 +250,7 @@ jobs:
       with:
         if-no-files-found: error
         name: macOS DMG${{matrix.suffix}} x86_64
-        path: build/*.dmg
+        path: ./*.dmg
 
   macos-arm64-build:
     runs-on: ubuntu-22.04
