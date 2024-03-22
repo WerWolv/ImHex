@@ -257,6 +257,8 @@ macro(createPackage)
             install(FILES ${IMHEX_ICON} DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/Resources")
             install(TARGETS main BUNDLE DESTINATION ".")
 
+            install(DIRECTORY "${CMAKE_INSTALL_PREFIX}/imhex.app/" DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/" OPTIONAL)
+
             # Update library references to make the bundle portable
             postprocess_bundle(imhex_all main)
 
