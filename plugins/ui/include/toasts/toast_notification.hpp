@@ -6,6 +6,7 @@
 
 #include <fonts/codicons_font.h>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <popups/popup_notification.hpp>
 
