@@ -250,6 +250,8 @@ namespace hex::plugin::builtin {
             #endif
 
             if (ImGui::BeginMainMenuBar()) {
+                ImGui::Dummy({});
+
                 auto window = ImHexApi::System::getMainWindowHandle();
 
                 ImGui::PopStyleVar();
