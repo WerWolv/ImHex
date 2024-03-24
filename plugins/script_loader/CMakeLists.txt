@@ -27,8 +27,12 @@ find_package(Python3 COMPONENTS Interpreter Development.Embed)
 if (Python3_FOUND)
     set(IMHEX_PYTHON_SCRIPT_SUPPORT ON)
 
-    add_romfs_resource(${CMAKE_CURRENT_SOURCE_DIR}/support/python/imhex.py "python/imhex.py")
+    get_target_property(PYTHON_LIBRARY Python3::Python IMPORTED_LOCATION)
+    get_target_property(PYTHON_INCLUDE_DIR Python3::Python INTERFACE_INCLUDE_DIRECTORIES)
 endif()
+
+add_subdirectory(support/c)
+
 
 
 add_imhex_plugin(
@@ -37,21 +41,19 @@ add_imhex_plugin(
 
     SOURCES
         source/plugin_script_loader.cpp
-
-        source/script_api/v1/mem.cpp
-        source/script_api/v1/bookmarks.cpp
-        source/script_api/v1/ui.cpp
-        source/script_api/v1/logger.cpp
     INCLUDES
         include
 
     LIBRARIES
+        c_api
         fonts
-        ui
+
     FEATURES
         DOTNET
         PYTHON
 )
+
+
 
 if (IMHEX_DOTNET_SCRIPT_SUPPORT)
     message(STATUS "Enabling .NET Scripting support!")
@@ -76,9 +78,6 @@ if (IMHEX_PYTHON_SCRIPT_SUPPORT)
             source/loaders/python/python_loader.cpp
             source/loaders/python/library_wrapper.cpp
     )
-
-    get_target_property(PYTHON_LIBRARY Python3::Python IMPORTED_LOCATION)
-    get_target_property(PYTHON_INCLUDE_DIR Python3::Python INTERFACE_INCLUDE_DIRECTORIES)
 
     target_include_directories(script_loader PRIVATE ${PYTHON_INCLUDE_DIR})
     target_compile_definitions(script_loader PRIVATE PYTHON_LIBRARY_PATH="${PYTHON_LIBRARY}")

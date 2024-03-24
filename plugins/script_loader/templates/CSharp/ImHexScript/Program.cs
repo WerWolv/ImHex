@@ -1,5 +1,4 @@
 ﻿using ImHex;
-using ImGuiNET;
 
 class Script {
     

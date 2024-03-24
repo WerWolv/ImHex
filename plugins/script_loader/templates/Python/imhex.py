@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 _script_loader = ctypes.CDLL("Script Loader", ctypes.DEFAULT_MODE, int(__script_loader__))
 _callback_refs = []
 
+
 class Color:
     def __init__(self, r: int, g: int, b: int, a: int):
         self.r = r
@@ -15,6 +16,7 @@ class Color:
 
     def to_int(self):
         return (self.a << 24) | (self.b << 16) | (self.g << 8) | self.r
+
 
 class UI:
     @staticmethod
