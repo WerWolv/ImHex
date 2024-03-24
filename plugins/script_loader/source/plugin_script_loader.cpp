@@ -7,6 +7,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <loaders/dotnet/dotnet_loader.hpp>
+#include <loaders/python/python_loader.hpp>
 
 #include <romfs/romfs.hpp>
 #include <nlohmann/json.hpp>
@@ -15,8 +16,11 @@ using namespace hex;
 using namespace hex::script::loader;
 
 using ScriptLoaders = std::tuple<
-    #if defined(DOTNET_PLUGINS)
-        DotNetLoader
+    #if defined(IMHEX_DOTNET_SCRIPT_SUPPORT)
+        DotNetLoader,
+    #endif
+    #if defined(IMHEX_PYTHON_SCRIPT_SUPPORT)
+        PythonLoader
     #endif
 >;
 
@@ -91,9 +95,9 @@ namespace {
                 }
 
                 for (const auto &script : scripts) {
-                    const auto &[name, entryPoint] = *script;
+                    const auto &[name, entryPoint, loader] = *script;
 
-                    if (ImGui::MenuItem(name.c_str())) {
+                    if (ImGui::MenuItem(name.c_str(), loader->getTypeName().c_str())) {
                         runnerTask = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint](auto&) {
                             entryPoint();
                         });
@@ -114,6 +118,11 @@ namespace {
     }
 
 }
+
+IMHEX_PLUGIN_FEATURES() {
+    { ".NET",         IMHEX_FEATURE_ENABLED(DOTNET)   },
+    { "Python",       IMHEX_FEATURE_ENABLED(PYTHON)   },
+};
 
 IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
