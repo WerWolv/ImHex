@@ -114,12 +114,13 @@ namespace hex::script::loader {
                 if (!entry.is_directory())
                     continue;
 
-                const auto scriptPath = entry.path() / "main.py";
+                const auto &scriptFolder = entry.path();
+                const auto scriptPath = scriptFolder / "main.py";
                 if (!std::fs::exists(scriptPath))
                     continue;
 
-                auto pathString = wolv::util::toUTF8String(scriptPath);
-                wolv::io::File scriptFile(pathString, wolv::io::File::Mode::Read);
+                auto scriptPathString = wolv::util::toUTF8String(scriptPath);
+                wolv::io::File scriptFile(scriptPathString, wolv::io::File::Mode::Read);
                 if (!scriptFile.isValid())
                     continue;
 
@@ -131,12 +132,14 @@ namespace hex::script::loader {
                     PyThreadState_DeleteCurrent();
                 };
 
-                PyObject *libraryModule = PyImport_AddModule("imhex");
+                PyObject* sysPath = PySys_GetObject("path");
+                PyList_Append(sysPath, PyUnicode_FromString(wolv::util::toUTF8String(scriptFolder).c_str()));
 
-                PyModule_AddStringConstant(libraryModule, "__script_loader__", hex::format("{}", reinterpret_cast<intptr_t>(hex::getContainingModule((void*)&getCurrentTraceback))).c_str());
-                populateModule(libraryModule, romfs::get("python/imhex.py").data<const char>());
 
-                PyObject *mainModule = PyModule_New(pathString.c_str());
+                PyObject *imhexInternalModule = PyImport_AddModule("__imhex_internal__");
+                PyModule_AddStringConstant(imhexInternalModule, "script_loader_handle", hex::format("{}", reinterpret_cast<intptr_t>(hex::getContainingModule((void*)&getCurrentTraceback))).c_str());
+
+                PyObject *mainModule = PyModule_New(scriptPathString.c_str());
                 populateModule(mainModule, scriptFile.readString());
 
                 if (PyObject_HasAttrString(mainModule, "main")) {

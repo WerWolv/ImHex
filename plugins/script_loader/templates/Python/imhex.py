@@ -1,9 +1,11 @@
+import __imhex_internal__
+
 import ctypes
 
 from enum import Enum
 from abc import ABC, abstractmethod
 
-_script_loader = ctypes.CDLL("Script Loader", ctypes.DEFAULT_MODE, int(__script_loader__))
+_script_loader = ctypes.CDLL("Script Loader", ctypes.DEFAULT_MODE, int(__imhex_internal__.script_loader_handle))
 _callback_refs = []
 
 
@@ -35,13 +37,13 @@ class UI:
     def show_yes_no_question_box(title: str, message: str):
         result = ctypes.c_bool()
         _script_loader.showYesNoQuestionBoxV1(ctypes.create_string_buffer(title.encode("utf-8")),
-                                             ctypes.create_string_buffer(message.encode("utf-8")),
-                                             ctypes.byref(result))
+                                              ctypes.create_string_buffer(message.encode("utf-8")),
+                                              ctypes.byref(result))
 
     class ToastType(Enum):
-        INFO    = 0
+        INFO = 0
         WARNING = 1
-        ERROR   = 2
+        ERROR = 2
 
     @staticmethod
     def show_toast(message: str, toast_type: ToastType):
@@ -59,8 +61,8 @@ class UI:
         _callback_refs.append(draw_function(draw_callback))
 
         _script_loader.registerViewV1(ctypes.create_string_buffer(icon.encode("utf-8")),
-                                     ctypes.create_string_buffer(name.encode("utf-8")),
-                                     draw_function(draw_callback))
+                                      ctypes.create_string_buffer(name.encode("utf-8")),
+                                      _callback_refs[-1])
 
     @staticmethod
     def add_menu_item(icon: str, menu_name: str, item_name: str, callback):
@@ -74,6 +76,7 @@ class UI:
                                      ctypes.create_string_buffer(item_name.encode("utf-8")),
                                      _callback_refs[-1])
 
+
 class Bookmarks:
     @staticmethod
     def create_bookmark(address: int, size: int, color: Color, name: str, description: str = ""):
@@ -81,6 +84,7 @@ class Bookmarks:
                                      color.to_int(),
                                      ctypes.create_string_buffer(name.encode("utf-8")),
                                      ctypes.create_string_buffer(description.encode("utf-8")))
+
 
 class Logger:
     @staticmethod
@@ -110,6 +114,7 @@ class Logger:
     @staticmethod
     def fatal(message: str):
         _script_loader.logFatalV1(ctypes.create_string_buffer(message.encode("utf-8")))
+
 
 class Memory:
     @staticmethod

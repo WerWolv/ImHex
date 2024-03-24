@@ -46,6 +46,8 @@ FUNCTION_DEFINITION(PyObject *, PyImport_AddModule, (const char *name), (name))
 FUNCTION_DEFINITION(PyObject *, PyModule_New, (const char *name), (name))
 FUNCTION_DEFINITION(PyObject *, PyObject_GetAttrString, (PyObject *pobj, const char *name), (pobj, name))
 FUNCTION_DEFINITION(int, PyObject_HasAttrString, (PyObject *pobj, const char *name), (pobj, name))
+FUNCTION_DEFINITION(PyObject*, PySys_GetObject, (const char *name), (name))
+FUNCTION_DEFINITION(int, PyList_Append, (PyObject *plist, PyObject *pvalue), (plist, pvalue))
 
 bool initPythonLoader() {
     void *pythonLibrary = nullptr;
@@ -63,6 +65,7 @@ bool initPythonLoader() {
     INIT_FUNCTION(Py_PreInitialize);
     INIT_FUNCTION(Py_Initialize);
     INIT_FUNCTION(Py_Finalize);
+    INIT_FUNCTION(PySys_GetObject);
 
     INIT_FUNCTION(PyEval_SaveThread);
     INIT_FUNCTION(PyEval_RestoreThread);
@@ -95,12 +98,12 @@ bool initPythonLoader() {
 
     INIT_FUNCTION(PyDict_GetItemString);
     INIT_FUNCTION(PyDict_SetItemString);
+    INIT_FUNCTION(PyList_Append);
 
     INIT_FUNCTION(PyCallable_Check);
     INIT_FUNCTION(PyObject_CallObject);
     INIT_FUNCTION(PyObject_GetAttrString);
     INIT_FUNCTION(PyObject_HasAttrString);
-
 
     INIT_FUNCTION(_Py_Dealloc);
 
