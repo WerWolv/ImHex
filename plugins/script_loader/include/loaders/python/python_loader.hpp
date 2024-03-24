@@ -17,12 +17,7 @@ namespace hex::script::loader {
         bool loadAll() override;
 
     private:
-        struct Script {
-            void *module;
-            void *mainFunction;
-        };
-
-        std::vector<Script> m_scripts;
+        std::vector<void*> m_loadedModules;
     };
 
 }

@@ -44,7 +44,8 @@ FUNCTION_DEFINITION(void, PyThreadState_DeleteCurrent, (), ())
 FUNCTION_DEFINITION(PyThreadState *, PyThreadState_New, (PyInterpreterState *interp), (interp))
 FUNCTION_DEFINITION(PyObject *, PyImport_AddModule, (const char *name), (name))
 FUNCTION_DEFINITION(PyObject *, PyModule_New, (const char *name), (name))
-
+FUNCTION_DEFINITION(PyObject *, PyObject_GetAttrString, (PyObject *pobj, const char *name), (pobj, name))
+FUNCTION_DEFINITION(int, PyObject_HasAttrString, (PyObject *pobj, const char *name), (pobj, name))
 
 bool initPythonLoader() {
     void *pythonLibrary = nullptr;
@@ -97,6 +98,9 @@ bool initPythonLoader() {
 
     INIT_FUNCTION(PyCallable_Check);
     INIT_FUNCTION(PyObject_CallObject);
+    INIT_FUNCTION(PyObject_GetAttrString);
+    INIT_FUNCTION(PyObject_HasAttrString);
+
 
     INIT_FUNCTION(_Py_Dealloc);
 

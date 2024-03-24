@@ -41,58 +41,63 @@ namespace hex::script::loader {
         return true;
     }
 
-    std::string getCurrentTraceback() {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
+    namespace {
 
-        PyObject *pModuleName = PyUnicode_FromString("traceback");
-        PyObject *pModule = PyImport_Import(pModuleName);
-        Py_DECREF(pModuleName);
+        std::string getCurrentTraceback() {
+            PyObject *ptype, *pvalue, *ptraceback;
+            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+            PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
 
-        if (pModule != nullptr) {
-            PyObject *pDict = PyModule_GetDict(pModule);
-            PyObject *pFunc = PyDict_GetItemString(pDict, "format_exception");
+            PyObject *pModuleName = PyUnicode_FromString("traceback");
+            PyObject *pModule = PyImport_Import(pModuleName);
+            Py_DECREF(pModuleName);
 
-            if (pFunc && PyCallable_Check(pFunc)) {
-                PyObject *pArgs = PyTuple_New(3);
-                PyTuple_SetItem(pArgs, 0, ptype);
-                PyTuple_SetItem(pArgs, 1, pvalue);
-                PyTuple_SetItem(pArgs, 2, ptraceback);
+            if (pModule != nullptr) {
+                PyObject *pDict = PyModule_GetDict(pModule);
+                PyObject *pFunc = PyDict_GetItemString(pDict, "format_exception");
 
-                PyObject *pResult = PyObject_CallObject(pFunc, pArgs);
-                Py_DECREF(pArgs);
+                if (pFunc && PyCallable_Check(pFunc)) {
+                    PyObject *pArgs = PyTuple_New(3);
+                    PyTuple_SetItem(pArgs, 0, ptype);
+                    PyTuple_SetItem(pArgs, 1, pvalue);
+                    PyTuple_SetItem(pArgs, 2, ptraceback);
 
-                if (pResult != NULL) {
-                    const char *errorMessage = PyUnicode_AsUTF8(PyUnicode_Join(PyUnicode_FromString(""), pResult));
-                    Py_DECREF(pResult);
-                    Py_DECREF(pModule);
-                    return errorMessage;
+                    PyObject *pResult = PyObject_CallObject(pFunc, pArgs);
+                    Py_DECREF(pArgs);
+
+                    if (pResult != NULL) {
+                        const char *errorMessage = PyUnicode_AsUTF8(PyUnicode_Join(PyUnicode_FromString(""), pResult));
+                        Py_DECREF(pResult);
+                        Py_DECREF(pModule);
+                        return errorMessage;
+                    }
                 }
+                Py_DECREF(pModule);
             }
-            Py_DECREF(pModule);
+
+            PyErr_Clear();
+            return "";
         }
 
-        PyErr_Clear();
-        return "";
-    }
+        void populateModule(PyObject *pyModule, const std::string &sourceCode) {
+            PyModule_AddStringConstant(pyModule, "__file__", "");
 
-    void populateModule(PyObject *pyModule, const std::string &sourceCode) {
-        PyModule_AddStringConstant(pyModule, "__file__", "");
+            PyObject *localDict = PyModule_GetDict(pyModule);
+            PyObject *builtins = PyEval_GetBuiltins();
 
-        PyObject *localDict = PyModule_GetDict(pyModule);
-        PyObject *builtins = PyEval_GetBuiltins();
+            PyDict_SetItemString(localDict, "__builtins__", builtins);
 
-        PyDict_SetItemString(localDict, "__builtins__", builtins);
-
-        PyErr_Clear();
-        PyObject *pyValue = PyRun_String(sourceCode.c_str(), Py_file_input, localDict, localDict);
-        if (pyValue != nullptr) {
-            Py_DECREF(pyValue);
-        } else {
-            log::error("{}", getCurrentTraceback());
+            PyErr_Clear();
+            PyObject *pyValue = PyRun_String(sourceCode.c_str(), Py_file_input, localDict, localDict);
+            if (pyValue != nullptr) {
+                Py_DECREF(pyValue);
+            } else {
+                log::error("{}", getCurrentTraceback());
+            }
         }
+
     }
+
 
     bool PythonLoader::loadAll() {
         this->clearScripts();
@@ -118,26 +123,39 @@ namespace hex::script::loader {
                 if (!scriptFile.isValid())
                     continue;
 
-                this->addScript(entry.path().stem().string(), [pathString, scriptContent = scriptFile.readString()] {
-                    PyThreadState* ts = PyThreadState_New(mainThreadState);
-                    PyEval_RestoreThread(ts);
+                PyThreadState* ts = PyThreadState_New(mainThreadState);
+                PyEval_RestoreThread(ts);
 
-                    ON_SCOPE_EXIT {
-                        PyThreadState_Clear(ts);
-                        PyThreadState_DeleteCurrent();
-                    };
-                    PyObject *libraryModule = PyImport_AddModule("imhex");
+                ON_SCOPE_EXIT {
+                    PyThreadState_Clear(ts);
+                    PyThreadState_DeleteCurrent();
+                };
 
-                    PyModule_AddStringConstant(libraryModule, "__script_loader__", hex::format("{}", (u64)hex::getContainingModule((void*)&getCurrentTraceback)).c_str());
-                    populateModule(libraryModule, romfs::get("python/imhex.py").data<const char>());
+                PyObject *libraryModule = PyImport_AddModule("imhex");
 
+                PyModule_AddStringConstant(libraryModule, "__script_loader__", hex::format("{}", reinterpret_cast<intptr_t>(hex::getContainingModule((void*)&getCurrentTraceback))).c_str());
+                populateModule(libraryModule, romfs::get("python/imhex.py").data<const char>());
 
-                    PyObject *mainModule = PyModule_New(pathString.c_str());
-                    populateModule(mainModule, scriptContent);
+                PyObject *mainModule = PyModule_New(pathString.c_str());
+                populateModule(mainModule, scriptFile.readString());
 
-                    Py_DECREF(mainModule);
-                });
+                if (PyObject_HasAttrString(mainModule, "main")) {
+                    this->addScript(entry.path().stem().string(), [mainModule] {
+                        PyThreadState* ts = PyThreadState_New(mainThreadState);
+                        PyEval_RestoreThread(ts);
 
+                        ON_SCOPE_EXIT {
+                            PyThreadState_Clear(ts);
+                            PyThreadState_DeleteCurrent();
+                        };
+
+                        auto mainFunction = PyObject_GetAttrString(mainModule, "main");
+                        PyObject_CallObject(mainFunction, nullptr);
+                        Py_DECREF(mainFunction);
+                    });
+                }
+
+                m_loadedModules.push_back(mainModule);
             }
         }
 

@@ -26,6 +26,14 @@ SCRIPT_API(void writeMemory, u64 address, size_t size, const void *buffer) {
     provider->write(address, buffer, size);
 }
 
+SCRIPT_API(u64 getBaseAddress) {
+    return hex::ImHexApi::Provider::get()->getBaseAddress();
+}
+
+SCRIPT_API(u64 getDataSize) {
+    return hex::ImHexApi::Provider::get()->getSize();
+}
+
 SCRIPT_API(bool getSelection, u64 *start, u64 *end) {
     if (start == nullptr || end == nullptr)
         return false;
