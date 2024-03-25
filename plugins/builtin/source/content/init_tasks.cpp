@@ -281,7 +281,7 @@ namespace hex::plugin::builtin {
 
                     auto size = fontSize;
                     if (font.defaultSize.has_value())
-                        size = font.defaultSize.value() * ImHexApi::System::getGlobalScale();
+                        size = font.defaultSize.value() * std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize);
 
                     cfg.SizePixels = size;
 
