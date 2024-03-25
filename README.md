@@ -358,24 +358,29 @@ To develop plugins for ImHex, use the following template project to get started.
 
 ### Contributors
 
+- [iTrooz](https://github.com/iTrooz) for getting ImHex onto the Web as well as hundreds of contributions in every part of the project
+- [jumanji144](https://github.com/jumanji144) for huge contributions to the Pattern Language and ImHex's infrastructure
 - [Mary](https://github.com/marysaka) for her immense help porting ImHex to MacOS and help during development
 - [Roblabla](https://github.com/Roblabla) for adding MSI Installer support to ImHex
-- [jam1garner](https://github.com/jam1garner) and [raytwo](https://github.com/raytwo) for their help with adding Rust support to plugins
 - [Mailaender](https://github.com/Mailaender) for getting ImHex onto Flathub
-- [iTrooz](https://github.com/iTrooz) for many improvements and new features to Imhex
 - Everybody else who has reported issues on Discord or GitHub that I had great conversations with :)
 
 ### Dependencies
 
 - Thanks a lot to ocornut for their amazing [Dear ImGui](https://github.com/ocornut/imgui) which is used for building the entire interface
-  - Thanks to ocornut as well for their hex editor view used as base for this project.
-  - Thanks to BalazsJako for their incredible [ImGuiColorTextEdit](https://github.com/BalazsJako/ImGuiColorTextEdit) used for the pattern language syntax highlighting
-- Thanks to nlohmann for their [json](https://github.com/nlohmann/json) library used for project files
-- Thanks to aquynh for [capstone](https://github.com/aquynh/capstone) which is the base of the disassembly window
+  - Thanks to epezent for [ImPlot](https://github.com/epezent/implot) used to plot data in various places
+  - Thanks to Nelarius for [ImNodes](https://github.com/Nelarius/imnodes) used as base for the data processor 
+  - Thanks to BalazsJako for [ImGuiColorTextEdit](https://github.com/BalazsJako/ImGuiColorTextEdit) used for the pattern language syntax highlighting
+- Thanks to nlohmann for their [json](https://github.com/nlohmann/json) library used for configuration files
 - Thanks to vitaut for their [libfmt](https://github.com/fmtlib/fmt) library which makes formatting and logging so much better
+- Thanks to btzy for [nativefiledialog-extended](https://github.com/btzy/nativefiledialog-extended) and their great support, used for handling file dialogs on all platforms
+- Thanks to danyspin97 for [xdgpp](https://sr.ht/~danyspin97/xdgpp) used to handle folder paths on Linux
+- Thanks to aquynh for [capstone](https://github.com/aquynh/capstone) which is the base of the disassembly window
 - Thanks to rxi for [microtar](https://github.com/rxi/microtar) used for extracting downloaded store assets 
-- Thanks to btzy for [nativefiledialog-extended](https://github.com/btzy/nativefiledialog-extended)
-- Thanks to danyspin97 for [xdgpp](https://sr.ht/~danyspin97/xdgpp)
+- Thanks to VirusTotal for [Yara](https://github.com/VirusTotal/yara) used by the Yara plugin
+- Thanks to Martinsos for [edlib](https://github.com/Martinsos/edlib) used for sequence searching in the diffing view
+- Thanks to ron4fun for [HashLibPlus](https://github.com/ron4fun/HashLibPlus) which implements every hashing algorithm under the sun
+- Thanks to mackron for [miniaudio](https://github.com/mackron/miniaudio) used to play audio files
 - Thanks to all other groups and organizations whose libraries are used in ImHex
 
 ### License

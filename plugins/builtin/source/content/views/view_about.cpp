@@ -313,7 +313,6 @@ namespace hex::plugin::builtin {
             Library { "ImPlot", "epezent", "https://github.com/epezent/implot" },
             Library { "imnodes", "Nelarius", "https://github.com/Nelarius/imnodes" },
             Library { "ImGuiColorTextEdit", "BalazsJako", "https://github.com/BalazsJako/ImGuiColorTextEdit" },
-
         };
 
         constexpr static std::array ExternalLibraries = {
@@ -323,16 +322,19 @@ namespace hex::plugin::builtin {
         };
 
         constexpr static std::array ThirdPartyLibraries = {
-            Library { "capstone", "aquynh", "https://github.com/aquynh/capstone" },
             Library { "json", "nlohmann", "https://github.com/nlohmann/json" },
-            Library { "yara", "VirusTotal", "https://github.com/VirusTotal/yara" },
+            Library { "fmt", "fmtlib", "https://github.com/fmtlib/fmt" },
             Library { "nativefiledialog-extended", "btzy", "https://github.com/btzy/nativefiledialog-extended" },
-            Library { "microtar", "rxi", "https://github.com/rxi/microtar" },
             Library { "xdgpp", "danyspin97", "https://sr.ht/~danyspin97/xdgpp" },
+            Library { "capstone", "aquynh", "https://github.com/aquynh/capstone" },
+            Library { "microtar", "rxi", "https://github.com/rxi/microtar" },
+            Library { "yara", "VirusTotal", "https://github.com/VirusTotal/yara" },
+            Library { "edlib", "Martinsos", "https://github.com/Martinsos/edlib" },
+            Library { "HashLibPlus", "ron4fun", "https://github.com/ron4fun/HashLibPlus" },
+            Library { "miniaudio", "mackron", "https://github.com/mackron/miniaudio" },
             Library { "freetype", "freetype", "https://gitlab.freedesktop.org/freetype/freetype" },
             Library { "mbedTLS", "ARMmbed", "https://github.com/ARMmbed/mbedtls" },
             Library { "curl", "curl", "https://github.com/curl/curl" },
-            Library { "fmt", "fmtlib", "https://github.com/fmtlib/fmt" },
             Library { "file", "file", "https://github.com/file/file" },
             Library { "glfw", "glfw", "https://github.com/glfw/glfw" },
             Library { "llvm", "llvm-project", "https://github.com/llvm/llvm-project" },
