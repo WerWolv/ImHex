@@ -31,11 +31,11 @@ namespace hex::plugin::builtin {
                 for (const auto &[unlocalizedSubCategory, entries] : subCategories) {
                     for (const auto &[unlocalizedName, widget] : entries) {
                         try {
-                            widget->load(ContentRegistry::Settings::impl::getSetting(unlocalizedCategory, unlocalizedName, widget->store()));
+                            auto defaultValue = widget->store();
+                            widget->load(ContentRegistry::Settings::impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue));
                             widget->onChanged();
                         } catch (const std::exception &e) {
                             log::error("Failed to load setting [{} / {}]: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
-                            widget->store();
                         }
                     }
                 }

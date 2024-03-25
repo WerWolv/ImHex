@@ -51,6 +51,9 @@ namespace hex {
                 if (!settings[unlocalizedCategory].contains(unlocalizedName))
                     settings[unlocalizedCategory][unlocalizedName] = defaultValue;
 
+                if (settings[unlocalizedCategory][unlocalizedName].is_null())
+                    settings[unlocalizedCategory][unlocalizedName] = defaultValue;
+
                 return settings[unlocalizedCategory][unlocalizedName];
             }
 
