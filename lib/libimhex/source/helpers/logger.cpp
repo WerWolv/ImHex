@@ -1,14 +1,15 @@
 #include <hex/helpers/logger.hpp>
 
+#include <hex/api/task_manager.hpp>
 #include <hex/api/event_manager.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/fmt.hpp>
 
 #include <wolv/io/file.hpp>
 
+#include <mutex>
 #include <chrono>
 #include <fmt/chrono.h>
-#include <hex/api/task_manager.hpp>
 
 #if defined(OS_WINDOWS)
     #include <Windows.h>
@@ -40,9 +41,14 @@ namespace hex::log {
 
     namespace impl {
 
-        std::recursive_mutex& getLoggerMutex() {
-            return s_loggerMutex;
+        void lockLoggerMutex() {
+            s_loggerMutex.lock();
         }
+
+        void unlockLoggerMutex() {
+            s_loggerMutex.unlock();
+        }
+
 
         bool isLoggingSuspended() {
             return s_loggingSuspended;

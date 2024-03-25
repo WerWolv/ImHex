@@ -2,13 +2,11 @@
 
 #include <hex.hpp>
 
-#include <mutex>
-
 #include <fmt/core.h>
 #include <fmt/color.h>
 
 #include <wolv/io/file.hpp>
-#include <hex/helpers/fmt.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::log {
 
@@ -20,9 +18,11 @@ namespace hex::log {
         [[maybe_unused]] void redirectToFile();
         [[maybe_unused]] void enableColorPrinting();
 
-        [[nodiscard]] std::recursive_mutex& getLoggerMutex();
         [[nodiscard]] bool isLoggingSuspended();
         [[nodiscard]] bool isDebugLoggingEnabled();
+
+        void lockLoggerMutex();
+        void unlockLoggerMutex();
 
         struct LogEntry {
             std::string project;
@@ -39,7 +39,8 @@ namespace hex::log {
             if (isLoggingSuspended()) [[unlikely]]
                 return;
 
-            std::scoped_lock lock(getLoggerMutex());
+            lockLoggerMutex();
+            ON_SCOPE_EXIT { unlockLoggerMutex(); };
 
             auto dest = getDestination();
             try {
@@ -94,7 +95,8 @@ namespace hex::log {
     }
 
     [[maybe_unused]] void print(const std::string &fmt, auto && ... args) {
-        std::scoped_lock lock(impl::getLoggerMutex());
+        impl::lockLoggerMutex();
+        ON_SCOPE_EXIT { impl::unlockLoggerMutex(); };
 
         try {
             auto dest = impl::getDestination();
@@ -105,7 +107,8 @@ namespace hex::log {
     }
 
     [[maybe_unused]] void println(const std::string &fmt, auto && ... args) {
-        std::scoped_lock lock(impl::getLoggerMutex());
+        impl::lockLoggerMutex();
+        ON_SCOPE_EXIT { impl::unlockLoggerMutex(); };
 
         try {
             auto dest = impl::getDestination();
