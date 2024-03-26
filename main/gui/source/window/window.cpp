@@ -985,7 +985,6 @@ namespace hex {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
 
-        ImNodes::DestroyContext();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
     }

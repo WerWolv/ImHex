@@ -880,9 +880,9 @@ namespace hex {
                 s_fontSize = size;
             }
 
-            static AutoReset<std::unique_ptr<ImFontAtlas>> s_fontAtlas;
+            static AutoReset<std::shared_ptr<ImFontAtlas>> s_fontAtlas;
             void setFontAtlas(ImFontAtlas* fontAtlas) {
-                s_fontAtlas = std::unique_ptr<ImFontAtlas>(fontAtlas);
+                s_fontAtlas = std::unique_ptr<ImFontAtlas, void(*)(ImFontAtlas*)>(fontAtlas, IM_DELETE);
             }
 
             static ImFont *s_boldFont = nullptr;

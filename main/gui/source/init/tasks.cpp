@@ -57,16 +57,20 @@ namespace hex::init {
         // Terminate all asynchronous tasks
         TaskManager::exit();
 
-        // Unlock font atlas so it can be deleted in case of a crash
-        if (ImGui::GetCurrentContext() != nullptr)
-            ImGui::GetIO().Fonts->Locked = false;
+        // Unlock font atlas, so it can be deleted in case of a crash
+        if (ImGui::GetCurrentContext() != nullptr) {
+            if (ImGui::GetIO().Fonts != nullptr) {
+                ImGui::GetIO().Fonts->Locked = false;
+                ImGui::GetIO().Fonts = nullptr;
+            }
+        }
 
         // Print a nice message if a crash happened while cleaning up resources
         // To the person fixing this:
         //     ALWAYS wrap static heap allocated objects inside libimhex such as std::vector, std::string, std::function, etc. in a AutoReset<T>
         //     e.g `AutoReset<std::vector<MyStruct>> m_structs;`
         //
-        //     The reason this is necessary is because each plugin / dynamic library gets its own instance of `std::allocator`
+        //     The reason this is necessary because each plugin / dynamic library gets its own instance of `std::allocator`
         //     which will try to free the allocated memory when the object is destroyed. However since the storage is static, this
         //     will happen only when libimhex is unloaded after main() returns. At this point all plugins have been unloaded already so
         //     the std::allocator will try to free memory in a heap that does not exist anymore which will cause a crash.
@@ -81,6 +85,7 @@ namespace hex::init {
         });
 
         ImHexApi::System::impl::cleanup();
+
         EventImHexClosing::post();
         EventManager::clear();
 
