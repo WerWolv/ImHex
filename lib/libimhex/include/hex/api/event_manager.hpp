@@ -2,11 +2,12 @@
 
 #include <hex.hpp>
 
+#include <algorithm>
+#include <functional>
 #include <list>
 #include <mutex>
 #include <map>
 #include <string_view>
-#include <functional>
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/logger.hpp>
