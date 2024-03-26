@@ -58,6 +58,7 @@ namespace hex {
             }
 
             #if defined(OS_WEB)
+
                 void load() {
                     char *data = (char *) MAIN_THREAD_EM_ASM_INT({
                         let data = localStorage.getItem("config");
@@ -73,7 +74,11 @@ namespace hex {
                     for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
                         for (const auto &[name, callbacks] : rest) {
                             for (const auto &[id, callback] : callbacks) {
-                                callback(getSetting(category, name, {}));
+                                try {
+                                    callback(getSetting(category, name, {}));
+                                } catch (const std::exception &e) {
+                                    log::error("Failed to load setting [{}/{}]: {}", category, name, e.what());
+                                }
                             }
                         }
                     }
@@ -112,7 +117,11 @@ namespace hex {
                     for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
                         for (const auto &[name, callbacks] : rest) {
                             for (const auto &[id, callback] : callbacks) {
-                                callback(getSetting(category, name, {}));
+                                try {
+                                    callback(getSetting(category, name, {}));
+                                } catch (const std::exception &e) {
+                                    log::error("Failed to load setting [{}/{}]: {}", category, name, e.what());
+                                }
                             }
                         }
                     }

@@ -226,12 +226,7 @@ namespace hex::init {
             // Try to load settings from file
             ContentRegistry::Settings::impl::load();
         } catch (std::exception &e) {
-            // If that fails, create a new settings file
-
             log::error("Failed to load configuration! {}", e.what());
-
-            ContentRegistry::Settings::impl::clear();
-            ContentRegistry::Settings::impl::store();
 
             return false;
         }
