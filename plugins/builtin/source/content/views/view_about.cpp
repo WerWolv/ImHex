@@ -444,27 +444,29 @@ namespace hex::plugin::builtin {
     void ViewAbout::drawPathsPage() {
         constexpr static std::array<std::pair<const char *, fs::ImHexPath>, size_t(fs::ImHexPath::END)> PathTypes = {
             {
-                { "Patterns",                       fs::ImHexPath::Patterns         },
-                { "Patterns Includes",              fs::ImHexPath::PatternsInclude  },
-                { "Magic",                          fs::ImHexPath::Magic            },
-                { "Plugins",                        fs::ImHexPath::Plugins          },
-                { "Libraries",                      fs::ImHexPath::Libraries        },
-                { "Yara Patterns",                  fs::ImHexPath::Yara             },
-                { "Config",                         fs::ImHexPath::Config           },
-                { "Resources",                      fs::ImHexPath::Resources        },
-                { "Constants lists",                fs::ImHexPath::Constants        },
-                { "Custom encodings",               fs::ImHexPath::Encodings        },
-                { "Logs",                           fs::ImHexPath::Logs             },
-                { "Recent files",                   fs::ImHexPath::Recent           },
-                { "Scripts",                        fs::ImHexPath::Scripts          },
-                { "Themes",                         fs::ImHexPath::Themes           },
-                { "Layouts",                        fs::ImHexPath::Layouts          },
-                { "Workspaces",                     fs::ImHexPath::Workspaces       },
-                { "Backups",                        fs::ImHexPath::Backups          },
-                { "Data inspector scripts",         fs::ImHexPath::Inspectors       },
-                { "Custom data processor nodes",    fs::ImHexPath::Nodes            }
+                { "Patterns",                       fs::ImHexPath::Patterns             },
+                { "Patterns Includes",              fs::ImHexPath::PatternsInclude      },
+                { "Magic",                          fs::ImHexPath::Magic                },
+                { "Plugins",                        fs::ImHexPath::Plugins              },
+                { "Yara Patterns",                  fs::ImHexPath::Yara                 },
+                { "Yara Advaned Analysis",          fs::ImHexPath::YaraAdvancedAnalysis },
+                { "Config",                         fs::ImHexPath::Config               },
+                { "Backups",                        fs::ImHexPath::Backups              },
+                { "Resources",                      fs::ImHexPath::Resources            },
+                { "Constants lists",                fs::ImHexPath::Constants            },
+                { "Custom encodings",               fs::ImHexPath::Encodings            },
+                { "Logs",                           fs::ImHexPath::Logs                 },
+                { "Recent files",                   fs::ImHexPath::Recent               },
+                { "Scripts",                        fs::ImHexPath::Scripts              },
+                { "Data inspector scripts",         fs::ImHexPath::Inspectors           },
+                { "Themes",                         fs::ImHexPath::Themes               },
+                { "Native Libraries",               fs::ImHexPath::Libraries            },
+                { "Custom data processor nodes",    fs::ImHexPath::Nodes                },
+                { "Layouts",                        fs::ImHexPath::Layouts              },
+                { "Workspaces",                     fs::ImHexPath::Workspaces           },
             }
         };
+        static_assert(PathTypes.back().first != nullptr, "All path items need to be populated!");
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
         ImGuiExt::BeginSubWindow("Paths", ImGui::GetContentRegionAvail());
