@@ -1141,8 +1141,8 @@ namespace hex::plugin::builtin {
                                                     u64 value = 0;
                                                     provider->read(selection->getStartAddress(), &value, selection->getSize());
 
-                                                    auto littleEndianValue = hex::changeEndianess(value, selection->size, std::endian::little);
-                                                    auto bigEndianValue    = hex::changeEndianess(value, selection->size,  std::endian::big);
+                                                    auto littleEndianValue = hex::changeEndianness(value, selection->size, std::endian::little);
+                                                    auto bigEndianValue    = hex::changeEndianness(value, selection->size,  std::endian::big);
 
                                                     auto canJumpTo = [provider](u64 value) {
                                                         return (value >= provider->getBaseAddress()) && (value < (provider->getBaseAddress() + provider->getActualSize()));

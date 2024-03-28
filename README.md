@@ -109,7 +109,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 <details>
   <summary><strong>Data Inspector</strong></summary>
 
-  - Interpreting data as many different types with endianess, decimal, hexadecimal and octal support and bit inversion
+  - Interpreting data as many different types with endianness, decimal, hexadecimal and octal support and bit inversion
     - Unsigned and signed integers (8, 16, 24, 32, 48, 64 bit)
     - Floats (16, 32, 64 bit)
     - Signed and Unsigned LEB128
@@ -158,7 +158,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Numeric Value search
     - Search for signed/unsigned integers and floats
     - Search for ranges of values
-    - Option to specify size and endianess
+    - Option to specify size and endianness
     - Option to ignore unaligned values
 </details>
 <details>
