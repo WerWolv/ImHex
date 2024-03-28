@@ -9,15 +9,8 @@ namespace hex::plugin::builtin {
 
     class ViewProvider : public hex::prv::Provider {
     public:
-        explicit ViewProvider() {
-            EventProviderClosing::subscribe(this, [this](const prv::Provider *provider, bool*) {
-                if (m_provider == provider)
-                    ImHexApi::Provider::remove(this, false);
-            });
-        }
-        ~ViewProvider() override {
-            EventProviderClosing::unsubscribe(this);
-        }
+        ViewProvider() = default;
+        ~ViewProvider() override = default;
 
         [[nodiscard]] bool isAvailable() const override {
             if (m_provider == nullptr)
@@ -52,8 +45,20 @@ namespace hex::plugin::builtin {
             m_provider->save();
         }
 
-        [[nodiscard]] bool open() override { return m_provider != this; }
-        void close() override { }
+        [[nodiscard]] bool open() override {
+            if (m_provider == this)
+                return false;
+
+            EventProviderClosing::subscribe(this, [this](const prv::Provider *provider, bool*) {
+                if (m_provider == provider)
+                    ImHexApi::Provider::remove(this, false);
+            });
+
+            return true;
+        }
+        void close() override {
+            EventProviderClosing::unsubscribe(this);
+        }
 
         void resizeRaw(u64 newSize) override {
             m_size = newSize;
