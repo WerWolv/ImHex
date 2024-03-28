@@ -408,6 +408,8 @@ namespace hex::plugin::builtin {
                 if (backgroundFadeOut >= 1.0F) {
                     if (tutorialEnabled) {
                         TutorialManager::startTutorial("hex.builtin.tutorial.introduction");
+                    } else {
+                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", false);
                     }
 
                     TaskManager::doLater([] {
