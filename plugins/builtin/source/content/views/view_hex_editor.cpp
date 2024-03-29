@@ -1117,7 +1117,7 @@ namespace hex::plugin::builtin {
         /* Remove */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.remove" }, ICON_VS_CLEAR_ALL, 1800, Shortcut::None,
                                                 [this] {
-                                                    auto selection      = ImHexApi::HexEditor::getSelection();
+                                                    auto selection = ImHexApi::HexEditor::getSelection();
 
                                                     this->openPopup<PopupRemove>(selection->getStartAddress(), selection->getSize());
                                                 },
@@ -1126,11 +1126,29 @@ namespace hex::plugin::builtin {
         /* Fill */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.fill" }, ICON_VS_PAINTCAN, 1810, Shortcut::None,
                                                 [this] {
-                                                    auto selection      = ImHexApi::HexEditor::getSelection();
+                                                    auto selection = ImHexApi::HexEditor::getSelection();
 
                                                     this->openPopup<PopupFill>(selection->getStartAddress(), selection->getSize());
                                                 },
                                                 [] { return ImHexApi::HexEditor::isSelectionValid() && ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isWritable(); });
+
+        /* Toggle Overwrite/Insert mode */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.insert_mode" }, ICON_VS_PENCIL, 1820, Shortcut::None,
+                                                [this] {
+                                                    if (m_hexEditor.getMode() == ui::HexEditor::Mode::Insert)
+                                                        m_hexEditor.setMode(ui::HexEditor::Mode::Overwrite);
+                                                    else
+                                                        m_hexEditor.setMode(ui::HexEditor::Mode::Insert);
+                                                },
+                                                [] {
+                                                    return ImHexApi::HexEditor::isSelectionValid() &&
+                                                           ImHexApi::Provider::isValid() &&
+                                                           ImHexApi::Provider::get()->isWritable() &&
+                                                           ImHexApi::Provider::get()->isResizable();
+                                                },
+                                                [this] {
+                                                    return m_hexEditor.getMode() == ui::HexEditor::Mode::Insert;
+                                                });
 
         /* Jump to */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.jump_to" }, ICON_VS_DEBUG_STEP_OUT, 1850,

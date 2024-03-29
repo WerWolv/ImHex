@@ -776,6 +776,7 @@
         "hex.builtin.view.hex_editor.menu.edit.cut": "Cut",
         "hex.builtin.view.hex_editor.menu.edit.fill": "Fill...",
         "hex.builtin.view.hex_editor.menu.edit.insert": "Insert...",
+        "hex.builtin.view.hex_editor.menu.edit.insert_mode": "Insert Mode",
         "hex.builtin.view.hex_editor.menu.edit.jump_to": "Jump to",
         "hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern": "Current Pattern",
         "hex.builtin.view.hex_editor.menu.edit.open_in_new_provider": "Open selection view...",

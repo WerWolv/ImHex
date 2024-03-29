@@ -79,6 +79,7 @@ namespace hex::prv::undo {
         for (u32 i = 0; i < count; i += 1) {
             i64 index = startIndex + i;
 
+            m_undoStack[index]->undo(m_provider);
             operation->addOperation(std::move(m_undoStack[index]));
         }
 

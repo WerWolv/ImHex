@@ -156,6 +156,11 @@ namespace hex::ui {
                 EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ { selection.address, selection.size }, m_provider });
                 m_shouldModifyValue = true;
             }
+
+            if (m_mode == Mode::Insert) {
+                m_selectionStart = m_selectionEnd;
+                m_cursorBlinkTimer = -0.3F;
+            }
         }
 
         [[nodiscard]] Region getSelection() const {
@@ -294,6 +299,26 @@ namespace hex::ui {
             m_editingAddress = std::nullopt;
         }
 
+        enum class Mode { Overwrite, Insert };
+        void setMode(Mode mode) {
+            if (mode == Mode::Insert) {
+                // Don't enter insert mode if the provider doesn't support resizing the underlying data
+                if (!m_provider->isResizable())
+                    return;
+
+                // Get rid of any selection in insert mode
+                m_selectionStart = m_selectionEnd;
+                m_cursorPosition = m_selectionEnd;
+                m_selectionChanged = true;
+            }
+
+            m_mode = mode;
+        }
+
+        [[nodiscard]] Mode getMode() const {
+            return m_mode;
+        }
+
     private:
         prv::Provider *m_provider = nullptr;
 
@@ -346,6 +371,9 @@ namespace hex::ui {
         static void defaultTooltipCallback(u64, const u8 *, size_t) {  }
         std::function<std::optional<color_t>(u64, const u8 *, size_t)> m_foregroundColorCallback = defaultColorCallback, m_backgroundColorCallback = defaultColorCallback;
         std::function<void(u64, const u8 *, size_t)> m_tooltipCallback = defaultTooltipCallback;
+
+        Mode m_mode = Mode::Overwrite;
+        float m_cursorBlinkTimer = -0.3F;
     };
 
 }

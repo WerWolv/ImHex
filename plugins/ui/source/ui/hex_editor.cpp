@@ -91,6 +91,9 @@ namespace hex::ui {
     }
 
     std::optional<color_t> HexEditor::applySelectionColor(u64 byteAddress, std::optional<color_t> color) {
+        if (m_mode == Mode::Insert)
+            return color.value_or(0);
+
         if (isSelectionValid()) {
             auto selection = getSelection();
 
@@ -287,7 +290,13 @@ namespace hex::ui {
                     m_enteredEditingMode = true;
 
                     m_editingBytes.resize(size);
-                    std::memcpy(m_editingBytes.data(), data, size);
+                    if (m_mode == Mode::Overwrite)
+                        std::memcpy(m_editingBytes.data(), data, size);
+                    else if (m_mode == Mode::Insert) {
+                        std::memset(m_editingBytes.data(), 0x00, size);
+                        m_provider->insert(address, size);
+                    }
+
                     m_editingCellType = cellType;
                 }
             }
@@ -342,9 +351,20 @@ namespace hex::ui {
 
                     if (nextEditingAddress >= m_provider->getBaseAddress() + m_provider->getCurrentPageAddress() + m_provider->getSize())
                         m_editingAddress = std::nullopt;
-                    else
+                    else {
                         m_editingAddress = nextEditingAddress;
+
+                        if (m_mode == Mode::Insert) {
+                            std::memset(m_editingBytes.data(), 0x00, size);
+                            m_provider->getUndoStack().groupOperations(2, "hex.builtin.undo_operation.insert");
+                            m_provider->insert(nextEditingAddress, size);
+                        }
+                    }
                 } else {
+                    if (m_mode == Mode::Insert) {
+                        m_provider->undo();
+                    }
+
                     m_editingAddress = std::nullopt;
                 }
 
@@ -379,21 +399,34 @@ namespace hex::ui {
 
         const color_t SelectionFrameColor = ImGui::GetColorU32(ImGuiCol_Text);
 
-        // Draw vertical line at the left of first byte and the start of the line
-        if (x == 0 || byteAddress == selection.getStartAddress())
-            drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1_scaled);
+        switch (m_mode) {
+            case Mode::Overwrite: {
+                // Draw vertical line at the left of first byte and the start of the line
+                if (x == 0 || byteAddress == selection.getStartAddress())
+                    drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1_scaled);
 
-        // Draw vertical line at the right of the last byte and the end of the line
-        if (x == u16((m_bytesPerRow / bytesPerCell) - 1) || (byteAddress + bytesPerCell) > selection.getEndAddress())
-            drawList->AddLine(cellPos + ImVec2(cellSize.x, -1), cellPos + cellSize, ImColor(SelectionFrameColor), 1_scaled);
+                // Draw vertical line at the right of the last byte and the end of the line
+                if (x == u16((m_bytesPerRow / bytesPerCell) - 1) || (byteAddress + bytesPerCell) > selection.getEndAddress())
+                    drawList->AddLine(cellPos + ImVec2(cellSize.x, -1), cellPos + cellSize, ImColor(SelectionFrameColor), 1_scaled);
 
-        // Draw horizontal line at the top of the bytes
-        if (y == 0 || (byteAddress - m_bytesPerRow) < selection.getStartAddress())
-            drawList->AddLine(cellPos, cellPos + ImVec2(cellSize.x + 1, 0), ImColor(SelectionFrameColor), 1_scaled);
+                // Draw horizontal line at the top of the bytes
+                if (y == 0 || (byteAddress - m_bytesPerRow) < selection.getStartAddress())
+                    drawList->AddLine(cellPos, cellPos + ImVec2(cellSize.x + 1, 0), ImColor(SelectionFrameColor), 1_scaled);
 
-        // Draw horizontal line at the bottom of the bytes
-        if ((byteAddress + m_bytesPerRow) > selection.getEndAddress())
-            drawList->AddLine(cellPos + ImVec2(0, cellSize.y), cellPos + cellSize + ImVec2(1, 0), ImColor(SelectionFrameColor), 1_scaled);
+                // Draw horizontal line at the bottom of the bytes
+                if ((byteAddress + m_bytesPerRow) > selection.getEndAddress())
+                    drawList->AddLine(cellPos + ImVec2(0, cellSize.y), cellPos + cellSize + ImVec2(1, 0), ImColor(SelectionFrameColor), 1_scaled);
+
+                break;
+            }
+            case Mode::Insert: {
+                bool cursorVisible = (!ImGui::GetIO().ConfigInputTextCursorBlink) || (m_cursorBlinkTimer <= 0.0f) || std::fmod(m_cursorBlinkTimer, 1.20f) <= 0.80f;
+                if (cursorVisible && byteAddress == selection.getStartAddress()) {
+                    // Draw vertical line at the left of first byte and the start of the line
+                    drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1_scaled);
+                }
+            }
+        }
     }
 
     void HexEditor::drawEditor(const ImVec2 &size) {
@@ -421,6 +454,9 @@ namespace hex::ui {
         if (m_provider == nullptr || m_provider->getActualSize() == 0) {
             ImGuiExt::TextFormattedCentered("{}", "hex.ui.hex_editor.no_bytes"_lang);
         }
+
+        if (!m_editingAddress.has_value() && ImGui::IsKeyPressed(ImGuiKey_Escape))
+            m_mode = Mode::Overwrite;
 
         Region hoveredCell = Region::Invalid();
         if (ImGui::BeginChild("Hex View", size, ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
@@ -898,6 +934,11 @@ namespace hex::ui {
                         // Human-readable units
                         ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_NUMERIC, &m_showHumanReadableUnits);
                         ImGuiExt::InfoTooltip("hex.ui.hex_editor.human_readable_units_footer"_lang);
+
+                        ImGui::SameLine(0, 10_scaled);
+                        if (m_mode == Mode::Insert) {
+                            ImGui::TextUnformatted("[ INSERT ]");
+                        }
                     }
 
                     // Collapse button
@@ -1045,6 +1086,8 @@ namespace hex::ui {
             this->drawFooter(footerSize);
 
         m_selectionChanged = false;
+
+        m_cursorBlinkTimer += ImGui::GetIO().DeltaTime;
     }
 
 }
