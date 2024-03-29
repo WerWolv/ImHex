@@ -17,6 +17,9 @@
 
 namespace hex::plugin::builtin {
 
+    // Function that draws the provider popup, defiend in the ui_items.cpp file
+    void drawProviderTooltip(const prv::Provider *provider);
+
     namespace {
 
         std::string s_windowTitle, s_windowTitleFull;
@@ -70,58 +73,58 @@ namespace hex::plugin::builtin {
         }
 
         void drawSidebar(ImVec2 dockSpaceSize, ImVec2 sidebarPos, float sidebarWidth) {
-                static i32 openWindow = -1;
-                u32 index = 0;
-                ImGui::PushID("SideBarWindows");
-                for (const auto &[icon, callback, enabledCallback] : ContentRegistry::Interface::impl::getSidebarItems()) {
-                    ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * index);
+            static i32 openWindow = -1;
+            u32 index = 0;
+            ImGui::PushID("SideBarWindows");
+            for (const auto &[icon, callback, enabledCallback] : ContentRegistry::Interface::impl::getSidebarItems()) {
+                ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * index);
 
-                    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
-                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
-                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
+                ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-                    ImGui::BeginDisabled(!(ImHexApi::Provider::isValid() && enabledCallback()));
-                    {
-                        if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
-                            if (static_cast<u32>(openWindow) == index)
-                                openWindow = -1;
-                            else
-                                openWindow = index;
-                        }
+                ImGui::BeginDisabled(!(ImHexApi::Provider::isValid() && enabledCallback()));
+                {
+                    if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
+                        if (static_cast<u32>(openWindow) == index)
+                            openWindow = -1;
+                        else
+                            openWindow = index;
                     }
-                    ImGui::EndDisabled();
-
-                    ImGui::PopStyleColor(3);
-
-                    auto sideBarFocused = ImGui::IsWindowFocused();
-
-                    bool open = static_cast<u32>(openWindow) == index;
-                    if (open) {
-
-                        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -1_scaled));
-                        ImGui::SetNextWindowSize(ImVec2(0, dockSpaceSize.y + 5_scaled));
-
-                        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
-                        ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
-                        if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                            if (ImGui::BeginChild("##Content", ImVec2(), ImGuiChildFlags_ResizeX)) {
-                                callback();
-                            }
-                            ImGui::EndChild();
-
-                            if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !sideBarFocused) {
-                                openWindow = -1;
-                            }
-                        }
-                        ImGui::End();
-                        ImGui::PopStyleVar();
-                        ImGui::PopStyleColor();
-                    }
-
-                    ImGui::NewLine();
-                    index++;
                 }
-                ImGui::PopID();
+                ImGui::EndDisabled();
+
+                ImGui::PopStyleColor(3);
+
+                auto sideBarFocused = ImGui::IsWindowFocused();
+
+                bool open = static_cast<u32>(openWindow) == index;
+                if (open) {
+
+                    ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -1_scaled));
+                    ImGui::SetNextWindowSize(ImVec2(0, dockSpaceSize.y + 5_scaled));
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
+                    ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
+                    if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                        if (ImGui::BeginChild("##Content", ImVec2(), ImGuiChildFlags_ResizeX)) {
+                            callback();
+                        }
+                        ImGui::EndChild();
+
+                        if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !sideBarFocused) {
+                            openWindow = -1;
+                        }
+                    }
+                    ImGui::End();
+                    ImGui::PopStyleVar();
+                    ImGui::PopStyleColor();
+                }
+
+                ImGui::NewLine();
+                index++;
+            }
+            ImGui::PopID();
         }
 
         void drawTitleBar() {
@@ -228,8 +231,16 @@ namespace hex::plugin::builtin {
                         EventSearchBoxClicked::post(ImGuiMouseButton_Right);
 
                     ImGui::PushTextWrapPos(300_scaled);
-                    if (!s_windowTitleFull.empty())
-                        ImGui::SetItemTooltip("%s", s_windowTitleFull.c_str());
+
+                    if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
+                        drawProviderTooltip(ImHexApi::Provider::get());
+                    } else {
+                        if (ImGuiExt::InfoTooltip()) {
+                            ImGui::BeginTooltip();
+                            ImGui::TextUnformatted(s_windowTitleFull.c_str());
+                            ImGui::EndTooltip();
+                        }
+                    }
                     ImGui::PopTextWrapPos();
 
                     ImGui::PopStyleVar(3);

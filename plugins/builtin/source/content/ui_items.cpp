@@ -334,6 +334,41 @@ namespace hex::plugin::builtin {
         }
     };
 
+    void drawProviderTooltip(const prv::Provider *provider) {
+        if (ImGuiExt::InfoTooltip()) {
+            ImGui::BeginTooltip();
+
+            ImGuiExt::TextFormatted("{}", provider->getName().c_str());
+
+            const auto &description = provider->getDataDescription();
+            if (!description.empty()) {
+                ImGui::Separator();
+                if (ImGui::GetIO().KeyShift && !description.empty()) {
+
+                    if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible, ImVec2(400_scaled, 0))) {
+                        ImGui::TableSetupColumn("type");
+                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+
+                        ImGui::TableNextRow();
+
+                        for (auto &[name, value] : description) {
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormatted("{}", name);
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormattedWrapped("{}", value);
+                        }
+
+                        ImGui::EndTable();
+                    }
+                } else {
+                    ImGuiExt::TextFormattedDisabled("hex.builtin.provider.tooltip.show_more"_lang);
+                }
+            }
+
+            ImGui::EndTooltip();
+        }
+    }
+
     void addToolbarItems() {
         ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Left, "hex.builtin.shortcut.prev_provider", []{
             auto currIndex = ImHexApi::Provider::getCurrentProviderIndex();
@@ -379,6 +414,7 @@ namespace hex::plugin::builtin {
             alwaysShowProviderTabs = value.get<bool>(false);
         });
 
+        // Toolbar items
         ContentRegistry::Interface::addToolbarItem([] {
             std::set<const ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> menuItems;
 
@@ -456,38 +492,7 @@ namespace hex::plugin::builtin {
                             lastSelectedProvider = i;
                         }
 
-                        if (ImGuiExt::InfoTooltip()) {
-                            ImGui::BeginTooltip();
-
-                            ImGuiExt::TextFormatted("{}", tabProvider->getName().c_str());
-
-                            const auto &description = tabProvider->getDataDescription();
-                            if (!description.empty()) {
-                                ImGui::Separator();
-                                if (ImGui::GetIO().KeyShift && !description.empty()) {
-
-                                    if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible, ImVec2(400_scaled, 0))) {
-                                        ImGui::TableSetupColumn("type");
-                                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
-
-                                        ImGui::TableNextRow();
-
-                                        for (auto &[name, value] : description) {
-                                            ImGui::TableNextColumn();
-                                            ImGuiExt::TextFormatted("{}", name);
-                                            ImGui::TableNextColumn();
-                                            ImGuiExt::TextFormattedWrapped("{}", value);
-                                        }
-
-                                        ImGui::EndTable();
-                                    }
-                                } else {
-                                    ImGuiExt::TextFormattedDisabled("hex.builtin.provider.tooltip.show_more"_lang);
-                                }
-                            }
-
-                            ImGui::EndTooltip();
-                        }
+                        drawProviderTooltip(tabProvider);
 
                         ImGui::PopID();
 
