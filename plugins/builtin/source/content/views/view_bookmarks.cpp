@@ -40,7 +40,7 @@ namespace hex::plugin::builtin {
                 name,
                 std::move(comment),
                 color,
-                false,
+                true,
                 bookmarkId
             };
 
@@ -283,11 +283,45 @@ namespace hex::plugin::builtin {
                     ImGui::PopID();
                 };
 
-                bool open = true;
-                if (!ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), locked ? nullptr : &open)) {
+                bool notDeleted = true;
+
+                auto expanded = ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), &notDeleted);
+                auto nextPos = ImGui::GetCursorPos();
+
+                ImGui::SameLine();
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - 70_scaled);
+
+                {
+                    // Draw jump to region button
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                        ImHexApi::HexEditor::setSelection(region);
+                    ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
+
+                    ImGui::SameLine(0, 1_scaled);
+
+                    // Draw open in new view button
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        TaskManager::doLater([region, provider]{
+                            auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
+                            if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                                viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
+                                if (viewProvider->open()) {
+                                    EventProviderOpened::post(viewProvider);
+                                    AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
+                                }
+                            }
+                        });
+                    }
+                    ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
+                }
+
+                ImGui::SetCursorPos(nextPos);
+                ImGui::Dummy({});
+
+                if (!expanded) {
                     // Handle dragging bookmarks up and down when they're collapsed
 
-                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoHoldToOpenOthers)) {
+                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoHoldToOpenOthers | ImGuiDragDropFlags_SourceAllowNullID)) {
                         // Set the payload to the bookmark id
                         ImGui::SetDragDropPayload("BOOKMARK_PAYLOAD", &bookmarkId, sizeof(bookmarkId));
 
@@ -341,13 +375,11 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
 
                         // Draw lock/unlock button
-                        if (locked) {
-                            if (ImGuiExt::IconButton(ICON_VS_LOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = false;
+                        ImGuiExt::DimmedIconToggle(ICON_VS_LOCK, ICON_VS_UNLOCK, &locked);
+                        if (locked)
                             ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.unlock"_lang);
-                        } else {
-                            if (ImGuiExt::IconButton(ICON_VS_UNLOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = true;
+                        else
                             ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.lock"_lang);
-                        }
 
                         ImGui::SameLine();
 
@@ -382,30 +414,6 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted("hex.ui.common.address"_lang);
                         ImGui::TableNextColumn();
                         ImGui::TableNextColumn();
-
-                        // Draw jump to address button
-                        if (ImGuiExt::IconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
-                            ImHexApi::HexEditor::setSelection(region);
-                        ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
-
-                        ImGui::SameLine();
-
-                        // Draw open in new view button
-                        if (ImGuiExt::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                            TaskManager::doLater([region, provider]{
-                                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
-                                if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
-                                    viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
-                                    if (viewProvider->open()) {
-                                        EventProviderOpened::post(viewProvider);
-                                        AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
-                                    }
-                                }
-                            });
-                        }
-                        ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
-
-                        ImGui::SameLine();
 
                         // Draw the address of the bookmark
                         u64 begin = region.getStartAddress();
@@ -465,7 +473,7 @@ namespace hex::plugin::builtin {
                 }
 
                 // Mark a bookmark for removal when the user clicks the remove button
-                if (!open)
+                if (!notDeleted)
                     bookmarkToRemove = it;
             }
 
