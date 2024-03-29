@@ -404,8 +404,7 @@ namespace hex::plugin::builtin {
 
         // Provider switcher
         ContentRegistry::Interface::addToolbarItem([] {
-            const auto provider      = ImHexApi::Provider::get();
-            const bool providerValid = provider != nullptr;
+            const bool providerValid = ImHexApi::Provider::get() != nullptr;
             const bool tasksRunning  = TaskManager::getRunningTaskCount() > 0;
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -429,6 +428,9 @@ namespace hex::plugin::builtin {
 
                         auto &tabProvider = providers[i];
                         const auto selectedProviderIndex = ImHexApi::Provider::getCurrentProviderIndex();
+
+                        if (std::ranges::contains(ImHexApi::Provider::impl::getClosingProviders(), tabProvider))
+                            continue;
 
                         bool open = true;
                         ImGui::PushID(tabProvider);
