@@ -35,9 +35,9 @@ EOF
 
 ## Download libmagic
 ### Clone libmagic
-RUN git clone https://github.com/file/file /mnt/file
+RUN git clone --depth 1 --branch FILE5_45 https://github.com/file/file /mnt/file
 ### Download libmagic dependencies
-RUN --mount=type=cache,target=/var/lib/apt/lists/ apt install -y libtool autoconf
+RUN --mount=type=cache,target=/var/lib/apt/lists/ apt update && apt install -y libtool autoconf
 
 # -- DOWNLOADING + BUILDING STUFF
 
