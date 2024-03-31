@@ -6,6 +6,7 @@ import json
 # This fixes a CJK full-width character input issue
 #  which makes left halves of deleted characters displayed on screen
 # pylint: disable=unused-import
+import re
 import readline
 
 DEFAULT_LANG = "en_US"
@@ -18,13 +19,26 @@ def main():
         prog="langtool",
         description="ImHex translate tool",
     )
-    parser.add_argument("command", choices=["check", "translate", "update", "create"])
+    parser.add_argument(
+        "command",
+        choices=[
+            "check",
+            "translate",
+            "update",
+            "create",
+            "retranslate",
+            "untranslate",
+        ],
+    )
     parser.add_argument(
         "-c", "--langdir", default=DEFAULT_LANG_PATH, help="Language folder glob"
     )
     parser.add_argument("-l", "--lang", default="", help="Language to translate")
     parser.add_argument(
         "-r", "--reflang", default="", help="Language for reference when translating"
+    )
+    parser.add_argument(
+        "-k", "--keys", help="Keys to re-translate (only in re/untranslate mode)"
     )
     args = parser.parse_args()
 
@@ -110,9 +124,13 @@ def main():
                 lang_data = json.load(target_lang_file)
 
                 for key, value in default_lang_data["translations"].items():
-                    if (
+                    has_translation = (
                         key in lang_data["translations"]
                         and lang_data["translations"][key] != INVALID_TRANSLATION
+                    )
+                    if has_translation and not (
+                        (command == "retranslate" or command == "untranslate")
+                        and re.compile(args.keys).fullmatch(key)
                     ):
                         continue
                     if command == "check":
@@ -120,15 +138,29 @@ def main():
                             f"Error: Translation {lang_data['code']} is missing translation for key '{key}'"
                         )
                         exit(2)
-                    elif command == "translate":
+                    elif (
+                        command == "translate"
+                        or command == "retranslate"
+                        or command == "untranslate"
+                    ):
+                        if command == "untranslate" and not has_translation:
+                            continue
                         reference_tranlsation = (
                             " '%s'" % reference_lang_data["translations"][key]
                             if reference_lang_data
                             else ""
                         )
                         print(
-                            f"\033[1m'{key}' '{value}'{reference_tranlsation}\033[0m => {lang_data['language']}"
+                            f"\033[1m'{key}' '{value}'{reference_tranlsation}\033[0m => {lang_data['language']}",
+                            end="",
                         )
+                        if has_translation:
+                            translation = lang_data["translations"][key]
+                            print(f" <= \033[1m'{translation}'\033[0m")
+                        print()  # for a new line
+                        if command == "untranslate":
+                            lang_data["translations"][key] = INVALID_TRANSLATION
+                            continue
                         try:
                             new_value = input("=> ")
                             lang_data["translations"][key] = new_value
