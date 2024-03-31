@@ -97,7 +97,9 @@ def main():
             ):
                 continue
 
-            print(f"\nProcessing '{lang_file_path}'\n----------------------------\n")
+            print(f"\nProcessing '{lang_file_path}'")
+            if not (command == "update" or command == "create"):
+                print("\n----------------------------\n")
 
             with lang_file_path.open("r+", encoding="utf-8") as target_lang_file:
                 lang_data = json.load(target_lang_file)
@@ -125,7 +127,7 @@ def main():
                             print(f"Reference: \033[1m{reference_tranlsation}\033[0m")
                         new_value = input("Enter translation: ")
                         lang_data["translations"][key] = new_value
-                    elif command == "update" or command == 'create':
+                    elif command == "update" or command == "create":
                         lang_data["translations"][key] = INVALID_TRANSLATION
 
                 keys_to_remove = []
