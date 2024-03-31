@@ -678,7 +678,7 @@
         "hex.builtin.tools.value": "值",
         "hex.builtin.tools.wiki_explain": "维基百科搜索",
         "hex.builtin.tools.wiki_explain.control": "控制",
-        "hex.builtin.tools.wiki_explain.invalid_response": "接收到来自 Wikipedia 的无效响应！",
+        "hex.builtin.tools.wiki_explain.invalid_response": "接收到来自维基百科的无效响应！",
         "hex.builtin.tools.wiki_explain.results": "结果",
         "hex.builtin.tools.wiki_explain.search": "搜索",
         "hex.builtin.tutorial.introduction": "ImHex 简介",
