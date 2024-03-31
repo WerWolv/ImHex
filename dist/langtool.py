@@ -28,6 +28,7 @@ def main():
             "create",
             "retranslate",
             "untranslate",
+            "fmtzh",
         ],
     )
     parser.add_argument(
@@ -128,7 +129,7 @@ def main():
                         key in lang_data["translations"]
                         and lang_data["translations"][key] != INVALID_TRANSLATION
                     )
-                    if has_translation and not (
+                    if not has_translation and not (
                         (command == "retranslate" or command == "untranslate")
                         and re.compile(args.keys).fullmatch(key)
                     ):
@@ -168,6 +169,11 @@ def main():
                             break
                     elif command == "update" or command == "create":
                         lang_data["translations"][key] = INVALID_TRANSLATION
+                    elif command == "fmtzh":
+                        if has_translation:
+                            lang_data["translations"][key] = fmtzh(
+                                lang_data["translations"][key]
+                            )
 
                 keys_to_remove = []
                 for key, value in lang_data["translations"].items():
@@ -188,6 +194,14 @@ def main():
                     sort_keys=True,
                     ensure_ascii=False,
                 )
+
+
+def fmtzh(text: str) -> str:
+    text = re.sub(r"(\.{3}|\.{6})", "……", text)
+    text = text.replace("!", "！")
+    text = re.sub(r"([^\.\na-zA-Z\d])\.$", "\1。", text, flags=re.M)
+    text = text.replace("?", "？")
+    return text
 
 
 if __name__ == "__main__":
