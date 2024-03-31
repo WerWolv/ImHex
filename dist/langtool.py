@@ -116,17 +116,19 @@ def main():
                         )
                         exit(2)
                     elif command == "translate":
-                        print(f"Key \033[1m'{key}'\033[0m to {lang_data['language']}")
-                        print(f"Text: \033[1m{value}\033[0m")
                         reference_tranlsation = (
-                            reference_lang_data["translations"][key]
+                            " '%s'" % reference_lang_data["translations"][key]
                             if reference_lang_data
-                            else None
+                            else ""
                         )
-                        if reference_tranlsation:
-                            print(f"Reference: \033[1m{reference_tranlsation}\033[0m")
-                        new_value = input("Enter translation: ")
-                        lang_data["translations"][key] = new_value
+                        print(
+                            f"\033[1m'{key}' '{value}'{reference_tranlsation}\033[0m => {lang_data['language']}"
+                        )
+                        try:
+                            new_value = input("=> ")
+                            lang_data["translations"][key] = new_value
+                        except KeyboardInterrupt:
+                            break
                     elif command == "update" or command == "create":
                         lang_data["translations"][key] = INVALID_TRANSLATION
 
