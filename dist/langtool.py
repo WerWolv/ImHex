@@ -3,6 +3,11 @@ from pathlib import Path
 import argparse
 import json
 
+# This fixes a CJK full-width character input issue
+#  which makes left halves of deleted characters displayed on screen
+# pylint: disable=unused-import
+import readline
+
 DEFAULT_LANG = "en_US"
 DEFAULT_LANG_PATH = "plugins/*/romfs/lang/"
 INVALID_TRANSLATION = ""
