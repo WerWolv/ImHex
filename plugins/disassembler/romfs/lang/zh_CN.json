@@ -17,7 +17,7 @@
         "hex.disassembler.view.disassembler.bpf.classic": "传统 BPF（cBPF）",
         "hex.disassembler.view.disassembler.bpf.extended": "扩展 BPF（eBPF）",
         "hex.disassembler.view.disassembler.disassemble": "反汇编",
-        "hex.disassembler.view.disassembler.disassembling": "反汇编中...",
+        "hex.disassembler.view.disassembler.disassembling": "反汇编中……",
         "hex.disassembler.view.disassembler.disassembly.address": "地址",
         "hex.disassembler.view.disassembler.disassembly.bytes": "字节",
         "hex.disassembler.view.disassembler.disassembly.offset": "偏移",
