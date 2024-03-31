@@ -1,0 +1,10 @@
+{
+    "code": "zh_CN",
+    "country": "China",
+    "language": "Chinese (Simplified)",
+    "translations": {
+        "hex.script_loader.menu.loading": "",
+        "hex.script_loader.menu.no_scripts": "",
+        "hex.script_loader.menu.run_script": ""
+    }
+}
