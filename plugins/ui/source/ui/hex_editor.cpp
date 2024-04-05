@@ -596,6 +596,8 @@ namespace hex::ui {
                                 auto cellSize = (CharacterSize * ImVec2(m_currDataVisualizer->getMaxCharsPerCell(), 1)) + (ImVec2(2, 2) * ImGui::GetStyle().CellPadding) + scaled(ImVec2(1 + m_byteCellPadding, 0));
                                 auto maxCharsPerCell = m_currDataVisualizer->getMaxCharsPerCell();
 
+                                cellSize = ImVec2(std::ceil(cellSize.x), std::ceil(cellSize.y));
+
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
 
                                 if (isColumnSeparatorColumn(x + 1, columnCount) && cellColors.size() > x + 1) {
