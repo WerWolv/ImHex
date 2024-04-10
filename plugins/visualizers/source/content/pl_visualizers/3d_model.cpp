@@ -151,7 +151,7 @@ namespace hex::plugin::visualizers {
             return std::max(maxx, maxy);
         }
 
-        void setDefaultColors(std::vector<float> &colors, float size, u32 color) {
+        void setDefaultColors(std::vector<float> &colors, size_t size, u32 color) {
             colors.resize(size / 3 * 4);
 
             float red   = float((color >> 0)  & 0xFF) / 255.0F;
