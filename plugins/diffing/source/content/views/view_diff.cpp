@@ -273,7 +273,7 @@ namespace hex::plugin::diffing {
 
                         // Draw end address
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(hex::format("0x{:02X}", regionA.start).c_str());
+                        ImGui::TextUnformatted(hex::format("0x{:02X}", regionA.end).c_str());
 
                         // Draw difference type
                         ImGui::TableNextColumn();
