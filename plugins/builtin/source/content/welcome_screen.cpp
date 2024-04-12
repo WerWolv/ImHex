@@ -108,7 +108,7 @@ namespace hex::plugin::builtin {
                 }
                 ImGui::SameLine();
                 ImGui::SetCursorPosX(width / 9 * 5);
-                if (ImGui::Button("hex.builtin.popup.safety_backup.delete"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                if (ImGui::Button("hex.builtin.popup.safety_backup.delete"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                     m_deleteCallback();
 
                     this->close();
@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.ui.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
 
-                if (ImGui::Button("hex.ui.common.close"_lang) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                if (ImGui::Button("hex.ui.common.close"_lang) || ImGui::IsKeyPressed(ImGuiKey_Escape))
                     Popup::close();
             }
         };

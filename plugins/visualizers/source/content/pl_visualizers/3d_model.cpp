@@ -286,7 +286,7 @@ namespace hex::plugin::visualizers {
         }
 
         void processKeyEvent(ImGuiKey key, float &variable, float incr, float accel) {
-            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(key))) {
+            if (ImGui::IsKeyPressed(key)) {
                 auto temp = variable + incr * accel;
                 if (variable * temp < 0.0F)
                     variable = 0.0F;
@@ -297,8 +297,8 @@ namespace hex::plugin::visualizers {
 
         void processInputEvents(gl::Vector<float, 3> &rotation, gl::Vector<float, 3> &translation, float &scaling, float &nearLimit, float &farLimit) {
             auto accel = 1.0F;
-            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_LeftShift)) ||
-                ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_RightShift)))
+            if (ImGui::IsKeyDown(ImGuiKey_LeftShift) ||
+                ImGui::IsKeyDown(ImGuiKey_RightShift))
                 accel = 10.0F;
 
             auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);

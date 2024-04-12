@@ -28,7 +28,7 @@ namespace hex::ui {
 
                 ImGui::SetWindowPos((ImHexApi::System::getMainWindowSize() - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
 
-                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                if (ImGui::IsKeyPressed(ImGuiKey_Escape))
                     this->close();
             }
 

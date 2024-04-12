@@ -75,7 +75,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::EndChild();
 
-            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape))
                 this->close();
         }
 

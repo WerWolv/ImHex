@@ -36,7 +36,7 @@ namespace hex::plugin::hashes {
             ImGui::InputText("##result", m_result, ImGuiInputTextFlags_ReadOnly);
             ImGui::PopItemWidth();
 
-            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape))
                 this->close();
         }
 

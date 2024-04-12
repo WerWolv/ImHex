@@ -883,7 +883,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
             // Escape key to close the popup
-            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape), false))
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape, false))
                 ImGui::CloseCurrentPopup();
 
             ImGui::EndPopup();

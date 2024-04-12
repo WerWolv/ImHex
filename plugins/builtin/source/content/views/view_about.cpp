@@ -766,7 +766,7 @@ namespace hex::plugin::builtin {
         };
 
         // Allow the window to be closed by pressing ESC
-        if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+        if (ImGui::IsKeyDown(ImGuiKey_Escape))
             ImGui::CloseCurrentPopup();
 
         if (ImGui::BeginTabBar("about_tab_bar")) {
