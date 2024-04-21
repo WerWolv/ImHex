@@ -720,7 +720,7 @@ namespace hex {
             glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
         #endif
 
-	#if defined(OS_LINUX)
+	#if defined(OS_LINUX) && defined(GLFW_WAYLAND_APP_ID)
             glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
 	#endif
 
