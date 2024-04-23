@@ -359,7 +359,7 @@
         "hex.builtin.oobe.tutorial_question": "",
         "hex.builtin.popup.blocking_task.desc": "현재 작업을 실행 중입니다.",
         "hex.builtin.popup.blocking_task.title": "작업 실행 중",
-        "hex.builtin.popup.close_provider.desc": "이 공급자에 대해 아직 프로젝트에\n저장되지 않은 변경 사항이 있습니다.\n\n정말 종료하시겠습니까?",
+        "hex.builtin.popup.close_provider.desc": "",
         "hex.builtin.popup.close_provider.title": "공급자를 종료하시겠습니까?",
         "hex.builtin.popup.create_workspace.desc": "",
         "hex.builtin.popup.create_workspace.title": "",
