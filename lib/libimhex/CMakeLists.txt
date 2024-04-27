@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 project(libimhex)
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 set(LIBIMHEX_SOURCES
         source/api/imhex_api.cpp
@@ -151,3 +150,4 @@ add_dependencies(imhex_all libimhex)
 
 install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
 set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set_target_properties(libimhex PROPERTIES PREFIX "")
