@@ -562,12 +562,15 @@ namespace hex {
 
             ImGui::SetNextWindowClass(&windowClass);
 
+            auto window    = ImGui::FindWindowByName(view->getName().c_str());
+            if (window != nullptr && window->DockNode == nullptr)
+                ImGui::SetNextWindowBgAlpha(1.0F);
+
             // Draw view
             view->draw();
             view->trackViewOpenState();
 
             if (view->getWindowOpenState()) {
-                auto window    = ImGui::FindWindowByName(view->getName().c_str());
                 bool hasWindow = window != nullptr;
                 bool focused   = false;
 
