@@ -526,6 +526,14 @@ namespace hex {
                 }
             }
         });
+        RequestChangeTheme::subscribe([this](const std::string &theme) {
+            const int immersiveDarkMode = 20;
+            auto hwnd = glfwGetWin32Window(m_window);
+            BOOL value = theme == "Dark" ? TRUE : FALSE;
+
+            // Using the C++ "bool" type seems to not work correctly.
+            DwmSetWindowAttribute(hwnd, immersiveDarkMode, &value, sizeof(value));
+        });
 
         ImGui::GetIO().ConfigDebugIsDebuggerPresent = ::IsDebuggerPresent();
     }
