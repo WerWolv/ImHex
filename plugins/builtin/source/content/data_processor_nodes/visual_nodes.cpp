@@ -1,3 +1,4 @@
+#include <imgui_internal.h>
 #include <hex/api/content_registry.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/data_processor/node.hpp>
@@ -11,10 +12,18 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(150_scaled);
-            if (m_value.has_value())
-                ImGuiExt::TextFormatted("0x{0:X}", m_value.value());
-            else
+            if (m_value.has_value()) {
+                ImGuiExt::TextFormattedSelectable("{0:d}",   m_value.value());
+                ImGuiExt::TextFormattedSelectable("0x{0:02X}", m_value.value());
+                ImGuiExt::TextFormattedSelectable("0o{0:03o}", m_value.value());
+                ImGuiExt::TextFormattedSelectable("0b{0:08b}", m_value.value());
+            } else {
                 ImGui::TextUnformatted("???");
+                ImGui::TextUnformatted("???");
+                ImGui::TextUnformatted("???");
+                ImGui::TextUnformatted("???");
+            }
+
             ImGui::PopItemWidth();
         }
 
@@ -36,7 +45,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             ImGui::PushItemWidth(150_scaled);
             if (m_value.has_value())
-                ImGuiExt::TextFormatted("{0}", m_value.value());
+                ImGuiExt::TextFormattedSelectable("{0}", m_value.value());
             else
                 ImGui::TextUnformatted("???");
             ImGui::PopItemWidth();
@@ -92,7 +101,7 @@ namespace hex::plugin::builtin {
                                 line += ".";
                         }
 
-                        ImGui::TextUnformatted(line.c_str());
+                        ImGuiExt::TextFormattedSelectable("{}", line.c_str());
                     }
                 }
                 clipper.End();
@@ -125,7 +134,7 @@ namespace hex::plugin::builtin {
                         auto line = string.substr(i * LineLength, LineLength);
                         ImGui::TextUnformatted("");
                         ImGui::SameLine();
-                        ImGui::TextUnformatted(line.data(), line.data() + line.length());
+                        ImGuiExt::TextFormattedSelectable("{}", line);
                     }
                 }
 
@@ -150,7 +159,7 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGui::Text("%s", m_display.c_str());
+            ImGuiExt::TextFormattedSelectable("{}", m_display);
             ImGui::PopItemWidth();
         }
 
