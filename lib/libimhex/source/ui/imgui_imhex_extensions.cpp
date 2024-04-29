@@ -180,7 +180,10 @@ namespace ImGuiExt {
         PushStyleColor(ImGuiCol_Text, ImU32(col));
 
         Text("%s %s", icon, label);
-        GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
+
+        if (hovered)
+            GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
+
         PopStyleColor();
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
@@ -209,7 +212,10 @@ namespace ImGuiExt {
         const ImU32 col = hovered ? GetColorU32(ImGuiCol_ButtonHovered) : GetColorU32(ImGuiCol_ButtonActive);
         PushStyleColor(ImGuiCol_Text, ImU32(col));
         TextEx(label, nullptr, ImGuiTextFlags_NoWidthForLargeClippedText);    // Skip formatting
-        GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
+
+        if (hovered)
+            GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
+
         PopStyleColor();
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
