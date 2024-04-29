@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             static const std::string Header = " Address    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F                       ";
 
-            if (ImGui::BeginChild("##hex_view", scaled(ImVec2(ImGui::CalcTextSize(Header.c_str()).x, 200)), true)) {
+            if (ImGui::BeginChild("##hex_view", ImVec2(ImGui::CalcTextSize(Header.c_str()).x, 200_scaled), true)) {
                 ImGui::TextUnformatted(Header.c_str());
 
                 auto size = m_buffer.size();
@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
 
                 clipper.Begin((size + 0x0F) / 0x10);
 
-                while (clipper.Step())
+                while (clipper.Step()) {
                     for (auto y = clipper.DisplayStart; y < clipper.DisplayEnd; y++) {
                         auto lineSize = ((size - y * 0x10) < 0x10) ? size % 0x10 : 0x10;
 
@@ -94,6 +94,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::TextUnformatted(line.c_str());
                     }
+                }
                 clipper.End();
             }
             ImGui::EndChild();
@@ -119,13 +120,14 @@ namespace hex::plugin::builtin {
                 ImGuiListClipper clipper;
                 clipper.Begin((string.length() + (LineLength - 1)) / LineLength);
 
-                while (clipper.Step())
+                while (clipper.Step()) {
                     for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         auto line = string.substr(i * LineLength, LineLength);
                         ImGui::TextUnformatted("");
                         ImGui::SameLine();
                         ImGui::TextUnformatted(line.data(), line.data() + line.length());
                     }
+                }
 
                 clipper.End();
             }
