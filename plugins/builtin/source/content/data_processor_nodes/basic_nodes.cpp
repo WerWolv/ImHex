@@ -9,6 +9,8 @@
 #include <nlohmann/json.hpp>
 
 #include <imgui.h>
+#include <fonts/codicons_font.h>
+#include <wolv/math_eval/math_evaluator.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -91,26 +93,34 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGuiExt::InputHexadecimal("##integer_value", &m_value);
+            ImGuiExt::InputTextIcon("##integer_value", ICON_VS_SYMBOL_OPERATOR, m_input, ImGuiInputTextFlags_AutoSelectAll);
             ImGui::PopItemWidth();
         }
 
         void process() override {
-            this->setIntegerOnOutput(0, m_value);
+            wolv::math_eval::MathEvaluator<i128> evaluator;
+
+            if (auto result = evaluator.evaluate(m_input); result.has_value())
+                this->setIntegerOnOutput(0, *result);
+            else
+                throwNodeError(evaluator.getLastError().value_or("Unknown math evaluator error"));
         }
 
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
-            j["data"] = m_value;
+            j["input"] = m_input;
         }
 
         void load(const nlohmann::json &j) override {
-            m_value = j.at("data");
+            if (j.contains("input"))
+                m_input = j.at("input");
+            else if (j.contains("data"))
+                m_input = std::to_string(j.at("data").get<i64>());
         }
 
     private:
-        u64 m_value = 0;
+        std::string m_input = "0x00";
     };
 
     class NodeFloat : public dp::Node {
