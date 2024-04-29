@@ -187,8 +187,8 @@ namespace ImGuiExt {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
 
-        ImGui::PushItemWidth(-FLT_MIN);
-        ImGui::InputText("##", const_cast<char *>(text.c_str()), text.size(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::PushItemWidth(ImGui::CalcTextSize(text.c_str()).x + ImGui::GetStyle().FramePadding.x * 2);
+        ImGui::InputText("##", const_cast<char *>(text.c_str()), text.size(), ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll);
         ImGui::PopItemWidth();
 
         ImGui::PopStyleColor();
@@ -222,7 +222,7 @@ namespace ImGuiExt {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
 
-        ImGui::PushItemWidth(-FLT_MIN);
+        ImGui::PushItemWidth(ImGui::CalcTextSize(text.c_str()).x + ImGui::GetStyle().FramePadding.x * 2);
         ImGui::InputTextMultiline(
                 "##",
                 const_cast<char *>(text.c_str()),
