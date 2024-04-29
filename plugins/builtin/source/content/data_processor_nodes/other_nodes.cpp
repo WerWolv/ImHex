@@ -83,15 +83,30 @@ namespace hex::plugin::builtin {
 
     class NodeCastIntegerToBuffer : public dp::Node {
     public:
-        NodeCastIntegerToBuffer() : Node("hex.builtin.nodes.casting.int_to_buffer.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeCastIntegerToBuffer() : Node("hex.builtin.nodes.casting.int_to_buffer.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.size"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
 
         void process() override {
             const auto &input = this->getIntegerOnInput(0);
+            auto size = this->getIntegerOnInput(1);
 
-            std::vector<u8> output(sizeof(input), 0x00);
-            std::memcpy(output.data(), &input, sizeof(input));
+            if (size == 0) {
+                for (u32 i = 0; i < sizeof(input); i++) {
+                    if ((input >> (i * 8)) == 0) {
+                        size = i;
+                        break;
+                    }
+                }
 
-            this->setBufferOnOutput(1, output);
+                if (size == 0)
+                    size = 1;
+            } else if (size > sizeof(input)) {
+                throwNodeError("Integers cannot hold more than 16 bytes");
+            }
+
+            std::vector<u8> output(size, 0x00);
+            std::memcpy(output.data(), &input, size);
+
+            this->setBufferOnOutput(2, output);
         }
     };
 
