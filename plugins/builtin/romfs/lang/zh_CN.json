@@ -354,7 +354,7 @@
         "hex.builtin.nodes.visualizer.image_rgba.header": "RGBA8 图像可视化",
         "hex.builtin.nodes.visualizer.layered_dist": "分层布局",
         "hex.builtin.nodes.visualizer.layered_dist.header": "分层布局",
-        "hex.builtin.popup.close_provider.desc": "对一个或多个提供者进行了未保存的更改\n尚未保存到项目中。\n\n并且您确定要关闭它们吗？",
+        "hex.builtin.popup.close_provider.desc": "",
         "hex.builtin.popup.close_provider.title": "关闭提供者？",
         "hex.builtin.popup.docs_question.title": "查找文档",
         "hex.builtin.popup.docs_question.no_answer": "文档中没有这个问题的答案",

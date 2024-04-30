@@ -415,6 +415,10 @@ namespace hex::init {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         #endif
 
+	#if defined(OS_LINUX) && defined(GLFW_WAYLAND_APP_ID)
+	    glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
+	#endif
+
         // Make splash screen non-resizable, undecorated and transparent
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);

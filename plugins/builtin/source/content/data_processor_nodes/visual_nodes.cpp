@@ -1,3 +1,4 @@
+#include <imgui_internal.h>
 #include <hex/api/content_registry.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/data_processor/node.hpp>
@@ -11,10 +12,18 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(150_scaled);
-            if (m_value.has_value())
-                ImGuiExt::TextFormatted("0x{0:X}", m_value.value());
-            else
+            if (m_value.has_value()) {
+                ImGuiExt::TextFormattedSelectable("{0:d}",   m_value.value());
+                ImGuiExt::TextFormattedSelectable("0x{0:02X}", m_value.value());
+                ImGuiExt::TextFormattedSelectable("0o{0:03o}", m_value.value());
+                ImGuiExt::TextFormattedSelectable("0b{0:08b}", m_value.value());
+            } else {
                 ImGui::TextUnformatted("???");
+                ImGui::TextUnformatted("???");
+                ImGui::TextUnformatted("???");
+                ImGui::TextUnformatted("???");
+            }
+
             ImGui::PopItemWidth();
         }
 
@@ -36,7 +45,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             ImGui::PushItemWidth(150_scaled);
             if (m_value.has_value())
-                ImGuiExt::TextFormatted("{0}", m_value.value());
+                ImGuiExt::TextFormattedSelectable("{0}", m_value.value());
             else
                 ImGui::TextUnformatted("???");
             ImGui::PopItemWidth();
@@ -60,7 +69,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             static const std::string Header = " Address    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F                       ";
 
-            if (ImGui::BeginChild("##hex_view", scaled(ImVec2(ImGui::CalcTextSize(Header.c_str()).x, 200)), true)) {
+            if (ImGui::BeginChild("##hex_view", ImVec2(ImGui::CalcTextSize(Header.c_str()).x, 200_scaled), true)) {
                 ImGui::TextUnformatted(Header.c_str());
 
                 auto size = m_buffer.size();
@@ -68,7 +77,7 @@ namespace hex::plugin::builtin {
 
                 clipper.Begin((size + 0x0F) / 0x10);
 
-                while (clipper.Step())
+                while (clipper.Step()) {
                     for (auto y = clipper.DisplayStart; y < clipper.DisplayEnd; y++) {
                         auto lineSize = ((size - y * 0x10) < 0x10) ? size % 0x10 : 0x10;
 
@@ -92,8 +101,9 @@ namespace hex::plugin::builtin {
                                 line += ".";
                         }
 
-                        ImGui::TextUnformatted(line.c_str());
+                        ImGuiExt::TextFormattedSelectable("{}", line.c_str());
                     }
+                }
                 clipper.End();
             }
             ImGui::EndChild();
@@ -119,13 +129,14 @@ namespace hex::plugin::builtin {
                 ImGuiListClipper clipper;
                 clipper.Begin((string.length() + (LineLength - 1)) / LineLength);
 
-                while (clipper.Step())
+                while (clipper.Step()) {
                     for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         auto line = string.substr(i * LineLength, LineLength);
                         ImGui::TextUnformatted("");
                         ImGui::SameLine();
-                        ImGui::TextUnformatted(line.data(), line.data() + line.length());
+                        ImGuiExt::TextFormattedSelectable("{}", line);
                     }
+                }
 
                 clipper.End();
             }
@@ -148,7 +159,7 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGui::Text("%s", m_display.c_str());
+            ImGuiExt::TextFormattedSelectable("{}", m_display);
             ImGui::PopItemWidth();
         }
 

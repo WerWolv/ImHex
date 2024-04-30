@@ -10,6 +10,7 @@
 #include <hex/ui/view.hpp>
 
 #include <imgui.h>
+#include <content/global_actions.hpp>
 
 #include <content/providers/file_provider.hpp>
 
@@ -80,17 +81,30 @@ namespace hex::plugin::builtin {
             if (provider->isDirty()) {
                 *shouldClose = false;
                 PopupUnsavedChanges::open("hex.builtin.popup.close_provider.desc"_lang,
-                                    []{
-                                        for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
-                                            ImHexApi::Provider::remove(provider, true);
+                    []{
+                        const bool projectSaved = ProjectFile::hasPath() ? saveProject() : saveProjectAs();
+                        if (projectSaved) {
+                            for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
+                                ImHexApi::Provider::remove(provider, true);
 
-                                        if (imhexClosing)
-                                            ImHexApi::System::closeImHex(true);
-                                    },
-                                    [] {
-                                        ImHexApi::Provider::impl::resetClosingProvider();
-                                        imhexClosing = false;
-                                    }
+                            if (imhexClosing)
+                                ImHexApi::System::closeImHex(true);
+                        } else {
+                            ImHexApi::Provider::impl::resetClosingProvider();
+                            imhexClosing = false;
+                        }
+                    },
+                    [] {
+                        for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
+                            ImHexApi::Provider::remove(provider, true);
+
+                        if (imhexClosing)
+                            ImHexApi::System::closeImHex(true);
+                    },
+                    [] {
+                        ImHexApi::Provider::impl::resetClosingProvider();
+                        imhexClosing = false;
+                    }
                 );
             }
         });

@@ -569,12 +569,15 @@ namespace hex {
 
             ImGui::SetNextWindowClass(&windowClass);
 
+            auto window    = ImGui::FindWindowByName(view->getName().c_str());
+            if (window != nullptr && window->DockNode == nullptr)
+                ImGui::SetNextWindowBgAlpha(1.0F);
+
             // Draw view
             view->draw();
             view->trackViewOpenState();
 
             if (view->getWindowOpenState()) {
-                auto window    = ImGui::FindWindowByName(view->getName().c_str());
                 bool hasWindow = window != nullptr;
                 bool focused   = false;
 
@@ -726,6 +729,10 @@ namespace hex {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
             glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
         #endif
+
+	#if defined(OS_LINUX) && defined(GLFW_WAYLAND_APP_ID)
+            glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
+	#endif
 
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);

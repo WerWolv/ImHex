@@ -181,14 +181,8 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginTable("Welcome Outer", 1, ImGuiTableFlags_None, ImGui::GetContentRegionAvail() - margin)) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Image(s_bannerTexture, s_bannerTexture.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale())));
+                ImGui::Image(s_bannerTexture, s_bannerTexture.getSize() / (3.5F * (1.0F / ImHexApi::System::getGlobalScale())));
 
-                ImGui::PushTextWrapPos(std::min(500_scaled, ImGui::GetContentRegionAvail().x));
-                ImGuiExt::TextFormattedWrapped("A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.");
-                ImGui::PopTextWrapPos();
-
-                ImGui::NewLine();
-                ImGui::NewLine();
                 ImGui::NewLine();
 
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
