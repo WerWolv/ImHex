@@ -521,8 +521,8 @@ namespace hex::init {
     void WindowSplash::loadAssets() {
 
         // Load splash screen image from romfs
-        this->splashBackgroundTexture = ImGuiExt::Texture(romfs::get("splash_background.png").span(), ImGuiExt::Texture::Filter::Linear);
-        this->splashTextTexture = ImGuiExt::Texture(romfs::get("splash_text.png").span(), ImGuiExt::Texture::Filter::Linear);
+        this->splashBackgroundTexture = ImGuiExt::Texture::fromImage(romfs::get("splash_background.png").span(), ImGuiExt::Texture::Filter::Linear);
+        this->splashTextTexture = ImGuiExt::Texture::fromImage(romfs::get("splash_text.png").span(), ImGuiExt::Texture::Filter::Linear);
 
         // If the image couldn't be loaded correctly, something went wrong during the build process
         // Close the application since this would lead to errors later on anyway.

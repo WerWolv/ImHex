@@ -142,7 +142,7 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
 
-target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES})
+target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${LUNASVG_LIBRARIES})
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 

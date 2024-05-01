@@ -181,7 +181,7 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginTable("Welcome Outer", 1, ImGuiTableFlags_None, ImGui::GetContentRegionAvail() - margin)) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Image(s_bannerTexture, s_bannerTexture.getSize() / (3.5F * (1.0F / ImHexApi::System::getGlobalScale())));
+                ImGui::Image(s_bannerTexture, s_bannerTexture.getSize());
 
                 ImGui::NewLine();
 
@@ -497,11 +497,15 @@ namespace hex::plugin::builtin {
 
         RequestChangeTheme::subscribe([](const std::string &theme) {
             auto changeTexture = [&](const std::string &path) {
-                return ImGuiExt::Texture(romfs::get(path).span(), ImGuiExt::Texture::Filter::Linear);
+                return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Linear);
+            };
+
+            auto changeTextureSvg = [&](const std::string &path) {
+                return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), 300_scaled, 0, ImGuiExt::Texture::Filter::Linear);
             };
 
             ThemeManager::changeTheme(theme);
-            s_bannerTexture = changeTexture(hex::format("assets/{}/banner.png", ThemeManager::getImageTheme()));
+            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()));
             s_backdropTexture = changeTexture(hex::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
 
             if (!s_bannerTexture.isValid()) {
@@ -617,7 +621,7 @@ namespace hex::plugin::builtin {
             for (const auto &defaultPath : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
                 const auto infoBannerPath = defaultPath / "info_banner.png";
                 if (wolv::io::fs::exists(infoBannerPath)) {
-                    s_infoBannerTexture = ImGuiExt::Texture(wolv::util::toUTF8String(infoBannerPath).c_str(), ImGuiExt::Texture::Filter::Linear);
+                    s_infoBannerTexture = ImGuiExt::Texture::fromImage(infoBannerPath, ImGuiExt::Texture::Filter::Linear);
 
                     if (s_infoBannerTexture.isValid())
                         break;
@@ -635,7 +639,7 @@ namespace hex::plugin::builtin {
                         const auto &data = response.getData();
                         if (!data.empty()) {
                             TaskManager::doLater([data] {
-                                s_infoBannerTexture = ImGuiExt::Texture(data.data(), data.size(), ImGuiExt::Texture::Filter::Linear);
+                                s_infoBannerTexture = ImGuiExt::Texture::fromImage(data.data(), data.size(), ImGuiExt::Texture::Filter::Linear);
                             });
                         }
                     }

@@ -165,7 +165,7 @@ namespace hex::plugin::builtin {
                                                 for (auto &pixel : pixels)
                                                     pixel = (pixel & 0xFF00FF00) | ((pixel & 0xFF) << 16) | ((pixel & 0xFF0000) >> 16);
 
-                                                texture = ImGuiExt::Texture(reinterpret_cast<const u8*>(pixels.data()), pixels.size(), ImGuiExt::Texture::Filter::Nearest, bitmap.bmWidth, bitmap.bmHeight);
+                                                texture = ImGuiExt::Texture::fromBitmap(reinterpret_cast<const u8*>(pixels.data()), pixels.size(), bitmap.bmWidth, bitmap.bmHeight, ImGuiExt::Texture::Filter::Nearest);
                                             }
                                         }
                                     }

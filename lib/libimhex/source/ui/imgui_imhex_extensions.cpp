@@ -12,9 +12,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <lunasvg.h>
+
 #include <set>
 #include <string>
-
 
 #include <hex/api/imhex_api.hpp>
 
@@ -40,74 +41,167 @@ namespace ImGuiExt {
             return GL_NEAREST;
         }
 
+        GLuint createTextureFromRGBA8Array(const ImU8 *buffer, int width, int height, Texture::Filter filter) {
+            GLuint texture;
+
+            // Generate texture
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getGLFilter(filter));
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getGLFilter(filter));
+
+            #if defined(GL_UNPACK_ROW_LENGTH)
+                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+            #endif
+
+            // Allocate storage for the texture
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+
+            return texture;
+        }
+
+        GLuint createMultisampleTextureFromRGBA8Array(const ImU8 *buffer, int width, int height, Texture::Filter filter) {
+            // Create a regular texture from the RGBA8 array
+            GLuint texture = createTextureFromRGBA8Array(buffer, width, height, filter);
+
+            if (filter == Texture::Filter::Nearest)
+                return texture;
+
+            constexpr static auto SampleCount = 8;
+
+            // Generate renderbuffer
+            GLuint renderbuffer;
+            glGenRenderbuffers(1, &renderbuffer);
+            glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+            glRenderbufferStorageMultisample(GL_RENDERBUFFER, SampleCount, GL_DEPTH24_STENCIL8, width, height);
+
+            // Generate framebuffer
+            GLuint framebuffer;
+            glGenFramebuffers(1, &framebuffer);
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+            // Attach texture to color attachment 0
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+            // Attach renderbuffer to depth-stencil attachment
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+
+            // Check framebuffer status
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+                return 0;
+            }
+
+            // Unbind framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            return texture;
+        }
+
     }
     
-    Texture::Texture(const ImU8 *buffer, int size, Filter filter, int width, int height) {
+    Texture Texture::fromImage(const ImU8 *buffer, int size, Filter filter) {
         if (size == 0)
-            return;
+            return {};
 
         unsigned char *imageData = nullptr;
 
-        if (width == 0 || height == 0)
-            imageData = stbi_load_from_memory(buffer, size, &m_width, &m_height, nullptr, 4);
-
-        if (imageData == nullptr) {
-            if (width * height * 4 > size)
-                return;
-
-            imageData = static_cast<unsigned char *>(STBI_MALLOC(size));
-            std::memcpy(imageData, buffer, size);
-            m_width = width;
-            m_height = height;
-        }
+        Texture result;
+        imageData = stbi_load_from_memory(buffer, size, &result.m_width, &result.m_height, nullptr, 4);
         if (imageData == nullptr)
-            return;
+            return {};
 
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        GLuint texture = createMultisampleTextureFromRGBA8Array(imageData, result.m_width, result.m_height, filter);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getGLFilter(filter));
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getGLFilter(filter));
-
-        #if defined(GL_UNPACK_ROW_LENGTH)
-            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        #endif
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
         STBI_FREE(imageData);
 
-        m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+        result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+
+        return result;
     }
 
-    Texture::Texture(std::span<const std::byte> bytes, Filter filter, int width, int height) : Texture(reinterpret_cast<const ImU8*>(bytes.data()), bytes.size(), filter, width, height) { }
+    Texture Texture::fromImage(std::span<const std::byte> buffer, Filter filter) {
+        return Texture::fromImage(reinterpret_cast<const ImU8*>(buffer.data()), buffer.size(), filter);
+    }
 
-    Texture::Texture(const std::fs::path &path, Filter filter) : Texture(reinterpret_cast<const char *>(path.u8string().c_str()), filter) { }
 
-    Texture::Texture(const char *path, Filter filter) {
-        unsigned char *imageData = stbi_load(path, &m_width, &m_height, nullptr, 4);
+    Texture Texture::fromImage(const std::fs::path &path, Filter filter) {
+        return Texture::fromImage(wolv::util::toUTF8String(path).c_str(), filter);
+    }
+
+    Texture Texture::fromImage(const char *path, Filter filter) {
+        Texture result;
+        unsigned char *imageData = stbi_load(path, &result.m_width, &result.m_height, nullptr, 4);
         if (imageData == nullptr)
-            return;
+            return {};
 
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        GLuint texture = createMultisampleTextureFromRGBA8Array(imageData, result.m_width, result.m_height, filter);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getGLFilter(filter));
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getGLFilter(filter));
-
-        #if defined(GL_UNPACK_ROW_LENGTH)
-            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        #endif
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
         STBI_FREE(imageData);
 
-        m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+        result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+
+        return result;
     }
 
-    Texture::Texture(unsigned int texture, int width, int height) : m_textureId(reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture))), m_width(width), m_height(height) {
+    Texture Texture::fromGLTexture(unsigned int glTexture, int width, int height) {
+        Texture texture;
+        texture.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(glTexture));
+        texture.m_width = width;
+        texture.m_height = height;
 
+        return texture;
+    }
+
+    Texture Texture::fromBitmap(std::span<const std::byte> buffer, int width, int height, Filter filter) {
+        return Texture::fromBitmap(reinterpret_cast<const ImU8*>(buffer.data()), buffer.size(), width, height, filter);
+    }
+
+    Texture Texture::fromBitmap(const ImU8 *buffer, int size, int width, int height, Filter filter) {
+        if (width * height * 4 > size)
+            return {};
+
+        GLuint texture = createMultisampleTextureFromRGBA8Array(buffer, width, height, filter);
+
+        Texture result;
+        result.m_width = width;
+        result.m_height = height;
+        result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+
+        return result;
+    }
+
+    Texture Texture::fromSVG(const char *path, int width, int height, Filter filter) {
+        auto document = lunasvg::Document::loadFromFile(path);
+        auto bitmap = document->renderToBitmap(width, height);
+
+        auto texture = createMultisampleTextureFromRGBA8Array(bitmap.data(), bitmap.width(), bitmap.height(), filter);
+
+        Texture result;
+        result.m_width = bitmap.width();
+        result.m_height = bitmap.height();
+        result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+
+        return result;
+    }
+
+    Texture Texture::fromSVG(const std::fs::path &path, int width, int height, Filter filter) {
+        return Texture::fromSVG(wolv::util::toUTF8String(path).c_str(), width, height, filter);
+    }
+
+    Texture Texture::fromSVG(std::span<const std::byte> buffer, int width, int height, Filter filter) {
+        auto document = lunasvg::Document::loadFromData(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+        auto bitmap = document->renderToBitmap(width, height);
+        bitmap.convertToRGBA();
+
+        auto texture = createMultisampleTextureFromRGBA8Array(bitmap.data(), bitmap.width(), bitmap.height(), filter);
+
+        Texture result;
+        result.m_width = bitmap.width();
+        result.m_height = bitmap.height();
+        result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+
+        return result;
     }
 
     Texture::Texture(Texture&& other) noexcept {

@@ -783,7 +783,7 @@ namespace hex::plugin::visualizers {
                 vertexArray.bind();
                 if (s_shouldUpdateTexture) {
                     s_shouldUpdateTexture = false;
-                    s_modelTexture = ImGuiExt::Texture(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
+                    s_modelTexture = ImGuiExt::Texture::fromImage(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
                 }
 
                 if (s_drawTexture)
@@ -899,7 +899,7 @@ namespace hex::plugin::visualizers {
             vertexArray.unbind();
             frameBuffer.unbind();
 
-            s_texture = ImGuiExt::Texture(renderTexture.release(), GLsizei(renderTexture.getWidth()), GLsizei(renderTexture.getHeight()));
+            s_texture = ImGuiExt::Texture::fromGLTexture(renderTexture.release(), GLsizei(renderTexture.getWidth()), GLsizei(renderTexture.getHeight()));
 
             drawWindow(s_texture, s_renderingWindowSize, mvp);
         }
