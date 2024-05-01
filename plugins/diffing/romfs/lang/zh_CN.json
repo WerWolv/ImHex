@@ -1,21 +1,21 @@
 {
     "code": "zh-CN",
-    "language": "Chinese (Simplified)",
     "country": "China",
     "fallback": false,
+    "language": "Chinese (Simplified)",
     "translations": {
-        "hex.diffing.algorithm.simple.name": "逐个字节简单算法",
-        "hex.diffing.algorithm.simple.description": "简单的 O(N) 逐字节比较。\n只能识别数据末尾的字节修改和插入/删除",
-        "hex.diffing.algorithm.myers.name": "迈尔斯位向量算法",
         "hex.diffing.algorithm.myers.description": "智能的 O(N*M) 比较算法。可以识别数据中任何位置的修改、插入和删除",
+        "hex.diffing.algorithm.myers.name": "迈尔斯位向量算法",
         "hex.diffing.algorithm.myers.settings.window_size": "窗口大小",
-        "hex.diffing.view.diff.name": "差异",
+        "hex.diffing.algorithm.simple.description": "简单的 O(N) 逐字节比较。\n只能识别数据末尾的字节修改和插入/删除",
+        "hex.diffing.algorithm.simple.name": "逐个字节简单算法",
         "hex.diffing.view.diff.added": "添加",
+        "hex.diffing.view.diff.algorithm": "差异算法",
         "hex.diffing.view.diff.modified": "修改",
+        "hex.diffing.view.diff.name": "差异",
         "hex.diffing.view.diff.provider_a": "提供者A",
         "hex.diffing.view.diff.provider_b": "提供者B",
         "hex.diffing.view.diff.removed": "移除",
-        "hex.diffing.view.diff.algorithm": "差异算法",
         "hex.diffing.view.diff.settings": "无可用设置",
         "hex.diffing.view.diff.settings.no_settings": "无可用设置"
     }
