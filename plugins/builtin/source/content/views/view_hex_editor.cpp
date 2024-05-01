@@ -531,7 +531,7 @@ namespace hex::plugin::builtin {
         }
 
         // Right click menu
-        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsAnyItemHovered())
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsAnyItemHovered())
             RequestOpenPopup::post("hex.builtin.menu.edit");
     }
 

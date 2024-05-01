@@ -146,7 +146,7 @@ namespace hex::plugin::windows {
         }
         ImGui::PopItemWidth();
 
-        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && m_portHandle != INVALID_HANDLE_VALUE && !m_transmitting)
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && m_portHandle != INVALID_HANDLE_VALUE && !m_transmitting)
             ImGui::OpenPopup("ConsoleMenu");
 
         if (ImGui::BeginPopup("ConsoleMenu")) {

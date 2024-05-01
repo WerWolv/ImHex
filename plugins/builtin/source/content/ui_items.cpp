@@ -502,7 +502,7 @@ namespace hex::plugin::builtin {
                             break;
                         }
 
-                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
+                        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
                             rightClickedProvider = tabProvider;
                             RequestOpenPopup::post("ProviderMenu");
                         }
