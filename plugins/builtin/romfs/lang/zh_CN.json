@@ -393,7 +393,6 @@
         "hex.builtin.oobe.tutorial_question": "由于这是您第一次使用 ImHex，您想学习一下介绍教程吗？\n\n您始终可以从“帮助”菜单访问该教程。",
         "hex.builtin.popup.blocking_task.desc": "一个任务正在运行。",
         "hex.builtin.popup.blocking_task.title": "运行任务",
-        "hex.builtin.popup.close_provider.desc": "对一个或多个提供者进行了未保存的更改\n尚未保存到项目中。\n\n并且您确定要关闭它们吗？",
         "hex.builtin.popup.close_provider.title": "关闭提供者？",
         "hex.builtin.popup.crash_recover.message": "抛出了异常，但 ImHex 能够捕获它并报告崩溃。",
         "hex.builtin.popup.crash_recover.title": "崩溃恢复",

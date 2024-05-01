@@ -11,10 +11,10 @@ namespace hex::plugin::builtin {
 
     class PopupUnsavedChanges : public Popup<PopupUnsavedChanges> {
     public:
-        PopupUnsavedChanges(std::string message, std::function<void()> yesFunction, std::function<void()> noFunction)
+        PopupUnsavedChanges(std::string message, std::function<void()> yesFunction, std::function<void()> noFunction, std::function<void()> cancelFunction)
                 : hex::Popup<PopupUnsavedChanges>("hex.ui.common.question", false),
                   m_message(std::move(message)),
-                  m_yesFunction(std::move(yesFunction)), m_noFunction(std::move(noFunction)) { }
+                  m_yesFunction(std::move(yesFunction)), m_noFunction(std::move(noFunction)), m_cancelFunction(std::move(cancelFunction)) { }
 
         void drawContent() override {
             ImGuiExt::TextFormattedWrapped("{}", m_message.c_str());
@@ -33,15 +33,21 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
 
             auto width = ImGui::GetWindowWidth();
-            ImGui::SetCursorPosX(width / 9);
-            if (ImGui::Button("hex.ui.common.yes"_lang, ImVec2(width / 3, 0))) {
+            ImGui::SetCursorPosX((width / 10) * 0.5);
+            if (ImGui::Button("hex.ui.common.yes"_lang, ImVec2(width / 4, 0))) {
                 m_yesFunction();
                 this->close();
             }
             ImGui::SameLine();
-            ImGui::SetCursorPosX(width / 9 * 5);
-            if (ImGui::Button("hex.ui.common.no"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            ImGui::SetCursorPosX((width / 10) * 3.75);
+            if (ImGui::Button("hex.ui.common.no"_lang, ImVec2(width / 4, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 m_noFunction();
+                this->close();
+            }
+            ImGui::SameLine();
+            ImGui::SetCursorPosX((width / 10) * 7);
+            if (ImGui::Button("hex.ui.common.cancel"_lang, ImVec2(width / 4, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                m_cancelFunction();
                 this->close();
             }
 
@@ -62,7 +68,7 @@ namespace hex::plugin::builtin {
 
     private:
         std::string m_message;
-        std::function<void()> m_yesFunction, m_noFunction;
+        std::function<void()> m_yesFunction, m_noFunction, m_cancelFunction;
     };
 
 }

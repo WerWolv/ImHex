@@ -151,7 +151,7 @@ namespace hex::plugin::visualizers {
             return std::max(maxx, maxy);
         }
 
-        void setDefaultColors(std::vector<float> &colors, float size, u32 color) {
+        void setDefaultColors(std::vector<float> &colors, size_t size, u32 color) {
             colors.resize(size / 3 * 4);
 
             float red   = float((color >> 0)  & 0xFF) / 255.0F;
@@ -286,7 +286,7 @@ namespace hex::plugin::visualizers {
         }
 
         void processKeyEvent(ImGuiKey key, float &variable, float incr, float accel) {
-            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(key))) {
+            if (ImGui::IsKeyPressed(key)) {
                 auto temp = variable + incr * accel;
                 if (variable * temp < 0.0F)
                     variable = 0.0F;
@@ -297,8 +297,8 @@ namespace hex::plugin::visualizers {
 
         void processInputEvents(gl::Vector<float, 3> &rotation, gl::Vector<float, 3> &translation, float &scaling, float &nearLimit, float &farLimit) {
             auto accel = 1.0F;
-            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_LeftShift)) ||
-                ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_RightShift)))
+            if (ImGui::IsKeyDown(ImGuiKey_LeftShift) ||
+                ImGui::IsKeyDown(ImGuiKey_RightShift))
                 accel = 10.0F;
 
             auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
@@ -783,7 +783,7 @@ namespace hex::plugin::visualizers {
                 vertexArray.bind();
                 if (s_shouldUpdateTexture) {
                     s_shouldUpdateTexture = false;
-                    s_modelTexture = ImGuiExt::Texture(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
+                    s_modelTexture = ImGuiExt::Texture::fromImage(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
                 }
 
                 if (s_drawTexture)
@@ -899,7 +899,7 @@ namespace hex::plugin::visualizers {
             vertexArray.unbind();
             frameBuffer.unbind();
 
-            s_texture = ImGuiExt::Texture(renderTexture.release(), GLsizei(renderTexture.getWidth()), GLsizei(renderTexture.getHeight()));
+            s_texture = ImGuiExt::Texture::fromGLTexture(renderTexture.release(), GLsizei(renderTexture.getWidth()), GLsizei(renderTexture.getHeight()));
 
             drawWindow(s_texture, s_renderingWindowSize, mvp);
         }

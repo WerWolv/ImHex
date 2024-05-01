@@ -2192,13 +2192,13 @@ CIMGUI_API void ImDrawList_AddNgonFilled(ImDrawList* self,const ImVec2 center,fl
 {
     return self->AddNgonFilled(center,radius,col,num_segments);
 }
-CIMGUI_API void ImDrawList_AddEllipse(ImDrawList* self,const ImVec2 center,float radius_x,float radius_y,ImU32 col,float rot,int num_segments,float thickness)
+CIMGUI_API void ImDrawList_AddEllipse(ImDrawList* self,const ImVec2 center,ImVec2 radius,ImU32 col,float rot,int num_segments,float thickness)
 {
-    return self->AddEllipse(center,radius_x,radius_y,col,rot,num_segments,thickness);
+    return self->AddEllipse(center,radius,col,rot,num_segments,thickness);
 }
-CIMGUI_API void ImDrawList_AddEllipseFilled(ImDrawList* self,const ImVec2 center,float radius_x,float radius_y,ImU32 col,float rot,int num_segments)
+CIMGUI_API void ImDrawList_AddEllipseFilled(ImDrawList* self,const ImVec2 center,ImVec2 radius,ImU32 col,float rot,int num_segments)
 {
-    return self->AddEllipseFilled(center,radius_x,radius_y,col,rot,num_segments);
+    return self->AddEllipseFilled(center,radius,col,rot,num_segments);
 }
 CIMGUI_API void ImDrawList_AddText_Vec2(ImDrawList* self,const ImVec2 pos,ImU32 col,const char* text_begin,const char* text_end)
 {
@@ -2280,9 +2280,9 @@ CIMGUI_API void ImDrawList_PathArcToFast(ImDrawList* self,const ImVec2 center,fl
 {
     return self->PathArcToFast(center,radius,a_min_of_12,a_max_of_12);
 }
-CIMGUI_API void ImDrawList_PathEllipticalArcTo(ImDrawList* self,const ImVec2 center,float radius_x,float radius_y,float rot,float a_min,float a_max,int num_segments)
+CIMGUI_API void ImDrawList_PathEllipticalArcTo(ImDrawList* self,const ImVec2 center,ImVec2 radius,float rot,float a_min,float a_max,int num_segments)
 {
-    return self->PathEllipticalArcTo(center,radius_x,radius_y,rot,a_min,a_max,num_segments);
+    return self->PathEllipticalArcTo(center,radius,rot,a_min,a_max,num_segments);
 }
 CIMGUI_API void ImDrawList_PathBezierCubicCurveTo(ImDrawList* self,const ImVec2 p2,const ImVec2 p3,const ImVec2 p4,int num_segments)
 {
@@ -2739,10 +2739,6 @@ CIMGUI_API ImGuiPlatformImeData* ImGuiPlatformImeData_ImGuiPlatformImeData(void)
 CIMGUI_API void ImGuiPlatformImeData_destroy(ImGuiPlatformImeData* self)
 {
     IM_DELETE(self);
-}
-CIMGUI_API ImGuiKey igGetKeyIndex(ImGuiKey key)
-{
-    return ImGui::GetKeyIndex(key);
 }
 CIMGUI_API ImGuiID igImHashData(const void* data,size_t data_size,ImGuiID seed)
 {

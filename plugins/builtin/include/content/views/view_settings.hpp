@@ -1,5 +1,6 @@
 #pragma once
 
+#include <hex/api/content_registry.hpp>
 #include <hex/ui/view.hpp>
 
 namespace hex::plugin::builtin {
@@ -21,6 +22,8 @@ namespace hex::plugin::builtin {
     private:
         bool m_restartRequested = false;
         bool m_triggerPopup = false;
+
+        const ContentRegistry::Settings::impl::Category *m_selectedCategory = nullptr;
     };
 
 }

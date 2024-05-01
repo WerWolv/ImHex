@@ -207,8 +207,8 @@ namespace hex::plugin::builtin {
 
                             m_download.wait();
 
-                            while (m_download.valid()) {
-                                std::this_thread::sleep_for(10ms);
+                            while (m_download.wait_for(100ms) != std::future_status::ready) {
+                                task.update();
                             }
 
                             task.increment();

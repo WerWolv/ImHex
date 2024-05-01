@@ -311,7 +311,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addFooterItem([] {
             if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value()) {
-                ImGuiExt::TextFormattedSelectable("0x{:02X} - 0x{:02X} ({} bytes)",
+                ImGuiExt::TextFormatted("0x{:02X} - 0x{:02X} ({} bytes)",
                     selection->getStartAddress(),
                     selection->getEndAddress(),
                     selection->getSize()

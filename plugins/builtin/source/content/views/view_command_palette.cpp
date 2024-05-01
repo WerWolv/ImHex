@@ -36,7 +36,7 @@ namespace hex::plugin::builtin {
             ImGui::BringWindowToFocusFront(ImGui::GetCurrentWindowRead());
 
             // Close the popup if the user presses ESC
-            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+            if (ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
 

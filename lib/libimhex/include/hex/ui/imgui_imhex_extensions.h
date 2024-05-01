@@ -76,13 +76,20 @@ namespace ImGuiExt {
         };
 
         Texture() = default;
-        Texture(const ImU8 *buffer, int size, Filter filter = Filter::Nearest, int width = 0, int height = 0);
-        Texture(std::span<const std::byte> bytes, Filter filter = Filter::Nearest, int width = 0, int height = 0);
-        explicit Texture(const char *path, Filter filter = Filter::Nearest);
-        explicit Texture(const std::fs::path &path, Filter filter = Filter::Nearest);
-        Texture(unsigned int texture, int width, int height);
         Texture(const Texture&) = delete;
         Texture(Texture&& other) noexcept;
+
+        static Texture fromImage(const ImU8 *buffer, int size, Filter filter = Filter::Nearest);
+        static Texture fromImage(std::span<const std::byte> buffer, Filter filter = Filter::Nearest);
+        static Texture fromImage(const char *path, Filter filter = Filter::Nearest);
+        static Texture fromImage(const std::fs::path &path, Filter filter = Filter::Nearest);
+        static Texture fromGLTexture(unsigned int texture, int width, int height);
+        static Texture fromBitmap(const ImU8 *buffer, int size, int width, int height, Filter filter = Filter::Nearest);
+        static Texture fromBitmap(std::span<const std::byte> buffer, int width, int height, Filter filter = Filter::Nearest);
+        static Texture fromSVG(const char *path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
+        static Texture fromSVG(const std::fs::path &path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
+        static Texture fromSVG(std::span<const std::byte> buffer, int width = 0, int height = 0, Filter filter = Filter::Nearest);
+
 
         ~Texture();
 
@@ -187,8 +194,8 @@ namespace ImGuiExt {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
 
-        ImGui::PushItemWidth(-FLT_MIN);
-        ImGui::InputText("##", const_cast<char *>(text.c_str()), text.size(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::PushItemWidth(ImGui::CalcTextSize(text.c_str()).x + ImGui::GetStyle().FramePadding.x * 2);
+        ImGui::InputText("##", const_cast<char *>(text.c_str()), text.size(), ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll);
         ImGui::PopItemWidth();
 
         ImGui::PopStyleColor();
@@ -222,7 +229,7 @@ namespace ImGuiExt {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
 
-        ImGui::PushItemWidth(-FLT_MIN);
+        ImGui::PushItemWidth(ImGui::CalcTextSize(text.c_str()).x + ImGui::GetStyle().FramePadding.x * 2);
         ImGui::InputTextMultiline(
                 "##",
                 const_cast<char *>(text.c_str()),

@@ -17,7 +17,7 @@ namespace hex {
         AutoReset<std::string> s_imageTheme;
         AutoReset<std::string> s_currTheme;
 
-        std::mutex s_themeMutex;
+        std::recursive_mutex s_themeMutex;
     }
 
 

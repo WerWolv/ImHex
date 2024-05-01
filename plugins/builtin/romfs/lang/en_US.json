@@ -354,7 +354,7 @@
         "hex.builtin.nodes.visualizer.image_rgba.header": "RGBA8 Image Visualizer",
         "hex.builtin.nodes.visualizer.layered_dist": "Layered Distribution",
         "hex.builtin.nodes.visualizer.layered_dist.header": "Layered Distribution",
-        "hex.builtin.popup.close_provider.desc": "There are unsaved changes made to one or more Providers\nthat haven't been saved to a Project yet.\n\nAre you sure you want to close them?",
+        "hex.builtin.popup.close_provider.desc": "Some changes haven't been saved to a Project yet.\n\nDo you want to save them before closing?",
         "hex.builtin.popup.close_provider.title": "Close Provider?",
         "hex.builtin.popup.docs_question.title": "Documentation query",
         "hex.builtin.popup.docs_question.no_answer": "The documentation didn't have an answer for this question",

@@ -1,8 +1,7 @@
 <a href="https://imhex.werwolv.net">
   <h1 align="center">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="./resources/projects/logo_text_light.svg">
-      <img height="100px" src="./resources/projects/logo_text_dark.svg">
+      <img height="300px" src="./resources/dist/common/logo/ImHexLogoSVGBG.svg">
     </picture>
   </h1>
 </a>

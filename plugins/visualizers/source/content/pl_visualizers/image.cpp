@@ -16,7 +16,7 @@ namespace hex::plugin::visualizers {
             auto pattern  = arguments[0].toPattern();
 
             auto data = pattern->getBytes();
-            texture = ImGuiExt::Texture(data.data(), data.size(), ImGuiExt::Texture::Filter::Nearest);
+            texture = ImGuiExt::Texture::fromImage(data.data(), data.size(), ImGuiExt::Texture::Filter::Nearest);
             scale = 200_scaled / texture.getSize().x;
         }
 
@@ -42,7 +42,7 @@ namespace hex::plugin::visualizers {
             auto height = arguments[2].toUnsigned();
 
             auto data = pattern->getBytes();
-            texture = ImGuiExt::Texture(data.data(), data.size(), ImGuiExt::Texture::Filter::Nearest, width, height);
+            texture = ImGuiExt::Texture::fromBitmap(data.data(), data.size(), width, height, ImGuiExt::Texture::Filter::Nearest);
         }
 
         if (texture.isValid())

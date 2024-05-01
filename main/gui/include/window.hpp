@@ -62,7 +62,8 @@ namespace hex {
 
         ImGuiExt::ImHexCustomData m_imguiCustomData;
 
-        u32 m_searchBarPosition;
+        u32 m_searchBarPosition = 0;
+        bool m_emergencyPopupOpen = false;
     };
 
 }

@@ -107,7 +107,7 @@ namespace hex::ui {
                 }, {}, m_multiple);
             }
 
-            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape))
                 this->close();
         }
 

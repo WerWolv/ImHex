@@ -606,7 +606,7 @@ ImU32 TextEditor::GetGlyphColor(const Glyph &aGlyph) const {
         return mPalette[(int)PaletteIndex::MultiLineComment];
     if (aGlyph.mDeactivated)
         return mPalette[(int)PaletteIndex::PreprocessorDeactivated];
-    auto const color = mPalette[(int)aGlyph.mColorIndex];
+    const auto color = mPalette[(int)aGlyph.mColorIndex];
     if (aGlyph.mPreprocessor) {
         const auto ppcolor = mPalette[(int)PaletteIndex::Preprocessor];
         const int c0       = ((ppcolor & 0xff) + (color & 0xff)) / 2;
@@ -621,18 +621,18 @@ ImU32 TextEditor::GetGlyphColor(const Glyph &aGlyph) const {
 void TextEditor::HandleKeyboardInputs() {
     ImGuiIO &io   = ImGui::GetIO();
     auto shift    = io.KeyShift;
-    auto left     = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow));
-    auto right    = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow));
-    auto up       = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow));
-    auto down     = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow));
+    auto left     = ImGui::IsKeyPressed(ImGuiKey_LeftArrow);
+    auto right    = ImGui::IsKeyPressed(ImGuiKey_RightArrow);
+    auto up       = ImGui::IsKeyPressed(ImGuiKey_UpArrow);
+    auto down     = ImGui::IsKeyPressed(ImGuiKey_DownArrow);
     auto ctrl     = io.ConfigMacOSXBehaviors ? io.KeyAlt : io.KeyCtrl;
     auto alt      = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
-    auto home     = io.ConfigMacOSXBehaviors ? io.KeySuper && left : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home));
-    auto end      = io.ConfigMacOSXBehaviors ? io.KeySuper && right : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End));
-    auto top      = io.ConfigMacOSXBehaviors ? io.KeySuper && up : ctrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home));
-    auto bottom   = io.ConfigMacOSXBehaviors ? io.KeySuper && down : ctrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End));
-    auto pageUp   = io.ConfigMacOSXBehaviors ? ctrl && up : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp));
-    auto pageDown = io.ConfigMacOSXBehaviors ? ctrl && down : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown));
+    auto home     = io.ConfigMacOSXBehaviors ? io.KeySuper && left : ImGui::IsKeyPressed(ImGuiKey_Home);
+    auto end      = io.ConfigMacOSXBehaviors ? io.KeySuper && right : ImGui::IsKeyPressed(ImGuiKey_End);
+    auto top      = io.ConfigMacOSXBehaviors ? io.KeySuper && up : ctrl && ImGui::IsKeyPressed(ImGuiKey_Home);
+    auto bottom   = io.ConfigMacOSXBehaviors ? io.KeySuper && down : ctrl && ImGui::IsKeyPressed(ImGuiKey_End);
+    auto pageUp   = io.ConfigMacOSXBehaviors ? ctrl && up : ImGui::IsKeyPressed(ImGuiKey_PageUp);
+    auto pageDown = io.ConfigMacOSXBehaviors ? ctrl && down : ImGui::IsKeyPressed(ImGuiKey_PageDown);
 
     if (ImGui::IsWindowFocused()) {
         if (ImGui::IsWindowHovered())
@@ -642,11 +642,11 @@ void TextEditor::HandleKeyboardInputs() {
         io.WantCaptureKeyboard = true;
         io.WantTextInput       = true;
 
-        if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Z)))
+        if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Z))
             Undo();
-        else if (!IsReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Backspace)))
+        else if (!IsReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
             Undo();
-        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Y)))
+        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Y))
             Redo();
         else if (!ctrl && !alt && up)
             MoveUp(1, shift);
@@ -668,43 +668,43 @@ void TextEditor::HandleKeyboardInputs() {
             MoveHome(shift);
         else if (!ctrl && !alt && end)
             MoveEnd(shift);
-        else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)))
+        else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Delete))
             Delete();
-        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
+        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Delete)) {
             auto wordStart = GetCursorPosition();
             MoveRight();
             auto wordEnd = FindWordEnd(GetCursorPosition());
             SetSelection(wordStart, wordEnd);
             Backspace();
         }
-        else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Backspace)))
+        else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
             Backspace();
-        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Backspace))) {
+        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Backspace)) {
             auto wordEnd = GetCursorPosition();
             MoveLeft();
             auto wordStart = FindWordStart(GetCursorPosition());
             SetSelection(wordStart, wordEnd);
             Backspace();
         }
-        else if (!ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Insert)))
+        else if (!ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Insert))
             mOverwrite = !mOverwrite;
-        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Insert)))
+        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Insert))
             Copy();
-        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_C)))
+        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_C))
             Copy();
-        else if (!IsReadOnly() && !ctrl && shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Insert)))
+        else if (!IsReadOnly() && !ctrl && shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Insert))
             Paste();
-        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_V)))
+        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_V))
             Paste();
-        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_X)))
+        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_X))
             Cut();
-        else if (!ctrl && shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)))
+        else if (!ctrl && shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Delete))
             Cut();
-        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_A)))
+        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_A))
             SelectAll();
-        else if (!IsReadOnly() && !ctrl && !shift && !alt && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_KeypadEnter))))
+        else if (!IsReadOnly() && !ctrl && !shift && !alt && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
             EnterCharacter('\n', false);
-        else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Tab)))
+        else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_Tab))
             EnterCharacter('\t', shift);
         else if (!ctrl && !alt && !shift && ImGui::IsKeyPressed(ImGuiKey_F3))
             mFindReplaceHandler.FindMatch(this, true);
@@ -2134,9 +2134,10 @@ bool TextEditor::FindReplaceHandler::FindNext(TextEditor *editor, bool wrapAroun
                 curPos.mColumn = textLoc - byteIndex;
 
                 auto &line = editor->mLines[curPos.mLine];
-                for (int i = 0; i < line.size(); i++)
+                for (int i = 0; i < line.size(); i++) {
                     if (line[i].mChar == '\t')
                         curPos.mColumn += (editor->mTabSize - 1);
+                }
                 break;
             } else {// just keep adding
                 byteIndex += byteCount;

@@ -476,7 +476,7 @@ namespace hex::ui {
                     if (isColumnSeparatorColumn(i, columnCount))
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
 
-                    ImGui::TableSetupColumn(hex::format(m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * m_currDataVisualizer->getMaxCharsPerCell() + (6 + m_byteCellPadding) * 1_scaled);
+                    ImGui::TableSetupColumn(hex::format(m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * m_currDataVisualizer->getMaxCharsPerCell() + std::ceil((6 + m_byteCellPadding) * 1_scaled));
                 }
 
                 // ASCII column
@@ -595,6 +595,8 @@ namespace hex::ui {
                                 auto cellStartPos = getCellPosition();
                                 auto cellSize = (CharacterSize * ImVec2(m_currDataVisualizer->getMaxCharsPerCell(), 1)) + (ImVec2(2, 2) * ImGui::GetStyle().CellPadding) + scaled(ImVec2(1 + m_byteCellPadding, 0));
                                 auto maxCharsPerCell = m_currDataVisualizer->getMaxCharsPerCell();
+
+                                cellSize = ImVec2(std::ceil(cellSize.x), std::ceil(cellSize.y));
 
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
 

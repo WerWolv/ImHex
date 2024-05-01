@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 project(libimhex)
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 set(LIBIMHEX_SOURCES
         source/api/imhex_api.cpp
@@ -143,7 +142,7 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
 
-target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES})
+target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${LUNASVG_LIBRARIES})
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 
@@ -151,3 +150,4 @@ add_dependencies(imhex_all libimhex)
 
 install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
 set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set_target_properties(libimhex PROPERTIES PREFIX "")

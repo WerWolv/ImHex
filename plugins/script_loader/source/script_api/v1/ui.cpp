@@ -39,7 +39,7 @@ public:
         }
         ImGui::SameLine();
         ImGui::SetCursorPosX(width / 9 * 5);
-        if (ImGui::Button("hex.ui.common.no"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+        if (ImGui::Button("hex.ui.common.no"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             s_yesNoQuestionBoxResult = false;
             this->close();
         }
@@ -92,7 +92,7 @@ public:
         ImGui::EndDisabled();
         ImGui::SameLine();
         ImGui::SetCursorPosX(width / 9 * 5);
-        if (ImGui::Button("hex.ui.common.cancel"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+        if (ImGui::Button("hex.ui.common.cancel"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             s_inputTextBoxResult = "";
             this->close();
         }

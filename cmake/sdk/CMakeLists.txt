@@ -44,7 +44,7 @@ add_subdirectory(lib/libimhex)
 if (WIN32)
     set_target_properties(libimhex PROPERTIES
             IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../libimhex.dll"
-            IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/lib/liblibimhex.dll.a"
+            IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex.dll.a"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex/include")
 elseif (APPLE)
     file(GLOB LIBIMHEX_DYLIB "${CMAKE_CURRENT_SOURCE_DIR}/../../Frameworks/libimhex.*.dylib")

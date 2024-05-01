@@ -44,12 +44,13 @@ namespace hex {
     using namespace std::literals::chrono_literals;
 
     Window::Window() {
-        constexpr static auto openEmergencyPopup = [](const std::string &title){
-            TaskManager::doLater([title] {
+        const static auto openEmergencyPopup = [this](const std::string &title){
+            TaskManager::doLater([this, title] {
                 for (const auto &provider : ImHexApi::Provider::getProviders())
                     ImHexApi::Provider::remove(provider, false);
 
                 ImGui::OpenPopup(title.c_str());
+                m_emergencyPopupOpen = true;
             });
         };
 
@@ -261,6 +262,13 @@ namespace hex {
                     const auto targetFrameTime = 1.0 / targetFPS;
                     if (frameTime < targetFrameTime) {
                         glfwWaitEventsTimeout(targetFrameTime - frameTime);
+
+                        // glfwWaitEventsTimeout might return early if there's an event
+                        const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
+                        if (frameTime < targetFrameTime) {
+                            const auto timeToSleepMs = (int)((targetFrameTime - frameTime) * 1000);
+                            std::this_thread::sleep_for(std::chrono::milliseconds(timeToSleepMs));
+                        }
                     }
                 }
             }
@@ -290,7 +298,10 @@ namespace hex {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
-        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+
+        if (!m_emergencyPopupOpen)
+            windowFlags |= ImGuiWindowFlags_MenuBar;
 
         // Render main dock space
         if (ImGui::Begin("ImHexDockSpace", nullptr, windowFlags)) {
@@ -303,7 +314,8 @@ namespace hex {
         ImGui::End();
         ImGui::PopStyleVar(2);
 
-        // Plugin load error popups. These are not translated because they should always be readable, no matter if any localization could be loaded or not
+        // Plugin load error popups
+        // These are not translated because they should always be readable, no matter if any localization could be loaded or not
         {
             auto drawPluginFolderTable = [] {
                 ImGuiExt::UnderlinedText("Plugin folders");
@@ -326,9 +338,19 @@ namespace hex {
                 }
             };
 
+            if (m_emergencyPopupOpen) {
+                const auto pos = ImHexApi::System::getMainWindowPosition();
+                const auto size = ImHexApi::System::getMainWindowSize();
+                ImGui::GetBackgroundDrawList()->AddRectFilled(pos, pos + size, ImGui::GetColorU32(ImGuiCol_WindowBg) | 0xFF000000);
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, 0x00);
+            ON_SCOPE_EXIT { ImGui::PopStyleColor(); };
+
             // No plugins error popup
-            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-            if (ImGui::BeginPopupModal("No Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
+            if (ImGui::BeginPopupModal("No Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar)) {
+                ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
                 ImGui::TextUnformatted("No ImHex plugins loaded (including the built-in plugin)!");
                 ImGui::TextUnformatted("Make sure you installed ImHex correctly.");
                 ImGui::TextUnformatted("There should be at least a 'builtin.hexplug' file in your plugins folder.");
@@ -338,15 +360,16 @@ namespace hex {
                 drawPluginFolderTable();
 
                 ImGui::NewLine();
-                if (ImGui::Button("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                if (ImGuiExt::DimmedButton("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                     ImHexApi::System::closeImHex(true);
 
                 ImGui::EndPopup();
             }
 
             // Duplicate plugins error popup
-            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-            if (ImGui::BeginPopupModal("Duplicate Plugins loaded", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
+            if (ImGui::BeginPopupModal("Duplicate Plugins loaded", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar)) {
+                ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
                 ImGui::TextUnformatted("ImHex found and attempted to load multiple plugins with the same name!");
                 ImGui::TextUnformatted("Make sure you installed ImHex correctly and, if needed,");
                 ImGui::TextUnformatted("cleaned up older installations correctly.");
@@ -357,7 +380,7 @@ namespace hex {
                 drawPluginFolderTable();
 
                 ImGui::NewLine();
-                if (ImGui::Button("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                if (ImGuiExt::DimmedButton("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                     ImHexApi::System::closeImHex(true);
 
                 ImGui::EndPopup();
@@ -546,12 +569,15 @@ namespace hex {
 
             ImGui::SetNextWindowClass(&windowClass);
 
+            auto window    = ImGui::FindWindowByName(view->getName().c_str());
+            if (window != nullptr && window->DockNode == nullptr)
+                ImGui::SetNextWindowBgAlpha(1.0F);
+
             // Draw view
             view->draw();
             view->trackViewOpenState();
 
             if (view->getWindowOpenState()) {
-                auto window    = ImGui::FindWindowByName(view->getName().c_str());
                 bool hasWindow = window != nullptr;
                 bool focused   = false;
 
@@ -703,6 +729,10 @@ namespace hex {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
             glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
         #endif
+
+	#if defined(OS_LINUX) && defined(GLFW_WAYLAND_APP_ID)
+            glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
+	#endif
 
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);

@@ -360,7 +360,7 @@
         "hex.builtin.oobe.tutorial_question": "Da dies das erste mal ist das du ImHex verwendest, möchtest du das Tutorial starten?",
         "hex.builtin.popup.blocking_task.desc": "Ein Task ist immer noch im Hintergrund am laufen.",
         "hex.builtin.popup.blocking_task.title": "Laufender Task",
-        "hex.builtin.popup.close_provider.desc": "Es wurden ungespeicherte Änderungen an einem oder mehreren Provider vorgenommen.\nBist du sicher, dass du diese schliessen willst?",
+        "hex.builtin.popup.close_provider.desc": "Einige Änderungen wurden noch nicht in einem Projekt gespeichert\nMöchtest du diese vor dem schliessen sichern?",
         "hex.builtin.popup.close_provider.title": "Provider schliessen?",
         "hex.builtin.popup.create_workspace.desc": "Gib einen Namen für den neuen Arbeitsbereich ein",
         "hex.builtin.popup.create_workspace.title": "Arbeitsbereich erstellen",

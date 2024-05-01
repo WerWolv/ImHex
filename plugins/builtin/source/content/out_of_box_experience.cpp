@@ -443,13 +443,13 @@ namespace hex::plugin::builtin {
             ImHexApi::System::setWindowResizable(false);
 
             const auto imageTheme = ThemeManager::getImageTheme();
-            s_imhexBanner    = ImGuiExt::Texture(romfs::get(hex::format("assets/{}/banner.png", imageTheme)).span<std::byte>());
-            s_compassTexture = ImGuiExt::Texture(romfs::get("assets/common/compass.png").span<std::byte>());
-            s_globeTexture   = ImGuiExt::Texture(romfs::get("assets/common/globe.png").span<std::byte>());
+            s_imhexBanner    = ImGuiExt::Texture::fromImage(romfs::get(hex::format("assets/{}/banner.png", imageTheme)).span<std::byte>());
+            s_compassTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/compass.png").span<std::byte>());
+            s_globeTexture   = ImGuiExt::Texture::fromImage(romfs::get("assets/common/globe.png").span<std::byte>());
             s_screenshotDescriptions = nlohmann::json::parse(romfs::get("assets/screenshot_descriptions.json").string());
 
             for (const auto &path : romfs::list("assets/screenshots")) {
-                s_screenshots.emplace_back(path.filename(), ImGuiExt::Texture(romfs::get(path).span<std::byte>(), ImGuiExt::Texture::Filter::Linear));
+                s_screenshots.emplace_back(path.filename(), ImGuiExt::Texture::fromImage(romfs::get(path).span<std::byte>(), ImGuiExt::Texture::Filter::Linear));
             }
 
             s_drawEvent = EventFrameBegin::subscribe(drawOutOfBoxExperience);
