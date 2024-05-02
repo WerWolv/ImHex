@@ -68,6 +68,11 @@ namespace ImGuiExt {
             if (filter == Texture::Filter::Nearest)
                 return texture;
 
+            // WebGL doesn't support multisampling
+            #if defined(OS_WEB)
+                return texture;
+            #endif
+
             constexpr static auto SampleCount = 8;
 
             // Generate renderbuffer
