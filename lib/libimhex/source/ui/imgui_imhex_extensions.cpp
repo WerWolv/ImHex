@@ -68,37 +68,34 @@ namespace ImGuiExt {
             if (filter == Texture::Filter::Nearest)
                 return texture;
 
-            // WebGL doesn't support multisampling
-            #if defined(OS_WEB)
-                return texture;
+            #if 0
+                constexpr static auto SampleCount = 8;
+
+                // Generate renderbuffer
+                GLuint renderbuffer;
+                glGenRenderbuffers(1, &renderbuffer);
+                glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+                glRenderbufferStorageMultisample(GL_RENDERBUFFER, SampleCount, GL_DEPTH24_STENCIL8, width, height);
+
+                // Generate framebuffer
+                GLuint framebuffer;
+                glGenFramebuffers(1, &framebuffer);
+                glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+                // Attach texture to color attachment 0
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+                // Attach renderbuffer to depth-stencil attachment
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+
+                // Check framebuffer status
+                if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+                    return 0;
+                }
+
+                // Unbind framebuffer
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
             #endif
-
-            constexpr static auto SampleCount = 8;
-
-            // Generate renderbuffer
-            GLuint renderbuffer;
-            glGenRenderbuffers(1, &renderbuffer);
-            glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-            glRenderbufferStorageMultisample(GL_RENDERBUFFER, SampleCount, GL_DEPTH24_STENCIL8, width, height);
-
-            // Generate framebuffer
-            GLuint framebuffer;
-            glGenFramebuffers(1, &framebuffer);
-            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-            // Attach texture to color attachment 0
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-
-            // Attach renderbuffer to depth-stencil attachment
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
-
-            // Check framebuffer status
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-                return 0;
-            }
-
-            // Unbind framebuffer
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
             return texture;
         }
