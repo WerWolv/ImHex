@@ -84,7 +84,6 @@ namespace ImGuiExt {
                 return texture;
 
             if (!isOpenGLExtensionSupported("GL_ARB_texture_multisample")) {
-                hex::log::error("Platform does not support texture multisample! Bailing out!");
                 return texture;
             }
 
@@ -111,7 +110,7 @@ namespace ImGuiExt {
 
                 // Check framebuffer status
                 if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-                    hex::log::error("Platform claim to support texture multisample but the API is failing! Bailing out!");
+                    hex::log::error("Driver claims to support texture multisampling but it's not working");
                     return texture;
                 }
 
