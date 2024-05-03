@@ -308,6 +308,21 @@ namespace hex {
         }
     }
 
+    void Window::configureGLFW() {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
+
+        // Windows versions before Windows 10 have issues with transparent framebuffers
+        // causing the entire window to be slightly transparent ignoring all configurations
+        OSVERSIONINFOA versionInfo = { };
+        if (::GetVersionExA(&versionInfo) && versionInfo.dwMajorVersion >= 10) {
+            glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+        } else {
+            glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
+        }
+    }
+
 
     void Window::initNative() {
         if (ImHexApi::System::isDebugBuild()) {

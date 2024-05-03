@@ -46,6 +46,13 @@ namespace hex {
         }, message.c_str());
     }
 
+    void Window::configureGLFW() {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_DECORATED, GL_FALSE);
+        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
+    }
+
     void Window::initNative() {
         EM_ASM({
             // Save data directory

@@ -29,6 +29,7 @@ namespace hex {
         void resize(i32 width, i32 height);
 
     private:
+        void configureGLFW();
         void setupNativeWindow();
         void beginNativeWindowFrame();
         void endNativeWindowFrame();
