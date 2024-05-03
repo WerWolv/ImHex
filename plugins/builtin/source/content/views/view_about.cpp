@@ -743,7 +743,11 @@ namespace hex::plugin::builtin {
     }
 
     void ViewAbout::drawLicensePage() {
+        const auto indentation = 50_scaled;
+
+        ImGui::Indent(indentation);
         ImGuiExt::TextFormattedWrapped("{}", romfs::get("licenses/LICENSE").string());
+        ImGui::Unindent(indentation);
     }
 
     void ViewAbout::drawAboutPopup() {
