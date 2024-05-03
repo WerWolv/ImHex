@@ -21,6 +21,7 @@
 
 #include <hex/api/task_manager.hpp>
 #include <hex/api/theme_manager.hpp>
+#include <hex/helpers/logger.hpp>
 
 
 namespace ImGuiExt {
@@ -28,6 +29,20 @@ namespace ImGuiExt {
     using namespace ImGui;
 
     namespace {
+
+        bool isOpenGLExtensionSupported(const char *name) {
+            GLint extensionCount = 0;
+            glGetIntegerv(GL_NUM_EXTENSIONS, &extensionCount);
+
+            for (GLint i = 0; i < extensionCount; i++) {
+                std::string_view extension = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i));
+                if (extension == name) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         constexpr auto getGLFilter(Texture::Filter filter) {
             switch (filter) {
@@ -68,7 +83,13 @@ namespace ImGuiExt {
             if (filter == Texture::Filter::Nearest)
                 return texture;
 
-            #if 0
+            if (!isOpenGLExtensionSupported("GL_ARB_texture_multisample")) {
+                hex::log::error("Platform does not support texture multisample! Bailing out!");
+                return texture;
+            }
+
+            #if defined(GL_TEXTURE_2D_MULTISAMPLE)
+
                 constexpr static auto SampleCount = 8;
 
                 // Generate renderbuffer
@@ -83,18 +104,20 @@ namespace ImGuiExt {
                 glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
                 // Attach texture to color attachment 0
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture, 0);
 
                 // Attach renderbuffer to depth-stencil attachment
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
 
                 // Check framebuffer status
                 if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-                    return 0;
+                    hex::log::error("Platform claim to support texture multisample but the API is failing! Bailing out!");
+                    return texture;
                 }
 
                 // Unbind framebuffer
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
             #endif
 
             return texture;
