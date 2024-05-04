@@ -55,6 +55,7 @@ namespace hex::plugin::builtin {
             if (ImGui::InputText("##command_input", m_commandBuffer)) {
                 m_lastResults = this->getCommandResults(m_commandBuffer);
             }
+            ImGui::SetItemKeyOwner(ImGuiKey_LeftAlt, ImGuiInputFlags_CondActive);
 
             ImGui::PopStyleVar(2);
             ImGui::PopStyleColor(3);
