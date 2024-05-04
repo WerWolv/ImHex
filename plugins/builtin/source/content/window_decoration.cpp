@@ -251,6 +251,92 @@ namespace hex::plugin::builtin {
             }
         }
 
+        void populateMenu(const UnlocalizedString &menuName) {
+            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                if (!menuName.empty()) {
+                    if (menuItem.unlocalizedNames[0] != menuName)
+                        continue;
+                }
+
+                const auto &[
+                    unlocalizedNames,
+                    icon,
+                    shortcut,
+                    view,
+                    callback,
+                    enabledCallback,
+                    selectedCallack,
+                    toolbarIndex
+                ] = menuItem;
+
+                createNestedMenu(unlocalizedNames, icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallack);
+            }
+        }
+
+        void defineMenu(const UnlocalizedString &menuName) {
+            ImGui::GetStyle().TouchExtraPadding = scaled(ImVec2(0, 2));
+            if (ImGui::BeginMenu(Lang(menuName))) {
+                ImGui::EndMenu();
+            }
+            ImGui::GetStyle().TouchExtraPadding = ImVec2(0, 0);
+
+            populateMenu(menuName);
+        }
+
+        void drawMenu() {
+            auto cursorPos = ImGui::GetCursorPosX();
+            u32 fittingItems = 0;
+
+            const auto &menuItems = ContentRegistry::Interface::impl::getMainMenuItems();
+            for (const auto &[priority, menuItem] : menuItems) {
+                auto menuName = Lang(menuItem.unlocalizedName);
+
+                const auto padding = ImGui::GetStyle().FramePadding.x;
+                auto width = ImGui::CalcTextSize(menuName).x + padding * 4;
+                if ((cursorPos + width) > (s_searchBarPosition - ImGui::CalcTextSize(ICON_VS_ELLIPSIS).x - padding * 2))
+                    break;
+
+                cursorPos += width;
+                fittingItems += 1;
+            }
+
+            if (fittingItems <= 2)
+                fittingItems = 0;
+
+            {
+                u32 count = 0;
+                for (const auto &[priority, menuItem] : menuItems) {
+                    if (count >= fittingItems)
+                        break;
+
+                    defineMenu(menuItem.unlocalizedName);
+
+                    count += 1;
+                }
+            }
+
+            if (fittingItems == 0) {
+                if (ImGui::BeginMenu(ICON_VS_MENU)) {
+                    for (const auto &[priority, menuItem] : menuItems) {
+                        defineMenu(menuItem.unlocalizedName);
+                    }
+                    ImGui::EndMenu();
+                }
+            } else if (fittingItems < menuItems.size()) {
+                u32 count = 0;
+                if (ImGui::BeginMenu(ICON_VS_ELLIPSIS)) {
+                    for (const auto &[priority, menuItem] : menuItems) {
+                        ON_SCOPE_EXIT { count += 1; };
+                        if (count < fittingItems)
+                            continue;
+
+                        defineMenu(menuItem.unlocalizedName);
+                    }
+                    ImGui::EndMenu();
+                }
+            }
+        }
+
         void drawMainMenu([[maybe_unused]] float menuBarHeight) {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
             ImGui::SetNextWindowScroll(ImVec2(0, 0));
@@ -300,45 +386,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndPopup();
                 }
 
-                const static auto drawMenu = [] {
-                    for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMainMenuItems()) {
-                        ImGui::GetStyle().TouchExtraPadding = scaled(ImVec2(0, 2));
-                        if (ImGui::BeginMenu(Lang(menuItem.unlocalizedName))) {
-                            ImGui::EndMenu();
-                        }
-                        ImGui::GetStyle().TouchExtraPadding = ImVec2(0, 0);
-                    }
-
-                    for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                        const auto &[
-                            unlocalizedNames,
-                            icon,
-                            shortcut,
-                            view,
-                            callback,
-                            enabledCallback,
-                            selectedCallack,
-                            toolbarIndex
-                        ] = menuItem;
-
-                        createNestedMenu(unlocalizedNames, icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallack);
-                    }
-                };
-
-                static u32 menuEndPos = 0;
-                if (menuEndPos <= s_searchBarPosition) {
-                    drawMenu();
-
-                    // Only initialize the menu end position if the language is already loaded
-                    if (!LocalizationManager::getSelectedLanguage().empty())
-                        menuEndPos = ImGui::GetCursorPosX();
-                } else {
-                    if (ImGui::BeginMenu(ICON_VS_MENU)) {
-                        drawMenu();
-                        ImGui::EndMenu();
-                    }
-                }
-
+                drawMenu();
                 drawTitleBar();
 
                 ImGui::EndMainMenuBar();
