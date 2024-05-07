@@ -915,10 +915,8 @@ void TextEditor::Render() {
             }
 
             if (mState.mCursorPosition.mLine == lineNo && mShowCursor) {
-                bool focused = false;
+                bool focused = ImGui::IsWindowFocused();
                 ImGuiViewport *viewport = ImGui::GetWindowViewport();
-                if (viewport->PlatformUserData != NULL && ImGui::GetPlatformIO().Platform_GetWindowFocus(viewport))
-                    focused = ImGui::IsWindowFocused();
 
                 // Highlight the current line (where the cursor is)
                 if (!HasSelection()) {
