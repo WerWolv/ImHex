@@ -339,12 +339,21 @@ namespace hex::plugin::builtin {
             return;
         }
 
+        if(m_changeEventAcknowledgementPending) {
+            return;
+        }
+
+        m_changeEventAcknowledgementPending = true;
+
         ui::PopupQuestion::open("hex.builtin.provider.file.reload_changes"_lang, [this] {
             this->close();
             (void)this->open();
             getUndoStack().reapply();
+            m_changeEventAcknowledgementPending = false;
         },
-        []{});
+        [this]{
+            m_changeEventAcknowledgementPending = false;
+        });
     }
 
 
