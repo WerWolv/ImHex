@@ -135,11 +135,12 @@ namespace hex::ui {
         }
 
         void drawSizeColumn(const pl::ptrn::Pattern& pattern) {
-            ImGui::TableNextColumn();
             if (auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
                 drawSizeColumnForBitfieldMember(*bitfieldMember);
-            else
+            else {
+                ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("0x{0:04X}", pattern.getSize());
+            }
         }
 
         void drawCommentTooltip(const pl::ptrn::Pattern &pattern) {
