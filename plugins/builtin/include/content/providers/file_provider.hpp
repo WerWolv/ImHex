@@ -68,6 +68,7 @@ namespace hex::plugin::builtin {
         std::vector<u8> m_data;
         bool m_loadedIntoMemory = false;
         bool m_ignoreNextChangeEvent = false;
+        bool m_changeEventAcknowledgementPending = false;
 
         std::optional<struct stat> m_fileStats;
 
