@@ -89,7 +89,7 @@ namespace hex::plugin::builtin {
                 }
 
                 bool executeGoto = false;
-                if (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+                if (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                     executeGoto = true;
                 }
 
@@ -174,7 +174,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
 
-                if (ImGui::Button("hex.builtin.view.hex_editor.select.select"_lang) || (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter)))) {
+                if (ImGui::Button("hex.builtin.view.hex_editor.select.select"_lang) || (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))) {
                     editor->setSelection(m_region.getStartAddress(), m_region.getEndAddress());
                     editor->jumpToSelection();
 
@@ -321,6 +321,11 @@ namespace hex::plugin::builtin {
                 [&]{
                     editor->closePopup();
                 });
+
+            if(ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
+                insert(m_address, m_size);
+                editor->closePopup();
+            }
         }
 
     private:
@@ -352,6 +357,11 @@ namespace hex::plugin::builtin {
                 [&]{
                     editor->closePopup();
                 });
+
+            if(ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
+                remove(m_address, m_size);
+                editor->closePopup();
+            }
         }
 
     private:
@@ -387,6 +397,11 @@ namespace hex::plugin::builtin {
             [&] {
                 editor->closePopup();
             });
+
+            if(ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
+                fill(m_address, m_size, m_input);
+                editor->closePopup();
+            }
         }
 
     private:
