@@ -604,11 +604,11 @@ namespace hex::plugin::builtin {
                     justOpened = false;
                 }
 
-                m_currPopup->draw(this);
-
-                m_currentPopupHover = ImGui::IsWindowHovered();
+                m_currentPopupHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
                 m_currentPopupDetached = !ImGui::GetCurrentWindow()->ViewportOwned;
                 m_currentPopupHasHovered |= m_currentPopupHover;
+
+                m_currPopup->draw(this);
 
                 ImGui::EndPopup();
             }
