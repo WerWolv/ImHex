@@ -107,7 +107,7 @@ namespace hex::plugin::builtin {
                     editor->jumpToSelection();
 
                     if (!this->isPinned())
-                        ImGui::CloseCurrentPopup();
+                        editor->closePopup();
                 }
 
                 ImGui::EndTabBar();
@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
                     editor->jumpToSelection();
 
                     if (!this->isPinned())
-                        ImGui::CloseCurrentPopup();
+                        editor->closePopup();
                 }
 
                 ImGui::EndTabBar();
@@ -557,66 +557,64 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::drawPopup() {
-        // Popup windows
-        if (m_shouldOpenPopup) {
-            m_shouldOpenPopup = false;
-            m_currentPopupHasHovered = false;
-            ImGui::OpenPopup("##hex_editor_popup");
-        }
-
         static bool justOpened = true;
         bool open = true;
 
         const float scaling = ImHexApi::System::getGlobalScale();
-        ImGui::SetNextWindowSize(ImVec2(250 * scaling, 0), ImGuiCond_Appearing);
-        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
+        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Once);
         const auto configuredAlpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
         bool alphaIsChanged = false;
         if (m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupHasHovered && m_currentPopupDetached && configuredAlpha < 0.99F && configuredAlpha > 0.01F) {
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, configuredAlpha);
             alphaIsChanged = true;
         }
-        if (ImGuiExt::BeginHoveringPopup("##hex_editor_popup", &open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
-            if (m_currPopup == nullptr || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-                ImGui::CloseCurrentPopup();
-                ImGui::EndPopup();
-            } else {
-                float titleOffset = 7 * scaling;
 
-                const ImVec2 originalCursorPos = ImGui::GetCursorPos();
-                if (m_currPopup->canBePinned()) {
-                    titleOffset += 16 * scaling;
-                    ImGui::SetCursorPos(ImVec2(5.0F, 0.0F));
-                    bool pinned = m_currPopup->isPinned();
-                    if (ImGuiExt::PopupTitleBarButton(pinned ? ICON_VS_PINNED : ICON_VS_PIN, pinned)) {
-                        m_currPopup->setPinned(!pinned);
+        if (m_currPopup != nullptr) {
+            if (ImGui::Begin(hex::format("##{}", m_currPopup->getTitle().get()).c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking)) {
+                if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                    this->closePopup();
+                } else {
+                    float titleOffset = 7 * scaling;
+
+                    const ImVec2 originalCursorPos = ImGui::GetCursorPos();
+                    if (m_currPopup->canBePinned()) {
+                        titleOffset += 16 * scaling;
+                        ImGui::SetCursorPos(ImVec2(5.0F, 0.0F));
+                        bool pinned = m_currPopup->isPinned();
+                        if (ImGuiExt::PopupTitleBarButton(pinned ? ICON_VS_PINNED : ICON_VS_PIN, pinned)) {
+                            m_currPopup->setPinned(!pinned);
+                        }
                     }
+
+                    const auto popupTitle = m_currPopup->getTitle();
+                    if (!popupTitle.empty()) {
+                        ImGui::SetCursorPos(ImVec2(titleOffset, 0.0F));
+                        ImGuiExt::PopupTitleBarText(Lang(popupTitle));
+                    }
+
+                    ImGui::SetCursorPos(originalCursorPos);
+
+                    if (justOpened) {
+                        ImGui::SetKeyboardFocusHere();
+                        justOpened = false;
+                    }
+
+                    m_currentPopupHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+                    m_currentPopupDetached = !ImGui::GetCurrentWindow()->ViewportOwned;
+                    m_currentPopupHasHovered |= m_currentPopupHover;
+
+                    m_currPopup->draw(this);
                 }
-
-                const auto popupTitle = m_currPopup->getTitle();
-                if (!popupTitle.empty()) {
-                    ImGui::SetCursorPos(ImVec2(titleOffset, 0.0F));
-                    ImGuiExt::PopupTitleBarText(Lang(popupTitle));
-                }
-
-                ImGui::SetCursorPos(originalCursorPos);
-
-                if (justOpened) {
-                    ImGui::SetKeyboardFocusHere();
-                    justOpened = false;
-                }
-
-                m_currentPopupHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-                m_currentPopupDetached = !ImGui::GetCurrentWindow()->ViewportOwned;
-                m_currentPopupHasHovered |= m_currentPopupHover;
-
-                m_currPopup->draw(this);
-
-                ImGui::EndPopup();
+            } else {
+                this->closePopup();
+                justOpened = true;
             }
-        } else {
-            this->closePopup();
-            justOpened = true;
+
+            if ((m_currPopup != nullptr && !m_currPopup->isPinned() && !ImGui::IsWindowFocused()) || !open) {
+                this->closePopup();
+            }
+
+            ImGui::End();
         }
 
         if (alphaIsChanged)
