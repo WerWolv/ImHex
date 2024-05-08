@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
         }
 
         [[nodiscard]] const char * getTitle() const override {
-            return "hex.builtin.view.hex_editor.select.select"_lang;
+            return "hex.builtin.view.hex_editor.menu.file.select"_lang;
         }
 
         [[nodiscard]] bool canBePinned() const override {
@@ -551,6 +551,7 @@ namespace hex::plugin::builtin {
         if (ImGuiExt::BeginHoveringPopup("##hex_editor_popup", &open, ImGuiWindowFlags_NoResize)) {
             if(m_currPopup == nullptr || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
             } else {
                 float titleOffset = 7 * scaling;
 
