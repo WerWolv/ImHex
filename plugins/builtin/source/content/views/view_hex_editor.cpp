@@ -571,8 +571,9 @@ namespace hex::plugin::builtin {
         ImGui::SetNextWindowSize(ImVec2(250 * scaling, 0), ImGuiCond_Appearing);
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
         const auto originalAlpha = ImGui::GetStyle().Alpha;
-        if(m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupHasHovered && m_currentPopupDetached) {
-            ImGui::GetStyle().Alpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
+        const auto configuredAlpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
+        if(m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupHasHovered && m_currentPopupDetached && configuredAlpha < 0.99F && configuredAlpha > 0.01F) {
+            ImGui::GetStyle().Alpha = configuredAlpha;
         }
         if (ImGuiExt::BeginHoveringPopup("##hex_editor_popup", &open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             if(m_currPopup == nullptr || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
