@@ -148,6 +148,11 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.select.offset.region"_lang)) {
                     u64 inputA = m_region.getStartAddress();
                     u64 inputB = m_region.getEndAddress();
+
+                    if(justOpened) {
+                        ImGui::SetKeyboardFocusHere();
+                        justOpened = false;
+                    }
                     ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.begin"_lang, &inputA, ImGuiInputTextFlags_AutoSelectAll);
                     ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.end"_lang, &inputB, ImGuiInputTextFlags_AutoSelectAll);
 
@@ -162,6 +167,11 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.select.offset.size"_lang)) {
                     u64 inputA = m_region.getStartAddress();
                     u64 inputB = m_region.getSize();
+
+                    if(justOpened) {
+                        ImGui::SetKeyboardFocusHere();
+                        justOpened = false;
+                    }
                     ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.begin"_lang, &inputA, ImGuiInputTextFlags_AutoSelectAll);
                     ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.size"_lang, &inputB, ImGuiInputTextFlags_AutoSelectAll);
 
@@ -194,6 +204,7 @@ namespace hex::plugin::builtin {
 
     private:
         Region m_region = { 0, 1 };
+        bool justOpened = true;
     };
 
     class PopupBaseAddress : public ViewHexEditor::Popup {
