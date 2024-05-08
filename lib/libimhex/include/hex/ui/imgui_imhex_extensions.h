@@ -304,6 +304,10 @@ namespace ImGuiExt {
     bool ToggleSwitch(const char *label, bool *v);
     bool ToggleSwitch(const char *label, bool v);
 
+    bool BeginHoveringPopup(const char* name, bool* p_open, ImGuiWindowFlags flags);
+    bool PopupTitleBarButton(const char* label, bool p_enabled);
+    void PopupTitleBarText(const char* text);
+
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {
         if constexpr      (std::same_as<T, u8>)     return ImGuiDataType_U8;

@@ -1216,6 +1216,89 @@ namespace ImGuiExt {
         return ToggleSwitch(label, &v);
     }
 
+    bool BeginHoveringPopup(const char* name, bool* p_open, ImGuiWindowFlags flags)
+    {
+        ImGuiContext& g = *GImGui;
+        ImGuiWindow* window = g.CurrentWindow;
+        const ImGuiID id = window->GetID(name);
+        if (!IsPopupOpen(id, ImGuiPopupFlags_None))
+        {
+            g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
+            if (p_open && *p_open)
+                *p_open = false;
+            return false;
+        }
+
+        if ((g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) == 0)
+        {
+            const ImGuiViewport* viewport = window->WasActive ? window->Viewport : GetMainViewport();
+            SetNextWindowPos(viewport->GetCenter(), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+        }
+
+        flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
+        const bool is_open = Begin(name, p_open, flags);
+        if (!is_open || (p_open && !*p_open))
+        {
+            EndPopup();
+            if (is_open)
+                ClosePopupToLevel(g.BeginPopupStack.Size, true);
+            return false;
+        }
+        return is_open;
+    }
+
+    bool PopupTitleBarButton(const char* label, bool p_enabled)
+    {
+        ImGuiContext& g = *GImGui;
+        ImGuiWindow* window = g.CurrentWindow;
+        const ImGuiID id = window->GetID(label);
+        const ImRect title_rect = window->TitleBarRect();
+        const ImVec2 size(g.FontSize, g.FontSize); // Button size matches font size for aesthetic consistency.
+        const ImVec2 pos = window->DC.CursorPos;
+        const ImVec2 max_pos = pos + size;
+        const ImRect bb(pos.x, title_rect.Min.y, max_pos.x, title_rect.Max.y);
+
+        ImGui::PushClipRect( title_rect.Min, title_rect.Max, false );
+
+        // Check for item addition (similar to how clipping is handled in the original button functions).
+        bool is_clipped = !ItemAdd(bb, id);
+        bool hovered, held;
+        bool pressed = ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_None);
+        if (is_clipped) {
+            ImGui::PopClipRect();
+            return pressed;
+        }
+
+        // const ImU32 bg_col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+        // window->DrawList->AddCircleFilled(bb.GetCenter(), ImMax(2.0f, g.FontSize * 0.5f + 1.0f), bg_col);
+
+        // Draw the label in the center
+        ImU32 text_col = GetColorU32(p_enabled || hovered ? ImGuiCol_Text : ImGuiCol_TextDisabled);
+        window->DrawList->AddText(bb.GetCenter() - ImVec2(g.FontSize * 0.45F, g.FontSize * 0.5F), text_col, label);
+
+        // Return the button press state
+        ImGui::PopClipRect();
+        return pressed;
+    }
+
+    void PopupTitleBarText(const char* text) {
+        ImGuiContext& g = *GImGui;
+        ImGuiWindow* window = g.CurrentWindow;
+        const ImRect title_rect = window->TitleBarRect();
+        const ImVec2 size(g.FontSize, g.FontSize); // Button size matches font size for aesthetic consistency.
+        const ImVec2 pos = window->DC.CursorPos;
+        const ImVec2 max_pos = pos + size;
+        const ImRect bb(pos.x, title_rect.Min.y, max_pos.x, title_rect.Max.y);
+
+        ImGui::PushClipRect( title_rect.Min, title_rect.Max, false );
+
+        // Draw the label in the center
+        ImU32 text_col = GetColorU32(ImGuiCol_Text);
+        window->DrawList->AddText(bb.GetCenter() - ImVec2(g.FontSize * 0.45F, g.FontSize * 0.5F), text_col, text);
+
+        // Return the button press state
+        ImGui::PopClipRect();
+    }
 }
 
 namespace ImGui {

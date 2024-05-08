@@ -20,6 +20,14 @@ namespace hex::plugin::builtin {
         public:
             virtual ~Popup() = default;
             virtual void draw(ViewHexEditor *editor) = 0;
+
+            virtual const char* getTitle() const { return nullptr; }
+
+            [[nodiscard]] virtual bool canBePinned() const { return false; }
+            [[nodiscard]] bool isPinned() const { return m_isPinned; }
+            void setPinned(const bool pinned) { m_isPinned = pinned; }
+        private:
+            bool m_isPinned = false;
         };
 
         [[nodiscard]] bool isAnyPopupOpen() const {

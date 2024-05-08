@@ -106,10 +106,21 @@ namespace hex::plugin::builtin {
                 if (executeGoto && m_newAddress.has_value()) {
                     editor->setSelection(*m_newAddress, *m_newAddress);
                     editor->jumpToSelection();
+
+                    if(!this->isPinned())
+                        ImGui::CloseCurrentPopup();
                 }
 
                 ImGui::EndTabBar();
             }
+        }
+
+        [[nodiscard]] const char * getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.file.goto"_lang;
+        }
+
+        bool canBePinned() const override {
+            return true;
         }
 
     private:
@@ -166,10 +177,21 @@ namespace hex::plugin::builtin {
                 if (ImGui::Button("hex.builtin.view.hex_editor.select.select"_lang) || (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter)))) {
                     editor->setSelection(m_region.getStartAddress(), m_region.getEndAddress());
                     editor->jumpToSelection();
+
+                    if(!this->isPinned())
+                        ImGui::CloseCurrentPopup();
                 }
 
                 ImGui::EndTabBar();
             }
+        }
+
+        [[nodiscard]] const char * getTitle() const override {
+            return "hex.builtin.view.hex_editor.select.select"_lang;
+        }
+
+        [[nodiscard]] bool canBePinned() const override {
+            return true;
         }
 
     private:
@@ -506,25 +528,40 @@ namespace hex::plugin::builtin {
         }
 
         static bool justOpened = true;
+        bool open = true;
 
+        ImGui::SetNextWindowSize(ImVec2(250, 0), ImGuiCond_Appearing);
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
-        if (ImGui::BeginPopup("##hex_editor_popup", ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoTitleBar)) {
-            // Force close the popup when user is editing an input
-            if (ImGui::IsKeyPressed(ImGuiKey_Escape)){
+        if (ImGuiExt::BeginHoveringPopup("##hex_editor_popup", &open, ImGuiWindowFlags_NoResize)) {
+            if(m_currPopup == nullptr || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 ImGui::CloseCurrentPopup();
-            }
+            } else {
+                float titleOffset = 7;
 
-            if (justOpened) {
-                ImGui::SetKeyboardFocusHere();
-                justOpened = false;
-            }
+                if(m_currPopup->canBePinned()) {
+                    titleOffset += 16;
+                    ImGui::SetCursorPos( ImVec2( 5.0F, 0.0F ) );
+                    bool pinned = m_currPopup->isPinned();
+                    if(ImGuiExt::PopupTitleBarButton(pinned ? ICON_VS_PINNED : ICON_VS_PIN, pinned)) {
+                        m_currPopup->setPinned(!pinned);
+                    }
+                }
 
-            if (m_currPopup != nullptr)
+                const char* popupTitle = m_currPopup->getTitle();
+                if(popupTitle != nullptr) {
+                    ImGui::SetCursorPos(ImVec2(titleOffset, 0.0F));
+                    ImGuiExt::PopupTitleBarText(popupTitle);
+                }
+
+                if (justOpened) {
+                    ImGui::SetKeyboardFocusHere();
+                    justOpened = false;
+                }
+
                 m_currPopup->draw(this);
-            else
-                ImGui::CloseCurrentPopup();
 
-            ImGui::EndPopup();
+                ImGui::EndPopup();
+            }
         } else {
             this->closePopup();
             justOpened = true;
