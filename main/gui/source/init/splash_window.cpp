@@ -44,7 +44,19 @@ namespace hex::init {
         this->initImGui();
         this->loadAssets();
 
-        ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
+        {
+            auto glVendor = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
+            auto glRenderer = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+            auto glVersion = reinterpret_cast<const char *>(glGetString(GL_VERSION));
+            auto glShadingLanguageVersion = reinterpret_cast<const char *>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+            log::debug("OpenGL Vendor: '{}'", glVendor);
+            log::debug("OpenGL Renderer: '{}'", glRenderer);
+            log::debug("OpenGL Version: '{}'", glVersion);
+            log::debug("OpenGL Shading Language Version: '{}'", glShadingLanguageVersion);
+
+            ImHexApi::System::impl::setGPUVendor(glVendor);
+        }
 
         RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
             m_tasks.push_back(Task{ name, function, async });
@@ -527,8 +539,7 @@ namespace hex::init {
         // If the image couldn't be loaded correctly, something went wrong during the build process
         // Close the application since this would lead to errors later on anyway.
         if (!this->splashBackgroundTexture.isValid() || !this->splashTextTexture.isValid()) {
-            log::fatal("Could not load splash screen image!");
-            std::exit(EXIT_FAILURE);
+            log::error("Could not load splash screen image!");
         }
 
         std::mt19937 rng(std::random_device{}());
