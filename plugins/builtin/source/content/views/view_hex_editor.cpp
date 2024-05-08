@@ -114,8 +114,8 @@ namespace hex::plugin::builtin {
             }
         }
 
-        [[nodiscard]] const char * getTitle() const override {
-            return "hex.builtin.view.hex_editor.menu.file.goto"_lang;
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.file.goto";
         }
 
         bool canBePinned() const override {
@@ -194,8 +194,8 @@ namespace hex::plugin::builtin {
             }
         }
 
-        [[nodiscard]] const char * getTitle() const override {
-            return "hex.builtin.view.hex_editor.menu.file.select"_lang;
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.file.select";
         }
 
         [[nodiscard]] bool canBePinned() const override {
@@ -229,8 +229,8 @@ namespace hex::plugin::builtin {
             );
         }
 
-        [[nodiscard]] const char * getTitle() const override {
-            return "hex.builtin.view.hex_editor.menu.edit.set_base"_lang;
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.set_base";
         }
 
     private:
@@ -265,8 +265,8 @@ namespace hex::plugin::builtin {
             );
         }
 
-        [[nodiscard]] const char * getTitle() const override {
-            return "hex.builtin.view.hex_editor.menu.edit.set_page_size"_lang;
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.set_page_size";
         }
 
     private:
@@ -304,8 +304,8 @@ namespace hex::plugin::builtin {
                 });
         }
 
-        [[nodiscard]] const char * getTitle() const override {
-            return "hex.builtin.view.hex_editor.menu.edit.resize"_lang;
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.resize";
         }
 
     private:
@@ -341,8 +341,8 @@ namespace hex::plugin::builtin {
             }
         }
 
-        [[nodiscard]] const char * getTitle() const override {
-            return "hex.builtin.view.hex_editor.menu.edit.insert"_lang;
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.insert";
         }
 
     private:
@@ -379,8 +379,8 @@ namespace hex::plugin::builtin {
             }
         }
 
-        [[nodiscard]] const char * getTitle() const override {
-            return "hex.builtin.view.hex_editor.menu.edit.remove"_lang;
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.remove";
         }
 
     private:
@@ -421,8 +421,8 @@ namespace hex::plugin::builtin {
             }
         }
 
-        [[nodiscard]] const char * getTitle() const override {
-            return "hex.builtin.view.hex_editor.menu.edit.fill"_lang;
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.fill";
         }
 
     private:
@@ -586,10 +586,10 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                const char* popupTitle = m_currPopup->getTitle();
-                if(popupTitle != nullptr) {
+                const auto popupTitle = m_currPopup->getTitle();
+                if(!popupTitle.empty()) {
                     ImGui::SetCursorPos(ImVec2(titleOffset, 0.0F));
-                    ImGuiExt::PopupTitleBarText(popupTitle);
+                    ImGuiExt::PopupTitleBarText(Lang(popupTitle));
                 }
 
                 ImGui::SetCursorPos(originalCursorPos);

@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
             virtual ~Popup() = default;
             virtual void draw(ViewHexEditor *editor) = 0;
 
-            virtual const char* getTitle() const { return nullptr; }
+            [[nodiscard]] virtual UnlocalizedString getTitle() const { return {}; }
 
             [[nodiscard]] virtual bool canBePinned() const { return false; }
             [[nodiscard]] bool isPinned() const { return m_isPinned; }

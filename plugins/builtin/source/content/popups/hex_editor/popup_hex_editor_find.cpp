@@ -301,7 +301,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    [[nodiscard]] const char * PopupFind::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.file.search"_lang;
+    [[nodiscard]] UnlocalizedString PopupFind::getTitle() const {
+        return "hex.builtin.view.hex_editor.menu.file.search";
     }
 }

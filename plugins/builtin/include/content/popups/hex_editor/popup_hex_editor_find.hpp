@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
 
         void processInputString();
 
-        [[nodiscard]] const char * getTitle() const override;
+        [[nodiscard]] UnlocalizedString getTitle() const override;
     };
 
 } // namespace hex::plugin::builtin
