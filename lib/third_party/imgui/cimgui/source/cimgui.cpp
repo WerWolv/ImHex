@@ -4931,9 +4931,9 @@ CIMGUI_API void igTablePopBackgroundChannel()
 {
     return ImGui::TablePopBackgroundChannel();
 }
-CIMGUI_API void igTableAngledHeadersRowEx(float angle,float max_label_width)
+CIMGUI_API void igTableAngledHeadersRowEx(ImGuiID row_id, float angle,float max_label_width, const ImGuiTableHeaderData *data, int data_count)
 {
-    return ImGui::TableAngledHeadersRowEx(angle,max_label_width);
+    return ImGui::TableAngledHeadersRowEx(row_id,angle,max_label_width,data,data_count);
 }
 CIMGUI_API ImGuiTable* igGetCurrentTable()
 {
