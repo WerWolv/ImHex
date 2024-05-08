@@ -79,6 +79,8 @@ namespace hex::plugin::builtin {
         ui::HexEditor m_hexEditor;
 
         bool m_shouldOpenPopup = false;
+        bool m_currentPopupHover = false;
+        bool m_currentPopupDetached = false;
         std::unique_ptr<Popup> m_currPopup;
 
         PerProvider<std::optional<u64>> m_selectionStart, m_selectionEnd;

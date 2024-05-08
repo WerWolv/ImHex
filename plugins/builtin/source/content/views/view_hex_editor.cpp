@@ -569,6 +569,10 @@ namespace hex::plugin::builtin {
         const float scaling = ImHexApi::System::getGlobalScale();
         ImGui::SetNextWindowSize(ImVec2(250 * scaling, 0), ImGuiCond_Appearing);
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
+        const auto originalAlpha = ImGui::GetStyle().Alpha;
+        if(m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupDetached) {
+            ImGui::GetStyle().Alpha = ImGui::GetStyle().PopupWindowAlpha;
+        }
         if (ImGuiExt::BeginHoveringPopup("##hex_editor_popup", &open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             if(m_currPopup == nullptr || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 ImGui::CloseCurrentPopup();
@@ -600,6 +604,9 @@ namespace hex::plugin::builtin {
                 }
 
                 m_currPopup->draw(this);
+
+                m_currentPopupHover = ImGui::IsWindowHovered();
+                m_currentPopupDetached = !ImGui::GetCurrentWindow()->ViewportOwned;
 
                 ImGui::EndPopup();
             }
