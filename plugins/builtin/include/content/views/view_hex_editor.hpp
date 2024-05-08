@@ -79,6 +79,7 @@ namespace hex::plugin::builtin {
         ui::HexEditor m_hexEditor;
 
         bool m_shouldOpenPopup = false;
+        bool m_currentPopupHasHovered = false; // This flag prevents the popup from initially appearing with the transparency effect
         bool m_currentPopupHover = false;
         bool m_currentPopupDetached = false;
         std::unique_ptr<Popup> m_currPopup;

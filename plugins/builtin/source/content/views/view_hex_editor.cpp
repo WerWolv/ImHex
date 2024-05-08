@@ -560,6 +560,7 @@ namespace hex::plugin::builtin {
         // Popup windows
         if (m_shouldOpenPopup) {
             m_shouldOpenPopup = false;
+            m_currentPopupHasHovered = false;
             ImGui::OpenPopup("##hex_editor_popup");
         }
 
@@ -570,7 +571,7 @@ namespace hex::plugin::builtin {
         ImGui::SetNextWindowSize(ImVec2(250 * scaling, 0), ImGuiCond_Appearing);
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
         const auto originalAlpha = ImGui::GetStyle().Alpha;
-        if(m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupDetached) {
+        if(m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupHasHovered && m_currentPopupDetached) {
             ImGui::GetStyle().Alpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
         }
         if (ImGuiExt::BeginHoveringPopup("##hex_editor_popup", &open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -607,6 +608,7 @@ namespace hex::plugin::builtin {
 
                 m_currentPopupHover = ImGui::IsWindowHovered();
                 m_currentPopupDetached = !ImGui::GetCurrentWindow()->ViewportOwned;
+                m_currentPopupHasHovered |= m_currentPopupHover;
 
                 ImGui::EndPopup();
             }
