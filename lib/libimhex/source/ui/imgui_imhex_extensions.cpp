@@ -1258,13 +1258,14 @@ namespace ImGuiExt {
         const ImVec2 max_pos = pos + size;
         const ImRect bb(pos.x, title_rect.Min.y, max_pos.x, title_rect.Max.y);
 
-        ImGui::PushClipRect( title_rect.Min, title_rect.Max, false );
+        ImGui::PushClipRect(title_rect.Min, title_rect.Max, false);
 
         // Check for item addition (similar to how clipping is handled in the original button functions).
         bool is_clipped = !ItemAdd(bb, id);
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_None);
-        if (is_clipped) {
+        if (is_clipped)
+        {
             ImGui::PopClipRect();
             return pressed;
         }

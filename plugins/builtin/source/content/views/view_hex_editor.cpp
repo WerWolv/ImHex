@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
                     editor->setSelection(*m_newAddress, *m_newAddress);
                     editor->jumpToSelection();
 
-                    if(!this->isPinned())
+                    if (!this->isPinned())
                         ImGui::CloseCurrentPopup();
                 }
 
@@ -149,7 +149,7 @@ namespace hex::plugin::builtin {
                     u64 inputA = m_region.getStartAddress();
                     u64 inputB = m_region.getEndAddress();
 
-                    if(justOpened) {
+                    if (justOpened) {
                         ImGui::SetKeyboardFocusHere();
                         justOpened = false;
                     }
@@ -168,7 +168,7 @@ namespace hex::plugin::builtin {
                     u64 inputA = m_region.getStartAddress();
                     u64 inputB = m_region.getSize();
 
-                    if(justOpened) {
+                    if (justOpened) {
                         ImGui::SetKeyboardFocusHere();
                         justOpened = false;
                     }
@@ -186,7 +186,7 @@ namespace hex::plugin::builtin {
                     editor->setSelection(m_region.getStartAddress(), m_region.getEndAddress());
                     editor->jumpToSelection();
 
-                    if(!this->isPinned())
+                    if (!this->isPinned())
                         ImGui::CloseCurrentPopup();
                 }
 
@@ -335,7 +335,7 @@ namespace hex::plugin::builtin {
                     editor->closePopup();
                 });
 
-            if(ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
+            if (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 insert(m_address, m_size);
                 editor->closePopup();
             }
@@ -373,7 +373,7 @@ namespace hex::plugin::builtin {
                     editor->closePopup();
                 });
 
-            if(ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
+            if (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 remove(m_address, m_size);
                 editor->closePopup();
             }
@@ -415,7 +415,7 @@ namespace hex::plugin::builtin {
                 editor->closePopup();
             });
 
-            if(ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
+            if (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 fill(m_address, m_size, m_input);
                 editor->closePopup();
             }
@@ -572,19 +572,19 @@ namespace hex::plugin::builtin {
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
         const auto configuredAlpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
         bool alphaIsChanged = false;
-        if(m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupHasHovered && m_currentPopupDetached && configuredAlpha < 0.99F && configuredAlpha > 0.01F) {
+        if (m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupHasHovered && m_currentPopupDetached && configuredAlpha < 0.99F && configuredAlpha > 0.01F) {
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, configuredAlpha);
             alphaIsChanged = true;
         }
         if (ImGuiExt::BeginHoveringPopup("##hex_editor_popup", &open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
-            if(m_currPopup == nullptr || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+            if (m_currPopup == nullptr || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 ImGui::CloseCurrentPopup();
                 ImGui::EndPopup();
             } else {
                 float titleOffset = 7 * scaling;
 
                 const ImVec2 originalCursorPos = ImGui::GetCursorPos();
-                if(m_currPopup->canBePinned()) {
+                if (m_currPopup->canBePinned()) {
                     titleOffset += 16 * scaling;
                     ImGui::SetCursorPos( ImVec2( 5.0F, 0.0F ) );
                     bool pinned = m_currPopup->isPinned();
@@ -594,7 +594,7 @@ namespace hex::plugin::builtin {
                 }
 
                 const auto popupTitle = m_currPopup->getTitle();
-                if(!popupTitle.empty()) {
+                if (!popupTitle.empty()) {
                     ImGui::SetCursorPos(ImVec2(titleOffset, 0.0F));
                     ImGuiExt::PopupTitleBarText(Lang(popupTitle));
                 }
@@ -619,7 +619,7 @@ namespace hex::plugin::builtin {
             justOpened = true;
         }
 
-        if(alphaIsChanged)
+        if (alphaIsChanged)
             ImGui::PopStyleVar();
 
         // Right click menu
