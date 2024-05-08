@@ -8,6 +8,7 @@ namespace hex::script::loader {
 
     struct Script {
         std::string name;
+        bool background;
         std::function<void()> entryPoint;
     };
 
@@ -19,8 +20,8 @@ namespace hex::script::loader {
         virtual bool initialize() = 0;
         virtual bool loadAll() = 0;
 
-        void addScript(std::string name, std::function<void()> entryPoint) {
-            m_scripts.emplace_back(std::move(name), std::move(entryPoint));
+        void addScript(std::string name, bool background, std::function<void()> entryPoint) {
+            m_scripts.emplace_back(std::move(name), background, std::move(entryPoint));
         }
 
         const auto& getScripts() const {

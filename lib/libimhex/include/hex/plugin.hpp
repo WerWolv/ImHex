@@ -131,8 +131,8 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
     std::vector<hex::SubCommand> g_subCommands
 
 #define IMHEX_FEATURE_ENABLED(feature) WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(IMHEX_PLUGIN_, IMHEX_PLUGIN_NAME), _FEATURE_), feature)
-#define IMHEX_PLUGIN_FEATURES() IMHEX_PLUGIN_FEATURES_IMPL()
-#define IMHEX_PLUGIN_FEATURES_IMPL()                                                        \
+#define IMHEX_DEFINE_PLUGIN_FEATURES() IMHEX_DEFINE_PLUGIN_FEATURES_IMPL()
+#define IMHEX_DEFINE_PLUGIN_FEATURES_IMPL()                                                 \
     extern std::vector<hex::Feature> g_features;                                            \
     template<>                                                                              \
     struct PluginFeatureFunctionHelper<PluginFunctionHelperInstantiation> {                 \
@@ -142,3 +142,5 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
         return &g_features;                                                                 \
     }                                                                                       \
     std::vector<hex::Feature> g_features
+
+#define IMHEX_PLUGIN_FEATURES g_features

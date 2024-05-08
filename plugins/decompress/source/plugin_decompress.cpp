@@ -14,7 +14,7 @@ namespace hex::plugin::decompress {
 using namespace hex;
 using namespace hex::plugin::decompress;
 
-IMHEX_PLUGIN_FEATURES() {
+IMHEX_DEFINE_PLUGIN_FEATURES() {
     { "bzip2 Support",      IMHEX_FEATURE_ENABLED(BZIP2)      },
     { "zlib Support",       IMHEX_FEATURE_ENABLED(ZLIB)       },
     { "LZMA Support",       IMHEX_FEATURE_ENABLED(LIBLZMA)    },
