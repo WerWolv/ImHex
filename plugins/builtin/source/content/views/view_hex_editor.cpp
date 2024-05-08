@@ -530,16 +530,17 @@ namespace hex::plugin::builtin {
         static bool justOpened = true;
         bool open = true;
 
-        ImGui::SetNextWindowSize(ImVec2(250, 0), ImGuiCond_Appearing);
+        const float scaling = ImHexApi::System::getGlobalScale();
+        ImGui::SetNextWindowSize(ImVec2(250 * scaling, 0), ImGuiCond_Appearing);
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
         if (ImGuiExt::BeginHoveringPopup("##hex_editor_popup", &open, ImGuiWindowFlags_NoResize)) {
             if(m_currPopup == nullptr || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 ImGui::CloseCurrentPopup();
             } else {
-                float titleOffset = 7;
+                float titleOffset = 7 * scaling;
 
                 if(m_currPopup->canBePinned()) {
-                    titleOffset += 16;
+                    titleOffset += 16 * scaling;
                     ImGui::SetCursorPos( ImVec2( 5.0F, 0.0F ) );
                     bool pinned = m_currPopup->isPinned();
                     if(ImGuiExt::PopupTitleBarButton(pinned ? ICON_VS_PINNED : ICON_VS_PIN, pinned)) {
