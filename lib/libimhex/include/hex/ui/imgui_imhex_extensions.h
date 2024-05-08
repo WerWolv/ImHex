@@ -305,7 +305,6 @@ namespace ImGuiExt {
     bool ToggleSwitch(const char *label, bool *v);
     bool ToggleSwitch(const char *label, bool v);
 
-    bool BeginHoveringPopup(const char* name, bool* p_open, ImGuiWindowFlags flags);
     bool PopupTitleBarButton(const char* label, bool p_enabled);
     void PopupTitleBarText(const char* text);
 

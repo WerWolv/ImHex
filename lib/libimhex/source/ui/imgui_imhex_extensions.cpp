@@ -1216,37 +1216,6 @@ namespace ImGuiExt {
         return ToggleSwitch(label, &v);
     }
 
-    bool BeginHoveringPopup(const char* name, bool* p_open, ImGuiWindowFlags flags)
-    {
-        ImGuiContext& g = *GImGui;
-        ImGuiWindow* window = g.CurrentWindow;
-        const ImGuiID id = window->GetID(name);
-        if (!IsPopupOpen(id, ImGuiPopupFlags_None))
-        {
-            g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
-            if (p_open && *p_open)
-                *p_open = false;
-            return false;
-        }
-
-        if ((g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) == 0)
-        {
-            const ImGuiViewport* viewport = window->WasActive ? window->Viewport : GetMainViewport();
-            SetNextWindowPos(viewport->GetCenter(), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
-        }
-
-        flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
-        const bool is_open = Begin(name, p_open, flags);
-        if (!is_open || (p_open && !*p_open))
-        {
-            EndPopup();
-            if (is_open)
-                ClosePopupToLevel(g.BeginPopupStack.Size, true);
-            return false;
-        }
-        return is_open;
-    }
-
     bool PopupTitleBarButton(const char* label, bool p_enabled)
     {
         ImGuiContext& g = *GImGui;
