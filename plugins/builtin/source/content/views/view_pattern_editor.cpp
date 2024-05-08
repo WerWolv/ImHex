@@ -1407,6 +1407,7 @@ namespace hex::plugin::builtin {
 
                 m_possiblePatternFiles.get(provider).clear();
 
+                bool popupOpen = false;
                 std::error_code errorCode;
                 for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
                     for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
@@ -1423,15 +1424,21 @@ namespace hex::plugin::builtin {
                             log::warn("Failed to preprocess file {} during MIME analysis", entry.path().string());
                         }
 
-                        if (foundCorrectType)
-                            m_possiblePatternFiles.get(provider).push_back(entry.path());
+                        if (foundCorrectType) {
+                            {
+                                std::scoped_lock lock(m_possiblePatternFilesMutex);
+
+                                m_possiblePatternFiles.get(provider).push_back(entry.path());
+                            }
+
+                            if (!popupOpen) {
+                                PopupAcceptPattern::open(this);
+                                popupOpen = true;
+                            }
+                        }
 
                         runtime.reset();
                     }
-                }
-
-                if (!m_possiblePatternFiles.get(provider).empty()) {
-                    PopupAcceptPattern::open(this);
                 }
             });
         }
