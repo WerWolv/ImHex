@@ -119,6 +119,11 @@ namespace ImGuiExt {
                 glGenFramebuffers(1, &framebuffer);
                 glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
+                // Unbind framebuffer on exit
+                ON_SCOPE_EXIT {
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                };
+
                 // Attach texture to color attachment 0
                 glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture, 0);
 
@@ -130,9 +135,6 @@ namespace ImGuiExt {
                     hex::log::error("Driver claims to support texture multisampling but it's not working");
                     return texture;
                 }
-
-                // Unbind framebuffer
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
             #endif
 
