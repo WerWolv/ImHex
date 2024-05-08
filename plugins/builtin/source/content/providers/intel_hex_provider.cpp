@@ -282,7 +282,7 @@ namespace hex::plugin::builtin {
     }
 
     nlohmann::json IntelHexProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = wolv::util::toUTF8String(m_sourceFilePath);
+        settings["path"] = wolv::io::fs::toNormalizedPathString(m_sourceFilePath);
 
         return Provider::storeSettings(settings);
     }

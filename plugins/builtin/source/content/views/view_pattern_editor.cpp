@@ -141,7 +141,7 @@ namespace hex::plugin::builtin {
         for (const auto &file : virtualFiles) {
             const auto &path = file->path;
 
-            auto currSegment = wolv::util::toUTF8String(*std::next(path.begin(), level));
+            auto currSegment = wolv::io::fs::toNormalizedPathString(*std::next(path.begin(), level));
             if (std::distance(path.begin(), path.end()) == ptrdiff_t(level + 1)) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();

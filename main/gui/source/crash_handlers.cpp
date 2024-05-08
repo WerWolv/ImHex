@@ -44,8 +44,8 @@ namespace hex::crash {
         log::fatal(message);
 
         nlohmann::json crashData {
-            { "logFile", wolv::util::toUTF8String(hex::log::impl::getFile().getPath()) },
-            { "project", wolv::util::toUTF8String(ProjectFile::getPath()) },
+            { "logFile", wolv::io::fs::toNormalizedPathString(hex::log::impl::getFile().getPath()) },
+            { "project", wolv::io::fs::toNormalizedPathString(ProjectFile::getPath()) },
         };
         
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {

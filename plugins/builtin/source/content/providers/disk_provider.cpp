@@ -369,9 +369,9 @@ namespace hex::plugin::builtin {
 
     std::vector<DiskProvider::Description> DiskProvider::getDataDescription() const {
         return {
-                { "hex.builtin.provider.disk.selected_disk"_lang, wolv::util::toUTF8String(m_path) },
-                { "hex.builtin.provider.disk.disk_size"_lang,     hex::toByteString(m_diskSize)    },
-                { "hex.builtin.provider.disk.sector_size"_lang,   hex::toByteString(m_sectorSize)  }
+            { "hex.builtin.provider.disk.selected_disk"_lang, wolv::util::toUTF8String(m_path) },
+            { "hex.builtin.provider.disk.disk_size"_lang,     hex::toByteString(m_diskSize)    },
+            { "hex.builtin.provider.disk.sector_size"_lang,   hex::toByteString(m_sectorSize)  }
         };
     }
 
@@ -497,7 +497,7 @@ namespace hex::plugin::builtin {
     }
 
     nlohmann::json DiskProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = wolv::util::toUTF8String(m_path);
+        settings["path"] = wolv::io::fs::toNormalizedPathString(m_path);
 
         settings["friendly_name"] = m_friendlyName;
 
@@ -527,7 +527,7 @@ namespace hex::plugin::builtin {
 
     std::variant<std::string, i128> DiskProvider::queryInformation(const std::string &category, const std::string &argument) {
         if (category == "file_path")
-            return wolv::util::toUTF8String(m_path);
+            return wolv::io::fs::toNormalizedPathString(m_path);
         else if (category == "sector_size")
             return m_sectorSize;
         else if (category == "friendly_name")
