@@ -570,10 +570,11 @@ namespace hex::plugin::builtin {
         const float scaling = ImHexApi::System::getGlobalScale();
         ImGui::SetNextWindowSize(ImVec2(250 * scaling, 0), ImGuiCond_Appearing);
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
-        const auto originalAlpha = ImGui::GetStyle().Alpha;
         const auto configuredAlpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
+        bool alphaIsChanged = false;
         if(m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupHasHovered && m_currentPopupDetached && configuredAlpha < 0.99F && configuredAlpha > 0.01F) {
-            ImGui::GetStyle().Alpha = configuredAlpha;
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, configuredAlpha);
+            alphaIsChanged = true;
         }
         if (ImGuiExt::BeginHoveringPopup("##hex_editor_popup", &open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             if(m_currPopup == nullptr || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
@@ -618,7 +619,8 @@ namespace hex::plugin::builtin {
             justOpened = true;
         }
 
-        ImGui::GetStyle().Alpha = originalAlpha;
+        if(alphaIsChanged)
+            ImGui::PopStyleVar();
 
         // Right click menu
         if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsAnyItemHovered())
