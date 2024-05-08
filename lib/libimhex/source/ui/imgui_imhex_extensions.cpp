@@ -1291,7 +1291,7 @@ namespace ImGuiExt {
         const ImVec2 max_pos = pos + size;
         const ImRect bb(pos.x, title_rect.Min.y, max_pos.x, title_rect.Max.y);
 
-        ImGui::PushClipRect( title_rect.Min, title_rect.Max, false );
+        ImGui::PushClipRect(title_rect.Min, title_rect.Max, false);
 
         // Draw the label in the center
         ImU32 text_col = GetColorU32(ImGuiCol_Text);
