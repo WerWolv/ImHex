@@ -557,7 +557,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::drawPopup() {
-        static bool justOpened = true;
         bool open = true;
 
         const float scaling = ImHexApi::System::getGlobalScale();
@@ -574,6 +573,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                     this->closePopup();
                 } else {
+
                     float titleOffset = 7 * scaling;
 
                     const ImVec2 originalCursorPos = ImGui::GetCursorPos();
@@ -594,9 +594,9 @@ namespace hex::plugin::builtin {
 
                     ImGui::SetCursorPos(originalCursorPos);
 
-                    if (justOpened) {
+                    if (ImGui::IsWindowAppearing()) {
                         ImGui::SetKeyboardFocusHere();
-                        justOpened = false;
+                        m_currentPopupHasHovered = false;
                     }
 
                     m_currentPopupHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
@@ -607,7 +607,6 @@ namespace hex::plugin::builtin {
                 }
             } else {
                 this->closePopup();
-                justOpened = true;
             }
 
             if ((m_currPopup != nullptr && !m_currPopup->isPinned() && !ImGui::IsWindowFocused()) || !open) {
