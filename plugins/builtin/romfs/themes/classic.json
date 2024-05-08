@@ -333,7 +333,8 @@
             ]
         },
         "imhex": {
-            "window-blur": 0.0
+            "window-blur": 0.0,
+            "popup-alpha": 0.65
         }
     }
 }

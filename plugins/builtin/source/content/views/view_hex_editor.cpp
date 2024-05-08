@@ -571,7 +571,7 @@ namespace hex::plugin::builtin {
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
         const auto originalAlpha = ImGui::GetStyle().Alpha;
         if(m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupDetached) {
-            ImGui::GetStyle().Alpha = ImGui::GetStyle().PopupWindowAlpha;
+            ImGui::GetStyle().Alpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
         }
         if (ImGuiExt::BeginHoveringPopup("##hex_editor_popup", &open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             if(m_currPopup == nullptr || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
@@ -614,6 +614,8 @@ namespace hex::plugin::builtin {
             this->closePopup();
             justOpened = true;
         }
+
+        ImGui::GetStyle().Alpha = originalAlpha;
 
         // Right click menu
         if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsAnyItemHovered())

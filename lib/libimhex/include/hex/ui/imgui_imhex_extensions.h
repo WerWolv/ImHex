@@ -161,6 +161,7 @@ namespace ImGuiExt {
 
         struct Styles {
             float WindowBlur = 0.0F;
+            float PopupWindowAlpha = 0.0F; // Alpha used by Popup tool windows when the user is not hovering over them
         } styles;
     };
 
