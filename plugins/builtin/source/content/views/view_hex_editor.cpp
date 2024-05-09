@@ -559,7 +559,6 @@ namespace hex::plugin::builtin {
     void ViewHexEditor::drawPopup() {
         bool open = true;
 
-        const float scaling = ImHexApi::System::getGlobalScale();
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Once);
         const auto configuredAlpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
         bool alphaIsChanged = false;
@@ -573,12 +572,12 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                     this->closePopup();
                 } else {
-                    float titleOffset = 7 * scaling;
+                    float titleOffset = 7_scaled;
 
                     const ImVec2 originalCursorPos = ImGui::GetCursorPos();
                     if (m_currPopup->canBePinned()) {
-                        titleOffset += 16 * scaling;
-                        ImGui::SetCursorPos(ImVec2(5.0F * scaling, 0.0F));
+                        titleOffset += 16_scaled;
+                        ImGui::SetCursorPos(ImVec2(5_scaled, 0.0F));
                         bool pinned = m_currPopup->isPinned();
                         if (ImGuiExt::PopupTitleBarButton(pinned ? ICON_VS_PINNED : ICON_VS_PIN, pinned)) {
                             m_currPopup->setPinned(!pinned);
