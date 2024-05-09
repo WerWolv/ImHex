@@ -579,7 +579,7 @@ namespace hex::plugin::builtin {
                     const ImVec2 originalCursorPos = ImGui::GetCursorPos();
                     if (m_currPopup->canBePinned()) {
                         titleOffset += 16 * scaling;
-                        ImGui::SetCursorPos(ImVec2(5.0F, 0.0F));
+                        ImGui::SetCursorPos(ImVec2(5.0F * scaling, 0.0F));
                         bool pinned = m_currPopup->isPinned();
                         if (ImGuiExt::PopupTitleBarButton(pinned ? ICON_VS_PINNED : ICON_VS_PIN, pinned)) {
                             m_currPopup->setPinned(!pinned);
