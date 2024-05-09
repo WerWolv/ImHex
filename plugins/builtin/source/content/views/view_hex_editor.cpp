@@ -573,7 +573,6 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                     this->closePopup();
                 } else {
-
                     float titleOffset = 7 * scaling;
 
                     const ImVec2 originalCursorPos = ImGui::GetCursorPos();
