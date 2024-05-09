@@ -840,14 +840,14 @@ namespace hex::ui {
                         const auto targetRowNumber = (newSelection.getStartAddress() - pageAddress) / m_bytesPerRow;
 
                         // Calculate the current top and bottom row numbers of the viewport
-                        int currentTopRow = m_scrollPosition;
-                        int currentBottomRow = m_scrollPosition + m_visibleRowCount - 3;
+                        ImS64 currentTopRow = m_scrollPosition;
+                        ImS64 currentBottomRow = m_scrollPosition + m_visibleRowCount - 3;
 
                         // Check if the targetRowNumber is outside the current visible range
-                        if ((ImS64)targetRowNumber < currentTopRow) {
+                        if (ImS64(targetRowNumber) < currentTopRow) {
                             // If target is above the current view, scroll just enough to bring it into view at the top
                             m_scrollPosition = targetRowNumber - m_visibleRowCount * m_jumpPivot;
-                        } else if ((ImS64)targetRowNumber > currentBottomRow) {
+                        } else if (ImS64(targetRowNumber) > currentBottomRow) {
                             // If target is below the current view, scroll just enough to bring it into view at the bottom
                             m_scrollPosition = targetRowNumber - (m_visibleRowCount - 3);
                         }
