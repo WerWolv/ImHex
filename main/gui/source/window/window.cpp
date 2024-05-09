@@ -491,7 +491,7 @@ namespace hex {
                     ImGui::OpenPopup(name);
                 }
 
-                if (currPopup->shouldClose()) {
+                if (currPopup->shouldClose() || !open) {
                     log::debug("Closing popup '{}'", name);
                     positionSet = sizeSet = false;
 
