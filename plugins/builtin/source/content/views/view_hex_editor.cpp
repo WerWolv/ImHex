@@ -608,7 +608,7 @@ namespace hex::plugin::builtin {
                 this->closePopup();
             }
 
-            if ((m_currPopup != nullptr && !m_currPopup->isPinned() && !ImGui::IsWindowFocused()) || !open) {
+            if ((m_currPopup != nullptr && !m_currPopup->isPinned() && !ImGui::IsWindowFocused() && !ImGui::IsWindowHovered()) || !open) {
                 this->closePopup();
             }
 
