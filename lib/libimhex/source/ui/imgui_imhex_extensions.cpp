@@ -31,17 +31,29 @@ namespace ImGuiExt {
     namespace {
 
         bool isOpenGLExtensionSupported(const char *name) {
-            GLint extensionCount = 0;
-            glGetIntegerv(GL_NUM_EXTENSIONS, &extensionCount);
+            static std::set<std::string> extensions;
 
-            for (GLint i = 0; i < extensionCount; i++) {
-                std::string_view extension = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i));
-                if (extension == name) {
-                    return true;
+            if (extensions.empty()) {
+                GLint extensionCount = 0;
+                glGetIntegerv(GL_NUM_EXTENSIONS, &extensionCount);
+
+                for (GLint i = 0; i < extensionCount; i++) {
+                    std::string extension = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i));
+                    extensions.emplace(std::move(extension));
                 }
             }
 
-            return false;
+            return extensions.contains(name);
+        }
+
+        bool isOpenGLVersionAtLeast(u8 major, u8 minor) {
+            static GLint actualMajor = 0, actualMinor = 0;
+            if (actualMajor == 0 || actualMinor == 0) {
+                glGetIntegerv(GL_MAJOR_VERSION, &actualMajor);
+                glGetIntegerv(GL_MINOR_VERSION, &actualMinor);
+            }
+
+            return actualMajor > major || (actualMajor == major && actualMinor >= minor);
         }
 
         constexpr auto getGLFilter(Texture::Filter filter) {
@@ -80,8 +92,13 @@ namespace ImGuiExt {
             // Create a regular texture from the RGBA8 array
             GLuint texture = createTextureFromRGBA8Array(buffer, width, height, filter);
 
-            if (filter == Texture::Filter::Nearest)
+            if (filter == Texture::Filter::Nearest) {
                 return texture;
+            }
+
+            if (!isOpenGLVersionAtLeast(3,2)) {
+                return texture;
+            }
 
             if (!isOpenGLExtensionSupported("GL_ARB_texture_multisample")) {
                 return texture;
@@ -102,6 +119,11 @@ namespace ImGuiExt {
                 glGenFramebuffers(1, &framebuffer);
                 glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
+                // Unbind framebuffer on exit
+                ON_SCOPE_EXIT {
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                };
+
                 // Attach texture to color attachment 0
                 glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture, 0);
 
@@ -113,9 +135,6 @@ namespace ImGuiExt {
                     hex::log::error("Driver claims to support texture multisampling but it's not working");
                     return texture;
                 }
-
-                // Unbind framebuffer
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
             #endif
 

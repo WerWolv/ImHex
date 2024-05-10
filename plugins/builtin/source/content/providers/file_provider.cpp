@@ -147,11 +147,11 @@ namespace hex::plugin::builtin {
 
     std::variant<std::string, i128> FileProvider::queryInformation(const std::string &category, const std::string &argument) {
         if (category == "file_path")
-            return wolv::util::toUTF8String(m_path);
+            return wolv::io::fs::toNormalizedPathString(m_path);
         else if (category == "file_name")
-            return wolv::util::toUTF8String(m_path.filename());
+            return wolv::io::fs::toNormalizedPathString(m_path.filename());
         else if (category == "file_extension")
-            return wolv::util::toUTF8String(m_path.extension());
+            return wolv::io::fs::toNormalizedPathString(m_path.extension());
         else if (category == "creation_time")
             return m_fileStats->st_ctime;
         else if (category == "access_time")
@@ -279,9 +279,9 @@ namespace hex::plugin::builtin {
     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
         std::string path;
         if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-            path = wolv::util::toUTF8String(std::fs::proximate(m_path, projectPath.parent_path()));
+            path = wolv::io::fs::toNormalizedPathString(std::fs::proximate(m_path, projectPath.parent_path()));
         if (path.empty())
-            path = wolv::util::toUTF8String(m_path);
+            path = wolv::io::fs::toNormalizedPathString(m_path);
 
         settings["path"] = path;
 

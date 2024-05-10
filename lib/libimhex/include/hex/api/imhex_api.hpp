@@ -3,6 +3,7 @@
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
 
+#include <functional>
 #include <optional>
 #include <span>
 #include <string>

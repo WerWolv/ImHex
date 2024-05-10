@@ -90,11 +90,7 @@ namespace hex {
     bool Tar::contains(const std::fs::path &path) const {
         mtar_header_t header;
 
-        auto fixedPath = path.string();
-        #if defined(OS_WINDOWS)
-            std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
-        #endif
-
+        const auto fixedPath = wolv::io::fs::toNormalizedPathString(path);
         return mtar_find(m_ctx.get(), fixedPath.c_str(), &header) == MTAR_ESUCCESS;
     }
 
@@ -115,10 +111,7 @@ namespace hex {
     std::vector<u8> Tar::readVector(const std::fs::path &path) const {
         mtar_header_t header;
 
-        auto fixedPath = path.string();
-        #if defined(OS_WINDOWS)
-            std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
-        #endif
+        const auto fixedPath = wolv::io::fs::toNormalizedPathString(path);
         int ret = mtar_find(m_ctx.get(), fixedPath.c_str(), &header);
         if (ret != MTAR_ESUCCESS){
             log::debug("Failed to read vector from path {} in tarred file {}: {}",
@@ -143,18 +136,12 @@ namespace hex {
             for (const auto &part : path.parent_path()) {
                 pathPart /= part;
 
-                auto fixedPath = pathPart.string();
-                #if defined(OS_WINDOWS)
-                    std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
-                #endif
+                auto fixedPath = wolv::io::fs::toNormalizedPathString(pathPart);
                 mtar_write_dir_header(m_ctx.get(), fixedPath.c_str());
             }
         }
 
-        auto fixedPath = path.string();
-        #if defined(OS_WINDOWS)
-            std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
-        #endif
+        const auto fixedPath = wolv::io::fs::toNormalizedPathString(path);
         mtar_write_file_header(m_ctx.get(), fixedPath.c_str(), data.size());
         mtar_write_data(m_ctx.get(), data.data(), data.size());
     }

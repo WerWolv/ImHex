@@ -262,13 +262,15 @@ namespace hex::script::loader {
                     continue;
 
                 if (m_methodExists("Main", scriptPath)) {
-                    this->addScript(entry.path().stem().string(), [this, scriptPath] {
+                    this->addScript(entry.path().stem().string(), false, [this, scriptPath] {
                         hex::unused(m_runMethod("Main", false, scriptPath));
                     });
                 }
 
                 if (m_methodExists("OnLoad", scriptPath)) {
-                    hex::unused(m_runMethod("OnLoad", true, scriptPath));
+                    this->addScript(entry.path().stem().string(), true, [this, scriptPath] {
+                        hex::unused(m_runMethod("OnLoad", true, scriptPath));
+                    });
                 }
             }
         }

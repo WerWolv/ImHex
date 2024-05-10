@@ -487,11 +487,11 @@ namespace hex {
                 else
                     createPopup(ImGui::BeginPopup(name, flags));
 
-                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 100) {
+                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 5) {
                     ImGui::OpenPopup(name);
                 }
 
-                if (currPopup->shouldClose()) {
+                if (currPopup->shouldClose() || !open) {
                     log::debug("Closing popup '{}'", name);
                     positionSet = sizeSet = false;
 

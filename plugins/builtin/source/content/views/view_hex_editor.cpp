@@ -87,12 +87,15 @@ namespace hex::plugin::builtin {
                     }
                 }
 
+                bool isOffsetValid = m_newAddress <= ImHexApi::Provider::get()->getActualSize();
+
                 bool executeGoto = false;
+
                 if (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                     executeGoto = true;
                 }
 
-                ImGui::BeginDisabled(!m_newAddress.has_value());
+                ImGui::BeginDisabled(!m_newAddress.has_value() || !isOffsetValid);
                 {
                     const auto label = hex::format("{} {}", "hex.builtin.view.hex_editor.menu.file.goto"_lang, m_newAddress.has_value() ? hex::format("0x{:08X}", *m_newAddress) : "???");
                     const auto buttonWidth = ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x * 2;
@@ -189,6 +192,7 @@ namespace hex::plugin::builtin {
                     if (!this->isPinned())
                         editor->closePopup();
                 }
+                ImGui::EndDisabled();
 
                 ImGui::EndTabBar();
             }

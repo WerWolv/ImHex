@@ -152,7 +152,7 @@ namespace hex::plugin::builtin {
                 std::vector<std::string> pathStrings;
 
                 for (const auto &path : m_paths) {
-                    pathStrings.push_back(wolv::util::toUTF8String(path));
+                    pathStrings.push_back(wolv::io::fs::toNormalizedPathString(path));
                 }
 
                 return pathStrings;
