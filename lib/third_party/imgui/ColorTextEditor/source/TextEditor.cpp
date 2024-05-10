@@ -22,6 +22,9 @@ bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Bi
     return first1 == last1 && first2 == last2;
 }
 
+const int TextEditor::sCursorBlinkInterval = 800;
+const int TextEditor::sCursorBlinkOnTime = 400;
+
 TextEditor::Palette TextEditor::sPaletteBase = TextEditor::GetDarkPalette();
 
 TextEditor::FindReplaceHandler::FindReplaceHandler() : mWholeWord(false),mFindRegEx(false),mMatchCase(false)  {}
@@ -642,6 +645,8 @@ void TextEditor::HandleKeyboardInputs() {
         io.WantCaptureKeyboard = true;
         io.WantTextInput       = true;
 
+        bool handledKeyEvent = true;
+
         if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Z))
             Undo();
         else if (!IsReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
@@ -716,6 +721,11 @@ void TextEditor::HandleKeyboardInputs() {
             mFindReplaceHandler.SetFindRegEx(this,!mFindReplaceHandler.GetFindRegEx());
         else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_W))
             mFindReplaceHandler.SetWholeWord(this,!mFindReplaceHandler.GetWholeWord());
+        else
+            handledKeyEvent = false;
+
+        if(handledKeyEvent)
+            ResetCursorBlinkTime();
 
         if (!IsReadOnly() && !io.InputQueueCharacters.empty()) {
             for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
@@ -929,7 +939,7 @@ void TextEditor::Render() {
                 if (focused) {
                     auto timeEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
                     auto elapsed = timeEnd - mStartTime;
-                    if (elapsed > 400) {
+                    if (elapsed > sCursorBlinkOnTime) {
                         float width = 1.0f;
                         auto cindex = GetCharacterIndex(mState.mCursorPosition);
                         float cx    = TextDistanceToLineStart(mState.mCursorPosition);
@@ -949,7 +959,7 @@ void TextEditor::Render() {
                         ImVec2 cstart(textScreenPos.x + cx, lineStartScreenPos.y);
                         ImVec2 cend(textScreenPos.x + cx + width, lineStartScreenPos.y + mCharAdvance.y);
                         drawList->AddRectFilled(cstart, cend, mPalette[(int)PaletteIndex::Cursor]);
-                        if (elapsed > 800)
+                        if (elapsed > sCursorBlinkInterval)
                             mStartTime = timeEnd;
                     }
                 }
@@ -1218,6 +1228,8 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
     UndoRecord u;
 
     u.mBefore = mState;
+
+    ResetCursorBlinkTime();
 
     if (HasSelection()) {
         if (aChar == '\t' && mState.mSelectionStart.mLine != mState.mSelectionEnd.mLine) {
@@ -2778,6 +2790,10 @@ void TextEditor::EnsureCursorVisible() {
 int TextEditor::GetPageSize() const {
     auto height = ImGui::GetWindowHeight() - 20.0f - mTopMargin;
     return (int)floor(height / mCharAdvance.y);
+}
+
+void TextEditor::ResetCursorBlinkTime() {
+    mStartTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - sCursorBlinkOnTime;
 }
 
 TextEditor::UndoRecord::UndoRecord(
