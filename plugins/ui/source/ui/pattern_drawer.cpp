@@ -1311,6 +1311,8 @@ namespace hex::ui {
             ImGui::EndTable();
         }
 
+        m_jumpToPattern = nullptr;
+
         if (m_favoritesUpdateTask.isRunning()) {
             ImGuiExt::TextOverlay("hex.ui.pattern_drawer.updating"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2);
         }
