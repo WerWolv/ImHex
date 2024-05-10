@@ -88,12 +88,14 @@ namespace hex::plugin::builtin {
                     }
                 }
 
+                bool isOffsetValid = m_newAddress <= ImHexApi::Provider::get()->getActualSize();
+
                 bool executeGoto = false;
-                if (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+                if (isOffsetValid && ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter)) {
                     executeGoto = true;
                 }
 
-                ImGui::BeginDisabled(!m_newAddress.has_value());
+                ImGui::BeginDisabled(!m_newAddress.has_value() || !isOffsetValid);
                 {
                     const auto label = hex::format("{} {}", "hex.builtin.view.hex_editor.menu.file.goto"_lang, m_newAddress.has_value() ? hex::format("0x{:08X}", *m_newAddress) : "???");
                     const auto buttonWidth = ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x * 2;
@@ -163,10 +165,18 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
 
-                if (ImGui::Button("hex.builtin.view.hex_editor.select.select"_lang) || (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter)))) {
-                    editor->setSelection(m_region.getStartAddress(), m_region.getEndAddress());
-                    editor->jumpToSelection();
+                const auto provider = ImHexApi::Provider::get();
+                bool isOffsetValid = m_region.getStartAddress() <= m_region.getEndAddress() &&
+                        m_region.getEndAddress() < provider->getActualSize();
+
+                ImGui::BeginDisabled(!isOffsetValid);
+                {
+                    if (ImGui::Button("hex.builtin.view.hex_editor.select.select"_lang) || (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter)))) {
+                        editor->setSelection(m_region.getStartAddress(), m_region.getEndAddress());
+                        editor->jumpToSelection();
+                    }
                 }
+                ImGui::EndDisabled();
 
                 ImGui::EndTabBar();
             }

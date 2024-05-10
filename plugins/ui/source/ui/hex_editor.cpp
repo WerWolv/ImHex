@@ -837,9 +837,20 @@ namespace hex::ui {
                         m_provider->setCurrentPage(m_provider->getPageOfAddress(newSelection.address).value_or(0));
 
                         const auto pageAddress = m_provider->getCurrentPageAddress() + m_provider->getBaseAddress();
+                        const auto targetRowNumber = (newSelection.getStartAddress() - pageAddress) / m_bytesPerRow;
 
-                        m_scrollPosition = (newSelection.getStartAddress() - pageAddress) / m_bytesPerRow;
-                        m_scrollPosition -= m_visibleRowCount * m_jumpPivot;
+                        // Calculate the current top and bottom row numbers of the viewport
+                        ImS64 currentTopRow = m_scrollPosition;
+                        ImS64 currentBottomRow = m_scrollPosition + m_visibleRowCount - 3;
+
+                        // Check if the targetRowNumber is outside the current visible range
+                        if (ImS64(targetRowNumber) < currentTopRow) {
+                            // If target is above the current view, scroll just enough to bring it into view at the top
+                            m_scrollPosition = targetRowNumber - m_visibleRowCount * m_jumpPivot;
+                        } else if (ImS64(targetRowNumber) > currentBottomRow) {
+                            // If target is below the current view, scroll just enough to bring it into view at the bottom
+                            m_scrollPosition = targetRowNumber - (m_visibleRowCount - 3);
+                        }
 
                         m_jumpPivot = 0.0F;
                     }
