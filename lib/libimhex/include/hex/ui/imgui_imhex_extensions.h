@@ -161,6 +161,7 @@ namespace ImGuiExt {
 
         struct Styles {
             float WindowBlur = 0.0F;
+            float PopupWindowAlpha = 0.0F; // Alpha used by Popup tool windows when the user is not hovering over them
         } styles;
     };
 
@@ -303,6 +304,9 @@ namespace ImGuiExt {
 
     bool ToggleSwitch(const char *label, bool *v);
     bool ToggleSwitch(const char *label, bool v);
+
+    bool PopupTitleBarButton(const char* label, bool p_enabled);
+    void PopupTitleBarText(const char* text);
 
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {

@@ -31,7 +31,6 @@ namespace hex::plugin::builtin {
     class PopupGoto : public ViewHexEditor::Popup {
     public:
         void draw(ViewHexEditor *editor) override {
-            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.goto"_lang);
             if (ImGui::BeginTabBar("goto_tabs")) {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.absolute"_lang)) {
                     m_mode = Mode::Absolute;
@@ -91,7 +90,8 @@ namespace hex::plugin::builtin {
                 bool isOffsetValid = m_newAddress <= ImHexApi::Provider::get()->getActualSize();
 
                 bool executeGoto = false;
-                if (isOffsetValid && ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+
+                if (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                     executeGoto = true;
                 }
 
@@ -108,10 +108,21 @@ namespace hex::plugin::builtin {
                 if (executeGoto && m_newAddress.has_value()) {
                     editor->setSelection(*m_newAddress, *m_newAddress);
                     editor->jumpToSelection();
+
+                    if (!this->isPinned())
+                        editor->closePopup();
                 }
 
                 ImGui::EndTabBar();
             }
+        }
+
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.file.goto";
+        }
+
+        bool canBePinned() const override {
+            return true;
         }
 
     private:
@@ -136,11 +147,15 @@ namespace hex::plugin::builtin {
         PopupSelect(u64 address, size_t size): m_region({address, size}) {}
 
         void draw(ViewHexEditor *editor) override {
-            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.select"_lang);
             if (ImGui::BeginTabBar("select_tabs")) {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.select.offset.region"_lang)) {
                     u64 inputA = m_region.getStartAddress();
                     u64 inputB = m_region.getEndAddress();
+
+                    if (justOpened) {
+                        ImGui::SetKeyboardFocusHere();
+                        justOpened = false;
+                    }
                     ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.begin"_lang, &inputA, ImGuiInputTextFlags_AutoSelectAll);
                     ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.end"_lang, &inputB, ImGuiInputTextFlags_AutoSelectAll);
 
@@ -155,6 +170,11 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.select.offset.size"_lang)) {
                     u64 inputA = m_region.getStartAddress();
                     u64 inputB = m_region.getSize();
+
+                    if (justOpened) {
+                        ImGui::SetKeyboardFocusHere();
+                        justOpened = false;
+                    }
                     ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.begin"_lang, &inputA, ImGuiInputTextFlags_AutoSelectAll);
                     ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.size"_lang, &inputB, ImGuiInputTextFlags_AutoSelectAll);
 
@@ -165,16 +185,12 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
 
-                const auto provider = ImHexApi::Provider::get();
-                bool isOffsetValid = m_region.getStartAddress() <= m_region.getEndAddress() &&
-                        m_region.getEndAddress() < provider->getActualSize();
+                if (ImGui::Button("hex.builtin.view.hex_editor.select.select"_lang) || (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))) {
+                    editor->setSelection(m_region.getStartAddress(), m_region.getEndAddress());
+                    editor->jumpToSelection();
 
-                ImGui::BeginDisabled(!isOffsetValid);
-                {
-                    if (ImGui::Button("hex.builtin.view.hex_editor.select.select"_lang) || (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter)))) {
-                        editor->setSelection(m_region.getStartAddress(), m_region.getEndAddress());
-                        editor->jumpToSelection();
-                    }
+                    if (!this->isPinned())
+                        editor->closePopup();
                 }
                 ImGui::EndDisabled();
 
@@ -182,8 +198,17 @@ namespace hex::plugin::builtin {
             }
         }
 
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.file.select";
+        }
+
+        [[nodiscard]] bool canBePinned() const override {
+            return true;
+        }
+
     private:
         Region m_region = { 0, 1 };
+        bool justOpened = true;
     };
 
     class PopupBaseAddress : public ViewHexEditor::Popup {
@@ -191,8 +216,6 @@ namespace hex::plugin::builtin {
         explicit PopupBaseAddress(u64 baseAddress) : m_baseAddress(baseAddress) { }
 
         void draw(ViewHexEditor *editor) override {
-            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.set_base"_lang);
-
             ImGuiExt::InputHexadecimal("##base_address", &m_baseAddress);
             if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 setBaseAddress(m_baseAddress);
@@ -210,6 +233,10 @@ namespace hex::plugin::builtin {
             );
         }
 
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.set_base";
+        }
+
     private:
         static void setBaseAddress(u64 baseAddress) {
             if (ImHexApi::Provider::isValid())
@@ -225,8 +252,6 @@ namespace hex::plugin::builtin {
         explicit PopupPageSize(u64 pageSize) : m_pageSize(pageSize) { }
 
         void draw(ViewHexEditor *editor) override {
-            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.set_page_size"_lang);
-
             ImGuiExt::InputHexadecimal("##page_size", &m_pageSize);
             if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 setPageSize(m_pageSize);
@@ -242,6 +267,10 @@ namespace hex::plugin::builtin {
                     editor->closePopup();
                 }
             );
+        }
+
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.set_page_size";
         }
 
     private:
@@ -263,8 +292,6 @@ namespace hex::plugin::builtin {
         explicit PopupResize(u64 currSize) : m_size(currSize) {}
 
         void draw(ViewHexEditor *editor) override {
-            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.resize"_lang);
-
             ImGuiExt::InputHexadecimal("##resize", &m_size);
             if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 this->resize(m_size);
@@ -279,6 +306,10 @@ namespace hex::plugin::builtin {
                 [&]{
                     editor->closePopup();
                 });
+        }
+
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.resize";
         }
 
     private:
@@ -296,8 +327,6 @@ namespace hex::plugin::builtin {
         PopupInsert(u64 address, size_t size) : m_address(address), m_size(size) {}
 
         void draw(ViewHexEditor *editor) override {
-            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.insert"_lang);
-
             ImGuiExt::InputHexadecimal("hex.ui.common.address"_lang, &m_address);
             ImGuiExt::InputHexadecimal("hex.ui.common.size"_lang, &m_size);
 
@@ -309,6 +338,15 @@ namespace hex::plugin::builtin {
                 [&]{
                     editor->closePopup();
                 });
+
+            if (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
+                insert(m_address, m_size);
+                editor->closePopup();
+            }
+        }
+
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.insert";
         }
 
     private:
@@ -327,8 +365,6 @@ namespace hex::plugin::builtin {
         PopupRemove(u64 address, size_t size) : m_address(address), m_size(size) {}
 
         void draw(ViewHexEditor *editor) override {
-            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.remove"_lang);
-
             ImGuiExt::InputHexadecimal("hex.ui.common.address"_lang, &m_address);
             ImGuiExt::InputHexadecimal("hex.ui.common.size"_lang, &m_size);
 
@@ -340,6 +376,15 @@ namespace hex::plugin::builtin {
                 [&]{
                     editor->closePopup();
                 });
+
+            if (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
+                remove(m_address, m_size);
+                editor->closePopup();
+            }
+        }
+
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.remove";
         }
 
     private:
@@ -358,8 +403,6 @@ namespace hex::plugin::builtin {
         PopupFill(u64 address, size_t size) : m_address(address), m_size(size) {}
 
         void draw(ViewHexEditor *editor) override {
-            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.fill"_lang);
-
             ImGuiExt::InputHexadecimal("hex.ui.common.address"_lang, &m_address);
             ImGuiExt::InputHexadecimal("hex.ui.common.size"_lang, &m_size);
 
@@ -375,6 +418,15 @@ namespace hex::plugin::builtin {
             [&] {
                 editor->closePopup();
             });
+
+            if (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
+                fill(m_address, m_size, m_input);
+                editor->closePopup();
+            }
+        }
+
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.fill";
         }
 
     private:
@@ -509,36 +561,65 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::drawPopup() {
-        // Popup windows
-        if (m_shouldOpenPopup) {
-            m_shouldOpenPopup = false;
-            ImGui::OpenPopup("##hex_editor_popup");
+        bool open = true;
+
+        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Once);
+        const auto configuredAlpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
+        bool alphaIsChanged = false;
+        if (m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupHasHovered && m_currentPopupDetached && configuredAlpha < 0.99F && configuredAlpha > 0.01F) {
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, configuredAlpha);
+            alphaIsChanged = true;
         }
 
-        static bool justOpened = true;
+        if (m_currPopup != nullptr) {
+            if (ImGui::Begin(hex::format("##{}", m_currPopup->getTitle().get()).c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking)) {
+                if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                    this->closePopup();
+                } else {
+                    float titleOffset = 7_scaled;
 
-        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
-        if (ImGui::BeginPopup("##hex_editor_popup", ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoTitleBar)) {
-            // Force close the popup when user is editing an input
-            if (ImGui::IsKeyPressed(ImGuiKey_Escape)){
-                ImGui::CloseCurrentPopup();
+                    const ImVec2 originalCursorPos = ImGui::GetCursorPos();
+                    if (m_currPopup->canBePinned()) {
+                        titleOffset += 16_scaled;
+                        ImGui::SetCursorPos(ImVec2(5_scaled, 0.0F));
+                        bool pinned = m_currPopup->isPinned();
+                        if (ImGuiExt::PopupTitleBarButton(pinned ? ICON_VS_PINNED : ICON_VS_PIN, pinned)) {
+                            m_currPopup->setPinned(!pinned);
+                        }
+                    }
+
+                    const auto popupTitle = m_currPopup->getTitle();
+                    if (!popupTitle.empty()) {
+                        ImGui::SetCursorPos(ImVec2(titleOffset, 0.0F));
+                        ImGuiExt::PopupTitleBarText(Lang(popupTitle));
+                    }
+
+                    ImGui::SetCursorPos(originalCursorPos);
+
+                    if (ImGui::IsWindowAppearing()) {
+                        ImGui::SetKeyboardFocusHere();
+                        m_currentPopupHasHovered = false;
+                    }
+
+                    m_currentPopupHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+                    m_currentPopupDetached = !ImGui::GetCurrentWindow()->ViewportOwned;
+                    m_currentPopupHasHovered |= m_currentPopupHover;
+
+                    m_currPopup->draw(this);
+                }
+            } else {
+                this->closePopup();
             }
 
-            if (justOpened) {
-                ImGui::SetKeyboardFocusHere();
-                justOpened = false;
+            if ((m_currPopup != nullptr && !m_currPopup->isPinned() && !ImGui::IsWindowFocused() && !ImGui::IsWindowHovered()) || !open) {
+                this->closePopup();
             }
 
-            if (m_currPopup != nullptr)
-                m_currPopup->draw(this);
-            else
-                ImGui::CloseCurrentPopup();
-
-            ImGui::EndPopup();
-        } else {
-            this->closePopup();
-            justOpened = true;
+            ImGui::End();
         }
+
+        if (alphaIsChanged)
+            ImGui::PopStyleVar();
 
         // Right click menu
         if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsAnyItemHovered())

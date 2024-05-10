@@ -29,8 +29,6 @@ namespace hex::plugin::builtin {
     }
 
     void PopupFind::draw(ViewHexEditor *editor) {
-        ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.search"_lang);
-
         auto lastMode = *s_searchMode;
         if (ImGui::BeginTabBar("##find_tabs")) {
             if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.hex"_lang)) {
@@ -301,5 +299,9 @@ namespace hex::plugin::builtin {
             default:
                 break;
         }
+    }
+
+    [[nodiscard]] UnlocalizedString PopupFind::getTitle() const {
+        return "hex.builtin.view.hex_editor.menu.file.search";
     }
 }

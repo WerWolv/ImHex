@@ -354,6 +354,7 @@ namespace hex::plugin::builtin {
                 auto &style = ImGuiExt::GetCustomStyle();
                 const static ThemeManager::StyleMap ImHexStyleMap = {
                         { "window-blur",    { &style.WindowBlur,    0.0F,   1.0F,   true } },
+                        { "popup-alpha",            { &style.PopupWindowAlpha,          0.0F,   1.0F,    false } },
                 };
 
                 ThemeManager::addStyleHandler("imhex", ImHexStyleMap);
