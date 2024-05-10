@@ -764,6 +764,7 @@ void TextEditor::HandleMouseInputs() {
                 }
 
                 mLastClick = -1.0f;
+                ResetCursorBlinkTime();
             }
 
             /*
@@ -781,6 +782,7 @@ void TextEditor::HandleMouseInputs() {
                 }
 
                 mLastClick = (float)ImGui::GetTime();
+                ResetCursorBlinkTime();
             }
 
             /*
@@ -798,6 +800,7 @@ void TextEditor::HandleMouseInputs() {
                     mSelectionMode = SelectionMode::Normal;
                 }
                 SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                ResetCursorBlinkTime();
 
                 mLastClick = (float)ImGui::GetTime();
             }
@@ -806,6 +809,7 @@ void TextEditor::HandleMouseInputs() {
                 io.WantCaptureMouse    = true;
                 mState.mCursorPosition = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
                 SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                ResetCursorBlinkTime();
             }
         }
     }
