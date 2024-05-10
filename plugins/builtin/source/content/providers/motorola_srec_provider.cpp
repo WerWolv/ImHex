@@ -185,7 +185,7 @@ namespace hex::plugin::builtin {
         }
 
         u64 maxAddress = 0x00;
-        for (auto &[address, bytes] : data) {
+        for (auto &[address, bytes] : data.value()) {
             auto endAddress = (address + bytes.size()) - 1;
             m_data.emplace({ address, endAddress }, std::move(bytes));
 
