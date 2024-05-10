@@ -1551,6 +1551,8 @@ namespace hex::plugin::builtin {
                     }
                 }
             }
+        } else {
+            patternVariables = std::move(oldPatternVariables);
         }
 
         m_runningParsers -= 1;
