@@ -185,12 +185,19 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
 
-                if (ImGui::Button("hex.builtin.view.hex_editor.select.select"_lang) || (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))) {
-                    editor->setSelection(m_region.getStartAddress(), m_region.getEndAddress());
-                    editor->jumpToSelection();
+                const auto provider = ImHexApi::Provider::get();
+                bool isOffsetValid = m_region.getStartAddress() <= m_region.getEndAddress() &&
+                                     m_region.getEndAddress() < provider->getActualSize();
+                ImGui::BeginDisabled(!isOffsetValid);
+                {
+                    if (ImGui::Button("hex.builtin.view.hex_editor.select.select"_lang) ||
+                        (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))) {
+                        editor->setSelection(m_region.getStartAddress(), m_region.getEndAddress());
+                        editor->jumpToSelection();
 
-                    if (!this->isPinned())
-                        editor->closePopup();
+                        if (!this->isPinned())
+                            editor->closePopup();
+                    }
                 }
                 ImGui::EndDisabled();
 
