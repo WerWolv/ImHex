@@ -1038,7 +1038,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::PushItemWidth(-1);
                         if (variable.outVariable) {
-                            ImGui::TextUnformatted(variable.value.toString(true).c_str());
+                            ImGuiExt::TextFormattedSelectable("{}", variable.value.toString(true).c_str());
                         } else if (variable.inVariable) {
                             const std::string label { "##" + name };
 
