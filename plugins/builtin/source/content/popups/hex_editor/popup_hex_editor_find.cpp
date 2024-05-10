@@ -46,6 +46,12 @@ namespace hex::plugin::builtin {
             ImGui::EndTabBar();
         }
 
+        if(ImGuiExt::IconHyperlink(ICON_VS_SEARCH, "Advanced Search...")) {
+            const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name");
+            view->getWindowOpenState() = true;
+            ImGui::SetWindowFocus(view->getName().c_str());
+        }
+
         if (lastMode != *s_searchMode) {
             m_requestFocus = true;
             s_inputString->clear();
