@@ -30,7 +30,7 @@ TextEditor::Palette TextEditor::sPaletteBase = TextEditor::GetDarkPalette();
 TextEditor::FindReplaceHandler::FindReplaceHandler() : mWholeWord(false),mFindRegEx(false),mMatchCase(false)  {}
 
 TextEditor::TextEditor()
-    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mScrollToBottom(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mTopMargin(0), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true),mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) {
+    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mScrollToBottom(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mTopMargin(0), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true),mStartTime(ImGui::GetTime() * 1000) {
     SetLanguageDefinition(LanguageDefinition::HLSL());
     mLines.push_back(Line());
 }
@@ -941,7 +941,7 @@ void TextEditor::Render() {
 
                 // Render the cursor
                 if (focused) {
-                    auto timeEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    auto timeEnd = ImGui::GetTime() * 1000;
                     auto elapsed = timeEnd - mStartTime;
                     if (elapsed > sCursorBlinkOnTime) {
                         float width = 1.0f;
@@ -2797,7 +2797,7 @@ int TextEditor::GetPageSize() const {
 }
 
 void TextEditor::ResetCursorBlinkTime() {
-    mStartTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - sCursorBlinkOnTime;
+    mStartTime = ImGui::GetTime() * 1000 - sCursorBlinkOnTime;
 }
 
 TextEditor::UndoRecord::UndoRecord(
