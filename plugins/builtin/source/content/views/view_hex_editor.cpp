@@ -957,7 +957,7 @@ namespace hex::plugin::builtin {
             if (newProvider != nullptr) {
                 m_hexEditor.setSelectionUnchecked(m_selectionStart.get(newProvider), m_selectionEnd.get(newProvider));
             } else {
-                ImHexApi::HexEditor::clearSelection();
+                m_hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
             }
 
             if (isSelectionValid()) {
