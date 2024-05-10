@@ -7,6 +7,7 @@
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
+#include <wolv/utils/expected.hpp>
 #include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
@@ -24,7 +25,7 @@ namespace hex::plugin::builtin {
                 throw std::runtime_error("Failed to parse hex digit");
         }
 
-        std::map<u64, std::vector<u8>> parseMotorolaSREC(const std::string &string) {
+        wolv::util::Expected<std::map<u64, std::vector<u8>>, std::string> parseMotorolaSREC(const std::string &string) {
             std::map<u64, std::vector<u8>> result;
 
             u64 offset = 0x00;
@@ -161,8 +162,8 @@ namespace hex::plugin::builtin {
                     while (std::isspace(string[offset]) && offset < string.length())
                         offset++;
                 }
-            } catch (const std::runtime_error &) {
-                return { };
+            } catch (const std::runtime_error &e) {
+                return wolv::util::Unexpected<std::string>(e.what());
             }
 
             return result;
@@ -172,12 +173,16 @@ namespace hex::plugin::builtin {
 
     bool MotorolaSRECProvider::open() {
         auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
-        if (!file.isValid())
+        if (!file.isValid()) {
+            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), ::strerror(errno)));
             return false;
+        }
 
         auto data = motorola_srec::parseMotorolaSREC(file.readString());
-        if (data.empty())
+        if (!data.has_value()) {
+            this->setErrorMessage(data.error());
             return false;
+        }
 
         u64 maxAddress = 0x00;
         for (auto &[address, bytes] : data) {
