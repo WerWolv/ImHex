@@ -919,6 +919,8 @@
         "hex.builtin.view.pattern_editor.replace_hint_history": " for history)",
         "hex.builtin.view.pattern_editor.section_popup": "Section",
         "hex.builtin.view.pattern_editor.sections": "Sections",
+        "hex.builtin.view.pattern_editor.sections.view": "View content",
+        "hex.builtin.view.pattern_editor.sections.export": "Export content",
         "hex.builtin.view.pattern_editor.settings": "Settings",
         "hex.builtin.view.pattern_editor.shortcut.run_pattern": "Run Pattern",
         "hex.builtin.view.pattern_editor.shortcut.step_debugger": "Step Debugger",
