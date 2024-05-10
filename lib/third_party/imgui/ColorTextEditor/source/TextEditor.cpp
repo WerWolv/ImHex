@@ -724,7 +724,7 @@ void TextEditor::HandleKeyboardInputs() {
         else
             handledKeyEvent = false;
 
-        if(handledKeyEvent)
+        if (handledKeyEvent)
             ResetCursorBlinkTime();
 
         if (!IsReadOnly() && !io.InputQueueCharacters.empty()) {
