@@ -50,6 +50,7 @@ namespace hex::plugin::builtin {
             const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name");
             view->getWindowOpenState() = true;
             ImGui::SetWindowFocus(view->getName().c_str());
+            editor->closePopup();
         }
 
         if (lastMode != *s_searchMode) {
