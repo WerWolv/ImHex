@@ -795,6 +795,7 @@
         "hex.builtin.view.hex_editor.search.find": "Buscar",
         "hex.builtin.view.hex_editor.search.hex": "Hexadecimal",
         "hex.builtin.view.hex_editor.search.no_more_results": "No se encontraron más resultados",
+        "hex.builtin.view.hex_editor.search.advanced": "",
         "hex.builtin.view.hex_editor.search.string": "Cadena",
         "hex.builtin.view.hex_editor.search.string.encoding": "Codificación",
         "hex.builtin.view.hex_editor.search.string.encoding.utf16": "UTF-16",

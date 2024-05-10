@@ -795,6 +795,7 @@
         "hex.builtin.view.hex_editor.search.find": "찾기",
         "hex.builtin.view.hex_editor.search.hex": "헥스",
         "hex.builtin.view.hex_editor.search.no_more_results": "더이상 결과 없음",
+        "hex.builtin.view.hex_editor.search.advanced": "",
         "hex.builtin.view.hex_editor.search.string": "문자열",
         "hex.builtin.view.hex_editor.search.string.encoding": "エンコード",
         "hex.builtin.view.hex_editor.search.string.encoding.utf16": "UTF-16",

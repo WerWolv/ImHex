@@ -795,6 +795,7 @@
         "hex.builtin.view.hex_editor.search.find": "尋找",
         "hex.builtin.view.hex_editor.search.hex": "十六進位",
         "hex.builtin.view.hex_editor.search.no_more_results": "沒有更多結果",
+        "hex.builtin.view.hex_editor.search.advanced": "",
         "hex.builtin.view.hex_editor.search.string": "字串",
         "hex.builtin.view.hex_editor.search.string.encoding": "編碼",
         "hex.builtin.view.hex_editor.search.string.encoding.utf16": "UTF-16",

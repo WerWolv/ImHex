@@ -805,6 +805,7 @@
         "hex.builtin.view.hex_editor.search.string.endianness.little": "Little",
         "hex.builtin.view.hex_editor.search.string.endianness.big": "Big",
         "hex.builtin.view.hex_editor.search.no_more_results": "No more results",
+        "hex.builtin.view.hex_editor.search.advanced": "Advanced Search...",
         "hex.builtin.view.hex_editor.select.offset.begin": "Begin",
         "hex.builtin.view.hex_editor.select.offset.end": "End",
         "hex.builtin.view.hex_editor.select.offset.region": "Region",

@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
             ImGui::EndTabBar();
         }
 
-        if(ImGuiExt::IconHyperlink(ICON_VS_SEARCH, "Advanced Search...")) {
+        if(ImGuiExt::IconHyperlink(ICON_VS_SEARCH, "hex.builtin.view.hex_editor.search.advanced"_lang)) {
             const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name");
             view->getWindowOpenState() = true;
             ImGui::SetWindowFocus(view->getName().c_str());

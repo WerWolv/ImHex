@@ -795,6 +795,7 @@
         "hex.builtin.view.hex_editor.search.find": "Cerca",
         "hex.builtin.view.hex_editor.search.hex": "Hex",
         "hex.builtin.view.hex_editor.search.no_more_results": "Nessun risultato trovato",
+        "hex.builtin.view.hex_editor.search.advanced": "",
         "hex.builtin.view.hex_editor.search.string": "Stringa",
         "hex.builtin.view.hex_editor.search.string.encoding": "Codifica",
         "hex.builtin.view.hex_editor.search.string.encoding.utf16": "UTF-16",
