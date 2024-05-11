@@ -914,10 +914,12 @@ void TextEditor::Render() {
             }
 
             // Draw line number (right aligned)
-            snprintf(buf, 16, "%d  ", lineNo + 1);
+            if (mShowLineNumbers) {
+                snprintf(buf, 16, "%d  ", lineNo + 1);
 
-            auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
-            drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+                auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
+                drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+            }
 
             // Draw breakpoints
             if (mBreakpoints.count(lineNo + 1) != 0) {
