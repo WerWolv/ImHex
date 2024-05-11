@@ -1038,7 +1038,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::PushItemWidth(-1);
                         if (variable.outVariable) {
-                            ImGui::TextUnformatted(variable.value.toString(true).c_str());
+                            ImGuiExt::TextFormattedSelectable("{}", variable.value.toString(true).c_str());
                         } else if (variable.inVariable) {
                             const std::string label { "##" + name };
 
@@ -1156,6 +1156,7 @@ namespace hex::plugin::builtin {
                                 patternDrawer->draw(patterns, &runtime, 150_scaled);
                         };
                     }
+                    ImGui::SetTooltip("hex.builtin.view.pattern_editor.sections.view"_lang);
                     ImGui::SameLine();
                     if (ImGuiExt::DimmedIconButton(ICON_VS_SAVE_AS, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         fs::openFileBrowser(fs::DialogMode::Save, {}, [id, &runtime](const auto &path) {
@@ -1168,6 +1169,7 @@ namespace hex::plugin::builtin {
                             file.writeVector(runtime.getSection(id));
                         });
                     }
+                    ImGui::SetTooltip("hex.builtin.view.pattern_editor.sections.export"_lang);
 
                     ImGui::PopID();
                 }
@@ -1551,6 +1553,8 @@ namespace hex::plugin::builtin {
                     }
                 }
             }
+        } else {
+            patternVariables = std::move(oldPatternVariables);
         }
 
         m_runningParsers -= 1;

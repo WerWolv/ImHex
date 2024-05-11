@@ -258,7 +258,7 @@ namespace hex::prv {
          */
         bool m_skipLoadInterface = false;
 
-        std::string m_errorMessage;
+        std::string m_errorMessage = "Unspecified error";
 
         u64 m_pageSize = MaxPageSize;
     };
