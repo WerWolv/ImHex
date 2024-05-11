@@ -63,6 +63,11 @@ jobs:
           ..
         make -j4 unit_tests
 
+    - name: 🧪 Perform plcli Integration Tests
+      run: |
+        cd lib/external/pattern_language
+        python tests/integration/integration.py ../../../build/imhex --pl
+
     - name: 🧪 Perform Unit Tests
       run: |
         cd build
