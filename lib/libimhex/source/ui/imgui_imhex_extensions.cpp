@@ -16,6 +16,7 @@
 
 #include <set>
 #include <string>
+#include <algorithm>
 
 #include <hex/api/imhex_api.hpp>
 
@@ -68,6 +69,13 @@ namespace ImGuiExt {
             return GL_NEAREST;
         }
 
+        GLint getMaxSamples(GLenum target, GLenum format) {
+            GLint MaxSamples;
+
+            glGetInternalformativ(target, format, GL_SAMPLES, 1, &MaxSamples);
+            return MaxSamples;
+        }
+
         GLuint createTextureFromRGBA8Array(const ImU8 *buffer, int width, int height, Texture::Filter filter) {
             GLuint texture;
 
@@ -105,12 +113,8 @@ namespace ImGuiExt {
             }
 
             #if defined(GL_TEXTURE_2D_MULTISAMPLE)
-                GLint MaxSamples;
-                static auto SampleCount = 8;
-
-                glGetIntegerv(GL_MAX_SAMPLES, &MaxSamples);
-
-                if(MaxSamples < 8) SampleCount = MaxSamples;
+                //Builds just fine without the cast, but I put it in just in case
+                static auto SampleCount = std::min(static_cast<GLint>(8), getMaxSamples(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8));
 
                 // Generate renderbuffer
                 GLuint renderbuffer;
