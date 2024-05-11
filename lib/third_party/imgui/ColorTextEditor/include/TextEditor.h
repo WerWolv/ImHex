@@ -428,6 +428,7 @@ private:
 	std::string GetWordUnderCursor() const;
 	std::string GetWordAt(const Coordinates& aCoords) const;
 	ImU32 GetGlyphColor(const Glyph& aGlyph) const;
+    void ResetCursorBlinkTime();
 
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
@@ -475,6 +476,9 @@ private:
 	float mLastClick;
     bool mShowCursor;
     bool mShowLineNumbers;
+
+    static const int sCursorBlinkInterval;
+    static const int sCursorBlinkOnTime;
 };
 
 bool TokenizeCStyleString(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);
