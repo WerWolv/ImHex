@@ -105,8 +105,12 @@ namespace ImGuiExt {
             }
 
             #if defined(GL_TEXTURE_2D_MULTISAMPLE)
+                GLint MaxSamples;
+                static auto SampleCount = 8;
 
-                constexpr static auto SampleCount = 8;
+                glGetIntegerv(GL_MAX_SAMPLES, &MaxSamples);
+
+                if(MaxSamples < 8) SampleCount = MaxSamples;
 
                 // Generate renderbuffer
                 GLuint renderbuffer;
