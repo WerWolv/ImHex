@@ -22,8 +22,8 @@ bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Bi
     return first1 == last1 && first2 == last2;
 }
 
-const int TextEditor::sCursorBlinkInterval = 800;
-const int TextEditor::sCursorBlinkOnTime = 400;
+const int TextEditor::sCursorBlinkInterval = 1200;
+const int TextEditor::sCursorBlinkOnTime = 800;
 
 TextEditor::Palette TextEditor::sPaletteBase = TextEditor::GetDarkPalette();
 
