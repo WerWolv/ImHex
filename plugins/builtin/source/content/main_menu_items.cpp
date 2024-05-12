@@ -575,9 +575,9 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, ICON_VS_LAYOUT, 1150, [] {
             bool locked = LayoutManager::isLayoutLocked();
-            if (ImGui::MenuItemEx("hex.builtin.menu.workspace.layout.lock"_lang, locked ? ICON_VS_UNLOCK : ICON_VS_LOCK, nullptr, locked, ImHexApi::Provider::isValid())) {
-                LayoutManager::lockLayout(locked);
-                ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", locked);
+            if (ImGui::MenuItemEx("hex.builtin.menu.workspace.layout.lock"_lang, ICON_VS_LOCK, nullptr, locked, ImHexApi::Provider::isValid())) {
+                LayoutManager::lockLayout(!locked);
+                ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", !locked);
             }
         });
 
