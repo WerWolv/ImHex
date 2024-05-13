@@ -961,7 +961,7 @@ namespace hex::plugin::builtin {
                             return;
 
                         auto result = formatter->format(
-                                m_foundOccurrences,
+                                m_sortedOccurrences,
                                 provider,
                                 [&](Occurrence o){ return this->decodeValue(provider, o); });
 
