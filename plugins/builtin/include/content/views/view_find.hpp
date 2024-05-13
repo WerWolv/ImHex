@@ -11,6 +11,8 @@
 
 #include <wolv/container/interval_tree.hpp>
 
+#include <content/export_formatters.hpp>
+
 namespace hex::plugin::builtin {
 
     class ViewFind : public View::Window {
@@ -21,13 +23,6 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-
-        struct Occurrence {
-            Region region;
-            enum class DecodeType { ASCII, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
-            std::endian endian = std::endian::native;
-            bool selected;
-        };
 
         struct BinaryPattern {
             u8 mask, value;
@@ -108,6 +103,7 @@ namespace hex::plugin::builtin {
         TaskHolder m_searchTask, m_filterTask;
         bool m_settingsValid = false;
         std::string m_replaceBuffer;
+        export_fmt::ExportFormatterArray m_formatters;
 
     private:
         static std::vector<Occurrence> searchStrings(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Strings &settings);
