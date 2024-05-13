@@ -44,7 +44,7 @@ namespace hex::plugin::builtin::export_fmt {
                     escapedResult.push_back('"');
                 }
 
-                const auto line = fmt::format("0x{:08X}{}0x{:X}{}{}",
+                const auto line = fmt::format("0x{:08X}{}0x{}{}{}",
                                               occurrence.region.getStartAddress(),
                                               separator,
                                               occurrence.region.getSize(),
