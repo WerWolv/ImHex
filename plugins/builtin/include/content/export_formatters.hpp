@@ -3,12 +3,14 @@
 #include "export_formatters/export_formatter.hpp"
 #include "export_formatters/export_formatter_csv.hpp"
 #include "export_formatters/export_formatter_tsv.hpp"
+#include "export_formatters/export_formatter_json.hpp"
 
 namespace hex::plugin::builtin::export_fmt {
 
     using ExportFormatters = std::tuple<
             ExportFormatterCsv,
-            ExportFormatterTsv
+            ExportFormatterTsv,
+            ExportFormatterJson
     >;
 
     using ExportFormatterArray = std::array<std::unique_ptr<hex::plugin::builtin::export_fmt::ExportFormatter>, std::tuple_size_v<ExportFormatters>>;
