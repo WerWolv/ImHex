@@ -956,14 +956,17 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::MenuItem(name.c_str())) {
                     fs::openFileBrowser(fs::DialogMode::Save, { { name.c_str(), extension.c_str() } }, [&](const std::fs::path &path) {
+                        wolv::io::File file(path, wolv::io::File::Mode::Create);
+                        if(!file.isValid())
+                            return;
+
                         auto result = formatter->format(
                                 m_foundOccurrences,
                                 provider,
                                 [&](Occurrence o){ return this->decodeValue(provider, o); });
 
-                        wolv::io::File output(path, wolv::io::File::Mode::Create);
-                        output.writeVector(result);
-                        output.close();
+                        file.writeVector(result);
+                        file.close();
                     });
                 }
             }
