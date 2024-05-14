@@ -941,12 +941,14 @@ namespace hex::plugin::builtin {
 
         ImGui::SameLine();
 
+        const auto startPos = ImGui::GetCursorPos();
         ImGui::BeginDisabled(m_sortedOccurrences->empty());
         if (ImGuiExt::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
             ImGui::OpenPopup("ExportResults");
         }
         ImGui::EndDisabled();
 
+        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImVec2(startPos.x, ImGui::GetCursorPosY()));
         if (ImGui::BeginPopup("ExportResults")) {
             for (const auto &formatter : m_formatters) {
                 const auto formatterName = formatter->getName();
