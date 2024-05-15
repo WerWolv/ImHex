@@ -38,7 +38,7 @@ namespace hex::ui {
                 return m_unsyncedPosition.get(m_provider);
         }
 
-        const ImS64& get() const {
+        [[nodiscard]] const ImS64& get() const {
             if (m_synced)
                 return m_syncedPosition;
             else
@@ -73,7 +73,6 @@ namespace hex::ui {
     class HexEditor {
     public:
         explicit HexEditor(prv::Provider *provider = nullptr);
-        ~HexEditor();
         void draw(float height = ImGui::GetContentRegionAvail().y);
 
         HexEditor(const HexEditor&) = default;
@@ -87,13 +86,14 @@ namespace hex::ui {
             m_currValidRegion = { Region::Invalid(), false };
             m_scrollPosition.setProvider(provider);
         }
-        prv::Provider* getProvider() const {
+
+        [[nodiscard]] prv::Provider* getProvider() const {
             return m_provider;
         }
 
         void setUnknownDataCharacter(char character) { m_unknownDataCharacter = character; }
     private:
-        enum class CellType { None, Hex, ASCII };
+        enum class CellType : u8 { None, Hex, ASCII };
 
         void drawCell(u64 address, const u8 *data, size_t size, bool hovered, CellType cellType);
         void drawSelectionFrame(u32 x, u32 y, Region selection, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &backgroundColor) const;
@@ -299,7 +299,11 @@ namespace hex::ui {
             m_editingAddress = std::nullopt;
         }
 
-        enum class Mode { Overwrite, Insert };
+        enum class Mode : u8 {
+            Overwrite,
+            Insert
+        };
+
         void setMode(Mode mode) {
             if (mode == Mode::Insert) {
                 // Don't enter insert mode if the provider doesn't support resizing the underlying data
@@ -326,6 +330,8 @@ namespace hex::ui {
         std::optional<u64> m_selectionEnd;
         std::optional<u64> m_cursorPosition;
         ScrollPosition m_scrollPosition;
+
+        Region m_frameStartSelectionRegion = Region::Invalid();
 
         u16 m_bytesPerRow = 16;
         std::endian m_dataVisualizerEndianness = std::endian::little;
