@@ -1156,8 +1156,10 @@ namespace hex::plugin::builtin {
                                 patternDrawer->draw(patterns, &runtime, 150_scaled);
                         };
                     }
-                    ImGui::SetTooltip("%s", "hex.builtin.view.pattern_editor.sections.view"_lang.get().c_str());
+                    ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.sections.view"_lang.get().c_str());
+
                     ImGui::SameLine();
+
                     if (ImGuiExt::DimmedIconButton(ICON_VS_SAVE_AS, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         fs::openFileBrowser(fs::DialogMode::Save, {}, [id, &runtime](const auto &path) {
                             wolv::io::File file(path, wolv::io::File::Mode::Create);
@@ -1169,7 +1171,7 @@ namespace hex::plugin::builtin {
                             file.writeVector(runtime.getSection(id));
                         });
                     }
-                    ImGui::SetTooltip("%s", (const char*)"hex.builtin.view.pattern_editor.sections.export"_lang.get().c_str());
+                    ImGui::SetItemTooltip("%s", (const char*)"hex.builtin.view.pattern_editor.sections.export"_lang.get().c_str());
 
                     ImGui::PopID();
                 }
