@@ -340,6 +340,8 @@ namespace hex {
             void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const std::common_type_t<T> &value) {
                 impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
                 impl::runOnChangeHandlers(unlocalizedCategory, unlocalizedName, value);
+
+                impl::store();
             }
 
             using OnChangeCallback = std::function<void(const SettingsValue &)>;
