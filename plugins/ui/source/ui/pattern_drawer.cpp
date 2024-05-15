@@ -151,7 +151,7 @@ namespace hex::ui {
 
     }
 
-    std::optional<PatternDrawer::Filter> PatternDrawer::parseRValueFilter(const std::string &filter) const {
+    std::optional<PatternDrawer::Filter> PatternDrawer::parseRValueFilter(const std::string &filter) {
         Filter result;
 
         if (filter.empty()) {
@@ -192,6 +192,17 @@ namespace hex::ui {
         return result;
     }
 
+    void PatternDrawer::updateFilter() {
+        m_filteredPatterns.clear();
+        std::vector<std::string> treePath;
+        for (auto &pattern : m_sortedPatterns) {
+            traversePatternTree(*pattern, treePath, [this, &treePath](auto &pattern){
+                if (matchesFilter(m_filter.path, treePath, false))
+                    m_filteredPatterns.push_back(&pattern);
+            });
+        }
+    }
+
     bool PatternDrawer::isEditingPattern(const pl::ptrn::Pattern& pattern) const {
         return m_editingPattern == &pattern && m_editingPatternOffset == pattern.getOffset();
     }
@@ -201,18 +212,28 @@ namespace hex::ui {
         m_editingPatternOffset = 0x00;
     }
 
-    bool PatternDrawer::matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch) const {
+    bool PatternDrawer::matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch) {
         if (fullMatch) {
             if (patternPath.size() != filterPath.size())
                 return false;
         }
 
-        if (patternPath.size() <= filterPath.size()) {
-            for (ssize_t i = patternPath.size() - 1; i >= 0; i--) {
-                const auto &filter = filterPath[i];
+        if (filterPath.size() > patternPath.size())
+            return false;
 
-                if (patternPath[i] != filter && !filter.empty() && filter != "*") {
-                    return false;
+        auto commonSize = std::min(filterPath.size(), patternPath.size());
+        for (size_t i = patternPath.size() - commonSize; i < patternPath.size(); i += 1) {
+            const auto &filter = filterPath[i - (patternPath.size() - commonSize)];
+            if (filter.empty())
+                return false;
+
+            if (filter != "*") {
+                if (i == (patternPath.size() - 1)) {
+                    if (!patternPath[i].starts_with(filter))
+                        return false;
+                } else {
+                    if (patternPath[i] != filter)
+                        return false;
                 }
             }
         }
@@ -887,21 +908,7 @@ namespace hex::ui {
         m_currPatternPath.push_back(pattern.getVariableName());
         ON_SCOPE_EXIT { m_currPatternPath.pop_back(); };
 
-        if (matchesFilter(m_filter.path, m_currPatternPath, false)) {
-            if (m_filter.value.has_value()) {
-                auto patternValue = pattern.getValue();
-                if (patternValue == m_filter.value) {
-                    pattern.accept(*this);
-                } else if (!matchesFilter(m_filter.path, m_currPatternPath, true)) {
-                    pattern.accept(*this);
-                } else if (patternValue.isPattern() && m_filter.value->isString()) {
-                    if (patternValue.toString(true) == m_filter.value->toString(false))
-                        pattern.accept(*this);
-                }
-            } else {
-                pattern.accept(*this);
-            }
-        }
+        pattern.accept(*this);
     }
 
     void PatternDrawer::drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iterable, bool isInlined) {
@@ -1128,9 +1135,10 @@ namespace hex::ui {
             this->resetEditing();
         }
 
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 9.5);
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 8.5F);
         if (ImGuiExt::InputTextIcon("##Search", ICON_VS_FILTER, m_filterText)) {
             m_filter = parseRValueFilter(m_filterText).value_or(Filter{ });
+            updateFilter();
         }
         ImGui::PopItemWidth();
 
@@ -1172,7 +1180,7 @@ namespace hex::ui {
                 const auto &extension = formatter->getFileExtension();
 
                 if (ImGui::MenuItem(name.c_str())) {
-                    fs::openFileBrowser(fs::DialogMode::Save, { { name.c_str(), extension.c_str() } }, [&](const std::fs::path &path) {
+                    fs::openFileBrowser(fs::DialogMode::Save, { { name, extension } }, [&](const std::fs::path &path) {
                         auto result = formatter->format(*runtime);
 
                         wolv::io::File output(path, wolv::io::File::Mode::Create);
@@ -1183,10 +1191,10 @@ namespace hex::ui {
             ImGui::EndPopup();
         }
 
-        if (!m_favoritesUpdated) {
-            m_favoritesUpdated = true;
+        if (!m_filtersUpdated && !patterns.empty()) {
+            m_filtersUpdated = true;
 
-            if (!patterns.empty() && !m_favoritesUpdateTask.isRunning()) {
+            if (!m_favoritesUpdateTask.isRunning()) {
                 m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
                     size_t updatedFavorites = 0;
 
@@ -1217,7 +1225,7 @@ namespace hex::ui {
                                     task.interrupt();
                                 task.update();
 
-                                if (this->matchesFilter(patternPath, path, true)) {
+                                if (matchesFilter(patternPath, path, true)) {
                                     favoritePattern = currPattern.clone();
                                     updatedFavorites += 1;
 
@@ -1234,6 +1242,8 @@ namespace hex::ui {
                     });
                 });
             }
+
+            updateFilter();
 
         }
 
@@ -1299,7 +1309,7 @@ namespace hex::ui {
 
                 m_showFavoriteStars = true;
 
-                for (auto &pattern : m_sortedPatterns) {
+                for (auto &pattern : m_filter.path.empty() ? m_sortedPatterns : m_filteredPatterns) {
                     ImGui::PushID(id);
                     this->draw(*pattern);
                     ImGui::PopID();
@@ -1326,6 +1336,7 @@ namespace hex::ui {
         m_visualizedPatterns.clear();
         m_currVisualizedPattern = nullptr;
         m_sortedPatterns.clear();
+        m_filteredPatterns.clear();
         m_lastVisualizerError.clear();
         m_currPatternPath.clear();
 
@@ -1340,6 +1351,6 @@ namespace hex::ui {
 
         m_groups.clear();
 
-        m_favoritesUpdated = false;
+        m_filtersUpdated = false;
     }
 }
