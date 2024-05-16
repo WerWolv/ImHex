@@ -216,7 +216,7 @@ namespace hex {
         }
 
         void clearSelection() {
-            impl::s_currentSelection.reset();
+            impl::s_currentSelection->reset();
         }
 
         void setSelection(const Region &region, prv::Provider *provider) {

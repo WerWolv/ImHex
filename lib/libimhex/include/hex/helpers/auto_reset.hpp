@@ -58,6 +58,13 @@ namespace hex {
             return m_value;
         }
 
+        bool isValid() const {
+            return m_valid;
+        }
+
+    private:
+        friend void ImHexApi::System::impl::cleanup();
+
         void reset() override {
             if constexpr (requires { m_value.reset(); }) {
                 m_value.reset();
@@ -68,9 +75,12 @@ namespace hex {
             } else {
                 m_value = { };
             }
+
+            m_valid = false;
         }
 
     private:
+        bool m_valid = true;
         T m_value;
     };
 
