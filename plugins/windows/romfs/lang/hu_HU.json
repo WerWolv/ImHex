@@ -1,0 +1,29 @@
+﻿{
+    "code": "hu_HU",
+    "language": "Hungarian",
+    "country": "Hungary",
+    "fallback": false,
+    "translations": {
+        "hex.builtin.setting.general.context_menu_entry": "Windows helyi menü bejegyzés",
+        "hex.builtin.setting.interface.show_resource_usage": "Erőforrás-használat mutatása az alsó sávban",
+        "hex.windows.view.tty_console.auto_scroll": "Automatikus görgetés",
+        "hex.windows.view.tty_console.baud": "Baudráta",
+        "hex.windows.view.tty_console.clear": "Töröl",
+        "hex.windows.view.tty_console.config": "Konfiguráció",
+        "hex.windows.view.tty_console.connect": "Csatlakozás",
+        "hex.windows.view.tty_console.connect_error": "Nem sikerült csatlakozni a COM porthoz!",
+        "hex.windows.view.tty_console.console": "Konzol",
+        "hex.windows.view.tty_console.cts": "CTS folyamatvezérlés használata",
+        "hex.windows.view.tty_console.disconnect": "Kapcsolat bontása",
+        "hex.windows.view.tty_console.name": "TTY konzol",
+        "hex.windows.view.tty_console.no_available_port": "Nincs érvényes COM port kiválasztva, vagy nincs elérhető COM port!",
+        "hex.windows.view.tty_console.num_bits": "Adat bitek",
+        "hex.windows.view.tty_console.parity_bits": "Paritás bit",
+        "hex.windows.view.tty_console.port": "Port",
+        "hex.windows.view.tty_console.reload": "Újratöltés",
+        "hex.windows.view.tty_console.send_eot": "EOT küldése",
+        "hex.windows.view.tty_console.send_etx": "EXT küldése",
+        "hex.windows.view.tty_console.send_sub": "SUB küldése",
+        "hex.windows.view.tty_console.stop_bits": "Stop bitek"
+    }
+}

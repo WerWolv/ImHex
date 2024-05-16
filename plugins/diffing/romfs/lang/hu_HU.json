@@ -1,0 +1,22 @@
+﻿{
+    "code": "hu_HU",
+    "language": "Hungarian",
+    "country": "Hungary",
+    "fallback": false,
+    "translations": {
+        "hex.diffing.algorithm.simple.name": "Egyszerű bájtonkénti algoritmus",
+        "hex.diffing.algorithm.simple.description": "Naív O(n) bájtonkénti algoritmus.\nCsak az adat végén tud azonosítani módosításokat, hozzáadásokat és törléseket",
+        "hex.diffing.algorithm.myers.name": "Myers bit-vektor algoritmusa",
+        "hex.diffing.algorithm.myers.description": "Okos O(N*M) különbségkereső algoritmus. Képes módosítások, beszúrások és törlések azonosítására bárhol az adatokban",
+        "hex.diffing.algorithm.myers.settings.window_size": "Ablak méret",
+        "hex.diffing.view.diff.name": "Különbségkeresés",
+        "hex.diffing.view.diff.added": "Hozzáadva",
+        "hex.diffing.view.diff.modified": "Módosítva",
+        "hex.diffing.view.diff.provider_a": "A forrás",
+        "hex.diffing.view.diff.provider_b": "B forrás",
+        "hex.diffing.view.diff.removed": "Tötölve",
+        "hex.diffing.view.diff.algorithm": "Különbségkereső algoritmus",
+        "hex.diffing.view.diff.settings": "Nincs elérhető beállítás",
+        "hex.diffing.view.diff.settings.no_settings": "Nincs elérhető beállítás"
+    }
+}
