@@ -399,7 +399,7 @@ namespace hex::init {
     void WindowSplash::initGLFW() {
         glfwSetErrorCallback([](int errorCode, const char *desc) {
             #if defined(GLFW_FEATURE_UNAVAILABLE)
-            bool unavailableFeature = errorCode = GLFW_FEATURE_UNAVAILABLE;
+            bool unavailableFeature = (errorCode == GLFW_FEATURE_UNAVAILABLE);
             #else
             bool unavailableFeature = false;
             #endif

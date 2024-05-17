@@ -699,7 +699,7 @@ namespace hex {
         auto initialWindowProperties = ImHexApi::System::getInitialWindowProperties();
         glfwSetErrorCallback([](int error, const char *desc) {
             #if defined(GLFW_FEATURE_UNAVAILABLE)
-            bool unavailableFeature = error = GLFW_FEATURE_UNAVAILABLE;
+            bool unavailableFeature = (error == GLFW_FEATURE_UNAVAILABLE);
             #else
             bool unavailableFeature = false;
             #endif
