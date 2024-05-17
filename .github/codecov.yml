@@ -1,0 +1,3 @@
+ignore:
+  - "lib/third_party" # Third party libraries should be ignored
+  - "lib/external" # Our own libraries should be checked in their own repositories

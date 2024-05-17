@@ -34,18 +34,11 @@ jobs:
         restore-keys: ${{ runner.os }}-tests-build
         max-size: 50M
 
-
-    - name: 📜 Restore CMakeCache
-      uses: actions/cache@v4
-      with:
-        path: |
-          build/CMakeCache.txt
-        key: ${{ runner.os }}-tests-build-${{ hashFiles('**/CMakeLists.txt') }}
-
     - name: ⬇️ Install dependencies
       run: |
         sudo apt update
         sudo bash dist/get_deps_debian.sh
+        sudo apt install gcovr -y
 
     - name: 🛠️ Build
       run: |
@@ -72,6 +65,18 @@ jobs:
       run: |
         cd build
         ctest --output-on-failure
+
+    # Generate report from all gcov .gcda files
+    - name: 🧪 Generate coverage report
+      run: |
+        gcovr --gcov-executable /usr/bin/gcov-12 -r . build --xml coverage_report.xml --verbose
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage_report.xml
 
   langs:
     name: 🧪 Langs
