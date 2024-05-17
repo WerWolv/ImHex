@@ -374,9 +374,6 @@ namespace hex {
             if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
-            if (impl::s_closingProviders.contains(provider))
-                return;
-
             if (!noQuestions) {
                 impl::s_closingProviders.insert(provider);
 
