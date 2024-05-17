@@ -356,6 +356,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawWelcomeScreen() {
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
             ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
             if (ImGui::Begin("ImHexDockSpace")) {
                 if (!ImHexApi::Provider::isValid()) {
@@ -408,11 +409,13 @@ namespace hex::plugin::builtin {
             }
             ImGui::End();
             ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
         }
         /**
          * @brief Draw some default background if there are no views available in the current layout
          */
         void drawNoViewsBackground() {
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
             ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
             if (ImGui::Begin("ImHexDockSpace")) {
                 static std::array<char, 256> title;
@@ -453,6 +456,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::End();
             ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
         }
     }
 

@@ -339,6 +339,7 @@ namespace hex::plugin::builtin {
 
         void drawMainMenu([[maybe_unused]] float menuBarHeight) {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
             ImGui::SetNextWindowScroll(ImVec2(0, 0));
 
             #if defined(OS_MACOS)
@@ -351,7 +352,7 @@ namespace hex::plugin::builtin {
 
                 auto window = ImHexApi::System::getMainWindowHandle();
 
-                ImGui::PopStyleVar();
+                ImGui::PopStyleVar(2);
 
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                     #if defined(OS_WINDOWS)
@@ -391,11 +392,13 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndMainMenuBar();
             } else {
-                ImGui::PopStyleVar();
+                ImGui::PopStyleVar(2);
             }
         }
 
         void drawToolbar() {
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
             if (ImGui::BeginMenuBar()) {
                 for (const auto &callback : ContentRegistry::Interface::impl::getToolbarItems()) {
                     callback();
@@ -412,6 +415,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndMenuBar();
             }
+            ImGui::PopStyleVar(2);
         }
 
         bool anySidebarItemsAvailable() {
@@ -450,10 +454,11 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0F);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
 
             // Draw main window decoration
             if (ImGui::Begin("ImHexDockSpace", nullptr, windowFlags)) {
-                ImGui::PopStyleVar();
+                ImGui::PopStyleVar(2);
 
                 const auto drawList = ImGui::GetWindowDrawList();
                 const auto shouldDrawSidebar = anySidebarItemsAvailable();
@@ -489,7 +494,7 @@ namespace hex::plugin::builtin {
                             ImGui::GetColorU32(ImGuiCol_Separator));
                 }
             } else {
-                ImGui::PopStyleVar();
+                ImGui::PopStyleVar(2);
             }
             ImGui::End();
 
