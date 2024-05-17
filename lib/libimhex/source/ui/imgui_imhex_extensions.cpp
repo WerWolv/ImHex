@@ -511,6 +511,7 @@ namespace ImGuiExt {
         PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
         PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
         PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, GetStyle().FramePadding.y));
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
 
         PushStyleColor(ImGuiCol_Text, iconColor);
         Button("(?)");
@@ -523,7 +524,7 @@ namespace ImGuiExt {
             EndTooltip();
         }
 
-        PopStyleVar();
+        PopStyleVar(2);
         PopStyleColor(3);
     }
 
