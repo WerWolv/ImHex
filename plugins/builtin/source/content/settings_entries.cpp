@@ -605,7 +605,7 @@ namespace hex::plugin::builtin {
 
         class FontFilePicker : public ContentRegistry::Settings::Widgets::FilePicker {
         public:
-            bool draw(const std::string &name) {
+            bool draw(const std::string &name) override {
                 bool changed = false;
 
                 const auto &fonts = hex::getFonts();
@@ -663,7 +663,7 @@ namespace hex::plugin::builtin {
 
                 result = !isIntelGPU;
                 if (isIntelGPU)
-                    log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please try the Mesa3D Software Renderer");
+                    log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please enable the Native OS Decoration setting or try the software rendererd -NoGPU release.");
             }
 
             return result;
