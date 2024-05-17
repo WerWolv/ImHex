@@ -261,17 +261,21 @@ namespace hex::script::loader {
                 if (!std::fs::exists(scriptPath))
                     continue;
 
-                if (m_methodExists("Main", scriptPath)) {
+                const bool hasMain = m_methodExists("Main", scriptPath);
+                const bool hasOnLoad = m_methodExists("OnLoad", scriptPath);
+
+                if (hasMain) {
                     this->addScript(entry.path().stem().string(), false, [this, scriptPath] {
                         hex::unused(m_runMethod("Main", false, scriptPath));
                     });
+                } else if (hasOnLoad) {
+                    this->addScript(entry.path().stem().string(), true, [] {});
                 }
 
-                if (m_methodExists("OnLoad", scriptPath)) {
-                    this->addScript(entry.path().stem().string(), true, [this, scriptPath] {
-                        hex::unused(m_runMethod("OnLoad", true, scriptPath));
-                    });
+                if (hasOnLoad) {
+                    hex::unused(m_runMethod("OnLoad", true, scriptPath));
                 }
+
             }
         }
 
