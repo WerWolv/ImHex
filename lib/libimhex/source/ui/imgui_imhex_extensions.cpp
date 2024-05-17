@@ -1220,9 +1220,9 @@ namespace ImGuiExt {
         window->DrawList->AddRectFilled(knob_bb.Min, knob_bb.Max, GetColorU32(held ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : *v ? ImGuiCol_ButtonActive : ImGuiCol_Button), size.y / 2);
 
         if (*v)
-            window->DrawList->AddCircleFilled(knob_bb.Max - ImVec2(size.y / 2, size.y / 2), (size.y - style.ItemInnerSpacing.y) / 2, GetColorU32(ImGuiCol_Text), 16);
+            window->DrawList->AddCircleFilled(knob_bb.Max - ImVec2(size.y / 2, size.y / 2), (size.y - style.ItemInnerSpacing.y) / 2, GetColorU32(ImGuiCol_ScrollbarGrabActive), 16);
         else
-            window->DrawList->AddCircleFilled(knob_bb.Min + ImVec2(size.y / 2, size.y / 2), (size.y - style.ItemInnerSpacing.y) / 2, GetColorU32(ImGuiCol_Text), 16);
+            window->DrawList->AddCircleFilled(knob_bb.Min + ImVec2(size.y / 2, size.y / 2), (size.y - style.ItemInnerSpacing.y) / 2, GetColorU32(ImGuiCol_ScrollbarGrabActive), 16);
 
         ImVec2 label_pos = ImVec2(knob_bb.Max.x + style.ItemInnerSpacing.x, knob_bb.Min.y + style.FramePadding.y);
         if (g.LogEnabled)
