@@ -16,7 +16,7 @@ using namespace hex;
 using namespace hex::script::loader;
 
 using ScriptLoaders = std::tuple<
-    #if defined(DOTNET_PLUGINS)
+    #if defined(IMHEX_DOTNET_SCRIPT_SUPPORT)
         DotNetLoader
     #endif
 >;
@@ -106,11 +106,11 @@ namespace {
                 }
 
                 for (const auto &script : scripts) {
-                    const auto &[name, background, entryPoint] = *script;
+                    const auto &[name, background, entryPoint, loader] = *script;
                     if (background)
                         continue;
 
-                    if (ImGui::MenuItem(name.c_str())) {
+                    if (ImGui::MenuItem(name.c_str(), loader->getTypeName().c_str())) {
                         runnerTask = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint](auto&) {
                             entryPoint();
                         });

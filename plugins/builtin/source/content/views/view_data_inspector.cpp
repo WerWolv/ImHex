@@ -184,7 +184,7 @@ namespace hex::plugin::builtin {
                                    }
                                }
                            } else {
-                               const auto& error = m_runtime.getError();
+                               const auto& error = m_runtime.getEvalError();
 
                                log::error("Failed to execute custom inspector file '{}'!", wolv::util::toUTF8String(filePath));
                                if (error.has_value())

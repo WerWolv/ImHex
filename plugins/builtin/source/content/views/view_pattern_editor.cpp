@@ -1662,7 +1662,7 @@ namespace hex::plugin::builtin {
 
             m_lastEvaluationResult = runtime.executeString(code, pl::api::Source::DefaultSource, envVars, inVariables);
             if (!m_lastEvaluationResult) {
-                *m_lastEvaluationError = runtime.getError();
+                *m_lastEvaluationError = runtime.getEvalError();
                 *m_lastCompileError    = runtime.getCompileErrors();
             }
 

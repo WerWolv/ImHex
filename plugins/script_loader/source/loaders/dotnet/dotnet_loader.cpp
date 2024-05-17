@@ -3,10 +3,8 @@
 #include <stdexcept>
 
 #if defined(OS_WINDOWS)
-    #include <Windows.h>
     #define STRING(str) L##str
 #else
-    #include <dlfcn.h>
     #define STRING(str) str
 #endif
 
@@ -33,38 +31,6 @@ namespace hex::script::loader {
     namespace {
 
         using get_hostfxr_path_fn = int(*)(char_t * buffer, size_t * buffer_size, const get_hostfxr_parameters *parameters);
-
-        #if defined(OS_WINDOWS)
-            void *loadLibrary(const char_t *path) {
-                try {
-                    HMODULE h = ::LoadLibraryW(path);
-                    return h;
-                } catch (...) {
-                    return nullptr;
-                }
-            }
-
-            template<typename T>
-            T getExport(void *h, const char *name) {
-                try {
-                    FARPROC f = ::GetProcAddress(static_cast<HMODULE>(h), name);
-                    return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(f));
-                } catch (...) {
-                    return nullptr;
-                }
-            }
-        #else
-            void *loadLibrary(const char_t *path) {
-                void *h = dlopen(path, RTLD_LAZY);
-                return h;
-            }
-
-            template<typename T>
-            T getExport(void *h, const char *name) {
-                void *f = dlsym(h, name);
-                return reinterpret_cast<T>(f);
-            }
-        #endif
 
         hostfxr_initialize_for_runtime_config_fn hostfxr_initialize_for_runtime_config  = nullptr;
         hostfxr_get_runtime_delegate_fn hostfxr_get_runtime_delegate = nullptr;
