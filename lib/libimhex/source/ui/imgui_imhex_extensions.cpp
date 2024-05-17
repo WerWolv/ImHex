@@ -718,7 +718,7 @@ namespace ImGuiExt {
         const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered
                                                                                           : ImGuiCol_Button);
         RenderNavHighlight(bb, id);
-        RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
+        RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         // Automatically close popups
@@ -823,7 +823,7 @@ namespace ImGuiExt {
 
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
         const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), CalcTextSize(prefix).x, label_size.y + style.FramePadding.y * 2.0F);
-        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
+        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(CalcItemWidth(), frame_size.y));
 
         SetCursorPosX(GetCursorPosX() + frame_size.x);
 
@@ -831,8 +831,10 @@ namespace ImGuiExt {
         DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, format);
 
         bool value_changed = false;
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
         if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0F), flags))
             value_changed = DataTypeApplyFromText(buf, type, value, format);
+        PopStyleVar();
 
         if (value_changed)
             MarkItemEdited(GImGui->LastItemData.ID);
