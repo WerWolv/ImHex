@@ -99,6 +99,8 @@ namespace hex::ui {
                         color = m_selectionColor;
                 }
             }
+        } else {
+            color = 0x00;
         }
 
         if (color.has_value())
