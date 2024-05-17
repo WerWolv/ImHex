@@ -47,7 +47,7 @@ namespace hex::plugin::builtin {
         }
 
         if(ImGuiExt::IconHyperlink(ICON_VS_SEARCH, "hex.builtin.view.hex_editor.search.advanced"_lang)) {
-            TaskManager::doLater([&editor] {
+            TaskManager::doLater([editor] {
                 const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name");
 
                 view->getWindowOpenState() = true;
