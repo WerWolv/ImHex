@@ -501,7 +501,7 @@ namespace hex::plugin::builtin {
 
         RequestChangeTheme::subscribe([](const std::string &theme) {
             auto changeTexture = [&](const std::string &path) {
-                return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Linear);
+                return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Nearest);
             };
 
             auto changeTextureSvg = [&](const std::string &path) {
