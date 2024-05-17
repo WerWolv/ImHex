@@ -698,11 +698,16 @@ namespace hex {
     void Window::initGLFW() {
         auto initialWindowProperties = ImHexApi::System::getInitialWindowProperties();
         glfwSetErrorCallback([](int error, const char *desc) {
-            if (error == GLFW_PLATFORM_ERROR || error == GLFW_FEATURE_UNAVAILABLE) {
+            bool isWaylandError = error == GLFW_PLATFORM_ERROR;
+            #if defined(GLFW_FEATURE_UNAVAILABLE)
+                isWaylandError = isWaylandError || (error == GLFW_FEATURE_UNAVAILABLE);
+            #endif
+            isWaylandError = isWaylandError && std::string_view(desc).contains("Wayland");
+
+            if (isWaylandError) {
                 // Ignore error spam caused by Wayland not supporting moving or resizing
                 // windows or querying their position and size.
-                if (std::string_view(desc).contains("Wayland"))
-                    return;
+                return;
             }
 
             try {
