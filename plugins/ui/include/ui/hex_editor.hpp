@@ -114,7 +114,7 @@ namespace hex::ui {
         }
         void setSelection(const Region &region) { this->setSelection(region.getStartAddress(), region.getEndAddress()); }
         void setSelection(u128 start, u128 end) {
-            if (!ImHexApi::Provider::isValid())
+            if (!ImHexApi::Provider::isValid() || m_provider == nullptr)
                 return;
 
             if (start > m_provider->getBaseAddress() + m_provider->getActualSize())
