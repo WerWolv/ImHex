@@ -292,7 +292,9 @@ namespace hex::plugin::builtin {
                 auto menuName = Lang(menuItem.unlocalizedName);
 
                 const auto padding = ImGui::GetStyle().FramePadding.x;
-                auto width = ImGui::CalcTextSize(menuName).x + padding * 4;
+                bool lastItem = (fittingItems + 1) == menuItems.size();
+                auto width = ImGui::CalcTextSize(menuName).x + padding * (lastItem ? -3.0F : 4.0F);
+
                 if ((cursorPos + width) > (s_searchBarPosition - ImGui::CalcTextSize(ICON_VS_ELLIPSIS).x - padding * 2))
                     break;
 
