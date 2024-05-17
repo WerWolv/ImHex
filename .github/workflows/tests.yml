@@ -72,7 +72,7 @@ jobs:
         gcovr --gcov-executable /usr/bin/gcov-12 -e lib/ -r . build --xml coverage_report.xml --verbose
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4.0.1
+      uses: codecov/codecov-action@v4
       with:
         fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
