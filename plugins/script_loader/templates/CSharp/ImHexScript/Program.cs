@@ -1,7 +1,7 @@
 ﻿using ImHex;
 using ImGuiNET;
 
-class Script {
+class Script : IScript {
     
     public static void OnLoad()
     {

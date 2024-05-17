@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ImHex
 {
-    public partial class Logger
+    public static partial class Logger
     {
         [LibraryImport("ImHex")]
         private static partial void logPrintV1(byte[] message);

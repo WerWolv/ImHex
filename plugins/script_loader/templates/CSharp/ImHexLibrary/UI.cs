@@ -8,7 +8,7 @@ namespace ImHex
         private delegate void DrawContentDelegate();
         private delegate void ActionDelegate();
 
-        private static List<Delegate> _registeredDelegates = new();
+        private static readonly List<Delegate> RegisteredDelegates = new();
 
         [LibraryImport("ImHex")]
         private static partial void showMessageBoxV1(byte[] message);
@@ -48,22 +48,17 @@ namespace ImHex
 
         public static string? ShowInputTextBox(string title, string message, int maxSize)
         {
-            unsafe
-            {
-                var buffer = new byte[maxSize];
-                GCHandle pinnedArray = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-                showInputTextBoxV1(Encoding.UTF8.GetBytes(title), Encoding.UTF8.GetBytes(message), pinnedArray.AddrOfPinnedObject(), maxSize);
-                pinnedArray.Free();
+            var buffer = new byte[maxSize];
+            GCHandle pinnedArray = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            showInputTextBoxV1(Encoding.UTF8.GetBytes(title), Encoding.UTF8.GetBytes(message), pinnedArray.AddrOfPinnedObject(), maxSize);
+            pinnedArray.Free();
 
-                if (buffer.Length == 0 || buffer[0] == '\x00')
-                {
-                    return null;
-                }
-                else
-                {
-                    return Encoding.UTF8.GetString(buffer);
-                }
+            if (buffer.Length == 0 || buffer[0] == '\x00')
+            {
+                return null;
             }
+            
+            return Encoding.UTF8.GetString(buffer);
         }
 
         public enum ToastType
@@ -85,22 +80,22 @@ namespace ImHex
 
         public static void RegisterView(byte[] icon, string name, Action function)
         {
-            _registeredDelegates.Add(new DrawContentDelegate(function));
+            RegisteredDelegates.Add(new DrawContentDelegate(function));
             registerViewV1(
                 icon,
                 Encoding.UTF8.GetBytes(name),
-                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^1])
+                Marshal.GetFunctionPointerForDelegate(RegisteredDelegates[^1])
             );
         }
 
         public static void AddMenuItem(byte[] icon, string menuName, string itemName, Action function)
         {
-            _registeredDelegates.Add(new ActionDelegate(function));
+            RegisteredDelegates.Add(new ActionDelegate(function));
             addMenuItemV1(
                 icon,
                 Encoding.UTF8.GetBytes(menuName),
                 Encoding.UTF8.GetBytes(itemName),
-                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^1])
+                Marshal.GetFunctionPointerForDelegate(RegisteredDelegates[^1])
             );
         }
 
