@@ -14,6 +14,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <set>
 #include <GLFW/glfw3.h>
 
 #if defined(OS_WINDOWS)
@@ -269,15 +270,16 @@ namespace hex {
 
         namespace impl {
 
-            static std::vector<prv::Provider*> s_closingProviders;
+            static std::set<prv::Provider*> s_closingProviders;
             void resetClosingProvider() {
                 s_closingProviders.clear();
             }
 
-            const std::vector<prv::Provider*>& getClosingProviders() {
+            const std::set<prv::Provider*>& getClosingProviders() {
                 return s_closingProviders;
             }
 
+            static std::recursive_mutex s_providerMutex;
         }
 
         prv::Provider *get() {
@@ -297,6 +299,8 @@ namespace hex {
         }
 
         void setCurrentProvider(i64 index) {
+            std::scoped_lock lock(impl::s_providerMutex);
+
             if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
@@ -310,6 +314,8 @@ namespace hex {
         }
 
         void setCurrentProvider(NonNull<prv::Provider*> provider) {
+            std::scoped_lock lock(impl::s_providerMutex);
+
             if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
@@ -344,6 +350,8 @@ namespace hex {
         }
 
         void add(std::unique_ptr<prv::Provider> &&provider, bool skipLoadInterface, bool select) {
+            std::scoped_lock lock(impl::s_providerMutex);
+
             if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
@@ -358,14 +366,19 @@ namespace hex {
         }
 
         void remove(prv::Provider *provider, bool noQuestions) {
+            std::scoped_lock lock(impl::s_providerMutex);
+
             if (provider == nullptr)
                  return;
 
             if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
+            if (impl::s_closingProviders.contains(provider))
+                return;
+
             if (!noQuestions) {
-                impl::s_closingProviders.push_back(provider);
+                impl::s_closingProviders.insert(provider);
 
                 bool shouldClose = true;
                 EventProviderClosing::post(provider, &shouldClose);
@@ -419,7 +432,7 @@ namespace hex {
 
             TaskManager::runWhenTasksFinished([it, provider] {
                 EventProviderDeleted::post(provider);
-                std::erase(impl::s_closingProviders, provider);
+                impl::s_closingProviders.erase(provider);
 
                 s_providers->erase(it);
                 if (s_currentProvider >= i64(s_providers->size()))
@@ -440,7 +453,6 @@ namespace hex {
     }
 
     namespace ImHexApi::System {
-
 
         namespace impl {
 

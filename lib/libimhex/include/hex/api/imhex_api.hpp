@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 #include <wolv/io/fs.hpp>
 
@@ -292,7 +293,7 @@ namespace hex {
             namespace impl {
 
                 void resetClosingProvider();
-                const std::vector<prv::Provider*>& getClosingProviders();
+                const std::set<prv::Provider*>& getClosingProviders();
 
             }
 

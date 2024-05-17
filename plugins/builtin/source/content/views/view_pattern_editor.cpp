@@ -1328,7 +1328,7 @@ namespace hex::plugin::builtin {
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
-            TaskManager::createBackgroundTask("Analyzing file content", [this, provider](auto &) {
+            m_analysisTask = TaskManager::createBackgroundTask("Analyzing file content", [this, provider](const Task &task) {
                 if (!m_autoLoadPatterns)
                     return;
 
@@ -1415,6 +1415,8 @@ namespace hex::plugin::builtin {
                 std::error_code errorCode;
                 for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
                     for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
+                        task.update();
+
                         foundCorrectType = false;
                         if (!entry.is_regular_file())
                             continue;
