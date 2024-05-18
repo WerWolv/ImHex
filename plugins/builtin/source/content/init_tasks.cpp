@@ -283,6 +283,8 @@ namespace hex::plugin::builtin {
                     if (font.defaultSize.has_value())
                         size = font.defaultSize.value() * std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize);
 
+                    size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
+
                     cfg.SizePixels = size;
 
                     ON_SCOPE_EXIT { cfg.MergeMode = true; };

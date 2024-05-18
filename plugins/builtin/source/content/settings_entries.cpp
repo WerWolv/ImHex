@@ -173,11 +173,14 @@ namespace hex::plugin::builtin {
                         return "x%.1f";
                 }();
 
-                if (ImGui::SliderFloat(name.data(), &m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
-                    return true;
+                bool changed = ImGui::SliderFloat(name.data(), &m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+
+                if (ImHexApi::Fonts::getCustomFontPath().empty() && (u32(m_value * 10) % 10) != 0) {
+                    ImGui::SameLine();
+                    ImGuiExt::HelpHover("hex.builtin.setting.interface.scaling.fractional_warning"_lang, ICON_VS_WARNING, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
                 }
 
-                return false;
+                return changed;
             }
 
             void load(const nlohmann::json &data) override {

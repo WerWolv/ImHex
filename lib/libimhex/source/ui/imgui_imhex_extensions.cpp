@@ -503,9 +503,7 @@ namespace ImGuiExt {
         return pressed;
     }
 
-    void HelpHover(const char *text) {
-        const auto iconColor = GetStyleColorVec4(ImGuiCol_ButtonActive);
-
+    void HelpHover(const char *text, const char *icon, ImU32 iconColor) {
         PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
         PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
@@ -513,7 +511,7 @@ namespace ImGuiExt {
         PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
 
         PushStyleColor(ImGuiCol_Text, iconColor);
-        Button("(?)");
+        Button(icon);
         PopStyleColor();
 
         if (IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {

@@ -87,6 +87,8 @@ namespace hex {
 
         EventWindowDeinitializing::post(m_window);
 
+        ContentRegistry::Settings::impl::store();
+
         this->exitImGui();
         this->exitGLFW();
     }
