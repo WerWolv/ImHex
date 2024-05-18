@@ -50,11 +50,13 @@ namespace hex {
 
         T& operator=(const T &value) {
             m_value = value;
+            m_valid = true;
             return m_value;
         }
 
         T& operator=(T &&value) noexcept {
             m_value = std::move(value);
+            m_valid = true;
             return m_value;
         }
 
