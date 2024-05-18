@@ -22,11 +22,15 @@ option(IMHEX_ENABLE_STD_ASSERTS         "Enable debug asserts in the C++ std lib
 option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                            OFF)
 option(IMHEX_ENABLE_PRECOMPILED_HEADERS "Enable precompiled headers"                                                            OFF)
 
+set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
+set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
+
+# Optional IDE support
+include("${IMHEX_BASE_FOLDER}/cmake/ide_helpers.cmake")
+
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
-set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
-set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 
 # Setup project
@@ -39,6 +43,13 @@ project(imhex
         DESCRIPTION     "The ImHex Hex Editor"
         HOMEPAGE_URL    "https://imhex.werwolv.net"
 )
+
+if (XCODE)
+    # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
+    set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>")
+elseif()
+    set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+endif()
 
 # Add ImHex sources
 add_custom_target(imhex_all ALL)
@@ -75,3 +86,6 @@ generateSDKDirectory()
 
 # Handle package generation
 createPackage()
+
+# Accomodate IDEs with FOLDER support
+tweakTargetsForIDESupport()

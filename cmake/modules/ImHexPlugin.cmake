@@ -55,7 +55,7 @@ macro(add_imhex_plugin)
     # Configure build properties
     set_target_properties(${IMHEX_PLUGIN_NAME}
             PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins
+            RUNTIME_OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}/plugins"
             CXX_STANDARD 23
             PREFIX ""
             SUFFIX ${IMHEX_PLUGIN_SUFFIX}
