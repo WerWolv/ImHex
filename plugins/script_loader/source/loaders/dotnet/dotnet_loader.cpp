@@ -23,6 +23,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
+#include <toasts/toast_notification.hpp>
 
 extern "C" void igSetCurrentContext(ImGuiContext* ctx);
 
@@ -236,17 +237,26 @@ namespace hex::script::loader {
 
                 const bool hasMain = m_methodExists("Main", scriptPath);
                 const bool hasOnLoad = m_methodExists("OnLoad", scriptPath);
+                const auto scriptName = entry.path().stem().string();
 
                 if (hasMain) {
-                    this->addScript(entry.path().stem().string(), false, [this, scriptPath] {
-                        hex::unused(m_runMethod("Main", false, scriptPath));
+                    this->addScript(scriptName, false, [this, scriptPath] {
+                        auto result = m_runMethod("Main", false, scriptPath);
+                        if (result != 0) {
+                            ui::ToastError::open(hex::format("Script '{}' running failed with code {}", result));
+                        }
                     });
                 } else if (hasOnLoad) {
-                    this->addScript(entry.path().stem().string(), true, [] {});
+                    this->addScript(scriptName, true, [] {});
                 }
 
                 if (hasOnLoad) {
-                    hex::unused(m_runMethod("OnLoad", true, scriptPath));
+                    auto result = m_runMethod("OnLoad", true, scriptPath);
+                    if (result != 0) {
+                        TaskManager::doLater([=] {
+                            ui::ToastError::open(hex::format("Script '{}' loading failed with code {}", scriptName, result));
+                        });
+                    }
                 }
 
             }

@@ -8,6 +8,12 @@ namespace ImHex
     public class EntryPoint
     {
 
+        private const int ResultSuccess                 = 0x0000_0000;
+        private const int ResultError                   = 0x1000_0001;
+        private const int ResultMethodNotFound          = 0x1000_0002;
+        private const int ResultLoaderError             = 0x1000_0003;
+        private const int ResultLoaderInvalidCommand    = 0x1000_0004;
+
         private static void Log(string message)
         {
             Console.WriteLine($"[.NET Script] {message}");
@@ -21,7 +27,7 @@ namespace ImHex
             catch (Exception e)
             {
                 Log($"Exception in AssemblyLoader: {e}");
-                return 1;
+                return ResultLoaderError;
             }
         }
 
@@ -35,17 +41,17 @@ namespace ImHex
             var path        = splitArgs[2];
 
             // Get the parent folder of the passed path
-            string? basePath = Path.GetDirectoryName(path);
+            var basePath = Path.GetDirectoryName(path);
             if (basePath == null)
             {
                 Log("Failed to get base path");
-                return 1;
+                return ResultError;
             }
 
             // Create a new assembly context
             AssemblyLoadContext? context = new("ScriptDomain_" + basePath, true);
 
-            int result = 0;
+            int result;
             try
             {
                 if (type is "LOAD")
@@ -53,7 +59,7 @@ namespace ImHex
                     // If the script has been loaded already, don't do it again
                     if (LoadedPlugins.Contains(path))
                     {
-                        return 0;
+                        return ResultSuccess;
                     }
 
                     // Check if the plugin is already loaded
@@ -87,7 +93,7 @@ namespace ImHex
                 if (libraryModule == null)
                 {
                     Log("Refusing to load non-ImHex script");
-                    return 1;
+                    return ResultError;
                 }
                 else
                 {
@@ -96,7 +102,7 @@ namespace ImHex
                     if (libraryType == null)
                     {
                         Log("Failed to find Library type in ImHexLibrary");
-                        return 1;
+                        return ResultError;
                     }
                     
                     // Load Initialize function in the Library type
@@ -104,7 +110,7 @@ namespace ImHex
                     if (initMethod == null)
                     {
                         Log("Failed to find Initialize method");
-                        return 1;
+                        return ResultError;
                     }
 
                     // Execute it
@@ -117,11 +123,11 @@ namespace ImHex
                 if (entryPointTypes.Length == 0)
                 {
                     Log("Failed to find Script entrypoint");
-                    return 1;
+                    return ResultError;
                 } else if (entryPointTypes.Length > 1)
                 {
                     Log("Found multiple Script entrypoints");
-                    return 1;
+                    return ResultError;
                 }
                 
                 var entryPointType = entryPointTypes[0];
@@ -132,11 +138,27 @@ namespace ImHex
                     var method = entryPointType.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
                     if (method == null)
                     {
-                        return 2;
+                        return ResultMethodNotFound;
                     }
 
                     // Execute it
-                    method.Invoke(null, null);
+                    var returnValue = method.Invoke(null, null);
+                    switch (returnValue)
+                    {
+                        case null:
+                            result = ResultSuccess;
+                            break;
+                        case int intValue:
+                            result = intValue;
+                            break;
+                        case uint intValue:
+                            result = (int)intValue;
+                            break;
+                        default:
+                            result = ResultError;
+                            Log($"Invalid return value from script: {returnValue.GetType().Name} {{{returnValue}}}");
+                            break;
+                    }
                 }
                 else if (type == "CHECK")
                 {
@@ -145,13 +167,13 @@ namespace ImHex
                 }
                 else
                 {
-                    return 1;
+                    return ResultLoaderInvalidCommand;
                 }
             }
             catch (Exception e)
             {
                 Log($"Exception in AssemblyLoader: {e}");
-                return 3;
+                return ResultLoaderError;
             }
             finally
             {

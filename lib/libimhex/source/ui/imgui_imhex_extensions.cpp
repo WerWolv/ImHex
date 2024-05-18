@@ -275,8 +275,7 @@ namespace ImGuiExt {
         if (m_textureId == nullptr)
             return;
 
-        auto glTextureId = static_cast<GLuint>(reinterpret_cast<intptr_t>(m_textureId));
-        glDeleteTextures(1, &glTextureId);
+        glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
     }
 
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {

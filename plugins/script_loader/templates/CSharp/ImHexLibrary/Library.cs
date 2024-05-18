@@ -8,9 +8,6 @@ public static class Library
     }
 }
 
-public interface IScript {
-
-    static void Main() { }
-    static void OnLoad() { }
-
+public interface IScript
+{
 }

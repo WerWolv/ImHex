@@ -39,6 +39,7 @@ add_imhex_plugin(
     LIBRARIES
         c_api
         fonts
+        ui
 )
 
 
