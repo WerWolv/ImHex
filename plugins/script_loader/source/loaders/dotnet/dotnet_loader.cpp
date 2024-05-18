@@ -63,6 +63,13 @@ namespace hex::script::loader {
                     if (netHostLibrary != nullptr)
                         break;
                 }
+                if (netHostLibrary == nullptr) {
+                    for (const auto &librariesPath : fs::getDefaultPaths(fs::ImHexPath::Libraries)) {
+                        netHostLibrary = loadLibrary((librariesPath / "libnethost.dylib").c_str());
+                        if (netHostLibrary != nullptr)
+                            break;
+                    }
+                }
             #endif
 
             if (netHostLibrary == nullptr) {
@@ -75,7 +82,7 @@ namespace hex::script::loader {
             std::array<char_t, 300> buffer = { };
             size_t bufferSize = buffer.size();
 
-            auto result = get_hostfxr_path_ptr(buffer.data(), &bufferSize, nullptr);
+            u32 result = get_hostfxr_path_ptr(buffer.data(), &bufferSize, nullptr);
             if (result != 0) {
                 log::error(hex::format("Could not get hostfxr path! 0x{:X}", result));
                 return false;

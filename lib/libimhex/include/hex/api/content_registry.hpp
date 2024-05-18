@@ -6,6 +6,7 @@
 
 #include <functional>
 #include <map>
+#include <mutex>
 #include <span>
 #include <string>
 #include <utility>
