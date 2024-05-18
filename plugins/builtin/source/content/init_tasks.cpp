@@ -229,8 +229,9 @@ namespace hex::plugin::builtin {
                 std::strncpy(defaultConfig.Name, fontName, sizeof(defaultConfig.Name) - 1);
 
                 if (fontFile.empty()) {
+                    fontSize = std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize) * ImHexApi::Fonts::DefaultFontSize;
                     defaultConfig.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-                    defaultConfig.SizePixels = std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize) * ImHexApi::Fonts::DefaultFontSize;
+                    defaultConfig.SizePixels = fontSize;
                     defaultFont = fonts->AddFontDefault(&defaultConfig);
                 } else {
                     defaultFont = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &defaultConfig, defaultGlyphRanges.Data);
