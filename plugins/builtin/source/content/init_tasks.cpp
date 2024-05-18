@@ -229,9 +229,8 @@ namespace hex::plugin::builtin {
                 std::strncpy(defaultConfig.Name, fontName, sizeof(defaultConfig.Name) - 1);
 
                 if (fontFile.empty()) {
-                    fontSize = std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize) * ImHexApi::Fonts::DefaultFontSize;
                     defaultConfig.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-                    defaultConfig.SizePixels = fontSize;
+                    defaultConfig.SizePixels = std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize) * ImHexApi::Fonts::DefaultFontSize;
                     defaultFont = fonts->AddFontDefault(&defaultConfig);
                 } else {
                     defaultFont = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &defaultConfig, defaultGlyphRanges.Data);
@@ -283,6 +282,8 @@ namespace hex::plugin::builtin {
                     auto size = fontSize;
                     if (font.defaultSize.has_value())
                         size = font.defaultSize.value() * std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize);
+
+                    size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
 
                     cfg.SizePixels = size;
 
