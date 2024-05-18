@@ -15,6 +15,8 @@
         void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode);
 
         void enumerateFontsMacos();
+    
+        void toggleWindowZoomMacos(GLFWwindow *window);
     }
 
 #endif

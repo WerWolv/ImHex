@@ -392,6 +392,20 @@ namespace hex::plugin::builtin {
                 drawMenu();
                 drawTitleBar();
 
+                #if defined(OS_MACOS)
+                    if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+                        const auto windowSize = ImHexApi::System::getMainWindowSize();
+                        const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight() * 1.5F);
+                        
+                        ImGui::SetCursorPos(ImVec2());
+                        
+                        // Drawing this button late allows widgets rendered before it to grab click events, forming an "input underlay"
+                        if (ImGui::InvisibleButton("##mainMenuUnderlay", menuUnderlaySize, ImGuiButtonFlags_PressedOnDoubleClick)) {
+                            toggleWindowZoomMacos(window);
+                        }
+                    }
+                #endif
+                
                 ImGui::EndMainMenuBar();
             } else {
                 ImGui::PopStyleVar(2);

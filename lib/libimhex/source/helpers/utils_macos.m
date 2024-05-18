@@ -88,6 +88,16 @@
         CFRelease(fontDescriptors);
     }
 
+    void toggleWindowZoomMacos(GLFWwindow *window) {
+        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+
+        // `[NSWindow performZoom:_ sender]` takes over pumping the main runloop for the duration of the resize,
+        // and would interfere with our renderer's frame logic. Shedule it for the next frame
+        CFRunLoopPerformBlock(CFRunLoopGetMain(), kCFRunLoopCommonModes, ^{
+            [cocoaWindow performZoom:nil];
+        });
+    }
+
     @interface HexDocument : NSDocument
 
     @end
