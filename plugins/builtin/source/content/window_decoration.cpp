@@ -234,7 +234,7 @@ namespace hex::plugin::builtin {
 
                     if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
                         drawProviderTooltip(ImHexApi::Provider::get());
-                    } else {
+                    } else if (!s_windowTitleFull.empty()) {
                         if (ImGuiExt::InfoTooltip()) {
                             ImGui::BeginTooltip();
                             ImGui::TextUnformatted(s_windowTitleFull.c_str());
