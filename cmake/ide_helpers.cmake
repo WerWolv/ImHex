@@ -70,7 +70,7 @@ function(tweakTargetForIDESupport target)
     # Add headers to target
     get_target_property(targetSourceDir ${target} SOURCE_DIR)
     if (targetSourceDir)
-        file(GLOB_RECURSE targetPrivateHeaders "${targetSourceDir}/include/*.hpp")
+        file(GLOB_RECURSE targetPrivateHeaders CONFIGURE_DEPENDS "${targetSourceDir}/include/*.hpp")
 
         target_sources(${target} PRIVATE ${targetPrivateHeaders})
     endif()

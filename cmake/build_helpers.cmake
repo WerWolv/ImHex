@@ -499,7 +499,7 @@ function(downloadImHexPatternsFiles dest)
     if (NOT EXISTS ${imhex_patterns_SOURCE_DIR}) 
         message(WARNING "Failed to locate ImHex-Patterns repository, some resources will be missing during install!")
     else()
-        file(GLOB_RECURSE sourceFilePaths LIST_DIRECTORIES NO RELATIVE "${imhex_patterns_SOURCE_DIR}"
+        file(GLOB_RECURSE sourceFilePaths LIST_DIRECTORIES NO RELATIVE CONFIGURE_DEPENDS "${imhex_patterns_SOURCE_DIR}"
             "${imhex_patterns_SOURCE_DIR}/constants/*"
             "${imhex_patterns_SOURCE_DIR}/encodings/*"
             "${imhex_patterns_SOURCE_DIR}/includes/*"
