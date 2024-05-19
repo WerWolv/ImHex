@@ -72,19 +72,19 @@ function(tweakTargetForIDESupport target)
     if (targetSourceDir)
         file(GLOB_RECURSE targetPrivateHeaders CONFIGURE_DEPENDS "${targetSourceDir}/include/*.hpp")
 
-        target_sources(${target} PRIVATE ${targetPrivateHeaders})
+        target_sources(${target} PRIVATE "${targetPrivateHeaders}")
     endif()
 
     # Organize target sources into directory tree
     get_target_property(sources ${target} SOURCES)
-    foreach(file ${sources})
-        get_filename_component(path ${file} ABSOLUTE)
+    foreach(file "${sources}")
+        get_filename_component(path "${file}" ABSOLUTE)
 
         if (NOT path MATCHES "^${targetSourceDir}")
             continue()
         endif()
 
-        source_group(TREE ${targetSourceDir} PREFIX "Source Tree" FILES ${file})
+        source_group(TREE "${targetSourceDir}" PREFIX "Source Tree" FILES "${file}")
     endforeach()
 endfunction()
 
@@ -126,18 +126,18 @@ endfunction()
 macro(_tweakTargetsRecursive dir)
     get_property(subdirectories DIRECTORY ${dir} PROPERTY SUBDIRECTORIES)
     foreach(subdir ${subdirectories})
-        _tweakTargetsRecursive(${subdir})
+        _tweakTargetsRecursive("${subdir}")
     endforeach()
 
     if(${dir} STREQUAL ${CMAKE_SOURCE_DIR})
         return()
     endif()
 
-    get_property(targets DIRECTORY ${dir} PROPERTY BUILDSYSTEM_TARGETS)
-    file(RELATIVE_PATH rdir ${CMAKE_SOURCE_DIR} ${dir}/..)
+    get_property(targets DIRECTORY "${dir}" PROPERTY BUILDSYSTEM_TARGETS)
+    file(RELATIVE_PATH rdir ${CMAKE_SOURCE_DIR} "${dir}/..")
 
     foreach(target ${targets})
-        _tweakTarget(${target} ${rdir})
+        _tweakTarget(${target} "${rdir}")
     endforeach()
 endmacro()
 
@@ -145,5 +145,5 @@ endmacro()
 function(tweakTargetsForIDESupport)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-    _tweakTargetsRecursive(${CMAKE_SOURCE_DIR})
+    _tweakTargetsRecursive("${CMAKE_SOURCE_DIR}")
 endfunction()
