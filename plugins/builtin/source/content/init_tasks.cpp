@@ -186,14 +186,16 @@ namespace hex::plugin::builtin {
                 {
                     constexpr static std::array<ImWchar, 3> controlCodeRange   = { 0x0001, 0x001F, 0 };
                     constexpr static std::array<ImWchar, 3> extendedAsciiRange = { 0x007F, 0x00FF, 0 };
+                    constexpr static std::array<ImWchar, 3> latinExtendedARange = { 0x0100, 0x017F, 0 };
 
                     glyphRangesBuilder.AddRanges(controlCodeRange.data());
                     glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesDefault());
                     glyphRangesBuilder.AddRanges(extendedAsciiRange.data());
+                    glyphRangesBuilder.AddRanges(latinExtendedARange.data());
                 }
 
                 if (loadUnicode) {
-                    constexpr static std::array<ImWchar, 3> fullRange = { 0x0100, 0xFFEF, 0 };
+                    constexpr static std::array<ImWchar, 3> fullRange = { 0x0180, 0xFFEF, 0 };
 
                     glyphRangesBuilder.AddRanges(fullRange.data());
                 } else {

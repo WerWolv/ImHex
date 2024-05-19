@@ -1,0 +1,21 @@
+﻿{
+    "code": "hu_HU",
+    "language": "Hungarian",
+    "country": "Hungary",
+    "fallback": false,
+    "translations": {
+        "hex.visualizers.pl_visualizer.3d.light_position": "Fény pozició",
+        "hex.visualizers.pl_visualizer.3d.ambient_brightness": "Környezeti fényerő",
+        "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "Szórt fényerő",
+        "hex.visualizers.pl_visualizer.3d.specular_brightness": "Tükröződő fényerő",
+        "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "Tárgyak fényvisszaverése",
+        "hex.visualizers.pl_visualizer.3d.light_color": "Fény színe",
+        "hex.visualizers.pl_visualizer.3d.more_settings": "További beállítások",
+        "hex.visualizers.pl_visualizer.3d.texture_file": "Textúra fájl helye",
+        "hex.visualizers.pl_visualizer.coordinates.latitude": "Szélesség",
+        "hex.visualizers.pl_visualizer.coordinates.longitude": "Hosszúság",
+        "hex.visualizers.pl_visualizer.coordinates.query": "Cím keresése",
+        "hex.visualizers.pl_visualizer.coordinates.querying": "Cím lekérdezése...",
+        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "Nem található cím"
+    }
+}
