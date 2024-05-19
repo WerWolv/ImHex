@@ -70,10 +70,10 @@ namespace ImGuiExt {
         }
 
         GLint getMaxSamples(GLenum target, GLenum format) {
-            GLint MaxSamples;
+            GLint maxSamples;
 
-            glGetInternalformativ(target, format, GL_SAMPLES, 1, &MaxSamples);
-            return MaxSamples;
+            glGetInternalformativ(target, format, GL_SAMPLES, 1, &maxSamples);
+            return maxSamples;
         }
 
         GLuint createTextureFromRGBA8Array(const ImU8 *buffer, int width, int height, Texture::Filter filter) {
@@ -113,14 +113,13 @@ namespace ImGuiExt {
             }
 
             #if defined(GL_TEXTURE_2D_MULTISAMPLE)
-                //Builds just fine without the cast, but I put it in just in case
-                static auto SampleCount = std::min(static_cast<GLint>(8), getMaxSamples(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8));
+                static const auto sampleCount = std::min(static_cast<GLint>(8), getMaxSamples(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8));
 
                 // Generate renderbuffer
                 GLuint renderbuffer;
                 glGenRenderbuffers(1, &renderbuffer);
                 glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-                glRenderbufferStorageMultisample(GL_RENDERBUFFER, SampleCount, GL_DEPTH24_STENCIL8, width, height);
+                glRenderbufferStorageMultisample(GL_RENDERBUFFER, sampleCount, GL_DEPTH24_STENCIL8, width, height);
 
                 // Generate framebuffer
                 GLuint framebuffer;
