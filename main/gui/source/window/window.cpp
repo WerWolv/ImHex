@@ -156,6 +156,10 @@ namespace hex {
     void Window::fullFrame() {
         static u32 crashWatchdog = 0;
 
+        if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) {
+            return;
+        }
+
         try {
             this->frameBegin();
             this->frame();
@@ -802,8 +806,6 @@ namespace hex {
         glfwSetWindowPosCallback(m_window, [](GLFWwindow *window, int x, int y) {
             ImHexApi::System::impl::setMainWindowPosition(x, y);
 
-            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
-
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
 
@@ -815,17 +817,22 @@ namespace hex {
             if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
                 ImHexApi::System::impl::setMainWindowSize(width, height);
 
-            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
-
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
-
-            win->fullFrame();
+            
+            #if !defined(OS_MACOS)
+                win->fullFrame();
+            #endif
         });
 
+        #if defined(OS_MACOS)
+            glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
+                auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+                win->fullFrame();
+            });
+        #endif
+        
         glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
-            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
-
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
         });
