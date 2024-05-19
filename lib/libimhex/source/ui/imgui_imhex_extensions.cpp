@@ -828,21 +828,25 @@ namespace ImGuiExt {
         char buf[64];
         DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, format);
 
-        bool value_changed = false;
-        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
-        if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0F), flags))
-            value_changed = DataTypeApplyFromText(buf, type, value, format);
-        PopStyleVar();
-
-        if (value_changed)
-            MarkItemEdited(GImGui->LastItemData.ID);
-
         RenderNavHighlight(frame_bb, id);
         RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
 
         PushStyleVar(ImGuiStyleVar_Alpha, 0.6F);
         RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), prefix);
         PopStyleVar();
+
+        bool value_changed = false;
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
+        PushStyleColor(ImGuiCol_FrameBg, 0x00000000);
+        PushStyleColor(ImGuiCol_FrameBgHovered, 0x00000000);
+        PushStyleColor(ImGuiCol_FrameBgActive, 0x00000000);
+        if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0F), flags))
+            value_changed = DataTypeApplyFromText(buf, type, value, format);
+        PopStyleColor(3);
+        PopStyleVar();
+
+        if (value_changed)
+            MarkItemEdited(GImGui->LastItemData.ID);
 
         return value_changed;
     }
@@ -853,6 +857,21 @@ namespace ImGuiExt {
 
     bool InputHexadecimal(const char *label, u64 *value, ImGuiInputTextFlags flags) {
         return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U64, "%llX", flags | ImGuiInputTextFlags_CharsHexadecimal);
+    }
+
+    bool SliderBytes(const char *label, u64 *value, u64 min, u64 max, ImGuiSliderFlags flags) {
+        std::string format;
+        if (*value < 1024) {
+            format = hex::format("{} Bytes", *value);
+        } else if (*value < 1024 * 1024) {
+            format = hex::format("{:.2f} KB", *value / 1024.0);
+        } else if (*value < 1024 * 1024 * 1024) {
+            format = hex::format("{:.2f} MB", *value / (1024.0 * 1024.0));
+        } else {
+            format = hex::format("{:.2f} GB", *value / (1024.0 * 1024.0 * 1024.0));
+        }
+
+        return ImGui::SliderScalar(label, ImGuiDataType_U64, value, &min, &max, format.c_str(), flags | ImGuiSliderFlags_Logarithmic);
     }
 
     void SmallProgressBar(float fraction, float yOffset) {

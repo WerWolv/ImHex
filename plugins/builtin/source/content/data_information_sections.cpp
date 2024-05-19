@@ -211,7 +211,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawSettings() override {
-            ImGuiExt::InputHexadecimal("hex.builtin.information_section.info_analysis.block_size"_lang, &m_inputChunkSize);
+            ImGuiExt::SliderBytes("hex.builtin.information_section.info_analysis.block_size"_lang, &m_inputChunkSize, 0, 1_MiB);
             ImGui::Checkbox("hex.builtin.information_section.info_analysis.show_annotations"_lang, &m_showAnnotations);
         }
 
@@ -351,7 +351,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        u32 m_inputChunkSize = 0;
+        u64 m_inputChunkSize = 0;
 
         u32 m_blockSize = 0;
         double m_averageEntropy = -1.0;
