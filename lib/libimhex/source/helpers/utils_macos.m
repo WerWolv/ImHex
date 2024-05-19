@@ -112,6 +112,12 @@
         }
     }
 
+    bool macosIsWindowBeingResizedByUser(GLFWwindow *window) {
+        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+        
+        return cocoaWindow.inLiveResize;
+    }
+
     @interface HexDocument : NSDocument
 
     @end

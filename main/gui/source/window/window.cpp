@@ -826,7 +826,12 @@ namespace hex {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
             
-            #if !defined(OS_MACOS)
+            #if defined(OS_MACOS)
+                // Stop widgets registering hover effects while the window is being resized
+                if (macosIsWindowBeingResizedByUser(window)) {
+                    ImGui::GetIO().MousePos = ImVec2();
+                }
+            #else
                 win->fullFrame();
             #endif
         });
