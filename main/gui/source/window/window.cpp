@@ -87,6 +87,8 @@ namespace hex {
 
         EventWindowDeinitializing::post(m_window);
 
+        ContentRegistry::Settings::impl::store();
+
         this->exitImGui();
         this->exitGLFW();
     }
@@ -153,6 +155,10 @@ namespace hex {
 
     void Window::fullFrame() {
         static u32 crashWatchdog = 0;
+
+        if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) {
+            return;
+        }
 
         try {
             this->frameBegin();
@@ -487,11 +493,11 @@ namespace hex {
                 else
                     createPopup(ImGui::BeginPopup(name, flags));
 
-                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 100) {
+                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 5) {
                     ImGui::OpenPopup(name);
                 }
 
-                if (currPopup->shouldClose()) {
+                if (currPopup->shouldClose() || !open) {
                     log::debug("Closing popup '{}'", name);
                     positionSet = sizeSet = false;
 
@@ -698,11 +704,16 @@ namespace hex {
     void Window::initGLFW() {
         auto initialWindowProperties = ImHexApi::System::getInitialWindowProperties();
         glfwSetErrorCallback([](int error, const char *desc) {
-            if (error == GLFW_PLATFORM_ERROR) {
+            bool isWaylandError = error == GLFW_PLATFORM_ERROR;
+            #if defined(GLFW_FEATURE_UNAVAILABLE)
+                isWaylandError = isWaylandError || (error == GLFW_FEATURE_UNAVAILABLE);
+            #endif
+            isWaylandError = isWaylandError && std::string_view(desc).contains("Wayland");
+
+            if (isWaylandError) {
                 // Ignore error spam caused by Wayland not supporting moving or resizing
                 // windows or querying their position and size.
-                if (std::string_view(desc).contains("Wayland"))
-                    return;
+                return;
             }
 
             try {
@@ -795,8 +806,6 @@ namespace hex {
         glfwSetWindowPosCallback(m_window, [](GLFWwindow *window, int x, int y) {
             ImHexApi::System::impl::setMainWindowPosition(x, y);
 
-            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
-
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
 
@@ -808,17 +817,22 @@ namespace hex {
             if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
                 ImHexApi::System::impl::setMainWindowSize(width, height);
 
-            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
-
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
-
-            win->fullFrame();
+            
+            #if !defined(OS_MACOS)
+                win->fullFrame();
+            #endif
         });
 
+        #if defined(OS_MACOS)
+            glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
+                auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+                win->fullFrame();
+            });
+        #endif
+        
         glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
-            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
-
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
         });

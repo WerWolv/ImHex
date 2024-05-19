@@ -795,6 +795,7 @@
         "hex.builtin.view.hex_editor.search.find": "検索",
         "hex.builtin.view.hex_editor.search.hex": "16進数",
         "hex.builtin.view.hex_editor.search.no_more_results": "結果がありません",
+        "hex.builtin.view.hex_editor.search.advanced": "",
         "hex.builtin.view.hex_editor.search.string": "文字列",
         "hex.builtin.view.hex_editor.search.string.encoding": "エンコード",
         "hex.builtin.view.hex_editor.search.string.encoding.utf16": "UTF-16",

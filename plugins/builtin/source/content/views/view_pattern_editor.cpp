@@ -1038,7 +1038,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::PushItemWidth(-1);
                         if (variable.outVariable) {
-                            ImGui::TextUnformatted(variable.value.toString(true).c_str());
+                            ImGuiExt::TextFormattedSelectable("{}", variable.value.toString(true).c_str());
                         } else if (variable.inVariable) {
                             const std::string label { "##" + name };
 
@@ -1156,7 +1156,10 @@ namespace hex::plugin::builtin {
                                 patternDrawer->draw(patterns, &runtime, 150_scaled);
                         };
                     }
+                    ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.sections.view"_lang.get().c_str());
+
                     ImGui::SameLine();
+
                     if (ImGuiExt::DimmedIconButton(ICON_VS_SAVE_AS, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         fs::openFileBrowser(fs::DialogMode::Save, {}, [id, &runtime](const auto &path) {
                             wolv::io::File file(path, wolv::io::File::Mode::Create);
@@ -1168,6 +1171,7 @@ namespace hex::plugin::builtin {
                             file.writeVector(runtime.getSection(id));
                         });
                     }
+                    ImGui::SetItemTooltip("%s", (const char*)"hex.builtin.view.pattern_editor.sections.export"_lang.get().c_str());
 
                     ImGui::PopID();
                 }
@@ -1324,7 +1328,7 @@ namespace hex::plugin::builtin {
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
-            TaskManager::createBackgroundTask("Analyzing file content", [this, provider](auto &) {
+            m_analysisTask = TaskManager::createBackgroundTask("Analyzing file content", [this, provider](const Task &task) {
                 if (!m_autoLoadPatterns)
                     return;
 
@@ -1407,9 +1411,12 @@ namespace hex::plugin::builtin {
 
                 m_possiblePatternFiles.get(provider).clear();
 
+                bool popupOpen = false;
                 std::error_code errorCode;
                 for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
                     for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
+                        task.update();
+
                         foundCorrectType = false;
                         if (!entry.is_regular_file())
                             continue;
@@ -1423,15 +1430,21 @@ namespace hex::plugin::builtin {
                             log::warn("Failed to preprocess file {} during MIME analysis", entry.path().string());
                         }
 
-                        if (foundCorrectType)
-                            m_possiblePatternFiles.get(provider).push_back(entry.path());
+                        if (foundCorrectType) {
+                            {
+                                std::scoped_lock lock(m_possiblePatternFilesMutex);
+
+                                m_possiblePatternFiles.get(provider).push_back(entry.path());
+                            }
+
+                            if (!popupOpen) {
+                                PopupAcceptPattern::open(this);
+                                popupOpen = true;
+                            }
+                        }
 
                         runtime.reset();
                     }
-                }
-
-                if (!m_possiblePatternFiles.get(provider).empty()) {
-                    PopupAcceptPattern::open(this);
                 }
             });
         }
@@ -1544,6 +1557,8 @@ namespace hex::plugin::builtin {
                     }
                 }
             }
+        } else {
+            patternVariables = std::move(oldPatternVariables);
         }
 
         m_runningParsers -= 1;
@@ -1649,7 +1664,7 @@ namespace hex::plugin::builtin {
 
             m_lastEvaluationResult = runtime.executeString(code, pl::api::Source::DefaultSource, envVars, inVariables);
             if (!m_lastEvaluationResult) {
-                *m_lastEvaluationError = runtime.getError();
+                *m_lastEvaluationError = runtime.getEvalError();
                 *m_lastCompileError    = runtime.getCompileErrors();
             }
 

@@ -22,12 +22,15 @@ bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Bi
     return first1 == last1 && first2 == last2;
 }
 
+const int TextEditor::sCursorBlinkInterval = 1200;
+const int TextEditor::sCursorBlinkOnTime = 800;
+
 TextEditor::Palette TextEditor::sPaletteBase = TextEditor::GetDarkPalette();
 
 TextEditor::FindReplaceHandler::FindReplaceHandler() : mWholeWord(false),mFindRegEx(false),mMatchCase(false)  {}
 
 TextEditor::TextEditor()
-    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mScrollToBottom(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mTopMargin(0), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true),mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) {
+    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mScrollToBottom(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mTopMargin(0), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true),mStartTime(ImGui::GetTime() * 1000) {
     SetLanguageDefinition(LanguageDefinition::HLSL());
     mLines.push_back(Line());
 }
@@ -642,6 +645,8 @@ void TextEditor::HandleKeyboardInputs() {
         io.WantCaptureKeyboard = true;
         io.WantTextInput       = true;
 
+        bool handledKeyEvent = true;
+
         if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Z))
             Undo();
         else if (!IsReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
@@ -716,6 +721,11 @@ void TextEditor::HandleKeyboardInputs() {
             mFindReplaceHandler.SetFindRegEx(this,!mFindReplaceHandler.GetFindRegEx());
         else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_W))
             mFindReplaceHandler.SetWholeWord(this,!mFindReplaceHandler.GetWholeWord());
+        else
+            handledKeyEvent = false;
+
+        if (handledKeyEvent)
+            ResetCursorBlinkTime();
 
         if (!IsReadOnly() && !io.InputQueueCharacters.empty()) {
             for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
@@ -754,6 +764,7 @@ void TextEditor::HandleMouseInputs() {
                 }
 
                 mLastClick = -1.0f;
+                ResetCursorBlinkTime();
             }
 
             /*
@@ -771,6 +782,7 @@ void TextEditor::HandleMouseInputs() {
                 }
 
                 mLastClick = (float)ImGui::GetTime();
+                ResetCursorBlinkTime();
             }
 
             /*
@@ -788,6 +800,7 @@ void TextEditor::HandleMouseInputs() {
                     mSelectionMode = SelectionMode::Normal;
                 }
                 SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                ResetCursorBlinkTime();
 
                 mLastClick = (float)ImGui::GetTime();
             }
@@ -796,6 +809,7 @@ void TextEditor::HandleMouseInputs() {
                 io.WantCaptureMouse    = true;
                 mState.mCursorPosition = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
                 SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                ResetCursorBlinkTime();
             }
         }
     }
@@ -900,10 +914,12 @@ void TextEditor::Render() {
             }
 
             // Draw line number (right aligned)
-            snprintf(buf, 16, "%d  ", lineNo + 1);
+            if (mShowLineNumbers) {
+                snprintf(buf, 16, "%d  ", lineNo + 1);
 
-            auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
-            drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+                auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
+                drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+            }
 
             // Draw breakpoints
             if (mBreakpoints.count(lineNo + 1) != 0) {
@@ -927,9 +943,9 @@ void TextEditor::Render() {
 
                 // Render the cursor
                 if (focused) {
-                    auto timeEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    auto timeEnd = ImGui::GetTime() * 1000;
                     auto elapsed = timeEnd - mStartTime;
-                    if (elapsed > 400) {
+                    if (elapsed > sCursorBlinkOnTime) {
                         float width = 1.0f;
                         auto cindex = GetCharacterIndex(mState.mCursorPosition);
                         float cx    = TextDistanceToLineStart(mState.mCursorPosition);
@@ -949,7 +965,7 @@ void TextEditor::Render() {
                         ImVec2 cstart(textScreenPos.x + cx, lineStartScreenPos.y);
                         ImVec2 cend(textScreenPos.x + cx + width, lineStartScreenPos.y + mCharAdvance.y);
                         drawList->AddRectFilled(cstart, cend, mPalette[(int)PaletteIndex::Cursor]);
-                        if (elapsed > 800)
+                        if (elapsed > sCursorBlinkInterval)
                             mStartTime = timeEnd;
                     }
                 }
@@ -1218,6 +1234,8 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
     UndoRecord u;
 
     u.mBefore = mState;
+
+    ResetCursorBlinkTime();
 
     if (HasSelection()) {
         if (aChar == '\t' && mState.mSelectionStart.mLine != mState.mSelectionEnd.mLine) {
@@ -2778,6 +2796,10 @@ void TextEditor::EnsureCursorVisible() {
 int TextEditor::GetPageSize() const {
     auto height = ImGui::GetWindowHeight() - 20.0f - mTopMargin;
     return (int)floor(height / mCharAdvance.y);
+}
+
+void TextEditor::ResetCursorBlinkTime() {
+    mStartTime = ImGui::GetTime() * 1000 - sCursorBlinkOnTime;
 }
 
 TextEditor::UndoRecord::UndoRecord(

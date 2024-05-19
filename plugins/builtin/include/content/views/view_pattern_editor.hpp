@@ -81,6 +81,8 @@ namespace hex::plugin::builtin {
             explicit PopupAcceptPattern(ViewPatternEditor *view) : Popup("hex.builtin.view.pattern_editor.accept_pattern"), m_view(view) {}
 
             void drawContent() override {
+                std::scoped_lock lock(m_view->m_possiblePatternFilesMutex);
+
                 auto* provider = ImHexApi::Provider::get();
 
                 ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
@@ -117,13 +119,13 @@ namespace hex::plugin::builtin {
                 ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
 
                 ImGuiExt::ConfirmButtons("hex.ui.common.yes"_lang, "hex.ui.common.no"_lang,
-                        [this, provider] {
-                            m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile], provider);
-                            this->close();
-                        },
-                        [this] {
-                            this->close();
-                        }
+                    [this, provider] {
+                        m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile], provider);
+                        this->close();
+                    },
+                    [this] {
+                        this->close();
+                    }
                 );
 
                 if (ImGui::IsKeyPressed(ImGuiKey_Escape))
@@ -174,6 +176,7 @@ namespace hex::plugin::builtin {
 
         std::unique_ptr<pl::PatternLanguage> m_editorRuntime;
 
+        std::mutex m_possiblePatternFilesMutex;
         PerProvider<std::vector<std::fs::path>> m_possiblePatternFiles;
         bool m_runAutomatically   = false;
         bool m_triggerEvaluation  = false;
@@ -215,6 +218,7 @@ namespace hex::plugin::builtin {
 
         PerProvider<std::list<EnvVar>> m_envVarEntries;
 
+        PerProvider<TaskHolder> m_analysisTask;
         PerProvider<bool> m_shouldAnalyze;
         PerProvider<bool> m_breakpointHit;
         PerProvider<std::unique_ptr<ui::PatternDrawer>> m_debuggerDrawer;

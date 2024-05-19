@@ -234,17 +234,6 @@ namespace hex::init {
         return true;
     }
 
-    bool storeSettings() {
-        try {
-            ContentRegistry::Settings::impl::store();
-            AchievementManager::storeProgress();
-        } catch (std::exception &e) {
-            log::error("Failed to store configuration! {}", e.what());
-            return false;
-        }
-        return true;
-    }
-
     // Run all exit tasks, and print to console
     void runExitTasks() {
         for (const auto &[name, task, async] : init::getExitTasks()) {
@@ -264,7 +253,6 @@ namespace hex::init {
 
     std::vector<Task> getExitTasks() {
         return {
-            { "Saving settings",         storeSettings,    false },
             { "Prepare exit",            prepareExit,      false },
             { "Unloading plugins",       unloadPlugins,    false },
             { "Deleting old files",      deleteOldFiles,   false },

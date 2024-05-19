@@ -20,6 +20,14 @@ namespace hex::plugin::builtin {
         public:
             virtual ~Popup() = default;
             virtual void draw(ViewHexEditor *editor) = 0;
+
+            [[nodiscard]] virtual UnlocalizedString getTitle() const { return {}; }
+
+            [[nodiscard]] virtual bool canBePinned() const { return false; }
+            [[nodiscard]] bool isPinned() const { return m_isPinned; }
+            void setPinned(const bool pinned) { m_isPinned = pinned; }
+        private:
+            bool m_isPinned = false;
         };
 
         [[nodiscard]] bool isAnyPopupOpen() const {
@@ -71,6 +79,9 @@ namespace hex::plugin::builtin {
         ui::HexEditor m_hexEditor;
 
         bool m_shouldOpenPopup = false;
+        bool m_currentPopupHasHovered = false; // This flag prevents the popup from initially appearing with the transparency effect
+        bool m_currentPopupHover = false;
+        bool m_currentPopupDetached = false;
         std::unique_ptr<Popup> m_currPopup;
 
         PerProvider<std::optional<u64>> m_selectionStart, m_selectionEnd;

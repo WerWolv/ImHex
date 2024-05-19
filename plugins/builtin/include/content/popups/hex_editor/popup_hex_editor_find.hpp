@@ -54,6 +54,8 @@ namespace hex::plugin::builtin {
         TaskHolder m_searchTask;
 
         void processInputString();
+
+        [[nodiscard]] UnlocalizedString getTitle() const override;
     };
 
 } // namespace hex::plugin::builtin

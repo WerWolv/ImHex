@@ -131,7 +131,7 @@ namespace ImGuiExt {
     bool DescriptionButton(const char *label, const char *description, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool DescriptionButtonProgress(const char *label, const char *description, float fraction, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
 
-    void HelpHover(const char *text);
+    void HelpHover(const char *text, const char *icon = "(?)", ImU32 iconColor = ImGui::GetColorU32(ImGuiCol_ButtonActive));
 
     void UnderlinedText(const char *label, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
 
@@ -150,6 +150,8 @@ namespace ImGuiExt {
     bool InputHexadecimal(const char* label, u32 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputHexadecimal(const char* label, u64 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
 
+    bool SliderBytes(const char *label, u64 *value, u64 min, u64 max, ImGuiSliderFlags flags = ImGuiSliderFlags_None);
+
     inline bool HasSecondPassed() {
         return static_cast<ImU32>(ImGui::GetTime() * 100) % 100 <= static_cast<ImU32>(ImGui::GetIO().DeltaTime * 100);
     }
@@ -161,6 +163,7 @@ namespace ImGuiExt {
 
         struct Styles {
             float WindowBlur = 0.0F;
+            float PopupWindowAlpha = 0.0F; // Alpha used by Popup tool windows when the user is not hovering over them
         } styles;
     };
 
@@ -303,6 +306,9 @@ namespace ImGuiExt {
 
     bool ToggleSwitch(const char *label, bool *v);
     bool ToggleSwitch(const char *label, bool v);
+
+    bool PopupTitleBarButton(const char* label, bool p_enabled);
+    void PopupTitleBarText(const char* text);
 
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {

@@ -29,8 +29,6 @@ namespace hex::plugin::builtin {
     }
 
     void PopupFind::draw(ViewHexEditor *editor) {
-        ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.search"_lang);
-
         auto lastMode = *s_searchMode;
         if (ImGui::BeginTabBar("##find_tabs")) {
             if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.hex"_lang)) {
@@ -46,6 +44,16 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::EndTabBar();
+        }
+
+        if(ImGuiExt::IconHyperlink(ICON_VS_SEARCH, "hex.builtin.view.hex_editor.search.advanced"_lang)) {
+            TaskManager::doLater([editor] {
+                const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name");
+
+                view->getWindowOpenState() = true;
+                ImGui::SetWindowFocus(view->getName().c_str());
+                editor->closePopup();
+            });
         }
 
         if (lastMode != *s_searchMode) {
@@ -301,5 +309,9 @@ namespace hex::plugin::builtin {
             default:
                 break;
         }
+    }
+
+    [[nodiscard]] UnlocalizedString PopupFind::getTitle() const {
+        return "hex.builtin.view.hex_editor.menu.file.search";
     }
 }

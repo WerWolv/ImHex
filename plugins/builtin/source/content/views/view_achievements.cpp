@@ -18,6 +18,7 @@ namespace hex::plugin::builtin {
         // Add newly unlocked achievements to the display queue
         EventAchievementUnlocked::subscribe(this, [this](const Achievement &achievement) {
             m_achievementUnlockQueue.push_back(&achievement);
+            AchievementManager::storeProgress();
         });
 
         RequestOpenWindow::subscribe(this, [this](const std::string &name) {

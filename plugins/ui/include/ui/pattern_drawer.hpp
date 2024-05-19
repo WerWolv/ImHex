@@ -24,7 +24,7 @@ namespace hex::ui {
 
         void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime = nullptr, float height = 0.0F);
 
-        enum class TreeStyle {
+        enum class TreeStyle : u8 {
             Default         = 0,
             AutoExpanded    = 1,
             Flattened       = 2
@@ -82,18 +82,19 @@ namespace hex::ui {
         void closeTreeNode(bool inlined) const;
 
         bool sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) const;
-        bool isEditingPattern(const pl::ptrn::Pattern& pattern) const;
+        [[nodiscard]] bool isEditingPattern(const pl::ptrn::Pattern& pattern) const;
         void resetEditing();
-        bool matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch) const;
         void traversePatternTree(pl::ptrn::Pattern &pattern, std::vector<std::string> &patternPath, const std::function<void(pl::ptrn::Pattern&)> &callback);
-        std::string getDisplayName(const pl::ptrn::Pattern& pattern) const;
+        [[nodiscard]] std::string getDisplayName(const pl::ptrn::Pattern& pattern) const;
 
         struct Filter {
             std::vector<std::string> path;
             std::optional<pl::core::Token::Literal> value;
         };
 
-        std::optional<Filter> parseRValueFilter(const std::string &filter) const;
+        [[nodiscard]] static bool matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch);
+        [[nodiscard]] static std::optional<Filter> parseRValueFilter(const std::string &filter);
+        void updateFilter();
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
@@ -113,11 +114,13 @@ namespace hex::ui {
 
         std::string m_filterText;
         Filter m_filter;
+        std::vector<pl::ptrn::Pattern*> m_filteredPatterns;
+
         std::vector<std::string> m_currPatternPath;
         std::map<std::vector<std::string>, std::unique_ptr<pl::ptrn::Pattern>> m_favorites;
         std::map<std::string, std::vector<std::unique_ptr<pl::ptrn::Pattern>>> m_groups;
         bool m_showFavoriteStars = false;
-        bool m_favoritesUpdated = false;
+        bool m_filtersUpdated = false;
         bool m_showSpecName = false;
 
         TaskHolder m_favoritesUpdateTask;

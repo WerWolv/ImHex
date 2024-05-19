@@ -50,6 +50,7 @@ namespace hex::plugin::builtin {
         static void processNodes(Workspace &workspace);
 
         void reloadCustomNodes();
+        void updateNodePositions();
 
         std::vector<Workspace*> &getWorkspaceStack() { return *m_workspaceStack; }
 

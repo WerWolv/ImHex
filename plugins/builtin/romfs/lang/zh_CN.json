@@ -839,6 +839,7 @@
         "hex.builtin.view.hex_editor.search.find": "查找",
         "hex.builtin.view.hex_editor.search.hex": "Hex",
         "hex.builtin.view.hex_editor.search.no_more_results": "没有更多结果",
+        "hex.builtin.view.hex_editor.search.advanced": "",
         "hex.builtin.view.hex_editor.search.string": "字符串",
         "hex.builtin.view.hex_editor.search.string.encoding": "编码",
         "hex.builtin.view.hex_editor.search.string.encoding.utf16": "UTF-16",

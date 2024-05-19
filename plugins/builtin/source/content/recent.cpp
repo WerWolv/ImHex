@@ -134,12 +134,10 @@ namespace hex::plugin::builtin::recent {
                     if (!recentFile.isValid())
                         continue;
 
-                    std::string displayName = hex::format("[{}] {}", "hex.ui.common.project"_lang, wolv::util::toUTF8String(projectFileName));
-
                     nlohmann::json recentEntry {
-                        {"type", "project"},
-                        {"displayName", displayName},
-                        {"path", wolv::util::toUTF8String(ProjectFile::getPath())}
+                        { "type", "project" },
+                        { "displayName", wolv::util::toUTF8String(projectFileName) },
+                        { "path", wolv::util::toUTF8String(ProjectFile::getPath()) }
                     };
 
                     recentFile.writeString(recentEntry.dump(4));

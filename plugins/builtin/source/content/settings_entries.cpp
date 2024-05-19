@@ -173,11 +173,14 @@ namespace hex::plugin::builtin {
                         return "x%.1f";
                 }();
 
-                if (ImGui::SliderFloat(name.data(), &m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
-                    return true;
+                bool changed = ImGui::SliderFloat(name.data(), &m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+
+                if (ImHexApi::Fonts::getCustomFontPath().empty() && (u32(m_value * 10) % 10) != 0) {
+                    ImGui::SameLine();
+                    ImGuiExt::HelpHover("hex.builtin.setting.interface.scaling.fractional_warning"_lang, ICON_VS_WARNING, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
                 }
 
-                return false;
+                return changed;
             }
 
             void load(const nlohmann::json &data) override {
@@ -605,7 +608,7 @@ namespace hex::plugin::builtin {
 
         class FontFilePicker : public ContentRegistry::Settings::Widgets::FilePicker {
         public:
-            bool draw(const std::string &name) {
+            bool draw(const std::string &name) override {
                 bool changed = false;
 
                 const auto &fonts = hex::getFonts();
@@ -663,7 +666,7 @@ namespace hex::plugin::builtin {
 
                 result = !isIntelGPU;
                 if (isIntelGPU)
-                    log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please try the Mesa3D Software Renderer");
+                    log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please enable the Native OS Decoration setting or try the software rendererd -NoGPU release.");
             }
 
             return result;
