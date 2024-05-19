@@ -676,14 +676,6 @@ jobs:
           config_opts['plugin_conf']['ccache_opts']['dir'] = "$GITHUB_WORKSPACE/.ccache"
           EOT
 
-      - name: 📜 Setup Mock Cache
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/mock
-          key: ${{ matrix.mock_release }}-mock-${{ github.run_id }}
-          restore-keys: |
-            ${{ matrix.mock_release }}-mock
-
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
