@@ -7,7 +7,11 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#include <wolv/literals.hpp>
+
 namespace hex::plugin::builtin {
+
+    using namespace wolv::literals;
 
     class InformationProvider : public ContentRegistry::DataInformation::InformationSection {
     public:
@@ -64,10 +68,22 @@ namespace hex::plugin::builtin {
 
             task.update();
 
-            m_dataDescription       = magic::getDescription(provider, region.getStartAddress());
-            m_dataMimeType          = magic::getMIMEType(provider, region.getStartAddress());
-            m_dataAppleCreatorType  = magic::getAppleCreatorType(provider, region.getStartAddress());
-            m_dataExtensions        = magic::getExtensions(provider, region.getStartAddress());
+            try {
+                std::vector<u8> data(region.getSize());
+                provider->read(region.getStartAddress(), data.data(), data.size());
+
+                m_dataDescription       = magic::getDescription(data);
+                m_dataMimeType          = magic::getMIMEType(data);
+                m_dataAppleCreatorType  = magic::getAppleCreatorType(data);
+                m_dataExtensions        = magic::getExtensions(data);
+            } catch (const std::bad_alloc &) {
+                hex::log::error("Failed to allocate enough memory for full file magic analysis!");
+
+                // Retry analysis with only the first 100 KiB
+                if (region.getSize() != 100_kiB) {
+                    process(task, provider, { region.getStartAddress(), 100_kiB });
+                }
+            }
         }
 
         void drawContent() override {
