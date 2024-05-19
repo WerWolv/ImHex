@@ -4,6 +4,7 @@
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/event_manager.hpp>
+#include <hex/api/layout_manager.hpp>
 
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
@@ -12,13 +13,16 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/codicons_font.h>
 
+#include <wolv/literals.hpp>
+#include <wolv/utils/string.hpp>
+
 #include <nlohmann/json.hpp>
 
 #include <utility>
-#include <hex/api/layout_manager.hpp>
-#include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
+
+    using namespace wolv::literals;
 
     namespace {
 
@@ -683,6 +687,8 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
             ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "", "hex.builtin.setting.general.auto_backup_time");
+            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "", "hex.builtin.setting.general.max_mem_file_size", 128_MiB, 0_bytes, 32_GiB)
+                .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc");
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
@@ -854,7 +860,7 @@ namespace hex::plugin::builtin {
             EventImHexStartupFinished::subscribe([]{
                 for (const auto &[name, experiment] : ContentRegistry::Experiments::impl::getExperiments()) {
                     ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.experiments", "", experiment.unlocalizedName, false)
-                        .setTooltip(Lang(experiment.unlocalizedDescription))
+                        .setTooltip(experiment.unlocalizedDescription)
                         .setChangedCallback([name](Widgets::Widget &widget) {
                             auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
 

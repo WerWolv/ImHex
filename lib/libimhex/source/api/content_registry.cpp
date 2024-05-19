@@ -312,6 +312,23 @@ namespace hex {
             }
 
 
+            bool SliderDataSize::draw(const std::string &name) {
+                return ImGuiExt::SliderBytes(name.c_str(), &m_value, m_min, m_max);
+            }
+
+            void SliderDataSize::load(const nlohmann::json &data) {
+                if (data.is_number_integer()) {
+                    m_value = data.get<u64>();
+                } else {
+                    log::warn("Invalid data type loaded from settings for slider!");
+                }
+            }
+
+            nlohmann::json SliderDataSize::store() {
+                return m_value;
+            }
+
+
             ColorPicker::ColorPicker(ImColor defaultColor) {
                 m_value = {
                         defaultColor.Value.x,

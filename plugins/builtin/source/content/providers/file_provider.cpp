@@ -1,11 +1,13 @@
 #include "content/providers/file_provider.hpp"
 #include "content/providers/memory_file_provider.hpp"
 
+#include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
 
+#include <popups/popup_question.hpp>
 #include <toasts/toast_notification.hpp>
 
 #include <hex/helpers/utils.hpp>
@@ -13,16 +15,18 @@
 #include <fmt/chrono.h>
 
 #include <wolv/utils/string.hpp>
+#include <wolv/literals.hpp>
 
 #include <nlohmann/json.hpp>
 #include <cstring>
-#include <popups/popup_question.hpp>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
 #endif
 
 namespace hex::plugin::builtin {
+
+    using namespace wolv::literals;
 
     std::set<FileProvider*> FileProvider::s_openedFiles;
 
@@ -223,8 +227,10 @@ namespace hex::plugin::builtin {
             }
         }
 
+        size_t maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
+
         if (m_writable) {
-            if (m_fileSize < MaxMemoryFileSize) {
+            if (m_fileSize < maxMemoryFileSize) {
                 m_data = m_file.readVectorAtomic(0x00, m_fileSize);
                 if (!m_data.empty()) {
                     m_changeTracker = wolv::io::ChangeTracker(m_file);
