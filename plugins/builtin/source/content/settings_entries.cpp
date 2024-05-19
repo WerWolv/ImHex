@@ -95,7 +95,7 @@ namespace hex::plugin::builtin {
             bool draw(const std::string &) override {
                 bool result = false;
 
-                if (!ImGui::BeginListBox("", ImVec2(-40_scaled, 280_scaled))) {
+                if (!ImGui::BeginListBox("##UserFolders", ImVec2(-40_scaled, 280_scaled))) {
                     return false;
                 } else {
                     for (size_t n = 0; n < m_paths.size(); n++) {
