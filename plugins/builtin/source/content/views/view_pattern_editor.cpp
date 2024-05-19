@@ -1156,8 +1156,10 @@ namespace hex::plugin::builtin {
                                 patternDrawer->draw(patterns, &runtime, 150_scaled);
                         };
                     }
-                    ImGui::SetTooltip("%s", "hex.builtin.view.pattern_editor.sections.view"_lang.get().c_str());
+                    ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.sections.view"_lang.get().c_str());
+
                     ImGui::SameLine();
+
                     if (ImGuiExt::DimmedIconButton(ICON_VS_SAVE_AS, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         fs::openFileBrowser(fs::DialogMode::Save, {}, [id, &runtime](const auto &path) {
                             wolv::io::File file(path, wolv::io::File::Mode::Create);
@@ -1169,7 +1171,7 @@ namespace hex::plugin::builtin {
                             file.writeVector(runtime.getSection(id));
                         });
                     }
-                    ImGui::SetTooltip("%s", (const char*)"hex.builtin.view.pattern_editor.sections.export"_lang.get().c_str());
+                    ImGui::SetItemTooltip("%s", (const char*)"hex.builtin.view.pattern_editor.sections.export"_lang.get().c_str());
 
                     ImGui::PopID();
                 }
@@ -1326,7 +1328,7 @@ namespace hex::plugin::builtin {
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
-            TaskManager::createBackgroundTask("Analyzing file content", [this, provider](auto &) {
+            m_analysisTask = TaskManager::createBackgroundTask("Analyzing file content", [this, provider](const Task &task) {
                 if (!m_autoLoadPatterns)
                     return;
 
@@ -1413,6 +1415,8 @@ namespace hex::plugin::builtin {
                 std::error_code errorCode;
                 for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
                     for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
+                        task.update();
+
                         foundCorrectType = false;
                         if (!entry.is_regular_file())
                             continue;
@@ -1660,7 +1664,7 @@ namespace hex::plugin::builtin {
 
             m_lastEvaluationResult = runtime.executeString(code, pl::api::Source::DefaultSource, envVars, inVariables);
             if (!m_lastEvaluationResult) {
-                *m_lastEvaluationError = runtime.getError();
+                *m_lastEvaluationError = runtime.getEvalError();
                 *m_lastCompileError    = runtime.getCompileErrors();
             }
 

@@ -3,10 +3,8 @@
 #include <stdexcept>
 
 #if defined(OS_WINDOWS)
-    #include <Windows.h>
     #define STRING(str) L##str
 #else
-    #include <dlfcn.h>
     #define STRING(str) str
 #endif
 
@@ -25,6 +23,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
+#include <toasts/toast_notification.hpp>
 
 extern "C" void igSetCurrentContext(ImGuiContext* ctx);
 
@@ -33,38 +32,6 @@ namespace hex::script::loader {
     namespace {
 
         using get_hostfxr_path_fn = int(*)(char_t * buffer, size_t * buffer_size, const get_hostfxr_parameters *parameters);
-
-        #if defined(OS_WINDOWS)
-            void *loadLibrary(const char_t *path) {
-                try {
-                    HMODULE h = ::LoadLibraryW(path);
-                    return h;
-                } catch (...) {
-                    return nullptr;
-                }
-            }
-
-            template<typename T>
-            T getExport(void *h, const char *name) {
-                try {
-                    FARPROC f = ::GetProcAddress(static_cast<HMODULE>(h), name);
-                    return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(f));
-                } catch (...) {
-                    return nullptr;
-                }
-            }
-        #else
-            void *loadLibrary(const char_t *path) {
-                void *h = dlopen(path, RTLD_LAZY);
-                return h;
-            }
-
-            template<typename T>
-            T getExport(void *h, const char *name) {
-                void *f = dlsym(h, name);
-                return reinterpret_cast<T>(f);
-            }
-        #endif
 
         hostfxr_initialize_for_runtime_config_fn hostfxr_initialize_for_runtime_config  = nullptr;
         hostfxr_get_runtime_delegate_fn hostfxr_get_runtime_delegate = nullptr;
@@ -97,6 +64,13 @@ namespace hex::script::loader {
                     if (netHostLibrary != nullptr)
                         break;
                 }
+                if (netHostLibrary == nullptr) {
+                    for (const auto &librariesPath : fs::getDefaultPaths(fs::ImHexPath::Libraries)) {
+                        netHostLibrary = loadLibrary((librariesPath / "libnethost.dylib").c_str());
+                        if (netHostLibrary != nullptr)
+                            break;
+                    }
+                }
             #endif
 
             if (netHostLibrary == nullptr) {
@@ -109,7 +83,7 @@ namespace hex::script::loader {
             std::array<char_t, 300> buffer = { };
             size_t bufferSize = buffer.size();
 
-            auto result = get_hostfxr_path_ptr(buffer.data(), &bufferSize, nullptr);
+            u32 result = get_hostfxr_path_ptr(buffer.data(), &bufferSize, nullptr);
             if (result != 0) {
                 log::error(hex::format("Could not get hostfxr path! 0x{:X}", result));
                 return false;
@@ -261,17 +235,30 @@ namespace hex::script::loader {
                 if (!std::fs::exists(scriptPath))
                     continue;
 
-                if (m_methodExists("Main", scriptPath)) {
-                    this->addScript(entry.path().stem().string(), false, [this, scriptPath] {
-                        hex::unused(m_runMethod("Main", false, scriptPath));
+                const bool hasMain = m_methodExists("Main", scriptPath);
+                const bool hasOnLoad = m_methodExists("OnLoad", scriptPath);
+                const auto scriptName = entry.path().stem().string();
+
+                if (hasMain) {
+                    this->addScript(scriptName, false, [this, scriptPath] {
+                        auto result = m_runMethod("Main", false, scriptPath);
+                        if (result != 0) {
+                            ui::ToastError::open(hex::format("Script '{}' running failed with code {}", result));
+                        }
                     });
+                } else if (hasOnLoad) {
+                    this->addScript(scriptName, true, [] {});
                 }
 
-                if (m_methodExists("OnLoad", scriptPath)) {
-                    this->addScript(entry.path().stem().string(), true, [this, scriptPath] {
-                        hex::unused(m_runMethod("OnLoad", true, scriptPath));
-                    });
+                if (hasOnLoad) {
+                    auto result = m_runMethod("OnLoad", true, scriptPath);
+                    if (result != 0) {
+                        TaskManager::doLater([=] {
+                            ui::ToastError::open(hex::format("Script '{}' loading failed with code {}", scriptName, result));
+                        });
+                    }
                 }
+
             }
         }
 

@@ -33,8 +33,8 @@ namespace ImHex
     }
     public partial class Memory
     {
-        private static List<IProvider> _registeredProviders = new();
-        private static List<Delegate> _registeredDelegates = new();
+        private static readonly List<IProvider> RegisteredProviders = new();
+        private static readonly List<Delegate> RegisteredDelegates = new();
 
         private delegate void DataAccessDelegate(UInt64 address, IntPtr buffer, UInt64 size);
         private delegate UInt64 GetSizeDelegate();
@@ -95,20 +95,20 @@ namespace ImHex
         
         public static void RegisterProvider<T>() where T : IProvider, new()
         {
-            _registeredProviders.Add(new T());
+            RegisteredProviders.Add(new T());
             
-            ref var provider = ref CollectionsMarshal.AsSpan(_registeredProviders)[^1];
+            ref var provider = ref CollectionsMarshal.AsSpan(RegisteredProviders)[^1];
             
-            _registeredDelegates.Add(new DataAccessDelegate(provider.readRaw));
-            _registeredDelegates.Add(new DataAccessDelegate(provider.writeRaw));
-            _registeredDelegates.Add(new GetSizeDelegate(provider.getSize));
+            RegisteredDelegates.Add(new DataAccessDelegate(provider.readRaw));
+            RegisteredDelegates.Add(new DataAccessDelegate(provider.writeRaw));
+            RegisteredDelegates.Add(new GetSizeDelegate(provider.getSize));
             
             registerProviderV1(
                 Encoding.UTF8.GetBytes(provider.getTypeName()), 
                 Encoding.UTF8.GetBytes(provider.getName()), 
-                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^3]), 
-                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^2]),
-                Marshal.GetFunctionPointerForDelegate(_registeredDelegates[^1])
+                Marshal.GetFunctionPointerForDelegate(RegisteredDelegates[^3]), 
+                Marshal.GetFunctionPointerForDelegate(RegisteredDelegates[^2]),
+                Marshal.GetFunctionPointerForDelegate(RegisteredDelegates[^1])
             );
         }
 

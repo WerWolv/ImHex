@@ -356,6 +356,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawWelcomeScreen() {
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
             ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
             if (ImGui::Begin("ImHexDockSpace")) {
                 if (!ImHexApi::Provider::isValid()) {
@@ -408,11 +409,13 @@ namespace hex::plugin::builtin {
             }
             ImGui::End();
             ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
         }
         /**
          * @brief Draw some default background if there are no views available in the current layout
          */
         void drawNoViewsBackground() {
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
             ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
             if (ImGui::Begin("ImHexDockSpace")) {
                 static std::array<char, 256> title;
@@ -453,6 +456,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::End();
             ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
         }
     }
 
@@ -497,7 +501,7 @@ namespace hex::plugin::builtin {
 
         RequestChangeTheme::subscribe([](const std::string &theme) {
             auto changeTexture = [&](const std::string &path) {
-                return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Linear);
+                return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Nearest);
             };
 
             auto changeTextureSvg = [&](const std::string &path) {

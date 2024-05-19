@@ -10,7 +10,7 @@ namespace hex::script::loader {
 
     class DotNetLoader : public ScriptLoader {
     public:
-        DotNetLoader() = default;
+        DotNetLoader() : ScriptLoader(".NET") {}
         ~DotNetLoader() override = default;
 
         bool initialize() override;

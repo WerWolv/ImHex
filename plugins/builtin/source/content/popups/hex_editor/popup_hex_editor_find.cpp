@@ -47,10 +47,13 @@ namespace hex::plugin::builtin {
         }
 
         if(ImGuiExt::IconHyperlink(ICON_VS_SEARCH, "hex.builtin.view.hex_editor.search.advanced"_lang)) {
-            const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name");
-            view->getWindowOpenState() = true;
-            ImGui::SetWindowFocus(view->getName().c_str());
-            editor->closePopup();
+            TaskManager::doLater([editor] {
+                const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name");
+
+                view->getWindowOpenState() = true;
+                ImGui::SetWindowFocus(view->getName().c_str());
+                editor->closePopup();
+            });
         }
 
         if (lastMode != *s_searchMode) {

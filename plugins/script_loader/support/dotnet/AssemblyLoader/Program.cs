@@ -8,20 +8,30 @@ namespace ImHex
     public class EntryPoint
     {
 
-        public static int ExecuteScript(IntPtr arg, int argLength)
+        private const int ResultSuccess                 = 0x0000_0000;
+        private const int ResultError                   = 0x1000_0001;
+        private const int ResultMethodNotFound          = 0x1000_0002;
+        private const int ResultLoaderError             = 0x1000_0003;
+        private const int ResultLoaderInvalidCommand    = 0x1000_0004;
+
+        private static void Log(string message)
+        {
+            Console.WriteLine($"[.NET Script] {message}");
+        }
+        public static int ExecuteScript(IntPtr argument, int argumentLength)
         {
             try
             {
-                return ExecuteScript(Marshal.PtrToStringUTF8(arg, argLength));
+                return ExecuteScript(Marshal.PtrToStringUTF8(argument, argumentLength));
             }
             catch (Exception e)
             {
-                Console.WriteLine("[.NET Script] Exception in AssemblyLoader: " + e.ToString());
-                return 1;
+                Log($"Exception in AssemblyLoader: {e}");
+                return ResultLoaderError;
             }
         }
 
-        private static List<string> loadedPlugins = new();
+        private static readonly List<string> LoadedPlugins = new();
         private static int ExecuteScript(string args)
         {
             // Parse input in the form of "execType||path"
@@ -31,36 +41,35 @@ namespace ImHex
             var path        = splitArgs[2];
 
             // Get the parent folder of the passed path
-            string? basePath = Path.GetDirectoryName(path);
+            var basePath = Path.GetDirectoryName(path);
             if (basePath == null)
             {
-                Console.WriteLine("[.NET Script] Failed to get base path");
-                return 1;
+                Log("Failed to get base path");
+                return ResultError;
             }
 
             // Create a new assembly context
             AssemblyLoadContext? context = new("ScriptDomain_" + basePath, true);
 
-            int result = 0;
+            int result;
             try
             {
                 if (type is "LOAD")
                 {
                     // If the script has been loaded already, don't do it again
-                    if (loadedPlugins.Contains(path))
+                    if (LoadedPlugins.Contains(path))
                     {
-                        return 0;
+                        return ResultSuccess;
                     }
 
                     // Check if the plugin is already loaded
-                    loadedPlugins.Add(path);
+                    LoadedPlugins.Add(path);
                 }
 
                 // Load all assemblies in the parent folder
-                foreach (var file in Directory.GetFiles(basePath, "*.dll"))
-                {
+                foreach (var file in Directory.GetFiles(basePath, "*.dll")) {
                     // Skip main Assembly
-                    if (file.EndsWith("Main.dll"))
+                    if (new FileInfo(file).Name == "Main.dll")
                     {
                         continue;
                     }
@@ -72,7 +81,7 @@ namespace ImHex
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("[.NET Script] Failed to load assembly: " + file + " - " + e);
+                        Log($"Failed to load assembly: {file} - {e}");
                     }
                 }
 
@@ -83,8 +92,8 @@ namespace ImHex
                 var libraryModule = Array.Find(context.Assemblies.ToArray(), module => module.GetName().Name == "ImHexLibrary");
                 if (libraryModule == null)
                 {
-                    Console.WriteLine("[.NET Script] Refusing to load non-ImHex script");
-                    return 1;
+                    Log("Refusing to load non-ImHex script");
+                    return ResultError;
                 }
                 else
                 {
@@ -92,29 +101,36 @@ namespace ImHex
                     var libraryType = libraryModule.GetType("Library");
                     if (libraryType == null)
                     {
-                        Console.WriteLine("[.NET Script] Failed to find Library type in ImHexLibrary");
-                        return 1;
+                        Log("Failed to find Library type in ImHexLibrary");
+                        return ResultError;
                     }
                     
                     // Load Initialize function in the Library type
                     var initMethod = libraryType.GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
                     if (initMethod == null)
                     {
-                        Console.WriteLine("[.NET Script] Failed to find Initialize method");
-                        return 1;
+                        Log("Failed to find Initialize method");
+                        return ResultError;
                     }
 
                     // Execute it
                     initMethod.Invoke(null, null);
                 }
                 
-                // Find a class named "Script"
-                var entryPointType = assembly.GetType("Script");
-                if (entryPointType == null)
+                // Find classes derived from IScript
+                var entryPointTypes = Array.FindAll(assembly.GetTypes(), t => t.GetInterface("IScript") != null);
+                
+                if (entryPointTypes.Length == 0)
                 {
-                    Console.WriteLine("[.NET Script] Failed to find Script type");
-                    return 1;
+                    Log("Failed to find Script entrypoint");
+                    return ResultError;
+                } else if (entryPointTypes.Length > 1)
+                {
+                    Log("Found multiple Script entrypoints");
+                    return ResultError;
                 }
+                
+                var entryPointType = entryPointTypes[0];
 
                 if (type is "EXEC" or "LOAD")
                 {
@@ -122,11 +138,27 @@ namespace ImHex
                     var method = entryPointType.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
                     if (method == null)
                     {
-                        return 2;
+                        return ResultMethodNotFound;
                     }
 
                     // Execute it
-                    method.Invoke(null, null);
+                    var returnValue = method.Invoke(null, null);
+                    switch (returnValue)
+                    {
+                        case null:
+                            result = ResultSuccess;
+                            break;
+                        case int intValue:
+                            result = intValue;
+                            break;
+                        case uint intValue:
+                            result = (int)intValue;
+                            break;
+                        default:
+                            result = ResultError;
+                            Log($"Invalid return value from script: {returnValue.GetType().Name} {{{returnValue}}}");
+                            break;
+                    }
                 }
                 else if (type == "CHECK")
                 {
@@ -135,13 +167,13 @@ namespace ImHex
                 }
                 else
                 {
-                    return 1;
+                    return ResultLoaderInvalidCommand;
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("[.NET Script] Exception in AssemblyLoader: " + e);
-                return 3;
+                Log($"Exception in AssemblyLoader: {e}");
+                return ResultLoaderError;
             }
             finally
             {

@@ -50,13 +50,22 @@ namespace hex {
 
         T& operator=(const T &value) {
             m_value = value;
+            m_valid = true;
             return m_value;
         }
 
         T& operator=(T &&value) noexcept {
             m_value = std::move(value);
+            m_valid = true;
             return m_value;
         }
+
+        bool isValid() const {
+            return m_valid;
+        }
+
+    private:
+        friend void ImHexApi::System::impl::cleanup();
 
         void reset() override {
             if constexpr (requires { m_value.reset(); }) {
@@ -68,9 +77,12 @@ namespace hex {
             } else {
                 m_value = { };
             }
+
+            m_valid = false;
         }
 
     private:
+        bool m_valid = true;
         T m_value;
     };
 

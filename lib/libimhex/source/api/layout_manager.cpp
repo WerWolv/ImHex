@@ -134,8 +134,8 @@ namespace hex {
     }
 
     void LayoutManager::reset() {
-        s_layoutPathToLoad.reset();
-        s_layoutStringToLoad.reset();
+        s_layoutPathToLoad->reset();
+        s_layoutStringToLoad->reset();
         s_layouts->clear();
     }
 

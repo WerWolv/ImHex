@@ -398,11 +398,16 @@ namespace hex::init {
 
     void WindowSplash::initGLFW() {
         glfwSetErrorCallback([](int errorCode, const char *desc) {
-            if (errorCode == GLFW_PLATFORM_ERROR) {
+            bool isWaylandError = errorCode == GLFW_PLATFORM_ERROR;
+            #if defined(GLFW_FEATURE_UNAVAILABLE)
+                isWaylandError = isWaylandError || (errorCode == GLFW_FEATURE_UNAVAILABLE);
+            #endif
+            isWaylandError = isWaylandError && std::string_view(desc).contains("Wayland");
+
+            if (isWaylandError) {
                 // Ignore error spam caused by Wayland not supporting moving or resizing
                 // windows or querying their position and size.
-                if (std::string_view(desc).contains("Wayland"))
-                    return;
+                return;
             }
 
             lastGlfwError.errorCode = errorCode;

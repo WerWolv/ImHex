@@ -911,7 +911,7 @@ namespace hex::plugin::builtin {
 
         auto &currOccurrences = *m_sortedOccurrences;
 
-        ImGui::PushItemWidth(-30_scaled);
+        ImGui::PushItemWidth(-15_scaled);
         auto prevFilterLength = m_currFilter->length();
         if (ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, *m_currFilter)) {
             if (prevFilterLength > m_currFilter->length())

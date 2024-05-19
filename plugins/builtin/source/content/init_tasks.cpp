@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
         }
 
         bool configureUIScale() {
-            int interfaceScaleSetting = int(ContentRegistry::Settings::read<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 1.0F) * 10.0F);
+            int interfaceScaleSetting = int(ContentRegistry::Settings::read<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F) * 10.0F);
 
             float interfaceScaling;
             if (interfaceScaleSetting == 0)
@@ -284,6 +284,8 @@ namespace hex::plugin::builtin {
                     auto size = fontSize;
                     if (font.defaultSize.has_value())
                         size = font.defaultSize.value() * std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize);
+
+                    size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
 
                     cfg.SizePixels = size;
 
