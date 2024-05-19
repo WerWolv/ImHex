@@ -77,7 +77,7 @@ function(tweakTargetForIDESupport target)
 
     # Organize target sources into directory tree
     get_target_property(sources ${target} SOURCES)
-    foreach(file "${sources}")
+    foreach(file IN LISTS sources)
         get_filename_component(path "${file}" ABSOLUTE)
 
         if (NOT path MATCHES "^${targetSourceDir}")
@@ -125,7 +125,7 @@ endfunction()
 
 macro(_tweakTargetsRecursive dir)
     get_property(subdirectories DIRECTORY ${dir} PROPERTY SUBDIRECTORIES)
-    foreach(subdir ${subdirectories})
+    foreach(subdir IN LISTS subdirectories)
         _tweakTargetsRecursive("${subdir}")
     endforeach()
 
