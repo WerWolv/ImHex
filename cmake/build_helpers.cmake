@@ -498,7 +498,8 @@ function(downloadImHexPatternsFiles dest)
 
     if (NOT EXISTS ${imhex_patterns_SOURCE_DIR}) 
         message(WARNING "Failed to locate ImHex-Patterns repository, some resources will be missing during install!")
-    else()
+    elseif(XCODE)
+        # The Xcode build has multiple configurations, which each need a copy of these files
         file(GLOB_RECURSE sourceFilePaths LIST_DIRECTORIES NO RELATIVE CONFIGURE_DEPENDS "${imhex_patterns_SOURCE_DIR}"
             "${imhex_patterns_SOURCE_DIR}/constants/*"
             "${imhex_patterns_SOURCE_DIR}/encodings/*"
@@ -512,6 +513,11 @@ function(downloadImHexPatternsFiles dest)
         foreach(relativePath IN LISTS sourceFilePaths)
             file(GENERATE OUTPUT "${dest}/${relativePath}" INPUT "${imhex_patterns_SOURCE_DIR}/${relativePath}")
         endforeach()
+    else()
+        set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic nodes)
+        foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
+            install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION ${dest} PATTERN "**/_schema.json" EXCLUDE)
+        endforeach ()
     endif ()
 
 endfunction()
