@@ -1,5 +1,6 @@
 .vscode/
 .idea/
+.kdev4/
 
 cmake-build-*/
 build*/
@@ -7,6 +8,7 @@ local/
 venv/
 
 *.mgc
+*.kdev4
 imgui.ini
 .DS_Store
 ./CMakeUserPresets.json
