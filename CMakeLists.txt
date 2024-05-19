@@ -47,7 +47,7 @@ project(imhex
 if (XCODE)
     # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
     set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>")
-elseif()
+else()
     set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 endif()
 
