@@ -105,8 +105,13 @@ namespace hex::magic {
             ON_SCOPE_EXIT { magic_close(ctx); };
 
             if (magic_load(ctx, magicFiles->c_str()) == 0) {
-                if (auto result = magic_buffer(ctx, data.data(), data.size()); result != nullptr)
-                    return wolv::util::replaceStrings(result, "\\012-", "\n-");
+                if (auto description = magic_buffer(ctx, data.data(), data.size()); description != nullptr) {
+                    auto result = wolv::util::replaceStrings(description, "\\012-", "\n-");
+                    if (result.ends_with("- data"))
+                        result = result.substr(0, result.size() - 6);
+
+                    return result;
+                }
             }
         }
 
@@ -130,8 +135,13 @@ namespace hex::magic {
             ON_SCOPE_EXIT { magic_close(ctx); };
 
             if (magic_load(ctx, magicFiles->c_str()) == 0) {
-                if (auto result = magic_buffer(ctx, data.data(), data.size()); result != nullptr)
-                    return wolv::util::replaceStrings(result, "\\012-", "\n-");
+                if (auto mimeType = magic_buffer(ctx, data.data(), data.size()); mimeType != nullptr) {
+                    auto result = wolv::util::replaceStrings(mimeType, "\\012-", "\n-");
+                    if (result.ends_with("- application/octet-stream"))
+                        result = result.substr(0, result.size() - 26);
+
+                    return result;
+                }
             }
         }
 
@@ -162,8 +172,13 @@ namespace hex::magic {
             ON_SCOPE_EXIT { magic_close(ctx); };
 
             if (magic_load(ctx, magicFiles->c_str()) == 0) {
-                if (auto result = magic_buffer(ctx, data.data(), data.size()); result != nullptr)
-                    return wolv::util::replaceStrings(result, "\\012-", "\n-");
+                if (auto extension = magic_buffer(ctx, data.data(), data.size()); extension != nullptr) {
+                    auto result = wolv::util::replaceStrings(extension, "\\012-", "\n-");
+                    if (result.ends_with("- ???"))
+                        result = result.substr(0, result.size() - 5);
+
+                    return result;
+                }
             }
         }
 
