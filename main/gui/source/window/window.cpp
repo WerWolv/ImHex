@@ -683,14 +683,20 @@ namespace hex {
         glfwMakeContextCurrent(backupContext);
 
         if (shouldRender) {
-            int displayWidth, displayHeight;
-            glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
-            glViewport(0, 0, displayWidth, displayHeight);
-            glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
-            glClear(GL_COLOR_BUFFER_BIT);
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            auto* drawData = ImGui::GetDrawData();
+            
+            // Avoid accidentally clearing the viewport when the application is minimized,
+            // otherwise the OS will display an empty frame during deminimization on macOS
+            if (drawData->DisplaySize.x != 0 && drawData->DisplaySize.y != 0) {
+                int displayWidth, displayHeight;
+                glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
+                glViewport(0, 0, displayWidth, displayHeight);
+                glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
+                glClear(GL_COLOR_BUFFER_BIT);
+                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-            glfwSwapBuffers(m_window);
+                glfwSwapBuffers(m_window);
+            }
 
             m_unlockFrameRate = true;
         }
@@ -820,7 +826,12 @@ namespace hex {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
             
-            #if !defined(OS_MACOS)
+            #if defined(OS_MACOS)
+                // Stop widgets registering hover effects while the window is being resized
+                if (macosIsWindowBeingResizedByUser(window)) {
+                    ImGui::GetIO().MousePos = ImVec2();
+                }
+            #else
                 win->fullFrame();
             #endif
         });
