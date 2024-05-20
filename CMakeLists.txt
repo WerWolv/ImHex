@@ -22,23 +22,29 @@ option(IMHEX_ENABLE_STD_ASSERTS         "Enable debug asserts in the C++ std lib
 option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                            OFF)
 option(IMHEX_ENABLE_PRECOMPILED_HEADERS "Enable precompiled headers"                                                            OFF)
 
+set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
+set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
+
+# Optional IDE support
+include("${IMHEX_BASE_FOLDER}/cmake/ide_helpers.cmake")
+
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
-set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
-set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 
 # Setup project
 loadVersion(IMHEX_VERSION)
 setVariableInParent(IMHEX_VERSION ${IMHEX_VERSION})
 configureCMake()
+
 project(imhex
         LANGUAGES       C CXX
         VERSION         ${IMHEX_VERSION}
         DESCRIPTION     "The ImHex Hex Editor"
         HOMEPAGE_URL    "https://imhex.werwolv.net"
 )
+configureProject()
 
 # Add ImHex sources
 add_custom_target(imhex_all ALL)
@@ -75,3 +81,6 @@ generateSDKDirectory()
 
 # Handle package generation
 createPackage()
+
+# Accomodate IDEs with FOLDER support
+tweakTargetsForIDESupport()

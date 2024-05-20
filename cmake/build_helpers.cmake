@@ -152,14 +152,12 @@ macro(addPluginDirectories)
     foreach (plugin IN LISTS PLUGINS)
         add_subdirectory("plugins/${plugin}")
         if (TARGET ${plugin})
-            set_target_properties(${plugin} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
-            set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
+            set_target_properties(${plugin} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}/plugins")
+            set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}/plugins")
 
             if (APPLE)
                 if (IMHEX_GENERATE_PACKAGE)
                     set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PLUGINS_INSTALL_LOCATION})
-                else ()
-                    set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
                 endif ()
             else ()
                 if (WIN32)
@@ -275,6 +273,8 @@ macro(createPackage)
             endif()
 
             install(CODE [[ message(STATUS "MacOS Bundle finalized. DO NOT TOUCH IT ANYMORE! ANY MODIFICATIONS WILL BREAK IT FROM NOW ON!") ]])
+        else()
+            downloadImHexPatternsFiles("${IMHEX_MAIN_OUTPUT_DIRECTORY}")
         endif()
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -342,8 +342,11 @@ macro(configureCMake)
 
         if (LD_LLD_PATH)
             set(CMAKE_LINKER ${LD_LLD_PATH})
-            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=lld")
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=lld")
+
+            if (NOT XCODE)
+                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=lld")
+                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=lld")
+            endif()
         else ()
             message(WARNING "lld not found, using default linker!")
         endif ()
@@ -377,6 +380,15 @@ macro(configureCMake)
 
     set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
 endmacro()
+
+function(configureProject)
+    if (XCODE)
+        # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
+        set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>" PARENT_SCOPE)
+    else()
+        set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" PARENT_SCOPE)
+    endif()
+endfunction()
 
 macro(setDefaultBuiltTypeIfUnset)
     if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -480,14 +492,40 @@ function(downloadImHexPatternsFiles dest)
         message(STATUS "Finished downloading ImHex-Patterns")
 
     else ()
+        set(imhex_patterns_SOURCE_DIR "")
+
         # Maybe patterns are cloned to a subdirectory
-        set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")
+        if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
+            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")        
+        endif()
+
+        # Or a sibling directory
+        if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
+            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ImHex-Patterns")        
+        endif()
     endif ()
 
-    if (EXISTS ${imhex_patterns_SOURCE_DIR})
+    if (NOT EXISTS ${imhex_patterns_SOURCE_DIR}) 
+        message(WARNING "Failed to locate ImHex-Patterns repository, some resources will be missing during install!")
+    elseif(XCODE)
+        # The Xcode build has multiple configurations, which each need a copy of these files
+        file(GLOB_RECURSE sourceFilePaths LIST_DIRECTORIES NO CONFIGURE_DEPENDS RELATIVE "${imhex_patterns_SOURCE_DIR}"
+            "${imhex_patterns_SOURCE_DIR}/constants/*"
+            "${imhex_patterns_SOURCE_DIR}/encodings/*"
+            "${imhex_patterns_SOURCE_DIR}/includes/*"
+            "${imhex_patterns_SOURCE_DIR}/patterns/*"
+            "${imhex_patterns_SOURCE_DIR}/magic/*"
+            "${imhex_patterns_SOURCE_DIR}/nodes/*"
+        )
+        list(FILTER sourceFilePaths EXCLUDE REGEX "_schema.json$")
+
+        foreach(relativePath IN LISTS sourceFilePaths)
+            file(GENERATE OUTPUT "${dest}/${relativePath}" INPUT "${imhex_patterns_SOURCE_DIR}/${relativePath}")
+        endforeach()
+    else()
         set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic nodes)
         foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
-            install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION ${dest} PATTERN "**/_schema.json" EXCLUDE)
+            install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "${dest}" PATTERN "**/_schema.json" EXCLUDE)
         endforeach ()
     endif ()
 
