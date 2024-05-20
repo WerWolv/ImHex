@@ -1,3 +1,5 @@
+define_property(TARGET PROPERTY IMHEX_PLUGIN BRIEF_DOCS "Property marking targets as an ImHex plugin for IDE integration")
+
 macro(add_imhex_plugin)
     # Parse arguments
     set(options LIBRARY_PLUGIN)
@@ -59,6 +61,7 @@ macro(add_imhex_plugin)
             CXX_STANDARD 23
             PREFIX ""
             SUFFIX ${IMHEX_PLUGIN_SUFFIX}
+            IMHEX_PLUGIN YES
     )
 
     # Set rpath of plugin libraries to the plugins folder

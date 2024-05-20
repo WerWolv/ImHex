@@ -2,6 +2,10 @@
 option(IMHEX_IDE_HELPERS_OVERRIDE_XCODE_COMPILER "Enable choice of compiler for Xcode builds, despite CMake's best efforts" OFF)
 option(IMHEX_IDE_HELPERS_INTRUSIVE_IDE_TWEAKS    "Enable intrusive CMake tweaks to better support IDEs with folder support" OFF)
 
+set(IMHEX_IDE_HELPERS_MAIN_TARGET_DEPENDS_ON_PLUGINS "" CACHE STRING 
+    "'ALL' or semicolon separated list of plugins the main executable should depend on"
+)
+
 # The CMake infrastructure silently ignores the CMAKE_<>_COMPILER settings when
 #  using the `Xcode` generator. 
 #
@@ -29,9 +33,6 @@ if (IMHEX_IDE_HELPERS_OVERRIDE_XCODE_COMPILER AND CMAKE_GENERATOR STREQUAL "Xcod
     #  anything other than AppleClang
     set(CMAKE_XCODE_ATTRIBUTE_COMPILER_INDEX_STORE_ENABLE "NO")
 endif()
-
-# Generate a launch/build scheme for all targets
-set(CMAKE_XCODE_GENERATE_SCHEME YES)
 
 # Utility function that helps avoid messing with non-standard targets
 macro(returnIfTargetIsNonTweakable target)
@@ -121,9 +122,18 @@ function(_tweakTarget target path)
     if (${targetType} MATCHES "EXECUTABLE|LIBRARY")
         set_target_properties(${target} PROPERTIES FOLDER "${path}")
     endif()
+
+    # Add additional dependencies to main executable as specified
+    if (IMHEX_IDE_HELPERS_MAIN_TARGET_DEPENDS_ON_PLUGINS STREQUAL "ALL")
+        get_target_property(imhexPlugin ${target} IMHEX_PLUGIN)
+
+        if (imhexPlugin)
+            add_dependencies(main ${target})
+        endif()
+    endif()
 endfunction()
 
-macro(_tweakTargetsRecursive dir)
+function(_tweakTargetsRecursive dir)
     get_property(subdirectories DIRECTORY ${dir} PROPERTY SUBDIRECTORIES)
     foreach(subdir IN LISTS subdirectories)
         _tweakTargetsRecursive("${subdir}")
@@ -139,11 +149,44 @@ macro(_tweakTargetsRecursive dir)
     foreach(target ${targets})
         _tweakTarget(${target} "${rdir}")
     endforeach()
-endmacro()
+endfunction()
+
+function(addSpecifiedPluginDependenciesToMainExecutable)
+    if (IMHEX_IDE_HELPERS_MAIN_TARGET_DEPENDS_ON_PLUGINS STREQUAL "ALL")
+        return()
+    endif()
+
+    foreach(target IN LISTS IMHEX_IDE_HELPERS_MAIN_TARGET_DEPENDS_ON_PLUGINS)
+        if (NOT TARGET ${target})
+            message(WARNING "Ignoring unknown target '${target}'")
+            continue()
+        endif()
+
+        get_target_property(imhexPlugin ${target} IMHEX_PLUGIN)
+        if (NOT imhexPlugin)
+            message(WARNING "Ignoring non plugin target '${target}'")
+            continue()
+        endif()
+
+        add_dependencies(main ${target})
+    endforeach()
+endfunction()
 
 # Tweak all targets this CMake build is aware about
 function(tweakTargetsForIDESupport)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
     _tweakTargetsRecursive("${CMAKE_SOURCE_DIR}")
+
+    addSpecifiedPluginDependenciesToMainExecutable()
+
+    if (XCODE)
+        # Main executable requires the 'builtin' plugin to fully launch
+        add_dependencies(main builtin)
+
+        # Make sure a scheme is generated for main in all cases
+        set_target_properties(main PROPERTIES
+            XCODE_GENERATE_SCHEME ON
+        )
+    endif()
 endfunction()
