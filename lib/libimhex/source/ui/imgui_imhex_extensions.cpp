@@ -69,7 +69,7 @@ namespace ImGuiExt {
             return GL_NEAREST;
         }
 
-        GLint getMaxSamples(GLenum target, GLenum format) {
+        [[maybe_unused]] GLint getMaxSamples(GLenum target, GLenum format) {
             GLint maxSamples;
 
             glGetInternalformativ(target, format, GL_SAMPLES, 1, &maxSamples);
