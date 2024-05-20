@@ -291,12 +291,14 @@ macro(createPackage)
                 MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/resources/dist/macos/MacOSXBundleInfo.plist.in"
             )
 
+            # TODO: Determine what to embed seems tricky - to make things worse ImHex does not
+            #  allow diagnosing why a plugin failed to load :\
+
             # Embed select plugins
-            set(pluginTargetsToEmbed "")
-            list(APPEND pluginTargetsToEmbed "builtin")
+            set(targetsToEmbed builtin ui fonts libimhex)
 
             set_target_properties(main PROPERTIES 
-                XCODE_EMBED_APP_EXTENSIONS "${pluginTargetsToEmbed}"
+                XCODE_EMBED_APP_EXTENSIONS "${targetsToEmbed}"
             )
 
             # Download and embed required resources
@@ -313,6 +315,15 @@ macro(createPackage)
 
             set_target_properties(main PROPERTIES
                 XCODE_EMBED_RESOURCES "${bundleResources}"
+            )
+
+            # Setup application entitlements
+            set_target_properties(main PROPERTIES
+                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "net.WerWolv.ImHex"
+
+                XCODE_ATTRIBUTE_ENABLE_APP_SANDBOX "YES"
+                XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME "YES"
+                XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_SOURCE_DIR}/resources/dist/macos/main.entitlements"
             )
         else()
             # Download required resources to (potentially configuration dependent) main output dir
