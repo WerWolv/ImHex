@@ -102,7 +102,7 @@
             }
         } else if ([action isEqualToString:@"Maximize"]) {
             // `[NSWindow zoom:_ sender]` takes over pumping the main runloop for the duration of the resize,
-            // and would interfere with our renderer's frame logic. Shedule it for the next frame
+            // and would interfere with our renderer's frame logic. Schedule it for the next frame
             
             CFRunLoopPerformBlock(CFRunLoopGetMain(), kCFRunLoopCommonModes, ^{
                 if ([cocoaWindow isZoomable]) {
