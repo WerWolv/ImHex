@@ -37,19 +37,14 @@ include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 loadVersion(IMHEX_VERSION)
 setVariableInParent(IMHEX_VERSION ${IMHEX_VERSION})
 configureCMake()
+
 project(imhex
         LANGUAGES       C CXX
         VERSION         ${IMHEX_VERSION}
         DESCRIPTION     "The ImHex Hex Editor"
         HOMEPAGE_URL    "https://imhex.werwolv.net"
 )
-
-if (XCODE)
-    # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
-    set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>")
-else()
-    set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
-endif()
+configureProject()
 
 # Add ImHex sources
 add_custom_target(imhex_all ALL)
