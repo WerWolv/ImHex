@@ -15,6 +15,9 @@
         void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode);
 
         void enumerateFontsMacos();
+    
+        void macosHandleTitlebarDoubleClickGesture(GLFWwindow *window);
+        bool macosIsWindowBeingResizedByUser(GLFWwindow *window);
     }
 
 #endif

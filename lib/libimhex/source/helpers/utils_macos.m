@@ -88,6 +88,36 @@
         CFRelease(fontDescriptors);
     }
 
+    void macosHandleTitlebarDoubleClickGesture(GLFWwindow *window) {
+        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+
+        // Consult user preferences: "System Settings -> Desktop & Dock -> Double-click a window's title bar to"
+        NSString* action = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleActionOnDoubleClick"];
+        
+        if (action == nil || [action isEqualToString:@"None"]) {
+            // Nothing to do
+        } else if ([action isEqualToString:@"Minimize"]) {
+            if ([cocoaWindow isMiniaturizable]) {
+                [cocoaWindow miniaturize:nil];
+            }
+        } else if ([action isEqualToString:@"Maximize"]) {
+            // `[NSWindow zoom:_ sender]` takes over pumping the main runloop for the duration of the resize,
+            // and would interfere with our renderer's frame logic. Schedule it for the next frame
+            
+            CFRunLoopPerformBlock(CFRunLoopGetMain(), kCFRunLoopCommonModes, ^{
+                if ([cocoaWindow isZoomable]) {
+                    [cocoaWindow zoom:nil];
+                }
+            });
+        }
+    }
+
+    bool macosIsWindowBeingResizedByUser(GLFWwindow *window) {
+        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+        
+        return cocoaWindow.inLiveResize;
+    }
+
     @interface HexDocument : NSDocument
 
     @end
