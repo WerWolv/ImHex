@@ -401,7 +401,7 @@ namespace hex::plugin::builtin {
                         
                         // Drawing this button late allows widgets rendered before it to grab click events, forming an "input underlay"
                         if (ImGui::InvisibleButton("##mainMenuUnderlay", menuUnderlaySize, ImGuiButtonFlags_PressedOnDoubleClick)) {
-                            toggleWindowZoomMacos(window);
+                            macosHandleTitlebarDoubleClickGesture(window);
                         }
                     }
                 #endif

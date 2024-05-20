@@ -16,7 +16,7 @@
 
         void enumerateFontsMacos();
     
-        void toggleWindowZoomMacos(GLFWwindow *window);
+        void macosHandleTitlebarDoubleClickGesture(GLFWwindow *window);
     }
 
 #endif
