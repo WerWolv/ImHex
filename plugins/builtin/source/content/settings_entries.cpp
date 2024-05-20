@@ -585,12 +585,12 @@ namespace hex::plugin::builtin {
                 if (data.is_null())
                     return;
 
+                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable())
+                    menuItem.toolbarIndex = -1;
+
                 auto toolbarItems = data.get<std::map<i32, std::pair<std::string, u32>>>();
                 if (toolbarItems.empty())
                     return;
-
-                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable())
-                    menuItem.toolbarIndex = -1;
 
                 for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable()) {
                     for (const auto &[index, value] : toolbarItems) {
