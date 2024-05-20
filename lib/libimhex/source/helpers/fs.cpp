@@ -303,6 +303,7 @@ namespace hex::fs {
 
         #elif defined(OS_MACOS)
 
+            paths.push_back(wolv::io::fs::getMainBundleResourcesDirectoryPath());
             paths.push_back(wolv::io::fs::getApplicationSupportDirectoryPath());
 
         #elif defined(OS_LINUX) || defined(OS_WEB)
@@ -395,6 +396,10 @@ namespace hex::fs {
                 break;
             case ImHexPath::Plugins:
                 result = appendPath(getPluginPaths(), "plugins");
+
+                #if defined(OS_MACOS)
+                    result.push_back(wolv::io::fs::getMainBundleBuiltInPlugInsDirectoryPath());
+                #endif
                 break;
             case ImHexPath::Libraries:
                 result = appendPath(getPluginPaths(), "lib");

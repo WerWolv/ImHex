@@ -297,9 +297,6 @@ macro(createPackage)
 
             set_target_properties(main PROPERTIES 
                 XCODE_EMBED_APP_EXTENSIONS "${pluginTargetsToEmbed}"
-
-                # Xcode's "Embed App Extensions" step usually places libs in ImHex.app/Contents/PlugIns - escape from there
-                XCODE_EMBED_APP_EXTENSIONS_PATH "../MacOS/plugins"
             )
 
             # Download and embed required resources
@@ -316,17 +313,6 @@ macro(createPackage)
 
             set_target_properties(main PROPERTIES
                 XCODE_EMBED_RESOURCES "${bundleResources}"
-                XCODE_EMBED_RESOURCES_CODE_SIGN_ON_COPY "YES"
-
-                # Xcode's "Embed Resources" step usually places libs in ImHex.app/Contents/PlugIns - escape from there
-                XCODE_EMBED_RESOURCES_PATH "../MacOS"
-            )
-
-            # Unfortunately the current bundle format cannot be signed. Imhex.app/Contents/MacOS should only
-            # contain signed executables, which is not what the application expects. Disable code signing
-            set_target_properties(main PROPERTIES
-                XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
-                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
             )
         else()
             # Download required resources to (potentially configuration dependent) main output dir
