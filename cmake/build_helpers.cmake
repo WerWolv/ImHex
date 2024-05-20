@@ -237,6 +237,17 @@ macro(createPackage)
     endif()
 
     if (APPLE)
+        # Verify we are running with same options
+        if (IMHEX_GENERATE_PACKAGE_XCODE)
+            if (IMHEX_GENERATE_PACKAGE)
+                message(FATAL_ERROR "IMHEX_GENERATE_PACKAGE_XCODE and IMHEX_GENERATE_PACKAGE are incompatible!")
+            endif()
+
+            if (NOT XCODE)
+                message(FATAL_ERROR "IMHEX_GENERATE_PACKAGE_XCODE can only be used with Xcode")
+            endif()
+        endif()
+
         if (IMHEX_GENERATE_PACKAGE)
             include(PostprocessBundle)
 
@@ -273,7 +284,52 @@ macro(createPackage)
             endif()
 
             install(CODE [[ message(STATUS "MacOS Bundle finalized. DO NOT TOUCH IT ANYMORE! ANY MODIFICATIONS WILL BREAK IT FROM NOW ON!") ]])
+        elseif(IMHEX_GENERATE_PACKAGE_XCODE)
+            # Main executable will be built as an application bundle
+            set_target_properties(main PROPERTIES
+                MACOSX_BUNDLE YES
+                MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/resources/dist/macos/MacOSXBundleInfo.plist.in"
+            )
+
+            # Embed select plugins
+            set(pluginTargetsToEmbed "")
+            list(APPEND pluginTargetsToEmbed "builtin")
+
+            set_target_properties(main PROPERTIES 
+                XCODE_EMBED_APP_EXTENSIONS "${pluginTargetsToEmbed}"
+
+                # Xcode's "Embed App Extensions" step usually places libs in ImHex.app/Contents/PlugIns - escape from there
+                XCODE_EMBED_APP_EXTENSIONS_PATH "../MacOS/plugins"
+            )
+
+            # Download and embed required resources
+            set(bundleResourcesBaseDir "${CMAKE_BINARY_DIR}/BundleResources")
+            downloadImHexPatternsFiles("${bundleResourcesBaseDir}")
+
+            set(bundleResources "")
+            list(APPEND bundleResources "${bundleResourcesBaseDir}/constants")
+            list(APPEND bundleResources "${bundleResourcesBaseDir}/encodings")
+            list(APPEND bundleResources "${bundleResourcesBaseDir}/includes")
+            list(APPEND bundleResources "${bundleResourcesBaseDir}/patterns")
+            list(APPEND bundleResources "${bundleResourcesBaseDir}/magic")
+            list(APPEND bundleResources "${bundleResourcesBaseDir}/nodes")
+
+            set_target_properties(main PROPERTIES
+                XCODE_EMBED_RESOURCES "${bundleResources}"
+                XCODE_EMBED_RESOURCES_CODE_SIGN_ON_COPY "YES"
+
+                # Xcode's "Embed Resources" step usually places libs in ImHex.app/Contents/PlugIns - escape from there
+                XCODE_EMBED_RESOURCES_PATH "../MacOS"
+            )
+
+            # Unfortunately the current bundle format cannot be signed. Imhex.app/Contents/MacOS should only
+            # contain signed executables, which is not what the application expects. Disable code signing
+            set_target_properties(main PROPERTIES
+                XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
+                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
+            )
         else()
+            # Download required resources to (potentially configuration dependent) main output dir
             downloadImHexPatternsFiles("${IMHEX_MAIN_OUTPUT_DIRECTORY}")
         endif()
     else()
@@ -379,10 +435,13 @@ macro(configureCMake)
     set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
 
     set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
+
+    # XCODE_EMBED_FRAMEWORKS only works for monolithic projects
+    set(CMAKE_XCODE_GENERATE_TOP_LEVEL_PROJECT_ONLY ON)
 endmacro()
 
 function(configureProject)
-    if (XCODE)
+    if (XCODE AND NOT IMHEX_GENERATE_PACKAGE_XCODE)
         # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
         set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>" PARENT_SCOPE)
     else()

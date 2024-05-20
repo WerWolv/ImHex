@@ -28,6 +28,12 @@ add_executable(main ${APPLICATION_TYPE}
     ${IMHEX_ICON}
 )
 
+# NB: Source file level properties must be set in the same CMakeLists.txt
+#  file in which their target resides for them to take effect
+set_source_files_properties(${IMHEX_ICON} PROPERTIES 
+    MACOSX_PACKAGE_LOCATION "Resources"
+)
+
 target_include_directories(main PUBLIC include)
 setupCompilerFlags(main)
 

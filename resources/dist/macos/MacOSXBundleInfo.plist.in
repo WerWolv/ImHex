@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- https://developer.apple.com/documentation/bundleresources/information_property_list -->
+
+	<!-- Core settings / Bundle configuration / Categorization -->
+
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+
+		<key>LSApplicationCategoryType</key>
+		<string>public.app-category.developer-tools</string>
+
+	<!-- Core settings / Bundle configuration / Identification -->
+
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+
+		<key>CFBundleName</key>
+		<string>ImHex</string>
+
+	<!-- Core settings / Bundle configuration / Naming -->
+
+		<key>CFBundleVersion</key>
+		<string>${IMHEX_VERSION}</string>
+
+	<!-- Core settings / Bundle configuration / Bundle version -->
+
+		<key>CFBundleVersion</key>
+		<string>${IMHEX_VERSION}</string>
+
+		<key>CFBundleShortVersionString</key>
+		<string>${IMHEX_VERSION}</string>
+
+		<key>NSHumanReadableCopyright</key>
+		<string>${IMHEX_COPYRIGHT}</string>
+
+	<!-- Core settings / User Interface / Icons -->
+
+		<key>CFBundleIconFile</key>
+		<string>AppIcon.icns</string>
+
+	<!-- Core settings / Localization -->
+
+		<key>CFBundleDevelopmentRegion</key>
+		<string>en</string>
+
+		<key>CFBundleLocalizations</key>
+		<array>
+			<string>de_DE</string>
+			<string>en_US</string>
+			<string>es_ES</string>
+			<string>hu_HU</string>
+			<string>it_IT</string>
+			<string>ja_JP</string>
+			<string>ko_KR</string>
+			<string>pt_BR</string>
+			<string>zh_CN</string>
+			<string>zh_TW</string>
+		</array>
+
+	<!-- Core settings / App execution / Launch -->
+
+		<key>CFBundleExecutable</key>
+		<string>imhex</string>
+
+	<!-- Servives / Data and storage / Documents -->
+
+		<key>CFBundleDocumentTypes</key>
+		<array>
+			<!-- ImHex can edit any file format -->
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>All Files</string>
+
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+
+				<key>NSDocumentClass</key>
+				<string>HexDocument</string>
+
+				<!-- NB: This key is not listed in the documentation -->
+				<key>CFBundleTypeExtensions</key>
+				<array>
+					<string>*</string>
+				</array>
+			</dict>
+		</array>
+
+</dict>
+</plist>

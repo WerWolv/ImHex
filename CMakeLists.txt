@@ -15,6 +15,7 @@ option(IMHEX_USE_DEFAULT_BUILD_SETTINGS "Use default build settings"            
 option(IMHEX_STRICT_WARNINGS            "Enable most available warnings and treat them as errors"                               ON )
 option(IMHEX_STATIC_LINK_PLUGINS        "Statically link all plugins into the main executable"                                  OFF)
 option(IMHEX_GENERATE_PACKAGE           "Specify if a native package should be built. (Windows and MacOS only)"                 OFF)
+option(IMHEX_GENERATE_PACKAGE_XCODE     "Specify if a native package should be built with Xcode. (Experimental)"                OFF)
 option(IMHEX_ENABLE_UNITY_BUILD         "Enables building ImHex as a unity build."                                              OFF)
 option(IMHEX_GENERATE_PDBS              "Enable generating PDB files in non-debug builds (Windows only)"                        OFF)
 option(IMHEX_REPLACE_DWARF_WITH_PDB     "Remove DWARF information from binaries when generating PDBS (Windows only)"            OFF)
