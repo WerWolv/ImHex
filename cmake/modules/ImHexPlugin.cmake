@@ -1,4 +1,7 @@
-define_property(TARGET PROPERTY IMHEX_PLUGIN BRIEF_DOCS "Property marking targets as an ImHex plugin for IDE integration")
+define_property(TARGET PROPERTY IMHEX_PLUGIN
+    BRIEF_DOCS "Property marking targets as an ImHex plugin for IDE integration"
+    FULL_DOCS  "Property marking targets as an ImHex plugin for IDE integration"
+)
 
 macro(add_imhex_plugin)
     # Parse arguments
