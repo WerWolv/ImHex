@@ -552,14 +552,26 @@ namespace hex::plugin::builtin {
                 bool hasProject = !crashFileData.value("project", "").empty();
 
                 auto backupFilePath = path / BackupFileName;
+                auto backupFilePathOld = path / BackupFileName;
+                backupFilePathOld.replace_extension(".hexproj.old");
+
                 bool hasBackupFile = wolv::io::fs::exists(backupFilePath);
 
                 if (!hasProject && !hasBackupFile) {
                     log::warn("No project file or backup file found in crash.json file");
 
                     crashFile.close();
+
+                    // Delete crash.json file
                     wolv::io::fs::remove(crashFilePath);
-                    wolv::io::fs::remove(backupFilePath);
+
+                    // Delete old backup file
+                    wolv::io::fs::remove(backupFilePathOld);
+
+                    // Try to move current backup file to the old backup location
+                    if (wolv::io::fs::copyFile(backupFilePath, backupFilePathOld)) {
+                        wolv::io::fs::remove(backupFilePath);
+                    }
                     continue;
                 }
 

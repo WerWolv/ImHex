@@ -50,6 +50,9 @@ namespace hex::plugin::builtin {
 
         LayoutManager::registerLoadCallback([](std::string_view line) {
             for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
+                if (!view->shouldStoreWindowState())
+                    continue;
+
                 std::string format = hex::format("{}=%d", view->getUnlocalizedName().get());
                 sscanf(line.data(), format.c_str(), &view->getWindowOpenState());
             }
@@ -57,6 +60,9 @@ namespace hex::plugin::builtin {
 
         LayoutManager::registerStoreCallback([](ImGuiTextBuffer *buffer) {
             for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
+                if (!view->shouldStoreWindowState())
+                    continue;
+
                 buffer->appendf("%s=%d\n", name.c_str(), view->getWindowOpenState());
             }
         });

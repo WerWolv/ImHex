@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
                                 ImGui::PopItemWidth();
                                 ImGui::EndDisabled();
 
-                                if (auto tooltip = setting.widget->getTooltip(); tooltip.has_value() && ImGui::IsItemHovered())
+                                if (const auto &tooltip = setting.widget->getTooltip(); tooltip.has_value() && ImGui::IsItemHovered())
                                     ImGuiExt::InfoTooltip(Lang(tooltip.value()));
 
                                 auto &widget = setting.widget;

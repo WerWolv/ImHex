@@ -11,8 +11,6 @@ namespace hex::plugin::builtin {
 
     class FileProvider : public hex::prv::Provider {
     public:
-        constexpr static u64 MaxMemoryFileSize = 128 * 1024 * 1024;
-
         FileProvider() = default;
         ~FileProvider() override = default;
 
