@@ -291,14 +291,9 @@ macro(createPackage)
                 MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/resources/dist/macos/MacOSXBundleInfo.plist.in"
             )
 
-            # TODO: Determine what to embed seems tricky - to make things worse ImHex does not
-            #  allow diagnosing why a plugin failed to load :\
-
-            # Embed select plugins
-            set(targetsToEmbed builtin ui fonts libimhex)
-
+            # Embed plugins
             set_target_properties(main PROPERTIES 
-                XCODE_EMBED_APP_EXTENSIONS "${targetsToEmbed}"
+                XCODE_EMBED_APP_EXTENSIONS "${PLUGINS}"
             )
 
             # Download and embed required resources
@@ -317,14 +312,22 @@ macro(createPackage)
                 XCODE_EMBED_RESOURCES "${bundleResources}"
             )
 
-            # Setup application entitlements
-            set_target_properties(main PROPERTIES
-                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "net.WerWolv.ImHex"
+            if (IMHEX_ENABLE_SANDBOXING_XCODE)
+                # Application sandbox requires a bundle ID, entitlements, and signing
+                set_target_properties(main PROPERTIES
+                    XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "net.WerWolv.ImHex"
 
-                XCODE_ATTRIBUTE_ENABLE_APP_SANDBOX "YES"
-                XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME "YES"
-                XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_SOURCE_DIR}/resources/dist/macos/main.entitlements"
-            )
+                    XCODE_ATTRIBUTE_ENABLE_APP_SANDBOX "YES"
+                    XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME "YES"
+                    XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_SOURCE_DIR}/resources/dist/macos/main.entitlements"
+                )
+            else()
+                # Xcode will by default try to sign the final bundle, disable this
+                set_target_properties(main PROPERTIES
+                    XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
+                    XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
+                )
+            endif()
         else()
             # Download required resources to (potentially configuration dependent) main output dir
             downloadImHexPatternsFiles("${IMHEX_MAIN_OUTPUT_DIRECTORY}")

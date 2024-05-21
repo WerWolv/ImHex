@@ -42,6 +42,8 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CXX_FLAGS": "-fexperimental-library -Wno-shorten-64-to-32 -Wno-deprecated-declarations",
 
+        "IMHEX_EXCLUDE_PLUGINS": "windows",
+
         "IMHEX_OFFLINE_BUILD": "YES",
         "IMHEX_GENERATE_PACKAGE_XCODE": "YES",
 
