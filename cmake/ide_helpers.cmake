@@ -1,10 +1,7 @@
 
 option(IMHEX_IDE_HELPERS_OVERRIDE_XCODE_COMPILER "Enable choice of compiler for Xcode builds, despite CMake's best efforts" OFF)
 option(IMHEX_IDE_HELPERS_INTRUSIVE_IDE_TWEAKS    "Enable intrusive CMake tweaks to better support IDEs with folder support" OFF)
-
-set(IMHEX_IDE_HELPERS_MAIN_TARGET_DEPENDS_ON_PLUGINS "" CACHE STRING 
-    "'ALL' or semicolon separated list of plugins the main executable should depend on"
-)
+option(IMHEX_IDE_HELPERS_MAIN_DEPENDS_ON_PLUGINS "Make main executable target depend on plugins for conveinience"           OFF)
 
 # The CMake infrastructure silently ignores the CMAKE_<>_COMPILER settings when
 #  using the `Xcode` generator. 
@@ -123,8 +120,7 @@ function(_tweakTarget target path)
         set_target_properties(${target} PROPERTIES FOLDER "${path}")
     endif()
 
-    # Add additional dependencies to main executable as specified
-    if (IMHEX_IDE_HELPERS_MAIN_TARGET_DEPENDS_ON_PLUGINS STREQUAL "ALL")
+    if (IMHEX_IDE_HELPERS_MAIN_DEPENDS_ON_PLUGINS)
         get_target_property(imhexPlugin ${target} IMHEX_PLUGIN)
 
         if (imhexPlugin)
@@ -151,39 +147,13 @@ function(_tweakTargetsRecursive dir)
     endforeach()
 endfunction()
 
-function(addSpecifiedPluginDependenciesToMainExecutable)
-    if (IMHEX_IDE_HELPERS_MAIN_TARGET_DEPENDS_ON_PLUGINS STREQUAL "ALL")
-        return()
-    endif()
-
-    foreach(target IN LISTS IMHEX_IDE_HELPERS_MAIN_TARGET_DEPENDS_ON_PLUGINS)
-        if (NOT TARGET ${target})
-            message(WARNING "Ignoring unknown target '${target}'")
-            continue()
-        endif()
-
-        get_target_property(imhexPlugin ${target} IMHEX_PLUGIN)
-        if (NOT imhexPlugin)
-            message(WARNING "Ignoring non plugin target '${target}'")
-            continue()
-        endif()
-
-        add_dependencies(main ${target})
-    endforeach()
-endfunction()
-
 # Tweak all targets this CMake build is aware about
 function(tweakTargetsForIDESupport)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
     _tweakTargetsRecursive("${CMAKE_SOURCE_DIR}")
 
-    addSpecifiedPluginDependenciesToMainExecutable()
-
     if (XCODE)
-        # Main executable requires the 'builtin' plugin to fully launch
-        add_dependencies(main builtin)
-
         # Make sure a scheme is generated for main in all cases
         set_target_properties(main PROPERTIES
             XCODE_GENERATE_SCHEME ON
