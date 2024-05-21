@@ -566,6 +566,9 @@ macro(setupCompilerFlags target)
         set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -pthread -Wno-dollar-in-identifier-extension -Wno-pthreads-mem-growth")
     endif ()
 
+    # Compress debug info
+    set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -gz=zlib")
+
     # Set actual CMake flags
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
     set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS}    ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
