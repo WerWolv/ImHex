@@ -237,7 +237,7 @@ macro(createPackage)
     endif()
 
     if (APPLE)
-        # Verify we are running with same options
+        # Verify we are running with sane options
         if (IMHEX_GENERATE_PACKAGE_XCODE)
             if (IMHEX_GENERATE_PACKAGE)
                 message(FATAL_ERROR "IMHEX_GENERATE_PACKAGE_XCODE and IMHEX_GENERATE_PACKAGE are incompatible!")
