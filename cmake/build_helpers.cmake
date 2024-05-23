@@ -532,6 +532,8 @@ function(downloadImHexPatternsFiles dest)
 endfunction()
 
 macro(setupCompilerFlags target)
+    # IMHEX_COMMON_FLAGS: flags common for C, C++, Objective C, etc.. compilers
+
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         # Define strict compilation flags
         if (IMHEX_STRICT_WARNINGS)
