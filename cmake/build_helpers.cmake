@@ -567,7 +567,20 @@ macro(setupCompilerFlags target)
     endif ()
 
     # Compress debug info
-    set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -gz=zstd")
+    check_cxx_compiler_flag(-gz=zstd ZSTD_AVAILABLE)
+    check_cxx_compiler_flag(-gz COMPRESS_AVAILABLE)
+    if (NOT DEBUG_COMPRESSION_FLAG)
+        if (ZSTD_AVAILABLE)
+            message("Using Zstd compression for debug info")
+            set(DEBUG_COMPRESSION_FLAG "-gz=zstd" CACHE STRING "Cache to use for debug info compression")
+        elseif(COMPRESS_AVAILABLE)
+            message("Using default compression for debug info")
+            set(DEBUG_COMPRESSION_FLAG "-gz" CACHE STRING "Cache to use for debug info compression")
+        else()
+            message("No compression available for debug info")
+        endif()
+    endif()
+    set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} ${DEBUG_COMPRESSION_FLAG}")
 
     # Set actual CMake flags
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
