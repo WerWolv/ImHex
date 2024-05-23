@@ -353,10 +353,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Ubuntu
-            release_num: 22.04
-          - name: Ubuntu
-            release_num: 23.04
+          - release_num: 22.04
+          - release_num: 23.04
 
     name: 🐧 Ubuntu ${{ matrix.release_num }}
     runs-on: ubuntu-latest
