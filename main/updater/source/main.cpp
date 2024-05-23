@@ -81,10 +81,12 @@ std::string getUpdateType() {
         return "mac-dmg";
     #elif defined (OS_LINUX)
         if (hex::executeCommand("lsb_release -a | grep Ubuntu") == 0) {
-            if (hex::executeCommand("lsb_release -a | grep 22.") == 0)
+            if (hex::executeCommand("lsb_release -a | grep 22\.") == 0)
                 return "linux-deb-22.04";
-            else if (hex::executeCommand("lsb_release -a | grep 23.") == 0)
+            else if (hex::executeCommand("lsb_release -a | grep 23\.04") == 0)
                 return "linux-deb-23.04";
+            else if (hex::executeCommand("lsb_release -a | grep 23\.10") == 0)
+                return "linux-deb-23.10";
         }
     #endif
 
@@ -103,6 +105,7 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
         UpdateHandler { "macos-dmg",        ".dmg",  "hdiutil attach {}"                                        },
         UpdateHandler { "linux-deb-22.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
         UpdateHandler { "linux-deb-23.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
+        UpdateHandler { "linux-deb-23.10",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
     };
 
     for (const auto &handler : UpdateHandlers) {
