@@ -531,7 +531,7 @@ int32_t TextEditor::GetStringCharacterCount(std::string str) const {
     if (str.empty())
         return 0;
     int32_t c      = 0;
-    for (unsigned i = 0; i < str.size(); c++)
+    for (uint32_t i = 0; i < str.size(); c++)
         i += UTF8CharLength(str[i]);
     return c;
 }
@@ -541,12 +541,12 @@ int32_t TextEditor::GetLineCharacterCount(int32_t aLine) const {
         return 0;
     auto &line = mLines[aLine];
     int32_t c      = 0;
-    for (unsigned i = 0; i < line.size(); c++)
+    for (uint32_t i = 0; i < line.size(); c++)
         i += UTF8CharLength(line[i].mChar);
     return c;
 }
 
-unsigned long long TextEditor::GetLineByteCount(int32_t aLine) const {
+uint64_t TextEditor::GetLineByteCount(int32_t aLine) const {
     if (aLine >= mLines.size())
         return 0;
     auto &line = mLines[aLine];
@@ -558,7 +558,7 @@ int32_t TextEditor::GetLineMaxColumn(int32_t aLine) const {
         return 0;
     auto &line = mLines[aLine];
     int32_t col    = 0;
-    for (unsigned i = 0; i < line.size();) {
+    for (uint32_t i = 0; i < line.size();) {
         auto c = line[i].mChar;
         if (c == '\t')
             col = (col / mTabSize) * mTabSize + mTabSize;
@@ -1989,7 +1989,7 @@ void TextEditor::FindReplaceHandler::SelectFound(TextEditor *editor, int32_t ind
 
 // The returned index is shown in the form
 //  'index of count' so 1 based
-unsigned TextEditor::FindReplaceHandler::FindMatch(TextEditor *editor, bool isNext) {
+uint32_t TextEditor::FindReplaceHandler::FindMatch(TextEditor *editor, bool isNext) {
 
     if ( editor->mTextChanged || mOptionsChanged) {
         std::string findWord = GetFindWord();
@@ -2007,7 +2007,7 @@ unsigned TextEditor::FindReplaceHandler::FindMatch(TextEditor *editor, bool isNe
         return 0;
     }
 
-    for (unsigned i=0; i < count; i++) {
+    for (uint32_t i=0; i < count; i++) {
         if (targetPos >= mMatches[i].mSelectionStart && targetPos <= mMatches[i].mSelectionEnd) {
             if (isNext) {
                 if (i == count - 1) {
@@ -2039,7 +2039,7 @@ unsigned TextEditor::FindReplaceHandler::FindMatch(TextEditor *editor, bool isNe
         }
     }
 
-    for (unsigned i=1;i < count;i++) {
+    for (uint32_t i=1;i < count;i++) {
 
         if (mMatches[i - 1].mSelectionEnd <= targetPos &&
             mMatches[i].mSelectionStart >= targetPos ) {
@@ -2057,7 +2057,7 @@ unsigned TextEditor::FindReplaceHandler::FindMatch(TextEditor *editor, bool isNe
 }
 
 // returns 1 based index
-unsigned TextEditor::FindReplaceHandler::FindPosition( TextEditor *editor, TextEditor::Coordinates targetPos, bool isNext) {
+uint32_t TextEditor::FindReplaceHandler::FindPosition( TextEditor *editor, TextEditor::Coordinates targetPos, bool isNext) {
     if ( editor->mTextChanged || mOptionsChanged) {
         std::string findWord = GetFindWord();
         if (findWord.empty())
@@ -2072,14 +2072,14 @@ unsigned TextEditor::FindReplaceHandler::FindPosition( TextEditor *editor, TextE
     if( isNext) {
         if (targetPos > mMatches[count - 1].mSelectionEnd || targetPos <= mMatches[0].mSelectionEnd)
             return 1;
-        for (unsigned i = 1; i < count; i++) {
+        for (uint32_t i = 1; i < count; i++) {
             if (targetPos > mMatches[i-1].mSelectionEnd && targetPos <= mMatches[i].mSelectionEnd)
                 return i+1;
         }
     } else {
         if (targetPos >= mMatches[count - 1].mSelectionStart || targetPos < mMatches[0].mSelectionStart)
             return count;
-        for (unsigned i = 1; i < count; i++) {
+        for (uint32_t i = 1; i < count; i++) {
             if (targetPos >= mMatches[i-1].mSelectionStart && targetPos < mMatches[i].mSelectionStart)
                 return i ;
         }
@@ -2110,7 +2110,7 @@ std::string make_wholeWord(const std::string &s) {
 // Performs actual search to fill mMatches
 bool TextEditor::FindReplaceHandler::FindNext(TextEditor *editor, bool wrapAround) {
     auto curPos = editor->mState.mCursorPosition;
-    unsigned long selectionLength = editor->GetStringCharacterCount(mFindWord);
+    uint64_t selectionLength = editor->GetStringCharacterCount(mFindWord);
     size_t byteIndex = 0;
 
     for (size_t ln = 0; ln < curPos.mLine; ln++)
@@ -2153,7 +2153,7 @@ bool TextEditor::FindReplaceHandler::FindNext(TextEditor *editor, bool wrapAroun
         if (!iter->ready())
             return false;
         size_t firstLoc = iter->position();
-        unsigned long firstLength = iter->length();
+        uint64_t firstLength = iter->length();
 
         if(firstLoc > byteIndex) {
             pos = firstLoc;
@@ -2319,7 +2319,7 @@ bool TextEditor::FindReplaceHandler::Replace(TextEditor *editor, bool next) {
         mMatches.erase(mMatches.begin() + matchIndex - 1);
         int32_t correction = addedCount - removedCount;
         if (correction != 0 ) {
-            for (unsigned i = matchIndex - 1; i < mMatches.size(); i++) {
+            for (uint32_t i = matchIndex - 1; i < mMatches.size(); i++) {
                  if (mMatches[i].mSelectionStart.mLine > selectionEnd.mLine)
                      break;
                  mMatches[i].mSelectionStart.mColumn += correction;
@@ -2335,9 +2335,9 @@ bool TextEditor::FindReplaceHandler::Replace(TextEditor *editor, bool next) {
 }
 
 bool TextEditor::FindReplaceHandler::ReplaceAll(TextEditor *editor) {
-    unsigned count = mMatches.size();
+    uint32_t count = mMatches.size();
 
-    for (unsigned i = 0; i < count; i++)
+    for (uint32_t i = 0; i < count; i++)
         Replace(editor,true);
 
     return true;
