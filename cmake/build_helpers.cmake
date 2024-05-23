@@ -567,7 +567,7 @@ macro(setupCompilerFlags target)
     endif ()
 
     # Compress debug info
-    set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -gz=zlib")
+    set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -gz=zstd")
 
     # Set actual CMake flags
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
