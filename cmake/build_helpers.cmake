@@ -567,6 +567,7 @@ macro(setupCompilerFlags target)
     endif ()
 
     # Compress debug info
+    include(CheckCXXCompilerFlag)
     check_cxx_compiler_flag(-gz=zstd ZSTD_AVAILABLE)
     check_cxx_compiler_flag(-gz COMPRESS_AVAILABLE)
     if (NOT DEBUG_COMPRESSION_FLAG)
