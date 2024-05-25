@@ -566,7 +566,7 @@ macro(setupCompilerFlags target)
         set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -pthread -Wno-dollar-in-identifier-extension -Wno-pthreads-mem-growth")
     endif ()
 
-    # Compress debug info
+    # Compress debug info. See https://github.com/WerWolv/ImHex/issues/1714 for relevant problem
     include(CheckCXXCompilerFlag)
     include(CheckLinkerFlag)
     check_cxx_compiler_flag(-gz=zstd ZSTD_AVAILABLE)
