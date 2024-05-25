@@ -16,10 +16,10 @@ namespace hex::plugin::builtin::export_fmt {
 
         [[nodiscard]] std::string getFileExtension() const override { return "json"; }
 
-        std::vector<u8> format(const PerProvider<std::vector<Occurrence>> &occurrences, prv::Provider *provider, std::function<std::string (Occurrence)> occurrenceFunc) override {
+        std::vector<u8> format(const std::vector<Occurrence> &occurrences, std::function<std::string (Occurrence)> occurrenceFunc) override {
             json results_array;
 
-            for (const auto &occurrence : occurrences.get(provider)) {
+            for (const auto &occurrence : occurrences) {
                 std::string formattedResult = occurrenceFunc(occurrence);
 
                 json obj = {

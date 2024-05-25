@@ -16,14 +16,14 @@ namespace hex::plugin::builtin::export_fmt {
 
         [[nodiscard]] std::string getFileExtension() const override { return "csv"; }
 
-        [[nodiscard]] std::vector<u8> format(const PerProvider<std::vector<Occurrence>> &occurrences, prv::Provider *provider, std::function<std::string(Occurrence)> occurrenceFunc) override {
+        [[nodiscard]] std::vector<u8> format(const std::vector<Occurrence> &occurrences, std::function<std::string(Occurrence)> occurrenceFunc) override {
             char separator = getSeparatorCharacter();
 
             std::ostringstream ss;
             ss << fmt::format("offset{}size{}data", separator, separator) << std::endl;
 
 
-            for (const auto &occurrence : occurrences.get(provider)) {
+            for (const auto &occurrence : occurrences) {
                 std::string formattedResult = occurrenceFunc(occurrence);
                 std::string escapedResult;
                 escapedResult.reserve(formattedResult.size() * 2);

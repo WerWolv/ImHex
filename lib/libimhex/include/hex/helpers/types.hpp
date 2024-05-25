@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <bit>
 
 #include <concepts>
 
@@ -62,13 +61,6 @@ namespace hex {
         constexpr static Region Invalid() {
             return { 0, 0 };
         }
-    };
-
-    struct Occurrence {
-        Region region;
-        enum class DecodeType { ASCII, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
-        std::endian endian = std::endian::native;
-        bool selected;
     };
 
     template<typename T>

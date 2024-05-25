@@ -968,7 +968,22 @@ namespace hex {
                     Callback callback;
                 };
 
+                struct FindOccurrence {
+                    Region region;
+                    enum class DecodeType { ASCII, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
+                    std::endian endian = std::endian::native;
+                    bool selected;
+                };
+
+                using ExporterCallback = std::function<std::vector<u8>(const std::vector<FindOccurrence>&, std::function<std::string(FindOccurrence)>)>;
+                struct ExporterEntry {
+                    UnlocalizedString unlocalizedName;
+                    std::string fileExtension;
+                    ExporterCallback callback;
+                };
+
                 const std::vector<Entry>& getEntries();
+                const std::vector<ExporterEntry>& getExporterEntries();
 
             }
 
@@ -979,6 +994,13 @@ namespace hex {
              * @param callback The function to call to format the data
              */
             void add(const UnlocalizedString &unlocalizedName, const impl::Callback &callback);
+
+            /**
+             * @brief Adds a new data exporter for Find results
+             * @param unlocalizedName The unlocalized name of the formatter
+             * @param callback The function to call to format the data
+             */
+            void addExportFormatter(const UnlocalizedString &unlocalizedName, const std::string fileExtension, const impl::ExporterCallback &callback);
 
         }
 

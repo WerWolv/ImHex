@@ -11,7 +11,7 @@
 
 #include <wolv/container/interval_tree.hpp>
 
-#include <content/export_formatters.hpp>
+#include <hex/api/content_registry.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -23,6 +23,8 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
+
+        using Occurrence = hex::ContentRegistry::DataFormatter::impl::FindOccurrence;
 
         struct BinaryPattern {
             u8 mask, value;
@@ -103,7 +105,7 @@ namespace hex::plugin::builtin {
         TaskHolder m_searchTask, m_filterTask;
         bool m_settingsValid = false;
         std::string m_replaceBuffer;
-        export_fmt::ExportFormatterArray m_formatters;
+        std::vector<hex::ContentRegistry::DataFormatter::impl::ExporterEntry> m_formatters;
 
     private:
         static std::vector<Occurrence> searchStrings(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Strings &settings);

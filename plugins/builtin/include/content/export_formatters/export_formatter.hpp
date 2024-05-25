@@ -5,7 +5,11 @@
 #include <array>
 #include <memory>
 
+#include <hex/api/content_registry.hpp>
+
 namespace hex::plugin::builtin::export_fmt {
+
+    using Occurrence = hex::ContentRegistry::DataFormatter::impl::FindOccurrence;
 
     class ExportFormatter {
     public:
@@ -18,7 +22,7 @@ namespace hex::plugin::builtin::export_fmt {
         }
 
         [[nodiscard]] virtual std::string getFileExtension() const = 0;
-        [[nodiscard]] virtual std::vector<u8> format(const PerProvider<std::vector<Occurrence>> &occurrences, prv::Provider *provider, std::function<std::string(Occurrence)> occurrenceFunc) = 0;
+        [[nodiscard]] virtual std::vector<u8> format(const std::vector<Occurrence> &occurrences, std::function<std::string(Occurrence)> occurrenceFunc) = 0;
 
     private:
         std::string mName;

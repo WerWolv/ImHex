@@ -8,6 +8,10 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/utils.hpp>
 
+#include <content/export_formatters/export_formatter_csv.hpp>
+#include <content/export_formatters/export_formatter_tsv.hpp>
+#include <content/export_formatters/export_formatter_json.hpp>
+
 namespace hex::plugin::builtin {
 
     static std::string formatLanguageArray(prv::Provider *provider, u64 offset, size_t size, const std::string &start, const std::string &byteFormat, const std::string &end, bool removeFinalDelimiter= false) {
@@ -170,6 +174,27 @@ namespace hex::plugin::builtin {
                 "</div>\n";
 
             return result;
+        });
+
+        ContentRegistry::DataFormatter::addExportFormatter("csv", "csv", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences,
+                std::function<std::string(ContentRegistry::DataFormatter::impl::FindOccurrence)> transformFunc){
+
+            export_fmt::ExportFormatterCsv formatter;
+            return formatter.format(occurrences, transformFunc);
+        });
+
+        ContentRegistry::DataFormatter::addExportFormatter("tsv", "tsv", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences,
+                std::function<std::string(ContentRegistry::DataFormatter::impl::FindOccurrence)> transformFunc){
+
+            export_fmt::ExportFormatterTsv formatter;
+            return formatter.format(occurrences, transformFunc);
+        });
+
+        ContentRegistry::DataFormatter::addExportFormatter("json", "json", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences,
+                std::function<std::string(ContentRegistry::DataFormatter::impl::FindOccurrence)> transformFunc){
+
+            export_fmt::ExportFormatterJson formatter;
+            return formatter.format(occurrences, transformFunc);
         });
     }
 

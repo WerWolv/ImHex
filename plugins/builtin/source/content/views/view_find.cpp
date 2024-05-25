@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
                 occurrence.selected = true;
         });
 
-        m_formatters = export_fmt::createFormatters();
+        m_formatters = hex::ContentRegistry::DataFormatter::impl::getExporterEntries();
     }
 
     template<typename Type, typename StorageType>
@@ -170,7 +170,7 @@ namespace hex::plugin::builtin {
         return hex::format("{}", value);
     }
 
-    std::vector<Occurrence> ViewFind::searchStrings(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Strings &settings) {
+    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchStrings(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Strings &settings) {
         using enum SearchSettings::StringType;
 
         std::vector<Occurrence> results;
@@ -256,7 +256,7 @@ namespace hex::plugin::builtin {
         return results;
     }
 
-    std::vector<Occurrence> ViewFind::searchSequence(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Sequence &settings) {
+    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchSequence(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Sequence &settings) {
         std::vector<Occurrence> results;
 
         auto reader = prv::ProviderReader(provider);
@@ -337,7 +337,7 @@ namespace hex::plugin::builtin {
         return results;
     }
 
-    std::vector<Occurrence> ViewFind::searchRegex(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Regex &settings) {
+    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchRegex(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Regex &settings) {
         auto stringOccurrences = searchStrings(task, provider, searchRegion, SearchSettings::Strings {
             .minLength          = settings.minLength,
             .nullTermination    = settings.nullTermination,
@@ -371,7 +371,7 @@ namespace hex::plugin::builtin {
         return result;
     }
 
-    std::vector<Occurrence> ViewFind::searchBinaryPattern(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::BinaryPattern &settings) {
+    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchBinaryPattern(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::BinaryPattern &settings) {
         std::vector<Occurrence> results;
 
         auto reader = prv::ProviderReader(provider);
@@ -424,7 +424,7 @@ namespace hex::plugin::builtin {
         return results;
     }
 
-    std::vector<Occurrence> ViewFind::searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings) {
+    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings) {
         std::vector<Occurrence> results;
 
         auto reader = prv::ProviderReader(provider);
@@ -951,10 +951,10 @@ namespace hex::plugin::builtin {
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImVec2(startPos.x, ImGui::GetCursorPosY()));
         if (ImGui::BeginPopup("ExportResults")) {
             for (const auto &formatter : m_formatters) {
-                const auto formatterName = formatter->getName();
+                const auto formatterName = formatter.unlocalizedName;
                 const auto name = toUpper(formatterName);
 
-                const auto &extension = formatter->getFileExtension();
+                const auto &extension = formatter.fileExtension;
 
                 if (ImGui::MenuItem(name.c_str())) {
                     fs::openFileBrowser(fs::DialogMode::Save, { { name.c_str(), extension.c_str() } }, [&](const std::fs::path &path) {
@@ -962,9 +962,8 @@ namespace hex::plugin::builtin {
                         if(!file.isValid())
                             return;
 
-                        auto result = formatter->format(
-                                m_sortedOccurrences,
-                                provider,
+                        auto result = formatter.callback(
+                                m_sortedOccurrences.get(provider),
                                 [&](Occurrence o){ return this->decodeValue(provider, o); });
 
                         file.writeVector(result);

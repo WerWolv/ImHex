@@ -967,12 +967,23 @@ namespace hex {
                 return *s_entries;
             }
 
+            static AutoReset<std::vector<ExporterEntry>> s_exportEntries;
+            const std::vector<ExporterEntry>& getExporterEntries() {
+                return *s_exportEntries;
+            }
+
         }
 
         void add(const UnlocalizedString &unlocalizedName, const impl::Callback &callback) {
             log::debug("Registered new data formatter: {}", unlocalizedName.get());
 
             impl::s_entries->push_back({ unlocalizedName, callback });
+        }
+
+        void addExportFormatter(const UnlocalizedString &unlocalizedName, const std::string fileExtension, const impl::ExporterCallback &callback) {
+            log::debug("Registered new export formatter: {}", unlocalizedName.get());
+
+            impl::s_exportEntries->push_back({ unlocalizedName, fileExtension, callback });
         }
 
     }
