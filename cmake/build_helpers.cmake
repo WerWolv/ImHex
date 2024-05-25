@@ -531,6 +531,31 @@ function(downloadImHexPatternsFiles dest)
 
 endfunction()
 
+# Compress debug info. See https://github.com/WerWolv/ImHex/issues/1714 for relevant problem
+macro(setupDebugCompressionFlag)
+    include(CheckCXXCompilerFlag)
+    include(CheckLinkerFlag)
+
+    check_cxx_compiler_flag(-gz=zstd ZSTD_AVAILABLE_COMPILER)
+    check_linker_flag(CXX -gz=zstd ZSTD_AVAILABLE_LINKER)
+    check_cxx_compiler_flag(-gz COMPRESS_AVAILABLE_COMPILER)
+    check_linker_flag(CXX -gz COMPRESS_AVAILABLE_LINKER)
+
+    if (NOT DEBUG_COMPRESSION_FLAG) # Cache variable
+        if (ZSTD_AVAILABLE_COMPILER AND ZSTD_AVAILABLE_LINKER)
+            message("Using Zstd compression for debug info because both compiler and linker support it")
+            set(DEBUG_COMPRESSION_FLAG "-gz=zstd" CACHE STRING "Cache to use for debug info compression")
+        elseif(COMPRESS_AVAILABLE_COMPILER AND COMPRESS_AVAILABLE_LINKER)
+            message("Using default compression for debug info because both compiler and linker support it")
+            set(DEBUG_COMPRESSION_FLAG "-gz" CACHE STRING "Cache to use for debug info compression")
+        else()
+            message("No compression available for debug info")
+        endif()
+    endif()
+
+    set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} ${DEBUG_COMPRESSION_FLAG}")
+endmacro()
+
 macro(setupCompilerFlags target)
     # IMHEX_COMMON_FLAGS: flags common for C, C++, Objective C, etc.. compilers
 
@@ -566,25 +591,7 @@ macro(setupCompilerFlags target)
         set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -pthread -Wno-dollar-in-identifier-extension -Wno-pthreads-mem-growth")
     endif ()
 
-    # Compress debug info. See https://github.com/WerWolv/ImHex/issues/1714 for relevant problem
-    include(CheckCXXCompilerFlag)
-    include(CheckLinkerFlag)
-    check_cxx_compiler_flag(-gz=zstd ZSTD_AVAILABLE)
-    check_linker_flag(CXX -gz=zstd ZSTD_AVAILABLE_2)
-    check_cxx_compiler_flag(-gz COMPRESS_AVAILABLE)
-    check_linker_flag(CXX -gz COMPRESS_AVAILABLE_2)
-    if (NOT DEBUG_COMPRESSION_FLAG)
-        if (ZSTD_AVAILABLE AND ZSTD_AVAILABLE_2)
-            message("Using Zstd compression for debug info because both compiler and linker support it")
-            set(DEBUG_COMPRESSION_FLAG "-gz=zstd" CACHE STRING "Cache to use for debug info compression")
-        elseif(COMPRESS_AVAILABLE AND COMPRESS_AVAILABLE_2)
-            message("Using default compression for debug info because both compiler and linker support it")
-            set(DEBUG_COMPRESSION_FLAG "-gz" CACHE STRING "Cache to use for debug info compression")
-        else()
-            message("No compression available for debug info")
-        endif()
-    endif()
-    set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} ${DEBUG_COMPRESSION_FLAG}")
+    setupDebugCompressionFlag()
 
     # Set actual CMake flags
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
