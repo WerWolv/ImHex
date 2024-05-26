@@ -63,6 +63,7 @@ namespace hex {
         }
     };
 
+
     template<typename T>
     concept Pointer = std::is_pointer_v<T>;
 

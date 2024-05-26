@@ -959,7 +959,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem(name.c_str())) {
                     fs::openFileBrowser(fs::DialogMode::Save, { { name.c_str(), extension.c_str() } }, [&](const std::fs::path &path) {
                         wolv::io::File file(path, wolv::io::File::Mode::Create);
-                        if(!file.isValid())
+                        if (!file.isValid())
                             return;
 
                         auto result = formatter.callback(
