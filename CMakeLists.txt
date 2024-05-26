@@ -21,6 +21,7 @@ option(IMHEX_REPLACE_DWARF_WITH_PDB     "Remove DWARF information from binaries 
 option(IMHEX_ENABLE_STD_ASSERTS         "Enable debug asserts in the C++ std library. (Breaks Plugin ABI!)"                     OFF)
 option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                            OFF)
 option(IMHEX_ENABLE_PRECOMPILED_HEADERS "Enable precompiled headers"                                                            OFF)
+option(IMHEX_COMPRESS_DEBUG_INFO "Compress debug information"                                                                   ON )
 
 set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
