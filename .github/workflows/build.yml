@@ -387,7 +387,7 @@ jobs:
           apt install software-properties-common -y
           add-apt-repository ppa:ubuntu-toolchain-r/test -y
           apt update
-          apt install -y gcc-14 g++-14
+          apt install -y gcc-13 g++-13
 
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v4
@@ -402,7 +402,7 @@ jobs:
           git config --global --add safe.directory '*'
           mkdir -p build
           cd build
-          CC=gcc-14 CXX=g++-14 cmake -G "Ninja"                       \
+          CC=gcc-13 CXX=g++-13 cmake -G "Ninja"                       \
             -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                    \
             -DCMAKE_INSTALL_PREFIX="/usr"                             \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
