@@ -385,7 +385,7 @@ jobs:
           bash dist/get_deps_debian.sh
 
           apt install software-properties-common -y
-          add-apt-repository ppa:ubuntu-toolchain-r/ppa -y
+          add-apt-repository ppa:ubuntu-toolchain-r/test -y
           apt update
           apt install -y gcc-14 g++-14
 
