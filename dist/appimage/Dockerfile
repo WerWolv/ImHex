@@ -38,7 +38,7 @@ ENV PATH="/cache/bin/:${PATH}"
 COPY . /imhex
 
 ARG LTO=ON
-ARG BUILD_TYPE=Release
+ARG BUILD_TYPE=RelWithDebInfo
 ARG GIT_COMMIT_HASH
 ARG GIT_BRANCH
 WORKDIR /build
