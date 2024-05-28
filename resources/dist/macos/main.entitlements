@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- ImHex is subject to sandboxing, and will declare entitlements in this file -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+
+	<!-- ImHex may have read-write access to files the user has selected using an Open or Save dialog. -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+
+	<!-- ImHex may open outgoing network connections -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+
+	<!-- ImHex runs in a hardened runtime, but allows loading unsigned plugins -->
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+</dict>
+</plist>
