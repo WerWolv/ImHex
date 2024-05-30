@@ -460,7 +460,7 @@
         "hex.builtin.setting.general.auto_load_patterns": "Auto-load supported pattern",
         "hex.builtin.setting.general.server_contact": "Enable update checks and usage statistics",
         "hex.builtin.setting.general.max_mem_file_size": "Maximum size of file to load into memory",
-        "hex.builtin.setting.general.max_mem_file_size.desc": "Small files are loaded into memory to prevent them from being modified directly on disk.\n\nIncreasing this size allows larger files to be loaded into memory before ImHex resorts streaming in data from disk.",
+        "hex.builtin.setting.general.max_mem_file_size.desc": "Small files are loaded into memory to prevent them from being modified directly on disk.\n\nIncreasing this size allows larger files to be loaded into memory before ImHex resorts to streaming in data from disk.",
         "hex.builtin.setting.general.network_interface": "Enable network interface",
         "hex.builtin.setting.general.save_recent_providers": "Save recently used providers",
         "hex.builtin.setting.general.show_tips": "Show tips on startup",
