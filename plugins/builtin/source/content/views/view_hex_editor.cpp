@@ -608,7 +608,7 @@ namespace hex::plugin::builtin {
                         m_currentPopupHasHovered = false;
                     }
 
-                    m_currentPopupHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+                    m_currentPopupHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_RootAndChildWindows);
                     m_currentPopupDetached = !ImGui::GetCurrentWindow()->ViewportOwned;
                     m_currentPopupHasHovered |= m_currentPopupHover;
 
@@ -618,7 +618,7 @@ namespace hex::plugin::builtin {
                 this->closePopup();
             }
 
-            if ((m_currPopup != nullptr && !m_currPopup->isPinned() && !ImGui::IsWindowFocused() && !ImGui::IsWindowHovered()) || !open) {
+            if ((m_currPopup != nullptr && !m_currPopup->isPinned() && !ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !ImGui::IsWindowHovered()) || !open) {
                 this->closePopup();
             }
 
