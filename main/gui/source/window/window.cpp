@@ -819,7 +819,7 @@ namespace hex {
         });
 
         // Register window resize callback
-        glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, int width, int height) {
+        glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, [[maybe_unused]] int width, [[maybe_unused]] int height) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
 
