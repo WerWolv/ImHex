@@ -820,12 +820,14 @@ namespace hex {
 
         // Register window resize callback
         glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, int width, int height) {
-            if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
-                ImHexApi::System::impl::setMainWindowSize(width, height);
-
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
-            
+
+            #if !defined(OS_WINDOWS)
+                if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
+                    ImHexApi::System::impl::setMainWindowSize(width, height);
+            #endif
+
             #if defined(OS_MACOS)
                 // Stop widgets registering hover effects while the window is being resized
                 if (macosIsWindowBeingResizedByUser(window)) {

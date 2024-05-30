@@ -551,6 +551,16 @@ namespace hex {
         });
 
         ImGui::GetIO().ConfigDebugIsDebuggerPresent = ::IsDebuggerPresent();
+
+        glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
+            auto *win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->m_unlockFrameRate = true;
+
+            glViewport(0, 0, width, height);
+            ImHexApi::System::impl::setMainWindowSize(width, height);
+
+            win->fullFrame();
+        });
     }
 
     void Window::beginNativeWindowFrame() {
