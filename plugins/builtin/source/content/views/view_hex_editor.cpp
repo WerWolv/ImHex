@@ -642,12 +642,18 @@ namespace hex::plugin::builtin {
     }
 
     static void save() {
-        ImHexApi::Provider::get()->save();
+        auto provider = ImHexApi::Provider::get();
+
+        if (provider != nullptr)
+            provider->save();
     }
 
     static void saveAs() {
-        fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
-            auto provider = ImHexApi::Provider::get();
+        auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return;
+
+        fs::openFileBrowser(fs::DialogMode::Save, {}, [provider](const auto &path) {
             PopupBlockingTask::open(TaskManager::createTask("Saving...", TaskManager::NoProgress, [=](Task &){
                 provider->saveAs(path);
             }));
@@ -658,8 +664,10 @@ namespace hex::plugin::builtin {
         constexpr static auto Format = "{0:02X} ";
 
         auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return;
 
-        auto reader = prv::ProviderReader (provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(selection.getStartAddress());
         reader.setEndAddress(selection.getEndAddress());
 
@@ -675,6 +683,8 @@ namespace hex::plugin::builtin {
 
     static void pasteBytes(const Region &selection, bool selectionCheck) {
         auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return;
 
         auto clipboard = ImGui::GetClipboardText();
         if (clipboard == nullptr)
@@ -694,6 +704,8 @@ namespace hex::plugin::builtin {
 
     static void copyString(const Region &selection) {
         auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return;
 
         std::string buffer(selection.size, 0x00);
         buffer.reserve(selection.size);
@@ -704,6 +716,8 @@ namespace hex::plugin::builtin {
 
     static void copyCustomEncoding(const EncodingFile &customEncoding, const Region &selection) {
         auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return;
 
         std::vector<u8> buffer(customEncoding.getLongestSequence(), 0x00);
         std::string string;
@@ -725,6 +739,9 @@ namespace hex::plugin::builtin {
         // Remove selection
         ShortcutManager::addShortcut(this, Keys::Escape, "hex.builtin.view.hex_editor.shortcut.remove_selection", [this] {
             auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return;
+
             m_selectionStart->reset();
             m_selectionEnd->reset();
 
