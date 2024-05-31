@@ -1,4 +1,4 @@
-// dear imgui, v1.90.6
+// dear imgui, v1.90.7
 // (widgets code)
 
 /*
@@ -547,7 +547,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
         for (int button = 0; button < 3; button++)
             if (flags & (ImGuiButtonFlags_MouseButtonLeft << button)) // Handle ImGuiButtonFlags_MouseButtonRight and ImGuiButtonFlags_MouseButtonMiddle here.
             {
-                if (IsMouseClicked(button, test_owner_id) && mouse_button_clicked == -1) { mouse_button_clicked = button; }
+                if (IsMouseClicked(button, ImGuiInputFlags_None, test_owner_id) && mouse_button_clicked == -1) { mouse_button_clicked = button; }
                 if (IsMouseReleased(button, test_owner_id) && mouse_button_released == -1) { mouse_button_released = button; }
             }
 
@@ -595,7 +595,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
             // 'Repeat' mode acts when held regardless of _PressedOn flags (see table above).
             // Relies on repeat logic of IsMouseClicked() but we may as well do it ourselves if we end up exposing finer RepeatDelay/RepeatRate settings.
             if (g.ActiveId == id && (item_flags & ImGuiItemFlags_ButtonRepeat))
-                if (g.IO.MouseDownDuration[g.ActiveIdMouseButton] > 0.0f && IsMouseClicked(g.ActiveIdMouseButton, test_owner_id, ImGuiInputFlags_Repeat))
+                if (g.IO.MouseDownDuration[g.ActiveIdMouseButton] > 0.0f && IsMouseClicked(g.ActiveIdMouseButton, ImGuiInputFlags_Repeat, test_owner_id))
                     pressed = true;
         }
 
@@ -1007,7 +1007,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
         scroll_ratio = ImSaturate((float)*p_scroll_v / (float)scroll_max);
         grab_v_norm = scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v;
 
-        // Update distance to grab now that we have seeked and saturated
+        // Update distance to grab now that we have seek'ed and saturated
         if (seek_absolute)
             g.ScrollbarClickDeltaToGrabCenter = clicked_v_norm - grab_v_norm - grab_h_norm * 0.5f;
     }
@@ -2315,7 +2315,7 @@ bool ImGui::DragBehaviorT(ImGuiDataType data_type, TYPE* v, float v_speed, const
         const int decimal_precision = is_floating_point ? ImParseFormatPrecision(format, 3) : 0;
         const bool tweak_slow = IsKeyDown((g.NavInputSource == ImGuiInputSource_Gamepad) ? ImGuiKey_NavGamepadTweakSlow : ImGuiKey_NavKeyboardTweakSlow);
         const bool tweak_fast = IsKeyDown((g.NavInputSource == ImGuiInputSource_Gamepad) ? ImGuiKey_NavGamepadTweakFast : ImGuiKey_NavKeyboardTweakFast);
-        const float tweak_factor = tweak_slow ? 1.0f / 1.0f : tweak_fast ? 10.0f : 1.0f;
+        const float tweak_factor = tweak_slow ? 1.0f / 10.0f : tweak_fast ? 10.0f : 1.0f;
         adjust_delta = GetNavTweakPressedAmount(axis) * tweak_factor;
         v_speed = ImMax(v_speed, GetMinimumStepAtDecimalPrecision(decimal_precision));
     }
@@ -2474,7 +2474,7 @@ bool ImGui::DragScalar(const char* label, ImGuiDataType data_type, void* p_data,
     if (!temp_input_is_active)
     {
         // Tabbing or CTRL-clicking on Drag turns it into an InputText
-        const bool clicked = hovered && IsMouseClicked(0, id);
+        const bool clicked = hovered && IsMouseClicked(0, ImGuiInputFlags_None, id);
         const bool double_clicked = (hovered && g.IO.MouseClickedCount[0] == 2 && TestKeyOwner(ImGuiKey_MouseLeft, id));
         const bool make_active = (clicked || double_clicked || g.NavActivateId == id);
         if (make_active && (clicked || double_clicked))
@@ -3065,7 +3065,7 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     if (!temp_input_is_active)
     {
         // Tabbing or CTRL-clicking on Slider turns it into an input box
-        const bool clicked = hovered && IsMouseClicked(0, id);
+        const bool clicked = hovered && IsMouseClicked(0, ImGuiInputFlags_None, id);
         const bool make_active = (clicked || g.NavActivateId == id);
         if (make_active && clicked)
             SetKeyOwner(ImGuiKey_MouseLeft, id);
@@ -3227,7 +3227,7 @@ bool ImGui::VSliderScalar(const char* label, const ImVec2& size, ImGuiDataType d
         format = DataTypeGetInfo(data_type)->PrintFmt;
 
     const bool hovered = ItemHoverable(frame_bb, id, g.LastItemData.InFlags);
-    const bool clicked = hovered && IsMouseClicked(0, id);
+    const bool clicked = hovered && IsMouseClicked(0, ImGuiInputFlags_None, id);
     if (clicked || g.NavActivateId == id)
     {
         if (clicked)
@@ -4315,6 +4315,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             SetKeyOwner(ImGuiKey_PageUp, id);
             SetKeyOwner(ImGuiKey_PageDown, id);
         }
+        // FIXME: May be a problem to always steal Alt on OSX, would ideally still allow an uninterrupted Alt down-up to toggle menu
         if (is_osx)
             SetKeyOwner(ImGuiMod_Alt, id);
     }
@@ -4447,7 +4448,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         // (For Tab and Enter: Win32/SFML/Allegro are sending both keys and chars, GLFW and SDL are only sending keys. For Space they all send all threes)
         if ((flags & ImGuiInputTextFlags_AllowTabInput) && !is_readonly)
         {
-            if (Shortcut(ImGuiKey_Tab, id, ImGuiInputFlags_Repeat))
+            if (Shortcut(ImGuiKey_Tab, ImGuiInputFlags_Repeat, id))
             {
                 unsigned int c = '\t'; // Insert TAB
                 if (InputTextFilterCharacter(&g, &c, flags, callback, callback_user_data))
@@ -4455,7 +4456,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             }
             // FIXME: Implement Shift+Tab
             /*
-            if (Shortcut(ImGuiKey_Tab | ImGuiMod_Shift, id, ImGuiInputFlags_Repeat))
+            if (Shortcut(ImGuiKey_Tab | ImGuiMod_Shift, ImGuiInputFlags_Repeat, id))
             {
             }
             */
@@ -4463,7 +4464,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
 
         // Process regular text input (before we check for Return because using some IME will effectively send a Return?)
         // We ignore CTRL inputs, but need to allow ALT+CTRL as some keyboards (e.g. German) use AltGR (which _is_ Alt+Ctrl) to input certain characters.
-        const bool ignore_char_inputs = (io.KeyCtrl && !io.KeyAlt) || (is_osx && io.KeySuper);
+        const bool ignore_char_inputs = (io.KeyCtrl && !io.KeyAlt) || (is_osx && io.KeyCtrl);
         if (io.InputQueueCharacters.Size > 0)
         {
             if (!ignore_char_inputs && !is_readonly && !input_requested_by_nav)
@@ -4493,25 +4494,26 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
 
         const int k_mask = (io.KeyShift ? STB_TEXTEDIT_K_SHIFT : 0);
         const bool is_wordmove_key_down = is_osx ? io.KeyAlt : io.KeyCtrl;                     // OS X style: Text editing cursor movement using Alt instead of Ctrl
-        const bool is_startend_key_down = is_osx && io.KeySuper && !io.KeyCtrl && !io.KeyAlt;  // OS X style: Line/Text Start and End using Cmd+Arrows instead of Home/End
+        const bool is_startend_key_down = is_osx && io.KeyCtrl && !io.KeySuper && !io.KeyAlt;  // OS X style: Line/Text Start and End using Cmd+Arrows instead of Home/End
 
         // Using Shortcut() with ImGuiInputFlags_RouteFocused (default policy) to allow routing operations for other code (e.g. calling window trying to use CTRL+A and CTRL+B: formet would be handled by InputText)
         // Otherwise we could simply assume that we own the keys as we are active.
         const ImGuiInputFlags f_repeat = ImGuiInputFlags_Repeat;
-        const bool is_cut   = (Shortcut(ImGuiMod_Shortcut | ImGuiKey_X, id, f_repeat) || Shortcut(ImGuiMod_Shift | ImGuiKey_Delete, id, f_repeat)) && !is_readonly && !is_password && (!is_multiline || state->HasSelection());
-        const bool is_copy  = (Shortcut(ImGuiMod_Shortcut | ImGuiKey_C, id) || Shortcut(ImGuiMod_Ctrl | ImGuiKey_Insert, id))  && !is_password && (!is_multiline || state->HasSelection());
-        const bool is_paste = (Shortcut(ImGuiMod_Shortcut | ImGuiKey_V, id, f_repeat) || Shortcut(ImGuiMod_Shift | ImGuiKey_Insert, id, f_repeat)) && !is_readonly;
-        const bool is_undo  = (Shortcut(ImGuiMod_Shortcut | ImGuiKey_Z, id, f_repeat)) && !is_readonly && is_undoable;
-        const bool is_redo =  (Shortcut(ImGuiMod_Shortcut | ImGuiKey_Y, id, f_repeat) || (is_osx && Shortcut(ImGuiMod_Shortcut | ImGuiMod_Shift | ImGuiKey_Z, id, f_repeat))) && !is_readonly && is_undoable;
-        const bool is_select_all = Shortcut(ImGuiMod_Shortcut | ImGuiKey_A, id);
+        const bool is_cut   = (Shortcut(ImGuiMod_Ctrl | ImGuiKey_X, f_repeat, id) || Shortcut(ImGuiMod_Shift | ImGuiKey_Delete, f_repeat, id)) && !is_readonly && !is_password && (!is_multiline || state->HasSelection());
+        const bool is_copy  = (Shortcut(ImGuiMod_Ctrl | ImGuiKey_C, 0,        id) || Shortcut(ImGuiMod_Ctrl  | ImGuiKey_Insert, 0,        id)) && !is_password && (!is_multiline || state->HasSelection());
+        const bool is_paste = (Shortcut(ImGuiMod_Ctrl | ImGuiKey_V, f_repeat, id) || Shortcut(ImGuiMod_Shift | ImGuiKey_Insert, f_repeat, id)) && !is_readonly;
+        const bool is_undo  = (Shortcut(ImGuiMod_Ctrl | ImGuiKey_Z, f_repeat, id)) && !is_readonly && is_undoable;
+        const bool is_redo =  (Shortcut(ImGuiMod_Ctrl | ImGuiKey_Y, f_repeat, id) || (is_osx && Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Z, f_repeat, id))) && !is_readonly && is_undoable;
+        const bool is_select_all = Shortcut(ImGuiMod_Ctrl | ImGuiKey_A, 0, id);
 
         // We allow validate/cancel with Nav source (gamepad) to makes it easier to undo an accidental NavInput press with no keyboard wired, but otherwise it isn't very useful.
         const bool nav_gamepad_active = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
         const bool is_enter_pressed = IsKeyPressed(ImGuiKey_Enter, true) || IsKeyPressed(ImGuiKey_KeypadEnter, true);
         const bool is_gamepad_validate = nav_gamepad_active && (IsKeyPressed(ImGuiKey_NavGamepadActivate, false) || IsKeyPressed(ImGuiKey_NavGamepadInput, false));
-        const bool is_cancel = Shortcut(ImGuiKey_Escape, id, f_repeat) || (nav_gamepad_active && Shortcut(ImGuiKey_NavGamepadCancel, id, f_repeat));
+        const bool is_cancel = Shortcut(ImGuiKey_Escape, f_repeat, id) || (nav_gamepad_active && Shortcut(ImGuiKey_NavGamepadCancel, f_repeat, id));
 
         // FIXME: Should use more Shortcut() and reduce IsKeyPressed()+SetKeyOwner(), but requires modifiers combination to be taken account of.
+        // FIXME-OSX: Missing support for Alt(option)+Right/Left = go to end of line, or next line if already in end of line.
         if (IsKeyPressed(ImGuiKey_LeftArrow))                        { state->OnKeyPressed((is_startend_key_down ? STB_TEXTEDIT_K_LINESTART : is_wordmove_key_down ? STB_TEXTEDIT_K_WORDLEFT : STB_TEXTEDIT_K_LEFT) | k_mask); }
         else if (IsKeyPressed(ImGuiKey_RightArrow))                  { state->OnKeyPressed((is_startend_key_down ? STB_TEXTEDIT_K_LINEEND : is_wordmove_key_down ? STB_TEXTEDIT_K_WORDRIGHT : STB_TEXTEDIT_K_RIGHT) | k_mask); }
         else if (IsKeyPressed(ImGuiKey_UpArrow) && is_multiline)     { if (io.KeyCtrl) SetScrollY(draw_window, ImMax(draw_window->Scroll.y - g.FontSize, 0.0f)); else state->OnKeyPressed((is_startend_key_down ? STB_TEXTEDIT_K_TEXTSTART : STB_TEXTEDIT_K_UP) | k_mask); }
@@ -4536,7 +4538,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             {
                 if (is_wordmove_key_down)
                     state->OnKeyPressed(STB_TEXTEDIT_K_WORDLEFT | STB_TEXTEDIT_K_SHIFT);
-                else if (is_osx && io.KeySuper && !io.KeyAlt && !io.KeyCtrl)
+                else if (is_osx && io.KeyCtrl && !io.KeyAlt && !io.KeySuper)
                     state->OnKeyPressed(STB_TEXTEDIT_K_LINESTART | STB_TEXTEDIT_K_SHIFT);
             }
             state->OnKeyPressed(STB_TEXTEDIT_K_BACKSPACE | k_mask);
@@ -4706,7 +4708,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                 // The reason we specify the usage semantic (Completion/History) is that Completion needs to disable keyboard TABBING at the moment.
                 ImGuiInputTextFlags event_flag = 0;
                 ImGuiKey event_key = ImGuiKey_None;
-                if ((flags & ImGuiInputTextFlags_CallbackCompletion) != 0 && Shortcut(ImGuiKey_Tab, id))
+                if ((flags & ImGuiInputTextFlags_CallbackCompletion) != 0 && Shortcut(ImGuiKey_Tab, 0, id))
                 {
                     event_flag = ImGuiInputTextFlags_CallbackCompletion;
                     event_key = ImGuiKey_Tab;
@@ -6774,7 +6776,7 @@ ImGuiTypingSelectRequest* ImGui::GetTypingSelectRequest(ImGuiTypingSelectFlags f
     g.IO.InputQueueCharacters.resize(0);
 
     // Handle backspace
-    if ((flags & ImGuiTypingSelectFlags_AllowBackspace) && IsKeyPressed(ImGuiKey_Backspace, 0, ImGuiInputFlags_Repeat))
+    if ((flags & ImGuiTypingSelectFlags_AllowBackspace) && IsKeyPressed(ImGuiKey_Backspace, ImGuiInputFlags_Repeat))
     {
         char* p = (char*)(void*)ImTextFindPreviousUtf8Codepoint(data->SearchBuffer, data->SearchBuffer + buffer_len);
         *p = 0;

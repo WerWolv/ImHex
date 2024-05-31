@@ -1,4 +1,4 @@
-// dear imgui, v1.90.6
+// dear imgui, v1.90.7
 // (internal structures/api)
 
 // You may use this file to debug, understand or extend Dear ImGui features but we don't provide any guarantee of forward compatibility.
@@ -177,7 +177,6 @@ typedef int ImGuiLayoutType;            // -> enum ImGuiLayoutType_         // E
 typedef int ImGuiActivateFlags;         // -> enum ImGuiActivateFlags_      // Flags: for navigation/focus function (will be for ActivateItem() later)
 typedef int ImGuiDebugLogFlags;         // -> enum ImGuiDebugLogFlags_      // Flags: for ShowDebugLogWindow(), g.DebugLogFlags
 typedef int ImGuiFocusRequestFlags;     // -> enum ImGuiFocusRequestFlags_  // Flags: for FocusWindow();
-typedef int ImGuiInputFlags;            // -> enum ImGuiInputFlags_         // Flags: for IsKeyPressed(), IsMouseClicked(), SetKeyOwner(), SetItemKeyOwner() etc.
 typedef int ImGuiItemFlags;             // -> enum ImGuiItemFlags_          // Flags: for PushItemFlag(), g.LastItemData.InFlags
 typedef int ImGuiItemStatusFlags;       // -> enum ImGuiItemStatusFlags_    // Flags: for g.LastItemData.StatusFlags
 typedef int ImGuiOldColumnFlags;        // -> enum ImGuiOldColumnFlags_     // Flags: for BeginColumns()
@@ -859,7 +858,8 @@ enum ImGuiItemStatusFlags_
     ImGuiItemStatusFlags_Deactivated        = 1 << 6,   // Only valid if ImGuiItemStatusFlags_HasDeactivated is set.
     ImGuiItemStatusFlags_HoveredWindow      = 1 << 7,   // Override the HoveredWindow test to allow cross-window hover testing.
     ImGuiItemStatusFlags_Visible            = 1 << 8,   // [WIP] Set when item is overlapping the current clipping rectangle (Used internally. Please don't use yet: API/system will change as we refactor Itemadd()).
-    ImGuiItemStatusFlags_HasClipRect        = 1 << 9,   // g.LastItemData.ClipRect is valid
+    ImGuiItemStatusFlags_HasClipRect        = 1 << 9,   // g.LastItemData.ClipRect is valid.
+    ImGuiItemStatusFlags_HasShortcut        = 1 << 10,  // g.LastItemData.Shortcut valid. Set by SetNextItemShortcut() -> ItemAdd().
 
     // Additional status + semantic for ImGuiTestEngine
 #ifdef IMGUI_ENABLE_TEST_ENGINE
@@ -906,7 +906,7 @@ enum ImGuiButtonFlagsPrivate_
     ImGuiButtonFlags_AlignTextBaseLine      = 1 << 15,  // vertically align button to match text baseline - ButtonEx() only // FIXME: Should be removed and handled by SmallButton(), not possible currently because of DC.CursorPosPrevLine
     ImGuiButtonFlags_NoKeyModifiers         = 1 << 16,  // disable mouse interaction if a key modifier is held
     ImGuiButtonFlags_NoHoldingActiveId      = 1 << 17,  // don't set ActiveId while holding the mouse (ImGuiButtonFlags_PressedOnClick only)
-    ImGuiButtonFlags_NoNavFocus             = 1 << 18,  // don't override navigation focus when activated (FIXME: this is essentially used everytime an item uses ImGuiItemFlags_NoNav, but because legacy specs don't requires LastItemData to be set ButtonBehavior(), we can't poll g.LastItemData.InFlags)
+    ImGuiButtonFlags_NoNavFocus             = 1 << 18,  // don't override navigation focus when activated (FIXME: this is essentially used every time an item uses ImGuiItemFlags_NoNav, but because legacy specs don't requires LastItemData to be set ButtonBehavior(), we can't poll g.LastItemData.InFlags)
     ImGuiButtonFlags_NoHoveredOnFocus       = 1 << 19,  // don't report as hovered when nav focus is on this item
     ImGuiButtonFlags_NoSetKeyOwner          = 1 << 20,  // don't set key/input owner on the initial click (note: mouse buttons are keys! often, the key in question will be ImGuiKey_MouseLeft!)
     ImGuiButtonFlags_NoTestKeyOwner         = 1 << 21,  // don't test key/input owner when polling the key (note: mouse buttons are keys! often, the key in question will be ImGuiKey_MouseLeft!)
@@ -1212,6 +1212,7 @@ struct ImGuiNextItemData
     ImGuiSelectionUserData      SelectionUserData;  // Set by SetNextItemSelectionUserData() (note that NULL/0 is a valid value, we use -1 == ImGuiSelectionUserData_Invalid to mark invalid values)
     float                       Width;              // Set by SetNextItemWidth()
     ImGuiKeyChord               Shortcut;           // Set by SetNextItemShortcut()
+    ImGuiInputFlags             ShortcutFlags;      // Set by SetNextItemShortcut()
     bool                        OpenVal;            // Set by SetNextItemOpen()
     ImGuiCond                   OpenCond : 8;
 
@@ -1227,9 +1228,10 @@ struct ImGuiLastItemData
     ImGuiItemStatusFlags    StatusFlags;        // See ImGuiItemStatusFlags_
     ImRect                  Rect;               // Full rectangle
     ImRect                  NavRect;            // Navigation scoring rectangle (not displayed)
-    // Rarely used fields are not explicitly cleared, only valid when the corresponding ImGuiItemStatusFlags is set.
-    ImRect                  DisplayRect;        // Display rectangle (ONLY VALID IF ImGuiItemStatusFlags_HasDisplayRect is set)
-    ImRect                  ClipRect;           // Clip rectangle at the time of submitting item (ONLY VALID IF ImGuiItemStatusFlags_HasClipRect is set)
+    // Rarely used fields are not explicitly cleared, only valid when the corresponding ImGuiItemStatusFlags ar set.
+    ImRect                  DisplayRect;        // Display rectangle. ONLY VALID IF (StatusFlags & ImGuiItemStatusFlags_HasDisplayRect) is set.
+    ImRect                  ClipRect;           // Clip rectangle at the time of submitting item. ONLY VALID IF (StatusFlags & ImGuiItemStatusFlags_HasClipRect) is set..
+    ImGuiKeyChord           Shortcut;           // Shortcut at the time of submitting item. ONLY VALID IF (StatusFlags & ImGuiItemStatusFlags_HasShortcut) is set..
 
     ImGuiLastItemData()     { memset(this, 0, sizeof(*this)); }
 };
@@ -1428,7 +1430,8 @@ struct ImGuiInputEvent
 
 // Input function taking an 'ImGuiID owner_id' argument defaults to (ImGuiKeyOwner_Any == 0) aka don't test ownership, which matches legacy behavior.
 #define ImGuiKeyOwner_Any           ((ImGuiID)0)    // Accept key that have an owner, UNLESS a call to SetKeyOwner() explicitly used ImGuiInputFlags_LockThisFrame or ImGuiInputFlags_LockUntilRelease.
-#define ImGuiKeyOwner_None          ((ImGuiID)-1)   // Require key to have no owner.
+#define ImGuiKeyOwner_NoOwner       ((ImGuiID)-1)   // Require key to have no owner.
+//#define ImGuiKeyOwner_None ImGuiKeyOwner_NoOwner  // We previously called this 'ImGuiKeyOwner_None' but it was inconsistent with our pattern that _None values == 0 and quite dangerous. Also using _NoOwner makes the IsKeyPressed() calls more explicit.
 
 typedef ImS16 ImGuiKeyRoutingIndex;
 
@@ -1436,13 +1439,13 @@ typedef ImS16 ImGuiKeyRoutingIndex;
 struct ImGuiKeyRoutingData
 {
     ImGuiKeyRoutingIndex            NextEntryIndex;
-    ImU16                           Mods;               // Technically we'd only need 4-bits but for simplify we store ImGuiMod_ values which need 16-bits. ImGuiMod_Shortcut is already translated to Ctrl/Super.
+    ImU16                           Mods;               // Technically we'd only need 4-bits but for simplify we store ImGuiMod_ values which need 16-bits.
     ImU8                            RoutingCurrScore;   // [DEBUG] For debug display
     ImU8                            RoutingNextScore;   // Lower is better (0: perfect score)
     ImGuiID                         RoutingCurr;
     ImGuiID                         RoutingNext;
 
-    ImGuiKeyRoutingData()           { NextEntryIndex = -1; Mods = 0; RoutingCurrScore = RoutingNextScore = 255; RoutingCurr = RoutingNext = ImGuiKeyOwner_None; }
+    ImGuiKeyRoutingData()           { NextEntryIndex = -1; Mods = 0; RoutingCurrScore = RoutingNextScore = 255; RoutingCurr = RoutingNext = ImGuiKeyOwner_NoOwner; }
 };
 
 // Routing table: maintain a desired owner for each possible key-chord (key + mods), and setup owner in NewFrame() when mods are matching.
@@ -1466,73 +1469,47 @@ struct ImGuiKeyOwnerData
     bool        LockThisFrame;      // Reading this key requires explicit owner id (until end of frame). Set by ImGuiInputFlags_LockThisFrame.
     bool        LockUntilRelease;   // Reading this key requires explicit owner id (until key is released). Set by ImGuiInputFlags_LockUntilRelease. When this is true LockThisFrame is always true as well.
 
-    ImGuiKeyOwnerData()             { OwnerCurr = OwnerNext = ImGuiKeyOwner_None; LockThisFrame = LockUntilRelease = false; }
+    ImGuiKeyOwnerData()             { OwnerCurr = OwnerNext = ImGuiKeyOwner_NoOwner; LockThisFrame = LockUntilRelease = false; }
 };
 
+// Extend ImGuiInputFlags_
 // Flags for extended versions of IsKeyPressed(), IsMouseClicked(), Shortcut(), SetKeyOwner(), SetItemKeyOwner()
 // Don't mistake with ImGuiInputTextFlags! (which is for ImGui::InputText() function)
-enum ImGuiInputFlags_
+enum ImGuiInputFlagsPrivate_
 {
     // Flags for IsKeyPressed(), IsKeyChordPressed(), IsMouseClicked(), Shortcut()
-    ImGuiInputFlags_None                = 0,
-
-    // Repeat mode
-    ImGuiInputFlags_Repeat              = 1 << 0,   // Enable repeat. Return true on successive repeats. Default for legacy IsKeyPressed(). NOT Default for legacy IsMouseClicked(). MUST BE == 1.
-    ImGuiInputFlags_RepeatRateDefault   = 1 << 1,   // Repeat rate: Regular (default)
-    ImGuiInputFlags_RepeatRateNavMove   = 1 << 2,   // Repeat rate: Fast
-    ImGuiInputFlags_RepeatRateNavTweak  = 1 << 3,   // Repeat rate: Faster
-
-    // Repeat mode: Specify when repeating key pressed can be interrupted.
-    // In theory ImGuiInputFlags_RepeatUntilOtherKeyPress may be a desirable default, but it would break too many behavior so everything is opt-in.
-    ImGuiInputFlags_RepeatUntilRelease               = 1 << 4,  // Stop repeating when released (default for all functions except Shortcut). This only exists to allow overriding Shortcut() default behavior.
-    ImGuiInputFlags_RepeatUntilKeyModsChange         = 1 << 5,  // Stop repeating when released OR if keyboard mods are changed (default for Shortcut)
+    // - Repeat mode: Repeat rate selection
+    ImGuiInputFlags_RepeatRateDefault           = 1 << 1,   // Repeat rate: Regular (default)
+    ImGuiInputFlags_RepeatRateNavMove           = 1 << 2,   // Repeat rate: Fast
+    ImGuiInputFlags_RepeatRateNavTweak          = 1 << 3,   // Repeat rate: Faster
+    // - Repeat mode: Specify when repeating key pressed can be interrupted.
+    // - In theory ImGuiInputFlags_RepeatUntilOtherKeyPress may be a desirable default, but it would break too many behavior so everything is opt-in.
+    ImGuiInputFlags_RepeatUntilRelease          = 1 << 4,   // Stop repeating when released (default for all functions except Shortcut). This only exists to allow overriding Shortcut() default behavior.
+    ImGuiInputFlags_RepeatUntilKeyModsChange    = 1 << 5,   // Stop repeating when released OR if keyboard mods are changed (default for Shortcut)
     ImGuiInputFlags_RepeatUntilKeyModsChangeFromNone = 1 << 6,  // Stop repeating when released OR if keyboard mods are leaving the None state. Allows going from Mod+Key to Key by releasing Mod.
-    ImGuiInputFlags_RepeatUntilOtherKeyPress         = 1 << 7,  // Stop repeating when released OR if any other keyboard key is pressed during the repeat
-
-    // Flags for SetItemKeyOwner()
-    ImGuiInputFlags_CondHovered         = 1 << 8,   // Only set if item is hovered (default to both)
-    ImGuiInputFlags_CondActive          = 1 << 9,   // Only set if item is active (default to both)
-    ImGuiInputFlags_CondDefault_        = ImGuiInputFlags_CondHovered | ImGuiInputFlags_CondActive,
+    ImGuiInputFlags_RepeatUntilOtherKeyPress    = 1 << 7,   // Stop repeating when released OR if any other keyboard key is pressed during the repeat
 
     // Flags for SetKeyOwner(), SetItemKeyOwner()
-    // Locking is useful to make input-owner-aware code steal keys from non-input-owner-aware code. If all code is input-owner-aware locking would never be necessary.
-    ImGuiInputFlags_LockThisFrame       = 1 << 10,  // Further accesses to key data will require EXPLICIT owner ID (ImGuiKeyOwner_Any/0 will NOT accepted for polling). Cleared at end of frame.
-    ImGuiInputFlags_LockUntilRelease    = 1 << 11,  // Further accesses to key data will require EXPLICIT owner ID (ImGuiKeyOwner_Any/0 will NOT accepted for polling). Cleared when the key is released or at end of each frame if key is released.
+    // - Locking key away from non-input aware code. Locking is useful to make input-owner-aware code steal keys from non-input-owner-aware code. If all code is input-owner-aware locking would never be necessary.
+    ImGuiInputFlags_LockThisFrame               = 1 << 20,  // Further accesses to key data will require EXPLICIT owner ID (ImGuiKeyOwner_Any/0 will NOT accepted for polling). Cleared at end of frame.
+    ImGuiInputFlags_LockUntilRelease            = 1 << 21,  // Further accesses to key data will require EXPLICIT owner ID (ImGuiKeyOwner_Any/0 will NOT accepted for polling). Cleared when the key is released or at end of each frame if key is released.
 
-    // Routing policies for Shortcut() + low-level SetShortcutRouting()
-    // - The general idea is that several callers register interest in a shortcut, and only one owner gets it.
-    //      Parent   -> call Shortcut(Ctrl+S)    // When Parent is focused, Parent gets the shortcut.
-    //        Child1 -> call Shortcut(Ctrl+S)    // When Child1 is focused, Child1 gets the shortcut (Child1 overrides Parent shortcuts)
-    //        Child2 -> no call                  // When Child2 is focused, Parent gets the shortcut.
-    //   The whole system is order independent, so if Child1 does it calls before Parent results will be identical.
-    //   This is an important property as it facilitate working with foreign code or larger codebase.
-    // - Visualize registered routes in 'Metrics->Inputs' and submitted routes in 'Debug Log->InputRouting'.
-    // - When a policy (except for _RouteAlways *) is set, Shortcut() will register itself with SetShortcutRouting(),
-    //   allowing the system to decide where to route the input among other route-aware calls.
-    //   (* Using ImGuiInputFlags_RouteAlways is roughly equivalent to calling IsKeyChordPressed(key)).
-    // - Shortcut() uses ImGuiInputFlags_RouteFocused by default. Meaning that a Shortcut() call will register
-    //   a route and only succeed when parent window is in the focus-stack and if no-one with a higher priority
-    //   is claiming the same shortcut.
-    // - You can chain two unrelated windows in the focus stack using SetWindowParentWindowForFocusRoute().
-    // - Priorities: GlobalHigh > Focused (when owner is active item) > Global > Focused (when focused window) > GlobalLow.
-    // - Can select only 1 policy among all available.
-    ImGuiInputFlags_RouteFocused        = 1 << 12,  // (Default) Honor focus route: Accept inputs if window is in focus stack. Deep-most focused window takes inputs. ActiveId takes inputs over deep-most focused window.
-    ImGuiInputFlags_RouteGlobalLow      = 1 << 13,  // Register route globally (lowest priority: unless a focused window or active item registered the route) -> recommended Global priority IF you need a Global priority.
-    ImGuiInputFlags_RouteGlobal         = 1 << 14,  // Register route globally (medium priority: unless an active item registered the route, e.g. CTRL+A registered by InputText will take priority over this).
-    ImGuiInputFlags_RouteGlobalHigh     = 1 << 15,  // Register route globally (higher priority: unlikely you need to use that: will interfere with every active items, e.g. CTRL+A registered by InputText will be overriden by this)
-    ImGuiInputFlags_RouteAlways         = 1 << 16,  // Do not register route, poll keys directly.
-    // Routing polices: extra options
-    ImGuiInputFlags_RouteUnlessBgFocused= 1 << 17,  // Global routes will not be applied if underlying background/void is focused (== no Dear ImGui windows are focused). Useful for overlay applications.
+    // - Condition for SetItemKeyOwner()
+    ImGuiInputFlags_CondHovered                 = 1 << 22,  // Only set if item is hovered (default to both)
+    ImGuiInputFlags_CondActive                  = 1 << 23,  // Only set if item is active (default to both)
+    ImGuiInputFlags_CondDefault_                = ImGuiInputFlags_CondHovered | ImGuiInputFlags_CondActive,
 
     // [Internal] Mask of which function support which flags
     ImGuiInputFlags_RepeatRateMask_             = ImGuiInputFlags_RepeatRateDefault | ImGuiInputFlags_RepeatRateNavMove | ImGuiInputFlags_RepeatRateNavTweak,
     ImGuiInputFlags_RepeatUntilMask_            = ImGuiInputFlags_RepeatUntilRelease | ImGuiInputFlags_RepeatUntilKeyModsChange | ImGuiInputFlags_RepeatUntilKeyModsChangeFromNone | ImGuiInputFlags_RepeatUntilOtherKeyPress,
     ImGuiInputFlags_RepeatMask_                 = ImGuiInputFlags_Repeat | ImGuiInputFlags_RepeatRateMask_ | ImGuiInputFlags_RepeatUntilMask_,
     ImGuiInputFlags_CondMask_                   = ImGuiInputFlags_CondHovered | ImGuiInputFlags_CondActive,
-    ImGuiInputFlags_RouteMask_                  = ImGuiInputFlags_RouteFocused | ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_RouteGlobalLow | ImGuiInputFlags_RouteGlobalHigh, // _Always not part of this!
+    ImGuiInputFlags_RouteTypeMask_              = ImGuiInputFlags_RouteActive | ImGuiInputFlags_RouteFocused | ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_RouteAlways,
+    ImGuiInputFlags_RouteOptionsMask_           = ImGuiInputFlags_RouteOverFocused | ImGuiInputFlags_RouteOverActive | ImGuiInputFlags_RouteUnlessBgFocused | ImGuiInputFlags_RouteFromRootWindow,
     ImGuiInputFlags_SupportedByIsKeyPressed     = ImGuiInputFlags_RepeatMask_,
     ImGuiInputFlags_SupportedByIsMouseClicked   = ImGuiInputFlags_Repeat,
-    ImGuiInputFlags_SupportedByShortcut         = ImGuiInputFlags_RepeatMask_ | ImGuiInputFlags_RouteMask_ | ImGuiInputFlags_RouteAlways | ImGuiInputFlags_RouteUnlessBgFocused,
+    ImGuiInputFlags_SupportedByShortcut         = ImGuiInputFlags_RepeatMask_ | ImGuiInputFlags_RouteTypeMask_ | ImGuiInputFlags_RouteOptionsMask_,
+    ImGuiInputFlags_SupportedBySetNextItemShortcut = ImGuiInputFlags_RepeatMask_ | ImGuiInputFlags_RouteTypeMask_ | ImGuiInputFlags_RouteOptionsMask_ | ImGuiInputFlags_Tooltip,
     ImGuiInputFlags_SupportedBySetKeyOwner      = ImGuiInputFlags_LockThisFrame | ImGuiInputFlags_LockUntilRelease,
     ImGuiInputFlags_SupportedBySetItemKeyOwner  = ImGuiInputFlags_SupportedBySetKeyOwner | ImGuiInputFlags_CondMask_,
 };
@@ -2140,6 +2117,7 @@ struct ImGuiContext
     ImFont*                 Font;                               // (Shortcut) == FontStack.empty() ? IO.Font : FontStack.back()
     float                   FontSize;                           // (Shortcut) == FontBaseSize * g.CurrentWindow->FontWindowScale == window->FontSize(). Text height for current window.
     float                   FontBaseSize;                       // (Shortcut) == IO.FontGlobalScale * Font->Scale * Font->FontSize. Base text height.
+    float                   CurrentDpiScale;                    // Current window/viewport DpiScale == CurrentViewport->DpiScale
     ImDrawListSharedData    DrawListSharedData;
     double                  Time;
     int                     FrameCount;
@@ -2166,7 +2144,7 @@ struct ImGuiContext
     ImVector<ImGuiWindowStackData> CurrentWindowStack;
     ImGuiStorage            WindowsById;                        // Map window's ImGuiID to ImGuiWindow*
     int                     WindowsActiveCount;                 // Number of unique windows submitted by frame
-    ImVec2                  WindowsHoverPadding;                // Padding around resizable windows for which hovering on counts as hovering the window == ImMax(style.TouchExtraPadding, WINDOWS_HOVER_PADDING)
+    ImVec2                  WindowsHoverPadding;                // Padding around resizable windows for which hovering on counts as hovering the window == ImMax(style.TouchExtraPadding, WINDOWS_HOVER_PADDING).
     ImGuiID                 DebugBreakInWindow;                 // Set to break in Begin() call.
     ImGuiWindow*            CurrentWindow;                      // Window being drawn into
     ImGuiWindow*            HoveredWindow;                      // Window the mouse is hovering. Will typically catch mouse inputs.
@@ -2209,9 +2187,9 @@ struct ImGuiContext
     ImGuiID                 LastActiveId;                       // Store the last non-zero ActiveId, useful for animation.
     float                   LastActiveIdTimer;                  // Store the last non-zero ActiveId timer since the beginning of activation, useful for animation.
 
-    // [EXPERIMENTAL] Key/Input Ownership + Shortcut Routing system
+    // Key/Input Ownership + Shortcut Routing system
     // - The idea is that instead of "eating" a given key, we can link to an owner.
-    // - Input query can then read input by specifying ImGuiKeyOwner_Any (== 0), ImGuiKeyOwner_None (== -1) or a custom ID.
+    // - Input query can then read input by specifying ImGuiKeyOwner_Any (== 0), ImGuiKeyOwner_NoOwner (== -1) or a custom ID.
     // - Routing is requested ahead of time for a given chord (Key + Mods) and granted in NewFrame().
     double                  LastKeyModsChangeTime;              // Record the last time key mods changed (affect repeat delay when using shortcut logic)
     double                  LastKeyModsChangeFromNoneTime;      // Record the last time key mods changed away from being 0 (affect repeat delay when using shortcut logic)
@@ -2249,7 +2227,6 @@ struct ImGuiContext
 
     // Viewports
     ImVector<ImGuiViewportP*> Viewports;                        // Active viewports (always 1+, and generally 1 unless multi-viewports are enabled). Each viewports hold their copy of ImDrawData.
-    float                   CurrentDpiScale;                    // == CurrentViewport->DpiScale
     ImGuiViewportP*         CurrentViewport;                    // We track changes of viewport (happening in Begin) so we can call Platform_OnChangedViewport()
     ImGuiViewportP*         MouseViewport;
     ImGuiViewportP*         MouseLastHoveredViewport;           // Last known viewport that was hovered by mouse (even if we are not hovering any viewport any more) + honoring the _NoInputs flag.
@@ -2309,8 +2286,8 @@ struct ImGuiContext
     ImGuiNavItemData        NavTabbingResultFirst;              // First tabbing request candidate within NavWindow and flattened hierarchy
 
     // Navigation: Windowing (CTRL+TAB for list, or Menu button + keys or directional pads to move/resize)
-    ImGuiKeyChord           ConfigNavWindowingKeyNext;          // = ImGuiMod_Ctrl | ImGuiKey_Tab, for reconfiguration (see #4828)
-    ImGuiKeyChord           ConfigNavWindowingKeyPrev;          // = ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Tab
+    ImGuiKeyChord           ConfigNavWindowingKeyNext;          // = ImGuiMod_Ctrl | ImGuiKey_Tab (or ImGuiMod_Super | ImGuiKey_Tab on OS X). For reconfiguration (see #4828)
+    ImGuiKeyChord           ConfigNavWindowingKeyPrev;          // = ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Tab (or ImGuiMod_Super | ImGuiMod_Shift | ImGuiKey_Tab on OS X)
     ImGuiWindow*            NavWindowingTarget;                 // Target window when doing CTRL+Tab (or Pad Menu + FocusPrev/Next), this window is temporarily displayed top-most!
     ImGuiWindow*            NavWindowingTargetAnim;             // Record of last valid NavWindowingTarget until DimBgRatio and NavWindowingHighlightAlpha becomes 0.0f, so the fade-out can stay on it.
     ImGuiWindow*            NavWindowingListWindow;             // Internal window actually listing the CTRL+Tab contents
@@ -2485,7 +2462,7 @@ struct ImGuiContext
         ConfigFlagsCurrFrame = ConfigFlagsLastFrame = ImGuiConfigFlags_None;
         FontAtlasOwnedByContext = shared_font_atlas ? false : true;
         Font = NULL;
-        FontSize = FontBaseSize = 0.0f;
+        FontSize = FontBaseSize = CurrentDpiScale = 0.0f;
         IO.Fonts = shared_font_atlas ? shared_font_atlas : IM_NEW(ImFontAtlas)();
         Time = 0.0f;
         FrameCount = 0;
@@ -2545,7 +2522,6 @@ struct ImGuiContext
         CurrentItemFlags = ImGuiItemFlags_None;
         DebugShowGroupRects = false;
 
-        CurrentDpiScale = 0.0f;
         CurrentViewport = NULL;
         MouseViewport = MouseLastHoveredViewport = NULL;
         PlatformLastFocusedViewportId = 0;
@@ -2580,8 +2556,10 @@ struct ImGuiContext
         NavTabbingDir = 0;
         NavTabbingCounter = 0;
 
-        ConfigNavWindowingKeyNext = ImGuiMod_Ctrl | ImGuiKey_Tab;
-        ConfigNavWindowingKeyPrev = ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Tab;
+        // All platforms use Ctrl+Tab but Ctrl<>Super are swapped on Mac...
+        // FIXME: Because this value is stored, it annoyingly interfere with toggling io.ConfigMacOSXBehaviors updating this..
+        ConfigNavWindowingKeyNext = IO.ConfigMacOSXBehaviors ? (ImGuiMod_Super | ImGuiKey_Tab) : (ImGuiMod_Ctrl | ImGuiKey_Tab);
+        ConfigNavWindowingKeyPrev = IO.ConfigMacOSXBehaviors ? (ImGuiMod_Super | ImGuiMod_Shift | ImGuiKey_Tab) : (ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Tab);
         NavWindowingTarget = NavWindowingTargetAnim = NavWindowingListWindow = NULL;
         NavWindowingTimer = NavWindowingHighlightAlpha = 0.0f;
         NavWindowingToggleLayer = false;
@@ -3071,8 +3049,7 @@ struct ImGuiTableInstanceData
     ImGuiTableInstanceData()    { TableInstanceID = 0; LastOuterHeight = LastTopHeadersRowHeight = LastFrozenHeight = 0.0f; HoveredRowLast = HoveredRowNext = -1; }
 };
 
-// FIXME-TABLE: more transient data could be stored in a stacked ImGuiTableTempData: e.g. SortSpecs, incoming RowData
-// sizeof() ~ 580 bytes + heap allocs described in TableBeginInitMemory()
+// sizeof() ~ 592 bytes + heap allocs described in TableBeginInitMemory()
 struct IMGUI_API ImGuiTable
 {
     ImGuiID                     ID;
@@ -3195,6 +3172,7 @@ struct IMGUI_API ImGuiTable
 // Transient data that are only needed between BeginTable() and EndTable(), those buffers are shared (1 per level of stacked table).
 // - Accessing those requires chasing an extra pointer so for very frequently used data we leave them in the main table structure.
 // - We also leave out of this structure data that tend to be particularly useful for debugging/metrics.
+// FIXME-TABLE: more transient data could be stored in a stacked ImGuiTableTempData: e.g. SortSpecs.
 // sizeof() ~ 136 bytes.
 struct IMGUI_API ImGuiTableTempData
 {
@@ -3315,6 +3293,7 @@ namespace ImGui
     // NewFrame
     IMGUI_API void          UpdateInputEvents(bool trickle_fast_inputs);
     IMGUI_API void          UpdateHoveredWindowAndCaptureFlags();
+    IMGUI_API void          FindHoveredWindowEx(const ImVec2& pos, bool find_first_and_in_any_viewport, ImGuiWindow** out_hovered_window, ImGuiWindow** out_hovered_window_under_moving_window);
     IMGUI_API void          StartMouseMovingWindow(ImGuiWindow* window);
     IMGUI_API void          StartMouseMovingWindowOrNode(ImGuiWindow* window, ImGuiDockNode* node, bool undock);
     IMGUI_API void          UpdateMouseMovingWindowNewFrame();
@@ -3462,23 +3441,21 @@ namespace ImGui
 
     // Inputs
     // FIXME: Eventually we should aim to move e.g. IsActiveIdUsingKey() into IsKeyXXX functions.
-    inline bool             IsNamedKey(ImGuiKey key)                                    { return key >= ImGuiKey_NamedKey_BEGIN && key < ImGuiKey_NamedKey_END; }
-    inline bool             IsNamedKeyOrModKey(ImGuiKey key)                            { return (key >= ImGuiKey_NamedKey_BEGIN && key < ImGuiKey_NamedKey_END) || key == ImGuiMod_Ctrl || key == ImGuiMod_Shift || key == ImGuiMod_Alt || key == ImGuiMod_Super || key == ImGuiMod_Shortcut; }
-    inline bool             IsLegacyKey(ImGuiKey key)                                   { return key >= ImGuiKey_LegacyNativeKey_BEGIN && key < ImGuiKey_LegacyNativeKey_END; }
-    inline bool             IsKeyboardKey(ImGuiKey key)                                 { return key >= ImGuiKey_Keyboard_BEGIN && key < ImGuiKey_Keyboard_END; }
-    inline bool             IsGamepadKey(ImGuiKey key)                                  { return key >= ImGuiKey_Gamepad_BEGIN && key < ImGuiKey_Gamepad_END; }
-    inline bool             IsMouseKey(ImGuiKey key)                                    { return key >= ImGuiKey_Mouse_BEGIN && key < ImGuiKey_Mouse_END; }
-    inline bool             IsAliasKey(ImGuiKey key)                                    { return key >= ImGuiKey_Aliases_BEGIN && key < ImGuiKey_Aliases_END; }
-    inline bool             IsModKey(ImGuiKey key)                                      { return key >= ImGuiKey_LeftCtrl && key <= ImGuiKey_RightSuper; }
-    ImGuiKeyChord           FixupKeyChord(ImGuiContext* ctx, ImGuiKeyChord key_chord);
-    inline ImGuiKey         ConvertSingleModFlagToKey(ImGuiContext* ctx, ImGuiKey key)
+    inline bool             IsNamedKey(ImGuiKey key)                    { return key >= ImGuiKey_NamedKey_BEGIN && key < ImGuiKey_NamedKey_END; }
+    inline bool             IsNamedKeyOrMod(ImGuiKey key)               { return (key >= ImGuiKey_NamedKey_BEGIN && key < ImGuiKey_NamedKey_END) || key == ImGuiMod_Ctrl || key == ImGuiMod_Shift || key == ImGuiMod_Alt || key == ImGuiMod_Super; }
+    inline bool             IsLegacyKey(ImGuiKey key)                   { return key >= ImGuiKey_LegacyNativeKey_BEGIN && key < ImGuiKey_LegacyNativeKey_END; }
+    inline bool             IsKeyboardKey(ImGuiKey key)                 { return key >= ImGuiKey_Keyboard_BEGIN && key < ImGuiKey_Keyboard_END; }
+    inline bool             IsGamepadKey(ImGuiKey key)                  { return key >= ImGuiKey_Gamepad_BEGIN && key < ImGuiKey_Gamepad_END; }
+    inline bool             IsMouseKey(ImGuiKey key)                    { return key >= ImGuiKey_Mouse_BEGIN && key < ImGuiKey_Mouse_END; }
+    inline bool             IsAliasKey(ImGuiKey key)                    { return key >= ImGuiKey_Aliases_BEGIN && key < ImGuiKey_Aliases_END; }
+    inline bool             IsModKey(ImGuiKey key)                      { return key >= ImGuiKey_LeftCtrl && key <= ImGuiKey_RightSuper; }
+    ImGuiKeyChord           FixupKeyChord(ImGuiKeyChord key_chord);
+    inline ImGuiKey         ConvertSingleModFlagToKey(ImGuiKey key)
     {
-        ImGuiContext& g = *ctx;
         if (key == ImGuiMod_Ctrl) return ImGuiKey_ReservedForModCtrl;
         if (key == ImGuiMod_Shift) return ImGuiKey_ReservedForModShift;
         if (key == ImGuiMod_Alt) return ImGuiKey_ReservedForModAlt;
         if (key == ImGuiMod_Super) return ImGuiKey_ReservedForModSuper;
-        if (key == ImGuiMod_Shortcut) return (g.IO.ConfigMacOSXBehaviors ? ImGuiKey_ReservedForModSuper : ImGuiKey_ReservedForModCtrl);
         return key;
     }
 
@@ -3498,7 +3475,7 @@ namespace ImGui
     // [EXPERIMENTAL] Low-Level: Key/Input Ownership
     // - The idea is that instead of "eating" a given input, we can link to an owner id.
     // - Ownership is most often claimed as a result of reacting to a press/down event (but occasionally may be claimed ahead).
-    // - Input queries can then read input by specifying ImGuiKeyOwner_Any (== 0), ImGuiKeyOwner_None (== -1) or a custom ID.
+    // - Input queries can then read input by specifying ImGuiKeyOwner_Any (== 0), ImGuiKeyOwner_NoOwner (== -1) or a custom ID.
     // - Legacy input queries (without specifying an owner or _Any or _None) are equivalent to using ImGuiKeyOwner_Any (== 0).
     // - Input ownership is automatically released on the frame after a key is released. Therefore:
     //   - for ownership registration happening as a result of a down/press event, the SetKeyOwner() call may be done once (common case).
@@ -3506,12 +3483,12 @@ namespace ImGui
     // - SetItemKeyOwner() is a shortcut for common simple case. A custom widget will probably want to call SetKeyOwner() multiple times directly based on its interaction state.
     // - This is marked experimental because not all widgets are fully honoring the Set/Test idioms. We will need to move forward step by step.
     //   Please open a GitHub Issue to submit your usage scenario or if there's a use case you need solved.
-    IMGUI_API ImGuiID           GetKeyOwner(ImGuiKey key);
-    IMGUI_API void              SetKeyOwner(ImGuiKey key, ImGuiID owner_id, ImGuiInputFlags flags = 0);
-    IMGUI_API void              SetKeyOwnersForKeyChord(ImGuiKeyChord key, ImGuiID owner_id, ImGuiInputFlags flags = 0);
-    IMGUI_API void              SetItemKeyOwner(ImGuiKey key, ImGuiInputFlags flags = 0);           // Set key owner to last item if it is hovered or active. Equivalent to 'if (IsItemHovered() || IsItemActive()) { SetKeyOwner(key, GetItemID());'.
-    IMGUI_API bool              TestKeyOwner(ImGuiKey key, ImGuiID owner_id);                       // Test that key is either not owned, either owned by 'owner_id'
-    inline ImGuiKeyOwnerData*   GetKeyOwnerData(ImGuiContext* ctx, ImGuiKey key)                    { if (key & ImGuiMod_Mask_) key = ConvertSingleModFlagToKey(ctx, key); IM_ASSERT(IsNamedKey(key)); return &ctx->KeysOwnerData[key - ImGuiKey_NamedKey_BEGIN]; }
+    IMGUI_API ImGuiID       GetKeyOwner(ImGuiKey key);
+    IMGUI_API void          SetKeyOwner(ImGuiKey key, ImGuiID owner_id, ImGuiInputFlags flags = 0);
+    IMGUI_API void          SetKeyOwnersForKeyChord(ImGuiKeyChord key, ImGuiID owner_id, ImGuiInputFlags flags = 0);
+    IMGUI_API void          SetItemKeyOwner(ImGuiKey key, ImGuiInputFlags flags = 0);   // Set key owner to last item if it is hovered or active. Equivalent to 'if (IsItemHovered() || IsItemActive()) { SetKeyOwner(key, GetItemID());'.
+    IMGUI_API bool          TestKeyOwner(ImGuiKey key, ImGuiID owner_id);               // Test that key is either not owned, either owned by 'owner_id'
+    inline ImGuiKeyOwnerData* GetKeyOwnerData(ImGuiContext* ctx, ImGuiKey key)          { if (key & ImGuiMod_Mask_) key = ConvertSingleModFlagToKey(key); IM_ASSERT(IsNamedKey(key)); return &ctx->KeysOwnerData[key - ImGuiKey_NamedKey_BEGIN]; }
 
     // [EXPERIMENTAL] High-Level: Input Access functions w/ support for Key/Input Ownership
     // - Important: legacy IsKeyPressed(ImGuiKey, bool repeat=true) _DEFAULTS_ to repeat, new IsKeyPressed() requires _EXPLICIT_ ImGuiInputFlags_Repeat flag.
@@ -3519,32 +3496,32 @@ namespace ImGui
     // - Specifying a value for 'ImGuiID owner' will test that EITHER the key is NOT owned (UNLESS locked), EITHER the key is owned by 'owner'.
     //   Legacy functions use ImGuiKeyOwner_Any meaning that they typically ignore ownership, unless a call to SetKeyOwner() explicitly used ImGuiInputFlags_LockThisFrame or ImGuiInputFlags_LockUntilRelease.
     // - Binding generators may want to ignore those for now, or suffix them with Ex() until we decide if this gets moved into public API.
-    IMGUI_API bool              IsKeyDown(ImGuiKey key, ImGuiID owner_id);
-    IMGUI_API bool              IsKeyPressed(ImGuiKey key, ImGuiID owner_id, ImGuiInputFlags flags = 0);    // Important: when transitioning from old to new IsKeyPressed(): old API has "bool repeat = true", so would default to repeat. New API requiress explicit ImGuiInputFlags_Repeat.
-    IMGUI_API bool              IsKeyReleased(ImGuiKey key, ImGuiID owner_id);
-    IMGUI_API bool              IsMouseDown(ImGuiMouseButton button, ImGuiID owner_id);
-    IMGUI_API bool              IsMouseClicked(ImGuiMouseButton button, ImGuiID owner_id, ImGuiInputFlags flags = 0);
-    IMGUI_API bool              IsMouseReleased(ImGuiMouseButton button, ImGuiID owner_id);
-    IMGUI_API bool              IsMouseDoubleClicked(ImGuiMouseButton button, ImGuiID owner_id);
+    IMGUI_API bool          IsKeyDown(ImGuiKey key, ImGuiID owner_id);
+    IMGUI_API bool          IsKeyPressed(ImGuiKey key, ImGuiInputFlags flags, ImGuiID owner_id = 0);    // Important: when transitioning from old to new IsKeyPressed(): old API has "bool repeat = true", so would default to repeat. New API requiress explicit ImGuiInputFlags_Repeat.
+    IMGUI_API bool          IsKeyReleased(ImGuiKey key, ImGuiID owner_id);
+    IMGUI_API bool          IsKeyChordPressed(ImGuiKeyChord key_chord, ImGuiInputFlags flags, ImGuiID owner_id = 0);
+    IMGUI_API bool          IsMouseDown(ImGuiMouseButton button, ImGuiID owner_id);
+    IMGUI_API bool          IsMouseClicked(ImGuiMouseButton button, ImGuiInputFlags flags, ImGuiID owner_id = 0);
+    IMGUI_API bool          IsMouseReleased(ImGuiMouseButton button, ImGuiID owner_id);
+    IMGUI_API bool          IsMouseDoubleClicked(ImGuiMouseButton button, ImGuiID owner_id);
 
-    // [EXPERIMENTAL] Shortcut Routing
-    // - ImGuiKeyChord = a ImGuiKey optionally OR-red with ImGuiMod_Alt/ImGuiMod_Ctrl/ImGuiMod_Shift/ImGuiMod_Super.
-    //     ImGuiKey_C                 (accepted by functions taking ImGuiKey or ImGuiKeyChord)
-    //     ImGuiKey_C | ImGuiMod_Ctrl (accepted by functions taking ImGuiKeyChord)
-    //   ONLY ImGuiMod_XXX values are legal to 'OR' with an ImGuiKey. You CANNOT 'OR' two ImGuiKey values.
-    // - When using one of the routing flags (e.g. ImGuiInputFlags_RouteFocused): routes requested ahead of time given a chord (key + modifiers) and a routing policy.
-    // - Routes are resolved during NewFrame(): if keyboard modifiers are matching current ones: SetKeyOwner() is called + route is granted for the frame.
-    // - Route is granted to a single owner. When multiple requests are made we have policies to select the winning route.
-    // - Multiple read sites may use the same owner id and will all get the granted route.
-    // - For routing: when owner_id is 0 we use the current Focus Scope ID as a default owner in order to identify our location.
-    // - TL;DR;
-    //   - IsKeyChordPressed() compares mods + call IsKeyPressed() -> function has no side-effect.
-    //   - Shortcut() submits a route then if currently can be routed calls IsKeyChordPressed() -> function has (desirable) side-effects.
-    IMGUI_API bool              IsKeyChordPressed(ImGuiKeyChord key_chord, ImGuiID owner_id, ImGuiInputFlags flags = 0);
-    IMGUI_API void              SetNextItemShortcut(ImGuiKeyChord key_chord);
-    IMGUI_API bool              Shortcut(ImGuiKeyChord key_chord, ImGuiID owner_id = 0, ImGuiInputFlags flags = 0);
-    IMGUI_API bool              SetShortcutRouting(ImGuiKeyChord key_chord, ImGuiID owner_id, ImGuiInputFlags flags = 0); // owner_id needs to be explicit and cannot be 0
-    IMGUI_API bool              TestShortcutRouting(ImGuiKeyChord key_chord, ImGuiID owner_id);
+    // Shortcut Testing & Routing
+    // - Set Shortcut() and SetNextItemShortcut() in imgui.h
+    // - When a policy (except for ImGuiInputFlags_RouteAlways *) is set, Shortcut() will register itself with SetShortcutRouting(),
+    //   allowing the system to decide where to route the input among other route-aware calls.
+    //   (* using ImGuiInputFlags_RouteAlways is roughly equivalent to calling IsKeyChordPressed(key) and bypassing route registration and check)
+    // - When using one of the routing option:
+    //   - The default route is ImGuiInputFlags_RouteFocused (accept inputs if window is in focus stack. Deep-most focused window takes inputs. ActiveId takes inputs over deep-most focused window.)
+    //   - Routes are requested given a chord (key + modifiers) and a routing policy.
+    //   - Routes are resolved during NewFrame(): if keyboard modifiers are matching current ones: SetKeyOwner() is called + route is granted for the frame.
+    //   - Each route may be granted to a single owner. When multiple requests are made we have policies to select the winning route (e.g. deep most window).
+    //   - Multiple read sites may use the same owner id can all access the granted route.
+    //   - When owner_id is 0 we use the current Focus Scope ID as a owner ID in order to identify our location.
+    // - You can chain two unrelated windows in the focus stack using SetWindowParentWindowForFocusRoute()
+    //   e.g. if you have a tool window associated to a document, and you want document shortcuts to run when the tool is focused.
+    IMGUI_API bool          Shortcut(ImGuiKeyChord key_chord, ImGuiInputFlags flags, ImGuiID owner_id);
+    IMGUI_API bool          SetShortcutRouting(ImGuiKeyChord key_chord, ImGuiInputFlags flags, ImGuiID owner_id); // owner_id needs to be explicit and cannot be 0
+    IMGUI_API bool          TestShortcutRouting(ImGuiKeyChord key_chord, ImGuiID owner_id);
     IMGUI_API ImGuiKeyRoutingData* GetShortcutRoutingData(ImGuiKeyChord key_chord);
 
     // Docking
@@ -3863,15 +3840,14 @@ namespace ImGui
     inline void     SetItemUsingMouseWheel()                                            { SetItemKeyOwner(ImGuiKey_MouseWheelY); }      // Changed in 1.89
     inline bool     TreeNodeBehaviorIsOpen(ImGuiID id, ImGuiTreeNodeFlags flags = 0)    { return TreeNodeUpdateNextOpen(id, flags); }   // Renamed in 1.89
 
+    //inline bool   IsKeyPressedMap(ImGuiKey key, bool repeat = true)                   { IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // Removed in 1.87: Mapping from named key is always identity!
+
     // Refactored focus/nav/tabbing system in 1.82 and 1.84. If you have old/custom copy-and-pasted widgets which used FocusableItemRegister():
     //  (Old) IMGUI_VERSION_NUM  < 18209: using 'ItemAdd(....)'                              and 'bool tab_focused = FocusableItemRegister(...)'
     //  (Old) IMGUI_VERSION_NUM >= 18209: using 'ItemAdd(..., ImGuiItemAddFlags_Focusable)'  and 'bool tab_focused = (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Focused) != 0'
     //  (New) IMGUI_VERSION_NUM >= 18413: using 'ItemAdd(..., ImGuiItemFlags_Inputable)'     and 'bool tab_focused = (g.NavActivateId == id && (g.NavActivateFlags & ImGuiActivateFlags_PreferInput))'
     //inline bool   FocusableItemRegister(ImGuiWindow* window, ImGuiID id)              // -> pass ImGuiItemAddFlags_Inputable flag to ItemAdd()
     //inline void   FocusableItemUnregister(ImGuiWindow* window)                        // -> unnecessary: TempInputText() uses ImGuiInputTextFlags_MergedItem
-#endif
-#ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-    inline bool     IsKeyPressedMap(ImGuiKey key, bool repeat = true)                   { IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // Removed in 1.87: Mapping from named key is always identity!
 #endif
 
 } // namespace ImGui
