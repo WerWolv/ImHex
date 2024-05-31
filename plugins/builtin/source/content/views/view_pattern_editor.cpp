@@ -1472,7 +1472,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{} ", "Path");
+                    ImGuiExt::TextFormatted("{} ", "hex.ui.common.path"_lang);
                     ImGui::TableNextColumn();
 
                     std::string path;
