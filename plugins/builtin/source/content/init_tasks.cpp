@@ -237,6 +237,7 @@ namespace hex::plugin::builtin {
 
                 if (!fontFile.empty()) {
                     if (!customFontData.empty()) {
+                        defaultConfig.FontDataOwnedByAtlas = false;
                         return fonts->AddFontFromMemoryTTF(customFontData.data(), customFontData.size(), 0, &defaultConfig, defaultGlyphRanges.Data);
                     }
                 }
