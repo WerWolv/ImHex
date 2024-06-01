@@ -17,6 +17,8 @@
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
 
+#include <hex/trace/instrumentation.hpp>
+
 #include <chrono>
 #include <csignal>
 
@@ -236,7 +238,9 @@ namespace hex {
                 glfwSetWindowSizeLimits(m_window, lastWindowSize.x, lastWindowSize.y, lastWindowSize.x, lastWindowSize.y);
             }
 
+            IMHEX_START_FRAME_MARK;
             this->fullFrame();
+            IMHEX_END_FRAME_MARK;
 
             ImHexApi::System::impl::setLastFrameTime(glfwGetTime() - m_lastStartFrameTime);
 
@@ -288,6 +292,8 @@ namespace hex {
     }
 
     void Window::frameBegin() {
+        IMHEX_TRACE_SCOPE;
+
         // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -547,6 +553,8 @@ namespace hex {
     }
 
     void Window::drawView(const std::string &name, const std::unique_ptr<View> &view) {
+        IMHEX_TRACE_SCOPE_NAME(name.c_str());
+
         // Draw always visible views
         view->drawAlwaysVisibleContent();
 
@@ -607,6 +615,8 @@ namespace hex {
     }
 
     void Window::frame() {
+        IMHEX_TRACE_SCOPE;
+
         // Loop through all views and draw them
         for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
@@ -624,6 +634,8 @@ namespace hex {
     }
 
     void Window::frameEnd() {
+        IMHEX_TRACE_SCOPE;
+
         EventFrameEnd::post();
 
         TutorialManager::drawTutorial();

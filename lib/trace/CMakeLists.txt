@@ -1,7 +1,7 @@
 project(tracing)
 
 option(IMHEX_TRACE_EXCEPTIONS "Hook thrown exceptions to display a stack trace when possible" ON)
-option(IMHEX_INSTRUMENT_FUNCTIONS "Hook all function entries and exits to profile things in Tracy" OFF)
+option(IMHEX_INSTRUMENT_FUNCTIONS "Hook all function entries and exits to profile things in Tracy" ON)
 
 add_library(tracing OBJECT
     source/stacktrace.cpp
@@ -42,20 +42,23 @@ endif()
 
 if (IMHEX_INSTRUMENT_FUNCTIONS)
     target_sources(tracing PUBLIC
-        source/instr_entry.cpp
         source/instrumentation.cpp
     )
 
+    set(TRACY_ON_DEMAND ON CACHE INTERNAL "TRACY_ON_DEMAND")
+    set(TRACY_DELAYED_INIT ON CACHE INTERNAL "TRACY_DELAYED_INIT")
+    set(TRACY_ONLY_LOCALHOST ON CACHE INTERNAL "TRACY_ONLY_LOCALHOST")
+    set(TRACY_NO_FRAME_IMAGE ON CACHE INTERNAL "TRACY_NO_FRAME_IMAGE")
+    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "BUILD_SHARED_LIBS")
     FetchContent_Declare(
             tracy
             GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-            GIT_TAG v0.10
+            GIT_TAG master
             GIT_SHALLOW TRUE
             GIT_PROGRESS TRUE
     )
     FetchContent_MakeAvailable(tracy)
     target_compile_options(TracyClient PRIVATE "-Wno-error")
-
-    target_compile_options(tracing PUBLIC "-finstrument-functions")
-    target_link_libraries(tracing PRIVATE TracyClient)
+    target_link_libraries(tracing PUBLIC TracyClient)
+    target_compile_definitions(tracing PUBLIC IMHEX_USE_INSTRUMENTATION=1)
 endif()

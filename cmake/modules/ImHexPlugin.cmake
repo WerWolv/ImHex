@@ -37,7 +37,7 @@ macro(add_imhex_plugin)
     # Add include directories and link libraries
     target_include_directories(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_INCLUDES})
     target_link_libraries(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_LIBRARIES})
-    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${FMT_LIBRARIES} imgui_all_includes libwolv)
+    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${FMT_LIBRARIES} imgui_all_includes libwolv tracing)
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl)
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl-gen)
 
