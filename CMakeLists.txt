@@ -69,6 +69,7 @@ addBundledLibraries()
 add_subdirectory(lib/libimhex)
 add_subdirectory(main)
 addPluginDirectories()
+add_subdirectory(lib/trace)
 
 # Add unit tests
 if (IMHEX_ENABLE_UNIT_TESTS)

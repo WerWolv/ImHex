@@ -13,7 +13,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <stacktrace.hpp>
+#include <hex/trace/stacktrace.hpp>
 #include <llvm/Demangle/Demangle.h>
 
 #include <csignal>
@@ -63,7 +63,7 @@ namespace hex::crash {
     }
 
     static void printStackTrace() {
-        for (const auto &stackFrame : stacktrace::getStackTrace()) {
+        for (const auto &stackFrame : trace::getStackTrace()) {
             if (stackFrame.line == 0)
                 log::fatal("  ({}) | {}", stackFrame.file, stackFrame.function);
             else
@@ -153,7 +153,7 @@ namespace hex::crash {
 
     // Setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
     void setupCrashHandlers() {
-        stacktrace::initialize();
+        trace::initialize();
 
         // Register signal handlers
         {

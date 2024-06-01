@@ -546,72 +546,76 @@ namespace hex {
         TaskManager::runDeferredCalls();
     }
 
-    void Window::frame() {
-        auto &io = ImGui::GetIO();
+    void Window::drawView(const std::string &name, const std::unique_ptr<View> &view) {
+        // Draw always visible views
+        view->drawAlwaysVisibleContent();
 
+        // Skip views that shouldn't be processed currently
+        if (!view->shouldProcess())
+            return;
+
+        const auto openViewCount = std::ranges::count_if(ContentRegistry::Views::impl::getEntries(), [](const auto &entry) {
+            const auto &[unlocalizedName, openView] = entry;
+
+            return openView->hasViewMenuItemEntry() && openView->shouldProcess();
+        });
+
+        ImGuiWindowClass windowClass = {};
+
+        windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoCloseButton;
+
+        if (openViewCount <= 1 || LayoutManager::isLayoutLocked())
+            windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoTabBar;
+
+        ImGui::SetNextWindowClass(&windowClass);
+
+        auto window    = ImGui::FindWindowByName(view->getName().c_str());
+        if (window != nullptr && window->DockNode == nullptr)
+            ImGui::SetNextWindowBgAlpha(1.0F);
+
+        // Draw view
+        view->draw();
+        view->trackViewOpenState();
+
+        if (view->getWindowOpenState()) {
+            bool hasWindow = window != nullptr;
+            bool focused   = false;
+
+            // Get the currently focused view
+            if (hasWindow && (window->Flags & ImGuiWindowFlags_Popup) != ImGuiWindowFlags_Popup) {
+                auto windowName = View::toWindowName(name);
+                ImGui::Begin(windowName.c_str());
+
+                // Detect if the window is focused
+                focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
+
+                // Dock the window if it's not already docked
+                if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
+                    ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
+                    EventViewOpened::post(view.get());
+                }
+
+                ImGui::End();
+            }
+
+            // Pass on currently pressed keys to the shortcut handler
+            auto &io = ImGui::GetIO();
+            for (const auto &key : m_pressedKeys) {
+                ShortcutManager::process(view.get(), io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
+            }
+        }
+    }
+
+    void Window::frame() {
         // Loop through all views and draw them
         for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 
-            // Draw always visible views
-            view->drawAlwaysVisibleContent();
-
-            // Skip views that shouldn't be processed currently
-            if (!view->shouldProcess())
-                continue;
-
-            const auto openViewCount = std::ranges::count_if(ContentRegistry::Views::impl::getEntries(), [](const auto &entry) {
-                const auto &[unlocalizedName, openView] = entry;
-
-                return openView->hasViewMenuItemEntry() && openView->shouldProcess();
-            });
-
-            ImGuiWindowClass windowClass = {};
-
-            windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoCloseButton;
-
-            if (openViewCount <= 1 || LayoutManager::isLayoutLocked())
-                windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoTabBar;
-
-            ImGui::SetNextWindowClass(&windowClass);
-
-            auto window    = ImGui::FindWindowByName(view->getName().c_str());
-            if (window != nullptr && window->DockNode == nullptr)
-                ImGui::SetNextWindowBgAlpha(1.0F);
-
-            // Draw view
-            view->draw();
-            view->trackViewOpenState();
-
-            if (view->getWindowOpenState()) {
-                bool hasWindow = window != nullptr;
-                bool focused   = false;
-
-                // Get the currently focused view
-                if (hasWindow && (window->Flags & ImGuiWindowFlags_Popup) != ImGuiWindowFlags_Popup) {
-                    auto windowName = View::toWindowName(name);
-                    ImGui::Begin(windowName.c_str());
-
-                    // Detect if the window is focused
-                    focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
-
-                    // Dock the window if it's not already docked
-                    if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
-                        ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
-                        EventViewOpened::post(view.get());
-                    }
-
-                    ImGui::End();
-                }
-
-                // Pass on currently pressed keys to the shortcut handler
-                for (const auto &key : m_pressedKeys) {
-                    ShortcutManager::process(view.get(), io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
-                }
-            }
+            drawView(name, view);
         }
 
         // Handle global shortcuts
+        auto &io = ImGui::GetIO();
         for (const auto &key : m_pressedKeys) {
             ShortcutManager::processGlobals(io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, key);
         }
@@ -738,6 +742,7 @@ namespace hex {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+        glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
         if (initialWindowProperties.has_value()) {
             glfwWindowHint(GLFW_MAXIMIZED, initialWindowProperties->maximized);

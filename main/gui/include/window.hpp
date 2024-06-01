@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -34,6 +36,7 @@ namespace hex {
         void beginNativeWindowFrame();
         void endNativeWindowFrame();
         void drawTitleBar();
+        void drawView(const std::string &name, const std::unique_ptr<View> &view);
 
         void frameBegin();
         void frame();
