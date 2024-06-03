@@ -597,6 +597,16 @@ namespace hex {
              */
             std::string getArchitecture();
 
+
+            struct LinuxDistro {
+                std::string name;
+                std::string version;
+            };
+            /**
+             * @brief Gets information related to the Linux distribution, if running on Linux
+             */
+            std::optional<LinuxDistro> getLinuxDistro();
+
             /**
              * @brief Gets the current ImHex version
              * @return ImHex version
