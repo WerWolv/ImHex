@@ -15,6 +15,8 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <set>
+#include <fstream>
+#include <algorithm>
 #include <GLFW/glfw3.h>
 
 #if defined(OS_WINDOWS)
@@ -740,6 +742,25 @@ namespace hex {
             #else
                 return "Unknown";
             #endif
+        }
+
+        std::optional<LinuxDistro> getLinuxDistro() {
+            std::ifstream file("/etc/os-release");
+            std::string name;
+            std::string version;
+
+            std::string line;
+            while (std::getline(file, line)) {
+                if (line.find("PRETTY_NAME=") != std::string::npos) {
+                    name = line.substr(line.find("=") + 1);
+                    name.erase(std::remove(name.begin(), name.end(), '\"'), name.end());
+                } else if (line.find("VERSION_ID=") != std::string::npos) {
+                    version = line.substr(line.find("=") + 1);
+                    version.erase(std::remove(version.begin(), version.end(), '\"'), version.end());
+                }
+            }
+
+            return {{name, version}};
         }
 
         std::string getImHexVersion(bool withBuildType) {
