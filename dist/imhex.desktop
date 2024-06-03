@@ -8,3 +8,4 @@ Type=Application
 StartupNotify=true
 Categories=Development;IDE;
 StartupWMClass=imhex
+Keywords=static-analysis;reverse-engineering;disassembler;disassembly;hacking;forensics;hex-editor;cybersecurity;security;binary-analysis;
