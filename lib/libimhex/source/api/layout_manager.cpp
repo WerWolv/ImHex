@@ -41,7 +41,7 @@ namespace hex {
 
         std::fs::path layoutPath;
         for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Layouts)) {
-            if (!hex::fs::isPathWritable(layoutPath))
+            if (!hex::fs::isPathWritable(path))
                 continue;
 
             layoutPath = path / fileName;
