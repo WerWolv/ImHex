@@ -805,6 +805,10 @@ namespace hex {
             #endif
         }
 
+        bool isNightly() {
+            return getImHexVersion(false).ends_with("WIP");
+        }
+
         bool updateImHex(UpdateType updateType) {
             // Get the path of the updater executable
             std::fs::path executablePath;

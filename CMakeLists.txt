@@ -35,8 +35,7 @@ set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 
 # Setup project
-loadVersion(IMHEX_VERSION)
-string(REPLACE "-WIP" "" IMHEX_VERSION_PLAIN ${IMHEX_VERSION})
+loadVersion(IMHEX_VERSION IMHEX_VERSION_PLAIN)
 setVariableInParent(IMHEX_VERSION ${IMHEX_VERSION})
 configureCMake()
 

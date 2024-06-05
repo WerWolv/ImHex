@@ -632,6 +632,12 @@ namespace hex {
              */
             bool isDebugBuild();
 
+            /**
+             * @brief Checks if this version of ImHex is a nightly build
+             * @return True if this version is a nightly, false if it's a release
+             */
+            bool isNightlyBuild();
+
             enum class UpdateType {
                 Stable,
                 Nightly
