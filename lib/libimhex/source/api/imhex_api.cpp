@@ -805,7 +805,7 @@ namespace hex {
             #endif
         }
 
-        bool isNightly() {
+        bool isNightlyBuild() {
             return getImHexVersion(false).ends_with("WIP");
         }
 
