@@ -15,7 +15,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <set>
-#include <fstream>
 #include <algorithm>
 #include <GLFW/glfw3.h>
 
@@ -437,8 +436,8 @@ namespace hex {
             s_providers->erase(it);
             impl::s_closingProviders.erase(provider);
 
-            if (s_currentProvider >= i64(s_providers->size()))
-                setCurrentProvider(0);
+            if (s_currentProvider >= i64(s_providers->size()) && !s_providers->empty())
+                setCurrentProvider(s_providers->size() - 1);
 
             if (s_providers->empty())
                 EventProviderChanged::post(provider, nullptr);
