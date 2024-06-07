@@ -279,8 +279,8 @@ namespace hex::script::loader {
     }
 
     void DotNetLoader::clearScripts() {
-        std::erase_if(getScripts(), [](const Script *script) {
-            return !script->background;
+        std::erase_if(getScripts(), [](const Script &script) {
+            return !script.background;
         });
     }
 
