@@ -1,4 +1,4 @@
-#if !defined(OS_FREEBSD)
+#if defined(OS_WINDOWS) || defined(OS_MACOS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
 
 #include <content/providers/process_memory_provider.hpp>
 
