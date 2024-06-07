@@ -128,7 +128,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawTitleBar() {
-            auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
+            auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
             auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -478,7 +478,7 @@ namespace hex::plugin::builtin {
                 const auto drawList = ImGui::GetWindowDrawList();
                 const auto shouldDrawSidebar = anySidebarItemsAvailable();
 
-                const auto menuBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
+                const auto menuBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
                 const auto sidebarPos   = ImGui::GetCursorPos();
                 const auto sidebarWidth = shouldDrawSidebar ? 20_scaled : 0;
 

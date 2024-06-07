@@ -564,7 +564,7 @@ namespace hex {
     }
 
     void Window::beginNativeWindowFrame() {
-        s_titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
+        s_titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
 
         // Remove WS_POPUP style from the window to make various window management tools work
         auto hwnd = glfwGetWin32Window(m_window);

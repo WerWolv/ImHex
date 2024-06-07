@@ -752,7 +752,7 @@ namespace ImGuiExt {
 
         ImVec2 pos = window->DC.CursorPos;
 
-        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight(), label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
+        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight, label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);

@@ -3821,7 +3821,7 @@ CIMGUI_API float ImGuiWindow_CalcFontSize(ImGuiWindow* self)
 }
 CIMGUI_API float ImGuiWindow_TitleBarHeight(ImGuiWindow* self)
 {
-    return self->TitleBarHeight();
+    return self->TitleBarHeight;
 }
 CIMGUI_API void ImGuiWindow_TitleBarRect(ImRect *pOut,ImGuiWindow* self)
 {
@@ -3829,7 +3829,7 @@ CIMGUI_API void ImGuiWindow_TitleBarRect(ImRect *pOut,ImGuiWindow* self)
 }
 CIMGUI_API float ImGuiWindow_MenuBarHeight(ImGuiWindow* self)
 {
-    return self->MenuBarHeight();
+    return self->MenuBarHeight;
 }
 CIMGUI_API void ImGuiWindow_MenuBarRect(ImRect *pOut,ImGuiWindow* self)
 {
