@@ -433,10 +433,14 @@ namespace hex::ui {
             }
         }
 
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editingEnabled) {
-            m_editingPattern = &pattern;
-            m_editingPatternOffset = pattern.getOffset();
-            AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
+        if (ImGui::IsItemHovered()) {
+            m_hoverCallback(&pattern);
+
+            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editingEnabled) {
+                m_editingPattern = &pattern;
+                m_editingPatternOffset = pattern.getOffset();
+                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
+            }
         }
 
         ImGui::SameLine(0, 0);
@@ -1113,6 +1117,8 @@ namespace hex::ui {
 
     void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime, float height) {
         std::scoped_lock lock(s_resetDrawMutex);
+
+        m_hoverCallback(nullptr);
 
         const auto treeStyleButton = [this](auto icon, TreeStyle style, const char *tooltip) {
             bool pushed = false;

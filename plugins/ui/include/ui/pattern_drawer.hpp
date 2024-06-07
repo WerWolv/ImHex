@@ -32,6 +32,7 @@ namespace hex::ui {
 
         void setTreeStyle(TreeStyle style) { m_treeStyle = style; }
         void setSelectionCallback(std::function<void(const pl::ptrn::Pattern *)> callback) { m_selectionCallback = std::move(callback); }
+        void setHoverCallback(std::function<void(const pl::ptrn::Pattern *)> callback) { m_hoverCallback = std::move(callback); }
         void enableRowColoring(bool enabled) { m_rowColoring = enabled; }
         void enablePatternEditing(bool enabled) { m_editingEnabled = enabled; }
         void reset();
@@ -126,6 +127,7 @@ namespace hex::ui {
         TaskHolder m_favoritesUpdateTask;
 
         std::function<void(const pl::ptrn::Pattern *)> m_selectionCallback = [](const pl::ptrn::Pattern *) { };
+        std::function<void(const pl::ptrn::Pattern *)> m_hoverCallback = [](const pl::ptrn::Pattern *) { };
 
         pl::gen::fmt::FormatterArray m_formatters;
     };
