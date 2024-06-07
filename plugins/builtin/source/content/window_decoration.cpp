@@ -128,7 +128,12 @@ namespace hex::plugin::builtin {
         }
 
         void drawTitleBar() {
-            auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight * 0.7;
+            auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
+
+            #if defined (OS_MACOS)
+                titleBarHeight *= 0.7F;
+            #endif
+
             auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
