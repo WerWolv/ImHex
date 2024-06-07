@@ -196,6 +196,7 @@ namespace hex::ui {
         }
 
         void jumpIfOffScreen() {
+            m_shouldScrollToSelection = true;
             m_shouldJumpWhenOffScreen = true;
         }
 
