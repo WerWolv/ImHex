@@ -702,6 +702,12 @@ macro(addBundledLibraries)
         set(JTHREAD_LIBRARIES jthread)
     endif()
 
+    if (USE_SYSTEM_BOOST)
+        find_package(boost REQUIRED)
+    else()
+        add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/boost ${CMAKE_CURRENT_BINARY_DIR}/boost EXCLUDE_FROM_ALL)
+    endif()
+
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)
     set(LIBPL_ENABLE_PRECOMPILED_HEADERS ${IMHEX_ENABLE_PRECOMPILED_HEADERS} CACHE BOOL "" FORCE)
 
