@@ -128,7 +128,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawTitleBar() {
-            auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
+            auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight * 0.7;
             auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -395,7 +395,7 @@ namespace hex::plugin::builtin {
                 #if defined(OS_MACOS)
                     if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                         const auto windowSize = ImHexApi::System::getMainWindowSize();
-                        const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight() * 1.5F);
+                        const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight);
                         
                         ImGui::SetCursorPos(ImVec2());
                         
