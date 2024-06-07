@@ -230,7 +230,7 @@ namespace hex::plugin::builtin {
             }
 
         private:
-            int m_value = 0;
+            int m_value = 5 * 2;
         };
 
         class KeybindingWidget : public ContentRegistry::Settings::Widgets::Widget {
