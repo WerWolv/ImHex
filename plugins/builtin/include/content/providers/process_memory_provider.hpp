@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(OS_WINDOWS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
+#if !defined(OS_FREEBSD)
 
 #include <hex/providers/provider.hpp>
 #include <hex/api/localization_manager.hpp>
@@ -28,9 +28,9 @@ namespace hex::plugin::builtin {
         ~ProcessMemoryProvider() override = default;
 
         [[nodiscard]] bool isAvailable() const override {
-            #ifdef _WIN32
+            #if defined(OS_WINDOWS)
                 return m_processHandle != nullptr;
-            #elif __linux__
+            #else
                 return m_processId != -1;
             #endif
         }
@@ -102,9 +102,9 @@ namespace hex::plugin::builtin {
             return hex::containsIgnoreCase(memoryRegion.name, search);
         });
 
-#ifdef _WIN32
+#if defined(OS_WINDOWS)
         HANDLE m_processHandle = nullptr;
-#elif __linux__
+#else
         pid_t m_processId = -1;
 #endif
 

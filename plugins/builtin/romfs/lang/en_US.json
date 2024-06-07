@@ -421,6 +421,7 @@
         "hex.builtin.provider.motorola_srec.name": "Motorola SREC {0}",
         "hex.builtin.provider.process_memory": "Process Memory Provider",
         "hex.builtin.provider.process_memory.enumeration_failed": "Failed to enumerate processes",
+        "hex.builtin.provider.process_memory.macos_limitations": "macOS doesn't properly allow reading memory from other processes, even when running as root. If System Integrity Protection (SIP) is enabled, it only works for applications that are unsigned or have the 'Get Task Allow' entitlement which generally only applies to applications compiled by yourself.",
         "hex.builtin.provider.process_memory.memory_regions": "Memory Regions",
         "hex.builtin.provider.process_memory.name": "'{0}' Process Memory",
         "hex.builtin.provider.process_memory.process_name": "Process Name",
