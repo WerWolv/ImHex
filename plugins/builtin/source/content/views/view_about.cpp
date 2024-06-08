@@ -540,6 +540,7 @@ namespace hex::plugin::builtin {
 
     struct ReleaseNotes {
         std::string title;
+        std::string versionString;
         std::vector<std::string> notes;
     };
 
@@ -561,6 +562,9 @@ namespace hex::plugin::builtin {
             // Get the release title
             notes.title = json["name"].get<std::string>();
 
+            // Get the release version string
+            notes.versionString = json["tag_name"].get<std::string>();
+
             // Get the release notes and split it into lines
             auto body = json["body"].get<std::string>();
             notes.notes = wolv::util::splitString(body, "\r\n");
@@ -575,8 +579,9 @@ namespace hex::plugin::builtin {
         static ReleaseNotes notes;
 
         // Set up the request to get the release notes the first time the page is opened
+        const static auto ImHexVersionString = ImHexApi::System::getImHexVersion(false);
         AT_FIRST_TIME {
-            static HttpRequest request("GET", GitHubApiURL + std::string("/releases/tags/v") + ImHexApi::System::getImHexVersion(false));
+            static HttpRequest request("GET", GitHubApiURL + std::string("/releases/") + (ImHexVersionString.ends_with(".WIP") ? "latest" : ( "tags/v" + ImHexVersionString)));
 
             m_releaseNoteRequest = request.execute();
         };
@@ -593,7 +598,7 @@ namespace hex::plugin::builtin {
 
         // Draw the release title
         if (!notes.title.empty()) {
-            auto title = hex::format("v{}: {}", ImHexApi::System::getImHexVersion(false), notes.title);
+            auto title = hex::format("{}: {}", notes.versionString, notes.title);
             ImGuiExt::Header(title.c_str(), true);
             ImGui::Separator();
         }
