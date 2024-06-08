@@ -170,13 +170,13 @@ namespace hex::plugin::builtin {
                                        };
 
                                        // Insert the inspector into the list
-                                       m_workData.push_back({
+                                       m_workData.emplace_back(
                                             pattern->getDisplayName(),
                                             displayFunction,
                                             editingFunction,
                                             false,
                                             wolv::util::toUTF8String(filePath) + ":" + pattern->getVariableName()
-                                        });
+                                        );
 
                                        AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.data_inspector.name");
                                    } catch (const pl::core::err::EvaluatorError::Exception &error) {
@@ -184,11 +184,32 @@ namespace hex::plugin::builtin {
                                    }
                                }
                            } else {
-                               const auto& error = m_runtime.getEvalError();
+                               std::string errorMessage;
+                               if (const auto &compileErrors = m_runtime.getCompileErrors(); !compileErrors.empty()) {
+                                   for (const auto &error : compileErrors) {
+                                       errorMessage += hex::format("{}\n", error.format());
+                                   }
+                               } else if (const auto &evalError = m_runtime.getEvalError(); evalError.has_value()) {
+                                   errorMessage += hex::format("{}:{}  {}\n", evalError->line, evalError->column, evalError->message);
+                               }
 
-                               log::error("Failed to execute custom inspector file '{}'!", wolv::util::toUTF8String(filePath));
-                               if (error.has_value())
-                                   log::error("{}", error.value().what());
+                               auto displayFunction = [errorMessage = std::move(errorMessage)] {
+                                   ImGuiExt::HelpHover(
+                                       errorMessage.c_str(),
+                                       "hex.builtin.view.data_inspector.execution_error"_lang,
+                                       ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError)
+                                   );
+
+                                   return errorMessage;
+                               };
+
+                               m_workData.emplace_back(
+                                   wolv::util::toUTF8String(filePath.filename()),
+                                   std::move(displayFunction),
+                                   std::nullopt,
+                                   false,
+                                   wolv::util::toUTF8String(filePath)
+                               );
                            }
                        }
                    }

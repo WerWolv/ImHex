@@ -682,6 +682,7 @@
         "hex.builtin.view.constants.row.desc": "Description",
         "hex.builtin.view.constants.row.name": "Name",
         "hex.builtin.view.constants.row.value": "Value",
+        "hex.builtin.view.data_inspector.execution_error": "Custom row evaluation error",
         "hex.builtin.view.data_inspector.invert": "Invert",
         "hex.builtin.view.data_inspector.name": "Data Inspector",
         "hex.builtin.view.data_inspector.no_data": "No bytes selected",
