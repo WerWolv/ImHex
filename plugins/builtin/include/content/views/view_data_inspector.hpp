@@ -47,6 +47,8 @@ namespace hex::plugin::builtin {
         void drawInspectorRows();
         void drawInspectorRow(InspectorCacheEntry& entry);
 
+        ContentRegistry::DataInspector::impl::DisplayFunction createPatternErrorDisplayFunction();
+
     private:
         bool m_shouldInvalidate = true;
 

@@ -85,13 +85,13 @@ namespace hex::plugin::builtin {
             }
 
             // Insert processed data into the inspector list
-            m_workData.push_back({
-                                         entry.unlocalizedName,
-                                         entry.generatorFunction(buffer, m_endian, m_numberDisplayStyle),
-                                         entry.editingFunction,
-                                         false,
-                                         entry.unlocalizedName
-                                 });
+            m_workData.emplace_back(
+                entry.unlocalizedName,
+                entry.generatorFunction(buffer, m_endian, m_numberDisplayStyle),
+                entry.editingFunction,
+                false,
+                entry.unlocalizedName
+            );
         }
 
         // Execute custom inspectors
@@ -156,11 +156,17 @@ namespace hex::plugin::builtin {
 
     void ViewDataInspector::executeInspector(const std::string& code, const std::fs::path& path, const std::map<std::string, pl::core::Token::Literal>& inVariables) {
         if (!m_runtime.executeString(code, pl::api::Source::DefaultSource, {}, inVariables, true)) {
-            const auto &error = m_runtime.getEvalError();
 
-            log::error("Failed to execute custom inspector file '{}'!", wolv::util::toUTF8String(path));
-            if (error.has_value())
-                log::error("{}", error.value().what());
+            auto displayFunction = createPatternErrorDisplayFunction();
+
+            // Insert the inspector into the list
+            m_workData.emplace_back(
+                wolv::util::toUTF8String(path.filename()),
+                std::move(displayFunction),
+                std::nullopt,
+                false,
+                wolv::util::toUTF8String(path)
+            );
 
             return;
         }
@@ -197,20 +203,27 @@ namespace hex::plugin::builtin {
                 };
 
                 // Insert the inspector into the list
-                m_workData.push_back({
-                                             pattern->getDisplayName(),
-                                             displayFunction,
-                                             editingFunction,
-                                             false,
-                                             wolv::util::toUTF8String(path) + ":" +
-                                             pattern->getVariableName()
-                                     });
+                m_workData.emplace_back(
+                    pattern->getDisplayName(),
+                    displayFunction,
+                    editingFunction,
+                    false,
+                    wolv::util::toUTF8String(path) + ":" + pattern->getVariableName()
+                );
 
                 AchievementManager::unlockAchievement("hex.builtin.achievement.patterns",
                                                       "hex.builtin.achievement.patterns.data_inspector.name");
-            } catch (const pl::core::err::EvaluatorError::Exception &error) {
-                log::error("Failed to get value of pattern '{}': {}", pattern->getDisplayName(),
-                           error.what());
+            } catch (const pl::core::err::EvaluatorError::Exception &) {
+                auto displayFunction = createPatternErrorDisplayFunction();
+
+                // Insert the inspector into the list
+                m_workData.emplace_back(
+                    wolv::util::toUTF8String(path.filename()),
+                    std::move(displayFunction),
+                    std::nullopt,
+                    false,
+                    wolv::util::toUTF8String(path)
+                );
             }
         }
     }
@@ -472,5 +485,31 @@ namespace hex::plugin::builtin {
             m_invert = selection == 1;
         }
     }
+
+    ContentRegistry::DataInspector::impl::DisplayFunction ViewDataInspector::createPatternErrorDisplayFunction() {
+        // Generate error message
+        std::string errorMessage;
+        if (const auto &compileErrors = m_runtime.getCompileErrors(); !compileErrors.empty()) {
+            for (const auto &error : compileErrors) {
+                errorMessage += hex::format("{}\n", error.format());
+            }
+        } else if (const auto &evalError = m_runtime.getEvalError(); evalError.has_value()) {
+            errorMessage += hex::format("{}:{}  {}\n", evalError->line, evalError->column, evalError->message);
+        }
+
+        // Create a dummy display function that displays the error message
+        auto displayFunction = [errorMessage = std::move(errorMessage)] {
+            ImGuiExt::HelpHover(
+                errorMessage.c_str(),
+                "hex.builtin.view.data_inspector.execution_error"_lang,
+                ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError)
+            );
+
+            return errorMessage;
+        };
+
+        return displayFunction;
+    }
+
 
 }
