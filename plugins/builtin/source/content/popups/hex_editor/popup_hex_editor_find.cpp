@@ -211,11 +211,21 @@ namespace hex::plugin::builtin {
     }
 
     std::optional<Region> PopupFind::findByteSequence(const std::vector<u8> &sequence) const {
+        if (sequence.empty())
+            return std::nullopt;
+
         auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return std::nullopt;
+
+        const auto providerSize = provider->getActualSize();
+        if (providerSize == 0x00)
+            return std::nullopt;
+
         prv::ProviderReader reader(provider);
 
         auto startAbsolutePosition = provider->getBaseAddress();
-        auto endAbsolutePosition = provider->getBaseAddress() + provider->getActualSize() - 1;
+        auto endAbsolutePosition = provider->getBaseAddress() + providerSize - 1;
 
         constexpr static auto searchFunction = [](const auto &haystackBegin, const auto &haystackEnd,
                                                   const auto &needleBegin, const auto &needleEnd) {

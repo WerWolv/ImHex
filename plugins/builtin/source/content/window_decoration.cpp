@@ -128,7 +128,12 @@ namespace hex::plugin::builtin {
         }
 
         void drawTitleBar() {
-            auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
+            auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
+
+            #if defined (OS_MACOS)
+                titleBarHeight *= 0.7F;
+            #endif
+
             auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -395,7 +400,7 @@ namespace hex::plugin::builtin {
                 #if defined(OS_MACOS)
                     if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                         const auto windowSize = ImHexApi::System::getMainWindowSize();
-                        const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight() * 1.5F);
+                        const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight);
                         
                         ImGui::SetCursorPos(ImVec2());
                         
@@ -462,7 +467,6 @@ namespace hex::plugin::builtin {
 
             constexpr static ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
-            // Handle all undocked floating windows
             ImGuiViewport *viewport = ImGui::GetMainViewport();
             ImGui::SetNextWindowPos(viewport->WorkPos);
             ImGui::SetNextWindowSize(ImHexApi::System::getMainWindowSize() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing()));
@@ -479,7 +483,7 @@ namespace hex::plugin::builtin {
                 const auto drawList = ImGui::GetWindowDrawList();
                 const auto shouldDrawSidebar = anySidebarItemsAvailable();
 
-                const auto menuBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
+                const auto menuBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
                 const auto sidebarPos   = ImGui::GetCursorPos();
                 const auto sidebarWidth = shouldDrawSidebar ? 20_scaled : 0;
 
@@ -490,7 +494,7 @@ namespace hex::plugin::builtin {
                     footerHeight += ImGui::GetStyle().FramePadding.y * 2;
                 #endif
 
-                const auto dockSpaceSize = ImVec2(ImHexApi::System::getMainWindowSize().x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
+                const auto dockSpaceSize = ImHexApi::System::getMainWindowSize() - ImVec2(sidebarWidth, menuBarHeight * 2 + footerHeight);
 
                 ImGui::SetCursorPosX(sidebarWidth);
                 drawFooter(drawList, dockSpaceSize, footerHeight);

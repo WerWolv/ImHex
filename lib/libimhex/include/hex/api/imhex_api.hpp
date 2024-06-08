@@ -597,6 +597,16 @@ namespace hex {
              */
             std::string getArchitecture();
 
+
+            struct LinuxDistro {
+                std::string name;
+                std::string version;
+            };
+            /**
+             * @brief Gets information related to the Linux distribution, if running on Linux
+             */
+            std::optional<LinuxDistro> getLinuxDistro();
+
             /**
              * @brief Gets the current ImHex version
              * @return ImHex version
@@ -621,6 +631,12 @@ namespace hex {
              * @return True if ImHex was built in debug mode, false otherwise
              */
             bool isDebugBuild();
+
+            /**
+             * @brief Checks if this version of ImHex is a nightly build
+             * @return True if this version is a nightly, false if it's a release
+             */
+            bool isNightlyBuild();
 
             enum class UpdateType {
                 Stable,

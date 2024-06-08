@@ -514,7 +514,7 @@ namespace ImGuiExt {
         PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
         PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, GetStyle().FramePadding.y));
+        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
 
         PushStyleColor(ImGuiCol_Text, iconColor);
@@ -522,7 +522,7 @@ namespace ImGuiExt {
         PopStyleColor();
 
         if (IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-            SetNextWindowSizeConstraints(ImVec2(GetTextLineHeight() * 25, 0), ImVec2(GetTextLineHeight() * 25, FLT_MAX));
+            SetNextWindowSizeConstraints(ImVec2(GetTextLineHeight() * 25, 0), ImVec2(GetTextLineHeight() * 35, FLT_MAX));
             BeginTooltip();
             TextFormattedWrapped("{}", text);
             EndTooltip();
@@ -752,7 +752,7 @@ namespace ImGuiExt {
 
         ImVec2 pos = window->DC.CursorPos;
 
-        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight(), label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
+        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight, label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);

@@ -130,7 +130,7 @@ namespace hex::plugin::builtin {
 
             // Load custom font related settings
             if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false)) {
-                std::fs::path fontFile = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
+                auto fontFile = ContentRegistry::Settings::read<std::fs::path>("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
                 if (!fontFile.empty()) {
                     if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile)) {
                         log::warn("Custom font file {} not found! Falling back to default font.", wolv::util::toUTF8String(fontFile));
@@ -210,8 +210,14 @@ namespace hex::plugin::builtin {
                 glyphRangesBuilder.BuildRanges(&defaultGlyphRanges);
             }
 
-            if (fontFile.empty())
+            std::vector<u8> customFontData;
+
+            if (fontFile.empty()) {
                 fonts->Clear();
+            } else {
+                wolv::io::File file(fontFile, wolv::io::File::Mode::Read);
+                customFontData = file.readVector();
+            }
 
             if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false)) {
                 if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
@@ -224,21 +230,22 @@ namespace hex::plugin::builtin {
 
             auto loadDefaultFont = [&](const char *fontName, u32 flags = 0) {
                 ImFontConfig defaultConfig = cfg;
-                ImFont *defaultFont;
 
                 defaultConfig.FontBuilderFlags |= flags;
 
                 std::strncpy(defaultConfig.Name, fontName, sizeof(defaultConfig.Name) - 1);
 
-                if (fontFile.empty()) {
-                    defaultConfig.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-                    defaultConfig.SizePixels = std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize) * ImHexApi::Fonts::DefaultFontSize;
-                    defaultFont = fonts->AddFontDefault(&defaultConfig);
-                } else {
-                    defaultFont = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &defaultConfig, defaultGlyphRanges.Data);
+                if (!fontFile.empty()) {
+                    if (!customFontData.empty()) {
+                        defaultConfig.FontDataOwnedByAtlas = false;
+                        return fonts->AddFontFromMemoryTTF(customFontData.data(), customFontData.size(), 0, &defaultConfig, defaultGlyphRanges.Data);
+                    }
                 }
 
-                return defaultFont;
+                defaultConfig.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
+                defaultConfig.SizePixels = std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize) * ImHexApi::Fonts::DefaultFontSize;
+
+                return fonts->AddFontDefault(&defaultConfig);
             };
 
             // Load main font
@@ -284,8 +291,8 @@ namespace hex::plugin::builtin {
                     auto size = fontSize;
                     if (font.defaultSize.has_value())
                         size = font.defaultSize.value() * std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize);
-
-                    size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
+                    else
+                        size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
 
                     cfg.SizePixels = size;
 

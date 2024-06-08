@@ -551,10 +551,20 @@ namespace hex {
         });
 
         ImGui::GetIO().ConfigDebugIsDebuggerPresent = ::IsDebuggerPresent();
+
+        glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
+            auto *win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->m_unlockFrameRate = true;
+
+            glViewport(0, 0, width, height);
+            ImHexApi::System::impl::setMainWindowSize(width, height);
+
+            win->fullFrame();
+        });
     }
 
     void Window::beginNativeWindowFrame() {
-        s_titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
+        s_titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
 
         // Remove WS_POPUP style from the window to make various window management tools work
         auto hwnd = glfwGetWin32Window(m_window);

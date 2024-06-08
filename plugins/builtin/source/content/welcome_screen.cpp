@@ -37,7 +37,7 @@
 namespace hex::plugin::builtin {
 
     namespace {
-        ImGuiExt::Texture s_bannerTexture, s_backdropTexture, s_infoBannerTexture;
+        ImGuiExt::Texture s_bannerTexture, s_nightlyTexture, s_backdropTexture, s_infoBannerTexture;
 
         std::string s_tipOfTheDay;
 
@@ -182,6 +182,17 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::Image(s_bannerTexture, s_bannerTexture.getSize());
+
+                if (ImHexApi::System::isNightlyBuild()) {
+                    auto cursor = ImGui::GetCursorPos();
+
+                    ImGui::SameLine(0);
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 15_scaled);
+                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
+                    ImGui::Image(s_nightlyTexture, s_nightlyTexture.getSize());
+
+                    ImGui::SetCursorPos(cursor);
+                }
 
                 ImGui::NewLine();
 
@@ -504,12 +515,13 @@ namespace hex::plugin::builtin {
                 return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Nearest);
             };
 
-            auto changeTextureSvg = [&](const std::string &path) {
-                return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), 300_scaled, 0, ImGuiExt::Texture::Filter::Linear);
+            auto changeTextureSvg = [&](const std::string &path, float width) {
+                return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), width, 0, ImGuiExt::Texture::Filter::Linear);
             };
 
             ThemeManager::changeTheme(theme);
-            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()));
+            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300_scaled);
+            s_nightlyTexture = changeTextureSvg(hex::format("assets/{}/nightly.svg", "common"), 35_scaled);
             s_backdropTexture = changeTexture(hex::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
 
             if (!s_bannerTexture.isValid()) {

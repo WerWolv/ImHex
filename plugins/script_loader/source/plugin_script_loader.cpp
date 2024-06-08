@@ -30,7 +30,7 @@ namespace {
     void loadScript(std::vector<const Script*> &scripts, auto &loader) {
         loader.loadAll();
 
-        for (auto &script : loader.getScripts())
+        for (auto &script : std::as_const(loader).getScripts())
             scripts.emplace_back(&script);
     }
 
@@ -106,7 +106,7 @@ namespace {
                 }
 
                 for (const auto &script : scripts) {
-                    const auto &[name, background, entryPoint, loader] = *script;
+                    const auto &[name, path, background, entryPoint, loader] = *script;
                     if (background)
                         continue;
 

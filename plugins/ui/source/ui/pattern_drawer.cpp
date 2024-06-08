@@ -44,7 +44,7 @@ namespace hex::ui {
 
         using namespace ::std::literals::string_literals;
 
-        bool isPatternSelected(u64 address, u64 size) {
+        bool isPatternOverlapSelected(u64 address, u64 size) {
             auto currSelection = ImHexApi::HexEditor::getSelection();
             if (!currSelection.has_value())
                 return false;
@@ -52,26 +52,38 @@ namespace hex::ui {
             return Region{ address, size }.overlaps(*currSelection);
         }
 
+        bool isPatternFullySelected(u64 address, u64 size) {
+            auto currSelection = ImHexApi::HexEditor::getSelection();
+            if (!currSelection.has_value())
+                return false;
+
+            return currSelection->address == address && currSelection->size == size;
+        }
+
         template<typename T>
         auto highlightWhenSelected(u64 address, u64 size, const T &callback) {
             constexpr static bool HasReturn = !requires(T t) { { t() } -> std::same_as<void>; };
 
-            auto selected = isPatternSelected(address, size);
+            const auto overlapSelected = isPatternOverlapSelected(address, size);
+            const auto fullySelected = isPatternFullySelected(address, size);
 
-            if (selected)
-                ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_PatternSelected));
+            const u32 selectionColor = ImColor(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_PatternSelected));
+            if (overlapSelected)
+                ImGui::PushStyleColor(ImGuiCol_Text, selectionColor);
+            if (fullySelected)
+                ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, (selectionColor & 0x00'FF'FF'FF) | 0x30'00'00'00);
 
             if constexpr (HasReturn) {
                 auto result = callback();
 
-                if (selected)
+                if (overlapSelected)
                     ImGui::PopStyleColor();
 
                 return result;
             } else {
                 callback();
 
-                if (selected)
+                if (overlapSelected)
                     ImGui::PopStyleColor();
             }
         }
@@ -433,10 +445,14 @@ namespace hex::ui {
             }
         }
 
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editingEnabled) {
-            m_editingPattern = &pattern;
-            m_editingPatternOffset = pattern.getOffset();
-            AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
+        if (ImGui::IsItemHovered()) {
+            m_hoverCallback(&pattern);
+
+            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editingEnabled) {
+                m_editingPattern = &pattern;
+                m_editingPatternOffset = pattern.getOffset();
+                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
+            }
         }
 
         ImGui::SameLine(0, 0);
@@ -1113,6 +1129,8 @@ namespace hex::ui {
 
     void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime, float height) {
         std::scoped_lock lock(s_resetDrawMutex);
+
+        m_hoverCallback(nullptr);
 
         const auto treeStyleButton = [this](auto icon, TreeStyle style, const char *tooltip) {
             bool pushed = false;

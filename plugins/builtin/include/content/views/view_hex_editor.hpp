@@ -69,6 +69,10 @@ namespace hex::plugin::builtin {
             m_hexEditor.jumpToSelection();
         }
 
+        void jumpIfOffScreen() {
+            m_hexEditor.jumpIfOffScreen();
+        }
+
     private:
         void drawPopup();
 

@@ -1472,9 +1472,36 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("{} ", "hex.ui.common.path"_lang);
+                    ImGui::TableNextColumn();
+
+                    std::string path;
+                    {
+                        std::vector<std::string> pathSegments;
+                        const pl::ptrn::Pattern *entry = pattern;
+                        while (entry != nullptr) {
+                            pathSegments.push_back(entry->getVariableName());
+                            entry = entry->getParent();
+                        }
+
+                        for (const auto &segment : pathSegments | std::views::reverse) {
+                            if (!segment.starts_with('['))
+                                path += '.';
+
+                            path += segment;
+                        }
+
+                        if (path.starts_with('.'))
+                            path = path.substr(1);
+                    }
+
+                    ImGuiExt::TextFormatted(" {}", path);
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{} ", "hex.ui.common.type"_lang);
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted(" {}", pattern->getTypeName());
+                    ImGuiExt::TextFormatted(" {}", pattern->getFormattedName());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();

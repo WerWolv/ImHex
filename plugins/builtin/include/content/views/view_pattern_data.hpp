@@ -18,6 +18,7 @@ namespace hex::plugin::builtin {
         ui::PatternDrawer::TreeStyle m_treeStyle = ui::PatternDrawer::TreeStyle::Default;
 
         PerProvider<std::unique_ptr<ui::PatternDrawer>> m_patternDrawer;
+        Region m_hoveredPatternRegion = Region::Invalid();
     };
 
 }

@@ -17,6 +17,8 @@ namespace hex::script::loader {
 
     struct Script {
         std::string name;
+        std::fs::path path;
+
         bool background;
         std::function<void()> entryPoint;
         const ScriptLoader *loader;
@@ -29,9 +31,10 @@ namespace hex::script::loader {
 
         virtual bool initialize() = 0;
         virtual bool loadAll() = 0;
+        virtual void clearScripts() = 0;
 
-        void addScript(std::string name, bool background, std::function<void()> entryPoint) {
-            m_scripts.emplace_back(std::move(name), background, std::move(entryPoint), this);
+        void addScript(std::string name, std::fs::path path, bool background, std::function<void()> entryPoint) {
+            m_scripts.emplace_back(std::move(name), std::move(path), background, std::move(entryPoint), this);
         }
 
         const auto& getScripts() const {
@@ -43,8 +46,8 @@ namespace hex::script::loader {
         }
 
     protected:
-        void clearScripts() {
-            m_scripts.clear();
+        auto& getScripts() {
+            return m_scripts;
         }
 
     private:

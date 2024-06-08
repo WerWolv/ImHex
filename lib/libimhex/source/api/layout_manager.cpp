@@ -41,7 +41,7 @@ namespace hex {
 
         std::fs::path layoutPath;
         for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Layouts)) {
-            if (!hex::fs::isPathWritable(layoutPath))
+            if (!hex::fs::isPathWritable(path))
                 continue;
 
             layoutPath = path / fileName;
@@ -71,15 +71,15 @@ namespace hex {
     void LayoutManager::removeLayout(const std::string& name) {
         for (const auto &layout : *s_layouts) {
             if (layout.name == name) {
-                if (wolv::io::File(layout.path, wolv::io::File::Mode::Write).remove()) {
+                if (wolv::io::fs::remove(layout.path)) {
                     log::info("Removed layout '{}'", name);
-                    LayoutManager::reload();
                 } else {
                     log::error("Failed to remove layout '{}'", name);
                 }
-                return;
             }
         }
+
+        LayoutManager::reload();
     }
 
 
@@ -90,21 +90,19 @@ namespace hex {
 
     void LayoutManager::process() {
         if (s_layoutPathToLoad->has_value()) {
-            const auto pathString = wolv::util::toUTF8String(**s_layoutPathToLoad);
-
             LayoutManager::closeAllViews();
-            ImGui::LoadIniSettingsFromDisk(pathString.c_str());
 
-            s_layoutPathToLoad = std::nullopt;
-            log::info("Loaded layout from {}", pathString);
+            wolv::io::File file(**s_layoutPathToLoad, wolv::io::File::Mode::Read);
+            s_layoutStringToLoad = file.readString();
+            s_layoutPathToLoad->reset();
         }
 
         if (s_layoutStringToLoad->has_value()) {
             LayoutManager::closeAllViews();
             ImGui::LoadIniSettingsFromMemory((*s_layoutStringToLoad)->c_str());
 
-            s_layoutStringToLoad = std::nullopt;
-            log::info("Loaded layout from string");
+            s_layoutStringToLoad->reset();
+            log::info("Loaded new Layout");
         }
     }
 

@@ -32,7 +32,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: cache
-        key: web-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
+        key: web-cache-${{ hashFiles('**/CMakeLists.txt') }}
     
     - name: 🐳 Inject /cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v2

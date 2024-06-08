@@ -1,4 +1,4 @@
-#if defined(OS_WINDOWS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
+#if defined(OS_WINDOWS) || defined(OS_MACOS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
 
 #include <content/providers/process_memory_provider.hpp>
 
@@ -6,6 +6,14 @@
     #include <windows.h>
     #include <psapi.h>
     #include <shellapi.h>
+#elif defined(OS_MACOS)
+    #include <mach/mach_types.h>
+    #include <mach/message.h>
+    #include <mach/arm/kern_return.h>
+    #include <mach/arm/vm_types.h>
+    #include <mach/vm_map.h>
+    #include <mach-o/dyld_images.h>
+    #include <libproc.h>
 #elif defined(OS_LINUX)
     #include <sys/uio.h>
 #endif
@@ -29,7 +37,7 @@ namespace hex::plugin::builtin {
             m_processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, m_selectedProcess->id);
             if (m_processHandle == nullptr)
                 return false;
-        #elif defined(OS_LINUX)
+        #else
             m_processId = pid_t(m_selectedProcess->id);
         #endif
 
@@ -42,7 +50,7 @@ namespace hex::plugin::builtin {
         #if defined(OS_WINDOWS)
             CloseHandle(m_processHandle);
             m_processHandle = nullptr;
-        #elif defined(OS_LINUX)
+        #else
             m_processId = -1;
         #endif
     }
@@ -50,6 +58,18 @@ namespace hex::plugin::builtin {
     void ProcessMemoryProvider::readRaw(u64 address, void *buffer, size_t size) {
         #if defined(OS_WINDOWS)
             ReadProcessMemory(m_processHandle, reinterpret_cast<LPCVOID>(address), buffer, size, nullptr);
+        #elif defined(OS_MACOS)
+            task_t t;
+            task_for_pid(mach_task_self(), m_processId, &t);
+
+            vm_size_t dataSize = 0;
+            vm_read_overwrite(t,
+                 address,
+                 size,
+                 reinterpret_cast<vm_address_t>(buffer),
+                 &dataSize
+            );
+
         #elif defined(OS_LINUX)
             const iovec local {
                 .iov_base = buffer,
@@ -70,6 +90,15 @@ namespace hex::plugin::builtin {
     void ProcessMemoryProvider::writeRaw(u64 address, const void *buffer, size_t size) {
         #if defined(OS_WINDOWS)
             WriteProcessMemory(m_processHandle, reinterpret_cast<LPVOID>(address), buffer, size, nullptr);
+        #elif defined(OS_MACOS)
+            task_t t;
+            task_for_pid(mach_task_self(), m_processId, &t);
+
+            vm_write(t,
+                 address,
+                 reinterpret_cast<vm_address_t>(buffer),
+                 size
+            );
         #elif defined(OS_LINUX)
             const iovec local {
                 .iov_base = const_cast<void*>(buffer),
@@ -176,6 +205,18 @@ namespace hex::plugin::builtin {
 
                     m_processes.push_back({ u32(processId), processName, std::move(texture) });
                 }
+            #elif defined(OS_MACOS)
+                std::array<pid_t, 2048> pids;
+                const auto bytes = proc_listpids(PROC_ALL_PIDS, 0, pids.data(), sizeof(pids));
+                const auto processCount = bytes / sizeof(pid_t);
+                for (u32 i = 0; i < processCount; i += 1) {
+                    proc_bsdinfo proc;
+                    const auto result = proc_pidinfo(pids[i], PROC_PIDTBSDINFO, 0,
+                                         &proc, PROC_PIDTBSDINFO_SIZE);
+                    if (result == PROC_PIDTBSDINFO_SIZE) {
+                        m_processes.emplace_back(pids[i], proc.pbi_name, ImGuiExt::Texture());
+                    }
+                }
             #elif defined(OS_LINUX)
                 for (const auto& entry : std::fs::directory_iterator("/proc")) {
                     if (!std::fs::is_directory(entry)) continue;
@@ -202,6 +243,11 @@ namespace hex::plugin::builtin {
         if (m_enumerationFailed) {
             ImGui::TextUnformatted("hex.builtin.provider.process_memory.enumeration_failed"_lang);
         } else {
+            #if defined(OS_MACOS)
+                ImGuiExt::TextFormattedWrapped("{}", "hex.builtin.provider.process_memory.macos_limitations"_lang);
+                ImGui::NewLine();
+            #endif
+
             ImGui::PushItemWidth(500_scaled);
             const auto &filtered = m_processSearchWidget.draw(m_processes);
             ImGui::PopItemWidth();
@@ -356,6 +402,26 @@ namespace hex::plugin::builtin {
                 m_memoryRegions.insert({ { reinterpret_cast<u64>(memoryInfo.BaseAddress), reinterpret_cast<u64>(memoryInfo.BaseAddress) + memoryInfo.RegionSize }, name });
             }
 
+        #elif defined(OS_MACOS)
+            vm_region_submap_info_64 info;
+            mach_msg_type_number_t count = VM_REGION_SUBMAP_INFO_COUNT_64;
+            vm_address_t address = 0;
+            vm_size_t size = 0;
+            natural_t depth = 0;
+
+            while (true) {
+                if (vm_region_recurse_64(mach_task_self(), &address, &size, &depth, reinterpret_cast<vm_region_info_64_t>(&info), &count) != KERN_SUCCESS)
+                    break;
+
+                // Get region name
+                std::array<char, 1024> name;
+                if (proc_regionfilename(m_processId, address, name.data(), name.size()) != 0) {
+                    std::strcpy(name.data(), "???");
+                }
+
+                m_memoryRegions.insert({ { address, size }, name.data() });
+                address += size;
+            }
         #elif defined(OS_LINUX)
 
             wolv::io::File file(std::fs::path("/proc") / std::to_string(m_processId) / "maps", wolv::io::File::Mode::Read);

@@ -268,7 +268,7 @@ macro(createPackage)
                 find_program(CODESIGN_PATH codesign)
                 if (CODESIGN_PATH)
                     install(CODE "message(STATUS \"Signing bundle '${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}'...\")")
-                    install(CODE "execute_process(COMMAND ${CODESIGN_PATH} --force --deep --sign - ${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME} COMMAND_ERROR_IS_FATAL ANY)")
+                    install(CODE "execute_process(COMMAND ${CODESIGN_PATH} --force --deep --entitlements ${CMAKE_SOURCE_DIR}/resources/macos/Entitlements.plist --sign - ${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME} COMMAND_ERROR_IS_FATAL ANY)")
                 endif()
             endif()
 
@@ -397,12 +397,14 @@ macro(setDefaultBuiltTypeIfUnset)
     endif()
 endmacro()
 
-function(loadVersion version)
+function(loadVersion version plain_version)
     set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${VERSION_FILE})
     file(READ "${VERSION_FILE}" read_version)
     string(STRIP ${read_version} read_version)
+    string(REPLACE ".WIP" "" read_version_plain ${read_version})
     set(${version} ${read_version} PARENT_SCOPE)
+    set(${plain_version} ${read_version_plain} PARENT_SCOPE)
 endfunction()
 
 function(detectBadClone)
@@ -531,7 +533,34 @@ function(downloadImHexPatternsFiles dest)
 
 endfunction()
 
+# Compress debug info. See https://github.com/WerWolv/ImHex/issues/1714 for relevant problem
+macro(setupDebugCompressionFlag)
+    include(CheckCXXCompilerFlag)
+    include(CheckLinkerFlag)
+
+    check_cxx_compiler_flag(-gz=zstd ZSTD_AVAILABLE_COMPILER)
+    check_linker_flag(CXX -gz=zstd ZSTD_AVAILABLE_LINKER)
+    check_cxx_compiler_flag(-gz COMPRESS_AVAILABLE_COMPILER)
+    check_linker_flag(CXX -gz COMPRESS_AVAILABLE_LINKER)
+
+    if (NOT DEBUG_COMPRESSION_FLAG) # Cache variable
+        if (ZSTD_AVAILABLE_COMPILER AND ZSTD_AVAILABLE_LINKER)
+            message("Using Zstd compression for debug info because both compiler and linker support it")
+            set(DEBUG_COMPRESSION_FLAG "-gz=zstd" CACHE STRING "Cache to use for debug info compression")
+        elseif (COMPRESS_AVAILABLE_COMPILER AND COMPRESS_AVAILABLE_LINKER)
+            message("Using default compression for debug info because both compiler and linker support it")
+            set(DEBUG_COMPRESSION_FLAG "-gz" CACHE STRING "Cache to use for debug info compression")
+        else()
+            message("No compression available for debug info")
+        endif()
+    endif()
+
+    set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} ${DEBUG_COMPRESSION_FLAG}")
+endmacro()
+
 macro(setupCompilerFlags target)
+    # IMHEX_COMMON_FLAGS: flags common for C, C++, Objective C, etc.. compilers
+
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         # Define strict compilation flags
         if (IMHEX_STRICT_WARNINGS)
@@ -564,11 +593,24 @@ macro(setupCompilerFlags target)
         set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -pthread -Wno-dollar-in-identifier-extension -Wno-pthreads-mem-growth")
     endif ()
 
+    if (IMHEX_COMPRESS_DEBUG_INFO)
+        setupDebugCompressionFlag()
+    endif()
+
     # Set actual CMake flags
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
     set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS}    ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}  ${IMHEX_CXX_FLAGS}")
     set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} ${IMHEX_COMMON_FLAGS}")
+
+    # Only generate minimal debug information for stacktraces in RelWithDebInfo builds
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g1")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g1")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # Add flags for debug info in inline functions
+        set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -gstatement-frontiers -ginline-points")
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -gstatement-frontiers -ginline-points")
+    endif()
 endmacro()
 
 # uninstall target
@@ -658,6 +700,12 @@ macro(addBundledLibraries)
         add_library(jthread INTERFACE)
         target_include_directories(jthread INTERFACE ${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
         set(JTHREAD_LIBRARIES jthread)
+    endif()
+
+    if (USE_SYSTEM_BOOST)
+        find_package(boost REQUIRED)
+    else()
+        add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/boost ${CMAKE_CURRENT_BINARY_DIR}/boost EXCLUDE_FROM_ALL)
     endif()
 
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)

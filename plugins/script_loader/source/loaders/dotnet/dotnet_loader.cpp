@@ -235,22 +235,36 @@ namespace hex::script::loader {
                 if (!std::fs::exists(scriptPath))
                     continue;
 
+                bool skip = false;
+                for (const auto &existingScript : getScripts()) {
+                    if (existingScript.path == scriptPath) {
+                        skip = true;
+                    }
+                }
+                if (skip)
+                    continue;
+
                 const bool hasMain = m_methodExists("Main", scriptPath);
                 const bool hasOnLoad = m_methodExists("OnLoad", scriptPath);
                 const auto scriptName = entry.path().stem().string();
 
+                if (hasMain && hasOnLoad) {
+                    log::error("Script '{}' has both a Main() and a OnLoad() function. Only one is allowed per script.", scriptName);
+                    continue;
+                } else if (!hasMain && !hasOnLoad) {
+                    log::error("Script '{}' has neither a Main() nor a OnLoad() function.", scriptName);
+                    continue;
+                }
+
                 if (hasMain) {
-                    this->addScript(scriptName, false, [this, scriptPath] {
+                    this->addScript(scriptName, scriptPath, false, [this, scriptPath] {
                         auto result = m_runMethod("Main", false, scriptPath);
                         if (result != 0) {
                             ui::ToastError::open(hex::format("Script '{}' running failed with code {}", result));
                         }
                     });
                 } else if (hasOnLoad) {
-                    this->addScript(scriptName, true, [] {});
-                }
-
-                if (hasOnLoad) {
+                    this->addScript(scriptName, scriptPath, true, [] {});
                     auto result = m_runMethod("OnLoad", true, scriptPath);
                     if (result != 0) {
                         TaskManager::doLater([=] {
@@ -258,11 +272,17 @@ namespace hex::script::loader {
                         });
                     }
                 }
-
             }
         }
 
         return true;
     }
+
+    void DotNetLoader::clearScripts() {
+        std::erase_if(getScripts(), [](const Script &script) {
+            return !script.background;
+        });
+    }
+
 
 }

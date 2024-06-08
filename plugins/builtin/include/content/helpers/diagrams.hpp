@@ -904,6 +904,8 @@ namespace hex {
 
             // Set the diagram handle position to the start of the plot
             m_handlePosition = m_startAddress;
+
+            m_annotationRegions.clear();
         }
 
         // Process one byte at the time

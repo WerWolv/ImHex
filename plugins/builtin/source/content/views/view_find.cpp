@@ -9,11 +9,11 @@
 
 #include <array>
 #include <ranges>
-#include <regex>
 #include <string>
 #include <utility>
 
 #include <llvm/Demangle/Demangle.h>
+#include <boost/regex.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -350,7 +350,7 @@ namespace hex::plugin::builtin {
         });
 
         std::vector<Occurrence> result;
-        std::regex regex(settings.pattern);
+        boost::regex regex(settings.pattern);
         for (const auto &occurrence : stringOccurrences) {
             std::string string(occurrence.region.getSize(), '\x00');
             provider->read(occurrence.region.getStartAddress(), string.data(), occurrence.region.getSize());
@@ -358,10 +358,10 @@ namespace hex::plugin::builtin {
             task.update();
 
             if (settings.fullMatch) {
-                if (std::regex_match(string, regex))
+                if (boost::regex_match(string, regex))
                     result.push_back(occurrence);
             } else {
-                if (std::regex_search(string, regex))
+                if (boost::regex_search(string, regex))
                     result.push_back(occurrence);
             }
         }
@@ -758,9 +758,9 @@ namespace hex::plugin::builtin {
                     ImGuiExt::InputTextIcon("hex.builtin.view.find.regex.pattern"_lang, ICON_VS_REGEX, settings.pattern);
 
                     try {
-                        std::regex regex(settings.pattern);
+                        boost::regex regex(settings.pattern);
                         m_settingsValid = true;
-                    } catch (const std::regex_error &) {
+                    } catch (const boost::regex_error &) {
                         m_settingsValid = false;
                     }
 

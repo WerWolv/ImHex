@@ -269,13 +269,13 @@ namespace hex::ui {
 
         if (m_editingAddress != address || m_editingCellType != cellType) {
             if (cellType == CellType::Hex) {
-                std::vector<u8> buffer(size);
-                std::memcpy(buffer.data(), data, size);
+                std::array<u8, 32> buffer;
+                std::memcpy(buffer.data(), data, std::min(size, buffer.size()));
 
                 if (m_dataVisualizerEndianness != std::endian::native)
-                    std::reverse(buffer.begin(), buffer.end());
+                    std::reverse(buffer.begin(), buffer.begin() + size);
 
-                m_currDataVisualizer->draw(address, buffer.data(), buffer.size(), m_upperCaseHex);
+                m_currDataVisualizer->draw(address, buffer.data(), size, m_upperCaseHex);
             } else {
                 asciiVisualizer.draw(address, data, size, m_upperCaseHex);
             }
@@ -530,6 +530,8 @@ namespace hex::ui {
                     m_visibleRowCount = std::max<i64>(m_visibleRowCount, 1);
 
                     // Loop over rows
+                    std::vector<u8> bytes(m_bytesPerRow, 0x00);
+                    std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors(m_bytesPerRow / bytesPerCell);
                     for (ImS64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows && numRows != 0; y++) {
                         // Draw address column
                         ImGui::TableNextRow();
@@ -539,12 +541,10 @@ namespace hex::ui {
 
                         const u8 validBytes = std::min<u64>(m_bytesPerRow, m_provider->getSize() - y * m_bytesPerRow);
 
-                        std::vector<u8> bytes(m_bytesPerRow, 0x00);
                         m_provider->read(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), bytes.data(), validBytes);
 
-                        std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors;
                         {
-                            for (u64 x = 0; x <  std::ceil(float(validBytes) / bytesPerCell); x++) {
+                            for (u64 x = 0; x < std::ceil(float(validBytes) / bytesPerCell); x++) {
                                 const u64 byteAddress = y * m_bytesPerRow + x * bytesPerCell + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                                 const auto cellBytes = std::min<u64>(validBytes, bytesPerCell);
@@ -567,15 +567,15 @@ namespace hex::ui {
                                             foregroundColor = ImGui::GetColorU32(ImGuiCol_TextDisabled);
                                     }
 
-                                    cellColors.emplace_back(
+                                    cellColors[x] = {
                                             foregroundColor,
                                             backgroundColor
-                                    );
+                                    };
                                 } else {
-                                    cellColors.emplace_back(
-                                            std::nullopt,
-                                            std::nullopt
-                                    );
+                                    cellColors[x] = {
+                                        std::nullopt,
+                                        std::nullopt
+                                    };
                                 }
                             }
                         }
@@ -634,7 +634,7 @@ namespace hex::ui {
                                 if (isCurrRegionValid(byteAddress))
                                     this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered, CellType::Hex);
                                 else
-                                    ImGuiExt::TextFormatted("{}", std::string(maxCharsPerCell, '?'));
+                                    ImGuiExt::TextFormatted("{:?>{}}", "", maxCharsPerCell);
 
                                 if (cellHovered) {
                                     hoveredCell = { byteAddress, bytesPerCell };
