@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
             if (id != nullptr)
                 *id = bookmarkId;
 
-            auto bookmark = ImHexApi::Bookmarks::Entry{
+            auto bookmark = ImHexApi::Bookmarks::Entry {
                 region,
                 name,
                 std::move(comment),
@@ -286,38 +286,6 @@ namespace hex::plugin::builtin {
                 bool notDeleted = true;
 
                 auto expanded = ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), &notDeleted);
-                auto nextPos = ImGui::GetCursorPos();
-
-                ImGui::SameLine();
-                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - 70_scaled);
-
-                {
-                    // Draw jump to region button
-                    if (ImGuiExt::DimmedIconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
-                        ImHexApi::HexEditor::setSelection(region);
-                    ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
-
-                    ImGui::SameLine(0, 1_scaled);
-
-                    // Draw open in new view button
-                    if (ImGuiExt::DimmedIconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        TaskManager::doLater([region, provider]{
-                            auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
-                            if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
-                                viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
-                                if (viewProvider->open()) {
-                                    EventProviderOpened::post(viewProvider);
-                                    AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
-                                }
-                            }
-                        });
-                    }
-                    ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
-                }
-
-                ImGui::SetCursorPos(nextPos);
-                ImGui::Dummy({});
-
                 if (!expanded) {
                     // Handle dragging bookmarks up and down when they're collapsed
 
@@ -354,12 +322,47 @@ namespace hex::plugin::builtin {
                             // Swap the two bookmarks
                             if (droppedIter != m_bookmarks->end()) {
                                 std::iter_swap(it, droppedIter);
+                                EventHighlightingChanged::post();
                             }
                         }
 
                         ImGui::EndDragDropTarget();
                     }
-                } else {
+                }
+
+                auto nextPos = ImGui::GetCursorPos();
+
+                ImGui::SameLine();
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - 70_scaled);
+
+                {
+                    // Draw jump to region button
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                        ImHexApi::HexEditor::setSelection(region);
+                    ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
+
+                    ImGui::SameLine(0, 1_scaled);
+
+                    // Draw open in new view button
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        TaskManager::doLater([region, provider]{
+                            auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
+                            if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                                viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
+                                if (viewProvider->open()) {
+                                    EventProviderOpened::post(viewProvider);
+                                    AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
+                                }
+                            }
+                        });
+                    }
+                    ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
+                }
+
+                ImGui::SetCursorPos(nextPos);
+                ImGui::Dummy({});
+
+                if (expanded) {
                     const auto rowHeight = ImGui::GetTextLineHeightWithSpacing() + 2 * ImGui::GetStyle().FramePadding.y;
                     if (ImGui::BeginTable("##bookmark_table", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
                         ImGui::TableSetupColumn("##name");
