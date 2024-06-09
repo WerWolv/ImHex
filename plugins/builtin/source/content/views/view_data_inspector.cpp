@@ -305,11 +305,12 @@ namespace hex::plugin::builtin {
                 inspectorRowId++;
             };
 
+            ImGui::PushID(inspectorRowId);
+
             bool grayedOut = m_hiddenValues.contains(entry.filterValue);
             if (!m_tableEditingModeEnabled && grayedOut)
                 continue;
 
-            ImGui::PushID(inspectorRowId);
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
