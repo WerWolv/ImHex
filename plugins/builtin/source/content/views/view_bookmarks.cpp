@@ -435,7 +435,7 @@ namespace hex::plugin::builtin {
 
                             ImGui::PopItemWidth();
 
-                            if (updated && end > begin) {
+                            if (updated && end >= begin) {
                                 region = Region(begin, end - begin + 1);
                                 EventHighlightingChanged::post();
                             }
