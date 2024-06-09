@@ -287,7 +287,7 @@ namespace hex::plugin::builtin {
         ImGui::PushItemWidth(-1);
         ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, m_currFilter);
         ImGui::PopItemWidth();
-        
+
         if (ImGui::BeginChild("##bookmarks")) {
             if (m_bookmarks->empty()) {
                 ImGuiExt::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);

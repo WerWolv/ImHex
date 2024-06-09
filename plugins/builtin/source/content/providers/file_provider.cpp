@@ -174,11 +174,18 @@ namespace hex::plugin::builtin {
         });
     }
 
-    std::vector<FileProvider::MenuEntry> FileProvider::getMenuEntries(){
+    std::vector<FileProvider::MenuEntry> FileProvider::getMenuEntries() {
+        FileProvider::MenuEntry loadMenuItem;
+
+        if (m_loadedIntoMemory)
+            loadMenuItem = { "hex.builtin.provider.file.menu.direct_access"_lang, [this] { this->convertToDirectAccess(); } };
+        else
+            loadMenuItem = { "hex.builtin.provider.file.menu.into_memory"_lang, [this] { this->convertToMemoryFile(); } };
+
         return {
             { "hex.builtin.provider.file.menu.open_folder"_lang, [this] { fs::openFolderWithSelectionExternal(m_path); } },
             { "hex.builtin.provider.file.menu.open_file"_lang,   [this] { fs::openFileExternal(m_path); } },
-            { "hex.builtin.provider.file.menu.into_memory"_lang, [this] { this->convertToMemoryFile(); } }
+            loadMenuItem
         };
     }
 
@@ -187,6 +194,37 @@ namespace hex::plugin::builtin {
     }
 
     bool FileProvider::open() {
+        const size_t maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
+
+        size_t fileSize = 0x00;
+        {
+            wolv::io::File file(m_path, wolv::io::File::Mode::Read);
+            if (!file.isValid())
+                return false;
+
+            fileSize = file.getSize();
+        }
+
+        const bool directAccess = fileSize >= maxMemoryFileSize;
+        const bool result = open(directAccess);
+
+        if (result && directAccess) {
+            m_writable = false;
+
+            ui::PopupQuestion::open("hex.builtin.provider.file.too_large"_lang,
+            [this] {
+                m_writable = false;
+            },
+            [this] {
+                m_writable = true;
+                RequestUpdateWindowTitle::post();
+            });
+        }
+
+        return result;
+    }
+
+    bool FileProvider::open(bool directAccess) {
         m_readable = true;
         m_writable = true;
 
@@ -227,10 +265,10 @@ namespace hex::plugin::builtin {
             }
         }
 
-        size_t maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
-
         if (m_writable) {
-            if (m_fileSize < maxMemoryFileSize) {
+            if (directAccess) {
+                m_loadedIntoMemory = false;
+            } else {
                 m_data = m_file.readVectorAtomic(0x00, m_fileSize);
                 if (!m_data.empty()) {
                     m_changeTracker = wolv::io::ChangeTracker(m_file);
@@ -238,21 +276,12 @@ namespace hex::plugin::builtin {
                     m_file.close();
                     m_loadedIntoMemory = true;
                 }
-            } else {
-                m_writable = false;
-                ui::PopupQuestion::open("hex.builtin.provider.file.too_large"_lang,
-                    [this] {
-                        m_writable = false;
-                    },
-                    [this] {
-                        m_writable = true;
-                        RequestUpdateWindowTitle::post();
-                    });
             }
         }
 
         return true;
     }
+
 
     void FileProvider::close() {
         m_file.close();
@@ -304,39 +333,13 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::convertToMemoryFile() {
-        auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+        this->close();
+        this->open(false);
+    }
 
-        if (auto memoryProvider = dynamic_cast<MemoryFileProvider*>(newProvider); memoryProvider != nullptr) {
-            if (!memoryProvider->open()) {
-                ImHexApi::Provider::remove(newProvider);
-            } else {
-                const auto size = this->getActualSize();
-                TaskManager::createTask("Loading into memory", size, [this, size, memoryProvider](Task &task) {
-                    task.setInterruptCallback([memoryProvider]{
-                        ImHexApi::Provider::remove(memoryProvider);
-                    });
-
-                    constexpr static size_t BufferSize = 0x10000;
-                    std::vector<u8> buffer(BufferSize);
-
-                    memoryProvider->resize(size);
-
-                    for (u64 i = 0; i < size; i += BufferSize) {
-                        auto copySize = std::min<size_t>(BufferSize, size - i);
-                        this->read(i, buffer.data(), copySize, true);
-                        memoryProvider->writeRaw(i, buffer.data(), copySize);
-                        task.update(i);
-                    }
-
-                    memoryProvider->markDirty(true);
-                    memoryProvider->getUndoStack().reset();
-
-                    TaskManager::runWhenTasksFinished([this]{
-                        ImHexApi::Provider::remove(this, false);
-                    });
-                });
-            }
-        }
+    void FileProvider::convertToDirectAccess() {
+        this->close();
+        this->open(true);
     }
 
     void FileProvider::handleFileChange() {
@@ -345,7 +348,7 @@ namespace hex::plugin::builtin {
             return;
         }
 
-        if(m_changeEventAcknowledgementPending) {
+        if (m_changeEventAcknowledgementPending) {
             return;
         }
 
@@ -353,7 +356,7 @@ namespace hex::plugin::builtin {
 
         ui::PopupQuestion::open("hex.builtin.provider.file.reload_changes"_lang, [this] {
             this->close();
-            (void)this->open();
+            (void)this->open(!m_loadedIntoMemory);
             getUndoStack().reapply();
             m_changeEventAcknowledgementPending = false;
         },
