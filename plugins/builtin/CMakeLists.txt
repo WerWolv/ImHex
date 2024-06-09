@@ -59,6 +59,7 @@ add_imhex_plugin(
         source/content/providers/memory_file_provider.cpp
         source/content/providers/process_memory_provider.cpp
         source/content/providers/base64_provider.cpp
+        source/content/providers/view_provider.cpp
 
         source/content/tools/ascii_table.cpp
         source/content/tools/base_converter.cpp

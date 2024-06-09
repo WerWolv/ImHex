@@ -345,10 +345,12 @@ namespace hex::plugin::builtin {
 
                     // Draw open in new view button
                     if (ImGuiExt::DimmedIconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        TaskManager::doLater([region, provider]{
+                        TaskManager::doLater([region, provider, name]{
                             auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
                             if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
                                 viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
+                                viewProvider->setName(hex::format("'{}' View", name));
+
                                 if (viewProvider->open()) {
                                     EventProviderOpened::post(viewProvider);
                                     AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
