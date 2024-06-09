@@ -342,9 +342,9 @@ namespace hex::plugin::builtin {
                         ImGui::ColorButton("##color", headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha);
                         ImGui::SameLine();
                         ImGuiExt::TextFormatted("{}", name);
-                        ImGui::Separator();
 
                         if (!comment.empty()) {
+                            ImGui::Separator();
                             ImGui::PushTextWrapPos(300_scaled);
                             ImGuiExt::TextFormatted("{}", comment);
                             ImGui::PopTextWrapPos();
