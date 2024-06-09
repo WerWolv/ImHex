@@ -945,7 +945,7 @@ namespace ImGuiExt {
 
         SetCursorPosX(GetCursorPosX() + frame_size.x);
 
-        bool value_changed = InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth() - icon_frame_size.x, label_size.y + style.FramePadding.y * 2.0F), ImGuiInputTextFlags_CallbackResize | flags, UpdateStringSizeCallback, &buffer);
+        bool value_changed = InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth(), label_size.y + style.FramePadding.y * 2.0F), ImGuiInputTextFlags_CallbackResize | flags, UpdateStringSizeCallback, &buffer);
 
         if (value_changed)
             MarkItemEdited(GImGui->LastItemData.ID);
