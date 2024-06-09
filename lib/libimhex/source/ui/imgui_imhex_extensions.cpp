@@ -574,7 +574,7 @@ namespace ImGuiExt {
         if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
             if (!std::string_view(text).empty()) {
                 const auto width = 300 * hex::ImHexApi::System::getGlobalScale();
-                ImGui::SetNextWindowSizeConstraints(ImVec2(width, 0), ImVec2(width, FLT_MAX));
+                ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(width, FLT_MAX));
                 if (BeginTooltip()) {
                     if (isSeparator)
                         SeparatorText(text);

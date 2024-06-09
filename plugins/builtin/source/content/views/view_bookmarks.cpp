@@ -339,7 +339,7 @@ namespace hex::plugin::builtin {
                     // Draw jump to region button
                     if (ImGuiExt::DimmedIconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                         ImHexApi::HexEditor::setSelection(region);
-                    ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
+                    ImGui::SetItemTooltip("%s", "hex.builtin.view.bookmarks.tooltip.jump_to"_lang.get().c_str());
 
                     ImGui::SameLine(0, 1_scaled);
 
@@ -358,7 +358,7 @@ namespace hex::plugin::builtin {
                             }
                         });
                     }
-                    ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
+                    ImGui::SetItemTooltip("%s", "hex.builtin.view.bookmarks.tooltip.open_in_view"_lang.get().c_str());
                 }
 
                 ImGui::SetCursorPos(nextPos);
