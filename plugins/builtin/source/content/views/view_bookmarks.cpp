@@ -240,22 +240,64 @@ namespace hex::plugin::builtin {
             EventHighlightingChanged::post();
     }
 
-    void ViewBookmarks::drawContent() {
-        auto provider = ImHexApi::Provider::get();
+    void ViewBookmarks::drawDropTarget(std::list<Bookmark>::iterator it, float height) {
+        height = std::max(height, 1.0F);
 
+        if (it != m_bookmarks->begin()) {
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - height);
+        } else {
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + height);
+        }
+
+        ImGui::InvisibleButton("##DropTarget", ImVec2(ImGui::GetContentRegionAvail().x, height * 2.0F));
+        const auto dropTarget = ImRect(ImGui::GetItemRectMin(), ImVec2(ImGui::GetItemRectMax().x, ImGui::GetItemRectMin().y + 2_scaled));
+
+        if (it == m_bookmarks->begin()) {
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - height);
+        }
+
+        ImGui::PushStyleColor(ImGuiCol_DragDropTarget, 0x00);
+        if (ImGui::BeginDragDropTarget()) {
+            ImGui::GetWindowDrawList()->AddRectFilled(dropTarget.Min, dropTarget.Max, ImGui::GetColorU32(ImGuiCol_ButtonActive));
+
+            if (auto payload = ImGui::AcceptDragDropPayload("BOOKMARK_PAYLOAD"); payload != nullptr) {
+                // Receive the bookmark id from the payload
+                u64 droppedBookmarkId = *static_cast<const u64*>(payload->Data);
+
+                // Find the correct bookmark with that id
+                auto droppedIter = std::ranges::find_if(m_bookmarks->begin(), m_bookmarks->end(), [droppedBookmarkId](const auto &bookmarkItem) {
+                    return bookmarkItem.entry.id == droppedBookmarkId;
+                });
+
+                // Swap the two bookmarks
+                if (droppedIter != m_bookmarks->end()) {
+                    m_bookmarks->splice(it, m_bookmarks, droppedIter);
+
+                    EventHighlightingChanged::post();
+                }
+            }
+
+            ImGui::EndDragDropTarget();
+        }
+        ImGui::PopStyleColor();
+    }
+
+    void ViewBookmarks::drawContent() {
         // Draw filter input
         ImGui::PushItemWidth(-1);
         ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, m_currFilter);
         ImGui::PopItemWidth();
-
-        ImGui::NewLine();
-
+        
         if (ImGui::BeginChild("##bookmarks")) {
             if (m_bookmarks->empty()) {
                 ImGuiExt::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
             }
 
             auto bookmarkToRemove = m_bookmarks->end();
+            const auto defaultItemSpacing = ImGui::GetStyle().ItemSpacing.y;
+
+            ImGui::Dummy({ ImGui::GetContentRegionAvail().x, 0 });
+            drawDropTarget(m_bookmarks->begin(), defaultItemSpacing);
 
             // Draw all bookmarks
             for (auto it = m_bookmarks->begin(); it != m_bookmarks->end(); ++it) {
@@ -285,7 +327,10 @@ namespace hex::plugin::builtin {
 
                 bool notDeleted = true;
 
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2());
                 auto expanded = ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), &notDeleted);
+                ImGui::PopStyleVar();
+
                 if (!expanded) {
                     // Handle dragging bookmarks up and down when they're collapsed
 
@@ -307,27 +352,6 @@ namespace hex::plugin::builtin {
 
                         ImGui::EndDragDropSource();
                     }
-
-                    if (ImGui::BeginDragDropTarget()) {
-
-                        if (auto payload = ImGui::AcceptDragDropPayload("BOOKMARK_PAYLOAD"); payload != nullptr) {
-                            // Receive the bookmark id from the payload
-                            u64 droppedBookmarkId = *static_cast<const u64*>(payload->Data);
-
-                            // Find the correct bookmark with that id
-                            auto droppedIter = std::ranges::find_if(m_bookmarks->begin(), m_bookmarks->end(), [droppedBookmarkId](const auto &bookmarkItem) {
-                                return bookmarkItem.entry.id == droppedBookmarkId;
-                            });
-
-                            // Swap the two bookmarks
-                            if (droppedIter != m_bookmarks->end()) {
-                                std::iter_swap(it, droppedIter);
-                                EventHighlightingChanged::post();
-                            }
-                        }
-
-                        ImGui::EndDragDropTarget();
-                    }
                 }
 
                 auto nextPos = ImGui::GetCursorPos();
@@ -345,6 +369,7 @@ namespace hex::plugin::builtin {
 
                     // Draw open in new view button
                     if (ImGuiExt::DimmedIconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        auto provider = ImHexApi::Provider::get();
                         TaskManager::doLater([region, provider, name]{
                             auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
                             if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
@@ -360,6 +385,10 @@ namespace hex::plugin::builtin {
                     }
                     ImGui::SetItemTooltip("%s", "hex.builtin.view.bookmarks.tooltip.open_in_view"_lang.get().c_str());
                 }
+
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2());
+                drawDropTarget(std::next(it), defaultItemSpacing);
+                ImGui::PopStyleVar();
 
                 ImGui::SetCursorPos(nextPos);
                 ImGui::Dummy({});
