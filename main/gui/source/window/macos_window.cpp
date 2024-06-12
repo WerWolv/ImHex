@@ -1,3 +1,5 @@
+#include <hex/api/project_file_manager.hpp>
+
 #include "window.hpp"
 
 #if defined(OS_MACOS)
@@ -60,6 +62,22 @@ namespace hex {
                 RequestChangeTheme::post("Light");
             else
                 RequestChangeTheme::post("Dark");
+        });
+
+        EventProviderDirtied::subscribe([this](prv::Provider *) {
+            macosMarkContentEdited(m_window);
+        });
+
+        ProjectFile::registerHandler({
+            .basePath = "",
+            .required = true,
+            .load = [](const std::fs::path &, Tar &) {
+                return true;
+            },
+            .store = [this](const std::fs::path &, Tar &) {
+                macosMarkContentEdited(m_window, false);
+                return true;
+            }
         });
 
         if (themeFollowSystem)

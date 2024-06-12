@@ -338,6 +338,7 @@ namespace hex {
 
         void markDirty() {
             get()->markDirty();
+            EventProviderDirtied::post(get());
         }
 
         void resetDirty() {

@@ -18,6 +18,7 @@
     
         void macosHandleTitlebarDoubleClickGesture(GLFWwindow *window);
         bool macosIsWindowBeingResizedByUser(GLFWwindow *window);
+        void macosMarkContentEdited(GLFWwindow *window, bool edited = true);
     }
 
 #endif
