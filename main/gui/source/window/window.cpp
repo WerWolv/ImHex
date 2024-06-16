@@ -270,7 +270,6 @@ namespace hex {
                         glfwWaitEventsTimeout(targetFrameTime - frameTime);
 
                         // glfwWaitEventsTimeout might return early if there's an event
-                        const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
                         if (frameTime < targetFrameTime) {
                             const auto timeToSleepMs = (int)((targetFrameTime - frameTime) * 1000);
                             std::this_thread::sleep_for(std::chrono::milliseconds(timeToSleepMs));

@@ -932,9 +932,9 @@ namespace hex {
                 s_fontSize = size;
             }
 
-            static AutoReset<std::shared_ptr<ImFontAtlas>> s_fontAtlas;
+            static AutoReset<ImFontAtlas*> s_fontAtlas;
             void setFontAtlas(ImFontAtlas* fontAtlas) {
-                s_fontAtlas = std::unique_ptr<ImFontAtlas, void(*)(ImFontAtlas*)>(fontAtlas, IM_DELETE);
+                s_fontAtlas = fontAtlas;
             }
 
             static ImFont *s_boldFont = nullptr;
@@ -1017,7 +1017,7 @@ namespace hex {
         }
 
         ImFontAtlas* getFontAtlas() {
-            return impl::s_fontAtlas->get();
+            return impl::s_fontAtlas;
         }
 
         ImFont* Bold() {
