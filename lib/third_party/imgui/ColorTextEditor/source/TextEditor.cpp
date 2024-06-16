@@ -623,13 +623,18 @@ ImU32 TextEditor::GetGlyphColor(const Glyph &aGlyph) const {
 
 void TextEditor::HandleKeyboardInputs() {
     ImGuiIO &io   = ImGui::GetIO();
+
+    // command => Ctrl
+    // control => Super
+    // option  => Alt
+
     auto shift    = io.KeyShift;
     auto left     = ImGui::IsKeyPressed(ImGuiKey_LeftArrow);
     auto right    = ImGui::IsKeyPressed(ImGuiKey_RightArrow);
     auto up       = ImGui::IsKeyPressed(ImGuiKey_UpArrow);
     auto down     = ImGui::IsKeyPressed(ImGuiKey_DownArrow);
-    auto ctrl     = io.ConfigMacOSXBehaviors ? io.KeyAlt : io.KeyCtrl;
-    auto alt      = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+    auto ctrl     = io.KeyCtrl;
+    auto alt      = io.KeyAlt;
     auto home     = io.ConfigMacOSXBehaviors ? io.KeySuper && left : ImGui::IsKeyPressed(ImGuiKey_Home);
     auto end      = io.ConfigMacOSXBehaviors ? io.KeySuper && right : ImGui::IsKeyPressed(ImGuiKey_End);
     auto top      = io.ConfigMacOSXBehaviors ? io.KeySuper && up : ctrl && ImGui::IsKeyPressed(ImGuiKey_Home);
