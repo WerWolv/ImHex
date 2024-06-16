@@ -293,7 +293,7 @@ namespace hex {
             namespace impl {
 
                 void resetClosingProvider();
-                const std::set<prv::Provider*>& getClosingProviders();
+                std::set<prv::Provider*> getClosingProviders();
 
             }
 

@@ -277,7 +277,7 @@ namespace hex {
                 s_closingProviders.clear();
             }
 
-            const std::set<prv::Provider*>& getClosingProviders() {
+            std::set<prv::Provider*> getClosingProviders() {
                 return s_closingProviders;
             }
 

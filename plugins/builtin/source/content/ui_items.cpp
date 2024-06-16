@@ -465,7 +465,7 @@ namespace hex::plugin::builtin {
                         auto &tabProvider = providers[i];
                         const auto selectedProviderIndex = ImHexApi::Provider::getCurrentProviderIndex();
 
-                        const auto &closingProviders = ImHexApi::Provider::impl::getClosingProviders();
+                        const auto closingProviders = ImHexApi::Provider::impl::getClosingProviders();
                         if (std::ranges::find(closingProviders, tabProvider) != closingProviders.end())
                             continue;
 
