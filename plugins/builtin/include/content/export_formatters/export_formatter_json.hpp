@@ -6,8 +6,6 @@
 
 namespace hex::plugin::builtin::export_fmt {
 
-    using json = nlohmann::json;
-
     class ExportFormatterJson : public ExportFormatter {
     public:
         ExportFormatterJson() : ExportFormatter("json") {}
@@ -15,21 +13,22 @@ namespace hex::plugin::builtin::export_fmt {
         ~ExportFormatterJson() override = default;
 
         std::vector<u8> format(const std::vector<Occurrence> &occurrences, std::function<std::string (Occurrence)> occurrenceFunc) override {
-            json results_array;
+            nlohmann::json resultJson;
 
             for (const auto &occurrence : occurrences) {
                 std::string formattedResult = occurrenceFunc(occurrence);
 
-                json obj = {
+                nlohmann::json obj = {
                         { "offset", occurrence.region.getStartAddress() },
                         { "size", occurrence.region.getSize() },
                         { "data", formattedResult }
                 };
-                results_array.push_back(obj);
+
+                resultJson.push_back(obj);
             }
 
-            const auto& result_string = results_array.dump(4);
-            return { result_string.begin(), result_string.end() };
+            auto result = resultJson.dump(4);
+            return { result.begin(), result.end() };
         }
     };
 }

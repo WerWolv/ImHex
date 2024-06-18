@@ -2,23 +2,21 @@
 
 #include "export_formatter.hpp"
 
-#include <sstream>
-
 namespace hex::plugin::builtin::export_fmt {
 
     class ExportFormatterCsv : public ExportFormatter {
     public:
         ExportFormatterCsv() : ExportFormatter("csv") {}
 
-        explicit ExportFormatterCsv(std::string name) : ExportFormatter(name) {}
+        explicit ExportFormatterCsv(std::string name) : ExportFormatter(std::move(name)) {}
 
         ~ExportFormatterCsv() override = default;
 
         [[nodiscard]] std::vector<u8> format(const std::vector<Occurrence> &occurrences, std::function<std::string(Occurrence)> occurrenceFunc) override {
             char separator = getSeparatorCharacter();
 
-            std::ostringstream ss;
-            ss << fmt::format("offset{}size{}data", separator, separator) << std::endl;
+            std::string result;
+            result += fmt::format("offset{}size{}data\n", separator, separator);
 
 
             for (const auto &occurrence : occurrences) {
@@ -48,10 +46,10 @@ namespace hex::plugin::builtin::export_fmt {
                                               occurrence.region.getSize(),
                                               separator,
                                               escapedResult);
-                ss << line << std::endl;
+                result += line;
+                result += '\n';
             }
 
-            auto result = ss.str();
             return { result.begin(), result.end() };
         }
 

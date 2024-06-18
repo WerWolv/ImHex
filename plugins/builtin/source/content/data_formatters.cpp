@@ -50,57 +50,57 @@ namespace hex::plugin::builtin {
 
     void registerDataFormatters() {
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.c", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.c", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, hex::format("const uint8_t data[{0}] = {{", size), "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.cpp", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.cpp", [](prv::Provider *provider, u64 offset, size_t size) {
             AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.copy_as.name");
 
             return formatLanguageArray(provider, offset, size, hex::format("constexpr std::array<uint8_t, {0}> data = {{", size), "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.java", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.java", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "final byte[] data = {", "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.csharp", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.csharp", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "const byte[] data = {", "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.rust", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.rust", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, hex::format("let data: [u8; 0x{0:02X}] = [", size), "0x{0:02X}, ", "];");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.python", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.python", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "data = bytes([", "0x{0:02X}, ", "])");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.js", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.js", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "const data = new Uint8Array([", "0x{0:02X}, ", "]);");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.lua", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.lua", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "data = {", "0x{0:02X}, ", "}");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.go", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.go", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "data := [...]byte{", "0x{0:02X}, ", "}", false);
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.crystal", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.crystal", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "data = [", "0x{0:02X}, ", "] of UInt8");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.swift", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.swift", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "let data: [Uint8] = [", "0x{0:02X}, ", "]");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.pascal", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.pascal", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, hex::format("data: array[0..{0}] of Byte = (", size - 1), "${0:02X}, ", ")");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.base64", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.base64", [](prv::Provider *provider, u64 offset, size_t size) {
             std::vector<u8> data(size, 0x00);
             provider->read(offset, data.data(), size);
 
@@ -109,11 +109,11 @@ namespace hex::plugin::builtin {
             return std::string(result.begin(), result.end());
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.hex_view", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.hex_view", [](prv::Provider *provider, u64 offset, size_t size) {
             return hex::generateHexView(offset, size, provider);
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.html", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.html", [](prv::Provider *provider, u64 offset, size_t size) {
             std::string result =
                 "<div>\n"
                 "    <style type=\"text/css\">\n"
@@ -176,23 +176,17 @@ namespace hex::plugin::builtin {
             return result;
         });
 
-        ContentRegistry::DataFormatter::addExportFormatter("csv", "csv", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences,
-                std::function<std::string(ContentRegistry::DataFormatter::impl::FindOccurrence)> transformFunc){
-
+        ContentRegistry::DataFormatter::addFindExportFormatter("csv", "csv", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences, const auto &transformFunc) {
             export_fmt::ExportFormatterCsv formatter;
             return formatter.format(occurrences, transformFunc);
         });
 
-        ContentRegistry::DataFormatter::addExportFormatter("tsv", "tsv", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences,
-                std::function<std::string(ContentRegistry::DataFormatter::impl::FindOccurrence)> transformFunc){
-
+        ContentRegistry::DataFormatter::addFindExportFormatter("tsv", "tsv", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences, const auto &transformFunc) {
             export_fmt::ExportFormatterTsv formatter;
             return formatter.format(occurrences, transformFunc);
         });
 
-        ContentRegistry::DataFormatter::addExportFormatter("json", "json", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences,
-                std::function<std::string(ContentRegistry::DataFormatter::impl::FindOccurrence)> transformFunc){
-
+        ContentRegistry::DataFormatter::addFindExportFormatter("json", "json", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences, const auto &transformFunc) {
             export_fmt::ExportFormatterJson formatter;
             return formatter.format(occurrences, transformFunc);
         });

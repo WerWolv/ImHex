@@ -982,28 +982,28 @@ namespace hex {
 
         namespace impl {
 
-            static AutoReset<std::vector<Entry>> s_entries;
-            const std::vector<Entry>& getEntries() {
-                return *s_entries;
+            static AutoReset<std::vector<ExportMenuEntry>> s_exportMenuEntries;
+            const std::vector<ExportMenuEntry>& getExportMenuEntries() {
+                return *s_exportMenuEntries;
             }
 
-            static AutoReset<std::vector<ExporterEntry>> s_exportEntries;
-            const std::vector<ExporterEntry>& getExporterEntries() {
-                return *s_exportEntries;
+            static AutoReset<std::vector<FindExporterEntry>> s_findExportEntries;
+            const std::vector<FindExporterEntry>& getFindExporterEntries() {
+                return *s_findExportEntries;
             }
 
         }
 
-        void add(const UnlocalizedString &unlocalizedName, const impl::Callback &callback) {
+        void addExportMenuEntry(const UnlocalizedString &unlocalizedName, const impl::Callback &callback) {
             log::debug("Registered new data formatter: {}", unlocalizedName.get());
 
-            impl::s_entries->push_back({ unlocalizedName, callback });
+            impl::s_exportMenuEntries->push_back({ unlocalizedName, callback });
         }
 
-        void addExportFormatter(const UnlocalizedString &unlocalizedName, const std::string fileExtension, const impl::ExporterCallback &callback) {
+        void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string fileExtension, const impl::FindExporterCallback &callback) {
             log::debug("Registered new export formatter: {}", unlocalizedName.get());
 
-            impl::s_exportEntries->push_back({ unlocalizedName, fileExtension, callback });
+            impl::s_findExportEntries->push_back({ unlocalizedName, fileExtension, callback });
         }
 
     }

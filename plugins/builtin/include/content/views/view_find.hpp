@@ -105,7 +105,6 @@ namespace hex::plugin::builtin {
         TaskHolder m_searchTask, m_filterTask;
         bool m_settingsValid = false;
         std::string m_replaceBuffer;
-        std::vector<hex::ContentRegistry::DataFormatter::impl::ExporterEntry> m_formatters;
 
     private:
         static std::vector<Occurrence> searchStrings(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Strings &settings);

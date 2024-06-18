@@ -105,8 +105,6 @@ namespace hex::plugin::builtin {
             for (auto &occurrence : *m_sortedOccurrences)
                 occurrence.selected = true;
         });
-
-        m_formatters = hex::ContentRegistry::DataFormatter::impl::getExporterEntries();
     }
 
     template<typename Type, typename StorageType>
@@ -950,7 +948,7 @@ namespace hex::plugin::builtin {
 
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImVec2(startPos.x, ImGui::GetCursorPosY()));
         if (ImGui::BeginPopup("ExportResults")) {
-            for (const auto &formatter : m_formatters) {
+            for (const auto &formatter : ContentRegistry::DataFormatter::impl::getFindExporterEntries()) {
                 const auto formatterName = formatter.unlocalizedName;
                 const auto name = toUpper(formatterName);
 
