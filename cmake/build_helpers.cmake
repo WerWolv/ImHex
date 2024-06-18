@@ -550,8 +550,6 @@ macro(setupDebugCompressionFlag)
         elseif (COMPRESS_AVAILABLE_COMPILER AND COMPRESS_AVAILABLE_LINKER)
             message("Using default compression for debug info because both compiler and linker support it")
             set(DEBUG_COMPRESSION_FLAG "-gz" CACHE STRING "Cache to use for debug info compression")
-        else()
-            message("No compression available for debug info")
         endif()
     endif()
 
