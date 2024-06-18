@@ -981,12 +981,34 @@ namespace hex {
             namespace impl {
 
                 using Callback = std::function<std::string(prv::Provider *provider, u64 address, size_t size)>;
-                struct Entry {
+                struct ExportMenuEntry {
                     UnlocalizedString unlocalizedName;
                     Callback callback;
                 };
 
-                const std::vector<Entry>& getEntries();
+                struct FindOccurrence {
+                    Region region;
+                    enum class DecodeType { ASCII, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
+                    std::endian endian = std::endian::native;
+                    bool selected;
+                };
+
+                using FindExporterCallback = std::function<std::vector<u8>(const std::vector<FindOccurrence>&, std::function<std::string(FindOccurrence)>)>;
+                struct FindExporterEntry {
+                    UnlocalizedString unlocalizedName;
+                    std::string fileExtension;
+                    FindExporterCallback callback;
+                };
+
+                /**
+                 * @brief Retrieves a list of all registered data formatters used by the 'File -> Export' menu
+                 */
+                const std::vector<ExportMenuEntry>& getExportMenuEntries();
+
+                /**
+                 * @brief Retrieves a list of all registered data formatters used in the Results section of the 'Find' view
+                 */
+                const std::vector<FindExporterEntry>& getFindExporterEntries();
 
             }
 
@@ -996,7 +1018,14 @@ namespace hex {
              * @param unlocalizedName The unlocalized name of the formatter
              * @param callback The function to call to format the data
              */
-            void add(const UnlocalizedString &unlocalizedName, const impl::Callback &callback);
+            void addExportMenuEntry(const UnlocalizedString &unlocalizedName, const impl::Callback &callback);
+
+            /**
+             * @brief Adds a new data exporter for Find results
+             * @param unlocalizedName The unlocalized name of the formatter
+             * @param callback The function to call to format the data
+             */
+            void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string fileExtension, const impl::FindExporterCallback &callback);
 
         }
 
