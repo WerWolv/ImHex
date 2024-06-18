@@ -24,8 +24,6 @@ namespace hex::plugin::builtin::export_fmt {
             return this->mName;
         }
 
-        [[nodiscard]] virtual std::string getFileExtension() const = 0;
-
         /**
          * Main export formatter function
          * @param occurrences A list of search occurrences found by the 'Find' view

@@ -10,8 +10,6 @@ namespace hex::plugin::builtin::export_fmt {
 
         ~ExportFormatterTsv() override = default;
 
-        [[nodiscard]] std::string getFileExtension() const override { return "tsv"; }
-
     protected:
         [[nodiscard]] char getSeparatorCharacter() const override { return '\t'; }
     };

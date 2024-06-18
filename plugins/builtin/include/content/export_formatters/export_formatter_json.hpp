@@ -14,8 +14,6 @@ namespace hex::plugin::builtin::export_fmt {
 
         ~ExportFormatterJson() override = default;
 
-        [[nodiscard]] std::string getFileExtension() const override { return "json"; }
-
         std::vector<u8> format(const std::vector<Occurrence> &occurrences, std::function<std::string (Occurrence)> occurrenceFunc) override {
             json results_array;
 
