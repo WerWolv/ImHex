@@ -982,7 +982,14 @@ namespace hex {
                     ExporterCallback callback;
                 };
 
+                /**
+                 * @brief Retrieves a list of all registered data formatters used by the 'File -> Export' menu
+                 */
                 const std::vector<Entry>& getEntries();
+
+                /**
+                 * @brief Retrieves a list of all registered data formatters used in the Results section of the 'Find' view
+                 */
                 const std::vector<ExporterEntry>& getExporterEntries();
 
             }
