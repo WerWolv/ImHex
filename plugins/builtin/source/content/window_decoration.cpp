@@ -59,9 +59,11 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
             ImGui::SetCursorPosX(8);
             for (const auto &callback : ContentRegistry::Interface::impl::getFooterItems()) {
-                auto prevIdx = drawList->_VtxCurrentIdx;
+                const auto y = ImGui::GetCursorPosY();
+                const auto prevIdx = drawList->_VtxCurrentIdx;
                 callback();
-                auto currIdx = drawList->_VtxCurrentIdx;
+                const auto currIdx = drawList->_VtxCurrentIdx;
+                ImGui::SetCursorPosY(y);
 
                 // Only draw separator if something was actually drawn
                 if (prevIdx != currIdx) {
