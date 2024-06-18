@@ -4,14 +4,16 @@
 
 #include <memory>
 #include <list>
+
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/content_registry.hpp>
+#include <hex/helpers/logger.hpp>
+#include <wolv/utils/string.hpp>
+#include <hex/helpers/fs.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <romfs/romfs.hpp>
-#include "wolv/io/file.hpp"
-#include "hex/api/content_registry.hpp"
-#include "hex/helpers/logger.hpp"
-#include "wolv/utils/string.hpp"
-#include "hex/helpers/fs.hpp"
+#include <wolv/io/file.hpp>
 
 namespace hex::fonts {
 
@@ -158,7 +160,7 @@ namespace hex::fonts {
                 // Calculate the expected font size
                 auto size = fontSize;
                 if (font.defaultSize.has_value())
-                    size = font.defaultSize.value() * std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize);
+                    size = font.defaultSize.value() * std::max(1.0F, std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize));
                 else
                     size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
 
@@ -227,7 +229,12 @@ namespace hex::fonts {
         }
 
         float getFontSize() {
-            float fontSize = ImHexApi::Fonts::DefaultFontSize * ImHexApi::System::getGlobalScale();
+            float fontSize = ImHexApi::Fonts::DefaultFontSize;
+
+            if (auto scaling = ImHexApi::System::getGlobalScale(); u32(scaling) * 10 == u32(scaling * 10))
+                fontSize *= scaling;
+            else
+                fontSize *= scaling * 0.75F;
 
             // Fall back to the default font if the global scale is 0
             if (fontSize == 0.0F)
@@ -310,7 +317,7 @@ namespace hex::fonts {
                 glyphRanges.push_back(glyphRange);
 
                 // Calculate the glyph offset for the font
-                ImVec2 offset = { font.offset.x, font.offset.y - defaultFont->getDescent() + fontAtlas.calculateFontDescend(font, fontSize) };
+                ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->getDescent() - fontAtlas.calculateFontDescend(font, fontSize)) };
 
                 // Load the font
                 fontAtlas.addFontFromMemory(font.fontData, font.defaultSize.value_or(fontSize), offset, false, glyphRanges.back());

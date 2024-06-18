@@ -574,7 +574,7 @@ namespace ImGuiExt {
         if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
             if (!std::string_view(text).empty()) {
                 const auto width = 300 * hex::ImHexApi::System::getGlobalScale();
-                ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(width, FLT_MAX));
+                ImGui::SetNextWindowSizeConstraints(ImVec2(width / 2, 0), ImVec2(width, FLT_MAX));
                 if (BeginTooltip()) {
                     if (isSeparator)
                         SeparatorText(text);
@@ -754,6 +754,8 @@ namespace ImGuiExt {
 
         ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight, label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
 
+        ImVec2 padding = (size - label_size) / 2;
+
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);
         if (!ItemAdd(bb, id))
@@ -769,7 +771,7 @@ namespace ImGuiExt {
                                                                                                  : ImGuiCol_MenuBarBg);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + padding, bb.Max - padding, symbol, nullptr, &size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
