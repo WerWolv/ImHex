@@ -71,11 +71,11 @@ namespace hex::init {
 
         std::string m_gpuVendor;
     
-        ImGuiExt::Texture splashBackgroundTexture;
-        ImGuiExt::Texture splashTextTexture;
-        std::future<bool> tasksSucceeded;
-        std::array<Highlight, 4> highlights;
-        float progressLerp = 0.0F;
+        ImGuiExt::Texture m_splashBackgroundTexture;
+        ImGuiExt::Texture m_splashTextTexture;
+        std::future<bool> m_tasksSucceeded;
+        std::array<Highlight, 4> m_highlights;
+        float m_progressLerp = 0.0F;
     };
 
 }

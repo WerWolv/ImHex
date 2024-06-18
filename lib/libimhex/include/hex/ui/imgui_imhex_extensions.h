@@ -131,7 +131,7 @@ namespace ImGuiExt {
     bool DescriptionButton(const char *label, const char *description, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool DescriptionButtonProgress(const char *label, const char *description, float fraction, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
 
-    void HelpHover(const char *text);
+    void HelpHover(const char *text, const char *icon = "(?)", ImU32 iconColor = ImGui::GetColorU32(ImGuiCol_ButtonActive));
 
     void UnderlinedText(const char *label, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
 
@@ -149,6 +149,8 @@ namespace ImGuiExt {
     bool InputIntegerPrefix(const char* label, const char *prefix, void *value, ImGuiDataType type, const char *format, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputHexadecimal(const char* label, u32 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputHexadecimal(const char* label, u64 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
+
+    bool SliderBytes(const char *label, u64 *value, u64 min, u64 max, ImGuiSliderFlags flags = ImGuiSliderFlags_None);
 
     inline bool HasSecondPassed() {
         return static_cast<ImU32>(ImGui::GetTime() * 100) % 100 <= static_cast<ImU32>(ImGui::GetIO().DeltaTime * 100);
@@ -183,11 +185,11 @@ namespace ImGuiExt {
 
     void SmallProgressBar(float fraction, float yOffset = 0.0F);
 
-    inline void TextFormatted(const std::string &fmt, auto &&...args) {
+    inline void TextFormatted(std::string_view fmt, auto &&...args) {
         ImGui::TextUnformatted(hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    inline void TextFormattedSelectable(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedSelectable(std::string_view fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
 
         ImGui::PushID(text.c_str());
@@ -205,19 +207,19 @@ namespace ImGuiExt {
         ImGui::PopID();
     }
 
-    inline void TextFormattedColored(ImColor color, const std::string &fmt, auto &&...args) {
+    inline void TextFormattedColored(ImColor color, std::string_view fmt, auto &&...args) {
         ImGui::TextColored(color, "%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    inline void TextFormattedDisabled(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedDisabled(std::string_view fmt, auto &&...args) {
         ImGui::TextDisabled("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    inline void TextFormattedWrapped(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedWrapped(std::string_view fmt, auto &&...args) {
         ImGui::TextWrapped("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    inline void TextFormattedWrappedSelectable(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedWrappedSelectable(std::string_view fmt, auto &&...args) {
         // Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
         auto text = wolv::util::wrapMonospacedString(
                 hex::format(fmt, std::forward<decltype(args)>(args)...),
@@ -247,13 +249,13 @@ namespace ImGuiExt {
     }
 
     void TextUnformattedCentered(const char *text);
-    inline void TextFormattedCentered(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedCentered(std::string_view fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
         TextUnformattedCentered(text.c_str());
     }
 
 
-    inline void TextFormattedCenteredHorizontal(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedCenteredHorizontal(std::string_view fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
         auto availableSpace = ImGui::GetContentRegionAvail();
         auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);

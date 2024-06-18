@@ -120,6 +120,11 @@ namespace hex::crash {
 
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
+        if (signalNumber == SIGINT) {
+            ImHexApi::System::closeImHex();
+            return;
+        }
+
         // Reset crash handlers, so we can't have a recursion if this code crashes
         resetCrashHandlers();
 
@@ -166,6 +171,7 @@ namespace hex::crash {
             HANDLE_SIGNAL(SIGILL);
             HANDLE_SIGNAL(SIGABRT);
             HANDLE_SIGNAL(SIGFPE);
+            HANDLE_SIGNAL(SIGINT);
 
             #if defined (SIGBUS)
                 HANDLE_SIGNAL(SIGBUS);

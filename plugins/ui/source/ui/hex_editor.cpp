@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <ui/hex_editor.hpp>
 
 #include <hex/api/content_registry.hpp>
@@ -24,7 +25,7 @@ namespace hex::ui {
 
             if (size == 1) {
                 const u8 c = data[0];
-                if (std::isprint(c))
+                if (std::isprint(c) != 0)
                     ImGui::Text("%c", c);
                 else
                     ImGui::TextDisabled(".");
@@ -53,8 +54,8 @@ namespace hex::ui {
 
                 ImGui::PushID(reinterpret_cast<void*>(address));
                 ON_SCOPE_EXIT { ImGui::PopID(); };
-                char buffer[2] = { std::isprint(data[0]) ? char(data[0]) : '.', 0x00 };
-                ImGui::InputText("##editing_input", buffer, 2, TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+                std::array<char, 2> buffer = { std::isprint(data[0]) != 0 ? char(data[0]) : '.', 0x00 };
+                ImGui::InputText("##editing_input", buffer.data(), buffer.size(), TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                     auto &userData = *static_cast<UserData*>(data->UserData);
 
                     if (data->BufTextLen >= userData.maxChars) {
@@ -78,10 +79,6 @@ namespace hex::ui {
 
     }
 
-    HexEditor::~HexEditor() {
-
-    }
-
     constexpr static u16 getByteColumnSeparatorCount(u16 columnCount) {
         return (columnCount - 1) / 8;
     }
@@ -91,18 +88,19 @@ namespace hex::ui {
     }
 
     std::optional<color_t> HexEditor::applySelectionColor(u64 byteAddress, std::optional<color_t> color) {
-        if (m_mode == Mode::Insert)
-            return color.value_or(0);
+        if (m_mode == Mode::Overwrite) {
+            if (m_frameStartSelectionRegion != Region::Invalid()) {
+                auto selection = m_frameStartSelectionRegion;
 
-        if (isSelectionValid()) {
-            auto selection = getSelection();
-
-            if (byteAddress >= selection.getStartAddress() && byteAddress <= selection.getEndAddress()) {
-                if (color.has_value())
-                    color = (ImAlphaBlendColors(color.value(), m_selectionColor)) & 0x00FFFFFF;
-                else
-                    color = m_selectionColor;
+                if (byteAddress >= selection.getStartAddress() && byteAddress <= selection.getEndAddress()) {
+                    if (color.has_value())
+                        color = (ImAlphaBlendColors(color.value(), m_selectionColor)) & 0x00FFFFFF;
+                    else
+                        color = m_selectionColor;
+                }
             }
+        } else {
+            color = 0x00;
         }
 
         if (color.has_value())
@@ -130,7 +128,7 @@ namespace hex::ui {
 
         const auto [decoded, advance] = encodingFile.getEncodingFor(buffer);
         const ImColor color = [&]{
-            if (decoded.length() == 1 && std::isalnum(decoded[0]))
+            if (decoded.length() == 1 && std::isalnum(decoded[0]) != 0)
                 return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingASCII);
             else if (decoded.length() == 1 && advance == 1)
                 return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingSingleChar);
@@ -271,13 +269,13 @@ namespace hex::ui {
 
         if (m_editingAddress != address || m_editingCellType != cellType) {
             if (cellType == CellType::Hex) {
-                std::vector<u8> buffer(size);
-                std::memcpy(buffer.data(), data, size);
+                std::array<u8, 32> buffer;
+                std::memcpy(buffer.data(), data, std::min(size, buffer.size()));
 
                 if (m_dataVisualizerEndianness != std::endian::native)
-                    std::reverse(buffer.begin(), buffer.end());
+                    std::reverse(buffer.begin(), buffer.begin() + size);
 
-                m_currDataVisualizer->draw(address, buffer.data(), buffer.size(), m_upperCaseHex);
+                m_currDataVisualizer->draw(address, buffer.data(), size, m_upperCaseHex);
             } else {
                 asciiVisualizer.draw(address, data, size, m_upperCaseHex);
             }
@@ -403,27 +401,27 @@ namespace hex::ui {
             case Mode::Overwrite: {
                 // Draw vertical line at the left of first byte and the start of the line
                 if (x == 0 || byteAddress == selection.getStartAddress())
-                    drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1_scaled);
+                    drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImColor(SelectionFrameColor), 1_scaled);
 
                 // Draw vertical line at the right of the last byte and the end of the line
                 if (x == u16((m_bytesPerRow / bytesPerCell) - 1) || (byteAddress + bytesPerCell) > selection.getEndAddress())
-                    drawList->AddLine(cellPos + ImVec2(cellSize.x, -1), cellPos + cellSize, ImColor(SelectionFrameColor), 1_scaled);
+                    drawList->AddLine(ImTrunc(cellPos + ImVec2(cellSize.x, 0)), ImTrunc(cellPos + cellSize), ImColor(SelectionFrameColor), 1_scaled);
 
                 // Draw horizontal line at the top of the bytes
                 if (y == 0 || (byteAddress - m_bytesPerRow) < selection.getStartAddress())
-                    drawList->AddLine(cellPos, cellPos + ImVec2(cellSize.x + 1, 0), ImColor(SelectionFrameColor), 1_scaled);
+                    drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(cellSize.x, 0)), ImColor(SelectionFrameColor), 1_scaled);
 
                 // Draw horizontal line at the bottom of the bytes
                 if ((byteAddress + m_bytesPerRow) > selection.getEndAddress())
-                    drawList->AddLine(cellPos + ImVec2(0, cellSize.y), cellPos + cellSize + ImVec2(1, 0), ImColor(SelectionFrameColor), 1_scaled);
+                    drawList->AddLine(ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImTrunc(cellPos + cellSize + scaled({ 1, 0 })), ImColor(SelectionFrameColor), 1_scaled);
 
                 break;
             }
             case Mode::Insert: {
-                bool cursorVisible = (!ImGui::GetIO().ConfigInputTextCursorBlink) || (m_cursorBlinkTimer <= 0.0f) || std::fmod(m_cursorBlinkTimer, 1.20f) <= 0.80f;
+                bool cursorVisible = (!ImGui::GetIO().ConfigInputTextCursorBlink) || (m_cursorBlinkTimer <= 0.0F) || std::fmod(m_cursorBlinkTimer, 1.20F) <= 0.80F;
                 if (cursorVisible && byteAddress == selection.getStartAddress()) {
                     // Draw vertical line at the left of first byte and the start of the line
-                    drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1_scaled);
+                    drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImColor(SelectionFrameColor), 1_scaled);
                 }
             }
         }
@@ -450,6 +448,7 @@ namespace hex::ui {
         }
 
         const auto selection = getSelection();
+        m_frameStartSelectionRegion = selection;
 
         if (m_provider == nullptr || m_provider->getActualSize() == 0) {
             ImGuiExt::TextFormattedCentered("{}", "hex.ui.hex_editor.no_bytes"_lang);
@@ -531,6 +530,8 @@ namespace hex::ui {
                     m_visibleRowCount = std::max<i64>(m_visibleRowCount, 1);
 
                     // Loop over rows
+                    std::vector<u8> bytes(m_bytesPerRow, 0x00);
+                    std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors(m_bytesPerRow / bytesPerCell);
                     for (ImS64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows && numRows != 0; y++) {
                         // Draw address column
                         ImGui::TableNextRow();
@@ -540,12 +541,10 @@ namespace hex::ui {
 
                         const u8 validBytes = std::min<u64>(m_bytesPerRow, m_provider->getSize() - y * m_bytesPerRow);
 
-                        std::vector<u8> bytes(m_bytesPerRow, 0x00);
                         m_provider->read(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), bytes.data(), validBytes);
 
-                        std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors;
                         {
-                            for (u64 x = 0; x <  std::ceil(float(validBytes) / bytesPerCell); x++) {
+                            for (u64 x = 0; x < std::ceil(float(validBytes) / bytesPerCell); x++) {
                                 const u64 byteAddress = y * m_bytesPerRow + x * bytesPerCell + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                                 const auto cellBytes = std::min<u64>(validBytes, bytesPerCell);
@@ -568,15 +567,15 @@ namespace hex::ui {
                                             foregroundColor = ImGui::GetColorU32(ImGuiCol_TextDisabled);
                                     }
 
-                                    cellColors.emplace_back(
+                                    cellColors[x] = {
                                             foregroundColor,
                                             backgroundColor
-                                    );
+                                    };
                                 } else {
-                                    cellColors.emplace_back(
-                                            std::nullopt,
-                                            std::nullopt
-                                    );
+                                    cellColors[x] = {
+                                        std::nullopt,
+                                        std::nullopt
+                                    };
                                 }
                             }
                         }
@@ -635,7 +634,7 @@ namespace hex::ui {
                                 if (isCurrRegionValid(byteAddress))
                                     this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered, CellType::Hex);
                                 else
-                                    ImGuiExt::TextFormatted("{}", std::string(maxCharsPerCell, '?'));
+                                    ImGuiExt::TextFormatted("{:?>{}}", "", maxCharsPerCell);
 
                                 if (cellHovered) {
                                     hoveredCell = { byteAddress, bytesPerCell };
@@ -799,13 +798,13 @@ namespace hex::ui {
                         // Scroll to the cursor if it's either at the top or bottom edge of the screen
                         if (m_shouldScrollToSelection && isSelectionValid()) {
                             // Make sure simply clicking on a byte at the edge of the screen won't cause scrolling
-                            if ((ImGui::IsMouseDragging(ImGuiMouseButton_Left) && *m_selectionStart != *m_selectionEnd)) {
-                                if (y == (m_scrollPosition + 3)) {
-                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) <= (ImS64(m_scrollPosition + 3) * m_bytesPerRow)) {
+                            if ((ImGui::IsMouseDragging(ImGuiMouseButton_Left))) {
+                                if ((*m_selectionStart >= (*m_selectionEnd + m_bytesPerRow)) && y == (m_scrollPosition + 1)) {
+                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) <= (ImS64(m_scrollPosition + 1) * m_bytesPerRow)) {
                                         m_shouldScrollToSelection = false;
                                         m_scrollPosition -= 3;
                                     }
-                                } else if (y == ((m_scrollPosition + m_visibleRowCount) - 1)) {
+                                } else if ((*m_selectionStart <= (*m_selectionEnd - m_bytesPerRow)) && y == ((m_scrollPosition + m_visibleRowCount) - 1)) {
                                     if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) >= (ImS64((m_scrollPosition + m_visibleRowCount) - 2) * m_bytesPerRow)) {
                                         m_shouldScrollToSelection = false;
                                         m_scrollPosition += 3;
@@ -993,8 +992,7 @@ namespace hex::ui {
                                     m_currDataVisualizer = visualizer;
                                     m_encodingLineStartAddresses.clear();
 
-                                    if (m_bytesPerRow < visualizer->getBytesPerCell())
-                                        m_bytesPerRow = visualizer->getBytesPerCell();
+                                    m_bytesPerRow = std::max(m_bytesPerRow, visualizer->getBytesPerCell());
                                 }
                             }
 

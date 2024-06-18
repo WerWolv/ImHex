@@ -16,6 +16,7 @@
 
 #include <set>
 #include <string>
+#include <algorithm>
 
 #include <hex/api/imhex_api.hpp>
 
@@ -68,6 +69,13 @@ namespace ImGuiExt {
             return GL_NEAREST;
         }
 
+        [[maybe_unused]] GLint getMaxSamples(GLenum target, GLenum format) {
+            GLint maxSamples;
+
+            glGetInternalformativ(target, format, GL_SAMPLES, 1, &maxSamples);
+            return maxSamples;
+        }
+
         GLuint createTextureFromRGBA8Array(const ImU8 *buffer, int width, int height, Texture::Filter filter) {
             GLuint texture;
 
@@ -105,14 +113,13 @@ namespace ImGuiExt {
             }
 
             #if defined(GL_TEXTURE_2D_MULTISAMPLE)
-
-                constexpr static auto SampleCount = 8;
+                static const auto sampleCount = std::min(static_cast<GLint>(8), getMaxSamples(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8));
 
                 // Generate renderbuffer
                 GLuint renderbuffer;
                 glGenRenderbuffers(1, &renderbuffer);
                 glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-                glRenderbufferStorageMultisample(GL_RENDERBUFFER, SampleCount, GL_DEPTH24_STENCIL8, width, height);
+                glRenderbufferStorageMultisample(GL_RENDERBUFFER, sampleCount, GL_DEPTH24_STENCIL8, width, height);
 
                 // Generate framebuffer
                 GLuint framebuffer;
@@ -275,8 +282,7 @@ namespace ImGuiExt {
         if (m_textureId == nullptr)
             return;
 
-        auto glTextureId = static_cast<GLuint>(reinterpret_cast<intptr_t>(m_textureId));
-        glDeleteTextures(1, &glTextureId);
+        glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
     }
 
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {
@@ -504,26 +510,25 @@ namespace ImGuiExt {
         return pressed;
     }
 
-    void HelpHover(const char *text) {
-        const auto iconColor = GetStyleColorVec4(ImGuiCol_ButtonActive);
-
+    void HelpHover(const char *text, const char *icon, ImU32 iconColor) {
         PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
         PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, GetStyle().FramePadding.y));
+        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
 
         PushStyleColor(ImGuiCol_Text, iconColor);
-        Button("(?)");
+        Button(icon);
         PopStyleColor();
 
         if (IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-            SetNextWindowSizeConstraints(ImVec2(GetTextLineHeight() * 25, 0), ImVec2(GetTextLineHeight() * 25, FLT_MAX));
+            SetNextWindowSizeConstraints(ImVec2(GetTextLineHeight() * 25, 0), ImVec2(GetTextLineHeight() * 35, FLT_MAX));
             BeginTooltip();
             TextFormattedWrapped("{}", text);
             EndTooltip();
         }
 
-        PopStyleVar();
+        PopStyleVar(2);
         PopStyleColor(3);
     }
 
@@ -568,12 +573,16 @@ namespace ImGuiExt {
         bool result = false;
         if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
             if (!std::string_view(text).empty()) {
-                BeginTooltip();
-                if (isSeparator)
-                    SeparatorText(text);
-                else
-                    TextUnformatted(text);
-                EndTooltip();
+                const auto width = 300 * hex::ImHexApi::System::getGlobalScale();
+                ImGui::SetNextWindowSizeConstraints(ImVec2(width / 2, 0), ImVec2(width, FLT_MAX));
+                if (BeginTooltip()) {
+                    if (isSeparator)
+                        SeparatorText(text);
+                    else
+                        TextFormattedWrapped("{}", text);
+
+                    EndTooltip();
+                }
             }
 
             result = true;
@@ -718,7 +727,7 @@ namespace ImGuiExt {
         const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered
                                                                                           : ImGuiCol_Button);
         RenderNavHighlight(bb, id);
-        RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
+        RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         // Automatically close popups
@@ -743,7 +752,9 @@ namespace ImGuiExt {
 
         ImVec2 pos = window->DC.CursorPos;
 
-        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight(), label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
+        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight, label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
+
+        ImVec2 padding = (size - label_size) / 2;
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);
@@ -760,7 +771,7 @@ namespace ImGuiExt {
                                                                                                  : ImGuiCol_MenuBarBg);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + padding, bb.Max - padding, symbol, nullptr, &size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -823,19 +834,12 @@ namespace ImGuiExt {
 
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
         const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), CalcTextSize(prefix).x, label_size.y + style.FramePadding.y * 2.0F);
-        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
+        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(CalcItemWidth(), frame_size.y));
 
         SetCursorPosX(GetCursorPosX() + frame_size.x);
 
         char buf[64];
         DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, format);
-
-        bool value_changed = false;
-        if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0F), flags))
-            value_changed = DataTypeApplyFromText(buf, type, value, format);
-
-        if (value_changed)
-            MarkItemEdited(GImGui->LastItemData.ID);
 
         RenderNavHighlight(frame_bb, id);
         RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
@@ -843,6 +847,19 @@ namespace ImGuiExt {
         PushStyleVar(ImGuiStyleVar_Alpha, 0.6F);
         RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), prefix);
         PopStyleVar();
+
+        bool value_changed = false;
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
+        PushStyleColor(ImGuiCol_FrameBg, 0x00000000);
+        PushStyleColor(ImGuiCol_FrameBgHovered, 0x00000000);
+        PushStyleColor(ImGuiCol_FrameBgActive, 0x00000000);
+        if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0F), flags))
+            value_changed = DataTypeApplyFromText(buf, type, value, format);
+        PopStyleColor(3);
+        PopStyleVar();
+
+        if (value_changed)
+            MarkItemEdited(GImGui->LastItemData.ID);
 
         return value_changed;
     }
@@ -853,6 +870,21 @@ namespace ImGuiExt {
 
     bool InputHexadecimal(const char *label, u64 *value, ImGuiInputTextFlags flags) {
         return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U64, "%llX", flags | ImGuiInputTextFlags_CharsHexadecimal);
+    }
+
+    bool SliderBytes(const char *label, u64 *value, u64 min, u64 max, ImGuiSliderFlags flags) {
+        std::string format;
+        if (*value < 1024) {
+            format = hex::format("{} Bytes", *value);
+        } else if (*value < 1024 * 1024) {
+            format = hex::format("{:.2f} KB", *value / 1024.0);
+        } else if (*value < 1024 * 1024 * 1024) {
+            format = hex::format("{:.2f} MB", *value / (1024.0 * 1024.0));
+        } else {
+            format = hex::format("{:.2f} GB", *value / (1024.0 * 1024.0 * 1024.0));
+        }
+
+        return ImGui::SliderScalar(label, ImGuiDataType_U64, value, &min, &max, format.c_str(), flags | ImGuiSliderFlags_Logarithmic);
     }
 
     void SmallProgressBar(float fraction, float yOffset) {
@@ -1217,9 +1249,9 @@ namespace ImGuiExt {
         window->DrawList->AddRectFilled(knob_bb.Min, knob_bb.Max, GetColorU32(held ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : *v ? ImGuiCol_ButtonActive : ImGuiCol_Button), size.y / 2);
 
         if (*v)
-            window->DrawList->AddCircleFilled(knob_bb.Max - ImVec2(size.y / 2, size.y / 2), (size.y - style.ItemInnerSpacing.y) / 2, GetColorU32(ImGuiCol_Text), 16);
+            window->DrawList->AddCircleFilled(knob_bb.Max - ImVec2(size.y / 2, size.y / 2), (size.y - style.ItemInnerSpacing.y) / 2, GetColorU32(ImGuiCol_ScrollbarGrabActive), 16);
         else
-            window->DrawList->AddCircleFilled(knob_bb.Min + ImVec2(size.y / 2, size.y / 2), (size.y - style.ItemInnerSpacing.y) / 2, GetColorU32(ImGuiCol_Text), 16);
+            window->DrawList->AddCircleFilled(knob_bb.Min + ImVec2(size.y / 2, size.y / 2), (size.y - style.ItemInnerSpacing.y) / 2, GetColorU32(ImGuiCol_ScrollbarGrabActive), 16);
 
         ImVec2 label_pos = ImVec2(knob_bb.Max.x + style.ItemInnerSpacing.x, knob_bb.Min.y + style.FramePadding.y);
         if (g.LogEnabled)

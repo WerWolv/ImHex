@@ -218,6 +218,7 @@ namespace hex::plugin::builtin {
 
         PerProvider<std::list<EnvVar>> m_envVarEntries;
 
+        PerProvider<TaskHolder> m_analysisTask;
         PerProvider<bool> m_shouldAnalyze;
         PerProvider<bool> m_breakpointHit;
         PerProvider<std::unique_ptr<ui::PatternDrawer>> m_debuggerDrawer;

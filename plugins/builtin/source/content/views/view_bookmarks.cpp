@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
             if (id != nullptr)
                 *id = bookmarkId;
 
-            auto bookmark = ImHexApi::Bookmarks::Entry{
+            auto bookmark = ImHexApi::Bookmarks::Entry {
                 region,
                 name,
                 std::move(comment),
@@ -240,15 +240,53 @@ namespace hex::plugin::builtin {
             EventHighlightingChanged::post();
     }
 
-    void ViewBookmarks::drawContent() {
-        auto provider = ImHexApi::Provider::get();
+    void ViewBookmarks::drawDropTarget(std::list<Bookmark>::iterator it, float height) {
+        height = std::max(height, 1.0F);
 
+        if (it != m_bookmarks->begin()) {
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - height);
+        } else {
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + height);
+        }
+
+        ImGui::InvisibleButton("##DropTarget", ImVec2(ImGui::GetContentRegionAvail().x, height * 2.0F));
+        const auto dropTarget = ImRect(ImGui::GetItemRectMin(), ImVec2(ImGui::GetItemRectMax().x, ImGui::GetItemRectMin().y + 2_scaled));
+
+        if (it == m_bookmarks->begin()) {
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - height);
+        }
+
+        ImGui::PushStyleColor(ImGuiCol_DragDropTarget, 0x00);
+        if (ImGui::BeginDragDropTarget()) {
+            ImGui::GetWindowDrawList()->AddRectFilled(dropTarget.Min, dropTarget.Max, ImGui::GetColorU32(ImGuiCol_ButtonActive));
+
+            if (auto payload = ImGui::AcceptDragDropPayload("BOOKMARK_PAYLOAD"); payload != nullptr) {
+                // Receive the bookmark id from the payload
+                u64 droppedBookmarkId = *static_cast<const u64*>(payload->Data);
+
+                // Find the correct bookmark with that id
+                auto droppedIter = std::ranges::find_if(m_bookmarks->begin(), m_bookmarks->end(), [droppedBookmarkId](const auto &bookmarkItem) {
+                    return bookmarkItem.entry.id == droppedBookmarkId;
+                });
+
+                // Swap the two bookmarks
+                if (droppedIter != m_bookmarks->end()) {
+                    m_bookmarks->splice(it, m_bookmarks, droppedIter);
+
+                    EventHighlightingChanged::post();
+                }
+            }
+
+            ImGui::EndDragDropTarget();
+        }
+        ImGui::PopStyleColor();
+    }
+
+    void ViewBookmarks::drawContent() {
         // Draw filter input
         ImGui::PushItemWidth(-1);
         ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, m_currFilter);
         ImGui::PopItemWidth();
-
-        ImGui::NewLine();
 
         if (ImGui::BeginChild("##bookmarks")) {
             if (m_bookmarks->empty()) {
@@ -256,6 +294,10 @@ namespace hex::plugin::builtin {
             }
 
             auto bookmarkToRemove = m_bookmarks->end();
+            const auto defaultItemSpacing = ImGui::GetStyle().ItemSpacing.y;
+
+            ImGui::Dummy({ ImGui::GetContentRegionAvail().x, 0 });
+            drawDropTarget(m_bookmarks->begin(), defaultItemSpacing);
 
             // Draw all bookmarks
             for (auto it = m_bookmarks->begin(); it != m_bookmarks->end(); ++it) {
@@ -285,38 +327,9 @@ namespace hex::plugin::builtin {
 
                 bool notDeleted = true;
 
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2());
                 auto expanded = ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), &notDeleted);
-                auto nextPos = ImGui::GetCursorPos();
-
-                ImGui::SameLine();
-                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - 70_scaled);
-
-                {
-                    // Draw jump to region button
-                    if (ImGuiExt::DimmedIconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
-                        ImHexApi::HexEditor::setSelection(region);
-                    ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
-
-                    ImGui::SameLine(0, 1_scaled);
-
-                    // Draw open in new view button
-                    if (ImGuiExt::DimmedIconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        TaskManager::doLater([region, provider]{
-                            auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
-                            if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
-                                viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
-                                if (viewProvider->open()) {
-                                    EventProviderOpened::post(viewProvider);
-                                    AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
-                                }
-                            }
-                        });
-                    }
-                    ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
-                }
-
-                ImGui::SetCursorPos(nextPos);
-                ImGui::Dummy({});
+                ImGui::PopStyleVar();
 
                 if (!expanded) {
                     // Handle dragging bookmarks up and down when they're collapsed
@@ -329,9 +342,9 @@ namespace hex::plugin::builtin {
                         ImGui::ColorButton("##color", headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha);
                         ImGui::SameLine();
                         ImGuiExt::TextFormatted("{}", name);
-                        ImGui::Separator();
 
                         if (!comment.empty()) {
+                            ImGui::Separator();
                             ImGui::PushTextWrapPos(300_scaled);
                             ImGuiExt::TextFormatted("{}", comment);
                             ImGui::PopTextWrapPos();
@@ -339,27 +352,48 @@ namespace hex::plugin::builtin {
 
                         ImGui::EndDragDropSource();
                     }
+                }
 
-                    if (ImGui::BeginDragDropTarget()) {
+                auto nextPos = ImGui::GetCursorPos();
 
-                        if (auto payload = ImGui::AcceptDragDropPayload("BOOKMARK_PAYLOAD"); payload != nullptr) {
-                            // Receive the bookmark id from the payload
-                            u64 droppedBookmarkId = *static_cast<const u64*>(payload->Data);
+                ImGui::SameLine();
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - 70_scaled);
 
-                            // Find the correct bookmark with that id
-                            auto droppedIter = std::ranges::find_if(m_bookmarks->begin(), m_bookmarks->end(), [droppedBookmarkId](const auto &bookmarkItem) {
-                                return bookmarkItem.entry.id == droppedBookmarkId;
-                            });
+                {
+                    // Draw jump to region button
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                        ImHexApi::HexEditor::setSelection(region);
+                    ImGui::SetItemTooltip("%s", "hex.builtin.view.bookmarks.tooltip.jump_to"_lang.get().c_str());
 
-                            // Swap the two bookmarks
-                            if (droppedIter != m_bookmarks->end()) {
-                                std::iter_swap(it, droppedIter);
+                    ImGui::SameLine(0, 1_scaled);
+
+                    // Draw open in new view button
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        auto provider = ImHexApi::Provider::get();
+                        TaskManager::doLater([region, provider, name]{
+                            auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
+                            if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                                viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
+                                viewProvider->setName(hex::format("'{}' View", name));
+
+                                if (viewProvider->open()) {
+                                    EventProviderOpened::post(viewProvider);
+                                    AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
+                                }
                             }
-                        }
-
-                        ImGui::EndDragDropTarget();
+                        });
                     }
-                } else {
+                    ImGui::SetItemTooltip("%s", "hex.builtin.view.bookmarks.tooltip.open_in_view"_lang.get().c_str());
+                }
+
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2());
+                drawDropTarget(std::next(it), defaultItemSpacing);
+                ImGui::PopStyleVar();
+
+                ImGui::SetCursorPos(nextPos);
+                ImGui::Dummy({});
+
+                if (expanded) {
                     const auto rowHeight = ImGui::GetTextLineHeightWithSpacing() + 2 * ImGui::GetStyle().FramePadding.y;
                     if (ImGui::BeginTable("##bookmark_table", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
                         ImGui::TableSetupColumn("##name");
@@ -435,7 +469,7 @@ namespace hex::plugin::builtin {
 
                             ImGui::PopItemWidth();
 
-                            if (updated && end > begin) {
+                            if (updated && end >= begin) {
                                 region = Region(begin, end - begin + 1);
                                 EventHighlightingChanged::post();
                             }

@@ -4,6 +4,7 @@
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/event_manager.hpp>
+#include <hex/api/layout_manager.hpp>
 
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
@@ -12,13 +13,16 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/codicons_font.h>
 
+#include <wolv/literals.hpp>
+#include <wolv/utils/string.hpp>
+
 #include <nlohmann/json.hpp>
 
 #include <utility>
-#include <hex/api/layout_manager.hpp>
-#include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
+
+    using namespace wolv::literals;
 
     namespace {
 
@@ -91,7 +95,7 @@ namespace hex::plugin::builtin {
             bool draw(const std::string &) override {
                 bool result = false;
 
-                if (!ImGui::BeginListBox("", ImVec2(-40_scaled, 280_scaled))) {
+                if (!ImGui::BeginListBox("##UserFolders", ImVec2(-40_scaled, 280_scaled))) {
                     return false;
                 } else {
                     for (size_t n = 0; n < m_paths.size(); n++) {
@@ -173,11 +177,14 @@ namespace hex::plugin::builtin {
                         return "x%.1f";
                 }();
 
-                if (ImGui::SliderFloat(name.data(), &m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
-                    return true;
+                bool changed = ImGui::SliderFloat(name.data(), &m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+
+                if (ImHexApi::Fonts::getCustomFontPath().empty() && (u32(m_value * 10) % 10) != 0) {
+                    ImGui::SameLine();
+                    ImGuiExt::HelpHover("hex.builtin.setting.interface.scaling.fractional_warning"_lang, ICON_VS_WARNING, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
                 }
 
-                return false;
+                return changed;
             }
 
             void load(const nlohmann::json &data) override {
@@ -223,7 +230,7 @@ namespace hex::plugin::builtin {
             }
 
         private:
-            int m_value = 0;
+            int m_value = 5 * 2;
         };
 
         class KeybindingWidget : public ContentRegistry::Settings::Widgets::Widget {
@@ -578,12 +585,12 @@ namespace hex::plugin::builtin {
                 if (data.is_null())
                     return;
 
+                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable())
+                    menuItem.toolbarIndex = -1;
+
                 auto toolbarItems = data.get<std::map<i32, std::pair<std::string, u32>>>();
                 if (toolbarItems.empty())
                     return;
-
-                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable())
-                    menuItem.toolbarIndex = -1;
 
                 for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable()) {
                     for (const auto &[index, value] : toolbarItems) {
@@ -605,7 +612,7 @@ namespace hex::plugin::builtin {
 
         class FontFilePicker : public ContentRegistry::Settings::Widgets::FilePicker {
         public:
-            bool draw(const std::string &name) {
+            bool draw(const std::string &name) override {
                 bool changed = false;
 
                 const auto &fonts = hex::getFonts();
@@ -663,7 +670,7 @@ namespace hex::plugin::builtin {
 
                 result = !isIntelGPU;
                 if (isIntelGPU)
-                    log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please try the Mesa3D Software Renderer");
+                    log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please enable the Native OS Decoration setting or try the software rendererd -NoGPU release.");
             }
 
             return result;
@@ -680,6 +687,8 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
             ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "", "hex.builtin.setting.general.auto_backup_time");
+            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "", "hex.builtin.setting.general.max_mem_file_size", 128_MiB, 0_bytes, 32_GiB)
+                .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc");
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
@@ -851,7 +860,7 @@ namespace hex::plugin::builtin {
             EventImHexStartupFinished::subscribe([]{
                 for (const auto &[name, experiment] : ContentRegistry::Experiments::impl::getExperiments()) {
                     ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.experiments", "", experiment.unlocalizedName, false)
-                        .setTooltip(Lang(experiment.unlocalizedDescription))
+                        .setTooltip(experiment.unlocalizedDescription)
                         .setChangedCallback([name](Widgets::Widget &widget) {
                             auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
 

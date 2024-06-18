@@ -1,0 +1,5 @@
+comment: false
+ignore:
+  - "lib/third_party" # Third party libraries should be ignored
+  - "lib/external" # Our own libraries should be checked in their own repositories
+  - "tests" # https://about.codecov.io/blog/should-i-include-test-files-in-code-coverage-calculations/

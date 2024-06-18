@@ -372,6 +372,12 @@ namespace hex::plugin::disasm {
                             break;
                     }
 
+                    if (littleEndian) {
+                        m_mode = cs_mode(u32(m_mode) | CS_MODE_LITTLE_ENDIAN);
+                    } else {
+                        m_mode = cs_mode(u32(m_mode) | CS_MODE_BIG_ENDIAN);
+                    }
+
                     ImGuiExt::EndBox();
                 }
             }

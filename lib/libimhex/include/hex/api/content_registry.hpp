@@ -6,6 +6,7 @@
 
 #include <functional>
 #include <map>
+#include <mutex>
 #include <span>
 #include <string>
 #include <utility>
@@ -98,7 +99,7 @@ namespace hex {
                         bool m_requiresRestart = false;
                         std::function<bool()> m_enabledCallback;
                         std::function<void(Widget&)> m_changedCallback;
-                        std::optional<std::string> m_tooltip;
+                        std::optional<UnlocalizedString> m_tooltip;
                     };
 
                     [[nodiscard]]
@@ -112,7 +113,7 @@ namespace hex {
                     }
 
                     [[nodiscard]]
-                    const std::optional<std::string>& getTooltip() const {
+                    const std::optional<UnlocalizedString>& getTooltip() const {
                         return m_interface.m_tooltip;
                     }
 
@@ -173,6 +174,21 @@ namespace hex {
                 protected:
                     float m_value;
                     float m_min, m_max;
+                };
+
+                class SliderDataSize : public Widget {
+                public:
+                    SliderDataSize(u64 defaultValue, u64 min, u64 max) : m_value(defaultValue), m_min(min), m_max(max) { }
+                    bool draw(const std::string &name) override;
+
+                    void load(const nlohmann::json &data) override;
+                    nlohmann::json store() override;
+
+                    [[nodiscard]] i32 getValue() const { return m_value; }
+
+                protected:
+                    u64 m_value;
+                    u64 m_min, m_max;
                 };
 
                 class ColorPicker : public Widget {
@@ -340,6 +356,8 @@ namespace hex {
             void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const std::common_type_t<T> &value) {
                 impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
                 impl::runOnChangeHandlers(unlocalizedCategory, unlocalizedName, value);
+
+                impl::store();
             }
 
             using OnChangeCallback = std::function<void(const SettingsValue &)>;

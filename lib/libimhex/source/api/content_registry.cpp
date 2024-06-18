@@ -128,7 +128,10 @@ namespace hex {
                 }
 
                 void store() {
-                    const auto &settingsData = getSettingsData();
+                    if (!s_settings.isValid())
+                        return;
+
+                    const auto &settingsData = *s_settings;
 
                     // During a crash settings can be empty, causing them to be overwritten.
                     if (settingsData.empty()) {
@@ -305,6 +308,23 @@ namespace hex {
             }
 
             nlohmann::json SliderFloat::store() {
+                return m_value;
+            }
+
+
+            bool SliderDataSize::draw(const std::string &name) {
+                return ImGuiExt::SliderBytes(name.c_str(), &m_value, m_min, m_max);
+            }
+
+            void SliderDataSize::load(const nlohmann::json &data) {
+                if (data.is_number_integer()) {
+                    m_value = data.get<u64>();
+                } else {
+                    log::warn("Invalid data type loaded from settings for slider!");
+                }
+            }
+
+            nlohmann::json SliderDataSize::store() {
                 return m_value;
             }
 

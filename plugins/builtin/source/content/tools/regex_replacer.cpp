@@ -2,7 +2,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/api/localization_manager.hpp>
 
-#include <regex>
+#include <boost/regex.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -12,23 +12,24 @@
 namespace hex::plugin::builtin {
 
     void drawRegexReplacer() {
-        static auto regexInput     = [] { std::string s; s.reserve(0xFFF); return s; }();
-        static auto regexPattern   = [] { std::string s; s.reserve(0xFFF); return s; }();
-        static auto replacePattern = [] { std::string s; s.reserve(0xFFF); return s; }();
-        static auto regexOutput    = [] { std::string s; s.reserve(0xFFF); return s; }();
+        static std::string inputString;
+        static std::string regexPattern;
+        static std::string replacePattern;
+        static std::string outputString;
 
         ImGui::PushItemWidth(-150_scaled);
         bool changed1 = ImGuiExt::InputTextIcon("hex.builtin.tools.regex_replacer.pattern"_lang, ICON_VS_REGEX, regexPattern);
         bool changed2 = ImGuiExt::InputTextIcon("hex.builtin.tools.regex_replacer.replace"_lang, ICON_VS_REGEX, replacePattern);
-        bool changed3 = ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexInput, ImVec2(0, 0));
+        bool changed3 = ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, inputString, ImVec2(0, 0));
 
         if (changed1 || changed2 || changed3) {
             try {
-                regexOutput = std::regex_replace(regexInput.data(), std::regex(regexPattern.data()), replacePattern.data());
-            } catch (std::regex_error &) { }
+                const auto regex = boost::regex(regexPattern);
+                outputString = boost::regex_replace(inputString, regex, replacePattern);
+            } catch (boost::regex_error &) { }
         }
 
-        ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.output"_lang, regexOutput.data(), regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.output"_lang, outputString.data(), outputString.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
 
         ImGui::PopItemWidth();
     }

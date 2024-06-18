@@ -37,7 +37,7 @@
 namespace hex::plugin::builtin {
 
     namespace {
-        ImGuiExt::Texture s_bannerTexture, s_backdropTexture, s_infoBannerTexture;
+        ImGuiExt::Texture s_bannerTexture, s_nightlyTexture, s_backdropTexture, s_infoBannerTexture;
 
         std::string s_tipOfTheDay;
 
@@ -182,6 +182,17 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::Image(s_bannerTexture, s_bannerTexture.getSize());
+
+                if (ImHexApi::System::isNightlyBuild()) {
+                    auto cursor = ImGui::GetCursorPos();
+
+                    ImGui::SameLine(0);
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 15_scaled);
+                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
+                    ImGui::Image(s_nightlyTexture, s_nightlyTexture.getSize());
+
+                    ImGui::SetCursorPos(cursor);
+                }
 
                 ImGui::NewLine();
 
@@ -356,6 +367,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawWelcomeScreen() {
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
             ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
             if (ImGui::Begin("ImHexDockSpace")) {
                 if (!ImHexApi::Provider::isValid()) {
@@ -408,11 +420,13 @@ namespace hex::plugin::builtin {
             }
             ImGui::End();
             ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
         }
         /**
          * @brief Draw some default background if there are no views available in the current layout
          */
         void drawNoViewsBackground() {
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
             ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
             if (ImGui::Begin("ImHexDockSpace")) {
                 static std::array<char, 256> title;
@@ -453,6 +467,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::End();
             ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
         }
     }
 
@@ -497,15 +512,16 @@ namespace hex::plugin::builtin {
 
         RequestChangeTheme::subscribe([](const std::string &theme) {
             auto changeTexture = [&](const std::string &path) {
-                return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Linear);
+                return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Nearest);
             };
 
-            auto changeTextureSvg = [&](const std::string &path) {
-                return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), 300_scaled, 0, ImGuiExt::Texture::Filter::Linear);
+            auto changeTextureSvg = [&](const std::string &path, float width) {
+                return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), width, 0, ImGuiExt::Texture::Filter::Linear);
             };
 
             ThemeManager::changeTheme(theme);
-            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()));
+            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300_scaled);
+            s_nightlyTexture = changeTextureSvg(hex::format("assets/{}/nightly.svg", "common"), 35_scaled);
             s_backdropTexture = changeTexture(hex::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
 
             if (!s_bannerTexture.isValid()) {
@@ -548,14 +564,26 @@ namespace hex::plugin::builtin {
                 bool hasProject = !crashFileData.value("project", "").empty();
 
                 auto backupFilePath = path / BackupFileName;
+                auto backupFilePathOld = path / BackupFileName;
+                backupFilePathOld.replace_extension(".hexproj.old");
+
                 bool hasBackupFile = wolv::io::fs::exists(backupFilePath);
 
                 if (!hasProject && !hasBackupFile) {
                     log::warn("No project file or backup file found in crash.json file");
 
                     crashFile.close();
+
+                    // Delete crash.json file
                     wolv::io::fs::remove(crashFilePath);
-                    wolv::io::fs::remove(backupFilePath);
+
+                    // Delete old backup file
+                    wolv::io::fs::remove(backupFilePathOld);
+
+                    // Try to move current backup file to the old backup location
+                    if (wolv::io::fs::copyFile(backupFilePath, backupFilePathOld)) {
+                        wolv::io::fs::remove(backupFilePath);
+                    }
                     continue;
                 }
 

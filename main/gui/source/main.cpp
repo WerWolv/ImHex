@@ -43,6 +43,11 @@ int main(int argc, char **argv) {
     log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
     log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
     log::info("Running on {} {} ({})", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture());
+    #if defined(OS_LINUX)
+    auto distro = ImHexApi::System::getLinuxDistro().value();
+    log::info("Linux distribution: {}. Version: {}", distro.name, distro.version == "" ? "None" : distro.version);
+    #endif
+
 
     // Run ImHex
     return init::runImHex();

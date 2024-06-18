@@ -92,7 +92,17 @@ namespace hex::plugin::builtin {
                 doubleDashFound = true;
             } else {
                 try {
-                    auto path = std::filesystem::weakly_canonical(arg);
+                    std::fs::path path;
+
+                    try {
+                        path = std::fs::weakly_canonical(arg);
+                    } catch(std::fs::filesystem_error &) {
+                        path = arg;
+                    }
+
+                    if (path.empty())
+                        continue;
+
                     fullPaths.push_back(wolv::util::toUTF8String(path));
                 } catch (std::exception &e) {
                     log::error("Failed to open file '{}'\n    {}", arg, e.what());
@@ -100,7 +110,8 @@ namespace hex::plugin::builtin {
             }
         }
 
-        hex::subcommands::forwardSubCommand("open", fullPaths);
+        if (!fullPaths.empty())
+            hex::subcommands::forwardSubCommand("open", fullPaths);
     }
 
     void handleCalcCommand(const std::vector<std::string> &args) {

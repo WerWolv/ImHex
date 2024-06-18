@@ -11,8 +11,6 @@ namespace hex::plugin::builtin {
 
     class FileProvider : public hex::prv::Provider {
     public:
-        constexpr static u64 MaxMemoryFileSize = 128 * 1024 * 1024;
-
         FileProvider() = default;
         ~FileProvider() override = default;
 
@@ -57,7 +55,11 @@ namespace hex::plugin::builtin {
 
     private:
         void convertToMemoryFile();
+        void convertToDirectAccess();
+
         void handleFileChange();
+
+        bool open(bool memoryMapped);
 
     protected:
         std::fs::path m_path;

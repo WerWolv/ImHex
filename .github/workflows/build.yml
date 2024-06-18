@@ -353,10 +353,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Ubuntu
-            release_num: 22.04
-          - name: Ubuntu
-            release_num: 23.04
+          - release_num: 22.04
+          - release_num: 24.04
 
     name: 🐧 Ubuntu ${{ matrix.release_num }}
     runs-on: ubuntu-latest
@@ -585,13 +583,13 @@ jobs:
             release_num: rawhide
             mock_config: fedora-rawhide
           - name: Fedora
+            mock_release: f40
+            release_num: 40
+            mock_config: fedora-40
+          - name: Fedora
             mock_release: f39
             release_num: 39
             mock_config: fedora-39
-          - name: Fedora
-            mock_release: f38
-            release_num: 38
-            mock_config: fedora-38
           - name: RHEL-AlmaLinux
             mock_release: epel9
             release_num: 9
@@ -675,14 +673,6 @@ jobs:
           config_opts['plugin_conf']['ccache_opts']['compress'] = True
           config_opts['plugin_conf']['ccache_opts']['dir'] = "$GITHUB_WORKSPACE/.ccache"
           EOT
-
-      - name: 📜 Setup Mock Cache
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/mock
-          key: ${{ matrix.mock_release }}-mock-${{ github.run_id }}
-          restore-keys: |
-            ${{ matrix.mock_release }}-mock
 
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM

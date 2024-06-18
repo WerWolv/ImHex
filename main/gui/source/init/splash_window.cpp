@@ -265,7 +265,7 @@ namespace hex::init {
         {
 
             // Draw the splash screen background
-            drawList->AddImage(this->splashBackgroundTexture, ImVec2(0, 0), this->splashBackgroundTexture.getSize());
+            drawList->AddImage(this->m_splashBackgroundTexture, ImVec2(0, 0), this->m_splashBackgroundTexture.getSize());
 
             {
 
@@ -315,14 +315,14 @@ namespace hex::init {
                 };
 
                 // Draw all highlights, slowly fading them in as the init tasks progress
-                for (const auto &highlight : this->highlights)
-                    highlightBytes(highlight.start, highlight.count, highlight.color, this->progressLerp);
+                for (const auto &highlight : this->m_highlights)
+                    highlightBytes(highlight.start, highlight.count, highlight.color, this->m_progressLerp);
             }
 
-            this->progressLerp += (m_progress - this->progressLerp) * 0.1F;
+            this->m_progressLerp += (m_progress - this->m_progressLerp) * 0.1F;
 
             // Draw the splash screen foreground
-            drawList->AddImage(this->splashTextTexture, ImVec2(0, 0), this->splashTextTexture.getSize());
+            drawList->AddImage(this->m_splashTextTexture, ImVec2(0, 0), this->m_splashTextTexture.getSize());
 
             // Draw the "copyright" notice
             drawList->AddText(ImVec2(35, 85), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv\n2020 - {0}", &__DATE__[7]).c_str());
@@ -335,7 +335,7 @@ namespace hex::init {
                 const static auto VersionInfo = hex::format("{0}", ImHexApi::System::getImHexVersion());
             #endif
 
-            drawList->AddText(ImVec2((this->splashBackgroundTexture.getSize().x - ImGui::CalcTextSize(VersionInfo.c_str()).x) / 2, 105), ImColor(0xFF, 0xFF, 0xFF, 0xFF), VersionInfo.c_str());
+            drawList->AddText(ImVec2((this->m_splashBackgroundTexture.getSize().x - ImGui::CalcTextSize(VersionInfo.c_str()).x) / 2, 105), ImColor(0xFF, 0xFF, 0xFF, 0xFF), VersionInfo.c_str());
         }
 
         // Draw the task progress bar
@@ -371,8 +371,8 @@ namespace hex::init {
         glfwSwapBuffers(m_window);
 
         // Check if all background tasks have finished so the splash screen can be closed
-        if (this->tasksSucceeded.wait_for(0s) == std::future_status::ready) {
-            if (this->tasksSucceeded.get()) {
+        if (this->m_tasksSucceeded.wait_for(0s) == std::future_status::ready) {
+            if (this->m_tasksSucceeded.get()) {
                 log::debug("All tasks finished successfully!");
                 return FrameResult::Success;
             } else {
@@ -398,11 +398,16 @@ namespace hex::init {
 
     void WindowSplash::initGLFW() {
         glfwSetErrorCallback([](int errorCode, const char *desc) {
-            if (errorCode == GLFW_PLATFORM_ERROR) {
+            bool isWaylandError = errorCode == GLFW_PLATFORM_ERROR;
+            #if defined(GLFW_FEATURE_UNAVAILABLE)
+                isWaylandError = isWaylandError || (errorCode == GLFW_FEATURE_UNAVAILABLE);
+            #endif
+            isWaylandError = isWaylandError && std::string_view(desc).contains("Wayland");
+
+            if (isWaylandError) {
                 // Ignore error spam caused by Wayland not supporting moving or resizing
                 // windows or querying their position and size.
-                if (std::string_view(desc).contains("Wayland"))
-                    return;
+                return;
             }
 
             lastGlfwError.errorCode = errorCode;
@@ -533,12 +538,12 @@ namespace hex::init {
     void WindowSplash::loadAssets() {
 
         // Load splash screen image from romfs
-        this->splashBackgroundTexture = ImGuiExt::Texture::fromImage(romfs::get("splash_background.png").span(), ImGuiExt::Texture::Filter::Linear);
-        this->splashTextTexture = ImGuiExt::Texture::fromImage(romfs::get("splash_text.png").span(), ImGuiExt::Texture::Filter::Linear);
+        this->m_splashBackgroundTexture = ImGuiExt::Texture::fromImage(romfs::get("splash_background.png").span(), ImGuiExt::Texture::Filter::Linear);
+        this->m_splashTextTexture = ImGuiExt::Texture::fromImage(romfs::get("splash_text.png").span(), ImGuiExt::Texture::Filter::Linear);
 
         // If the image couldn't be loaded correctly, something went wrong during the build process
         // Close the application since this would lead to errors later on anyway.
-        if (!this->splashBackgroundTexture.isValid() || !this->splashTextTexture.isValid()) {
+        if (!this->m_splashBackgroundTexture.isValid() || !this->m_splashTextTexture.isValid()) {
             log::error("Could not load splash screen image!");
         }
 
@@ -547,7 +552,7 @@ namespace hex::init {
         u32 lastPos = 0;
         u32 lastCount = 0;
         u32 index = 0;
-        for (auto &highlight : this->highlights) {
+        for (auto &highlight : this->m_highlights) {
             u32 newPos = lastPos + lastCount + (rng() % 35);
             u32 newCount = (rng() % 7) + 3;
             highlight.start.x = float(newPos % 13);
@@ -564,7 +569,7 @@ namespace hex::init {
 
     void WindowSplash::startStartupTasks() {
         // Launch init tasks in the background
-        this->tasksSucceeded = processTasksAsync();
+        this->m_tasksSucceeded = processTasksAsync();
     }
 
     void WindowSplash::exitGLFW() const {

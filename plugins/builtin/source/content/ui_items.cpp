@@ -253,13 +253,13 @@ namespace hex::plugin::builtin {
                 {
                     ImGuiExt::TextSpinner(hex::format("({})", taskCount).c_str());
                     ImGui::SameLine();
-                    ImGuiExt::SmallProgressBar(progress, (ImGui::GetCurrentWindowRead()->MenuBarHeight() - 10_scaled) / 2.0);
+                    ImGuiExt::SmallProgressBar(progress, (ImGui::GetCurrentWindowRead()->MenuBarHeight - 10_scaled) / 2.0);
                     ImGui::SameLine();
                 }
                 const auto widgetEnd = ImGui::GetCursorPos();
 
                 ImGui::SetCursorPos(widgetStart);
-                ImGui::InvisibleButton("RestTasks", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindowRead()->MenuBarHeight()));
+                ImGui::InvisibleButton("RestTasks", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindowRead()->MenuBarHeight));
                 ImGui::SetCursorPos(widgetEnd);
 
                 std::string progressString;
@@ -311,7 +311,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addFooterItem([] {
             if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value()) {
-                ImGuiExt::TextFormatted("0x{:02X} - 0x{:02X} ({} bytes)",
+                ImGuiExt::TextFormatted("0x{0:02X} - 0x{1:02X} (0x{2:02X} | {2} bytes)",
                     selection->getStartAddress(),
                     selection->getEndAddress(),
                     selection->getSize()
@@ -465,7 +465,7 @@ namespace hex::plugin::builtin {
                         auto &tabProvider = providers[i];
                         const auto selectedProviderIndex = ImHexApi::Provider::getCurrentProviderIndex();
 
-                        const auto &closingProviders = ImHexApi::Provider::impl::getClosingProviders();
+                        const auto closingProviders = ImHexApi::Provider::impl::getClosingProviders();
                         if (std::ranges::find(closingProviders, tabProvider) != closingProviders.end())
                             continue;
 

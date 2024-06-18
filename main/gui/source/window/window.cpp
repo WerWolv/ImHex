@@ -87,6 +87,8 @@ namespace hex {
 
         EventWindowDeinitializing::post(m_window);
 
+        ContentRegistry::Settings::impl::store();
+
         this->exitImGui();
         this->exitGLFW();
     }
@@ -153,6 +155,10 @@ namespace hex {
 
     void Window::fullFrame() {
         static u32 crashWatchdog = 0;
+
+        if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) {
+            return;
+        }
 
         try {
             this->frameBegin();
@@ -264,7 +270,6 @@ namespace hex {
                         glfwWaitEventsTimeout(targetFrameTime - frameTime);
 
                         // glfwWaitEventsTimeout might return early if there's an event
-                        const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
                         if (frameTime < targetFrameTime) {
                             const auto timeToSleepMs = (int)((targetFrameTime - frameTime) * 1000);
                             std::this_thread::sleep_for(std::chrono::milliseconds(timeToSleepMs));
@@ -677,14 +682,20 @@ namespace hex {
         glfwMakeContextCurrent(backupContext);
 
         if (shouldRender) {
-            int displayWidth, displayHeight;
-            glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
-            glViewport(0, 0, displayWidth, displayHeight);
-            glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
-            glClear(GL_COLOR_BUFFER_BIT);
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            auto* drawData = ImGui::GetDrawData();
+            
+            // Avoid accidentally clearing the viewport when the application is minimized,
+            // otherwise the OS will display an empty frame during deminimization on macOS
+            if (drawData->DisplaySize.x != 0 && drawData->DisplaySize.y != 0) {
+                int displayWidth, displayHeight;
+                glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
+                glViewport(0, 0, displayWidth, displayHeight);
+                glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
+                glClear(GL_COLOR_BUFFER_BIT);
+                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-            glfwSwapBuffers(m_window);
+                glfwSwapBuffers(m_window);
+            }
 
             m_unlockFrameRate = true;
         }
@@ -698,11 +709,16 @@ namespace hex {
     void Window::initGLFW() {
         auto initialWindowProperties = ImHexApi::System::getInitialWindowProperties();
         glfwSetErrorCallback([](int error, const char *desc) {
-            if (error == GLFW_PLATFORM_ERROR) {
+            bool isWaylandError = error == GLFW_PLATFORM_ERROR;
+            #if defined(GLFW_FEATURE_UNAVAILABLE)
+                isWaylandError = isWaylandError || (error == GLFW_FEATURE_UNAVAILABLE);
+            #endif
+            isWaylandError = isWaylandError && std::string_view(desc).contains("Wayland");
+
+            if (isWaylandError) {
                 // Ignore error spam caused by Wayland not supporting moving or resizing
                 // windows or querying their position and size.
-                if (std::string_view(desc).contains("Wayland"))
-                    return;
+                return;
             }
 
             try {
@@ -795,8 +811,6 @@ namespace hex {
         glfwSetWindowPosCallback(m_window, [](GLFWwindow *window, int x, int y) {
             ImHexApi::System::impl::setMainWindowPosition(x, y);
 
-            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
-
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
 
@@ -804,21 +818,33 @@ namespace hex {
         });
 
         // Register window resize callback
-        glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, int width, int height) {
-            if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
-                ImHexApi::System::impl::setMainWindowSize(width, height);
-
-            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
-
+        glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, [[maybe_unused]] int width, [[maybe_unused]] int height) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
 
-            win->fullFrame();
+            #if !defined(OS_WINDOWS)
+                if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
+                    ImHexApi::System::impl::setMainWindowSize(width, height);
+            #endif
+
+            #if defined(OS_MACOS)
+                // Stop widgets registering hover effects while the window is being resized
+                if (macosIsWindowBeingResizedByUser(window)) {
+                    ImGui::GetIO().MousePos = ImVec2();
+                }
+            #else
+                win->fullFrame();
+            #endif
         });
 
+        #if defined(OS_MACOS)
+            glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
+                auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+                win->fullFrame();
+            });
+        #endif
+        
         glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
-            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
-
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
         });

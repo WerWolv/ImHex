@@ -7,7 +7,11 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#include <wolv/literals.hpp>
+
 namespace hex::plugin::builtin {
+
+    using namespace wolv::literals;
 
     class InformationProvider : public ContentRegistry::DataInformation::InformationSection {
     public:
@@ -64,10 +68,22 @@ namespace hex::plugin::builtin {
 
             task.update();
 
-            m_dataDescription       = magic::getDescription(provider, region.getStartAddress());
-            m_dataMimeType          = magic::getMIMEType(provider, region.getStartAddress());
-            m_dataAppleCreatorType  = magic::getAppleCreatorType(provider, region.getStartAddress());
-            m_dataExtensions        = magic::getExtensions(provider, region.getStartAddress());
+            try {
+                std::vector<u8> data(region.getSize());
+                provider->read(region.getStartAddress(), data.data(), data.size());
+
+                m_dataDescription       = magic::getDescription(data);
+                m_dataMimeType          = magic::getMIMEType(data);
+                m_dataAppleCreatorType  = magic::getAppleCreatorType(data);
+                m_dataExtensions        = magic::getExtensions(data);
+            } catch (const std::bad_alloc &) {
+                hex::log::error("Failed to allocate enough memory for full file magic analysis!");
+
+                // Retry analysis with only the first 100 KiB
+                if (region.getSize() != 100_kiB) {
+                    process(task, provider, { region.getStartAddress(), 100_kiB });
+                }
+            }
         }
 
         void drawContent() override {
@@ -195,7 +211,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawSettings() override {
-            ImGuiExt::InputHexadecimal("hex.builtin.information_section.info_analysis.block_size"_lang, &m_inputChunkSize);
+            ImGuiExt::SliderBytes("hex.builtin.information_section.info_analysis.block_size"_lang, &m_inputChunkSize, 0, 1_MiB);
             ImGui::Checkbox("hex.builtin.information_section.info_analysis.show_annotations"_lang, &m_showAnnotations);
         }
 
@@ -335,7 +351,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        u32 m_inputChunkSize = 0;
+        u64 m_inputChunkSize = 0;
 
         u32 m_blockSize = 0;
         double m_averageEntropy = -1.0;

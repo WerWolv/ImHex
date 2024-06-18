@@ -10,11 +10,12 @@ namespace hex::script::loader {
 
     class DotNetLoader : public ScriptLoader {
     public:
-        DotNetLoader() = default;
+        DotNetLoader() : ScriptLoader(".NET") {}
         ~DotNetLoader() override = default;
 
         bool initialize() override;
         bool loadAll() override;
+        void clearScripts() override;
 
     private:
         std::function<int(const std::string &, bool, const std::fs::path&)>  m_runMethod;

@@ -90,7 +90,7 @@
             "advanced-encoding-multi":  "#F1C40FFF",
             "advanced-encoding-unknown":  "#E74C3CFF",
             "patches":  "#E74C3CFF",
-            "pattern-selected":  "#06539BFF"
+            "pattern-selected":  "#3683CBFF"
         },
         "imnodes": {
             "box-selector": "#3D85E01E",
