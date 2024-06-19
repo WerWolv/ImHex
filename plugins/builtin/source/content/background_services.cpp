@@ -9,18 +9,20 @@
 #include <hex/helpers/fmt.hpp>
 #include <fmt/chrono.h>
 #include <hex/helpers/logger.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <nlohmann/json.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
 
-    static bool networkInterfaceServiceEnabled = false;
-    static int autoBackupTime = 0;
+    static bool s_networkInterfaceServiceEnabled = false;
+    static int s_autoBackupTime = 0;
 
     namespace {
 
         void handleNetworkInterfaceService() {
-            if (!networkInterfaceServiceEnabled) {
+            if (!s_networkInterfaceServiceEnabled) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 return;
             }
@@ -62,21 +64,35 @@ namespace hex::plugin::builtin {
             });
         }
 
+        bool s_dataDirty = false;
         void handleAutoBackup() {
             auto now = std::chrono::steady_clock::now();
             static std::chrono::time_point<std::chrono::steady_clock> lastBackupTime = now;
 
-            if (autoBackupTime > 0 && (now - lastBackupTime) > std::chrono::seconds(autoBackupTime)) {
+            if (s_autoBackupTime > 0 && (now - lastBackupTime) > std::chrono::seconds(s_autoBackupTime)) {
                 lastBackupTime = now;
 
-                if (ImHexApi::Provider::isValid() && ImHexApi::Provider::isDirty()) {
-                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
-                        const auto fileName = hex::format("auto_backup.{:%y%m%d_%H%M%S}.hexproj", fmt::gmtime(std::chrono::system_clock::now()));
-                        if (ProjectFile::store(path / fileName, false))
-                            break;
+                if (ImHexApi::Provider::isValid() && s_dataDirty) {
+                    s_dataDirty = false;
+
+                    std::vector<prv::Provider *> dirtyProviders;
+                    for (const auto &provider : ImHexApi::Provider::getProviders()) {
+                        if (provider->isDirty()) {
+                            dirtyProviders.push_back(provider);
+                        }
                     }
 
-                    log::info("Backed up project");
+                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
+                        const auto backupPath = path / hex::format("auto_backup.{:%y%m%d_%H%M%S}.hexproj", fmt::gmtime(std::chrono::system_clock::now()));
+                        if (ProjectFile::store(backupPath, false)) {
+                            log::info("Created auto-backup file '{}'", wolv::util::toUTF8String(backupPath));
+                            break;
+                        }
+                    }
+
+                    for (const auto &provider : dirtyProviders) {
+                        provider->markDirty();
+                    }
                 }
             }
 
@@ -87,15 +103,19 @@ namespace hex::plugin::builtin {
 
     void registerBackgroundServices() {
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", [](const ContentRegistry::Settings::SettingsValue &value) {
-            networkInterfaceServiceEnabled = value.get<bool>(false);
+            s_networkInterfaceServiceEnabled = value.get<bool>(false);
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.auto_backup_time", [](const ContentRegistry::Settings::SettingsValue &value) {
-            autoBackupTime = value.get<int>(0) * 30;
+            s_autoBackupTime = value.get<int>(0) * 30;
         });
 
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface", handleNetworkInterfaceService);
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup", handleAutoBackup);
+
+        EventProviderDirtied::subscribe([](prv::Provider *) {
+            s_dataDirty = true;
+        });
     }
 
 }
