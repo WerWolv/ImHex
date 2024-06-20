@@ -50,11 +50,9 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawFooter(ImDrawList *drawList, ImVec2 dockSpaceSize, float footerHeight) {
+        void drawFooter(ImDrawList *drawList, ImVec2 dockSpaceSize) {
             auto dockId = ImGui::DockSpace(ImGui::GetID("ImHexMainDock"), dockSpaceSize);
             ImHexApi::System::impl::setMainDockSpaceId(dockId);
-
-            drawList->AddRectFilled(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled), ImGui::GetColorU32(ImGuiCol_MenuBarBg));
 
             ImGui::Separator();
             ImGui::SetCursorPosX(8);
@@ -499,22 +497,29 @@ namespace hex::plugin::builtin {
                 const auto dockSpaceSize = ImHexApi::System::getMainWindowSize() - ImVec2(sidebarWidth, menuBarHeight * 2 + footerHeight);
 
                 ImGui::SetCursorPosX(sidebarWidth);
-                drawFooter(drawList, dockSpaceSize, footerHeight);
+                drawFooter(drawList, dockSpaceSize);
 
                 if (shouldDrawSidebar) {
+                    // Draw sidebar background and separator
+                    drawList->AddRectFilled(
+                        ImGui::GetWindowPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 1_scaled),
+                        ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y + 1_scaled),
+                        ImGui::GetColorU32(ImGuiCol_MenuBarBg)
+                    );
+
                     ImGui::SetCursorPos(sidebarPos);
                     drawSidebar(dockSpaceSize, sidebarPos, sidebarWidth);
+
+                    if (ImHexApi::Provider::isValid() && isAnyViewOpen()) {
+                        drawList->AddLine(
+                                ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, menuBarHeight - 2_scaled),
+                                ImGui::GetWindowPos() + sidebarPos + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y + 2_scaled + menuBarHeight),
+                                ImGui::GetColorU32(ImGuiCol_Separator));
+                    }
                 }
 
                 drawMainMenu(menuBarHeight);
                 drawToolbar();
-
-                if (ImHexApi::Provider::isValid() && isAnyViewOpen()) {
-                    drawList->AddLine(
-                            ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -2_scaled),
-                            ImGui::GetWindowPos() + sidebarPos + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled + menuBarHeight),
-                            ImGui::GetColorU32(ImGuiCol_Separator));
-                }
             } else {
                 ImGui::PopStyleVar(2);
             }
