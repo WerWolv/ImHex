@@ -81,7 +81,7 @@ namespace hex::plugin::visualizers {
 
                     ImPlot::PushPlotClipRect();
                     auto transparentColor = left.color;
-                    transparentColor.Value.w = 0.4F;
+                    transparentColor.Value.w = 0.2F;
                     ImPlot::GetPlotDrawList()->AddRectFilled(min, max, transparentColor);
                     ImPlot::PopPlotClipRect();
                 }
