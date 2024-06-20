@@ -15,12 +15,13 @@ namespace hex::messaging {
 
     void setupEvents() {
         SendMessageToMainInstance::subscribe([](const std::string &eventName, const std::vector<u8> &eventData) {
-            log::debug("Forwarding message {} (maybe to us)", eventName);
             if (ImHexApi::System::isMainInstance()) {
+                log::debug("Executing message '{}' in current instance", eventName);
                 EventImHexStartupFinished::subscribe([eventName, eventData]{
                     ImHexApi::Messaging::impl::runHandler(eventName, eventData);
                 });
             } else {
+                log::debug("Forwarding message '{}' to existing instance", eventName);
                 sendToOtherInstance(eventName, eventData);
             }
         });
