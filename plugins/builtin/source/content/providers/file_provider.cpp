@@ -297,28 +297,39 @@ namespace hex::plugin::builtin {
         std::fs::path path = std::u8string(pathString.begin(), pathString.end());
 
         if (auto projectPath = ProjectFile::getPath(); !projectPath.empty()) {
+            std::fs::path fullPath;
             try {
-                this->setPath(std::fs::weakly_canonical(projectPath.parent_path() / path));
+                fullPath = std::fs::weakly_canonical(projectPath.parent_path() / path);
             } catch (const std::fs::filesystem_error &) {
-                try {
-                    this->setPath(projectPath.parent_path() / path);
-                } catch (const std::fs::filesystem_error &e) {
-                    this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), e.what()));
-                }
+                fullPath = projectPath.parent_path() / path;
             }
-        } else {
-            this->setPath(path);
+
+            if (!wolv::io::fs::exists(fullPath))
+                fullPath = path;
+
+            if (!wolv::io::fs::exists(fullPath)) {
+                this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), ::strerror(ENOENT)));
+            }
+
+            path = std::move(fullPath);
         }
+
+        this->setPath(path);
     }
 
     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
-        std::string path;
-        if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-            path = wolv::io::fs::toNormalizedPathString(std::fs::proximate(m_path, projectPath.parent_path()));
-        if (path.empty())
-            path = wolv::io::fs::toNormalizedPathString(m_path);
+        std::fs::path path;
 
-        settings["path"] = path;
+        if (m_path.u8string().starts_with(u8"//")) {
+            path = m_path;
+        } else {
+            if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
+                path = std::fs::proximate(m_path, projectPath.parent_path());
+            if (path.empty())
+                path = m_path;
+        }
+
+        settings["path"] = wolv::io::fs::toNormalizedPathString(path);
 
         return Provider::storeSettings(settings);
     }
