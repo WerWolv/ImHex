@@ -26,6 +26,7 @@ add_imhex_plugin(
         source/content/pl_visualizers/coordinates.cpp
         source/content/pl_visualizers/timestamp.cpp
         source/content/pl_visualizers/table.cpp
+        source/content/pl_visualizers/digital_signal.cpp
     INCLUDES
         include
         ${MINIAUDIO_INCLUDE_DIRS}
