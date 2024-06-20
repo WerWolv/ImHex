@@ -195,7 +195,10 @@ namespace hex::ui {
     }
 
     void HexEditor::drawMinimap(ImVec2 characterSize) {
-        ImS64 numRows = m_provider == nullptr ? 0 : (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+        if (m_provider == nullptr)
+            return;
+
+        ImS64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
 
         auto window = ImGui::GetCurrentWindowRead();
         const auto outerRect = window->Rect();
@@ -239,14 +242,25 @@ namespace hex::ui {
         drawList->ChannelsSetCurrent(0);
 
         std::vector<u8> rowData(m_bytesPerRow);
+        std::vector<ImColor> rowColors;
         const auto drawStart = std::max<ImS64>(0, scrollPos - grabPos);
         for (ImS64 y = drawStart; y < std::min<ImS64>(drawStart + rowCount, m_provider->getSize() / m_bytesPerRow); y += 1) {
             const auto rowStart = bb.Min + ImVec2(0, (y - drawStart) * rowHeight);
             const auto rowEnd = rowStart + ImVec2(bb.GetSize().x, rowHeight);
+            const auto rowSize = rowEnd - rowStart;
 
-            m_provider->read(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), rowData.data(), rowData.size());
+            const auto address = y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+            m_provider->read(address, rowData.data(), rowData.size());
 
-            drawList->AddRectFilled(rowStart, rowEnd, m_miniMapVisualizer->callback(rowData));
+            m_miniMapVisualizer->callback(address, rowData, rowColors);
+
+            const auto cellSize = rowSize / ImVec2(rowColors.size(), 1);
+            ImVec2 cellPos = rowStart;
+            for (const auto &rowColor : rowColors) {
+                drawList->AddRectFilled(cellPos, cellPos + cellSize, rowColor);
+                cellPos.x += cellSize.x;
+            }
+            rowColors.clear();
         }
 
         drawList->ChannelsMerge();

@@ -1086,7 +1086,7 @@ namespace hex {
             };
 
             struct MiniMapVisualizer {
-                using Callback = std::function<ImColor(const std::vector<u8>&)>;
+                using Callback = std::function<void(u64, std::span<const u8>, std::vector<ImColor>&)>;
 
                 UnlocalizedString unlocalizedName;
                 Callback callback;
