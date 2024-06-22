@@ -9,6 +9,7 @@
     #include <hex/helpers/utils.hpp>
     #include <hex/helpers/utils_linux.hpp>
     #include <hex/helpers/logger.hpp>
+    #include <hex/helpers/default_paths.hpp>
 
     #include <wolv/utils/core.hpp>
 
@@ -87,7 +88,7 @@ namespace hex {
         log::impl::enableColorPrinting();
 
         // Add plugin library folders to dll search path
-        for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {
+        for (const auto &path : paths::Libraries.read())  {
             if (std::fs::exists(path))
                 setenv("LD_LIBRARY_PATH", hex::format("{};{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
         }
