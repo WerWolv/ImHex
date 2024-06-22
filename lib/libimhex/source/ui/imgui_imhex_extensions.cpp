@@ -546,6 +546,34 @@ namespace ImGuiExt {
         PopStyleColor();
     }
 
+    void UnderSquiggledText(const char *label, ImColor textColor, ImColor lineColor, const ImVec2 &size_arg) {
+        ImGuiWindow *window = GetCurrentWindow();
+        std::string labelStr(label);
+        for (char letter : labelStr) {
+            std::string letterStr(1, letter);
+            const ImVec2 label_size = CalcTextSize(letterStr.c_str(), nullptr, true);
+            ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
+            ImVec2 pos = window->DC.CursorPos;
+            float lineWidth = size.x / 3.0f;
+            float halfLineW = lineWidth / 2.0f;
+            float lineY = pos.y + size.y;
+            ImVec2 initial = ImVec2(pos.x, lineY);
+            ImVec2 pos1 = ImVec2(pos.x + lineWidth, lineY - 2.0f);
+            ImVec2 pos2 = ImVec2(pos.x + lineWidth + halfLineW, lineY);
+            ImVec2 pos3 = ImVec2(pos.x + lineWidth * 2 + halfLineW, lineY - 2.0f);
+            ImVec2 pos4 = ImVec2(pos.x + lineWidth * 3, lineY - 1.0f);
+
+            PushStyleColor(ImGuiCol_Text, ImU32(textColor));
+            TextEx(letterStr.c_str(), nullptr, ImGuiTextFlags_NoWidthForLargeClippedText);    // Skip formatting
+            GetWindowDrawList()->AddLine(initial, pos1, ImU32(lineColor),0.4f);
+            GetWindowDrawList()->AddLine(pos1, pos2, ImU32(lineColor),0.3f);
+            GetWindowDrawList()->AddLine(pos2, pos3, ImU32(lineColor),0.4f);
+            GetWindowDrawList()->AddLine(pos3, pos4, ImU32(lineColor),0.3f);
+            PopStyleColor();
+            window->DC.CursorPos = ImVec2(pos.x + size.x, pos.y);
+        }
+    }
+
     void TextSpinner(const char *label) {
         Text("[%c] %s", "|/-\\"[ImU32(GetTime() * 20) % 4], label);
     }

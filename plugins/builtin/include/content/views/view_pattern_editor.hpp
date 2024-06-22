@@ -16,8 +16,12 @@
 #include <TextEditor.h>
 #include "popups/popup_file_chooser.hpp"
 #include "hex/api/achievement_manager.hpp"
+#include "pl/core/preprocessor.hpp"
+#include "pl/core/ast/ast_node_function_definition.hpp"
+#include "pl/helpers/safe_iterator.hpp"
 
-namespace pl::ptrn { class Pattern; }
+
+ namespace pl::ptrn { class Pattern; }
 
 namespace hex::plugin::builtin {
 
@@ -61,7 +65,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
             return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
         }
-
+        TextEditor::PaletteIndex getPaletteIndex(char type);
     public:
         struct VirtualFile {
             std::fs::path path;
@@ -73,6 +77,354 @@ namespace hex::plugin::builtin {
             Ask,
             Allow,
             Deny
+        };
+
+        class TextHighlighter  {
+        public:
+            class Interval;
+            using Token = pl::core::Token;
+            using ASTNode = pl::core::ast::ASTNode;
+            using ExcludedLocation = pl::core::Preprocessor::ExcludedLocation;
+            using CompileError = pl::core::err::CompileError;
+            using Identifier = Token::Identifier;
+            using IdentifierType = Identifier::IdentifierType;
+            using UnorderedBlocks = std::map<std::string,Interval>;
+            using OrderedBlocks = std::map<Interval,std::string>;
+            using Scopes  = std::set<Interval>;
+            using Location = pl::core::Location;
+            using TokenIter = pl::hlp::SafeIterator<std::vector<Token>::const_iterator>;
+            using VariableScopes = std::map<std::string,Scopes>;
+            using Inheritances = std::map<std::string,std::vector<std::string>>;
+
+            struct ParentDefinition;
+            struct Definition {
+                Definition()= default;
+                Definition(IdentifierType identifierType, std::string typeStr,i32 tokenId, Location location) : idType(identifierType), typeStr(typeStr), tokenIndex(tokenId),location(location) {}
+                IdentifierType idType;
+                std::string typeStr;
+                i32 tokenIndex;
+                Location location;
+            };
+
+            struct ParentDefinition {
+                ParentDefinition() = default;
+                ParentDefinition(IdentifierType identifierType, i32 tokenId, Location location) : idType(identifierType), tokenIndex(tokenId), location(location) {}
+                IdentifierType idType;
+                i32 tokenIndex;
+                Location location;
+            };
+            /// to define functions and types
+            using Definitions = std::map<std::string,ParentDefinition>;
+            /// to define global variables
+            using Variables   = std::map<std::string,std::vector<Definition>>;
+            /// to define UDT and function variables
+            using VariableMap = std::map<std::string,Variables>;
+        private:
+            std::string m_text;
+            std::vector<std::string> m_lines;
+            std::vector<i32> m_firstTokenIdOfLine;
+            ViewPatternEditor &m_viewPatternEditor;
+            std::vector<ExcludedLocation> m_excludedLocations;
+            std::vector<std::shared_ptr<ASTNode>> m_ast;
+            std::vector<Token> m_tokens;
+            std::unique_ptr<pl::PatternLanguage> &patternLanguage;
+            std::vector<CompileError> m_compileErrors;
+
+            std::map<std::string,std::vector<i32>> m_instances;
+
+            Definitions m_UDTDefinitions;
+            Definitions m_functionDefinitions;
+
+            OrderedBlocks m_namespaceTokenRange;
+            UnorderedBlocks m_UDTTokenRange;
+            UnorderedBlocks m_functionTokenRange;
+            Scopes m_globalTokenRange;
+
+            VariableMap m_UDTVariables;
+            VariableMap m_functionVariables;
+            Variables m_globalVariables;
+
+            std::map<std::string,std::string> m_attributeFunctionArgumentType;
+
+            std::vector<std::string> m_typeDefs;
+            std::vector<std::string> m_nameSpaces;
+            std::vector<std::string> m_UDTs;
+
+            std::map<std::string, pl::hlp::safe_shared_ptr<pl::core::ast::ASTNodeTypeDecl>>  m_types;
+
+            TokenIter m_curr;
+            TokenIter m_startToken, m_originalPosition, m_partOriginalPosition;
+
+            VariableScopes m_UDTBlocks;
+            VariableScopes m_functionBlocks;
+            Scopes m_globalBlocks;
+
+            Inheritances m_inheritances;
+        public:
+            /// Intervals are the sets finite contiguous non-negative integer that
+            /// are described by their endpoints. The sets must have the following
+            /// properties:
+            /// 1. Any two elements of the set can either have an empty intersection or
+            /// 2. their intersection is equal to one of the two sets (i.e. one is
+            /// a subset of the other).
+            /// An interval is defined to be smaller than another if:
+            /// 1. The interval lies entirely to the left of the other interval or
+            /// 2. The interval is a proper subset of the other interval.
+            /// Two intervals are equal if they have identical start and end values.
+            /// This ordering is used for things like code blocks or the token
+            /// ranges that are defined by the blocks.
+            class Interval {
+            public:
+                i32 start;
+                i32 end;
+                Interval() : start(0), end(0) {}
+                Interval(i32 start, i32 end) : start(start), end(end) {
+                    if (start >= end)
+                        throw std::invalid_argument("Interval start must be less than end");
+                }
+                bool operator<(const Interval &other) const {
+                    return other.end > end;
+                }
+                bool operator>(const Interval &other) const {
+                    return end > other.end;
+                }
+                bool operator==(const Interval &other) const {
+                    return start == other.start && end == other.end;
+                }
+                bool operator!=(const Interval &other) const {
+                    return start != other.start || end != other.end;
+                }
+                bool operator<=(const Interval &other) const {
+                    return other.end >= end;
+                }
+                bool operator>=(const Interval &other) const {
+                    return end >= other.end;
+                }
+                bool contains(const Interval &other) const {
+                    return other.start >= start && other.end <= end;
+                }
+                bool contains(i32 value) const {
+                    return value >= start && value <= end;
+                }
+                bool contiguous(const Interval &other) const {
+                    return ((start - other.end) == 1 || (other.start - end) == 1);
+                }
+            };
+            std::atomic<bool>  m_needsToUpdateColors = true;
+
+            TextHighlighter(ViewPatternEditor &viewPatternEditor ) : m_viewPatternEditor(viewPatternEditor), patternLanguage(viewPatternEditor.m_editorRuntime) {
+                m_needsToUpdateColors = true;
+            }
+
+            /**
+             * @brief Entry point to syntax highlighting
+             */
+            void highlightSourceCode();
+            /**
+             * @brief Renders compile errors in real time
+             */
+            void renderErrors();
+            /// The argument to this function must be the token sequence that was processed
+            /// by the parser which loaded the identifiers of variable definitions with their types.
+            /// This function then loads the types to the un-preprocessed token sequence.
+            void getIdentifierTypes(const std::optional<std::vector<pl::core::Token>> &tokens);
+            /// A token range is the set of token indices of a definition. The namespace token
+            /// ranges are obtained first because they are needed to obtain unique identifiers.
+            void getAllTokenRanges(IdentifierType idtype);
+
+            /// The global scope is the complement of the union of all the function and UDT token ranges
+            void getGlobalTokenRanges();
+            /// If the current token is a function or UDT or namespace, creates a map entry from the name to the token range
+            /// for the first two and from the token range to the name for the last. This ensures that namespaces are stored in the order they occur in the source code.
+            bool getTokenRange(std::vector<Token> keywords,UnorderedBlocks &tokenRange, OrderedBlocks &tokenRangeInv, bool fullName, bool invertMap, VariableScopes *blocks);
+            /// Code blocks are delimited by braces so they are created by loops, conditionals, functions, UDTs and namespaces
+            void loadGlobalBlocks();
+            /// Global variables are the variables that are not inside a function or UDT
+            void fixGlobalVariables();
+            /// Creates the definition maps for UDTs, functions, their variables and global variables
+            void getDefinitions();
+            void loadGlobalDefinitions(Scopes tokenRangeSet, std::vector<IdentifierType> identifierTypes, Variables &variables);
+            void loadVariableDefinitions(UnorderedBlocks tokenRangeMap, Token delimiter, std::vector<IdentifierType> identifierTypes, bool isArgument, VariableMap &variableMap);
+            void loadTypeDefinitions(UnorderedBlocks tokenRangeMap, std::vector<IdentifierType> identifierTypes, Definitions &types);
+            std::string getArgumentTypeName(i32 rangeStart, Token delimiter2);
+            std::string getVariableTypeName();
+            void appendInheritances();
+            ///Loads a map of identifiers to their token id instances
+            void loadInstances();
+            /// Replace auto with the actual type
+            void resolveAutos(VariableMap &variableMap, UnorderedBlocks &tokenRange);
+            void fixAutos();
+            /// for every function token range creates a map of identifier types from
+            /// their definitions and uses it to assign the correct type to the function variables.
+            void fixFunctionVariables();
+            /// Processes the tokens one line of source code at a time
+            void processLineTokens();
+            /// Returns the next/previous valid source code line
+            u32 nextLine(u32 line);
+            u32 previousLine(u32 line);
+            /// Returns the number of escape characters in a string
+            i32 escapeCharCount(const std::string &str);
+            /// Loads the source code and calculates the first token index of each line
+            void loadText();
+            /// Used to obtain the color to be applied.
+            TextEditor::PaletteIndex getPaletteIndex();
+            TextEditor::PaletteIndex getPaletteIndex(Identifier::IdentifierType type);
+            TextEditor::PaletteIndex getPaletteIndex(Token::Literal *literal);
+            TextEditor::PaletteIndex getPaletteIndex(Identifier *identifier);
+            /// The complement of a set is also known as its inverse
+            void invertGlobalTokenRange();
+            /// Starting at the identifier, it tracks back all the scope resolution and dot operators and returns the full chain without arrays, templates, pointers,...
+            bool getFullName(std::string &identifierName);
+            /// Returns the identifier value.
+            bool getIdentifierName(std::string &identifierName);
+            /// Adds namespaces ti the full name if they exist
+            bool getQualifiedName(std::string &identifierName);
+            /// Rewinds the token iterator to the start of the identifier. Used by getFullName
+            void rewindIdentifierName();
+            /// As it moves forward it loads the result to the argument. Used by getFullName
+            bool forwardIdentifierName(std::string &identifierName, std::optional<TokenIter> curr, std::vector<Identifier *> &identifiers);
+            /// Takes as input the full name and returns the type of the last element.
+            bool resolveIdentifierType(Definition &result);
+            /// Assumes that there is a map entry for the identifier in the current token and that the token is inside the corresponding token range
+            bool findIdentifierType(IdentifierType &type );
+            /// Scope resolution can be namespace or enumeration.
+            bool findScopeResolutionType(Identifier::IdentifierType &type);
+           /// like previous functions but returns the type of the variable that is a member of a UDT
+            std::string findIdentifierTypeStr(const std::string &identifierName, std::string context="");
+            bool findOrContains(std::string &context, UnorderedBlocks tokenRange, VariableMap variableMap);
+            /// Convenience functions.
+            void skipAttribute();
+            void skipArray(i32 maxSkipCount, bool forward = true);
+            void skipTemplate(i32 maxSkipCount, bool forward = true);
+            void skipDelimiters(i32 maxSkipCount, Token delimiter[2], i8 increment);
+            void skipToken(Token token, i8 step=1);
+            /// from given or current names find the corresponding definition
+            bool findIdentifierDefinition(Definition &result, const std::string &optionalIdentifierName = "",  std::string optionalName = "");
+            /// To deal with the Parent keyword
+            std::optional<Definition> setChildrenTypes(std::string &optionalFullName, std::vector<Identifier *> &optionalIdentifiers);
+            bool findParentTypes(std::vector<std::string> &parentTypes, const std::string &optionalName="");
+            bool findAllParentTypes(std::vector<std::string> &parentTypes, std::vector<Identifier *> &identifiers, std::string &optionalFullName);
+            bool tryParentType(const std::string &parentType, std::string &variableName, std::optional<Definition> &result, std::vector<Identifier *> &identifiers);
+            /// Clear all the data structures
+            void clear();
+            /// Convenience function
+            bool isTokenIdValid(i32 tokenId);
+            /// These 3 use the types created from ast, but only as las resort or for importes
+            std::optional<std::shared_ptr<pl::core::ast::ASTNode>> parseChildren(const std::shared_ptr<pl::core::ast::ASTNode> &node, const std::string &typeName);
+            bool isMemberOf(const std::string &memberName, const std::string &UDTName, IdentifierType &identifierType);
+            std::optional<std::shared_ptr<ASTNode>> findType(const std::string &typeName, IdentifierType &identifierType);
+            /// Returns the name of the context where the current or given token is located
+            bool findScope(std::string &name, const UnorderedBlocks &map, i32 optionalTokenId=-1);
+            /// Returns the name of the namespace where the current or given token is located
+            bool findNamespace(std::string &nameSpace, i32 optionalTokenId=-1);
+            /// Calculate the source code, line and column numbers of a token index
+            pl::core::Location getLocation(i32 tokenId);
+            /// Calculate the token index of a source code, line and column numbers
+            i32 getTokenId(pl::core::Location location);
+            /// Calculate the function or template argument position from token indices
+            i32  getArgumentNumber(i32 start,i32 arg);
+            /// Calculate the token index of a function or template argument position
+            void getTokenIdForArgument(i32 start, i32 argNumber);
+            ///Creates amap from function name to argument type
+            void linkAttribute();
+            /// Token consuming
+
+            template<typename T>
+            const T *getValue(const i32 index) {
+                return std::get_if<T>(&m_curr[index].value);
+            }
+
+            void restart() {
+                m_curr = m_startToken;
+            }
+
+            void next(i32 count = 1) {
+                if (count == 0)
+                    return;
+                i32 id = getTokenId(m_curr->location);
+                i32 maxChange;
+                if (count > 0)
+                    maxChange = std::min(count,static_cast<i32>(m_tokens.size() - id));
+                else
+                    maxChange = -std::min(-count,id);
+                m_curr += maxChange;
+            }
+            constexpr static u32 Normal = 0;
+            constexpr static u32 Not    = 1;
+
+            bool begin() {
+                m_originalPosition = m_curr;
+
+                return true;
+            }
+
+            void partBegin() {
+                m_partOriginalPosition = m_curr;
+            }
+
+            void reset() {
+                m_curr = m_originalPosition;
+            }
+
+            void partReset() {
+                m_curr = m_partOriginalPosition;
+            }
+
+            bool resetIfFailed(const bool value) {
+                if (!value) reset();
+
+                return value;
+            }
+
+            template<auto S = Normal>
+            bool sequenceImpl() {
+                if constexpr (S == Normal)
+                    return true;
+                else if constexpr (S == Not)
+                    return false;
+                else
+                    std::unreachable();
+            }
+
+            template<auto S = Normal>
+            bool matchOne(const Token &token) {
+                if constexpr (S == Normal) {
+                    if (!peek(token)) {
+                        partReset();
+                        return false;
+                    }
+
+                    next();
+                    return true;
+                } else if constexpr (S == Not) {
+                    if (!peek(token))
+                        return true;
+
+                    next();
+                    partReset();
+                    return false;
+                } else
+                    std::unreachable();
+            }
+
+            template<auto S = Normal>
+            bool sequenceImpl(const auto &... args) {
+                return (matchOne<S>(args) && ...);
+            }
+
+            template<auto S = Normal>
+            bool sequence(const Token &token, const auto &... args) {
+                partBegin();
+                return sequenceImpl<S>(token, args...);
+            }
+
+            bool peek(const Token &token, const i32 index = 0) {
+                i32 id = getTokenId(m_curr->location);
+                if (id+index < 0 || id+index >= (i32)m_tokens.size())
+                    return false;
+                return m_curr[index].type == token.type && m_curr[index] == token.value;
+            }
+
         };
 
     private:
@@ -210,6 +562,7 @@ namespace hex::plugin::builtin {
 
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
+        PerProvider<std::vector<const pl::core::ast::ASTNode*>> m_callStack;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
         PerProvider<std::map<u64, pl::api::Section>> m_sections;
@@ -223,13 +576,13 @@ namespace hex::plugin::builtin {
         PerProvider<bool> m_breakpointHit;
         PerProvider<std::unique_ptr<ui::PatternDrawer>> m_debuggerDrawer;
         std::atomic<bool> m_resetDebuggerVariables;
-        int m_debuggerScopeIndex = 0;
+        i32 m_debuggerScopeIndex = 0;
 
         std::array<AccessData, 512> m_accessHistory = {};
         u32 m_accessHistoryIndex = 0;
         bool m_parentHighlightingEnabled = true;
         bool m_replaceMode = false;
-
+        bool m_openFindReplacePopUp = false;
 
         static inline std::array<std::string,256> m_findHistory;
         static inline u32 m_findHistorySize = 0;
@@ -238,6 +591,8 @@ namespace hex::plugin::builtin {
         static inline u32 m_replaceHistorySize = 0;
         static inline u32 m_replaceHistoryIndex = 0;
 
+        TextHighlighter m_textHighlighter = TextHighlighter(*this);
+
     private:
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
@@ -245,7 +600,7 @@ namespace hex::plugin::builtin {
         void drawSectionSelector(ImVec2 size, const std::map<u64, pl::api::Section> &sections);
         void drawVirtualFiles(ImVec2 size, const std::vector<VirtualFile> &virtualFiles) const;
         void drawDebugger(ImVec2 size);
-
+        std::string preprocessText(const std::string &code);
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 
         void drawFindReplaceDialog(std::string &findWord, bool &requestFocus, u64 &position, u64 &count, bool &updateCount);
