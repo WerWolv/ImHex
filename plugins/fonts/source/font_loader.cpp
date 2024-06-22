@@ -337,10 +337,17 @@ namespace hex::fonts {
 
         // If the build wasn't successful and Unicode characters are enabled, try again without them
         // If they were disabled already, something went wrong, and we can't recover from it
-        if (!shouldLoadUnicode)
+        if (!shouldLoadUnicode) {
+            // Reset Unicode loading and scaling factor settings back to default to make sure the user can still use the application
+            ContentRegistry::Settings::write<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false);
+
+            ContentRegistry::Settings::write<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 1.0F);
+            ImHexApi::System::impl::setGlobalScale(1.0F);
+
             return false;
-        else
+        } else {
             return buildFontAtlasImpl(false);
+        }
     }
 
     bool buildFontAtlas() {
