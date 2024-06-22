@@ -179,9 +179,5 @@ namespace hex::plugin::builtin {
 
     void registerProjectHandlers() {
         hex::ProjectFile::setProjectFunctions(load, store);
-
-        ContentRegistry::Interface::addSidebarItem(ICON_VS_PROJECT, [] {
-            ImGui::TextUnformatted("Test");
-        });
     }
 }
