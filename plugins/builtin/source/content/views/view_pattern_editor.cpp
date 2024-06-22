@@ -14,6 +14,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/binary_pattern.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <hex/providers/memory_provider.hpp>
 
@@ -239,9 +240,9 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginPopup("##pattern_editor_context_menu")) {
                 // no shortcut for this
                 if (ImGui::MenuItem("hex.builtin.menu.file.import.pattern_file"_lang, nullptr, false))
-                    importPatternFile();
+                    m_importPatternFile();
                 if (ImGui::MenuItem("hex.builtin.menu.file.export.pattern_file"_lang, nullptr, false))
-                    exportPatternFile();
+                    m_exportPatternFile();
 
                 ImGui::Separator();
 
@@ -1413,7 +1414,7 @@ namespace hex::plugin::builtin {
 
                 bool popupOpen = false;
                 std::error_code errorCode;
-                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
+                for (const auto &dir : paths::Patterns.read()) {
                     for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
                         task.update();
 
@@ -1792,11 +1793,11 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::registerMenuItems() {
         /* Import Pattern */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, ICON_VS_FILE_CODE, 4050, Shortcut::None,
-                                                importPatternFile, ImHexApi::Provider::isValid);
+                                                m_importPatternFile, ImHexApi::Provider::isValid);
 
         /* Export Pattern */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, Shortcut::None,
-                                                exportPatternFile, [this] {
+                                                m_exportPatternFile, [this] {
                                                     return !wolv::util::trim(m_textEditor.GetText()).empty() && ImHexApi::Provider::isValid();
                                                 }
         );

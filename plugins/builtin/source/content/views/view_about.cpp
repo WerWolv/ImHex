@@ -10,6 +10,7 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/http_requests.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <content/popups/popup_docs_question.hpp>
 
@@ -451,28 +452,28 @@ namespace hex::plugin::builtin {
 
 
     void ViewAbout::drawPathsPage() {
-        constexpr static std::array<std::pair<const char *, fs::ImHexPath>, size_t(fs::ImHexPath::END)> PathTypes = {
+        constexpr static std::array<std::pair<const char *, const paths::impl::DefaultPath*>, paths::All.size()> PathTypes = {
             {
-                { "Patterns",                       fs::ImHexPath::Patterns             },
-                { "Patterns Includes",              fs::ImHexPath::PatternsInclude      },
-                { "Magic",                          fs::ImHexPath::Magic                },
-                { "Plugins",                        fs::ImHexPath::Plugins              },
-                { "Yara Patterns",                  fs::ImHexPath::Yara                 },
-                { "Yara Advaned Analysis",          fs::ImHexPath::YaraAdvancedAnalysis },
-                { "Config",                         fs::ImHexPath::Config               },
-                { "Backups",                        fs::ImHexPath::Backups              },
-                { "Resources",                      fs::ImHexPath::Resources            },
-                { "Constants lists",                fs::ImHexPath::Constants            },
-                { "Custom encodings",               fs::ImHexPath::Encodings            },
-                { "Logs",                           fs::ImHexPath::Logs                 },
-                { "Recent files",                   fs::ImHexPath::Recent               },
-                { "Scripts",                        fs::ImHexPath::Scripts              },
-                { "Data inspector scripts",         fs::ImHexPath::Inspectors           },
-                { "Themes",                         fs::ImHexPath::Themes               },
-                { "Native Libraries",               fs::ImHexPath::Libraries            },
-                { "Custom data processor nodes",    fs::ImHexPath::Nodes                },
-                { "Layouts",                        fs::ImHexPath::Layouts              },
-                { "Workspaces",                     fs::ImHexPath::Workspaces           },
+                { "Patterns",                       &paths::Patterns             },
+                { "Patterns Includes",              &paths::PatternsInclude      },
+                { "Magic",                          &paths::Magic                },
+                { "Plugins",                        &paths::Plugins              },
+                { "Yara Patterns",                  &paths::Yara                 },
+                { "Yara Advaned Analysis",          &paths::YaraAdvancedAnalysis },
+                { "Config",                         &paths::Config               },
+                { "Backups",                        &paths::Backups              },
+                { "Resources",                      &paths::Resources            },
+                { "Constants lists",                &paths::Constants            },
+                { "Custom encodings",               &paths::Encodings            },
+                { "Logs",                           &paths::Logs                 },
+                { "Recent files",                   &paths::Recent               },
+                { "Scripts",                        &paths::Scripts              },
+                { "Data inspector scripts",         &paths::Inspectors           },
+                { "Themes",                         &paths::Themes               },
+                { "Native Libraries",               &paths::Libraries            },
+                { "Custom data processor nodes",    &paths::Nodes                },
+                { "Layouts",                        &paths::Layouts              },
+                { "Workspaces",                     &paths::Workspaces           },
             }
         };
         static_assert(PathTypes.back().first != nullptr, "All path items need to be populated!");
@@ -487,13 +488,13 @@ namespace hex::plugin::builtin {
 
                 // Draw the table
                 ImGui::TableHeadersRow();
-                for (const auto &[name, type] : PathTypes) {
+                for (const auto &[name, paths] : PathTypes) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(name);
 
                     ImGui::TableNextColumn();
-                    for (auto &path : fs::getDefaultPaths(type, true)){
+                    for (auto &path : paths->all()){
                         // Draw hyperlink to paths that exist or red text if they don't
                         if (wolv::io::fs::isDirectory(path)){
                             if (ImGuiExt::Hyperlink(wolv::util::toUTF8String(path).c_str())) {

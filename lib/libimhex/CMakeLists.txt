@@ -36,6 +36,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/logger.cpp
         source/helpers/tar.cpp
         source/helpers/debugging.cpp
+        source/helpers/default_paths.cpp
 
         source/test/tests.cpp
 

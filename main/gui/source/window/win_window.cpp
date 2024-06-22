@@ -1,11 +1,13 @@
 #include "window.hpp"
 
-#include "messaging.hpp"
 
 #if defined(OS_WINDOWS)
 
-    #include <hex/helpers/utils.hpp>
+    #include "messaging.hpp"
+
+#include <hex/helpers/utils.hpp>
     #include <hex/helpers/logger.hpp>
+    #include <hex/helpers/default_paths.hpp>
 
     #include <imgui.h>
     #include <imgui_internal.h>
@@ -352,7 +354,7 @@ namespace hex {
         }
 
         // Add plugin library folders to dll search path
-        for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {
+        for (const auto &path : paths::Libraries.read())  {
             if (std::fs::exists(path))
                 AddDllDirectory(path.c_str());
         }

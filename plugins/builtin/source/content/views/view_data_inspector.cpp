@@ -1,13 +1,12 @@
 #include "content/views/view_data_inspector.hpp"
 
-#include <hex/ui/imgui_imhex_extensions.h>
-
-#include <hex/providers/provider.hpp>
-
 #include <hex/api/achievement_manager.hpp>
+#include <hex/providers/provider.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <fonts/codicons_font.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>
@@ -134,7 +133,7 @@ namespace hex::plugin::builtin {
         m_runtime.setStartAddress(m_startAddress);
 
         // Loop over all files in the inspectors folder and execute them
-        for (const auto &folderPath : fs::getDefaultPaths(fs::ImHexPath::Inspectors)) {
+        for (const auto &folderPath : paths::Inspectors.read()) {
             for (const auto &entry: std::fs::recursive_directory_iterator(folderPath)) {
                 const auto &filePath = entry.path();
                 // Skip non-files and files that don't end with .hexpat

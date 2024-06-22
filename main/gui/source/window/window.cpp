@@ -13,6 +13,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
@@ -331,7 +332,7 @@ namespace hex {
 
                     ImGui::TableHeadersRow();
 
-                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Plugins, true)) {
+                    for (const auto &path : paths::Plugins.all()) {
                         const auto filePath = path / "builtin.hexplug";
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -867,8 +868,11 @@ namespace hex {
                     // If the key name is only one character long, use the ASCII value instead
                     // Otherwise the keyboard was set to a non-English layout and the key name
                     // is not the same as the ASCII value
-                    if (name.length() == 1) {
-                        key = std::toupper(name[0]);
+                    if (!name.empty()) {
+                        const std::uint8_t byte = name[0];
+                        if (name.length() == 1 && byte <= 0x7F) {
+                            key = std::toupper(byte);
+                        }
                     }
                 }
 

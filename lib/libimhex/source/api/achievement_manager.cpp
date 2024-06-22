@@ -2,6 +2,7 @@
 #include <hex/api/event_manager.hpp>
 
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -197,7 +198,7 @@ namespace hex {
     constexpr static auto AchievementsFile = "achievements.json";
 
     void AchievementManager::loadProgress() {
-        for (const auto &directory : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+        for (const auto &directory : paths::Config.read()) {
             auto path = directory / AchievementsFile;
 
             if (!wolv::io::fs::exists(path)) {
@@ -246,7 +247,7 @@ namespace hex {
         if (json.empty())
             return;
 
-        for (const auto &directory : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+        for (const auto &directory : paths::Config.write()) {
             auto path = directory / AchievementsFile;
 
             wolv::io::File file(path, wolv::io::File::Mode::Create);

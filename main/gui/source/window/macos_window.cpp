@@ -1,14 +1,14 @@
-#include <hex/api/project_file_manager.hpp>
-
 #include "window.hpp"
 
 #if defined(OS_MACOS)
 
+    #include <hex/api/project_file_manager.hpp>
     #include <hex/api/imhex_api.hpp>
     #include <hex/api/event_manager.hpp>
 
     #include <hex/helpers/utils_macos.hpp>
     #include <hex/helpers/logger.hpp>
+    #include <hex/helpers/default_paths.hpp>
 
     #include <cstdio>
     #include <unistd.h>
@@ -35,7 +35,7 @@ namespace hex {
         log::impl::enableColorPrinting();
 
         // Add plugin library folders to dll search path
-        for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {
+        for (const auto &path : paths::Libraries.read())  {
             if (std::fs::exists(path))
                 setenv("LD_LIBRARY_PATH", hex::format("{};{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
         }

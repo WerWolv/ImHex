@@ -7,13 +7,16 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
+
 #include <hex/helpers/logger.hpp>
-#include <wolv/utils/string.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <romfs/romfs.hpp>
+
 #include <wolv/io/file.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::fonts {
 
@@ -214,7 +217,7 @@ namespace hex::fonts {
 
             // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
             if (fontFile.empty()) {
-                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
+                for (const auto &dir : paths::Resources.read()) {
                     auto path = dir / "font.ttf";
                     if (wolv::io::fs::exists(path)) {
                         log::info("Loading custom font from {}", wolv::util::toUTF8String(path));

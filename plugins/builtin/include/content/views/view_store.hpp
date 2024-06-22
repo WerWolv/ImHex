@@ -7,6 +7,7 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <future>
 #include <string>
@@ -40,7 +41,7 @@ namespace hex::plugin::builtin {
     struct StoreCategory {
         UnlocalizedString unlocalizedName;
         std::string requestName;
-        fs::ImHexPath path;
+        const paths::impl::DefaultPath* path;
         std::vector<StoreEntry> entries;
         std::function<void()> downloadCallback;
     };
@@ -66,10 +67,10 @@ namespace hex::plugin::builtin {
         void refresh();
         void parseResponse();
 
-        void addCategory(const UnlocalizedString &unlocalizedName, const std::string &requestName, fs::ImHexPath path, std::function<void()> downloadCallback = []{});
+        void addCategory(const UnlocalizedString &unlocalizedName, const std::string &requestName, const paths::impl::DefaultPath *path, std::function<void()> downloadCallback = []{});
 
-        bool download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url);
-        bool remove(fs::ImHexPath pathType, const std::string &fileName);
+        bool download(const paths::impl::DefaultPath *pathType, const std::string &fileName, const std::string &url);
+        bool remove(const paths::impl::DefaultPath *pathType, const std::string &fileName);
 
     private:
         HttpRequest m_httpRequest = HttpRequest("GET", "");

@@ -75,24 +75,29 @@ namespace hex::plugin::builtin {
         void drawSidebar(ImVec2 dockSpaceSize, ImVec2 sidebarPos, float sidebarWidth) {
             static i32 openWindow = -1;
             u32 index = 0;
+            u32 drawIndex = 0;
             ImGui::PushID("SideBarWindows");
             for (const auto &[icon, callback, enabledCallback] : ContentRegistry::Interface::impl::getSidebarItems()) {
-                ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * index);
+                ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * drawIndex);
 
                 ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-                ImGui::BeginDisabled(!(ImHexApi::Provider::isValid() && enabledCallback()));
-                {
-                    if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
-                        if (static_cast<u32>(openWindow) == index)
-                            openWindow = -1;
-                        else
-                            openWindow = index;
+
+                if (enabledCallback()) {
+                    drawIndex += 1;
+                    ImGui::BeginDisabled(!ImHexApi::Provider::isValid());
+                    {
+                        if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
+                            if (static_cast<u32>(openWindow) == index)
+                                openWindow = -1;
+                            else
+                                openWindow = index;
+                        }
                     }
+                    ImGui::EndDisabled();
                 }
-                ImGui::EndDisabled();
 
                 ImGui::PopStyleColor(3);
 
@@ -122,7 +127,7 @@ namespace hex::plugin::builtin {
                 }
 
                 ImGui::NewLine();
-                index++;
+                index += 1;
             }
             ImGui::PopID();
         }

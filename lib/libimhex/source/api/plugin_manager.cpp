@@ -5,6 +5,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/auto_reset.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -306,7 +307,7 @@ namespace hex {
 
     bool PluginManager::loadLibraries() {
         bool success = true;
-        for (const auto &loadPath : fs::getDefaultPaths(fs::ImHexPath::Libraries))
+        for (const auto &loadPath : paths::Libraries.read())
             success = PluginManager::loadLibraries(loadPath) && success;
 
         return success;

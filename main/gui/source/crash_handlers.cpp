@@ -2,19 +2,19 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
-#include <init/tasks.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <wolv/utils/string.hpp>
 
 #include <window.hpp>
-
-#include <nlohmann/json.hpp>
-
+#include <init/tasks.hpp>
 #include <stacktrace.hpp>
+
 #include <llvm/Demangle/Demangle.h>
+#include <nlohmann/json.hpp>
 
 #include <csignal>
 #include <exception>
@@ -48,7 +48,7 @@ namespace hex::crash {
             { "project", wolv::io::fs::toNormalizedPathString(ProjectFile::getPath()) },
         };
         
-        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+        for (const auto &path : paths::Config.write()) {
             wolv::io::File file(path / "crash.json", wolv::io::File::Mode::Create);
             if (file.isValid()) {
                 file.writeString(crashData.dump(4));
@@ -194,7 +194,7 @@ namespace hex::crash {
 
                 // Create crash backup if any providers are open
                 if (ImHexApi::Provider::isValid()) {
-                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                    for (const auto &path : paths::Config.write()) {
                         if (ProjectFile::store(path / CrashBackupFileName, false))
                             break;
                     }

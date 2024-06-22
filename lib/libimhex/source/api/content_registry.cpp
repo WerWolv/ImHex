@@ -4,6 +4,7 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/data_processor/node.hpp>
@@ -101,7 +102,7 @@ namespace hex {
 
                 void load() {
                     bool loaded = false;
-                    for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                    for (const auto &dir : paths::Config.read()) {
                         wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Read);
 
                         if (file.isValid()) {
@@ -142,7 +143,7 @@ namespace hex {
                     if (result.empty()) {
                         return;
                     }
-                    for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                    for (const auto &dir : paths::Config.write()) {
                         wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
 
                         if (file.isValid()) {
@@ -153,7 +154,7 @@ namespace hex {
                 }
 
                 void clear() {
-                    for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                    for (const auto &dir : paths::Config.write()) {
                         wolv::io::fs::remove(dir / SettingsFile);
                     }
                 }
@@ -595,7 +596,7 @@ namespace hex {
                 );
             }
 
-            runtime.setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude) | fs::getDefaultPaths(fs::ImHexPath::Patterns));
+            runtime.setIncludePaths(paths::PatternsInclude.read() | paths::Patterns.read());
 
             for (const auto &[ns, name, paramCount, callback, dangerous] : impl::getFunctions()) {
                 if (dangerous)

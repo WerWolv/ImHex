@@ -1,13 +1,15 @@
 #include <hex/api/layout_manager.hpp>
 
+#include <hex/api/content_registry.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/default_paths.hpp>
+
 #include <wolv/utils/string.hpp>
 
 #include <imgui.h>
-#include <hex/api/content_registry.hpp>
-#include <hex/ui/view.hpp>
 
 namespace hex {
 
@@ -40,10 +42,7 @@ namespace hex {
         fileName += ".hexlyt";
 
         std::fs::path layoutPath;
-        for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Layouts)) {
-            if (!hex::fs::isPathWritable(path))
-                continue;
-
+        for (const auto &path : paths::Layouts.write()) {
             layoutPath = path / fileName;
         }
 
@@ -109,7 +108,7 @@ namespace hex {
     void LayoutManager::reload() {
         s_layouts->clear();
 
-        for (const auto &directory : hex::fs::getDefaultPaths(fs::ImHexPath::Layouts)) {
+        for (const auto &directory : paths::Layouts.read()) {
             for (const auto &entry : std::fs::directory_iterator(directory)) {
                 const auto &path = entry.path();
 

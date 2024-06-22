@@ -3,6 +3,7 @@
 
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 using namespace std::literals::string_literals;
 
@@ -46,7 +47,7 @@ std::optional<std::fs::path> downloadUpdate(const std::string &url) {
 
         // Loop over all available paths
         wolv::io::File file;
-        for (const auto &path : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Config)) {
+        for (const auto &path : hex::paths::Config.write()) {
             // Remove any existing update files
             wolv::io::fs::remove(path / UpdateFileName);
 

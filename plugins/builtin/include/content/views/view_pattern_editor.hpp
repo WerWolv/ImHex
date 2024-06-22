@@ -1,8 +1,10 @@
  #pragma once
 
+#include <hex/api/achievement_manager.hpp>
 #include <hex/ui/view.hpp>
-#include <hex/providers/provider.hpp>
 #include <hex/ui/popup.hpp>
+#include <hex/providers/provider.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <pl/pattern_language.hpp>
 #include <pl/core/errors/error.hpp>
@@ -14,8 +16,7 @@
 #include <functional>
 
 #include <TextEditor.h>
-#include "popups/popup_file_chooser.hpp"
-#include "hex/api/achievement_manager.hpp"
+#include <popups/popup_file_chooser.hpp>
 
 namespace pl::ptrn { class Pattern; }
 
@@ -261,9 +262,9 @@ namespace hex::plugin::builtin {
         void registerMenuItems();
         void registerHandlers();
 
-        std::function<void()> importPatternFile = [&] {
+        std::function<void()> m_importPatternFile = [this] {
             auto provider = ImHexApi::Provider::get();
-            const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Patterns);
+            const auto basePaths = paths::Patterns.read();
             std::vector<std::fs::path> paths;
 
             for (const auto &imhexPath : basePaths) {
@@ -284,7 +285,7 @@ namespace hex::plugin::builtin {
             );
         };
 
-        std::function<void()> exportPatternFile = [&] {
+        std::function<void()> m_exportPatternFile = [this] {
             fs::openFileBrowser(
                     fs::DialogMode::Save, { {"Pattern", "hexpat"} },
                     [this](const auto &path) {

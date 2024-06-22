@@ -7,6 +7,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
 
@@ -19,7 +20,6 @@
 #include <popups/popup_file_chooser.hpp>
 #include <content/popups/popup_blocking_task.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
-#include <wolv/utils/lock.hpp>
 #include <pl/patterns/pattern.hpp>
 
 using namespace std::literals::string_literals;
@@ -1053,7 +1053,7 @@ namespace hex::plugin::builtin {
         /* Load Encoding File */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.custom_encoding" }, "あ", 5050, Shortcut::None,
                                                 [this]{
-                                                    const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Encodings);
+                                                    const auto basePaths = paths::Encodings.read();
                                                     std::vector<std::fs::path> paths;
                                                     for (const auto &path : basePaths) {
                                                         std::error_code error;

@@ -5,6 +5,7 @@
 #include <hex/api/plugin_manager.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <wolv/utils/guards.hpp>
 
@@ -60,7 +61,7 @@ namespace hex::init {
 
         // Load all plugins but don't initialize them
         PluginManager::loadLibraries();
-        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
+        for (const auto &dir : paths::Plugins.read()) {
             PluginManager::load(dir);
         }
 

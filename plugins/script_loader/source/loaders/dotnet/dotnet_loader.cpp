@@ -23,6 +23,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/default_paths.hpp>
+
 #include <toasts/toast_notification.hpp>
 
 extern "C" void igSetCurrentContext(ImGuiContext* ctx);
@@ -57,7 +59,7 @@ namespace hex::script::loader {
                 auto netHostLibrary = loadLibrary("libnethost.so");
             #elif defined(OS_MACOS)
                 void *netHostLibrary = nullptr;
-                for (const auto &pluginPath : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
+                for (const auto &pluginPath : paths::Plugins.read()) {
                     auto frameworksPath = pluginPath.parent_path().parent_path() / "Frameworks";
 
                     netHostLibrary = loadLibrary((frameworksPath / "libnethost.dylib").c_str());
@@ -65,7 +67,7 @@ namespace hex::script::loader {
                         break;
                 }
                 if (netHostLibrary == nullptr) {
-                    for (const auto &librariesPath : fs::getDefaultPaths(fs::ImHexPath::Libraries)) {
+                    for (const auto &librariesPath : paths::Libraries.read()) {
                         netHostLibrary = loadLibrary((librariesPath / "libnethost.dylib").c_str());
                         if (netHostLibrary != nullptr)
                             break;
@@ -165,7 +167,7 @@ namespace hex::script::loader {
             return false;
         }
 
-        for (const auto& path : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Plugins)) {
+        for (const auto& path : paths::Plugins.read()) {
             auto assemblyLoader = path / "AssemblyLoader.dll";
             if (!wolv::io::fs::exists(assemblyLoader))
                 continue;
@@ -219,7 +221,7 @@ namespace hex::script::loader {
     bool DotNetLoader::loadAll() {
         this->clearScripts();
 
-        for (const auto &imhexPath : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Scripts)) {
+        for (const auto &imhexPath : paths::Scripts.read()) {
             auto directoryPath = imhexPath / "custom" / "dotnet";
             if (!wolv::io::fs::exists(directoryPath))
                 wolv::io::fs::createDirectories(directoryPath);

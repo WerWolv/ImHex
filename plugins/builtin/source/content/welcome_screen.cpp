@@ -15,6 +15,7 @@
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <hex/api/project_file_manager.hpp>
 
@@ -87,8 +88,8 @@ namespace hex::plugin::builtin {
 
                             // Anonymize the log file
                             {
-                                for (u32 pathType = 0; pathType < u32(fs::ImHexPath::END); pathType++) {
-                                    for (auto &folder : fs::getDefaultPaths(static_cast<fs::ImHexPath>(pathType))) {
+                                for (const auto &paths : paths::All) {
+                                    for (auto &folder : paths->all()) {
                                         auto parent = wolv::util::toUTF8String(folder.parent_path());
                                         data = wolv::util::replaceStrings(data, parent, "<*****>");
                                     }
@@ -546,7 +547,7 @@ namespace hex::plugin::builtin {
         constexpr static auto BackupFileName = "crash_backup.hexproj";
         bool hasCrashed = false;
 
-        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+        for (const auto &path : paths::Config.read()) {
             if (auto crashFilePath = std::fs::path(path) / CrashFileName; wolv::io::fs::exists(crashFilePath)) {
                 hasCrashed = true;
                 
@@ -646,7 +647,7 @@ namespace hex::plugin::builtin {
 
         // Load info banner texture either locally or from the server
         TaskManager::doLater([] {
-            for (const auto &defaultPath : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
+            for (const auto &defaultPath : paths::Resources.read()) {
                 const auto infoBannerPath = defaultPath / "info_banner.png";
                 if (wolv::io::fs::exists(infoBannerPath)) {
                     s_infoBannerTexture = ImGuiExt::Texture::fromImage(infoBannerPath, ImGuiExt::Texture::Filter::Linear);

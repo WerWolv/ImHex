@@ -8,6 +8,7 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/content_registry.hpp>
 #include <hex/api/event_manager.hpp>
 
 #include <hex/providers/provider.hpp>
@@ -177,6 +178,10 @@ namespace hex::plugin::builtin {
     }
 
     void registerProjectHandlers() {
-        hex::ProjectFile::setProjectFunctions(load, store);    
+        hex::ProjectFile::setProjectFunctions(load, store);
+
+        ContentRegistry::Interface::addSidebarItem(ICON_VS_PROJECT, [] {
+            ImGui::TextUnformatted("Test");
+        });
     }
 }

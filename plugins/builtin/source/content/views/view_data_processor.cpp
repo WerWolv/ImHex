@@ -7,6 +7,7 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <imnodes.h>
 #include <imnodes_internal.h>
@@ -127,7 +128,7 @@ namespace hex::plugin::builtin {
         void process() override {
             switch (this->getType()) {
                 case dp::Attribute::Type::Integer: m_value = this->getIntegerOnInput(0); break;
-                case dp::Attribute::Type::Float:   m_value = this->getFloatOnInput(0); break;
+                case dp::Attribute::Type::Float:   m_value = static_cast<long double>(this->getFloatOnInput(0)); break;
                 case dp::Attribute::Type::Buffer:  m_value = this->getBufferOnInput(0); break;
             }
         }
@@ -568,7 +569,7 @@ namespace hex::plugin::builtin {
         m_customNodes.clear();
 
         // Loop over all custom node folders
-        for (const auto &basePath : fs::getDefaultPaths(fs::ImHexPath::Nodes)) {
+        for (const auto &basePath : paths::Nodes.read()) {
             // Loop over all files in the folder
             for (const auto &entry : std::fs::recursive_directory_iterator(basePath)) {
                 // Skip files that are not .hexnode files

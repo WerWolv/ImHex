@@ -3,16 +3,17 @@
 #include <hex/api/event_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 
-#include <wolv/utils/guards.hpp>
-#include <wolv/net/socket_server.hpp>
-
 #include <hex/helpers/fmt.hpp>
-#include <fmt/chrono.h>
+#include <hex/helpers/default_paths.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/providers/provider.hpp>
 
-#include <nlohmann/json.hpp>
+#include <wolv/utils/guards.hpp>
 #include <wolv/utils/string.hpp>
+#include <wolv/net/socket_server.hpp>
+
+#include <fmt/chrono.h>
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -82,7 +83,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
+                    for (const auto &path : paths::Backups.write()) {
                         const auto backupPath = path / hex::format("auto_backup.{:%y%m%d_%H%M%S}.hexproj", fmt::gmtime(std::chrono::system_clock::now()));
                         if (ProjectFile::store(backupPath, false)) {
                             log::info("Created auto-backup file '{}'", wolv::util::toUTF8String(backupPath));

@@ -1,4 +1,3 @@
-
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -7,6 +6,7 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <fmt/chrono.h>
@@ -41,7 +41,7 @@ namespace hex::plugin::builtin::recent {
             };
         public:
             PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups", true, true) {
-                for (const auto &backupPath : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
+                for (const auto &backupPath : paths::Backups.read()) {
                     for (const auto &entry : std::fs::directory_iterator(backupPath)) {
                         if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
                             wolv::io::File backupFile(entry.path(), wolv::io::File::Mode::Read);
@@ -99,7 +99,7 @@ namespace hex::plugin::builtin::recent {
                     return;
 
                 // The recent provider is saved to every "recent" directory
-                for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
+                for (const auto &recentPath : paths::Recent.write()) {
                     wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
                     if (!recentFile.isValid())
                         continue;
@@ -129,7 +129,7 @@ namespace hex::plugin::builtin::recent {
                     return;
 
                 // The recent provider is saved to every "recent" directory
-                for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
+                for (const auto &recentPath : paths::Recent.write()) {
                     wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
                     if (!recentFile.isValid())
                         continue;
@@ -160,7 +160,7 @@ namespace hex::plugin::builtin::recent {
 
             // Query all recent providers
             std::vector<std::fs::path> recentFilePaths;
-            for (const auto &folder : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
+            for (const auto &folder : paths::Recent.read()) {
                 for (const auto &entry : std::fs::directory_iterator(folder)) {
                     if (entry.is_regular_file())
                         recentFilePaths.push_back(entry.path());
@@ -203,7 +203,7 @@ namespace hex::plugin::builtin::recent {
             std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentEntries));
 
             s_autoBackupsFound = false;
-            for (const auto &backupPath : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
+            for (const auto &backupPath : paths::Backups.read()) {
                 for (const auto &entry : std::fs::directory_iterator(backupPath)) {
                     if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
                         s_autoBackupsFound = true;
@@ -347,7 +347,7 @@ namespace hex::plugin::builtin::recent {
                     s_recentEntries.clear();
 
                     // Remove all recent files
-                    for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
+                    for (const auto &recentPath : paths::Recent.write()) {
                         for (const auto &entry : std::fs::directory_iterator(recentPath))
                             std::fs::remove(entry.path());
                     }

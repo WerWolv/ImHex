@@ -1,8 +1,8 @@
 #include "content/views/view_constants.hpp"
 
-#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <wolv/utils/string.hpp>
 #include <wolv/io/file.hpp>
@@ -22,7 +22,7 @@ namespace hex::plugin::builtin {
         m_constants.clear();
         m_filterIndices.clear();
 
-        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Constants)) {
+        for (const auto &path : paths::Constants.read()) {
             if (!wolv::io::fs::exists(path)) continue;
 
             std::error_code error;

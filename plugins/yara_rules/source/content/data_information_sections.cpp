@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <hex/api/task_manager.hpp>
+#include <hex/helpers/default_paths.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <content/yara_rule.hpp>
@@ -25,7 +26,7 @@ namespace hex::plugin::yara {
         };
 
         void process(Task &task, prv::Provider *provider, Region region) override {
-            for (const auto &yaraSignaturePath : fs::getDefaultPaths(fs::ImHexPath::YaraAdvancedAnalysis)) {
+            for (const auto &yaraSignaturePath : paths::YaraAdvancedAnalysis.read()) {
                 for (const auto &ruleFilePath : std::fs::recursive_directory_iterator(yaraSignaturePath)) {
                     wolv::io::File file(ruleFilePath.path(), wolv::io::File::Mode::Read);
                     if (!file.isValid())

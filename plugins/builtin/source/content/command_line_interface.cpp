@@ -3,19 +3,19 @@
 #include <content/providers/file_provider.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event_manager.hpp>
+#include <hex/api/plugin_manager.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <hex/helpers/fmt.hpp>
-
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/utils.hpp>
-#include <romfs/romfs.hpp>
+#include <hex/helpers/default_paths.hpp>
 
-#include <hex/api/plugin_manager.hpp>
-#include <hex/api/task_manager.hpp>
 #include <hex/subcommands/subcommands.hpp>
 
+#include <romfs/romfs.hpp>
 #include <wolv/utils/string.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
 
@@ -308,7 +308,7 @@ namespace hex::plugin::builtin {
         if (processedArgs.empty()) {
             processedArgs.emplace_back("--help");
         } else {
-            for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::PatternsInclude))
+            for (const auto &path : paths::PatternsInclude.read())
                 processedArgs.emplace_back(hex::format("--includes={}", wolv::util::toUTF8String(path)));
         }
 

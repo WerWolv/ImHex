@@ -1,7 +1,5 @@
 #pragma once
 
-#include <hex.hpp>
-
 #include <string>
 #include <vector>
 #include <filesystem>
@@ -31,36 +29,7 @@ namespace hex::fs {
     void openFolderExternal(const std::fs::path &dirPath);
     void openFolderWithSelectionExternal(const std::fs::path &selectedFilePath);
 
-    enum class ImHexPath : u32 {
-        Patterns = 0,
-        PatternsInclude,
-        Magic,
-        Plugins,
-        Yara,
-        YaraAdvancedAnalysis,
-        Config,
-        Backups,
-        Resources,
-        Constants,
-        Encodings,
-        Logs,
-        Recent,
-        Scripts,
-        Inspectors,
-        Themes,
-        Libraries,
-        Nodes,
-        Layouts,
-        Workspaces,
-
-        END
-    };
 
     bool isPathWritable(const std::fs::path &path);
 
-    std::vector<std::fs::path> getDefaultPaths(ImHexPath path, bool listNonExisting = false);
-
-    // Temporarily expose these for the migration function
-    std::vector<std::fs::path> getDataPaths();
-    std::vector<std::fs::path> appendPath(std::vector<std::fs::path> paths, const std::fs::path &folder);
 }

@@ -3,6 +3,7 @@
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -25,7 +26,7 @@ namespace hex {
             .builtin = false
         }).first;
 
-        for (const auto &workspaceFolder : fs::getDefaultPaths(fs::ImHexPath::Workspaces)) {
+        for (const auto &workspaceFolder : paths::Workspaces.write()) {
             const auto workspacePath = workspaceFolder / (name + ".hexws");
             if (exportToFile(workspacePath)) {
                 s_currentWorkspace->second.path = workspacePath;
@@ -157,7 +158,7 @@ namespace hex {
     void WorkspaceManager::reload() {
         WorkspaceManager::reset();
 
-        for (const auto &defaultPath : fs::getDefaultPaths(fs::ImHexPath::Workspaces)) {
+        for (const auto &defaultPath : paths::Workspaces.read()) {
             for (const auto &entry : std::fs::directory_iterator(defaultPath)) {
                 if (!entry.is_regular_file()) {
                     continue;
