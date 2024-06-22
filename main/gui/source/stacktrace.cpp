@@ -192,8 +192,12 @@ namespace {
     namespace hex::stacktrace {
 
         void initialize() { }
-        std::vector<StackFrame> getStackTrace() { return { StackFrame { "??", "Stacktrace collecting not available!", 0 } }; }
-
+        StackTraceResult getStackTrace() {
+            return StackTraceResult {
+                {StackFrame { "??", "Stacktrace collecting not available!", 0 }},
+                "none"
+            };
+        }
     }
     
 #endif
