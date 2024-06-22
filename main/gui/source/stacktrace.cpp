@@ -100,7 +100,7 @@ namespace {
 
             SymCleanup(process);
 
-            return StackTraceResult{ stackTrace, "Windows" };
+            return StackTraceResult{ stackTrace, "StackWalk" };
         }
 
     }
