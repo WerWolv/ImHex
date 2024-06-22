@@ -63,7 +63,9 @@ namespace hex::crash {
     }
 
     static void printStackTrace() {
-        for (const auto &stackFrame : stacktrace::getStackTrace()) {
+        auto stackTraceResult = stacktrace::getStackTrace();
+        log::fatal("Printing stacktrace using implementation '{}'", stackTraceResult.implementationName);
+        for (const auto &stackFrame : stackTraceResult.stackFrames) {
             if (stackFrame.line == 0)
                 log::fatal("  ({}) | {}", stackFrame.file, stackFrame.function);
             else
