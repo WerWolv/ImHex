@@ -29,7 +29,7 @@ namespace {
 
         }
 
-        std::vector<StackFrame> getStackTrace() {
+        StackTraceResult getStackTrace() {
             std::vector<StackFrame> stackTrace;
 
             HANDLE process = GetCurrentProcess();
@@ -100,7 +100,7 @@ namespace {
 
             SymCleanup(process);
 
-            return stackTrace;
+            return StackTraceResult{ stackTrace, "Windows" };
         }
 
     }
@@ -119,7 +119,7 @@ namespace {
 
             }
 
-            std::vector<StackFrame> getStackTrace() {
+            StackTraceResult getStackTrace() {
                 static std::vector<StackFrame> result;
 
                 std::array<void*, 128> addresses = {};
@@ -135,7 +135,7 @@ namespace {
                     result.push_back(StackFrame { std::move(fileName), std::move(demangledName), 0 });
                 }
 
-                return result;
+                return StackTraceResult{ result, "execinfo" };
             }
 
         }
@@ -162,7 +162,7 @@ namespace {
                 }
             }
 
-            std::vector<StackFrame> getStackTrace() {
+            StackTraceResult getStackTrace() {
                 static std::vector<StackFrame> result;
 
                 result.clear();
@@ -180,7 +180,7 @@ namespace {
 
                 }
 
-                return result;
+                return StackTraceResult{ result, "backtrace" };
             }
 
         }
