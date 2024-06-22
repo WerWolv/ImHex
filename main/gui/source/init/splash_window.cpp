@@ -56,6 +56,7 @@ namespace hex::init {
             log::debug("OpenGL Shading Language Version: '{}'", glShadingLanguageVersion);
 
             ImHexApi::System::impl::setGPUVendor(glVendor);
+            ImHexApi::System::impl::setGLRenderer(glRenderer);
         }
 
         RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){

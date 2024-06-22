@@ -532,6 +532,11 @@ namespace hex {
                 s_gpuVendor = vendor;
             }
 
+            static AutoReset<std::string> s_glRenderer;
+            void setGLRenderer(const std::string &renderer) {
+                s_glRenderer = renderer;
+            }
+
             static AutoReset<std::map<std::string, std::string>> s_initArguments;
             void addInitArgument(const std::string &key, const std::string &value) {
                 static std::mutex initArgumentsMutex;
@@ -674,6 +679,10 @@ namespace hex {
 
         const std::string &getGPUVendor() {
             return impl::s_gpuVendor;
+        }
+
+        const std::string &getGLRenderer() {
+            return impl::s_glRenderer;
         }
 
         bool isPortableVersion() {

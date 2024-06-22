@@ -656,22 +656,46 @@ namespace hex::plugin::builtin {
 
 
         bool getDefaultBorderlessWindowMode() {
-            bool result = false;
+            bool result;
 
-            #if defined (OS_WINDOWS) || defined(OS_MACOS)
+            #if defined (OS_WINDOWS)
                 result = true;
-            #endif
 
-            // Intel's OpenGL driver has weird bugs that cause the drawn window to be offset to the bottom right.
-            // This can be fixed by either using Mesa3D's OpenGL Software renderer or by simply disabling it.
-            // If you want to try if it works anyways on your GPU, set the hex.builtin.setting.interface.force_borderless_window_mode setting to 1
-            if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+                // Intel's OpenGL driver is extremely buggy. Its issues can manifest in lots of different ways
+                // such as "colorful snow" appearing on the screen or, the most annoying issue,
+                // it might draw the window content slightly offset to the bottom right as seen in issue #1625
+
+                // The latter issue can be circumvented by using the native OS decorations or by using the software renderer.
+                // This code here tries to detect if the user has a problematic Intel GPU and if so, it will default to the native OS decorations.
+                // This doesn't actually solve the issue at all but at least it makes ImHex usable on these GPUs.
                 const bool isIntelGPU = hex::containsIgnoreCase(ImHexApi::System::getGPUVendor(), "Intel");
+                if (isIntelGPU) {
+                    log::warn("Intel GPU detected! Intel's OpenGL GPU drivers are extremely buggy and can cause issues when using ImHex. If you experience any rendering bugs, please enable the Native OS Decoration setting or try the software rendererd -NoGPU release.");
 
-                result = !isIntelGPU;
-                if (isIntelGPU)
-                    log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please enable the Native OS Decoration setting or try the software rendererd -NoGPU release.");
-            }
+                    // Non-exhaustive list of bad GPUs.
+                    // If more GPUs are found to be problematic, they can be added here.
+                    constexpr static std::array BadGPUs = {
+                        // Sandy Bridge Series, Second Gen HD Graphics
+                        "HD Graphics 2000",
+                        "HD Graphics 3000"
+                    };
+
+                    const auto &glRenderer = ImHexApi::System::getGLRenderer();
+                    for (const auto &badGPU : BadGPUs) {
+                        if (hex::containsIgnoreCase(glRenderer, badGPU)) {
+                            result = false;
+                            break;
+                        }
+                    }
+                }
+
+            #elif defined(OS_MACOS)
+                result = true;
+            #elif defined(OS_LINUX)
+                // On Linux, things like Window snapping and moving is hard to implement
+                // without hacking e.g. libdecor, therefor we default to the native window decorations.
+                result = false;
+            #endif
 
             return result;
         }

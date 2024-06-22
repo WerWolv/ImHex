@@ -434,6 +434,7 @@ namespace hex {
                 void setInitialWindowProperties(InitialWindowProperties properties);
 
                 void setGPUVendor(const std::string &vendor);
+                void setGLRenderer(const std::string &renderer);
 
                 void addInitArgument(const std::string &key, const std::string &value = { });
 
@@ -572,6 +573,12 @@ namespace hex {
              * @return The current GPU vendor
              */
             const std::string& getGPUVendor();
+
+            /**
+             * @brief Gets the current GPU vendor
+             * @return The current GPU vendor
+             */
+            const std::string& getGLRenderer();
 
             /**
              * @brief Checks if ImHex is running in portable mode
