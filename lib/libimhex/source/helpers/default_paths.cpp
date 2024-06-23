@@ -84,7 +84,9 @@ namespace hex::paths {
         #endif
     }
 
-    static std::vector<std::fs::path> appendPath(std::vector<std::fs::path> paths, const std::fs::path &folder) {
+    static std::vector<std::fs::path> appendPath(std::vector<std::fs::path> paths, std::fs::path folder) {
+        folder.make_preferred();
+        
         for (auto &path : paths)
             path = path / folder;
 
