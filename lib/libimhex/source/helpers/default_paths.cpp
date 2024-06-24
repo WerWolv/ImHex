@@ -131,11 +131,11 @@ namespace hex::paths {
         }
 
         std::vector<std::fs::path> DataPath::all() const {
-            return appendPath(getConfigPaths(true), m_postfix);
+            return appendPath(getDataPaths(true), m_postfix);
         }
 
         std::vector<std::fs::path> DataPath::write() const {
-            auto result = appendPath(getConfigPaths(false), m_postfix);
+            auto result = appendPath(getDataPaths(false), m_postfix);
 
             std::erase_if(result, [](const auto &entryPath) {
                 return !hex::fs::isPathWritable(entryPath);
