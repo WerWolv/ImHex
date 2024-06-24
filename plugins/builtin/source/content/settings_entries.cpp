@@ -695,6 +695,8 @@ namespace hex::plugin::builtin {
                 // On Linux, things like Window snapping and moving is hard to implement
                 // without hacking e.g. libdecor, therefor we default to the native window decorations.
                 result = false;
+            #else
+                result = false;
             #endif
 
             return result;
