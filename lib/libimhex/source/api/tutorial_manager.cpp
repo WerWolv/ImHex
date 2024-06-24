@@ -142,20 +142,28 @@ namespace hex {
     }
 
     void TutorialManager::drawHighlights() {
-        if (s_helpHoverActive && s_hoveredId != 0) {
-            ImGui::GetForegroundDrawList()->AddRectFilled(s_hoveredRect.Min, s_hoveredRect.Max, 0x30FFFFFF);
+        if (s_helpHoverActive) {
+            const auto &drawList = ImGui::GetForegroundDrawList();
+            drawList->AddText(ImGui::GetMousePos() + scaled({ 10, -5, }), ImGui::GetColorU32(ImGuiCol_Text), "?");
 
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                s_helpHoverActive = false;
+            const bool mouseClicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+            if (s_hoveredId != 0) {
+                drawList->AddRectFilled(s_hoveredRect.Min, s_hoveredRect.Max, 0x30FFFFFF);
 
-                auto it = s_interactiveHelpItems->find(s_hoveredId);
-                if (it != s_interactiveHelpItems->end()) {
-                    it->second();
+                if (mouseClicked) {
+                    auto it = s_interactiveHelpItems->find(s_hoveredId);
+                    if (it != s_interactiveHelpItems->end()) {
+                        it->second();
+                    }
                 }
+
+                s_hoveredId = 0;
+                s_hoveredRect = {};
             }
 
-            s_hoveredId = 0;
-            s_hoveredRect = {};
+            if (mouseClicked || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                s_helpHoverActive = false;
+            }
         }
 
         for (const auto &[rect, unlocalizedText] : *s_highlightDisplays) {
