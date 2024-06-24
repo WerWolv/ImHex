@@ -77,6 +77,8 @@ namespace hex {
 
         EventWindowInitialized::post();
         EventImHexStartupFinished::post();
+
+        TutorialManager::init();
     }
 
     Window::~Window() {

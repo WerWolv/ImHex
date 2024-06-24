@@ -119,6 +119,8 @@ namespace hex {
             decltype(m_steps)::iterator m_currentStep, m_latestStep;
         };
 
+        static void init();
+
         /**
          * @brief Gets a list of all tutorials
          * @return List of all tutorials
@@ -144,6 +146,10 @@ namespace hex {
          * @param unlocalizedName Name of tutorial to start
          */
         static void startTutorial(const UnlocalizedString &unlocalizedName);
+
+        static void startHelpHover();
+        static void addInteractiveHelpText(std::initializer_list<std::variant<Lang, std::string, int>> &&ids, UnlocalizedString unlocalizedString);
+        static void addInteractiveHelpLink(std::initializer_list<std::variant<Lang, std::string, int>> &&ids, std::string link);
 
 
         /**

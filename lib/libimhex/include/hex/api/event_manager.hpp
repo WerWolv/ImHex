@@ -275,6 +275,7 @@ namespace hex {
     EVENT_DEF_NO_LOG(EventFrameBegin);
     EVENT_DEF_NO_LOG(EventFrameEnd);
     EVENT_DEF_NO_LOG(EventSetTaskBarIconState, u32, u32, u32);
+    EVENT_DEF_NO_LOG(EventImGuiElementRendered, ImGuiID, const std::array<float, 4>&)
 
     EVENT_DEF(RequestAddInitTask, std::string, bool, std::function<bool()>);
     EVENT_DEF(RequestAddExitTask, std::string, std::function<bool()>);

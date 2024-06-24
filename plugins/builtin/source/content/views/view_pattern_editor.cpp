@@ -1527,7 +1527,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("{} ", "hex.ui.common.comment"_lang);
                         ImGui::TableNextColumn();
-                        ImGui::TextWrapped(" \"%s\"", comment.c_str());
+                        ImGuiExt::TextFormattedWrapped(" \"{}\"", comment);
                     }
 
                     ImGui::EndTable();
