@@ -73,11 +73,12 @@ namespace hex {
 
             explicit Event(Callback func) noexcept : m_func(std::move(func)) { }
 
-            void operator()(std::string_view eventName, Params... params) const {
+            template<typename E>
+            void call(Params... params) const {
                 try {
                     m_func(params...);
                 } catch (const std::exception &e) {
-                    log::error("An exception occurred while handling event {}: {}", eventName, e.what());
+                    log::error("An exception occurred while handling event {}: {}", wolv::type::getTypeName<E>(), e.what());
                     throw;
                 }
             }
@@ -180,12 +181,12 @@ namespace hex {
 
             for (const auto &[id, event] : getEvents()) {
                 if (id == E::Id) {
-                    (*static_cast<E *const>(event.get()))(wolv::type::getTypeName<E>(), std::forward<decltype(args)>(args)...);
+                    (*static_cast<E *const>(event.get())).template call<E>(std::forward<decltype(args)>(args)...);
                 }
             }
 
             #if defined (DEBUG)
-                if (E::ShouldLog)
+                if constexpr (E::ShouldLog)
                     log::debug("Event posted: '{}'", wolv::type::getTypeName<E>());
             #endif
         }
