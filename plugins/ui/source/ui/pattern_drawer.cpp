@@ -108,9 +108,9 @@ namespace hex::ui {
                 ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
             } else {
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset(), pattern.getBitOffsetForDisplay());
+                ImGuiExt::TextFormatted("0x{0:08X}.{1}", pattern.getOffset(), pattern.getBitOffsetForDisplay());
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset() + pattern.getSize(), pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1));
+                ImGuiExt::TextFormatted("0x{0:08X}.{1}", pattern.getOffset() + pattern.getSize(), (pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1)) % 8);
             }
         }
 
@@ -151,7 +151,9 @@ namespace hex::ui {
                 drawSizeColumnForBitfieldMember(*bitfieldMember);
             else {
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("0x{0:04X}", pattern.getSize());
+
+                auto size = pattern.getSize();
+                ImGuiExt::TextFormatted("{0:d} {1}", size, size == 1 ? "byte" : "bytes");
             }
         }
 
@@ -287,7 +289,7 @@ namespace hex::ui {
     void PatternDrawer::drawColorColumn(const pl::ptrn::Pattern& pattern) {
         ImGui::TableNextColumn();
         if (pattern.getVisibility() == pl::ptrn::Visibility::Visible) {
-            ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+            ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, (pattern.getColor() & 0x00'FF'FF'FF) | 0xC0'00'00'00);
 
             if (m_rowColoring)
                 ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, (pattern.getColor() & 0x00'FF'FF'FF) | 0x30'00'00'00);
@@ -654,7 +656,7 @@ namespace hex::ui {
                     auto max = value.max.toUnsigned();
 
                     bool isSelected = min <= currValue && max >= currValue;
-                    if (ImGui::Selectable(fmt::format("{}::{} (0x{:0{}X})", pattern.getTypeName(), value.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
+                    if (ImGui::Selectable(fmt::format("{}::{}", pattern.getTypeName(), value.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
                         pattern.setValue(value.min);
                         this->resetEditing();
                     }
@@ -1074,15 +1076,15 @@ namespace hex::ui {
         }
     
         ImGui::TableSetupScrollFreeze(0, 1);
-        ImGui::TableSetupColumn("##favorite",                               ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentDisable, ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.var_name"_lang, ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.color"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.start"_lang,    ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("start"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.end"_lang,      ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("end"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.size"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.type"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("type"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.value"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("value"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.comment"_lang,    ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultHide, 0, ImGui::GetID("comment"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.favorites"_lang, ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentDisable, ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.var_name"_lang,  ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.color"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.start"_lang,     ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("start"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.end"_lang,       ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("end"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.size"_lang,      ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.type"_lang,      ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("type"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.value"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("value"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.comment"_lang,   ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultHide, 0, ImGui::GetID("comment"));
 
         auto sortSpecs = ImGui::TableGetSortSpecs();
 
