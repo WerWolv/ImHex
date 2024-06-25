@@ -88,9 +88,18 @@ macro(add_imhex_plugin)
 
     # Fix rpath
     if (APPLE)
-        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH "@executable_path/../Frameworks;@executable_path/plugins")
+        set_target_properties(
+                ${IMHEX_PLUGIN_NAME}
+                PROPERTIES
+                    INSTALL_RPATH "@executable_path/../Frameworks;@executable_path/plugins"
+        )
     elseif (UNIX)
-        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH_USE_ORIGIN ON INSTALL_RPATH "$ORIGIN/")
+        set_target_properties(
+                ${IMHEX_PLUGIN_NAME}
+                PROPERTIES
+                    INSTALL_RPATH_USE_ORIGIN ON
+                    INSTALL_RPATH "$ORIGIN/;${CMAKE_INSTALL_PREFIX}/lib"
+        )
     endif()
 
     if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt AND IMHEX_ENABLE_UNIT_TESTS AND IMHEX_ENABLE_PLUGIN_TESTS)
