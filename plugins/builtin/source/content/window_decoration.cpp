@@ -371,7 +371,8 @@ namespace hex::plugin::builtin {
                         ImGui::Image(s_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
                         ImGui::SetCursorPosX(5_scaled);
                         ImGui::InvisibleButton("##logo", ImVec2(menuBarHeight, menuBarHeight));
-                        ImGui::OpenPopupOnItemClick("WindowingMenu", ImGuiPopupFlags_MouseButtonLeft);
+                        if (ImGui::IsItemHovered() && ImGui::IsAnyMouseDown())
+                            ImGui::OpenPopup("WindowingMenu");
                     #elif defined(OS_MACOS)
                         if (!isMacosFullScreenModeEnabled(window))
                             ImGui::SetCursorPosX(68_scaled);
