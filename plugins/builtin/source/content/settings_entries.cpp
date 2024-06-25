@@ -572,6 +572,10 @@ namespace hex::plugin::builtin {
                     ImGui::EndTable();
                 }
 
+                if (changed) {
+                    ContentRegistry::Interface::updateToolbarItems();
+                }
+
                 return changed;
             }
 
@@ -609,6 +613,8 @@ namespace hex::plugin::builtin {
                 }
 
                 m_currIndex = toolbarItems.size();
+
+                ContentRegistry::Interface::updateToolbarItems();
             }
 
         private:

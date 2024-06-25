@@ -774,6 +774,7 @@ namespace hex {
                 const std::multimap<u32, MainMenuItem>& getMainMenuItems();
 
                 const std::multimap<u32, MenuItem>& getMenuItems();
+                const std::vector<MenuItem*>& getToolbarMenuItems();
                 std::multimap<u32, MenuItem>& getMenuItemsMutable();
 
                 const std::vector<DrawCallback>& getWelcomeScreenEntries();
@@ -915,6 +916,11 @@ namespace hex {
              * @param color Color of the toolbar icon
              */
             void addMenuItemToToolbar(const UnlocalizedString &unlocalizedName, ImGuiCustomCol color);
+
+            /**
+             * @brief Reconstructs the toolbar items list after they have been modified
+             */
+            void updateToolbarItems();
 
             /**
              * @brief Adds a new sidebar item
