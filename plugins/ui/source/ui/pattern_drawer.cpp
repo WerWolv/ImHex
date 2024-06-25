@@ -501,7 +501,24 @@ namespace hex::ui {
         drawOffsetColumnForBitfieldMember(pattern);
         drawSizeColumnForBitfieldMember(pattern);
         ImGui::TableNextColumn();
-        ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
+
+        if (dynamic_cast<pl::ptrn::PatternBitfieldFieldSigned*>(&pattern) != nullptr) {
+            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "signed");
+            ImGui::SameLine();
+            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), pattern.getBitSize() == 1 ? "bit" : "bits");
+        } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern) != nullptr) {
+            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "enum");
+            ImGui::SameLine();
+            ImGui::TextUnformatted(pattern.getTypeName().c_str());
+        } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldBoolean*>(&pattern) != nullptr) {
+            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "bool");
+            ImGui::SameLine();
+            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "bit");
+        } else {
+            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "unsigned");
+            ImGui::SameLine();
+            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), pattern.getBitSize() == 1 ? "bit" : "bits");
+        }
 
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
@@ -513,7 +530,24 @@ namespace hex::ui {
             auto value = pattern.getValue();
             auto valueString = pattern.toString();
 
-            if (pattern.getBitSize() == 1) {
+            if (auto enumPattern = dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern); enumPattern != nullptr) {
+                if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
+                    auto currValue = pattern.getValue().toUnsigned();
+                    for (auto &enumValue : enumPattern->getEnumValues()) {
+                        auto min = enumValue.min.toUnsigned();
+                        auto max = enumValue.max.toUnsigned();
+
+                        bool isSelected = min <= currValue && max >= currValue;
+                        if (ImGui::Selectable(fmt::format("{}::{}", pattern.getTypeName(), enumValue.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
+                            pattern.setValue(enumValue.min);
+                            this->resetEditing();
+                        }
+                        if (isSelected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+            } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldBoolean*>(&pattern) != nullptr) {
                 bool boolValue = value.toBoolean();
                 if (ImGui::Checkbox("##boolean", &boolValue)) {
                     pattern.setValue(boolValue);
