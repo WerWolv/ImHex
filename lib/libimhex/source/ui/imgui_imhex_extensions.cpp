@@ -573,8 +573,13 @@ namespace ImGuiExt {
         bool result = false;
         if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
             if (!std::string_view(text).empty()) {
-                const auto width = 300 * hex::ImHexApi::System::getGlobalScale();
-                ImGui::SetNextWindowSizeConstraints(ImVec2(width / 2, 0), ImVec2(width, FLT_MAX));
+                const auto textWidth = CalcTextSize(text).x;
+
+                auto width = 150 * hex::ImHexApi::System::getGlobalScale();
+                if (textWidth < width)
+                    width = textWidth;
+
+                ImGui::SetNextWindowSizeConstraints(ImVec2(width, 0), ImVec2(width * 2, FLT_MAX));
                 if (BeginTooltip()) {
                     if (isSeparator)
                         SeparatorText(text);
