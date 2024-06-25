@@ -279,18 +279,17 @@ namespace hex::plugin::builtin {
                     toolbarIndex
                 ] = menuItem;
 
-                createNestedMenu(unlocalizedNames, icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallack);
+                createNestedMenu(unlocalizedNames | std::views::drop(1), icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallack);
             }
         }
 
         void defineMenu(const UnlocalizedString &menuName) {
             ImGui::GetStyle().TouchExtraPadding = scaled(ImVec2(0, 2));
             if (ImGui::BeginMenu(Lang(menuName))) {
+                populateMenu(menuName);
                 ImGui::EndMenu();
             }
             ImGui::GetStyle().TouchExtraPadding = ImVec2(0, 0);
-
-            populateMenu(menuName);
         }
 
         void drawMenu() {

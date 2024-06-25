@@ -416,6 +416,7 @@ namespace hex::plugin::builtin {
 
         // Toolbar items
         ContentRegistry::Interface::addToolbarItem([] {
+            // TODO: Optimize this
             std::set<const ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> menuItems;
 
             for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
