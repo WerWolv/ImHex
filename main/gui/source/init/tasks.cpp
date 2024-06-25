@@ -36,7 +36,7 @@ namespace hex::init {
 
         // Try to create all default directories
         for (auto path : paths::All) {
-            for (auto &folder : path->all()) {
+            for (auto &folder : path->write()) {
                 try {
                     wolv::io::fs::createDirectories(folder);
                 } catch (...) {

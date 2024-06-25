@@ -145,7 +145,7 @@ namespace hex::log {
         }
 
         void assertionHandler(bool expr, const char* exprString, const char* file, int line) {
-            if (!expr) {
+            if (!expr) [[unlikely]] {
                 log::error("Assertion failed: {} at {}:{}", exprString, file, line);
 
                 #if defined (DEBUG)

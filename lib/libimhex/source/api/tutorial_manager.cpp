@@ -21,6 +21,11 @@ namespace hex {
         AutoReset<std::map<ImGuiID, std::string>> s_highlights;
         AutoReset<std::vector<std::pair<ImRect, std::string>>> s_highlightDisplays;
 
+        AutoReset<std::map<ImGuiID, std::function<void()>>> s_interactiveHelpItems;
+        ImRect s_hoveredRect;
+        ImGuiID s_hoveredId;
+        bool s_helpHoverActive = false;
+
 
         class IDStack {
         public:
@@ -56,8 +61,42 @@ namespace hex {
             ImVector<ImGuiID> idStack;
         };
 
+        ImGuiID calculateId(const auto &ids) {
+            IDStack idStack;
+
+            for (const auto &id : ids) {
+                std::visit(wolv::util::overloaded {
+                        [&idStack](const Lang &id) {
+                            idStack.add(id.get());
+                        },
+                        [&idStack](const auto &id) {
+                            idStack.add(id);
+                        }
+                }, id);
+            }
+
+            return idStack.get();
+        }
+
     }
 
+    void TutorialManager::init() {
+        EventImGuiElementRendered::subscribe([](ImGuiID id, const std::array<float, 4> bb){
+            const auto boundingBox = ImRect(bb[0], bb[1], bb[2], bb[3]);
+
+            const auto element = hex::s_highlights->find(id);
+            if (element != hex::s_highlights->end()) {
+                hex::s_highlightDisplays->emplace_back(boundingBox, element->second);
+            }
+
+            if (id != 0 && boundingBox.Contains(ImGui::GetMousePos())) {
+                if ((s_hoveredRect.GetArea() == 0 || boundingBox.GetArea() < s_hoveredRect.GetArea()) && s_interactiveHelpItems->contains(id)) {
+                    s_hoveredRect = boundingBox;
+                    s_hoveredId = id;
+                }
+            }
+        });
+    }
 
     const std::map<std::string, TutorialManager::Tutorial>& TutorialManager::getTutorials() {
         return s_tutorials;
@@ -72,6 +111,28 @@ namespace hex {
         return s_tutorials->try_emplace(unlocalizedName, Tutorial(unlocalizedName, unlocalizedDescription)).first->second;
     }
 
+    void TutorialManager::startHelpHover() {
+        TaskManager::doLater([]{
+            s_helpHoverActive = true;
+        });
+    }
+
+    void TutorialManager::addInteractiveHelpText(std::initializer_list<std::variant<Lang, std::string, int>> &&ids, UnlocalizedString text) {
+        auto id = calculateId(ids);
+
+        s_interactiveHelpItems->emplace(id, [text = std::move(text)]{
+            log::info("{}", Lang(text).get());
+        });
+    }
+
+    void TutorialManager::addInteractiveHelpLink(std::initializer_list<std::variant<Lang, std::string, int>> &&ids, std::string link) {
+        auto id = calculateId(ids);
+
+        s_interactiveHelpItems->emplace(id, [link = std::move(link)]{
+            hex::openWebpage(link);
+        });
+    }
+
     void TutorialManager::startTutorial(const UnlocalizedString &unlocalizedName) {
         s_currentTutorial = s_tutorials->find(unlocalizedName);
         if (s_currentTutorial == s_tutorials->end())
@@ -81,6 +142,30 @@ namespace hex {
     }
 
     void TutorialManager::drawHighlights() {
+        if (s_helpHoverActive) {
+            const auto &drawList = ImGui::GetForegroundDrawList();
+            drawList->AddText(ImGui::GetMousePos() + scaled({ 10, -5, }), ImGui::GetColorU32(ImGuiCol_Text), "?");
+
+            const bool mouseClicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+            if (s_hoveredId != 0) {
+                drawList->AddRectFilled(s_hoveredRect.Min, s_hoveredRect.Max, 0x30FFFFFF);
+
+                if (mouseClicked) {
+                    auto it = s_interactiveHelpItems->find(s_hoveredId);
+                    if (it != s_interactiveHelpItems->end()) {
+                        it->second();
+                    }
+                }
+
+                s_hoveredId = 0;
+                s_hoveredRect = {};
+            }
+
+            if (mouseClicked || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                s_helpHoverActive = false;
+            }
+        }
+
         for (const auto &[rect, unlocalizedText] : *s_highlightDisplays) {
             const auto drawList = ImGui::GetForegroundDrawList();
 
@@ -241,39 +326,13 @@ namespace hex {
             m_onAppear();
 
         for (const auto &[text, ids] : m_highlights) {
-            IDStack idStack;
-
-            for (const auto &id : ids) {
-                std::visit(wolv::util::overloaded {
-                    [&idStack](const Lang &id) {
-                        idStack.add(id.get());
-                    },
-                    [&idStack](const auto &id) {
-                        idStack.add(id);
-                    }
-                }, id);
-            }
-
-            s_highlights->emplace(idStack.get(), text);
+            s_highlights->emplace(calculateId(ids), text);
         }
     }
 
     void TutorialManager::Tutorial::Step::removeHighlights() const {
         for (const auto &[text, ids] : m_highlights) {
-            IDStack idStack;
-
-            for (const auto &id : ids) {
-                std::visit(wolv::util::overloaded {
-                    [&idStack](const Lang &id) {
-                        idStack.add(id.get());
-                    },
-                    [&idStack](const auto &id) {
-                        idStack.add(id);
-                    }
-                }, id);
-            }
-
-            s_highlights->erase(idStack.get());
+            s_highlights->erase(calculateId(ids));
         }
     }
 
@@ -369,14 +428,3 @@ namespace hex {
     }
 
 }
-
-void ImGuiTestEngineHook_ItemAdd(ImGuiContext*, ImGuiID id, const ImRect& bb, const ImGuiLastItemData*) {
-    const auto element = hex::s_highlights->find(id);
-    if (element != hex::s_highlights->end()) {
-        hex::s_highlightDisplays->emplace_back(bb, element->second);
-    }
-}
-
-void ImGuiTestEngineHook_ItemInfo(ImGuiContext*, ImGuiID, const char*, ImGuiItemStatusFlags) {}
-void ImGuiTestEngineHook_Log(ImGuiContext*, const char*, ...) {}
-const char* ImGuiTestEngine_FindItemDebugLabel(ImGuiContext*, ImGuiID) { return nullptr; }

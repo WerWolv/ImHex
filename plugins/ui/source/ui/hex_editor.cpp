@@ -24,9 +24,11 @@ namespace hex::ui {
             hex::unused(address, upperCase);
 
             if (size == 1) {
-                const u8 c = data[0];
-                if (std::isprint(c) != 0)
-                    ImGui::Text("%c", c);
+                const char c = char(data[0]);
+                if (std::isprint(c) != 0) {
+                    const std::array<char, 2> string = { c, 0x00 };
+                    ImGui::TextUnformatted(string.data());
+                }
                 else
                     ImGui::TextDisabled(".");
             } else {

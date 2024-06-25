@@ -71,7 +71,7 @@ namespace hex {
     }
 
     std::string View::toWindowName(const UnlocalizedString &unlocalizedName) {
-        return Lang(unlocalizedName) + "###" + unlocalizedName.get();
+        return fmt::format("{}###{}", Lang(unlocalizedName), unlocalizedName.get());
     }
 
 }

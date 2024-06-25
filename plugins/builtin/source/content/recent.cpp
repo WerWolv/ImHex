@@ -243,8 +243,8 @@ namespace hex::plugin::builtin::recent {
         if (s_recentEntries.empty() && !s_autoBackupsFound)
             return;
 
-        ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
-        {
+        static bool collapsed = false;
+        if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, &collapsed, ImVec2(), ImGuiChildFlags_AutoResizeX)) {
             if (!s_recentEntriesUpdating) {
                 for (auto it = s_recentEntries.begin(); it != s_recentEntries.end();) {
                     const auto &recentEntry = *it;
@@ -327,8 +327,9 @@ namespace hex::plugin::builtin::recent {
                         PopupAutoBackups::open();
                 }
             }
+
+            ImGuiExt::EndSubWindow();
         }
-        ImGuiExt::EndSubWindow();
     }
 
     void addMenuItems() {

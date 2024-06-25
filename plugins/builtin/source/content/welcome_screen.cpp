@@ -212,8 +212,7 @@ namespace hex::plugin::builtin {
 
                     {
                         auto startPos = ImGui::GetCursorPos();
-                        ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.start"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
-                        {
+                        if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.start"_lang, nullptr, ImVec2(), ImGuiChildFlags_AutoResizeX)) {
                             if (ImGuiExt::IconHyperlink(ICON_VS_NEW_FILE, "hex.builtin.welcome.start.create_file"_lang)) {
                                 auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
                                 if (newProvider != nullptr && !newProvider->open())
@@ -227,8 +226,9 @@ namespace hex::plugin::builtin {
                                 RequestOpenWindow::post("Open Project");
                             if (ImGuiExt::IconHyperlink(ICON_VS_TELESCOPE, "hex.builtin.welcome.start.open_other"_lang))
                                 otherProvidersVisible = !otherProvidersVisible;
+
+                            ImGuiExt::EndSubWindow();
                         }
-                        ImGuiExt::EndSubWindow();
                         auto endPos = ImGui::GetCursorPos();
 
                         if (otherProvidersVisible) {
@@ -237,14 +237,16 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted(ICON_VS_ARROW_RIGHT);
                             ImGui::SameLine(0, 2_scaled);
 
-                            ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 6), ImGuiChildFlags_AutoResizeX);
-                            for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
-                                if (ImGuiExt::Hyperlink(Lang(unlocalizedProviderName))) {
-                                    ImHexApi::Provider::createProvider(unlocalizedProviderName);
-                                    otherProvidersVisible = false;
+                            if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, nullptr, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 6), ImGuiChildFlags_AutoResizeX)) {
+                                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
+                                    if (ImGuiExt::Hyperlink(Lang(unlocalizedProviderName))) {
+                                        ImHexApi::Provider::createProvider(unlocalizedProviderName);
+                                        otherProvidersVisible = false;
+                                    }
                                 }
+
+                                ImGuiExt::EndSubWindow();
                             }
-                            ImGuiExt::EndSubWindow();
                         }
                     }
 
@@ -256,13 +258,13 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
-                    ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.help"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
-                    {
+                    if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.help"_lang, nullptr, ImVec2(), ImGuiChildFlags_AutoResizeX)) {
                         if (ImGuiExt::IconHyperlink(ICON_VS_GITHUB, "hex.builtin.welcome.help.repo"_lang)) hex::openWebpage("hex.builtin.welcome.help.repo.link"_lang);
                         if (ImGuiExt::IconHyperlink(ICON_VS_ORGANIZATION, "hex.builtin.welcome.help.gethelp"_lang)) hex::openWebpage("hex.builtin.welcome.help.gethelp.link"_lang);
                         if (ImGuiExt::IconHyperlink(ICON_VS_COMMENT_DISCUSSION, "hex.builtin.welcome.help.discord"_lang)) hex::openWebpage("hex.builtin.welcome.help.discord.link"_lang);
+
+                        ImGuiExt::EndSubWindow();
                     }
-                    ImGuiExt::EndSubWindow();
 
                     if (ImHexApi::System::getInitArguments().contains("update-available")) {
                         ImGui::TableNextRow();
@@ -281,17 +283,16 @@ namespace hex::plugin::builtin {
 
                     auto windowPadding = ImGui::GetStyle().WindowPadding.x * 3;
 
-                    ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.customize"_lang, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX);
-                    {
+                    if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.customize"_lang, nullptr, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX)) {
                         if (ImGuiExt::DescriptionButton("hex.builtin.welcome.customize.settings.title"_lang, "hex.builtin.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                             RequestOpenWindow::post("Settings");
+
+                        ImGuiExt::EndSubWindow();
                     }
-                    ImGuiExt::EndSubWindow();
                     ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                     ImGui::TableNextColumn();
 
-                    ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.learn"_lang, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX);
-                    {
+                    if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.learn"_lang, nullptr, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX)) {
                         const auto size = ImVec2(ImGui::GetContentRegionAvail().x, 0);
                         if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.latest.title"_lang, "hex.builtin.welcome.learn.latest.desc"_lang, size))
                             hex::openWebpage("hex.builtin.welcome.learn.latest.link"_lang);
@@ -314,20 +315,21 @@ namespace hex::plugin::builtin {
                                 RequestOpenWindow::post("Achievements");
                             }
                         }
+
+                        ImGuiExt::EndSubWindow();
                     }
-                    ImGuiExt::EndSubWindow();
 
                     auto extraWelcomeScreenEntries = ContentRegistry::Interface::impl::getWelcomeScreenEntries();
                     if (!extraWelcomeScreenEntries.empty()) {
                         ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                         ImGui::TableNextColumn();
 
-                        ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.various"_lang, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0));
-                        {
+                        if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.various"_lang, nullptr, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0))) {
                             for (const auto &callback : extraWelcomeScreenEntries)
                                 callback();
+
+                            ImGuiExt::EndSubWindow();
                         }
-                        ImGuiExt::EndSubWindow();
                     }
 
                     if (s_infoBannerTexture.isValid()) {
@@ -335,8 +337,8 @@ namespace hex::plugin::builtin {
 
                         ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Border));
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-                        ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.info"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
-                        {
+
+                        if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.info"_lang, nullptr, ImVec2(), ImGuiChildFlags_AutoResizeX)) {
                             const auto height = 80_scaled;
                             ImGui::Image(s_infoBannerTexture, ImVec2(height * s_infoBannerTexture.getAspectRatio(), height));
                             hovered = ImGui::IsItemHovered();
@@ -344,8 +346,9 @@ namespace hex::plugin::builtin {
                             if (ImGui::IsItemClicked()) {
                                 hex::openWebpage(ImHexApiURL + hex::format("/info/{}/link", hex::toLower(ImHexApi::System::getOSName())));
                             }
+
+                            ImGuiExt::EndSubWindow();
                         }
-                        ImGuiExt::EndSubWindow();
                         ImGui::PopStyleVar();
                         ImGui::PopStyleColor();
 
@@ -372,8 +375,12 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
             if (ImGui::Begin("ImHexDockSpace")) {
                 if (!ImHexApi::Provider::isValid()) {
-                    static std::array<char, 256> title;
-                    ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindowRead()->Name, ImGui::GetID("ImHexMainDock"));
+                    static auto title = []{
+                        std::array<char, 256> title = {};
+                        ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindowRead()->Name, ImGui::GetID("ImHexMainDock"));
+                        return title;
+                    }();
+
                     if (ImGui::Begin(title.data(), nullptr, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
                         ImGui::Dummy({});
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled({ 10, 10 }));
@@ -398,14 +405,14 @@ namespace hex::plugin::builtin {
                                 const ImVec2 windowSize = scaled({ 150, 60 });
                                 ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
                                 ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
-                                ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, windowSize, ImGuiChildFlags_AutoResizeY);
-                                {
+                                if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
                                     if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen)) {
                                         ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
                                         WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
                                     }
+
+                                    ImGuiExt::EndSubWindow();
                                 }
-                                ImGuiExt::EndSubWindow();
                                 ImGui::PopStyleColor();
                                 hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 

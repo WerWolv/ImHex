@@ -37,6 +37,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/tar.cpp
         source/helpers/debugging.cpp
         source/helpers/default_paths.cpp
+        source/helpers/imgui_hooks.cpp
 
         source/test/tests.cpp
 

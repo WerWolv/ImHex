@@ -177,7 +177,12 @@ namespace hex::plugin::builtin {
                         return "x%.1f";
                 }();
 
-                bool changed = ImGui::SliderFloat(name.data(), &m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+                bool changed = ImGui::SliderFloat(name.data(), &m_value, 0, 4, format.c_str());
+
+                if (m_value < 0)
+                    m_value = 0;
+                else if (m_value > 10)
+                    m_value = 10;
 
                 if (ImHexApi::Fonts::getCustomFontPath().empty() && (u32(m_value * 10) % 10) != 0) {
                     ImGui::SameLine();
@@ -445,8 +450,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     // Draw toolbar icon box
-                    ImGuiExt::BeginSubWindow("hex.builtin.setting.toolbar.icons"_lang, ImGui::GetContentRegionAvail());
-                    {
+                    if (ImGuiExt::BeginSubWindow("hex.builtin.setting.toolbar.icons"_lang, nullptr, ImGui::GetContentRegionAvail())) {
                         if (ImGui::BeginTable("##icons", 6, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
                             ImGui::TableNextRow();
 
@@ -548,8 +552,9 @@ namespace hex::plugin::builtin {
 
                             ImGui::EndTable();
                         }
+
+                        ImGuiExt::EndSubWindow();
                     }
-                    ImGuiExt::EndSubWindow();
 
                     // Handle dropping menu items onto the toolbar box
                     if (ImGui::BeginDragDropTarget()) {
