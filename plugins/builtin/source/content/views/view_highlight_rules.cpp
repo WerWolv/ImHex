@@ -228,8 +228,7 @@ namespace hex::plugin::builtin {
 
 
     void ViewHighlightRules::drawRulesConfig() {
-        ImGuiExt::BeginSubWindow("hex.builtin.view.highlight_rules.config"_lang, ImGui::GetContentRegionAvail());
-        {
+        if (ImGuiExt::BeginSubWindow("hex.builtin.view.highlight_rules.config"_lang, nullptr, ImGui::GetContentRegionAvail())) {
             if (m_selectedRule != m_rules->end()) {
 
                 // Draw text input field for the rule name
@@ -297,8 +296,9 @@ namespace hex::plugin::builtin {
             } else {
                 ImGuiExt::TextFormattedCentered("hex.builtin.view.highlight_rules.no_rule"_lang);
             }
+
+            ImGuiExt::EndSubWindow();
         }
-        ImGuiExt::EndSubWindow();
     }
 
 

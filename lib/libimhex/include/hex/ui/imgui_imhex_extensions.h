@@ -286,7 +286,7 @@ namespace ImGuiExt {
     bool BeginBox();
     void EndBox();
 
-    void BeginSubWindow(const char *label, ImVec2 size = ImVec2(0, 0), ImGuiChildFlags flags = ImGuiChildFlags_None);
+    bool BeginSubWindow(const char *label, bool *collapsed = nullptr, ImVec2 size = ImVec2(0, 0), ImGuiChildFlags flags = ImGuiChildFlags_None);
     void EndSubWindow();
 
     void ConfirmButtons(const char *textLeft, const char *textRight, const auto &leftButtonCallback, const auto &rightButtonCallback) {

@@ -128,11 +128,11 @@ namespace hex::plugin::builtin {
 
             ImGui::TableNextColumn();
 
-            ImGuiExt::BeginSubWindow("Build Information", ImVec2(450_scaled, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);
-            {
+            if (ImGuiExt::BeginSubWindow("Build Information", nullptr, ImVec2(450_scaled, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
                 this->drawBuildInformation();
+
+                ImGuiExt::EndSubWindow();
             }
-            ImGuiExt::EndSubWindow();
 
             ImGui::EndTable();
         }
@@ -243,9 +243,9 @@ namespace hex::plugin::builtin {
 
     static void drawContributorTable(const char *title, const auto &contributors) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
-        ImGuiExt::BeginSubWindow(title, ImVec2(ImGui::GetContentRegionAvail().x, 0), ImGuiChildFlags_AutoResizeX);
+        auto result = ImGuiExt::BeginSubWindow(title, nullptr, ImVec2(ImGui::GetContentRegionAvail().x, 0), ImGuiChildFlags_AutoResizeX);
         ImGui::PopStyleVar();
-        {
+        if (result) {
             if (ImGui::BeginTable(title, 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
                 for (const auto &contributor : contributors) {
                     ImGui::TableNextRow();
@@ -266,8 +266,9 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndTable();
             }
+
+            ImGuiExt::EndSubWindow();
         }
-        ImGuiExt::EndSubWindow();
     }
 
     void ViewAbout::drawContributorPage() {
@@ -348,8 +349,7 @@ namespace hex::plugin::builtin {
 
         constexpr static auto drawTable = [](const char *category, const auto &libraries) {
             const auto width = ImGui::GetContentRegionAvail().x;
-            ImGuiExt::BeginSubWindow(category);
-            {
+            if (ImGuiExt::BeginSubWindow(category)) {
                 for (const auto &library : libraries) {
                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetColorU32(ImGuiCol_TableHeaderBg));
                     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 50);
@@ -370,8 +370,9 @@ namespace hex::plugin::builtin {
                     ImGui::PopStyleColor();
                     ImGui::PopStyleVar(2);
                 }
+
+                ImGuiExt::EndSubWindow();
             }
-            ImGuiExt::EndSubWindow();
 
             ImGui::NewLine();
         };
@@ -388,9 +389,10 @@ namespace hex::plugin::builtin {
         const auto &plugins = PluginManager::getPlugins();
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
-        ImGuiExt::BeginSubWindow("hex.builtin.view.help.about.plugins"_lang);
+        auto result = ImGuiExt::BeginSubWindow("hex.builtin.view.help.about.plugins"_lang);
         ImGui::PopStyleVar();
-        {
+
+        if (result) {
             if (ImGui::BeginTable("plugins", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.help.about.plugins.plugin"_lang);
@@ -406,8 +408,9 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndTable();
             }
+
+            ImGuiExt::EndSubWindow();
         }
-        ImGuiExt::EndSubWindow();
     }
 
     void ViewAbout::drawPluginRow(const hex::Plugin& plugin) {
@@ -479,8 +482,7 @@ namespace hex::plugin::builtin {
         static_assert(PathTypes.back().first != nullptr, "All path items need to be populated!");
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
-        ImGuiExt::BeginSubWindow("Paths", ImGui::GetContentRegionAvail());
-        {
+        if (ImGuiExt::BeginSubWindow("Paths", nullptr, ImGui::GetContentRegionAvail())) {
             if (ImGui::BeginTable("##imhex_paths", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("Type");
@@ -508,8 +510,9 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndTable();
             }
+
+            ImGuiExt::EndSubWindow();
         }
-        ImGuiExt::EndSubWindow();
         ImGui::PopStyleVar();
 
     }
@@ -722,12 +725,14 @@ namespace hex::plugin::builtin {
         if (commits.empty()) return;
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
-        ImGuiExt::BeginSubWindow("Commits", ImGui::GetContentRegionAvail());
+        auto result = ImGuiExt::BeginSubWindow("Commits", nullptr, ImGui::GetContentRegionAvail());
         ImGui::PopStyleVar();
 
-        this->drawCommitsTable(commits);
+        if (result) {
+            this->drawCommitsTable(commits);
 
-        ImGuiExt::EndSubWindow();
+            ImGuiExt::EndSubWindow();
+        }
     }
 
     void ViewAbout::drawCommitsTable(const auto& commits) {

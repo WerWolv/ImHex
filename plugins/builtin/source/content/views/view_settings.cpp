@@ -97,8 +97,7 @@ namespace hex::plugin::builtin {
                         if (subCategory.entries.empty())
                             continue;
 
-                        ImGuiExt::BeginSubWindow(Lang(subCategory.unlocalizedName));
-                        {
+                        if (ImGuiExt::BeginSubWindow(Lang(subCategory.unlocalizedName))) {
                             for (auto &setting : subCategory.entries) {
                                 ImGui::BeginDisabled(!setting.widget->isEnabled());
                                 ImGui::PushItemWidth(-200_scaled);
@@ -131,8 +130,9 @@ namespace hex::plugin::builtin {
                                     }
                                 }
                             }
+
+                            ImGuiExt::EndSubWindow();
                         }
-                        ImGuiExt::EndSubWindow();
                         ImGui::NewLine();
                     }
                 }

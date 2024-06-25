@@ -1158,17 +1158,38 @@ namespace ImGuiExt {
         PopStyleVar();
     }
 
-    void BeginSubWindow(const char *label, ImVec2 size, ImGuiChildFlags flags) {
+    bool BeginSubWindow(const char *label, bool *collapsed, ImVec2 size, ImGuiChildFlags flags) {
         const bool hasMenuBar = !std::string_view(label).empty();
 
+        bool result = false;
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
         if (ImGui::BeginChild(hex::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+            result = true;
+
             if (hasMenuBar && ImGui::BeginMenuBar()) {
-                ImGui::TextUnformatted(label);
+                if (collapsed == nullptr)
+                    ImGui::TextUnformatted(label);
+                else {
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, ImGui::GetStyle().FramePadding.y));
+                    ImGui::PushStyleColor(ImGuiCol_Button, 0x00);
+                    if (ImGui::Button(label))
+                        *collapsed = !*collapsed;
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleVar();
+                }
                 ImGui::EndMenuBar();
+            }
+
+            if (collapsed != nullptr && *collapsed) {
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetStyle().FramePadding.y * 2));
+                ImGui::TextDisabled("...");
+                result = false;
+                ImGui::EndChild();
             }
         }
         ImGui::PopStyleVar();
+
+        return result;
     }
 
     void EndSubWindow() {

@@ -102,8 +102,7 @@ namespace hex::plugin::builtin {
 
                 // Draw settings window
                 ImGui::BeginDisabled(analysis.task.isRunning());
-                ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang);
-                {
+                if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang)) {
                     // Create a table so we can draw global settings on the left and section specific settings on the right
                     if (ImGui::BeginTable("SettingsTable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingStretchProp, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                         ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.3F);
@@ -147,8 +146,9 @@ namespace hex::plugin::builtin {
                     ImGui::SetCursorPosX(50_scaled);
                     if (ImGuiExt::DimmedButton("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x - 50_scaled, 0)))
                         this->analyze();
+
+                    ImGuiExt::EndSubWindow();
                 }
-                ImGuiExt::EndSubWindow();
                 ImGui::EndDisabled();
 
                 if (analysis.analyzedProvider != nullptr) {
