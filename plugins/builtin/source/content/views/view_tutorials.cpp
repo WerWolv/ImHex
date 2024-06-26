@@ -57,9 +57,8 @@ namespace hex::plugin::builtin {
             if (m_selectedTutorial != nullptr) {
                 if (ImGuiExt::BeginSubWindow("hex.builtin.view.tutorials.description"_lang, nullptr, ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y * 2))) {
                     ImGuiExt::TextFormattedWrapped(Lang(m_selectedTutorial->getUnlocalizedDescription()));
-
-                    ImGuiExt::EndSubWindow();
                 }
+                ImGuiExt::EndSubWindow();
 
                 ImGui::BeginDisabled(currTutorial != tutorials.end());
                 if (ImGuiExt::DimmedButton("hex.builtin.view.tutorials.start"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {

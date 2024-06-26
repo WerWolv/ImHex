@@ -226,9 +226,9 @@ namespace hex::plugin::builtin {
                                 RequestOpenWindow::post("Open Project");
                             if (ImGuiExt::IconHyperlink(ICON_VS_TELESCOPE, "hex.builtin.welcome.start.open_other"_lang))
                                 otherProvidersVisible = !otherProvidersVisible;
-
-                            ImGuiExt::EndSubWindow();
                         }
+                        ImGuiExt::EndSubWindow();
+
                         auto endPos = ImGui::GetCursorPos();
 
                         if (otherProvidersVisible) {
@@ -245,8 +245,8 @@ namespace hex::plugin::builtin {
                                     }
                                 }
 
-                                ImGuiExt::EndSubWindow();
                             }
+                            ImGuiExt::EndSubWindow();
                         }
                     }
 
@@ -262,9 +262,8 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::IconHyperlink(ICON_VS_GITHUB, "hex.builtin.welcome.help.repo"_lang)) hex::openWebpage("hex.builtin.welcome.help.repo.link"_lang);
                         if (ImGuiExt::IconHyperlink(ICON_VS_ORGANIZATION, "hex.builtin.welcome.help.gethelp"_lang)) hex::openWebpage("hex.builtin.welcome.help.gethelp.link"_lang);
                         if (ImGuiExt::IconHyperlink(ICON_VS_COMMENT_DISCUSSION, "hex.builtin.welcome.help.discord"_lang)) hex::openWebpage("hex.builtin.welcome.help.discord.link"_lang);
-
-                        ImGuiExt::EndSubWindow();
                     }
+                    ImGuiExt::EndSubWindow();
 
                     if (ImHexApi::System::getInitArguments().contains("update-available")) {
                         ImGui::TableNextRow();
@@ -286,9 +285,9 @@ namespace hex::plugin::builtin {
                     if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.customize"_lang, nullptr, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX)) {
                         if (ImGuiExt::DescriptionButton("hex.builtin.welcome.customize.settings.title"_lang, "hex.builtin.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                             RequestOpenWindow::post("Settings");
-
-                        ImGuiExt::EndSubWindow();
                     }
+                    ImGuiExt::EndSubWindow();
+
                     ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                     ImGui::TableNextColumn();
 
@@ -315,9 +314,8 @@ namespace hex::plugin::builtin {
                                 RequestOpenWindow::post("Achievements");
                             }
                         }
-
-                        ImGuiExt::EndSubWindow();
                     }
+                    ImGuiExt::EndSubWindow();
 
                     auto extraWelcomeScreenEntries = ContentRegistry::Interface::impl::getWelcomeScreenEntries();
                     if (!extraWelcomeScreenEntries.empty()) {
@@ -327,9 +325,8 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.various"_lang, nullptr, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0))) {
                             for (const auto &callback : extraWelcomeScreenEntries)
                                 callback();
-
-                            ImGuiExt::EndSubWindow();
                         }
+                        ImGuiExt::EndSubWindow();
                     }
 
                     if (s_infoBannerTexture.isValid()) {
@@ -346,9 +343,9 @@ namespace hex::plugin::builtin {
                             if (ImGui::IsItemClicked()) {
                                 hex::openWebpage(ImHexApiURL + hex::format("/info/{}/link", hex::toLower(ImHexApi::System::getOSName())));
                             }
-
-                            ImGuiExt::EndSubWindow();
                         }
+                        ImGuiExt::EndSubWindow();
+
                         ImGui::PopStyleVar();
                         ImGui::PopStyleColor();
 
@@ -411,8 +408,9 @@ namespace hex::plugin::builtin {
                                         WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
                                     }
 
-                                    ImGuiExt::EndSubWindow();
                                 }
+                                ImGuiExt::EndSubWindow();
+
                                 ImGui::PopStyleColor();
                                 hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 

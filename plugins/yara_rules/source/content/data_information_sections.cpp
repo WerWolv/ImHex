@@ -80,9 +80,9 @@ namespace hex::plugin::yara {
                                 const auto &ruleName = match.metadata.contains("name") ? match.metadata.at("name") : match.identifier;
                                 ImGui::TextUnformatted(ruleName.c_str());
                             }
-
-                            ImGuiExt::EndSubWindow();
                         }
+                        ImGuiExt::EndSubWindow();
+
                     }
 
                     ImGui::EndTable();

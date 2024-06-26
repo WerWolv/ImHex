@@ -355,9 +355,8 @@ namespace hex::plugin::builtin {
                             auto yEnd = ImGui::GetCursorPosY();
                             subWindowSize = ImGui::GetWindowSize();
                             subWindowSize.y = (yEnd - yBegin) + 35_scaled;
-
-                            ImGuiExt::EndSubWindow();
                         }
+                        ImGuiExt::EndSubWindow();
 
                         break;
                     }

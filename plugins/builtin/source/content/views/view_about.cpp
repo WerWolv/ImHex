@@ -130,9 +130,8 @@ namespace hex::plugin::builtin {
 
             if (ImGuiExt::BeginSubWindow("Build Information", nullptr, ImVec2(450_scaled, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
                 this->drawBuildInformation();
-
-                ImGuiExt::EndSubWindow();
             }
+            ImGuiExt::EndSubWindow();
 
             ImGui::EndTable();
         }
@@ -266,9 +265,8 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndTable();
             }
-
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
     }
 
     void ViewAbout::drawContributorPage() {
@@ -371,8 +369,8 @@ namespace hex::plugin::builtin {
                     ImGui::PopStyleVar(2);
                 }
 
-                ImGuiExt::EndSubWindow();
             }
+            ImGuiExt::EndSubWindow();
 
             ImGui::NewLine();
         };
@@ -409,8 +407,8 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
 
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
     }
 
     void ViewAbout::drawPluginRow(const hex::Plugin& plugin) {
@@ -511,8 +509,8 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
 
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
         ImGui::PopStyleVar();
 
     }
@@ -730,9 +728,8 @@ namespace hex::plugin::builtin {
 
         if (result) {
             this->drawCommitsTable(commits);
-
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
     }
 
     void ViewAbout::drawCommitsTable(const auto& commits) {

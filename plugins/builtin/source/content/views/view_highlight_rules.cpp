@@ -297,8 +297,8 @@ namespace hex::plugin::builtin {
                 ImGuiExt::TextFormattedCentered("hex.builtin.view.highlight_rules.no_rule"_lang);
             }
 
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
     }
 
 

@@ -553,8 +553,8 @@ namespace hex::plugin::builtin {
                             ImGui::EndTable();
                         }
 
-                        ImGuiExt::EndSubWindow();
                     }
+                    ImGuiExt::EndSubWindow();
 
                     // Handle dropping menu items onto the toolbar box
                     if (ImGui::BeginDragDropTarget()) {

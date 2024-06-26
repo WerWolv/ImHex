@@ -328,8 +328,8 @@ namespace hex::plugin::builtin::recent {
                 }
             }
 
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
     }
 
     void addMenuItems() {

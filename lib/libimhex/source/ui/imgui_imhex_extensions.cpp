@@ -1189,7 +1189,6 @@ namespace ImGuiExt {
                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetStyle().FramePadding.y * 2));
                 ImGui::TextDisabled("...");
                 result = false;
-                ImGui::EndChild();
             }
         }
         ImGui::PopStyleVar();
