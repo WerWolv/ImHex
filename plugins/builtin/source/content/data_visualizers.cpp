@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
                 const u8 c = data[0];
                 switch (c) {
                     case 0x00:
-                        ImGui::Text("  ");
+                        ImGui::TextUnformatted("  ");
                         break;
                     case 0xFF:
                         ImGui::TextDisabled("##");

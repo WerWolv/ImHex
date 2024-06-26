@@ -109,7 +109,7 @@ namespace hex::plugin::builtin {
                     }
                     ImGui::TableNextColumn();
                     // The space makes a padding in the UI
-                    ImGui::Text("%s ", wolv::util::combineStrings(entry.authors, ", ").c_str());
+                    ImGuiExt::TextFormatted("{} ", wolv::util::combineStrings(entry.authors, ", "));
                     ImGui::TableNextColumn();
 
                     const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
