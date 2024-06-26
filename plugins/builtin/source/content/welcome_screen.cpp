@@ -190,7 +190,9 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine(0);
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 15_scaled);
                     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
+
                     ImGui::Image(s_nightlyTexture, s_nightlyTexture.getSize());
+                    ImGuiExt::InfoTooltip("hex.builtin.welcome.nightly_build"_lang);
 
                     ImGui::SetCursorPos(cursor);
                 }

@@ -1008,6 +1008,7 @@
         "hex.builtin.welcome.customize.settings.desc": "Change preferences of ImHex",
         "hex.builtin.welcome.customize.settings.title": "Settings",
         "hex.builtin.welcome.drop_file": "Drop a file here to get started...",
+        "hex.builtin.welcome.nightly_build": "You're running a nightly build of ImHex.\n\nPlease report any bugs you encounter on the GitHub issue tracker!",
         "hex.builtin.welcome.header.customize": "Customize",
         "hex.builtin.welcome.header.help": "Help",
         "hex.builtin.welcome.header.info": "Information",
