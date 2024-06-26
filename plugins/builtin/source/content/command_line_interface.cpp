@@ -1,6 +1,7 @@
-#include "content/command_line_interface.hpp"
-
+#include <content/command_line_interface.hpp>
 #include <content/providers/file_provider.hpp>
+
+#include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
@@ -349,6 +350,30 @@ namespace hex::plugin::builtin {
 
         log::println("{}", llvm::demangle(args[0]));
         std::exit(EXIT_SUCCESS);
+    }
+
+    void handleSettingsResetCommand(const std::vector<std::string> &) {
+        constexpr static auto ConfirmationString = "YES I AM ABSOLUTELY SURE";
+
+        log::println("You're about to reset all settings back to their default. Are you sure you want to continue?");
+        log::println("Type \"{}\" to continue.", ConfirmationString);
+
+        std::string input(128, '\x00');
+
+        log::print("> ");
+        std::fgets(input.data(), input.size() - 1, stdin);
+        input = wolv::util::trim(input);
+
+        if (input == ConfirmationString) {
+            log::println("Resetting all settings!");
+            ContentRegistry::Settings::impl::clear();
+            ContentRegistry::Settings::impl::store();
+
+            std::exit(EXIT_SUCCESS);
+        } else {
+            log::println("Wrong confirmation string. Settings will not be reset.");
+            std::exit(EXIT_FAILURE);
+        }
     }
 
 

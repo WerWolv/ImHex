@@ -58,22 +58,23 @@ namespace hex::plugin::builtin {
 }
 
 IMHEX_PLUGIN_SUBCOMMANDS() {
-    { "help",       "h", "Print help about this command",                hex::plugin::builtin::handleHelpCommand             },
-    { "version",    "",  "Print ImHex version",                          hex::plugin::builtin::handleVersionCommand          },
-    { "plugins",    "",  "Lists all plugins that have been installed",   hex::plugin::builtin::handlePluginsCommand          },
-    { "language",   "",  "Changes the language ImHex uses",              hex::plugin::builtin::handleLanguageCommand         },
-    { "verbose",    "v", "Enables verbose debug logging",                hex::plugin::builtin::handleVerboseCommand          },
+    { "help",           "h", "Print help about this command",                hex::plugin::builtin::handleHelpCommand             },
+    { "version",        "",  "Print ImHex version",                          hex::plugin::builtin::handleVersionCommand          },
+    { "plugins",        "",  "Lists all plugins that have been installed",   hex::plugin::builtin::handlePluginsCommand          },
+    { "language",       "",  "Changes the language ImHex uses",              hex::plugin::builtin::handleLanguageCommand         },
+    { "verbose",        "v", "Enables verbose debug logging",                hex::plugin::builtin::handleVerboseCommand          },
 
-    { "open",       "o", "Open files passed as argument. [default]",     hex::plugin::builtin::handleOpenCommand             },
+    { "open",           "o", "Open files passed as argument. [default]",     hex::plugin::builtin::handleOpenCommand             },
 
-    { "calc",       "",  "Evaluate a mathematical expression",           hex::plugin::builtin::handleCalcCommand             },
-    { "hash",       "",  "Calculate the hash of a file",                 hex::plugin::builtin::handleHashCommand             },
-    { "encode",     "",  "Encode a string",                              hex::plugin::builtin::handleEncodeCommand           },
-    { "decode",     "",  "Decode a string",                              hex::plugin::builtin::handleDecodeCommand           },
-    { "magic",      "",  "Identify file types",                          hex::plugin::builtin::handleMagicCommand            },
-    { "pl",         "",  "Interact with the pattern language",           hex::plugin::builtin::handlePatternLanguageCommand  },
-    { "hexdump",    "",  "Generate a hex dump of the provided file",     hex::plugin::builtin::handleHexdumpCommand          },
-    { "demangle",   "",  "Demangle a mangled symbol",                    hex::plugin::builtin::handleDemangleCommand         },
+    { "calc",           "",  "Evaluate a mathematical expression",           hex::plugin::builtin::handleCalcCommand             },
+    { "hash",           "",  "Calculate the hash of a file",                 hex::plugin::builtin::handleHashCommand             },
+    { "encode",         "",  "Encode a string",                              hex::plugin::builtin::handleEncodeCommand           },
+    { "decode",         "",  "Decode a string",                              hex::plugin::builtin::handleDecodeCommand           },
+    { "magic",          "",  "Identify file types",                          hex::plugin::builtin::handleMagicCommand            },
+    { "pl",             "",  "Interact with the pattern language",           hex::plugin::builtin::handlePatternLanguageCommand  },
+    { "hexdump",        "",  "Generate a hex dump of the provided file",     hex::plugin::builtin::handleHexdumpCommand          },
+    { "demangle",       "",  "Demangle a mangled symbol",                    hex::plugin::builtin::handleDemangleCommand         },
+    { "reset-settings", "",  "Demangle a mangled symbol",                    hex::plugin::builtin::handleSettingsResetCommand    },
 };
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
