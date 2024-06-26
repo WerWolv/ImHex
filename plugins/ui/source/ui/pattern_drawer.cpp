@@ -1246,62 +1246,6 @@ namespace hex::ui {
             ImGui::EndPopup();
         }
 
-        if (!m_filtersUpdated && !patterns.empty()) {
-            m_filtersUpdated = true;
-
-            if (!m_favoritesUpdateTask.isRunning()) {
-                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
-                    size_t updatedFavorites = 0;
-
-                    for (auto &pattern : patterns) {
-                        std::vector<std::string> patternPath;
-                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
-                            if (currPattern.hasAttribute("hex::favorite"))
-                                m_favorites.insert({ patternPath, currPattern.clone() });
-
-                            if (const auto &args = currPattern.getAttributeArguments("hex::group"); !args.empty()) {
-                                auto groupName = args.front().toString();
-
-                                if (!m_groups.contains(groupName))
-                                    m_groups.insert({groupName, std::vector<std::unique_ptr<pl::ptrn::Pattern>>()});
-
-                                m_groups[groupName].push_back(currPattern.clone());
-                            }
-                        });
-
-                        if (updatedFavorites == m_favorites.size())
-                            task.interrupt();
-                        task.update();
-
-                        patternPath.clear();
-                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
-                            for (auto &[path, favoritePattern] : m_favorites) {
-                                if (updatedFavorites == m_favorites.size())
-                                    task.interrupt();
-                                task.update();
-
-                                if (matchesFilter(patternPath, path, true)) {
-                                    favoritePattern = currPattern.clone();
-                                    updatedFavorites += 1;
-
-                                    break;
-                                }
-                            }
-                        });
-                    }
-
-                    std::erase_if(m_favorites, [](const auto &entry) {
-                        const auto &[path, favoritePattern] = entry;
-
-                        return favoritePattern == nullptr;
-                    });
-                });
-            }
-
-            updateFilter();
-
-        }
-
         if (beginPatternTable(patterns, m_sortedPatterns, height)) {
             ImGui::TableHeadersRow();
 
@@ -1374,6 +1318,62 @@ namespace hex::ui {
             }
 
             ImGui::EndTable();
+        }
+
+        if (!m_filtersUpdated && !patterns.empty()) {
+            m_filtersUpdated = true;
+
+            if (!m_favoritesUpdateTask.isRunning()) {
+                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
+                    size_t updatedFavorites = 0;
+
+                    for (auto &pattern : patterns) {
+                        std::vector<std::string> patternPath;
+                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
+                            if (currPattern.hasAttribute("hex::favorite"))
+                                m_favorites.insert({ patternPath, currPattern.clone() });
+
+                            if (const auto &args = currPattern.getAttributeArguments("hex::group"); !args.empty()) {
+                                auto groupName = args.front().toString();
+
+                                if (!m_groups.contains(groupName))
+                                    m_groups.insert({groupName, std::vector<std::unique_ptr<pl::ptrn::Pattern>>()});
+
+                                m_groups[groupName].push_back(currPattern.clone());
+                            }
+                        });
+
+                        if (updatedFavorites == m_favorites.size())
+                            task.interrupt();
+                        task.update();
+
+                        patternPath.clear();
+                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
+                            for (auto &[path, favoritePattern] : m_favorites) {
+                                if (updatedFavorites == m_favorites.size())
+                                    task.interrupt();
+                                task.update();
+
+                                if (matchesFilter(patternPath, path, true)) {
+                                    favoritePattern = currPattern.clone();
+                                    updatedFavorites += 1;
+
+                                    break;
+                                }
+                            }
+                        });
+                    }
+
+                    std::erase_if(m_favorites, [](const auto &entry) {
+                        const auto &[path, favoritePattern] = entry;
+
+                        return favoritePattern == nullptr;
+                    });
+                });
+            }
+
+            updateFilter();
+
         }
 
         m_jumpToPattern = nullptr;
