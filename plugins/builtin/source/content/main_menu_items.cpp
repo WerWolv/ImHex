@@ -200,7 +200,7 @@ namespace hex::plugin::builtin {
 
                     auto selection = ImHexApi::HexEditor::getSelection();
                     for (u64 address = selection->getStartAddress(); address <= selection->getEndAddress(); address += bytes.size()) {
-                        bytes.resize(std::min<u64>(bytes.size(), selection->getEndAddress() - address));
+                        bytes.resize(std::min<u64>(bytes.size(), selection->getEndAddress() - address + 1));
                         provider->read(address, bytes.data(), bytes.size());
 
                         outputFile.writeVector(bytes);
