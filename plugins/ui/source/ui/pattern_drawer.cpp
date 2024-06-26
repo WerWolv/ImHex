@@ -27,6 +27,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
+#include <TextEditor.h>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -95,7 +96,7 @@ namespace hex::ui {
 
         void drawTypeNameColumn(const pl::ptrn::Pattern& pattern, const std::string& structureTypeName) {
             ImGui::TableNextColumn();
-            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), structureTypeName);
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], structureTypeName);
             ImGui::SameLine();
             ImGui::TextUnformatted(pattern.getTypeName().c_str());
         }
@@ -478,7 +479,7 @@ namespace hex::ui {
 
         // Draw type column
         ImGui::TableNextColumn();
-        ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
+        ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
     }
 
     void PatternDrawer::closeTreeNode(bool inlined) const {
@@ -503,21 +504,21 @@ namespace hex::ui {
         ImGui::TableNextColumn();
 
         if (dynamic_cast<pl::ptrn::PatternBitfieldFieldSigned*>(&pattern) != nullptr) {
-            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "signed");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], "signed");
             ImGui::SameLine();
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), pattern.getBitSize() == 1 ? "bit" : "bits");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], pattern.getBitSize() == 1 ? "bit" : "bits");
         } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern) != nullptr) {
-            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "enum");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], "enum");
             ImGui::SameLine();
             ImGui::TextUnformatted(pattern.getTypeName().c_str());
         } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldBoolean*>(&pattern) != nullptr) {
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "bool");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "bool");
             ImGui::SameLine();
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "bit");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "bit");
         } else {
-            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "unsigned");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], "unsigned");
             ImGui::SameLine();
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), pattern.getBitSize() == 1 ? "bit" : "bits");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], pattern.getBitSize() == 1 ? "bit" : "bits");
         }
 
         if (!this->isEditingPattern(pattern)) {
@@ -749,7 +750,7 @@ namespace hex::ui {
             drawOffsetColumns(pattern);
             drawSizeColumn(pattern);
             ImGui::TableNextColumn();
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName());
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{}", pattern.getFormattedName());
             drawValueColumn(pattern);
             drawCommentColumn(pattern);
         }
@@ -978,12 +979,12 @@ namespace hex::ui {
             drawSizeColumn(pattern);
 
             ImGui::TableNextColumn();
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{0}", pattern.getTypeName());
             ImGui::SameLine(0, 0);
 
             ImGui::TextUnformatted("[");
             ImGui::SameLine(0, 0);
-            ImGuiExt::TextFormattedColored(ImColor(0xFF00FF00), "{0}", iterable.getEntryCount());
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Number)], "{0}", iterable.getEntryCount());
             ImGui::SameLine(0, 0);
             ImGui::TextUnformatted("]");
 
@@ -1036,12 +1037,12 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("0x{0:04X}", chunkSize);
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
+                ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{0}", pattern.getTypeName());
                 ImGui::SameLine(0, 0);
 
                 ImGui::TextUnformatted("[");
                 ImGui::SameLine(0, 0);
-                ImGuiExt::TextFormattedColored(ImColor(0xFF00FF00), "{0}", endIndex - i);
+                ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Number)], "{0}", endIndex - i);
                 ImGui::SameLine(0, 0);
                 ImGui::TextUnformatted("]");
 

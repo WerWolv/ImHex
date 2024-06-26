@@ -1457,7 +1457,7 @@ namespace hex::plugin::builtin {
         {
             ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
             ImGui::SameLine(0, 10);
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{} ", pattern->getFormattedName());
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{} ", pattern->getFormattedName());
             ImGui::SameLine(0, 5);
             ImGuiExt::TextFormatted("{}", pattern->getDisplayName());
             ImGui::SameLine();
