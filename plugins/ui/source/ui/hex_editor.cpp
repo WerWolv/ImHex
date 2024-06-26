@@ -187,7 +187,15 @@ namespace hex::ui {
             this->drawMinimap(characterSize);
 
         if (ImGui::IsWindowHovered()) {
-            m_scrollPosition += ImS64(ImGui::GetIO().MouseWheel * -5);
+            float scrollMultiplier;
+            if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeyShift)
+                scrollMultiplier = m_visibleRowCount * 10.0F;
+            else if (ImGui::GetIO().KeyCtrl)
+                scrollMultiplier = m_visibleRowCount;
+            else
+                scrollMultiplier = 5;
+
+            m_scrollPosition += ImS64(ImGui::GetIO().MouseWheel * -scrollMultiplier);
         }
 
         if (m_scrollPosition < 0)
