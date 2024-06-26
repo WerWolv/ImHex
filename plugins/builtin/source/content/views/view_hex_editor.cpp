@@ -794,23 +794,12 @@ namespace hex::plugin::builtin {
         });
 
         ShortcutManager::addShortcut(this, Keys::PageUp, "hex.builtin.view.hex_editor.shortcut.cursor_page_up", [this] {
-            auto selection = getSelection();
-            auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
-
-            u64 visibleByteCount = m_hexEditor.getBytesPerRow() * m_hexEditor.getVisibleRowCount();
-            if (cursor >= visibleByteCount) {
-                auto pos = cursor - visibleByteCount;
-                this->setSelection(pos, (pos + m_hexEditor.getBytesPerCell()) - 1);
-                m_hexEditor.jumpIfOffScreen();
-            }
+            const i64 visibleRowCount = m_hexEditor.getVisibleRowCount();
+            m_hexEditor.setScrollPosition(m_hexEditor.getScrollPosition() - visibleRowCount);
         });
         ShortcutManager::addShortcut(this, Keys::PageDown, "hex.builtin.view.hex_editor.shortcut.cursor_page_down", [this] {
-            auto selection = getSelection();
-            auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
-
-            auto pos = cursor + (m_hexEditor.getBytesPerRow() * m_hexEditor.getVisibleRowCount());
-            this->setSelection(pos, (pos + m_hexEditor.getBytesPerCell()) - 1);
-            m_hexEditor.jumpIfOffScreen();
+            const i64 visibleRowCount = m_hexEditor.getVisibleRowCount();
+            m_hexEditor.setScrollPosition(m_hexEditor.getScrollPosition() + visibleRowCount);
         });
 
         ShortcutManager::addShortcut(this, Keys::Home, "hex.builtin.view.hex_editor.shortcut.cursor_start", [this] {
