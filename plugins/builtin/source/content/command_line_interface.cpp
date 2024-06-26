@@ -361,7 +361,9 @@ namespace hex::plugin::builtin {
         std::string input(128, '\x00');
 
         log::print("> ");
-        std::fgets(input.data(), input.size() - 1, stdin);
+        if (std::fgets(input.data(), input.size() - 1, stdin) == nullptr)
+            std::exit(EXIT_FAILURE);
+        
         input = wolv::util::trim(input);
 
         if (input == ConfirmationString) {
