@@ -571,7 +571,7 @@ namespace ImGuiExt {
         ImGuiID hoveredID = GetHoveredID();
 
         bool result = false;
-        if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
+        if (IsItemHovered(ImGuiHoveredFlags_DelayNormal) && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
             if (!std::string_view(text).empty()) {
                 const auto textWidth = CalcTextSize(text).x;
 
