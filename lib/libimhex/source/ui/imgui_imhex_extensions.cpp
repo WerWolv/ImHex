@@ -575,16 +575,23 @@ namespace ImGuiExt {
             if (!std::string_view(text).empty()) {
                 const auto textWidth = CalcTextSize(text).x;
 
-                auto width = 150 * hex::ImHexApi::System::getGlobalScale();
-                if (textWidth < width)
-                    width = textWidth;
+                const auto maxWidth = 300 * hex::ImHexApi::System::getGlobalScale();
+                const bool wrapping = textWidth > maxWidth;
 
-                ImGui::SetNextWindowSizeConstraints(ImVec2(width, 0), ImVec2(width * 2, FLT_MAX));
+                if (wrapping)
+                    ImGui::SetNextWindowSizeConstraints(ImVec2(maxWidth, 0), ImVec2(maxWidth, FLT_MAX));
+                else
+                    ImGui::SetNextWindowSize(ImVec2(textWidth + GetStyle().WindowPadding.x * 2, 0));
+
                 if (BeginTooltip()) {
                     if (isSeparator)
                         SeparatorText(text);
-                    else
-                        TextFormattedWrapped("{}", text);
+                    else {
+                        if (wrapping)
+                            TextFormattedWrapped("{}", text);
+                        else
+                            TextFormatted("{}", text);
+                    }
 
                     EndTooltip();
                 }
