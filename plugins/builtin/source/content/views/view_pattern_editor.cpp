@@ -1496,38 +1496,50 @@ namespace hex::plugin::builtin {
                             path = path.substr(1);
                     }
 
-                    ImGuiExt::TextFormatted(" {}", path);
+                    ImGui::Indent();
+                    ImGuiExt::TextFormattedWrapped("{}", path);
+                    ImGui::Unindent();
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{} ", "hex.ui.common.type"_lang);
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted(" {}", pattern->getFormattedName());
+                    ImGui::Indent();
+                    ImGuiExt::TextFormatted("{}", pattern->getFormattedName());
+                    ImGui::Unindent();
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{} ", "hex.ui.common.address"_lang);
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted(" 0x{:08X}", pattern->getOffset());
+                    ImGui::Indent();
+                    ImGuiExt::TextFormatted("0x{:08X}", pattern->getOffset());
+                    ImGui::Unindent();
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{} ", "hex.ui.common.size"_lang);
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted(" {}", hex::toByteString(pattern->getSize()));
+                    ImGui::Indent();
+                    ImGuiExt::TextFormatted("{}", hex::toByteString(pattern->getSize()));
+                    ImGui::Unindent();
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{} ", "hex.ui.common.endian"_lang);
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted(" {}", pattern->getEndian() == std::endian::little ? "hex.ui.common.little"_lang : "hex.ui.common.big"_lang);
+                    ImGui::Indent();
+                    ImGuiExt::TextFormatted("{}", pattern->getEndian() == std::endian::little ? "hex.ui.common.little"_lang : "hex.ui.common.big"_lang);
+                    ImGui::Unindent();
 
                     if (const auto &comment = pattern->getComment(); !comment.empty()) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("{} ", "hex.ui.common.comment"_lang);
                         ImGui::TableNextColumn();
-                        ImGuiExt::TextFormattedWrapped(" \"{}\"", comment);
+                        ImGui::Indent();
+                        ImGuiExt::TextFormattedWrapped("\"{}\"", comment);
+                        ImGui::Unindent();
                     }
 
                     ImGui::EndTable();
