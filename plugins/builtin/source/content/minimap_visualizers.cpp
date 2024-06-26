@@ -124,12 +124,12 @@ namespace hex::plugin::builtin {
     }
 
     void registerMiniMapVisualizers() {
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.highlights",       highlightsMiniMapVisualizer);
         ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.entropy",          entropyMiniMapVisualizer);
         ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.zero_count",       zerosCountMiniMapVisualizer);
         ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.zeros",            zerosMiniMapVisualizer);
         ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.ascii_count",      asciiCountMiniMapVisualizer);
         ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.byte_type",        byteTypeMiniMapVisualizer);
-        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.highlights",       highlightsMiniMapVisualizer);
         ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.byte_magnitude",   byteMagnitudeMiniMapVisualizer);
     }
 
