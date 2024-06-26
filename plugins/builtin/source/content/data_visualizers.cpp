@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
             hex::unused(address);
 
             if (size == ByteCount)
-                ImGui::Text(getFormatString(upperCase), *reinterpret_cast<const T*>(data));
+                ImGuiExt::TextFormatted(upperCase ? "{:0{}X}" : "{:0{}x}", *reinterpret_cast<const T*>(data), sizeof(T) * 2);
             else
                 ImGuiExt::TextFormatted("{: {}s}", CharCount);
         }
