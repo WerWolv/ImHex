@@ -193,6 +193,7 @@ namespace hex::plugin::builtin {
 
     void FileProvider::setPath(const std::fs::path &path) {
         m_path = path;
+        m_path.make_preferred();
     }
 
     bool FileProvider::open() {
