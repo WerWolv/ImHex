@@ -76,7 +76,7 @@ namespace hex::script::loader {
             #endif
 
             if (netHostLibrary == nullptr) {
-                log::error("Could not load libnethost!");
+                log::debug("libnethost is not available! Disabling .NET support");
                 return false;
             }
 
@@ -163,7 +163,6 @@ namespace hex::script::loader {
 
     bool DotNetLoader::initialize() {
         if (!loadHostfxr()) {
-            log::error("Failed to initialize dotnet loader, could not load hostfxr");
             return false;
         }
 
