@@ -183,7 +183,9 @@ namespace hex::plugin::builtin::recent {
                         .entryFilePath  = path,
                         .data           = jsonData
                     });
-                } catch (...) { }
+                } catch (const std::exception &e) {
+                    log::error("Failed to parse recent file: {}", e.what());
+                }
             }
 
             // Delete all recent provider files that are not in the list
