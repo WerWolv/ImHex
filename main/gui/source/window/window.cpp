@@ -190,6 +190,7 @@ namespace hex {
     }
 
     void Window::loop() {
+        glfwShowWindow(m_window);
         while (!glfwWindowShouldClose(m_window)) {
             m_lastStartFrameTime = glfwGetTime();
 
@@ -913,8 +914,6 @@ namespace hex {
         });
 
         glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
-
-        glfwShowWindow(m_window);
     }
 
     void Window::resize(i32 width, i32 height) {
