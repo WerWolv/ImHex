@@ -32,6 +32,9 @@
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/string.hpp>
 
+#include <fmt/format.h>
+#include <fmt/xchar.h>
+
 namespace hex::fs {
 
     static AutoReset<std::function<void(const std::string&)>> s_fileBrowserErrorCallback;
@@ -48,7 +51,7 @@ namespace hex::fs {
 
         #if defined(OS_WINDOWS)
             hex::unused(
-                ShellExecute(nullptr, "open", wolv::util::toUTF8String(filePath).c_str(), nullptr, nullptr, SW_SHOWNORMAL)
+                ShellExecuteW(nullptr, L"open", filePath.c_str(), nullptr, nullptr, SW_SHOWNORMAL)
             );
         #elif defined(OS_MACOS)
             hex::unused(system(
@@ -66,9 +69,8 @@ namespace hex::fs {
         }
 
         #if defined(OS_WINDOWS)
-            hex::unused(system(
-                hex::format("explorer.exe {}", wolv::util::toUTF8String(dirPath)).c_str()
-            ));
+            auto args = fmt::format(L"\"{}\"", dirPath.c_str());
+            ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
             hex::unused(system(
                 hex::format("open {}", wolv::util::toUTF8String(dirPath)).c_str()
@@ -85,9 +87,8 @@ namespace hex::fs {
         }
 
         #if defined(OS_WINDOWS)
-            hex::unused(system(
-                hex::format(R"(explorer.exe /select,"{}")", wolv::util::toUTF8String(selectedFilePath)).c_str()
-            ));
+            auto args = fmt::format(L"/select,\"{}\"", selectedFilePath.c_str());
+            ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
             hex::unused(system(
                 hex::format(
