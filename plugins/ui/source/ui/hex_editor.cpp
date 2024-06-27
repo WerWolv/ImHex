@@ -30,9 +30,9 @@ namespace hex::ui {
                     ImGui::TextUnformatted(string.data());
                 }
                 else
-                    ImGui::TextDisabled(".");
+                    ImGuiExt::TextFormattedDisabled(".");
             } else {
-                ImGui::TextDisabled(".");
+                ImGuiExt::TextFormattedDisabled(".");
             }
         }
 
@@ -455,12 +455,17 @@ namespace hex::ui {
         const float SeparatorColumWidth   = 6_scaled;
         const auto CharacterSize          = ImGui::CalcTextSize("0");
 
-        if (const auto &visualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit"); m_currDataVisualizer == nullptr && visualizer != nullptr) {
-            m_currDataVisualizer = visualizer;
-            return;
+        if (m_currDataVisualizer == nullptr) {
+            if (const auto &visualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit"); visualizer != nullptr) {
+                m_currDataVisualizer = visualizer;
+                return;
+            }
         }
-        if (const auto &visualizers = ContentRegistry::HexEditor::impl::getMiniMapVisualizers(); m_miniMapVisualizer == nullptr && !visualizers.empty())
-            m_miniMapVisualizer = visualizers.front();
+
+        if (m_miniMapVisualizer == nullptr) {
+            if (const auto &visualizers = ContentRegistry::HexEditor::impl::getMiniMapVisualizers(); !visualizers.empty())
+                m_miniMapVisualizer = visualizers.front();
+        }
 
         const auto bytesPerCell    = m_currDataVisualizer->getBytesPerCell();
         const u16 columnCount      = m_bytesPerRow / bytesPerCell;

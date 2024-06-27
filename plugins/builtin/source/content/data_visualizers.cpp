@@ -63,11 +63,11 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted("  ");
                         break;
                     case 0xFF:
-                        ImGui::TextDisabled("##");
+                        ImGuiExt::TextFormattedDisabled("##");
                         break;
                     default:
                         if (c >= ' ' && c <= '~')
-                            ImGui::Text(".%c", c);
+                            ImGuiExt::TextFormatted(".{:c}", char(c));
                         else
                             ImGui::Text(getFormatString(upperCase), c);
                         break;

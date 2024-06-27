@@ -285,6 +285,10 @@ namespace ImGuiExt {
         glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
     }
 
+    float GetTextWrapPos() {
+        return GImGui->CurrentWindow->DC.TextWrapPos;
+    }
+
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {
         if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
             auto &string = *static_cast<std::string *>(data->UserData);
@@ -1194,7 +1198,7 @@ namespace ImGuiExt {
 
             if (collapsed != nullptr && *collapsed) {
                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetStyle().FramePadding.y * 2));
-                ImGui::TextDisabled("...");
+                ImGuiExt::TextFormattedDisabled("...");
                 result = false;
             }
         }

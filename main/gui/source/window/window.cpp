@@ -325,7 +325,7 @@ namespace hex {
         // Plugin load error popups
         // These are not translated because they should always be readable, no matter if any localization could be loaded or not
         {
-            auto drawPluginFolderTable = [] {
+            const static auto drawPluginFolderTable = [] {
                 ImGuiExt::UnderlinedText("Plugin folders");
                 if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2(0, 100_scaled))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
