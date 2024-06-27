@@ -1247,6 +1247,8 @@ namespace hex::ui {
         }
 
         if (beginPatternTable(patterns, m_sortedPatterns, height)) {
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.4F));
+            ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImGui::GetColorU32(ImGuiCol_HeaderActive, 0.4F));
             ImGui::TableHeadersRow();
 
             m_showFavoriteStars = false;
@@ -1316,6 +1318,8 @@ namespace hex::ui {
                     id += 1;
                 }
             }
+
+            ImGui::PopStyleColor(2);
 
             ImGui::EndTable();
         }
