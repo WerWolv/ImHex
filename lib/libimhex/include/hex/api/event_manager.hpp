@@ -14,18 +14,18 @@
 
 #include <wolv/types/type_name.hpp>
 
-#define EVENT_DEF_IMPL(event_name, event_name_string, should_log, ...)                                                                          \
-    struct event_name final : public hex::impl::Event<__VA_ARGS__> {                                                                            \
-        constexpr static auto Id = [] { return hex::impl::EventId(event_name_string); }();                                                      \
-        constexpr static auto ShouldLog = (should_log);                                                                                         \
-        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }                                                                \
-                                                                                                                                                \
-        static EventManager::EventList::iterator subscribe(Event::Callback function) { return EventManager::subscribe<event_name>(function); }  \
-        static void subscribe(void *token, Event::Callback function) { EventManager::subscribe<event_name>(token, function); }                  \
-        static void unsubscribe(const EventManager::EventList::iterator &token) noexcept { EventManager::unsubscribe(token); }                  \
-        static void unsubscribe(void *token) noexcept { EventManager::unsubscribe<event_name>(token); }                                         \
-        static void post(auto &&...args) { EventManager::post<event_name>(std::forward<decltype(args)>(args)...); }                    \
-    };
+#define EVENT_DEF_IMPL(event_name, event_name_string, should_log, ...)                                                                                      \
+    struct event_name final : public hex::impl::Event<__VA_ARGS__> {                                                                                        \
+        constexpr static auto Id = [] { return hex::impl::EventId(event_name_string); }();                                                                  \
+        constexpr static auto ShouldLog = (should_log);                                                                                                     \
+        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }                                                                            \
+                                                                                                                                                            \
+        static EventManager::EventList::iterator subscribe(Event::Callback function) { return EventManager::subscribe<event_name>(std::move(function)); }   \
+        static void subscribe(void *token, Event::Callback function) { EventManager::subscribe<event_name>(token, std::move(function)); }                   \
+        static void unsubscribe(const EventManager::EventList::iterator &token) noexcept { EventManager::unsubscribe(token); }                              \
+        static void unsubscribe(void *token) noexcept { EventManager::unsubscribe<event_name>(token); }                                                     \
+        static void post(auto &&...args) { EventManager::post<event_name>(std::forward<decltype(args)>(args)...); }                                         \
+    }
 
 #define EVENT_DEF(event_name, ...)          EVENT_DEF_IMPL(event_name, #event_name, true, __VA_ARGS__)
 #define EVENT_DEF_NO_LOG(event_name, ...)   EVENT_DEF_IMPL(event_name, #event_name, false, __VA_ARGS__)
@@ -56,6 +56,10 @@ namespace hex {
 
             constexpr bool operator==(const EventId &other) const {
                 return m_hash == other.m_hash;
+            }
+
+            constexpr auto operator<=>(const EventId &other) const {
+                return m_hash <=> other.m_hash;
             }
 
         private:
@@ -99,7 +103,7 @@ namespace hex {
      */
     class EventManager {
     public:
-        using EventList = std::list<std::pair<impl::EventId, std::unique_ptr<impl::EventBase>>>;
+        using EventList = std::multimap<impl::EventId, std::unique_ptr<impl::EventBase>>;
 
         /**
          * @brief Subscribes to an event
@@ -112,7 +116,7 @@ namespace hex {
             std::scoped_lock lock(getEventMutex());
 
             auto &events = getEvents();
-            return events.insert(events.end(), std::make_pair(E::Id, std::make_unique<E>(function)));
+            return events.insert({ E::Id, std::make_unique<E>(function) });
         }
 
         /**
@@ -164,7 +168,7 @@ namespace hex {
             });
 
             if (iter != tokenStore.end()) {
-                getEvents().remove(*iter->second);
+                getEvents().erase(iter->second);
                 tokenStore.erase(iter);
             }
 
@@ -179,10 +183,10 @@ namespace hex {
         static void post(auto && ...args) {
             std::scoped_lock lock(getEventMutex());
 
-            for (const auto &[id, event] : getEvents()) {
-                if (id == E::Id) {
-                    (*static_cast<E *const>(event.get())).template call<E>(std::forward<decltype(args)>(args)...);
-                }
+            auto [begin, end] = getEvents().equal_range(E::Id);
+            for (auto it = begin; it != end; ++it) {
+                const auto &[id, event] = *it;
+                (*static_cast<E *const>(event.get())).template call<E>(std::forward<decltype(args)>(args)...);
             }
 
             #if defined (DEBUG)
@@ -276,7 +280,7 @@ namespace hex {
     EVENT_DEF_NO_LOG(EventFrameBegin);
     EVENT_DEF_NO_LOG(EventFrameEnd);
     EVENT_DEF_NO_LOG(EventSetTaskBarIconState, u32, u32, u32);
-    EVENT_DEF_NO_LOG(EventImGuiElementRendered, ImGuiID, const std::array<float, 4>&)
+    EVENT_DEF_NO_LOG(EventImGuiElementRendered, ImGuiID, const std::array<float, 4>&);
 
     EVENT_DEF(RequestAddInitTask, std::string, bool, std::function<bool()>);
     EVENT_DEF(RequestAddExitTask, std::string, std::function<bool()>);
