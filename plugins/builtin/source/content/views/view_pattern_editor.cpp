@@ -1497,7 +1497,9 @@ namespace hex::plugin::builtin {
                     }
 
                     ImGui::Indent();
+                    ImGui::PushTextWrapPos(300_scaled);
                     ImGuiExt::TextFormattedWrapped("{}", path);
+                    ImGui::PopTextWrapPos();
                     ImGui::Unindent();
 
                     ImGui::TableNextRow();
