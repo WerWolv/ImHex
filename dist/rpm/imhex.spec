@@ -1,3 +1,5 @@
+%define source_date_epoch_from_changelog 0
+
 Name:           imhex
 Version:        VERSION
 Release:        0%{?dist}
@@ -125,7 +127,3 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %{_libdir}/libimhex.so*
 %{_libdir}/%{name}/
 %{_metainfodir}/net.werwolv.%{name}.metainfo.xml
-
-%source_date_epoch_from_changelog 0
-%changelog
-- Unspecified
