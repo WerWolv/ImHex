@@ -206,7 +206,7 @@ namespace hex::plugin::builtin {
         }
 
         [[nodiscard]] UnlocalizedString getTitle() const override {
-            return "hex.builtin.view.hex_editor.menu.file.select";
+            return "hex.builtin.view.hex_editor.menu.edit.select";
         }
 
         [[nodiscard]] bool canBePinned() const override {
@@ -1085,15 +1085,6 @@ namespace hex::plugin::builtin {
                                                 },
                                                 ImHexApi::Provider::isValid);
 
-        /* Select */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.select" }, ICON_VS_SELECTION, 1650,
-                                                CTRLCMD + SHIFT + Keys::A,
-                                                [this] {
-                                                    auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion{ { 0, 1 }, nullptr });
-                                                    this->openPopup<PopupSelect>(selection.getStartAddress(), selection.getSize());
-                                                },
-                                                ImHexApi::Provider::isValid);
-
 
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1100);
@@ -1185,8 +1176,17 @@ namespace hex::plugin::builtin {
                                                 ImHexApi::HexEditor::isSelectionValid,
                                                 this);
 
+        /* Select */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.select" }, ICON_VS_SELECTION, 1525,
+                                                CTRLCMD + SHIFT + Keys::A,
+                                                [this] {
+                                                    auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion{ { 0, 1 }, nullptr });
+                                                    this->openPopup<PopupSelect>(selection.getStartAddress(), selection.getSize());
+                                                },
+                                                ImHexApi::Provider::isValid);
+
         /* Select All */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.select_all" }, ICON_VS_SELECTION, 1550, CurrentView + CTRLCMD + Keys::A,
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.select_all" }, ICON_VS_LIST_FLAT, 1550, CurrentView + CTRLCMD + Keys::A,
                                                 [] {
                                                     auto provider = ImHexApi::Provider::get();
                                                     ImHexApi::HexEditor::setSelection(provider->getBaseAddress(), provider->getActualSize());
