@@ -38,7 +38,7 @@ namespace hex {
 
     void nativeErrorMessage(const std::string &message) {
         log::fatal(message);
-        MessageBox(nullptr, message.c_str(), "Error", MB_ICONERROR | MB_OK);
+        MessageBoxA(nullptr, message.c_str(), "Error", MB_ICONERROR | MB_OK);
     }
 
     // Custom Window procedure for receiving OS events
@@ -78,7 +78,7 @@ namespace hex {
                 // Handle Windows theme changes
                 if (lParam == 0) break;
 
-                if (LPCTSTR(lParam) == std::string_view("ImmersiveColorSet")) {
+                if (reinterpret_cast<const WCHAR*>(lParam) == std::wstring_view(L"ImmersiveColorSet")) {
                     EventOSThemeChanged::post();
                 }
 
@@ -86,7 +86,7 @@ namespace hex {
             }
             case WM_SETCURSOR: {
                 if (LOWORD(lParam) != HTCLIENT) {
-                    return CallWindowProc((WNDPROC)s_oldWndProc, hwnd, uMsg, wParam, lParam);
+                    return CallWindowProc(reinterpret_cast<WNDPROC>(s_oldWndProc), hwnd, uMsg, wParam, lParam);
                 } else {
                     switch (ImGui::GetMouseCursor()) {
                         case ImGuiMouseCursor_Arrow:

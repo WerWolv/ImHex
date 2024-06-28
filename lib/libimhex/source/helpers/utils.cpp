@@ -355,7 +355,7 @@ namespace hex {
             url = "https://" + url;
 
         #if defined(OS_WINDOWS)
-            ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+            ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
             openWebpageMacos(url.c_str());
         #elif defined(OS_LINUX)
