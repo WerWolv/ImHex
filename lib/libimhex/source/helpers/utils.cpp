@@ -685,24 +685,38 @@ namespace hex {
             return string;
 
         // If the string is longer than the max length, find the last space before the max length
-        auto it = string.begin() + maxLength;
+        auto it = string.begin() + maxLength / 2;
         while (it != string.begin() && !std::isspace(*it)) --it;
 
         // If there's no space before the max length, just cut the string
         if (it == string.begin()) {
-            it = string.begin() + maxLength;
+            it = string.begin() + maxLength / 2;
 
             // Try to find a UTF-8 character boundary
             while (it != string.begin() && (*it & 0x80) == 0x00) --it;
-            ++it;
+            --it;
         }
 
         // If we still didn't find a valid boundary, just return the string as is
         if (it == string.begin())
             return string;
 
-        // Append
-        return std::string(string.begin(), it) + "…";
+        auto result = std::string(string.begin(), it) + "…";
+
+        // If the string is longer than the max length, find the last space before the max length
+        it = string.end() - 1 - maxLength / 2;
+        while (it != string.end() && !std::isspace(*it)) ++it;
+
+        // If there's no space before the max length, just cut the string
+        if (it == string.end()) {
+            it = string.end() - 1 - maxLength / 2;
+
+            // Try to find a UTF-8 character boundary
+            while (it != string.end() && (*it & 0x80) == 0x00) ++it;
+            ++it;
+        }
+
+        return result + std::string(it, string.end());
     }
 
     static std::optional<std::fs::path> s_fileToOpen;
