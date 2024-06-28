@@ -94,11 +94,18 @@ macro(add_imhex_plugin)
                     INSTALL_RPATH "@executable_path/../Frameworks;@executable_path/plugins"
         )
     elseif (UNIX)
+        set(PLUGIN_RPATH "")
+        list(APPEND PLUGIN_RPATH "$ORIGIN")
+
+        if (IMHEX_PLUGIN_ADD_INSTALL_PREFIX_TO_RPATH)
+            list(APPEND PLUGIN_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+        endif()
+
         set_target_properties(
                 ${IMHEX_PLUGIN_NAME}
                 PROPERTIES
                     INSTALL_RPATH_USE_ORIGIN ON
-                    INSTALL_RPATH "$ORIGIN/;${CMAKE_INSTALL_PREFIX}/lib"
+                    INSTALL_RPATH "${PLUGIN_RPATH}"
         )
     endif()
 
