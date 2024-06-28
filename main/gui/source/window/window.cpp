@@ -817,8 +817,6 @@ namespace hex {
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
-
-            win->fullFrame();
         });
 
         // Register window resize callback
@@ -837,17 +835,9 @@ namespace hex {
                     ImGui::GetIO().MousePos = ImVec2();
                 }
             #else
-                win->fullFrame();
             #endif
         });
 
-        #if defined(OS_MACOS)
-            glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
-                auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-                win->fullFrame();
-            });
-        #endif
-        
         glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;

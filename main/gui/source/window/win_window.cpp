@@ -560,8 +560,12 @@ namespace hex {
 
             glViewport(0, 0, width, height);
             ImHexApi::System::impl::setMainWindowSize(width, height);
+        });
 
+        glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->fullFrame();
+            DwmFlush();
         });
     }
 
@@ -581,8 +585,7 @@ namespace hex {
     }
 
     void Window::endNativeWindowFrame() {
-        if (!ImHexApi::System::isBorderlessWindowModeEnabled())
-            return;
+
     }
 
 }

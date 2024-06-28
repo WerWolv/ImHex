@@ -91,6 +91,11 @@ namespace hex {
         });
 
         setupMacosWindowStyle(m_window, ImHexApi::System::isBorderlessWindowModeEnabled());
+
+        glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->fullFrame();
+        });
     }
 
     void Window::beginNativeWindowFrame() {
