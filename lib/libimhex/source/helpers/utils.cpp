@@ -693,8 +693,7 @@ namespace hex {
             it = string.begin() + maxLength / 2;
 
             // Try to find a UTF-8 character boundary
-            while (it != string.begin() && (*it & 0x80) == 0x00) --it;
-            --it;
+            while (it != string.begin() && (*it & 0xC0) == 0x80) --it;
         }
 
         // If we still didn't find a valid boundary, just return the string as is
@@ -712,8 +711,7 @@ namespace hex {
             it = string.end() - 1 - maxLength / 2;
 
             // Try to find a UTF-8 character boundary
-            while (it != string.end() && (*it & 0x80) == 0x00) ++it;
-            ++it;
+            while (it != string.end() && (*it & 0xC0) == 0x80) ++it;
         }
 
         return result + std::string(it, string.end());
