@@ -126,6 +126,6 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %{_libdir}/%{name}/
 %{_metainfodir}/net.werwolv.%{name}.metainfo.xml
 
-
+%source_date_epoch_from_changelog 0
 %changelog
 - Unspecified
