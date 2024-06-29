@@ -194,6 +194,16 @@ namespace hex {
         while (!glfwWindowShouldClose(m_window)) {
             m_lastStartFrameTime = glfwGetTime();
 
+            {
+                int x = 0, y = 0;
+                int width = 0, height = 0;
+                glfwGetWindowPos(m_window, &x, &y);
+                glfwGetWindowSize(m_window, &width, &height);
+
+                ImHexApi::System::impl::setMainWindowPosition(x, y);
+                ImHexApi::System::impl::setMainWindowSize(width, height);
+            }
+
             // Determine if the application should be in long sleep mode
             bool shouldLongSleep = !m_unlockFrameRate;
 

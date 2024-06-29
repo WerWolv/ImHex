@@ -5,7 +5,7 @@
 
     #include "messaging.hpp"
 
-#include <hex/helpers/utils.hpp>
+    #include <hex/helpers/utils.hpp>
     #include <hex/helpers/logger.hpp>
     #include <hex/helpers/default_paths.hpp>
 
@@ -24,6 +24,7 @@
     #include <wrl/client.h>
     #include <fcntl.h>
     #include <shellapi.h>
+    #include <timeapi.h>
 
     #include <cstdio>
 
@@ -160,7 +161,50 @@ namespace hex {
                     rect = client;
                 }
 
-                return 0;
+                // This code tries to avoid DWM flickering when resizing the window
+                // It's not perfect, but it's really the best we can do.
+
+                LARGE_INTEGER performanceFrequency = {};
+                QueryPerformanceFrequency(&performanceFrequency);
+                TIMECAPS tc = {};
+                timeGetDevCaps(&tc, sizeof(tc));
+
+                const auto granularity = tc.wPeriodMin;
+                timeBeginPeriod(tc.wPeriodMin);
+
+                DWM_TIMING_INFO dti = {};
+                dti.cbSize = sizeof(dti);
+                ::DwmGetCompositionTimingInfo(nullptr, &dti);
+
+                LARGE_INTEGER end = {};
+                QueryPerformanceCounter(&end);
+
+                const auto period = dti.qpcRefreshPeriod;
+                const i64 delta = dti.qpcVBlank - end.QuadPart;
+
+                i64 sleepTicks = 0;
+                i64 sleepMilliSeconds = 0;
+                if (delta >= 0) {
+                    sleepTicks = delta / period;
+                } else {
+
+                    sleepTicks = -1 + delta / period;
+                }
+
+                sleepMilliSeconds = delta - (period * sleepTicks);
+                const double sleepTime = (1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
+                Sleep(DWORD(std::round(sleepTime)));
+                timeEndPeriod(granularity);
+
+                return WVR_REDRAW;
+            }
+            case WM_ERASEBKGND:
+                return 1;
+            case WM_WINDOWPOSCHANGING: {
+                // Make sure that windows discards the entire client area when resizing to avoid flickering
+                const auto windowPos = reinterpret_cast<LPWINDOWPOS>(lParam);
+                windowPos->flags |= SWP_NOCOPYBITS;
+                break;
             }
             case WM_NCHITTEST: {
                 // Handle window resizing and moving
@@ -562,8 +606,20 @@ namespace hex {
             ImHexApi::System::impl::setMainWindowSize(width, height);
         });
 
+        DwmEnableMMCSS(TRUE);
+        
+        {
+            constexpr BOOL value = TRUE;
+            DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_ENABLED, &value, sizeof(value));
+        }
+        {
+            constexpr DWMNCRENDERINGPOLICY value = DWMNCRP_ENABLED;
+            DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &value, sizeof(value));
+        }
+
         glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+
             win->fullFrame();
             DwmFlush();
         });
