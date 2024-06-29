@@ -117,6 +117,10 @@ macro(add_imhex_plugin)
 endmacro()
 
 macro(add_romfs_resource input output)
+    if (NOT EXISTS ${input})
+        message(WARNING "Resource file ${input} does not exist")
+    endif()
+
     configure_file(${input} ${CMAKE_CURRENT_BINARY_DIR}/romfs/${output} COPYONLY)
 
     list(APPEND LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/romfs)
