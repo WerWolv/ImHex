@@ -31,6 +31,17 @@ namespace hex::init {
         return true;
     }
 
+    static bool isSubPathWritable(std::fs::path path) {
+        while (path.root_directory() != path) {
+            if (hex::fs::isPathWritable(path))
+                return true;
+
+            path = path.parent_path();
+        }
+
+        return false;
+    }
+
     bool createDirectories() {
         bool result = true;
 
@@ -38,7 +49,7 @@ namespace hex::init {
         for (auto path : paths::All) {
             for (auto &folder : path->all()) {
                 try {
-                    if (hex::fs::isPathWritable(folder.parent_path()))
+                    if (isSubPathWritable(folder.parent_path()))
                         wolv::io::fs::createDirectories(folder);
                 } catch (...) {
                     log::error("Failed to create folder {}!", wolv::util::toUTF8String(folder));
