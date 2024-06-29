@@ -36,9 +36,10 @@ namespace hex::init {
 
         // Try to create all default directories
         for (auto path : paths::All) {
-            for (auto &folder : path->write()) {
+            for (auto &folder : path->all()) {
                 try {
-                    wolv::io::fs::createDirectories(folder);
+                    if (hex::fs::isPathWritable(folder.parent_path()))
+                        wolv::io::fs::createDirectories(folder);
                 } catch (...) {
                     log::error("Failed to create folder {}!", wolv::util::toUTF8String(folder));
                     result = false;
