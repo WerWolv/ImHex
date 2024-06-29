@@ -152,8 +152,11 @@ namespace hex::fonts {
                 return m_fontAtlas->Build();
             }
 
-            [[nodiscard]] ImFontAtlas* getAtlas() const {
-                return m_fontAtlas;
+            [[nodiscard]] ImFontAtlas* takeAtlas() {
+                auto result = m_fontAtlas;
+                m_fontAtlas = nullptr;
+
+                return result;
             }
 
             float calculateFontDescend(const ImHexApi::Fonts::Font &font, float fontSize) const {
@@ -331,7 +334,7 @@ namespace hex::fonts {
         const bool result = fontAtlas.build();
         if (result) {
             // Set the font atlas if the build was successful
-            ImHexApi::Fonts::impl::setFontAtlas(fontAtlas.getAtlas());
+            ImHexApi::Fonts::impl::setFontAtlas(fontAtlas.takeAtlas());
             return true;
         }
 
