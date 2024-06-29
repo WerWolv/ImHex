@@ -32,11 +32,15 @@ namespace hex::init {
     }
 
     static bool isSubPathWritable(std::fs::path path) {
-        while (path.root_directory() != path) {
+        for (u32 i = 0; i < 128; i++) {
             if (hex::fs::isPathWritable(path))
                 return true;
 
-            path = path.parent_path();
+            auto parentPath = path.parent_path();
+            if (parentPath == path)
+                break;
+
+            path = std::move(parentPath);
         }
 
         return false;
