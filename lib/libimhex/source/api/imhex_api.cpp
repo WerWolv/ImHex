@@ -862,7 +862,7 @@ namespace hex {
 
             EventImHexClosing::subscribe([executablePath, updateTypeString] {
                 hex::executeCommand(
-                        hex::format("{} {}",
+                        hex::format("\"{}\" \"{}\"",
                                     wolv::util::toUTF8String(executablePath),
                                     updateTypeString
                                     )
