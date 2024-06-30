@@ -129,6 +129,12 @@ jobs:
     env:
       IMHEX_SDK_PATH: "${{ github.workspace }}/out/sdk"
     steps:
+      - name: 🧰 Checkout ImHex
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          path: imhex
+
       - name: 🟦 Install msys2
         uses: msys2/setup-msys2@v2
         with:
@@ -137,13 +143,14 @@ jobs:
       - name: ⬇️ Install dependencies
         run: |
           set -x
-          dist/get_deps_msys2.sh
+          imhex/dist/get_deps_msys2.sh
 
       - name: 🧰 Checkout ImHex-Plugin-Template
         uses: actions/checkout@v4
         with:
           name: WerWolv/ImHex-Plugin-Template
           submodules: recursive
+          path: template
 
       - name: ⬇️ Download artifact
         uses: actions/download-artifact@v4
@@ -154,6 +161,7 @@ jobs:
       - name: 🛠️ Build
         run: |
           set -x
+          cd template
           mkdir -p build
           cd build
   
