@@ -119,6 +119,52 @@ jobs:
         path: |
           build/install/*
 
+  win-plugin-template-test:
+    runs-on: windows-2022
+    name: 🧪 Plugin Template Test
+    defaults:
+      run:
+        shell: msys2 {0}
+    needs: win
+    env:
+      IMHEX_SDK_PATH: "${{ github.workspace }}/out/sdk"
+    steps:
+      - name: 🟦 Install msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+
+      - name: ⬇️ Install dependencies
+        run: |
+          set -x
+          dist/get_deps_msys2.sh
+
+      - name: 🧰 Checkout ImHex-Plugin-Template
+        uses: actions/checkout@v4
+        with:
+          name: WerWolv/ImHex-Plugin-Template
+          submodules: recursive
+
+      - name: ⬇️ Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Windows Portable x86_64
+          path: out
+
+      - name: 🛠️ Build
+        run: |
+          set -x
+          mkdir -p build
+          cd build
+  
+          cmake -G "Ninja"                                          \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                    \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
+          -DUSE_SYSTEM_CAPSTONE=ON                                  \
+          ..
+          
+          ninja
+
   # MacOS build
   macos:
     runs-on: macos-12
