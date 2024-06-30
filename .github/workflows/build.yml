@@ -132,7 +132,6 @@ jobs:
       - name: 🧰 Checkout ImHex
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           path: imhex
 
       - name: 🟦 Install msys2
@@ -148,7 +147,7 @@ jobs:
       - name: 🧰 Checkout ImHex-Plugin-Template
         uses: actions/checkout@v4
         with:
-          name: WerWolv/ImHex-Plugin-Template
+          repository: WerWolv/ImHex-Plugin-Template
           submodules: recursive
           path: template
 
