@@ -321,16 +321,17 @@ To use ImHex, the following minimal system requirements need to be met.
   - **macOS**: macOS 12.1 (Monterey) or higher, 
     - Lower versions are supported, but you'll need to compile ImHex yourself
   - **Linux**: "Modern" Linux. The following distributions have official releases available. Other distros are supported through the AppImage and Flatpak releases.
-    - Ubuntu 22.04/23.04
-    - Fedora 36/37
-    - RHEL/AlmaLinux 9
+    - Ubuntu and Debian
+    - Fedora
+    - RHEL/AlmaLinux
     - Arch Linux
+    - Basically any other distro will work as well when compiling ImHex from sources.
 - **CPU**: x86_64 (64 Bit)
 - **GPU**: OpenGL 3.0 or higher 
   - Intel HD drivers are really buggy and often cause graphic artifacts
   - In case you don't have a GPU available, there are software rendered releases available for Windows and macOS
 - **RAM**: 256MB, more may be required for more complicated analysis
-- **Storage**: 100MB
+- **Storage**: 150MB
 
 ## Installing
 
