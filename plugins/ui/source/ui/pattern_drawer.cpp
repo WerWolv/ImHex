@@ -209,6 +209,12 @@ namespace hex::ui {
 
     void PatternDrawer::updateFilter() {
         m_filteredPatterns.clear();
+
+        if (m_filter.path.empty()) {
+            m_filteredPatterns = m_sortedPatterns;
+            return;
+        }
+
         std::vector<std::string> treePath;
         for (auto &pattern : m_sortedPatterns) {
             traversePatternTree(*pattern, treePath, [this, &treePath](auto &pattern){
@@ -1131,24 +1137,26 @@ namespace hex::ui {
         if (!sortSpecs->SpecsDirty && !sortedPatterns.empty()) {
             return true;
         }
-        
-        sortedPatterns.clear();
-        std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::ptrn::Pattern> &pattern) {
-            return pattern.get();
-        });
 
-        std::sort(sortedPatterns.begin(), sortedPatterns.end(), [this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right) -> bool {
-            return this->sortPatterns(sortSpecs, left, right);
-        });
+        if (!m_favoritesUpdateTask.isRunning()) {
+            sortedPatterns.clear();
+            std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::ptrn::Pattern> &pattern) {
+                return pattern.get();
+            });
 
-        for (auto &pattern : sortedPatterns) {
-            pattern->sort([this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right){
+            std::stable_sort(sortedPatterns.begin(), sortedPatterns.end(), [this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right) -> bool {
                 return this->sortPatterns(sortSpecs, left, right);
             });
+
+            for (auto &pattern : sortedPatterns) {
+                pattern->sort([this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right){
+                    return this->sortPatterns(sortSpecs, left, right);
+                });
+            }
+
+            sortSpecs->SpecsDirty = false;
         }
 
-        sortSpecs->SpecsDirty = false;
-        
         return true;
     }
 
