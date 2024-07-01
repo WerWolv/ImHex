@@ -343,6 +343,7 @@ namespace hex::plugin::builtin {
             Library { "file", "file", "https://github.com/file/file" },
             Library { "glfw", "glfw", "https://github.com/glfw/glfw" },
             Library { "llvm", "llvm-project", "https://github.com/llvm/llvm-project" },
+            Library { "Boost.Regex", "John Maddock", "https://github.com/boostorg/regex" },
         };
 
         constexpr static auto drawTable = [](const char *category, const auto &libraries) {
