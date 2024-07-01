@@ -83,5 +83,5 @@ generateSDKDirectory()
 # Handle package generation
 createPackage()
 
-# Accomodate IDEs with FOLDER support
+# Accommodate IDEs with FOLDER support
 tweakTargetsForIDESupport()
