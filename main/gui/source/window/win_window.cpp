@@ -631,6 +631,7 @@ namespace hex {
         // Remove WS_POPUP style from the window to make various window management tools work
         auto hwnd = glfwGetWin32Window(m_window);
         ::SetWindowLong(hwnd, GWL_STYLE, (GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW) & ~WS_POPUP);
+        ::SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_COMPOSITED | WS_EX_LAYERED);
 
         if (!ImHexApi::System::impl::isWindowResizable()) {
             if (glfwGetWindowAttrib(m_window, GLFW_MAXIMIZED)) {
