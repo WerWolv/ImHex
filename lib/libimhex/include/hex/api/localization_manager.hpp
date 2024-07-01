@@ -102,12 +102,9 @@ namespace hex {
         std::string m_unlocalizedString;
     };
 
-}
-
-template<>
-struct fmt::formatter<hex::Lang> : fmt::formatter<std::string_view> {
-    template<typename FormatContext>
-    auto format(const hex::Lang &entry, FormatContext &ctx) {
-        return fmt::formatter<std::string_view>::format(entry.get(), ctx);
+    // {fmt} formatter for hex::Lang
+    inline auto format_as(const hex::Lang &entry) {
+        return entry.get();
     }
-};
+
+}

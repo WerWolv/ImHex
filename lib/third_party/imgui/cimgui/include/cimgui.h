@@ -3303,7 +3303,7 @@ typedef union SDL_Event SDL_Event;
 #endif // CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 
 #ifndef CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-typedef struct ImGuiStorage::ImGuiStoragePair ImGuiStoragePair;
+typedef struct ImGuiStoragePair ImGuiStoragePair;
 typedef struct ImGuiTextFilter::ImGuiTextRange ImGuiTextRange;
 typedef ImStb::STB_TexteditState STB_TexteditState;
 typedef ImStb::StbTexteditRow StbTexteditRow;
