@@ -974,6 +974,9 @@ namespace hex {
         style.IndentSpacing            = 10.0F;
         style.DisplaySafeAreaPadding  = ImVec2(0.0F, 0.0F);
 
+        style.Colors[ImGuiCol_TabSelectedOverline]          = ImVec4(0.0F, 0.0F, 0.0F, 0.0F);
+        style.Colors[ImGuiCol_TabDimmedSelectedOverline]    = ImVec4(0.0F, 0.0F, 0.0F, 0.0F);
+
         // Install custom settings handler
         {
             ImGuiSettingsHandler handler;
