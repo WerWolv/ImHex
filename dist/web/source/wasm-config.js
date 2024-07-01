@@ -144,14 +144,10 @@ if (urlParams.has("lang")) {
 window.addEventListener('resize', js_resizeCanvas, false);
 function js_resizeCanvas() {
     let canvas = document.getElementById('canvas');
+
+
+    canvas.top    = document.documentElement.clientTop;
+    canvas.left   = document.documentElement.clientLeft;
     canvas.width  = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     canvas.height = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-
-    canvas.classList.add("canvas_full_screen")
-
-    if (GLFW.active && GLFW.active.windowPosFunc) {
-        getWasmTableEntry(GLFW.active.windowPosFunc)(GLFW.active.id, GLFW.active.x, GLFW.active.y);
-    }
-
-    GLFW.onWindowSizeChanged();
 }

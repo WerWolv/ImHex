@@ -844,7 +844,8 @@ namespace hex {
                 if (macosIsWindowBeingResizedByUser(window)) {
                     ImGui::GetIO().MousePos = ImVec2();
                 }
-            #else
+            #elif defined(OS_WEB)
+                win->fullFrame();
             #endif
         });
 
