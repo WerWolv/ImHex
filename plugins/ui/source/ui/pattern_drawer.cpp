@@ -27,6 +27,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
+#include <TextEditor.h>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -95,7 +96,7 @@ namespace hex::ui {
 
         void drawTypeNameColumn(const pl::ptrn::Pattern& pattern, const std::string& structureTypeName) {
             ImGui::TableNextColumn();
-            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), structureTypeName);
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], structureTypeName);
             ImGui::SameLine();
             ImGui::TextUnformatted(pattern.getTypeName().c_str());
         }
@@ -208,6 +209,12 @@ namespace hex::ui {
 
     void PatternDrawer::updateFilter() {
         m_filteredPatterns.clear();
+
+        if (m_filter.path.empty()) {
+            m_filteredPatterns = m_sortedPatterns;
+            return;
+        }
+
         std::vector<std::string> treePath;
         for (auto &pattern : m_sortedPatterns) {
             traversePatternTree(*pattern, treePath, [this, &treePath](auto &pattern){
@@ -478,7 +485,7 @@ namespace hex::ui {
 
         // Draw type column
         ImGui::TableNextColumn();
-        ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
+        ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
     }
 
     void PatternDrawer::closeTreeNode(bool inlined) const {
@@ -503,21 +510,21 @@ namespace hex::ui {
         ImGui::TableNextColumn();
 
         if (dynamic_cast<pl::ptrn::PatternBitfieldFieldSigned*>(&pattern) != nullptr) {
-            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "signed");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], "signed");
             ImGui::SameLine();
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), pattern.getBitSize() == 1 ? "bit" : "bits");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], pattern.getBitSize() == 1 ? "bit" : "bits");
         } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern) != nullptr) {
-            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "enum");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], "enum");
             ImGui::SameLine();
             ImGui::TextUnformatted(pattern.getTypeName().c_str());
         } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldBoolean*>(&pattern) != nullptr) {
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "bool");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "bool");
             ImGui::SameLine();
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "bit");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "bit");
         } else {
-            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "unsigned");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], "unsigned");
             ImGui::SameLine();
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), pattern.getBitSize() == 1 ? "bit" : "bits");
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], pattern.getBitSize() == 1 ? "bit" : "bits");
         }
 
         if (!this->isEditingPattern(pattern)) {
@@ -749,7 +756,7 @@ namespace hex::ui {
             drawOffsetColumns(pattern);
             drawSizeColumn(pattern);
             ImGui::TableNextColumn();
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName());
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{}", pattern.getFormattedName());
             drawValueColumn(pattern);
             drawCommentColumn(pattern);
         }
@@ -978,12 +985,12 @@ namespace hex::ui {
             drawSizeColumn(pattern);
 
             ImGui::TableNextColumn();
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{0}", pattern.getTypeName());
             ImGui::SameLine(0, 0);
 
             ImGui::TextUnformatted("[");
             ImGui::SameLine(0, 0);
-            ImGuiExt::TextFormattedColored(ImColor(0xFF00FF00), "{0}", iterable.getEntryCount());
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Number)], "{0}", iterable.getEntryCount());
             ImGui::SameLine(0, 0);
             ImGui::TextUnformatted("]");
 
@@ -1036,12 +1043,12 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("0x{0:04X}", chunkSize);
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
+                ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{0}", pattern.getTypeName());
                 ImGui::SameLine(0, 0);
 
                 ImGui::TextUnformatted("[");
                 ImGui::SameLine(0, 0);
-                ImGuiExt::TextFormattedColored(ImColor(0xFF00FF00), "{0}", endIndex - i);
+                ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Number)], "{0}", endIndex - i);
                 ImGui::SameLine(0, 0);
                 ImGui::TextUnformatted("]");
 
@@ -1130,24 +1137,26 @@ namespace hex::ui {
         if (!sortSpecs->SpecsDirty && !sortedPatterns.empty()) {
             return true;
         }
-        
-        sortedPatterns.clear();
-        std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::ptrn::Pattern> &pattern) {
-            return pattern.get();
-        });
 
-        std::sort(sortedPatterns.begin(), sortedPatterns.end(), [this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right) -> bool {
-            return this->sortPatterns(sortSpecs, left, right);
-        });
+        if (!m_favoritesUpdateTask.isRunning()) {
+            sortedPatterns.clear();
+            std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::ptrn::Pattern> &pattern) {
+                return pattern.get();
+            });
 
-        for (auto &pattern : sortedPatterns) {
-            pattern->sort([this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right){
+            std::stable_sort(sortedPatterns.begin(), sortedPatterns.end(), [this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right) -> bool {
                 return this->sortPatterns(sortSpecs, left, right);
             });
+
+            for (auto &pattern : sortedPatterns) {
+                pattern->sort([this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right){
+                    return this->sortPatterns(sortSpecs, left, right);
+                });
+            }
+
+            sortSpecs->SpecsDirty = false;
         }
 
-        sortSpecs->SpecsDirty = false;
-        
         return true;
     }
 
@@ -1245,63 +1254,9 @@ namespace hex::ui {
             ImGui::EndPopup();
         }
 
-        if (!m_filtersUpdated && !patterns.empty()) {
-            m_filtersUpdated = true;
-
-            if (!m_favoritesUpdateTask.isRunning()) {
-                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
-                    size_t updatedFavorites = 0;
-
-                    for (auto &pattern : patterns) {
-                        std::vector<std::string> patternPath;
-                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
-                            if (currPattern.hasAttribute("hex::favorite"))
-                                m_favorites.insert({ patternPath, currPattern.clone() });
-
-                            if (const auto &args = currPattern.getAttributeArguments("hex::group"); !args.empty()) {
-                                auto groupName = args.front().toString();
-
-                                if (!m_groups.contains(groupName))
-                                    m_groups.insert({groupName, std::vector<std::unique_ptr<pl::ptrn::Pattern>>()});
-
-                                m_groups[groupName].push_back(currPattern.clone());
-                            }
-                        });
-
-                        if (updatedFavorites == m_favorites.size())
-                            task.interrupt();
-                        task.update();
-
-                        patternPath.clear();
-                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
-                            for (auto &[path, favoritePattern] : m_favorites) {
-                                if (updatedFavorites == m_favorites.size())
-                                    task.interrupt();
-                                task.update();
-
-                                if (matchesFilter(patternPath, path, true)) {
-                                    favoritePattern = currPattern.clone();
-                                    updatedFavorites += 1;
-
-                                    break;
-                                }
-                            }
-                        });
-                    }
-
-                    std::erase_if(m_favorites, [](const auto &entry) {
-                        const auto &[path, favoritePattern] = entry;
-
-                        return favoritePattern == nullptr;
-                    });
-                });
-            }
-
-            updateFilter();
-
-        }
-
         if (beginPatternTable(patterns, m_sortedPatterns, height)) {
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.4F));
+            ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImGui::GetColorU32(ImGuiCol_HeaderActive, 0.4F));
             ImGui::TableHeadersRow();
 
             m_showFavoriteStars = false;
@@ -1372,7 +1327,65 @@ namespace hex::ui {
                 }
             }
 
+            ImGui::PopStyleColor(2);
+
             ImGui::EndTable();
+        }
+
+        if (!m_filtersUpdated && !patterns.empty()) {
+            m_filtersUpdated = true;
+
+            if (!m_favoritesUpdateTask.isRunning()) {
+                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
+                    size_t updatedFavorites = 0;
+
+                    for (auto &pattern : patterns) {
+                        std::vector<std::string> patternPath;
+                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
+                            if (currPattern.hasAttribute("hex::favorite"))
+                                m_favorites.insert({ patternPath, currPattern.clone() });
+
+                            if (const auto &args = currPattern.getAttributeArguments("hex::group"); !args.empty()) {
+                                auto groupName = args.front().toString();
+
+                                if (!m_groups.contains(groupName))
+                                    m_groups.insert({groupName, std::vector<std::unique_ptr<pl::ptrn::Pattern>>()});
+
+                                m_groups[groupName].push_back(currPattern.clone());
+                            }
+                        });
+
+                        if (updatedFavorites == m_favorites.size())
+                            task.interrupt();
+                        task.update();
+
+                        patternPath.clear();
+                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
+                            for (auto &[path, favoritePattern] : m_favorites) {
+                                if (updatedFavorites == m_favorites.size())
+                                    task.interrupt();
+                                task.update();
+
+                                if (matchesFilter(patternPath, path, true)) {
+                                    favoritePattern = currPattern.clone();
+                                    updatedFavorites += 1;
+
+                                    break;
+                                }
+                            }
+                        });
+                    }
+
+                    std::erase_if(m_favorites, [](const auto &entry) {
+                        const auto &[path, favoritePattern] = entry;
+
+                        return favoritePattern == nullptr;
+                    });
+                });
+            }
+
+            updateFilter();
+
         }
 
         m_jumpToPattern = nullptr;

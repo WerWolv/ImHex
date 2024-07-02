@@ -147,8 +147,8 @@ namespace hex::plugin::builtin {
                     if (ImGuiExt::DimmedButton("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x - 50_scaled, 0)))
                         this->analyze();
 
-                    ImGuiExt::EndSubWindow();
                 }
+                ImGuiExt::EndSubWindow();
                 ImGui::EndDisabled();
 
                 if (analysis.analyzedProvider != nullptr) {

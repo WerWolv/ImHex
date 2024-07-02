@@ -76,7 +76,7 @@ jobs:
           -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                         \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
           ..
-    
+
     - name: 🛠️ Build
       run: |
         cd build
@@ -119,6 +119,59 @@ jobs:
         path: |
           build/install/*
 
+  win-plugin-template-test:
+    runs-on: windows-2022
+    name: 🧪 Plugin Template Test
+    defaults:
+      run:
+        shell: msys2 {0}
+    needs: win
+    env:
+      IMHEX_SDK_PATH: "${{ github.workspace }}/out/sdk"
+    steps:
+      - name: 🧰 Checkout ImHex
+        uses: actions/checkout@v4
+        with:
+          path: imhex
+
+      - name: 🟦 Install msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+
+      - name: ⬇️ Install dependencies
+        run: |
+          set -x
+          imhex/dist/get_deps_msys2.sh
+
+      - name: 🧰 Checkout ImHex-Plugin-Template
+        uses: actions/checkout@v4
+        with:
+          repository: WerWolv/ImHex-Plugin-Template
+          submodules: recursive
+          path: template
+
+      - name: ⬇️ Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Windows Portable x86_64
+          path: out
+
+      - name: 🛠️ Build
+        run: |
+          set -x
+          cd template
+          mkdir -p build
+          cd build
+  
+          cmake -G "Ninja"                                          \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                    \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
+          -DUSE_SYSTEM_CAPSTONE=ON                                  \
+          ..
+          
+          ninja
+
   # MacOS build
   macos:
     runs-on: macos-12
@@ -153,15 +206,14 @@ jobs:
 
     - name: ⬇️ Install dependencies
       run: |
-        set -x
-        brew reinstall python || brew link --overwrite python
+        brew reinstall python || brew link --overwrite python || true
         brew bundle --no-lock --file dist/Brewfile
         rm -rf /usr/local/Cellar/capstone
 
     - name: ⬇️ Install classic glfw
       if: ${{! matrix.custom_glfw}}
       run: |
-        brew install glfw
+        brew install glfw || true
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v4
@@ -174,7 +226,7 @@ jobs:
       with:
         repository: glfw/glfw
         path: glfw
-    
+
     # GLFW custom build (to allow software rendering)
     - name: ⬇️ Patch and install custom glfw
       if: ${{matrix.custom_glfw}}
@@ -219,7 +271,7 @@ jobs:
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                  \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                 \
           ..
-      
+
     - name: 🛠️ Build
       run: cd build && ninja install
 
@@ -264,7 +316,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
-    
+
     - name: 📁 Restore docker /cache
       uses: actions/cache@v4
       with:
@@ -346,7 +398,7 @@ jobs:
           if-no-files-found: error
           name: macOS DMG arm64
           path: ./*.dmg
-  
+
   # Ubuntu build
   ubuntu:
     strategy:
@@ -409,9 +461,9 @@ jobs:
             -DIMHEX_USE_GTK_FILE_PICKER=ON                            \
             -DDOTNET_EXECUTABLE="dotnet"                              \
             ..
-      
+
       - name: 🛠️ Build
-        run: cd build && DESTDIR=DebDir ninja install 
+        run: cd build && DESTDIR=DebDir ninja install
 
       - name: 📜 Set version variable
         run: |
@@ -446,7 +498,7 @@ jobs:
           path: cache
           key: appimage-ccache-${{ github.run_id }}
           restore-keys: appimage-cache
-      
+
       - name: 🐳 Inject /cache into docker
         uses: reproducible-containers/buildkit-cache-dance@v2
         with:
@@ -532,9 +584,9 @@ jobs:
           -DIMHEX_ENABLE_LTO=ON                         \
           -DIMHEX_USE_GTK_FILE_PICKER=ON                \
           ..
-      
+
       - name: 🛠️ Build
-        run: cd build && DESTDIR=installDir ninja install 
+        run: cd build && DESTDIR=installDir ninja install
 
       - name: 📜 Set version variable
         run: |

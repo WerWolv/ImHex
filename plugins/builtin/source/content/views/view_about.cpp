@@ -130,9 +130,8 @@ namespace hex::plugin::builtin {
 
             if (ImGuiExt::BeginSubWindow("Build Information", nullptr, ImVec2(450_scaled, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
                 this->drawBuildInformation();
-
-                ImGuiExt::EndSubWindow();
             }
+            ImGuiExt::EndSubWindow();
 
             ImGui::EndTable();
         }
@@ -266,9 +265,8 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndTable();
             }
-
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
     }
 
     void ViewAbout::drawContributorPage() {
@@ -345,6 +343,7 @@ namespace hex::plugin::builtin {
             Library { "file", "file", "https://github.com/file/file" },
             Library { "glfw", "glfw", "https://github.com/glfw/glfw" },
             Library { "llvm", "llvm-project", "https://github.com/llvm/llvm-project" },
+            Library { "Boost.Regex", "John Maddock", "https://github.com/boostorg/regex" },
         };
 
         constexpr static auto drawTable = [](const char *category, const auto &libraries) {
@@ -371,8 +370,8 @@ namespace hex::plugin::builtin {
                     ImGui::PopStyleVar(2);
                 }
 
-                ImGuiExt::EndSubWindow();
             }
+            ImGuiExt::EndSubWindow();
 
             ImGui::NewLine();
         };
@@ -409,8 +408,8 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
 
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
     }
 
     void ViewAbout::drawPluginRow(const hex::Plugin& plugin) {
@@ -511,8 +510,8 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
 
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
         ImGui::PopStyleVar();
 
     }
@@ -730,9 +729,8 @@ namespace hex::plugin::builtin {
 
         if (result) {
             this->drawCommitsTable(commits);
-
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
     }
 
     void ViewAbout::drawCommitsTable(const auto& commits) {

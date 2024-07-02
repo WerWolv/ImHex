@@ -821,6 +821,12 @@ namespace hex {
                 return *s_menuItems;
             }
 
+            static AutoReset<std::vector<MenuItem*>> s_toolbarMenuItems;
+            const std::vector<MenuItem*>& getToolbarMenuItems() {
+                return s_toolbarMenuItems;
+            }
+
+
             std::multimap<u32, MenuItem>& getMenuItemsMutable() {
                 return *s_menuItems;
             }
@@ -930,10 +936,34 @@ namespace hex {
                 if (menuItem.unlocalizedNames.back() == unlocalizedName) {
                     menuItem.toolbarIndex = maxIndex + 1;
                     menuItem.icon.color = color;
+                    updateToolbarItems();
+
                     break;
                 }
             }
         }
+
+        struct MenuItemSorter {
+            bool operator()(const auto *a, const auto *b) const {
+                return a->toolbarIndex < b->toolbarIndex;
+            }
+        };
+
+        void updateToolbarItems() {
+            std::set<ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> menuItems;
+
+            for (auto &[priority, menuItem] : impl::getMenuItemsMutable()) {
+                if (menuItem.toolbarIndex != -1) {
+                    menuItems.insert(&menuItem);
+                }
+            }
+
+            impl::s_toolbarMenuItems->clear();
+            for (auto menuItem : menuItems) {
+                impl::s_toolbarMenuItems->push_back(menuItem);
+            }
+        }
+
 
 
         void addSidebarItem(const std::string &icon, const impl::DrawCallback &function, const impl::EnabledCallback &enabledCallback) {

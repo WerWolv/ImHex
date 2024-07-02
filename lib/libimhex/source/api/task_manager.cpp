@@ -443,7 +443,7 @@ namespace hex {
             static auto setThreadDescription = reinterpret_cast<SetThreadDescriptionFunc>(
                 reinterpret_cast<uintptr_t>(
                     ::GetProcAddress(
-                        ::GetModuleHandle("Kernel32.dll"),
+                        ::GetModuleHandleW(L"Kernel32.dll"),
                         "SetThreadDescription"
                     )
                 )

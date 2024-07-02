@@ -31,14 +31,30 @@ namespace hex::init {
         return true;
     }
 
+    static bool isSubPathWritable(std::fs::path path) {
+        for (u32 i = 0; i < 128; i++) {
+            if (hex::fs::isPathWritable(path))
+                return true;
+
+            auto parentPath = path.parent_path();
+            if (parentPath == path)
+                break;
+
+            path = std::move(parentPath);
+        }
+
+        return false;
+    }
+
     bool createDirectories() {
         bool result = true;
 
         // Try to create all default directories
         for (auto path : paths::All) {
-            for (auto &folder : path->write()) {
+            for (auto &folder : path->all()) {
                 try {
-                    wolv::io::fs::createDirectories(folder);
+                    if (isSubPathWritable(folder.parent_path()))
+                        wolv::io::fs::createDirectories(folder);
                 } catch (...) {
                     log::error("Failed to create folder {}!", wolv::util::toUTF8String(folder));
                     result = false;

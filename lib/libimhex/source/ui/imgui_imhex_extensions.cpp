@@ -285,6 +285,10 @@ namespace ImGuiExt {
         glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
     }
 
+    float GetTextWrapPos() {
+        return GImGui->CurrentWindow->DC.TextWrapPos;
+    }
+
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {
         if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
             auto &string = *static_cast<std::string *>(data->UserData);
@@ -571,15 +575,27 @@ namespace ImGuiExt {
         ImGuiID hoveredID = GetHoveredID();
 
         bool result = false;
-        if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
+        if (IsItemHovered(ImGuiHoveredFlags_DelayNormal) && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
             if (!std::string_view(text).empty()) {
-                const auto width = 300 * hex::ImHexApi::System::getGlobalScale();
-                ImGui::SetNextWindowSizeConstraints(ImVec2(width / 2, 0), ImVec2(width, FLT_MAX));
+                const auto textWidth = CalcTextSize(text).x;
+
+                const auto maxWidth = 300 * hex::ImHexApi::System::getGlobalScale();
+                const bool wrapping = textWidth > maxWidth;
+
+                if (wrapping)
+                    ImGui::SetNextWindowSizeConstraints(ImVec2(maxWidth, 0), ImVec2(maxWidth, FLT_MAX));
+                else
+                    ImGui::SetNextWindowSize(ImVec2(textWidth + GetStyle().WindowPadding.x * 2, 0));
+
                 if (BeginTooltip()) {
                     if (isSeparator)
                         SeparatorText(text);
-                    else
-                        TextFormattedWrapped("{}", text);
+                    else {
+                        if (wrapping)
+                            TextFormattedWrapped("{}", text);
+                        else
+                            TextFormatted("{}", text);
+                    }
 
                     EndTooltip();
                 }
@@ -1182,9 +1198,8 @@ namespace ImGuiExt {
 
             if (collapsed != nullptr && *collapsed) {
                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetStyle().FramePadding.y * 2));
-                ImGui::TextDisabled("...");
+                ImGuiExt::TextFormattedDisabled("...");
                 result = false;
-                ImGui::EndChild();
             }
         }
         ImGui::PopStyleVar();

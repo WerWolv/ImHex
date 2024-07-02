@@ -85,6 +85,12 @@ namespace hex {
             }
         });
 
+        glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            resizeCanvas();
+            win->fullFrame();
+        });
+
         if (themeFollowSystem)
             EventOSThemeChanged::post();
     }

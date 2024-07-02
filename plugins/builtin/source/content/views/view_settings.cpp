@@ -131,8 +131,8 @@ namespace hex::plugin::builtin {
                                 }
                             }
 
-                            ImGuiExt::EndSubWindow();
                         }
+                        ImGuiExt::EndSubWindow();
                         ImGui::NewLine();
                     }
                 }

@@ -267,7 +267,7 @@ namespace hex::plugin::builtin {
                     ImGui::Image(process->icon, process->icon.getSize());
 
                     ImGui::TableNextColumn();
-                    ImGui::Text("%d", process->id);
+                    ImGuiExt::TextFormatted("{}", process->id);
 
                     ImGui::TableNextColumn();
                     if (ImGui::Selectable(process->name.c_str(), m_selectedProcess != nullptr && process->id == m_selectedProcess->id, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, process->icon.getSize().y)))

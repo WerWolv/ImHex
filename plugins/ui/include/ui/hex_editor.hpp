@@ -232,10 +232,6 @@ namespace hex::ui {
             m_showAscii = showAscii;
         }
 
-        void enableShowHumanReadableUnits(bool showHumanReadableUnits) {
-            m_showHumanReadableUnits = showHumanReadableUnits;
-        }
-
         void enableSyncScrolling(bool syncScrolling) {
             m_scrollPosition.setSynced(syncScrolling);
         }
@@ -365,7 +361,6 @@ namespace hex::ui {
         bool m_showCustomEncoding = true;
         bool m_showMiniMap = false;
         int m_miniMapWidth = 5;
-        bool m_showHumanReadableUnits = true;
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
         bool m_footerCollapsed = true;
 

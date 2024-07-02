@@ -109,7 +109,7 @@ namespace hex::plugin::builtin {
                     }
                     ImGui::TableNextColumn();
                     // The space makes a padding in the UI
-                    ImGui::Text("%s ", wolv::util::combineStrings(entry.authors, ", ").c_str());
+                    ImGuiExt::TextFormatted("{} ", wolv::util::combineStrings(entry.authors, ", "));
                     ImGui::TableNextColumn();
 
                     const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
@@ -207,9 +207,12 @@ namespace hex::plugin::builtin {
 
                             m_download.wait();
 
-                            while (m_download.wait_for(100ms) != std::future_status::ready) {
+                            while (m_download.valid() && m_download.wait_for(100ms) != std::future_status::ready) {
                                 task.update();
                             }
+
+                            entry.hasUpdate = false;
+                            entry.downloading = false;
 
                             task.increment();
                         }
@@ -324,7 +327,7 @@ namespace hex::plugin::builtin {
             return false;
         }
 
-        return true;
+        return downloading;
     }
 
     bool ViewStore::remove(const paths::impl::DefaultPath *pathType, const std::string &fileName) {

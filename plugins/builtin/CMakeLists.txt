@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.16)
 
 include(ImHexPlugin)
 
+find_file(DEFAULT_MAGIC_FILE_PATH magic.mgc HINTS ${LIBMAGIC_INCLUDE_DIR}/../share/misc)
+if (EXISTS ${DEFAULT_MAGIC_FILE_PATH})
+    add_romfs_resource(${DEFAULT_MAGIC_FILE_PATH} always_auto_extract/magic/magic.mgc)
+endif ()
+
 add_imhex_plugin(
     NAME
         builtin
@@ -121,11 +126,6 @@ add_imhex_plugin(
         libpl-gen
         LLVMDemangle
 )
-
-find_file(DEFAULT_MAGIC_FILE_PATH magic.mgc HINTS ${LIBMAGIC_INCLUDE_DIR}/../share/misc)
-if (DEFAULT_MAGIC_FILE_PATH)
-    add_romfs_resource(${DEFAULT_MAGIC_FILE_PATH} always_auto_extract/magic/magic.mgc)
-endif ()
 
 if (WIN32)
     target_link_libraries(builtin PRIVATE setupapi)

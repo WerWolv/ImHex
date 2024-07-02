@@ -123,6 +123,8 @@ namespace ImGuiExt {
         int m_width = 0, m_height = 0;
     };
 
+    float GetTextWrapPos();
+
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data);
 
     bool IconHyperlink(const char *icon, const char *label, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
@@ -186,7 +188,12 @@ namespace ImGuiExt {
     void SmallProgressBar(float fraction, float yOffset = 0.0F);
 
     inline void TextFormatted(std::string_view fmt, auto &&...args) {
-        ImGui::TextUnformatted(hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+        if constexpr (sizeof...(args) == 0) {
+            ImGui::TextUnformatted(fmt.data(), fmt.data() + fmt.size());
+        } else {
+            const auto string = hex::format(fmt, std::forward<decltype(args)>(args)...);
+            ImGui::TextUnformatted(string.c_str(), string.c_str() + string.size());
+        }
     }
 
     inline void TextFormattedSelectable(std::string_view fmt, auto &&...args) {
@@ -208,15 +215,24 @@ namespace ImGuiExt {
     }
 
     inline void TextFormattedColored(ImColor color, std::string_view fmt, auto &&...args) {
-        ImGui::TextColored(color, "%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+        ImGui::PushStyleColor(ImGuiCol_Text, color.Value);
+        ImGuiExt::TextFormatted(fmt, std::forward<decltype(args)>(args)...);
+        ImGui::PopStyleColor();
     }
 
     inline void TextFormattedDisabled(std::string_view fmt, auto &&...args) {
-        ImGui::TextDisabled("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+        ImGuiExt::TextFormatted(fmt, std::forward<decltype(args)>(args)...);
+        ImGui::PopStyleColor();
     }
 
     inline void TextFormattedWrapped(std::string_view fmt, auto &&...args) {
-        ImGui::TextWrapped("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+        const bool need_backup = ImGuiExt::GetTextWrapPos() < 0.0F;  // Keep existing wrap position if one is already set
+        if (need_backup)
+            ImGui::PushTextWrapPos(0.0F);
+        ImGuiExt::TextFormatted(fmt, std::forward<decltype(args)>(args)...);
+        if (need_backup)
+            ImGui::PopTextWrapPos();
     }
 
     inline void TextFormattedWrappedSelectable(std::string_view fmt, auto &&...args) {

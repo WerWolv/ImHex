@@ -328,12 +328,6 @@ namespace hex::plugin::builtin {
         }
     }
 
-    struct MenuItemSorter {
-        bool operator()(const auto *a, const auto *b) const {
-            return a->toolbarIndex < b->toolbarIndex;
-        }
-    };
-
     void drawProviderTooltip(const prv::Provider *provider) {
         if (ImGuiExt::InfoTooltip()) {
             ImGui::BeginTooltip();
@@ -416,16 +410,8 @@ namespace hex::plugin::builtin {
 
         // Toolbar items
         ContentRegistry::Interface::addToolbarItem([] {
-            // TODO: Optimize this
-            std::set<const ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> menuItems;
 
-            for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                if (menuItem.toolbarIndex != -1) {
-                    menuItems.insert(&menuItem);
-                }
-            }
-
-            for (const auto &menuItem : menuItems) {
+            for (const auto &menuItem : ContentRegistry::Interface::impl::getToolbarMenuItems()) {
                 if (menuItem->unlocalizedNames.back().get() == ContentRegistry::Interface::impl::SeparatorValue) {
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                     continue;
@@ -453,8 +439,8 @@ namespace hex::plugin::builtin {
             {
                 auto providers = ImHexApi::Provider::getProviders();
 
-                ImGui::PushStyleColor(ImGuiCol_TabActive, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
-                ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+                ImGui::PushStyleColor(ImGuiCol_TabSelected, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+                ImGui::PushStyleColor(ImGuiCol_TabDimmedSelected, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
                 auto providerSelectorVisible = ImGui::BeginTabBar("provider_switcher", ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_AutoSelectNewTabs);
                 ImGui::PopStyleColor(2);
 

@@ -60,7 +60,7 @@ target_compile_definitions(main PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
 target_link_libraries(main PRIVATE libromfs-imhex libimhex libwolv ${LIBBACKTRACE_LIBRARIES} LLVMDemangle)
 if (WIN32)
-    target_link_libraries(main PRIVATE usp10 wsock32 ws2_32 Dwmapi.lib)
+    target_link_libraries(main PRIVATE usp10 wsock32 ws2_32 Dwmapi.lib Winmm.lib)
 else ()
     target_link_libraries(main PRIVATE pthread)
 endif ()

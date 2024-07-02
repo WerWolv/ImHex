@@ -190,8 +190,19 @@ namespace hex {
     }
 
     void Window::loop() {
+        glfwShowWindow(m_window);
         while (!glfwWindowShouldClose(m_window)) {
             m_lastStartFrameTime = glfwGetTime();
+
+            {
+                int x = 0, y = 0;
+                int width = 0, height = 0;
+                glfwGetWindowPos(m_window, &x, &y);
+                glfwGetWindowSize(m_window, &width, &height);
+
+                ImHexApi::System::impl::setMainWindowPosition(x, y);
+                ImHexApi::System::impl::setMainWindowSize(width, height);
+            }
 
             // Determine if the application should be in long sleep mode
             bool shouldLongSleep = !m_unlockFrameRate;
@@ -325,7 +336,7 @@ namespace hex {
         // Plugin load error popups
         // These are not translated because they should always be readable, no matter if any localization could be loaded or not
         {
-            auto drawPluginFolderTable = [] {
+            const static auto drawPluginFolderTable = [] {
                 ImGuiExt::UnderlinedText("Plugin folders");
                 if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2(0, 100_scaled))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
@@ -816,8 +827,6 @@ namespace hex {
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
-
-            win->fullFrame();
         });
 
         // Register window resize callback
@@ -835,18 +844,11 @@ namespace hex {
                 if (macosIsWindowBeingResizedByUser(window)) {
                     ImGui::GetIO().MousePos = ImVec2();
                 }
-            #else
+            #elif defined(OS_WEB)
                 win->fullFrame();
             #endif
         });
 
-        #if defined(OS_MACOS)
-            glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
-                auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-                win->fullFrame();
-            });
-        #endif
-        
         glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
@@ -913,8 +915,6 @@ namespace hex {
         });
 
         glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
-
-        glfwShowWindow(m_window);
     }
 
     void Window::resize(i32 width, i32 height) {
@@ -973,6 +973,9 @@ namespace hex {
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing            = 10.0F;
         style.DisplaySafeAreaPadding  = ImVec2(0.0F, 0.0F);
+
+        style.Colors[ImGuiCol_TabSelectedOverline]          = ImVec4(0.0F, 0.0F, 0.0F, 0.0F);
+        style.Colors[ImGuiCol_TabDimmedSelectedOverline]    = ImVec4(0.0F, 0.0F, 0.0F, 0.0F);
 
         // Install custom settings handler
         {

@@ -553,8 +553,8 @@ namespace hex::plugin::builtin {
                             ImGui::EndTable();
                         }
 
-                        ImGuiExt::EndSubWindow();
                     }
+                    ImGuiExt::EndSubWindow();
 
                     // Handle dropping menu items onto the toolbar box
                     if (ImGui::BeginDragDropTarget()) {
@@ -570,6 +570,10 @@ namespace hex::plugin::builtin {
                     }
 
                     ImGui::EndTable();
+                }
+
+                if (changed) {
+                    ContentRegistry::Interface::updateToolbarItems();
                 }
 
                 return changed;
@@ -609,6 +613,8 @@ namespace hex::plugin::builtin {
                 }
 
                 m_currIndex = toolbarItems.size();
+
+                ContentRegistry::Interface::updateToolbarItems();
             }
 
         private:

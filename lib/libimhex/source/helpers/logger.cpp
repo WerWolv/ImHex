@@ -144,14 +144,12 @@ namespace hex::log {
             fmt::print(dest, "{0}", std::string(projectNameLength > MaxTagLength ? 0 : MaxTagLength - projectNameLength, ' '));
         }
 
-        void assertionHandler(bool expr, const char* exprString, const char* file, int line) {
-            if (!expr) [[unlikely]] {
-                log::error("Assertion failed: {} at {}:{}", exprString, file, line);
+        void assertionHandler(const char* exprString, const char* file, int line) {
+            log::error("Assertion failed: {} at {}:{}", exprString, file, line);
 
-                #if defined (DEBUG)
-                    std::abort();
-                #endif
-            }
+            #if defined (DEBUG)
+                std::abort();
+            #endif
         }
 
         namespace color {

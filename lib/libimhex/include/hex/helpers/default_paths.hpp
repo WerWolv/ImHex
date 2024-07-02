@@ -67,7 +67,7 @@ namespace hex::paths {
     const static inline impl::PluginPath Plugins("plugins");
 
     const static inline impl::DataPath Patterns("patterns");
-    const static inline impl::DataPath PatternsInclude("patterns/include");
+    const static inline impl::DataPath PatternsInclude("includes");
     const static inline impl::DataPath Magic("magic");
     const static inline impl::DataPath Yara("yara");
     const static inline impl::DataPath YaraAdvancedAnalysis("yara/advanced_analysis");

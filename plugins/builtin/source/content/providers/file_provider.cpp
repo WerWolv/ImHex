@@ -26,6 +26,8 @@
 
 namespace hex::plugin::builtin {
 
+    static std::mutex s_openCloseMutex;
+
     using namespace wolv::literals;
 
     std::set<FileProvider*> FileProvider::s_openedFiles;
@@ -191,6 +193,7 @@ namespace hex::plugin::builtin {
 
     void FileProvider::setPath(const std::fs::path &path) {
         m_path = path;
+        m_path.make_preferred();
     }
 
     bool FileProvider::open() {
@@ -247,6 +250,8 @@ namespace hex::plugin::builtin {
             ui::ToastInfo::open("hex.builtin.popup.error.read_only"_lang);
         }
 
+        std::scoped_lock lock(s_openCloseMutex);
+
         m_file      = std::move(file);
         m_fileStats = m_file.getFileInfo();
         m_fileSize  = m_file.getSize();
@@ -284,6 +289,8 @@ namespace hex::plugin::builtin {
 
 
     void FileProvider::close() {
+        std::scoped_lock lock(s_openCloseMutex);
+
         m_file.close();
         m_data.clear();
         s_openedFiles.erase(this);

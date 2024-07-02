@@ -169,14 +169,14 @@ namespace hex::plugin::windows {
         }
     }
 
-    std::vector<std::pair<std::string, std::string>> ViewTTYConsole::getAvailablePorts() const {
-        std::vector<std::pair<std::string, std::string>> result;
-        std::vector<char> buffer(0xFFF, 0x00);
+    std::vector<std::pair<std::wstring, std::wstring>> ViewTTYConsole::getAvailablePorts() const {
+        std::vector<std::pair<std::wstring, std::wstring>> result;
+        std::vector<wchar_t> buffer(0xFFF, 0x00);
 
         for (u16 portNumber = 0; portNumber <= 255; portNumber++) {
-            std::string port = "COM" + std::to_string(portNumber);
+            std::wstring port = L"COM" + std::to_wstring(portNumber);
 
-            if (::QueryDosDevice(port.c_str(), buffer.data(), buffer.size()) != 0) {
+            if (::QueryDosDeviceW(port.c_str(), buffer.data(), buffer.size()) != 0) {
                 result.emplace_back(port, buffer.data());
             }
         }
@@ -189,7 +189,7 @@ namespace hex::plugin::windows {
             ui::ToastError::open("hex.windows.view.tty_console.no_available_port"_lang);
             return true;    // If false, connect_error error popup will override this error popup
         }
-        m_portHandle = ::CreateFile((R"(\\.\)" + m_comPorts[m_selectedPort].first).c_str(),
+        m_portHandle = ::CreateFileW((LR"(\\.\)" + m_comPorts[m_selectedPort].first).c_str(),
             GENERIC_READ | GENERIC_WRITE,
             0,
             nullptr,

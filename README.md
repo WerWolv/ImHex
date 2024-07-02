@@ -314,22 +314,25 @@ To use ImHex, the following minimal system requirements need to be met.
 > ImHex requires a GPU with OpenGL 3.0 support in general.
 > There are releases available (with the `-NoGPU` suffix) that are software rendered and don't require a GPU, however these can be a lot slower than the GPU accelerated versions.
 > 
-> If possible at all, make ImHex use the dedicated GPU on your system instead of the integrated one (especially Intel HD GPUs are known to cause issues).
+> If possible at all, make ImHex use the dedicated GPU on your system instead of the integrated one.
+> ImHex will usually run fine with integrated GPUs as well but certain Intel HD GPU drivers on Windows are known to cause graphical artifacts.
 
 - **OS**: 
   - **Windows**: Windows 7 or higher (Windows 10/11 recommended)
-  - **macOS**: macOS 11 (Big Sur) or higher, 
+  - **macOS**: macOS 12.1 (Monterey) or higher, 
+    - Lower versions are supported, but you'll need to compile ImHex yourself
   - **Linux**: "Modern" Linux. The following distributions have official releases available. Other distros are supported through the AppImage and Flatpak releases.
-    - Ubuntu 22.04/23.04
-    - Fedora 36/37
-    - RHEL/AlmaLinux 9
+    - Ubuntu and Debian
+    - Fedora
+    - RHEL/AlmaLinux
     - Arch Linux
+    - Basically any other distro will work as well when compiling ImHex from sources.
 - **CPU**: x86_64 (64 Bit)
 - **GPU**: OpenGL 3.0 or higher 
-  - Intel HD drivers are really buggy and often cause graphic artifacts
+  - Integrated Intel HD iGPUs are supported, however certain drivers are known to cause various graphical artifacts, especially on Windows. Use at your own risk.
   - In case you don't have a GPU available, there are software rendered releases available for Windows and macOS
 - **RAM**: 256MB, more may be required for more complicated analysis
-- **Storage**: 100MB
+- **Storage**: 150MB
 
 ## Installing
 

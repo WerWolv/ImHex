@@ -88,12 +88,28 @@ macro(add_imhex_plugin)
 
     # Fix rpath
     if (APPLE)
-        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH "@executable_path/../Frameworks;@executable_path/plugins")
+        set_target_properties(
+                ${IMHEX_PLUGIN_NAME}
+                PROPERTIES
+                    INSTALL_RPATH "@executable_path/../Frameworks;@executable_path/plugins"
+        )
     elseif (UNIX)
-        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH_USE_ORIGIN ON INSTALL_RPATH "$ORIGIN/")
+        set(PLUGIN_RPATH "")
+        list(APPEND PLUGIN_RPATH "$ORIGIN")
+
+        if (IMHEX_PLUGIN_ADD_INSTALL_PREFIX_TO_RPATH)
+            list(APPEND PLUGIN_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+        endif()
+
+        set_target_properties(
+                ${IMHEX_PLUGIN_NAME}
+                PROPERTIES
+                    INSTALL_RPATH_USE_ORIGIN ON
+                    INSTALL_RPATH "${PLUGIN_RPATH}"
+        )
     endif()
 
-    if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt AND IMHEX_ENABLE_UNIT_TESTS)
+    if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt AND IMHEX_ENABLE_UNIT_TESTS AND IMHEX_ENABLE_PLUGIN_TESTS)
         add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
         target_link_libraries(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_NAME}_tests)
         target_compile_definitions(${IMHEX_PLUGIN_NAME}_tests PRIVATE IMHEX_PROJECT_NAME="${IMHEX_PLUGIN_NAME}-tests")
@@ -101,6 +117,10 @@ macro(add_imhex_plugin)
 endmacro()
 
 macro(add_romfs_resource input output)
+    if (NOT EXISTS ${input})
+        message(WARNING "Resource file ${input} does not exist")
+    endif()
+
     configure_file(${input} ${CMAKE_CURRENT_BINARY_DIR}/romfs/${output} COPYONLY)
 
     list(APPEND LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/romfs)

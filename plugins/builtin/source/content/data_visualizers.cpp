@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
             hex::unused(address);
 
             if (size == ByteCount)
-                ImGui::Text(getFormatString(upperCase), *reinterpret_cast<const T*>(data));
+                ImGuiExt::TextFormatted(upperCase ? "{:0{}X}" : "{:0{}x}", *reinterpret_cast<const T*>(data), sizeof(T) * 2);
             else
                 ImGuiExt::TextFormatted("{: {}s}", CharCount);
         }
@@ -60,14 +60,14 @@ namespace hex::plugin::builtin {
                 const u8 c = data[0];
                 switch (c) {
                     case 0x00:
-                        ImGui::Text("  ");
+                        ImGui::TextUnformatted("  ");
                         break;
                     case 0xFF:
-                        ImGui::TextDisabled("##");
+                        ImGuiExt::TextFormattedDisabled("##");
                         break;
                     default:
                         if (c >= ' ' && c <= '~')
-                            ImGui::Text(".%c", c);
+                            ImGuiExt::TextFormatted(".{:c}", char(c));
                         else
                             ImGui::Text(getFormatString(upperCase), c);
                         break;

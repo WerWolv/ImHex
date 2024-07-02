@@ -17,9 +17,9 @@ namespace hex::plugin::windows {
         void drawContent() override;
 
     private:
-        std::vector<std::pair<std::string, std::string>> m_comPorts;
+        std::vector<std::pair<std::wstring, std::wstring>> m_comPorts;
 
-        std::vector<std::pair<std::string, std::string>> getAvailablePorts() const;
+        std::vector<std::pair<std::wstring, std::wstring>> getAvailablePorts() const;
         bool connect();
         bool disconnect();
 

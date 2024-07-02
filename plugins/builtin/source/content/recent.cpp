@@ -173,17 +173,31 @@ namespace hex::plugin::builtin::recent {
             });
 
             std::unordered_set<RecentEntry, RecentEntry::HashFunction> uniqueProviders;
-            for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < MaxRecentEntries; i++) {
-                auto &path = recentFilePaths[i];
+            for (const auto &path : recentFilePaths) {
+                if (uniqueProviders.size() >= MaxRecentEntries)
+                    break;
+
                 try {
-                    auto jsonData = nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString());
+                    wolv::io::File recentFile(path, wolv::io::File::Mode::Read);
+                    if (!recentFile.isValid()) {
+                        continue;
+                    }
+
+                    auto content = recentFile.readString();
+                    if (content.empty()) {
+                        continue;
+                    }
+
+                    auto jsonData = nlohmann::json::parse(content);
                     uniqueProviders.insert(RecentEntry {
                         .displayName    = jsonData.at("displayName"),
                         .type           = jsonData.at("type"),
                         .entryFilePath  = path,
                         .data           = jsonData
                     });
-                } catch (...) { }
+                } catch (const std::exception &e) {
+                    log::error("Failed to parse recent file: {}", e.what());
+                }
             }
 
             // Delete all recent provider files that are not in the list
@@ -328,8 +342,8 @@ namespace hex::plugin::builtin::recent {
                 }
             }
 
-            ImGuiExt::EndSubWindow();
         }
+        ImGuiExt::EndSubWindow();
     }
 
     void addMenuItems() {

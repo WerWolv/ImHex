@@ -21,6 +21,7 @@ namespace hex::plugin::builtin {
     void handlePatternLanguageCommand(const std::vector<std::string> &args);
     void handleHexdumpCommand(const std::vector<std::string> &args);
     void handleDemangleCommand(const std::vector<std::string> &args);
+    void handleSettingsResetCommand(const std::vector<std::string> &args);
 
 
     void registerCommandForwarders();

@@ -16,7 +16,7 @@ namespace hex::messaging {
             // Get the window name
             auto length = ::GetWindowTextLength(hWnd);
             std::string windowName(length + 1, '\x00');
-            ::GetWindowText(hWnd, windowName.data(), windowName.size());
+            ::GetWindowTextA(hWnd, windowName.data(), windowName.size());
 
             // Check if the window is visible and if it's an ImHex window
             if (::IsWindowVisible(hWnd) == TRUE && length != 0) {
@@ -66,13 +66,13 @@ namespace hex::messaging {
 
     bool setupNative() {
 
-        constexpr static auto UniqueMutexId = "ImHex/a477ea68-e334-4d07-a439-4f159c683763";
+        constexpr static auto UniqueMutexId = L"ImHex/a477ea68-e334-4d07-a439-4f159c683763";
 
         // Check if an ImHex instance is already running by opening a global mutex
-        HANDLE globalMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, UniqueMutexId);
+        HANDLE globalMutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, UniqueMutexId);
         if (globalMutex == nullptr) {
             // If no ImHex instance is running, create a new global mutex
-            globalMutex = CreateMutex(nullptr, FALSE, UniqueMutexId);
+            globalMutex = CreateMutexW(nullptr, FALSE, UniqueMutexId);
             return true;
         } else {
             return false;

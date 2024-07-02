@@ -146,7 +146,7 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-            const auto windowSize = ImHexApi::System::getMainWindowSize();
+            const auto windowSize = ImGui::GetWindowSize();
             auto searchBoxSize = ImVec2(s_showSearchBar ? windowSize.x / 2.5 : ImGui::CalcTextSize(s_windowTitle.c_str()).x, titleBarHeight);
             auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 0);
             auto titleBarButtonPosY = 0.0F;
@@ -371,7 +371,8 @@ namespace hex::plugin::builtin {
                         ImGui::Image(s_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
                         ImGui::SetCursorPosX(5_scaled);
                         ImGui::InvisibleButton("##logo", ImVec2(menuBarHeight, menuBarHeight));
-                        ImGui::OpenPopupOnItemClick("WindowingMenu", ImGuiPopupFlags_MouseButtonLeft);
+                        if (ImGui::IsItemHovered() && ImGui::IsAnyMouseDown())
+                            ImGui::OpenPopup("WindowingMenu");
                     #elif defined(OS_MACOS)
                         if (!isMacosFullScreenModeEnabled(window))
                             ImGui::SetCursorPosX(68_scaled);
