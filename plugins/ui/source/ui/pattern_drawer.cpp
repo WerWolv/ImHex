@@ -141,13 +141,42 @@ namespace hex::ui {
 
         void drawSizeColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
             ImGui::TableNextColumn();
-            if (pattern.getBitSize() == 1)
-                ImGuiExt::TextFormatted("1 bit");
-            else
-                ImGuiExt::TextFormatted("{0} bits", pattern.getBitSize());
+
+            auto bits = pattern.getBitSize();
+            auto bytes = bits / 8;
+            bits = bits % 8;
+
+            std::string text;
+            if (bytes != 0) {
+                if (bytes == 1)
+                    text += hex::format("{0} byte", bytes);
+                else
+                    text += hex::format("{0} bytes", bytes);
+
+                if (bits != 0)
+                    text += ", ";
+            }
+
+            if (bits != 0) {
+                if (bits == 1)
+                    text += hex::format("{0} bit", bits);
+                else
+                    text += hex::format("{0} bits", bits);
+            }
+
+            if (bytes == 0 && bits == 0) {
+                text = "0 bytes";
+            }
+
+            ImGui::TextUnformatted(text.c_str());
         }
 
         void drawSizeColumn(const pl::ptrn::Pattern& pattern) {
+            if (pattern.isPatternLocal()) {
+                ImGui::TableNextColumn();
+                return;
+            }
+
             if (auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
                 drawSizeColumnForBitfieldMember(*bitfieldMember);
             else {
