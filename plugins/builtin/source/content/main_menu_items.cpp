@@ -644,12 +644,6 @@ namespace hex::plugin::builtin {
 
     static void createHelpMenu() {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.help", 6000);
-
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "Interactive Help"}, 10000, Shortcut::None, []{
-            TutorialManager::startHelpHover();
-        });
-
-        TutorialManager::addInteractiveHelpLink({ View::toWindowName("hex.builtin.view.pattern_data.name") }, "https://google.com");
     }
 
 
