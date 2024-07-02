@@ -111,7 +111,9 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("0x{0:08X}.{1}", pattern.getOffset(), pattern.getBitOffsetForDisplay());
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("0x{0:08X}.{1}", pattern.getOffset() + pattern.getSize(), (pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1)) % 8);
+
+                const auto bitSize = (pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1));
+                ImGuiExt::TextFormatted("0x{0:08X}.{1}", pattern.getOffset() + bitSize / 8, bitSize % 8);
             }
         }
 
