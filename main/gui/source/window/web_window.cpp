@@ -7,6 +7,9 @@
 
 #include <hex/api/event_manager.hpp>
 
+#include <imgui.h>
+#include <imgui_internal.h>
+
 // Function used by c++ to get the size of the html canvas
 EM_JS(int, canvas_get_width, (), {
     return Module.canvas.width;
@@ -35,6 +38,27 @@ EM_JS(bool, isDarkModeEnabled, (), {
 EMSCRIPTEN_KEEPALIVE
 extern "C" void handleThemeChange() {
     hex::EventOSThemeChanged::post();
+}
+
+
+EM_JS(void, setupInputModeListener, (), {
+    Module.canvas.addEventListener('mousedown', function() {
+        Module._enterMouseMode();
+    });
+
+    Module.canvas.addEventListener('touchstart', function() {
+        Module._enterTouchMode();
+    });
+});
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" void enterMouseMode() {
+    ImGui::GetIO().AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" void enterTouchMode() {
+    ImGui::GetIO().AddMouseSourceEvent(ImGuiMouseSource_TouchScreen);
 }
 
 namespace hex {
@@ -70,6 +94,7 @@ namespace hex {
     void Window::setupNativeWindow() {
         resizeCanvas();
         setupThemeListener();
+        setupInputModeListener();
 
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
         EventOSThemeChanged::subscribe(this, [themeFollowSystem] {
