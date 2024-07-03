@@ -100,7 +100,77 @@ var notWorkingTimer = setTimeout(() => {
 
 var Module = {
     preRun:  [],
-    postRun: [],
+    postRun: function() {
+        // Patch the emscripten GLFW module to send mouse and touch events in the right order
+        // For ImGui interactions to correctly work with touch input, MousePos events need
+        // to be processed first and then MouseButton events in the next frame. By default,
+        // GLFW does the exact opposite, which causes buttons to require two taps to register
+        // and windows get "stuck" to the cursor when dragged or resized
+        GLFW.onMousemove = event => {
+            if (event.type === "touchmove") {
+                event.preventDefault();
+                let primaryChanged = false;
+                for (let i of event.changedTouches) {
+                    if (GLFW.primaryTouchId === i.identifier) {
+                        Browser.setMouseCoords(i.pageX, i.pageY);
+                        primaryChanged = true;
+                        break;
+                    }
+                }
+                if (!primaryChanged) {
+                    return;
+                }
+            } else {
+                Browser.calculateMouseEvent(event);
+            }
+        };
+
+        GLFW.onMouseButtonChanged = (event, status) => {
+            if (!GLFW.active) return;
+            if (event.target != Module["canvas"]) return;
+            const isTouchType = event.type === "touchstart" || event.type === "touchend" || event.type === "touchcancel";
+            let eventButton = 0;
+            if (isTouchType) {
+                event.preventDefault();
+                let primaryChanged = false;
+                if (GLFW.primaryTouchId === null && event.type === "touchstart" && event.targetTouches.length > 0) {
+                    const chosenTouch = event.targetTouches[0];
+                    GLFW.primaryTouchId = chosenTouch.identifier;
+                    Browser.setMouseCoords(chosenTouch.pageX, chosenTouch.pageY);
+                    primaryChanged = true;
+                } else if (event.type === "touchend" || event.type === "touchcancel") {
+                    for (let i of event.changedTouches) {
+                        if (GLFW.primaryTouchId === i.identifier) {
+                            GLFW.primaryTouchId = null;
+                            primaryChanged = true;
+                            break;
+                        }
+                    }
+                }
+                if (!primaryChanged) {
+                    return;
+                }
+            } else {
+                Browser.calculateMouseEvent(event);
+                eventButton = GLFW.DOMToGLFWMouseButton(event);
+            }
+            if (status == 1) {
+                GLFW.active.buttons |= (1 << eventButton);
+                try {
+                    event.target.setCapture();
+                } catch (e) {}
+            } else {
+                GLFW.active.buttons &= ~(1 << eventButton);
+            }
+
+            if (GLFW.active.cursorPosFunc) {
+                getWasmTableEntry(GLFW.active.cursorPosFunc)(GLFW.active.id, Browser.mouseX, Browser.mouseY);
+            }
+            if (GLFW.active.mouseButtonFunc) {
+                getWasmTableEntry(GLFW.active.mouseButtonFunc)(GLFW.active.id, eventButton, status, GLFW.getModBits(GLFW.active));
+            }
+        };
+    },
     onRuntimeInitialized: function() {
         // Triggered when the wasm module is loaded and ready to use.
         document.getElementById("loading").style.display = "none"
@@ -156,7 +226,6 @@ if (urlParams.has("lang")) {
 window.addEventListener('resize', js_resizeCanvas, false);
 function js_resizeCanvas() {
     let canvas = document.getElementById('canvas');
-
 
     canvas.top    = document.documentElement.clientTop;
     canvas.left   = document.documentElement.clientLeft;
