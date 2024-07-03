@@ -13,6 +13,7 @@
 #include <nethost.h>
 #include <coreclr_delegates.h>
 #include <hostfxr.h>
+
 #include <imgui.h>
 #include <hex/api/plugin_manager.hpp>
 
@@ -110,13 +111,7 @@ namespace hex::script::loader {
                         = getExport<hostfxr_set_error_writer_fn>(hostfxrLibrary, "hostfxr_set_error_writer");
             }
 
-            hostfxr_set_error_writer([] HOSTFXR_CALLTYPE (const char_t *message) {
-                #if defined(OS_WINDOWS)
-                    log::error("{}", utf16ToUtf8(message));
-                #else
-                    log::error("{}", message);
-                #endif
-            });
+            hostfxr_set_error_writer([] HOSTFXR_CALLTYPE (const char_t *) { });
 
             return
                 hostfxr_initialize_for_runtime_config != nullptr &&
@@ -137,7 +132,12 @@ namespace hex::script::loader {
             };
 
             if (result > 2 || ctx == nullptr) {
-                throw std::runtime_error(hex::format("Failed to initialize command line 0x{:X}", result));
+                if (result == /* FrameworkMissingFailure */ 0x80008096) {
+                    log::warn("ImHex has built-in support for .NET scripts and extensions. However, these can only be used when the .NET runtime is installed.");
+                    log::warn("Please install version {} or later of the .NET runtime if you plan to use them. Otherwise this error can be safely ignored.", IMHEX_DOTNET_RUNTIME_VERSION);
+                }
+
+                throw std::runtime_error(hex::format("Command line init failed 0x{:X}", result));
             }
 
             #if defined (OS_WINDOWS)
@@ -145,6 +145,14 @@ namespace hex::script::loader {
             #else
                 hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), hex::format("{}", (void*)pInvokeOverride).c_str());
             #endif
+
+            hostfxr_set_error_writer([] HOSTFXR_CALLTYPE (const char_t *message) {
+                #if defined(OS_WINDOWS)
+                    log::error("{}", utf16ToUtf8(message));
+                #else
+                    log::error("{}", message);
+                #endif
+            });
 
             result = hostfxr_get_runtime_delegate(
                 ctx,
