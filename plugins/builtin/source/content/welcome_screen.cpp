@@ -372,7 +372,7 @@ namespace hex::plugin::builtin {
         void drawWelcomeScreen() {
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
             ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
-            if (ImGui::Begin("ImHexDockSpace")) {
+            if (ImGui::Begin("ImHexDockSpace", nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus)) {
                 if (!ImHexApi::Provider::isValid()) {
                     static auto title = []{
                         std::array<char, 256> title = {};
@@ -388,7 +388,7 @@ namespace hex::plugin::builtin {
                         ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
                         ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 2_scaled));
                         ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
-                        if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+                        if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                             ImGui::BringWindowToDisplayBack(ImGui::GetCurrentWindowRead());
 
                             drawWelcomeScreenBackground();
@@ -436,7 +436,7 @@ namespace hex::plugin::builtin {
         void drawNoViewsBackground() {
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
             ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
-            if (ImGui::Begin("ImHexDockSpace")) {
+            if (ImGui::Begin("ImHexDockSpace", nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus)) {
                 static std::array<char, 256> title;
                 ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindowRead()->Name, ImGui::GetID("ImHexMainDock"));
                 if (ImGui::Begin(title.data())) {
@@ -447,7 +447,7 @@ namespace hex::plugin::builtin {
                     ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
                     ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 2_scaled));
                     ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
-                    if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+                    if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                         auto imageSize = scaled(ImVec2(350, 350));
                         auto imagePos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
 
