@@ -1067,10 +1067,20 @@ namespace hex::ui {
 
                 ImGui::TableNextColumn();
 
-                drawOffsetColumns(pattern);
+                if (!pattern.isLocal()) {
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("0x{0:08X}", startOffset);
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("0x{0:08X}", endOffset + endSize - (endSize == 0 ? 0 : 1));
+                } else {
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
+                }
 
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("0x{0:04X}", chunkSize);
+                ImGuiExt::TextFormatted("{0} {1}", chunkSize, chunkSize == 1 ? "byte" : "bytes");
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{0}", pattern.getTypeName());
                 ImGui::SameLine(0, 0);
