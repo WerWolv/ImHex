@@ -25,6 +25,10 @@ EM_JS(void, resizeCanvas, (), {
     js_resizeCanvas();
 });
 
+EM_JS(void, fixCanvasInPlace, (), {
+    document.getElementById('canvas').classList.add('canvas-fixed');
+});
+
 EM_JS(void, setupThemeListener, (), {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
         Module._handleThemeChange();
@@ -88,6 +92,9 @@ namespace hex {
                     return;
                 alert("Failed to load permanent file system: "+err);
             });
+
+            // Center splash screen
+            document.getElementById('canvas').classList.remove('canvas-fixed');
         });
     }
 
@@ -95,6 +102,7 @@ namespace hex {
         resizeCanvas();
         setupThemeListener();
         setupInputModeListener();
+        fixCanvasInPlace();
 
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
         EventOSThemeChanged::subscribe(this, [themeFollowSystem] {
