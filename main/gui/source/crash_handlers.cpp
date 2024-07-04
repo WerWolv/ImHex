@@ -122,10 +122,12 @@ namespace hex::crash {
 
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
-        if (signalNumber == SIGINT) {
-            ImHexApi::System::closeImHex();
-            return;
-        }
+        #if !defined (DEBUG)
+            if (signalNumber == SIGINT) {
+                ImHexApi::System::closeImHex();
+                return;
+            }
+        #endif
 
         // Reset crash handlers, so we can't have a recursion if this code crashes
         resetCrashHandlers();
