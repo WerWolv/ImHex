@@ -180,3 +180,9 @@ a:hover {
     height: 25%;
     margin-top: 50px;
 }
+
+.canvas-fixed {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
