@@ -187,6 +187,36 @@ var Module = {
             e.preventDefault();
         }, false);
 
+        // Turn long touches into right-clicks
+        let timer = null;
+        canvas.addEventListener('touchstart', event => {
+            timer = setTimeout(() => {
+                let eventArgs = {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    screenX: event.touches[0].screenX,
+                    screenY: event.touches[0].screenY,
+                    clientX: event.touches[0].clientX,
+                    clientY: event.touches[0].clientY,
+                    button: 2,
+                    buttons: 2,
+                    relatedTarget: event.target,
+                    region: event.region
+                }
+
+                canvas.dispatchEvent(new MouseEvent('mousedown', eventArgs));
+                canvas.dispatchEvent(new MouseEvent('mouseup', eventArgs));
+            }, 400);
+        });
+
+        canvas.addEventListener('touchend', event => {
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+        });
+
         if (typeof WebGL2RenderingContext !== 'undefined') {
             let gl = canvas.getContext('webgl2', { stencil: true });
             if (!gl) {

@@ -231,7 +231,7 @@ namespace hex::plugin::builtin {
 
             m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
-            if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+            if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
                 ImGui::OpenPopup("##pattern_editor_context_menu");
             }
 
