@@ -597,7 +597,7 @@ namespace hex::plugin::builtin {
 
     void ViewDataProcessor::drawContextMenus(ViewDataProcessor::Workspace &workspace) {
         // Handle the right click context menus
-        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
             // Clear selections
             ImNodes::ClearNodeSelection();
             ImNodes::ClearLinkSelection();
