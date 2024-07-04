@@ -284,12 +284,10 @@ namespace hex::plugin::builtin {
         }
 
         void defineMenu(const UnlocalizedString &menuName) {
-            ImGui::GetStyle().TouchExtraPadding = scaled(ImVec2(0, 2));
             if (ImGui::BeginMenu(Lang(menuName))) {
                 populateMenu(menuName);
                 ImGui::EndMenu();
             }
-            ImGui::GetStyle().TouchExtraPadding = ImVec2(0, 0);
         }
 
         void drawMenu() {
