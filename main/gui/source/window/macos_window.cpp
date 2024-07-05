@@ -66,7 +66,7 @@ namespace hex {
         });
 
         EventProviderDirtied::subscribe([this](prv::Provider *) {
-            TaskManager::doLater([] {
+            TaskManager::doLater([this] {
                 macosMarkContentEdited(m_window);
             });
         });
@@ -78,7 +78,7 @@ namespace hex {
                 return true;
             },
             .store = [this](const std::fs::path &, Tar &) {
-                TaskManager::doLater([] {
+                TaskManager::doLater([this] {
                     macosMarkContentEdited(m_window, false);
                 });
 
