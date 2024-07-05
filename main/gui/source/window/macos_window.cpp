@@ -5,6 +5,7 @@
     #include <hex/api/project_file_manager.hpp>
     #include <hex/api/imhex_api.hpp>
     #include <hex/api/event_manager.hpp>
+    #include <hex/api/task_manager.hpp>
 
     #include <hex/helpers/utils_macos.hpp>
     #include <hex/helpers/logger.hpp>
@@ -65,7 +66,9 @@ namespace hex {
         });
 
         EventProviderDirtied::subscribe([this](prv::Provider *) {
-            macosMarkContentEdited(m_window);
+            TaskManager::doLater([] {
+                macosMarkContentEdited(m_window);
+            });
         });
 
         ProjectFile::registerHandler({
@@ -75,7 +78,10 @@ namespace hex {
                 return true;
             },
             .store = [this](const std::fs::path &, Tar &) {
-                macosMarkContentEdited(m_window, false);
+                TaskManager::doLater([] {
+                    macosMarkContentEdited(m_window, false);
+                });
+
                 return true;
             }
         });
