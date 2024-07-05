@@ -201,6 +201,10 @@ namespace hex::plugin::builtin {
                 return m_value;
             }
 
+            float getValue() const {
+                return m_value;
+            }
+
         private:
             float m_value = 1.0F;
         };
@@ -833,6 +837,14 @@ namespace hex::plugin::builtin {
             auto customFontPathSetting = ContentRegistry::Settings::add<FontFilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
                     .requiresRestart()
                     .setEnabledCallback(customFontsEnabled);
+
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.pixel_perfect_default_font", true)
+                .setEnabledCallback([customFontPathSetting] {
+                    auto &fontPath = static_cast<Widgets::FilePicker &>(customFontPathSetting.getWidget());
+
+                    return fontPath.getPath().empty();
+                })
+                .requiresRestart();
 
             const auto customFontSettingsEnabled = [customFontEnabledSetting, customFontPathSetting] {
                 auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
