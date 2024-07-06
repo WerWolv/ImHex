@@ -26,6 +26,8 @@ namespace hex::plugin::builtin {
 
     namespace {
 
+        bool s_showScalingWarning = true;
+
         /*
             Values of this setting:
             0 - do not check for updates on startup
@@ -184,7 +186,7 @@ namespace hex::plugin::builtin {
                 else if (m_value > 10)
                     m_value = 10;
 
-                if (ImHexApi::Fonts::getCustomFontPath().empty() && (u32(m_value * 10) % 10) != 0) {
+                if (s_showScalingWarning && (u32(m_value * 10) % 10) != 0) {
                     ImGui::SameLine();
                     ImGuiExt::HelpHover("hex.builtin.setting.interface.scaling.fractional_warning"_lang, ICON_VS_WARNING, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
                 }
@@ -764,7 +766,8 @@ namespace hex::plugin::builtin {
                                                                   }
                                                               });
 
-            ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor").requiresRestart();
+            ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor")
+            .requiresRestart();
 
             #if defined (OS_WEB)
                 ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.crisp_scaling", false)
@@ -823,6 +826,11 @@ namespace hex::plugin::builtin {
 
         /* Fonts */
         {
+            const auto scaleWarningHandler = [](auto&) {
+                s_showScalingWarning = ImHexApi::Fonts::getCustomFontPath().empty() &&
+                    ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
+            };
+
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false)
                 .requiresRestart();
 
@@ -836,15 +844,8 @@ namespace hex::plugin::builtin {
 
             auto customFontPathSetting = ContentRegistry::Settings::add<FontFilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
                     .requiresRestart()
+                    .setChangedCallback(scaleWarningHandler)
                     .setEnabledCallback(customFontsEnabled);
-
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.pixel_perfect_default_font", true)
-                .setEnabledCallback([customFontPathSetting] {
-                    auto &fontPath = static_cast<Widgets::FilePicker &>(customFontPathSetting.getWidget());
-
-                    return fontPath.getPath().empty();
-                })
-                .requiresRestart();
 
             const auto customFontSettingsEnabled = [customFontEnabledSetting, customFontPathSetting] {
                 auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
@@ -852,6 +853,16 @@ namespace hex::plugin::builtin {
 
                 return customFontsEnabled.isChecked() && !fontPath.getPath().empty();
             };
+
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.pixel_perfect_default_font", true)
+                .setChangedCallback(scaleWarningHandler)
+                .setEnabledCallback([customFontPathSetting, customFontEnabledSetting] {
+                    auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
+                    auto &fontPath = static_cast<Widgets::FilePicker &>(customFontPathSetting.getWidget());
+
+                    return customFontsEnabled.isChecked()&& fontPath.getPath().empty();
+                })
+                .requiresRestart();
 
             ContentRegistry::Settings::add<Widgets::Label>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_info")
                     .setEnabledCallback(customFontsEnabled);
