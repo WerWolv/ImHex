@@ -142,7 +142,7 @@ namespace hex::plugin::builtin {
 
     void addInitTasks() {
         ImHexApi::System::addStartupTask("Load Window Settings", false, loadWindowSettings);
-        ImHexApi::System::addStartupTask("Configuring UI scale", true, configureUIScale);
+        ImHexApi::System::addStartupTask("Configuring UI scale", false, configureUIScale);
         ImHexApi::System::addStartupTask("Checking for updates", true, checkForUpdates);
     }
 }
