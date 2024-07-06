@@ -206,7 +206,7 @@ namespace hex::plugin::builtin {
             }
 
         private:
-            float m_value = 1.0F;
+            float m_value = 0.0F;
         };
 
         class AutoBackupWidget : public ContentRegistry::Settings::Widgets::Widget {
