@@ -239,40 +239,58 @@ namespace hex::plugin::decompress {
         });
 
         /* lz4_decompress(compressed_pattern, section_id) */
-        ContentRegistry::PatternLanguage::addFunction(nsHexDec, "lz4_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
+        ContentRegistry::PatternLanguage::addFunction(nsHexDec, "lz4_decompress", FunctionParameterCount::exactly(3), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(LZ4)
                 auto compressedData = getCompressedData(evaluator, params[0]);
                 auto &section = evaluator->getSection(params[1].toUnsigned());
+                bool frame = params[2].toBoolean();
 
-                // Create the decompression context
-                LZ4F_decompressionContext_t dctx;
-                LZ4F_errorCode_t err = LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION);
-                if (LZ4F_isError(err)) {
-                   return false;
-                }
-
-                std::vector<u8> outBuffer(1024 * 1024);
-
-                const u8* sourcePointer = compressedData.data();
-                size_t srcSize = compressedData.size();
-
-                while (srcSize > 0) {
-                    u8* dstPtr = outBuffer.data();
-                    size_t dstCapacity = outBuffer.size();
-
-                    // Decompress the data
-                    size_t ret = LZ4F_decompress(dctx, dstPtr, &dstCapacity, sourcePointer, &srcSize, nullptr);
-                    if (LZ4F_isError(ret)) {
-                        LZ4F_freeDecompressionContext(dctx);
-                        return false;
+                if (frame) {
+                    LZ4F_decompressionContext_t dctx;
+                    LZ4F_errorCode_t err = LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION);
+                    if (LZ4F_isError(err)) {
+                       return false;
                     }
 
-                    section.insert(section.end(), outBuffer.begin(), outBuffer.begin() + dstCapacity);
-                    sourcePointer += (compressedData.size() - srcSize);
+                    std::vector<u8> outBuffer(1024 * 1024);
+
+                    const u8* sourcePointer = compressedData.data();
+                    size_t srcSize = compressedData.size();
+
+                    while (srcSize > 0) {
+                        u8* dstPtr = outBuffer.data();
+                        size_t dstCapacity = outBuffer.size();
+
+                        size_t ret = LZ4F_decompress(dctx, dstPtr, &dstCapacity, sourcePointer, &srcSize, nullptr);
+                        if (LZ4F_isError(ret)) {
+                            LZ4F_freeDecompressionContext(dctx);
+                            return false;
+                        }
+
+                        section.insert(section.end(), outBuffer.begin(), outBuffer.begin() + dstCapacity);
+                        sourcePointer += (compressedData.size() - srcSize);
+                    }
+
+                    LZ4F_freeDecompressionContext(dctx);
+                } else {
+                    section.resize(1024 * 1024);
+
+                    while (true) {
+                        auto decompressedSize = LZ4_decompress_safe(reinterpret_cast<const char*>(compressedData.data()), reinterpret_cast<char *>(section.data()), compressedData.size(), static_cast<int>(section.size()));
+
+                        if (decompressedSize < 0) {
+                            return false;
+                        } else if (decompressedSize > 0) {
+                            // Successful decompression
+                            section.resize(decompressedSize);
+                            break;
+                        } else {
+                            // Buffer too small, resize and try again
+                            section.resize(section.size() * 2);
+                        }
+                    }
                 }
 
-                // Free the decompression context
-                LZ4F_freeDecompressionContext(dctx);
 
                 return true;
             #else
