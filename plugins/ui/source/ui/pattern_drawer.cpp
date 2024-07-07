@@ -111,7 +111,9 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("0x{0:08X}.{1}", pattern.getOffset(), pattern.getBitOffsetForDisplay());
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("0x{0:08X}.{1}", pattern.getOffset() + pattern.getSize(), (pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1)) % 8);
+
+                const auto bitSize = (pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1));
+                ImGuiExt::TextFormatted("0x{0:08X}.{1}", pattern.getOffset() + bitSize / 8, bitSize % 8);
             }
         }
 
@@ -141,13 +143,42 @@ namespace hex::ui {
 
         void drawSizeColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
             ImGui::TableNextColumn();
-            if (pattern.getBitSize() == 1)
-                ImGuiExt::TextFormatted("1 bit");
-            else
-                ImGuiExt::TextFormatted("{0} bits", pattern.getBitSize());
+
+            auto bits = pattern.getBitSize();
+            auto bytes = bits / 8;
+            bits = bits % 8;
+
+            std::string text;
+            if (bytes != 0) {
+                if (bytes == 1)
+                    text += hex::format("{0} byte", bytes);
+                else
+                    text += hex::format("{0} bytes", bytes);
+
+                if (bits != 0)
+                    text += ", ";
+            }
+
+            if (bits != 0) {
+                if (bits == 1)
+                    text += hex::format("{0} bit", bits);
+                else
+                    text += hex::format("{0} bits", bits);
+            }
+
+            if (bytes == 0 && bits == 0) {
+                text = "0 bytes";
+            }
+
+            ImGui::TextUnformatted(text.c_str());
         }
 
         void drawSizeColumn(const pl::ptrn::Pattern& pattern) {
+            if (pattern.isPatternLocal()) {
+                ImGui::TableNextColumn();
+                return;
+            }
+
             if (auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
                 drawSizeColumnForBitfieldMember(*bitfieldMember);
             else {
@@ -1038,10 +1069,20 @@ namespace hex::ui {
 
                 ImGui::TableNextColumn();
 
-                drawOffsetColumns(pattern);
+                if (!pattern.isLocal()) {
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("0x{0:08X}", startOffset);
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("0x{0:08X}", endOffset + endSize - (endSize == 0 ? 0 : 1));
+                } else {
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
+                }
 
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("0x{0:04X}", chunkSize);
+                ImGuiExt::TextFormatted("{0} {1}", chunkSize, chunkSize == 1 ? "byte" : "bytes");
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{0}", pattern.getTypeName());
                 ImGui::SameLine(0, 0);

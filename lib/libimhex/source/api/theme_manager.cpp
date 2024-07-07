@@ -21,6 +21,11 @@ namespace hex {
     }
 
 
+    void ThemeManager::reapplyCurrentTheme() {
+        ThemeManager::changeTheme(s_currTheme);
+    }
+
+
     void ThemeManager::addThemeHandler(const std::string &name, const ColorMap &colorMap, const std::function<ImColor(u32)> &getFunction, const std::function<void(u32, ImColor)> &setFunction) {
         std::unique_lock lock(s_themeMutex);
 

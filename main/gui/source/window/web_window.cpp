@@ -7,6 +7,9 @@
 
 #include <hex/api/event_manager.hpp>
 
+#include <imgui.h>
+#include <imgui_internal.h>
+
 // Function used by c++ to get the size of the html canvas
 EM_JS(int, canvas_get_width, (), {
     return Module.canvas.width;
@@ -22,6 +25,10 @@ EM_JS(void, resizeCanvas, (), {
     js_resizeCanvas();
 });
 
+EM_JS(void, fixCanvasInPlace, (), {
+    document.getElementById('canvas').classList.add('canvas-fixed');
+});
+
 EM_JS(void, setupThemeListener, (), {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
         Module._handleThemeChange();
@@ -35,6 +42,27 @@ EM_JS(bool, isDarkModeEnabled, (), {
 EMSCRIPTEN_KEEPALIVE
 extern "C" void handleThemeChange() {
     hex::EventOSThemeChanged::post();
+}
+
+
+EM_JS(void, setupInputModeListener, (), {
+    Module.canvas.addEventListener('mousedown', function() {
+        Module._enterMouseMode();
+    });
+
+    Module.canvas.addEventListener('touchstart', function() {
+        Module._enterTouchMode();
+    });
+});
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" void enterMouseMode() {
+    ImGui::GetIO().AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" void enterTouchMode() {
+    ImGui::GetIO().AddMouseSourceEvent(ImGuiMouseSource_TouchScreen);
 }
 
 namespace hex {
@@ -64,12 +92,17 @@ namespace hex {
                     return;
                 alert("Failed to load permanent file system: "+err);
             });
+
+            // Center splash screen
+            document.getElementById('canvas').classList.remove('canvas-fixed');
         });
     }
 
     void Window::setupNativeWindow() {
         resizeCanvas();
         setupThemeListener();
+        setupInputModeListener();
+        fixCanvasInPlace();
 
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
         EventOSThemeChanged::subscribe(this, [themeFollowSystem] {

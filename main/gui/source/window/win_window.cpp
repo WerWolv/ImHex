@@ -1,3 +1,6 @@
+#include <hex/api/content_registry.hpp>
+#include <hex/api/theme_manager.hpp>
+
 #include "window.hpp"
 
 
@@ -45,6 +48,22 @@ namespace hex {
     // Custom Window procedure for receiving OS events
     static LRESULT commonWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
+            case WM_DPICHANGED: {
+                int interfaceScaleSetting = int(hex::ContentRegistry::Settings::read<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F) * 10.0F);
+                if (interfaceScaleSetting != 0)
+                    break;
+
+                const auto newScale = LOWORD(wParam) / 96.0F;
+                const auto oldScale = ImHexApi::System::getNativeScale();
+
+                EventDPIChanged::post(oldScale, newScale);
+                ImHexApi::System::impl::setNativeScale(newScale);
+
+                ThemeManager::reapplyCurrentTheme();
+                ImGui::GetStyle().ScaleAllSizes(newScale);
+
+                return TRUE;
+            }
             case WM_COPYDATA: {
                 // Handle opening files in existing instance
 
@@ -371,6 +390,18 @@ namespace hex {
 
 
     void Window::initNative() {
+        // Setup DPI Awareness
+        {
+            using SetProcessDpiAwarenessContextFunc = HRESULT(WINAPI *)(DPI_AWARENESS_CONTEXT);
+
+            SetProcessDpiAwarenessContextFunc SetProcessDpiAwarenessContext =
+                (SetProcessDpiAwarenessContextFunc)(void*)GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetProcessDpiAwarenessContext");
+
+            if (SetProcessDpiAwarenessContext != nullptr) {
+                SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+            }
+        }
+
         if (ImHexApi::System::isDebugBuild()) {
             // If the application is running in debug mode, ImHex runs under the CONSOLE subsystem,
             // so we don't need to do anything besides enabling ANSI colors

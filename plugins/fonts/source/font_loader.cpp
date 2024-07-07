@@ -1,12 +1,16 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_freetype.h>
+#include <imgui_impl_opengl3.h>
 
 #include <memory>
 #include <list>
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
+#include <hex/api/event_manager.hpp>
+#include <hex/api/task_manager.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
@@ -64,13 +68,14 @@ namespace hex::fonts {
                 config.SizePixels = std::floor(ImHexApi::System::getGlobalScale()) * 13.0F;
 
                 auto font = m_fontAtlas->AddFontDefault(&config);
+                m_fontSizes.emplace_back(false, config.SizePixels);
 
                 m_config.MergeMode = true;
 
                 return Font(font);
             }
 
-            Font addFontFromMemory(const std::vector<u8> &fontData, float fontSize, ImVec2 offset, bool ownedByImGui = false, const ImVector<ImWchar> &glyphRange = {}) {
+            Font addFontFromMemory(const std::vector<u8> &fontData, float fontSize, bool scalable, ImVec2 offset, bool ownedByImGui = false, const ImVector<ImWchar> &glyphRange = {}) {
                 auto &storedFontData = m_fontData.emplace_back(fontData);
 
                 ImFontConfig config = m_config;
@@ -78,22 +83,23 @@ namespace hex::fonts {
 
                 config.GlyphOffset = { offset.x, offset.y };
                 auto font = m_fontAtlas->AddFontFromMemoryTTF(storedFontData.data(), int(storedFontData.size()), fontSize, &config, !glyphRange.empty() ? glyphRange.Data : m_glyphRange.Data);
+                m_fontSizes.emplace_back(scalable, fontSize);
 
                 m_config.MergeMode = true;
 
                 return Font(font);
             }
 
-            Font addFontFromRomFs(const std::fs::path &path, float fontSize, ImVec2 offset, const ImVector<ImWchar> &glyphRange = {}) {
+            Font addFontFromRomFs(const std::fs::path &path, float fontSize, bool scalable, ImVec2 offset, const ImVector<ImWchar> &glyphRange = {}) {
                 auto data = romfs::get(path).span<u8>();
-                return addFontFromMemory({ data.begin(), data.end() }, fontSize, offset, false, glyphRange);
+                return addFontFromMemory({ data.begin(), data.end() }, fontSize, scalable, offset, false, glyphRange);
             }
 
-            Font addFontFromFile(const std::fs::path &path, float fontSize, ImVec2 offset, const ImVector<ImWchar> &glyphRange = {}) {
+            Font addFontFromFile(const std::fs::path &path, float fontSize, bool scalable, ImVec2 offset, const ImVector<ImWchar> &glyphRange = {}) {
                 wolv::io::File file(path, wolv::io::File::Mode::Read);
 
                 auto data = file.readVector();
-                return addFontFromMemory(data, fontSize, offset, true, glyphRange);
+                return addFontFromMemory(data, fontSize, scalable, offset, true, glyphRange);
             }
 
             void setBold(bool enabled) {
@@ -154,7 +160,6 @@ namespace hex::fonts {
 
             [[nodiscard]] ImFontAtlas* takeAtlas() {
                 auto result = m_fontAtlas;
-                m_fontAtlas = nullptr;
 
                 return result;
             }
@@ -198,8 +203,22 @@ namespace hex::fonts {
                 m_config.MergeMode = false;
             }
 
+            void updateFontScaling(float newScaling) {
+                for (int i = 0; i < m_fontAtlas->ConfigData.size(); i += 1) {
+                    const auto &[scalable, fontSize] = m_fontSizes[i];
+                    auto &configData = m_fontAtlas->ConfigData[i];
+
+                    if (!scalable) {
+                        configData.SizePixels = fontSize * std::floor(newScaling);
+                    } else {
+                        configData.SizePixels = fontSize * newScaling;
+                    }
+                }
+            }
+
         private:
             ImFontAtlas* m_fontAtlas;
+            std::vector<std::pair<bool, float>> m_fontSizes;
             ImFontConfig m_config;
             ImVector<ImWchar> m_glyphRange;
 
@@ -288,7 +307,7 @@ namespace hex::fonts {
         // Try to load the custom font if one was set
         std::optional<Font> defaultFont;
         if (!customFontPath.empty()) {
-            defaultFont = fontAtlas.addFontFromFile(customFontPath, fontSize, ImVec2());
+            defaultFont = fontAtlas.addFontFromFile(customFontPath, fontSize, true, ImVec2());
             if (!fontAtlas.build()) {
                 log::error("Failed to load custom font '{}'! Falling back to default font", wolv::util::toUTF8String(customFontPath));
                 defaultFont.reset();
@@ -297,7 +316,13 @@ namespace hex::fonts {
 
         // If there's no custom font set, or it failed to load, fall back to the default font
         if (!defaultFont.has_value()) {
-            defaultFont = fontAtlas.addDefaultFont();
+            auto pixelPerfectFont = ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
+
+            if (pixelPerfectFont)
+                defaultFont = fontAtlas.addDefaultFont();
+            else
+                defaultFont = fontAtlas.addFontFromRomFs("fonts/firacode.ttf", fontSize * 1.1, true, ImVec2());
+
             if (!fontAtlas.build()) {
                 log::fatal("Failed to load default font!");
                 return false;
@@ -326,9 +351,19 @@ namespace hex::fonts {
                 ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->getDescent() - fontAtlas.calculateFontDescend(font, fontSize)) };
 
                 // Load the font
-                fontAtlas.addFontFromMemory(font.fontData, font.defaultSize.value_or(fontSize), offset, false, glyphRanges.back());
+                fontAtlas.addFontFromMemory(font.fontData, font.defaultSize.value_or(fontSize), !font.defaultSize.has_value(), offset, false, glyphRanges.back());
             }
         }
+
+        EventDPIChanged::subscribe([](float, float newScaling) {
+            fontAtlas.updateFontScaling(newScaling);
+
+            if (fontAtlas.build()) {
+                ImGui_ImplOpenGL3_DestroyFontsTexture();
+                ImGui_ImplOpenGL3_CreateFontsTexture();
+                ImHexApi::Fonts::impl::setFontAtlas(fontAtlas.takeAtlas());
+            }
+        });
 
         // Build the font atlas
         const bool result = fontAtlas.build();

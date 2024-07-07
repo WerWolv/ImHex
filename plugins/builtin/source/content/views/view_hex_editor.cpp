@@ -608,7 +608,7 @@ namespace hex::plugin::builtin {
                         m_currentPopupHasHovered = false;
                     }
 
-                    m_currentPopupHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_RootAndChildWindows);
+                    m_currentPopupHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_RectOnly | ImGuiHoveredFlags_RootAndChildWindows);
                     m_currentPopupDetached = !ImGui::GetCurrentWindow()->ViewportOwned;
                     m_currentPopupHasHovered |= m_currentPopupHover;
 
@@ -629,7 +629,7 @@ namespace hex::plugin::builtin {
             ImGui::PopStyleVar();
 
         // Right click menu
-        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsAnyItemHovered())
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsAnyItemHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Right))
             RequestOpenPopup::post("hex.builtin.menu.edit");
     }
 

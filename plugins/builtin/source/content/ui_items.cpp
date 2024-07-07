@@ -412,7 +412,8 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addToolbarItem([] {
 
             for (const auto &menuItem : ContentRegistry::Interface::impl::getToolbarMenuItems()) {
-                if (menuItem->unlocalizedNames.back().get() == ContentRegistry::Interface::impl::SeparatorValue) {
+                const auto &unlocalizedItemName = menuItem->unlocalizedNames.back();
+                if (unlocalizedItemName.get() == ContentRegistry::Interface::impl::SeparatorValue) {
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                     continue;
                 }
@@ -421,6 +422,8 @@ namespace hex::plugin::builtin {
                 if (ImGuiExt::ToolBarButton(menuItem->icon.glyph.c_str(), ImGuiExt::GetCustomColorVec4(ImGuiCustomCol(menuItem->icon.color)))) {
                     menuItem->callback();
                 }
+                ImGuiExt::InfoTooltip(Lang(unlocalizedItemName));
+
                 ImGui::EndDisabled();
             }
         });
@@ -489,7 +492,7 @@ namespace hex::plugin::builtin {
                             break;
                         }
 
-                        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
+                        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
                             rightClickedProvider = tabProvider;
                             RequestOpenPopup::post("ProviderMenu");
                         }

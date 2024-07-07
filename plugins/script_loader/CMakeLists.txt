@@ -3,8 +3,11 @@ cmake_minimum_required(VERSION 3.16)
 include(ImHexPlugin)
 
 find_package(CoreClrEmbed)
+add_library(dotnet INTERFACE)
 if (CoreClrEmbed_FOUND)
     set(IMHEX_DOTNET_SCRIPT_SUPPORT ON)
+
+    target_compile_definitions(dotnet INTERFACE IMHEX_DOTNET_RUNTIME_VERSION="${CoreClrEmbed_VERSION}")
 
     add_library(nethost SHARED IMPORTED)
     target_include_directories(nethost INTERFACE "${CoreClrEmbed_INCLUDE_DIRS}")
@@ -40,6 +43,7 @@ add_imhex_plugin(
         c_api
         fonts
         ui
+        dotnet
 )
 
 

@@ -115,6 +115,21 @@ namespace hex {
             m_popupsToOpen.push_back(name);
         });
 
+        EventDPIChanged::subscribe([this](float oldScaling, float newScaling) {
+            if (oldScaling == newScaling || oldScaling == 0 || newScaling == 0)
+                return;
+
+            int width, height;
+            glfwGetWindowSize(m_window, &width, &height);
+
+            width = float(width) * newScaling / oldScaling;
+            height = float(height) * newScaling / oldScaling;
+
+            ImHexApi::System::impl::setMainWindowSize(width, height);
+            glfwSetWindowSize(m_window, width, height);
+        });
+
+
         LayoutManager::registerLoadCallback([this](std::string_view line) {
             int width = 0, height = 0;
                 sscanf(line.data(), "MainWindowSize=%d,%d", &width, &height);
@@ -827,6 +842,7 @@ namespace hex {
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
+            win->fullFrame();
         });
 
         // Register window resize callback

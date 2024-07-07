@@ -455,6 +455,7 @@
         "hex.builtin.setting.font.font_italic": "Italic",
         "hex.builtin.setting.font.font_antialias": "Antialiasing",
         "hex.builtin.setting.font.font_path": "Custom Font Path",
+        "hex.builtin.setting.font.pixel_perfect_default_font": "Use a Pixel-Perfect default font",
         "hex.builtin.setting.font.font_size": "Font Size",
         "hex.builtin.setting.font.font_size.tooltip": "The font size can only be adjusted when a custom font has been selected above.\n\nThis is because ImHex uses a pixel-perfect bitmap font by default. Scaling it by any non-integer factor will only cause it to become blurry.",
         "hex.builtin.setting.general": "General",

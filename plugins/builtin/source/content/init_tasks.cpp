@@ -1,5 +1,6 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
+#include <hex/api/event_manager.hpp>
 #include <hex/api_urls.hpp>
 
 #include <hex/api/task_manager.hpp>
@@ -98,15 +99,20 @@ namespace hex::plugin::builtin {
         }
 
         bool configureUIScale() {
-            int interfaceScaleSetting = int(ContentRegistry::Settings::read<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 1.0F) * 10.0F);
+            EventDPIChanged::subscribe([](float, float newScaling) {
+                int interfaceScaleSetting = int(ContentRegistry::Settings::read<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F) * 10.0F);
 
-            float interfaceScaling;
-            if (interfaceScaleSetting == 0)
-                interfaceScaling = ImHexApi::System::getNativeScale();
-            else
-                interfaceScaling = interfaceScaleSetting / 10.0F;
+                float interfaceScaling;
+                if (interfaceScaleSetting == 0)
+                    interfaceScaling = newScaling;
+                else
+                    interfaceScaling = interfaceScaleSetting / 10.0F;
 
-            ImHexApi::System::impl::setGlobalScale(interfaceScaling);
+                ImHexApi::System::impl::setGlobalScale(interfaceScaling);
+            });
+
+            const auto nativeScale = ImHexApi::System::getNativeScale();
+            EventDPIChanged::post(nativeScale, nativeScale);
 
             return true;
         }
@@ -136,7 +142,7 @@ namespace hex::plugin::builtin {
 
     void addInitTasks() {
         ImHexApi::System::addStartupTask("Load Window Settings", false, loadWindowSettings);
-        ImHexApi::System::addStartupTask("Configuring UI scale", true, configureUIScale);
+        ImHexApi::System::addStartupTask("Configuring UI scale", false, configureUIScale);
         ImHexApi::System::addStartupTask("Checking for updates", true, checkForUpdates);
     }
 }
