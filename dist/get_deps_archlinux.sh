@@ -18,4 +18,5 @@ pacman -S $@ --needed \
   zlib          \
   bzip2         \
   xz            \
-  zstd
+  zstd          \
+  lz4

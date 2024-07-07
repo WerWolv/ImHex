@@ -22,6 +22,11 @@
 #if IMHEX_FEATURE_ENABLED(ZSTD)
     #include <zstd.h>
 #endif
+#if IMHEX_FEATURE_ENABLED(LZ4)
+    #include <lz4.h>
+    #include <lz4frame.h>
+#endif
+
 
 namespace hex::plugin::decompress {
 
@@ -89,7 +94,7 @@ namespace hex::plugin::decompress {
                 return true;
             #else
                 hex::unused(evaluator, params);
-                err::E0012.throwError("hex::dec::zlib_decompress is not available. Please recompile with zlib support.");
+                err::E0012.throwError("hex::dec::zlib_decompress is not available. Please recompile ImHex with zlib support.");
             #endif
         });
 
@@ -136,7 +141,7 @@ namespace hex::plugin::decompress {
                 return true;
             #else
                 hex::unused(evaluator, params);
-                err::E0012.throwError("hex::dec::bzlib_decompress is not available. Please recompile with bzip2 support.");
+                err::E0012.throwError("hex::dec::bzlib_decompress is not available. Please recompile ImHex with bzip2 support.");
             #endif
 
         });
@@ -184,7 +189,7 @@ namespace hex::plugin::decompress {
                 return true;
             #else
                 hex::unused(evaluator, params);
-                err::E0012.throwError("hex::dec::lzma_decompress is not available. Please recompile with liblzma support.");
+                err::E0012.throwError("hex::dec::lzma_decompress is not available. Please recompile ImHex with liblzma support.");
             #endif
         });
 
@@ -229,7 +234,50 @@ namespace hex::plugin::decompress {
                 return true;
             #else
                 hex::unused(evaluator, params);
-                err::E0012.throwError("hex::dec::zstd_decompress is not available. Please recompile with zstd support.");
+                err::E0012.throwError("hex::dec::zstd_decompress is not available. Please recompile ImHex with zstd support.");
+            #endif
+        });
+
+        /* lz4_decompress(compressed_pattern, section_id) */
+        ContentRegistry::PatternLanguage::addFunction(nsHexDec, "lz4_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
+            #if IMHEX_FEATURE_ENABLED(LZ4)
+                auto compressedData = getCompressedData(evaluator, params[0]);
+                auto &section = evaluator->getSection(params[1].toUnsigned());
+
+                // Create the decompression context
+                LZ4F_decompressionContext_t dctx;
+                LZ4F_errorCode_t err = LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION);
+                if (LZ4F_isError(err)) {
+                   return false;
+                }
+
+                std::vector<u8> outBuffer(1024 * 1024);
+
+                const u8* sourcePointer = compressedData.data();
+                size_t srcSize = compressedData.size();
+
+                while (srcSize > 0) {
+                    u8* dstPtr = outBuffer.data();
+                    size_t dstCapacity = outBuffer.size();
+
+                    // Decompress the data
+                    size_t ret = LZ4F_decompress(dctx, dstPtr, &dstCapacity, sourcePointer, &srcSize, nullptr);
+                    if (LZ4F_isError(ret)) {
+                        LZ4F_freeDecompressionContext(dctx);
+                        return false;
+                    }
+
+                    section.insert(section.end(), outBuffer.begin(), outBuffer.begin() + dstCapacity);
+                    sourcePointer += (compressedData.size() - srcSize);
+                }
+
+                // Free the decompression context
+                LZ4F_freeDecompressionContext(dctx);
+
+                return true;
+            #else
+                hex::unused(evaluator, params);
+                err::E0012.throwError("hex::dec::lz4_decompress is not available. Please recompile ImHex with liblz4 support.");
             #endif
         });
     }

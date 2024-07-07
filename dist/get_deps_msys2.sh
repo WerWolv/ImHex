@@ -17,4 +17,5 @@ pacboy -S --needed --noconfirm  \
   zlib:p         \
   bzip2:p        \
   xz:p           \
-  zstd:p
+  zstd:p         \
+  lz4:p

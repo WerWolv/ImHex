@@ -28,5 +28,6 @@ RDEPEND="${DEPEND}
 		app-arch/bzip2
 		app-arch/lzma
 		app-arch/zstd
+		app-arch/lz4
 		"
 BDEPEND="${DEPEND}"

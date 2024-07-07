@@ -16,4 +16,5 @@ zypper install     \
   libzstd-devel    \
   zlib-devel       \
   bzip3-devel      \
-  xz-devel
+  xz-devel         \
+  lz4-dev
