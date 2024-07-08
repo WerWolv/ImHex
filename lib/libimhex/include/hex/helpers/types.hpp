@@ -61,6 +61,10 @@ namespace hex {
         constexpr static Region Invalid() {
             return { 0, 0 };
         }
+
+        constexpr bool operator<(const Region &other) const {
+            return this->address < other.address;
+        }
     };
 
 

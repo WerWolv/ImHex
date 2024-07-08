@@ -91,6 +91,7 @@ namespace hex::plugin::builtin {
         PerProvider<std::optional<u64>> m_selectionStart, m_selectionEnd;
 
         PerProvider<std::map<u64, color_t>> m_foregroundHighlights, m_backgroundHighlights;
+        PerProvider<std::set<Region>> m_hoverHighlights;
     };
 
 }

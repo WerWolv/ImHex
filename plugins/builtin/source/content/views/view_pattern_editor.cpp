@@ -1912,24 +1912,23 @@ namespace hex::plugin::builtin {
             return color;
         });
 
-        ImHexApi::HexEditor::addHoverHighlightProvider([this](const prv::Provider *provider, u64 address, const u8 *, size_t) {
-            if (!m_parentHighlightingEnabled) return false;
+        ImHexApi::HexEditor::addHoverHighlightProvider([this](const prv::Provider *, u64 address, size_t size) {
+            std::set<Region> result;
+            if (!m_parentHighlightingEnabled)
+                return result;
 
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
-            if (auto hoveredRegion = ImHexApi::HexEditor::getHoveredRegion(provider)) {
-                for (const auto &pattern : runtime.getPatternsAtAddress(hoveredRegion->getStartAddress())) {
-                    const pl::ptrn::Pattern * checkPattern = pattern;
-                    if (auto parent = checkPattern->getParent(); parent != nullptr)
-                        checkPattern = parent;
+            const auto hoveredRegion = Region { address, size };
+            for (const auto &pattern : runtime.getPatternsAtAddress(hoveredRegion.getStartAddress())) {
+                const pl::ptrn::Pattern * checkPattern = pattern;
+                if (auto parent = checkPattern->getParent(); parent != nullptr)
+                    checkPattern = parent;
 
-                    if (checkPattern->getOffset() <= address && checkPattern->getOffset() + checkPattern->getSize() > address) {
-                        return true;
-                    }
-                }
+                result.emplace(checkPattern->getOffset(), checkPattern->getSize());
             }
 
-            return false;
+            return result;
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {

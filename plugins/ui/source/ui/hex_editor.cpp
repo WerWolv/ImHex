@@ -666,7 +666,11 @@ namespace hex::ui {
                                     ImGuiExt::TextFormatted("{:?>{}}", "", maxCharsPerCell);
 
                                 if (cellHovered) {
-                                    hoveredCell = { byteAddress, bytesPerCell };
+                                    Region newHoveredCell = { byteAddress, bytesPerCell };
+                                    if (hoveredCell != newHoveredCell) {
+                                        hoveredCell = newHoveredCell;
+                                        m_hoverChangedCallback(hoveredCell.address, hoveredCell.size);
+                                    }
                                 }
 
                                 ImGui::PopItemWidth();
@@ -725,7 +729,11 @@ namespace hex::ui {
                                             this->drawCell(byteAddress, &bytes[x], 1, cellHovered, CellType::ASCII);
 
                                         if (cellHovered) {
-                                            hoveredCell = { byteAddress, bytesPerCell };
+                                            Region newHoveredCell = { byteAddress, bytesPerCell };
+                                            if (hoveredCell != newHoveredCell) {
+                                                hoveredCell = newHoveredCell;
+                                                m_hoverChangedCallback(hoveredCell.address, hoveredCell.size);
+                                            }
                                         }
 
                                         ImGui::PopItemWidth();
@@ -813,7 +821,11 @@ namespace hex::ui {
                                             this->handleSelection(address, data.advance, &bytes[address % m_bytesPerRow], cellHovered);
 
                                             if (cellHovered) {
-                                                hoveredCell = { address, data.advance };
+                                                Region newHoveredCell = { address, data.advance };
+                                                if (hoveredCell != newHoveredCell) {
+                                                    hoveredCell = newHoveredCell;
+                                                    m_hoverChangedCallback(hoveredCell.address, hoveredCell.size);
+                                                }
                                             }
                                         }
                                     }

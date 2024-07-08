@@ -75,7 +75,7 @@ namespace hex {
             namespace impl {
 
                 using HighlightingFunction = std::function<std::optional<color_t>(u64, const u8*, size_t, bool)>;
-                using HoveringFunction = std::function<bool(const prv::Provider *, u64, const u8*, size_t)>;
+                using HoveringFunction = std::function<std::set<Region>(const prv::Provider *, u64, size_t)>;
 
                 const std::map<u32, Highlighting>& getBackgroundHighlights();
                 const std::map<u32, HighlightingFunction>& getBackgroundHighlightingFunctions();
