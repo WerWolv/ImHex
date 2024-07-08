@@ -1689,6 +1689,7 @@ namespace hex::plugin::builtin {
             });
 
             ON_SCOPE_EXIT {
+                runtime.getInternals().evaluator->setDebugMode(false);
                 *m_lastEvaluationOutVars = runtime.getOutVariables();
                 *m_sections              = runtime.getSections();
 
