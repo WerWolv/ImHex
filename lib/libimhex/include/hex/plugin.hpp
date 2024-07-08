@@ -37,7 +37,10 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
     return nullptr;
 }
 
-extern std::vector<hex::Feature> g_features;
+[[maybe_unused]] static auto& getFeaturesImpl() {
+    static std::vector<hex::Feature> features;
+    return features;
+}
 
 #if defined (IMHEX_STATIC_LINK_PLUGINS)
     #define IMHEX_PLUGIN_VISIBILITY_PREFIX static
@@ -48,21 +51,20 @@ extern std::vector<hex::Feature> g_features;
 #define IMHEX_FEATURE_ENABLED(feature) WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(IMHEX_PLUGIN_, IMHEX_PLUGIN_NAME), _FEATURE_), feature)
 #define IMHEX_DEFINE_PLUGIN_FEATURES() IMHEX_DEFINE_PLUGIN_FEATURES_IMPL()
 #define IMHEX_DEFINE_PLUGIN_FEATURES_IMPL()                                                 \
-    extern std::vector<hex::Feature> g_features;                                            \
     template<>                                                                              \
     struct PluginFeatureFunctionHelper<PluginFunctionHelperInstantiation> {                 \
         static void* getFeatures();                                                         \
     };                                                                                      \
     void* PluginFeatureFunctionHelper<PluginFunctionHelperInstantiation>::getFeatures() {   \
-        return &g_features;                                                                 \
+        return &getFeaturesImpl();                                                          \
     }                                                                                       \
-    std::vector<hex::Feature> g_features = { IMHEX_PLUGIN_FEATURES_CONTENT }
+    static auto initFeatures = [] { getFeaturesImpl() = std::vector<hex::Feature>({ IMHEX_PLUGIN_FEATURES_CONTENT }); return 0; }()
 
-#define IMHEX_PLUGIN_FEATURES g_features
+#define IMHEX_PLUGIN_FEATURES ::getFeaturesImpl()
 
 /**
  * This macro is used to define all the required entry points for a plugin.
- * Name, Author and Description will be displayed in the in the plugin list on the Welcome screen.
+ * Name, Author and Description will be displayed in the plugin list on the Welcome screen.
  */
 #define IMHEX_PLUGIN_SETUP(name, author, description) IMHEX_PLUGIN_SETUP_IMPL(name, author, description)
 #define IMHEX_LIBRARY_SETUP(name) IMHEX_LIBRARY_SETUP_IMPL(name)
