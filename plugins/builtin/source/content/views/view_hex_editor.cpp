@@ -493,16 +493,8 @@ namespace hex::plugin::builtin {
         });
 
         m_hexEditor.setBackgroundHighlightCallback([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
-            bool hovered = false;
-            for (const auto &[id, hoverFunction] : ImHexApi::HexEditor::impl::getHoveringFunctions()) {
-                if (hoverFunction(m_hexEditor.getProvider(), address, data, size)) {
-                    hovered = true;
-                    break;
-                }
-            }
-
             if (auto highlight = m_backgroundHighlights->find(address); highlight != m_backgroundHighlights->end()) {
-                if (hovered)
+                if (std::ranges::any_of(*m_hoverHighlights, [region = Region(address, size)](const Region &highlight) { return highlight.overlaps(region); }))
                     return ImAlphaBlendColors(highlight->second, 0xA0FFFFFF);
                 else
                     return highlight->second;
@@ -525,6 +517,14 @@ namespace hex::plugin::builtin {
                 m_backgroundHighlights->insert({ address, result.value() });
 
             return result;
+        });
+
+        m_hexEditor.setHoverChangedCallback([this](u64 address, size_t size) {
+            m_hoverHighlights->clear();
+            for (const auto &[id, hoverFunction] : ImHexApi::HexEditor::impl::getHoveringFunctions()) {
+                auto highlightedAddresses = hoverFunction(m_hexEditor.getProvider(), address, size);
+                m_hoverHighlights->merge(highlightedAddresses);
+            }
         });
 
         m_hexEditor.setTooltipCallback([](u64 address, const u8 *data, size_t size) {

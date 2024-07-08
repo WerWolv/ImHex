@@ -37,8 +37,8 @@ namespace hex::plugin::builtin {
            (*m_patternDrawer)->jumpToPattern(pattern);
         });
 
-        ImHexApi::HexEditor::addHoverHighlightProvider([this](const prv::Provider *, u64 address, const u8 *, size_t size) {
-            return m_hoveredPatternRegion.overlaps(Region { address, size });
+        ImHexApi::HexEditor::addHoverHighlightProvider([this](const prv::Provider *, u64, size_t) -> std::set<Region> {
+            return { m_hoveredPatternRegion };
         });
 
         m_patternDrawer.setOnCreateCallback([this](const prv::Provider *provider, auto &drawer) {
