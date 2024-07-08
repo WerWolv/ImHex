@@ -27,7 +27,7 @@ namespace hex::plugin::hashes {
                 u64 readSize = std::min<u64>(1_MiB, (region.getEndAddress() - address) + 1);
 
                 auto data = reader.read(address, readSize);
-                hashFunction->TransformBytes({ data.begin(), data.end() }, address - region.getStartAddress(), data.size());
+                hashFunction->TransformBytes({ data.begin(), data.end() }, 0, data.size());
             }
 
             auto result = hashFunction->TransformFinal();
