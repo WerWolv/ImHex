@@ -825,7 +825,6 @@ namespace hex {
         {
             int width = 0, height = 0;
             glfwGetWindowSize(m_window, &width, &height);
-            glfwSetWindowSize(m_window, width, height);
 
             if (initialWindowProperties.has_value()) {
                 width  = initialWindowProperties->width;

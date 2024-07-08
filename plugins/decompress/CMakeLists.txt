@@ -26,11 +26,11 @@ add_imhex_plugin(
         ui
         fonts
     FEATURES
-        ZLIB
-        BZIP2
-        LIBLZMA
-        ZSTD
-        LZ4
+        ZLIB "ZLib support"
+        BZIP2 "Bzip2 support"
+        LIBLZMA "LZMA support"
+        ZSTD "zstd Support"
+        LZ4 "lz4 Support"
 )
 
 set(LIBLZMA_HAS_AUTO_DECODER 1)

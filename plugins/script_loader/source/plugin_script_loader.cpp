@@ -21,8 +21,6 @@ using ScriptLoaders = std::tuple<
     #endif
 >;
 
-IMHEX_DEFINE_PLUGIN_FEATURES(){ };
-
 namespace {
 
     ScriptLoaders s_loaders;

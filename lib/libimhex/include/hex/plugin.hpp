@@ -37,11 +37,28 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
     return nullptr;
 }
 
+extern std::vector<hex::Feature> g_features;
+
 #if defined (IMHEX_STATIC_LINK_PLUGINS)
     #define IMHEX_PLUGIN_VISIBILITY_PREFIX static
 #else
     #define IMHEX_PLUGIN_VISIBILITY_PREFIX extern "C" [[gnu::visibility("default")]]
 #endif
+
+#define IMHEX_FEATURE_ENABLED(feature) WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(IMHEX_PLUGIN_, IMHEX_PLUGIN_NAME), _FEATURE_), feature)
+#define IMHEX_DEFINE_PLUGIN_FEATURES() IMHEX_DEFINE_PLUGIN_FEATURES_IMPL()
+#define IMHEX_DEFINE_PLUGIN_FEATURES_IMPL()                                                 \
+    extern std::vector<hex::Feature> g_features;                                            \
+    template<>                                                                              \
+    struct PluginFeatureFunctionHelper<PluginFunctionHelperInstantiation> {                 \
+        static void* getFeatures();                                                         \
+    };                                                                                      \
+    void* PluginFeatureFunctionHelper<PluginFunctionHelperInstantiation>::getFeatures() {   \
+        return &g_features;                                                                 \
+    }                                                                                       \
+    std::vector<hex::Feature> g_features = { IMHEX_PLUGIN_FEATURES_CONTENT }
+
+#define IMHEX_PLUGIN_FEATURES g_features
 
 /**
  * This macro is used to define all the required entry points for a plugin.
@@ -85,6 +102,7 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
         ImGui::SetCurrentContext(ctx);                                                                                          \
         GImGui = ctx;                                                                                                           \
     }                                                                                                                           \
+    IMHEX_DEFINE_PLUGIN_FEATURES();                                                                                             \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void* getFeatures() {                                                                        \
         return PluginFeatureFunctionHelper<PluginFunctionHelperInstantiation>::getFeatures();                                   \
     }                                                                                                                           \
@@ -129,18 +147,3 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
         return &g_subCommands;                                                                      \
     }                                                                                               \
     std::vector<hex::SubCommand> g_subCommands
-
-#define IMHEX_FEATURE_ENABLED(feature) WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(IMHEX_PLUGIN_, IMHEX_PLUGIN_NAME), _FEATURE_), feature)
-#define IMHEX_DEFINE_PLUGIN_FEATURES() IMHEX_DEFINE_PLUGIN_FEATURES_IMPL()
-#define IMHEX_DEFINE_PLUGIN_FEATURES_IMPL()                                                 \
-    extern std::vector<hex::Feature> g_features;                                            \
-    template<>                                                                              \
-    struct PluginFeatureFunctionHelper<PluginFunctionHelperInstantiation> {                 \
-        static void* getFeatures();                                                         \
-    };                                                                                      \
-    void* PluginFeatureFunctionHelper<PluginFunctionHelperInstantiation>::getFeatures() {   \
-        return &g_features;                                                                 \
-    }                                                                                       \
-    std::vector<hex::Feature> g_features
-
-#define IMHEX_PLUGIN_FEATURES g_features
