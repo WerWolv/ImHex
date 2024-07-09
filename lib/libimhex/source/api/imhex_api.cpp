@@ -268,7 +268,7 @@ namespace hex {
 
         static i64 s_currentProvider = -1;
         static AutoReset<std::vector<std::unique_ptr<prv::Provider>>> s_providers;
-        static AutoReset<std::list<std::unique_ptr<prv::Provider>>> s_providersToRemove;
+        static AutoReset<std::map<prv::Provider*, std::unique_ptr<prv::Provider>>> s_providersToRemove;
 
         namespace impl {
 
@@ -430,7 +430,8 @@ namespace hex {
 
             // Move provider over to a list of providers to delete
             eraseMutex.lock();
-            auto removeIt = s_providersToRemove->emplace(s_providersToRemove->end(), std::move(*it));
+            auto providerToRemove = it->get();
+            (*s_providersToRemove)[providerToRemove] = std::move(*it);
             eraseMutex.unlock();
 
             // Remove left over references from the main provider list
@@ -443,16 +444,16 @@ namespace hex {
             if (s_providers->empty())
                 EventProviderChanged::post(provider, nullptr);
 
-            EventProviderClosed::post(removeIt->get());
+            EventProviderClosed::post(it->get());
             RequestUpdateWindowTitle::post();
 
             // Do the destruction of the provider in the background once all tasks have finished
-            TaskManager::runWhenTasksFinished([removeIt] {
-                EventProviderDeleted::post(removeIt->get());
-                TaskManager::createBackgroundTask("Closing Provider", [removeIt](Task &) {
+            TaskManager::runWhenTasksFinished([providerToRemove] {
+                EventProviderDeleted::post(providerToRemove);
+                TaskManager::createBackgroundTask("Closing Provider", [providerToRemove](Task &) {
                     eraseMutex.lock();
-                    auto provider = std::move(*removeIt);
-                    s_providersToRemove->erase(removeIt);
+                    auto provider = std::move((*s_providersToRemove)[providerToRemove]);
+                    s_providersToRemove->erase(providerToRemove);
                     eraseMutex.unlock();
 
                     provider->close();
