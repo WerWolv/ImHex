@@ -26,10 +26,10 @@ add_imhex_plugin(
         ui
         fonts
     FEATURES
-        ZLIB
-        BZIP2
-        LIBLZMA
-        ZSTD
+        ZLIB "ZLib support"
+        BZIP2 "Bzip2 support"
+        LIBLZMA "LZMA support"
+        ZSTD "zstd Support"
 )
 
 find_package(ZSTD)

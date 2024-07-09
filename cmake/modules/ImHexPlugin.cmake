@@ -72,10 +72,23 @@ macro(add_imhex_plugin)
     add_subdirectory(${IMHEX_BASE_FOLDER}/lib/external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/libromfs)
     target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE ${LIBROMFS_LIBRARY})
 
-    foreach(feature ${IMHEX_PLUGIN_FEATURES})
-        string(TOUPPER ${feature} feature)
-        add_definitions(-DIMHEX_PLUGIN_${IMHEX_PLUGIN_NAME}_FEATURE_${feature}=0)
-    endforeach()
+    set(FEATURE_DEFINE_CONTENT)
+
+    if (IMHEX_PLUGIN_FEATURES)
+        list(LENGTH IMHEX_PLUGIN_FEATURES IMHEX_FEATURE_COUNT)
+        math(EXPR IMHEX_FEATURE_COUNT "${IMHEX_FEATURE_COUNT} - 1" OUTPUT_FORMAT DECIMAL)
+        foreach(index RANGE 0 ${IMHEX_FEATURE_COUNT} 2)
+            list(SUBLIST IMHEX_PLUGIN_FEATURES ${index} 2 IMHEX_PLUGIN_FEATURE)
+            list(GET IMHEX_PLUGIN_FEATURE 0 feature_define)
+            list(GET IMHEX_PLUGIN_FEATURE 1 feature_description)
+
+            string(TOUPPER ${feature_define} feature_define)
+            add_definitions(-DIMHEX_PLUGIN_${IMHEX_PLUGIN_NAME}_FEATURE_${feature_define}=0)
+            set(FEATURE_DEFINE_CONTENT "${FEATURE_DEFINE_CONTENT}{ \"${feature_description}\", IMHEX_FEATURE_ENABLED(${feature_define}) },")
+        endforeach()
+    endif()
+
+    target_compile_options(${IMHEX_PLUGIN_NAME} PRIVATE -DIMHEX_PLUGIN_FEATURES_CONTENT=${FEATURE_DEFINE_CONTENT})
 
     # Add the new plugin to the main dependency list so it gets built by default
     if (TARGET imhex_all)

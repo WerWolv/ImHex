@@ -24,6 +24,18 @@ if (CoreClrEmbed_FOUND)
     if (IMHEX_BUNDLE_DOTNET)
         install(FILES ${CoreClrEmbed_SHARED_LIBRARIES} DESTINATION ${CMAKE_INSTALL_LIBDIR})
     endif()
+
+    message(STATUS "Enabling .NET Scripting support!")
+
+    target_link_directories(dotnet INTERFACE ${CoreClrEmbed_FOLDER})
+    target_include_directories(dotnet INTERFACE ${CoreClrEmbed_INCLUDE_DIRS})
+    target_compile_definitions(dotnet INTERFACE IMHEX_DOTNET_SCRIPT_SUPPORT=1)
+    target_sources(dotnet INTERFACE
+            source/loaders/dotnet/dotnet_loader.cpp
+    )
+
+    add_subdirectory(support/dotnet)
+    add_dependencies(dotnet AssemblyLoader)
 endif()
 
 add_subdirectory(support/c)
@@ -45,19 +57,3 @@ add_imhex_plugin(
         ui
         dotnet
 )
-
-
-
-if (IMHEX_DOTNET_SCRIPT_SUPPORT)
-    message(STATUS "Enabling .NET Scripting support!")
-
-    target_link_directories(script_loader PRIVATE ${CoreClrEmbed_FOLDER})
-    target_include_directories(script_loader PRIVATE ${CoreClrEmbed_INCLUDE_DIRS})
-    target_compile_definitions(script_loader PRIVATE IMHEX_DOTNET_SCRIPT_SUPPORT=1)
-    target_sources(script_loader PRIVATE
-            source/loaders/dotnet/dotnet_loader.cpp
-    )
-
-    add_subdirectory(support/dotnet)
-    add_dependencies(script_loader AssemblyLoader)
-endif()

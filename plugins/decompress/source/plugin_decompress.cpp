@@ -14,13 +14,6 @@ namespace hex::plugin::decompress {
 using namespace hex;
 using namespace hex::plugin::decompress;
 
-IMHEX_DEFINE_PLUGIN_FEATURES() {
-    { "bzip2 Support",      IMHEX_FEATURE_ENABLED(BZIP2)      },
-    { "zlib Support",       IMHEX_FEATURE_ENABLED(ZLIB)       },
-    { "LZMA Support",       IMHEX_FEATURE_ENABLED(LIBLZMA)    },
-    { "zstd Support",       IMHEX_FEATURE_ENABLED(ZSTD)       },
-};
-
 IMHEX_PLUGIN_SETUP("Decompressing", "WerWolv", "Support for decompressing data") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
 
