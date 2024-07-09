@@ -32,14 +32,12 @@ add_imhex_plugin(
         ZSTD "zstd Support"
 )
 
-find_package(ZSTD)
-if(ZSTD_FOUND)
-    set(LIBRARIES ${LIBRARIES} "${ZSTD_LIBRARY}")
-    message(STATUS "Enabling decompression support using ZSTD (${ZSTD_VERSION})")
-    enable_plugin_feature(ZSTD)
-endif()
+set(LIBLZMA_HAS_AUTO_DECODER 1)
+set(LIBLZMA_HAS_EASY_ENCODER 1)
+set(LIBLZMA_HAS_LZMA_PRESET  1)
 
 addOptionalLibrary(ZLIB ZLIB)
 addOptionalLibrary(BZip2 BZip2)
 addOptionalLibrary(LibLZMA LibLZMA)
+addOptionalLibrary(ZSTD zstd)
 target_link_libraries(decompress PRIVATE ${LIBRARIES})
