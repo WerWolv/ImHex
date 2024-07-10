@@ -4,15 +4,14 @@
 
 #include <implot.h>
 #include <imgui.h>
-#include <hex/helpers/logger.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <pl/patterns/pattern_bitfield.hpp>
 
 namespace hex::plugin::visualizers {
 
-    void drawDigitalSignalVisualizer(pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iterable, bool shouldReset, std::span<const pl::core::Token::Literal>) {
-        auto *bitfield = dynamic_cast<pl::ptrn::PatternBitfield*>(&pattern);
+    void drawDigitalSignalVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+        auto *bitfield = dynamic_cast<pl::ptrn::PatternBitfield*>(arguments[0].toPattern().get());
         if (bitfield == nullptr)
             throw std::logic_error("Digital signal visualizer only works with bitfields.");
 
@@ -30,8 +29,8 @@ namespace hex::plugin::visualizers {
             dataPoints.clear();
             lastPoint = { 0, 0 };
 
-            iterable.forEachEntry(0, iterable.getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
-                size_t bitSize = 0;
+            bitfield->forEachEntry(0, bitfield->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
+                size_t bitSize;
                 if (auto bitfieldField = dynamic_cast<pl::ptrn::PatternBitfieldField*>(entry); bitfieldField != nullptr)
                     bitSize = bitfieldField->getBitSize();
                 else
@@ -47,7 +46,7 @@ namespace hex::plugin::visualizers {
                 );
 
                 lastPoint = dataPoints.back().points[1];
-                lastPoint.x += bitSize;
+                lastPoint.x += float(bitSize);
             });
 
             dataPoints.push_back({
@@ -70,7 +69,7 @@ namespace hex::plugin::visualizers {
                 const auto &right = dataPoints[i + 1];
 
                 {
-                    auto x = left.points[1].x + (right.points[0].x - left.points[1].x) / 2;
+                    auto x = left.points[1].x + ((right.points[0].x - left.points[1].x) / 2);
                     ImPlot::Annotation(x, 0.55F, left.color, {}, false, "%s", left.label.c_str());
                     ImPlot::Annotation(x, 0.40F, left.color, {}, false, "%s", left.value.c_str());
                 }

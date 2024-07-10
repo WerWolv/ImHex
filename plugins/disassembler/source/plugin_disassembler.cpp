@@ -14,7 +14,7 @@ using namespace hex::plugin::disasm;
 
 namespace hex::plugin::disasm {
 
-    void drawDisassemblyVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments);
+    void drawDisassemblyVisualizer(pl::ptrn::Pattern &, bool, std::span<const pl::core::Token::Literal> arguments);
 
 }
 

@@ -50,7 +50,7 @@ namespace hex::ui {
             if (!currSelection.has_value())
                 return false;
 
-            return Region{ address, size }.overlaps(*currSelection);
+            return Region(address, size).overlaps(*currSelection);
         }
 
         bool isPatternFullySelected(u64 address, u64 size) {
@@ -113,7 +113,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
 
                 const auto bitSize = (pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1));
-                ImGuiExt::TextFormatted("0x{0:08X}.{1}", pattern.getOffset() + bitSize / 8, bitSize % 8);
+                ImGuiExt::TextFormatted("0x{0:08X}.{1}", pattern.getOffset() + (bitSize / 8), bitSize % 8);
             }
         }
 
@@ -339,7 +339,7 @@ namespace hex::ui {
         ImGui::TextUnformatted(pattern.getComment().c_str());
     }
 
-    void PatternDrawer::drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iterable, bool reset) {
+    void PatternDrawer::drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, bool reset) {
         auto visualizerName = arguments.front().toString(true);
 
         if (auto entry = visualizers.find(visualizerName); entry != visualizers.end()) {
@@ -350,7 +350,7 @@ namespace hex::ui {
 
             if (paramCount >= minParams && paramCount <= maxParams) {
                 try {
-                    visualizer.callback(pattern, iterable, reset, { arguments.begin() + 1, arguments.end() });
+                    visualizer.callback(pattern, reset, { arguments.begin() + 1, arguments.end() });
                 } catch (std::exception &e) {
                     m_lastVisualizerError = e.what();
                 }
@@ -383,12 +383,12 @@ namespace hex::ui {
             bool shouldReset = false;
             if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
                 auto previousPattern = m_currVisualizedPattern;
-
                 m_currVisualizedPattern = &pattern;
-                m_lastVisualizerError.clear();
 
-                if (m_currVisualizedPattern != previousPattern)
+                if (!m_lastVisualizerError.empty() || m_currVisualizedPattern != previousPattern)
                     shouldReset = true;
+
+                m_lastVisualizerError.clear();
 
                 ImGui::OpenPopup("Visualizer");
             }
@@ -398,14 +398,14 @@ namespace hex::ui {
 
             if (ImGui::BeginPopup("Visualizer")) {
                 if (m_currVisualizedPattern == &pattern) {
-                    drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, pattern, dynamic_cast<pl::ptrn::IIterable&>(pattern), !m_visualizedPatterns.contains(&pattern) || shouldReset);
+                    drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, pattern, !m_visualizedPatterns.contains(&pattern) || shouldReset);
                     m_visualizedPatterns.insert(&pattern);
                 }
 
                 ImGui::EndPopup();
             }
         } else if (const auto &inlineVisualizeArgs = pattern.getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
-            drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, pattern, dynamic_cast<pl::ptrn::IIterable&>(pattern), true);
+            drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, pattern, true);
         } else {
             ImGuiExt::TextFormatted("{}", value);
         }
@@ -1239,7 +1239,7 @@ namespace hex::ui {
             this->resetEditing();
         }
 
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 9.4F);
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - (ImGui::GetTextLineHeightWithSpacing() * 9.4F));
         if (ImGuiExt::InputTextIcon("##Search", ICON_VS_FILTER, m_filterText)) {
             m_filter = parseRValueFilter(m_filterText).value_or(Filter{ });
             updateFilter();
@@ -1284,7 +1284,7 @@ namespace hex::ui {
                 const auto &extension = formatter->getFileExtension();
 
                 if (ImGui::MenuItem(name.c_str())) {
-                    fs::openFileBrowser(fs::DialogMode::Save, { { name, extension } }, [&](const std::fs::path &path) {
+                    fs::openFileBrowser(fs::DialogMode::Save, { fs::ItemFilter(name, extension) }, [&](const std::fs::path &path) {
                         auto result = formatter->format(*runtime);
 
                         wolv::io::File output(path, wolv::io::File::Mode::Create);

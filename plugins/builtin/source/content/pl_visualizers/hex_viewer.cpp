@@ -12,7 +12,7 @@
 
 namespace hex::plugin::builtin {
 
-    void drawHexVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    void drawHexVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static ui::HexEditor editor;
         static prv::MemoryProvider dataProvider;
 

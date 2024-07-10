@@ -13,7 +13,7 @@
 
 namespace hex::plugin::visualizers {
 
-    void drawTableVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    void drawTableVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static std::vector<std::string> tableContent;
         static u128 width = 0, height = 0;
 
@@ -47,7 +47,7 @@ namespace hex::plugin::visualizers {
                 for (u128 j = 0; j < width; j += 1) {
                     ImGui::TableSetColumnIndex(j);
                     if (i * width + j < tableContent.size())
-                        ImGui::TextUnformatted(tableContent[i * width + j].c_str());
+                        ImGui::TextUnformatted(tableContent[(i * width) + j].c_str());
                     else
                         ImGui::TextUnformatted("??");
                 }

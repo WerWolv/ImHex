@@ -13,7 +13,7 @@
 
 namespace hex::plugin::visualizers {
 
-    void drawCoordinateVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    void drawCoordinateVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static ImVec2 coordinate;
         static double latitude, longitude;
         static std::string address;

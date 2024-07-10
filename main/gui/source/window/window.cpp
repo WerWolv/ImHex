@@ -172,17 +172,22 @@ namespace hex {
     }
 
     void Window::fullFrame() {
-        static u32 crashWatchdog = 0;
+        [[maybe_unused]] static u32 crashWatchdog = 0;
 
         if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) {
             return;
         }
 
+        #if !defined(DEBUG)
         try {
+        #endif
+
+            // Render an entire frame
             this->frameBegin();
             this->frame();
             this->frameEnd();
 
+        #if !defined(DEBUG)
             // Feed the watchdog
             crashWatchdog = 0;
         } catch (...) {
@@ -202,6 +207,7 @@ namespace hex {
             // Handle the exception
             handleException();
         }
+        #endif
     }
 
     void Window::loop() {

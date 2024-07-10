@@ -12,7 +12,7 @@
 
 namespace hex::plugin::visualizers {
 
-    void drawSoundVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    void drawSoundVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         auto wavePattern = arguments[0].toPattern();
         auto channels = arguments[1].toUnsigned();
         auto sampleRate = arguments[2].toUnsigned();
