@@ -848,7 +848,7 @@ function(generateSDKDirectory)
     if (NOT USE_SYSTEM_NLOHMANN_JSON)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json DESTINATION "${SDK_PATH}/lib/third_party")
     endif()
-        if (NOT USE_SYSTEM_NLOHMANN_JSON)
+    if (NOT USE_SYSTEM_BOOST)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/boost DESTINATION "${SDK_PATH}/lib/third_party")
     endif()
 
