@@ -111,6 +111,38 @@ namespace hex::plugin::builtin {
         }
     };
 
+    class NodeLoop : public dp::Node {
+    public:
+        NodeLoop() : Node("hex.builtin.nodes.control_flow.loop.header",
+                                             { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.start"),
+                                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.end"),
+                                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.init"),
+                                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.in"),
+                                               dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.out") }) {}
+
+        void process() override {
+            if (!m_started) {
+                m_started = true;
+                auto start = this->getIntegerOnInput(0);
+                auto end   = this->getIntegerOnInput(1);
+
+                m_value = this->getIntegerOnInput(2);
+                for (auto value = start; value < end; value += 1) {
+                    this->resetProcessedInputs();
+                    m_value = this->getIntegerOnInput(3);
+                }
+
+                m_started = false;
+            }
+
+            this->setIntegerOnOutput(4, m_value);
+        }
+
+    private:
+        bool m_started = false;
+        i128 m_value = 0;
+    };
+
     void registerControlDataProcessorNodes() {
         ContentRegistry::DataProcessorNode::add<NodeIf>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.if");
         ContentRegistry::DataProcessorNode::add<NodeEquals>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.equals");
@@ -119,6 +151,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeLessThan>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.lt");
         ContentRegistry::DataProcessorNode::add<NodeBoolAND>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.and");
         ContentRegistry::DataProcessorNode::add<NodeBoolOR>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.or");
+        ContentRegistry::DataProcessorNode::add<NodeLoop>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.loop");
     }
 
 }
