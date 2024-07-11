@@ -1,5 +1,6 @@
 #include <content/command_line_interface.hpp>
 #include <content/providers/file_provider.hpp>
+#include <content/helpers/demangle.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
@@ -348,7 +349,7 @@ namespace hex::plugin::builtin {
             std::exit(EXIT_FAILURE);
         }
 
-        log::println("{}", llvm::demangle(args[0]));
+        log::println("{}", hex::plugin::builtin::demangle(args[0]));
         std::exit(EXIT_SUCCESS);
     }
 

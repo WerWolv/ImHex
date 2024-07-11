@@ -12,7 +12,7 @@
 #include <string>
 #include <utility>
 
-#include <llvm/Demangle/Demangle.h>
+#include <content/helpers/demangle.hpp>
 #include <boost/regex.hpp>
 
 namespace hex::plugin::builtin {
@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
                                 ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", region.getStartAddress(), region.getEndAddress());
 
-                                auto demangledValue = llvm::demangle(value);
+                                auto demangledValue = hex::plugin::builtin::demangle(value);
 
                                 if (value != demangledValue) {
                                     ImGui::TableNextRow();
@@ -602,7 +602,7 @@ namespace hex::plugin::builtin {
             if (ImGui::MenuItem("hex.builtin.view.find.context.copy"_lang))
                 ImGui::SetClipboardText(value.c_str());
             if (ImGui::MenuItem("hex.builtin.view.find.context.copy_demangle"_lang))
-                ImGui::SetClipboardText(llvm::demangle(value).c_str());
+                ImGui::SetClipboardText(hex::plugin::builtin::demangle(value).c_str());
             if (ImGui::BeginMenu("hex.builtin.view.find.context.replace"_lang)) {
                 if (ImGui::BeginTabBar("##replace_tabs")) {
                     if (ImGui::BeginTabItem("hex.builtin.view.find.context.replace.hex"_lang)) {

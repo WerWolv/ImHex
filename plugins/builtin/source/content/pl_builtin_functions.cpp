@@ -7,7 +7,7 @@
 #include <pl/core/token.hpp>
 #include <pl/core/evaluator.hpp>
 
-#include <llvm/Demangle/Demangle.h>
+#include <content/helpers/demangle.hpp>
 #include <pl/patterns/pattern.hpp>
 
 namespace hex::plugin::builtin {
@@ -75,7 +75,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::addFunction(nsHexDec, "demangle", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto mangledString = params[0].toString(false);
 
-                return llvm::demangle(mangledString);
+                return hex::plugin::builtin::demangle(mangledString);
             });
         }
 
