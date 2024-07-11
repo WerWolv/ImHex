@@ -8,6 +8,7 @@
 #include <imnodes_internal.h>
 
 #include <string>
+#include <hex/api/task_manager.hpp>
 #include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
@@ -16,6 +17,8 @@ namespace hex::plugin::builtin {
     public:
         struct Workspace {
             Workspace() = default;
+
+
 
             std::unique_ptr<ImNodesContext, void(*)(ImNodesContext*)> context = { []{
                 ImNodesContext *ctx = ImNodes::CreateContext();
@@ -47,7 +50,7 @@ namespace hex::plugin::builtin {
 
         static void eraseLink(Workspace &workspace, int id);
         static void eraseNodes(Workspace &workspace, const std::vector<int> &ids);
-        static void processNodes(Workspace &workspace);
+        void processNodes(Workspace &workspace);
 
         void reloadCustomNodes();
         void updateNodePositions();
@@ -74,6 +77,7 @@ namespace hex::plugin::builtin {
 
         PerProvider<Workspace> m_mainWorkspace;
         PerProvider<std::vector<Workspace*>> m_workspaceStack;
+        TaskHolder m_evaluationTask;
     };
 
 }

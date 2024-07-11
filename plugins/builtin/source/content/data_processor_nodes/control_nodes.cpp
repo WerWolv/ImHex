@@ -138,6 +138,10 @@ namespace hex::plugin::builtin {
             this->setIntegerOnOutput(4, m_value);
         }
 
+        void reset() override {
+            m_started = false;
+        }
+
     private:
         bool m_started = false;
         i128 m_value = 0;
