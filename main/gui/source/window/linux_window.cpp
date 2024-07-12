@@ -74,6 +74,7 @@ namespace hex {
     }
 
     void Window::configureGLFW() {
+        glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_FALSE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
