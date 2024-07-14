@@ -426,8 +426,8 @@ namespace hex {
                 void setMainDockSpaceId(ImGuiID id);
                 void setMainWindowHandle(GLFWwindow *window);
 
-                void setGlobalScale(float scale);
-                void setNativeScale(float scale);
+                void setContentScale(float scale);
+                void setUserScale(float scale);
 
                 void setBorderlessWindowMode(bool enabled);
                 void setMultiWindowMode(bool enabled);
@@ -481,17 +481,22 @@ namespace hex {
 
 
             /**
-             * @brief Gets the current global scale
-             * @return The current global scale
+             * @brief Gets the combined window content and user scale
+             * @return The combined window content and user scale
              */
             float getGlobalScale();
 
             /**
-             * @brief Gets the current native scale
-             * @return The current native scale
+             * @brief Gets the window content scale
+             * @return The window content scale
              */
-            float getNativeScale();
+            float getContentScale();
 
+            /**
+             * @brief Gets the user requested scale
+             * @return The user requested scale
+             */
+            float getUserScale();
 
             /**
              * @brief Gets the current main window position

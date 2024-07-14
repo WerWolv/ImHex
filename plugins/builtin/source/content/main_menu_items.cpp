@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <implot.h>
 
+#include <hex/ui/glfw_di.h>
 #include <hex/ui/view.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
@@ -536,11 +537,14 @@ namespace hex::plugin::builtin {
                     size     = ImHexApi::System::getMainWindowSize();
 
                     const auto monitor = glfwGetPrimaryMonitor();
-                    const auto videoMode = glfwGetVideoMode(monitor);
-
-                    glfwSetWindowMonitor(window, monitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
+                    auto videoMode = glfwGetVideoMode(monitor);
+                    if (videoMode) {
+                        int monitorWidth, monitorHeight;
+                        hex::glfw::GetMonitorSize(monitor, &monitorWidth, &monitorHeight);
+                        hex::glfw::SetWindowMonitor(window, monitor, 0, 0, monitorWidth, monitorHeight, videoMode->refreshRate);
+                    }
                 } else {
-                    glfwSetWindowMonitor(window, nullptr, position.x, position.y, size.x, size.y, 0);
+                    hex::glfw::SetWindowMonitor(window, nullptr, position.x, position.y, size.x, size.y, 0);
                 }
 
             }, []{ return true; }, []{ return glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr; });

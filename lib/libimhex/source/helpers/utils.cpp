@@ -29,19 +29,19 @@
 namespace hex {
 
     float operator""_scaled(long double value) {
-        return value * ImHexApi::System::getGlobalScale();
+        return value * ImHexApi::System::getUserScale();
     }
 
     float operator""_scaled(unsigned long long value) {
-        return value * ImHexApi::System::getGlobalScale();
+        return value * ImHexApi::System::getUserScale();
     }
 
     ImVec2 scaled(const ImVec2 &vector) {
-        return vector * ImHexApi::System::getGlobalScale();
+        return vector * ImHexApi::System::getUserScale();
     }
 
     ImVec2 scaled(float x, float y) {
-        return ImVec2(x, y) * ImHexApi::System::getGlobalScale();
+        return ImVec2(x, y) * ImHexApi::System::getUserScale();
     }
 
     std::string to_string(u128 value) {

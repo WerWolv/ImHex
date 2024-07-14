@@ -99,20 +99,21 @@ namespace hex::plugin::builtin {
         }
 
         bool configureUIScale() {
-            EventDPIChanged::subscribe([](float, float newScaling) {
-                int interfaceScaleSetting = int(ContentRegistry::Settings::read<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F) * 10.0F);
+            int interfaceScaleSetting = int(ContentRegistry::Settings::read<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 1.0F) * 10.0F);
 
-                float interfaceScaling;
-                if (interfaceScaleSetting == 0)
-                    interfaceScaling = newScaling;
-                else
-                    interfaceScaling = interfaceScaleSetting / 10.0F;
+            float interfaceScaling;
+            // 0 used to mean 'native' but with DPI awareness in GLFW this just
+            // means no UI scaling
+            if (interfaceScaleSetting == 0) {
+                interfaceScaling = 1.0F;
+                ContentRegistry::Settings::write<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 1.0F);
+            } else
+                interfaceScaling = interfaceScaleSetting / 10.0F;
 
-                ImHexApi::System::impl::setGlobalScale(interfaceScaling);
-            });
-
-            const auto nativeScale = ImHexApi::System::getNativeScale();
-            EventDPIChanged::post(nativeScale, nativeScale);
+            // An `EventScaleChanged` event should be posted when the main
+            // window loads to communicate the content scale, so there should be
+            // no need to send one here too
+            ImHexApi::System::impl::setUserScale(interfaceScaling);
 
             return true;
         }

@@ -172,19 +172,12 @@ namespace hex::plugin::builtin {
         class ScalingWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
             bool draw(const std::string &name) override {
-                auto format = [this] -> std::string {
-                    if (m_value == 0)
-                        return "hex.builtin.setting.interface.scaling.native"_lang + hex::format(" (x{:.1f})", ImHexApi::System::getNativeScale());
-                    else
-                        return "x%.1f";
-                }();
+                bool changed = ImGui::SliderFloat(name.data(), &m_value, 0.1, 4, "x%.1f");
 
-                bool changed = ImGui::SliderFloat(name.data(), &m_value, 0, 4, format.c_str());
-
-                if (m_value < 0)
-                    m_value = 0;
-                else if (m_value > 10)
-                    m_value = 10;
+                if (m_value < 0.1)
+                    m_value = 0.1;
+                else if (m_value > 4)
+                    m_value = 4;
 
                 if (s_showScalingWarning && (u32(m_value * 10) % 10) != 0) {
                     ImGui::SameLine();

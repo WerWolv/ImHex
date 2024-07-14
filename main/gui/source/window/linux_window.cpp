@@ -11,6 +11,8 @@
     #include <hex/helpers/logger.hpp>
     #include <hex/helpers/default_paths.hpp>
 
+    #include <hex/ui/glfw_di.h>
+
     #include <wolv/utils/core.hpp>
 
     #include <nlohmann/json.hpp>
@@ -18,7 +20,6 @@
     #include <sys/wait.h>
     #include <unistd.h>
 
-    #include <imgui_impl_glfw.h>
     #include <string.h>
     #include <ranges>
 
@@ -74,10 +75,6 @@ namespace hex {
     }
 
     void Window::configureGLFW() {
-        #if defined(GLFW_SCALE_FRAMEBUFFER)
-            glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_FALSE);
-        #endif
-
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
@@ -140,7 +137,7 @@ namespace hex {
         });
 
         glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            auto win = static_cast<Window *>(hex::glfw::GetWindowUserPointer(window));
             win->fullFrame();
         });
 

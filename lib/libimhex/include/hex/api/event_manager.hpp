@@ -226,7 +226,7 @@ namespace hex {
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventThemeChanged);
     EVENT_DEF(EventOSThemeChanged);
-    EVENT_DEF(EventDPIChanged, float, float);
+    EVENT_DEF(EventDPIChanged, float);
     EVENT_DEF(EventWindowFocused, bool);
 
     /**

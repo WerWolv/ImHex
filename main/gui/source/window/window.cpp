@@ -7,6 +7,7 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
+#include <hex/api/theme_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 #include <hex/api/tutorial_manager.hpp>
 
@@ -15,6 +16,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
 
+#include <hex/ui/glfw_di.h>
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
 
@@ -115,28 +117,13 @@ namespace hex {
             m_popupsToOpen.push_back(name);
         });
 
-        EventDPIChanged::subscribe([this](float oldScaling, float newScaling) {
-            if (oldScaling == newScaling || oldScaling == 0 || newScaling == 0)
-                return;
-
-            int width, height;
-            glfwGetWindowSize(m_window, &width, &height);
-
-            width = float(width) * newScaling / oldScaling;
-            height = float(height) * newScaling / oldScaling;
-
-            ImHexApi::System::impl::setMainWindowSize(width, height);
-            glfwSetWindowSize(m_window, width, height);
-        });
-
-
         LayoutManager::registerLoadCallback([this](std::string_view line) {
             int width = 0, height = 0;
                 sscanf(line.data(), "MainWindowSize=%d,%d", &width, &height);
 
                 if (width > 0 && height > 0) {
                     TaskManager::doLater([width, height, this]{
-                        glfwSetWindowSize(m_window, width, height);
+                        hex::glfw::SetWindowSize(m_window, width, height);
                     });
                 }
         });
@@ -218,8 +205,8 @@ namespace hex {
             {
                 int x = 0, y = 0;
                 int width = 0, height = 0;
-                glfwGetWindowPos(m_window, &x, &y);
-                glfwGetWindowSize(m_window, &width, &height);
+                hex::glfw::GetWindowPos(m_window, &x, &y);
+                hex::glfw::GetWindowSize(m_window, &width, &height);
 
                 ImHexApi::System::impl::setMainWindowPosition(x, y);
                 ImHexApi::System::impl::setMainWindowSize(width, height);
@@ -265,10 +252,10 @@ namespace hex {
 
             static ImVec2 lastWindowSize = ImHexApi::System::getMainWindowSize();
             if (ImHexApi::System::impl::isWindowResizable()) {
-                glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
+                hex::glfw::SetWindowSizeLimits(m_window, 480, 360, GLFW_DONT_CARE, GLFW_DONT_CARE);
                 lastWindowSize = ImHexApi::System::getMainWindowSize();
             } else {
-                glfwSetWindowSizeLimits(m_window, lastWindowSize.x, lastWindowSize.y, lastWindowSize.x, lastWindowSize.y);
+                hex::glfw::SetWindowSizeLimits(m_window, lastWindowSize.x, lastWindowSize.y, lastWindowSize.x, lastWindowSize.y);
             }
 
             this->fullFrame();
@@ -779,11 +766,7 @@ namespace hex {
 
         // Create window
         m_windowTitle = "ImHex";
-        m_window      = glfwCreateWindow(1280_scaled, 720_scaled, m_windowTitle.c_str(), nullptr, nullptr);
-
-        ImHexApi::System::impl::setMainWindowHandle(m_window);
-
-        glfwSetWindowUserPointer(m_window, this);
+        m_window      = hex::glfw::CreateWindow(1280, 720, m_windowTitle.c_str(), nullptr, nullptr);
 
         if (m_window == nullptr) {
             log::fatal("Failed to create window!");
@@ -793,6 +776,9 @@ namespace hex {
         // Force window to be fully opaque by default
         glfwSetWindowOpacity(m_window, 1.0F);
 
+        ImHexApi::System::impl::setMainWindowHandle(m_window);
+        hex::glfw::SetWindowUserPointer(m_window, this);
+
         glfwMakeContextCurrent(m_window);
 
         // Disable VSync. Not like any graphics driver actually cares
@@ -801,58 +787,66 @@ namespace hex {
         // Center window
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
         if (monitor != nullptr) {
-            const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-            if (mode != nullptr) {
+            int monitorWidth, monitorHeight;
+            if (hex::glfw::GetMonitorSize(monitor, &monitorWidth, &monitorHeight)) {
                 int monitorX, monitorY;
-                glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+                hex::glfw::GetMonitorPos(monitor, &monitorX, &monitorY);
 
                 int windowWidth, windowHeight;
-                glfwGetWindowSize(m_window, &windowWidth, &windowHeight);
+                hex::glfw::GetWindowSize(m_window, &windowWidth, &windowHeight);
 
-                glfwSetWindowPos(m_window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
+                hex::glfw::SetWindowPos(m_window, monitorX + (monitorWidth - windowWidth) / 2, monitorY + (monitorHeight - windowHeight) / 2);
             }
         }
 
         // Set up initial window position
         {
             int x = 0, y = 0;
-            glfwGetWindowPos(m_window, &x, &y);
 
             if (initialWindowProperties.has_value()) {
                 x = initialWindowProperties->x;
                 y = initialWindowProperties->y;
+            } else {
+                hex::glfw::GetWindowPos(m_window, &x, &y);
             }
 
             ImHexApi::System::impl::setMainWindowPosition(x, y);
-            glfwSetWindowPos(m_window, x, y);
+            hex::glfw::SetWindowPos(m_window, x, y);
         }
 
         // Set up initial window size
         {
             int width = 0, height = 0;
-            glfwGetWindowSize(m_window, &width, &height);
 
             if (initialWindowProperties.has_value()) {
                 width  = initialWindowProperties->width;
                 height = initialWindowProperties->height;
+            } else {
+                hex::glfw::GetWindowSize(m_window, &width, &height);
             }
 
             ImHexApi::System::impl::setMainWindowSize(width, height);
-            glfwSetWindowSize(m_window, width, height);
+            hex::glfw::SetWindowSize(m_window, width, height);
+        }
+
+        {
+            float contentScale;
+            glfwGetWindowContentScale(m_window, &contentScale, nullptr);
+            ImHexApi::System::impl::setContentScale(contentScale);
         }
 
         // Register window move callback
-        glfwSetWindowPosCallback(m_window, [](GLFWwindow *window, int x, int y) {
+        hex::glfw::SetWindowPosCallback(m_window, [](GLFWwindow *window, int x, int y) {
             ImHexApi::System::impl::setMainWindowPosition(x, y);
 
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            auto win = static_cast<Window *>(hex::glfw::GetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
             win->fullFrame();
         });
 
         // Register window resize callback
-        glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, [[maybe_unused]] int width, [[maybe_unused]] int height) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+        hex::glfw::SetWindowSizeCallback(m_window, [](GLFWwindow *window, [[maybe_unused]] int width, [[maybe_unused]] int height) {
+            auto win = static_cast<Window *>(hex::glfw::GetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
 
             #if !defined(OS_WINDOWS)
@@ -870,8 +864,8 @@ namespace hex {
             #endif
         });
 
-        glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+        hex::glfw::SetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
+            auto win = static_cast<Window *>(hex::glfw::GetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
         });
 
@@ -909,7 +903,7 @@ namespace hex {
                         key != GLFW_KEY_LEFT_SHIFT && key != GLFW_KEY_RIGHT_SHIFT &&
                         key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
                     ) {
-                        auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+                        auto win = static_cast<Window *>(hex::glfw::GetWindowUserPointer(window));
                         win->m_unlockFrameRate = true;
 
                         if (!(mods & GLFW_MOD_NUM_LOCK)) {
@@ -935,11 +929,20 @@ namespace hex {
             EventWindowClosing::post(window);
         });
 
-        glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
+        hex::glfw::SetWindowContentScaleCallback(m_window, [](GLFWwindow *, float newScale, float) {
+            auto oldScale = ImHexApi::System::getContentScale();
+            if (newScale == 0 || oldScale == newScale)
+                return;
+
+            ImHexApi::System::impl::setContentScale(newScale);
+            EventDPIChanged::post(newScale);
+        });
+
+        hex::glfw::SetWindowSizeLimits(m_window, 480, 360, GLFW_DONT_CARE, GLFW_DONT_CARE);
     }
 
     void Window::resize(i32 width, i32 height) {
-        glfwSetWindowSize(m_window, width, height);
+        hex::glfw::SetWindowSize(m_window, width, height);
     }
 
     void Window::initImGui() {
@@ -966,7 +969,6 @@ namespace hex {
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
-        io.FontGlobalScale = 1.0F;
 
         if (glfwGetPrimaryMonitor() != nullptr) {
             if (ImHexApi::System::isMutliWindowModeEnabled())
@@ -985,10 +987,6 @@ namespace hex {
         }
 
         io.UserData = &m_imguiCustomData;
-
-        auto scale = ImHexApi::System::getGlobalScale();
-        style.ScaleAllSizes(scale);
-        io.DisplayFramebufferScale = ImVec2(scale, scale);
         io.Fonts->SetTexID(fonts->TexID);
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
@@ -1041,10 +1039,11 @@ namespace hex {
             plugin.setImGuiContext(ImGui::GetCurrentContext());
 
         RequestInitThemeHandlers::post();
+        EventDPIChanged::post(ImHexApi::System::getContentScale());
     }
 
     void Window::exitGLFW() {
-        glfwDestroyWindow(m_window);
+        hex::glfw::DestroyWindow(m_window);
         glfwTerminate();
 
         m_window = nullptr;

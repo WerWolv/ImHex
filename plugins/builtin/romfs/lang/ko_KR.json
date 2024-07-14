@@ -489,7 +489,6 @@
         "hex.builtin.setting.interface.multi_windows": "다중 창 지원 사용",
         "hex.builtin.setting.interface.pattern_data_row_bg": "색상 패턴 배경 사용",
         "hex.builtin.setting.interface.restore_window_pos": "창 위치 복원",
-        "hex.builtin.setting.interface.scaling.native": "기본",
         "hex.builtin.setting.interface.scaling_factor": "배율",
         "hex.builtin.setting.interface.style": "스타일",
         "hex.builtin.setting.interface.wiki_explain_language": "위키백과 언어",

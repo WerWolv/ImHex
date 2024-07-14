@@ -49,23 +49,33 @@ namespace hex::fonts {
                 enableUnicodeCharacters(false);
 
                 // Set the default configuration for the font atlas
-                m_config.OversampleH = m_config.OversampleV = 1;
-                m_config.PixelSnapH = true;
                 m_config.MergeMode = false;
 
-                // Make sure the font atlas doesn't get too large, otherwise weaker GPUs might reject it
-                m_fontAtlas->Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;
-                m_fontAtlas->TexDesiredWidth = 4096;
+                EventDPIChanged::subscribe(this, [this](float) {
+                    if (scaleAndBuild()) {
+                        ImGui_ImplOpenGL3_DestroyFontsTexture();
+                        ImGui_ImplOpenGL3_CreateFontsTexture();
+                        ImHexApi::Fonts::impl::setFontAtlas(getAtlas());
+                    }
+                });
             }
 
             ~FontAtlas() {
                 IM_DELETE(m_fontAtlas);
+                EventDPIChanged::unsubscribe(this);
+            }
+
+            bool scaleAndBuild() {
+                updateFontScaling(ImHexApi::System::getUserScale(), ImHexApi::System::getContentScale());
+                return build();
             }
 
             Font addDefaultFont() {
                 ImFontConfig config = m_config;
                 config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-                config.SizePixels = std::floor(ImHexApi::System::getGlobalScale()) * 13.0F;
+                config.SizePixels = ImHexApi::Fonts::DefaultFontSize;
+                config.OversampleH = m_config.OversampleV = 1;
+                config.PixelSnapH = true;
 
                 auto font = m_fontAtlas->AddFontDefault(&config);
                 m_fontSizes.emplace_back(false, config.SizePixels);
@@ -159,24 +169,21 @@ namespace hex::fonts {
             }
 
             [[nodiscard]] ImFontAtlas* getAtlas() {
-                auto result = m_fontAtlas;
-
-                return result;
+                return m_fontAtlas;
             }
 
-            float calculateFontDescend(const ImHexApi::Fonts::Font &font, float fontSize) const {
+            float calculateFontDescent(const ImHexApi::Fonts::Font &font, float fontSize) const {
                 auto atlas = std::make_unique<ImFontAtlas>();
                 auto cfg = m_config;
 
                 // Calculate the expected font size
-                auto size = fontSize;
                 if (font.defaultSize.has_value())
-                    size = font.defaultSize.value() * std::max(1.0F, std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize));
+                    fontSize = font.defaultSize.value() * std::max(1.0F, std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize));
                 else
-                    size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
+                    fontSize = std::max(1.0F, std::floor(fontSize / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
 
                 cfg.MergeMode = false;
-                cfg.SizePixels = size;
+                cfg.SizePixels = fontSize;
                 cfg.FontDataOwnedByAtlas = false;
 
                 // Construct a range that only contains the first glyph of the font
@@ -203,16 +210,18 @@ namespace hex::fonts {
                 m_config.MergeMode = false;
             }
 
-            void updateFontScaling(float newScaling) {
+            void updateFontScaling(float scale, float density) {
                 for (int i = 0; i < m_fontAtlas->ConfigData.size(); i += 1) {
                     const auto &[scalable, fontSize] = m_fontSizes[i];
                     auto &configData = m_fontAtlas->ConfigData[i];
 
                     if (!scalable) {
-                        configData.SizePixels = fontSize * std::floor(newScaling);
+                        configData.SizePixels = fontSize * std::max(1.0F, std::floor(scale));
                     } else {
-                        configData.SizePixels = fontSize * newScaling;
+                        configData.SizePixels = fontSize * scale;
                     }
+
+                    configData.RasterizerDensity = density;
                 }
             }
 
@@ -254,25 +263,16 @@ namespace hex::fonts {
         }
 
         float getFontSize() {
-            float fontSize = ImHexApi::Fonts::DefaultFontSize;
+            float fontSize = 0.0F;
+            if (!ImHexApi::Fonts::getCustomFontPath().empty()) {
+                fontSize = float(ContentRegistry::Settings::read<int>("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", ImHexApi::Fonts::DefaultFontSize));
+            }
 
-            if (auto scaling = ImHexApi::System::getGlobalScale(); u32(scaling) * 10 == u32(scaling * 10))
-                fontSize *= scaling;
-            else
-                fontSize *= scaling * 0.75F;
-
-            // Fall back to the default font if the global scale is 0
             if (fontSize == 0.0F)
                 fontSize = ImHexApi::Fonts::DefaultFontSize;
 
-            // If a custom font is used, adjust the font size
-            if (!ImHexApi::Fonts::getCustomFontPath().empty()) {
-                fontSize = float(ContentRegistry::Settings::read<int>("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13)) * ImHexApi::System::getGlobalScale();
-            }
-
             return fontSize;
         }
-
     }
 
     bool buildFontAtlasImpl(bool loadUnicodeCharacters) {
@@ -282,11 +282,9 @@ namespace hex::fonts {
         // Check if Unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
         // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
         bool shouldLoadUnicode =
-                ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false) &&
-                ImHexApi::System::getGPUVendor() != "VMware, Inc.";
-
-        if (!loadUnicodeCharacters)
-            shouldLoadUnicode = false;
+            loadUnicodeCharacters &&
+            ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false) &&
+            ImHexApi::System::getGPUVendor() != "VMware, Inc.";
 
         fontAtlas.enableUnicodeCharacters(shouldLoadUnicode);
 
@@ -298,10 +296,9 @@ namespace hex::fonts {
 
             ImHexApi::Fonts::impl::setCustomFontPath(findCustomFontPath());
         }
-        ImHexApi::Fonts::impl::setFontSize(getFontSize());
 
-
-        const auto fontSize = ImHexApi::Fonts::getFontSize();
+        const auto fontSize = getFontSize();
+        ImHexApi::Fonts::impl::setFontSize(fontSize);
         const auto &customFontPath = ImHexApi::Fonts::getCustomFontPath();
 
         // Try to load the custom font if one was set
@@ -348,25 +345,15 @@ namespace hex::fonts {
                 glyphRanges.push_back(glyphRange);
 
                 // Calculate the glyph offset for the font
-                ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->getDescent() - fontAtlas.calculateFontDescend(font, fontSize)) };
+                ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->getDescent() - fontAtlas.calculateFontDescent(font, fontSize)) };
 
                 // Load the font
                 fontAtlas.addFontFromMemory(font.fontData, font.defaultSize.value_or(fontSize), !font.defaultSize.has_value(), offset, glyphRanges.back());
             }
         }
 
-        EventDPIChanged::subscribe([](float, float newScaling) {
-            fontAtlas.updateFontScaling(newScaling);
-
-            if (fontAtlas.build()) {
-                ImGui_ImplOpenGL3_DestroyFontsTexture();
-                ImGui_ImplOpenGL3_CreateFontsTexture();
-                ImHexApi::Fonts::impl::setFontAtlas(fontAtlas.getAtlas());
-            }
-        });
-
         // Build the font atlas
-        const bool result = fontAtlas.build();
+        const bool result = fontAtlas.scaleAndBuild();
         if (result) {
             // Set the font atlas if the build was successful
             ImHexApi::Fonts::impl::setFontAtlas(fontAtlas.getAtlas());
@@ -380,7 +367,7 @@ namespace hex::fonts {
             ContentRegistry::Settings::write<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false);
 
             ContentRegistry::Settings::write<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 1.0F);
-            ImHexApi::System::impl::setGlobalScale(1.0F);
+            ImHexApi::System::impl::setUserScale(1.0F);
 
             return false;
         } else {

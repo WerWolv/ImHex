@@ -501,16 +501,15 @@ namespace hex {
             }
 
 
-            static float s_globalScale = 1.0;
-            void setGlobalScale(float scale) {
-                s_globalScale = scale;
+            static float s_contentScale = 1.0;
+            void setContentScale(float scale) {
+                s_contentScale = scale;
             }
 
-            static float s_nativeScale = 1.0;
-            void setNativeScale(float scale) {
-                s_nativeScale = scale;
+            static float s_userScale = 1.0;
+            void setUserScale(float scale) {
+                s_userScale = scale;
             }
-
 
             static bool s_borderlessWindowMode;
             void setBorderlessWindowMode(bool enabled) {
@@ -598,13 +597,16 @@ namespace hex {
         }
 
         float getGlobalScale() {
-            return impl::s_globalScale;
+            return getUserScale() * getContentScale();
         }
 
-        float getNativeScale() {
-            return impl::s_nativeScale;
+        float getContentScale() {
+            return impl::s_contentScale;
         }
 
+        float getUserScale() {
+            return impl::s_userScale;
+        }
 
         ImVec2 getMainWindowPosition() {
             if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) != ImGuiConfigFlags_None)

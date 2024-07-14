@@ -14,6 +14,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/ui/glfw_di.h>
 
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -77,20 +78,20 @@ namespace hex::init {
             return;
 
         // Get information about the monitor
-        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-        if (!mode)
+        int monitorWidth, monitorHeight;
+        if (!hex::glfw::GetMonitorSize(monitor, &monitorWidth, &monitorHeight))
             return;
 
         // Get the position of the monitor's viewport on the virtual screen
         int monitorX, monitorY;
-        glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+        hex::glfw::GetMonitorPos(monitor, &monitorX, &monitorY);
 
         // Get the window size
         int windowWidth, windowHeight;
-        glfwGetWindowSize(window, &windowWidth, &windowHeight);
+        hex::glfw::GetWindowSize(window, &windowWidth, &windowHeight);
 
         // Center the splash screen on the monitor
-        glfwSetWindowPos(window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
+        hex::glfw::SetWindowPos(window, monitorX + (monitorWidth - windowWidth) / 2, monitorY + (monitorHeight - windowHeight) / 2);
     }
 
     static ImColor getHighlightColor(u32 index) {
@@ -251,7 +252,7 @@ namespace hex::init {
 
 
     FrameResult WindowSplash::fullFrame() {
-        glfwSetWindowSize(m_window, 640, 400);
+        hex::glfw::SetWindowSize(m_window, 640, 400);
         centerWindow(m_window);
 
         glfwPollEvents();
@@ -426,7 +427,6 @@ namespace hex::init {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-            glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
             glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
         #else
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -445,8 +445,7 @@ namespace hex::init {
         glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 
-        // Create the splash screen window
-        m_window = glfwCreateWindow(1, 1, "Starting ImHex...", nullptr, nullptr);
+        m_window = hex::glfw::CreateWindow(1, 1, "Starting ImHex...", nullptr, nullptr);
         if (m_window == nullptr) {
             hex::nativeErrorMessage(hex::format(
                 "Failed to create GLFW window: [{}] {}.\n"
@@ -459,27 +458,6 @@ namespace hex::init {
 
         // Force window to be fully opaque by default
         glfwSetWindowOpacity(m_window, 1.0F);
-
-        // Calculate native scale factor for hidpi displays
-        {
-            float xScale = 0, yScale = 0;
-            glfwGetWindowContentScale(m_window, &xScale, &yScale);
-
-            auto meanScale = std::midpoint(xScale, yScale);
-            if (meanScale <= 0.0F)
-                meanScale = 1.0F;
-
-            #if defined(OS_MACOS)
-                meanScale /= getBackingScaleFactor();
-            #elif defined(OS_WEB)
-                meanScale = 1.0F;
-            #endif
-
-            ImHexApi::System::impl::setGlobalScale(meanScale);
-            ImHexApi::System::impl::setNativeScale(meanScale);
-
-            log::info("Native scaling set to: {:.1f}", meanScale);
-        }
 
         glfwMakeContextCurrent(m_window);
         glfwSwapInterval(1);
@@ -502,17 +480,20 @@ namespace hex::init {
             ImGui_ImplOpenGL3_Init("#version 130");
         #endif
 
-        auto &io = ImGui::GetIO();
+        float contentScale;
+        glfwGetWindowContentScale(m_window, &contentScale, nullptr);
 
-        ImGui::GetStyle().ScaleAllSizes(ImHexApi::System::getGlobalScale());
+        auto &io = ImGui::GetIO();
 
         // Load fonts necessary for the splash screen
         {
             io.Fonts->Clear();
 
             ImFontConfig cfg;
-            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+            cfg.OversampleH = cfg.OversampleV = 1;
+            cfg.PixelSnapH = true;
             cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
+            cfg.RasterizerDensity = contentScale;
             io.Fonts->AddFontDefault(&cfg);
 
             std::uint8_t *px;
@@ -574,7 +555,7 @@ namespace hex::init {
     }
 
     void WindowSplash::exitGLFW() const {
-        glfwDestroyWindow(m_window);
+        hex::glfw::DestroyWindow(m_window);
         glfwTerminate();
     }
 

@@ -10,7 +10,6 @@
         void openWebpageMacos(const char *url);
         bool isMacosSystemDarkModeEnabled();
         bool isMacosFullScreenModeEnabled(GLFWwindow *window);
-        float getBackingScaleFactor();
 
         void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode);
 

@@ -485,7 +485,6 @@
         "hex.builtin.setting.interface.language": "Nyelv",
         "hex.builtin.setting.interface.multi_windows": "Több ablakos mód engedélyezése",
         "hex.builtin.setting.interface.scaling_factor": "Méretezés",
-        "hex.builtin.setting.interface.scaling.native": "Natív",
         "hex.builtin.setting.interface.show_header_command_palette": "Parancspaletta mutatása az ablak fejlécben",
         "hex.builtin.setting.interface.style": "Stílusok",
         "hex.builtin.setting.interface.window": "Ablak",

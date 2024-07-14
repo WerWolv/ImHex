@@ -42,10 +42,6 @@
         }
     }
 
-    float getBackingScaleFactor(void) {
-        return [[NSScreen mainScreen] backingScaleFactor];
-    }
-
     void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode) {
         NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
 

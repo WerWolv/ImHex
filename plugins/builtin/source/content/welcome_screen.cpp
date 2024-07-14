@@ -557,7 +557,7 @@ namespace hex::plugin::builtin {
         for (const auto &path : paths::Config.read()) {
             if (auto crashFilePath = std::fs::path(path) / CrashFileName; wolv::io::fs::exists(crashFilePath)) {
                 hasCrashed = true;
-                
+
                 log::info("Found crash.json file at {}", wolv::util::toUTF8String(crashFilePath));
                 wolv::io::File crashFile(crashFilePath, wolv::io::File::Mode::Read);
                 nlohmann::json crashFileData;
