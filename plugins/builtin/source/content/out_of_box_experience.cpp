@@ -76,7 +76,7 @@ namespace hex::plugin::builtin {
 
                 // Draw banner
                 ImGui::SetCursorPos(scaled({ 25 * bannerSlideIn, 25 }));
-                const auto bannerSize = s_imhexBanner.getSize() / (3.0F * (1.0F / ImHexApi::System::getGlobalScale()));
+                const auto bannerSize = s_imhexBanner.getSize();
                 ImGui::Image(
                     s_imhexBanner,
                     bannerSize,
@@ -443,7 +443,7 @@ namespace hex::plugin::builtin {
 
             const auto imageTheme = ThemeManager::getImageTheme();
             const auto scale = ImHexApi::System::getContentScale();
-            s_imhexBanner    = ImGuiExt::Texture::fromSVG(romfs::get(hex::format("assets/{}/banner.svg", imageTheme)).span<std::byte>(), 0, 0, scale);
+            s_imhexBanner    = ImGuiExt::Texture::fromSVG(romfs::get(hex::format("assets/{}/banner.svg", imageTheme)).span<std::byte>(), 300_scaled, 0, scale);
             s_compassTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/compass.png").span<std::byte>());
             s_globeTexture   = ImGuiExt::Texture::fromImage(romfs::get("assets/common/globe.png").span<std::byte>());
             s_screenshotDescriptions = nlohmann::json::parse(romfs::get("assets/screenshot_descriptions.json").string());
