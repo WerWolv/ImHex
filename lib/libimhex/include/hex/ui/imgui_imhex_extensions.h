@@ -86,9 +86,9 @@ namespace ImGuiExt {
         static Texture fromGLTexture(unsigned int texture, int width, int height);
         static Texture fromBitmap(const ImU8 *buffer, int size, int width, int height, Filter filter = Filter::Nearest);
         static Texture fromBitmap(std::span<const std::byte> buffer, int width, int height, Filter filter = Filter::Nearest);
-        static Texture fromSVG(const char *path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
-        static Texture fromSVG(const std::fs::path &path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
-        static Texture fromSVG(std::span<const std::byte> buffer, int width = 0, int height = 0, Filter filter = Filter::Nearest);
+        static Texture fromSVG(const char *path, int width = 0, int height = 0, float scale = 1.0f, Filter filter = Filter::Nearest);
+        static Texture fromSVG(const std::fs::path &path, int width = 0, int height = 0, float scale = 1.0f, Filter filter = Filter::Nearest);
+        static Texture fromSVG(std::span<const std::byte> buffer, int width = 0, int height = 0, float scale = 1.0f, Filter filter = Filter::Nearest);
 
 
         ~Texture();
@@ -109,7 +109,7 @@ namespace ImGuiExt {
         }
 
         [[nodiscard]] auto getSize() const noexcept {
-            return ImVec2(m_width, m_height);
+            return ImVec2(float(m_width) / m_scale, float(m_height) / m_scale);
         }
 
         [[nodiscard]] constexpr auto getAspectRatio() const noexcept {
@@ -121,6 +121,7 @@ namespace ImGuiExt {
     private:
         ImTextureID m_textureId = nullptr;
         int m_width = 0, m_height = 0;
+        float m_scale = 1.0f;
     };
 
     float GetTextWrapPos();

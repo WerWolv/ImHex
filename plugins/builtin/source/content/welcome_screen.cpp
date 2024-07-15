@@ -524,7 +524,9 @@ namespace hex::plugin::builtin {
             };
 
             auto changeTextureSvg = [&](const std::string &path, float width) {
-                return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), width, 0, ImGuiExt::Texture::Filter::Linear);
+                // UI scaling is already baked into the width
+                const auto scale = ImHexApi::System::getContentScale();
+                return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), width, 0, scale, ImGuiExt::Texture::Filter::Linear);
             };
 
             ThemeManager::changeTheme(theme);
