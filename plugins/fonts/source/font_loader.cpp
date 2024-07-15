@@ -75,11 +75,11 @@ namespace hex::fonts {
                 return Font(font);
             }
 
-            Font addFontFromMemory(const std::vector<u8> &fontData, float fontSize, bool scalable, ImVec2 offset, bool ownedByImGui = false, const ImVector<ImWchar> &glyphRange = {}) {
+            Font addFontFromMemory(const std::vector<u8> &fontData, float fontSize, bool scalable, ImVec2 offset, const ImVector<ImWchar> &glyphRange = {}) {
                 auto &storedFontData = m_fontData.emplace_back(fontData);
 
                 ImFontConfig config = m_config;
-                config.FontDataOwnedByAtlas = ownedByImGui;
+                config.FontDataOwnedByAtlas = false;
 
                 config.GlyphOffset = { offset.x, offset.y };
                 auto font = m_fontAtlas->AddFontFromMemoryTTF(storedFontData.data(), int(storedFontData.size()), fontSize, &config, !glyphRange.empty() ? glyphRange.Data : m_glyphRange.Data);
@@ -92,14 +92,14 @@ namespace hex::fonts {
 
             Font addFontFromRomFs(const std::fs::path &path, float fontSize, bool scalable, ImVec2 offset, const ImVector<ImWchar> &glyphRange = {}) {
                 auto data = romfs::get(path).span<u8>();
-                return addFontFromMemory({ data.begin(), data.end() }, fontSize, scalable, offset, false, glyphRange);
+                return addFontFromMemory({ data.begin(), data.end() }, fontSize, scalable, offset, glyphRange);
             }
 
             Font addFontFromFile(const std::fs::path &path, float fontSize, bool scalable, ImVec2 offset, const ImVector<ImWchar> &glyphRange = {}) {
                 wolv::io::File file(path, wolv::io::File::Mode::Read);
 
                 auto data = file.readVector();
-                return addFontFromMemory(data, fontSize, scalable, offset, true, glyphRange);
+                return addFontFromMemory(data, fontSize, scalable, offset, glyphRange);
             }
 
             void setBold(bool enabled) {
@@ -158,7 +158,7 @@ namespace hex::fonts {
                 return m_fontAtlas->Build();
             }
 
-            [[nodiscard]] ImFontAtlas* takeAtlas() {
+            [[nodiscard]] ImFontAtlas* getAtlas() {
                 auto result = m_fontAtlas;
 
                 return result;
@@ -351,7 +351,7 @@ namespace hex::fonts {
                 ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->getDescent() - fontAtlas.calculateFontDescend(font, fontSize)) };
 
                 // Load the font
-                fontAtlas.addFontFromMemory(font.fontData, font.defaultSize.value_or(fontSize), !font.defaultSize.has_value(), offset, false, glyphRanges.back());
+                fontAtlas.addFontFromMemory(font.fontData, font.defaultSize.value_or(fontSize), !font.defaultSize.has_value(), offset, glyphRanges.back());
             }
         }
 
@@ -361,7 +361,7 @@ namespace hex::fonts {
             if (fontAtlas.build()) {
                 ImGui_ImplOpenGL3_DestroyFontsTexture();
                 ImGui_ImplOpenGL3_CreateFontsTexture();
-                ImHexApi::Fonts::impl::setFontAtlas(fontAtlas.takeAtlas());
+                ImHexApi::Fonts::impl::setFontAtlas(fontAtlas.getAtlas());
             }
         });
 
@@ -369,7 +369,7 @@ namespace hex::fonts {
         const bool result = fontAtlas.build();
         if (result) {
             // Set the font atlas if the build was successful
-            ImHexApi::Fonts::impl::setFontAtlas(fontAtlas.takeAtlas());
+            ImHexApi::Fonts::impl::setFontAtlas(fontAtlas.getAtlas());
             return true;
         }
 
