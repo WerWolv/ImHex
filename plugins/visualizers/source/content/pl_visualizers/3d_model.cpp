@@ -634,10 +634,13 @@ namespace hex::plugin::visualizers {
         if (s_renderingWindowSize.x <= 0 || s_renderingWindowSize.y <= 0)
             s_renderingWindowSize = { minSize, minSize };
 
-        if (!textureFile.empty())
+        if (!textureFile.empty()) {
             s_texturePath = textureFile;
-        else
+            s_drawTexture = true;
+        }
+        else {
             s_drawTexture = false;
+        }
 
         s_renderingWindowSize.x = std::max(s_renderingWindowSize.x, minSize);
         s_renderingWindowSize.y = std::max(s_renderingWindowSize.y, minSize);
@@ -795,6 +798,8 @@ namespace hex::plugin::visualizers {
                 if (s_shouldUpdateTexture) {
                     s_shouldUpdateTexture = false;
                     s_modelTexture = ImGuiExt::Texture::fromImage(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
+                    if(s_modelTexture.isValid())
+                        s_drawTexture = true;
                 }
 
                 if (s_drawTexture)
