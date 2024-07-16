@@ -438,7 +438,7 @@ namespace hex::plugin::builtin {
                 const u64 end   = std::stoull(split[0].substr(split[0].find('-') + 1), nullptr, 16);
 
                 std::string name;
-                if (split.size() >= 5)
+                if (split.size() > 5)
                     name = combineStrings(std::vector(split.begin() + 5, split.end()), " ");
 
                 m_memoryRegions.insert({ { start, end - start }, name });
