@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
 
     std::pair<Region, bool> ProcessMemoryProvider::getRegionValidity(u64 address) const {
         for (const auto &memoryRegion : m_memoryRegions) {
-            if (memoryRegion.region.overlaps({ address, 1 }))
+            if (memoryRegion.region.overlaps({ address, 1LLU }))
                 return { memoryRegion.region, true };
         }
 
@@ -126,7 +126,7 @@ namespace hex::plugin::builtin {
         for (const auto &memoryRegion : m_memoryRegions) {
 
             if (address < memoryRegion.region.getStartAddress())
-                return { Region { lastRegion.getEndAddress() + 1, memoryRegion.region.getStartAddress() - lastRegion.getEndAddress() }, false };
+                return { Region { lastRegion.getEndAddress() + 1LLU, memoryRegion.region.getStartAddress() - lastRegion.getEndAddress() }, false };
 
             lastRegion = memoryRegion.region;
         }
@@ -429,14 +429,17 @@ namespace hex::plugin::builtin {
             if (!file.isValid())
                 return;
 
-            for (const auto &line : wolv::util::splitString(file.readString(0xF'FFFF), "\n")) {
-                const auto &split = wolv::util::splitString(line, " ");
-                if (split.size() < 6)
+            for (const auto &line : wolv::util::splitString(file.readString(), "\n")) {
+                const auto &split = splitString(line, " ");
+                if (split.size() < 5)
                     continue;
 
                 const u64 start = std::stoull(split[0].substr(0, split[0].find('-')), nullptr, 16);
                 const u64 end   = std::stoull(split[0].substr(split[0].find('-') + 1), nullptr, 16);
-                const auto &name = split[5];
+
+                std::string name;
+                if (split.size() >= 5)
+                    name = combineStrings(std::vector(split.begin() + 5, split.end()), " ");
 
                 m_memoryRegions.insert({ { start, end - start }, name });
             }
