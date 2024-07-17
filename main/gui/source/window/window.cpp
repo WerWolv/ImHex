@@ -849,10 +849,8 @@ namespace hex {
             auto win = static_cast<Window *>(hex::glfw::GetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
 
-            #if !defined(OS_WINDOWS)
-                if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
-                    ImHexApi::System::impl::setMainWindowSize(width, height);
-            #endif
+            if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
+                ImHexApi::System::impl::setMainWindowSize(width, height);
 
             #if defined(OS_MACOS)
                 // Stop widgets registering hover effects while the window is being resized
@@ -929,13 +927,16 @@ namespace hex {
             EventWindowClosing::post(window);
         });
 
-        hex::glfw::SetWindowContentScaleCallback(m_window, [](GLFWwindow *, float newScale, float) {
+        hex::glfw::SetWindowContentScaleCallback(m_window, [](GLFWwindow *window, float newScale, float) {
             auto oldScale = ImHexApi::System::getContentScale();
             if (newScale == 0 || oldScale == newScale)
                 return;
 
             ImHexApi::System::impl::setContentScale(newScale);
             EventDPIChanged::post(newScale);
+
+            auto win = static_cast<Window *>(hex::glfw::GetWindowUserPointer(window));
+            win->fullFrame();
         });
 
         hex::glfw::SetWindowSizeLimits(m_window, 480, 360, GLFW_DONT_CARE, GLFW_DONT_CARE);
