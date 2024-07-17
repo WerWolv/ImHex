@@ -258,7 +258,8 @@ namespace hex::plugin::builtin {
         RequestInitThemeHandlers::subscribe([] {
             {
                 auto &style = ImGui::GetStyle();
-                const static ThemeManager::StyleMap ImGuiStyleMap = {
+                static ThemeManager::StyleMap ImGuiStyleMap;
+                ImGuiStyleMap = {
                     { "alpha",                  { &style.Alpha,                     0.1F,   1.0F,    false } },
                     { "disabled-alpha",         { &style.DisabledAlpha,             0.0F,   1.0F,    false } },
                     { "window-padding",         { &style.WindowPadding,             0.0F,   20.0F,   true  } },
@@ -294,7 +295,8 @@ namespace hex::plugin::builtin {
 
             {
                 auto &style = ImPlot::GetStyle();
-                const static ThemeManager::StyleMap ImPlotStyleMap = {
+                static ThemeManager::StyleMap ImPlotStyleMap;
+                ImPlotStyleMap = {
                         { "line-weight",            { &style.LineWeight,         0.0F, 5.0F,    true  } },
                         { "marker-size",            { &style.MarkerSize,         2.0F, 10.0F,   true  } },
                         { "marker-weight",          { &style.MarkerWeight,       0.0F, 5.0F,    true  } },
@@ -328,7 +330,8 @@ namespace hex::plugin::builtin {
 
             {
                 auto &style = ImNodes::GetStyle();
-                const static ThemeManager::StyleMap ImNodesStyleMap = {
+                static ThemeManager::StyleMap ImNodesStyleMap;
+                ImNodesStyleMap = {
                         { "grid-spacing",                  { &style.GridSpacing,               0.0F,    100.0F, true } },
                         { "node-corner-rounding",          { &style.NodeCornerRounding,        0.0F,    12.0F,  true } },
                         { "node-padding",                  { &style.NodePadding,               0.0F,    20.0F,  true } },
@@ -351,8 +354,9 @@ namespace hex::plugin::builtin {
 
             {
                 auto &style = ImGuiExt::GetCustomStyle();
-                const static ThemeManager::StyleMap ImHexStyleMap = {
-                        { "window-blur",    { &style.WindowBlur,    0.0F,   1.0F,   true } },
+                static ThemeManager::StyleMap ImHexStyleMap;
+                ImHexStyleMap = {
+                        { "window-blur",            { &style.WindowBlur,                0.0F,   1.0F,    true  } },
                         { "popup-alpha",            { &style.PopupWindowAlpha,          0.0F,   1.0F,    false } },
                 };
 
