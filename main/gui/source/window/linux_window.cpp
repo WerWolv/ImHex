@@ -22,6 +22,10 @@
     #include <string.h>
     #include <ranges>
 
+    #ifdef USE_FONTCONFIG
+    #include <fontconfig/fontconfig.h>
+    #endif
+
 namespace hex {
 
     bool isFileInPath(const std::fs::path &filename) {
@@ -48,7 +52,39 @@ namespace hex {
         } // Hopefully one of these commands is installed
     }
 
+#ifdef USE_FONTCONFIG
+    static bool enumerateFontConfig() {
+        if (!FcInit())
+            return false;
+
+        auto fonts = FcConfigGetFonts(nullptr, FcSetSystem);
+        if (!fonts)
+            return false;
+
+        for (auto i = 0; i < fonts->nfont; ++i) {
+            auto font = fonts->fonts[i];
+            FcChar8 *file, *fullName;
+            if (FcPatternGetString(font, FC_FILE, 0, &file) != FcResultMatch) {
+                continue;
+            }
+            if (FcPatternGetString(font, FC_FULLNAME, 0, &fullName) != FcResultMatch
+                && FcPatternGetString(font, FC_FAMILY, 0, &fullName) != FcResultMatch) {
+                continue;
+            }
+            registerFont(reinterpret_cast<const char *>(fullName), reinterpret_cast<const char *>(file));
+        }
+
+        FcFini();
+        return true;
+    }
+#endif
+
     void enumerateFonts() {
+#ifdef USE_FONTCONFIG
+        if (enumerateFontConfig())
+            return;
+#endif
+
         const std::array FontDirectories = {
             "/usr/share/fonts",
             "/usr/local/share/fonts",
