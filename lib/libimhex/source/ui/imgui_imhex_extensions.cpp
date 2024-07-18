@@ -33,7 +33,7 @@ namespace ImGuiExt {
 
     namespace {
 
-        void adjustSVGScale(const lunasvg::Document *document, int &width, int &height, int scale) {
+        void adjustSVGScale(const lunasvg::Document *document, int &width, int &height, float scale) {
             if (document->width() == 0 || document->height() == 0)
                 return;
 

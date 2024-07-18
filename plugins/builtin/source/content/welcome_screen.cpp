@@ -479,6 +479,15 @@ namespace hex::plugin::builtin {
         }
     }
 
+    static auto changeTextureSvg(const std::string &path, float width) {
+        const auto scale = ImHexApi::System::getContentScale();
+        return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), width, 0, scale, ImGuiExt::Texture::Filter::Linear);
+    };
+
+    static void loadBannerTexture() {
+        s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300_scaled);
+    }
+
     /**
      * @brief Registers the event handlers related to the welcome screen
     * should only be called once, at startup
@@ -518,19 +527,21 @@ namespace hex::plugin::builtin {
             ImHexApi::System::setTargetFPS(static_cast<float>(value.get<int>(14)));
         });
 
+        EventScaleChanged::subscribe([]() {
+            // FIXME: The condition is a hack to wait until the
+            // RequestChangeTheme event has fired because it is too hard to me
+            // to do appropriate state management with way the event manager is
+            // designed and with global variables everywhere
+            if (s_bannerTexture)
+                loadBannerTexture();
+        });
         RequestChangeTheme::subscribe([](const std::string &theme) {
             auto changeTexture = [&](const std::string &path) {
                 return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Nearest);
             };
 
-            auto changeTextureSvg = [&](const std::string &path, float width) {
-                // UI scaling is already baked into the width
-                const auto scale = ImHexApi::System::getContentScale();
-                return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), width, 0, scale, ImGuiExt::Texture::Filter::Linear);
-            };
-
             ThemeManager::changeTheme(theme);
-            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300_scaled);
+            loadBannerTexture();
             s_nightlyTexture = changeTextureSvg(hex::format("assets/{}/nightly.svg", "common"), 35_scaled);
             s_backdropTexture = changeTexture(hex::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
 

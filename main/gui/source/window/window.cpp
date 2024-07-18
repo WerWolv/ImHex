@@ -933,7 +933,7 @@ namespace hex {
                 return;
 
             ImHexApi::System::impl::setContentScale(newScale);
-            EventDPIChanged::post(newScale);
+            EventScaleChanged::post();
 
             auto win = static_cast<Window *>(hex::glfw::GetWindowUserPointer(window));
             win->fullFrame();
@@ -1040,7 +1040,7 @@ namespace hex {
             plugin.setImGuiContext(ImGui::GetCurrentContext());
 
         RequestInitThemeHandlers::post();
-        EventDPIChanged::post(ImHexApi::System::getContentScale());
+        EventScaleChanged::post();
     }
 
     void Window::exitGLFW() {

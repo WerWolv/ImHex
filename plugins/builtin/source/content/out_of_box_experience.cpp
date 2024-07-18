@@ -442,8 +442,12 @@ namespace hex::plugin::builtin {
             ImHexApi::System::setWindowResizable(false);
 
             const auto imageTheme = ThemeManager::getImageTheme();
-            const auto scale = ImHexApi::System::getContentScale();
-            s_imhexBanner    = ImGuiExt::Texture::fromSVG(romfs::get(hex::format("assets/{}/banner.svg", imageTheme)).span<std::byte>(), 300_scaled, 0, scale);
+            auto loadBanner = [=] {
+                const auto scale = ImHexApi::System::getContentScale();
+                s_imhexBanner = ImGuiExt::Texture::fromSVG(romfs::get(hex::format("assets/{}/banner.svg", imageTheme)).span<std::byte>(), 300_scaled, 0, scale);
+            };
+            EventScaleChanged::subscribe(loadBanner);
+            loadBanner();
             s_compassTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/compass.png").span<std::byte>());
             s_globeTexture   = ImGuiExt::Texture::fromImage(romfs::get("assets/common/globe.png").span<std::byte>());
             s_screenshotDescriptions = nlohmann::json::parse(romfs::get("assets/screenshot_descriptions.json").string());

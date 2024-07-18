@@ -51,7 +51,7 @@ namespace hex::fonts {
                 m_config.SizePixels = ImHexApi::Fonts::DefaultFontSize;
                 m_config.MergeMode = false;
 
-                EventDPIChanged::subscribe(this, [this](float) {
+                EventScaleChanged::subscribe(this, [this]() {
                     if (scaleAndBuild()) {
                         ImGui_ImplOpenGL3_DestroyFontsTexture();
                         ImGui_ImplOpenGL3_CreateFontsTexture();
@@ -62,7 +62,7 @@ namespace hex::fonts {
 
             ~FontAtlas() {
                 IM_DELETE(m_fontAtlas);
-                EventDPIChanged::unsubscribe(this);
+                EventScaleChanged::unsubscribe(this);
             }
 
             bool scaleAndBuild() {
