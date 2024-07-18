@@ -5,6 +5,7 @@ pacman -S $@ --needed \
   gcc           \
   lld           \
   glfw          \
+  fontconfig    \
   file          \
   mbedtls       \
   freetype2     \

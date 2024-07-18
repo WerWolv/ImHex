@@ -16,6 +16,7 @@ BuildRequires:  cmake
 BuildRequires:  desktop-file-utils
 BuildRequires:  dbus-devel
 BuildRequires:  file-devel
+BuildRequires:  fontconfig-devel
 BuildRequires:  freetype-devel
 BuildRequires:  fmt-devel
 BuildRequires:  gcc-c++
