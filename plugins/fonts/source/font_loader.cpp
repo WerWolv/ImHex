@@ -48,7 +48,7 @@ namespace hex::fonts {
             FontAtlas() : m_fontAtlas(IM_NEW(ImFontAtlas)) {
                 enableUnicodeCharacters(false);
 
-                // Set the default configuration for the font atlas
+                m_config.SizePixels = ImHexApi::Fonts::DefaultFontSize;
                 m_config.MergeMode = false;
 
                 EventDPIChanged::subscribe(this, [this](float) {
@@ -71,17 +71,10 @@ namespace hex::fonts {
             }
 
             Font addDefaultFont() {
-                ImFontConfig config = m_config;
-                config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-                config.SizePixels = ImHexApi::Fonts::DefaultFontSize;
-                config.OversampleH = m_config.OversampleV = 1;
-                config.PixelSnapH = true;
-
-                auto font = m_fontAtlas->AddFontDefault(&config);
-                m_fontSizes.emplace_back(false, config.SizePixels);
-
+                setAntiAliasing(false);
+                auto font = m_fontAtlas->AddFontDefault(&m_config);
+                m_fontSizes.emplace_back(false, m_config.SizePixels);
                 m_config.MergeMode = true;
-
                 return Font(font);
             }
 
@@ -127,10 +120,13 @@ namespace hex::fonts {
             }
 
             void setAntiAliasing(bool enabled) {
-                if (enabled)
+                if (enabled) {
+                    m_config.PixelSnapH = false;
                     m_config.FontBuilderFlags &= ~ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-                else
+                } else {
+                    m_config.PixelSnapH = true;
                     m_config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
+                }
             }
 
             void enableUnicodeCharacters(bool enabled) {
@@ -165,6 +161,9 @@ namespace hex::fonts {
             }
 
             bool build() const {
+                // FIXME: Large font size + Unicode enabled + fonts with lots of
+                // glyphs = unrecoverable `pack_rect.was_packed` assertion
+                // failure in `ImFontAtlasBuildWithFreeTypeEx`
                 return m_fontAtlas->Build();
             }
 
@@ -211,16 +210,20 @@ namespace hex::fonts {
             }
 
             void updateFontScaling(float scale, float density) {
-                for (int i = 0; i < m_fontAtlas->ConfigData.size(); i += 1) {
+                // Using only `RasterizerDensity` in combination with
+                // `ImGuiIO::FontGlobalScale` does not work; when the combined
+                // density and scale go above a certain amount, something
+                // silently breaks and the window is rendered all black except
+                // for rasterised images which are drawn on top of the black
+                for (auto i = 0; i < m_fontAtlas->ConfigData.size(); ++i) {
                     const auto &[scalable, fontSize] = m_fontSizes[i];
                     auto &configData = m_fontAtlas->ConfigData[i];
 
-                    if (!scalable) {
-                        configData.SizePixels = fontSize * std::max(1.0F, std::floor(scale));
-                    } else {
-                        configData.SizePixels = fontSize * scale;
-                    }
-
+                    configData.SizePixels = fontSize * std::max(1.0F, scalable ? scale : std::floor(scale));
+                    // The oversample limit is chosen arbitrarily, based loosely
+                    // on the experience of having UI scaling above 3.0 black
+                    // out during testing as described in the previous comment
+                    configData.OversampleH = scalable && configData.SizePixels <= 18 ? 2 : 1;
                     configData.RasterizerDensity = density;
                 }
             }
