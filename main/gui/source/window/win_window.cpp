@@ -29,8 +29,6 @@
     #include <shellapi.h>
     #include <timeapi.h>
 
-    #include <cstdio>
-
 namespace hex {
 
     template<typename T>
@@ -415,12 +413,6 @@ namespace hex {
             // Reopen stdin, stdout and stderr to the console if not in debug mode
             reopenConsoleHandle(STD_INPUT_HANDLE,  STDIN_FILENO,  stdin);
             reopenConsoleHandle(STD_OUTPUT_HANDLE, STDOUT_FILENO, stdout);
-
-            // Explicitly don't forward stderr because some libraries like to write to it
-            // with no way to disable it (e.g., libmagic)
-            /*
-                reopenConsoleHandle(STD_ERROR_HANDLE,  STDERR_FILENO, stderr);
-            */
 
             // Enable ANSI colors in the console
             log::impl::enableColorPrinting();
