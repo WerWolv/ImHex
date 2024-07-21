@@ -30,6 +30,7 @@ AppDir:
     - libbz2-1.0:amd64
     - libcap2:amd64
     - libdbus-1-3:amd64
+    - libfontconfig1:amd64
     - libgpg-error0:amd64
     - liblzma5:amd64
     - libnss-mdns:amd64
