@@ -664,7 +664,9 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (!s_infoBannerTexture.isValid()) {
+            auto allowNetworking = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", false)
+                && ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0) != 0;
+            if (!s_infoBannerTexture.isValid() && allowNetworking) {
                 TaskManager::createBackgroundTask("Load banner", [](auto&) {
                     HttpRequest request("GET",
                         ImHexApiURL + hex::format("/info/{}/image", hex::toLower(ImHexApi::System::getOSName())));
