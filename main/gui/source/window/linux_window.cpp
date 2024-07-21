@@ -63,7 +63,7 @@ namespace hex {
             if (fonts == nullptr)
                 return false;
 
-            for (u32 i = 0; i < fonts->nfont; ++i) {
+            for (int i = 0; i < fonts->nfont; ++i) {
                 auto font = fonts->fonts[i];
                 FcChar8 *file, *fullName;
 
