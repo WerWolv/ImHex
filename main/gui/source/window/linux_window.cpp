@@ -22,6 +22,10 @@
     #include <string.h>
     #include <ranges>
 
+    #if defined(IMHEX_HAS_FONTCONFIG)
+        #include <fontconfig/fontconfig.h>
+    #endif
+
 namespace hex {
 
     bool isFileInPath(const std::fs::path &filename) {
@@ -48,7 +52,43 @@ namespace hex {
         } // Hopefully one of these commands is installed
     }
 
+    #if defined(IMHEX_HAS_FONTCONFIG)
+        static bool enumerateFontConfig() {
+            if (!FcInit())
+                return false;
+
+            ON_SCOPE_EXIT { FcFini(); };
+
+            auto fonts = FcConfigGetFonts(nullptr, FcSetSystem);
+            if (fonts == nullptr)
+                return false;
+
+            for (int i = 0; i < fonts->nfont; ++i) {
+                auto font = fonts->fonts[i];
+                FcChar8 *file, *fullName;
+
+                if (FcPatternGetString(font, FC_FILE, 0, &file) != FcResultMatch) {
+                    continue;
+                }
+
+                if (FcPatternGetString(font, FC_FULLNAME, 0, &fullName) != FcResultMatch
+                    && FcPatternGetString(font, FC_FAMILY, 0, &fullName) != FcResultMatch) {
+                    continue;
+                }
+                
+                registerFont(reinterpret_cast<const char *>(fullName), reinterpret_cast<const char *>(file));
+            }
+
+            return true;
+        }
+    #endif
+
     void enumerateFonts() {
+        #if defined(IMHEX_HAS_FONTCONFIG)
+            if (enumerateFontConfig())
+                return;
+        #endif
+
         const std::array FontDirectories = {
             "/usr/share/fonts",
             "/usr/local/share/fonts",
@@ -74,7 +114,10 @@ namespace hex {
     }
 
     void Window::configureGLFW() {
-        glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_FALSE);
+        #if defined(GLFW_SCALE_FRAMEBUFFER)
+            glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_FALSE);
+        #endif
+
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);

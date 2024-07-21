@@ -4,6 +4,7 @@ dnf install -y      \
   cmake             \
   dbus-devel        \
   file-devel        \
+  fontconfig-devel  \
   freetype-devel    \
   libcurl-devel     \
   gcc-c++           \

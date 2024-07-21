@@ -107,12 +107,12 @@ namespace hex::plugin::builtin {
                 if (open) {
 
                     ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -1_scaled));
-                    ImGui::SetNextWindowSize(ImVec2(0, dockSpaceSize.y + 5_scaled));
+                    ImGui::SetNextWindowSizeConstraints(ImVec2(0, dockSpaceSize.y + 5_scaled), ImVec2(FLT_MAX, dockSpaceSize.y + 5_scaled));
 
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
                     ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
-                    if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                        if (ImGui::BeginChild("##Content", ImVec2(), ImGuiChildFlags_ResizeX)) {
+                    if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                        if (ImGui::BeginChild("##Content", ImGui::GetContentRegionAvail())) {
                             callback();
                         }
                         ImGui::EndChild();
