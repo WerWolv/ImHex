@@ -170,11 +170,11 @@ namespace hex::plugin::decompress {
 
                 while (stream.avail_in != 0) {
                     auto res = lzma_code(&stream, LZMA_RUN);
-                    if (res == BZ_STREAM_END) {
+                    if (res == LZMA_STREAM_END) {
                         section.resize(section.size() - stream.avail_out);
                         break;
                     }
-                    if (res != LZMA_OK && res != LZMA_STREAM_END)
+                    if (res != LZMA_OK)
                         return false;
 
                     if (stream.avail_out != 0)
