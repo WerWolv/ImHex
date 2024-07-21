@@ -637,8 +637,7 @@ namespace hex::plugin::visualizers {
         if (!textureFile.empty()) {
             s_texturePath = textureFile;
             s_drawTexture = true;
-        }
-        else {
+        } else {
             s_drawTexture = false;
         }
 
@@ -798,8 +797,9 @@ namespace hex::plugin::visualizers {
                 if (s_shouldUpdateTexture) {
                     s_shouldUpdateTexture = false;
                     s_modelTexture = ImGuiExt::Texture::fromImage(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
-                    if(s_modelTexture.isValid())
+                    if (s_modelTexture.isValid()) {
                         s_drawTexture = true;
+                    }
                 }
 
                 if (s_drawTexture)
