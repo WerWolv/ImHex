@@ -81,10 +81,7 @@ namespace hex::plugin::builtin {
             };
 
             auto read = process_vm_readv(m_processId, &local, 1, &remote, 1, 0);
-
-            if (read == -1) {
-                log::error("Process memory provider failed to read data: {}", strerror(errno));
-            }
+            hex::unused(read);
         #endif
     }
     void ProcessMemoryProvider::writeRaw(u64 address, const void *buffer, size_t size) {
@@ -109,10 +106,8 @@ namespace hex::plugin::builtin {
                 .iov_len = size,
             };
 
-            auto read = process_vm_writev(m_processId, &local, 1, &remote, 1, 0);
-            if (read == -1) {
-                log::error("Process memory provider failed to write data: {}", strerror(errno));
-            }
+            auto write = process_vm_writev(m_processId, &local, 1, &remote, 1, 0);
+            hex::unused(write);
         #endif
     }
 
