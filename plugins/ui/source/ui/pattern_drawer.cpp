@@ -571,12 +571,12 @@ namespace hex::ui {
             if (auto enumPattern = dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern); enumPattern != nullptr) {
                 if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
                     auto currValue = pattern.getValue().toUnsigned();
-                    for (auto &enumValue : enumPattern->getEnumValues()) {
+                    for (auto &[name, enumValue] : enumPattern->getEnumValues()) {
                         auto min = enumValue.min.toUnsigned();
                         auto max = enumValue.max.toUnsigned();
 
                         bool isSelected = min <= currValue && max >= currValue;
-                        if (ImGui::Selectable(fmt::format("{}::{}", pattern.getTypeName(), enumValue.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
+                        if (ImGui::Selectable(fmt::format("{}::{}", pattern.getTypeName(), name, min, pattern.getSize() * 2).c_str(), isSelected)) {
                             pattern.setValue(enumValue.min);
                             this->resetEditing();
                         }
@@ -723,13 +723,13 @@ namespace hex::ui {
 
             if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
                 auto currValue = pattern.getValue().toUnsigned();
-                for (auto &value : pattern.getEnumValues()) {
-                    auto min = value.min.toUnsigned();
-                    auto max = value.max.toUnsigned();
+                for (auto &[name, enumValue] : pattern.getEnumValues()) {
+                    auto min = enumValue.min.toUnsigned();
+                    auto max = enumValue.max.toUnsigned();
 
                     bool isSelected = min <= currValue && max >= currValue;
-                    if (ImGui::Selectable(fmt::format("{}::{}", pattern.getTypeName(), value.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
-                        pattern.setValue(value.min);
+                    if (ImGui::Selectable(fmt::format("{}::{}", pattern.getTypeName(), name, min, pattern.getSize() * 2).c_str(), isSelected)) {
+                        pattern.setValue(enumValue.min);
                         this->resetEditing();
                     }
                     if (isSelected)
