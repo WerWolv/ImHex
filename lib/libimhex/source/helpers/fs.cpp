@@ -23,6 +23,7 @@
 #if defined(OS_WEB)
     #include <emscripten.h>
 #else
+    #include <GLFW/glfw3.h>
     #include <nfd.hpp>
     #if defined(OS_WINDOWS)
         #define GLFW_EXPOSE_NATIVE_WIN32
@@ -36,17 +37,21 @@
         #define GLFW_EXPOSE_NATIVE_COCOA
     #endif
     #if defined(OS_LINUX)
-        #define GLFW_EXPOSE_NATIVE_X11
+        #if GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
+            #define GLFW_EXPOSE_NATIVE_X11
+        #else
+            #define GLFW_EXPOSE_NATIVE_WAYLAND
+        #endif
     #endif
-    #if defined(OS_LINUX) && defined(GLFW_WAYLAND_APP_ID)
-        #define GLFW_EXPOSE_NATIVE_WAYLAND
-    #endif
+
     #include <nfd_glfw3.h>
-    #if defined(OS_LINUX) && defined(GLFW_WAYLAND_APP_ID)
-        #undef GLFW_EXPOSE_NATIVE_WAYLAND
-    #endif
-    #if defined(OS_LINUX)
-        #undef GLFW_EXPOSE_NATIVE_X11
+
+    #if defined(OS_LINUX) && GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
+        #if GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
+            #undef GLFW_EXPOSE_NATIVE_X11
+        #else
+            #undef GLFW_EXPOSE_NATIVE_WAYLAND
+        #endif
     #endif
     #if defined(OS_MACOS)
         #undef GLFW_EXPOSE_NATIVE_COCOA
