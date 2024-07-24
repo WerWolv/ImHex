@@ -1307,7 +1307,8 @@ namespace hex::plugin::builtin {
 
                 if (!m_lastCompileError->empty()) {
                     for (const auto &error : *m_lastCompileError) {
-                        if (error.getLocation().source->source == pl::api::Source::DefaultSource)
+                        auto source = error.getLocation().source;
+                        if (source != nullptr && source->source == pl::api::Source::DefaultSource)
                             errorMarkers[error.getLocation().line] = processMessage(error.getMessage());
                     }
                 }
