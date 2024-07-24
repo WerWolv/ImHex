@@ -1382,6 +1382,8 @@ namespace hex::ui {
 
                     for (auto &pattern : patterns) {
                         std::vector<std::string> patternPath;
+
+                        size_t startFavoriteCount = m_favorites.size();
                         traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
                             if (currPattern.hasAttribute("hex::favorite"))
                                 m_favorites.insert({ patternPath, currPattern.clone() });
@@ -1394,11 +1396,14 @@ namespace hex::ui {
 
                                 m_groups[groupName].push_back(currPattern.clone());
                             }
+
+                            task.update();
                         });
 
-                        if (updatedFavorites == m_favorites.size())
-                            task.interrupt();
                         task.update();
+
+                        if (startFavoriteCount == m_favorites.size())
+                            continue;
 
                         patternPath.clear();
                         traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
