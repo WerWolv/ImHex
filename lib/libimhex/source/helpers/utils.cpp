@@ -685,7 +685,7 @@ namespace hex {
             return string;
 
         // If the string is longer than the max length, find the last space before the max length
-        auto it = string.begin() + maxLength / 2;
+        auto it = string.begin() + maxLength;
         while (it != string.begin() && !std::isspace(*it)) --it;
 
         // If there's no space before the max length, just cut the string

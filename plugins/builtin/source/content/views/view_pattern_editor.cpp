@@ -1456,6 +1456,7 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::drawPatternTooltip(pl::ptrn::Pattern *pattern) {
         ImGui::PushID(pattern);
         {
+            const bool shiftHeld = ImGui::GetIO().KeyShift;
             ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
             ImGui::SameLine(0, 10);
             ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{} ", pattern->getFormattedName());
@@ -1464,9 +1465,9 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::SameLine();
-            ImGuiExt::TextFormatted("{} ", hex::limitStringLength(pattern->getFormattedValue(), 64));
+            ImGuiExt::TextFormatted("{: <{}} ", hex::limitStringLength(pattern->getFormattedValue(), 64), shiftHeld ? 40 : 0);
 
-            if (ImGui::GetIO().KeyShift) {
+            if (shiftHeld) {
                 ImGui::Indent();
                 if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip)) {
                     ImGui::TableNextRow();
@@ -1498,7 +1499,7 @@ namespace hex::plugin::builtin {
                     }
 
                     ImGui::Indent();
-                    ImGui::PushTextWrapPos(300_scaled);
+                    ImGui::PushTextWrapPos(500_scaled);
                     ImGuiExt::TextFormattedWrapped("{}", path);
                     ImGui::PopTextWrapPos();
                     ImGui::Unindent();
