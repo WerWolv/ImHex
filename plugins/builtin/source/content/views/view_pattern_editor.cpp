@@ -1529,9 +1529,11 @@ namespace hex::plugin::builtin {
                     ImGui::Unindent();
 
                     {
+                        const auto provider = ImHexApi::Provider::get();
+                        const auto baseAddress = provider != nullptr ? provider->getBaseAddress() : 0x00;
                         const auto parent = pattern->getParent();
-                        const auto parentAddress = parent == nullptr ? 0x00 : parent->getOffset();
-                        const auto parentSize = parent == nullptr ? 0x00 : parent->getSize();
+                        const auto parentAddress = parent == nullptr ? baseAddress : parent->getOffset();
+                        const auto parentSize = parent == nullptr ? baseAddress : parent->getSize();
                         const auto patternAddress = pattern->getOffset();
 
                         if (patternAddress >= parentAddress && patternAddress + pattern->getSize() <= parentAddress + parentSize) {
