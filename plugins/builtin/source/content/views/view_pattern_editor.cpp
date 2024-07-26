@@ -1527,6 +1527,23 @@ namespace hex::plugin::builtin {
                     ImGuiExt::TextFormatted("{}", hex::toByteString(pattern->getSize()));
                     ImGui::Unindent();
 
+                    {
+                        const auto parent = pattern->getParent();
+                        const auto parentAddress = parent == nullptr ? 0x00 : parent->getOffset();
+                        const auto parentSize = parent == nullptr ? 0x00 : parent->getSize();
+                        const auto patternAddress = pattern->getOffset();
+
+                        if (patternAddress >= parentAddress && patternAddress + pattern->getSize() <= parentAddress + parentSize) {
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormatted("{} ", "hex.builtin.view.pattern_editor.tooltip.parent_offset"_lang);
+                            ImGui::TableNextColumn();
+                            ImGui::Indent();
+                            ImGuiExt::TextFormatted("0x{:02X}", pattern->getOffset() - parentAddress);
+                            ImGui::Unindent();
+                        }
+                    }
+
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{} ", "hex.ui.common.endian"_lang);
