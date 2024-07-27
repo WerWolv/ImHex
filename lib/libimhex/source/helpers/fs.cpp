@@ -39,18 +39,17 @@
     #if defined(OS_LINUX)
         #if GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
             #define GLFW_EXPOSE_NATIVE_X11
-        #else
-            #define GLFW_EXPOSE_NATIVE_WAYLAND
         #endif
     #endif
 
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
     #include <nfd_glfw3.h>
+    #pragma GCC diagnostic pop
 
     #if defined(OS_LINUX) && GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
         #if GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
             #undef GLFW_EXPOSE_NATIVE_X11
-        #else
-            #undef GLFW_EXPOSE_NATIVE_WAYLAND
         #endif
     #endif
     #if defined(OS_MACOS)
