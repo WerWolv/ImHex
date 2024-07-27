@@ -292,10 +292,21 @@ namespace hex::plugin::diffing {
                         // Draw start address
                         ImGui::TableNextColumn();
                         if (ImGui::Selectable(hex::format("0x{:02X}", regionA.start).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                            a.hexEditor.setSelection({ regionA.start, ((regionA.end - regionA.start) + 1) });
+                            const Region selectionA = { regionA.start, ((regionA.end - regionA.start) + 1) };
+                            const Region selectionB = { regionB.start, ((regionB.end - regionB.start) + 1) };
+
+                            a.hexEditor.setSelection(selectionA);
                             a.hexEditor.jumpToSelection();
-                            b.hexEditor.setSelection({ regionB.start, ((regionB.end - regionB.start) + 1) });
+                            b.hexEditor.setSelection(selectionB);
                             b.hexEditor.jumpToSelection();
+
+                            const auto &providers = ImHexApi::Provider::getProviders();
+                            auto openProvider = ImHexApi::Provider::get();
+
+                            if (providers[a.provider] == openProvider)
+                                ImHexApi::HexEditor::setSelection(selectionA);
+                            else if (providers[b.provider] == openProvider)
+                                ImHexApi::HexEditor::setSelection(selectionB);
                         }
 
                         // Draw end address
