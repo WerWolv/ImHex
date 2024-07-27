@@ -58,6 +58,8 @@
         "hex.builtin.achievement.misc.analyze_file.desc": "Analyze the bytes of your data by using the 'Analyze' option in the Data Information view.",
         "hex.builtin.achievement.misc.download_from_store.name": "There's an app for that",
         "hex.builtin.achievement.misc.download_from_store.desc": "Download any item from the Content Store",
+        "hex.builtin.background_service.network_interface": "Network Interface",
+        "hex.builtin.background_service.auto_backup": "Auto Backup",
         "hex.builtin.command.calc.desc": "Calculator",
         "hex.builtin.command.convert.desc": "Unit conversion",
         "hex.builtin.command.convert.hexadecimal": "hexadecimal",

@@ -654,7 +654,7 @@ namespace hex::plugin::builtin {
             return;
 
         fs::openFileBrowser(fs::DialogMode::Save, {}, [provider](const auto &path) {
-            PopupBlockingTask::open(TaskManager::createTask("Saving..."_lang, TaskManager::NoProgress, [=](Task &){
+            PopupBlockingTask::open(TaskManager::createTask("hex.builtin.task.saving_data"_lang, TaskManager::NoProgress, [=](Task &){
                 provider->saveAs(path);
             }));
         });
