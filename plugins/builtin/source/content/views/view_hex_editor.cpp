@@ -1055,7 +1055,7 @@ namespace hex::plugin::builtin {
 
                                                     ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                                                     [this](const auto &path) {
-                                                        TaskManager::createTask("Loading encoding file"_lang, 0, [this, path](auto&) {
+                                                        TaskManager::createTask("hex.builtin.task.loading_encoding_file"_lang, 0, [this, path](auto&) {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
                                                             ImHexApi::Provider::markDirty();
 

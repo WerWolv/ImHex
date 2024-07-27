@@ -16,6 +16,7 @@
         "hex.visualizers.pl_visualizer.coordinates.longitude": "Longitude",
         "hex.visualizers.pl_visualizer.coordinates.query": "Find address",
         "hex.visualizers.pl_visualizer.coordinates.querying": "Querying address...",
-        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "No address found"
+        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "No address found",
+        "hex.visualizers.pl_visualizer.task.visualizing": "Visualizing data..."
     }
 }

@@ -23,6 +23,7 @@
         "hex.windows.view.tty_console.send_eot": "Send EOT",
         "hex.windows.view.tty_console.send_etx": "Send ETX",
         "hex.windows.view.tty_console.send_sub": "Send SUB",
-        "hex.windows.view.tty_console.stop_bits": "Stop bits"
+        "hex.windows.view.tty_console.stop_bits": "Stop bits",
+        "hex.windows.view.tty_console.task.transmitting": "Transmitting data..."
     }
 }

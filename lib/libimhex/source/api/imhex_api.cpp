@@ -450,7 +450,7 @@ namespace hex {
             // Do the destruction of the provider in the background once all tasks have finished
             TaskManager::runWhenTasksFinished([providerToRemove] {
                 EventProviderDeleted::post(providerToRemove);
-                TaskManager::createBackgroundTask("Closing Provider"_lang, [providerToRemove](Task &) {
+                TaskManager::createBackgroundTask(Lang("Closing Provider"), [providerToRemove](Task &) {
                     eraseMutex.lock();
                     auto provider = std::move((*s_providersToRemove)[providerToRemove]);
                     s_providersToRemove->erase(providerToRemove);

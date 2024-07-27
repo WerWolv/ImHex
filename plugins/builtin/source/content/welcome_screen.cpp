@@ -96,7 +96,7 @@ namespace hex::plugin::builtin {
                                 }
                             }
 
-                            TaskManager::createBackgroundTask("Upload Crash report"_lang, [path = m_logFilePath, data](auto&){
+                            TaskManager::createBackgroundTask("hex.builtin.task.uploading_crash"_lang, [path = m_logFilePath, data](auto&){
                                 HttpRequest request("POST", ImHexApiURL + std::string("/crash_upload"));
                                 request.uploadFile(std::vector<u8>(data.begin(), data.end()), "file", path.filename()).wait();
                             });
@@ -667,7 +667,7 @@ namespace hex::plugin::builtin {
             auto allowNetworking = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", false)
                 && ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0) != 0;
             if (!s_infoBannerTexture.isValid() && allowNetworking) {
-                TaskManager::createBackgroundTask("Load banner"_lang, [](auto&) {
+                TaskManager::createBackgroundTask("hex.builtin.task.loading_banner"_lang, [](auto&) {
                     HttpRequest request("GET",
                         ImHexApiURL + hex::format("/info/{}/image", hex::toLower(ImHexApi::System::getOSName())));
 

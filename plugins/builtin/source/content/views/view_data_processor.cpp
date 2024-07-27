@@ -528,7 +528,7 @@ namespace hex::plugin::builtin {
         // Reset any potential node errors
         workspace.currNodeError.reset();
 
-        m_evaluationTask = TaskManager::createTask("Evaluating Nodes..."_lang, 0, [this, workspace = &workspace](Task& task) {
+        m_evaluationTask = TaskManager::createTask("hex.builtin.task.evaluating_nodes"_lang, 0, [this, workspace = &workspace](Task& task) {
             task.setInterruptCallback([]{
                 dp::Node::interrupt();
             });

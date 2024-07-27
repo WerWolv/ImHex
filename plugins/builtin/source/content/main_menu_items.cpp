@@ -214,7 +214,7 @@ namespace hex::plugin::builtin {
             for (const auto &formatter : ContentRegistry::DataFormatter::impl::getExportMenuEntries()) {
                 if (ImGui::MenuItem(Lang(formatter.unlocalizedName), nullptr, false, ImHexApi::Provider::get()->getActualSize() > 0)) {
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [&formatter](const auto &path) {
-                        TaskManager::createTask("Exporting data"_lang, TaskManager::NoProgress, [&formatter, path](auto&){
+                        TaskManager::createTask("hex.builtin.task.exporting_data"_lang, TaskManager::NoProgress, [&formatter, path](auto&){
                             auto provider = ImHexApi::Provider::get();
                             auto selection = ImHexApi::HexEditor::getSelection()
                                     .value_or(

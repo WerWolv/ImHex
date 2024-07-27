@@ -558,7 +558,7 @@ namespace hex::plugin::builtin {
                 auto code = m_textEditor.GetText();
                 EventPatternEditorChanged::post(code);
 
-                TaskManager::createBackgroundTask("Pattern Parsing"_lang, [this, code, provider](auto &){
+                TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern"_lang, [this, code, provider](auto &){
                     this->parsePattern(code, provider);
 
                     if (m_runAutomatically)
@@ -1330,7 +1330,7 @@ namespace hex::plugin::builtin {
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
-            m_analysisTask = TaskManager::createBackgroundTask("Analyzing file content"_lang, [this, provider](const Task &task) {
+            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data"_lang, [this, provider](const Task &task) {
                 if (!m_autoLoadPatterns)
                     return;
 
@@ -1584,7 +1584,7 @@ namespace hex::plugin::builtin {
             m_textEditor.SetText(code);
             m_sourceCode.set(provider, code);
 
-            TaskManager::createBackgroundTask("Parse pattern"_lang, [this, code, provider](auto&) { this->parsePattern(code, provider); });
+            TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern"_lang, [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
 

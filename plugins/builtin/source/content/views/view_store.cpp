@@ -197,7 +197,7 @@ namespace hex::plugin::builtin {
         ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetCursorPosX() - 25_scaled);
         ImGui::BeginDisabled(m_updateAllTask.isRunning() || m_updateCount == 0);
         if (ImGuiExt::IconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            m_updateAllTask = TaskManager::createTask("Update All..."_lang, m_updateCount, [this](auto &task) {
+            m_updateAllTask = TaskManager::createTask("hex.builtin.task.updating_store"_lang, m_updateCount, [this](auto &task) {
                 for (auto &category : m_categories) {
                     for (auto &entry : category.entries) {
                         if (entry.hasUpdate) {

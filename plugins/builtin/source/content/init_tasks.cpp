@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
                     ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", uuid);
                 }
 
-                TaskManager::createBackgroundTask("Sending statistics..."_lang, [uuid, versionString](auto&) {
+                TaskManager::createBackgroundTask("hex.builtin.task.sending_statistics"_lang, [uuid, versionString](auto&) {
                     // To avoid potentially flooding our database with lots of dead users
                     // from people just visiting the website, don't send telemetry data from
                     // the web version
@@ -94,7 +94,7 @@ namespace hex::plugin::builtin {
         }
 
         bool checkForUpdates() {
-            TaskManager::createBackgroundTask("Checking for updates"_lang, [](auto&) { checkForUpdatesSync(); });
+            TaskManager::createBackgroundTask("hex.builtin.task.check_updates"_lang, [](auto&) { checkForUpdatesSync(); });
             return true;
         }
 

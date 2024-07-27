@@ -91,7 +91,7 @@ namespace {
                 if (menuJustOpened) {
                     menuJustOpened = false;
                     if (!updaterTask.isRunning()) {
-                        updaterTask = TaskManager::createBackgroundTask("Updating Scripts..."_lang, [] (auto&) {
+                        updaterTask = TaskManager::createBackgroundTask("hex.script_loader.task.updating"_lang, [] (auto&) {
                             scripts = loadAllScripts();
                         });
                     }
@@ -109,7 +109,7 @@ namespace {
                         continue;
 
                     if (ImGui::MenuItem(name.c_str(), loader->getTypeName().c_str())) {
-                        runnerTask = TaskManager::createTask("Running script..."_lang, TaskManager::NoProgress, [entryPoint](auto&) {
+                        runnerTask = TaskManager::createTask("hex.script_loader.task.running"_lang, TaskManager::NoProgress, [entryPoint](auto&) {
                             entryPoint();
                         });
                     }
@@ -123,7 +123,7 @@ namespace {
             return !runnerTask.isRunning();
         });
 
-        updaterTask = TaskManager::createBackgroundTask("Updating Scripts..."_lang, [] (auto&) {
+        updaterTask = TaskManager::createBackgroundTask("hex.script_loader.task.updating"_lang, [] (auto&) {
             scripts = loadAllScripts();
         });
     }

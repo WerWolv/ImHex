@@ -924,7 +924,7 @@ namespace hex::plugin::builtin {
                 m_filterTask.interrupt();
 
             if (!m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("Filtering"_lang, currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
+                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_lang, currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
                     u64 progress = 0;
                     std::erase_if(currOccurrences, [this, provider, &task, &progress](const auto &region) {
                         task.update(progress);
