@@ -544,7 +544,7 @@ namespace hex::plugin::builtin {
                                 auto max = ImGui::GetItemRectMax();
                                 auto iconSize = ImGui::CalcTextSize(menuItem->icon.glyph.c_str());
 
-                                auto text = Lang(unlocalizedName).get();
+                                std::string text = Lang(unlocalizedName);
                                 if (text.ends_with("..."))
                                     text = text.substr(0, text.size() - 3);
 

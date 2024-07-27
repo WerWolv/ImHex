@@ -558,7 +558,7 @@ namespace hex::plugin::builtin {
                 auto code = m_textEditor.GetText();
                 EventPatternEditorChanged::post(code);
 
-                TaskManager::createBackgroundTask("Pattern Parsing", [this, code, provider](auto &){
+                TaskManager::createBackgroundTask("Pattern Parsing"_lang, [this, code, provider](auto &){
                     this->parsePattern(code, provider);
 
                     if (m_runAutomatically)
@@ -1157,7 +1157,7 @@ namespace hex::plugin::builtin {
                                 patternDrawer->draw(patterns, &runtime, 150_scaled);
                         };
                     }
-                    ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.sections.view"_lang.get().c_str());
+                    ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.sections.view"_lang.get());
 
                     ImGui::SameLine();
 
@@ -1172,7 +1172,7 @@ namespace hex::plugin::builtin {
                             file.writeVector(runtime.getSection(id));
                         });
                     }
-                    ImGui::SetItemTooltip("%s", (const char*)"hex.builtin.view.pattern_editor.sections.export"_lang.get().c_str());
+                    ImGui::SetItemTooltip("%s", (const char*)"hex.builtin.view.pattern_editor.sections.export"_lang.get());
 
                     ImGui::PopID();
                 }
@@ -1330,7 +1330,7 @@ namespace hex::plugin::builtin {
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
-            m_analysisTask = TaskManager::createBackgroundTask("Analyzing file content", [this, provider](const Task &task) {
+            m_analysisTask = TaskManager::createBackgroundTask("Analyzing file content"_lang, [this, provider](const Task &task) {
                 if (!m_autoLoadPatterns)
                     return;
 
@@ -1584,7 +1584,7 @@ namespace hex::plugin::builtin {
             m_textEditor.SetText(code);
             m_sourceCode.set(provider, code);
 
-            TaskManager::createBackgroundTask("Parse pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
+            TaskManager::createBackgroundTask("Parse pattern"_lang, [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
 
@@ -1649,7 +1649,7 @@ namespace hex::plugin::builtin {
 
         EventHighlightingChanged::post();
 
-        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
+        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating"_lang, TaskManager::NoProgress, [this, code, provider](auto &task) {
             auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();

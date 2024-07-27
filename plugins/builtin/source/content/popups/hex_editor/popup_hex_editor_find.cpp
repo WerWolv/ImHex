@@ -87,7 +87,7 @@ namespace hex::plugin::builtin {
             this->processInputString();
 
             if (!m_searchTask.isRunning() && !m_searchByteSequence.empty()) {
-                m_searchTask = TaskManager::createTask("hex.ui.common.processing",
+                m_searchTask = TaskManager::createTask("hex.ui.common.processing"_lang,
                                                        ImHexApi::Provider::get()->getActualSize(),
                                                        doSearch);
             }

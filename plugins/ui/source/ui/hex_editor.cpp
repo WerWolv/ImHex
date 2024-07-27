@@ -1081,7 +1081,7 @@ namespace hex::ui {
                                                                ? hex::format("{}", m_provider->getActualSize())
                                                                : hex::toByteString(m_provider->getActualSize())
                             );
-                            ImGui::SetItemTooltip("%s", "hex.ui.hex_editor.data_size"_lang.get().c_str());
+                            ImGui::SetItemTooltip("%s", "hex.ui.hex_editor.data_size"_lang.get());
                         }
                     }
                 }

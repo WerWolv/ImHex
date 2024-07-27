@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
         // Task exception toast
         for (const auto &task : TaskManager::getRunningTasks()) {
             if (task->hadException()) {
-                ui::ToastError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
+                ui::ToastError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, task->getName(), task->getExceptionMessage()));
                 task->clearException();
                 break;
             }
@@ -268,7 +268,7 @@ namespace hex::plugin::builtin {
                 else
                     progressString = hex::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), std::min(progress, 1.0F) * 100.0F);
 
-                ImGuiExt::InfoTooltip(hex::format("{}{}", progressString, Lang(frontTask->getUnlocalizedName())).c_str());
+                ImGuiExt::InfoTooltip(hex::format("{}{}", progressString, frontTask->getName()).c_str());
 
                 if (ImGui::BeginPopupContextItem("RestTasks", ImGuiPopupFlags_MouseButtonLeft)) {
                     for (const auto &task : tasks) {
@@ -276,7 +276,7 @@ namespace hex::plugin::builtin {
                             continue;
 
                         ImGui::PushID(&task);
-                        ImGuiExt::TextFormatted("{}", Lang(task->getUnlocalizedName()));
+                        ImGuiExt::TextFormatted("{}", task->getName());
                         ImGui::SameLine();
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                         ImGui::SameLine();

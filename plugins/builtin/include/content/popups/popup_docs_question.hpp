@@ -85,7 +85,7 @@ namespace hex::plugin::builtin {
 
     private:
         void executeQuery() {
-            m_requestTask = TaskManager::createBackgroundTask("Query Docs", [this, input = m_inputBuffer](Task &) {
+            m_requestTask = TaskManager::createBackgroundTask("Query Docs"_lang, [this, input = m_inputBuffer](Task &) {
                 m_noAnswer = false;
                 for (auto space : { "xj7sbzGbHH260vbpZOu1", "WZzDdGjxmgMSIE3xly6o" }) {
                     m_answer.clear();

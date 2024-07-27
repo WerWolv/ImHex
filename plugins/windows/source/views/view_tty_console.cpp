@@ -299,7 +299,7 @@ namespace hex::plugin::windows {
         if (m_transmitting)
             return;
 
-        TaskManager::createBackgroundTask("Transmitting data", [&, this](auto&) {
+        TaskManager::createBackgroundTask("Transmitting data"_lang, [&, this](auto&) {
             OVERLAPPED overlapped = { };
 
             overlapped.hEvent = ::CreateEvent(nullptr, true, false, nullptr);

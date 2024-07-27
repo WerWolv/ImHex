@@ -123,18 +123,17 @@ namespace hex {
     }
 
     Lang::operator const char *() const {
-        return get().c_str();
+        return get();
     }
 
-    const std::string &Lang::get() const {
+    const char *Lang::get() const {
         const auto &lang = *LocalizationManager::s_currStrings;
 
         auto it = lang.find(m_entryHash);
         if (it == lang.end()) {
-            static const std::string invalidString = "[ !!! INVALID LANGUAGE STRING !!! ]";
-            return invalidString;
+            return m_unlocalizedString == nullptr ? "[ !!! INVALID LANGUAGE STRING !!! ]" : m_unlocalizedString;
         } else {
-            return it->second;
+            return it->second.c_str();
         }
     }
 

@@ -44,6 +44,7 @@ namespace hex {
 
     class Lang {
     public:
+        Lang() = default;
         explicit Lang(const char *unlocalizedString);
         explicit Lang(const std::string &unlocalizedString);
         explicit Lang(const UnlocalizedString &unlocalizedString);
@@ -53,7 +54,7 @@ namespace hex {
         [[nodiscard]] operator std::string_view() const;
         [[nodiscard]] operator const char *() const;
 
-        const std::string &get() const;
+        const char* get() const;
 
         constexpr static size_t hash(std::string_view string){
             constexpr u64 p = 131;
@@ -70,13 +71,14 @@ namespace hex {
         }
 
     private:
-        constexpr explicit Lang(std::size_t hash) : m_entryHash(hash) {}
+        constexpr explicit Lang(std::size_t hash, const char *unlocalizedString) : m_entryHash(hash), m_unlocalizedString(unlocalizedString) {}
 
         template<wolv::type::StaticString>
         friend consteval Lang operator""_lang();
 
     private:
         std::size_t m_entryHash;
+        const char *m_unlocalizedString = nullptr;
     };
 
     [[nodiscard]] std::string operator+(const std::string &&left, const Lang &&right);
@@ -89,7 +91,7 @@ namespace hex {
 
     template<wolv::type::StaticString String>
     [[nodiscard]] consteval Lang operator""_lang() {
-        return Lang(Lang::hash(String.value.data()));
+        return Lang(Lang::hash(String.value.data()), String.value.data());
     }
 
 

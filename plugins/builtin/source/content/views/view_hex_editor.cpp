@@ -654,7 +654,7 @@ namespace hex::plugin::builtin {
             return;
 
         fs::openFileBrowser(fs::DialogMode::Save, {}, [provider](const auto &path) {
-            PopupBlockingTask::open(TaskManager::createTask("Saving...", TaskManager::NoProgress, [=](Task &){
+            PopupBlockingTask::open(TaskManager::createTask("Saving..."_lang, TaskManager::NoProgress, [=](Task &){
                 provider->saveAs(path);
             }));
         });
@@ -1055,7 +1055,7 @@ namespace hex::plugin::builtin {
 
                                                     ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                                                     [this](const auto &path) {
-                                                        TaskManager::createTask("Loading encoding file", 0, [this, path](auto&) {
+                                                        TaskManager::createTask("Loading encoding file"_lang, 0, [this, path](auto&) {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
                                                             ImHexApi::Provider::markDirty();
 

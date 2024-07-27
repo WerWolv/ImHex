@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataInspector::updateInspectorRows() {
-        m_updateTask = TaskManager::createBackgroundTask("Update Inspector", [this](auto &) {
+        m_updateTask = TaskManager::createBackgroundTask("Update Inspector"_lang, [this](auto &) {
             this->updateInspectorRowsTask();
         });
     }

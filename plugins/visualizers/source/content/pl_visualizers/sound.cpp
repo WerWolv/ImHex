@@ -32,7 +32,7 @@ namespace hex::plugin::visualizers {
         if (shouldReset) {
             waveData.clear();
 
-            resetTask = TaskManager::createTask("Visualizing...", TaskManager::NoProgress, [=](Task &) {
+            resetTask = TaskManager::createTask("Visualizing..."_lang, TaskManager::NoProgress, [=](Task &) {
                 ma_device_stop(&audioDevice);
                 waveData = patternToArray<i16>(wavePattern.get());
                 sampledData = sampleData(waveData, 300_scaled * 4);

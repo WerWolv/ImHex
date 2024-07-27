@@ -22,7 +22,7 @@ namespace hex {
     class Task {
     public:
         Task() = default;
-        Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function);
+        Task(Lang name, u64 maxValue, bool background, std::function<void(Task &)> function);
 
         Task(const Task&) = delete;
         Task(Task &&other) noexcept;
@@ -65,7 +65,7 @@ namespace hex {
         void clearException();
         [[nodiscard]] std::string getExceptionMessage() const;
 
-        [[nodiscard]] const UnlocalizedString &getUnlocalizedName();
+        [[nodiscard]] const Lang &getName();
         [[nodiscard]] u64 getValue() const;
         [[nodiscard]] u64 getMaxValue() const;
 
@@ -77,7 +77,7 @@ namespace hex {
     private:
         mutable std::mutex m_mutex;
 
-        UnlocalizedString m_unlocalizedName;
+        Lang m_name;
         std::atomic<u64> m_currValue = 0, m_maxValue = 0;
         std::function<void()> m_interruptCallback;
         std::function<void(Task &)> m_function;
@@ -135,7 +135,7 @@ namespace hex {
          * @param function Function to be executed
          * @return A TaskHolder holding a weak reference to the task
          */
-        static TaskHolder createTask(std::string name, u64 maxValue, std::function<void(Task &)> function);
+        static TaskHolder createTask(Lang name, u64 maxValue, std::function<void(Task &)> function);
 
         /**
          * @brief Creates a new asynchronous task that does not get displayed in the Task Manager
@@ -143,7 +143,7 @@ namespace hex {
          * @param function Function to be executed
          * @return A TaskHolder holding a weak reference to the task
          */
-        static TaskHolder createBackgroundTask(std::string name, std::function<void(Task &)> function);
+        static TaskHolder createBackgroundTask(Lang name, std::function<void(Task &)> function);
 
         /**
          * @brief Creates a new synchronous task that will execute the given function at the start of the next frame
@@ -190,7 +190,7 @@ namespace hex {
         static void runDeferredCalls();
 
     private:
-        static TaskHolder createTask(std::string name, u64 maxValue, bool background, std::function<void(Task &)> function);
+        static TaskHolder createTask(Lang name, u64 maxValue, bool background, std::function<void(Task &)> function);
     };
 
 }

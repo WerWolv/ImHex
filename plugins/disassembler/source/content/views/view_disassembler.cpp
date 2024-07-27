@@ -26,7 +26,7 @@ namespace hex::plugin::disasm {
     void ViewDisassembler::disassemble() {
         m_disassembly.clear();
 
-        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling", m_codeRegion.getSize(), [this](auto &task) {
+        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling"_lang, m_codeRegion.getSize(), [this](auto &task) {
             csh capstoneHandle;
             cs_insn *instructions = nullptr;
 
