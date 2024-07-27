@@ -1235,13 +1235,13 @@ namespace hex {
 
         }
 
-        void registerService(const UnlocalizedString &unlocalizedName, const impl::Callback &callback) {
-            log::debug("Registered new background service: {}", unlocalizedName.get());
+        void registerService(Lang name, const impl::Callback &callback) {
+            log::debug("Registered new background service: {}", name.get());
 
             impl::s_services->emplace_back(
-                unlocalizedName,
+                name,
                 std::jthread([=](const std::stop_token &stopToken){
-                    TaskManager::setCurrentThreadName(Lang(unlocalizedName));
+                    TaskManager::setCurrentThreadName(name);
                     while (!stopToken.stop_requested()) {
                         callback();
                         std::this_thread::sleep_for(std::chrono::milliseconds(50));

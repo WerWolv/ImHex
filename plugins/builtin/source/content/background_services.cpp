@@ -111,8 +111,8 @@ namespace hex::plugin::builtin {
             s_autoBackupTime = value.get<int>(0) * 30;
         });
 
-        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface", handleNetworkInterfaceService);
-        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup", handleAutoBackup);
+        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface"_lang, handleNetworkInterfaceService);
+        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup"_lang, handleAutoBackup);
 
         EventProviderDirtied::subscribe([](prv::Provider *) {
             s_dataDirty = true;

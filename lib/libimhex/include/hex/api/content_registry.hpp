@@ -1273,7 +1273,7 @@ namespace hex {
                 void stopServices();
             }
 
-            void registerService(const UnlocalizedString &unlocalizedName, const impl::Callback &callback);
+            void registerService(Lang name, const impl::Callback &callback);
         }
 
         /* Network Communication Interface Registry. Allows adding new communication interface endpoints */
