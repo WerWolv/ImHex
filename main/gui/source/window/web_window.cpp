@@ -6,6 +6,7 @@
 #include <emscripten/html5.h>
 
 #include <hex/api/event_manager.hpp>
+#include <hex/ui/glfw_di.h>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -119,7 +120,7 @@ namespace hex {
         });
 
         glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            auto win = static_cast<Window *>(hex::glfw::GetWindowUserPointer(window));
             resizeCanvas();
             win->fullFrame();
         });

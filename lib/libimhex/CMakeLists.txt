@@ -45,6 +45,7 @@ set(LIBIMHEX_SOURCES
         source/providers/memory_provider.cpp
         source/providers/undo/stack.cpp
 
+        source/ui/glfw_di.cpp
         source/ui/imgui_imhex_extensions.cpp
         source/ui/view.cpp
         source/ui/popup.cpp

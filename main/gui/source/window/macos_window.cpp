@@ -11,10 +11,10 @@
     #include <hex/helpers/logger.hpp>
     #include <hex/helpers/default_paths.hpp>
 
+    #include <hex/ui/glfw_di.h>
+
     #include <cstdio>
     #include <unistd.h>
-
-    #include <imgui_impl_glfw.h>
 
 namespace hex {
 
@@ -27,7 +27,6 @@ namespace hex {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
         glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
     }
@@ -99,7 +98,7 @@ namespace hex {
         setupMacosWindowStyle(m_window, ImHexApi::System::isBorderlessWindowModeEnabled());
 
         glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            auto win = static_cast<Window *>(hex::glfw::GetWindowUserPointer(window));
             win->fullFrame();
         });
     }

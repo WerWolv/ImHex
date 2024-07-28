@@ -76,7 +76,7 @@ namespace hex::plugin::builtin {
 
                 // Draw banner
                 ImGui::SetCursorPos(scaled({ 25 * bannerSlideIn, 25 }));
-                const auto bannerSize = s_imhexBanner.getSize() / (3.0F * (1.0F / ImHexApi::System::getGlobalScale()));
+                const auto bannerSize = s_imhexBanner.getSize();
                 ImGui::Image(
                     s_imhexBanner,
                     bannerSize,
@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
                         ImGui::EndChild();
 
                         if (!s_screenshots.empty()) {
-                            const auto imageSize = s_screenshots.front().second.getSize() * ImHexApi::System::getGlobalScale();
+                            const auto imageSize = scaled(s_screenshots.front().second.getSize());
                             const auto padding = ImGui::GetStyle().CellPadding.x;
                             const auto stride = imageSize.x + padding * 2;
                             static bool imageHovered = false;
@@ -221,7 +221,7 @@ namespace hex::plugin::builtin {
                             currLanguage = languages.begin();
 
                         // Draw globe image
-                        const auto imageSize = s_compassTexture.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
+                        const auto imageSize = scaled(s_compassTexture.getSize() / 1.5F);
                         ImGui::SetCursorPos((ImGui::GetWindowSize() / 2 - imageSize / 2) - ImVec2(0, 50_scaled));
                         ImGui::Image(s_globeTexture, imageSize);
 
@@ -370,7 +370,7 @@ namespace hex::plugin::builtin {
                         ImGui::NewLine();
 
                         // Draw compass image
-                        const auto imageSize = s_compassTexture.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
+                        const auto imageSize = scaled(s_compassTexture.getSize() / 1.5F);
                         ImGui::SetCursorPos((ImGui::GetWindowSize() / 2 - imageSize / 2) - ImVec2(0, 50_scaled));
                         ImGui::Image(s_compassTexture, imageSize);
 
@@ -442,7 +442,12 @@ namespace hex::plugin::builtin {
             ImHexApi::System::setWindowResizable(false);
 
             const auto imageTheme = ThemeManager::getImageTheme();
-            s_imhexBanner    = ImGuiExt::Texture::fromSVG(romfs::get(hex::format("assets/{}/banner.svg", imageTheme)).span<std::byte>());
+            auto loadBanner = [=] {
+                const auto scale = ImHexApi::System::getContentScale();
+                s_imhexBanner = ImGuiExt::Texture::fromSVG(romfs::get(hex::format("assets/{}/banner.svg", imageTheme)).span<std::byte>(), 300_scaled, 0, scale);
+            };
+            EventScaleChanged::subscribe(loadBanner);
+            loadBanner();
             s_compassTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/compass.png").span<std::byte>());
             s_globeTexture   = ImGuiExt::Texture::fromImage(romfs::get("assets/common/globe.png").span<std::byte>());
             s_screenshotDescriptions = nlohmann::json::parse(romfs::get("assets/screenshot_descriptions.json").string());

@@ -77,6 +77,7 @@
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
 #include "imgui_impl_glfw.h"
+#include <cmath>
 
 // Clang warnings with -Weverything
 #if defined(__clang__)
@@ -164,6 +165,15 @@ struct ImGui_ImplGlfw_Data
     bool                    InstalledCallbacks;
     bool                    CallbacksChainForAllWindows;
     bool                    WantUpdateMonitors;
+    // GLFW’s (<=3.4) coordinate space is a leaky abstraction of the platform’s
+    // coordinate system. Some platforms are already device-independent
+    // (Wayland, macOS, Web); others are not (X11, Win32). ScaleCoordinates is
+    // the value required to convert between DI coordinates and GLFW coordinates
+    // so that the application only sees DI coordinates. Notably, this is NOT
+    // the same as GLFW’s content scale; content scale describes the pixel
+    // aspect ratio of the framebuffer and is the same across all platforms
+    // regardless of coordinate system.
+    ImVec2                  ScaleCoordinates;
 #ifdef __EMSCRIPTEN__
     const char*             CanvasSelector;
 #endif
@@ -473,6 +483,8 @@ void ImGui_ImplGlfw_CursorPosCallback(GLFWwindow* window, double x, double y)
         x += window_x;
         y += window_y;
     }
+    x /= bd->ScaleCoordinates.x;
+    y /= bd->ScaleCoordinates.y;
     io.AddMousePosEvent((float)x, (float)y);
     bd->LastValidMousePos = ImVec2((float)x, (float)y);
 }
@@ -611,6 +623,7 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     bd->Window = window;
     bd->Time = 0.0;
     bd->WantUpdateMonitors = true;
+    bd->ScaleCoordinates = ImVec2(1.0F, 1.0F);
 
 // IMHEX PATCH BEGIN
 #ifdef __EMSCRIPTEN__
@@ -776,6 +789,8 @@ static void ImGui_ImplGlfw_UpdateMouseData()
                     mouse_x += window_x;
                     mouse_y += window_y;
                 }
+                mouse_x /= bd->ScaleCoordinates.x;
+                mouse_y /= bd->ScaleCoordinates.y;
                 bd->LastValidMousePos = ImVec2((float)mouse_x, (float)mouse_y);
                 io.AddMousePosEvent((float)mouse_x, (float)mouse_y);
             }
@@ -929,7 +944,6 @@ static void ImGui_ImplGlfw_UpdateMonitors()
         // Warning: the validity of monitor DPI information on Windows depends on the application DPI awareness settings, which generally needs to be set in the manifest or at runtime.
         float x_scale, y_scale;
         glfwGetMonitorContentScale(glfw_monitors[n], &x_scale, &y_scale);
-        monitor.DpiScale = x_scale;
 
         // IMHEX PATCH BEGIN
         // REASON: Prevent occasional crash when a monitor connection status is changed
@@ -951,11 +965,33 @@ void ImGui_ImplGlfw_NewFrame()
     // Setup display size (every frame to accommodate for window resizing)
     int w, h;
     int display_w, display_h;
+    float scale_w, scale_h;
     glfwGetWindowSize(bd->Window, &w, &h);
     glfwGetFramebufferSize(bd->Window, &display_w, &display_h);
+    glfwGetWindowContentScale(bd->Window, &scale_w, &scale_h);
     io.DisplaySize = ImVec2((float)w, (float)h);
     if (w > 0 && h > 0)
         io.DisplayFramebufferScale = ImVec2((float)display_w / (float)w, (float)display_h / (float)h);
+
+    // Since `ImGui_ImplGlfw_NewFrame` updates `DisplaySize` and
+    // `DisplayFramebufferScale` immediately before calling
+    // `ImGui_ImplGlfw_UpdateMouseData` (which needs `ScaleCoordinates` to be
+    // accurate to translate mouse events into DI space), it seems necessary to
+    // calculate `ScaleCoordinates` here.
+    // GLFW (<=3.4) also does not update content scale and framebuffer size
+    // atomically on at least Wayland, and there is no documented order for the
+    // `glfwSetFramebufferSizeCallback` and `glfwSetContentScaleCallback`
+    // callback functions, so it also seems they could not be used reliably even
+    // if this function were modified to stop setting `DisplaySize` and
+    // `DisplayFramebufferScale` on every frame.
+    bd->ScaleCoordinates = ImVec2(scale_w / io.DisplayFramebufferScale.x, scale_h / io.DisplayFramebufferScale.y);
+    if (std::abs(bd->ScaleCoordinates.x - 1.0F) < .001F && std::abs(bd->ScaleCoordinates.y - 1.0F) < .001F) {
+        bd->ScaleCoordinates = ImVec2(1.0F, 1.0F);
+    } else {
+        io.DisplaySize /= bd->ScaleCoordinates;
+        io.DisplayFramebufferScale = bd->ScaleCoordinates;
+    }
+
     if (bd->WantUpdateMonitors)
         ImGui_ImplGlfw_UpdateMonitors();
 
@@ -1189,10 +1225,11 @@ static void ImGui_ImplGlfw_ShowWindow(ImGuiViewport* viewport)
 
 static ImVec2 ImGui_ImplGlfw_GetWindowPos(ImGuiViewport* viewport)
 {
+    ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     int x = 0, y = 0;
     glfwGetWindowPos(vd->Window, &x, &y);
-    return ImVec2((float)x, (float)y);
+    return ImVec2((float)x, (float)y) / bd->ScaleCoordinates;
 }
 
 static void ImGui_ImplGlfw_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
@@ -1207,7 +1244,7 @@ static ImVec2 ImGui_ImplGlfw_GetWindowSize(ImGuiViewport* viewport)
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     int w = 0, h = 0;
     glfwGetWindowSize(vd->Window, &w, &h);
-    return ImVec2((float)w, (float)h);
+    return ImVec2((float)w, (float)h) / ImGui_ImplGlfw_GetBackendData()->ScaleCoordinates;
 }
 
 static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
@@ -1224,6 +1261,7 @@ static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
     glfwSetWindowPos(vd->Window, x, y - height + size.y);
 #endif
     vd->IgnoreWindowSizeEventFrame = ImGui::GetFrameCount();
+    size *= ImGui_ImplGlfw_GetBackendData()->ScaleCoordinates;
     glfwSetWindowSize(vd->Window, (int)size.x, (int)size.y);
 }
 

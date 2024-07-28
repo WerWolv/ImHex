@@ -530,7 +530,6 @@
         "hex.builtin.setting.interface.native_window_decorations": "使用操作系统窗口装饰",
         "hex.builtin.setting.interface.pattern_data_row_bg": "启用彩色图案背景",
         "hex.builtin.setting.interface.restore_window_pos": "恢复窗口位置",
-        "hex.builtin.setting.interface.scaling.native": "本地默认",
         "hex.builtin.setting.interface.scaling_factor": "缩放",
         "hex.builtin.setting.interface.show_header_command_palette": "在窗口标题中显示命令面板",
         "hex.builtin.setting.interface.style": "风格",

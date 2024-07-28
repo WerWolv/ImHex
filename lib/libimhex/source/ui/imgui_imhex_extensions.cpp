@@ -23,13 +23,32 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/utils.hpp>
 
 
 namespace ImGuiExt {
 
     using namespace ImGui;
+    using hex::operator""_scaled;
 
     namespace {
+
+        void adjustSVGScale(const lunasvg::Document *document, int &width, int &height, float scale) {
+            if (document->width() == 0 || document->height() == 0)
+                return;
+
+            if (width == 0 && height == 0) {
+                width = document->width();
+                height = document->height();
+            } else if (width != 0 && height == 0) {
+                height = std::ceil(double(width) * document->height() / document->width());
+            } else if (height != 0 && width == 0) {
+                width = std::ceil(double(height) * document->width() / document->height());
+            }
+
+            width *= scale;
+            height *= scale;
+        }
 
         bool isOpenGLExtensionSupported(const char *name) {
             static std::set<std::string> extensions;
@@ -221,8 +240,13 @@ namespace ImGuiExt {
         return result;
     }
 
-    Texture Texture::fromSVG(const char *path, int width, int height, Filter filter) {
+    Texture Texture::fromSVG(const char *path, int width, int height, float scale, Filter filter) {
         auto document = lunasvg::Document::loadFromFile(path);
+        if (!document)
+            return {};
+
+        adjustSVGScale(document.get(), width, height, scale);
+
         auto bitmap = document->renderToBitmap(width, height);
 
         auto texture = createMultisampleTextureFromRGBA8Array(bitmap.data(), bitmap.width(), bitmap.height(), filter);
@@ -230,17 +254,23 @@ namespace ImGuiExt {
         Texture result;
         result.m_width = bitmap.width();
         result.m_height = bitmap.height();
+        result.m_scale = scale;
         result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
 
         return result;
     }
 
-    Texture Texture::fromSVG(const std::fs::path &path, int width, int height, Filter filter) {
-        return Texture::fromSVG(wolv::util::toUTF8String(path).c_str(), width, height, filter);
+    Texture Texture::fromSVG(const std::fs::path &path, int width, int height, float scale, Filter filter) {
+        return Texture::fromSVG(wolv::util::toUTF8String(path).c_str(), width, height, scale, filter);
     }
 
-    Texture Texture::fromSVG(std::span<const std::byte> buffer, int width, int height, Filter filter) {
+    Texture Texture::fromSVG(std::span<const std::byte> buffer, int width, int height, float scale, Filter filter) {
         auto document = lunasvg::Document::loadFromData(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+        if (!document)
+            return {};
+
+        adjustSVGScale(document.get(), width, height, scale);
+
         auto bitmap = document->renderToBitmap(width, height);
         bitmap.convertToRGBA();
 
@@ -249,6 +279,7 @@ namespace ImGuiExt {
         Texture result;
         result.m_width = bitmap.width();
         result.m_height = bitmap.height();
+        result.m_scale = scale;
         result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
 
         return result;
@@ -261,6 +292,7 @@ namespace ImGuiExt {
         m_textureId = other.m_textureId;
         m_width = other.m_width;
         m_height = other.m_height;
+        m_scale = other.m_scale;
 
         other.m_textureId = nullptr;
     }
@@ -272,6 +304,7 @@ namespace ImGuiExt {
         m_textureId = other.m_textureId;
         m_width = other.m_width;
         m_height = other.m_height;
+        m_scale = other.m_scale;
 
         other.m_textureId = nullptr;
         
@@ -500,8 +533,8 @@ namespace ImGuiExt {
         RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &clipBb);
         PopStyleColor();
 
-        RenderFrame(ImVec2(bb.Min.x, bb.Max.y - 5 * hex::ImHexApi::System::getGlobalScale()), bb.Max, GetColorU32(ImGuiCol_ScrollbarBg), false, style.FrameRounding);
-        RenderFrame(ImVec2(bb.Min.x, bb.Max.y - 5 * hex::ImHexApi::System::getGlobalScale()), ImVec2(bb.Min.x + fraction * bb.GetSize().x, bb.Max.y), GetColorU32(ImGuiCol_Button), false, style.FrameRounding);
+        RenderFrame(ImVec2(bb.Min.x, bb.Max.y - 5_scaled), bb.Max, GetColorU32(ImGuiCol_ScrollbarBg), false, style.FrameRounding);
+        RenderFrame(ImVec2(bb.Min.x, bb.Max.y - 5_scaled), ImVec2(bb.Min.x + fraction * bb.GetSize().x, bb.Max.y), GetColorU32(ImGuiCol_Button), false, style.FrameRounding);
         RenderFrame(bb.Min, bb.Max, 0x00, true, style.FrameRounding);
 
         PopStyleVar(2);
@@ -579,7 +612,7 @@ namespace ImGuiExt {
             if (!std::string_view(text).empty()) {
                 const auto textWidth = CalcTextSize(text).x;
 
-                const auto maxWidth = 300 * hex::ImHexApi::System::getGlobalScale();
+                const auto maxWidth = 300_scaled;
                 const bool wrapping = textWidth > maxWidth;
 
                 if (wrapping)
@@ -912,7 +945,7 @@ namespace ImGuiExt {
         const ImGuiStyle &style = g.Style;
 
         ImVec2 pos  = window->DC.CursorPos + ImVec2(0, yOffset);
-        ImVec2 size = CalcItemSize(ImVec2(100, 5) * hex::ImHexApi::System::getGlobalScale(), 100, g.FontSize + style.FramePadding.y * 2.0F);
+        ImVec2 size = CalcItemSize(ImVec2(100_scaled, 5_scaled), 100, g.FontSize + style.FramePadding.y * 2.0F);
         ImRect bb(pos, pos + size);
         ItemSize(size, 0);
         if (!ItemAdd(bb, 0))

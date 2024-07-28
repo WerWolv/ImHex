@@ -7,6 +7,7 @@
 #include <hex/api/workspace_manager.hpp>
 
 #include <hex/providers/provider.hpp>
+#include <hex/ui/glfw_di.h>
 #include <hex/ui/view.hpp>
 
 #include <imgui.h>
@@ -240,8 +241,8 @@ namespace hex::plugin::builtin {
 
             {
                 int x = 0, y = 0, width = 0, height = 0, maximized = 0;
-                glfwGetWindowPos(window, &x, &y);
-                glfwGetWindowSize(window, &width, &height);
+                hex::glfw::GetWindowPos(window, &x, &y);
+                hex::glfw::GetWindowSize(window, &width, &height);
                 maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
 
                 ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", x);
