@@ -9,11 +9,11 @@
 
 #include <array>
 #include <ranges>
-#include <regex>
 #include <string>
 #include <utility>
 
-#include <llvm/Demangle/Demangle.h>
+#include <content/helpers/demangle.hpp>
+#include <boost/regex.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
                                 ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", region.getStartAddress(), region.getEndAddress());
 
-                                auto demangledValue = llvm::demangle(value);
+                                auto demangledValue = hex::plugin::builtin::demangle(value);
 
                                 if (value != demangledValue) {
                                     ImGui::TableNextRow();
@@ -168,7 +168,7 @@ namespace hex::plugin::builtin {
         return hex::format("{}", value);
     }
 
-    std::vector<ViewFind::Occurrence> ViewFind::searchStrings(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Strings &settings) {
+    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchStrings(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Strings &settings) {
         using enum SearchSettings::StringType;
 
         std::vector<Occurrence> results;
@@ -254,7 +254,7 @@ namespace hex::plugin::builtin {
         return results;
     }
 
-    std::vector<ViewFind::Occurrence> ViewFind::searchSequence(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Sequence &settings) {
+    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchSequence(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Sequence &settings) {
         std::vector<Occurrence> results;
 
         auto reader = prv::ProviderReader(provider);
@@ -335,7 +335,7 @@ namespace hex::plugin::builtin {
         return results;
     }
 
-    std::vector<ViewFind::Occurrence> ViewFind::searchRegex(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Regex &settings) {
+    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchRegex(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Regex &settings) {
         auto stringOccurrences = searchStrings(task, provider, searchRegion, SearchSettings::Strings {
             .minLength          = settings.minLength,
             .nullTermination    = settings.nullTermination,
@@ -350,7 +350,7 @@ namespace hex::plugin::builtin {
         });
 
         std::vector<Occurrence> result;
-        std::regex regex(settings.pattern);
+        boost::regex regex(settings.pattern);
         for (const auto &occurrence : stringOccurrences) {
             std::string string(occurrence.region.getSize(), '\x00');
             provider->read(occurrence.region.getStartAddress(), string.data(), occurrence.region.getSize());
@@ -358,10 +358,10 @@ namespace hex::plugin::builtin {
             task.update();
 
             if (settings.fullMatch) {
-                if (std::regex_match(string, regex))
+                if (boost::regex_match(string, regex))
                     result.push_back(occurrence);
             } else {
-                if (std::regex_search(string, regex))
+                if (boost::regex_search(string, regex))
                     result.push_back(occurrence);
             }
         }
@@ -369,7 +369,7 @@ namespace hex::plugin::builtin {
         return result;
     }
 
-    std::vector<ViewFind::Occurrence> ViewFind::searchBinaryPattern(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::BinaryPattern &settings) {
+    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchBinaryPattern(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::BinaryPattern &settings) {
         std::vector<Occurrence> results;
 
         auto reader = prv::ProviderReader(provider);
@@ -422,7 +422,7 @@ namespace hex::plugin::builtin {
         return results;
     }
 
-    std::vector<ViewFind::Occurrence> ViewFind::searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings) {
+    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings) {
         std::vector<Occurrence> results;
 
         auto reader = prv::ProviderReader(provider);
@@ -508,7 +508,7 @@ namespace hex::plugin::builtin {
         m_occurrenceTree->clear();
         EventHighlightingChanged::post();
 
-        m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching", searchRegion.getSize(), [this, settings = m_searchSettings, searchRegion](auto &task) {
+        m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching"_lang, searchRegion.getSize(), [this, settings = m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
             switch (settings.mode) {
@@ -602,7 +602,7 @@ namespace hex::plugin::builtin {
             if (ImGui::MenuItem("hex.builtin.view.find.context.copy"_lang))
                 ImGui::SetClipboardText(value.c_str());
             if (ImGui::MenuItem("hex.builtin.view.find.context.copy_demangle"_lang))
-                ImGui::SetClipboardText(llvm::demangle(value).c_str());
+                ImGui::SetClipboardText(hex::plugin::builtin::demangle(value).c_str());
             if (ImGui::BeginMenu("hex.builtin.view.find.context.replace"_lang)) {
                 if (ImGui::BeginTabBar("##replace_tabs")) {
                     if (ImGui::BeginTabItem("hex.builtin.view.find.context.replace.hex"_lang)) {
@@ -758,9 +758,9 @@ namespace hex::plugin::builtin {
                     ImGuiExt::InputTextIcon("hex.builtin.view.find.regex.pattern"_lang, ICON_VS_REGEX, settings.pattern);
 
                     try {
-                        std::regex regex(settings.pattern);
+                        boost::regex regex(settings.pattern);
                         m_settingsValid = true;
-                    } catch (const std::regex_error &) {
+                    } catch (const boost::regex_error &) {
                         m_settingsValid = false;
                     }
 
@@ -888,7 +888,6 @@ namespace hex::plugin::builtin {
             ImGui::EndDisabled();
 
             ImGui::SameLine();
-            ImGuiExt::TextFormatted("hex.builtin.view.find.search.entries"_lang, m_foundOccurrences->size());
 
             ImGui::BeginDisabled(m_foundOccurrences->empty());
             {
@@ -902,6 +901,10 @@ namespace hex::plugin::builtin {
                 }
             }
             ImGui::EndDisabled();
+
+            ImGui::SameLine();
+
+            ImGuiExt::TextFormatted("hex.builtin.view.find.search.entries"_lang, m_foundOccurrences->size());
         }
         ImGui::EndDisabled();
 
@@ -911,7 +914,7 @@ namespace hex::plugin::builtin {
 
         auto &currOccurrences = *m_sortedOccurrences;
 
-        ImGui::PushItemWidth(-15_scaled);
+        ImGui::PushItemWidth(-30_scaled);
         auto prevFilterLength = m_currFilter->length();
         if (ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, *m_currFilter)) {
             if (prevFilterLength > m_currFilter->length())
@@ -921,7 +924,7 @@ namespace hex::plugin::builtin {
                 m_filterTask.interrupt();
 
             if (!m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("Filtering", currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
+                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_lang, currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
                     u64 progress = 0;
                     std::erase_if(currOccurrences, [this, provider, &task, &progress](const auto &region) {
                         task.update(progress);
@@ -936,22 +939,38 @@ namespace hex::plugin::builtin {
 
         ImGui::SameLine();
 
+        const auto startPos = ImGui::GetCursorPos();
         ImGui::BeginDisabled(m_sortedOccurrences->empty());
         if (ImGuiExt::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            fs::openFileBrowser(fs::DialogMode::Save, {}, [this](const std::fs::path &path) {
-                if (path.empty())
-                    return;
-
-                wolv::io::File file(path, wolv::io::File::Mode::Create);
-                if (!file.isValid())
-                    return;
-
-                for (const auto &occurrence : *m_sortedOccurrences) {
-                    file.writeString(hex::format("0x{:08X}\t{}\n", occurrence.region.getStartAddress(), this->decodeValue(ImHexApi::Provider::get(), occurrence)));
-                }
-            });
+            ImGui::OpenPopup("ExportResults");
         }
         ImGui::EndDisabled();
+
+        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImVec2(startPos.x, ImGui::GetCursorPosY()));
+        if (ImGui::BeginPopup("ExportResults")) {
+            for (const auto &formatter : ContentRegistry::DataFormatter::impl::getFindExporterEntries()) {
+                const auto formatterName = formatter.unlocalizedName;
+                const auto name = toUpper(formatterName);
+
+                const auto &extension = formatter.fileExtension;
+
+                if (ImGui::MenuItem(name.c_str())) {
+                    fs::openFileBrowser(fs::DialogMode::Save, { { name.c_str(), extension.c_str() } }, [&](const std::fs::path &path) {
+                        wolv::io::File file(path, wolv::io::File::Mode::Create);
+                        if (!file.isValid())
+                            return;
+
+                        auto result = formatter.callback(
+                                m_sortedOccurrences.get(provider),
+                                [&](Occurrence o){ return this->decodeValue(provider, o); });
+
+                        file.writeVector(result);
+                        file.close();
+                    });
+                }
+            }
+            ImGui::EndPopup();
+        }
 
         if (ImGui::BeginTable("##entries", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImMax(ImGui::GetContentRegionAvail(), ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5)))) {
             ImGui::TableSetupScrollFreeze(0, 1);

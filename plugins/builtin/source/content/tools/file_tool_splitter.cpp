@@ -93,7 +93,7 @@ namespace hex::plugin::builtin {
                 ImGuiExt::TextSpinner("hex.builtin.tools.file_tools.splitter.picker.splitting"_lang);
             } else {
                 if (ImGui::Button("hex.builtin.tools.file_tools.splitter.picker.split"_lang)) {
-                    splitterTask = TaskManager::createTask("hex.builtin.tools.file_tools.splitter.picker.splitting", 0, [](auto &task) {
+                    splitterTask = TaskManager::createTask("hex.builtin.tools.file_tools.splitter.picker.splitting"_lang, 0, [](auto &task) {
                         ON_SCOPE_EXIT {
                             selectedFile.clear();
                             baseOutputPath.clear();

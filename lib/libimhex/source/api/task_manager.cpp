@@ -63,8 +63,8 @@ namespace hex {
     }
 
 
-    Task::Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
-    : m_unlocalizedName(std::move(unlocalizedName)), m_maxValue(maxValue), m_function(std::move(function)), m_background(background) { }
+    Task::Task(Lang name, u64 maxValue, bool background, std::function<void(Task &)> function)
+    : m_name(std::move(name)), m_maxValue(maxValue), m_function(std::move(function)), m_background(background) { }
 
     Task::Task(hex::Task &&other) noexcept {
         {
@@ -72,7 +72,7 @@ namespace hex {
             std::scoped_lock otherLock(other.m_mutex);
 
             m_function = std::move(other.m_function);
-            m_unlocalizedName = std::move(other.m_unlocalizedName);
+            m_name = std::move(other.m_name);
         }
 
         m_maxValue    = u64(other.m_maxValue);
@@ -159,8 +159,8 @@ namespace hex {
         return m_exceptionMessage;
     }
 
-    const UnlocalizedString &Task::getUnlocalizedName() {
-        return m_unlocalizedName;
+    const Lang &Task::getName() {
+        return m_name;
     }
 
     u64 Task::getValue() const {
@@ -275,22 +275,22 @@ namespace hex {
 
                     try {
                         // Set the thread name to the name of the task
-                        TaskManager::setCurrentThreadName(Lang(task->m_unlocalizedName));
+                        TaskManager::setCurrentThreadName(task->m_name);
 
                         // Execute the task
                         task->m_function(*task);
 
-                        log::debug("Task '{}' finished", task->m_unlocalizedName.get());
+                        log::debug("Task '{}' finished", task->m_name.get());
                     } catch (const Task::TaskInterruptor &) {
                         // Handle the task being interrupted by user request
                         task->interruption();
                     } catch (const std::exception &e) {
-                        log::error("Exception in task '{}': {}", task->m_unlocalizedName.get(), e.what());
+                        log::error("Exception in task '{}': {}", task->m_name.get(), e.what());
 
                         // Handle the task throwing an uncaught exception
                         task->exception(e.what());
                     } catch (...) {
-                        log::error("Exception in task '{}'", task->m_unlocalizedName.get());
+                        log::error("Exception in task '{}'", task->m_name.get());
 
                         // Handle the task throwing an uncaught exception of unknown type
                         task->exception("Unknown Exception");
@@ -327,7 +327,7 @@ namespace hex {
         s_tasksFinishedCallbacks.clear();
     }
 
-    TaskHolder TaskManager::createTask(std::string name, u64 maxValue, bool background, std::function<void(Task&)> function) {
+    TaskHolder TaskManager::createTask(Lang name, u64 maxValue, bool background, std::function<void(Task&)> function) {
         std::scoped_lock lock(s_queueMutex);
 
         // Construct new task
@@ -344,12 +344,12 @@ namespace hex {
     }
 
 
-    TaskHolder TaskManager::createTask(std::string name, u64 maxValue, std::function<void(Task &)> function) {
+    TaskHolder TaskManager::createTask(Lang name, u64 maxValue, std::function<void(Task &)> function) {
         log::debug("Creating task {}", name);
         return createTask(std::move(name), maxValue, false, std::move(function));
     }
 
-    TaskHolder TaskManager::createBackgroundTask(std::string name, std::function<void(Task &)> function) {
+    TaskHolder TaskManager::createBackgroundTask(Lang name, std::function<void(Task &)> function) {
         log::debug("Creating background task {}", name);
         return createTask(std::move(name), 0, true, std::move(function));
     }
@@ -443,7 +443,7 @@ namespace hex {
             static auto setThreadDescription = reinterpret_cast<SetThreadDescriptionFunc>(
                 reinterpret_cast<uintptr_t>(
                     ::GetProcAddress(
-                        ::GetModuleHandle("Kernel32.dll"),
+                        ::GetModuleHandleW(L"Kernel32.dll"),
                         "SetThreadDescription"
                     )
                 )

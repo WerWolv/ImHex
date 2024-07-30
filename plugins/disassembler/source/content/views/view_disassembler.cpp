@@ -26,7 +26,7 @@ namespace hex::plugin::disasm {
     void ViewDisassembler::disassemble() {
         m_disassembly.clear();
 
-        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling", m_codeRegion.getSize(), [this](auto &task) {
+        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling"_lang, m_codeRegion.getSize(), [this](auto &task) {
             csh capstoneHandle;
             cs_insn *instructions = nullptr;
 
@@ -370,6 +370,12 @@ namespace hex::plugin::disasm {
                         case Architecture::XCORE:
                             m_mode = cs_mode(0);
                             break;
+                    }
+
+                    if (littleEndian) {
+                        m_mode = cs_mode(u32(m_mode) | CS_MODE_LITTLE_ENDIAN);
+                    } else {
+                        m_mode = cs_mode(u32(m_mode) | CS_MODE_BIG_ENDIAN);
                     }
 
                     ImGuiExt::EndBox();

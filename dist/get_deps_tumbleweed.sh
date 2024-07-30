@@ -5,6 +5,7 @@ zypper install     \
   ninja            \
   gcc12            \
   gcc12-c++        \
+  fontconfig-devel \
   freetype2-devel  \
   libcurl-devel    \
   dbus-1-devel     \
@@ -16,4 +17,5 @@ zypper install     \
   libzstd-devel    \
   zlib-devel       \
   bzip3-devel      \
-  xz-devel
+  xz-devel         \
+  lz4-dev

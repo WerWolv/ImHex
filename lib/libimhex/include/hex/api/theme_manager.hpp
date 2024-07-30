@@ -56,6 +56,7 @@ namespace hex {
          */
         static void addStyleHandler(const std::string &name, const StyleMap &styleMap);
 
+        static void reapplyCurrentTheme();
 
         static std::vector<std::string> getThemeNames();
         static const std::string &getImageTheme();

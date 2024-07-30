@@ -1,13 +1,15 @@
 #include <hex/api/layout_manager.hpp>
 
+#include <hex/api/content_registry.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/default_paths.hpp>
+
 #include <wolv/utils/string.hpp>
 
 #include <imgui.h>
-#include <hex/api/content_registry.hpp>
-#include <hex/ui/view.hpp>
 
 namespace hex {
 
@@ -40,10 +42,7 @@ namespace hex {
         fileName += ".hexlyt";
 
         std::fs::path layoutPath;
-        for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Layouts)) {
-            if (!hex::fs::isPathWritable(layoutPath))
-                continue;
-
+        for (const auto &path : paths::Layouts.write()) {
             layoutPath = path / fileName;
         }
 
@@ -71,15 +70,15 @@ namespace hex {
     void LayoutManager::removeLayout(const std::string& name) {
         for (const auto &layout : *s_layouts) {
             if (layout.name == name) {
-                if (wolv::io::File(layout.path, wolv::io::File::Mode::Write).remove()) {
+                if (wolv::io::fs::remove(layout.path)) {
                     log::info("Removed layout '{}'", name);
-                    LayoutManager::reload();
                 } else {
                     log::error("Failed to remove layout '{}'", name);
                 }
-                return;
             }
         }
+
+        LayoutManager::reload();
     }
 
 
@@ -90,28 +89,26 @@ namespace hex {
 
     void LayoutManager::process() {
         if (s_layoutPathToLoad->has_value()) {
-            const auto pathString = wolv::util::toUTF8String(**s_layoutPathToLoad);
-
             LayoutManager::closeAllViews();
-            ImGui::LoadIniSettingsFromDisk(pathString.c_str());
 
-            s_layoutPathToLoad = std::nullopt;
-            log::info("Loaded layout from {}", pathString);
+            wolv::io::File file(**s_layoutPathToLoad, wolv::io::File::Mode::Read);
+            s_layoutStringToLoad = file.readString();
+            s_layoutPathToLoad->reset();
         }
 
         if (s_layoutStringToLoad->has_value()) {
             LayoutManager::closeAllViews();
             ImGui::LoadIniSettingsFromMemory((*s_layoutStringToLoad)->c_str());
 
-            s_layoutStringToLoad = std::nullopt;
-            log::info("Loaded layout from string");
+            s_layoutStringToLoad->reset();
+            log::info("Loaded new Layout");
         }
     }
 
     void LayoutManager::reload() {
         s_layouts->clear();
 
-        for (const auto &directory : hex::fs::getDefaultPaths(fs::ImHexPath::Layouts)) {
+        for (const auto &directory : paths::Layouts.read()) {
             for (const auto &entry : std::fs::directory_iterator(directory)) {
                 const auto &path = entry.path();
 

@@ -9,7 +9,7 @@
 
 namespace hex::plugin::visualizers {
 
-    void drawLinePlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    void drawLinePlotVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static std::vector<float> values;
         auto dataPattern = arguments[0].toPattern();
 

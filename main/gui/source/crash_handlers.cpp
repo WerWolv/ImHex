@@ -2,19 +2,19 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
-#include <init/tasks.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <wolv/utils/string.hpp>
 
 #include <window.hpp>
-
-#include <nlohmann/json.hpp>
-
+#include <init/tasks.hpp>
 #include <stacktrace.hpp>
+
 #include <llvm/Demangle/Demangle.h>
+#include <nlohmann/json.hpp>
 
 #include <csignal>
 #include <exception>
@@ -48,7 +48,7 @@ namespace hex::crash {
             { "project", wolv::io::fs::toNormalizedPathString(ProjectFile::getPath()) },
         };
         
-        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+        for (const auto &path : paths::Config.write()) {
             wolv::io::File file(path / "crash.json", wolv::io::File::Mode::Create);
             if (file.isValid()) {
                 file.writeString(crashData.dump(4));
@@ -63,7 +63,9 @@ namespace hex::crash {
     }
 
     static void printStackTrace() {
-        for (const auto &stackFrame : stacktrace::getStackTrace()) {
+        auto stackTraceResult = stacktrace::getStackTrace();
+        log::fatal("Printing stacktrace using implementation '{}'", stackTraceResult.implementationName);
+        for (const auto &stackFrame : stackTraceResult.stackFrames) {
             if (stackFrame.line == 0)
                 log::fatal("  ({}) | {}", stackFrame.file, stackFrame.function);
             else
@@ -120,6 +122,13 @@ namespace hex::crash {
 
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
+        #if !defined (DEBUG)
+            if (signalNumber == SIGINT) {
+                ImHexApi::System::closeImHex();
+                return;
+            }
+        #endif
+
         // Reset crash handlers, so we can't have a recursion if this code crashes
         resetCrashHandlers();
 
@@ -166,6 +175,7 @@ namespace hex::crash {
             HANDLE_SIGNAL(SIGILL);
             HANDLE_SIGNAL(SIGABRT);
             HANDLE_SIGNAL(SIGFPE);
+            HANDLE_SIGNAL(SIGINT);
 
             #if defined (SIGBUS)
                 HANDLE_SIGNAL(SIGBUS);
@@ -188,7 +198,7 @@ namespace hex::crash {
 
                 // Create crash backup if any providers are open
                 if (ImHexApi::Provider::isValid()) {
-                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                    for (const auto &path : paths::Config.write()) {
                         if (ProjectFile::store(path / CrashBackupFileName, false))
                             break;
                     }

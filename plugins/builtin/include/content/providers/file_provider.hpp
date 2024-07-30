@@ -55,7 +55,11 @@ namespace hex::plugin::builtin {
 
     private:
         void convertToMemoryFile();
+        void convertToDirectAccess();
+
         void handleFileChange();
+
+        bool open(bool memoryMapped);
 
     protected:
         std::fs::path m_path;

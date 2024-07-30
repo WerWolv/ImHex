@@ -50,18 +50,18 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawFooter(ImDrawList *drawList, ImVec2 dockSpaceSize, float footerHeight) {
+        void drawFooter(ImDrawList *drawList, ImVec2 dockSpaceSize) {
             auto dockId = ImGui::DockSpace(ImGui::GetID("ImHexMainDock"), dockSpaceSize);
             ImHexApi::System::impl::setMainDockSpaceId(dockId);
-
-            drawList->AddRectFilled(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled), ImGui::GetColorU32(ImGuiCol_MenuBarBg));
 
             ImGui::Separator();
             ImGui::SetCursorPosX(8);
             for (const auto &callback : ContentRegistry::Interface::impl::getFooterItems()) {
-                auto prevIdx = drawList->_VtxCurrentIdx;
+                const auto y = ImGui::GetCursorPosY();
+                const auto prevIdx = drawList->_VtxCurrentIdx;
                 callback();
-                auto currIdx = drawList->_VtxCurrentIdx;
+                const auto currIdx = drawList->_VtxCurrentIdx;
+                ImGui::SetCursorPosY(y);
 
                 // Only draw separator if something was actually drawn
                 if (prevIdx != currIdx) {
@@ -75,24 +75,29 @@ namespace hex::plugin::builtin {
         void drawSidebar(ImVec2 dockSpaceSize, ImVec2 sidebarPos, float sidebarWidth) {
             static i32 openWindow = -1;
             u32 index = 0;
+            u32 drawIndex = 0;
             ImGui::PushID("SideBarWindows");
             for (const auto &[icon, callback, enabledCallback] : ContentRegistry::Interface::impl::getSidebarItems()) {
-                ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * index);
+                ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * drawIndex);
 
                 ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-                ImGui::BeginDisabled(!(ImHexApi::Provider::isValid() && enabledCallback()));
-                {
-                    if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
-                        if (static_cast<u32>(openWindow) == index)
-                            openWindow = -1;
-                        else
-                            openWindow = index;
+
+                if (enabledCallback()) {
+                    drawIndex += 1;
+                    ImGui::BeginDisabled(!ImHexApi::Provider::isValid());
+                    {
+                        if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
+                            if (static_cast<u32>(openWindow) == index)
+                                openWindow = -1;
+                            else
+                                openWindow = index;
+                        }
                     }
+                    ImGui::EndDisabled();
                 }
-                ImGui::EndDisabled();
 
                 ImGui::PopStyleColor(3);
 
@@ -102,12 +107,12 @@ namespace hex::plugin::builtin {
                 if (open) {
 
                     ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -1_scaled));
-                    ImGui::SetNextWindowSize(ImVec2(0, dockSpaceSize.y + 5_scaled));
+                    ImGui::SetNextWindowSizeConstraints(ImVec2(0, dockSpaceSize.y + 5_scaled), ImVec2(FLT_MAX, dockSpaceSize.y + 5_scaled));
 
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
                     ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
-                    if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                        if (ImGui::BeginChild("##Content", ImVec2(), ImGuiChildFlags_ResizeX)) {
+                    if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                        if (ImGui::BeginChild("##Content", ImGui::GetContentRegionAvail())) {
                             callback();
                         }
                         ImGui::EndChild();
@@ -122,13 +127,18 @@ namespace hex::plugin::builtin {
                 }
 
                 ImGui::NewLine();
-                index++;
+                index += 1;
             }
             ImGui::PopID();
         }
 
         void drawTitleBar() {
-            auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
+            auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
+
+            #if defined (OS_MACOS)
+                titleBarHeight *= 0.7F;
+            #endif
+
             auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -136,7 +146,7 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-            const auto windowSize = ImHexApi::System::getMainWindowSize();
+            const auto windowSize = ImGui::GetWindowSize();
             auto searchBoxSize = ImVec2(s_showSearchBar ? windowSize.x / 2.5 : ImGui::CalcTextSize(s_windowTitle.c_str()).x, titleBarHeight);
             auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 0);
             auto titleBarButtonPosY = 0.0F;
@@ -269,18 +279,15 @@ namespace hex::plugin::builtin {
                     toolbarIndex
                 ] = menuItem;
 
-                createNestedMenu(unlocalizedNames, icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallack);
+                createNestedMenu(unlocalizedNames | std::views::drop(1), icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallack);
             }
         }
 
         void defineMenu(const UnlocalizedString &menuName) {
-            ImGui::GetStyle().TouchExtraPadding = scaled(ImVec2(0, 2));
             if (ImGui::BeginMenu(Lang(menuName))) {
+                populateMenu(menuName);
                 ImGui::EndMenu();
             }
-            ImGui::GetStyle().TouchExtraPadding = ImVec2(0, 0);
-
-            populateMenu(menuName);
         }
 
         void drawMenu() {
@@ -362,7 +369,8 @@ namespace hex::plugin::builtin {
                         ImGui::Image(s_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
                         ImGui::SetCursorPosX(5_scaled);
                         ImGui::InvisibleButton("##logo", ImVec2(menuBarHeight, menuBarHeight));
-                        ImGui::OpenPopupOnItemClick("WindowingMenu", ImGuiPopupFlags_MouseButtonLeft);
+                        if (ImGui::IsItemHovered() && ImGui::IsAnyMouseDown())
+                            ImGui::OpenPopup("WindowingMenu");
                     #elif defined(OS_MACOS)
                         if (!isMacosFullScreenModeEnabled(window))
                             ImGui::SetCursorPosX(68_scaled);
@@ -395,7 +403,7 @@ namespace hex::plugin::builtin {
                 #if defined(OS_MACOS)
                     if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                         const auto windowSize = ImHexApi::System::getMainWindowSize();
-                        const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight() * 1.5F);
+                        const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight);
                         
                         ImGui::SetCursorPos(ImVec2());
                         
@@ -462,7 +470,6 @@ namespace hex::plugin::builtin {
 
             constexpr static ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
-            // Handle all undocked floating windows
             ImGuiViewport *viewport = ImGui::GetMainViewport();
             ImGui::SetNextWindowPos(viewport->WorkPos);
             ImGui::SetNextWindowSize(ImHexApi::System::getMainWindowSize() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing()));
@@ -479,7 +486,7 @@ namespace hex::plugin::builtin {
                 const auto drawList = ImGui::GetWindowDrawList();
                 const auto shouldDrawSidebar = anySidebarItemsAvailable();
 
-                const auto menuBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
+                const auto menuBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
                 const auto sidebarPos   = ImGui::GetCursorPos();
                 const auto sidebarWidth = shouldDrawSidebar ? 20_scaled : 0;
 
@@ -490,25 +497,32 @@ namespace hex::plugin::builtin {
                     footerHeight += ImGui::GetStyle().FramePadding.y * 2;
                 #endif
 
-                const auto dockSpaceSize = ImVec2(ImHexApi::System::getMainWindowSize().x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
+                const auto dockSpaceSize = ImHexApi::System::getMainWindowSize() - ImVec2(sidebarWidth, menuBarHeight * 2 + footerHeight);
 
                 ImGui::SetCursorPosX(sidebarWidth);
-                drawFooter(drawList, dockSpaceSize, footerHeight);
+                drawFooter(drawList, dockSpaceSize);
 
                 if (shouldDrawSidebar) {
+                    // Draw sidebar background and separator
+                    drawList->AddRectFilled(
+                        ImGui::GetWindowPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 1_scaled),
+                        ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y + 1_scaled),
+                        ImGui::GetColorU32(ImGuiCol_MenuBarBg)
+                    );
+
                     ImGui::SetCursorPos(sidebarPos);
                     drawSidebar(dockSpaceSize, sidebarPos, sidebarWidth);
+
+                    if (ImHexApi::Provider::isValid() && isAnyViewOpen()) {
+                        drawList->AddLine(
+                                ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, menuBarHeight - 2_scaled),
+                                ImGui::GetWindowPos() + sidebarPos + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y + 2_scaled + menuBarHeight),
+                                ImGui::GetColorU32(ImGuiCol_Separator));
+                    }
                 }
 
                 drawMainMenu(menuBarHeight);
                 drawToolbar();
-
-                if (ImHexApi::Provider::isValid() && isAnyViewOpen()) {
-                    drawList->AddLine(
-                            ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -2_scaled),
-                            ImGui::GetWindowPos() + sidebarPos + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled + menuBarHeight),
-                            ImGui::GetColorU32(ImGuiCol_Separator));
-                }
             } else {
                 ImGui::PopStyleVar(2);
             }

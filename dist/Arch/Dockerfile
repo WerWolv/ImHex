@@ -13,6 +13,7 @@ RUN pacman -S --needed --noconfirm      \
     glfw-x11                            \
     file                                \
     mbedtls                             \
+    fontconfig                          \
     freetype2                           \
     curl                                \
     dbus                                \

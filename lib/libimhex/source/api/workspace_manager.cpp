@@ -3,6 +3,7 @@
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -25,7 +26,7 @@ namespace hex {
             .builtin = false
         }).first;
 
-        for (const auto &workspaceFolder : fs::getDefaultPaths(fs::ImHexPath::Workspaces)) {
+        for (const auto &workspaceFolder : paths::Workspaces.write()) {
             const auto workspacePath = workspaceFolder / (name + ".hexws");
             if (exportToFile(workspacePath)) {
                 s_currentWorkspace->second.path = workspacePath;
@@ -43,8 +44,9 @@ namespace hex {
     }
 
     void WorkspaceManager::importFromFile(const std::fs::path& path) {
-        if (std::ranges::any_of(*s_workspaces, [path](const auto &pair) { return pair.second.path == path; }))
+        if (std::ranges::any_of(*s_workspaces, [path](const auto &pair) { return pair.second.path == path; })) {
             return;
+        }
 
         wolv::io::File file(path, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
@@ -74,19 +76,23 @@ namespace hex {
 
     bool WorkspaceManager::exportToFile(std::fs::path path, std::string workspaceName, bool builtin) {
         if (path.empty()) {
-            if (s_currentWorkspace == s_workspaces->end())
+            if (s_currentWorkspace == s_workspaces->end()) {
                 return false;
+            }
 
             path = s_currentWorkspace->second.path;
         }
 
-        if (workspaceName.empty())
+        if (workspaceName.empty()) {
             workspaceName = s_currentWorkspace->first;
+        }
+
 
         wolv::io::File file(path, wolv::io::File::Mode::Create);
 
-        if (!file.isValid())
+        if (!file.isValid()) {
             return false;
+        }
 
         nlohmann::json json;
         json["name"]    = workspaceName;
@@ -99,19 +105,26 @@ namespace hex {
     }
 
     void WorkspaceManager::removeWorkspace(const std::string& name) {
+        bool deletedCurrentWorkspace = false;
         for (const auto &[workspaceName, workspace] : *s_workspaces) {
             if (workspaceName == name) {
-                log::info("{}", wolv::util::toUTF8String(workspace.path));
-                if (wolv::io::File(workspace.path, wolv::io::File::Mode::Write).remove()) {
+                log::info("Removing workspace file '{}'", wolv::util::toUTF8String(workspace.path));
+                if (wolv::io::fs::remove(workspace.path)) {
                     log::info("Removed workspace '{}'", name);
 
-                    switchWorkspace(s_workspaces->begin()->first);
-                    s_workspaces->erase(workspaceName);
+                    if (workspaceName == s_currentWorkspace->first) {
+                        deletedCurrentWorkspace = true;
+                    }
                 } else {
                     log::error("Failed to remove workspace '{}'", name);
                 }
-                return;
             }
+        }
+
+        WorkspaceManager::reload();
+
+        if (deletedCurrentWorkspace && !s_workspaces->empty()) {
+            s_currentWorkspace = s_workspaces->begin();
         }
     }
 
@@ -119,8 +132,9 @@ namespace hex {
     void WorkspaceManager::process() {
         if (s_previousWorkspace != s_currentWorkspace) {
             log::info("Updating workspace");
-            if (s_previousWorkspace != s_workspaces->end())
+            if (s_previousWorkspace != s_workspaces->end()) {
                 exportToFile(s_previousWorkspace->second.path, s_previousWorkspace->first, s_previousWorkspace->second.builtin);
+            }
 
             LayoutManager::closeAllViews();
             ImGui::LoadIniSettingsFromMemory(s_currentWorkspace->second.layout.c_str());
@@ -144,14 +158,16 @@ namespace hex {
     void WorkspaceManager::reload() {
         WorkspaceManager::reset();
 
-        for (const auto &defaultPath : fs::getDefaultPaths(fs::ImHexPath::Workspaces)) {
+        for (const auto &defaultPath : paths::Workspaces.read()) {
             for (const auto &entry : std::fs::directory_iterator(defaultPath)) {
-                if (!entry.is_regular_file())
+                if (!entry.is_regular_file()) {
                     continue;
+                }
 
                 const auto &path = entry.path();
-                if (path.extension() != ".hexws")
+                if (path.extension() != ".hexws") {
                     continue;
+                }
 
                 WorkspaceManager::importFromFile(path);
             }

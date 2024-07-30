@@ -15,6 +15,11 @@ namespace hex::stacktrace {
 
     void initialize();
 
-    std::vector<StackFrame> getStackTrace(); 
+    struct StackTraceResult {
+        std::vector<StackFrame> stackFrames;
+        std::string implementationName;
+    };
+
+    StackTraceResult getStackTrace(); 
 
 }

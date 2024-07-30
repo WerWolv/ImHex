@@ -1,13 +1,16 @@
 <a href="https://imhex.werwolv.net">
   <h1 align="center">
     <picture>
-      <img height="300px" src="./resources/dist/common/logo/ImHexLogoSVGBG.svg">
+      <img height="300px" style="margin: 0; padding: 0" src="./resources/dist/common/logo/ImHexLogoSVGBG.svg">
     </picture>
   </h1>
 </a>
 
-<p align="center">A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.</p>
-
+<p align="center">
+    A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.
+    <br>
+    <a href="https://itinerarium.github.io/phoneme-synthesis/?w=/'ˈɪmhɛks/"><strong>/ˈɪmhɛks/</strong></a>
+</p>
 <p align="center">
   <a title="'Build' workflow Status" href="https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild"><img alt="'Build' workflow Status" src="https://img.shields.io/github/actions/workflow/status/WerWolv/ImHex/build.yml?longCache=true&style=for-the-badge&label=Build&logoColor=fff&logo=GitHub%20Actions&branch=master"></a>
   <a title="Discord Server" href="https://discord.gg/X63jZ36xBY"><img alt="Discord Server" src="https://img.shields.io/discord/789833418631675954?label=Discord&logo=Discord&logoColor=fff&style=for-the-badge"></a>
@@ -311,22 +314,25 @@ To use ImHex, the following minimal system requirements need to be met.
 > ImHex requires a GPU with OpenGL 3.0 support in general.
 > There are releases available (with the `-NoGPU` suffix) that are software rendered and don't require a GPU, however these can be a lot slower than the GPU accelerated versions.
 > 
-> If possible at all, make ImHex use the dedicated GPU on your system instead of the integrated one (especially Intel HD GPUs are known to cause issues).
+> If possible at all, make ImHex use the dedicated GPU on your system instead of the integrated one.
+> ImHex will usually run fine with integrated GPUs as well but certain Intel HD GPU drivers on Windows are known to cause graphical artifacts.
 
 - **OS**: 
   - **Windows**: Windows 7 or higher (Windows 10/11 recommended)
-  - **macOS**: macOS 11 (Big Sur) or higher, 
+  - **macOS**: macOS 12.1 (Monterey) or higher, 
+    - Lower versions are supported, but you'll need to compile ImHex yourself
   - **Linux**: "Modern" Linux. The following distributions have official releases available. Other distros are supported through the AppImage and Flatpak releases.
-    - Ubuntu 22.04/23.04
-    - Fedora 36/37
-    - RHEL/AlmaLinux 9
+    - Ubuntu and Debian
+    - Fedora
+    - RHEL/AlmaLinux
     - Arch Linux
+    - Basically any other distro will work as well when compiling ImHex from sources.
 - **CPU**: x86_64 (64 Bit)
 - **GPU**: OpenGL 3.0 or higher 
-  - Intel HD drivers are really buggy and often cause graphic artifacts
+  - Integrated Intel HD iGPUs are supported, however certain drivers are known to cause various graphical artifacts, especially on Windows. Use at your own risk.
   - In case you don't have a GPU available, there are software rendered releases available for Windows and macOS
 - **RAM**: 256MB, more may be required for more complicated analysis
-- **Storage**: 100MB
+- **Storage**: 150MB
 
 ## Installing
 

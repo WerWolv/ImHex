@@ -93,7 +93,7 @@ namespace hex::plugin::diffing {
 
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
         auto commonSize = std::max(providerA->getActualSize(), providerB->getActualSize());
-        m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &) {
+        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing"_lang, commonSize, [this, providerA, providerB](Task &) {
             auto differences = m_algorithm->analyze(providerA, providerB);
 
             auto providers = ImHexApi::Provider::getProviders();
@@ -184,10 +184,21 @@ namespace hex::plugin::diffing {
         if (auto &algorithms = ContentRegistry::Diffing::impl::getAlgorithms(); m_algorithm == nullptr && !algorithms.empty())
             m_algorithm = algorithms.front().get();
 
-        const auto height = ImGui::GetContentRegionAvail().y;
+        static float height = 0;
+        static bool dragging = false;
+
+        const auto availableSize = ImGui::GetContentRegionAvail();
+        auto diffingColumnSize = availableSize;
+        diffingColumnSize.y *= 3.5 / 5.0;
+        diffingColumnSize.y -= ImGui::GetTextLineHeightWithSpacing();
+        diffingColumnSize.y += height;
+
+        if (availableSize.y > 1)
+            diffingColumnSize.y = std::clamp(diffingColumnSize.y, 1.0F, std::max(1.0F, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3));
+
 
         // Draw the two hex editor columns side by side
-        if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, ImVec2(0, height - 250_scaled))) {
+        if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, diffingColumnSize)) {
             ImGui::TableSetupColumn("hex.diffing.view.diff.provider_a"_lang);
             ImGui::TableSetupColumn("hex.diffing.view.diff.provider_b"_lang);
             ImGui::TableHeadersRow();
@@ -214,11 +225,11 @@ namespace hex::plugin::diffing {
 
             // Draw first hex editor column
             ImGui::TableNextColumn();
-            bool scrollB = drawDiffColumn(a, height - 250_scaled);
+            bool scrollB = drawDiffColumn(a, diffingColumnSize.y);
 
             // Draw second hex editor column
             ImGui::TableNextColumn();
-            bool scrollA = drawDiffColumn(b, height - 250_scaled);
+            bool scrollA = drawDiffColumn(b, diffingColumnSize.y);
 
             // Sync the scroll positions of the hex editors
             {
@@ -235,8 +246,24 @@ namespace hex::plugin::diffing {
             ImGui::EndTable();
         }
 
+        ImGui::Button("##table_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 2_scaled));
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
+            if (ImGui::IsItemHovered())
+                dragging = true;
+        } else {
+            dragging = false;
+        }
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+        }
+
+        if (dragging) {
+            height += ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0).y;
+            ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
+        }
+
         // Draw the differences table
-        if (ImGui::BeginTable("##differences", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable, ImVec2(0, 200_scaled))) {
+        if (ImGui::BeginTable("##differences", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable)) {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("hex.ui.common.begin"_lang);
             ImGui::TableSetupColumn("hex.ui.common.end"_lang);
@@ -265,10 +292,21 @@ namespace hex::plugin::diffing {
                         // Draw start address
                         ImGui::TableNextColumn();
                         if (ImGui::Selectable(hex::format("0x{:02X}", regionA.start).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                            a.hexEditor.setSelection({ regionA.start, ((regionA.end - regionA.start) + 1) });
+                            const Region selectionA = { regionA.start, ((regionA.end - regionA.start) + 1) };
+                            const Region selectionB = { regionB.start, ((regionB.end - regionB.start) + 1) };
+
+                            a.hexEditor.setSelection(selectionA);
                             a.hexEditor.jumpToSelection();
-                            b.hexEditor.setSelection({ regionB.start, ((regionB.end - regionB.start) + 1) });
+                            b.hexEditor.setSelection(selectionB);
                             b.hexEditor.jumpToSelection();
+
+                            const auto &providers = ImHexApi::Provider::getProviders();
+                            auto openProvider = ImHexApi::Provider::get();
+
+                            if (providers[a.provider] == openProvider)
+                                ImHexApi::HexEditor::setSelection(selectionA);
+                            else if (providers[b.provider] == openProvider)
+                                ImHexApi::HexEditor::setSelection(selectionB);
                         }
 
                         // Draw end address

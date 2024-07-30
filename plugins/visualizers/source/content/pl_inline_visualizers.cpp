@@ -12,7 +12,7 @@ namespace hex::plugin::visualizers {
 
     namespace {
 
-        void drawColorInlineVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments) {
+        void drawColorInlineVisualizer(pl::ptrn::Pattern &, bool, std::span<const pl::core::Token::Literal> arguments) {
             auto r = arguments[0].toFloatingPoint();
             auto g = arguments[1].toFloatingPoint();
             auto b = arguments[2].toFloatingPoint();
@@ -21,7 +21,7 @@ namespace hex::plugin::visualizers {
             ImGui::ColorButton("color", ImVec4(r / 255.0F, g / 255.0F, b / 255.0F, a / 255.0F), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
         }
 
-        void drawGaugeInlineVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments) {
+        void drawGaugeInlineVisualizer(pl::ptrn::Pattern &, bool, std::span<const pl::core::Token::Literal> arguments) {
             auto value = arguments[0].toFloatingPoint();
 
             const auto color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
@@ -37,7 +37,7 @@ namespace hex::plugin::visualizers {
             ImGui::PopStyleColor(3);
         }
 
-        void drawButtonInlineVisualizer(pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments) {
+        void drawButtonInlineVisualizer(pl::ptrn::Pattern &pattern, bool, std::span<const pl::core::Token::Literal> arguments) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5F));
 

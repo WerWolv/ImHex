@@ -8,7 +8,7 @@
 
 namespace hex::plugin::builtin {
 
-    void drawChunkBasedEntropyVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    void drawChunkBasedEntropyVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         // Variable used to store the result to avoid having to recalculate the result at each frame
         static DiagramChunkBasedEntropyAnalysis analyzer;
 

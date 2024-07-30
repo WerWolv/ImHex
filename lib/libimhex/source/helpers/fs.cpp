@@ -23,7 +23,42 @@
 #if defined(OS_WEB)
     #include <emscripten.h>
 #else
+    #include <GLFW/glfw3.h>
     #include <nfd.hpp>
+    #if defined(OS_WINDOWS)
+        #define GLFW_EXPOSE_NATIVE_WIN32
+    #endif
+    #if defined(OS_MACOS)
+        // macOS platform headers can't be compiled with gcc
+        #define GLFW_NATIVE_INCLUDE_NONE
+        typedef uint32_t CGDirectDisplayID;
+        typedef void *id;
+        typedef void NSWindow;
+        #define GLFW_EXPOSE_NATIVE_COCOA
+    #endif
+    #if defined(OS_LINUX)
+        #if GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
+            #define GLFW_EXPOSE_NATIVE_X11
+        #endif
+    #endif
+
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+    #include <nfd_glfw3.h>
+    #pragma GCC diagnostic pop
+
+    #if defined(OS_LINUX) && GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
+        #if GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
+            #undef GLFW_EXPOSE_NATIVE_X11
+        #endif
+    #endif
+    #if defined(OS_MACOS)
+        #undef GLFW_EXPOSE_NATIVE_COCOA
+        #undef GLFW_NATIVE_INCLUDE_NONE
+    #endif
+    #if defined(OS_WINDOWS)
+        #undef GLFW_EXPOSE_NATIVE_WIN32
+    #endif
 #endif
 
 #include <filesystem>
@@ -31,6 +66,9 @@
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/string.hpp>
+
+#include <fmt/format.h>
+#include <fmt/xchar.h>
 
 namespace hex::fs {
 
@@ -48,7 +86,7 @@ namespace hex::fs {
 
         #if defined(OS_WINDOWS)
             hex::unused(
-                ShellExecute(nullptr, "open", wolv::util::toUTF8String(filePath).c_str(), nullptr, nullptr, SW_SHOWNORMAL)
+                ShellExecuteW(nullptr, L"open", filePath.c_str(), nullptr, nullptr, SW_SHOWNORMAL)
             );
         #elif defined(OS_MACOS)
             hex::unused(system(
@@ -66,9 +104,8 @@ namespace hex::fs {
         }
 
         #if defined(OS_WINDOWS)
-            hex::unused(system(
-                hex::format("explorer.exe {}", wolv::util::toUTF8String(dirPath)).c_str()
-            ));
+            auto args = fmt::format(L"\"{}\"", dirPath.c_str());
+            ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
             hex::unused(system(
                 hex::format("open {}", wolv::util::toUTF8String(dirPath)).c_str()
@@ -85,9 +122,8 @@ namespace hex::fs {
         }
 
         #if defined(OS_WINDOWS)
-            hex::unused(system(
-                hex::format(R"(explorer.exe /select,"{}")", wolv::util::toUTF8String(selectedFilePath)).c_str()
-            ));
+            auto args = fmt::format(L"/select,\"{}\"", selectedFilePath.c_str());
+            ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
             hex::unused(system(
                 hex::format(
@@ -232,20 +268,22 @@ namespace hex::fs {
             NFD::UniquePathU8 outPath;
             NFD::UniquePathSet outPaths;
             nfdresult_t result = NFD_ERROR;
+            nfdwindowhandle_t nativeWindow{};
+            NFD_GetNativeWindowFromGLFWWindow(ImHexApi::System::getMainWindowHandle(), &nativeWindow);
 
             // Open the correct file dialog based on the mode
             switch (mode) {
                 case DialogMode::Open:
                     if (multiple)
-                        result = NFD::OpenDialogMultiple(outPaths, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                        result = NFD::OpenDialogMultiple(outPaths, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), nativeWindow);
                     else
-                        result = NFD::OpenDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                        result = NFD::OpenDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), nativeWindow);
                     break;
                 case DialogMode::Save:
-                    result = NFD::SaveDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    result = NFD::SaveDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), nullptr, nativeWindow);
                     break;
                 case DialogMode::Folder:
-                    result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str(), nativeWindow);
                     break;
             }
 
@@ -285,170 +323,6 @@ namespace hex::fs {
         }
 
     #endif
-
-    std::vector<std::fs::path> getDataPaths() {
-        std::vector<std::fs::path> paths;
-
-        #if defined(OS_WINDOWS)
-
-            // In the portable Windows version, we just use the executable directory
-            // Prevent the use of the AppData folder here
-            if (!ImHexApi::System::isPortableVersion()) {
-                PWSTR wAppDataPath = nullptr;
-                if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &wAppDataPath))) {
-                    paths.emplace_back(wAppDataPath);
-                    CoTaskMemFree(wAppDataPath);
-                }
-            }
-
-        #elif defined(OS_MACOS)
-
-            paths.push_back(wolv::io::fs::getApplicationSupportDirectoryPath());
-
-        #elif defined(OS_LINUX) || defined(OS_WEB)
-
-            paths.push_back(xdg::DataHomeDir());
-
-            auto dataDirs = xdg::DataDirs();
-            std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
-
-        #endif
-
-        #if defined(OS_MACOS)
-
-            if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value())
-                paths.push_back(*executablePath);
-
-        #else
-
-            for (auto &path : paths)
-                path = path / "imhex";
-
-            if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value())
-                paths.push_back(executablePath->parent_path());
-
-        #endif
-
-
-        // Add additional data directories to the path
-        auto additionalDirs = ImHexApi::System::getAdditionalFolderPaths();
-        std::ranges::copy(additionalDirs, std::back_inserter(paths));
-
-        // Add the project file directory to the path, if one is loaded
-        if (ProjectFile::hasPath()) {
-            paths.push_back(ProjectFile::getPath().parent_path());
-        }
-
-        return paths;
-    }
-
-    static std::vector<std::fs::path> getConfigPaths() {
-        #if defined(OS_WINDOWS)
-            return getDataPaths();
-        #elif defined(OS_MACOS)
-            return getDataPaths();
-        #elif defined(OS_LINUX) || defined(OS_WEB)
-            return {xdg::ConfigHomeDir() / "imhex"};
-        #endif
-    }
-
-    std::vector<std::fs::path> appendPath(std::vector<std::fs::path> paths, const std::fs::path &folder) {
-        for (auto &path : paths)
-            path = path / folder;
-
-        return paths;
-    }
-
-    std::vector<std::fs::path> getPluginPaths() {
-        std::vector<std::fs::path> paths = getDataPaths();
-
-        // Add the system plugin directory to the path if one was provided at compile time
-        #if defined(OS_LINUX) && defined(SYSTEM_PLUGINS_LOCATION)
-            paths.push_back(SYSTEM_PLUGINS_LOCATION);
-        #endif
-
-        return paths;
-    }
-
-
-    std::vector<std::fs::path> getDefaultPaths(ImHexPath path, bool listNonExisting) {
-        std::vector<std::fs::path> result;
-
-        // Return the correct path based on the ImHexPath enum
-        switch (path) {
-            case ImHexPath::END:
-                return { };
-            case ImHexPath::Constants:
-                result = appendPath(getDataPaths(), "constants");
-                break;
-            case ImHexPath::Config:
-                result = appendPath(getConfigPaths(), "config");
-                break;
-            case ImHexPath::Backups:
-                result = appendPath(getDataPaths(), "backups");
-                break;
-            case ImHexPath::Encodings:
-                result = appendPath(getDataPaths(), "encodings");
-                break;
-            case ImHexPath::Logs:
-                result = appendPath(getDataPaths(), "logs");
-                break;
-            case ImHexPath::Plugins:
-                result = appendPath(getPluginPaths(), "plugins");
-                break;
-            case ImHexPath::Libraries:
-                result = appendPath(getPluginPaths(), "lib");
-                break;
-            case ImHexPath::Resources:
-                result = appendPath(getDataPaths(), "resources");
-                break;
-            case ImHexPath::Magic:
-                result = appendPath(getDataPaths(), "magic");
-                break;
-            case ImHexPath::Patterns:
-                result = appendPath(getDataPaths(), "patterns");
-                break;
-            case ImHexPath::PatternsInclude:
-                result = appendPath(getDataPaths(), "includes");
-                break;
-            case ImHexPath::Yara:
-                result = appendPath(getDataPaths(), "yara");
-                break;
-            case ImHexPath::YaraAdvancedAnalysis:
-                result = appendPath(getDefaultPaths(ImHexPath::Yara), "advanced_analysis");
-                break;
-            case ImHexPath::Recent:
-                result = appendPath(getConfigPaths(), "recent");
-                break;
-            case ImHexPath::Scripts:
-                result = appendPath(getDataPaths(), "scripts");
-                break;
-            case ImHexPath::Inspectors:
-                result = appendPath(getDefaultPaths(ImHexPath::Scripts), "inspectors");
-                break;
-            case ImHexPath::Nodes:
-                result = appendPath(getDefaultPaths(ImHexPath::Scripts), "nodes");
-                break;
-            case ImHexPath::Themes:
-                result = appendPath(getDataPaths(), "themes");
-                break;
-            case ImHexPath::Layouts:
-                result = appendPath(getDataPaths(), "layouts");
-                break;
-            case ImHexPath::Workspaces:
-                result = appendPath(getDataPaths(), "workspaces");
-                break;
-        }
-
-        // Remove all paths that don't exist if requested
-        if (!listNonExisting) {
-            std::erase_if(result, [](const auto &entryPath) {
-                return !wolv::io::fs::isDirectory(entryPath);
-            });
-        }
-
-        return result;
-    }
 
     bool isPathWritable(const std::fs::path &path) {
         constexpr static auto TestFileName = "__imhex__tmp__";

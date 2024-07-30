@@ -147,7 +147,7 @@ jobs:
           commit_email: itrooz@protonmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           commit_message: Bump to version ${{ env.IMHEX_VERSION }}
-          ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
+          ssh_keyscan_types: rsa,ecdsa,ed25519
 
   release-update-winget:
     name: Release update winget package

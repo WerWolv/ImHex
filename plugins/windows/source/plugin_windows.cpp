@@ -28,11 +28,11 @@ static void detectSystemTheme() {
             return;
 
         HKEY hkey;
-        if (RegOpenKey(HKEY_CURRENT_USER, R"(Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", &hkey) == ERROR_SUCCESS) {
+        if (RegOpenKeyW(HKEY_CURRENT_USER, LR"(Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", &hkey) == ERROR_SUCCESS) {
             DWORD value = 0;
             DWORD size  = sizeof(DWORD);
 
-            auto error = RegQueryValueEx(hkey, "AppsUseLightTheme", nullptr, nullptr, reinterpret_cast<LPBYTE>(&value), &size);
+            auto error = RegQueryValueExW(hkey, L"AppsUseLightTheme", nullptr, nullptr, reinterpret_cast<LPBYTE>(&value), &size);
             if (error == ERROR_SUCCESS) {
                 RequestChangeTheme::post(value == 0 ? "Dark" : "Light");
             }

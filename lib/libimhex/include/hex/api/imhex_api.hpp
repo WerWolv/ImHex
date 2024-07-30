@@ -75,7 +75,7 @@ namespace hex {
             namespace impl {
 
                 using HighlightingFunction = std::function<std::optional<color_t>(u64, const u8*, size_t, bool)>;
-                using HoveringFunction = std::function<bool(const prv::Provider *, u64, const u8*, size_t)>;
+                using HoveringFunction = std::function<std::set<Region>(const prv::Provider *, u64, size_t)>;
 
                 const std::map<u32, Highlighting>& getBackgroundHighlights();
                 const std::map<u32, HighlightingFunction>& getBackgroundHighlightingFunctions();
@@ -293,7 +293,7 @@ namespace hex {
             namespace impl {
 
                 void resetClosingProvider();
-                const std::set<prv::Provider*>& getClosingProviders();
+                std::set<prv::Provider*> getClosingProviders();
 
             }
 
@@ -434,6 +434,7 @@ namespace hex {
                 void setInitialWindowProperties(InitialWindowProperties properties);
 
                 void setGPUVendor(const std::string &vendor);
+                void setGLRenderer(const std::string &renderer);
 
                 void addInitArgument(const std::string &key, const std::string &value = { });
 
@@ -574,6 +575,12 @@ namespace hex {
             const std::string& getGPUVendor();
 
             /**
+             * @brief Gets the current GPU vendor
+             * @return The current GPU vendor
+             */
+            const std::string& getGLRenderer();
+
+            /**
              * @brief Checks if ImHex is running in portable mode
              * @return Whether ImHex is running in portable mode
              */
@@ -596,6 +603,16 @@ namespace hex {
              * @return CPU architecture
              */
             std::string getArchitecture();
+
+
+            struct LinuxDistro {
+                std::string name;
+                std::string version;
+            };
+            /**
+             * @brief Gets information related to the Linux distribution, if running on Linux
+             */
+            std::optional<LinuxDistro> getLinuxDistro();
 
             /**
              * @brief Gets the current ImHex version
@@ -621,6 +638,12 @@ namespace hex {
              * @return True if ImHex was built in debug mode, false otherwise
              */
             bool isDebugBuild();
+
+            /**
+             * @brief Checks if this version of ImHex is a nightly build
+             * @return True if this version is a nightly, false if it's a release
+             */
+            bool isNightlyBuild();
 
             enum class UpdateType {
                 Stable,

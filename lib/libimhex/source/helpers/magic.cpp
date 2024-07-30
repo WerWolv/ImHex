@@ -3,6 +3,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <wolv/utils/guards.hpp>
 #include <wolv/utils/string.hpp>
@@ -29,7 +30,7 @@ namespace hex::magic {
         std::string magicFiles;
 
         std::error_code error;
-        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
+        for (const auto &dir : paths::Magic.read()) {
             for (const auto &entry : std::fs::directory_iterator(dir, error)) {
                 auto path = std::fs::absolute(entry.path());
 
@@ -64,12 +65,12 @@ namespace hex::magic {
         if (magicFiles->empty())
             return true;
 
-        std::array<char, 1024> cwd = { 0x00 };
+        std::array<char, 1024> cwd = { };
         if (getcwd(cwd.data(), cwd.size()) == nullptr)
             return false;
 
         std::optional<std::fs::path> magicFolder;
-        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
+        for (const auto &dir : paths::Magic.write()) {
             if (std::fs::exists(dir) && fs::isPathWritable(dir)) {
                 magicFolder = dir;
                 break;

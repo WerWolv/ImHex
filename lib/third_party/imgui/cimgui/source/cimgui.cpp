@@ -1264,9 +1264,9 @@ CIMGUI_API ImGuiID igDockSpace(ImGuiID id,const ImVec2 size,ImGuiDockNodeFlags f
 {
     return ImGui::DockSpace(id,size,flags,window_class);
 }
-CIMGUI_API ImGuiID igDockSpaceOverViewport(const ImGuiViewport* viewport,ImGuiDockNodeFlags flags,const ImGuiWindowClass* window_class)
+CIMGUI_API ImGuiID igDockSpaceOverViewport(ImGuiID dockspace_id, const ImGuiViewport* viewport,ImGuiDockNodeFlags flags,const ImGuiWindowClass* window_class)
 {
-    return ImGui::DockSpaceOverViewport(viewport,flags,window_class);
+    return ImGui::DockSpaceOverViewport(dockspace_id,viewport,flags,window_class);
 }
 CIMGUI_API void igSetNextWindowDockID(ImGuiID dock_id,ImGuiCond cond)
 {
@@ -3821,7 +3821,7 @@ CIMGUI_API float ImGuiWindow_CalcFontSize(ImGuiWindow* self)
 }
 CIMGUI_API float ImGuiWindow_TitleBarHeight(ImGuiWindow* self)
 {
-    return self->TitleBarHeight();
+    return self->TitleBarHeight;
 }
 CIMGUI_API void ImGuiWindow_TitleBarRect(ImRect *pOut,ImGuiWindow* self)
 {
@@ -3829,7 +3829,7 @@ CIMGUI_API void ImGuiWindow_TitleBarRect(ImRect *pOut,ImGuiWindow* self)
 }
 CIMGUI_API float ImGuiWindow_MenuBarHeight(ImGuiWindow* self)
 {
-    return self->MenuBarHeight();
+    return self->MenuBarHeight;
 }
 CIMGUI_API void ImGuiWindow_MenuBarRect(ImRect *pOut,ImGuiWindow* self)
 {
@@ -4479,9 +4479,9 @@ CIMGUI_API bool igIsNamedKey(ImGuiKey key)
 {
     return ImGui::IsNamedKey(key);
 }
-CIMGUI_API bool igIsNamedKeyOrModKey(ImGuiKey key)
+CIMGUI_API bool igIsNamedKeyOrMod(ImGuiKey key)
 {
-    return ImGui::IsNamedKeyOrModKey(key);
+    return ImGui::IsNamedKeyOrMod(key);
 }
 CIMGUI_API bool igIsLegacyKey(ImGuiKey key)
 {
@@ -4507,13 +4507,13 @@ CIMGUI_API bool igIsModKey(ImGuiKey key)
 {
     return ImGui::IsModKey(key);
 }
-CIMGUI_API ImGuiKeyChord igFixupKeyChord(ImGuiContext* ctx,ImGuiKeyChord key_chord)
+CIMGUI_API ImGuiKeyChord igFixupKeyChord(ImGuiKeyChord key_chord)
 {
-    return ImGui::FixupKeyChord(ctx,key_chord);
+    return ImGui::FixupKeyChord(key_chord);
 }
-CIMGUI_API ImGuiKey igConvertSingleModFlagToKey(ImGuiContext* ctx,ImGuiKey key)
+CIMGUI_API ImGuiKey igConvertSingleModFlagToKey(ImGuiKey key)
 {
-    return ImGui::ConvertSingleModFlagToKey(ctx,key);
+    return ImGui::ConvertSingleModFlagToKey(key);
 }
 CIMGUI_API ImGuiKeyData* igGetKeyData_ContextPtr(ImGuiContext* ctx,ImGuiKey key)
 {

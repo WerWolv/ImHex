@@ -12,6 +12,7 @@
 
 #include <nlohmann/json_fwd.hpp>
 #include <imgui.h>
+#include <hex/providers/provider_data.hpp>
 
 namespace hex::prv {
     class Provider;
@@ -42,8 +43,9 @@ namespace hex::dp {
             m_overlay = overlay;
         }
 
-        virtual void drawNode() { }
+        void draw();
         virtual void process() = 0;
+        virtual void reset() { }
 
         virtual void store(nlohmann::json &j) const { hex::unused(j); }
         virtual void load(const nlohmann::json &j) { hex::unused(j); }
@@ -80,6 +82,11 @@ namespace hex::dp {
         void setIntegerOnOutput(u32 index, i128 integer);
         void setFloatOnOutput(u32 index, double floatingPoint);
 
+        static void interrupt();
+
+    protected:
+        virtual void drawNode() { }
+
     private:
         int m_id;
         UnlocalizedString m_unlocalizedTitle, m_unlocalizedName;
@@ -90,45 +97,16 @@ namespace hex::dp {
 
         static int s_idCounter;
 
-        Attribute& getAttribute(u32 index) {
-            if (index >= this->getAttributes().size())
-                throw std::runtime_error("Attribute index out of bounds!");
-
-            return this->getAttributes()[index];
-        }
-
-        Attribute *getConnectedInputAttribute(u32 index) {
-            const auto &connectedAttribute = this->getAttribute(index).getConnectedAttributes();
-
-            if (connectedAttribute.empty())
-                return nullptr;
-
-            return connectedAttribute.begin()->second;
-        }
-
-        void markInputProcessed(u32 index) {
-            const auto &[iter, inserted] = m_processedInputs.insert(index);
-            if (!inserted)
-                throwNodeError("Recursion detected!");
-        }
-
-        void unmarkInputProcessed(u32 index) {
-            m_processedInputs.erase(index);
-        }
+        Attribute& getAttribute(u32 index);
+        Attribute *getConnectedInputAttribute(u32 index);
+        void markInputProcessed(u32 index);
+        void unmarkInputProcessed(u32 index);
 
     protected:
-        [[noreturn]] void throwNodeError(const std::string &message) {
-            throw NodeError { this, message };
-        }
+        [[noreturn]] void throwNodeError(const std::string &message);
 
         void setOverlayData(u64 address, const std::vector<u8> &data);
-
-        void setAttributes(std::vector<Attribute> attributes) {
-            m_attributes = std::move(attributes);
-
-            for (auto &attr : m_attributes)
-                attr.setParentNode(this);
-        }
+        void setAttributes(std::vector<Attribute> attributes);
     };
 
 }

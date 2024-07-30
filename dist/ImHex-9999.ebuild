@@ -20,13 +20,14 @@ DEPEND=""
 RDEPEND="${DEPEND}
 		media-libs/glfw
 		sys-apps/file
-		dev-libs/mbedtls
+		net-libs/mbedtls
 		dev-cpp/nlohmann_json
-		dbus
-		xdg-desktop-portal
+		sys-apps/dbus
+		sys-apps/xdg-desktop-portal
 		sys-libs/zlib
-        app-arch/bzip2
-        app-arch/lzma
-        app-arch/zstd
+		app-arch/bzip2
+		app-arch/lzma
+		app-arch/zstd
+		app-arch/lz4
 		"
 BDEPEND="${DEPEND}"

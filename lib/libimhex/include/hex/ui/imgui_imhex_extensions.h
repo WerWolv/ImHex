@@ -123,6 +123,8 @@ namespace ImGuiExt {
         int m_width = 0, m_height = 0;
     };
 
+    float GetTextWrapPos();
+
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data);
 
     bool IconHyperlink(const char *icon, const char *label, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
@@ -185,11 +187,16 @@ namespace ImGuiExt {
 
     void SmallProgressBar(float fraction, float yOffset = 0.0F);
 
-    inline void TextFormatted(const std::string &fmt, auto &&...args) {
-        ImGui::TextUnformatted(hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+    inline void TextFormatted(std::string_view fmt, auto &&...args) {
+        if constexpr (sizeof...(args) == 0) {
+            ImGui::TextUnformatted(fmt.data(), fmt.data() + fmt.size());
+        } else {
+            const auto string = hex::format(fmt, std::forward<decltype(args)>(args)...);
+            ImGui::TextUnformatted(string.c_str(), string.c_str() + string.size());
+        }
     }
 
-    inline void TextFormattedSelectable(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedSelectable(std::string_view fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
 
         ImGui::PushID(text.c_str());
@@ -207,19 +214,28 @@ namespace ImGuiExt {
         ImGui::PopID();
     }
 
-    inline void TextFormattedColored(ImColor color, const std::string &fmt, auto &&...args) {
-        ImGui::TextColored(color, "%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+    inline void TextFormattedColored(ImColor color, std::string_view fmt, auto &&...args) {
+        ImGui::PushStyleColor(ImGuiCol_Text, color.Value);
+        ImGuiExt::TextFormatted(fmt, std::forward<decltype(args)>(args)...);
+        ImGui::PopStyleColor();
     }
 
-    inline void TextFormattedDisabled(const std::string &fmt, auto &&...args) {
-        ImGui::TextDisabled("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+    inline void TextFormattedDisabled(std::string_view fmt, auto &&...args) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+        ImGuiExt::TextFormatted(fmt, std::forward<decltype(args)>(args)...);
+        ImGui::PopStyleColor();
     }
 
-    inline void TextFormattedWrapped(const std::string &fmt, auto &&...args) {
-        ImGui::TextWrapped("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+    inline void TextFormattedWrapped(std::string_view fmt, auto &&...args) {
+        const bool need_backup = ImGuiExt::GetTextWrapPos() < 0.0F;  // Keep existing wrap position if one is already set
+        if (need_backup)
+            ImGui::PushTextWrapPos(0.0F);
+        ImGuiExt::TextFormatted(fmt, std::forward<decltype(args)>(args)...);
+        if (need_backup)
+            ImGui::PopTextWrapPos();
     }
 
-    inline void TextFormattedWrappedSelectable(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedWrappedSelectable(std::string_view fmt, auto &&...args) {
         // Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
         auto text = wolv::util::wrapMonospacedString(
                 hex::format(fmt, std::forward<decltype(args)>(args)...),
@@ -249,13 +265,13 @@ namespace ImGuiExt {
     }
 
     void TextUnformattedCentered(const char *text);
-    inline void TextFormattedCentered(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedCentered(std::string_view fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
         TextUnformattedCentered(text.c_str());
     }
 
 
-    inline void TextFormattedCenteredHorizontal(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedCenteredHorizontal(std::string_view fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
         auto availableSpace = ImGui::GetContentRegionAvail();
         auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);
@@ -286,7 +302,7 @@ namespace ImGuiExt {
     bool BeginBox();
     void EndBox();
 
-    void BeginSubWindow(const char *label, ImVec2 size = ImVec2(0, 0), ImGuiChildFlags flags = ImGuiChildFlags_None);
+    bool BeginSubWindow(const char *label, bool *collapsed = nullptr, ImVec2 size = ImVec2(0, 0), ImGuiChildFlags flags = ImGuiChildFlags_None);
     void EndSubWindow();
 
     void ConfirmButtons(const char *textLeft, const char *textRight, const auto &leftButtonCallback, const auto &rightButtonCallback) {

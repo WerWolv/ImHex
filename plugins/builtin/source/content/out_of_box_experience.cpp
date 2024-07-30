@@ -269,8 +269,7 @@ namespace hex::plugin::builtin {
 
                         // Draw telemetry subwindow
                         ImGui::SetCursorPos((windowSize - subWindowSize) / 2);
-                        ImGuiExt::BeginSubWindow("hex.builtin.oobe.server_contact"_lang, subWindowSize, ImGuiChildFlags_AutoResizeY);
-                        {
+                        if (ImGuiExt::BeginSubWindow("hex.builtin.oobe.server_contact"_lang, nullptr, subWindowSize, ImGuiChildFlags_AutoResizeY)) {
                             // Draw telemetry information
                             auto yBegin = ImGui::GetCursorPosY();
                             std::string message = "hex.builtin.oobe.server_contact.text"_lang;

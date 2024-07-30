@@ -5,6 +5,8 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/task_manager.hpp>
 
+#include <wolv/io/file.hpp>
+
 #include <bit>
 #include <cstdio>
 #include <string>
@@ -31,7 +33,21 @@ namespace hex::plugin::builtin {
     private:
         void invalidateData();
         void updateInspectorRows();
+        void updateInspectorRowsTask();
 
+        void executeInspectors();
+        void executeInspector(const std::string& code, const std::fs::path& path, const std::map<std::string, pl::core::Token::Literal>& inVariables);
+
+        void inspectorReadFunction(u64 offset, u8 *buffer, size_t size);
+
+        // draw functions
+        void drawEndianSetting();
+        void drawRadixSetting();
+        void drawInvertSetting();
+        void drawInspectorRows();
+        void drawInspectorRow(InspectorCacheEntry& entry);
+
+        ContentRegistry::DataInspector::impl::DisplayFunction createPatternErrorDisplayFunction();
 
     private:
         bool m_shouldInvalidate = true;

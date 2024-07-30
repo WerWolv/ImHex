@@ -6,11 +6,14 @@
 #include <romfs/romfs.hpp>
 
 namespace hex::fonts {
-    void loadFonts();
+    void registerFonts();
+
+    bool buildFontAtlas();
 }
 
 IMHEX_LIBRARY_SETUP("Fonts") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
 
-    hex::fonts::loadFonts();
+    hex::ImHexApi::System::addStartupTask("Loading fonts", true, hex::fonts::buildFontAtlas);
+    hex::fonts::registerFonts();
 }

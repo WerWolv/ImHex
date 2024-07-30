@@ -355,7 +355,7 @@ namespace hex {
             url = "https://" + url;
 
         #if defined(OS_WINDOWS)
-            ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+            ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
             openWebpageMacos(url.c_str());
         #elif defined(OS_LINUX)
@@ -677,6 +677,44 @@ namespace hex {
             return std::nullopt;
         else
             return value;
+    }
+
+    [[nodiscard]] std::string limitStringLength(const std::string &string, size_t maxLength) {
+        // If the string is shorter than the max length, return it as is
+        if (string.size() < maxLength)
+            return string;
+
+        // If the string is longer than the max length, find the last space before the max length
+        auto it = string.begin() + maxLength;
+        while (it != string.begin() && !std::isspace(*it)) --it;
+
+        // If there's no space before the max length, just cut the string
+        if (it == string.begin()) {
+            it = string.begin() + maxLength / 2;
+
+            // Try to find a UTF-8 character boundary
+            while (it != string.begin() && (*it & 0xC0) == 0x80) --it;
+        }
+
+        // If we still didn't find a valid boundary, just return the string as is
+        if (it == string.begin())
+            return string;
+
+        auto result = std::string(string.begin(), it) + "…";
+
+        // If the string is longer than the max length, find the last space before the max length
+        it = string.end() - 1 - maxLength / 2;
+        while (it != string.end() && !std::isspace(*it)) ++it;
+
+        // If there's no space before the max length, just cut the string
+        if (it == string.end()) {
+            it = string.end() - 1 - maxLength / 2;
+
+            // Try to find a UTF-8 character boundary
+            while (it != string.end() && (*it & 0xC0) == 0x80) ++it;
+        }
+
+        return result + std::string(it, string.end());
     }
 
     static std::optional<std::fs::path> s_fileToOpen;

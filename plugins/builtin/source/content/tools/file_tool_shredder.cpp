@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(selectedFile.empty());
             {
                 if (ImGui::Button("hex.builtin.tools.file_tools.shredder.shred"_lang)) {
-                    shredderTask = TaskManager::createTask("hex.builtin.tools.file_tools.shredder.shredding", 0, [](auto &task) {
+                    shredderTask = TaskManager::createTask("hex.builtin.tools.file_tools.shredder.shredding"_lang, 0, [](auto &task) {
                         ON_SCOPE_EXIT {
                             selectedFile.clear();
                         };

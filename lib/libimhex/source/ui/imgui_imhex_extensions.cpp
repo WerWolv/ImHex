@@ -285,6 +285,10 @@ namespace ImGuiExt {
         glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
     }
 
+    float GetTextWrapPos() {
+        return GImGui->CurrentWindow->DC.TextWrapPos;
+    }
+
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {
         if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
             auto &string = *static_cast<std::string *>(data->UserData);
@@ -514,7 +518,7 @@ namespace ImGuiExt {
         PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
         PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, GetStyle().FramePadding.y));
+        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
 
         PushStyleColor(ImGuiCol_Text, iconColor);
@@ -522,7 +526,7 @@ namespace ImGuiExt {
         PopStyleColor();
 
         if (IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-            SetNextWindowSizeConstraints(ImVec2(GetTextLineHeight() * 25, 0), ImVec2(GetTextLineHeight() * 25, FLT_MAX));
+            SetNextWindowSizeConstraints(ImVec2(GetTextLineHeight() * 25, 0), ImVec2(GetTextLineHeight() * 35, FLT_MAX));
             BeginTooltip();
             TextFormattedWrapped("{}", text);
             EndTooltip();
@@ -599,15 +603,27 @@ namespace ImGuiExt {
         ImGuiID hoveredID = GetHoveredID();
 
         bool result = false;
-        if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
+        if (IsItemHovered(ImGuiHoveredFlags_DelayNormal) && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
             if (!std::string_view(text).empty()) {
-                const auto width = 300 * hex::ImHexApi::System::getGlobalScale();
-                ImGui::SetNextWindowSizeConstraints(ImVec2(width, 0), ImVec2(width, FLT_MAX));
+                const auto textWidth = CalcTextSize(text).x;
+
+                const auto maxWidth = 300 * hex::ImHexApi::System::getGlobalScale();
+                const bool wrapping = textWidth > maxWidth;
+
+                if (wrapping)
+                    ImGui::SetNextWindowSizeConstraints(ImVec2(maxWidth, 0), ImVec2(maxWidth, FLT_MAX));
+                else
+                    ImGui::SetNextWindowSize(ImVec2(textWidth + GetStyle().WindowPadding.x * 2, 0));
+
                 if (BeginTooltip()) {
                     if (isSeparator)
                         SeparatorText(text);
-                    else
-                        TextFormattedWrapped("{}", text);
+                    else {
+                        if (wrapping)
+                            TextFormattedWrapped("{}", text);
+                        else
+                            TextFormatted("{}", text);
+                    }
 
                     EndTooltip();
                 }
@@ -780,7 +796,9 @@ namespace ImGuiExt {
 
         ImVec2 pos = window->DC.CursorPos;
 
-        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight(), label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
+        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight, label_size.x + style.FramePadding.x * 2.0F, label_size.y + style.FramePadding.y * 2.0F);
+
+        ImVec2 padding = (size - label_size) / 2;
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);
@@ -797,7 +815,7 @@ namespace ImGuiExt {
                                                                                                  : ImGuiCol_MenuBarBg);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + padding, bb.Max - padding, symbol, nullptr, &size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -973,7 +991,7 @@ namespace ImGuiExt {
 
         SetCursorPosX(GetCursorPosX() + frame_size.x);
 
-        bool value_changed = InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth() - icon_frame_size.x, label_size.y + style.FramePadding.y * 2.0F), ImGuiInputTextFlags_CallbackResize | flags, UpdateStringSizeCallback, &buffer);
+        bool value_changed = InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth(), label_size.y + style.FramePadding.y * 2.0F), ImGuiInputTextFlags_CallbackResize | flags, UpdateStringSizeCallback, &buffer);
 
         if (value_changed)
             MarkItemEdited(GImGui->LastItemData.ID);
@@ -1184,17 +1202,37 @@ namespace ImGuiExt {
         PopStyleVar();
     }
 
-    void BeginSubWindow(const char *label, ImVec2 size, ImGuiChildFlags flags) {
+    bool BeginSubWindow(const char *label, bool *collapsed, ImVec2 size, ImGuiChildFlags flags) {
         const bool hasMenuBar = !std::string_view(label).empty();
 
+        bool result = false;
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
         if (ImGui::BeginChild(hex::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+            result = true;
+
             if (hasMenuBar && ImGui::BeginMenuBar()) {
-                ImGui::TextUnformatted(label);
+                if (collapsed == nullptr)
+                    ImGui::TextUnformatted(label);
+                else {
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, ImGui::GetStyle().FramePadding.y));
+                    ImGui::PushStyleColor(ImGuiCol_Button, 0x00);
+                    if (ImGui::Button(label))
+                        *collapsed = !*collapsed;
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleVar();
+                }
                 ImGui::EndMenuBar();
+            }
+
+            if (collapsed != nullptr && *collapsed) {
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetStyle().FramePadding.y * 2));
+                ImGuiExt::TextFormattedDisabled("...");
+                result = false;
             }
         }
         ImGui::PopStyleVar();
+
+        return result;
     }
 
     void EndSubWindow() {

@@ -37,12 +37,23 @@ namespace hex::plugin::builtin {
            (*m_patternDrawer)->jumpToPattern(pattern);
         });
 
+        ImHexApi::HexEditor::addHoverHighlightProvider([this](const prv::Provider *, u64, size_t) -> std::set<Region> {
+            return { m_hoveredPatternRegion };
+        });
+
         m_patternDrawer.setOnCreateCallback([this](const prv::Provider *provider, auto &drawer) {
             drawer = std::make_unique<ui::PatternDrawer>();
 
             drawer->setSelectionCallback([](const pl::ptrn::Pattern *pattern) {
                 ImHexApi::HexEditor::setSelection(Region { pattern->getOffset(), pattern->getSize() });
                 RequestPatternEditorSelectionChange::post(pattern->getLine(), 0);
+            });
+
+            drawer->setHoverCallback([this](const pl::ptrn::Pattern *pattern) {
+                if (pattern == nullptr)
+                    m_hoveredPatternRegion = Region::Invalid();
+                else
+                    m_hoveredPatternRegion = { pattern->getOffset(), pattern->getSize() };
             });
 
             drawer->setTreeStyle(m_treeStyle);

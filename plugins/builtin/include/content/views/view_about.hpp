@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 #include <hex/ui/view.hpp>
+#include <hex/plugin.hpp>
 #include <hex/helpers/http_requests.hpp>
 
 namespace hex::plugin::builtin {
@@ -33,12 +34,16 @@ namespace hex::plugin::builtin {
         void drawAboutPopup();
 
         void drawAboutMainPage();
+        void drawBuildInformation();
         void drawContributorPage();
         void drawLibraryCreditsPage();
         void drawLoadedPlugins();
+        void drawPluginRow(const hex::Plugin& plugin);
         void drawPathsPage();
         void drawReleaseNotesPage();
         void drawCommitHistoryPage();
+        void drawCommitsTable(const auto& commits);
+        void drawCommitRow(const auto& commit);
         void drawLicensePage();
 
         ImGuiExt::Texture m_logoTexture;

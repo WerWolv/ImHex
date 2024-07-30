@@ -1,11 +1,14 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include <map>
 #include <string>
 #include <string_view>
 #include <vector>
 
 #include <fmt/format.h>
+#include <wolv/types/static_string.hpp>
 
 namespace hex {
 
@@ -22,8 +25,10 @@ namespace hex {
         };
 
         namespace impl {
+
             void setFallbackLanguage(const std::string &language);
             void resetLanguageStrings();
+
         }
 
         void loadLanguage(const std::string &language);
@@ -32,12 +37,14 @@ namespace hex {
         [[nodiscard]] const std::map<std::string, std::string> &getSupportedLanguages();
         [[nodiscard]] const std::string &getFallbackLanguage();
         [[nodiscard]] const std::string &getSelectedLanguage();
+
     }
 
     struct UnlocalizedString;
 
     class Lang {
     public:
+        Lang() = default;
         explicit Lang(const char *unlocalizedString);
         explicit Lang(const std::string &unlocalizedString);
         explicit Lang(const UnlocalizedString &unlocalizedString);
@@ -47,10 +54,31 @@ namespace hex {
         [[nodiscard]] operator std::string_view() const;
         [[nodiscard]] operator const char *() const;
 
-        [[nodiscard]] const std::string &get() const;
+        const char* get() const;
+
+        constexpr static size_t hash(std::string_view string){
+            constexpr u64 p = 131;
+            constexpr u64 m = std::numeric_limits<std::uint32_t>::max() - 4; // Largest 32 bit prime
+            u64 total = 0;
+            u64 currentMultiplier = 1;
+
+            for (char c : string) {
+                total = (total + currentMultiplier * c) % m;
+                currentMultiplier = (currentMultiplier * p) % m;
+            }
+
+            return total;
+        }
 
     private:
-        std::string m_unlocalizedString;
+        constexpr explicit Lang(std::size_t hash, const char *unlocalizedString) : m_entryHash(hash), m_unlocalizedString(unlocalizedString) {}
+
+        template<wolv::type::StaticString>
+        friend consteval Lang operator""_lang();
+
+    private:
+        std::size_t m_entryHash;
+        const char *m_unlocalizedString = nullptr;
     };
 
     [[nodiscard]] std::string operator+(const std::string &&left, const Lang &&right);
@@ -61,14 +89,16 @@ namespace hex {
     [[nodiscard]] std::string operator+(const Lang &&left, const char *right);
     [[nodiscard]] std::string operator+(const Lang &&left, const Lang &&right);
 
-    [[nodiscard]] inline Lang operator""_lang(const char *string, size_t) {
-        return Lang(string);
+    template<wolv::type::StaticString String>
+    [[nodiscard]] consteval Lang operator""_lang() {
+        return Lang(Lang::hash(String.value.data()), String.value.data());
     }
 
 
     struct UnlocalizedString {
     public:
         UnlocalizedString() = default;
+
         UnlocalizedString(auto && arg) : m_unlocalizedString(std::forward<decltype(arg)>(arg)) {
             static_assert(!std::same_as<std::remove_cvref_t<decltype(arg)>, Lang>, "Expected a unlocalized name, got a localized one!");
         }
@@ -102,12 +132,9 @@ namespace hex {
         std::string m_unlocalizedString;
     };
 
-}
-
-template<>
-struct fmt::formatter<hex::Lang> : fmt::formatter<std::string_view> {
-    template<typename FormatContext>
-    auto format(const hex::Lang &entry, FormatContext &ctx) {
-        return fmt::formatter<std::string_view>::format(entry.get(), ctx);
+    // {fmt} formatter for hex::Lang
+    inline auto format_as(const hex::Lang &entry) {
+        return entry.get();
     }
-};
+
+}

@@ -16,6 +16,7 @@
         "hex.diffing.view.diff.removed": "Removed",
         "hex.diffing.view.diff.algorithm": "Diffing Algorithm",
         "hex.diffing.view.diff.settings": "No settings available",
-        "hex.diffing.view.diff.settings.no_settings": "No settings available"
+        "hex.diffing.view.diff.settings.no_settings": "No settings available",
+        "hex.diffing.view.diff.task.diffing": "Diffing data..."
     }
 }

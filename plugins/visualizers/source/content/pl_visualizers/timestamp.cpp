@@ -14,7 +14,7 @@
 
 namespace hex::plugin::visualizers {
 
-    void drawTimestampVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments) {
+    void drawTimestampVisualizer(pl::ptrn::Pattern &, bool, std::span<const pl::core::Token::Literal> arguments) {
         time_t timestamp = arguments[0].toUnsigned();
         auto tm = fmt::gmtime(timestamp);
         auto date = std::chrono::year_month_day(std::chrono::year(tm.tm_year + 1900), std::chrono::month(tm.tm_mon + 1), std::chrono::day(tm.tm_mday));

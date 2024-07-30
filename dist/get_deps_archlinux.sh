@@ -5,6 +5,7 @@ pacman -S $@ --needed \
   gcc           \
   lld           \
   glfw          \
+  fontconfig    \
   file          \
   mbedtls       \
   freetype2     \
@@ -18,4 +19,5 @@ pacman -S $@ --needed \
   zlib          \
   bzip2         \
   xz            \
-  zstd
+  zstd          \
+  lz4

@@ -26,6 +26,8 @@ namespace hex::plugin::builtin {
 
     namespace {
 
+        bool s_showScalingWarning = true;
+
         /*
             Values of this setting:
             0 - do not check for updates on startup
@@ -177,9 +179,14 @@ namespace hex::plugin::builtin {
                         return "x%.1f";
                 }();
 
-                bool changed = ImGui::SliderFloat(name.data(), &m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+                bool changed = ImGui::SliderFloat(name.data(), &m_value, 0, 4, format.c_str());
 
-                if (ImHexApi::Fonts::getCustomFontPath().empty() && (u32(m_value * 10) % 10) != 0) {
+                if (m_value < 0)
+                    m_value = 0;
+                else if (m_value > 10)
+                    m_value = 10;
+
+                if (s_showScalingWarning && (u32(m_value * 10) % 10) != 0) {
                     ImGui::SameLine();
                     ImGuiExt::HelpHover("hex.builtin.setting.interface.scaling.fractional_warning"_lang, ICON_VS_WARNING, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
                 }
@@ -196,8 +203,12 @@ namespace hex::plugin::builtin {
                 return m_value;
             }
 
+            float getValue() const {
+                return m_value;
+            }
+
         private:
-            float m_value = 0;
+            float m_value = 0.0F;
         };
 
         class AutoBackupWidget : public ContentRegistry::Settings::Widgets::Widget {
@@ -230,7 +241,7 @@ namespace hex::plugin::builtin {
             }
 
         private:
-            int m_value = 0;
+            int m_value = 5 * 2;
         };
 
         class KeybindingWidget : public ContentRegistry::Settings::Widgets::Widget {
@@ -445,8 +456,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     // Draw toolbar icon box
-                    ImGuiExt::BeginSubWindow("hex.builtin.setting.toolbar.icons"_lang, ImGui::GetContentRegionAvail());
-                    {
+                    if (ImGuiExt::BeginSubWindow("hex.builtin.setting.toolbar.icons"_lang, nullptr, ImGui::GetContentRegionAvail())) {
                         if (ImGui::BeginTable("##icons", 6, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
                             ImGui::TableNextRow();
 
@@ -534,7 +544,7 @@ namespace hex::plugin::builtin {
                                 auto max = ImGui::GetItemRectMax();
                                 auto iconSize = ImGui::CalcTextSize(menuItem->icon.glyph.c_str());
 
-                                auto text = Lang(unlocalizedName).get();
+                                std::string text = Lang(unlocalizedName);
                                 if (text.ends_with("..."))
                                     text = text.substr(0, text.size() - 3);
 
@@ -548,6 +558,7 @@ namespace hex::plugin::builtin {
 
                             ImGui::EndTable();
                         }
+
                     }
                     ImGuiExt::EndSubWindow();
 
@@ -565,6 +576,10 @@ namespace hex::plugin::builtin {
                     }
 
                     ImGui::EndTable();
+                }
+
+                if (changed) {
+                    ContentRegistry::Interface::updateToolbarItems();
                 }
 
                 return changed;
@@ -604,6 +619,8 @@ namespace hex::plugin::builtin {
                 }
 
                 m_currIndex = toolbarItems.size();
+
+                ContentRegistry::Interface::updateToolbarItems();
             }
 
         private:
@@ -656,22 +673,48 @@ namespace hex::plugin::builtin {
 
 
         bool getDefaultBorderlessWindowMode() {
-            bool result = false;
+            bool result;
 
-            #if defined (OS_WINDOWS) || defined(OS_MACOS)
+            #if defined (OS_WINDOWS)
                 result = true;
-            #endif
 
-            // Intel's OpenGL driver has weird bugs that cause the drawn window to be offset to the bottom right.
-            // This can be fixed by either using Mesa3D's OpenGL Software renderer or by simply disabling it.
-            // If you want to try if it works anyways on your GPU, set the hex.builtin.setting.interface.force_borderless_window_mode setting to 1
-            if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+                // Intel's OpenGL driver is extremely buggy. Its issues can manifest in lots of different ways
+                // such as "colorful snow" appearing on the screen or, the most annoying issue,
+                // it might draw the window content slightly offset to the bottom right as seen in issue #1625
+
+                // The latter issue can be circumvented by using the native OS decorations or by using the software renderer.
+                // This code here tries to detect if the user has a problematic Intel GPU and if so, it will default to the native OS decorations.
+                // This doesn't actually solve the issue at all but at least it makes ImHex usable on these GPUs.
                 const bool isIntelGPU = hex::containsIgnoreCase(ImHexApi::System::getGPUVendor(), "Intel");
+                if (isIntelGPU) {
+                    log::warn("Intel GPU detected! Intel's OpenGL GPU drivers are extremely buggy and can cause issues when using ImHex. If you experience any rendering bugs, please enable the Native OS Decoration setting or try the software rendererd -NoGPU release.");
 
-                result = !isIntelGPU;
-                if (isIntelGPU)
-                    log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please enable the Native OS Decoration setting or try the software rendererd -NoGPU release.");
-            }
+                    // Non-exhaustive list of bad GPUs.
+                    // If more GPUs are found to be problematic, they can be added here.
+                    constexpr static std::array BadGPUs = {
+                        // Sandy Bridge Series, Second Gen HD Graphics
+                        "HD Graphics 2000",
+                        "HD Graphics 3000"
+                    };
+
+                    const auto &glRenderer = ImHexApi::System::getGLRenderer();
+                    for (const auto &badGPU : BadGPUs) {
+                        if (hex::containsIgnoreCase(glRenderer, badGPU)) {
+                            result = false;
+                            break;
+                        }
+                    }
+                }
+
+            #elif defined(OS_MACOS)
+                result = true;
+            #elif defined(OS_LINUX)
+                // On Linux, things like Window snapping and moving is hard to implement
+                // without hacking e.g. libdecor, therefor we default to the native window decorations.
+                result = false;
+            #else
+                result = false;
+            #endif
 
             return result;
         }
@@ -723,7 +766,8 @@ namespace hex::plugin::builtin {
                                                                   }
                                                               });
 
-            ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor").requiresRestart();
+            ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor")
+            .requiresRestart();
 
             #if defined (OS_WEB)
                 ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.crisp_scaling", false)
@@ -782,6 +826,11 @@ namespace hex::plugin::builtin {
 
         /* Fonts */
         {
+            const auto scaleWarningHandler = [](auto&) {
+                s_showScalingWarning = ImHexApi::Fonts::getCustomFontPath().empty() &&
+                    ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
+            };
+
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false)
                 .requiresRestart();
 
@@ -795,6 +844,7 @@ namespace hex::plugin::builtin {
 
             auto customFontPathSetting = ContentRegistry::Settings::add<FontFilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
                     .requiresRestart()
+                    .setChangedCallback(scaleWarningHandler)
                     .setEnabledCallback(customFontsEnabled);
 
             const auto customFontSettingsEnabled = [customFontEnabledSetting, customFontPathSetting] {
@@ -803,6 +853,16 @@ namespace hex::plugin::builtin {
 
                 return customFontsEnabled.isChecked() && !fontPath.getPath().empty();
             };
+
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.pixel_perfect_default_font", true)
+                .setChangedCallback(scaleWarningHandler)
+                .setEnabledCallback([customFontPathSetting, customFontEnabledSetting] {
+                    auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
+                    auto &fontPath = static_cast<Widgets::FilePicker &>(customFontPathSetting.getWidget());
+
+                    return customFontsEnabled.isChecked()&& fontPath.getPath().empty();
+                })
+                .requiresRestart();
 
             ContentRegistry::Settings::add<Widgets::Label>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_info")
                     .setEnabledCallback(customFontsEnabled);

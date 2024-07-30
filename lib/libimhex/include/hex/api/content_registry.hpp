@@ -438,7 +438,7 @@ namespace hex {
 
             namespace impl {
 
-                using VisualizerFunctionCallback = std::function<void(pl::ptrn::Pattern&, pl::ptrn::IIterable&, bool, std::span<const pl::core::Token::Literal>)>;
+                using VisualizerFunctionCallback = std::function<void(pl::ptrn::Pattern&, bool, std::span<const pl::core::Token::Literal>)>;
 
                 struct FunctionDefinition {
                     pl::api::Namespace ns;
@@ -774,6 +774,7 @@ namespace hex {
                 const std::multimap<u32, MainMenuItem>& getMainMenuItems();
 
                 const std::multimap<u32, MenuItem>& getMenuItems();
+                const std::vector<MenuItem*>& getToolbarMenuItems();
                 std::multimap<u32, MenuItem>& getMenuItemsMutable();
 
                 const std::vector<DrawCallback>& getWelcomeScreenEntries();
@@ -917,6 +918,11 @@ namespace hex {
             void addMenuItemToToolbar(const UnlocalizedString &unlocalizedName, ImGuiCustomCol color);
 
             /**
+             * @brief Reconstructs the toolbar items list after they have been modified
+             */
+            void updateToolbarItems();
+
+            /**
              * @brief Adds a new sidebar item
              * @param icon The icon to use for the item
              * @param function The function to call to draw the item
@@ -981,12 +987,34 @@ namespace hex {
             namespace impl {
 
                 using Callback = std::function<std::string(prv::Provider *provider, u64 address, size_t size)>;
-                struct Entry {
+                struct ExportMenuEntry {
                     UnlocalizedString unlocalizedName;
                     Callback callback;
                 };
 
-                const std::vector<Entry>& getEntries();
+                struct FindOccurrence {
+                    Region region;
+                    enum class DecodeType { ASCII, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
+                    std::endian endian = std::endian::native;
+                    bool selected;
+                };
+
+                using FindExporterCallback = std::function<std::vector<u8>(const std::vector<FindOccurrence>&, std::function<std::string(FindOccurrence)>)>;
+                struct FindExporterEntry {
+                    UnlocalizedString unlocalizedName;
+                    std::string fileExtension;
+                    FindExporterCallback callback;
+                };
+
+                /**
+                 * @brief Retrieves a list of all registered data formatters used by the 'File -> Export' menu
+                 */
+                const std::vector<ExportMenuEntry>& getExportMenuEntries();
+
+                /**
+                 * @brief Retrieves a list of all registered data formatters used in the Results section of the 'Find' view
+                 */
+                const std::vector<FindExporterEntry>& getFindExporterEntries();
 
             }
 
@@ -996,7 +1024,14 @@ namespace hex {
              * @param unlocalizedName The unlocalized name of the formatter
              * @param callback The function to call to format the data
              */
-            void add(const UnlocalizedString &unlocalizedName, const impl::Callback &callback);
+            void addExportMenuEntry(const UnlocalizedString &unlocalizedName, const impl::Callback &callback);
+
+            /**
+             * @brief Adds a new data exporter for Find results
+             * @param unlocalizedName The unlocalized name of the formatter
+             * @param callback The function to call to format the data
+             */
+            void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string fileExtension, const impl::FindExporterCallback &callback);
 
         }
 
@@ -1057,7 +1092,7 @@ namespace hex {
             };
 
             struct MiniMapVisualizer {
-                using Callback = std::function<ImColor(const std::vector<u8>&)>;
+                using Callback = std::function<void(u64, std::span<const u8>, std::vector<ImColor>&)>;
 
                 UnlocalizedString unlocalizedName;
                 Callback callback;
@@ -1238,7 +1273,7 @@ namespace hex {
                 void stopServices();
             }
 
-            void registerService(const UnlocalizedString &unlocalizedName, const impl::Callback &callback);
+            void registerService(Lang name, const impl::Callback &callback);
         }
 
         /* Network Communication Interface Registry. Allows adding new communication interface endpoints */

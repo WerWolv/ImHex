@@ -7,6 +7,7 @@
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/plugin_manager.hpp>
@@ -30,16 +31,30 @@ namespace hex::init {
         return true;
     }
 
+    static bool isSubPathWritable(std::fs::path path) {
+        for (u32 i = 0; i < 128; i++) {
+            if (hex::fs::isPathWritable(path))
+                return true;
+
+            auto parentPath = path.parent_path();
+            if (parentPath == path)
+                break;
+
+            path = std::move(parentPath);
+        }
+
+        return false;
+    }
+
     bool createDirectories() {
         bool result = true;
 
-        using enum fs::ImHexPath;
-
         // Try to create all default directories
-        for (u32 path = 0; path < u32(fs::ImHexPath::END); path++) {
-            for (auto &folder : fs::getDefaultPaths(static_cast<fs::ImHexPath>(path), true)) {
+        for (auto path : paths::All) {
+            for (auto &folder : path->all()) {
                 try {
-                    wolv::io::fs::createDirectories(folder);
+                    if (isSubPathWritable(folder.parent_path()))
+                        wolv::io::fs::createDirectories(folder);
                 } catch (...) {
                     log::error("Failed to create folder {}!", wolv::util::toUTF8String(folder));
                     result = false;
@@ -95,7 +110,7 @@ namespace hex::init {
     bool loadPlugins() {
         // Load all plugins
         #if !defined(IMHEX_STATIC_LINK_PLUGINS)
-            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
+            for (const auto &dir : paths::Plugins.read()) {
                 PluginManager::addLoadPath(dir);
             }
 
@@ -185,8 +200,8 @@ namespace hex::init {
     bool deleteOldFiles() {
         bool result = true;
 
-        auto keepNewest = [&](u32 count, fs::ImHexPath pathType) {
-            for (const auto &path : fs::getDefaultPaths(pathType)) {
+        auto keepNewest = [&](u32 count, const paths::impl::DefaultPath &pathType) {
+            for (const auto &path : pathType.write()) {
                 try {
                     std::vector<std::filesystem::directory_entry> files;
 
@@ -209,8 +224,8 @@ namespace hex::init {
             }
         };
 
-        keepNewest(10, fs::ImHexPath::Logs);
-        keepNewest(25, fs::ImHexPath::Backups);
+        keepNewest(10, paths::Logs);
+        keepNewest(25, paths::Backups);
 
         return result;
     }

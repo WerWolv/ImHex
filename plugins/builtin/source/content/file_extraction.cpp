@@ -4,6 +4,7 @@
 #include <romfs/romfs.hpp>
 
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -17,7 +18,7 @@ namespace hex::plugin::builtin {
 
         for (const auto &[extractFolder, alwaysExtract] : Paths) {
             for (const auto &romfsPath : romfs::list(extractFolder)) {
-                for (const auto &imhexPath : fs::getDataPaths()) {
+                for (const auto &imhexPath : paths::getDataPaths(false)) {
                     const auto path = imhexPath / std::fs::relative(romfsPath, extractFolder);
                     log::info("Extracting {} to {}", romfsPath.string(), path.string());
                     if (!alwaysExtract && wolv::io::fs::exists(path))

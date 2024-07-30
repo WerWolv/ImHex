@@ -9,7 +9,7 @@
 
 namespace hex::plugin::visualizers {
 
-    void drawScatterPlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    void drawScatterPlotVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static std::vector<float> xValues, yValues;
 
         auto xPattern = arguments[0].toPattern();

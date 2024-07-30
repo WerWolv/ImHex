@@ -13,6 +13,7 @@
 #include <nethost.h>
 #include <coreclr_delegates.h>
 #include <hostfxr.h>
+
 #include <imgui.h>
 #include <hex/api/plugin_manager.hpp>
 
@@ -23,6 +24,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/default_paths.hpp>
+
 #include <toasts/toast_notification.hpp>
 
 extern "C" void igSetCurrentContext(ImGuiContext* ctx);
@@ -57,7 +60,7 @@ namespace hex::script::loader {
                 auto netHostLibrary = loadLibrary("libnethost.so");
             #elif defined(OS_MACOS)
                 void *netHostLibrary = nullptr;
-                for (const auto &pluginPath : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
+                for (const auto &pluginPath : paths::Plugins.read()) {
                     auto frameworksPath = pluginPath.parent_path().parent_path() / "Frameworks";
 
                     netHostLibrary = loadLibrary((frameworksPath / "libnethost.dylib").c_str());
@@ -65,7 +68,7 @@ namespace hex::script::loader {
                         break;
                 }
                 if (netHostLibrary == nullptr) {
-                    for (const auto &librariesPath : fs::getDefaultPaths(fs::ImHexPath::Libraries)) {
+                    for (const auto &librariesPath : paths::Libraries.read()) {
                         netHostLibrary = loadLibrary((librariesPath / "libnethost.dylib").c_str());
                         if (netHostLibrary != nullptr)
                             break;
@@ -74,7 +77,7 @@ namespace hex::script::loader {
             #endif
 
             if (netHostLibrary == nullptr) {
-                log::error("Could not load libnethost!");
+                log::debug("libnethost is not available! Disabling .NET support");
                 return false;
             }
 
@@ -108,13 +111,7 @@ namespace hex::script::loader {
                         = getExport<hostfxr_set_error_writer_fn>(hostfxrLibrary, "hostfxr_set_error_writer");
             }
 
-            hostfxr_set_error_writer([] HOSTFXR_CALLTYPE (const char_t *message) {
-                #if defined(OS_WINDOWS)
-                    log::error("{}", utf16ToUtf8(message));
-                #else
-                    log::error("{}", message);
-                #endif
-            });
+            hostfxr_set_error_writer([] HOSTFXR_CALLTYPE (const char_t *) { });
 
             return
                 hostfxr_initialize_for_runtime_config != nullptr &&
@@ -135,7 +132,12 @@ namespace hex::script::loader {
             };
 
             if (result > 2 || ctx == nullptr) {
-                throw std::runtime_error(hex::format("Failed to initialize command line 0x{:X}", result));
+                if (result == /* FrameworkMissingFailure */ 0x80008096) {
+                    log::warn("ImHex has built-in support for .NET scripts and extensions. However, these can only be used when the .NET runtime is installed.");
+                    log::warn("Please install version {} or later of the .NET runtime if you plan to use them. Otherwise this error can be safely ignored.", IMHEX_DOTNET_RUNTIME_VERSION);
+                }
+
+                throw std::runtime_error(hex::format("Command line init failed 0x{:X}", result));
             }
 
             #if defined (OS_WINDOWS)
@@ -143,6 +145,14 @@ namespace hex::script::loader {
             #else
                 hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), hex::format("{}", (void*)pInvokeOverride).c_str());
             #endif
+
+            hostfxr_set_error_writer([] HOSTFXR_CALLTYPE (const char_t *message) {
+                #if defined(OS_WINDOWS)
+                    log::error("{}", utf16ToUtf8(message));
+                #else
+                    log::error("{}", message);
+                #endif
+            });
 
             result = hostfxr_get_runtime_delegate(
                 ctx,
@@ -161,11 +171,10 @@ namespace hex::script::loader {
 
     bool DotNetLoader::initialize() {
         if (!loadHostfxr()) {
-            log::error("Failed to initialize dotnet loader, could not load hostfxr");
             return false;
         }
 
-        for (const auto& path : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Plugins)) {
+        for (const auto& path : paths::Plugins.read()) {
             auto assemblyLoader = path / "AssemblyLoader.dll";
             if (!wolv::io::fs::exists(assemblyLoader))
                 continue;
@@ -219,7 +228,7 @@ namespace hex::script::loader {
     bool DotNetLoader::loadAll() {
         this->clearScripts();
 
-        for (const auto &imhexPath : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Scripts)) {
+        for (const auto &imhexPath : paths::Scripts.read()) {
             auto directoryPath = imhexPath / "custom" / "dotnet";
             if (!wolv::io::fs::exists(directoryPath))
                 wolv::io::fs::createDirectories(directoryPath);
@@ -235,22 +244,36 @@ namespace hex::script::loader {
                 if (!std::fs::exists(scriptPath))
                     continue;
 
+                bool skip = false;
+                for (const auto &existingScript : getScripts()) {
+                    if (existingScript.path == scriptPath) {
+                        skip = true;
+                    }
+                }
+                if (skip)
+                    continue;
+
                 const bool hasMain = m_methodExists("Main", scriptPath);
                 const bool hasOnLoad = m_methodExists("OnLoad", scriptPath);
                 const auto scriptName = entry.path().stem().string();
 
+                if (hasMain && hasOnLoad) {
+                    log::error("Script '{}' has both a Main() and a OnLoad() function. Only one is allowed per script.", scriptName);
+                    continue;
+                } else if (!hasMain && !hasOnLoad) {
+                    log::error("Script '{}' has neither a Main() nor a OnLoad() function.", scriptName);
+                    continue;
+                }
+
                 if (hasMain) {
-                    this->addScript(scriptName, false, [this, scriptPath] {
+                    this->addScript(scriptName, scriptPath, false, [this, scriptPath] {
                         auto result = m_runMethod("Main", false, scriptPath);
                         if (result != 0) {
                             ui::ToastError::open(hex::format("Script '{}' running failed with code {}", result));
                         }
                     });
                 } else if (hasOnLoad) {
-                    this->addScript(scriptName, true, [] {});
-                }
-
-                if (hasOnLoad) {
+                    this->addScript(scriptName, scriptPath, true, [] {});
                     auto result = m_runMethod("OnLoad", true, scriptPath);
                     if (result != 0) {
                         TaskManager::doLater([=] {
@@ -258,11 +281,17 @@ namespace hex::script::loader {
                         });
                     }
                 }
-
             }
         }
 
         return true;
     }
+
+    void DotNetLoader::clearScripts() {
+        std::erase_if(getScripts(), [](const Script &script) {
+            return !script.background;
+        });
+    }
+
 
 }

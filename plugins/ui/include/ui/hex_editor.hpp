@@ -196,6 +196,7 @@ namespace hex::ui {
         }
 
         void jumpIfOffScreen() {
+            m_shouldScrollToSelection = true;
             m_shouldJumpWhenOffScreen = true;
         }
 
@@ -229,10 +230,6 @@ namespace hex::ui {
 
         void enableShowAscii(bool showAscii) {
             m_showAscii = showAscii;
-        }
-
-        void enableShowHumanReadableUnits(bool showHumanReadableUnits) {
-            m_showHumanReadableUnits = showHumanReadableUnits;
         }
 
         void enableSyncScrolling(bool syncScrolling) {
@@ -271,6 +268,10 @@ namespace hex::ui {
 
         void setBackgroundHighlightCallback(const std::function<std::optional<color_t>(u64, const u8 *, size_t)> &callback) {
             m_backgroundColorCallback = callback;
+        }
+
+        void setHoverChangedCallback(const std::function<void(u64, size_t)> &callback) {
+            m_hoverChangedCallback = callback;
         }
 
         void setTooltipCallback(const std::function<void(u64, const u8 *, size_t)> &callback) {
@@ -364,7 +365,6 @@ namespace hex::ui {
         bool m_showCustomEncoding = true;
         bool m_showMiniMap = false;
         int m_miniMapWidth = 5;
-        bool m_showHumanReadableUnits = true;
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
         bool m_footerCollapsed = true;
 
@@ -376,6 +376,7 @@ namespace hex::ui {
         static std::optional<color_t> defaultColorCallback(u64, const u8 *, size_t) { return std::nullopt; }
         static void defaultTooltipCallback(u64, const u8 *, size_t) {  }
         std::function<std::optional<color_t>(u64, const u8 *, size_t)> m_foregroundColorCallback = defaultColorCallback, m_backgroundColorCallback = defaultColorCallback;
+        std::function<void(u64, size_t)> m_hoverChangedCallback = [](auto, auto){ };
         std::function<void(u64, const u8 *, size_t)> m_tooltipCallback = defaultTooltipCallback;
 
         Mode m_mode = Mode::Overwrite;

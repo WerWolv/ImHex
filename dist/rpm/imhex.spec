@@ -1,3 +1,5 @@
+%define source_date_epoch_from_changelog 0
+
 Name:           imhex
 Version:        VERSION
 Release:        0%{?dist}
@@ -14,6 +16,7 @@ BuildRequires:  cmake
 BuildRequires:  desktop-file-utils
 BuildRequires:  dbus-devel
 BuildRequires:  file-devel
+BuildRequires:  fontconfig-devel
 BuildRequires:  freetype-devel
 BuildRequires:  fmt-devel
 BuildRequires:  gcc-c++
@@ -125,6 +128,3 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %{_libdir}/libimhex.so*
 %{_libdir}/%{name}/
 %{_metainfodir}/net.werwolv.%{name}.metainfo.xml
-
-
-%changelog

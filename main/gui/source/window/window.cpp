@@ -13,6 +13,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
@@ -76,6 +77,8 @@ namespace hex {
 
         EventWindowInitialized::post();
         EventImHexStartupFinished::post();
+
+        TutorialManager::init();
     }
 
     Window::~Window() {
@@ -111,6 +114,21 @@ namespace hex {
 
             m_popupsToOpen.push_back(name);
         });
+
+        EventDPIChanged::subscribe([this](float oldScaling, float newScaling) {
+            if (oldScaling == newScaling || oldScaling == 0 || newScaling == 0)
+                return;
+
+            int width, height;
+            glfwGetWindowSize(m_window, &width, &height);
+
+            width = float(width) * newScaling / oldScaling;
+            height = float(height) * newScaling / oldScaling;
+
+            ImHexApi::System::impl::setMainWindowSize(width, height);
+            glfwSetWindowSize(m_window, width, height);
+        });
+
 
         LayoutManager::registerLoadCallback([this](std::string_view line) {
             int width = 0, height = 0;
@@ -154,17 +172,22 @@ namespace hex {
     }
 
     void Window::fullFrame() {
-        static u32 crashWatchdog = 0;
+        [[maybe_unused]] static u32 crashWatchdog = 0;
 
         if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) {
             return;
         }
 
+        #if !defined(DEBUG)
         try {
+        #endif
+
+            // Render an entire frame
             this->frameBegin();
             this->frame();
             this->frameEnd();
 
+        #if !defined(DEBUG)
             // Feed the watchdog
             crashWatchdog = 0;
         } catch (...) {
@@ -184,11 +207,23 @@ namespace hex {
             // Handle the exception
             handleException();
         }
+        #endif
     }
 
     void Window::loop() {
+        glfwShowWindow(m_window);
         while (!glfwWindowShouldClose(m_window)) {
             m_lastStartFrameTime = glfwGetTime();
+
+            {
+                int x = 0, y = 0;
+                int width = 0, height = 0;
+                glfwGetWindowPos(m_window, &x, &y);
+                glfwGetWindowSize(m_window, &width, &height);
+
+                ImHexApi::System::impl::setMainWindowPosition(x, y);
+                ImHexApi::System::impl::setMainWindowSize(width, height);
+            }
 
             // Determine if the application should be in long sleep mode
             bool shouldLongSleep = !m_unlockFrameRate;
@@ -270,7 +305,6 @@ namespace hex {
                         glfwWaitEventsTimeout(targetFrameTime - frameTime);
 
                         // glfwWaitEventsTimeout might return early if there's an event
-                        const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
                         if (frameTime < targetFrameTime) {
                             const auto timeToSleepMs = (int)((targetFrameTime - frameTime) * 1000);
                             std::this_thread::sleep_for(std::chrono::milliseconds(timeToSleepMs));
@@ -323,7 +357,7 @@ namespace hex {
         // Plugin load error popups
         // These are not translated because they should always be readable, no matter if any localization could be loaded or not
         {
-            auto drawPluginFolderTable = [] {
+            const static auto drawPluginFolderTable = [] {
                 ImGuiExt::UnderlinedText("Plugin folders");
                 if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2(0, 100_scaled))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
@@ -332,7 +366,7 @@ namespace hex {
 
                     ImGui::TableHeadersRow();
 
-                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Plugins, true)) {
+                    for (const auto &path : paths::Plugins.all()) {
                         const auto filePath = path / "builtin.hexplug";
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -797,7 +831,6 @@ namespace hex {
         {
             int width = 0, height = 0;
             glfwGetWindowSize(m_window, &width, &height);
-            glfwSetWindowSize(m_window, width, height);
 
             if (initialWindowProperties.has_value()) {
                 width  = initialWindowProperties->width;
@@ -814,35 +847,29 @@ namespace hex {
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
-
             win->fullFrame();
         });
 
         // Register window resize callback
-        glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, int width, int height) {
-            if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
-                ImHexApi::System::impl::setMainWindowSize(width, height);
-
+        glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, [[maybe_unused]] int width, [[maybe_unused]] int height) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
-            
+
+            #if !defined(OS_WINDOWS)
+                if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
+                    ImHexApi::System::impl::setMainWindowSize(width, height);
+            #endif
+
             #if defined(OS_MACOS)
                 // Stop widgets registering hover effects while the window is being resized
                 if (macosIsWindowBeingResizedByUser(window)) {
                     ImGui::GetIO().MousePos = ImVec2();
                 }
-            #else
+            #elif defined(OS_WEB)
                 win->fullFrame();
             #endif
         });
 
-        #if defined(OS_MACOS)
-            glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
-                auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-                win->fullFrame();
-            });
-        #endif
-        
         glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
@@ -866,8 +893,11 @@ namespace hex {
                     // If the key name is only one character long, use the ASCII value instead
                     // Otherwise the keyboard was set to a non-English layout and the key name
                     // is not the same as the ASCII value
-                    if (name.length() == 1) {
-                        key = std::toupper(name[0]);
+                    if (!name.empty()) {
+                        const std::uint8_t byte = name[0];
+                        if (name.length() == 1 && byte <= 0x7F) {
+                            key = std::toupper(byte);
+                        }
                     }
                 }
 
@@ -906,8 +936,6 @@ namespace hex {
         });
 
         glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
-
-        glfwShowWindow(m_window);
     }
 
     void Window::resize(i32 width, i32 height) {
@@ -966,6 +994,9 @@ namespace hex {
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing            = 10.0F;
         style.DisplaySafeAreaPadding  = ImVec2(0.0F, 0.0F);
+
+        style.Colors[ImGuiCol_TabSelectedOverline]          = ImVec4(0.0F, 0.0F, 0.0F, 0.0F);
+        style.Colors[ImGuiCol_TabDimmedSelectedOverline]    = ImVec4(0.0F, 0.0F, 0.0F, 0.0F);
 
         // Install custom settings handler
         {

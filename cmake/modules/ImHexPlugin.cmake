@@ -72,10 +72,23 @@ macro(add_imhex_plugin)
     add_subdirectory(${IMHEX_BASE_FOLDER}/lib/external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/libromfs)
     target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE ${LIBROMFS_LIBRARY})
 
-    foreach(feature ${IMHEX_PLUGIN_FEATURES})
-        string(TOUPPER ${feature} feature)
-        add_definitions(-DIMHEX_PLUGIN_${IMHEX_PLUGIN_NAME}_FEATURE_${feature}=0)
-    endforeach()
+    set(FEATURE_DEFINE_CONTENT)
+
+    if (IMHEX_PLUGIN_FEATURES)
+        list(LENGTH IMHEX_PLUGIN_FEATURES IMHEX_FEATURE_COUNT)
+        math(EXPR IMHEX_FEATURE_COUNT "${IMHEX_FEATURE_COUNT} - 1" OUTPUT_FORMAT DECIMAL)
+        foreach(index RANGE 0 ${IMHEX_FEATURE_COUNT} 2)
+            list(SUBLIST IMHEX_PLUGIN_FEATURES ${index} 2 IMHEX_PLUGIN_FEATURE)
+            list(GET IMHEX_PLUGIN_FEATURE 0 feature_define)
+            list(GET IMHEX_PLUGIN_FEATURE 1 feature_description)
+
+            string(TOUPPER ${feature_define} feature_define)
+            add_definitions(-DIMHEX_PLUGIN_${IMHEX_PLUGIN_NAME}_FEATURE_${feature_define}=0)
+            set(FEATURE_DEFINE_CONTENT "${FEATURE_DEFINE_CONTENT}{ \"${feature_description}\", IMHEX_FEATURE_ENABLED(${feature_define}) },")
+        endforeach()
+    endif()
+
+    target_compile_options(${IMHEX_PLUGIN_NAME} PRIVATE -DIMHEX_PLUGIN_FEATURES_CONTENT=${FEATURE_DEFINE_CONTENT})
 
     # Add the new plugin to the main dependency list so it gets built by default
     if (TARGET imhex_all)
@@ -88,12 +101,28 @@ macro(add_imhex_plugin)
 
     # Fix rpath
     if (APPLE)
-        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH "@executable_path/../Frameworks;@executable_path/plugins")
+        set_target_properties(
+                ${IMHEX_PLUGIN_NAME}
+                PROPERTIES
+                    INSTALL_RPATH "@executable_path/../Frameworks;@executable_path/plugins"
+        )
     elseif (UNIX)
-        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH_USE_ORIGIN ON INSTALL_RPATH "$ORIGIN/")
+        set(PLUGIN_RPATH "")
+        list(APPEND PLUGIN_RPATH "$ORIGIN")
+
+        if (IMHEX_PLUGIN_ADD_INSTALL_PREFIX_TO_RPATH)
+            list(APPEND PLUGIN_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+        endif()
+
+        set_target_properties(
+                ${IMHEX_PLUGIN_NAME}
+                PROPERTIES
+                    INSTALL_RPATH_USE_ORIGIN ON
+                    INSTALL_RPATH "${PLUGIN_RPATH}"
+        )
     endif()
 
-    if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt AND IMHEX_ENABLE_UNIT_TESTS)
+    if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt AND IMHEX_ENABLE_UNIT_TESTS AND IMHEX_ENABLE_PLUGIN_TESTS)
         add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
         target_link_libraries(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_NAME}_tests)
         target_compile_definitions(${IMHEX_PLUGIN_NAME}_tests PRIVATE IMHEX_PROJECT_NAME="${IMHEX_PLUGIN_NAME}-tests")
@@ -101,6 +130,10 @@ macro(add_imhex_plugin)
 endmacro()
 
 macro(add_romfs_resource input output)
+    if (NOT EXISTS ${input})
+        message(WARNING "Resource file ${input} does not exist")
+    endif()
+
     configure_file(${input} ${CMAKE_CURRENT_BINARY_DIR}/romfs/${output} COPYONLY)
 
     list(APPEND LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/romfs)

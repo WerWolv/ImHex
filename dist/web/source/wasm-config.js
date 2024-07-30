@@ -100,7 +100,77 @@ var notWorkingTimer = setTimeout(() => {
 
 var Module = {
     preRun:  [],
-    postRun: [],
+    postRun: function() {
+        // Patch the emscripten GLFW module to send mouse and touch events in the right order
+        // For ImGui interactions to correctly work with touch input, MousePos events need
+        // to be processed first and then MouseButton events in the next frame. By default,
+        // GLFW does the exact opposite, which causes buttons to require two taps to register
+        // and windows get "stuck" to the cursor when dragged or resized
+        GLFW.onMousemove = event => {
+            if (event.type === "touchmove") {
+                event.preventDefault();
+                let primaryChanged = false;
+                for (let i of event.changedTouches) {
+                    if (GLFW.primaryTouchId === i.identifier) {
+                        Browser.setMouseCoords(i.pageX, i.pageY);
+                        primaryChanged = true;
+                        break;
+                    }
+                }
+                if (!primaryChanged) {
+                    return;
+                }
+            } else {
+                Browser.calculateMouseEvent(event);
+            }
+        };
+
+        GLFW.onMouseButtonChanged = (event, status) => {
+            if (!GLFW.active) return;
+            if (event.target != Module["canvas"]) return;
+            const isTouchType = event.type === "touchstart" || event.type === "touchend" || event.type === "touchcancel";
+            let eventButton = 0;
+            if (isTouchType) {
+                event.preventDefault();
+                let primaryChanged = false;
+                if (GLFW.primaryTouchId === null && event.type === "touchstart" && event.targetTouches.length > 0) {
+                    const chosenTouch = event.targetTouches[0];
+                    GLFW.primaryTouchId = chosenTouch.identifier;
+                    Browser.setMouseCoords(chosenTouch.pageX, chosenTouch.pageY);
+                    primaryChanged = true;
+                } else if (event.type === "touchend" || event.type === "touchcancel") {
+                    for (let i of event.changedTouches) {
+                        if (GLFW.primaryTouchId === i.identifier) {
+                            GLFW.primaryTouchId = null;
+                            primaryChanged = true;
+                            break;
+                        }
+                    }
+                }
+                if (!primaryChanged) {
+                    return;
+                }
+            } else {
+                Browser.calculateMouseEvent(event);
+                eventButton = GLFW.DOMToGLFWMouseButton(event);
+            }
+            if (status == 1) {
+                GLFW.active.buttons |= (1 << eventButton);
+                try {
+                    event.target.setCapture();
+                } catch (e) {}
+            } else {
+                GLFW.active.buttons &= ~(1 << eventButton);
+            }
+
+            if (GLFW.active.cursorPosFunc) {
+                getWasmTableEntry(GLFW.active.cursorPosFunc)(GLFW.active.id, Browser.mouseX, Browser.mouseY);
+            }
+            if (GLFW.active.mouseButtonFunc) {
+                getWasmTableEntry(GLFW.active.mouseButtonFunc)(GLFW.active.id, eventButton, status, GLFW.getModBits(GLFW.active));
+            }
+        };
+    },
     onRuntimeInitialized: function() {
         // Triggered when the wasm module is loaded and ready to use.
         document.getElementById("loading").style.display = "none"
@@ -111,13 +181,55 @@ var Module = {
     print:   (function() { })(),
     printErr: function(text) {  },
     canvas: (function() {
-        let canvas = document.getElementById('canvas');
-        // As a default initial behavior, pop up an alert when webgl context is lost. To make your
-        // application robust, you may want to override this behavior before shipping!
-        // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
-        canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+        const canvas = document.getElementById('canvas');
+        canvas.addEventListener("webglcontextlost", function(e) {
+            alert('WebGL context lost, please reload the page');
+            e.preventDefault();
+        }, false);
 
-        return canvas;
+        // Turn long touches into right-clicks
+        let timer = null;
+        canvas.addEventListener('touchstart', event => {
+            timer = setTimeout(() => {
+                let eventArgs = {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    screenX: event.touches[0].screenX,
+                    screenY: event.touches[0].screenY,
+                    clientX: event.touches[0].clientX,
+                    clientY: event.touches[0].clientY,
+                    button: 2,
+                    buttons: 2,
+                    relatedTarget: event.target,
+                    region: event.region
+                }
+
+                canvas.dispatchEvent(new MouseEvent('mousedown', eventArgs));
+                canvas.dispatchEvent(new MouseEvent('mouseup', eventArgs));
+            }, 400);
+        });
+
+        canvas.addEventListener('touchend', event => {
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+        });
+
+        if (typeof WebGL2RenderingContext !== 'undefined') {
+            let gl = canvas.getContext('webgl2', { stencil: true });
+            if (!gl) {
+                console.error('WebGL 2 not available, falling back to WebGL');
+                gl = canvas.getContext('webgl', { stencil: true });
+            }
+            if (!gl) {
+                alert('WebGL not available with stencil buffer');
+            }
+            return canvas;
+        } else {
+            alert('WebGL 2 not supported by this browser');
+        }
     })(),
     setStatus: function(text) { },
     totalDependencies: 0,
@@ -144,14 +256,9 @@ if (urlParams.has("lang")) {
 window.addEventListener('resize', js_resizeCanvas, false);
 function js_resizeCanvas() {
     let canvas = document.getElementById('canvas');
+
+    canvas.top    = document.documentElement.clientTop;
+    canvas.left   = document.documentElement.clientLeft;
     canvas.width  = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     canvas.height = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-
-    canvas.classList.add("canvas_full_screen")
-
-    if (GLFW.active && GLFW.active.windowPosFunc) {
-        getWasmTableEntry(GLFW.active.windowPosFunc)(GLFW.active.id, GLFW.active.x, GLFW.active.y);
-    }
-
-    GLFW.onWindowSizeChanged();
 }

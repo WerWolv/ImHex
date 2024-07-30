@@ -5,8 +5,8 @@
 
 namespace hex::plugin::builtin {
 
-    void drawHexVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments);
-    void drawChunkBasedEntropyVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments);
+    void drawHexVisualizer(pl::ptrn::Pattern &, bool, std::span<const pl::core::Token::Literal> arguments);
+    void drawChunkBasedEntropyVisualizer(pl::ptrn::Pattern &, bool, std::span<const pl::core::Token::Literal> arguments);
 
     void registerPatternLanguageVisualizers() {
         using ParamCount = pl::api::FunctionParameterCount;

@@ -8,11 +8,17 @@
 namespace hex::dp {
 
     int Node::s_idCounter = 1;
+    static std::atomic_bool s_interrupted;
 
     Node::Node(UnlocalizedString unlocalizedTitle, std::vector<Attribute> attributes) : m_id(s_idCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
         for (auto &attr : m_attributes)
             attr.setParentNode(this);
     }
+
+    void Node::draw() {
+        this->drawNode();
+    }
+
 
     const std::vector<u8>& Node::getBufferOnInput(u32 index) {
         auto attribute = this->getConnectedInputAttribute(index);
@@ -148,9 +154,56 @@ namespace hex::dp {
         m_overlay->getData() = data;
     }
 
+    [[noreturn]] void Node::throwNodeError(const std::string &message) {
+        throw NodeError { this, message };
+    }
+
+    void Node::setAttributes(std::vector<Attribute> attributes) {
+        m_attributes = std::move(attributes);
+
+        for (auto &attr : m_attributes)
+            attr.setParentNode(this);
+    }
+
     void Node::setIdCounter(int id) {
         if (id > s_idCounter)
             s_idCounter = id;
     }
+
+    Attribute& Node::getAttribute(u32 index) {
+        if (index >= this->getAttributes().size())
+            throw std::runtime_error("Attribute index out of bounds!");
+
+        return this->getAttributes()[index];
+    }
+
+    Attribute *Node::getConnectedInputAttribute(u32 index) {
+        const auto &connectedAttribute = this->getAttribute(index).getConnectedAttributes();
+
+        if (connectedAttribute.empty())
+            return nullptr;
+
+        return connectedAttribute.begin()->second;
+    }
+
+    void Node::markInputProcessed(u32 index) {
+        const auto &[iter, inserted] = m_processedInputs.insert(index);
+        if (!inserted)
+            throwNodeError("Recursion detected!");
+
+        if (s_interrupted) {
+            s_interrupted = false;
+            throwNodeError("Execution interrupted!");
+        }
+    }
+
+    void Node::unmarkInputProcessed(u32 index) {
+        m_processedInputs.erase(index);
+    }
+
+    void Node::interrupt() {
+        s_interrupted = true;
+    }
+
 
 }

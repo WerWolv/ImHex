@@ -110,7 +110,7 @@ namespace hex::plugin::builtin {
 
 
     ViewHighlightRules::ViewHighlightRules() : View::Floating("hex.builtin.view.highlight_rules.name") {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.highlight_rules.menu.edit.rules" }, ICON_VS_TAG, 1870, Shortcut::None, [&, this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.highlight_rules.menu.file.rules" }, ICON_VS_TAG, 1650, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         }, ImHexApi::Provider::isValid);
 
@@ -228,8 +228,7 @@ namespace hex::plugin::builtin {
 
 
     void ViewHighlightRules::drawRulesConfig() {
-        ImGuiExt::BeginSubWindow("hex.builtin.view.highlight_rules.config"_lang, ImGui::GetContentRegionAvail());
-        {
+        if (ImGuiExt::BeginSubWindow("hex.builtin.view.highlight_rules.config"_lang, nullptr, ImGui::GetContentRegionAvail())) {
             if (m_selectedRule != m_rules->end()) {
 
                 // Draw text input field for the rule name
@@ -297,6 +296,7 @@ namespace hex::plugin::builtin {
             } else {
                 ImGuiExt::TextFormattedCentered("hex.builtin.view.highlight_rules.no_rule"_lang);
             }
+
         }
         ImGuiExt::EndSubWindow();
     }

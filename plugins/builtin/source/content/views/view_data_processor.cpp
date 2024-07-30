@@ -7,6 +7,7 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 #include <imnodes.h>
 #include <imnodes_internal.h>
@@ -127,7 +128,7 @@ namespace hex::plugin::builtin {
         void process() override {
             switch (this->getType()) {
                 case dp::Attribute::Type::Integer: m_value = this->getIntegerOnInput(0); break;
-                case dp::Attribute::Type::Float:   m_value = this->getFloatOnInput(0); break;
+                case dp::Attribute::Type::Float:   m_value = static_cast<long double>(this->getFloatOnInput(0)); break;
                 case dp::Attribute::Type::Buffer:  m_value = this->getBufferOnInput(0); break;
             }
         }
@@ -389,10 +390,6 @@ namespace hex::plugin::builtin {
             m_updateNodePositions = true;
         });
 
-        EventDataChanged::subscribe(this, [this](prv::Provider *provider) {
-            ViewDataProcessor::processNodes(*m_workspaceStack.get(provider).back());
-        });
-
         /* Import Nodes */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, ICON_VS_CHIP, 4050, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
@@ -531,36 +528,49 @@ namespace hex::plugin::builtin {
         // Reset any potential node errors
         workspace.currNodeError.reset();
 
-        // Process all nodes in the workspace
-        try {
-            for (auto &endNode : workspace.endNodes) {
-                // Reset the output data of the end node
-                endNode->resetOutputData();
+        m_evaluationTask = TaskManager::createTask("hex.builtin.task.evaluating_nodes"_lang, 0, [this, workspace = &workspace](Task& task) {
+            task.setInterruptCallback([]{
+                dp::Node::interrupt();
+            });
+            do {
 
-                // Reset processed inputs of all nodes
-                for (auto &node : workspace.nodes)
-                    node->resetProcessedInputs();
+                // Process all nodes in the workspace
+                try {
+                    for (auto &endNode : workspace->endNodes) {
+                        // Reset the output data of the end node
+                        endNode->resetOutputData();
 
-                // Process the end node
-                endNode->process();
-            }
-        } catch (const dp::Node::NodeError &e) {
-            // Handle user errors
+                        // Reset processed inputs of all nodes
+                        for (auto &node : workspace->nodes) {
+                            node->reset();
+                            node->resetProcessedInputs();
+                        }
 
-            // Add the node error to the current workspace, so it can be displayed
-            workspace.currNodeError = e;
+                        // Process the end node
+                        endNode->process();
+                    }
+                } catch (const dp::Node::NodeError &e) {
+                    // Handle user errors
 
-            // Delete all overlays
-            for (auto overlay : workspace.dataOverlays)
-                ImHexApi::Provider::get()->deleteOverlay(overlay);
-            workspace.dataOverlays.clear();
-        } catch (const std::runtime_error &e) {
-            // Handle internal errors
-            log::fatal("Data processor node implementation bug! {}", e.what());
-        } catch (const std::exception &e) {
-            // Handle other fatal errors
-            log::fatal("Unhandled exception thrown in data processor node! {}", e.what());
-        }
+                    // Add the node error to the current workspace, so it can be displayed
+                    workspace->currNodeError = e;
+
+                    // Delete all overlays
+                    for (auto overlay : workspace->dataOverlays)
+                        ImHexApi::Provider::get()->deleteOverlay(overlay);
+                    workspace->dataOverlays.clear();
+                } catch (const std::runtime_error &e) {
+                    // Handle internal errors
+                    log::fatal("Data processor node implementation bug! {}", e.what());
+                } catch (const std::exception &e) {
+                    // Handle other fatal errors
+                    log::fatal("Unhandled exception thrown in data processor node! {}", e.what());
+                }
+
+                task.update();
+            } while (m_continuousEvaluation);
+        });
+
     }
 
     void ViewDataProcessor::reloadCustomNodes() {
@@ -568,7 +578,7 @@ namespace hex::plugin::builtin {
         m_customNodes.clear();
 
         // Loop over all custom node folders
-        for (const auto &basePath : fs::getDefaultPaths(fs::ImHexPath::Nodes)) {
+        for (const auto &basePath : paths::Nodes.read()) {
             // Loop over all files in the folder
             for (const auto &entry : std::fs::recursive_directory_iterator(basePath)) {
                 // Skip files that are not .hexnode files
@@ -596,7 +606,7 @@ namespace hex::plugin::builtin {
 
     void ViewDataProcessor::drawContextMenus(ViewDataProcessor::Workspace &workspace) {
         // Handle the right click context menus
-        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
             // Clear selections
             ImNodes::ClearNodeSelection();
             ImNodes::ClearLinkSelection();
@@ -773,7 +783,9 @@ namespace hex::plugin::builtin {
 
             // Draw the node's body
             ImGui::PopStyleVar();
-            node.drawNode();
+            if (!m_evaluationTask.isRunning()) {
+                node.draw();
+            }
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0F, 1.0F));
 
             // Draw all attributes of the node
@@ -850,6 +862,8 @@ namespace hex::plugin::builtin {
     void ViewDataProcessor::drawContent() {
         auto &workspace = *m_workspaceStack->back();
 
+        ImGui::BeginDisabled(m_evaluationTask.isRunning());
+
         bool popWorkspace = false;
         // Set the ImNodes context to the current workspace context
         ImNodes::SetCurrentContext(workspace.context.get());
@@ -871,6 +885,9 @@ namespace hex::plugin::builtin {
         // Draw the main node editor workspace window
         if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.3F))) {
             ImNodes::BeginNodeEditor();
+
+            if (m_evaluationTask.isRunning())
+                ImNodes::GetCurrentContext()->MousePos = { FLT_MAX, FLT_MAX };
 
             // Loop over all nodes that have been placed in the workspace
             bool stillUpdating = m_updateNodePositions;
@@ -932,10 +949,19 @@ namespace hex::plugin::builtin {
         }
         ImGui::EndChild();
 
+        ImGui::EndDisabled();
+
         // Draw the control bar at the bottom
         {
-            if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || m_continuousEvaluation)
-                this->processNodes(workspace);
+            if (!m_evaluationTask.isRunning()) {
+                if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+                    this->processNodes(workspace);
+                }
+            } else {
+                if (ImGuiExt::IconButton(ICON_VS_DEBUG_STOP, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                    m_evaluationTask.interrupt();
+                }
+            }
 
             ImGui::SameLine();
 
@@ -943,7 +969,7 @@ namespace hex::plugin::builtin {
         }
 
 
-        // Erase links that have been distroyed
+        // Erase links that have been destroyed
         {
             int linkId;
             if (ImNodes::IsLinkDestroyed(&linkId)) {

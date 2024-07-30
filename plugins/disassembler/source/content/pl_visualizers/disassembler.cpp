@@ -12,7 +12,7 @@
 
 namespace hex::plugin::disasm {
 
-    void drawDisassemblyVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    void drawDisassemblyVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         struct Disassembly {
             u64 address;
             std::vector<u8> bytes;

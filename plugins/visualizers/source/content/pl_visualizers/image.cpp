@@ -8,7 +8,7 @@
 
 namespace hex::plugin::visualizers {
 
-    void drawImageVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    void drawImageVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static ImGuiExt::Texture texture;
         static float scale = 1.0F;
 
@@ -32,7 +32,7 @@ namespace hex::plugin::visualizers {
         }
     }
 
-    void drawBitmapVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    void drawBitmapVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static ImGuiExt::Texture texture;
         static float scale = 1.0F;
 

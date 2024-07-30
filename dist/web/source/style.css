@@ -137,7 +137,7 @@ a:hover {
 
 
 :root {
-    --progress: 25%;
+    --progress: 0%;
 }
 
 .progress-bar-container {
@@ -174,4 +174,15 @@ a:hover {
 .progress-moved .progress-bar {
     width: var(--progress);
     background-color: #3864cb;
+}
+
+#logo {
+    height: 25%;
+    margin-top: 50px;
+}
+
+.canvas-fixed {
+    position: absolute;
+    top: 0;
+    left: 0;
 }

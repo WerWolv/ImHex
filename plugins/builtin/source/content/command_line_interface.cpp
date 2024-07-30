@@ -1,21 +1,23 @@
-#include "content/command_line_interface.hpp"
-
+#include <content/command_line_interface.hpp>
 #include <content/providers/file_provider.hpp>
+#include <content/helpers/demangle.hpp>
+
+#include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event_manager.hpp>
+#include <hex/api/plugin_manager.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <hex/helpers/fmt.hpp>
-
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/utils.hpp>
-#include <romfs/romfs.hpp>
+#include <hex/helpers/default_paths.hpp>
 
-#include <hex/api/plugin_manager.hpp>
-#include <hex/api/task_manager.hpp>
 #include <hex/subcommands/subcommands.hpp>
 
+#include <romfs/romfs.hpp>
 #include <wolv/utils/string.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
 
@@ -92,7 +94,17 @@ namespace hex::plugin::builtin {
                 doubleDashFound = true;
             } else {
                 try {
-                    auto path = std::filesystem::weakly_canonical(arg);
+                    std::fs::path path;
+
+                    try {
+                        path = std::fs::weakly_canonical(arg);
+                    } catch(std::fs::filesystem_error &) {
+                        path = arg;
+                    }
+
+                    if (path.empty())
+                        continue;
+
                     fullPaths.push_back(wolv::util::toUTF8String(path));
                 } catch (std::exception &e) {
                     log::error("Failed to open file '{}'\n    {}", arg, e.what());
@@ -100,7 +112,8 @@ namespace hex::plugin::builtin {
             }
         }
 
-        hex::subcommands::forwardSubCommand("open", fullPaths);
+        if (!fullPaths.empty())
+            hex::subcommands::forwardSubCommand("open", fullPaths);
     }
 
     void handleCalcCommand(const std::vector<std::string> &args) {
@@ -297,7 +310,7 @@ namespace hex::plugin::builtin {
         if (processedArgs.empty()) {
             processedArgs.emplace_back("--help");
         } else {
-            for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::PatternsInclude))
+            for (const auto &path : paths::PatternsInclude.read())
                 processedArgs.emplace_back(hex::format("--includes={}", wolv::util::toUTF8String(path)));
         }
 
@@ -336,8 +349,34 @@ namespace hex::plugin::builtin {
             std::exit(EXIT_FAILURE);
         }
 
-        log::println("{}", llvm::demangle(args[0]));
+        log::println("{}", hex::plugin::builtin::demangle(args[0]));
         std::exit(EXIT_SUCCESS);
+    }
+
+    void handleSettingsResetCommand(const std::vector<std::string> &) {
+        constexpr static auto ConfirmationString = "YES I AM ABSOLUTELY SURE";
+
+        log::println("You're about to reset all settings back to their default. Are you sure you want to continue?");
+        log::println("Type \"{}\" to continue.", ConfirmationString);
+
+        std::string input(128, '\x00');
+
+        log::print("> ");
+        if (std::fgets(input.data(), input.size() - 1, stdin) == nullptr)
+            std::exit(EXIT_FAILURE);
+        
+        input = wolv::util::trim(input);
+
+        if (input == ConfirmationString) {
+            log::println("Resetting all settings!");
+            ContentRegistry::Settings::impl::clear();
+            ContentRegistry::Settings::impl::store();
+
+            std::exit(EXIT_SUCCESS);
+        } else {
+            log::println("Wrong confirmation string. Settings will not be reset.");
+            std::exit(EXIT_FAILURE);
+        }
     }
 
 

@@ -9,7 +9,7 @@
 
 namespace hex::fonts {
 
-    void loadFonts() {
+    void registerFonts() {
         using namespace ImHexApi::Fonts;
 
         /**

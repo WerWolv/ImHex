@@ -1,7 +1,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/api/localization_manager.hpp>
 
-#include <llvm/Demangle/Demangle.h>
+#include <content/helpers/demangle.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -25,7 +25,7 @@ namespace hex::plugin::builtin {
         static float prevWindowWidth;
 
         if (ImGui::InputTextWithHint("hex.builtin.tools.demangler.mangled"_lang, "Itanium, MSVC, Dlang & Rust", mangledName)) {
-            demangledName = llvm::demangle(mangledName);
+            demangledName = hex::plugin::builtin::demangle(mangledName);
 
             if (demangledName == mangledName) {
                 demangledName = "???";

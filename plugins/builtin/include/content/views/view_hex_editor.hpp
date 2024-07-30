@@ -69,6 +69,10 @@ namespace hex::plugin::builtin {
             m_hexEditor.jumpToSelection();
         }
 
+        void jumpIfOffScreen() {
+            m_hexEditor.jumpIfOffScreen();
+        }
+
     private:
         void drawPopup();
 
@@ -87,6 +91,7 @@ namespace hex::plugin::builtin {
         PerProvider<std::optional<u64>> m_selectionStart, m_selectionEnd;
 
         PerProvider<std::map<u64, color_t>> m_foregroundHighlights, m_backgroundHighlights;
+        PerProvider<std::set<Region>> m_hoverHighlights;
     };
 
 }

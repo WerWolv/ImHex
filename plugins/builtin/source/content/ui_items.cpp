@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
         // Task exception toast
         for (const auto &task : TaskManager::getRunningTasks()) {
             if (task->hadException()) {
-                ui::ToastError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
+                ui::ToastError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, task->getName(), task->getExceptionMessage()));
                 task->clearException();
                 break;
             }
@@ -253,13 +253,13 @@ namespace hex::plugin::builtin {
                 {
                     ImGuiExt::TextSpinner(hex::format("({})", taskCount).c_str());
                     ImGui::SameLine();
-                    ImGuiExt::SmallProgressBar(progress, (ImGui::GetCurrentWindowRead()->MenuBarHeight() - 10_scaled) / 2.0);
+                    ImGuiExt::SmallProgressBar(progress, (ImGui::GetCurrentWindowRead()->MenuBarHeight - 10_scaled) / 2.0);
                     ImGui::SameLine();
                 }
                 const auto widgetEnd = ImGui::GetCursorPos();
 
                 ImGui::SetCursorPos(widgetStart);
-                ImGui::InvisibleButton("RestTasks", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindowRead()->MenuBarHeight()));
+                ImGui::InvisibleButton("RestTasks", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindowRead()->MenuBarHeight));
                 ImGui::SetCursorPos(widgetEnd);
 
                 std::string progressString;
@@ -268,7 +268,7 @@ namespace hex::plugin::builtin {
                 else
                     progressString = hex::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), std::min(progress, 1.0F) * 100.0F);
 
-                ImGuiExt::InfoTooltip(hex::format("{}{}", progressString, Lang(frontTask->getUnlocalizedName())).c_str());
+                ImGuiExt::InfoTooltip(hex::format("{}{}", progressString, frontTask->getName()).c_str());
 
                 if (ImGui::BeginPopupContextItem("RestTasks", ImGuiPopupFlags_MouseButtonLeft)) {
                     for (const auto &task : tasks) {
@@ -276,7 +276,7 @@ namespace hex::plugin::builtin {
                             continue;
 
                         ImGui::PushID(&task);
-                        ImGuiExt::TextFormatted("{}", Lang(task->getUnlocalizedName()));
+                        ImGuiExt::TextFormatted("{}", task->getName());
                         ImGui::SameLine();
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                         ImGui::SameLine();
@@ -311,7 +311,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addFooterItem([] {
             if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value()) {
-                ImGuiExt::TextFormatted("0x{:02X} - 0x{:02X} ({} bytes)",
+                ImGuiExt::TextFormatted("0x{0:02X} - 0x{1:02X} (0x{2:02X} | {2} bytes)",
                     selection->getStartAddress(),
                     selection->getEndAddress(),
                     selection->getSize()
@@ -327,12 +327,6 @@ namespace hex::plugin::builtin {
             }
         }
     }
-
-    struct MenuItemSorter {
-        bool operator()(const auto *a, const auto *b) const {
-            return a->toolbarIndex < b->toolbarIndex;
-        }
-    };
 
     void drawProviderTooltip(const prv::Provider *provider) {
         if (ImGuiExt::InfoTooltip()) {
@@ -416,16 +410,10 @@ namespace hex::plugin::builtin {
 
         // Toolbar items
         ContentRegistry::Interface::addToolbarItem([] {
-            std::set<const ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> menuItems;
 
-            for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                if (menuItem.toolbarIndex != -1) {
-                    menuItems.insert(&menuItem);
-                }
-            }
-
-            for (const auto &menuItem : menuItems) {
-                if (menuItem->unlocalizedNames.back().get() == ContentRegistry::Interface::impl::SeparatorValue) {
+            for (const auto &menuItem : ContentRegistry::Interface::impl::getToolbarMenuItems()) {
+                const auto &unlocalizedItemName = menuItem->unlocalizedNames.back();
+                if (unlocalizedItemName.get() == ContentRegistry::Interface::impl::SeparatorValue) {
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                     continue;
                 }
@@ -434,6 +422,8 @@ namespace hex::plugin::builtin {
                 if (ImGuiExt::ToolBarButton(menuItem->icon.glyph.c_str(), ImGuiExt::GetCustomColorVec4(ImGuiCustomCol(menuItem->icon.color)))) {
                     menuItem->callback();
                 }
+                ImGuiExt::InfoTooltip(Lang(unlocalizedItemName));
+
                 ImGui::EndDisabled();
             }
         });
@@ -452,8 +442,8 @@ namespace hex::plugin::builtin {
             {
                 auto providers = ImHexApi::Provider::getProviders();
 
-                ImGui::PushStyleColor(ImGuiCol_TabActive, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
-                ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+                ImGui::PushStyleColor(ImGuiCol_TabSelected, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+                ImGui::PushStyleColor(ImGuiCol_TabDimmedSelected, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
                 auto providerSelectorVisible = ImGui::BeginTabBar("provider_switcher", ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_AutoSelectNewTabs);
                 ImGui::PopStyleColor(2);
 
@@ -465,7 +455,7 @@ namespace hex::plugin::builtin {
                         auto &tabProvider = providers[i];
                         const auto selectedProviderIndex = ImHexApi::Provider::getCurrentProviderIndex();
 
-                        const auto &closingProviders = ImHexApi::Provider::impl::getClosingProviders();
+                        const auto closingProviders = ImHexApi::Provider::impl::getClosingProviders();
                         if (std::ranges::find(closingProviders, tabProvider) != closingProviders.end())
                             continue;
 
@@ -502,7 +492,7 @@ namespace hex::plugin::builtin {
                             break;
                         }
 
-                        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
+                        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
                             rightClickedProvider = tabProvider;
                             RequestOpenPopup::post("ProviderMenu");
                         }

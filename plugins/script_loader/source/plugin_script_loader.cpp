@@ -21,8 +21,6 @@ using ScriptLoaders = std::tuple<
     #endif
 >;
 
-IMHEX_DEFINE_PLUGIN_FEATURES(){ };
-
 namespace {
 
     ScriptLoaders s_loaders;
@@ -30,7 +28,7 @@ namespace {
     void loadScript(std::vector<const Script*> &scripts, auto &loader) {
         loader.loadAll();
 
-        for (auto &script : loader.getScripts())
+        for (auto &script : std::as_const(loader).getScripts())
             scripts.emplace_back(&script);
     }
 
@@ -93,7 +91,7 @@ namespace {
                 if (menuJustOpened) {
                     menuJustOpened = false;
                     if (!updaterTask.isRunning()) {
-                        updaterTask = TaskManager::createBackgroundTask("Updating Scripts...", [] (auto&) {
+                        updaterTask = TaskManager::createBackgroundTask("hex.script_loader.task.updating"_lang, [] (auto&) {
                             scripts = loadAllScripts();
                         });
                     }
@@ -106,12 +104,12 @@ namespace {
                 }
 
                 for (const auto &script : scripts) {
-                    const auto &[name, background, entryPoint, loader] = *script;
+                    const auto &[name, path, background, entryPoint, loader] = *script;
                     if (background)
                         continue;
 
                     if (ImGui::MenuItem(name.c_str(), loader->getTypeName().c_str())) {
-                        runnerTask = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint](auto&) {
+                        runnerTask = TaskManager::createTask("hex.script_loader.task.running"_lang, TaskManager::NoProgress, [entryPoint](auto&) {
                             entryPoint();
                         });
                     }
@@ -125,7 +123,7 @@ namespace {
             return !runnerTask.isRunning();
         });
 
-        updaterTask = TaskManager::createBackgroundTask("Updating Scripts...", [] (auto&) {
+        updaterTask = TaskManager::createBackgroundTask("hex.script_loader.task.updating"_lang, [] (auto&) {
             scripts = loadAllScripts();
         });
     }

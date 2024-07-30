@@ -1,16 +1,15 @@
 #include <hex/api/theme_manager.hpp>
+#include <hex/api/event_manager.hpp>
+
+#include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/helpers/default_paths.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <implot.h>
-#include <hex/ui/imgui_imhex_extensions.h>
 #include <imnodes.h>
 #include <TextEditor.h>
 #include <romfs/romfs.hpp>
-
-#include <hex/helpers/fs.hpp>
-
-#include <hex/api/event_manager.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -55,9 +54,9 @@ namespace hex::plugin::builtin {
                     { "resize-grip-active",             ImGuiCol_ResizeGripActive       },
                     { "tab",                            ImGuiCol_Tab                    },
                     { "tab-hovered",                    ImGuiCol_TabHovered             },
-                    { "tab-active",                     ImGuiCol_TabActive              },
-                    { "tab-unfocused",                  ImGuiCol_TabUnfocused           },
-                    { "tab-unfocused-active",           ImGuiCol_TabUnfocusedActive     },
+                    { "tab-active",                     ImGuiCol_TabSelected            },
+                    { "tab-unfocused",                  ImGuiCol_TabDimmed              },
+                    { "tab-unfocused-active",           ImGuiCol_TabDimmedSelected      },
                     { "docking-preview",                ImGuiCol_DockingPreview         },
                     { "docking-empty-background",       ImGuiCol_DockingEmptyBg         },
                     { "plot-lines",                     ImGuiCol_PlotLines              },
@@ -388,7 +387,7 @@ namespace hex::plugin::builtin {
         }
 
         // Load user themes
-        for (const auto &themeFolder : fs::getDefaultPaths(fs::ImHexPath::Themes)) {
+        for (const auto &themeFolder : paths::Themes.read()) {
             for (const auto &theme : std::fs::directory_iterator(themeFolder)) {
                 if (theme.is_regular_file())
                     ThemeManager::addTheme(wolv::io::File(theme.path(), wolv::io::File::Mode::Read).readString());

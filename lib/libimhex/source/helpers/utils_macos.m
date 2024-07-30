@@ -118,6 +118,12 @@
         return cocoaWindow.inLiveResize;
     }
 
+    void macosMarkContentEdited(GLFWwindow *window, bool edited) {
+        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+
+        [cocoaWindow setDocumentEdited:edited];
+    }
+
     @interface HexDocument : NSDocument
 
     @end

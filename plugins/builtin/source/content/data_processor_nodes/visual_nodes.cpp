@@ -28,10 +28,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            m_value.reset();
-            const auto &input = this->getIntegerOnInput(0);
-
-            m_value = input;
+            m_value = this->getIntegerOnInput(0);
         }
 
     private:
