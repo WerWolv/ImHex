@@ -80,6 +80,33 @@ else()
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
 
+if (UNIX AND NOT APPLE)
+    # For Linux, we need to figure out whether our GLFW is built for X11, Wayland, or both
+    INCLUDE(CheckCXXSourceCompiles)
+    set(CMAKE_REQUIRED_INCLUDES ${GLFW_INCLUDE_DIRS})
+    set(CMAKE_REQUIRED_LIBRARIES ${GLFW_LIBRARIES})
+    check_cxx_source_compiles("
+        #define GLFW_EXPOSE_NATIVE_X11
+        #include <GLFW/glfw3.h>
+        #include <GLFW/glfw3native.h>
+        Window test(GLFWwindow* w) { return glfwGetX11Window(w); }
+        int main() {}
+    " GLFW_HAS_X11)
+    check_cxx_source_compiles("
+        #define GLFW_EXPOSE_NATIVE_WAYLAND
+        #include <GLFW/glfw3.h>
+        #include <GLFW/glfw3native.h>
+        wl_surface* test(GLFWwindow* w) { return glfwGetWaylandWindow(w); }
+        int main() {}
+    " GLFW_HAS_WAYLAND)
+    if (GLFW_HAS_X11)
+        target_compile_definitions(libimhex PRIVATE GLFW_BACKEND_X11)
+    endif()
+    if (GLFW_HAS_WAYLAND)
+        target_compile_definitions(libimhex PRIVATE GLFW_BACKEND_WAYLAND)
+    endif()
+endif()
+
 
 if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_BRANCH)
     set(GIT_COMMIT_HASH_LONG "${IMHEX_COMMIT_HASH_LONG}")

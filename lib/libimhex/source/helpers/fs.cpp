@@ -35,17 +35,17 @@
         typedef void NSWindow;
         #define GLFW_EXPOSE_NATIVE_COCOA
     #endif
-    #if defined(OS_LINUX)
+    #if defined(OS_LINUX) && defined(GLFW_BACKEND_X11)
         #define GLFW_EXPOSE_NATIVE_X11
     #endif
-    #if defined(OS_LINUX) && defined(GLFW_WAYLAND_APP_ID)
+    #if defined(OS_LINUX) && defined(GLFW_BACKEND_WAYLAND)
         #define GLFW_EXPOSE_NATIVE_WAYLAND
     #endif
     #include <nfd_glfw3.h>
-    #if defined(OS_LINUX) && defined(GLFW_WAYLAND_APP_ID)
+    #if defined(OS_LINUX) && defined(GLFW_BACKEND_WAYLAND)
         #undef GLFW_EXPOSE_NATIVE_WAYLAND
     #endif
-    #if defined(OS_LINUX)
+    #if defined(OS_LINUX) && defined(GLFW_BACKEND_X11)
         #undef GLFW_EXPOSE_NATIVE_X11
     #endif
     #if defined(OS_MACOS)
