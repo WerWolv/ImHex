@@ -136,6 +136,8 @@ namespace hex {
                         case ImGuiMouseCursor_TextInput:
                             SetCursor(LoadCursor(nullptr, IDC_IBEAM));
                             break;
+                        default:
+                            break;
                     }
 
                     return TRUE;
@@ -145,7 +147,7 @@ namespace hex {
                 break;
         }
 
-        return CallWindowProc((WNDPROC)s_oldWndProc, hwnd, uMsg, wParam, lParam);
+        return CallWindowProc(reinterpret_cast<WNDPROC>(s_oldWndProc), hwnd, uMsg, wParam, lParam);
     }
 
     // Custom window procedure for borderless window
@@ -163,7 +165,7 @@ namespace hex {
                 RECT &rect  = *reinterpret_cast<RECT *>(lParam);
                 RECT client = rect;
 
-                CallWindowProc((WNDPROC)s_oldWndProc, hwnd, uMsg, wParam, lParam);
+                CallWindowProc(reinterpret_cast<WNDPROC>(s_oldWndProc), hwnd, uMsg, wParam, lParam);
 
                 if (IsMaximized(hwnd)) {
                     WINDOWINFO windowInfo = { };
@@ -394,11 +396,15 @@ namespace hex {
         {
             using SetProcessDpiAwarenessContextFunc = HRESULT(WINAPI *)(DPI_AWARENESS_CONTEXT);
 
-            SetProcessDpiAwarenessContextFunc SetProcessDpiAwarenessContext =
-                (SetProcessDpiAwarenessContextFunc)(void*)GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetProcessDpiAwarenessContext");
+            SetProcessDpiAwarenessContextFunc setProcessDpiAwarenessContext =
+                reinterpret_cast<SetProcessDpiAwarenessContextFunc>(
+                    reinterpret_cast<void*>(
+                        GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetProcessDpiAwarenessContext")
+                    )
+                );
 
-            if (SetProcessDpiAwarenessContext != nullptr) {
-                SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+            if (setProcessDpiAwarenessContext != nullptr) {
+                setProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
             }
         }
 
@@ -537,7 +543,7 @@ namespace hex {
 
         // Set up the correct window procedure based on the borderless window mode state
         if (borderlessWindowMode) {
-            s_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)borderlessWindowProc);
+            s_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(borderlessWindowProc));
 
             MARGINS borderless = { 1, 1, 1, 1 };
             ::DwmExtendFrameIntoClientArea(hwnd, &borderless);
@@ -547,7 +553,7 @@ namespace hex {
 
             ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE);
         } else {
-            s_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)commonWindowProc);
+            s_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(commonWindowProc));
         }
 
         // Set up a taskbar progress handler
@@ -606,25 +612,25 @@ namespace hex {
             if (user32Dll != nullptr) {
                 using SetWindowCompositionAttributeFunc = BOOL(WINAPI*)(HWND, WINCOMPATTRDATA*);
 
-                const auto SetWindowCompositionAttribute =
-                        (SetWindowCompositionAttributeFunc)
-                        (void*)
-                        GetProcAddress(user32Dll.get(), "SetWindowCompositionAttribute");
+                const auto setWindowCompositionAttribute =
+                    reinterpret_cast<SetWindowCompositionAttributeFunc>(
+                        reinterpret_cast<void*>(
+                            GetProcAddress(user32Dll.get(), "SetWindowCompositionAttribute")
+                        )
+                    );
 
-                if (SetWindowCompositionAttribute != nullptr) {
+                if (setWindowCompositionAttribute != nullptr) {
                     ACCENTPOLICY policy = { ImGuiExt::GetCustomStyle().WindowBlur > 0.5F ? 4U : 0U, 0, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_BlurBackground), 0 };
                     WINCOMPATTRDATA data = { 19, &policy, sizeof(ACCENTPOLICY) };
-                    SetWindowCompositionAttribute(hwnd, &data);
+                    setWindowCompositionAttribute(hwnd, &data);
                 }
             }
         });
         RequestChangeTheme::subscribe([this](const std::string &theme) {
-            const int immersiveDarkMode = 20;
             auto hwnd = glfwGetWin32Window(m_window);
-            BOOL value = theme == "Dark" ? TRUE : FALSE;
 
-            // Using the C++ "bool" type seems to not work correctly.
-            DwmSetWindowAttribute(hwnd, immersiveDarkMode, &value, sizeof(value));
+            BOOL value = theme == "Dark" ? TRUE : FALSE;
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
         });
 
         ImGui::GetIO().ConfigDebugIsDebuggerPresent = ::IsDebuggerPresent();
