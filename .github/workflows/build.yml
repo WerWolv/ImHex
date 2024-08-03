@@ -289,6 +289,12 @@ jobs:
         cd build/install
         chmod -R 755 ImHex.app/
 
+    - name: 🔫 Kill XProtect
+      run: |
+        # See https://github.com/actions/runner-images/issues/7522
+        echo Killing XProtect...; sudo pkill -9 XProtect >/dev/null || true;
+        echo Waiting for XProtect process...; while pgrep XProtect; do sleep 3; done;
+
     - name: 📦 Create DMG
       run: |
         set -x
@@ -381,6 +387,12 @@ jobs:
           set -x
           cd out
           chmod -R 755 ImHex.app/
+
+      - name: 🔫 Kill XProtect
+        run: |
+          # See https://github.com/actions/runner-images/issues/7522
+          echo Killing XProtect...; sudo pkill -9 XProtect >/dev/null || true;
+          echo Waiting for XProtect process...; while pgrep XProtect; do sleep 3; done;
 
       - name: 📦 Create DMG
         run: |
