@@ -139,7 +139,7 @@ namespace hex::plugin::builtin {
                 }
 
                 ImGui::NewLine();
-                ImGuiExt::TextUnformattedCentered("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
+                ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
                 ImGui::NewLine();
 
                 ImGuiExt::ConfirmButtons("hex.ui.common.yes"_lang, "hex.ui.common.no"_lang,

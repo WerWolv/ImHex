@@ -1373,7 +1373,7 @@ namespace hex::plugin::builtin {
                         if (end == std::string::npos)
                             return std::nullopt;
 
-                        value = value.substr(0, end - 1);
+                        value = value.substr(0, end);
                         value = wolv::util::trim(value);
 
                         return BinaryPattern(value);
@@ -1406,6 +1406,9 @@ namespace hex::plugin::builtin {
                         return false;
 
                     std::vector<u8> bytes(pattern->getSize());
+                    if (bytes.empty())
+                        return false;
+
                     provider->read(*address, bytes.data(), bytes.size());
 
                     if (pattern->matches(bytes))
