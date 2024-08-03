@@ -532,11 +532,22 @@ namespace hex::plugin::builtin {
             task.setInterruptCallback([]{
                 dp::Node::interrupt();
             });
-            do {
 
+            const auto handleError = [workspace] {
+                TaskManager::doLater([workspace] {
+                    // Delete all overlays
+                    for (auto overlay : workspace->dataOverlays)
+                        ImHexApi::Provider::get()->deleteOverlay(overlay);
+                    workspace->dataOverlays.clear();
+                });
+            };
+
+            do {
                 // Process all nodes in the workspace
                 try {
                     for (auto &endNode : workspace->endNodes) {
+                        task.update();
+
                         // Reset the output data of the end node
                         endNode->resetOutputData();
 
@@ -554,20 +565,24 @@ namespace hex::plugin::builtin {
 
                     // Add the node error to the current workspace, so it can be displayed
                     workspace->currNodeError = e;
+                    handleError();
 
-                    // Delete all overlays
-                    for (auto overlay : workspace->dataOverlays)
-                        ImHexApi::Provider::get()->deleteOverlay(overlay);
-                    workspace->dataOverlays.clear();
+                    break;
                 } catch (const std::runtime_error &e) {
                     // Handle internal errors
+
                     log::fatal("Data processor node implementation bug! {}", e.what());
+                    handleError();
+
+                    break;
                 } catch (const std::exception &e) {
                     // Handle other fatal errors
-                    log::fatal("Unhandled exception thrown in data processor node! {}", e.what());
-                }
 
-                task.update();
+                    log::fatal("Unhandled exception thrown in data processor node! {}", e.what());
+                    handleError();
+
+                    break;
+                }
             } while (m_continuousEvaluation);
         });
 
