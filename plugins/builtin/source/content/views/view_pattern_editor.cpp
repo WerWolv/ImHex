@@ -1340,9 +1340,9 @@ namespace hex::plugin::builtin {
                 pl::PatternLanguage runtime;
                 ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
 
-                auto mimeType = magic::getMIMEType(provider, 0, 100_KiB, true);
-
                 bool foundCorrectType = false;
+
+                auto mimeType = magic::getMIMEType(provider, 0, 100_KiB, true);
                 runtime.addPragma("MIME", [&mimeType, &foundCorrectType](const pl::PatternLanguage &runtime, const std::string &value) {
                     hex::unused(runtime);
 
@@ -1414,6 +1414,18 @@ namespace hex::plugin::builtin {
                     return true;
                 });
 
+                std::string author;
+                runtime.addPragma("author", [&author](pl::PatternLanguage &, const std::string &value) -> bool {
+                    author = value;
+                    return true;
+                });
+
+                std::string description;
+                runtime.addPragma("description", [&description](pl::PatternLanguage &, const std::string &value) -> bool {
+                    description = value;
+                    return true;
+                });
+
                 m_possiblePatternFiles.get(provider).clear();
 
                 bool popupOpen = false;
@@ -1430,6 +1442,9 @@ namespace hex::plugin::builtin {
                         if (!file.isValid())
                             continue;
 
+                        author.clear();
+                        description.clear();
+
                         auto result = runtime.preprocessString(file.readString(), pl::api::Source::DefaultSource);
                         if (!result.has_value()) {
                             log::warn("Failed to preprocess file {} during MIME analysis", entry.path().string());
@@ -1439,7 +1454,11 @@ namespace hex::plugin::builtin {
                             {
                                 std::scoped_lock lock(m_possiblePatternFilesMutex);
 
-                                m_possiblePatternFiles.get(provider).push_back(entry.path());
+                                m_possiblePatternFiles.get(provider).emplace_back(
+                                    entry.path(),
+                                    std::move(author),
+                                    std::move(description)
+                                );
                             }
 
                             if (!popupOpen) {

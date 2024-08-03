@@ -88,21 +88,43 @@ namespace hex::plugin::builtin {
 
                 ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
-                std::vector<std::string> entries;
-                entries.resize(m_view->m_possiblePatternFiles.get(provider).size());
-
-                for (u32 i = 0; i < entries.size(); i++) {
-                    entries[i] = wolv::util::toUTF8String(m_view->m_possiblePatternFiles.get(provider)[i].filename());
-                }
-
-                if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
+                if (ImGui::BeginListBox("##patterns_accept", ImVec2(400_scaled, 0))) {
                     u32 index = 0;
-                    for (auto &path : m_view->m_possiblePatternFiles.get(provider)) {
-                        if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == m_selectedPatternFile, ImGuiSelectableFlags_DontClosePopups))
+                    for (const auto &[path, author, description] : m_view->m_possiblePatternFiles.get(provider)) {
+                        auto fileName = wolv::util::toUTF8String(path.filename());
+
+                        std::string displayValue;
+                        if (!description.empty()) {
+                            displayValue = fmt::format("{} ({})", description, fileName);
+                        } else {
+                            displayValue = fileName;
+                        }
+
+                        if (ImGui::Selectable(displayValue.c_str(), index == m_selectedPatternFile, ImGuiSelectableFlags_DontClosePopups))
                             m_selectedPatternFile = index;
 
+                        if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary | ImGuiHoveredFlags_DelayNormal)) {
+                            if (ImGui::BeginTooltip()) {
+                                ImGui::TextUnformatted(fileName.c_str());
+
+                                if (!author.empty()) {
+                                    ImGui::SameLine();
+                                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                                    ImGui::SameLine();
+                                    ImGui::TextUnformatted(author.c_str());
+                                }
+
+                                if (!description.empty()) {
+                                    ImGui::Separator();
+                                    ImGui::TextUnformatted(description.c_str());
+                                }
+
+                                ImGui::EndTooltip();
+                            }
+                        }
+
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-                            m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile], provider);
+                            m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider);
 
                         ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
@@ -117,11 +139,12 @@ namespace hex::plugin::builtin {
                 }
 
                 ImGui::NewLine();
-                ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
+                ImGuiExt::TextUnformattedCentered("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
+                ImGui::NewLine();
 
                 ImGuiExt::ConfirmButtons("hex.ui.common.yes"_lang, "hex.ui.common.no"_lang,
                     [this, provider] {
-                        m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile], provider);
+                        m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider);
                         this->close();
                     },
                     [this] {
@@ -175,10 +198,16 @@ namespace hex::plugin::builtin {
             u32 color;
         };
 
+        struct PossiblePattern {
+            std::fs::path path;
+            std::string author;
+            std::string description;
+        };
+
         std::unique_ptr<pl::PatternLanguage> m_editorRuntime;
 
         std::mutex m_possiblePatternFilesMutex;
-        PerProvider<std::vector<std::fs::path>> m_possiblePatternFiles;
+        PerProvider<std::vector<PossiblePattern>> m_possiblePatternFiles;
         bool m_runAutomatically   = false;
         bool m_triggerEvaluation  = false;
         std::atomic<bool> m_triggerAutoEvaluate = false;
