@@ -1,0 +1,27 @@
+name: Close inactive issues
+on:
+  schedule:
+    - cron: "30 1 * * 0"
+
+jobs:
+  close-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v5
+        with:
+          days-before-issue-stale: 334
+          days-before-issue-close: 30
+          stale-issue-label: "stale"
+          stale-issue-message: |
+              This issue is marked stale as it has been open for 11 months without activity. 
+              Please try the latest ImHex version. (Avaiable here:  https://imhex.download/ for release and https://imhex.download/#nightly for development version)
+              If the issue persists on the latest version, please make a comment on this issue again
+
+              Without response, this issue will be closed in one month.
+          close-issue-message: ""
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
