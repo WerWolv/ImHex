@@ -66,7 +66,7 @@ namespace hex::plugin::builtin {
                     if (category.subCategories.empty())
                         continue;
 
-                    if (ImGui::Selectable(Lang(category.unlocalizedName), m_selectedCategory == &category, ImGuiSelectableFlags_DontClosePopups) || m_selectedCategory == nullptr)
+                    if (ImGui::Selectable(Lang(category.unlocalizedName), m_selectedCategory == &category, ImGuiSelectableFlags_NoAutoClosePopups) || m_selectedCategory == nullptr)
                         m_selectedCategory = &category;
 
                     if (m_selectedCategory == &category)

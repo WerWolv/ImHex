@@ -68,7 +68,7 @@ namespace hex::ui {
                     ImGui::PushID(&*fileIt);
 
                     bool selected = m_selectedFiles.contains(fileIt);
-                    if (ImGui::Selectable(pathNameString.c_str(), selected, ImGuiSelectableFlags_DontClosePopups)) {
+                    if (ImGui::Selectable(pathNameString.c_str(), selected, ImGuiSelectableFlags_NoAutoClosePopups)) {
                         if (!m_multiple) {
                             m_selectedFiles.clear();
                             m_selectedFiles.insert(fileIt);

@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
                             displayValue = fileName;
                         }
 
-                        if (ImGui::Selectable(displayValue.c_str(), index == m_selectedPatternFile, ImGuiSelectableFlags_DontClosePopups))
+                        if (ImGui::Selectable(displayValue.c_str(), index == m_selectedPatternFile, ImGuiSelectableFlags_NoAutoClosePopups))
                             m_selectedPatternFile = index;
 
                         if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary | ImGuiHoveredFlags_DelayNormal)) {

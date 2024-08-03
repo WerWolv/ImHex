@@ -574,7 +574,7 @@ namespace hex::plugin::builtin {
     void ViewHexEditor::drawPopup() {
         bool open = true;
 
-        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Once);
+        ImGui::SetNextWindowPos(ImGui::GetCurrentWindowRead()->ContentRegionRect.Min - ImGui::GetStyle().WindowPadding, ImGuiCond_Once);
         const auto configuredAlpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
         bool alphaIsChanged = false;
         if (m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupHasHovered && m_currentPopupDetached && configuredAlpha < 0.99F && configuredAlpha > 0.01F) {
