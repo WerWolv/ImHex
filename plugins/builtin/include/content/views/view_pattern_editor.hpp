@@ -261,6 +261,8 @@ namespace hex::plugin::builtin {
         bool m_parentHighlightingEnabled = true;
         bool m_replaceMode = false;
 
+        std::map<std::fs::path, std::string> m_patternNames;
+
 
         static inline std::array<std::string,256> m_findHistory;
         static inline u32 m_findHistorySize = 0;
@@ -281,7 +283,7 @@ namespace hex::plugin::builtin {
 
         void drawFindReplaceDialog(std::string &findWord, bool &requestFocus, u64 &position, u64 &count, bool &updateCount);
 
-        void historyInsert(std::array<std::string,256> &history,u32 &size,  u32 &index, const std::string &value);
+        void historyInsert(std::array<std::string, 256> &history, u32 &size, u32 &index, const std::string &value);
 
         void loadPatternFile(const std::fs::path &path, prv::Provider *provider);
 
@@ -306,12 +308,34 @@ namespace hex::plugin::builtin {
                         paths.push_back(entry.path());
                 }
             }
-            ui::PopupFileChooser::open(
-                    basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
-                    [this, provider](const std::fs::path &path) {
-                        this->loadPatternFile(path, provider);
-                        AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
+
+            ui::PopupNamedFileChooser::open(
+                basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
+                [this, provider](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
+                    auto it = m_patternNames.find(path);
+                    if (it != m_patternNames.end()) {
+                        return it->second;
                     }
+
+                    const auto fileName = wolv::util::toUTF8String(adjustedPath.filename());
+                    m_patternNames[path] = fileName;
+
+                    pl::PatternLanguage runtime;
+                    ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
+                    runtime.addPragma("description", [&](pl::PatternLanguage &, const std::string &value) -> bool {
+                        m_patternNames[path] = hex::format("{} ({})", value, fileName);
+                        return true;
+                    });
+
+                    wolv::io::File file(path, wolv::io::File::Mode::Read);
+                    hex::unused(runtime.preprocessString(file.readString(), pl::api::Source::DefaultSource));
+
+                    return m_patternNames[path];
+                },
+                [this, provider](const std::fs::path &path) {
+                    this->loadPatternFile(path, provider);
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
+                }
             );
         };
 

@@ -17,10 +17,10 @@ namespace hex::ui {
     template<typename T>
     class PopupNamedFileChooserBase : public Popup<T> {
     public:
-        PopupNamedFileChooserBase(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<std::string(const std::fs::path &)> &nameCallback, const std::function<void(std::fs::path)> &callback)
+        PopupNamedFileChooserBase(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
                 : hex::Popup<T>("hex.ui.common.choose_file"),
+                  m_files(files),
                   m_selectedFiles({ }),
-                  m_nameCallback(nameCallback),
                   m_openCallback(callback),
                   m_validExtensions(validExtensions),
                   m_multiple(multiple) {
@@ -37,11 +37,11 @@ namespace hex::ui {
                 if (adjustedPath.empty())
                     adjustedPath = path.filename();
 
-                m_files.push_back({ path, adjustedPath });
+                m_adjustedPaths[path] = adjustedPath;
             }
 
             std::sort(m_files.begin(), m_files.end(), [](const auto &a, const auto &b) {
-                return a.first < b.first;
+                return a < b;
             });
         }
 
@@ -59,9 +59,9 @@ namespace hex::ui {
 
             if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
                 for (auto fileIt = m_files.begin(); fileIt != m_files.end(); ++fileIt) {
-                    const auto &[path, pathName] = *fileIt;
+                    const auto &path = *fileIt;
 
-                    const auto &pathNameString = m_nameCallback(pathName);
+                    const auto &pathNameString = getEntryName(path);
                     if (!m_filter.empty() && !pathNameString.contains(m_filter))
                         continue;
 
@@ -94,7 +94,7 @@ namespace hex::ui {
 
             if (ImGui::Button("hex.ui.common.open"_lang) || doubleClicked) {
                 for (const auto &it : m_selectedFiles)
-                    m_openCallback(it->first);
+                    m_openCallback(*it);
                 Popup<T>::close();
             }
 
@@ -115,6 +115,14 @@ namespace hex::ui {
             return ImGuiWindowFlags_AlwaysAutoResize;
         }
 
+
+    protected:
+        const std::fs::path& getAdjustedPath(const std::fs::path &path) const {
+            return m_adjustedPaths.at(path);
+        }
+
+        virtual std::string getEntryName(const std::fs::path &path) = 0;
+
     private:
         static bool isSubpath(const std::fs::path &basePath, const std::fs::path &path) {
             auto relativePath = std::fs::relative(path, basePath);
@@ -124,9 +132,9 @@ namespace hex::ui {
 
     private:
         std::string m_filter;
-        std::vector<std::pair<std::fs::path, std::fs::path>> m_files;
-        std::set<std::vector<std::pair<std::fs::path, std::fs::path>>::const_iterator> m_selectedFiles;
-        std::function<std::string(const std::fs::path &)> m_nameCallback;
+        std::vector<std::fs::path> m_files;
+        std::map<std::fs::path, std::fs::path> m_adjustedPaths;
+        std::set<std::vector<std::fs::path>::const_iterator> m_selectedFiles;
         std::function<void(std::fs::path)> m_openCallback;
         std::vector<hex::fs::ItemFilter> m_validExtensions;
         bool m_multiple = false;
@@ -135,17 +143,24 @@ namespace hex::ui {
 
     class PopupNamedFileChooser : public PopupNamedFileChooserBase<PopupNamedFileChooser> {
     public:
-        PopupNamedFileChooser(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<std::string(const std::fs::path &)> &nameCallback, const std::function<void(std::fs::path)> &callback)
-        : PopupNamedFileChooserBase(basePaths, files, validExtensions, multiple, nameCallback, callback) { }
+        PopupNamedFileChooser(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<std::string(std::fs::path, std::fs::path)> &nameCallback, const std::function<void(std::fs::path)> &callback)
+        : PopupNamedFileChooserBase(basePaths, files, validExtensions, multiple, callback), m_nameCallback(nameCallback) { }
+
+        std::string getEntryName(const std::fs::path &path) override {
+            return m_nameCallback(path, getAdjustedPath(path));
+        }
+
+    private:
+        std::function<std::string(std::fs::path, std::fs::path)> m_nameCallback;
     };
 
     class PopupFileChooser : public PopupNamedFileChooserBase<PopupFileChooser> {
     public:
         PopupFileChooser(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
-        : PopupNamedFileChooserBase(basePaths, files, validExtensions, multiple, nameCallback, callback) { }
+            : PopupNamedFileChooserBase(basePaths, files, validExtensions, multiple, callback) { }
 
-        static std::string nameCallback(const std::fs::path &path) {
-            return wolv::util::toUTF8String(path);
+        std::string getEntryName(const std::fs::path &path) override {
+            return wolv::util::toUTF8String(getAdjustedPath(path));
         }
     };
 
