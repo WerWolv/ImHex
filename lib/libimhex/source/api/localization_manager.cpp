@@ -51,7 +51,7 @@ namespace hex {
                     if (value.empty())
                         continue;
 
-                    s_currStrings->emplace(Lang::hash(key), value);
+                    s_currStrings->emplace(LangConst::hash(key), value);
                 }
             }
         }
@@ -109,10 +109,11 @@ namespace hex {
 
     }
 
-    Lang::Lang(const char *unlocalizedString) : m_entryHash(hash(unlocalizedString)) { }
-    Lang::Lang(const std::string &unlocalizedString) : m_entryHash(hash(unlocalizedString)) { }
-    Lang::Lang(const UnlocalizedString &unlocalizedString) : m_entryHash(hash(unlocalizedString.get())) { }
-    Lang::Lang(std::string_view unlocalizedString) : m_entryHash(hash(unlocalizedString)) { }
+    Lang::Lang(const char *unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString)), m_unlocalizedString(unlocalizedString) { }
+    Lang::Lang(const std::string &unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString)), m_unlocalizedString(unlocalizedString) { }
+    Lang::Lang(const LangConst &localizedString) : m_entryHash(localizedString.m_entryHash), m_unlocalizedString(localizedString.m_unlocalizedString) { }
+    Lang::Lang(const UnlocalizedString &unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString.get())), m_unlocalizedString(unlocalizedString.get()) { }
+    Lang::Lang(std::string_view unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString)), m_unlocalizedString(unlocalizedString) { }
 
     Lang::operator std::string() const {
         return get();
@@ -129,9 +130,32 @@ namespace hex {
     const char *Lang::get() const {
         const auto &lang = *LocalizationManager::s_currStrings;
 
-        auto it = lang.find(m_entryHash);
+        const auto it = lang.find(m_entryHash);
         if (it == lang.end()) {
-            return m_unlocalizedString == nullptr ? "[ !!! INVALID LANGUAGE STRING !!! ]" : m_unlocalizedString;
+            return m_unlocalizedString.c_str();
+        } else {
+            return it->second.c_str();
+        }
+    }
+
+    LangConst::operator std::string() const {
+        return get();
+    }
+
+    LangConst::operator std::string_view() const {
+        return get();
+    }
+
+    LangConst::operator const char *() const {
+        return get();
+    }
+
+    const char *LangConst::get() const {
+        const auto &lang = *LocalizationManager::s_currStrings;
+
+        const auto it = lang.find(m_entryHash);
+        if (it == lang.end()) {
+            return m_unlocalizedString;
         } else {
             return it->second.c_str();
         }

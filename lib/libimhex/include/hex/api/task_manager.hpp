@@ -22,7 +22,7 @@ namespace hex {
     class Task {
     public:
         Task() = default;
-        Task(Lang name, u64 maxValue, bool background, std::function<void(Task &)> function);
+        Task(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function);
 
         Task(const Task&) = delete;
         Task(Task &&other) noexcept;
@@ -65,7 +65,7 @@ namespace hex {
         void clearException();
         [[nodiscard]] std::string getExceptionMessage() const;
 
-        [[nodiscard]] const Lang &getName();
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedName();
         [[nodiscard]] u64 getValue() const;
         [[nodiscard]] u64 getMaxValue() const;
 
@@ -77,7 +77,7 @@ namespace hex {
     private:
         mutable std::mutex m_mutex;
 
-        Lang m_name;
+        UnlocalizedString m_unlocalizedName;
         std::atomic<u64> m_currValue = 0, m_maxValue = 0;
         std::function<void()> m_interruptCallback;
         std::function<void(Task &)> m_function;
@@ -130,20 +130,20 @@ namespace hex {
 
         /**
          * @brief Creates a new asynchronous task that gets displayed in the Task Manager in the footer
-         * @param name Name of the task
+         * @param unlocalizedName Name of the task
          * @param maxValue Maximum value of the task
          * @param function Function to be executed
          * @return A TaskHolder holding a weak reference to the task
          */
-        static TaskHolder createTask(Lang name, u64 maxValue, std::function<void(Task &)> function);
+        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void(Task &)> function);
 
         /**
          * @brief Creates a new asynchronous task that does not get displayed in the Task Manager
-         * @param name Name of the task
+         * @param unlocalizedName Name of the task
          * @param function Function to be executed
          * @return A TaskHolder holding a weak reference to the task
          */
-        static TaskHolder createBackgroundTask(Lang name, std::function<void(Task &)> function);
+        static TaskHolder createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void(Task &)> function);
 
         /**
          * @brief Creates a new synchronous task that will execute the given function at the start of the next frame
@@ -190,7 +190,7 @@ namespace hex {
         static void runDeferredCalls();
 
     private:
-        static TaskHolder createTask(Lang name, u64 maxValue, bool background, std::function<void(Task &)> function);
+        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function);
     };
 
 }

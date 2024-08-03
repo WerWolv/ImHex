@@ -35,7 +35,7 @@ namespace hex::ui {
                 m_filteredEntries.clear();
                 m_filteredEntries.reserve(entries.size());
 
-                m_updateTask = TaskManager::createBackgroundTask(Lang("Searching"), [this, &entries, searchBuffer = m_searchBuffer](Task&) {
+                m_updateTask = TaskManager::createBackgroundTask("Searching", [this, &entries, searchBuffer = m_searchBuffer](Task&) {
                     for (auto &entry : entries) {
                         if (searchBuffer.empty() || m_comparator(searchBuffer, entry))
                             m_filteredEntries.push_back(&entry);

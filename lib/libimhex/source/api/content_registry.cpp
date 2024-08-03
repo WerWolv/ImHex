@@ -1199,7 +1199,7 @@ namespace hex {
 
             class Service {
             public:
-                Service(std::string name, std::jthread thread) : m_name(std::move(name)), m_thread(std::move(thread)) { }
+                Service(const UnlocalizedString &unlocalizedName, std::jthread thread) : m_unlocalizedName(std::move(unlocalizedName)), m_thread(std::move(thread)) { }
                 Service(const Service&) = delete;
                 Service(Service &&) = default;
                 ~Service() {
@@ -1211,8 +1211,8 @@ namespace hex {
                 Service& operator=(const Service&) = delete;
                 Service& operator=(Service &&) = default;
 
-                [[nodiscard]] const std::string& getName() const {
-                    return m_name;
+                [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const {
+                    return m_unlocalizedName;
                 }
 
                 [[nodiscard]] const std::jthread& getThread() const {
@@ -1220,7 +1220,7 @@ namespace hex {
                 }
 
             private:
-                std::string m_name;
+                UnlocalizedString m_unlocalizedName;
                 std::jthread m_thread;
             };
 
@@ -1235,13 +1235,13 @@ namespace hex {
 
         }
 
-        void registerService(Lang name, const impl::Callback &callback) {
-            log::debug("Registered new background service: {}", name.get());
+        void registerService(const UnlocalizedString &unlocalizedName, const impl::Callback &callback) {
+            log::debug("Registered new background service: {}", unlocalizedName.get());
 
             impl::s_services->emplace_back(
-                name,
+                unlocalizedName,
                 std::jthread([=](const std::stop_token &stopToken){
-                    TaskManager::setCurrentThreadName(name);
+                    TaskManager::setCurrentThreadName(Lang(unlocalizedName));
                     while (!stopToken.stop_requested()) {
                         callback();
                         std::this_thread::sleep_for(std::chrono::milliseconds(50));
