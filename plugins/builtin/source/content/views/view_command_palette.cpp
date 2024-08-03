@@ -105,11 +105,11 @@ namespace hex::plugin::builtin {
             // Draw the results
             if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
                 for (const auto &[displayResult, matchedCommand, callback] : m_lastResults) {
-                    ImGui::PushTabStop(true);
-                    ON_SCOPE_EXIT { ImGui::PopTabStop(); };
+                    ImGui::PushItemFlag(ImGuiItemFlags_NoTabStop, false);
+                    ON_SCOPE_EXIT { ImGui::PopItemFlag(); };
 
                     // Allow executing a command by clicking on it or selecting it with the keyboard and pressing enter
-                    if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_DontClosePopups)) {
+                    if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_NoAutoClosePopups)) {
                         callback(matchedCommand);
                         break;
                     }

@@ -64,7 +64,7 @@ jobs:
         cd build
 
         cmake -G "Ninja"                                            \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                    \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"                     \
           -DIMHEX_GENERATE_PACKAGE=ON                               \
           -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
@@ -82,7 +82,7 @@ jobs:
         cd build
         ninja install
         cpack
-        mv ImHex-*.msi ../imhex-${{env.IMHEX_VERSION}}-Windows-x86_64.msi
+        mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-x86_64.msi
 
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
@@ -165,7 +165,7 @@ jobs:
           cd build
   
           cmake -G "Ninja"                                          \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                    \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
           -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
           -DUSE_SYSTEM_CAPSTONE=ON                                  \
           ..
@@ -185,7 +185,7 @@ jobs:
           - suffix: ""
             custom_glfw: false
 
-    name: 🍎 macOS 12.0${{matrix.suffix}}
+    name: 🍎 macOS 12.0${{ matrix.suffix }}
 
     steps:
     - name: 🧰 Checkout
@@ -206,14 +206,15 @@ jobs:
 
     - name: ⬇️ Install dependencies
       run: |
-        brew reinstall python || brew link --overwrite python || true
-        brew bundle --no-lock --file dist/Brewfile
+        brew reinstall python 2>&1 >/dev/null || true
+        brew link --overwrite python 2>&1 >/dev/null || true
+        brew bundle --no-lock --file dist/Brewfile 2>&1 >/dev/null || true
         rm -rf /usr/local/Cellar/capstone
 
     - name: ⬇️ Install classic glfw
-      if: ${{! matrix.custom_glfw}}
+      if: ${{! matrix.custom_glfw }}
       run: |
-        brew install glfw || true
+        brew install glfw 2>&1 >/dev/null || true
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v4
@@ -221,7 +222,7 @@ jobs:
         dotnet-version: '8.0.100'
 
     - name: 🧰 Checkout glfw
-      if: ${{matrix.custom_glfw}}
+      if: ${{ matrix.custom_glfw }}
       uses: actions/checkout@v4
       with:
         repository: glfw/glfw
@@ -229,7 +230,7 @@ jobs:
 
     # GLFW custom build (to allow software rendering)
     - name: ⬇️ Patch and install custom glfw
-      if: ${{matrix.custom_glfw}}
+      if: ${{ matrix.custom_glfw }}
       run: |
         set -x
         cd glfw
@@ -239,7 +240,7 @@ jobs:
         cd build
 
         cmake -G "Ninja"                                \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}      \
           -DBUILD_SHARED_LIBS=ON                        \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
@@ -260,7 +261,7 @@ jobs:
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                                                    \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
           -DIMHEX_GENERATE_PACKAGE=ON                                                               \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
@@ -289,6 +290,12 @@ jobs:
         cd build/install
         chmod -R 755 ImHex.app/
 
+    - name: 🔫 Kill XProtect
+      run: |
+        # See https://github.com/actions/runner-images/issues/7522
+        echo Killing XProtect...; sudo pkill -9 XProtect >/dev/null || true;
+        echo Waiting for XProtect process...; while pgrep XProtect; do sleep 3; done;
+
     - name: 📦 Create DMG
       run: |
         set -x
@@ -297,13 +304,13 @@ jobs:
         cd bundle
         ln -s /Applications Applications
         cd ..
-        hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64.dmg
+        hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-x86_64.dmg
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: macOS DMG${{matrix.suffix}} x86_64
+        name: macOS DMG${{ matrix.suffix }} x86_64
         path: ./*.dmg
 
   macos-arm64-build:
@@ -382,6 +389,12 @@ jobs:
           cd out
           chmod -R 755 ImHex.app/
 
+      - name: 🔫 Kill XProtect
+        run: |
+          # See https://github.com/actions/runner-images/issues/7522
+          echo Killing XProtect...; sudo pkill -9 XProtect >/dev/null || true;
+          echo Waiting for XProtect process...; while pgrep XProtect; do sleep 3; done;
+
       - name: 📦 Create DMG
         run: |
           set -x
@@ -390,7 +403,7 @@ jobs:
           cd bundle
           ln -s /Applications Applications
           cd ..
-          hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{env.IMHEX_VERSION}}-macOS-arm64.dmg
+          hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{ env.IMHEX_VERSION }}-macOS-arm64.dmg
 
       - name: ⬆️ Upload DMG
         uses: actions/upload-artifact@v4
@@ -427,8 +440,8 @@ jobs:
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1
         with:
-          key: Ubuntu-${{matrix.release_num}}-ccache-${{ github.run_id }}
-          restore-keys: Ubuntu-${{matrix.release_num}}-ccache
+          key: Ubuntu-${{ matrix.release_num }}-ccache-${{ github.run_id }}
+          restore-keys: Ubuntu-${{ matrix.release_num }}-ccache
           max-size: 1G
 
       - name: ⬇️ Install dependencies
@@ -450,7 +463,7 @@ jobs:
           mkdir -p build
           cd build
           CC=gcc-12 CXX=g++-12 cmake -G "Ninja"                       \
-            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                    \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
             -DCMAKE_INSTALL_PREFIX="/usr"                             \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                      \
@@ -473,7 +486,7 @@ jobs:
         run: |
           cp -r build/DEBIAN build/DebDir
           dpkg-deb -Zgzip --build build/DebDir
-          mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-${{ matrix.release_num }}-x86_64.deb
+          mv build/DebDir.deb imhex-${{ env.IMHEX_VERSION }}-Ubuntu-${{ matrix.release_num }}-x86_64.deb
 
       - name: ⬆️ Upload DEB
         uses: actions/upload-artifact@v4
@@ -570,7 +583,7 @@ jobs:
           mkdir -p build
           cd build
           CC=gcc CXX=g++ cmake -G "Ninja"               \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}      \
           -DCMAKE_INSTALL_PREFIX="/usr"                 \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
@@ -595,7 +608,7 @@ jobs:
       - name: ✒️ Prepare PKGBUILD
         run: |
           cp dist/Arch/PKGBUILD build
-          sed -i 's/%version%/${{env.IMHEX_VERSION}}/g' build/PKGBUILD
+          sed -i 's/%version%/${{ env.IMHEX_VERSION }}/g' build/PKGBUILD
 
     # makepkg doesn't want to run as root, so I had to chmod 777 all over
       - name: 📦 Package ArchLinux .pkg.tar.zst
@@ -605,16 +618,16 @@ jobs:
 
           # the name is a small trick to make makepkg recognize it as the source
           # else, it would try to download the file from the release
-          tar -cvf imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst -C installDir .
+          tar -cvf imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst -C installDir .
 
           chmod -R 777 .
 
           sudo -u nobody makepkg
 
           # Replace the old file
-          rm imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
+          rm imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
           rm *imhex-bin-debug* # rm debug package which is created for some reason
-          mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
+          mv *.pkg.tar.zst imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
 
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
         uses: actions/upload-artifact@v4
@@ -622,7 +635,7 @@ jobs:
           if-no-files-found: error
           name: ArchLinux .pkg.tar.zst x86_64
           path: |
-            build/imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
+            build/imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
 
   # RPM distro builds
   rpm-build:
@@ -702,11 +715,11 @@ jobs:
       - name: ✒️ Modify spec file
         run: |
           sed -i \
-          -e 's/Version:        VERSION$/Version:        ${{env.IMHEX_VERSION}}/g' \
-          -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'                  \
-          -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\'      \
-          -e '/BuildRequires:  cmake/a BuildRequires:  git-core'                   \
-          -e '/%files/a %{_datadir}/%{name}/'                                      \
+          -e 's/Version:        VERSION$/Version:        ${{ env.IMHEX_VERSION }}/g'  \
+          -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'                     \
+          -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\'         \
+          -e '/BuildRequires:  cmake/a BuildRequires:  git-core'                      \
+          -e '/%files/a %{_datadir}/%{name}/'                                         \
           $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
 
       - name: 📜 Fix ccache on EL9
@@ -733,8 +746,8 @@ jobs:
 
       - name: 🟩 Move and rename finished RPM
         run: |
-          mv $GITHUB_WORKSPACE/results_imhex/${{env.IMHEX_VERSION}}/*/imhex-${{env.IMHEX_VERSION}}-0.*.x86_64.rpm \
-          $GITHUB_WORKSPACE/imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm
+          mv $GITHUB_WORKSPACE/results_imhex/${{ env.IMHEX_VERSION }}/*/imhex-${{ env.IMHEX_VERSION }}-0.*.x86_64.rpm \
+          $GITHUB_WORKSPACE/imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
 
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v4
@@ -742,4 +755,4 @@ jobs:
           if-no-files-found: error
           name: ${{ matrix.name }} ${{ matrix.release_num }} RPM x86_64
           path: |
-            imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm
+            imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm

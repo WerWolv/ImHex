@@ -18,8 +18,6 @@ namespace hex::plugin::builtin {
         struct Workspace {
             Workspace() = default;
 
-
-
             std::unique_ptr<ImNodesContext, void(*)(ImNodesContext*)> context = { []{
                 ImNodesContext *ctx = ImNodes::CreateContext();
                 ctx->Style = ImNodes::GetStyle();

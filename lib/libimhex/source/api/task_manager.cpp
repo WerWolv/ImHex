@@ -349,9 +349,27 @@ namespace hex {
         return createTask(std::move(unlocalizedName), maxValue, false, std::move(function));
     }
 
+    TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void()> function) {
+        log::debug("Creating task {}", unlocalizedName.get());
+        return createTask(std::move(unlocalizedName), maxValue, false,
+            [function = std::move(function)](Task&) {
+                function();
+            }
+        );
+    }
+
     TaskHolder TaskManager::createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void(Task &)> function) {
         log::debug("Creating background task {}", unlocalizedName.get());
         return createTask(std::move(unlocalizedName), 0, true, std::move(function));
+    }
+
+    TaskHolder TaskManager::createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void()> function) {
+        log::debug("Creating background task {}", unlocalizedName.get());
+        return createTask(std::move(unlocalizedName), 0, true,
+            [function = std::move(function)](Task&) {
+                function();
+            }
+        );
     }
 
     void TaskManager::collectGarbage() {

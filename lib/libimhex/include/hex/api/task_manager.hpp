@@ -138,12 +138,29 @@ namespace hex {
         static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void(Task &)> function);
 
         /**
+        * @brief Creates a new asynchronous task that gets displayed in the Task Manager in the footer
+        * @param unlocalizedName Name of the task
+        * @param maxValue Maximum value of the task
+        * @param function Function to be executed
+        * @return A TaskHolder holding a weak reference to the task
+        */
+        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void()> function);
+
+        /**
          * @brief Creates a new asynchronous task that does not get displayed in the Task Manager
          * @param unlocalizedName Name of the task
          * @param function Function to be executed
          * @return A TaskHolder holding a weak reference to the task
          */
         static TaskHolder createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void(Task &)> function);
+
+        /**
+         * @brief Creates a new asynchronous task that does not get displayed in the Task Manager
+         * @param unlocalizedName Name of the task
+         * @param function Function to be executed
+         * @return A TaskHolder holding a weak reference to the task
+         */
+        static TaskHolder createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void()> function);
 
         /**
          * @brief Creates a new synchronous task that will execute the given function at the start of the next frame
