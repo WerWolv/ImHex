@@ -444,22 +444,28 @@ namespace hex::plugin::builtin {
             if (m_textEditor.IsTextChanged()) {
                 m_textEditor.SetTextChanged(false);
                 m_hasUnevaluatedChanges = true;
+
                 m_textHighlighter.m_needsToUpdateColors = false;
+
+                m_lastEditorChangeTime = std::chrono::steady_clock::now();
+
                 ImHexApi::Provider::markDirty();
             }
 
             if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0) {
-                m_hasUnevaluatedChanges = false;
+                if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1)) {
+                    m_hasUnevaluatedChanges = false;
 
-                auto code = m_textEditor.GetText();
-                EventPatternEditorChanged::post(code);
+                    auto code = m_textEditor.GetText();
+                    EventPatternEditorChanged::post(code);
 
-                TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern"_lang, [this, code, provider](auto &){
-                    this->parsePattern(code, provider);
+                    TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern"_lang, [this, code = std::move(code), provider](auto &){
+                        this->parsePattern(code, provider);
 
-                    if (m_runAutomatically)
-                        m_triggerAutoEvaluate = true;
-                });
+                        if (m_runAutomatically)
+                            m_triggerAutoEvaluate = true;
+                    });
+                }
             }
 
             if (m_triggerAutoEvaluate.exchange(false)) {

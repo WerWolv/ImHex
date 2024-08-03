@@ -337,8 +337,11 @@ namespace hex {
         }
 
         void markDirty() {
-            get()->markDirty();
-            EventProviderDirtied::post(get());
+            const auto provider = get();
+            if (!provider->isDirty()) {
+                provider->markDirty();
+                EventProviderDirtied::post(provider);
+            }
         }
 
         void resetDirty() {
