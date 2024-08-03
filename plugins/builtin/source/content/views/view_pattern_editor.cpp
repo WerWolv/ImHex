@@ -555,7 +555,7 @@ namespace hex::plugin::builtin {
             if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0) {
                 m_hasUnevaluatedChanges = false;
 
-                auto code = m_textEditor.GetText();
+                const auto &code = m_textEditor.GetText();
                 EventPatternEditorChanged::post(code);
 
                 TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern"_lang, [this, code, provider](auto &){

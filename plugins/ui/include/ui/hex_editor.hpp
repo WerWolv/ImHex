@@ -333,6 +333,7 @@ namespace hex::ui {
         ScrollPosition m_scrollPosition;
 
         Region m_frameStartSelectionRegion = Region::Invalid();
+        Region m_hoveredRegion = Region::Invalid();
 
         u16 m_bytesPerRow = 16;
         std::endian m_dataVisualizerEndianness = std::endian::little;

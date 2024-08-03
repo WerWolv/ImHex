@@ -669,7 +669,6 @@ namespace hex::ui {
                                     Region newHoveredCell = { byteAddress, bytesPerCell };
                                     if (hoveredCell != newHoveredCell) {
                                         hoveredCell = newHoveredCell;
-                                        m_hoverChangedCallback(hoveredCell.address, hoveredCell.size);
                                     }
                                 }
 
@@ -732,7 +731,6 @@ namespace hex::ui {
                                             Region newHoveredCell = { byteAddress, bytesPerCell };
                                             if (hoveredCell != newHoveredCell) {
                                                 hoveredCell = newHoveredCell;
-                                                m_hoverChangedCallback(hoveredCell.address, hoveredCell.size);
                                             }
                                         }
 
@@ -824,7 +822,6 @@ namespace hex::ui {
                                                 Region newHoveredCell = { address, data.advance };
                                                 if (hoveredCell != newHoveredCell) {
                                                     hoveredCell = newHoveredCell;
-                                                    m_hoverChangedCallback(hoveredCell.address, hoveredCell.size);
                                                 }
                                             }
                                         }
@@ -904,6 +901,11 @@ namespace hex::ui {
         ImGui::EndChild();
 
         ImHexApi::HexEditor::impl::setHoveredRegion(m_provider, hoveredCell);
+
+        if (m_hoveredRegion != hoveredCell) {
+            m_hoveredRegion = hoveredCell;
+            m_hoverChangedCallback(m_hoveredRegion.address, m_hoveredRegion.size);
+        }
 
         m_shouldScrollToSelection = false;
     }
