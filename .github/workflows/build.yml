@@ -206,14 +206,15 @@ jobs:
 
     - name: ⬇️ Install dependencies
       run: |
-        brew reinstall python || brew link --overwrite python || true
-        brew bundle --no-lock --file dist/Brewfile
+        brew reinstall python 2>&1 >/dev/null || true
+        brew link --overwrite python 2>&1 >/dev/null || true
+        brew bundle --no-lock --file dist/Brewfile 2>&1 >/dev/null || true
         rm -rf /usr/local/Cellar/capstone
 
     - name: ⬇️ Install classic glfw
       if: ${{! matrix.custom_glfw }}
       run: |
-        brew install glfw || true
+        brew install glfw 2>&1 >/dev/null || true
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v4
