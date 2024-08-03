@@ -161,32 +161,4 @@ namespace hex {
         }
     }
 
-    std::string operator+(const std::string &&left, const Lang &&right) {
-        return left + static_cast<std::string>(right);
-    }
-
-    std::string operator+(const Lang &&left, const std::string &&right) {
-        return static_cast<std::string>(left) + right;
-    }
-
-    std::string operator+(const Lang &&left, const Lang &&right) {
-        return static_cast<std::string>(left) + static_cast<std::string>(right);
-    }
-
-    std::string operator+(const std::string_view &&left, const Lang &&right) {
-        return std::string(left) + static_cast<std::string>(right);
-    }
-
-    std::string operator+(const Lang &&left, const std::string_view &&right) {
-        return static_cast<std::string>(left) + std::string(right);
-    }
-
-    std::string operator+(const char *left, const Lang &&right) {
-        return left + static_cast<std::string>(right);
-    }
-
-    std::string operator+(const Lang &&left, const char *right) {
-        return static_cast<std::string>(left) + right;
-    }
-
 }
