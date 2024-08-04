@@ -533,6 +533,7 @@
         "hex.builtin.task.updating_store": "Updating store...",
         "hex.builtin.task.parsing_pattern": "Parsing pattern...",
         "hex.builtin.task.analyzing_data": "Analyzing data...",
+        "hex.builtin.task.colorizing_pattern": "Colorizing pattern...",
         "hex.builtin.task.updating_inspector": "Updating inspector...",
         "hex.builtin.task.saving_data": "Saving data...",
         "hex.builtin.task.loading_encoding_file": "Loading encoding file...",

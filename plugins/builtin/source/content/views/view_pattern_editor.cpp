@@ -6,18 +6,11 @@
 #include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>
 #include <pl/core/preprocessor.hpp>
-#include <pl/core/parser.hpp>
 #include <pl/core/lexer.hpp>
 #include <pl/core/validator.hpp>
 #include "pl/core/tokens.hpp"
-#include <pl/core/ast/ast_node_compound_statement.hpp>
-#include <pl/core/ast/ast_node_lvalue_assignment.hpp>
 #include <pl/core/ast/ast_node_variable_decl.hpp>
 #include <pl/core/ast/ast_node_builtin_type.hpp>
-#include <pl/core/ast/ast_node_struct.hpp>
-#include <pl/core/ast/ast_node_union.hpp>
-#include <pl/core/ast/ast_node_enum.hpp>
-#include <pl/core/ast/ast_node_bitfield.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/magic.hpp>
@@ -129,7 +122,6 @@ namespace hex::plugin::builtin {
         if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
             static float height = 0;
             static bool dragging = false;
-
             const auto availableSize = ImGui::GetContentRegionAvail();
             auto textEditorSize = availableSize;
             textEditorSize.y *= 3.5 / 5.0;
@@ -137,8 +129,9 @@ namespace hex::plugin::builtin {
             textEditorSize.y += height;
 
             if (availableSize.y > 1)
-                textEditorSize.y = std::clamp(textEditorSize.y, 1.0F, std::max(1.0F, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3));
-            m_textHighlighter.highlightSourceCode();
+                textEditorSize.y = std::clamp(textEditorSize.y, 1.0F, std::max(1.0F, availableSize.y -
+                                                                                     ImGui::GetTextLineHeightWithSpacing() *
+                                                                                     3));
 
             m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
@@ -452,7 +445,7 @@ namespace hex::plugin::builtin {
                 ImHexApi::Provider::markDirty();
             }
 
-            if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0) {
+            if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0 && m_textHighlighter.getRunningColorizers() == 0) {
                 if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1)) {
                     m_hasUnevaluatedChanges = false;
 
@@ -471,6 +464,8 @@ namespace hex::plugin::builtin {
             if (m_triggerAutoEvaluate.exchange(false)) {
                 this->evaluatePattern(m_textEditor.GetText(), provider);
             }
+
+            m_textHighlighter.highlightSourceCode();
         }
 
         if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
@@ -793,1997 +788,15 @@ namespace hex::plugin::builtin {
         }
     }
 
-    i32 ViewPatternEditor::TextHighlighter::escapeCharCount(const std::string &str) {
-        int count = 0;
-        for (auto c : str) {
-            if (c == '\"' || c == '\\' || c == '\'' || c == '\0' || c == '\t' ||
-                c == '\n' || c == '\r' || c == '\a' || c == '\b' || c == '\f')
-                count++;
-        }
-        return count;
-    }
-
-    // very simple parsing to look for type declarations
-    std::optional<std::shared_ptr<pl::core::ast::ASTNode>> ViewPatternEditor::TextHighlighter::parseChildren(const std::shared_ptr<pl::core::ast::ASTNode> &node, const std::string &typeName) {
-        std::vector<std::shared_ptr<pl::core::ast::ASTNode>> children;
-
-        if (auto compoundStatement = dynamic_cast<pl::core::ast::ASTNodeCompoundStatement *>(node.get()); compoundStatement != nullptr) {
-            children = compoundStatement->getStatements();
-            for (auto child: children) {
-                auto result = parseChildren(child, typeName);
-                if (result.has_value())
-                    return result;
-            }
-        } else if (auto typeDecl = dynamic_cast<pl::core::ast::ASTNodeTypeDecl *>(node.get());
-               typeDecl != nullptr && typeDecl->getName() == typeName) {
-            return typeDecl->getType();
-        }
-        return std::nullopt;
-    }
-
-    // If typeName is a UDT it returns the node.
-    std::optional<std::shared_ptr<pl::core::ast::ASTNode>> ViewPatternEditor::TextHighlighter::findType(const std::string &typeName, IdentifierType &identifierType) {
-        using Struct = pl::core::ast::ASTNodeStruct;
-        using Union = pl::core::ast::ASTNodeUnion;
-        using Enum = pl::core::ast::ASTNodeEnum;
-        using Bitfield = pl::core::ast::ASTNodeBitfield;
-        using TypeDecl = pl::core::ast::ASTNodeTypeDecl;
-
-        if (typeName.empty())
-            return std::nullopt;
-        std::optional<std::shared_ptr<pl::core::ast::ASTNode>> node;
-
-        if (m_types.contains(typeName))
-            node = m_types[typeName]->getType();
-        else
-            return std::nullopt;
-
-        if (auto structNode = dynamic_cast<Struct *>(node->get()); structNode != nullptr) {
-            identifierType = IdentifierType::UDT;
-            return node;
-        } else if (auto unionNode = dynamic_cast<Union *>(node->get()); unionNode != nullptr) {
-            identifierType = IdentifierType::UDT;
-            return node;
-        } else if (auto enumNode = dynamic_cast<Enum *>(node->get()); enumNode != nullptr) {
-            identifierType = IdentifierType::UDT;
-            return node;
-        } else if (auto bitfieldNode = dynamic_cast<Bitfield *>(node->get()); bitfieldNode != nullptr) {
-            identifierType = IdentifierType::UDT;
-            return node;
-        } else if (auto typeDeclNode = dynamic_cast<TypeDecl *>(node->get()); typeDeclNode != nullptr) {
-            identifierType = IdentifierType::Typedef;
-            return node;
-        } else
-            return std::nullopt;
-    }
-
-    // If memberName is a member of UDTName it returns true and sets the type of the member.
-    bool ViewPatternEditor::TextHighlighter::isMemberOf(const std::string &memberName, const std::string &UDTName, IdentifierType &type) {
-        using Struct = pl::core::ast::ASTNodeStruct;
-        using Union = pl::core::ast::ASTNodeUnion;
-        using Enum = pl::core::ast::ASTNodeEnum;
-        using Bitfield = pl::core::ast::ASTNodeBitfield;
-        IdentifierType identifierType;
-
-        if (memberName.empty() || UDTName.empty())
-            return false;
-
-        auto optional = findType(UDTName, identifierType);
-        if (!optional.has_value())
-            return false;
-        auto typeDecl = optional.value();
-
-        if (auto structNode = dynamic_cast<Struct *>(typeDecl.get()); structNode != nullptr) {
-            for (auto member: structNode->getMembers()) {
-
-                if (auto variableDecl = dynamic_cast<pl::core::ast::ASTNodeVariableDecl *>(member.get());
-                        variableDecl != nullptr && variableDecl->getName() == memberName) {
-                    auto placementOffset = variableDecl->getPlacementOffset().get();
-
-                    if (placementOffset != nullptr)
-                        type = IdentifierType::PatternPlacedVariable;
-                     else
-                        type = IdentifierType::PatternVariable;
-                    return true;
-                }
-
-                if (auto variableAssignment = dynamic_cast<pl::core::ast::ASTNodeLValueAssignment *>(member.get());
-                        variableAssignment != nullptr &&
-                        variableAssignment->getLValueName() == memberName) {
-                    type = IdentifierType::PatternLocalVariable;
-                    return true;
-                }
-            }
-        } else if (auto unionNode = dynamic_cast<Union *>(typeDecl.get()); unionNode != nullptr) {
-            for (auto member: unionNode->getMembers()) {
-
-                if (auto variableDecl = dynamic_cast<pl::core::ast::ASTNodeVariableDecl *>(member.get());
-                        variableDecl != nullptr && variableDecl->getName() == memberName) {
-                    auto placementOffset = variableDecl->getPlacementOffset().get();
-
-                    if (placementOffset != nullptr)
-                        type = IdentifierType::PatternPlacedVariable;
-                    else
-                        type = IdentifierType::PatternVariable;
-                    return true;
-                }
-
-                if (auto variableAssignment = dynamic_cast<pl::core::ast::ASTNodeLValueAssignment *>(member.get());
-                        variableAssignment != nullptr &&
-                        variableAssignment->getLValueName() == memberName) {
-                    type = IdentifierType::PatternLocalVariable;
-                    return true;
-                }
-            }
-        } else if (auto enumNode = dynamic_cast<Enum *>(typeDecl.get()); enumNode != nullptr) {
-            for (const auto &[name, offset]: enumNode->getEntries()) {
-
-                if (name == memberName) {
-                    type = IdentifierType::PatternVariable;
-                    return true;
-                }
-            }
-        } else if (auto bitfieldNode = dynamic_cast<Bitfield *>(typeDecl.get()); bitfieldNode != nullptr) {
-            for (auto member: bitfieldNode->getEntries()) {
-
-                if (auto variableDecl = dynamic_cast<pl::core::ast::ASTNodeVariableDecl *>(member.get());
-                        variableDecl != nullptr && variableDecl->getName() == memberName) {
-                    type = IdentifierType::PatternVariable;
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    using namespace pl::core;
-    using Identifier = Token::Identifier;
-    using Keyword = Token::Keyword;
-    using Separator = Token::Separator;
-    using Operator = Token::Operator;
-    using Comment = Token::Comment;
-    using DocComment = Token::DocComment;
-    using Literal = Token::Literal;
-    using ValueType = Token::ValueType;
-
-
-    bool ViewPatternEditor::TextHighlighter::getIdentifierName(std::string &identifierName) {
-        auto keyword = getValue<Keyword>(0);
-        auto identifier = getValue<Identifier>(0);
-
-        if (identifier != nullptr) {
-            identifierName = identifier->get();
-            return true;
-        } else if (keyword != nullptr) {
-
-            if (peek(tkn::Keyword::Parent)) {
-                identifierName = "Parent";
-                return true;
-            }
-
-            if (peek(tkn::Keyword::This)) {
-                identifierName = "This";
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Returns a chain of identifiers like a.b.c or a::b::c
-    bool ViewPatternEditor::TextHighlighter::getFullName(std::string &identifierName) {
-
-        if (getTokenId(m_curr->location) < 1)
-            return (getIdentifierName(identifierName));
-
-        auto curr = m_curr;
-        next(-1);
-        identifierName.clear();
-        rewindIdentifierName();
-        std::vector<Identifier *> identifiers;
-
-        if (!forwardIdentifierName(identifierName,curr, identifiers)) {
-            m_curr = curr;
-            return false;
-        }
-
-        m_curr = curr;
-        return true;
-    }
-
-    // Rewind to the beginning of the identifier name when identifiers are separated by scope resolution or dot
-    void ViewPatternEditor::TextHighlighter::rewindIdentifierName() {
-        while (getTokenId(m_curr->location) > 2 &&
-               (peek(tkn::Operator::ScopeResolution) || peek(tkn::Separator::Dot)) ) {
-
-            if (peek(tkn::Separator::Dot)) {
-                skipArray(200, false);
-            }
-
-            if (!peek(tkn::Literal::Identifier,-1) && !peek(tkn::Keyword::Parent,-1) && !peek(tkn::Keyword::This,-1))
-                break;
-            next(-2);
-        }
-        next();
-    }
-
-    // If optional curr is set, forwardIdentifierName will only parse until curr is reached, otherwise it will parse
-    // until the end of the identifier name is reached.
-    bool ViewPatternEditor::TextHighlighter::forwardIdentifierName(std::string &identifierName,std::optional<TokenIter> curr, std::vector<Identifier *> &identifiers) {
-        bool useCurr = curr.has_value();
-        auto tokenRef = Token(tkn::Keyword::Reference);
-        auto tokenPointer = Token(tkn::Operator::Star);
-        Identifier *identifier;
-        TokenIter restoreCurr;
-
-        if (useCurr)
-            restoreCurr = curr.value();
-        else
-            restoreCurr = m_curr;
-
-        std::string current;
-        identifier = (Identifier *)getValue<Identifier>(0);
-        identifiers.push_back(identifier);
-
-        if (!getIdentifierName(current))
-            return false;
-
-        identifierName += current;
-        bool whileLoop;
-
-        if (useCurr)
-            whileLoop = (m_curr != restoreCurr);
-        skipArray(200,true);
-
-        if (!useCurr)
-            whileLoop = (peek(tkn::Operator::ScopeResolution,1) || peek(tkn::Separator::Dot,1));
-
-        while (whileLoop) {
-            next();
-
-            if (peek(tkn::Operator::ScopeResolution))
-                identifierName += "::";
-            else if (peek(tkn::Separator::Dot))
-                identifierName += ".";
-            else {
-                m_curr = restoreCurr;
-                return false;
-            }
-
-            if (!useCurr || m_curr != restoreCurr)
-                next();
-
-            if (getIdentifierName(current)) {
-                identifiers.push_back((Identifier *)getValue<Identifier>(0));
-                identifierName += current;
-
-                if (useCurr)
-                    whileLoop = (m_curr != restoreCurr);
-                skipArray(200,true);
-
-                if (!useCurr)
-                    whileLoop = (peek(tkn::Operator::ScopeResolution,1) || peek(tkn::Separator::Dot,1));
-            } else {
-                m_curr = restoreCurr;
-                return false;
-            }
-        }
-        m_curr = restoreCurr;
-        return true;
-    }
-
-    // Adds namespace if it exists
-    bool ViewPatternEditor::TextHighlighter::getQualifiedName(std::string &identifierName) {
-        std::string shortName;
-        std::string qualifiedName;
-
-        if (!getFullName(identifierName))
-            return false;
-
-        std::string nameSpace;
-        if (m_functionDefinitions.contains(identifierName) || m_UDTDefinitions.contains(identifierName))
-            return true;
-
-        for (auto [name,definition] : m_UDTDefinitions) {
-            findNamespace(nameSpace, definition.tokenIndex);
-
-            if (!nameSpace.empty() && !identifierName.contains(nameSpace)) {
-                qualifiedName = nameSpace + "::" + identifierName;
-
-                if (name == qualifiedName) {
-                    identifierName = qualifiedName;
-                    return true;
-                }
-            }
-
-            if (name == identifierName) {
-                identifierName = name;
-                return true;
-            }
-        }
-
-        if (identifierName.empty())
-            return false;
-        return true;
-    }
-
-    // Finds the token range of a function, namespace or UDT
-    bool ViewPatternEditor::TextHighlighter::getTokenRange(std::vector<Token> keywords,ViewPatternEditor::TextHighlighter::UnorderedBlocks &tokenRange, ViewPatternEditor::TextHighlighter::OrderedBlocks &tokenRangeInv, bool fullName, bool invertMap, VariableScopes *blocks) {
-        std::stack<i32> tokenStack;
-        if (getTokenId(m_curr->location) < 1)
-            return false;
-
-        std::string name;
-        if (fullName) {
-            if (!getFullName(name))
-                return false;
-        } else {
-            if (!getIdentifierName(name))
-                return false;
-            std::string nameSpace;
-            std::string qualifiedName = name;
-            findNamespace(nameSpace,getTokenId(m_curr->location));
-            if (!nameSpace.empty())
-                name = nameSpace + "::" + name;
-        }
-
-        i32 tokenCount = m_tokens.size();
-        auto saveCurr = m_curr-1;
-        skipTemplate(200);
-        next();
-        if (sequence(tkn::Operator::Colon)) {
-            while (peek(tkn::Literal::Identifier)) {
-                auto identifier = (Identifier *) getValue<Identifier>(0);
-                if (identifier == nullptr)
-                    break;
-                auto identifierName = identifier->get();
-                if (std::ranges::find(m_inheritances[name], identifierName) == m_inheritances[name].end())
-                    m_inheritances[name].push_back(identifierName);
-                skipTemplate(200);
-                next(2);
-            }
-        }
-
-        m_curr = saveCurr;
-        i32 index1 = getTokenId(m_curr->location);
-        bool result =  true;
-        for (auto keyword : keywords)
-            result = result && !peek(keyword);
-        if (result)
-            return false;
-        u32 nestedLevel=0;
-        next();
-        auto limit = m_startToken + tokenCount;
-        while (m_curr != limit) {
-
-            if (sequence(tkn::Separator::LeftBrace)) {
-                auto tokenId = getTokenId(m_curr[-1].location);
-                tokenStack.push(tokenId);
-                nestedLevel++;
-            } else if (sequence(tkn::Separator::RightBrace)) {
-                nestedLevel--;
-
-                if (tokenStack.empty())
-                    return false;
-                Interval range(tokenStack.top(), getTokenId(m_curr[-1].location));
-                tokenStack.pop();
-
-                if (nestedLevel == 0) {
-                    range.end -= 1;
-                    if (blocks != nullptr)
-                        blocks->operator[](name).insert(range);
-                    skipAttribute();
-                    break;
-                }
-                if (blocks != nullptr)
-                    blocks->operator[](name).insert(range);
-            } else if (sequence(tkn::Separator::EndOfProgram))
-                return false;
-            else
-                next();
-        }
-        i32 index2 = getTokenId(m_curr->location);
-
-        if (index2 > index1 && index2 < tokenCount) {
-
-           if(invertMap) {
-              tokenRangeInv[Interval(index1, index2)] = name;
-           } else {
-               tokenRange[name]=Interval(index1, index2);
-           }
-            if (blocks != nullptr)
-                blocks->operator[](name).insert(Interval(index1,index2));
-            return true;
-        }
-        return false;
-    }
-
-    // Searches through tokens and loads all the ranges of one kind. First namespaces are searched.
-    void ViewPatternEditor::TextHighlighter::getAllTokenRanges(IdentifierType IdentifierTypeToSearch) {
-
-        if (m_tokens.empty())
-            return;
-
-        std::string name;
-        Identifier *identifier;
-        IdentifierType identifierType;
-        std::string UDTName;
-        m_curr = m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_tokens.begin(), m_tokens.end());
-
-        for (;!peek(tkn::Separator::EndOfProgram);next()) {
-            auto curr = m_curr;
-
-            if (peek(tkn::Literal::Identifier)) {
-                identifier = (Identifier *) getValue<Identifier>(0);
-                identifierType = identifier->getType();
-                name = identifier->get();
-
-                if (identifierType == IdentifierTypeToSearch) {
-                    switch (identifierType) {
-                        case IdentifierType::Function:          getTokenRange({tkn::Keyword::Function},m_functionTokenRange, m_namespaceTokenRange,false, false, &m_functionBlocks);
-                            break;
-                        case IdentifierType::NameSpace:
-                            if (std::ranges::find(m_nameSpaces, name) == m_nameSpaces.end())
-                                m_nameSpaces.push_back(name);
-                                                                getTokenRange({tkn::Keyword::Namespace},m_functionTokenRange, m_namespaceTokenRange, true, true, nullptr);
-                            break;
-                        case IdentifierType::UDT:
-                            if (std::ranges::find(m_UDTs, name) == m_UDTs.end())
-                                m_UDTs.push_back(name);
-                                                                getTokenRange({tkn::Keyword::Struct,tkn::Keyword::Union,tkn::Keyword::Enum,tkn::Keyword::Bitfield},m_UDTTokenRange,m_namespaceTokenRange, false, false, &m_UDTBlocks);
-                            break;
-                        case IdentifierType::Typedef:
-                            if (std::ranges::find(m_typeDefs, name) == m_typeDefs.end())
-                                m_typeDefs.push_back(name);
-                            break;
-                        case IdentifierType::TemplateArgument:  findScope(UDTName, m_UDTTokenRange);
-                            break;
-                        case IdentifierType::Attribute:         linkAttribute();
-                            break;
-                        case IdentifierType::GlobalVariable:
-                        case IdentifierType::PlacedVariable:
-                        case IdentifierType::PatternVariable:
-                        case IdentifierType::PatternLocalVariable:
-                        case IdentifierType::PatternPlacedVariable:
-                        case IdentifierType::FunctionVariable:
-                        case IdentifierType::FunctionParameter:
-                        case IdentifierType::Macro:
-                        case IdentifierType::Unknown:
-                        case IdentifierType::FunctionUnknown:
-                        case IdentifierType::MemberUnknown:
-                        case IdentifierType::ScopeResolutionUnknown:
-                            break;
-                    }
-                }
-            }
-            m_curr = curr;
-        }
-    }
-
-    void ViewPatternEditor::TextHighlighter::skipDelimiters(i32 maxSkipCount, Token delimiter[2], i8 increment) {
-        auto curr = m_curr;
-        i32 skipCount = 0;
-        i32 depth = 0;
-        i32 tokenId = getTokenId(m_curr->location);
-
-        if (tokenId == -1 || tokenId >= (i32) m_tokens.size())
-            return;
-        i32 skipCountLimit = increment > 0 ? std::min(maxSkipCount, (i32) m_tokens.size() - 1 - tokenId) : std::min(maxSkipCount, tokenId);
-        next(increment);
-        if (peek(delimiter[0])) {
-            next(increment);
-            while (skipCount < skipCountLimit) {
-                if (peek(delimiter[1])) {
-                    if (depth == 0)
-                        return;
-                    depth--;
-                } else if (peek(delimiter[0]))
-                    depth++;
-                next(increment);
-                skipCount++;
-            }
-        }
-        m_curr = curr;
-    }
-
-    void ViewPatternEditor::TextHighlighter::skipTemplate(i32 maxSkipCount, bool forward) {
-        Token delimiters[2];
-        if (forward) {
-            delimiters[0] = Token(tkn::Operator::BoolLessThan);
-            delimiters[1] = Token(tkn::Operator::BoolGreaterThan);
-        } else {
-            delimiters[0] = Token(tkn::Operator::BoolGreaterThan);
-            delimiters[1] = Token(tkn::Operator::BoolLessThan);
-        }
-        skipDelimiters(maxSkipCount, delimiters, forward ? 1 : -1);
-    }
-
-    void ViewPatternEditor::TextHighlighter::skipArray(i32 maxSkipCount, bool forward) {
-        Token delimiters[2];
-        if (forward) {
-            delimiters[0] = Token(tkn::Separator::LeftBracket);
-            delimiters[1] = Token(tkn::Separator::RightBracket);
-        } else {
-            delimiters[0] = Token(tkn::Separator::RightBracket);
-            delimiters[1] = Token(tkn::Separator::LeftBracket);
-        }
-        skipDelimiters(maxSkipCount, delimiters, forward ? 1 : -1);
-    }
-
-    // Used to skip references,pointers,...
-    void ViewPatternEditor::TextHighlighter::skipToken(Token token, i8 step) {
-        if (peek(token,step))
-            next(step);
-    }
-
-    void ViewPatternEditor::TextHighlighter::skipAttribute() {
-
-        if (sequence(tkn::Separator::LeftBracket,tkn::Separator::LeftBracket)) {
-            while (!sequence(tkn::Separator::RightBracket,tkn::Separator::RightBracket))
-                next();
-        }
-    }
-
-    // Takes an identifier chain resolves the type of the end from the rest iteratively.
-    bool ViewPatternEditor::TextHighlighter::resolveIdentifierType(Definition &result) {
-        auto curr = m_curr + 1;
-        Identifier *identifier;
-        next(-1);
-        rewindIdentifierName();
-
-        std::string nameSpace;
-        std::string currentName;
-        std::string variableParentType;
-
-        if (identifier = (Identifier *) getValue<Identifier>(0); identifier != nullptr)
-            currentName = identifier->get();
-        skipArray(200, true);
-
-        if (peek(tkn::Separator::Dot, 1))
-            variableParentType = findIdentifierTypeStr(currentName);
-
-        while (peek(tkn::Separator::Dot, 1) || peek(tkn::Operator::ScopeResolution, 1)) {
-
-            if (peek(tkn::Separator::Dot, 1)) {
-                next(2);
-
-                if (identifier = (Identifier *) getValue<Identifier>(0); identifier != nullptr)
-                    currentName = identifier->get();
-                skipArray(200, true);
-
-                if ((m_curr + 1) == curr)
-                    break;
-
-                if (peek(tkn::Separator::Dot, 1))
-                    variableParentType = findIdentifierTypeStr(currentName, variableParentType);
-            } else if (peek(tkn::Operator::ScopeResolution, 1)) {
-
-                if (std::ranges::find(m_nameSpaces, currentName) != m_nameSpaces.end()) {
-                    nameSpace += currentName + "::";
-                    next(2);
-
-                    if (identifier = (Identifier *) getValue<Identifier>(0); identifier != nullptr)
-                        variableParentType = identifier->get();
-
-                    if (peek(tkn::Operator::ScopeResolution, 1))
-                        currentName = variableParentType;
-                } else if (std::ranges::find(m_UDTs, currentName) != m_UDTs.end()) {
-                    next(2);
-                    variableParentType = currentName;
-
-                    if (!nameSpace.empty() && !variableParentType.contains(nameSpace))
-                        variableParentType = nameSpace + variableParentType;
-                    else if (findNamespace(nameSpace) && !variableParentType.contains(nameSpace))
-                        variableParentType = nameSpace + "::" + variableParentType;
-
-                    if (identifier = (Identifier *) getValue<Identifier>(0); identifier != nullptr)
-                        currentName = identifier->get();
-
-                    if ((m_curr + 1) == curr)
-                        break;
-
-                    if (peek(tkn::Operator::ScopeResolution, 1))
-                        variableParentType = findIdentifierTypeStr(currentName, variableParentType);
-                } else
-                    next();
-            }
-        }
-
-        if (findIdentifierDefinition(result, currentName, variableParentType)) {
-            m_curr = curr - 1;
-            return true;
-        } else if (m_types.contains(variableParentType) && identifier != nullptr) {
-            IdentifierType type;
-            if (isMemberOf(currentName, variableParentType, type)) {
-                result.idType = type;
-                result.typeStr = variableParentType;
-                m_curr = curr - 1;
-                return true;
-            }
-        }
-
-        m_curr = curr - 1;
-        return false;
-    }
-
-    // If contex then find it otherwise check if it belongs in map
-    bool ViewPatternEditor::TextHighlighter::findOrContains(std::string &context, UnorderedBlocks tokenRange, VariableMap variableMap) {
-        if (context.empty())
-            return findScope(context, tokenRange);
-        else
-            return variableMap.contains(context);
-    }
-
-    bool ViewPatternEditor::TextHighlighter::findIdentifierDefinition(Definition &result, const std::string &optionalIdentifierName, std::string optionalName) {
-        auto curr = m_curr;
-        Scopes blocks;
-        auto tokenId = getTokenId(m_curr->location);
-        std::vector<Definition> definitions;
-        std::string name = optionalName;
-        result.idType = IdentifierType::Unknown;
-        std::string identifierName = optionalIdentifierName;
-        if (optionalIdentifierName == "")
-            getFullName(identifierName);
-
-        if (findOrContains(name,m_UDTTokenRange,m_UDTVariables) && m_UDTVariables[name].contains(identifierName)) {
-            definitions = m_UDTVariables[name][identifierName];
-            blocks = m_UDTBlocks[name];
-        } else if (findOrContains(name,m_functionTokenRange,m_functionVariables) && m_functionVariables[name].contains(identifierName)) {
-            definitions = m_functionVariables[name][identifierName];
-            blocks = m_functionBlocks[name];
-        } else if (m_globalVariables.contains(identifierName)) {
-            definitions = m_globalVariables[identifierName];
-            blocks = m_globalBlocks;
-        }
-
-        for (auto block: blocks) {
-            for (auto definition: definitions) {
-                if (block.contains(definition.tokenIndex) && block.contains(tokenId)) {
-                    result = definition;
-                    m_curr = curr;
-                    return true;
-                } else if (result.idType < definition.idType)
-                    result = definition;
-            }
-        }
-
-        if (result.idType != IdentifierType::Unknown) {
-            m_curr = curr;
-            return true;
-        }
-
-        m_curr = curr;
-        return false;
-    }
-
-    bool ViewPatternEditor::TextHighlighter::findIdentifierType(IdentifierType &type) {
-        type = IdentifierType::Unknown;
-        auto identifier = (Identifier *) getValue<Identifier>(0);
-        Definition result;
-
-        if (identifier == nullptr)
-            return false;
-        std::string identifierName = identifier->get();
-        std::string fullName;
-
-        if (!getQualifiedName(fullName))
-            return false;
-        std::vector<std::string> vectorString;
-        std::string shortName;
-        std::string separator;
-
-        if (peek(tkn::Separator::Dot, -1))
-            separator = ".";
-        else if (peek(tkn::Operator::ScopeResolution, -1))
-            separator = "::";
-
-        if ( findType(fullName, type).has_value()) {
-            identifier->setType(type, true);
-            return true;
-        }
-
-        if (separator.empty()) {
-
-            if (findIdentifierDefinition(result, identifierName))
-                type = result.idType;
-
-            if (type != IdentifierType::Unknown) {
-                identifier->setType(type, true);
-                return true;
-            }
-            return false;
-        }
-
-        if (resolveIdentifierType(result)) {
-            type = result.idType;
-            identifier->setType(result.idType, true);
-            return true;
-        }
-
-        vectorString = hex::splitString(fullName, separator);
-        if (vectorString.back() == identifierName && vectorString.size() > 1) {
-            vectorString.pop_back();
-            shortName = vectorString.back();
-            fullName = hex::combineStrings(vectorString, separator);
-
-            if (findIdentifierDefinition(result, fullName))
-                type = result.idType;
-            else if (findIdentifierDefinition(result, shortName)) {
-                fullName = result.typeStr;
-
-                if (findIdentifierDefinition(result, fullName))
-                    type = result.idType;
-            }
-
-            if (type != IdentifierType::Unknown || isMemberOf(identifierName, fullName, type)) {
-                identifier->setType(type, true);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    using Definition = ViewPatternEditor::TextHighlighter::Definition;
-    bool ViewPatternEditor::TextHighlighter::findScopeResolutionType(IdentifierType &type) {
-
-        auto identifier = (Identifier *) getValue<Identifier>(0);
-        if (identifier == nullptr)
-            return false;
-
-        std::string variableName;
-        if (!getIdentifierName(variableName))
-            return false;
-
-        if (std::ranges::find(m_nameSpaces, variableName) != m_nameSpaces.end()) {
-            type = IdentifierType::NameSpace;
-            identifier->setType(type,true);
-            return true;
-        }
-
-        if (std::ranges::find(m_UDTs, variableName) != m_UDTs.end()) {
-            type = IdentifierType::UDT;
-            identifier->setType(type,true);
-            return true;
-        }
-
-        u32 currentLine = m_curr->location.line-1;
-        u32 startingLineTokenIndex = m_firstTokenIdOfLine[currentLine];
-        if (startingLineTokenIndex == 0xFFFFFFFFu || startingLineTokenIndex > m_tokens.size())
-            return false;
-
-        if (auto *keyword = std::get_if<Keyword>(&m_tokens[startingLineTokenIndex].value);
-            keyword != nullptr && *keyword == Keyword::Import) {
-            type = IdentifierType::NameSpace;
-            identifier->setType(type,true);
-            return true;
-        }
-
-        i32 index = getTokenId(m_curr->location);
-        if (index < (i32)m_tokens.size() - 1 && index > 2) {
-            auto nextToken = m_curr[1];
-            auto *separator = std::get_if<Token::Separator>(&nextToken.value);
-            auto *operatortk = std::get_if<Token::Operator>(&nextToken.value);
-            if ((separator != nullptr && *separator == Separator::Semicolon) ||
-                (operatortk != nullptr && *operatortk == Operator::BoolLessThan)) {
-                auto previousToken = m_curr[-1];
-                auto prevprevToken = m_curr[-2];
-                operatortk = std::get_if<Operator>(&previousToken.value);
-                auto *identifier2 = std::get_if<Identifier>(&prevprevToken.value);
-                if (operatortk != nullptr && identifier2 != nullptr && *operatortk == Operator::ScopeResolution) {
-                    if (identifier2->getType() == IdentifierType::UDT) {
-                        type = IdentifierType::PatternLocalVariable;
-                        identifier->setType(type,true);
-                        return true;
-                    } else if (identifier2->getType() == IdentifierType::NameSpace) {
-                        type = IdentifierType::UDT;
-                        identifier->setType(type,true);
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    // finds the name of the tpken range that the given or the current token index is in.
-    bool ViewPatternEditor::TextHighlighter::findScope(std::string &name, const UnorderedBlocks &map, i32 optionalTokenId) {
-        auto tokenId = optionalTokenId == -1 ? getTokenId(m_curr->location) : optionalTokenId;
-        for (auto [scopeName,range] : map) {
-            if (range.contains(tokenId)) {
-                name = scopeName;
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    // Finds the namespace of the given or the current token index.
-    bool ViewPatternEditor::TextHighlighter::findNamespace(std::string &nameSpace, i32 optionalTokenId) {
-        nameSpace = "";
-
-        for (auto [interval,name] : m_namespaceTokenRange) {
-            i32 tokenId = optionalTokenId == -1 ? getTokenId(m_curr->location) : optionalTokenId;
-
-            if (tokenId > interval.start && tokenId < interval.end) {
-                if (nameSpace == "")
-                    nameSpace = name;
-                else
-                    nameSpace = name + "::" + nameSpace;
-            }
-        }
-        if (nameSpace != "")
-            return true;
-        return false;
-    }
-
-    //The context is the name of the function or UDT that the variable is in.
-    std::string ViewPatternEditor::TextHighlighter::findIdentifierTypeStr(const std::string &identifierName, std::string context) {
-        Definition result;
-        findIdentifierDefinition(result, identifierName, context);
-        return result.typeStr;
-    }
-
-    // Creates a map from the attribute function to the type of the argument it takes.
-    void ViewPatternEditor::TextHighlighter::linkAttribute() {
-        auto curr = m_curr;
-     //   while (!peek(tkn::Separator::LeftParenthesis) && !peek(tkn::Separator::Semicolon))
-     //       next();
-      //  next(-1);
-        bool qualifiedAttribute = false;
-        while (sequence(tkn::Literal::Identifier,tkn::Operator::ScopeResolution))
-            qualifiedAttribute = true;
-
-        if (qualifiedAttribute) {
-            auto identifier = (Identifier *)getValue<Identifier>(0);
-            if (identifier != nullptr)
-                identifier->setType(IdentifierType::Attribute, true);
-            m_curr = curr;
-            identifier = (Identifier *)getValue<Identifier>(0);
-            if (identifier != nullptr)
-                identifier->setType(IdentifierType::NameSpace, true);
-        } else
-            m_curr = curr;
-
-        std::string functionName;
-        next();
-
-        if (sequence(tkn::Separator::LeftParenthesis,tkn::Literal::String)) {
-
-            functionName = getValue<Literal>(-1)->toString(false);
-            if (!functionName.contains("::")) {
-
-                std::string namespaceName;
-                if (findNamespace(namespaceName))
-                    functionName = namespaceName + "::" + functionName;
-            } else{
-
-                auto vectorString = hex::splitString(functionName, "::");
-                vectorString.pop_back();
-                for (auto nameSpace : vectorString) {
-                    if (std::ranges::find(m_nameSpaces, nameSpace) == m_nameSpaces.end())
-                        m_nameSpaces.push_back(nameSpace);
-                }
-            }
-        } else
-            return;
-
-        u32 line = m_curr->location.line;
-        i32 tokenIndex;
-
-        while (!peek(tkn::Separator::Semicolon,-1)){
-            if (line = previousLine(line); line > m_firstTokenIdOfLine.size())
-                return;
-
-            if (tokenIndex = m_firstTokenIdOfLine[line]; !isTokenIdValid(tokenIndex))
-                return;
-
-            restart();
-            next(tokenIndex);
-            while(peek(tkn::Literal::Comment,-1) || peek(tkn::Literal::DocComment,-1))
-                next(-1);
-        }
-
-        while(peek(tkn::Literal::Comment) || peek(tkn::Literal::DocComment))
-            next();
-
-        Identifier *identifier;
-        std::string UDTName;
-        while (sequence(tkn::Literal::Identifier,tkn::Operator::ScopeResolution)) {
-            identifier = (Identifier *) getValue<Identifier>(-2);
-            UDTName += identifier->get() + "::";
-        }
-
-        if (sequence(tkn::Literal::Identifier)) {
-            identifier = (Identifier *) getValue<Identifier>(-1);
-            UDTName += identifier->get();
-            if (!UDTName.contains("::")) {
-                std::string namespaceName;
-                if (findNamespace(namespaceName))
-                    UDTName = namespaceName + "::" + UDTName;
-            }
-            if (m_types.contains(UDTName))
-                m_attributeFunctionArgumentType[functionName] = UDTName;
-        } else if (sequence(tkn::ValueType::Any)) {
-            auto valueType = getValue<ValueType>(-1);
-            m_attributeFunctionArgumentType[functionName] = Token::getTypeName(*valueType);
-        } else {
-            if (findScope(UDTName, m_UDTTokenRange) && !UDTName.empty())
-                m_attributeFunctionArgumentType[functionName] = UDTName;
-        }
-    }
-
-    // This function assumes that the first variable in the link that concatenates sequences including the Parent keyword started with Parent and was removed. Uses a function to find
-    // all the parents of a variable, If there are subsequent elements in the link that are Parent then for each parent it finds all the grandparents and puts them in a vector called
-    // parentTypes. It stops when a link that's not Parent is found amd only returns the last generation of parents.
-     bool ViewPatternEditor::TextHighlighter::findAllParentTypes(std::vector<std::string> &parentTypes, std::vector<Identifier *> &identifiers, std::string &optionalFullName) {
-        auto fullName = optionalFullName;
-
-        if (optionalFullName.empty())
-            forwardIdentifierName(fullName, std::nullopt, (std::vector<Identifier *> &) identifiers);
-
-        auto nameParts = hex::splitString(fullName, ".");
-        std::vector<std::string> grandpaTypes;
-        findParentTypes(parentTypes);
-
-        if (parentTypes.empty())
-            return false;
-
-        auto currentName=nameParts[0];
-        nameParts.erase(nameParts.begin());
-        auto identifier = identifiers[0];
-        identifiers.erase(identifiers.begin());
-
-        while (currentName == "Parent" && !nameParts.empty()) {
-            for (auto parentType: parentTypes)
-                findParentTypes(grandpaTypes, parentType);
-
-            currentName = nameParts[0];
-            nameParts.erase(nameParts.begin());
-            identifier = identifiers[0];
-            identifiers.erase(identifiers.begin());
-            parentTypes = grandpaTypes;
-            grandpaTypes.clear();
-        }
-
-        nameParts.insert(nameParts.begin(),currentName);
-        identifiers.insert(identifiers.begin(),identifier);
-        optionalFullName = hex::combineStrings(nameParts, ".");
-
-        return true;
-    }
-
-    // Searches for parents through every custom type,i.e. for structs that have members
-    // of the same type as the one being searched and places them in a vector called parentTypes.
-    bool ViewPatternEditor::TextHighlighter::findParentTypes(std::vector<std::string> &parentTypes,const std::string &optionalUDTName) {
-        std::string UDTName;
-
-        if (optionalUDTName.empty()) {
-            if (!findScope(UDTName, m_UDTTokenRange))
-                return false;
-        } else
-            UDTName = optionalUDTName;
-
-        bool found = false;
-        for (auto [name,variables] : m_UDTVariables) {
-            for (auto [variableName,definitions] : variables) {
-                for (auto definition : definitions) {
-                    if (definition.typeStr == UDTName) {
-                        if (std::ranges::find(parentTypes, name) == parentTypes.end()) {
-                            parentTypes.push_back(name);
-                            found = true;
-                        }
-                    }
-                }
-            }
-        }
-        return found;
-    }
-
-    // this function searches all the parents recursively until it can match the variable name at the end of the chain
-    // and selects its type to colour the variable because the search only occurs pn type declarations which we know
-    // the types of. Once the end link is found then all the previous links are also assigned the types that were found
-    // for them during the search.
-    bool ViewPatternEditor::TextHighlighter::tryParentType(  const std::string &parentType, std::string &variableName,
-                                                             std::optional<Definition> &result, std::vector<Identifier *> &identifiers) {
-
-        auto vectorString = hex::splitString(variableName, ".");
-        auto count = vectorString.size();
-        Identifier *identifier = identifiers[0];
-        auto UDTName=parentType;
-        auto currentName = vectorString[0];
-
-        if (m_UDTVariables.contains(UDTName) && m_UDTVariables[UDTName].contains(currentName)) {
-            auto definitions = m_UDTVariables[UDTName][currentName];
-            for (auto definition : definitions) {
-                UDTName = definition.typeStr;
-
-                if (count == 1) {
-                    identifier->setType(definition.idType, true);
-                    result = definition;
-                    return true;
-                }
-
-                vectorString.erase(vectorString.begin());
-                variableName = hex::combineStrings(vectorString, ".");
-                identifier = identifiers[0];
-                identifiers.erase(identifiers.begin());
-                if (tryParentType(UDTName, variableName, result,identifiers) ) {
-                    identifier->setType(definition.idType, true);
-                    return true;
-                }
-
-                identifiers.insert(identifiers.begin(),identifier);
-                variableName += "." + currentName;
-                return false;
-            }
-            return false;
-        } else
-            return false;
-        return false;
-    }
-
-    // Handles Parent keyword.
-    std::optional<Definition> ViewPatternEditor::TextHighlighter::setChildrenTypes(std::string &optionalFullName, std::vector<Identifier *> &optionalIdentifiers) {
-        auto curr = m_curr;
-        std::string fullName;
-        std::vector<Identifier *> identifiers;
-        std::vector<Definition> definitions;
-        std::optional<Definition> result;
-
-        if (!optionalFullName.empty()) {
-            fullName = optionalFullName;
-            identifiers = optionalIdentifiers;
-        } else
-            forwardIdentifierName(fullName,std::nullopt,identifiers);
-
-        std::vector<std::string> parentTypes;
-        auto vectorString = hex::splitString(fullName, ".");
-        if (vectorString[0] == "Parent") {
-            vectorString.erase(vectorString.begin());
-            fullName = hex::combineStrings(vectorString, ".");
-            identifiers.erase(identifiers.begin());
-            if (!findAllParentTypes(parentTypes, identifiers, fullName)) {
-                m_curr = curr;
-                return std::nullopt;
-            }
-        } else
-             return std::nullopt;
-
-        for (auto parentType : parentTypes) {
-            if (tryParentType(parentType, fullName, result, identifiers)) {
-                if (result.has_value())
-                    definitions.push_back(result.value());
-            } else {
-                m_curr = curr;
-                return std::nullopt;
-            }
-        }
-        // Todo: Are all definitions supposed to be the same? If not, which one should be used?
-        // for now, use the first one.
-        if (!definitions.empty())
-            result = definitions[0];
-        m_curr = curr;
-        return result;
-    }
-
-    // Third paletteIndex called from processLineTokens to process variable identifiers that were
-    // labeled as unknown.
-    TextEditor::PaletteIndex ViewPatternEditor::TextHighlighter::getPaletteIndex(IdentifierType type) {
-        switch (type) {
-            case IdentifierType::NameSpace:             return TextEditor::PaletteIndex::NameSpace;
-            case IdentifierType::UDT:                   return TextEditor::PaletteIndex::UserDefinedType;
-            case IdentifierType::FunctionVariable:      return TextEditor::PaletteIndex::FunctionVariable;
-            case IdentifierType::FunctionParameter:     return TextEditor::PaletteIndex::FunctionParameter;
-            case IdentifierType::PatternLocalVariable:  return TextEditor::PaletteIndex::PatternLocalVariable;
-            case IdentifierType::PatternVariable:       return TextEditor::PaletteIndex::PatternVariable;
-            case IdentifierType::PatternPlacedVariable: return TextEditor::PaletteIndex::PatternPlacedVariable;
-            case IdentifierType::TemplateArgument:      return TextEditor::PaletteIndex::TemplateArgument;
-            case IdentifierType::GlobalVariable:        return TextEditor::PaletteIndex::GlobalVariable;
-            case IdentifierType::PlacedVariable:        return TextEditor::PaletteIndex::PlacedVariable;
-            case IdentifierType::Typedef:               return TextEditor::PaletteIndex::TypeDef;
-            default:                                    return TextEditor::PaletteIndex::UnkIdentifier;
-        }
-    }
-
-    // Second paletteIndex called from processLineTokens to process literals
-    TextEditor::PaletteIndex ViewPatternEditor::TextHighlighter::getPaletteIndex(Literal *literal) {
-
-        if (literal->isFloatingPoint() || literal->isSigned() || literal->isUnsigned()) return TextEditor::PaletteIndex::NumericLiteral;
-        else if (literal->isCharacter() || literal->isBoolean())                        return TextEditor::PaletteIndex::CharLiteral;
-        else if (literal->isString())                                                   return TextEditor::PaletteIndex::StringLiteral;
-        else                                                                            return TextEditor::PaletteIndex::UnkIdentifier;
-    }
-
-    // Second paletteIndex called from processLineTokens to process identifiers
-    TextEditor::PaletteIndex ViewPatternEditor::TextHighlighter::getPaletteIndex(Identifier *identifier) {
-        IdentifierType identifierType = identifier->getType();
-        std::string functionName;
-        switch (identifierType) {
-            case IdentifierType::Macro:                 return TextEditor::PaletteIndex::PreprocIdentifier;
-            case IdentifierType::Attribute:             return TextEditor::PaletteIndex::Attribute;
-            case IdentifierType::Function:              return TextEditor::PaletteIndex::Function;
-            case IdentifierType::NameSpace:             return TextEditor::PaletteIndex::NameSpace;
-            case IdentifierType::UDT:
-                if (std::ranges::find(m_typeDefs,identifier->get()) != m_typeDefs.end()) {
-                    identifier->setType(IdentifierType::Typedef,true);
-                    return TextEditor::PaletteIndex::TypeDef;
-                }
-                                                        return TextEditor::PaletteIndex::UserDefinedType;
-            case IdentifierType::FunctionVariable:      return TextEditor::PaletteIndex::FunctionVariable;
-            case IdentifierType::FunctionParameter:     return TextEditor::PaletteIndex::FunctionParameter;
-            case IdentifierType::PatternLocalVariable:
-                if (peek(tkn::Separator::Comma,1)) {
-                    identifier->setType(IdentifierType::PatternVariable, true);
-                    return TextEditor::PaletteIndex::PatternVariable;
-                }
-                                                        return TextEditor::PaletteIndex::PatternLocalVariable;
-            case IdentifierType::PatternVariable:       return TextEditor::PaletteIndex::PatternVariable;
-            case IdentifierType::PatternPlacedVariable: return TextEditor::PaletteIndex::PatternPlacedVariable;
-            case IdentifierType::TemplateArgument:      return TextEditor::PaletteIndex::TemplateArgument;
-            case IdentifierType::GlobalVariable:        return TextEditor::PaletteIndex::GlobalVariable;
-            case IdentifierType::PlacedVariable:        return TextEditor::PaletteIndex::PlacedVariable;
-            case IdentifierType::Typedef:               return TextEditor::PaletteIndex::TypeDef;
-            case IdentifierType::FunctionUnknown:
-            case IdentifierType::MemberUnknown:
-            case IdentifierType::ScopeResolutionUnknown:
-            case IdentifierType::Unknown:
-                if (findIdentifierType(identifierType))
-                    return getPaletteIndex(identifierType);
-                if (findScopeResolutionType(identifierType))
-                    return getPaletteIndex(identifierType);
-                                                        return TextEditor::PaletteIndex::UnkIdentifier;
-            default:                                    return TextEditor::PaletteIndex::UnkIdentifier;
-        }
-    }
-
-    // First paletteIndex called from processLineTokens
-    TextEditor::PaletteIndex ViewPatternEditor::TextHighlighter::getPaletteIndex() {
-        auto &token = m_curr[0];
-        TextEditor::PatternLanguageTypes type;
-        Comment *comment;
-        DocComment *docComment;
-        Identifier *identifier;
-        Literal *literal;
-        std::vector<Identifier *> identifiers;
-        std::string fullName;
-        switch (token.type) {
-            using enum TextEditor::PatternLanguageTypes;
-            case Token::Type::Keyword:
-                if (peek(tkn::Keyword::Parent,0))
-                    setChildrenTypes(fullName,identifiers);
-                type = Keyword;
-                break;
-            case Token::Type::ValueType: type = ValueType;
-                break;
-            case Token::Type::Operator: type = Operator;
-                break;
-            case Token::Type::Integer:
-                if (literal = (Literal *)std::get_if<Literal>(&token.value); literal != nullptr)
-                    return getPaletteIndex(literal);
-                type = Integer;
-                break;
-            case Token::Type::String:   type = String;
-                break;
-            case Token::Type::Identifier:
-                if (identifier =(Token::Identifier *) std::get_if<Token::Identifier>(&token.value); identifier != nullptr)
-                    return getPaletteIndex(identifier);
-                type = Identifier;
-                break;
-            case Token::Type::Separator:    type = Separator;
-                break;
-            case Token::Type::Comment:
-                if (comment =(Token::Comment *) std::get_if<Token::Comment>(&token.value); comment != nullptr)
-                    type = comment->singleLine ? Comment : BlockComment;
-                else
-                    type = Comment;
-                break;
-            case Token::Type::DocComment:
-                if (docComment = (Token::DocComment *)std::get_if<Token::DocComment>(&token.value); docComment != nullptr)
-                    type = docComment->singleLine ? DocComment : docComment->global ? DocGlobalComment : DocBlockComment;
-                else
-                    type = DocComment;
-                break;
-            case Token::Type::Directive:    type = Directive;
-                break;
-            default:
-                type = Default;
-        }
-        return m_viewPatternEditor.m_textEditor.getPaletteIndex<TextEditor::PatternLanguageTypes>(type);
-    }
-
-    // Render the compilation errors using squiggly lines
-    void ViewPatternEditor::TextHighlighter::renderErrors() {
-        const auto processMessage = [](const auto &message) {
-            auto lines = wolv::util::splitString(message, "\n");
-
-            std::ranges::transform(lines, lines.begin(), [](auto line) {
-                if (line.size() >= 128)
-                    line = wolv::util::trim(line);
-
-                return hex::limitStringLength(line, 128);
-            });
-
-            return wolv::util::combineStrings(lines, "\n");
-        };
-        TextEditor::ErrorMarkers errorMarkers;
-
-        if (!m_compileErrors.empty()) {
-            for (const auto &error : m_compileErrors) {
-                auto key = TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
-                if (!errorMarkers.contains(key) || errorMarkers[key].first < error.getLocation().length)
-                    errorMarkers[key] = std::make_pair(error.getLocation().length, processMessage(error.getMessage()));
-            }
-        }
-        m_viewPatternEditor.m_textEditor.SetErrorMarkers(errorMarkers);
-    }
-
-    // creates a map from variable names to a vector of token indices
-    // od every instance of the variable name in the code.
-    void ViewPatternEditor::TextHighlighter::loadInstances() {
-
-        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_tokens.begin(), m_tokens.end());
-        for (m_curr = m_startToken; !peek(tkn::Separator::EndOfProgram); next()) {
-
-            if (peek(pl::core::tkn::Literal::Identifier)) {
-                std::string name;
-                if (!getQualifiedName(name))
-                    continue;
-                auto id = getTokenId(m_curr->location);
-                auto &instances = m_instances[name];
-                if (std::ranges::find(instances, id) == instances.end())
-                    instances.push_back(id);
-            }
-        }
-    }
-
-    // Get the location of a given token index
-    pl::core::Location ViewPatternEditor::TextHighlighter::getLocation(i32 tokenId) {
-        pl::core::Location location;
-        if (tokenId >= (i32)m_tokens.size())
-            return location;
-        return m_tokens[tokenId].location;
-    }
-
-    // Get the token index for a given location.
-    i32 ViewPatternEditor::TextHighlighter::getTokenId(pl::core::Location location) {
-        if (location.source->source != "<Source Code>")
-            return -1;
-        auto line1 = location.line-1;
-        auto line2 = nextLine(line1);
-        i32 tokenStart = m_firstTokenIdOfLine[line1];
-        i32 tokenEnd = m_firstTokenIdOfLine[line2]-1;
-
-        if (tokenEnd >= (i32)m_tokens.size())
-            tokenEnd = m_tokens.size()-1;
-
-        if (tokenStart == -1 || tokenEnd == -1 || tokenStart >= (i32)m_tokens.size())
-            return -1;
-
-        for (i32 i = tokenStart; i <= tokenEnd; i++) {
-            if (m_tokens[i].location.column >= location.column)
-                return i;
-        }
-        return -1;
-    }
-
-    // Transfer identifier types from the parsed tokens to the un-preprocessed tokens. Token indices won't match,
-    // but the locations will.
-    void ViewPatternEditor::TextHighlighter::getIdentifierTypes(const std::optional<std::vector<pl::core::Token>> &tokens) {
-        using IdentifierType::Unknown;
-        using IdentifierType::MemberUnknown;
-        using IdentifierType::FunctionUnknown;
-        using IdentifierType::ScopeResolutionUnknown;
-
-        if (!tokens.has_value())
-            return;
-
-        std::map<std::string,IdentifierType> includedNames;
-        std::map<std::string,IdentifierType> sourceNames;
-
-        m_curr = m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(tokens.value().begin(), tokens.value().end());
-
-        for (auto curr = m_curr;!peek(tkn::Separator::EndOfProgram); next()) {
-            if (auto tokenIdentifier = std::get_if<Identifier>(&m_curr->value); tokenIdentifier != nullptr) {
-
-                if (auto type = getValue<Identifier>(0)->getType(); type != Unknown && type != MemberUnknown && type != FunctionUnknown && type != ScopeResolutionUnknown) {
-                    auto name = getValue<Identifier>(0)->get();
-                    i32 tokenId = getTokenId(m_curr->location);
-
-                    if (tokenId == -1) {
-
-                        if (type == IdentifierType::NameSpace && (std::ranges::find(m_nameSpaces, name) == m_nameSpaces.end()))
-                            m_nameSpaces.push_back(name);
-
-                        if (!includedNames.contains(name))
-                            includedNames[name] = type;
-
-                    } else if (auto m_tokensIdentifier = std::get_if<Identifier>(&m_tokens[tokenId].value); m_tokensIdentifier != nullptr) {
-
-                        m_tokensIdentifier->setType(type, true);
-                        if (!sourceNames.contains(name))
-                            sourceNames[name] = type;
-                    }
-                }
-            } else if (auto keyword = std::get_if<Keyword>(&m_curr->value); keyword != nullptr && *keyword == Keyword::Namespace) {
-                curr = m_curr;
-                next();
-                auto namespaceIdentifier = std::get_if<Identifier>(&m_curr->value);
-                while (namespaceIdentifier != nullptr) {
-                    auto name = namespaceIdentifier->get();
-
-                    if (std::ranges::find(m_nameSpaces, name) == m_nameSpaces.end())
-                        m_nameSpaces.push_back(name);
-                    next();
-
-                    if (auto operatortk = std::get_if<Operator>(&m_curr->value); operatortk == nullptr || *operatortk != Operator::ScopeResolution)
-                        break;
-                    next();
-                    namespaceIdentifier = std::get_if<Identifier>(&m_curr->value);
-                }
-                m_curr = curr;
-            }
-        }
-
-        for (auto [name,type] : includedNames) {
-            if (!sourceNames.contains(name) && m_instances.contains(name)) {
-                auto &instances = m_instances[name];
-                for (auto instance : instances) {
-
-                    if (auto identifier = std::get_if<Identifier>(&m_tokens[instance].value); identifier != nullptr) {
-
-                        if (identifier->getType() == Unknown || identifier->getType() == MemberUnknown || identifier->getType() == FunctionUnknown || identifier->getType() == ScopeResolutionUnknown)
-                            identifier->setType(type, true);
-                    }
-                }
-            }
-        }
-    }
-
-    void ViewPatternEditor::TextHighlighter::appendInheritances() {
-        for (auto [name,inheritances] : m_inheritances) {
-            for (auto inheritance : inheritances) {
-                auto definitions = m_UDTVariables[inheritance];
-                for (auto [variableName,variableDefinitions] : definitions) {
-                    for (auto variableDefinition : variableDefinitions)
-                        m_UDTVariables[name][variableName].push_back(variableDefinition);
-                }
-            }
-        }
-    }
-
-    // Get the string of the argument type. This works on function arguments and user defined template arguments.
-    std::string ViewPatternEditor::TextHighlighter::getArgumentTypeName( i32 rangeStart, Token delimiter2) {
-        auto curr = m_curr;
-        auto tokenRef = Token(tkn::Keyword::Reference);
-        i32 parameterIndex = getArgumentNumber(rangeStart, getTokenId(m_curr->location));
-        Token delimiter;
-        std::string typeStr;
-
-        if (parameterIndex > 0)
-            delimiter = tkn::Separator::Comma;
-        else
-            delimiter = delimiter2;
-
-        while (!peek(delimiter))
-            next(-1);
-        skipToken(tokenRef);
-        next();
-        if (peek(tkn::ValueType::Any))
-            typeStr = Token::getTypeName(*getValue<Token::ValueType>(0));
-        else if (peek(tkn::Literal::Identifier))
-            typeStr = getValue<Token::Identifier>(0)->get();
-
-        m_curr = curr;
-        return typeStr;
-    }
-
-    bool ViewPatternEditor::TextHighlighter::isTokenIdValid(i32 tokenId) {
-        return tokenId >= 0 && tokenId < (i32)m_tokens.size();
-    }
-
-    // Find the string of the variable type. This works on function
-    // variables, local, placed and regular pattern variables.
-    std::string ViewPatternEditor::TextHighlighter::getVariableTypeName() {
-        auto curr = m_curr;
-        auto tokenPointer = Token(tkn::Operator::Star);
-        auto varTokenId = getTokenId(m_curr->location);
-
-        if (!isTokenIdValid(varTokenId) )
-            return "";
-
-        std::string typeStr;
-        restart();
-        next(varTokenId);
-        skipToken(tokenPointer,-1);
-
-        while (peek(tkn::Separator::Comma,-1))
-            next(-2);
-
-        if (peek(tkn::ValueType::Any,-1))
-            typeStr = Token::getTypeName(*getValue<Token::ValueType>(-1));
-        else {
-            skipTemplate(200, false);
-            next(-1);
-            if (peek(tkn::Literal::Identifier)) {
-                typeStr = getValue<Token::Identifier>(0)->get();
-                next(-1);
-            }
-            std::string nameSpace;
-            while (peek(tkn::Operator::ScopeResolution)) {
-                next(-1);
-                nameSpace = getValue<Token::Identifier>(0)->get() + "::" + nameSpace;
-                next(-1);
-            }
-            typeStr = nameSpace + typeStr;
-
-            if (m_types.contains(typeStr)) {
-                m_curr = curr;
-                return typeStr;
-            }
-            std::vector<std::string> candidates;
-            for (auto [name,typeDecl] : m_types) {
-                auto vectorString = hex::splitString(name, "::");
-                if (typeStr == vectorString.back())
-                    candidates.push_back(name);
-            }
-
-            if (candidates.size() == 1) {
-                m_curr = curr;
-                return candidates[0];
-            }
-        }
-        m_curr = curr;
-        return typeStr;
-    }
-
-    // Definitions of global variables and placed variables.
-    void ViewPatternEditor::TextHighlighter::loadGlobalDefinitions(
-            Scopes tokenRangeSet, std::vector<IdentifierType> identifierTypes,
-            Variables &variables) {
-        for (auto range : tokenRangeSet) {
-            restart();
-            auto limit = m_curr + range.end;
-            next(range.start);
-            while (m_curr != limit) {
-
-                if (peek(tkn::Literal::Identifier)) {
-                    auto identifier = (Identifier *) getValue<Token::Identifier>(0);
-                    auto identifierType = identifier->getType();
-                    auto identifierName = identifier->get();
-
-                    if (std::ranges::find(identifierTypes,identifierType) != identifierTypes.end()) {
-                        std::string typeStr = getVariableTypeName();
-                        variables[identifierName].push_back(Definition(identifierType,typeStr,getTokenId(m_curr->location),  m_curr->location));
-                    }
-                }
-                next();
-            }
-        }
-    }
-
-    // Definitions of variables and arguments in functions and user defined types.
-    void ViewPatternEditor::TextHighlighter::loadVariableDefinitions(UnorderedBlocks tokenRangeMap, Token delimiter,
-                                                                     std::vector<IdentifierType> identifierTypes, bool isArgument, VariableMap &variableMap) {
-        for (auto [name,range] : tokenRangeMap) {
-            restart();
-            auto limit = m_curr + range.end;
-            next(range.start);
-            Keyword *keyword = std::get_if<Keyword>(&m_tokens[range.start].value);
-            while (m_curr != limit) {
-
-                if (peek(tkn::Literal::Identifier)) {
-                    auto identifier = (Identifier *) getValue<Token::Identifier>(0);
-                    auto identifierType = identifier->getType();
-                    auto identifierName = identifier->get();
-
-                    if (std::ranges::find(identifierTypes,identifierType) != identifierTypes.end()) {
-                        std::string typeStr;
-
-                        if (keyword != nullptr && (*keyword == Keyword::Enum || *keyword == Keyword::Bitfield)) {
-                            typeStr = name;
-                        } else if (isArgument) {
-                            typeStr = getArgumentTypeName(range.start, delimiter);
-                        } else {
-                            typeStr = getVariableTypeName();
-                        }
-                        variableMap[name][identifierName].push_back(Definition(identifierType,typeStr, getTokenId(m_curr->location),  m_curr->location));
-                    }
-                }
-                next();
-            }
-        }
-    }
-
-    // Definitions of user defined types and functions.
-    void ViewPatternEditor::TextHighlighter::loadTypeDefinitions(
-            UnorderedBlocks tokenRangeMap, std::vector<IdentifierType> identifierTypes, Definitions &types) {
-        for (auto [name,range] : tokenRangeMap) {
-            restart();
-            auto limit = m_curr + range.end;
-            next(range.start);
-            while (m_curr != limit) {
-
-                if (peek(tkn::Literal::Identifier)) {
-                    auto identifier = (Identifier *)getValue<Token::Identifier>(0);
-                    auto identifierType = identifier->getType();
-
-                    if (std::ranges::find(identifierTypes,identifierType) != identifierTypes.end())
-                        types[name] = ParentDefinition(identifierType, getTokenId(m_curr->location), m_curr->location);
-                }
-                next();
-            }
-        }
-    }
-
-    // Once types are loaded from parsed tokens we can create
-    // maps of variable names to their definitions.
-    void ViewPatternEditor::TextHighlighter::getDefinitions() {
-        using IdentifierType::PatternLocalVariable;
-        using IdentifierType::PatternVariable;
-        using IdentifierType::PatternPlacedVariable;
-        using IdentifierType::GlobalVariable;
-        using IdentifierType::PlacedVariable;
-        using IdentifierType::FunctionVariable;
-        using IdentifierType::FunctionParameter;
-        using IdentifierType::TemplateArgument;
-        using IdentifierType::UDT;
-        using IdentifierType::Function;
-
-
-        loadTypeDefinitions(m_UDTTokenRange, {UDT}, m_UDTDefinitions);
-        loadVariableDefinitions(m_UDTTokenRange, tkn::Operator::BoolLessThan, {TemplateArgument}, true, m_UDTVariables);
-        loadVariableDefinitions(m_UDTTokenRange, tkn::Operator::BoolLessThan, {PatternLocalVariable, PatternVariable, PatternPlacedVariable}, false, m_UDTVariables);
-
-        appendInheritances();
-
-        loadTypeDefinitions(m_functionTokenRange,{Function},m_functionDefinitions);
-        loadVariableDefinitions(m_functionTokenRange,tkn::Separator::LeftParenthesis,{FunctionParameter},true,m_functionVariables);
-        loadVariableDefinitions(m_functionTokenRange,tkn::Separator::LeftParenthesis,{FunctionVariable},false,m_functionVariables);
-
-        loadGlobalDefinitions(m_globalTokenRange,{GlobalVariable,PlacedVariable},m_globalVariables);
-    }
-
-    // Load the source code into the text highlighter, splits
-    // the text into lines and creates a lookup table for the
-    // first token id of each line.
-    void ViewPatternEditor::TextHighlighter::loadText() {
-        m_lines.clear();
-
-        if (m_text.empty())
-            m_text = m_viewPatternEditor.m_textEditor.GetText();
-
-        m_lines = hex::splitString(m_text, "\n");
-        m_lines.push_back("");
-        m_firstTokenIdOfLine.clear();
-        m_firstTokenIdOfLine.resize(m_lines.size(), -1);
-
-        i32 tokenId = 0;
-        i32 tokenCount = m_tokens.size();
-        i32 index;
-
-        if (tokenCount > 0) {
-            index = m_tokens[0].location.line - 1;
-            m_firstTokenIdOfLine[index] = 0;
-        }
-        i32 count = m_lines.size();
-        for (i32 currentLine=0; currentLine < count; currentLine++) {
-            for (index = m_tokens[tokenId].location.line - 1; index <= currentLine && tokenId+1 < tokenCount ; tokenId++)
-                index = m_tokens[tokenId+1].location.line - 1;
-
-            if (index > currentLine)
-                m_firstTokenIdOfLine[index] = tokenId;
-        }
-
-        if (m_firstTokenIdOfLine.back() != tokenCount)
-             m_firstTokenIdOfLine.push_back(tokenCount);
-    }
-
-    // Some tokens span many lines and some lines have no tokens. This
-    // function helps to find the next line number in the inner loop.
-    u32 ViewPatternEditor::TextHighlighter::nextLine(u32 line) {
-        auto currentTokenId = m_firstTokenIdOfLine[line];
-        u32 i = 1;
-        while(line + i < m_lines.size() && (m_firstTokenIdOfLine[line + i] == currentTokenId || m_firstTokenIdOfLine[line + i] == (i32)0xFFFFFFFF))
-            i++;
-        return i + line;
-    }
-
-    u32 ViewPatternEditor::TextHighlighter::previousLine(u32 line) {
-        auto currentTokenId = m_firstTokenIdOfLine[line];
-        u32 i = 1;
-        while(line - i < m_lines.size() && (m_firstTokenIdOfLine[line - i] == currentTokenId || m_firstTokenIdOfLine[line - i] == (i32)0xFFFFFFFF))
-            i++;
-        return line - i;
-    }
-
-    // global token ranges are the complement (aka inverse) of the union
-    // of the UDT and function token ranges
-    void ViewPatternEditor::TextHighlighter::invertGlobalTokenRange() {
-        std::set<Interval> ranges;
-        auto size = m_globalTokenRange.size();
-
-        if (size == 0) {
-            ranges.insert(Interval(0, m_tokens.size()));
-        } else {
-            auto it = m_globalTokenRange.begin();
-            auto it2 = std::next(it);
-            if (it->start != 0)
-                ranges.insert(Interval(0, it->start));
-            while (it2 != m_globalTokenRange.end()) {
-
-                if (it->end < it2->start)
-                    ranges.insert(Interval(it->end, it2->start));
-                else
-                    ranges.insert(Interval(it->start, it2->end));
-                it = it2;
-                it2 = std::next(it);
-            }
-
-            if (it->end < (i32) m_tokens.size())
-                ranges.insert(Interval(it->end, m_tokens.size()));
-        }
-        m_globalTokenRange = ranges;
-    }
-
-    // 0 for 1st argument, 1 for 2nd argument, etc. Obtained counting commas.
-    i32  ViewPatternEditor::TextHighlighter::getArgumentNumber(i32 start,i32 arg) {
-        i32 count = 0;
-        restart();
-        auto limit = m_curr + arg;
-        next(start);
-        while (m_curr != limit) {
-
-            if (peek(tkn::Separator::Comma))
-                count++;
-            next();
-        }
-
-        return count;
-    }
-
-    // The inverse of getArgumentNumber.
-    void ViewPatternEditor::TextHighlighter::getTokenIdForArgument(i32 start, i32 argNumber) {
-        restart();
-        next(start+2);
-        i32 count = 0;
-        while (count < argNumber) {
-
-            if (peek(tkn::Separator::Comma))
-                count++;
-            next();
-        }
-    }
-
-    // Changes auto type string in definitions to the actual type string.
-    void ViewPatternEditor::TextHighlighter::resolveAutos( VariableMap &variableMap, UnorderedBlocks &tokenRange) {
-        auto curr = m_curr;
-        std::string UDTName;
-        for (auto &[name, variables]: variableMap) {
-            for (auto &[variableName, definitions]: variables) {
-                for (auto &definition: definitions) {
-
-                    if (definition.typeStr == "auto") {
-                        auto argumentIndex = getArgumentNumber(tokenRange[name].start, definition.tokenIndex);
-
-                        if (tokenRange == m_UDTTokenRange || !m_attributeFunctionArgumentType.contains(name) ||
-                            m_attributeFunctionArgumentType[name].empty()) {
-                            auto instances = m_instances[name];
-                            for (auto instance: instances) {
-
-                                if (std::abs(definition.tokenIndex - instance) <= 5)
-                                    continue;
-                                std::string fullName;
-                                std::vector<Identifier *> identifiers;
-                                getTokenIdForArgument(instance, argumentIndex);
-                                auto save = m_curr;
-                                forwardIdentifierName(fullName, std::nullopt, identifiers);
-                                m_curr = save;
-
-                                if (fullName.starts_with("Parent.")) {
-                                    auto fixedDefinition = setChildrenTypes(fullName, identifiers);
-
-                                    if (fixedDefinition.has_value() &&
-                                        m_UDTDefinitions.contains(fixedDefinition->typeStr)) {
-                                        definition.tokenIndex = fixedDefinition->tokenIndex;
-                                        definition.typeStr = fixedDefinition->typeStr;
-                                        continue;
-                                    }
-                                } else if (fullName.contains(".")) {
-                                    Definition definitionTemp;
-                                    resolveIdentifierType(definitionTemp);
-                                    definition.typeStr = definitionTemp.typeStr;
-                                    definition.tokenIndex = definitionTemp.tokenIndex;
-                                } else {
-                                    auto typeName = findIdentifierTypeStr(fullName);
-                                    definition.typeStr = typeName;
-                                }
-                            }
-                        } else {
-                            UDTName = m_attributeFunctionArgumentType[name];
-                            if (m_UDTDefinitions.contains(UDTName)) {
-                                definition.tokenIndex = m_UDTDefinitions[UDTName].tokenIndex;
-                                definition.typeStr = UDTName;
-                                continue;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        m_curr = curr;
-    }
-
-    void ViewPatternEditor::TextHighlighter::fixAutos() {
-        resolveAutos(m_functionVariables, m_functionTokenRange);
-        resolveAutos(m_UDTVariables, m_UDTTokenRange);
-    }
-
-    // Calculates the union of all the UDT and function token ranges
-    // and inverts the result.
-    void ViewPatternEditor::TextHighlighter::getGlobalTokenRanges() {
-        std::set<Interval> ranges;
-        for (auto [name,range] : m_UDTTokenRange)
-            ranges.insert(range);
-        for (auto [name,range] : m_functionTokenRange)
-            ranges.insert(range);
-
-        if (ranges.empty()) {
-            invertGlobalTokenRange();
-            return;
-        }
-        auto it = ranges.begin();
-        auto next = std::next(it);
-        while (next != ranges.end()) {
-
-            if (next->start - it->end < 2) {
-                Interval &range = const_cast<Interval &>(*it);
-                range.end = next->end;
-                ranges.erase(next);
-                next = std::next(it);
-            } else {
-                it++;
-                next = std::next(it);
-            }
-        }
-        m_globalTokenRange = ranges;
-        invertGlobalTokenRange();
-    }
-
-    // A block is a range of tokens enclosed by braces.
-    void ViewPatternEditor::TextHighlighter::loadGlobalBlocks() {
-        auto curr = m_curr;
-        std::stack<i32> tokenStack;
-        for (auto tokenRange : m_globalTokenRange) {
-            m_globalBlocks.insert(tokenRange);
-            restart();
-            auto limit = m_curr + tokenRange.end;
-            next(tokenRange.start);
-
-            while (m_curr != limit) {
-                if (peek(tkn::Separator::LeftBrace)) {
-                    auto tokenId = getTokenId(m_curr->location);
-                    tokenStack.push(tokenId);
-                } else if (peek(tkn::Separator::RightBrace)) {
-                    if (tokenStack.empty())
-                        break;
-                    Interval range(tokenStack.top(), getTokenId(m_curr->location));
-                    tokenStack.pop();
-                    m_globalBlocks.insert(range);
-                } else if (peek(tkn::Separator::EndOfProgram)) {
-                    break;
-                }
-                next();
-            }
-        }
-        m_curr = curr;
-    }
-
-    // Parser labels global variables that are not placed as
-    // function variables.
-    void ViewPatternEditor::TextHighlighter::fixGlobalVariables() {
-        for (auto range : m_globalTokenRange) {
-            restart();
-            auto limit = m_curr + range.end;
-            next(range.start);
-            while (m_curr != limit) {
-
-                if (sequence(tkn::Literal::Identifier)) {
-                    auto identifier = (Identifier *)getValue<Token::Identifier>(-1);
-                    if (identifier->getType() == IdentifierType::FunctionVariable)
-                        identifier->setType(IdentifierType::GlobalVariable, true);
-                } else
-                    next();
-            }
-        }
-    }
-
-    // Parser only sets identifier types for variable definitions.
-    // creates a map of all the defined function variable types and names
-    // and uses it to set the type of all variable instances.
-    void ViewPatternEditor::TextHighlighter::fixFunctionVariables() {
-        fixAutos();
-
-        for (auto range : m_functionTokenRange) {
-            std::map<Identifier *,IdentifierType > functionVariables;
-            for (auto [function,variables]  : m_functionVariables) {
-                // variables can have multiple definitions
-                for (auto [variable, definitions]: variables) {
-                    for (auto definition: definitions) {
-                        std::string variableType = definition.typeStr;
-                        // 1 is for the variable type 2 is for the variable itself
-                        if (m_UDTDefinitions.contains(variableType)) {
-                            auto index1 = m_UDTDefinitions[variableType].tokenIndex;
-                            auto index2 = definition.tokenIndex;
-                            auto token1 = m_tokens[index1];
-                            auto token2 = m_tokens[index2];
-                            Identifier *identifier1 = std::get_if<Identifier>(&token1.value);
-                            Identifier *identifier2 = std::get_if<Identifier>(&token2.value);
-
-                            if (identifier1 != nullptr)
-                                functionVariables[identifier1] = identifier1->getType();
-                            if (identifier2 != nullptr)
-                                functionVariables[identifier2] = identifier2->getType();
-                        }
-                    }
-                }
-            }
-            // scan token range for variables in map and set the identifier type
-            restart();
-            auto limit = m_curr + range.second.end;
-            for (next(range.second.start); m_curr != limit; next()) {
-
-                if (peek(tkn::Literal::Identifier)) {
-
-                    auto identifier = (Identifier *)getValue<Token::Identifier>(0);
-                    auto identifierType = identifier->getType();
-                    if (functionVariables.contains(identifier) && ((identifierType == IdentifierType::Unknown) ||
-                        (identifierType == IdentifierType::FunctionUnknown || identifierType == IdentifierType::MemberUnknown ||
-                         identifierType == IdentifierType::ScopeResolutionUnknown)))
-
-                        identifier->setType(functionVariables[identifier],true);
-                }
-            }
-        }
-    }
-
-    // Process the tokens one line of text at a time.
-    void ViewPatternEditor::TextHighlighter::processLineTokens() {
-        fixFunctionVariables();
-        // This is needed to avoid iterator out of bounds errors.
-        auto tokenEnd = TokenIter(m_tokens.end(), m_tokens.end());
-
-        // Possibly skip the lines on top if they have no tokens
-        u32 firstLine = 0;
-        while (m_firstTokenIdOfLine[firstLine] == -1 && firstLine < m_lines.size())
-            firstLine++;
-
-        for (auto line = firstLine; line < m_lines.size(); line = nextLine(line)) {
-
-            restart();
-            auto limit = m_curr + m_firstTokenIdOfLine[nextLine(line)];
-            for (next(m_firstTokenIdOfLine[line]); m_curr != limit && m_curr != tokenEnd; next()) {
-
-                auto location = m_curr->location;
-                u32 column = location.column-1;
-                TextEditor::Coordinates start = {(i32) line, (i32) column};
-                TextEditor::PaletteIndex paletteIndexCopy, paletteIndex;
-                paletteIndex = paletteIndexCopy = getPaletteIndex();
-
-                u32 i = 0;
-                if (m_excludedLocations.size() > 0) {
-                    auto isExcluded = m_excludedLocations[1].location < location;
-                    while (isExcluded.value_or(false) && i + 2 < m_excludedLocations.size()) {
-                        i += 2;
-                        isExcluded = m_excludedLocations[i + 1].location < location;
-                    }
-                    auto isLessThanMax = location <= m_excludedLocations[i + 1].location;
-                    auto isGreaterThanMin = m_excludedLocations[i].location <= location;
-
-                    if (isLessThanMax.value_or(false) && isGreaterThanMin.value_or(false))
-                        paletteIndex = TextEditor::PaletteIndex::PreprocessorDeactivated;
-                }
-
-                u32 escapeCount = 0;
-                if (paletteIndexCopy == TextEditor::PaletteIndex::StringLiteral) {
-                    Literal literal = std::get<Literal>(m_curr->value);
-                    std::string str = literal.toString();
-                    escapeCount = escapeCharCount(str);
-                }
-
-                TextEditor::Coordinates end = m_viewPatternEditor.m_textEditor.add(start, location.length+escapeCount);
-                m_viewPatternEditor.m_textEditor.setColorRange(start, end, paletteIndex);
-            }
-        }
-    }
-
-    // cleats all the data structures used by highlighter so that previous runs
-    // do not affect the current.
-    void ViewPatternEditor::TextHighlighter::clear() {
-        m_typeDefs.clear();
-        m_UDTs.clear();
-        m_globalVariables.clear();
-        m_functionVariables.clear();
-        m_UDTVariables.clear();
-        m_attributeFunctionArgumentType.clear();
-        m_functionTokenRange.clear();
-        m_UDTTokenRange.clear();
-        m_namespaceTokenRange.clear();
-        m_globalTokenRange.clear();
-        m_instances.clear();
-        m_UDTDefinitions.clear();
-        m_functionDefinitions.clear();
-        m_nameSpaces.clear();
-        m_types.clear();
-        m_UDTBlocks.clear();
-        m_functionBlocks.clear();
-    }
-
-    // Only update if needed. Must wait for the parser to finish first.
-    void ViewPatternEditor::TextHighlighter::highlightSourceCode() {
-
-        if (m_needsToUpdateColors && (m_viewPatternEditor.m_runningParsers + m_viewPatternEditor.m_runningEvaluators == 0)) {
-
-            m_text = m_viewPatternEditor.m_textEditor.GetText();
-            if (m_text.empty() || m_text == "\n")
-                return;
-
-            m_needsToUpdateColors = false;
-            clear();
-            m_tokens = patternLanguage->getInternals().preprocessor.get()->getResult();
-            if (m_tokens.empty())
-                return;
-            m_globalTokenRange.insert(Interval(0, m_tokens.size()));
-            loadText();
-            m_ast = patternLanguage->getAST();
-            // Namespaces from included files.
-            m_nameSpaces = patternLanguage->getInternals().preprocessor.get()->getNamespaces();
-            auto tokens = patternLanguage->getInternals().preprocessor.get()->getOutput();
-            m_types = patternLanguage->getInternals().parser.get()->getTypes();
-            m_excludedLocations = patternLanguage->getInternals().preprocessor->getExcludedLocations();
-
-            // The order of the following functions is important.
-            getIdentifierTypes(tokens);
-            getAllTokenRanges(IdentifierType::NameSpace);
-            getAllTokenRanges(IdentifierType::UDT);
-            getAllTokenRanges(IdentifierType::Function);
-            getAllTokenRanges(IdentifierType::Attribute);
-            getAllTokenRanges(IdentifierType::Typedef);
-            getAllTokenRanges(IdentifierType::TemplateArgument);
-            getGlobalTokenRanges();
-            loadGlobalBlocks();
-            fixGlobalVariables();
-            getDefinitions();
-            loadInstances();
-
-            m_viewPatternEditor.m_textEditor.ClearErrorMarkers();
-            m_compileErrors = patternLanguage->getCompileErrors();
-            if (!m_compileErrors.empty())
-                renderErrors();
-            else
-                m_viewPatternEditor.m_textEditor.ClearErrorMarkers();
-
-            processLineTokens();
-        }
-    }
-
     TextEditor::PaletteIndex ViewPatternEditor::getPaletteIndex(char type) {
-        TextEditor::ConsoleTypes consoleType = TextEditor::ConsoleTypes::Information;
         switch (type) {
+            using enum TextEditor::PaletteIndex;
+            case 'W': return WarningText;
+            case 'E': return ErrorText;
+            case 'D': return DebugText;
             case 'I':
-                consoleType = TextEditor::ConsoleTypes::Information;
-                break;
-            case 'W':
-                consoleType = TextEditor::ConsoleTypes::Warning;
-                break;
-            case 'E':
-                consoleType = TextEditor::ConsoleTypes::Error;
-                break;
-            case 'D':
-                consoleType = TextEditor::ConsoleTypes::Debug;
-                break;
+            default : return DefaultText;
         }
-        return m_textEditor.getPaletteIndex<TextEditor::ConsoleTypes>(consoleType);
     }
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
@@ -3389,7 +1402,7 @@ namespace hex::plugin::builtin {
             const bool shiftHeld = ImGui::GetIO().KeyShift;
             ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
             ImGui::SameLine(0, 10);
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{} ", pattern->getFormattedName());
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::PlacedVariable)], "{} ", pattern->getFormattedName());
             ImGui::SameLine(0, 5);
             ImGuiExt::TextFormatted("{}", pattern->getDisplayName());
             ImGui::SameLine();
@@ -3556,6 +1569,7 @@ namespace hex::plugin::builtin {
         }
 
         m_textHighlighter.m_needsToUpdateColors = true;
+        m_changesWereParsed = true;
         m_runningParsers -= 1;
     }
 
@@ -3717,14 +1731,19 @@ namespace hex::plugin::builtin {
             m_envVarEntries->emplace_back(0, "", i128(0), EnvVarType::Integer);
 
             m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
+            m_cursorPosition.get(provider) =  TextEditor::Coordinates(0, 0);
         });
 
         EventProviderChanged::subscribe(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
-            if (oldProvider != nullptr)
+            if (oldProvider != nullptr) {
                 m_sourceCode.set(oldProvider, m_textEditor.GetText());
+                m_cursorPosition.set(m_textEditor.GetCursorPosition(),oldProvider);
+            }
 
-            if (newProvider != nullptr)
-               m_textEditor.SetText(m_sourceCode.get(newProvider));
+            if (newProvider != nullptr) {
+                m_textEditor.SetText(m_sourceCode.get(newProvider));
+                m_textEditor.SetCursorPosition(m_cursorPosition.get(newProvider));
+            }
             m_hasUnevaluatedChanges = true;
             m_textHighlighter.m_needsToUpdateColors = false;
         });
@@ -3960,50 +1979,50 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::F + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::F + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find", [this] {
             m_openFindReplacePopUp = true;
             m_replaceMode = false;
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::H + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.replace", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::H + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.replace", [this] {
             m_openFindReplacePopUp = true;
             m_replaceMode = true;
         });
 
-        ShortcutManager::addShortcut(this, Keys::F3 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find_next", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::F3 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find_next", [this] {
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
             findReplaceHandler->FindMatch(&m_textEditor,true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::F3 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find_previous", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, SHIFT + Keys::F3 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find_previous", [this] {
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
             findReplaceHandler->FindMatch(&m_textEditor,false);
         });
 
-        ShortcutManager::addShortcut(this, ALT + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.match_case_toggle", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, ALT + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.match_case_toggle", [this] {
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
             findReplaceHandler->SetMatchCase(&m_textEditor,!findReplaceHandler->GetMatchCase());
         });
 
-        ShortcutManager::addShortcut(this, ALT + Keys::R + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.regex_toggle", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, ALT + Keys::R + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.regex_toggle", [this] {
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
             findReplaceHandler->SetFindRegEx(&m_textEditor,!findReplaceHandler->GetFindRegEx());
         });
 
-        ShortcutManager::addShortcut(this, ALT + Keys::W + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.whole_word_toggle", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, ALT + Keys::W + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.whole_word_toggle", [this] {
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
             findReplaceHandler->SetWholeWord(&m_textEditor,!findReplaceHandler->GetWholeWord());
         });
 
-        ShortcutManager::addShortcut(this, ALT + Keys::S + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.save_project", [] {
+        ShortcutManager::addShortcut((hex::View *)this, ALT + Keys::S + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.save_project", [] {
             hex::plugin::builtin::saveProject();
         });
 
-        ShortcutManager::addShortcut(this, ALT + Keys::O + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.open_project", [] {
+        ShortcutManager::addShortcut((hex::View *)this, ALT + Keys::O + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.open_project", [] {
             hex::plugin::builtin::openProject();
         });
 
-        ShortcutManager::addShortcut(this, ALT + SHIFT + Keys::S + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.save_project_as", [] {
+        ShortcutManager::addShortcut((hex::View *)this, ALT + SHIFT + Keys::S + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.save_project_as", [] {
             hex::plugin::builtin::saveProjectAs();
         });
 
@@ -4011,7 +2030,7 @@ namespace hex::plugin::builtin {
      //       m_textEditor.Copy();
      //   });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.copy", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.copy", [this] {
             m_textEditor.Copy();
         });
 
@@ -4019,11 +2038,11 @@ namespace hex::plugin::builtin {
         //    m_textEditor.Paste();
     //    });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::V + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.paste", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::V + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.paste", [this] {
             m_textEditor.Paste();
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::X + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.cut", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::X + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.cut", [this] {
             m_textEditor.Cut();
         });
 
@@ -4031,7 +2050,7 @@ namespace hex::plugin::builtin {
       //      m_textEditor.Cut();
       //  });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::Z + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.undo", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::Z + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.undo", [this] {
             m_textEditor.Undo();
         });
 
@@ -4039,131 +2058,131 @@ namespace hex::plugin::builtin {
     //        m_textEditor.Undo();
       //  });
 
-        ShortcutManager::addShortcut(this, Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete", [this] {
             m_textEditor.Delete();
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::Y + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.redo", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::Y + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.redo", [this] {
             m_textEditor.Redo();
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::A + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_all", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::A + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_all", [this] {
             m_textEditor.SelectAll();
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_right", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_right", [this] {
             m_textEditor.MoveRight(1, true, false);
         });
 
-        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_right", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_right", [this] {
             m_textEditor.MoveRight(1, true, true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_left", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_left", [this] {
             m_textEditor.MoveLeft(1, true, false);
         });
 
-        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_left", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_left", [this] {
             m_textEditor.MoveLeft(1, true, true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_up", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, SHIFT + Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_up", [this] {
             m_textEditor.MoveUp(1, true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT +Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_up", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, SHIFT +Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_up", [this] {
             m_textEditor.MoveUp(m_textEditor.GetPageSize()-4, true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_down", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, SHIFT + Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_down", [this] {
             m_textEditor.MoveDown(1, true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT +Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_down", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, SHIFT +Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_down", [this] {
             m_textEditor.MoveDown(m_textEditor.GetPageSize()-4, true);
         });
 
-        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_top", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_top", [this] {
             m_textEditor.MoveTop(true);
         });
 
-        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_bottom", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_bottom", [this] {
             m_textEditor.MoveBottom(true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_home", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_home", [this] {
             m_textEditor.MoveHome(true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_end", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_end", [this] {
             m_textEditor.MoveEnd(true);
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_right", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_right", [this] {
             m_textEditor.DeleteWordRight();
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_left", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_left", [this] {
             m_textEditor.DeleteWordLeft();
         });
 
-        ShortcutManager::addShortcut(this, Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.backspace", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.backspace", [this] {
             m_textEditor.Backspace();
         });
 
-        ShortcutManager::addShortcut(this, Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.toggle_insert", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.toggle_insert", [this] {
             m_textEditor.SetOverwrite(!m_textEditor.IsOverwrite());
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_right", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_right", [this] {
             m_textEditor.MoveRight(1, false, true);
         });
 
-        ShortcutManager::addShortcut(this, Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_right", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_right", [this] {
             m_textEditor.MoveRight(1, false, false);
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_left", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_left", [this] {
             m_textEditor.MoveLeft(1, false, true);
         });
 
-        ShortcutManager::addShortcut(this, Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_left", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_left", [this] {
             m_textEditor.MoveLeft(1, false, false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_up", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_up", [this] {
             m_textEditor.MoveUp(1, false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_up", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_up", [this] {
             m_textEditor.MoveUp(m_textEditor.GetPageSize()-4, false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_down", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_down", [this] {
             m_textEditor.MoveDown(1, false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_down", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_down", [this] {
             m_textEditor.MoveDown(m_textEditor.GetPageSize()-4, false);
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_top", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_top", [this] {
             m_textEditor.MoveTop(false);
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_bottom", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, CTRL + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_bottom", [this] {
             m_textEditor.MoveBottom(false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_home", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_home", [this] {
             m_textEditor.MoveHome(false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_end", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_end", [this] {
             m_textEditor.MoveEnd(false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::F8 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.add_breakpoint", [this] {
+        ShortcutManager::addShortcut((hex::View *)this, Keys::F8 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.add_breakpoint", [this] {
             const auto line = m_textEditor.GetCursorPosition().mLine + 1;
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 

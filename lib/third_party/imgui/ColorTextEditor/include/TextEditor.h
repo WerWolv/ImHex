@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include <memory>
+#include <mutex>
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
@@ -54,9 +55,10 @@ public:
         Default,
         UserDefinedType,
 		PatternVariable,
-		PatternLocalVariable,
-		PatternPlacedVariable,
+		LocalVariable,
+		CalculatedPointer,
 		TemplateArgument,
+		View,
 		FunctionVariable,
 		FunctionParameter,
 		PlacedVariable,
@@ -98,47 +100,6 @@ public:
 	};
 
     /**
-     *  Use cases for pattern language and console text.
-     *  In these cases we define enums for the colors the text can have.
-     *  A template function defined in the TextEditor class will map
-     *  a value in these enums to a PaletteIndex value.
-     */
-
-
-	enum class PatternLanguageTypes {
-		Keyword,
-		ValueType,
-		Operator,
-		Integer,
-		String,
-		Identifier,
-		Separator,
-		Comment,
-		BlockComment,
-		DocComment,
-		DocBlockComment,
-		DocGlobalComment,
-		Directive,
-		Default
-	};
-
-	enum class ConsoleTypes {
-		Debug,
-		Information,
-		Warning,
-		Error
-	};
-
-    /**
-     * @brief getPaletteIndex
-     * @param val
-     * @return
-     * This template function maps a value from your custom defined enum
-     * to a PaletteIndex value.
-     */
-    template<class E> PaletteIndex getPaletteIndex(E val);
-
-    /**
      * @brief sets the color of a range of text
      * @param startCoord
      * @param endCoord
@@ -169,14 +130,45 @@ public:
 	struct Glyph
 	{
 		[[maybe_unused]] Char mChar = 0x00;
-		PaletteIndex mColorIndex = PaletteIndex::Default;
-
+		[[maybe_unused]] PaletteIndex mColorIndex = PaletteIndex::Default;
+        Glyph()=default;
 		Glyph(Char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex) {}
 	};
 
-	typedef std::vector<Glyph> Line;
-	typedef std::vector<Line> Lines;
+	using Line = std::vector<Glyph>;
+    using Lines = std::vector<Line>;
+    using LineColors = std::vector<PaletteIndex>;
+    using LinesOfColors = std::vector<LineColors>;
 
+    class ColorStaging {
+        std::mutex *mMutex;
+        LinesOfColors mLinesOfColors;
+    public:
+        ColorStaging();
+
+        void stage(const LinesOfColors &linesOfColors) {
+            std::scoped_lock lock(*mMutex);
+
+            mLinesOfColors = linesOfColors;
+        }
+
+        void commit(Lines &lines) {
+            std::scoped_lock lock(*mMutex);
+
+            auto lineCount = lines.size();
+            if (lineCount != mLinesOfColors.size())
+                return;
+            for (uint32_t i = 0; i < lineCount; i++) {
+                auto &line = lines[i];
+                auto &lineColors = mLinesOfColors[i];
+                auto glyphCount = line.size();
+                if (glyphCount != lineColors.size())
+                    return;
+                for (uint32_t j = 0; j < glyphCount; j++)
+                    line[j].mColorIndex = lineColors[j];
+            }
+        }
+    };
 
     enum class SelectionMode
     {
@@ -185,11 +177,11 @@ public:
         Line
     };
 
-	typedef std::string String;
-    typedef std::map<Coordinates, std::pair<uint32_t ,std::string>> ErrorMarkers;
-    typedef std::map<Coordinates, std::pair<ImVec2,ImVec2>> ErrorHoverBoxes;
-	typedef std::unordered_set<int32_t> Breakpoints;
-	typedef std::array<ImU32, (uint32_t)PaletteIndex::Max> Palette;
+	using String = std::string;
+    using ErrorMarkers = std::map<Coordinates, std::pair<uint32_t ,std::string>>;
+    using ErrorHoverBoxes = std::map<Coordinates, std::pair<ImVec2,ImVec2>>;
+	using Breakpoints = std::unordered_set<int32_t>;
+	using Palette = std::array<ImU32, (uint32_t)PaletteIndex::Max>;
 
 	TextEditor();
 	~TextEditor();
@@ -202,14 +194,19 @@ public:
 		mErrorMarkers.clear();
 		mErrorHoverBoxes.clear();
 	}
+
+    auto getColorsStaging() { return &mColorStaging; }
 	void SetBreakpoints(const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
     ImVec2 UnderSquiggles( ImVec2 pos, uint32_t nChars, ImColor color= ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg= ImVec2(0, 0));
 
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
 	void SetText(const std::string& aText);
 	std::string GetText() const;
+    Lines &GetLines() {
+        return mLines;
+    }
 	void clearLines();
-	[[maybe_unused]] void SetTextLines(const std::vector<std::string>& aLines);
+	[[maybe_unused]] void SetTextLines(const Lines& aLines);
 	std::vector<std::string> GetTextLines() const;
 
 	std::string GetSelectedText() const;
@@ -268,27 +265,6 @@ public:
 	void SelectAll();
 	bool HasSelection() const;
 
-	Coordinates add(Coordinates c, const uint32_t len)
-	{
-		auto cum = mLines[c.mLine].size()+1-c.mColumn;
-		Coordinates result;
-		if (cum >= len) {
-			result.mLine = c.mLine;
-			result.mColumn = c.mColumn + len -1;
-		} else {
-			auto rem = len;
-			rem -= cum;
-			result.mLine = c.mLine+1;
-			result.mColumn = 0;
-			while (rem > mLines[result.mLine].size()+1)
-			{
-				rem -= mLines[result.mLine].size()+1;
-				result.mLine++;
-			}
-			result.mColumn += rem-1;
-		}
-		return result;
-	}
 
 	void Copy();
 	void Cut();
@@ -421,7 +397,7 @@ private:
 		EditorState mAfter;
 	};
 
-	typedef std::vector<UndoRecord> UndoBuffer;
+	using UndoBuffer = std::vector<UndoRecord>;
 
 	[[maybe_unused]] void ProcessInputs();
 	float TextDistanceToLineStart(const Coordinates& aFrom) const;
@@ -458,6 +434,7 @@ private:
 
 	float mLineSpacing;
 	Lines mLines;
+    ColorStaging mColorStaging;
 	EditorState mState;
 	UndoBuffer mUndoBuffer;
 	int32_t mUndoIndex;
