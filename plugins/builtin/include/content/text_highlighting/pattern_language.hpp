@@ -1,5 +1,4 @@
 #pragma once
-//#include <content/views/view_pattern_editor.hpp>
 #include <pl/core/token.hpp>
 #include <pl/core/preprocessor.hpp>
 #include <pl/helpers/safe_iterator.hpp>
@@ -9,7 +8,6 @@
 namespace pl {
     class PatternLanguage;
 }
-
 
 namespace hex::plugin::builtin {
     class ViewPatternEditor;
@@ -157,10 +155,25 @@ namespace hex::plugin::builtin {
          * @brief Entry point to syntax highlighting
          */
         void highlightSourceCode();
+        /**
+        * @brief Task for syntax highlighting
+        */
         void colorizePatternEditor();
+        /**
+        * @brief Syntax highlighting from parser
+        */
         void setInitialColors();
+        /**
+        * @brief Create data to pass to text editor
+        */
         void setAllColors();
-        void setColor(i32 tokenId=-1, const IdentifierType &type = IdentifierType::Unknown);//TextEditor::PaletteIndex color);
+        /**
+        * @brief Set the color of a token
+        */
+        void setColor(i32 tokenId=-1, const IdentifierType &type = IdentifierType::Unknown);
+        /**
+        * @brief Only identifiers not in chains should remain
+        */
         void colorRemainingTokens();
         /**
          * @brief Renders compile errors in real time
@@ -171,8 +184,8 @@ namespace hex::plugin::builtin {
         void getAllTokenRanges(IdentifierType idtype);
         /// The global scope is the complement of the union of all the function and UDT token ranges
         void getGlobalTokenRanges();
-        /// If the current token is a function or UDT or namespace, creates a map entry from the name to the token range
-        /// for the first two and from the token range to the name for the last. This ensures that namespaces are stored in the order they occur in the source code.
+        /// If the current token is a function or UDT, creates a map entry from the name to the token range. These are ordered alphabetically by name.
+        /// If the current token is a namespace, creates a map entry from the token range to the name. Namespace entries are stored in the order they occur in the source code.
         bool getTokenRange(std::vector<Token> keywords,UnorderedBlocks &tokenRange, OrderedBlocks &tokenRangeInv, bool fullName, VariableScopes *blocks);
         /// Global variables are the variables that are not inside a function or UDT
         void fixGlobalVariables();
@@ -183,17 +196,21 @@ namespace hex::plugin::builtin {
         void loadTypeDefinitions(UnorderedBlocks tokenRangeMap, std::vector<IdentifierType> identifierTypes, Definitions &types);
         std::string getArgumentTypeName(i32 rangeStart, Token delimiter2);
         std::string getVariableTypeName();
+        /// Append the variable definitions of the parent to the child
         void appendInheritances();
         ///Loads a map of identifiers to their token id instances
         void loadInstances();
-        /// Replace auto with the actual type
-        void resolveAutos(VariableMap &variableMap, UnorderedBlocks &tokenRange);
+        /// Replace auto with the actual type for template arguments and function parameters
         void fixAutos();
+        void resolveAutos(VariableMap &variableMap, UnorderedBlocks &tokenRange);
+        /// Chains are sequences of identifiers separated by scope resolution or dot operators.
         void fixChains();
+        bool colorSeparatorScopeChain();
+        bool colorOperatorDotChain();
         /// Returns the next/previous valid source code line
         u32 nextLine(u32 line);
         u32 previousLine(u32 line);
-        /// Returns the number of escape characters in a string
+        /// Returns the number of escape characters in a string in order to colorize the right number of characters
         i32 escapeCharCount(const std::string &str);
         /// Loads the source code and calculates the first token index of each line
         void loadText();
@@ -201,21 +218,21 @@ namespace hex::plugin::builtin {
         TextEditor::PaletteIndex getPaletteIndex(Token::Literal *literal);
         /// The complement of a set is also known as its inverse
         void invertGlobalTokenRange();
-        /// Starting at the identifier, it tracks back all the scope resolution and dot operators and returns the full chain without arrays, templates, pointers,...
+        /// Starting at the identifier, it tracks all the scope resolution and dot operators and returns the full chain without arrays, templates, pointers,...
         bool getFullName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool preserveCurr = true);
         /// Returns the identifier value.
         bool getIdentifierName(std::string &identifierName, Identifier *&identifier);
-        /// Adds namespaces ti the full name if they exist
+        /// Adds namespaces to the full name if they exist
         bool getQualifiedName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool useDefinitions = false, bool preserveCurr = true);
         /// As it moves forward it loads the result to the argument. Used by getFullName
         bool forwardIdentifierName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool preserveCurr = true);
         /// Takes as input the full name and returns the type of the last element.
         bool resolveIdentifierType(Definition &result, std::string identifierName);
-        bool colorSeparatorScopeChain();
-        bool colorOperatorDotChain();
         /// like previous functions but returns the type of the variable that is a member of a UDT
         std::string findIdentifierTypeStr(const std::string &identifierName, std::string context="");
+        /// If context is empty search for the variable, if it isnt use the variable map.
         bool findOrContains(std::string &context, UnorderedBlocks tokenRange, VariableMap variableMap);
+        /// Search for instances inside some block
         void setBlockInstancesColor(const std::string &name, const Definition &definition, const Interval &block);
         /// Convenience functions.
         void skipAttribute();
@@ -233,9 +250,6 @@ namespace hex::plugin::builtin {
         /// Convenience function
         bool isTokenIdValid(i32 tokenId);
         bool isLocationValid(Location location);
-        /// These 2 use the types created from ast, but only as las resort or for importes
-        //std::optional<std::shared_ptr<pl::core::ast::ASTNode>> parseChildren(const std::shared_ptr<pl::core::ast::ASTNode> &node, const std::string &typeName);
-        //std::optional<std::shared_ptr<ASTNode>> findType(const std::string &typeName, IdentifierType &identifierType);
         /// Returns the name of the context where the current or given token is located
         bool findScope(std::string &name, const UnorderedBlocks &map, i32 optionalTokenId=-1);
         /// Returns the name of the namespace where the current or given token is located
@@ -248,15 +262,18 @@ namespace hex::plugin::builtin {
         i32  getArgumentNumber(i32 start,i32 arg);
         /// Calculate the token index of a function or template argument position
         void getTokenIdForArgument(i32 start, i32 argNumber, Token delimiter);
-        ///Creates amap from function name to argument type
+        ///Creates a map from function name to argument type
         void linkAttribute();
+        /// Sets the sizes of each line of code to a vector of colors
         void SetColorsSize( TextEditor::LinesOfColors &linesOfColors);
+        /// Comment and strings usethese function to determine their coordinates
         template<typename T> TextEditor::Coordinates commentCoordinates(Token *token);
         TextEditor::Coordinates stringCoordinates();
+        /// Returns the number of tasks highlighting code. Shouldn't be > 1
         i32 getRunningColorizers() {
             return m_runningColorizers;
         }
-        /// Token consuming
+        /// The following functions were copied from the parser and some were modified
 
         template<typename T>
         const T *getValue(const i32 index) {
