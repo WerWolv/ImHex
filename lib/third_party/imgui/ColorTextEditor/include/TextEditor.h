@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include <memory>
+#include <mutex>
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
@@ -13,28 +14,84 @@
 class TextEditor
 {
 public:
+    /// Represents a character coordinate from the user's point of view,
+    /// i.e. consider a uniform grid (assuming monospaced font) on the
+    /// screen as it is rendered, and each cell has its own coordinate, starting from 0.
+    /// Tabs are counted as [1:mTabSize] count empty spaces, depending on
+    /// how many space is necessary to reach the next tab stop.
+    /// For example, coordinate (0, 5) represents the character 'B' in the first line "\\tABC", where mTabSize = 4,
+    /// because it is rendered as "    ABC" on the screen.
+    ///
+    /// This is similar to the Location class in ImHex except that it is zero based
+    /// and it doesnt contain a pointer to the text.
+    struct Coordinates
+    {
+        int32_t mLine, mColumn;
+        Coordinates() : mLine(0), mColumn(0) {}
+        Coordinates(int32_t aLine, int32_t aColumn) : mLine(aLine), mColumn(aColumn)
+        {
+            if(aLine<0)
+                assert(aLine >= 0);
+            if(aColumn<0)
+                assert(aColumn >= 0);
+        }
+        static Coordinates Invalid() { static Coordinates invalid(-1, -1); return invalid; }
+		bool operator ==(const Coordinates& o) const;
+		bool operator !=(const Coordinates& o) const;
+		bool operator <(const Coordinates& o) const;
+		bool operator >(const Coordinates& o) const;
+		bool operator <=(const Coordinates& o) const;
+		bool operator >=(const Coordinates& o) const;
+    };
+
+    /**
+     * @brief Colorizer API
+     * PaletteIndex is an enum class that represents the color index of the text editor.
+     * All the colors that can be used in the text editor are defined in this enum class.
+     */
+
 	enum class PaletteIndex
 	{
-		Default,
-		Keyword,
-		Number,
-		String,
-		CharLiteral,
-		Punctuation,
-		Preprocessor,
-		Identifier,
-		KnownIdentifier,
+        Default,
+        UserDefinedType,
+		PatternVariable,
+		LocalVariable,
+		CalculatedPointer,
+		TemplateArgument,
+		View,
+		FunctionVariable,
+		FunctionParameter,
+		PlacedVariable,
+        GlobalVariable,
 		PreprocIdentifier,
-        GlobalDocComment,
-		DocComment,
-		Comment,
-		MultiLineComment,
+        NameSpace,
+        TypeDef,
+        Keyword,
+        BuiltInType,
+        Attribute,
+        Directive,
+        Function,
+        UnkIdentifier,
+        NumericLiteral,
+        StringLiteral,
+        CharLiteral,
+        Operator,
+        Separator,
+        Comment,
+		BlockComment,
+        DocComment,
+		DocBlockComment,
+		DocGlobalComment,
 		PreprocessorDeactivated,
 		Background,
 		Cursor,
 		Selection,
 		ErrorMarker,
 		Breakpoint,
+		ErrorText,
+		WarningText,
+		DebugText,
+		DefaultText,
 		LineNumber,
 		CurrentLineFill,
 		CurrentLineFillInactive,
@@ -42,246 +99,195 @@ public:
 		Max
 	};
 
-	enum class SelectionMode
-	{
-		Normal,
-		Word,
-		Line
-	};
+    /**
+     * @brief sets the color of a range of text
+     * @param startCoord
+     * @param endCoord
+     * @param aColorIndex
+     * This function and the next one are the ones used to set the colors of the text.
+     */
 
-	struct Breakpoint
-	{
-		int mLine;
-		bool mEnabled;
-		std::string mCondition;
+    void setColorRange(Coordinates startCoord, Coordinates endCoord, PaletteIndex aColorIndex);
 
-		Breakpoint()
-			: mLine(-1)
-			, mEnabled(false)
-		{}
-	};
+    /**
+    * @brief Inserts a string at the current cursor position with a specific color.
+    * @param aValue
+    * @param aColorIndex
+    * Typically used to insert lines of text but the only restriction is that the string
+    * is of the same color.
+    */
 
-	// Represents a character coordinate from the user's point of view,
-	// i. e. consider an uniform grid (assuming fixed-width font) on the
-	// screen as it is rendered, and each cell has its own coordinate, starting from 0.
-	// Tabs are counted as [1..mTabSize] count empty spaces, depending on
-	// how many space is necessary to reach the next tab stop.
-	// For example, coordinate (1, 5) represents the character 'B' in a line "\tABC", when mTabSize = 4,
-	// because it is rendered as "    ABC" on the screen.
-	struct Coordinates
-	{
-		int mLine, mColumn;
-		Coordinates() : mLine(0), mColumn(0) {}
-		Coordinates(int aLine, int aColumn) : mLine(aLine), mColumn(aColumn)
-		{
-			assert(aLine >= 0);
-			assert(aColumn >= 0);
-		}
-		static Coordinates Invalid() { static Coordinates invalid(-1, -1); return invalid; }
+    void InsertColoredText(const std::string& aValue, PaletteIndex aColorIndex);
 
-		bool operator ==(const Coordinates& o) const
-		{
-			return
-				mLine == o.mLine &&
-				mColumn == o.mColumn;
-		}
-
-		bool operator !=(const Coordinates& o) const
-		{
-			return
-				mLine != o.mLine ||
-				mColumn != o.mColumn;
-		}
-
-		bool operator <(const Coordinates& o) const
-		{
-			if (mLine != o.mLine)
-				return mLine < o.mLine;
-			return mColumn < o.mColumn;
-		}
-
-		bool operator >(const Coordinates& o) const
-		{
-			if (mLine != o.mLine)
-				return mLine > o.mLine;
-			return mColumn > o.mColumn;
-		}
-
-		bool operator <=(const Coordinates& o) const
-		{
-			if (mLine != o.mLine)
-				return mLine < o.mLine;
-			return mColumn <= o.mColumn;
-		}
-
-		bool operator >=(const Coordinates& o) const
-		{
-			if (mLine != o.mLine)
-				return mLine > o.mLine;
-			return mColumn >= o.mColumn;
-		}
-	};
-
-	struct Identifier
-	{
-		Coordinates mLocation;
-		std::string mDeclaration;
-	};
-
-	typedef std::string String;
-	typedef std::unordered_map<std::string, Identifier> Identifiers;
-	typedef std::unordered_set<std::string> Keywords;
-	typedef std::map<int, std::string> ErrorMarkers;
-	typedef std::unordered_set<int> Breakpoints;
-	typedef std::array<ImU32, (unsigned)PaletteIndex::Max> Palette;
 	typedef uint8_t Char;
+
+	/**
+	 * @brief Glyph
+	 * A glyph is a character and its color index.
+	 * A line is a vector of glyphs and a document is a vector of lines.
+	 */
 
 	struct Glyph
 	{
-		Char mChar;
-		PaletteIndex mColorIndex = PaletteIndex::Default;
-		bool mComment : 1;
-		bool mMultiLineComment : 1;
-		bool mPreprocessor : 1;
-		bool mDocComment : 1;
-        bool mGlobalDocComment : 1;
-		bool mDeactivated : 1;
-
-		Glyph(Char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex), mComment(false),
-        mMultiLineComment(false), mPreprocessor(false), mDocComment(false), mGlobalDocComment(false), mDeactivated(false) {}
+		[[maybe_unused]] Char mChar = 0x00;
+		[[maybe_unused]] PaletteIndex mColorIndex = PaletteIndex::Default;
+        Glyph()=default;
+		Glyph(Char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex) {}
 	};
 
-	typedef std::vector<Glyph> Line;
-	typedef std::vector<Line> Lines;
+	using Line = std::vector<Glyph>;
+    using Lines = std::vector<Line>;
+    using LineColors = std::vector<PaletteIndex>;
+    using LinesOfColors = std::vector<LineColors>;
 
-	struct LanguageDefinition
-	{
-		typedef std::pair<std::string, PaletteIndex> TokenRegexString;
-		typedef std::vector<TokenRegexString> TokenRegexStrings;
-		typedef bool(*TokenizeCallback)(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end, PaletteIndex & paletteIndex);
+    class ColorStaging {
+        std::mutex *mMutex;
+        LinesOfColors mLinesOfColors;
+    public:
+        ColorStaging();
 
-		std::string mName;
-		Keywords mKeywords;
-		Identifiers mIdentifiers;
-		Identifiers mPreprocIdentifiers;
-		std::string mCommentStart, mCommentEnd, mSingleLineComment, mGlobalDocComment, mDocComment;
-		char mPreprocChar;
-		bool mAutoIndentation;
+        void stage(const LinesOfColors &linesOfColors) {
+            std::scoped_lock lock(*mMutex);
 
-		TokenizeCallback mTokenize;
+            mLinesOfColors = linesOfColors;
+        }
 
-		TokenRegexStrings mTokenRegexStrings;
+        void commit(Lines &lines) {
+            std::scoped_lock lock(*mMutex);
 
-		bool mCaseSensitive;
+            auto lineCount = lines.size();
+            if (lineCount != mLinesOfColors.size())
+                return;
+            for (uint32_t i = 0; i < lineCount; i++) {
+                auto &line = lines[i];
+                auto &lineColors = mLinesOfColors[i];
+                auto glyphCount = line.size();
+                if (glyphCount != lineColors.size())
+                    return;
+                for (uint32_t j = 0; j < glyphCount; j++)
+                    line[j].mColorIndex = lineColors[j];
+            }
+        }
+    };
 
-		LanguageDefinition()
-			: mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
-		{
-		}
+    enum class SelectionMode
+    {
+        Normal,
+        Word,
+        Line
+    };
 
-		static const LanguageDefinition& CPlusPlus();
-		static const LanguageDefinition& HLSL();
-		static const LanguageDefinition& GLSL();
-		static const LanguageDefinition& C();
-		static const LanguageDefinition& SQL();
-		static const LanguageDefinition& AngelScript();
-		static const LanguageDefinition& Lua();
-	};
+	using String = std::string;
+    using ErrorMarkers = std::map<Coordinates, std::pair<uint32_t ,std::string>>;
+    using ErrorHoverBoxes = std::map<Coordinates, std::pair<ImVec2,ImVec2>>;
+	using Breakpoints = std::unordered_set<int32_t>;
+	using Palette = std::array<ImU32, (uint32_t)PaletteIndex::Max>;
 
 	TextEditor();
 	~TextEditor();
-
-	void SetLanguageDefinition(const LanguageDefinition& aLanguageDef);
-	const LanguageDefinition& GetLanguageDefinition() const { return mLanguageDefinition; }
 
 	static const Palette& GetPalette() { return sPaletteBase; }
 	static void SetPalette(const Palette& aValue);
 
 	void SetErrorMarkers(const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
+	void ClearErrorMarkers() {
+		mErrorMarkers.clear();
+		mErrorHoverBoxes.clear();
+	}
+
+    auto getColorsStaging() { return &mColorStaging; }
 	void SetBreakpoints(const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
+    ImVec2 UnderSquiggles( ImVec2 pos, uint32_t nChars, ImColor color= ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg= ImVec2(0, 0));
 
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
 	void SetText(const std::string& aText);
 	std::string GetText() const;
-
-	void SetTextLines(const std::vector<std::string>& aLines);
+    Lines &GetLines() {
+        return mLines;
+    }
+	void clearLines();
+	[[maybe_unused]] void SetTextLines(const Lines& aLines);
 	std::vector<std::string> GetTextLines() const;
 
 	std::string GetSelectedText() const;
-	std::string GetCurrentLineText()const;
+	[[maybe_unused]] std::string GetCurrentLineText()const;
     class FindReplaceHandler;
 
-public:
     FindReplaceHandler *GetFindReplaceHandler() { return &mFindReplaceHandler; }
-	int GetTotalLines() const { return (int)mLines.size(); }
-	bool IsOverwrite() const { return mOverwrite; }
+	int32_t GetTotalLines() const { return (int32_t)mLines.size(); }
+	[[maybe_unused]] bool IsOverwrite() const { return mOverwrite; }
+    void SetOverwrite(bool aValue) { mOverwrite = aValue; }
 
 	void SetReadOnly(bool aValue);
 	bool IsReadOnly() const { return mReadOnly; }
 	bool IsTextChanged() const { return mTextChanged; }
-	bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
+    void SetTextChanged(bool aValue) { mTextChanged = aValue; }
+	[[maybe_unused]] bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
 
     void SetShowCursor(bool aValue) { mShowCursor = aValue; }
     void SetShowLineNumbers(bool aValue) { mShowLineNumbers = aValue; }
 
-	bool IsColorizerEnabled() const { return mColorizerEnabled; }
-	void SetColorizerEnable(bool aValue);
-
 	Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
 	void SetCursorPosition(const Coordinates& aPosition);
 
-	inline void SetHandleMouseInputs    (bool aValue){ mHandleMouseInputs    = aValue;}
-	inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
+	[[maybe_unused]] inline void SetHandleMouseInputs    (bool aValue){ mHandleMouseInputs    = aValue;}
+	[[maybe_unused]] inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
 
-	inline void SetHandleKeyboardInputs (bool aValue){ mHandleKeyboardInputs = aValue;}
-	inline bool IsHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
+	[[maybe_unused]]inline void SetHandleKeyboardInputs (bool aValue){ mHandleKeyboardInputs = aValue;}
+	[[maybe_unused]] inline bool IsHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
 
 	inline void SetImGuiChildIgnored    (bool aValue){ mIgnoreImGuiChild     = aValue;}
-	inline bool IsImGuiChildIgnored() const { return mIgnoreImGuiChild; }
+	[[maybe_unused]] inline bool IsImGuiChildIgnored() const { return mIgnoreImGuiChild; }
 
 	inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
-	inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
+	[[maybe_unused]] inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
 
-	void SetTabSize(int aValue);
-	inline int GetTabSize() const { return mTabSize; }
+	[[maybe_unused]] void SetTabSize(int32_t aValue);
+	[[maybe_unused]] inline int32_t GetTabSize() const { return mTabSize; }
 
 	void InsertText(const std::string& aValue);
 	void InsertText(const char* aValue);
 
-	void MoveUp(int aAmount = 1, bool aSelect = false);
-	void MoveDown(int aAmount = 1, bool aSelect = false);
-	void MoveLeft(int aAmount = 1, bool aSelect = false, bool aWordMode = false);
-	void MoveRight(int aAmount = 1, bool aSelect = false, bool aWordMode = false);
+
+	void MoveUp(int32_t aAmount = 1, bool aSelect = false);
+	void MoveDown(int32_t aAmount = 1, bool aSelect = false);
+	void MoveLeft(int32_t aAmount = 1, bool aSelect = false, bool aWordMode = false);
+	void MoveRight(int32_t aAmount = 1, bool aSelect = false, bool aWordMode = false);
 	void MoveTop(bool aSelect = false);
 	void MoveBottom(bool aSelect = false);
 	void MoveHome(bool aSelect = false);
 	void MoveEnd(bool aSelect = false);
 
-	void SetSelectionStart(const Coordinates& aPosition);
-	void SetSelectionEnd(const Coordinates& aPosition);
+[[maybe_unused]]	void SetSelectionStart(const Coordinates& aPosition);
+[[maybe_unused]]	void SetSelectionEnd(const Coordinates& aPosition);
 	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd, SelectionMode aMode = SelectionMode::Normal);
 	void SelectWordUnderCursor();
 	void SelectAll();
 	bool HasSelection() const;
 
+
 	void Copy();
 	void Cut();
 	void Paste();
 	void Delete();
+    int32_t GetPageSize() const;
 
 	ImVec2 &GetCharAdvance() { return mCharAdvance; }
 
 	bool CanUndo() const;
 	bool CanRedo() const;
-	void Undo(int aSteps = 1);
-	void Redo(int aSteps = 1);
+	void Undo(int32_t aSteps = 1);
+	void Redo(int32_t aSteps = 1);
 
-	static const Palette& GetDarkPalette();
-	static const Palette& GetLightPalette();
-	static const Palette& GetRetroBluePalette();
+    void DeleteWordLeft();
+    void DeleteWordRight();
+    void Backspace();
+
+					static const Palette& GetDarkPalette();
+[[maybe_unused]]	static const Palette& GetLightPalette();
+[[maybe_unused]]	static const Palette& GetRetroBluePalette();
 
 private:
-	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
 
 	struct EditorState
 	{
@@ -290,7 +296,6 @@ private:
 		Coordinates mCursorPosition;
 	};
 
-
 public:
     class FindReplaceHandler {
     public:
@@ -298,7 +303,7 @@ public:
         typedef std::vector<EditorState> Matches;
         Matches &GetMatches() { return mMatches; }
         bool FindNext(TextEditor *editor,bool wrapAround);
-        unsigned FindMatch(TextEditor *editor,bool isNex);
+        uint32_t FindMatch(TextEditor *editor,bool isNex);
         bool Replace(TextEditor *editor,bool right);
         bool ReplaceAll(TextEditor *editor);
         std::string &GetFindWord()  { return mFindWord; }
@@ -310,9 +315,9 @@ public:
         }
         std::string &GetReplaceWord()  { return mReplaceWord; }
         void SetReplaceWord(const std::string &aReplaceWord) { mReplaceWord = aReplaceWord; }
-        void SelectFound(TextEditor *editor, int found);
+        void SelectFound(TextEditor *editor, int32_t found);
         void FindAllMatches(TextEditor *editor,std::string findWord);
-        unsigned FindPosition( TextEditor *editor, Coordinates pos, bool isNext);
+        uint32_t FindPosition( TextEditor *editor, Coordinates pos, bool isNext);
         bool GetMatchCase() const { return mMatchCase; }
         void SetMatchCase(TextEditor *editor, bool matchCase)  {
             if (matchCase != mMatchCase) {
@@ -392,57 +397,51 @@ private:
 		EditorState mAfter;
 	};
 
-	typedef std::vector<UndoRecord> UndoBuffer;
+	using UndoBuffer = std::vector<UndoRecord>;
 
-	void ProcessInputs();
-	void Colorize(int aFromLine = 0, int aCount = -1);
-	void ColorizeRange(int aFromLine = 0, int aToLine = 0);
-	void ColorizeInternal();
+	[[maybe_unused]] void ProcessInputs();
 	float TextDistanceToLineStart(const Coordinates& aFrom) const;
 	void EnsureCursorVisible();
-	int GetPageSize() const;
 	std::string GetText(const Coordinates& aStart, const Coordinates& aEnd) const;
 	Coordinates GetActualCursorCoordinates() const;
 	Coordinates SanitizeCoordinates(const Coordinates& aValue) const;
 	void Advance(Coordinates& aCoordinates) const;
 	void DeleteRange(const Coordinates& aStart, const Coordinates& aEnd);
-	int InsertTextAt(Coordinates& aWhere, const char* aValue);
+	int32_t InsertTextAt(Coordinates& aWhere, const char* aValue);
 	void AddUndo(UndoRecord& aValue);
 	Coordinates ScreenPosToCoordinates(const ImVec2& aPosition) const;
 	Coordinates FindWordStart(const Coordinates& aFrom) const;
 	Coordinates FindWordEnd(const Coordinates& aFrom) const;
-	Coordinates FindNextWord(const Coordinates& aFrom) const;
-	int GetCharacterIndex(const Coordinates& aCoordinates) const;
-	int GetCharacterColumn(int aLine, int aIndex) const;
-	int GetLineCharacterCount(int aLine) const;
-	unsigned long long GetLineByteCount(int aLine) const;
-	int GetStringCharacterCount(std::string str) const;
-	int GetLineMaxColumn(int aLine) const;
+	[[maybe_unused]] Coordinates FindNextWord(const Coordinates& aFrom) const;
+	int32_t GetCharacterIndex(const Coordinates& aCoordinates) const;
+	int32_t GetCharacterColumn(int32_t aLine, int32_t aIndex) const;
+	[[maybe_unused]] int32_t GetLineCharacterCount(int32_t aLine) const;
+	uint64_t GetLineByteCount(int32_t aLine) const;
+	int32_t GetStringCharacterCount(std::string str) const;
+	int32_t GetLineMaxColumn(int32_t aLine) const;
 	bool IsOnWordBoundary(const Coordinates& aAt) const;
-	void RemoveLine(int aStart, int aEnd);
-	void RemoveLine(int aIndex);
-	Line& InsertLine(int aIndex);
+	void RemoveLine(int32_t aStart, int32_t aEnd);
+	void RemoveLine(int32_t aIndex);
+	Line& InsertLine(int32_t aIndex);
 	void EnterCharacter(ImWchar aChar, bool aShift);
-	void Backspace();
 	void DeleteSelection();
-	std::string GetWordUnderCursor() const;
+	[[maybe_unused]] std::string GetWordUnderCursor() const;
 	std::string GetWordAt(const Coordinates& aCoords) const;
-	ImU32 GetGlyphColor(const Glyph& aGlyph) const;
     void ResetCursorBlinkTime();
-
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
 	void Render();
 
 	float mLineSpacing;
 	Lines mLines;
+    ColorStaging mColorStaging;
 	EditorState mState;
 	UndoBuffer mUndoBuffer;
-	int mUndoIndex;
+	int32_t mUndoIndex;
     bool mScrollToBottom;
     float mTopMargin;
 
-	int mTabSize;
+	int32_t mTabSize;
 	bool mOverwrite;
 	bool mReadOnly;
 	bool mWithinRender;
@@ -451,9 +450,8 @@ private:
 	bool mTextChanged;
 	bool mColorizerEnabled;
 	float mTextStart;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
-	int  mLeftMargin;
+	int32_t  mLeftMargin;
 	bool mCursorPositionChanged;
-	int mColorRangeMin, mColorRangeMax;
 	SelectionMode mSelectionMode;
 	bool mHandleKeyboardInputs;
 	bool mHandleMouseInputs;
@@ -462,16 +460,13 @@ private:
 
 	static Palette sPaletteBase;
 	Palette mPalette;
-	LanguageDefinition mLanguageDefinition;
-	RegexList mRegexList;
-    bool mCheckComments;
 	Breakpoints mBreakpoints;
 	ErrorMarkers mErrorMarkers;
+    ErrorHoverBoxes mErrorHoverBoxes;
 	ImVec2 mCharAdvance;
 	Coordinates mInteractiveStart, mInteractiveEnd;
 	std::string mLineBuffer;
 	uint64_t mStartTime;
-	std::vector<std::string> mDefines;
 
 	float mLastClick;
     bool mShowCursor;
@@ -481,8 +476,3 @@ private:
     static const int sCursorBlinkOnTime;
 };
 
-bool TokenizeCStyleString(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);
-bool TokenizeCStyleCharacterLiteral(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);
-bool TokenizeCStyleIdentifier(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);
-bool TokenizeCStyleNumber(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);
-bool TokenizeCStylePunctuation(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);

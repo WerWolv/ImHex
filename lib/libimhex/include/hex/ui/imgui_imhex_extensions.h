@@ -136,7 +136,7 @@ namespace ImGuiExt {
     void HelpHover(const char *text, const char *icon = "(?)", ImU32 iconColor = ImGui::GetColorU32(ImGuiCol_ButtonActive));
 
     void UnderlinedText(const char *label, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
-
+    void UnderSquiggledText(const char *label, ImColor textColor = ImGui::GetStyleColorVec4(ImGuiCol_Text), ImColor lineColor = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
     void TextSpinner(const char *label);
 
     void Header(const char *label, bool firstEntry = false);
