@@ -914,7 +914,6 @@ void TextEditor::Render() {
 
             if (mState.mCursorPosition.mLine == lineNo && mShowCursor) {
                 bool focused = ImGui::IsWindowFocused();
-                ImGuiViewport *viewport = ImGui::GetWindowViewport();
 
                 // Highlight the current line (where the cursor is)
                 if (!HasSelection()) {
@@ -957,12 +956,10 @@ void TextEditor::Render() {
             mColorStaging.commit(mLines);
             auto prevColor = line.empty() ? mPalette[(int32_t)PaletteIndex::Default] : mPalette[(int32_t)line[0].mColorIndex];
             ImVec2 bufferOffset;
-            std::string lineString;
 
             for (int32_t i = 0; i < line.size();) {
 
                 auto &glyph = line[i];
-                lineString += glyph.mChar;
                 auto color  = mPalette[(int32_t)glyph.mColorIndex];
                 bool underSquiggled = false;
                 ErrorMarkers::iterator errorIt;
@@ -981,7 +978,6 @@ void TextEditor::Render() {
                     mLineBuffer.clear();
                 }
                 if (underSquiggled) {
-                    underSquiggled = false;
                     auto textStart = TextDistanceToLineStart(Coordinates(lineNo, i-1)) + mTextStart;
                     auto begin = ImVec2(lineStartScreenPos.x + textStart, lineStartScreenPos.y);
                     auto end = UnderSquiggles(begin, errorIt->second.first, mPalette[(int32_t) PaletteIndex::ErrorMarker]);
@@ -1039,7 +1035,6 @@ void TextEditor::Render() {
                 mLineBuffer.clear();
             }
             if (underSquiggled) {
-                underSquiggled = false;
                 auto textStart = TextDistanceToLineStart(Coordinates(lineNo, line.size()-1)) + mTextStart;
                 auto begin = ImVec2(lineStartScreenPos.x + textStart, lineStartScreenPos.y);
                 auto end = UnderSquiggles(begin, errorIt->second.first,mPalette[(int32_t) PaletteIndex::ErrorMarker]);
@@ -1096,16 +1091,15 @@ void TextEditor::Render() {
         mTopMargin = 0;
     }
 
-    static float linesAdded = 0;
-    static float pixelsAdded = 0;
-    static float savedScrollY = 0;
-    static float shiftedScrollY = 0;
     if (mTopMargin != oldTopMargin) {
+        static float savedScrollY = 0;
         if (oldTopMargin == 0)
             savedScrollY = ImGui::GetScrollY();
         auto window = ImGui::GetCurrentWindow();
         auto maxScroll = window->ScrollMax.y;
         if (maxScroll > 0) {
+            static float linesAdded = 0;
+            static float pixelsAdded = 0;
             float lineCount;
             float pixelCount;
             if (mTopMargin > oldTopMargin) {
@@ -1143,6 +1137,7 @@ void TextEditor::Render() {
                 pixelsAdded = 0;
             }
             if (oldScrollY + pixelCount < maxScroll) {
+                static float shiftedScrollY = 0;
                 if (mTopMargin > oldTopMargin)
                     shiftedScrollY = oldScrollY + pixelCount;
                 else if (mTopMargin > 0)
@@ -1193,16 +1188,6 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
     mWithinRender = false;
 }
 
-void TextEditor::clearLines(){
-    Coordinates start,end;
-    start.mLine = 0;
-    start.mColumn = 0;
-    auto lineCount = mLines.size();
-    end.mLine = lineCount - 1;
-    end.mColumn = mLines[ end.mLine].size();
-    DeleteRange(start,end);
-}
-
 void TextEditor::SetText(const std::string &aText) {
     mLines.resize(1);
     mLines[0].clear();
@@ -1221,16 +1206,6 @@ void TextEditor::SetText(const std::string &aText) {
 
     mUndoBuffer.clear();
     mUndoIndex = 0;
-}
-
-void TextEditor::SetTextLines(const Lines &aLines) {
-
-    if (aLines.empty()) {
-        mLines.emplace_back(Line());
-    } else {
-        mLines = std::move(aLines);
-    }
-
 }
 
 void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {

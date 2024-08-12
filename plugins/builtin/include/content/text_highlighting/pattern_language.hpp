@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
         std::vector<i32> m_firstTokenIdOfLine;
         ViewPatternEditor *m_viewPatternEditor;
         std::vector<ExcludedLocation> m_excludedLocations;
-        std::vector<Token> *m_tokens;
+        std::vector<Token> m_tokens;
         TokenColor m_tokenColors;
         std::unique_ptr<pl::PatternLanguage> *patternLanguage;
         std::vector<CompileError> m_compileErrors;
@@ -252,6 +252,8 @@ namespace hex::plugin::builtin {
         bool isLocationValid(Location location);
         /// Returns the name of the context where the current or given token is located
         bool findScope(std::string &name, const UnorderedBlocks &map, i32 optionalTokenId=-1);
+        /// Returns true if the current or given token index is in the global scope
+        bool isInGlobalScope(i32 optionalTokenId=-1);
         /// Returns the name of the namespace where the current or given token is located
         bool findNamespace(std::string &nameSpace, i32 optionalTokenId=-1);
         /// Calculate the source code, line and column numbers of a token index
@@ -286,7 +288,7 @@ namespace hex::plugin::builtin {
             i32 id = getTokenId(m_curr->location);
             i32 maxChange;
             if (count > 0)
-                maxChange = std::min(count,static_cast<i32>(m_tokens->size() - id));
+                maxChange = std::min(count,static_cast<i32>(m_tokens.size() - id));
             else
                 maxChange = -std::min(-count,id);
             m_curr += maxChange;
@@ -377,7 +379,7 @@ namespace hex::plugin::builtin {
             if (!isValid())
                 return false;
             i32 id = getTokenId(m_curr->location);
-            if (id+index < 0 || id+index >= (i32)m_tokens->size())
+            if (id+index < 0 || id+index >= (i32)m_tokens.size())
                 return false;
             return m_curr[index].type == token.type && m_curr[index] == token.value;
         }
