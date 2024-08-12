@@ -451,6 +451,8 @@ TextEditor::Coordinates TextEditor::FindWordEnd(const Coordinates &aFrom) const 
         }
         charIndex += d;
     }
+    if (line[charIndex-1].mChar == '\"')
+        --charIndex;
     return Coordinates(aFrom.mLine, GetCharacterColumn(aFrom.mLine, charIndex));
 }
 
@@ -790,7 +792,7 @@ void TextEditor::HandleMouseInputs() {
                 }
                 SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
                 resetBlinking=true;
-
+                EnsureCursorVisible();
                 mLastClick = (float)ImGui::GetTime();
             }
             // Mouse left button dragging (=> update selection)
@@ -1210,11 +1212,6 @@ void TextEditor::SetText(const std::string &aText) {
 
 void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
     assert(!mReadOnly);
-    std::string findWord = mFindReplaceHandler.GetFindWord();
-    if (!findWord.empty()) {
-        mFindReplaceHandler.resetMatches();
-        mFindReplaceHandler.FindAllMatches(this, findWord);
-    }
     UndoRecord u;
 
     u.mBefore = mState;
@@ -1390,7 +1387,14 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
 
     AddUndo(u);
 
+    std::string findWord = mFindReplaceHandler.GetFindWord();
+    if (!findWord.empty()) {
+        mFindReplaceHandler.resetMatches();
+        mFindReplaceHandler.FindAllMatches(this, findWord);
+    }
+
     EnsureCursorVisible();
+
 }
 
 void TextEditor::SetReadOnly(bool aValue) {
@@ -1481,8 +1485,6 @@ void TextEditor::InsertText(const std::string &aValue) {
 }
 
 void TextEditor::InsertText(const char *aValue) {
-    std::string findWord = mFindReplaceHandler.GetFindWord();
-    mFindReplaceHandler.resetMatches();
 
     if (aValue == nullptr)
         return;
@@ -1494,14 +1496,16 @@ void TextEditor::InsertText(const char *aValue) {
 
     SetSelection(pos, pos);
     SetCursorPosition(pos);
-    if (!findWord.empty())
+
+    std::string findWord = mFindReplaceHandler.GetFindWord();
+    if (!findWord.empty()) {
+        mFindReplaceHandler.resetMatches();
         mFindReplaceHandler.FindAllMatches(this, findWord);
+    }
 }
 
 void TextEditor::DeleteSelection() {
     assert(mState.mSelectionEnd >= mState.mSelectionStart);
-    std::string findWord = mFindReplaceHandler.GetFindWord();
-    mFindReplaceHandler.resetMatches();
 
     if (mState.mSelectionEnd == mState.mSelectionStart)
         return;
@@ -1510,9 +1514,11 @@ void TextEditor::DeleteSelection() {
 
     SetSelection(mState.mSelectionStart, mState.mSelectionStart);
     SetCursorPosition(mState.mSelectionStart);
-    if (!findWord.empty())
+    std::string findWord = mFindReplaceHandler.GetFindWord();
+    if (!findWord.empty()) {
+        mFindReplaceHandler.resetMatches();
         mFindReplaceHandler.FindAllMatches(this, findWord);
-
+    }
 }
 
 void TextEditor::MoveUp(int32_t aAmount, bool aSelect) {
@@ -1750,9 +1756,6 @@ void TextEditor::MoveEnd(bool aSelect) {
 }
 
 void TextEditor::Delete() {
-    std::string findWord = mFindReplaceHandler.GetFindWord();
-    mFindReplaceHandler.resetMatches();
-
     ResetCursorBlinkTime();
     assert(!mReadOnly);
 
@@ -1800,14 +1803,13 @@ void TextEditor::Delete() {
 
     u.mAfter = mState;
     AddUndo(u);
-    if (!findWord.empty())
+    std::string findWord = mFindReplaceHandler.GetFindWord();
+    if (!findWord.empty()) {
+        mFindReplaceHandler.resetMatches();
         mFindReplaceHandler.FindAllMatches(this, findWord);
-}
+    }}
 
 void TextEditor::Backspace() {
-    std::string findWord = mFindReplaceHandler.GetFindWord();
-    mFindReplaceHandler.resetMatches();
-
     ResetCursorBlinkTime();
     assert(!mReadOnly);
 
@@ -1872,8 +1874,11 @@ void TextEditor::Backspace() {
 
     u.mAfter = mState;
     AddUndo(u);
-    if (!findWord.empty())
+    std::string findWord = mFindReplaceHandler.GetFindWord();
+    if (!findWord.empty()) {
+        mFindReplaceHandler.resetMatches();
         mFindReplaceHandler.FindAllMatches(this, findWord);
+    }
 }
 
 void TextEditor::SelectWordUnderCursor() {
@@ -1904,9 +1909,6 @@ void TextEditor::Copy() {
 }
 
 void TextEditor::Cut() {
-    std::string findWord = mFindReplaceHandler.GetFindWord();
-    mFindReplaceHandler.resetMatches();
-
     if (IsReadOnly()) {
         Copy();
     } else {
@@ -1924,14 +1926,14 @@ void TextEditor::Cut() {
             AddUndo(u);
         }
     }
-    if (!findWord.empty())
+    std::string findWord = mFindReplaceHandler.GetFindWord();
+    if (!findWord.empty()) {
+        mFindReplaceHandler.resetMatches();
         mFindReplaceHandler.FindAllMatches(this, findWord);
+    }
 }
 
 void TextEditor::Paste() {
-    std::string findWord = mFindReplaceHandler.GetFindWord();
-    mFindReplaceHandler.resetMatches();
-
     if (IsReadOnly())
         return;
 
@@ -1956,8 +1958,11 @@ void TextEditor::Paste() {
         u.mAfter    = mState;
         AddUndo(u);
     }
-    if (!findWord.empty())
+    std::string findWord = mFindReplaceHandler.GetFindWord();
+    if (!findWord.empty()) {
+        mFindReplaceHandler.resetMatches();
         mFindReplaceHandler.FindAllMatches(this, findWord);
+    }
 }
 
 bool TextEditor::CanUndo() const {
@@ -1985,7 +1990,7 @@ void TextEditor::FindReplaceHandler::SelectFound(TextEditor *editor, int32_t ind
     auto selectionEnd = mMatches[index].mSelectionEnd;
     editor->SetSelection(selectionStart, selectionEnd);
     editor->SetCursorPosition(selectionEnd);
-    editor->mScrollToCursor = true;
+    editor->EnsureCursorVisible();
 }
 
 // The returned index is shown in the form
@@ -2110,7 +2115,7 @@ std::string make_wholeWord(const std::string &s) {
 
 // Performs actual search to fill mMatches
 bool TextEditor::FindReplaceHandler::FindNext(TextEditor *editor, bool wrapAround) {
-    auto curPos = editor->mState.mCursorPosition;
+    auto curPos = mMatches.empty() ? editor->mState.mCursorPosition : mMatches.back().mCursorPosition;
     uint64_t selectionLength = editor->GetStringCharacterCount(mFindWord);
     size_t byteIndex = 0;
 
@@ -2137,13 +2142,13 @@ bool TextEditor::FindReplaceHandler::FindNext(TextEditor *editor, bool wrapAroun
         if (GetFindRegEx()) {
             try {
                 regularExpression.assign(wordLower);
-            } catch (std::regex_error &e) {
+            } catch (const std::regex_error &e) {
                 return false;
             }
         } else {
             try {
                 regularExpression.assign(make_wholeWord(wordLower));
-            } catch (std::regex_error &e) {
+            } catch (const std::regex_error &e) {
                 return false;
             }
         }
@@ -2173,10 +2178,8 @@ bool TextEditor::FindReplaceHandler::FindNext(TextEditor *editor, bool wrapAroun
 
         textLoc = pos;
         if (wrapAround) {
-            if (iter == end) {
-                pos = firstLoc;
+            if (iter == end)
                 selectionLength = firstLength;
-            }
         }
     } else {
         // non regex search
@@ -2214,16 +2217,18 @@ bool TextEditor::FindReplaceHandler::FindNext(TextEditor *editor, bool wrapAroun
 
     auto selStart = curPos, selEnd = curPos;
     selEnd.mColumn += selectionLength;
-    editor->SetSelection(selStart, selEnd);
-    editor->SetCursorPosition(selEnd);
-    editor->mScrollToCursor = true;
+    TextEditor::EditorState state;
+    state.mSelectionStart = selStart;
+    state.mSelectionEnd = selEnd;
+    state.mCursorPosition = selEnd;
+    mMatches.push_back(state);
     return true;
 }
 
 void TextEditor::FindReplaceHandler::FindAllMatches(TextEditor *editor,std::string findWord) {
 
     if (findWord.empty()) {
-        editor->mScrollToCursor = true;
+        editor->EnsureCursorVisible();
         mFindWord = "";
         mMatches.clear();
         return;
@@ -2238,32 +2243,30 @@ void TextEditor::FindReplaceHandler::FindAllMatches(TextEditor *editor,std::stri
     mMatches.clear();
     mFindWord = findWord;
     auto startingPos = editor->mState.mCursorPosition;
-    auto state = editor->mState;
+    auto saveState = editor->mState;
     Coordinates begin = Coordinates(0,0);
     editor->mState.mCursorPosition = begin;
 
     if (!FindNext(editor,false)) {
-        editor->mState = state;
-        editor->mScrollToCursor = true;
+        editor->mState = saveState;
+        editor->EnsureCursorVisible();
         return;
     }
-    auto initialPos = editor->mState.mCursorPosition;
-    mMatches.push_back(editor->mState);
+    TextEditor::EditorState state = mMatches.back();
 
-    while( editor->mState.mCursorPosition < startingPos) {
+    while( state.mCursorPosition < startingPos) {
         if (!FindNext(editor,false)) {
-            editor->mState = state;
-            editor->mScrollToCursor = true;
+            editor->mState = saveState;
+            editor->EnsureCursorVisible();
             return;
         }
-        mMatches.push_back(editor->mState);
+        state = mMatches.back();
     }
 
-    while (FindNext(editor,false))
-        mMatches.push_back(editor->mState);
+    while (FindNext(editor,false));
 
-    editor->mState = state;
-    editor->mScrollToCursor = true;
+    editor->mState = saveState;
+    editor->EnsureCursorVisible();
     return;
 }
 
@@ -2311,7 +2314,7 @@ bool TextEditor::FindReplaceHandler::Replace(TextEditor *editor, bool next) {
 
         u.mAddedEnd = editor->GetActualCursorCoordinates();
         auto addedCount = editor->GetStringCharacterCount(u.mAdded);
-        editor->mScrollToCursor = true;
+        editor->EnsureCursorVisible();
         ImGui::SetKeyboardFocusHere(0);
 
         u.mAfter = editor->mState;
