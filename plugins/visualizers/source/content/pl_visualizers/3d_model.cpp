@@ -343,7 +343,7 @@ namespace hex::plugin::visualizers {
             }
             auto vectorCount = vector.size()/divisor;
             if (vectorCount != vertexCount) {
-                errorMessage = std::format("Expected {} colors, got {}", vertexCount, vectorCount);
+                errorMessage = hex::format("Expected {} colors, got {}", vertexCount, vectorCount);
                 return false;
             }
             return true;
@@ -656,7 +656,7 @@ namespace hex::plugin::visualizers {
                              badIndicesStr += std::to_string(badIndex) + ", ";
                         badIndicesStr.pop_back();
                           badIndicesStr.pop_back();
-                         badIndicesStr += std::format(" for {} vertices",s_vertexCount);
+                         badIndicesStr += hex::format(" for {} vertices",s_vertexCount);
                          throw std::runtime_error(badIndicesStr);
                     }
                 }
@@ -689,7 +689,7 @@ namespace hex::plugin::visualizers {
                             badIndicesStr += std::to_string(badIndex) + ", ";
                         badIndicesStr.pop_back();
                         badIndicesStr.pop_back();
-                        badIndicesStr += std::format(" for {} vertices",s_vertexCount);
+                        badIndicesStr += hex::format(" for {} vertices",s_vertexCount);
                         throw std::runtime_error(badIndicesStr);
                     }
                 }
