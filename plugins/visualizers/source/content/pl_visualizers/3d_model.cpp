@@ -18,6 +18,7 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <romfs/romfs.hpp>
+#include "stb_image.h"
 
 namespace hex::plugin::visualizers {
 
@@ -84,7 +85,7 @@ namespace hex::plugin::visualizers {
 
         IndexType s_indexType;
 
-        ImGuiExt::Texture s_modelTexture;
+        u32 s_modelTexture;
 
         gl::Vector<float, 3> s_translation      = { {  0.0F, 0.0F, -3.0F } };
         gl::Vector<float, 3> s_rotation         = { {  0.0F, 0.0F,  0.0F } };
@@ -95,6 +96,7 @@ namespace hex::plugin::visualizers {
 
         ImGuiExt::Texture s_texture;
         std::fs::path s_texturePath;
+        std::fs::path s_texturePathOld;
         u32 s_vertexCount;
 
         const auto isIndexInRange = [](auto index) {
@@ -102,6 +104,44 @@ namespace hex::plugin::visualizers {
                 s_badIndices.push_back(index);
             return index < s_vertexCount;
         };
+
+        void LoadTexture(auto &oglTexture, auto &drawTexture) {
+
+            int width, height, nrChannels;
+            unsigned char *data = nullptr;
+
+            std::string texturePathStr = s_texturePath.string();
+            std::string texturePathStrOld = s_texturePathOld.string();
+            if (texturePathStr != texturePathStrOld) {
+                s_shouldReset = true;
+                glGenTextures(1, &oglTexture);
+                glBindTexture(GL_TEXTURE_2D, oglTexture);
+
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                const char *texturePath = texturePathStr.c_str();
+                data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
+
+                if (data) {
+                    if (nrChannels == 3)
+                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                    else if (nrChannels == 4)
+                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+                    else
+                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+                    glGenerateMipmap(GL_TEXTURE_2D);
+
+                    stbi_image_free(data);
+                    drawTexture = true;
+                } else
+                    drawTexture = false;
+                s_texturePathOld = s_texturePath;
+            }
+        }
+
 
         template<typename T>
         void indicesForLines(std::vector<T> &vertexIndices) {
@@ -256,7 +296,7 @@ namespace hex::plugin::visualizers {
 
                     indices.resize(vectors.indices.size());
                     for (u32 i = 0; i < vectors.indices.size(); i += 1)
-                            indices[i] = vectors.indices[i];
+                        indices[i] = vectors.indices[i];
 
                     setNormalsWithIndices(vectors.vertices, vectors.normals, indices);
                 }
@@ -493,9 +533,9 @@ namespace hex::plugin::visualizers {
                     auto mousePos =ImGui::GetMousePos() - screenPos;
                     ImDrawList *drawList = ImGui::GetWindowDrawList();
                     drawList->AddText(
-                        screenPos + scaled({ 5, 5 }),
-                        ImGui::GetColorU32(ImGuiCol_Text),
-                        hex::format("X: {:.5}\nY: {:.5}", mousePos.x, mousePos.y).c_str());
+                            screenPos + scaled({ 5, 5 }),
+                            ImGui::GetColorU32(ImGuiCol_Text),
+                            hex::format("X: {:.5}\nY: {:.5}", mousePos.x, mousePos.y).c_str());
                 }
 
             }
@@ -587,7 +627,6 @@ namespace hex::plugin::visualizers {
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::SameLine();
 
-            //if (ImGuiExt::DimmedButton("hex.ui.common.reset"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
             if (ImGuiExt::DimmedButton("hex.ui.common.reset"_lang, ImVec2(renderingWindowSize.x+5-ImGui::GetCursorPosX(), 0))) {
                 s_translation      = { {  0.0F, 0.0F, -3.0F } };
                 s_rotation         = { {  0.0F, 0.0F,  0.0F } };
@@ -653,11 +692,11 @@ namespace hex::plugin::visualizers {
                     if (!std::ranges::all_of(vectors.indices,isIndexInRange)) {
                         std::string badIndicesStr = "Invalid indices: ";
                         for (auto badIndex : s_badIndices)
-                             badIndicesStr += std::to_string(badIndex) + ", ";
+                            badIndicesStr += std::to_string(badIndex) + ", ";
                         badIndicesStr.pop_back();
-                          badIndicesStr.pop_back();
-                         badIndicesStr += hex::format(" for {} vertices",s_vertexCount);
-                         throw std::runtime_error(badIndicesStr);
+                        badIndicesStr.pop_back();
+                        badIndicesStr += hex::format(" for {} vertices",s_vertexCount);
+                        throw std::runtime_error(badIndicesStr);
                     }
                 }
 
@@ -789,14 +828,7 @@ namespace hex::plugin::visualizers {
                 shader.setUniform("lightColor",         s_lightColor);
 
                 vertexArray.bind();
-                if (s_shouldUpdateTexture) {
-                    s_shouldUpdateTexture = false;
-                    s_modelTexture = ImGuiExt::Texture::fromImage(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
-                    if (s_modelTexture.isValid()) {
-                        s_drawTexture = true;
-                    }
-                }
-
+                LoadTexture(s_modelTexture, s_drawTexture);
                 if (s_drawTexture)
                     glBindTexture(GL_TEXTURE_2D, s_modelTexture);
 
