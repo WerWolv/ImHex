@@ -2121,9 +2121,6 @@ namespace hex::plugin::builtin {
                         if (std::ranges::find(m_UDTs,identifierName) != m_UDTs.end()) {
                             identifier->setType(IdentifierType::UDT, true);
                             setColor(-1, IdentifierType::UDT);
-                        } else if (m_globalVariables.contains(identifierName)) { // undefined global variables could be defined in imported or included files.
-                           identifier->setType(IdentifierType::GlobalVariable, true);
-                            setColor(-1, IdentifierType::GlobalVariable);
                         }
                     }
                 }
