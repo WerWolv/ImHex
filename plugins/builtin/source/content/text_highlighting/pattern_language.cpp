@@ -8,22 +8,12 @@
 #include <content/views/view_pattern_editor.hpp>
 #include <pl/pattern_language.hpp>
 #include <toasts/toast_notification.hpp>
-#include <chrono>
 
 namespace hex::plugin::builtin {
-    TextHighlighter::TextHighlighter(ViewPatternEditor *viewPatternEditor, std::unique_ptr<pl::PatternLanguage> *patternLanguage )
-    : m_viewPatternEditor(viewPatternEditor), patternLanguage(patternLanguage) {
-        m_needsToUpdateColors = true;
-    }
 
-    i32 TextHighlighter::escapeCharCount(const std::string &str) {
-        int count = 0;
-        for (auto c: str) {
-            if (c == '\"' || c == '\\' || c == '\'' || c == '\0' || c == '\t' ||
-                c == '\n' || c == '\r' || c == '\a' || c == '\b' || c == '\f')
-                count++;
-        }
-        return count;
+    bool isEscapeChar(char c) {
+        return c == '\"' || c == '\\' || c == '\'' || c == '\0' || c == '\t' ||
+               c == '\n' || c == '\r' || c == '\a' || c == '\b' || c == '\f';
     }
 
     using namespace pl::core;
@@ -36,9 +26,9 @@ namespace hex::plugin::builtin {
     using Literal = Token::Literal;
     using ValueType = Token::ValueType;
 
-    bool TextHighlighter::getIdentifierName(std::string &identifierName, Identifier *&identifier) {
+    bool TextHighlighter::getIdentifierName(std::string &identifierName, Identifier *identifier) {
         auto keyword = getValue<Keyword>(0);
-        identifier = (Identifier *)getValue<Identifier>(0);
+        identifier = getValue<Identifier>(0);
 
         if (identifier != nullptr) {
             identifierName = identifier->get();
@@ -72,7 +62,7 @@ namespace hex::plugin::builtin {
 
     bool TextHighlighter::forwardIdentifierName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool preserveCurr ) {
         auto curr = m_curr;
-        Identifier *identifier = (Identifier *) getValue<Identifier>(0);
+        Identifier *identifier = getValue<Identifier>(0);
         std::string current;
 
         if (identifier != nullptr) {
@@ -213,7 +203,7 @@ namespace hex::plugin::builtin {
         next();
         if (sequence(tkn::Operator::Colon)) {
             while (peek(tkn::Literal::Identifier)) {
-                auto identifier = (Identifier *) getValue<Identifier>(0);
+                auto identifier = getValue<Identifier>(0);
                 if (identifier == nullptr)
                     break;
                 auto identifierName = identifier->get();
@@ -297,7 +287,7 @@ namespace hex::plugin::builtin {
             auto curr = m_curr;
 
             if (peek(tkn::Literal::Identifier)) {
-                identifier = (Identifier *) getValue<Identifier>(0);
+                identifier = getValue<Identifier>(0);
                 identifierType = identifier->getType();
                 name = identifier->get();
 
@@ -728,8 +718,8 @@ namespace hex::plugin::builtin {
                         auto variableName = vectorString[i+1];
                         if (!m_UDTVariables[name].contains(variableName))
                             return false;
-                        auto veriableDefinition = m_UDTVariables[name][variableName][0];
-                        setColor(-1, veriableDefinition.idType);
+                        auto variableDefinition = m_UDTVariables[name][variableName][0];
+                        setColor(-1, variableDefinition.idType);
                         return true;
                     } else
                         return true;
@@ -803,7 +793,6 @@ namespace hex::plugin::builtin {
         return false;
     }
 
-
 // Finds the namespace of the given or the current token index.
     bool TextHighlighter::findNamespace(std::string &nameSpace, i32 optionalTokenId) {
         nameSpace = "";
@@ -844,12 +833,12 @@ namespace hex::plugin::builtin {
             qualifiedAttribute = true;
 
         if (qualifiedAttribute) {
-            auto identifier = (Identifier *) getValue<Identifier>(0);
+            auto identifier = getValue<Identifier>(0);
 
             if (identifier != nullptr)
                 setColor(-1, IdentifierType::Attribute);
             m_curr = curr;
-            identifier = (Identifier *) getValue<Identifier>(0);
+            identifier = getValue<Identifier>(0);
 
             if (identifier != nullptr)
                 setColor(-1, IdentifierType::NameSpace);
@@ -903,12 +892,12 @@ namespace hex::plugin::builtin {
         Identifier *identifier;
         std::string UDTName;
         while (sequence(tkn::Literal::Identifier, tkn::Operator::ScopeResolution)) {
-            identifier = (Identifier *) getValue<Identifier>(-2);
+            identifier = getValue<Identifier>(-2);
             UDTName += identifier->get() + "::";
         }
 
         if (sequence(tkn::Literal::Identifier)) {
-            identifier = (Identifier *) getValue<Identifier>(-1);
+            identifier = getValue<Identifier>(-1);
             UDTName += identifier->get();
 
             if (!UDTName.contains("::")) {
@@ -1181,7 +1170,7 @@ namespace hex::plugin::builtin {
 
             if (peek(tkn::Literal::Identifier)) {
 
-                if (auto identifier = (Identifier *) getValue<Identifier>(0); identifier != nullptr) {
+                if (auto identifier = getValue<Identifier>(0); identifier != nullptr) {
 
                     if (auto identifierType = identifier->getType(); identifierType != IdentifierType::Unknown &&
                                                                      identifierType != IdentifierType::MemberUnknown &&
@@ -1203,7 +1192,7 @@ namespace hex::plugin::builtin {
             if (peek(tkn::Literal::Identifier)) {
                 std::string name;
 
-                if (auto identifier = (Identifier *) getValue<Identifier>(0); identifier != nullptr) {
+                if (auto identifier = getValue<Identifier>(0); identifier != nullptr) {
 
                     if (auto identifierType = identifier->getType(); identifierType != IdentifierType::Unknown &&
                                                                      identifierType != IdentifierType::MemberUnknown &&
@@ -1222,7 +1211,7 @@ namespace hex::plugin::builtin {
                         bool chainStarted = false;
                         while (sequence(tkn::Operator::ScopeResolution, tkn::Literal::Identifier)) {
 
-                            if (identifier = (Identifier *) getValue<Identifier>(-1); identifier != nullptr)
+                            if (identifier = getValue<Identifier>(-1); identifier != nullptr)
                                 name += "::"+identifier->get();
 
                             if (!chainStarted) {
@@ -1233,7 +1222,7 @@ namespace hex::plugin::builtin {
                         }
                         while (sequence(tkn::Separator::Dot, tkn::Literal::Identifier)) {
 
-                            if (identifier = (Identifier *) getValue<Identifier>(-1); identifier != nullptr)
+                            if (identifier = getValue<Identifier>(-1); identifier != nullptr)
                                 name += "."+identifier->get();
 
                             if (!chainStarted) {
@@ -1302,11 +1291,9 @@ namespace hex::plugin::builtin {
         result.mLine = tokenCoords.mLine;
         result.mColumn = tokenCoords.mColumn + token->location.length - 1;
 
-        u32 escapeCount = 0;
         Literal literal = std::get<Literal>(m_curr->value);
         std::string str = literal.toString();
-        escapeCount = escapeCharCount(str);
-        result.mColumn += escapeCount;
+        result.mColumn += std::ranges::count_if(str, isEscapeChar);
         return result;
     }
 
@@ -1342,13 +1329,13 @@ namespace hex::plugin::builtin {
             token = const_cast<Token *>(&m_tokens[tokenId]);
 
         if (token->type == Token::Type::Integer) {
-            auto literal = (Literal *) getValue<Literal>(0);
+            auto literal = getValue<Literal>(0);
 
             if (literal != nullptr && !m_tokenColors.contains(token))
                 m_tokenColors[token] = getPaletteIndex(literal);
 
         } else if (token->type == Token::Type::DocComment) {
-            auto docComment = (DocComment *) getValue<DocComment>(0);
+            auto docComment = getValue<DocComment>(0);
 
             if (docComment != nullptr && !m_tokenColors.contains(token)) {
 
@@ -1360,7 +1347,7 @@ namespace hex::plugin::builtin {
                     m_tokenColors[token] = TextEditor::PaletteIndex::DocBlockComment;
             }
         } else if (token->type == Token::Type::Comment) {
-            auto comment = (Comment *) getValue<Comment>(0);
+            auto comment = getValue<Token::Comment>(0);
 
             if (comment != nullptr && !m_tokenColors.contains(token)) {
 
@@ -1452,14 +1439,14 @@ namespace hex::plugin::builtin {
                 }
                 skipArray(200,true);
                 m_curr = curr;
-                auto identifier = const_cast<Identifier *>( getValue<Token::Identifier>(0));
+                auto identifier = getValue<Token::Identifier>(0);
 
                 if (identifier == nullptr)
                     continue;
                 auto identifierType = identifier->getType();
                 auto variableName = identifier->get();
 
-                if (m_tokenColors.contains(token) && m_tokenColors.at(token) != TextEditor::PaletteIndex::UnkIdentifier)// && !dontSkip)
+                if (m_tokenColors.contains(token) && m_tokenColors.at(token) != TextEditor::PaletteIndex::UnkIdentifier)
                     continue;
                 Definition definition;
 
@@ -1685,7 +1672,7 @@ namespace hex::plugin::builtin {
             for ( m_curr = m_startToken + range.start; m_curr != limit; next()) {
 
                 if (peek(tkn::Literal::Identifier)) {
-                    auto identifier = (Identifier *) getValue<Token::Identifier>(0);
+                    auto identifier = getValue<Token::Identifier>(0);
                     auto identifierType = identifier->getType();
                     auto identifierName = identifier->get();
 
@@ -1743,7 +1730,7 @@ namespace hex::plugin::builtin {
             for (keyword = std::get_if<Keyword>(&m_tokens[range.start].value); m_curr != limit; next()) {
 
                 if (peek(tkn::Literal::Identifier)) {
-                    auto identifier = (Identifier *) getValue<Token::Identifier>(0);
+                    auto identifier = getValue<Token::Identifier>(0);
 
                     if (identifier == nullptr)
                         continue;
@@ -1777,7 +1764,6 @@ namespace hex::plugin::builtin {
         for (auto [name, range]: tokenRangeMap) {
 
             m_curr = m_startToken + range.start+1;
-            //while (m_curr != limit) {
 
             if (!peek(tkn::Literal::Identifier))
                 continue;
@@ -1974,8 +1960,6 @@ namespace hex::plugin::builtin {
                         if (tokenRange == m_UDTTokenRange || !m_attributeFunctionArgumentType.contains(name) ||
                             m_attributeFunctionArgumentType[name].empty()) {
 
-                            //auto vectorString = hex::splitString(name, "::");
-                            //auto shortName = vectorString.back();
                             auto instances = m_instances[name];
                             for (auto instance: instances) {
 
@@ -2107,7 +2091,7 @@ namespace hex::plugin::builtin {
             auto limit = m_startToken + range.end;
             for (m_curr =m_startToken + range.start; m_curr != limit; next()) {
 
-                if (auto identifier = (Identifier *) getValue<Token::Identifier>(0); identifier != nullptr) {
+                if (auto identifier = getValue<Token::Identifier>(0); identifier != nullptr) {
                     auto identifierType = identifier->getType();
                     auto identifierName = identifier->get();
 
@@ -2127,7 +2111,6 @@ namespace hex::plugin::builtin {
             }
         }
     }
-
 
 // Only update if needed. Must wait for the parser to finish first.
     void TextHighlighter::highlightSourceCode() {

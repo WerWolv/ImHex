@@ -150,7 +150,8 @@ namespace hex::plugin::builtin {
         };
         std::atomic<bool>  m_needsToUpdateColors = true;
 
-        TextHighlighter(ViewPatternEditor *viewPatternEditor, std::unique_ptr<pl::PatternLanguage> *patternLanguage );
+        TextHighlighter(ViewPatternEditor *viewPatternEditor, std::unique_ptr<pl::PatternLanguage> *patternLanguage ) :
+                m_viewPatternEditor(viewPatternEditor), patternLanguage(patternLanguage), m_needsToUpdateColors(true) {}
         /**
          * @brief Entry point to syntax highlighting
          */
@@ -221,7 +222,7 @@ namespace hex::plugin::builtin {
         /// Starting at the identifier, it tracks all the scope resolution and dot operators and returns the full chain without arrays, templates, pointers,...
         bool getFullName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool preserveCurr = true);
         /// Returns the identifier value.
-        bool getIdentifierName(std::string &identifierName, Identifier *&identifier);
+        bool getIdentifierName(std::string &identifierName, Identifier *identifier);
         /// Adds namespaces to the full name if they exist
         bool getQualifiedName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool useDefinitions = false, bool preserveCurr = true);
         /// As it moves forward it loads the result to the argument. Used by getFullName
@@ -278,8 +279,8 @@ namespace hex::plugin::builtin {
         /// The following functions were copied from the parser and some were modified
 
         template<typename T>
-        const T *getValue(const i32 index) {
-            return std::get_if<T>(&m_curr[index].value);
+        T *getValue(const i32 index) {
+            return const_cast<T*>(std::get_if<T>(&m_curr[index].value));
         }
 
         void next(i32 count = 1) {
