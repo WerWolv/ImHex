@@ -18,7 +18,6 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <romfs/romfs.hpp>
-#include "stb_image.h"
 
 namespace hex::plugin::visualizers {
 
@@ -36,7 +35,7 @@ namespace hex::plugin::visualizers {
             std::vector<float> vertices;
             std::vector<float> normals;
             std::vector<float> colors;
-            std::vector<float> uv1;
+            std::vector<float> uv;
             std::vector<T> indices;
         };
 
@@ -52,7 +51,7 @@ namespace hex::plugin::visualizers {
             gl::Buffer<float> vertices;
             gl::Buffer<float> normals;
             gl::Buffer<float> colors;
-            gl::Buffer<float> uv1;
+            gl::Buffer<float> uv;
             gl::Buffer<T> indices;
         };
 
@@ -85,7 +84,7 @@ namespace hex::plugin::visualizers {
 
         IndexType s_indexType;
 
-        u32 s_modelTexture;
+        ImGuiExt::Texture s_modelTexture;
 
         gl::Vector<float, 3> s_translation      = { {  0.0F, 0.0F, -3.0F } };
         gl::Vector<float, 3> s_rotation         = { {  0.0F, 0.0F,  0.0F } };
@@ -105,44 +104,6 @@ namespace hex::plugin::visualizers {
             return index < s_vertexCount;
         };
 
-        void LoadTexture(auto &oglTexture, auto &drawTexture) {
-
-            int width, height, nrChannels;
-            unsigned char *data = nullptr;
-
-            std::string texturePathStr = s_texturePath.string();
-            std::string texturePathStrOld = s_texturePathOld.string();
-            if (texturePathStr != texturePathStrOld) {
-                s_shouldReset = true;
-                glGenTextures(1, &oglTexture);
-                glBindTexture(GL_TEXTURE_2D, oglTexture);
-
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                const char *texturePath = texturePathStr.c_str();
-                data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
-
-                if (data) {
-                    if (nrChannels == 3)
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-                    else if (nrChannels == 4)
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-                    else
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-
-                    glGenerateMipmap(GL_TEXTURE_2D);
-
-                    stbi_image_free(data);
-                    drawTexture = true;
-                } else
-                    drawTexture = false;
-                s_texturePathOld = s_texturePath;
-            }
-        }
-
-
         template<typename T>
         void indicesForLines(std::vector<T> &vertexIndices) {
             std::vector<u32> indices;
@@ -151,14 +112,14 @@ namespace hex::plugin::visualizers {
             indices.resize(vertexCount * 6);
 
             for (u32 i = 0; i < vertexCount; i += 1) {
-                indices[i * 6] = vertexIndices[3 * i];
+                indices[ i * 6     ] = vertexIndices[ 3 * i     ];
                 indices[(i * 6) + 1] = vertexIndices[(3 * i) + 1];
 
                 indices[(i * 6) + 2] = vertexIndices[(3 * i) + 1];
                 indices[(i * 6) + 3] = vertexIndices[(3 * i) + 2];
 
                 indices[(i * 6) + 4] = vertexIndices[(3 * i) + 2];
-                indices[(i * 6) + 5] = vertexIndices[3 * i];
+                indices[(i * 6) + 5] = vertexIndices[ 3 * i     ];
             }
 
             vertexIndices.resize(indices.size());
@@ -167,15 +128,14 @@ namespace hex::plugin::visualizers {
             }
         }
 
-
         float getBoundingBox(const std::vector<float> &vertices) {
             gl::Vector<float, 4> minWorld(std::numeric_limits<float>::infinity()), maxWorld(-std::numeric_limits<float>::infinity());
             for (u32 i = 0; i < vertices.size(); i += 3) {
-                minWorld[0] = std::min(vertices[i], minWorld[0]);
+                minWorld[0] = std::min(vertices[i    ], minWorld[0]);
                 minWorld[1] = std::min(vertices[i + 1], minWorld[1]);
                 minWorld[2] = std::min(vertices[i + 2], minWorld[2]);
 
-                maxWorld[0] = std::max(vertices[i], maxWorld[0]);
+                maxWorld[0] = std::max(vertices[i    ], maxWorld[0]);
                 maxWorld[1] = std::max(vertices[i + 1], maxWorld[1]);
                 maxWorld[2] = std::max(vertices[i + 2], maxWorld[2]);
             }
@@ -197,6 +157,14 @@ namespace hex::plugin::visualizers {
             return std::max(max_X, max_Y);
         }
 
+        void setDefaultUVs(std::vector<float> &uv, size_t size) {
+            uv.resize(size / 3 * 2);
+            for (u32 i = 0; i < uv.size(); i += 2) {
+                uv[i    ] = 0.0F;
+                uv[i + 1] = 0.0F;
+            }
+        }
+
         void setDefaultColors(std::vector<float> &colors, size_t size, u32 color) {
             colors.resize(size / 3 * 4);
 
@@ -206,7 +174,7 @@ namespace hex::plugin::visualizers {
             float alpha = float((color >> 24) & 0xFF) / 255.0F;
 
             for (u32 i = 0; i < colors.size(); i += 4) {
-                colors[i] = red;
+                colors[i    ] = red;
                 colors[i + 1] = green;
                 colors[i + 2] = blue;
                 colors[i + 3] = alpha;
@@ -216,12 +184,12 @@ namespace hex::plugin::visualizers {
         void setNormals(const std::vector<float> &vertices, std::vector<float> &normals) {
             for (u32 i = 0; i < normals.size(); i += 9) {
 
-                auto v1 = gl::Vector<float, 3>({vertices[i], vertices[i + 1], vertices[i + 2]});
+                auto v1 = gl::Vector<float, 3>({vertices[i    ], vertices[i + 1], vertices[i + 2]});
                 auto v2 = gl::Vector<float, 3>({vertices[i + 3], vertices[i + 4], vertices[i + 5]});
                 auto v3 = gl::Vector<float, 3>({vertices[i + 6], vertices[i + 7], vertices[i + 8]});
 
                 auto normal = ((v2 - v1).cross(v3 - v1));
-                normals[i] += normal[0];
+                normals[i    ] += normal[0];
                 normals[i + 1] += normal[1];
                 normals[i + 2] += normal[2];
                 normals[i + 3] += normal[0];
@@ -234,7 +202,7 @@ namespace hex::plugin::visualizers {
             for (u32 i = 0; i < normals.size(); i += 3) {
                 auto normal = gl::Vector<float, 3>({normals[i], normals[i + 1], normals[i + 2]});
                 normal.normalize();
-                normals[i] = normal[0];
+                normals[i    ] = normal[0];
                 normals[i + 1] = normal[1];
                 normals[i + 2] = normal[2];
             }
@@ -242,28 +210,27 @@ namespace hex::plugin::visualizers {
 
         void setNormalsWithIndices(const std::vector<float> &vertices, std::vector<float> &normals, const std::vector<u32> &indices) {
             for (u32 i = 0; i < indices.size(); i += 3) {
-                auto idx = indices[i];
+                auto idx  = indices[i    ];
                 auto idx1 = indices[i + 1];
                 auto idx2 = indices[i + 2];
 
-                auto v1 = gl::Vector<float, 3>({vertices[3 * idx], vertices[(3 * idx) + 1], vertices[(3 * idx) + 2]});
-                auto v2 = gl::Vector<float, 3>(
-                        {vertices[3 * idx1], vertices[(3 * idx1) + 1], vertices[(3 * idx1) + 2]});
-                auto v3 = gl::Vector<float, 3>(
-                        {vertices[3 * idx2], vertices[(3 * idx2) + 1], vertices[(3 * idx2) + 2]});
+                auto v1 = gl::Vector<float, 3>({vertices[3 * idx ], vertices[(3 * idx ) + 1], vertices[(3 * idx ) + 2]});
+                auto v2 = gl::Vector<float, 3>({vertices[3 * idx1], vertices[(3 * idx1) + 1], vertices[(3 * idx1) + 2]});
+                auto v3 = gl::Vector<float, 3>({vertices[3 * idx2], vertices[(3 * idx2) + 1], vertices[(3 * idx2) + 2]});
 
                 auto weighted = ((v2 - v1).cross(v3 - v1));
 
-                normals[3 * idx] += weighted[0];
-                normals[(3 * idx) + 1] += weighted[1];
-                normals[(3 * idx) + 2] += weighted[2];
-                normals[(3 * idx1)] += weighted[0];
+                normals[ 3 * idx      ] += weighted[0];
+                normals[(3 * idx)  + 1] += weighted[1];
+                normals[(3 * idx)  + 2] += weighted[2];
+                normals[(3 * idx1)    ] += weighted[0];
                 normals[(3 * idx1) + 1] += weighted[1];
                 normals[(3 * idx1) + 2] += weighted[2];
-                normals[(3 * idx2)] += weighted[0];
+                normals[(3 * idx2)    ] += weighted[0];
                 normals[(3 * idx2) + 1] += weighted[1];
                 normals[(3 * idx2) + 2] += weighted[2];
             }
+
             for (u32 i = 0; i < normals.size(); i += 3) {
 
                 auto normal = gl::Vector<float, 3>({normals[i], normals[i + 1], normals[i + 2]});
@@ -284,6 +251,9 @@ namespace hex::plugin::visualizers {
                 setDefaultColors(vectors.colors, vectors.vertices.size(), 0x00000000);
             else if (vectors.colors.empty())
                 setDefaultColors(vectors.colors, vectors.vertices.size(), 0xFF337FFF);
+
+            if (vectors.uv.empty())
+                setDefaultUVs(vectors.uv, vectors.vertices.size());
 
             if (vectors.normals.empty()) {
                 vectors.normals.resize(vectors.vertices.size());
@@ -369,9 +339,7 @@ namespace hex::plugin::visualizers {
             rotation[2] = std::fmod(rotation[2], 2 * std::numbers::pi_v<float>);
         }
 
-        bool validateVector(const std::vector<float> &vector, u32 vertexCount, u32 divisor, const std::string &name,std::string &errorMessage, bool skipEmpty = false) {
-            if (vector.empty() && skipEmpty)
-                return true;
+        bool validateVector(const std::vector<float> &vector, u32 vertexCount, u32 divisor, const std::string &name,std::string &errorMessage) {
             if (!vector.empty()) {
                 if (vector.size() % divisor != 0) {
                     errorMessage = name + " must be a multiple of " + std::to_string(divisor);
@@ -394,8 +362,8 @@ namespace hex::plugin::visualizers {
             buffers.vertices    = {};
             buffers.normals     = {};
             buffers.colors      = {};
-            buffers.uv1         = {};
-            buffers.indices    = {};
+            buffers.uv          = {};
+            buffers.indices     = {};
 
             vertexArray.bind();
             u32 vertexCount = vectors.vertices.size() / 3;
@@ -422,8 +390,8 @@ namespace hex::plugin::visualizers {
             else
                 throw std::runtime_error(errorMessage);
 
-            if (validateVector(vectors.uv1, vertexCount, 2, "UV coordinates", errorMessage, true))
-                buffers.uv1 = gl::Buffer<float>(gl::BufferType::Vertex, vectors.uv1);
+            if (validateVector(vectors.uv, vertexCount, 2, "UV coordinates", errorMessage))
+                buffers.uv = gl::Buffer<float>(gl::BufferType::Vertex, vectors.uv);
             else
                 throw std::runtime_error(errorMessage);
 
@@ -431,16 +399,12 @@ namespace hex::plugin::visualizers {
             vertexArray.addBuffer(0, buffers.vertices);
             vertexArray.addBuffer(1, buffers.colors, 4);
             vertexArray.addBuffer(2, buffers.normals);
-
-            if (!vectors.uv1.empty())
-                vertexArray.addBuffer(3, buffers.uv1, 2);
+            vertexArray.addBuffer(3, buffers.uv, 2);
 
             buffers.vertices.unbind();
             buffers.colors.unbind();
             buffers.normals.unbind();
-
-            if (!vectors.uv1.empty())
-                buffers.uv1.unbind();
+            buffers.uv.unbind();
 
             if (indexType != IndexType::Undefined)
                 buffers.indices.unbind();
@@ -453,7 +417,7 @@ namespace hex::plugin::visualizers {
         void bindLineBuffers(LineBuffers<T> &lineBuffers, const gl::VertexArray &vertexArray, const LineVectors<T> &lineVectors, IndexType indexType) {
             lineBuffers.vertices  = {};
             lineBuffers.colors    = {};
-            lineBuffers.indices  = {};
+            lineBuffers.indices   = {};
             u32 vertexCount = lineVectors.vertices.size() / 3;
             vertexArray.bind();
             std::string errorMessage;
@@ -645,7 +609,7 @@ namespace hex::plugin::visualizers {
     template <class T>
     void processRendering(std::shared_ptr<pl::ptrn::Pattern> verticesPattern, std::shared_ptr<pl::ptrn::Pattern> indicesPattern,
                           std::shared_ptr<pl::ptrn::Pattern> normalsPattern, std::shared_ptr<pl::ptrn::Pattern> colorsPattern,
-                          std::shared_ptr<pl::ptrn::Pattern> uv1Pattern, const std::string &textureFile) {
+                          std::shared_ptr<pl::ptrn::Pattern> uvPattern) {
         static gl::LightSourceVectors sourceVectors(20);
         static gl::VertexArray sourceVertexArray = {};
         static gl::LightSourceBuffers sourceBuffers(sourceVertexArray, sourceVectors);
@@ -663,19 +627,13 @@ namespace hex::plugin::visualizers {
         if (s_renderingWindowSize.x <= 0 || s_renderingWindowSize.y <= 0)
             s_renderingWindowSize = {350_scaled, 350_scaled};
 
-        if (!textureFile.empty()) {
-            s_texturePath = textureFile;
-            s_drawTexture = true;
-        } else {
-            s_drawTexture = false;
-        }
-
         gl::Matrix<float, 4, 4> mvp(0);
         static Buffers<T> buffers;
         static LineBuffers<T> lineBuffers;
 
         if (s_shouldReset) {
             s_shouldReset = false;
+            s_shouldUpdateLightSource = true;
 
             if (s_drawMode == GL_TRIANGLES) {
                 Vectors<T> vectors;
@@ -704,8 +662,8 @@ namespace hex::plugin::visualizers {
                     vectors.colors = patternToArray<float>(colorsPattern.get());
                 if (normalsPattern != nullptr)
                     vectors.normals = patternToArray<float>(normalsPattern.get());
-                if (uv1Pattern != nullptr)
-                    vectors.uv1 = patternToArray<float>(uv1Pattern.get());
+                if (uvPattern != nullptr)
+                    vectors.uv = patternToArray<float>(uvPattern.get());
 
                 loadVectors(vectors, s_indexType);
 
@@ -819,19 +777,25 @@ namespace hex::plugin::visualizers {
 
                 shader.bind();
 
-                shader.setUniform("modelScale",      scaledModel);
-                shader.setUniform("modelMatrix",     model);
-                shader.setUniform("viewMatrix",      view);
-                shader.setUniform("projectionMatrix",projection);
-                shader.setUniform("lightPosition",      s_lightPosition);
-                shader.setUniform("lightBrightness",    s_lightBrightness);
-                shader.setUniform("lightColor",         s_lightColor);
+                shader.setUniform("modelScale",       scaledModel);
+                shader.setUniform("modelMatrix",      model);
+                shader.setUniform("viewMatrix",       view);
+                shader.setUniform("projectionMatrix", projection);
+                shader.setUniform("lightPosition",    s_lightPosition);
+                shader.setUniform("lightBrightness",  s_lightBrightness);
+                shader.setUniform("lightColor",       s_lightColor);
 
                 vertexArray.bind();
-                LoadTexture(s_modelTexture, s_drawTexture);
+                if (s_shouldUpdateTexture) {
+                    s_shouldUpdateTexture = false;
+                    s_modelTexture = ImGuiExt::Texture::fromImage(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
+                    if (s_modelTexture.isValid()) {
+                        s_drawTexture = true;
+                    }
+                }
+
                 if (s_drawTexture)
                     glBindTexture(GL_TEXTURE_2D, s_modelTexture);
-
 
                 buffers.indices.bind();
                 if (buffers.indices.getSize() == 0)
@@ -924,7 +888,7 @@ namespace hex::plugin::visualizers {
         std::shared_ptr<pl::ptrn::Pattern> indicesPattern = arguments[1].toPattern();
         std::shared_ptr<pl::ptrn::Pattern> normalsPattern = nullptr;
         std::shared_ptr<pl::ptrn::Pattern> colorsPattern = nullptr;
-        std::shared_ptr<pl::ptrn::Pattern> uv1Pattern = nullptr;
+        std::shared_ptr<pl::ptrn::Pattern> uvPattern = nullptr;
 
         std::string textureFile;
         if (arguments.size() > 2) {
@@ -932,34 +896,39 @@ namespace hex::plugin::visualizers {
             if (arguments.size() > 3) {
                 colorsPattern = arguments[3].toPattern();
                 if (arguments.size() > 4) {
-                    uv1Pattern = arguments[4].toPattern();
+                    uvPattern = arguments[4].toPattern();
                     if (arguments.size() > 5)
                         textureFile = arguments[5].toString();
                 }
             }
         }
 
+        s_texturePath = textureFile;
+        s_drawTexture = !textureFile.empty();
         if (shouldReset)
             s_shouldReset = true;
         processInputEvents(s_rotation, s_translation, s_scaling, s_nearLimit, s_farLimit);
+        if (s_texturePath != s_texturePathOld) {
+            s_texturePathOld = s_texturePath;
+            s_shouldUpdateTexture = true;
+        }
 
         auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
         if (iterable != nullptr && iterable->getEntryCount() > 0) {
             const auto &content = iterable->getEntry(0);
             if (content->getSize() == 1) {
                 s_indexType = IndexType::U8;
-                processRendering<u8>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uv1Pattern, textureFile);
+                processRendering<u8>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uvPattern);
             } else if (content->getSize() == 2) {
                 s_indexType = IndexType::U16;
-                processRendering<u16>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uv1Pattern, textureFile);
+                processRendering<u16>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uvPattern);
             } else if (content->getSize() == 4) {
                 s_indexType = IndexType::U32;
-                processRendering<u32>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uv1Pattern,
-                                      textureFile);
+                processRendering<u32>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uvPattern);
             }
         } else {
             s_indexType = IndexType::Undefined;
-            processRendering<u8>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uv1Pattern, textureFile);
+            processRendering<u8>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uvPattern);
         }
     }
 }
