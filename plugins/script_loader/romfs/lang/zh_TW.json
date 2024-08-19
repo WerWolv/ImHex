@@ -2,6 +2,7 @@
     "code": "zh-TW",
     "country": "Taiwan",
     "language": "Chinese (Traditional)",
+    "fallback": false,
     "translations": {
         "hex.script_loader.menu.loading": "正在載入...",
         "hex.script_loader.menu.no_scripts": "找不到指令碼",

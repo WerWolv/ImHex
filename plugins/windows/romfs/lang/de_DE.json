@@ -2,6 +2,7 @@
     "code": "de-DE",
     "country": "Germany",
     "language": "German",
+    "fallback": false,
     "translations": {
         "hex.builtin.setting.general.context_menu_entry": "Windows Kontextmenu-Eintrag",
         "hex.builtin.setting.interface.show_resource_usage": "Resourcenverbrauch anzeigen",

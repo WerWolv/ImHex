@@ -2,6 +2,7 @@
     "code": "zh-CN",
     "country": "China",
     "language": "Chinese (Simplified)",
+    "fallback": false,
     "translations": {
         "hex.builtin.setting.general.context_menu_entry": "窗口上下文菜单项",
         "hex.builtin.setting.interface.show_resource_usage": "在底部中显示资源使用情况",

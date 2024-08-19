@@ -2,6 +2,7 @@
     "code": "ko-KR",
     "country": "Korea",
     "language": "Korean",
+    "fallback": false,
     "translations": {
         "hex.builtin.setting.general.context_menu_entry": "Windows 컨텍스트 메뉴 항목",
         "hex.builtin.setting.interface.show_resource_usage": "하단에 리소스 사용량 표시",

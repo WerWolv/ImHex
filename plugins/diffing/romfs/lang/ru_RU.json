@@ -1,0 +1,23 @@
+{
+    "code": "ru-RU",
+    "language": "Russian",
+    "country": "Russia",
+    "fallback": false,
+    "translations": {
+        "hex.diffing.algorithm.simple.name": "Простой побайтовый алгоритм",
+        "hex.diffing.algorithm.simple.description": "Примитивное O(N) побайтовое сравнение.\nСпособен выявить только изменения байтов и вставку/удаление в конце данных",
+        "hex.diffing.algorithm.myers.name": "Алгоритм битового-вектора Майера",
+        "hex.diffing.algorithm.myers.description": "Умный O(N*M) алгоритм сравнения. Способен выявить изменение, вставку и удаление байтов в любом месте в данных",
+        "hex.diffing.algorithm.myers.settings.window_size": "Размер окна",
+        "hex.diffing.view.diff.name": "Сравнение",
+        "hex.diffing.view.diff.added": "Добавлен",
+        "hex.diffing.view.diff.modified": "Изменён",
+        "hex.diffing.view.diff.provider_a": "Источник A",
+        "hex.diffing.view.diff.provider_b": "Источник B",
+        "hex.diffing.view.diff.removed": "Удалён",
+        "hex.diffing.view.diff.algorithm": "Алгоритм сравнения",
+        "hex.diffing.view.diff.settings": "Нет доступных настроек",
+        "hex.diffing.view.diff.settings.no_settings": "Нет доступных настроек",
+        "hex.diffing.view.diff.task.diffing": "Сравнение данных..."
+    }
+}
