@@ -492,16 +492,18 @@ namespace hex::plugin::visualizers {
                     if (showZ)
                         drawList->AddText(ImVec2(axesPositionX[2], axesPositionY[2]) + screenPos, IM_COL32(0, 0, 255, 255), "Z");
                 }
+                auto mousePos =ImGui::GetMousePos() - screenPos;
+                ImDrawList *drawList = ImGui::GetWindowDrawList();
+                ImU32 color;
+                if (ImHexApi::System::isDebugBuild())
+                    color = ImGui::GetColorU32(ImGuiCol_Text);
+                else
+                    color = ImGui::GetColorU32(ImGuiCol_PopupBg);
 
-                if (ImHexApi::System::isDebugBuild()) {
-                    auto mousePos =ImGui::GetMousePos() - screenPos;
-                    ImDrawList *drawList = ImGui::GetWindowDrawList();
-                    drawList->AddText(
-                            screenPos + scaled({ 5, 5 }),
-                            ImGui::GetColorU32(ImGuiCol_Text),
-                            hex::format("X: {:.5}\nY: {:.5}", mousePos.x, mousePos.y).c_str());
-                }
-
+                drawList->AddText( screenPos + scaled({ 5, 5 }), color,
+                                   hex::format("X: {:.5}\nY: {:.5}", mousePos.x, mousePos.y).c_str());
+                drawList->AddText( screenPos + scaled({ 5, 5 }), ImGui::GetColorU32(ImGuiCol_PopupBg),
+                                   hex::format("X: {:.5}\n", ImGui::GetIO().MouseWheel).c_str());
             }
             ImGui::EndChild();
             ImGui::PopStyleVar();
