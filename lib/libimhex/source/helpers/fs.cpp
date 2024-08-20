@@ -25,40 +25,6 @@
 #else
     #include <GLFW/glfw3.h>
     #include <nfd.hpp>
-    #if defined(OS_WINDOWS)
-        #define GLFW_EXPOSE_NATIVE_WIN32
-    #endif
-    #if defined(OS_MACOS)
-        // macOS platform headers can't be compiled with gcc
-        #define GLFW_NATIVE_INCLUDE_NONE
-        typedef uint32_t CGDirectDisplayID;
-        typedef void *id;
-        typedef void NSWindow;
-        #define GLFW_EXPOSE_NATIVE_COCOA
-    #endif
-    #if defined(OS_LINUX)
-        #if GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
-            #define GLFW_EXPOSE_NATIVE_X11
-        #endif
-    #endif
-
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wunused-parameter"
-    #include <nfd_glfw3.h>
-    #pragma GCC diagnostic pop
-
-    #if defined(OS_LINUX) && GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
-        #if GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4
-            #undef GLFW_EXPOSE_NATIVE_X11
-        #endif
-    #endif
-    #if defined(OS_MACOS)
-        #undef GLFW_EXPOSE_NATIVE_COCOA
-        #undef GLFW_NATIVE_INCLUDE_NONE
-    #endif
-    #if defined(OS_WINDOWS)
-        #undef GLFW_EXPOSE_NATIVE_WIN32
-    #endif
 #endif
 
 #include <filesystem>
@@ -268,22 +234,20 @@ namespace hex::fs {
             NFD::UniquePathU8 outPath;
             NFD::UniquePathSet outPaths;
             nfdresult_t result = NFD_ERROR;
-            nfdwindowhandle_t nativeWindow{};
-            NFD_GetNativeWindowFromGLFWWindow(ImHexApi::System::getMainWindowHandle(), &nativeWindow);
 
             // Open the correct file dialog based on the mode
             switch (mode) {
                 case DialogMode::Open:
                     if (multiple)
-                        result = NFD::OpenDialogMultiple(outPaths, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), nativeWindow);
+                        result = NFD::OpenDialogMultiple(outPaths, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
                     else
-                        result = NFD::OpenDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), nativeWindow);
+                        result = NFD::OpenDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
                     break;
                 case DialogMode::Save:
-                    result = NFD::SaveDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), nullptr, nativeWindow);
+                    result = NFD::SaveDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
                     break;
                 case DialogMode::Folder:
-                    result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str(), nativeWindow);
+                    result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
                     break;
             }
 
