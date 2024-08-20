@@ -7,7 +7,7 @@ namespace hex::plugin::builtin {
 
     void Base64Provider::readRaw(u64 offset, void *buffer, size_t size) {
         const u64 base64Offset = 4 * (offset / 3);
-        const u64 base64Size = hex::alignTo<u64>(4 * (size / 3), 4) + 4;
+        const u64 base64Size = std::min<u64>(hex::alignTo<u64>(4 * (size / 3), 4) + 4, m_fileSize);
 
         std::vector<u8> bytes(base64Size);
         FileProvider::readRaw(base64Offset, bytes.data(), bytes.size());
