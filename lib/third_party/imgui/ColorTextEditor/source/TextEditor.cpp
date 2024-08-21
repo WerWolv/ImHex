@@ -369,6 +369,8 @@ TextEditor::Coordinates TextEditor::FindWordEnd(const Coordinates &aFrom) const 
         }
         cindex += d;
     }
+    if (line[cindex-1].mChar == '\"')
+        --cindex;
     return Coordinates(aFrom.mLine, GetCharacterColumn(aFrom.mLine, cindex));
 }
 
