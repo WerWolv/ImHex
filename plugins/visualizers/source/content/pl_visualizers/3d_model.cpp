@@ -493,6 +493,14 @@ namespace hex::plugin::visualizers {
             }
             ImGui::EndChild();
             ImGui::PopStyleVar();
+            {
+                ImGui::SameLine();
+                {
+                    ImGui::PushID(5);
+                    ImGui::Dummy(ImVec2(0, 0));
+                    ImGui::PopID();
+                }
+            }
 
             // Draw axis arrows toggle
             {
@@ -572,7 +580,7 @@ namespace hex::plugin::visualizers {
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::SameLine();
 
-            if (ImGuiExt::DimmedButton("hex.ui.common.reset"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+            if (ImGuiExt::DimmedButton("hex.ui.common.reset"_lang, ImVec2(renderingWindowSize.x-ImGui::GetCursorPosX(), 0))) {
                 s_translation      = { {  0.0F, 0.0F, -3.0F } };
                 s_rotation         = { {  0.0F, 0.0F,  0.0F } };
                 s_scaling            = 1.0F;
