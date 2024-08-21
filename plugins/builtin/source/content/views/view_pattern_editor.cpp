@@ -554,7 +554,7 @@ namespace hex::plugin::builtin {
             }
 
             if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0) {
-                if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1)) {
+                if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
                     m_hasUnevaluatedChanges = false;
 
                     auto code = m_textEditor.GetText();
@@ -1684,7 +1684,7 @@ namespace hex::plugin::builtin {
                 *m_breakpointHit = true;
                 m_resetDebuggerVariables = true;
                 while (*m_breakpointHit) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100ll));
                 }
             });
 
@@ -1707,7 +1707,7 @@ namespace hex::plugin::builtin {
                 m_dangerousFunctionCalled = true;
 
                 while (m_dangerousFunctionsAllowed == DangerousFunctionPerms::Ask) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100ll));
                 }
 
                 return m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
@@ -1800,15 +1800,19 @@ namespace hex::plugin::builtin {
             m_envVarEntries->emplace_back(0, "", i128(0), EnvVarType::Integer);
 
             m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
+            m_cursorPosition.get(provider) =  TextEditor::Coordinates(0, 0);
         });
 
         EventProviderChanged::subscribe(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
-            if (oldProvider != nullptr)
+            if (oldProvider != nullptr) {
                 m_sourceCode.set(oldProvider, m_textEditor.GetText());
+                m_cursorPosition.set(m_textEditor.GetCursorPosition(),oldProvider);
+            }
 
-            if (newProvider != nullptr)
+            if (newProvider != nullptr) {
                 m_textEditor.SetText(m_sourceCode.get(newProvider));
-            else
+                m_textEditor.SetCursorPosition(m_cursorPosition.get(newProvider));
+            } else
                 m_textEditor.SetText("");
         });
 
