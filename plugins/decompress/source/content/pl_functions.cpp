@@ -174,6 +174,13 @@ namespace hex::plugin::decompress {
                         section.resize(section.size() - stream.avail_out);
                         break;
                     }
+
+                    if (res == LZMA_MEMLIMIT_ERROR ) {
+                        auto usage = lzma_memusage(&stream);
+                        lzma_memlimit_set(&stream, usage);
+                        res = lzma_code(&stream, LZMA_RUN);
+                    }
+
                     if (res != LZMA_OK)
                         return false;
 
