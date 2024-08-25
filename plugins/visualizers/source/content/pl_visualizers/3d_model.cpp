@@ -34,7 +34,7 @@ namespace hex::plugin::visualizers {
             std::vector<float> vertices;
             std::vector<float> normals;
             std::vector<float> colors;
-            std::vector<float> uv1;
+            std::vector<float> uv;
             std::vector<u8> indices8;
             std::vector<u16> indices16;
             std::vector<u32> indices32;
@@ -52,7 +52,7 @@ namespace hex::plugin::visualizers {
             gl::Buffer<float> vertices;
             gl::Buffer<float> normals;
             gl::Buffer<float> colors;
-            gl::Buffer<float> uv1;
+            gl::Buffer<float> uv;
             gl::Buffer<u8> indices8;
             gl::Buffer<u16> indices16;
             gl::Buffer<u32> indices32;
@@ -97,7 +97,7 @@ namespace hex::plugin::visualizers {
 
         ImGuiExt::Texture s_texture;
         std::fs::path s_texturePath;
-
+        std::fs::path s_texturePathOld;
         template<typename T>
         void indicesForLines(std::vector<T> &vertexIndices) {
             std::vector<u32> indices;
@@ -106,30 +106,30 @@ namespace hex::plugin::visualizers {
             indices.resize(vertexCount * 6);
 
             for (u32 i = 0; i < vertexCount; i += 1) {
-                indices[i * 6] = vertexIndices[3 * i];
+                indices[ i * 6     ] = vertexIndices[ 3 * i     ];
                 indices[(i * 6) + 1] = vertexIndices[(3 * i) + 1];
 
                 indices[(i * 6) + 2] = vertexIndices[(3 * i) + 1];
                 indices[(i * 6) + 3] = vertexIndices[(3 * i) + 2];
 
                 indices[(i * 6) + 4] = vertexIndices[(3 * i) + 2];
-                indices[(i * 6) + 5] = vertexIndices[3 * i];
+                indices[(i * 6) + 5] = vertexIndices[ 3 * i     ];
             }
 
             vertexIndices.resize(indices.size());
-            for (u32 i = 0; i < indices.size(); ++i)
+            for (u32 i = 0; i < indices.size(); i=i+1) {
                 vertexIndices[i] = indices[i];
+            }
         }
-
 
         float getBoundingBox(const std::vector<float> &vertices) {
             gl::Vector<float, 4> minWorld(std::numeric_limits<float>::infinity()), maxWorld(-std::numeric_limits<float>::infinity());
             for (u32 i = 0; i < vertices.size(); i += 3) {
-                minWorld[0] = std::min(vertices[i], minWorld[0]);
+                minWorld[0] = std::min(vertices[i    ], minWorld[0]);
                 minWorld[1] = std::min(vertices[i + 1], minWorld[1]);
                 minWorld[2] = std::min(vertices[i + 2], minWorld[2]);
 
-                maxWorld[0] = std::max(vertices[i], maxWorld[0]);
+                maxWorld[0] = std::max(vertices[i    ], maxWorld[0]);
                 maxWorld[1] = std::max(vertices[i + 1], maxWorld[1]);
                 maxWorld[2] = std::max(vertices[i + 2], maxWorld[2]);
             }
@@ -145,10 +145,18 @@ namespace hex::plugin::visualizers {
             if (minCamera[3] != 0)
                 minCamera = minCamera * (1.0F / minCamera[3]);
 
-            float maxx = std::max(std::fabs(minCamera[0]), std::fabs(maxCamera[0]));
-            float maxy = std::max(std::fabs(minCamera[1]), std::fabs(maxCamera[1]));
+            float max_X = std::max(std::fabs(minCamera[0]), std::fabs(maxCamera[0]));
+            float max_Y = std::max(std::fabs(minCamera[1]), std::fabs(maxCamera[1]));
 
-            return std::max(maxx, maxy);
+            return std::max(max_X, max_Y);
+        }
+
+        void setDefaultUVs(std::vector<float> &uv, size_t size) {
+            uv.resize(size / 3 * 2);
+            for (u32 i = 0; i < uv.size(); i += 2) {
+                uv[i    ] = 0.0F;
+                uv[i + 1] = 0.0F;
+            }
         }
 
         void setDefaultColors(std::vector<float> &colors, size_t size, u32 color) {
@@ -160,7 +168,7 @@ namespace hex::plugin::visualizers {
             float alpha = float((color >> 24) & 0xFF) / 255.0F;
 
             for (u32 i = 0; i < colors.size(); i += 4) {
-                colors[i] = red;
+                colors[i    ] = red;
                 colors[i + 1] = green;
                 colors[i + 2] = blue;
                 colors[i + 3] = alpha;
@@ -170,12 +178,12 @@ namespace hex::plugin::visualizers {
         void setNormals(const std::vector<float> &vertices, std::vector<float> &normals) {
             for (u32 i = 0; i < normals.size(); i += 9) {
 
-                auto v1 = gl::Vector<float, 3>({vertices[i], vertices[i + 1], vertices[i + 2]});
+                auto v1 = gl::Vector<float, 3>({vertices[i    ], vertices[i + 1], vertices[i + 2]});
                 auto v2 = gl::Vector<float, 3>({vertices[i + 3], vertices[i + 4], vertices[i + 5]});
                 auto v3 = gl::Vector<float, 3>({vertices[i + 6], vertices[i + 7], vertices[i + 8]});
 
                 auto normal = ((v2 - v1).cross(v3 - v1));
-                normals[i] += normal[0];
+                normals[i    ] += normal[0];
                 normals[i + 1] += normal[1];
                 normals[i + 2] += normal[2];
                 normals[i + 3] += normal[0];
@@ -188,7 +196,7 @@ namespace hex::plugin::visualizers {
             for (u32 i = 0; i < normals.size(); i += 3) {
                 auto normal = gl::Vector<float, 3>({normals[i], normals[i + 1], normals[i + 2]});
                 normal.normalize();
-                normals[i] = normal[0];
+                normals[i    ] = normal[0];
                 normals[i + 1] = normal[1];
                 normals[i + 2] = normal[2];
             }
@@ -196,28 +204,27 @@ namespace hex::plugin::visualizers {
 
         void setNormalsWithIndices(const std::vector<float> &vertices, std::vector<float> &normals, const std::vector<u32> &indices) {
             for (u32 i = 0; i < indices.size(); i += 3) {
-                auto idx = indices[i];
+                auto idx  = indices[i    ];
                 auto idx1 = indices[i + 1];
                 auto idx2 = indices[i + 2];
 
-                auto v1 = gl::Vector<float, 3>({vertices[3 * idx], vertices[(3 * idx) + 1], vertices[(3 * idx) + 2]});
-                auto v2 = gl::Vector<float, 3>(
-                        {vertices[3 * idx1], vertices[(3 * idx1) + 1], vertices[(3 * idx1) + 2]});
-                auto v3 = gl::Vector<float, 3>(
-                        {vertices[3 * idx2], vertices[(3 * idx2) + 1], vertices[(3 * idx2) + 2]});
+                auto v1 = gl::Vector<float, 3>({vertices[3 * idx ], vertices[(3 * idx ) + 1], vertices[(3 * idx ) + 2]});
+                auto v2 = gl::Vector<float, 3>({vertices[3 * idx1], vertices[(3 * idx1) + 1], vertices[(3 * idx1) + 2]});
+                auto v3 = gl::Vector<float, 3>({vertices[3 * idx2], vertices[(3 * idx2) + 1], vertices[(3 * idx2) + 2]});
 
                 auto weighted = ((v2 - v1).cross(v3 - v1));
 
-                normals[3 * idx] += weighted[0];
-                normals[(3 * idx) + 1] += weighted[1];
-                normals[(3 * idx) + 2] += weighted[2];
-                normals[(3 * idx1)] += weighted[0];
+                normals[ 3 * idx      ] += weighted[0];
+                normals[(3 * idx)  + 1] += weighted[1];
+                normals[(3 * idx)  + 2] += weighted[2];
+                normals[(3 * idx1)    ] += weighted[0];
                 normals[(3 * idx1) + 1] += weighted[1];
                 normals[(3 * idx1) + 2] += weighted[2];
-                normals[(3 * idx2)] += weighted[0];
+                normals[(3 * idx2)    ] += weighted[0];
                 normals[(3 * idx2) + 1] += weighted[1];
                 normals[(3 * idx2) + 2] += weighted[2];
             }
+
             for (u32 i = 0; i < normals.size(); i += 3) {
 
                 auto normal = gl::Vector<float, 3>({normals[i], normals[i + 1], normals[i + 2]});
@@ -237,6 +244,9 @@ namespace hex::plugin::visualizers {
                 setDefaultColors(vectors.colors, vectors.vertices.size(), 0x00000000);
             else if (vectors.colors.empty())
                 setDefaultColors(vectors.colors, vectors.vertices.size(), 0xFF337FFF);
+
+            if (vectors.uv.empty())
+                setDefaultUVs(vectors.uv, vectors.vertices.size());
 
             if (vectors.normals.empty()) {
                 vectors.normals.resize(vectors.vertices.size());
@@ -334,20 +344,20 @@ namespace hex::plugin::visualizers {
             scaling = std::max(scaling, 0.01F);
 
             processKeyEvent(ImGuiKey_Keypad4, translation[0], -0.1F, accel);
-            processKeyEvent(ImGuiKey_Keypad6, translation[0], 0.1F, accel);
-            processKeyEvent(ImGuiKey_Keypad8, translation[1], 0.1F, accel);
+            processKeyEvent(ImGuiKey_Keypad6, translation[0],  0.1F, accel);
+            processKeyEvent(ImGuiKey_Keypad8, translation[1],  0.1F, accel);
             processKeyEvent(ImGuiKey_Keypad2, translation[1], -0.1F, accel);
-            processKeyEvent(ImGuiKey_Keypad1, translation[2], 0.1F, accel);
+            processKeyEvent(ImGuiKey_Keypad1, translation[2],  0.1F, accel);
             processKeyEvent(ImGuiKey_Keypad7, translation[2], -0.1F, accel);
-            processKeyEvent(ImGuiKey_Keypad9, nearLimit, -0.01F, accel);
-            processKeyEvent(ImGuiKey_Keypad3, nearLimit, 0.01F, accel);
+            processKeyEvent(ImGuiKey_Keypad9, nearLimit,     -0.01F, accel);
+            processKeyEvent(ImGuiKey_Keypad3, nearLimit,      0.01F, accel);
 
             if (ImHexApi::System::isDebugBuild()) {
-                processKeyEvent(ImGuiKey_KeypadDivide, farLimit, -1.0F, accel);
-                processKeyEvent(ImGuiKey_KeypadMultiply, farLimit, 1.0F, accel);
+                processKeyEvent(ImGuiKey_KeypadDivide,   farLimit, -1.0F, accel);
+                processKeyEvent(ImGuiKey_KeypadMultiply, farLimit,  1.0F, accel);
             }
 
-            processKeyEvent(ImGuiKey_KeypadAdd, rotation[2], -0.075F, accel);
+            processKeyEvent(ImGuiKey_KeypadAdd, rotation[2],     -0.075F, accel);
             processKeyEvent(ImGuiKey_KeypadSubtract, rotation[2], 0.075F, accel);
             rotation[2] = std::fmod(rotation[2], 2 * std::numbers::pi_v<float>);
         }
@@ -357,7 +367,7 @@ namespace hex::plugin::visualizers {
             buffers.vertices    = {};
             buffers.normals     = {};
             buffers.colors      = {};
-            buffers.uv1         = {};
+            buffers.uv          = {};
             buffers.indices8    = {};
             buffers.indices16   = {};
             buffers.indices32   = {};
@@ -366,6 +376,7 @@ namespace hex::plugin::visualizers {
             buffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, vectors.vertices);
             buffers.colors   = gl::Buffer<float>(gl::BufferType::Vertex, vectors.colors);
             buffers.normals  = gl::Buffer<float>(gl::BufferType::Vertex, vectors.normals);
+            buffers.uv       = gl::Buffer<float>(gl::BufferType::Vertex, vectors.uv);
 
             if (indexType == IndexType::U8)
                 buffers.indices8 = gl::Buffer<u8>(gl::BufferType::Index, vectors.indices8);
@@ -374,22 +385,15 @@ namespace hex::plugin::visualizers {
             else
                 buffers.indices32 = gl::Buffer<u32>(gl::BufferType::Index, vectors.indices32);
 
-            if (!vectors.uv1.empty())
-                buffers.uv1 = gl::Buffer<float>(gl::BufferType::Vertex, vectors.uv1);
-
             vertexArray.addBuffer(0, buffers.vertices);
             vertexArray.addBuffer(1, buffers.colors, 4);
             vertexArray.addBuffer(2, buffers.normals);
-
-            if (!vectors.uv1.empty())
-                vertexArray.addBuffer(3, buffers.uv1, 2);
+            vertexArray.addBuffer(3, buffers.uv, 2);
 
             buffers.vertices.unbind();
             buffers.colors.unbind();
             buffers.normals.unbind();
-
-            if (!vectors.uv1.empty())
-                buffers.uv1.unbind();
+            buffers.uv.unbind();
 
             if (indexType == IndexType::U8)
                 buffers.indices8.unbind();
@@ -468,17 +472,17 @@ namespace hex::plugin::visualizers {
                     axes.updateRow(1, axes.getRow(1) * (1.0F / axes(1, 3)));
                     axes.updateRow(2, axes.getRow(2) * (1.0F / axes(2, 3)));
 
-                    auto axesPosx = (axes.getColumn(0) + 1.0F) * (textureWidth / 2.0F);
-                    auto axesPosy = (axes.getColumn(1) + 1.0F) * (-textureHeight / 2.0F) + textureHeight;
+                    auto axesPositionX = (axes.getColumn(0) + 1.0F) * (textureWidth / 2.0F);
+                    auto axesPositionY = (axes.getColumn(1) + 1.0F) * (-textureHeight / 2.0F) + textureHeight;
 
                     ImDrawList *drawList = ImGui::GetWindowDrawList();
 
                     if (showX)
-                        drawList->AddText(ImVec2(axesPosx[0], axesPosy[0]) + screenPos, IM_COL32(255, 0, 0, 255), "X");
+                        drawList->AddText(ImVec2(axesPositionX[0], axesPositionY[0]) + screenPos, IM_COL32(255, 0, 0, 255), "X");
                     if (showY)
-                        drawList->AddText(ImVec2(axesPosx[1], axesPosy[1]) + screenPos, IM_COL32(0, 255, 0, 255), "Y");
+                        drawList->AddText(ImVec2(axesPositionX[1], axesPositionY[1]) + screenPos, IM_COL32(0, 255, 0, 255), "Y");
                     if (showZ)
-                        drawList->AddText(ImVec2(axesPosx[2], axesPosy[2]) + screenPos, IM_COL32(0, 0, 255, 255), "Z");
+                        drawList->AddText(ImVec2(axesPositionX[2], axesPositionY[2]) + screenPos, IM_COL32(0, 0, 255, 255), "Z");
                 }
 
                 if (ImHexApi::System::isDebugBuild()) {
@@ -608,7 +612,7 @@ namespace hex::plugin::visualizers {
         std::shared_ptr<pl::ptrn::Pattern> indicesPattern = arguments[1].toPattern();
         std::shared_ptr<pl::ptrn::Pattern> normalsPattern = nullptr;
         std::shared_ptr<pl::ptrn::Pattern> colorsPattern = nullptr;
-        std::shared_ptr<pl::ptrn::Pattern> uv1Pattern = nullptr;
+        std::shared_ptr<pl::ptrn::Pattern> uvPattern = nullptr;
 
         std::string textureFile;
         if (arguments.size() > 2) {
@@ -616,7 +620,7 @@ namespace hex::plugin::visualizers {
             if (arguments.size() > 3) {
                 colorsPattern = arguments[3].toPattern();
                 if (arguments.size() > 4) {
-                    uv1Pattern = arguments[4].toPattern();
+                    uvPattern = arguments[4].toPattern();
                     if (arguments.size() > 5)
                         textureFile = arguments[5].toString();
                 }
@@ -634,22 +638,25 @@ namespace hex::plugin::visualizers {
         if (s_renderingWindowSize.x <= 0 || s_renderingWindowSize.y <= 0)
             s_renderingWindowSize = { minSize, minSize };
 
-        if (!textureFile.empty()) {
-            s_texturePath = textureFile;
-            s_drawTexture = true;
-        } else {
-            s_drawTexture = false;
-        }
-
         s_renderingWindowSize.x = std::max(s_renderingWindowSize.x, minSize);
         s_renderingWindowSize.y = std::max(s_renderingWindowSize.y, minSize);
 
         gl::Matrix<float, 4, 4> mvp(0);
 
+
+        s_texturePath = textureFile;
+        s_drawTexture = !textureFile.empty();
+        if (shouldReset)
+            s_shouldReset = true;
         processInputEvents(s_rotation, s_translation, s_scaling, s_nearLimit, s_farLimit);
+        if (s_texturePath != s_texturePathOld) {
+            s_texturePathOld = s_texturePath;
+            s_shouldUpdateTexture = true;
+        }
 
         if (s_shouldReset) {
             s_shouldReset = false;
+            s_shouldUpdateLightSource = true;
 
             auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
             if (iterable != nullptr && iterable->getEntryCount() > 0) {
@@ -680,8 +687,8 @@ namespace hex::plugin::visualizers {
                     vectors.colors = patternToArray<float>(colorsPattern.get());
                 if (normalsPattern != nullptr)
                     vectors.normals = patternToArray<float>(normalsPattern.get());
-                if (uv1Pattern != nullptr)
-                    vectors.uv1 = patternToArray<float>(uv1Pattern.get());
+                if (uvPattern != nullptr)
+                    vectors.uv = patternToArray<float>(uvPattern.get());
 
                 loadVectors(vectors, s_indexType);
 
@@ -785,13 +792,13 @@ namespace hex::plugin::visualizers {
 
                 shader.bind();
 
-                shader.setUniform("modelScale",      scaledModel);
-                shader.setUniform("modelMatrix",     model);
-                shader.setUniform("viewMatrix",      view);
-                shader.setUniform("projectionMatrix",projection);
-                shader.setUniform("lightPosition",      s_lightPosition);
-                shader.setUniform("lightBrightness",    s_lightBrightness);
-                shader.setUniform("lightColor",         s_lightColor);
+                shader.setUniform("modelScale",       scaledModel);
+                shader.setUniform("modelMatrix",      model);
+                shader.setUniform("viewMatrix",       view);
+                shader.setUniform("projectionMatrix", projection);
+                shader.setUniform("lightPosition",    s_lightPosition);
+                shader.setUniform("lightBrightness",  s_lightBrightness);
+                shader.setUniform("lightColor",       s_lightColor);
 
                 vertexArray.bind();
                 if (s_shouldUpdateTexture) {
