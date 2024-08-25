@@ -636,6 +636,7 @@
         "hex.builtin.tools.ieee754.mantissa_size": "Mantissa Size",
         "hex.builtin.tools.ieee754.result.float": "Floating Point Result",
         "hex.builtin.tools.ieee754.result.hex": "Hexadecimal Result",
+        "hex.builtin.tools.ieee754.quarter_precision": "Quarter Precision",
         "hex.builtin.tools.ieee754.result.title": "Result",
         "hex.builtin.tools.ieee754.settings.display_mode.detailed": "Detailed",
         "hex.builtin.tools.ieee754.settings.display_mode.simplified": "Simplified",
