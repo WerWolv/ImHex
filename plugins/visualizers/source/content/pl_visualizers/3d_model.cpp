@@ -285,13 +285,11 @@ namespace hex::plugin::visualizers {
             else
                 indicesForLines(lineVectors.indices32);
 
-            const auto isIndexInRange = [vertexCount](auto index) { return index >= vertexCount; };
+            const auto isIndexInRange = [vertexCount](auto index) { return index < (vertexCount /  3); };
 
-            if (
-                !std::ranges::all_of(lineVectors.indices8, isIndexInRange)  ||
-                !std::ranges::all_of(lineVectors.indices16, isIndexInRange) ||
-                !std::ranges::all_of(lineVectors.indices32, isIndexInRange)
-            ) {
+            if ((indexType == IndexType::U8 && !std::ranges::all_of(lineVectors.indices8, isIndexInRange)) ||
+                (indexType == IndexType::U16 && !std::ranges::all_of(lineVectors.indices16, isIndexInRange)) ||
+                (indexType == IndexType::U32 && !std::ranges::all_of(lineVectors.indices32, isIndexInRange))) {
                 throw std::logic_error("One or more indices point to out-of-range vertex");
             }
         }
