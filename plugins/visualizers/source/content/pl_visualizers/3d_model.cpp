@@ -18,6 +18,7 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <romfs/romfs.hpp>
+#include <numeric>
 
 namespace hex::plugin::visualizers {
 
@@ -641,7 +642,8 @@ namespace hex::plugin::visualizers {
                     if (indexCount < 3 || indexCount % 3 != 0) {
                         throw std::runtime_error("Index count must be a multiple of 3");
                     }
-                    if (!std::ranges::all_of(vectors.indices,isIndexInRange)) {
+                    auto booleans = std::views::transform(vectors.indices,isIndexInRange);
+                    if (!std::accumulate(std::begin(booleans), std::end(booleans), true, std::logical_and<>())) {
                         std::string badIndicesStr = "Invalid indices: ";
                         for (auto badIndex : s_badIndices)
                             badIndicesStr += std::to_string(badIndex) + ", ";
