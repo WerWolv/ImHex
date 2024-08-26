@@ -339,6 +339,8 @@ TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates &aFrom) cons
         }
         --cindex;
     }
+    if (cindex==0 && line[cindex].mChar == '\"')
+        ++cindex;
     return Coordinates(at.mLine, GetCharacterColumn(at.mLine, cindex));
 }
 
