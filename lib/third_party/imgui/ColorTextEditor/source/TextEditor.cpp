@@ -1956,7 +1956,6 @@ void TextEditor::Paste() {
 
 bool TextEditor::CanUndo() {
     return !mReadOnly && mUndoIndex > 0;
-    EnsureCursorVisible();
 }
 
 bool TextEditor::CanRedo() const {
@@ -1966,11 +1965,21 @@ bool TextEditor::CanRedo() const {
 void TextEditor::Undo(int aSteps) {
     while (CanUndo() && aSteps-- > 0)
         mUndoBuffer[--mUndoIndex].Undo(this);
+    std::string findWord = mFindReplaceHandler.GetFindWord();
+    if (!findWord.empty()) {
+        mFindReplaceHandler.resetMatches();
+        mFindReplaceHandler.FindAllMatches(this, findWord);
+    }
 }
 
 void TextEditor::Redo(int aSteps) {
     while (CanRedo() && aSteps-- > 0)
         mUndoBuffer[mUndoIndex++].Redo(this);
+    std::string findWord = mFindReplaceHandler.GetFindWord();
+    if (!findWord.empty()) {
+        mFindReplaceHandler.resetMatches();
+        mFindReplaceHandler.FindAllMatches(this, findWord);
+    }
 }
 
 // the index here is array index so zero based
@@ -2889,6 +2898,7 @@ void TextEditor::UndoRecord::Redo(TextEditor *aEditor) {
 
     aEditor->mState = mAfter;
     aEditor->EnsureCursorVisible();
+
 }
 
 bool TokenizeCStyleString(const char *in_begin, const char *in_end, const char *&out_begin, const char *&out_end) {
