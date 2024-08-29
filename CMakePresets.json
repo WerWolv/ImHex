@@ -17,6 +17,7 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "IMHEX_PATTERNS_PULL_MASTER": "ON",
         "CMAKE_INSTALL_PREFIX": "./install",
         "USE_SYSTEM_CAPSTONE": "ON",
