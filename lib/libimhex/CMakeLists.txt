@@ -151,5 +151,5 @@ set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 add_dependencies(imhex_all libimhex)
 
 install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
-set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set_target_properties(libimhex PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${IMHEX_MAIN_OUTPUT_DIRECTORY})
 set_target_properties(libimhex PROPERTIES PREFIX "")

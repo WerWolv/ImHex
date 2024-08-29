@@ -1,4 +1,4 @@
-project(updater) 
+project(updater)
 
 add_executable(updater
     source/main.cpp
@@ -16,5 +16,5 @@ endif()
 
 set_target_properties(updater PROPERTIES
         OUTPUT_NAME "imhex-updater"
-        RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}
+        RUNTIME_OUTPUT_DIRECTORY ${IMHEX_MAIN_OUTPUT_DIRECTORY}
 )
