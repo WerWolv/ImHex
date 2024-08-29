@@ -1,4 +1,5 @@
 .vscode/
+.devcontainer/
 .idea/
 .kdev4/
 
