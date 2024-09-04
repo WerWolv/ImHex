@@ -1304,15 +1304,27 @@ namespace hex::plugin::builtin {
                 };
 
                 TextEditor::ErrorMarkers errorMarkers;
-                if (m_lastEvaluationError->has_value()) {
-                    errorMarkers[(*m_lastEvaluationError)->line] = processMessage((*m_lastEvaluationError)->message);
+                if (!m_callStack->empty()) {
+                    for (const auto &frame : *m_callStack | std::views::reverse) {
+                        auto location = frame->getLocation();
+                        std::string message;
+                        if (location.source->source == pl::api::Source::DefaultSource) {
+                            if (m_lastEvaluationError->has_value())
+                                message = processMessage((*m_lastEvaluationError)->message);
+                            auto key = TextEditor::Coordinates(location.line, location.column);
+                            errorMarkers[key] = std::make_pair(location.length, message);
+                        }
+                    }
                 }
 
                 if (!m_lastCompileError->empty()) {
                     for (const auto &error : *m_lastCompileError) {
-                        auto source = error.getLocation().source;
-                        if (source != nullptr && source->source == pl::api::Source::DefaultSource)
-                            errorMarkers[error.getLocation().line] = processMessage(error.getMessage());
+                       auto source = error.getLocation().source;
+                        if (source != nullptr && source->source == pl::api::Source::DefaultSource) {
+                            auto key = TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
+                            if (!errorMarkers.contains(key) ||errorMarkers[key].first < error.getLocation().length)
+                                    errorMarkers[key] = std::make_pair(error.getLocation().length,processMessage(error.getMessage()));
+                        }
                     }
                 }
 
@@ -1755,6 +1767,7 @@ namespace hex::plugin::builtin {
             if (!m_lastEvaluationResult) {
                 *m_lastEvaluationError = runtime.getEvalError();
                 *m_lastCompileError    = runtime.getCompileErrors();
+                *m_callStack           = reinterpret_cast<const std::vector<const pl::core::ast::ASTNode *> &>(runtime.getInternals().evaluator->getCallStack());
             }
 
             TaskManager::doLater([code] {
