@@ -293,36 +293,18 @@ namespace hex::plugin::builtin {
             }
 
             // Context menu entries that open the find/replace popup
-            bool openFindPopup = false;
             ImGui::PushID(&this->m_textEditor);
             if (clickedMenuFind) {
                 m_replaceMode = false;
-                openFindPopup = true;
+                m_openFindReplacePopUp = true;
             }
 
             if (clickedMenuReplace) {
                 m_replaceMode = true;
-                openFindPopup = true;
+                m_openFindReplacePopUp = true;
             }
 
             // shortcuts to open the find/replace popup
-            if (ImGui::IsItemHovered()) {
-                if (ImGui::IsKeyPressed(ImGuiKey_F, false) && ImGui::GetIO().KeyCtrl) {
-                    m_replaceMode = false;
-                    openFindPopup = true;
-                }
-
-                if (ImGui::IsKeyPressed(ImGuiKey_H, false) && ImGui::GetIO().KeyCtrl) {
-                    m_replaceMode = true;
-                    openFindPopup = true;
-                }
-                if (ImGui::IsKeyPressed(ImGuiKey_S, false) && ImGui::GetIO().KeyAlt)
-                    hex::plugin::builtin::saveProject();
-                if (ImGui::IsKeyPressed(ImGuiKey_O, false) && ImGui::GetIO().KeyAlt)
-                    hex::plugin::builtin::openProject();
-                if (ImGui::IsKeyPressed(ImGuiKey_S, false) && ImGui::GetIO().KeyAlt && ImGui::GetIO().KeyShift)
-                    hex::plugin::builtin::saveProjectAs();
-            }
 
             static std::string findWord;
             static bool requestFocus = false;
@@ -330,7 +312,8 @@ namespace hex::plugin::builtin {
             static u64 count = 0;
             static bool updateCount = false;
 
-            if (openFindPopup) {
+            if (m_openFindReplacePopUp) {
+                m_openFindReplacePopUp = false;
                 // Place the popup at the top right of the window
                 auto windowSize = ImGui::GetWindowSize();
                 auto style = ImGui::GetStyle();
@@ -2035,6 +2018,209 @@ namespace hex::plugin::builtin {
                 tar.writeString(basePath, wolv::util::trim(sourceCode));
                 return true;
             }
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::F + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find", [this] {
+            m_openFindReplacePopUp = true;
+            m_replaceMode = false;
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::H + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.replace", [this] {
+            m_openFindReplacePopUp = true;
+            m_replaceMode = true;
+        });
+
+        ShortcutManager::addShortcut(this, Keys::F3 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find_next", [this] {
+            TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
+            findReplaceHandler->FindMatch(&m_textEditor,true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::F3 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find_previous", [this] {
+            TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
+            findReplaceHandler->FindMatch(&m_textEditor,false);
+        });
+
+        ShortcutManager::addShortcut(this, ALT + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.match_case_toggle", [this] {
+            TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
+            findReplaceHandler->SetMatchCase(&m_textEditor,!findReplaceHandler->GetMatchCase());
+        });
+
+        ShortcutManager::addShortcut(this, ALT + Keys::R + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.regex_toggle", [this] {
+            TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
+            findReplaceHandler->SetFindRegEx(&m_textEditor,!findReplaceHandler->GetFindRegEx());
+        });
+
+        ShortcutManager::addShortcut(this, ALT + Keys::W + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.whole_word_toggle", [this] {
+            TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
+            findReplaceHandler->SetWholeWord(&m_textEditor,!findReplaceHandler->GetWholeWord());
+        });
+
+        ShortcutManager::addShortcut(this, ALT + Keys::S + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.save_project", [] {
+            hex::plugin::builtin::saveProject();
+        });
+
+        ShortcutManager::addShortcut(this, ALT + Keys::O + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.open_project", [] {
+            hex::plugin::builtin::openProject();
+        });
+
+        ShortcutManager::addShortcut(this, ALT + SHIFT + Keys::S + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.save_project_as", [] {
+            hex::plugin::builtin::saveProjectAs();
+        });
+
+     //   ShortcutManager::addShortcut(this, CTRL + Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.copy", [this] {
+     //       m_textEditor.Copy();
+     //   });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.copy", [this] {
+            m_textEditor.Copy();
+        });
+
+     //   ShortcutManager::addShortcut(this, SHIFT + Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.paste", [this] {
+        //    m_textEditor.Paste();
+    //    });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::V + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.paste", [this] {
+            m_textEditor.Paste();
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::X + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.cut", [this] {
+            m_textEditor.Cut();
+        });
+
+      //  ShortcutManager::addShortcut(this, SHIFT + Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.cut", [this] {
+      //      m_textEditor.Cut();
+      //  });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Z + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.undo", [this] {
+            m_textEditor.Undo();
+        });
+
+      //  ShortcutManager::addShortcut(this, ALT + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.undo", [this] {
+    //        m_textEditor.Undo();
+      //  });
+
+        ShortcutManager::addShortcut(this, Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete", [this] {
+            m_textEditor.Delete();
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Y + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.redo", [this] {
+            m_textEditor.Redo();
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::A + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_all", [this] {
+            m_textEditor.SelectAll();
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_right", [this] {
+            m_textEditor.MoveRight(1, true, false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_right", [this] {
+            m_textEditor.MoveRight(1, true, true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_left", [this] {
+            m_textEditor.MoveLeft(1, true, false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_left", [this] {
+            m_textEditor.MoveLeft(1, true, true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_up", [this] {
+            m_textEditor.MoveUp(1, true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT +Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_up", [this] {
+            m_textEditor.MoveUp(m_textEditor.GetPageSize()-4, true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_down", [this] {
+            m_textEditor.MoveDown(1, true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT +Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_down", [this] {
+            m_textEditor.MoveDown(m_textEditor.GetPageSize()-4, true);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_top", [this] {
+            m_textEditor.MoveTop(true);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_bottom", [this] {
+            m_textEditor.MoveBottom(true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_home", [this] {
+            m_textEditor.MoveHome(true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_end", [this] {
+            m_textEditor.MoveEnd(true);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_right", [this] {
+            m_textEditor.DeleteWordRight();
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_left", [this] {
+            m_textEditor.DeleteWordLeft();
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.backspace", [this] {
+            m_textEditor.Backspace();
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.toggle_insert", [this] {
+            m_textEditor.SetOverwrite(!m_textEditor.IsOverwrite());
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_right", [this] {
+            m_textEditor.MoveRight(1, false, true);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_right", [this] {
+            m_textEditor.MoveRight(1, false, false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_left", [this] {
+            m_textEditor.MoveLeft(1, false, true);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_left", [this] {
+            m_textEditor.MoveLeft(1, false, false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_up", [this] {
+            m_textEditor.MoveUp(1, false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_up", [this] {
+            m_textEditor.MoveUp(m_textEditor.GetPageSize()-4, false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_down", [this] {
+            m_textEditor.MoveDown(1, false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_down", [this] {
+            m_textEditor.MoveDown(m_textEditor.GetPageSize()-4, false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_top", [this] {
+            m_textEditor.MoveTop(false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_bottom", [this] {
+            m_textEditor.MoveBottom(false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_home", [this] {
+            m_textEditor.MoveHome(false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_end", [this] {
+            m_textEditor.MoveEnd(false);
         });
 
         ShortcutManager::addShortcut(this, Keys::F8 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.add_breakpoint", [this] {

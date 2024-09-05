@@ -215,6 +215,7 @@ public:
     FindReplaceHandler *GetFindReplaceHandler() { return &mFindReplaceHandler; }
 	int GetTotalLines() const { return (int)mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
+    void SetOverwrite(bool aValue) { mOverwrite = aValue; }
 
 	void SetReadOnly(bool aValue);
 	bool IsReadOnly() const { return mReadOnly; }
@@ -268,6 +269,7 @@ public:
 	void Cut();
 	void Paste();
 	void Delete();
+    int32_t GetPageSize() const;
 
 	ImVec2 &GetCharAdvance() { return mCharAdvance; }
 
@@ -275,6 +277,10 @@ public:
 	bool CanRedo() const;
 	void Undo(int aSteps = 1);
 	void Redo(int aSteps = 1);
+
+    void DeleteWordLeft();
+    void DeleteWordRight();
+    void Backspace();
 
 	static const Palette& GetDarkPalette();
 	static const Palette& GetLightPalette();
@@ -400,7 +406,6 @@ private:
 	void ColorizeInternal();
 	float TextDistanceToLineStart(const Coordinates& aFrom) const;
 	void EnsureCursorVisible();
-	int GetPageSize() const;
 	std::string GetText(const Coordinates& aStart, const Coordinates& aEnd) const;
 	Coordinates GetActualCursorCoordinates() const;
 	Coordinates SanitizeCoordinates(const Coordinates& aValue) const;
@@ -423,7 +428,6 @@ private:
 	void RemoveLine(int aIndex);
 	Line& InsertLine(int aIndex);
 	void EnterCharacter(ImWchar aChar, bool aShift);
-	void Backspace();
 	void DeleteSelection();
 	std::string GetWordUnderCursor() const;
 	std::string GetWordAt(const Coordinates& aCoords) const;

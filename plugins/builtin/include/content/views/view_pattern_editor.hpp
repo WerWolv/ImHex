@@ -260,6 +260,7 @@ namespace hex::plugin::builtin {
         u32 m_accessHistoryIndex = 0;
         bool m_parentHighlightingEnabled = true;
         bool m_replaceMode = false;
+        bool m_openFindReplacePopUp = false;
 
         std::map<std::fs::path, std::string> m_patternNames;
 
