@@ -147,7 +147,10 @@ def main():
                             continue
                         reference_tranlsation = (
                             " '%s'" % reference_lang_data["translations"][key]
-                            if reference_lang_data
+                            if (
+                                reference_lang_data
+                                and key in reference_lang_data["translations"]
+                            )
                             else ""
                         )
                         print(
