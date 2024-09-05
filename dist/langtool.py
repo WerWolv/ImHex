@@ -129,7 +129,7 @@ def main():
                         key in lang_data["translations"]
                         and lang_data["translations"][key] != INVALID_TRANSLATION
                     )
-                    if not has_translation and not (
+                    if has_translation and not (
                         (command == "retranslate" or command == "untranslate")
                         and re.compile(args.keys).fullmatch(key)
                     ):
