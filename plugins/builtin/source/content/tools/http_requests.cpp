@@ -23,29 +23,29 @@ namespace hex::plugin::builtin {
         static std::future<HttpRequest::Result<std::string>> response;
 
         AT_FIRST_TIME {
-            responseEditor.SetReadOnly(true);
-            responseEditor.SetShowLineNumbers(false);
-            responseEditor.SetShowWhitespaces(true);
-            responseEditor.SetShowCursor(false);
+            responseEditor.setReadOnly(true);
+            responseEditor.setShowLineNumbers(false);
+            responseEditor.setShowWhitespaces(true);
+            responseEditor.setShowCursor(false);
 
             auto languageDef = TextEditor::LanguageDefinition();
-            for (auto &[name, identifier] : languageDef.mIdentifiers)
-                identifier.mDeclaration = "";
-            languageDef.mCaseSensitive   = false;
-            languageDef.mAutoIndentation = false;
-            languageDef.mCommentStart = "";
-            languageDef.mCommentEnd = "";
-            languageDef.mSingleLineComment = "";
-            languageDef.mDocComment = "";
-            languageDef.mGlobalDocComment = "";
+            for (auto &[name, identifier] : languageDef.m_identifiers)
+                identifier.m_declaration = "";
+            languageDef.m_caseSensitive   = false;
+            languageDef.m_autoIndentation = false;
+            languageDef.m_commentStart = "";
+            languageDef.m_commentEnd = "";
+            languageDef.m_singleLineComment = "";
+            languageDef.m_docComment = "";
+            languageDef.m_globalDocComment = "";
 
-            responseEditor.SetLanguageDefinition(languageDef);
+            responseEditor.setLanguageDefinition(languageDef);
 
-            bodyEditor.SetShowLineNumbers(true);
-            bodyEditor.SetShowWhitespaces(true);
-            bodyEditor.SetShowCursor(true);
+            bodyEditor.setShowLineNumbers(true);
+            bodyEditor.setShowWhitespaces(true);
+            bodyEditor.setShowCursor(true);
 
-            bodyEditor.SetLanguageDefinition(languageDef);
+            bodyEditor.setLanguageDefinition(languageDef);
         };
 
         constexpr static auto Methods = std::array{
@@ -130,7 +130,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.builtin.tools.http_requests.body"_lang)) {
-                    bodyEditor.Render("Body", ImGui::GetContentRegionAvail(), true);
+                    bodyEditor.render("Body", ImGui::GetContentRegionAvail(), true);
                     ImGui::EndTabItem();
                 }
 
@@ -140,16 +140,16 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
 
         ImGuiExt::Header("hex.builtin.tools.http_requests.response"_lang);
-        responseEditor.Render("Response", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true);
+        responseEditor.render("Response", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true);
 
         if (response.valid() && response.wait_for(0s) != std::future_status::timeout) {
             const auto result = response.get();
             const auto data = result.getData();
 
             if (const auto status = result.getStatusCode(); status != 0)
-                responseEditor.SetText("Status: " + std::to_string(result.getStatusCode()) + "\n\n" + data);
+                responseEditor.setText("Status: " + std::to_string(result.getStatusCode()) + "\n\n" + data);
             else
-                responseEditor.SetText("Status: No Response");
+                responseEditor.setText("Status: No Response");
         }
 
     }

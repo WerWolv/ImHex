@@ -490,17 +490,17 @@ namespace hex::plugin::builtin {
                     }
 
                     // Draw comment if the bookmark is locked or an input text box if it's unlocked
-                    editor.SetReadOnly(locked);
-                    editor.SetShowLineNumbers(!locked);
-                    editor.SetShowCursor(!locked);
-                    editor.SetShowWhitespaces(false);
+                    editor.setReadOnly(locked);
+                    editor.setShowLineNumbers(!locked);
+                    editor.setShowCursor(!locked);
+                    editor.setShowWhitespaces(false);
 
-                    if (!locked || (locked && !comment.empty())) {
+                    if (!locked || !comment.empty()) {
                         ImGuiExt::Header("hex.builtin.view.bookmarks.header.comment"_lang);
-                        editor.Render("##comment", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true);
+                        editor.render("##comment", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true);
 
-                        if (editor.IsTextChanged())
-                            comment = editor.GetText();
+                        if (editor.isTextChanged())
+                            comment = editor.getText();
                     }
 
                     ImGui::NewLine();
@@ -533,7 +533,7 @@ namespace hex::plugin::builtin {
                 continue;
 
             TextEditor editor;
-            editor.SetText(bookmark["comment"]);
+            editor.setText(bookmark["comment"]);
             m_bookmarks.get(provider).push_back({
                 {
                     .region     = { region["address"], region["size"] },
@@ -560,7 +560,7 @@ namespace hex::plugin::builtin {
         for (const auto &[bookmark, editor]  : m_bookmarks.get(provider)) {
             json["bookmarks"][index] = {
                     { "name",       bookmark.name },
-                    { "comment",    editor.GetText() },
+                    { "comment",    editor.getText() },
                     { "color",      bookmark.color },
                     { "region", {
                             { "address",    bookmark.region.address },
