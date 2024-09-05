@@ -138,7 +138,6 @@ def main():
                         print(
                             f"Error: Translation {lang_data['code']} is missing translation for key '{key}'"
                         )
-                        exit(2)
                     elif (
                         command == "translate"
                         or command == "retranslate"
