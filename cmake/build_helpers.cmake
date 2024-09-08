@@ -582,6 +582,12 @@ macro(setupCompilerFlags target)
         endif ()
     endif()
 
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND APPLE)
+        execute_process(COMMAND brew --prefix llvm OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+        set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
+        set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
+    endif()
+
     # Disable some warnings for gcc
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -Wno-restrict -Wno-stringop-overread -Wno-stringop-overflow -Wno-dangling-reference")
