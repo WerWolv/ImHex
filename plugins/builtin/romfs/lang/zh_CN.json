@@ -821,7 +821,7 @@
         "hex.builtin.view.help.about.release_notes": "发行说明",
         "hex.builtin.view.help.about.source": "源代码位于 GitHub：",
         "hex.builtin.view.help.about.thanks": "如果您喜欢我的工作，请赞助以帮助此项目继续前进。非常感谢 <3",
-        "hex.builtin.view.help.about.translator": "由 xtexChooser 翻译，York Waugh修改",
+        "hex.builtin.view.help.about.translator": "由 xtex 翻译，York Waugh 修改",
         "hex.builtin.view.help.calc_cheat_sheet": "计算器帮助",
         "hex.builtin.view.help.documentation": "ImHex 文档",
         "hex.builtin.view.help.documentation_search": "搜索文档",
