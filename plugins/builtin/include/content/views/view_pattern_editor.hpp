@@ -344,7 +344,7 @@ namespace hex::plugin::builtin {
                     fs::DialogMode::Save, { {"Pattern", "hexpat"} },
                     [this](const auto &path) {
                         wolv::io::File file(path, wolv::io::File::Mode::Create);
-                        file.writeString(wolv::util::trim(m_textEditor.GetText()));
+                        file.writeString(wolv::util::trim(m_textEditor.getText()));
                     }
             );
         };
