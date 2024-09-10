@@ -29,7 +29,7 @@ namespace hex::paths {
 
         #elif defined(OS_MACOS)
 
-            paths.push_back(wolv::io::fs::getApplicationSupportDirectoryPath());
+            paths.push_back(wolv::io::fs::getApplicationSupportDirectoryPath() / "imhex");
 
         #elif defined(OS_LINUX) || defined(OS_WEB)
 
