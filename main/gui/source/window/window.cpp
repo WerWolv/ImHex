@@ -635,12 +635,12 @@ namespace hex {
                         EventViewOpened::post(view.get());
                     }
 
-                    ImGui::End();
-                }
+                    // Pass on currently pressed keys to the shortcut handler
+                    for (const auto &key : m_pressedKeys) {
+                        ShortcutManager::process(view.get(), io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
+                    }
 
-                // Pass on currently pressed keys to the shortcut handler
-                for (const auto &key : m_pressedKeys) {
-                    ShortcutManager::process(view.get(), io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
+                    ImGui::End();
                 }
             }
         }
