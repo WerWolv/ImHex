@@ -43,12 +43,19 @@ namespace hex::plugin::visualizers {
             auto pattern  = arguments[0].toPattern();
             auto width  = arguments[1].toUnsigned();
             auto height = arguments[2].toUnsigned();
+            bool hasColorTable = false;
 
             if (arguments.size() == 4) {
                 auto colorTablePattern = arguments[3].toPattern();
-                auto indices = getIndices(pattern.get(), width, height);
-               texture = getTexture(colorTablePattern.get(), indices, width, height);
-            } else {
+
+                if (colorTablePattern->getSize() > 0) {
+                    auto indices = getIndices(pattern.get(), width, height);
+                    texture = getTexture(colorTablePattern.get(), indices, width, height);
+                    hasColorTable = true;
+                }
+            }
+
+            if (!hasColorTable) {
                 auto data = pattern->getBytes();
                 texture = ImGuiExt::Texture::fromBitmap(data.data(), data.size(), width, height,ImGuiExt::Texture::Filter::Nearest);
             }
