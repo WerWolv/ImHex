@@ -16,9 +16,18 @@
 #include <functional>
 
 #include <TextEditor.h>
-#include <popups/popup_file_chooser.hpp>
 
-namespace pl::ptrn { class Pattern; }
+#include "popups/popup_file_chooser.hpp"
+#include "hex/api/achievement_manager.hpp"
+#include "pl/core/preprocessor.hpp"
+#include "pl/core/parser.hpp"
+#include "pl/core/ast/ast_node_function_definition.hpp"
+#include "pl/helpers/safe_iterator.hpp"
+#include "content/text_highlighting/pattern_language.hpp"
+
+
+
+ namespace pl::ptrn { class Pattern; }
 
 namespace hex::plugin::builtin {
 
@@ -58,12 +67,39 @@ namespace hex::plugin::builtin {
         ~ViewPatternEditor() override;
 
         void drawAlwaysVisibleContent() override;
+        std::unique_ptr<pl::PatternLanguage> *getPatternLanguage() {
+            return &m_editorRuntime;
+        }
+
+        TextEditor &getTextEditor() {
+            return m_textEditor;
+        }
+
+        bool getChangesWereParsed() const {
+            return m_changesWereParsed;
+        }
+
+        u32  getRunningParsers () const {
+            return m_runningParsers;
+        }
+
+        u32  getRunningEvaluators () const {
+            return m_runningEvaluators;
+        }
+
+        void setChangesWereParsed(bool changesWereParsed) {
+            m_changesWereParsed = changesWereParsed;
+        }
+
         void drawContent() override;
         [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
             return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
         }
 
-    public:
+        TextEditor::PaletteIndex getPaletteIndex(char type);
+
+        std::string preprocessText(const std::string &code);
+
         struct VirtualFile {
             std::fs::path path;
             std::vector<u8> data;
@@ -75,6 +111,7 @@ namespace hex::plugin::builtin {
             Allow,
             Deny
         };
+
 
     private:
         class PopupAcceptPattern : public Popup<PopupAcceptPattern> {
@@ -218,6 +255,7 @@ namespace hex::plugin::builtin {
         std::atomic<u32> m_runningEvaluators = 0;
         std::atomic<u32> m_runningParsers    = 0;
 
+        bool m_changesWereParsed = false;
         bool m_hasUnevaluatedChanges = false;
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
 
@@ -239,8 +277,10 @@ namespace hex::plugin::builtin {
 
         std::mutex m_logMutex;
 
+        PerProvider<TextEditor::Coordinates>  m_cursorPosition;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
+        PerProvider<std::vector<const pl::core::ast::ASTNode*>> m_callStack;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
         PerProvider<std::map<u64, pl::api::Section>> m_sections;
@@ -254,15 +294,15 @@ namespace hex::plugin::builtin {
         PerProvider<bool> m_breakpointHit;
         PerProvider<std::unique_ptr<ui::PatternDrawer>> m_debuggerDrawer;
         std::atomic<bool> m_resetDebuggerVariables;
-        int m_debuggerScopeIndex = 0;
+        i32 m_debuggerScopeIndex = 0;
 
         std::array<AccessData, 512> m_accessHistory = {};
         u32 m_accessHistoryIndex = 0;
         bool m_parentHighlightingEnabled = true;
         bool m_replaceMode = false;
+        bool m_openFindReplacePopUp = false;
 
         std::map<std::fs::path, std::string> m_patternNames;
-
 
         static inline std::array<std::string,256> m_findHistory;
         static inline u32 m_findHistorySize = 0;
@@ -271,6 +311,8 @@ namespace hex::plugin::builtin {
         static inline u32 m_replaceHistorySize = 0;
         static inline u32 m_replaceHistoryIndex = 0;
 
+        TextHighlighter m_textHighlighter = TextHighlighter(this,&this->m_editorRuntime);
+
     private:
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
@@ -278,7 +320,6 @@ namespace hex::plugin::builtin {
         void drawSectionSelector(ImVec2 size, const std::map<u64, pl::api::Section> &sections);
         void drawVirtualFiles(ImVec2 size, const std::vector<VirtualFile> &virtualFiles) const;
         void drawDebugger(ImVec2 size);
-
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 
         void drawFindReplaceDialog(std::string &findWord, bool &requestFocus, u64 &position, u64 &count, bool &updateCount);

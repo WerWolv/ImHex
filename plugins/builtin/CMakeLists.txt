@@ -117,6 +117,8 @@ add_imhex_plugin(
         source/content/views/view_achievements.cpp
         source/content/views/view_highlight_rules.cpp
         source/content/views/view_tutorials.cpp
+
+        source/content/text_highlighting/pattern_language.cpp
     INCLUDES
         include
 

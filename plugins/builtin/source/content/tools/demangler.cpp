@@ -20,12 +20,6 @@ namespace hex::plugin::builtin {
             editor.SetShowCursor(false);
             editor.SetImGuiChildIgnored(true);
 
-            auto languageDef = TextEditor::LanguageDefinition::CPlusPlus();
-            for (auto &[name, identifier] : languageDef.mIdentifiers)
-                identifier.mDeclaration = "";
-
-            editor.SetLanguageDefinition(languageDef);
-
             return editor;
         }();
         static float prevWindowWidth;
