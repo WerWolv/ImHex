@@ -22,6 +22,15 @@ namespace pl::ptrn { class Pattern; }
 
 namespace hex::plugin::builtin {
 
+
+    constexpr static auto textEditorView    = "/Pattern editor_";
+    constexpr static auto consoleView       = "/##console_";
+    constexpr static auto variablesView     = "/##env_vars_";
+    constexpr static auto settingsView      = "/##settings_";
+    constexpr static auto sectionsView      = "/##sections_table_";
+    constexpr static auto virtualFilesView  = "/Virtual File Tree_";
+    constexpr static auto debuggerView      = "/##debugger_";
+
     class PatternSourceCode {
     public:
         const std::string& get(prv::Provider *provider) {
@@ -239,8 +248,10 @@ namespace hex::plugin::builtin {
 
         std::mutex m_logMutex;
 
+        PerProvider<TextEditor::Coordinates>  m_cursorPosition;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
+        PerProvider<std::vector<const pl::core::ast::ASTNode*>> m_callStack;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
         PerProvider<std::map<u64, pl::api::Section>> m_sections;
@@ -260,9 +271,13 @@ namespace hex::plugin::builtin {
         u32 m_accessHistoryIndex = 0;
         bool m_parentHighlightingEnabled = true;
         bool m_replaceMode = false;
+        bool m_openFindReplacePopUp = false;
 
         std::map<std::fs::path, std::string> m_patternNames;
 
+        ImRect m_textEditorHoverBox;
+        ImRect m_consoleHoverBox;
+        std::string m_focusedSubWindowName;
 
         static inline std::array<std::string,256> m_findHistory;
         static inline u32 m_findHistorySize = 0;
@@ -281,7 +296,7 @@ namespace hex::plugin::builtin {
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 
-        void drawFindReplaceDialog(std::string &findWord, bool &requestFocus, u64 &position, u64 &count, bool &updateCount);
+        void drawFindReplaceDialog(TextEditor *textEditor, std::string &findWord, bool &requestFocus, u64 &position, u64 &count, bool &updateCount, bool canReplace);
 
         void historyInsert(std::array<std::string, 256> &history, u32 &size, u32 &index, const std::string &value);
 
@@ -289,6 +304,9 @@ namespace hex::plugin::builtin {
 
         void parsePattern(const std::string &code, prv::Provider *provider);
         void evaluatePattern(const std::string &code, prv::Provider *provider);
+
+        TextEditor *getEditorFromFocusedWindow();
+        void setupFindReplace(TextEditor *editor);
 
         void registerEvents();
         void registerMenuItems();
