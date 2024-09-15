@@ -175,7 +175,7 @@ namespace hex::plugin::decompress {
                         break;
                     }
 
-                    if (res == LZMA_MEMLIMIT_ERROR ) {
+                    if (res == LZMA_MEMLIMIT_ERROR) {
                         auto usage = lzma_memusage(&stream);
                         lzma_memlimit_set(&stream, usage);
                         res = lzma_code(&stream, LZMA_RUN);
