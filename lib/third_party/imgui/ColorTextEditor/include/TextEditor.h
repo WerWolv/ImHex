@@ -275,7 +275,7 @@ public:
 
 	ImVec2 &GetCharAdvance() { return mCharAdvance; }
 
-	bool CanUndo() const;
+	bool CanUndo();
 	bool CanRedo() const;
 	void Undo(int aSteps = 1);
 	void Redo(int aSteps = 1);
