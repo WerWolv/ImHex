@@ -692,8 +692,9 @@ namespace hex {
                 auto drawData = viewPort->DrawData;
                 for (int n = 0; n < drawData->CmdListsCount; n++) {
                     const ImDrawList *cmdList = drawData->CmdLists[n];
+                    std::string ownerName = cmdList->_OwnerName;
 
-                    if (vtxDataSize == previousVtxDataSize) {
+                    if (vtxDataSize == previousVtxDataSize && (!ownerName.contains("##Popup") || !ownerName.contains("##image"))) {
                         shouldRender = shouldRender || std::memcmp(previousVtxData.data() + offset, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.size() * sizeof(ImDrawVert)) != 0;
                     } else {
                         shouldRender = true;
