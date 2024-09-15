@@ -769,7 +769,7 @@ void TextEditor::HandleMouseInputs() {
             auto doubleClick = ImGui::IsMouseDoubleClicked(0);
             auto t           = ImGui::GetTime();
             auto tripleClick = click && !doubleClick && (mLastClick != -1.0f && (t - mLastClick) < io.MouseDoubleClickTime);
-
+            bool resetBlinking = false;
             /*
             Left mouse button triple click
             */
@@ -782,7 +782,7 @@ void TextEditor::HandleMouseInputs() {
                 }
 
                 mLastClick = -1.0f;
-                ResetCursorBlinkTime();
+                resetBlinking=true;
             }
 
             /*
@@ -800,7 +800,7 @@ void TextEditor::HandleMouseInputs() {
                 }
 
                 mLastClick = (float)ImGui::GetTime();
-                ResetCursorBlinkTime();
+                resetBlinking=true;
             }
 
             /*
@@ -818,8 +818,8 @@ void TextEditor::HandleMouseInputs() {
                     mSelectionMode = SelectionMode::Normal;
                 }
                 SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
-                ResetCursorBlinkTime();
-
+                resetBlinking=true;
+                EnsureCursorVisible();
                 mLastClick = (float)ImGui::GetTime();
             }
             // Mouse left button dragging (=> update selection)
@@ -827,8 +827,10 @@ void TextEditor::HandleMouseInputs() {
                 io.WantCaptureMouse    = true;
                 mState.mCursorPosition = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
                 SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
-                ResetCursorBlinkTime();
+                resetBlinking=true;
             }
+            if (resetBlinking)
+                ResetCursorBlinkTime();
         }
     }
 }
@@ -1528,6 +1530,7 @@ void TextEditor::DeleteSelection() {
 }
 
 void TextEditor::MoveUp(int aAmount, bool aSelect) {
+    ResetCursorBlinkTime();
     auto oldPos                  = mState.mCursorPosition;
     mState.mCursorPosition.mLine = std::max(0, mState.mCursorPosition.mLine - aAmount);
     if (oldPos != mState.mCursorPosition) {
@@ -1550,6 +1553,7 @@ void TextEditor::MoveUp(int aAmount, bool aSelect) {
 
 void TextEditor::MoveDown(int aAmount, bool aSelect) {
     assert(mState.mCursorPosition.mColumn >= 0);
+    ResetCursorBlinkTime();
     auto oldPos                  = mState.mCursorPosition;
     mState.mCursorPosition.mLine = std::max(0, std::min((int)mLines.size() - 1, mState.mCursorPosition.mLine + aAmount));
 
@@ -1576,8 +1580,9 @@ static bool IsUTFSequence(char c) {
 }
 
 void TextEditor::MoveLeft(int aAmount, bool aSelect, bool aWordMode) {
-    auto oldPos= mState.mCursorPosition;
+    auto oldPos = mState.mCursorPosition;
 
+    ResetCursorBlinkTime();
     if (mLines.empty() || oldPos.mLine >= mLines.size())
         return;
 
@@ -1632,6 +1637,7 @@ void TextEditor::MoveLeft(int aAmount, bool aSelect, bool aWordMode) {
 }
 
 void TextEditor::MoveRight(int aAmount, bool aSelect, bool aWordMode) {
+    ResetCursorBlinkTime();
     auto oldPos = mState.mCursorPosition;
 
     if (mLines.empty() || oldPos.mLine >= mLines.size())
@@ -1687,6 +1693,7 @@ void TextEditor::MoveRight(int aAmount, bool aSelect, bool aWordMode) {
 }
 
 void TextEditor::MoveTop(bool aSelect) {
+    ResetCursorBlinkTime();
     auto oldPos = mState.mCursorPosition;
     SetCursorPosition(Coordinates(0, 0));
 
@@ -1701,6 +1708,7 @@ void TextEditor::MoveTop(bool aSelect) {
 }
 
 void TextEditor::TextEditor::MoveBottom(bool aSelect) {
+    ResetCursorBlinkTime();
     auto oldPos = GetCursorPosition();
     auto newPos = Coordinates((int)mLines.size() - 1, 0);
     SetCursorPosition(newPos);
@@ -1713,6 +1721,7 @@ void TextEditor::TextEditor::MoveBottom(bool aSelect) {
 }
 
 void TextEditor::MoveHome(bool aSelect) {
+    ResetCursorBlinkTime();
     auto oldPos = mState.mCursorPosition;
     SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, 0));
 
@@ -1733,6 +1742,7 @@ void TextEditor::MoveHome(bool aSelect) {
 }
 
 void TextEditor::MoveEnd(bool aSelect) {
+    ResetCursorBlinkTime();
     auto oldPos = mState.mCursorPosition;
     SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, GetLineMaxColumn(oldPos.mLine)));
 
@@ -1753,6 +1763,7 @@ void TextEditor::MoveEnd(bool aSelect) {
 }
 
 void TextEditor::Delete() {
+    ResetCursorBlinkTime();
     assert(!mReadOnly);
 
     if (mLines.empty())
@@ -1804,6 +1815,7 @@ void TextEditor::Delete() {
 }
 
 void TextEditor::Backspace() {
+    ResetCursorBlinkTime();
     assert(!mReadOnly);
 
     if (mLines.empty())
