@@ -128,13 +128,14 @@ public:
 		std::string mDeclaration;
 	};
 
-	typedef std::string String;
-	typedef std::unordered_map<std::string, Identifier> Identifiers;
-	typedef std::unordered_set<std::string> Keywords;
-	typedef std::map<int, std::string> ErrorMarkers;
-	typedef std::unordered_set<int> Breakpoints;
-	typedef std::array<ImU32, (unsigned)PaletteIndex::Max> Palette;
-	typedef uint8_t Char;
+    using String = std::string;
+	using Identifiers = std::unordered_map<std::string, Identifier>;
+	using Keywords = std::unordered_set<std::string> ;
+    using ErrorMarkers = std::map<Coordinates, std::pair<uint32_t ,std::string>>;
+    using ErrorHoverBoxes = std::map<Coordinates, std::pair<ImVec2,ImVec2>>;
+    using Breakpoints = std::unordered_set<int32_t>;
+    using Palette = std::array<ImU32, (uint32_t)PaletteIndex::Max>;
+    using Char = uint8_t ;
 
 	struct Glyph
 	{
@@ -199,6 +200,7 @@ public:
 
 	void SetErrorMarkers(const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
 	void SetBreakpoints(const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
+    ImVec2 Underwaves( ImVec2 pos, uint32_t nChars, ImColor color= ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg= ImVec2(0, 0));
 
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
 	void SetText(const std::string& aText);
@@ -473,6 +475,7 @@ private:
     bool mCheckComments;
 	Breakpoints mBreakpoints;
 	ErrorMarkers mErrorMarkers;
+    ErrorHoverBoxes mErrorHoverBoxes;
 	ImVec2 mCharAdvance;
 	Coordinates mInteractiveStart, mInteractiveEnd;
 	std::string mLineBuffer;

@@ -38,6 +38,37 @@ TextEditor::TextEditor()
 TextEditor::~TextEditor() {
 }
 
+
+ImVec2 TextEditor::Underwaves( ImVec2 pos ,uint32_t nChars, ImColor color, const ImVec2 &size_arg) {
+    auto save = ImGui::GetStyle().AntiAliasedLines;
+    ImGui::GetStyle().AntiAliasedLines = false;
+    ImGuiWindow *window = ImGui::GetCurrentWindow();
+    window->DC.CursorPos =pos;
+    const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
+    ImVec2 size = ImGui::CalcItemSize(size_arg, label_size.x, label_size.y);
+    float lineWidth = size.x / 3.0f + 0.5f;
+    float halfLineW = lineWidth / 2.0f;
+
+    for (uint32_t i = 0; i < nChars; i++) {
+        pos = window->DC.CursorPos;
+        float lineY = pos.y + size.y;
+
+        ImVec2 pos1_1 = ImVec2(pos.x + 0*lineWidth, lineY + halfLineW);
+        ImVec2 pos1_2 = ImVec2(pos.x + 1*lineWidth, lineY - halfLineW);
+        ImVec2 pos2_1 = ImVec2(pos.x + 2*lineWidth, lineY + halfLineW);
+        ImVec2 pos2_2 = ImVec2(pos.x + 3*lineWidth, lineY - halfLineW);
+
+        ImGui::GetWindowDrawList()->AddLine(pos1_1, pos1_2, ImU32(color), 0.4f);
+        ImGui::GetWindowDrawList()->AddLine(pos1_2, pos2_1, ImU32(color), 0.4f);
+        ImGui::GetWindowDrawList()->AddLine(pos2_1, pos2_2, ImU32(color), 0.4f);
+
+        window->DC.CursorPos = ImVec2(pos.x + size.x, pos.y);
+    }
+    auto ret = window->DC.CursorPos;
+    ret.y += size.y;
+    return ret;
+}
+
 void TextEditor::SetLanguageDefinition(const LanguageDefinition &aLanguageDef) {
     mLanguageDefinition = aLanguageDef;
     mRegexList.clear();
@@ -541,8 +572,8 @@ void TextEditor::RemoveLine(int aStart, int aEnd) {
 
     ErrorMarkers etmp;
     for (auto &i : mErrorMarkers) {
-        ErrorMarkers::value_type e(i.first >= aStart ? i.first - 1 : i.first, i.second);
-        if (e.first >= aStart && e.first <= aEnd)
+        ErrorMarkers::value_type e(i.first.mLine >= aStart ?  Coordinates(i.first.mLine - 1,i.first.mColumn ) : i.first, i.second);
+        if (e.first.mLine >= aStart && e.first.mLine <= aEnd)
             continue;
         etmp.insert(e);
     }
@@ -555,9 +586,10 @@ void TextEditor::RemoveLine(int aStart, int aEnd) {
         btmp.insert(i >= aStart ? i - 1 : i);
     }
     mBreakpoints = std::move(btmp);
-
-    mLines.erase(mLines.begin() + aStart, mLines.begin() + aEnd);
-    assert(!mLines.empty());
+    if (aStart == 0 && aEnd == (int32_t)mLines.size() - 1)
+        mLines.erase(mLines.begin() + aStart, mLines.end());
+    else
+        mLines.erase(mLines.begin() + aStart, mLines.begin() + aEnd + 1);
 
     mTextChanged = true;
 }
@@ -568,8 +600,8 @@ void TextEditor::RemoveLine(int aIndex) {
 
     ErrorMarkers etmp;
     for (auto &i : mErrorMarkers) {
-        ErrorMarkers::value_type e(i.first > aIndex ? i.first - 1 : i.first, i.second);
-        if (e.first - 1 == aIndex)
+        ErrorMarkers::value_type e(i.first.mLine > aIndex ? Coordinates(i.first.mLine - 1 ,i.first.mColumn) : i.first, i.second);
+        if (e.first.mLine - 1 == aIndex)
             continue;
         etmp.insert(e);
     }
@@ -594,7 +626,7 @@ TextEditor::Line &TextEditor::InsertLine(int aIndex) {
 
     ErrorMarkers etmp;
     for (auto &i : mErrorMarkers)
-        etmp.insert(ErrorMarkers::value_type(i.first >= aIndex ? i.first + 1 : i.first, i.second));
+        etmp.insert(ErrorMarkers::value_type(i.first.mLine >= aIndex ? Coordinates(i.first.mLine + 1,i.first.mColumn) : i.first, i.second));
     mErrorMarkers = std::move(etmp);
 
     Breakpoints btmp;
@@ -853,25 +885,6 @@ void TextEditor::Render() {
 
             auto start = ImVec2(lineStartScreenPos.x + scrollX, lineStartScreenPos.y);
 
-            // Draw error markers
-            auto errorIt = mErrorMarkers.find(lineNo + 1);
-            if (errorIt != mErrorMarkers.end()) {
-                auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::ErrorMarker]);
-
-                if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end)) {
-                    ImGui::BeginTooltip();
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
-                    ImGui::Text("Error at line %d:", errorIt->first);
-                    ImGui::PopStyleColor();
-                    ImGui::Separator();
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.2f, 1.0f));
-                    ImGui::Text("%s", errorIt->second.c_str());
-                    ImGui::PopStyleColor();
-                    ImGui::EndTooltip();
-                }
-            }
-
             // Draw line number (right aligned)
             if (mShowLineNumbers) {
                 snprintf(buf, 16, "%d  ", lineNo + 1);
@@ -891,7 +904,6 @@ void TextEditor::Render() {
 
             if (mState.mCursorPosition.mLine == lineNo && mShowCursor) {
                 bool focused = ImGui::IsWindowFocused();
-                ImGuiViewport *viewport = ImGui::GetWindowViewport();
 
                 // Highlight the current line (where the cursor is)
                 if (!HasSelection()) {
@@ -937,7 +949,14 @@ void TextEditor::Render() {
             for (int i = 0; i < line.size();) {
                 auto &glyph = line[i];
                 auto color  = GetGlyphColor(glyph);
-
+                bool underwaved = false;
+                ErrorMarkers::iterator errorIt;
+                if (mErrorMarkers.size() > 0) {
+                    errorIt = mErrorMarkers.find(Coordinates(lineNo+1,i));
+                    if (errorIt != mErrorMarkers.end()) {
+                        underwaved = true;
+                    }
+                }
                 if ((color != prevColor || glyph.mChar == '\t' || glyph.mChar == ' ') && !mLineBuffer.empty()) {
                     const ImVec2 newOffset(textScreenPos.x + bufferOffset.x, textScreenPos.y + bufferOffset.y);
                     drawList->AddText(newOffset, prevColor, mLineBuffer.c_str());
@@ -945,6 +964,13 @@ void TextEditor::Render() {
                     bufferOffset.x += textSize.x;
                     mLineBuffer.clear();
                 }
+                if (underwaved) {
+                    auto textStart = TextDistanceToLineStart(Coordinates(lineNo, i-1)) + mTextStart;
+                    auto begin = ImVec2(lineStartScreenPos.x + textStart, lineStartScreenPos.y);
+                    auto end = Underwaves(begin, errorIt->second.first, mPalette[(int32_t) PaletteIndex::ErrorMarker]);
+                    mErrorHoverBoxes[Coordinates(lineNo+1,i)]=std::make_pair(begin,end);
+                }
+
                 prevColor = color;
 
                 if (glyph.mChar == '\t') {
@@ -1019,6 +1045,22 @@ void TextEditor::Render() {
     if (mScrollToCursor) {
         EnsureCursorVisible();
         mScrollToCursor = false;
+    }
+
+    for (auto [key,value] : mErrorMarkers) {
+        auto start = mErrorHoverBoxes[key].first;
+        auto end = mErrorHoverBoxes[key].second;
+        if (ImGui::IsMouseHoveringRect(start, end)) {
+            ImGui::BeginTooltip();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
+            ImGui::Text("Error at line %d:", key.mLine);
+            ImGui::PopStyleColor();
+            ImGui::Separator();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.2f, 1.0f));
+            ImGui::Text("%s", value.second.c_str());
+            ImGui::PopStyleColor();
+            ImGui::EndTooltip();
+        }
     }
 
     ImGuiPopupFlags_ popup_flags = ImGuiPopupFlags_None;
@@ -1788,7 +1830,7 @@ void TextEditor::Backspace() {
 
             ErrorMarkers etmp;
             for (auto &i : mErrorMarkers)
-                etmp.insert(ErrorMarkers::value_type(i.first - 1 == mState.mCursorPosition.mLine ? i.first - 1 : i.first, i.second));
+                etmp.insert(ErrorMarkers::value_type(i.first.mLine - 1 == mState.mCursorPosition.mLine ? Coordinates(i.first.mLine - 1,i.first.mColumn) : i.first, i.second));
             mErrorMarkers = std::move(etmp);
 
             RemoveLine(mState.mCursorPosition.mLine);
@@ -2457,7 +2499,7 @@ void TextEditor::ColorizeRange(int aFromLine, int aToLine) {
                     hasTokenizeResult = true;
             }
 
-            if (hasTokenizeResult == false) {
+            if (!hasTokenizeResult) {
                 // todo : remove
                 // printf("using regex for %.*s\n", first + 10 < last ? 10 : int(last - first), first);
 
