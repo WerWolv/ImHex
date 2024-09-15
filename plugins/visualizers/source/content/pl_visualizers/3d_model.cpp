@@ -18,6 +18,7 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <romfs/romfs.hpp>
+#include <numeric>
 
 namespace hex::plugin::visualizers {
 
@@ -27,43 +28,39 @@ namespace hex::plugin::visualizers {
             U8,
             U16,
             U32,
-            Invalid,
+            Undefined,
         };
 
+        template<class T>
         struct Vectors {
             std::vector<float> vertices;
             std::vector<float> normals;
             std::vector<float> colors;
-            std::vector<float> uv1;
-            std::vector<u8> indices8;
-            std::vector<u16> indices16;
-            std::vector<u32> indices32;
+            std::vector<float> uv;
+            std::vector<T> indices;
         };
 
+        template <class T>
         struct LineVectors {
             std::vector<float> vertices;
             std::vector<float> colors;
-            std::vector<u8> indices8;
-            std::vector<u16> indices16;
-            std::vector<u32> indices32;
+            std::vector<T> indices;
         };
 
+        template<class T>
         struct Buffers {
             gl::Buffer<float> vertices;
             gl::Buffer<float> normals;
             gl::Buffer<float> colors;
-            gl::Buffer<float> uv1;
-            gl::Buffer<u8> indices8;
-            gl::Buffer<u16> indices16;
-            gl::Buffer<u32> indices32;
+            gl::Buffer<float> uv;
+            gl::Buffer<T> indices;
         };
 
+        template<class T>
         struct LineBuffers {
             gl::Buffer<float> vertices;
             gl::Buffer<float> colors;
-            gl::Buffer<u8> indices8;
-            gl::Buffer<u16> indices16;
-            gl::Buffer<u32> indices32;
+            gl::Buffer<T> indices;
         };
 
         ImVec2 s_renderingWindowSize;
@@ -84,6 +81,8 @@ namespace hex::plugin::visualizers {
         bool s_shouldUpdateLightSource = true;
         bool s_shouldUpdateTexture = false;
 
+        std::vector<u32> s_badIndices;
+
         IndexType s_indexType;
 
         ImGuiExt::Texture s_modelTexture;
@@ -97,6 +96,13 @@ namespace hex::plugin::visualizers {
 
         ImGuiExt::Texture s_texture;
         std::fs::path s_texturePath;
+        u32 s_vertexCount;
+
+        const auto isIndexInRange = [](auto index) {
+            if (index >= s_vertexCount)
+                s_badIndices.push_back(index);
+            return index < s_vertexCount;
+        };
 
         template<typename T>
         void indicesForLines(std::vector<T> &vertexIndices) {
@@ -145,10 +151,18 @@ namespace hex::plugin::visualizers {
             if (minCamera[3] != 0)
                 minCamera = minCamera * (1.0F / minCamera[3]);
 
-            float maxx = std::max(std::fabs(minCamera[0]), std::fabs(maxCamera[0]));
-            float maxy = std::max(std::fabs(minCamera[1]), std::fabs(maxCamera[1]));
+            float max_X = std::max(std::fabs(minCamera[0]), std::fabs(maxCamera[0]));
+            float max_Y = std::max(std::fabs(minCamera[1]), std::fabs(maxCamera[1]));
 
-            return std::max(maxx, maxy);
+            return std::max(max_X, max_Y);
+        }
+
+        void setDefaultUVs(std::vector<float> &uv, size_t size) {
+            uv.resize(size / 3 * 2);
+            for (u32 i = 0; i < uv.size(); i += 2) {
+                uv[i    ] = 0.0F;
+                uv[i + 1] = 0.0F;
+            }
         }
 
         void setDefaultColors(std::vector<float> &colors, size_t size, u32 color) {
@@ -230,7 +244,8 @@ namespace hex::plugin::visualizers {
             }
         }
 
-        void loadVectors(Vectors &vectors, IndexType indexType) {
+        template<class T>
+        void loadVectors(Vectors<T> &vectors, IndexType indexType) {
             s_max = getBoundingBox(vectors.vertices);
 
             if (s_drawTexture)
@@ -238,62 +253,36 @@ namespace hex::plugin::visualizers {
             else if (vectors.colors.empty())
                 setDefaultColors(vectors.colors, vectors.vertices.size(), 0xFF337FFF);
 
+            if (vectors.uv.empty())
+                setDefaultUVs(vectors.uv, vectors.vertices.size());
+
             if (vectors.normals.empty()) {
                 vectors.normals.resize(vectors.vertices.size());
 
-                if ((indexType == IndexType::U8 && vectors.indices8.empty()) || (indexType == IndexType::Invalid) ||
-                    (indexType == IndexType::U16 && vectors.indices16.empty()) ||
-                    (indexType == IndexType::U32 && vectors.indices32.empty())) {
-
+                if (vectors.indices.empty() || (indexType == IndexType::Undefined)) {
                     setNormals(vectors.vertices, vectors.normals);
 
                 } else {
                     std::vector<u32> indices;
 
-                    if (indexType == IndexType::U16) {
-                        indices.resize(vectors.indices16.size());
-                        for (u32 i = 0; i < vectors.indices16.size(); ++i)
-                            indices[i] = vectors.indices16[i];
+                    indices.resize(vectors.indices.size());
+                    for (u32 i = 0; i < vectors.indices.size(); i += 1)
+                        indices[i] = vectors.indices[i];
 
-                    } else if (indexType == IndexType::U8) {
-                        indices.resize(vectors.indices8.size());
-                        for (u32 i = 0; i < vectors.indices8.size(); ++i)
-                            indices[i] = vectors.indices8[i];
-
-                    } else {
-                        indices.resize(vectors.indices32.size());
-                        for (u32 i = 0; i < vectors.indices32.size(); ++i)
-                            indices[i] = vectors.indices32[i];
-                    }
                     setNormalsWithIndices(vectors.vertices, vectors.normals, indices);
                 }
             }
         }
 
-        void loadLineVectors(LineVectors &lineVectors, IndexType indexType) {
-            const auto vertexCount = lineVectors.vertices.size();
+        template<class T>
+        void loadLineVectors(LineVectors<T> &lineVectors, IndexType indexType) {
             s_max = getBoundingBox(lineVectors.vertices);
 
             if (lineVectors.colors.empty())
                 setDefaultColors(lineVectors.colors, lineVectors.vertices.size(), 0xFF337FFF);
 
-            std::vector<u32> indices;
-            if (indexType == IndexType::U8)
-                indicesForLines(lineVectors.indices8);
-            else if (indexType == IndexType::U16)
-                indicesForLines(lineVectors.indices16);
-            else
-                indicesForLines(lineVectors.indices32);
-
-            const auto isIndexInRange = [vertexCount](auto index) { return index >= vertexCount; };
-
-            if (
-                !std::ranges::all_of(lineVectors.indices8, isIndexInRange)  ||
-                !std::ranges::all_of(lineVectors.indices16, isIndexInRange) ||
-                !std::ranges::all_of(lineVectors.indices32, isIndexInRange)
-            ) {
-                throw std::logic_error("One or more indices point to out-of-range vertex");
-            }
+            if (indexType != IndexType::Undefined)
+                indicesForLines(lineVectors.indices);
         }
 
         void processKeyEvent(ImGuiKey key, float &variable, float increment, float acceleration) {
@@ -352,75 +341,104 @@ namespace hex::plugin::visualizers {
             rotation[2] = std::fmod(rotation[2], 2 * std::numbers::pi_v<float>);
         }
 
+        bool validateVector(const std::vector<float> &vector, u32 vertexCount, u32 divisor, const std::string &name,std::string &errorMessage) {
+            if (!vector.empty()) {
+                if (vector.size() % divisor != 0) {
+                    errorMessage = name + " must be a multiple of " + std::to_string(divisor);
+                    return false;
+                }
+            } else {
+                errorMessage = name + " can't be empty";
+                return false;
+            }
+            auto vectorCount = vector.size()/divisor;
+            if (vectorCount != vertexCount) {
+                errorMessage = hex::format("Expected {} colors, got {}", vertexCount, vectorCount);
+                return false;
+            }
+            return true;
+        }
 
-        void bindBuffers(Buffers &buffers, const gl::VertexArray &vertexArray, Vectors vectors, IndexType indexType) {
+        template <class T>
+        void bindBuffers(Buffers<T> &buffers, const gl::VertexArray &vertexArray, Vectors<T> vectors, IndexType indexType) {
             buffers.vertices    = {};
             buffers.normals     = {};
             buffers.colors      = {};
-            buffers.uv1         = {};
-            buffers.indices8    = {};
-            buffers.indices16   = {};
-            buffers.indices32   = {};
+            buffers.uv          = {};
+            buffers.indices     = {};
 
             vertexArray.bind();
-            buffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, vectors.vertices);
-            buffers.colors   = gl::Buffer<float>(gl::BufferType::Vertex, vectors.colors);
-            buffers.normals  = gl::Buffer<float>(gl::BufferType::Vertex, vectors.normals);
+            u32 vertexCount = vectors.vertices.size() / 3;
+            std::string errorMessage;
 
-            if (indexType == IndexType::U8)
-                buffers.indices8 = gl::Buffer<u8>(gl::BufferType::Index, vectors.indices8);
-            else if (indexType == IndexType::U16)
-                buffers.indices16 = gl::Buffer<u16>(gl::BufferType::Index, vectors.indices16);
+            if (indexType != IndexType::Undefined && !vectors.indices.empty())
+                buffers.indices = gl::Buffer<T>(gl::BufferType::Index, vectors.indices);
+
+            if (validateVector(vectors.vertices, vertexCount, 3, "Positions", errorMessage)) {
+                if ((indexType == IndexType::Undefined || vectors.indices.empty()) && vertexCount % 3 != 0)
+                    throw std::runtime_error("Without indices vertices must be a multiple of 3");
+                else
+                    buffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, vectors.vertices);
+            } else
+                throw std::runtime_error(errorMessage);
+
+            if (validateVector(vectors.colors, vertexCount, 4, "Colors", errorMessage))
+                buffers.colors = gl::Buffer<float>(gl::BufferType::Vertex, vectors.colors);
             else
-                buffers.indices32 = gl::Buffer<u32>(gl::BufferType::Index, vectors.indices32);
+                throw std::runtime_error(errorMessage);
 
-            if (!vectors.uv1.empty())
-                buffers.uv1 = gl::Buffer<float>(gl::BufferType::Vertex, vectors.uv1);
+            if (validateVector(vectors.normals, vertexCount, 3, "Normals", errorMessage))
+                buffers.normals = gl::Buffer<float>(gl::BufferType::Vertex, vectors.normals);
+            else
+                throw std::runtime_error(errorMessage);
+
+            if (validateVector(vectors.uv, vertexCount, 2, "UV coordinates", errorMessage))
+                buffers.uv = gl::Buffer<float>(gl::BufferType::Vertex, vectors.uv);
+            else
+                throw std::runtime_error(errorMessage);
+
 
             vertexArray.addBuffer(0, buffers.vertices);
             vertexArray.addBuffer(1, buffers.colors, 4);
             vertexArray.addBuffer(2, buffers.normals);
-
-            if (!vectors.uv1.empty())
-                vertexArray.addBuffer(3, buffers.uv1, 2);
+            vertexArray.addBuffer(3, buffers.uv, 2);
 
             buffers.vertices.unbind();
             buffers.colors.unbind();
             buffers.normals.unbind();
+            buffers.uv.unbind();
 
-            if (!vectors.uv1.empty())
-                buffers.uv1.unbind();
-
-            if (indexType == IndexType::U8)
-                buffers.indices8.unbind();
-
-            else if (indexType == IndexType::U16)
-                buffers.indices16.unbind();
-
-            else if (indexType == IndexType::U32)
-                buffers.indices32.unbind();
+            if (indexType != IndexType::Undefined)
+                buffers.indices.unbind();
 
             vertexArray.unbind();
 
         }
 
-        void bindLineBuffers(LineBuffers &lineBuffers, const gl::VertexArray &vertexArray, const LineVectors &lineVectors, IndexType indexType) {
+        template <class T>
+        void bindLineBuffers(LineBuffers<T> &lineBuffers, const gl::VertexArray &vertexArray, const LineVectors<T> &lineVectors, IndexType indexType) {
             lineBuffers.vertices  = {};
             lineBuffers.colors    = {};
-            lineBuffers.indices8  = {};
-            lineBuffers.indices16 = {};
-            lineBuffers.indices32 = {};
-
+            lineBuffers.indices   = {};
+            u32 vertexCount = lineVectors.vertices.size() / 3;
             vertexArray.bind();
-            lineBuffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, lineVectors.vertices);
-            lineBuffers.colors = gl::Buffer<float>(gl::BufferType::Vertex, lineVectors.colors);
+            std::string errorMessage;
 
-            if (indexType == IndexType::U8)
-                lineBuffers.indices8 = gl::Buffer<u8>(gl::BufferType::Index, lineVectors.indices8);
-            else if (indexType == IndexType::U16)
-                lineBuffers.indices16 = gl::Buffer<u16>(gl::BufferType::Index, lineVectors.indices16);
+            if (indexType != IndexType::Undefined)
+                lineBuffers.indices = gl::Buffer<T>(gl::BufferType::Index, lineVectors.indices);
+
+            if (validateVector(lineVectors.vertices, vertexCount, 3, "Positions", errorMessage)) {
+                if ((indexType == IndexType::Undefined || lineVectors.indices.empty()) && vertexCount % 3 != 0)
+                    throw std::runtime_error("Without indices vertices must be a multiple of 3");
+                else
+                    lineBuffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, lineVectors.vertices);
+            } else
+                throw std::runtime_error(errorMessage);
+
+            if (validateVector(lineVectors.colors, vertexCount, 4, "Colors", errorMessage))
+                lineBuffers.colors = gl::Buffer<float>(gl::BufferType::Vertex, lineVectors.colors);
             else
-                lineBuffers.indices32 = gl::Buffer<u32>(gl::BufferType::Index, lineVectors.indices32);
+                throw std::runtime_error(errorMessage);
 
             vertexArray.addBuffer(0, lineBuffers.vertices);
             vertexArray.addBuffer(1, lineBuffers.colors, 4);
@@ -428,12 +446,8 @@ namespace hex::plugin::visualizers {
             lineBuffers.vertices.unbind();
             lineBuffers.colors.unbind();
 
-            if (indexType == IndexType::U8)
-                lineBuffers.indices8.unbind();
-            else if (indexType == IndexType::U16)
-                lineBuffers.indices16.unbind();
-            else if (indexType == IndexType::U32)
-                lineBuffers.indices32.unbind();
+            if (indexType != IndexType::Undefined)
+                lineBuffers.indices.unbind();
 
             vertexArray.unbind();
 
@@ -587,7 +601,10 @@ namespace hex::plugin::visualizers {
 
     }
 
-    void draw3DVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+    template <class T>
+    void processRendering(std::shared_ptr<pl::ptrn::Pattern> verticesPattern, std::shared_ptr<pl::ptrn::Pattern> indicesPattern,
+                          std::shared_ptr<pl::ptrn::Pattern> normalsPattern, std::shared_ptr<pl::ptrn::Pattern> colorsPattern,
+                          std::shared_ptr<pl::ptrn::Pattern> uvPattern) {
         static gl::LightSourceVectors sourceVectors(20);
         static gl::VertexArray sourceVertexArray = {};
         static gl::LightSourceBuffers sourceBuffers(sourceVertexArray, sourceVectors);
@@ -601,103 +618,74 @@ namespace hex::plugin::visualizers {
         static gl::AxesBuffers axesBuffers(axesVertexArray, axesVectors);
 
         static gl::VertexArray vertexArray = {};
-        static Buffers buffers;
-        static LineBuffers lineBuffers;
-
-        std::shared_ptr<pl::ptrn::Pattern> verticesPattern = arguments[0].toPattern();
-        std::shared_ptr<pl::ptrn::Pattern> indicesPattern = arguments[1].toPattern();
-        std::shared_ptr<pl::ptrn::Pattern> normalsPattern = nullptr;
-        std::shared_ptr<pl::ptrn::Pattern> colorsPattern = nullptr;
-        std::shared_ptr<pl::ptrn::Pattern> uv1Pattern = nullptr;
-
-        std::string textureFile;
-        if (arguments.size() > 2) {
-            normalsPattern = arguments[2].toPattern();
-            if (arguments.size() > 3) {
-                colorsPattern = arguments[3].toPattern();
-                if (arguments.size() > 4) {
-                    uv1Pattern = arguments[4].toPattern();
-                    if (arguments.size() > 5)
-                        textureFile = arguments[5].toString();
-                }
-            }
-        }
-
-        if (shouldReset)
-            s_shouldReset = true;
-
-        const auto fontSize = ImGui::GetFontSize();
-        const auto framePad = ImGui::GetStyle().FramePadding;
-        float minSize = (fontSize * 8_scaled) + (framePad.x * 20_scaled);
-        minSize = minSize > 200_scaled ? minSize : 200_scaled;
 
         if (s_renderingWindowSize.x <= 0 || s_renderingWindowSize.y <= 0)
-            s_renderingWindowSize = { minSize, minSize };
-
-        if (!textureFile.empty()) {
-            s_texturePath = textureFile;
-            s_drawTexture = true;
-        } else {
-            s_drawTexture = false;
-        }
-
-        s_renderingWindowSize.x = std::max(s_renderingWindowSize.x, minSize);
-        s_renderingWindowSize.y = std::max(s_renderingWindowSize.y, minSize);
+            s_renderingWindowSize = {350_scaled, 350_scaled};
 
         gl::Matrix<float, 4, 4> mvp(0);
-
-        processInputEvents(s_rotation, s_translation, s_scaling, s_nearLimit, s_farLimit);
+        static Buffers<T> buffers;
+        static LineBuffers<T> lineBuffers;
 
         if (s_shouldReset) {
             s_shouldReset = false;
-
-            auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
-            if (iterable != nullptr && iterable->getEntryCount() > 0) {
-                const auto &content = iterable->getEntry(0);
-                if (content->getSize() == 1) {
-                    s_indexType = IndexType::U8;
-                } else if (content->getSize() == 2) {
-                    s_indexType = IndexType::U16;
-                } else if (content->getSize() == 4) {
-                    s_indexType = IndexType::U32;
-                } else {
-                    s_indexType = IndexType::Invalid;
-                }
-            }
+            s_shouldUpdateLightSource = true;
 
             if (s_drawMode == GL_TRIANGLES) {
-                Vectors vectors;
+                Vectors<T> vectors;
 
                 vectors.vertices = patternToArray<float>(verticesPattern.get());
-                if (s_indexType == IndexType::U16)
-                    vectors.indices16 = patternToArray<u16>(indicesPattern.get());
-                else if (s_indexType == IndexType::U32)
-                    vectors.indices32 = patternToArray<u32>(indicesPattern.get());
-                else if (s_indexType == IndexType::U8)
-                    vectors.indices8 = patternToArray<u8>(indicesPattern.get());
+                s_vertexCount = vectors.vertices.size() / 3;
+                if (s_indexType != IndexType::Undefined) {
+                    vectors.indices = patternToArray<T>(indicesPattern.get());
+                    s_badIndices.clear();
+                    auto indexCount = vectors.indices.size();
+                    if (indexCount < 3 || indexCount % 3 != 0) {
+                        throw std::runtime_error("Index count must be a multiple of 3");
+                    }
+                    auto booleans = std::views::transform(vectors.indices,isIndexInRange);
+                    if (!std::accumulate(std::begin(booleans), std::end(booleans), true, std::logical_and<>())) {
+                        std::string badIndicesStr = "Invalid indices: ";
+                        for (auto badIndex : s_badIndices)
+                            badIndicesStr += std::to_string(badIndex) + ", ";
+                        badIndicesStr.pop_back();
+                        badIndicesStr.pop_back();
+                        badIndicesStr += hex::format(" for {} vertices",s_vertexCount);
+                        throw std::runtime_error(badIndicesStr);
+                    }
+                }
 
                 if (colorsPattern != nullptr)
                     vectors.colors = patternToArray<float>(colorsPattern.get());
                 if (normalsPattern != nullptr)
                     vectors.normals = patternToArray<float>(normalsPattern.get());
-                if (uv1Pattern != nullptr)
-                    vectors.uv1 = patternToArray<float>(uv1Pattern.get());
+                if (uvPattern != nullptr)
+                    vectors.uv = patternToArray<float>(uvPattern.get());
 
                 loadVectors(vectors, s_indexType);
 
                 bindBuffers(buffers, vertexArray, vectors, s_indexType);
             } else {
-                LineVectors lineVectors;
+                LineVectors<T> lineVectors;
 
                 lineVectors.vertices = patternToArray<float>(verticesPattern.get());
-                if (s_indexType == IndexType::U16)
-                    lineVectors.indices16 = patternToArray<u16>(indicesPattern.get());
-
-                else if (s_indexType == IndexType::U32)
-                    lineVectors.indices32 = patternToArray<u32>(indicesPattern.get());
-
-                else if (s_indexType == IndexType::U8)
-                    lineVectors.indices8 = patternToArray<u8>(indicesPattern.get());
+                s_vertexCount = lineVectors.vertices.size() / 3;
+                if (s_indexType != IndexType::Undefined) {
+                    lineVectors.indices = patternToArray<T>(indicesPattern.get());
+                    auto indexCount = lineVectors.indices.size();
+                    if (indexCount < 3 || indexCount % 3 != 0) {
+                        throw std::runtime_error("Index count must be a multiple of 3");
+                    }
+                    s_badIndices.clear();
+                    if (!std::ranges::all_of(lineVectors.indices,isIndexInRange)) {
+                        std::string badIndicesStr = "Invalid indices: ";
+                        for (auto badIndex : s_badIndices)
+                            badIndicesStr += std::to_string(badIndex) + ", ";
+                        badIndicesStr.pop_back();
+                        badIndicesStr.pop_back();
+                        badIndicesStr += hex::format(" for {} vertices",s_vertexCount);
+                        throw std::runtime_error(badIndicesStr);
+                    }
+                }
 
                 if (colorsPattern != nullptr)
                     lineVectors.colors = patternToArray<float>(colorsPattern.get());
@@ -805,34 +793,13 @@ namespace hex::plugin::visualizers {
                 if (s_drawTexture)
                     glBindTexture(GL_TEXTURE_2D, s_modelTexture);
 
-                if (s_indexType == IndexType::U8) {
+                buffers.indices.bind();
+                if (buffers.indices.getSize() == 0)
+                    buffers.vertices.draw(s_drawMode);
+                else
+                    buffers.indices.draw(s_drawMode);
+                buffers.indices.unbind();
 
-                    buffers.indices8.bind();
-                    if (buffers.indices8.getSize() == 0)
-                        buffers.vertices.draw(s_drawMode);
-                    else
-                        buffers.indices8.draw(s_drawMode);
-                    buffers.indices8.unbind();
-
-                } else if (s_indexType == IndexType::U16) {
-
-                    buffers.indices16.bind();
-                    if (buffers.indices16.getSize() == 0)
-                        buffers.vertices.draw(s_drawMode);
-                    else
-                        buffers.indices16.draw(s_drawMode);
-                    buffers.indices16.unbind();
-                } else {
-
-                    buffers.indices32.bind();
-                    if (buffers.indices32.getSize() == 0)
-                        buffers.vertices.draw(s_drawMode);
-                    else
-                        buffers.indices32.draw(s_drawMode);
-                    buffers.indices32.unbind();
-
-
-                }
             } else {
                 static gl::Shader lineShader = gl::Shader(
                     romfs::get("shaders/default/lineVertex.glsl").string(),
@@ -844,29 +811,14 @@ namespace hex::plugin::visualizers {
                 lineShader.setUniform("viewMatrix", view);
                 lineShader.setUniform("projectionMatrix", projection);
                 vertexArray.bind();
-                if (s_indexType == IndexType::U8) {
-                    lineBuffers.indices8.bind();
-                    if (lineBuffers.indices8.getSize() == 0)
-                        lineBuffers.vertices.draw(s_drawMode);
-                    else
-                        lineBuffers.indices8.draw(s_drawMode);
-                    lineBuffers.indices8.unbind();
 
-                } else if (s_indexType == IndexType::U16) {
-                    lineBuffers.indices16.bind();
-                    if (lineBuffers.indices16.getSize() == 0)
-                        lineBuffers.vertices.draw(s_drawMode);
-                    else
-                        lineBuffers.indices16.draw(s_drawMode);
-                    lineBuffers.indices16.unbind();
-                } else {
-                    lineBuffers.indices32.bind();
-                    if (lineBuffers.indices32.getSize() == 0)
-                        lineBuffers.vertices.draw(s_drawMode);
-                    else
-                        lineBuffers.indices32.draw(s_drawMode);
-                    lineBuffers.indices32.unbind();
-                }
+                lineBuffers.indices.bind();
+                if (lineBuffers.indices.getSize() == 0)
+                    lineBuffers.vertices.draw(s_drawMode);
+                else
+                    lineBuffers.indices.draw(s_drawMode);
+                lineBuffers.indices.unbind();
+
             }
 
             if (s_drawGrid || s_drawAxes) {
@@ -926,4 +878,49 @@ namespace hex::plugin::visualizers {
         }
     }
 
+    void draw3DVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+
+        std::shared_ptr<pl::ptrn::Pattern> verticesPattern = arguments[0].toPattern();
+        std::shared_ptr<pl::ptrn::Pattern> indicesPattern = arguments[1].toPattern();
+        std::shared_ptr<pl::ptrn::Pattern> normalsPattern = nullptr;
+        std::shared_ptr<pl::ptrn::Pattern> colorsPattern = nullptr;
+        std::shared_ptr<pl::ptrn::Pattern> uvPattern = nullptr;
+
+        std::string textureFile;
+        if (arguments.size() > 2) {
+            normalsPattern = arguments[2].toPattern();
+            if (arguments.size() > 3) {
+                colorsPattern = arguments[3].toPattern();
+                if (arguments.size() > 4) {
+                    uvPattern = arguments[4].toPattern();
+                    if (arguments.size() > 5)
+                        textureFile = arguments[5].toString();
+                }
+            }
+        }
+
+        s_texturePath = textureFile;
+        s_drawTexture = !textureFile.empty();
+        if (shouldReset)
+            s_shouldReset = true;
+        processInputEvents(s_rotation, s_translation, s_scaling, s_nearLimit, s_farLimit);
+
+        auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
+        if (iterable != nullptr && iterable->getEntryCount() > 0) {
+            const auto &content = iterable->getEntry(0);
+            if (content->getSize() == 1) {
+                s_indexType = IndexType::U8;
+                processRendering<u8>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uvPattern);
+            } else if (content->getSize() == 2) {
+                s_indexType = IndexType::U16;
+                processRendering<u16>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uvPattern);
+            } else if (content->getSize() == 4) {
+                s_indexType = IndexType::U32;
+                processRendering<u32>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uvPattern);
+            }
+        } else {
+            s_indexType = IndexType::Undefined;
+            processRendering<u8>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uvPattern);
+        }
+    }
 }
