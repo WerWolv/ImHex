@@ -117,7 +117,7 @@ namespace hex::plugin::visualizers {
             }
 
             vertexIndices.resize(indices.size());
-            for (u32 i = 0; i < indices.size(); i=i+1) {
+            for (u32 i = 0; i < indices.size(); i += 1) {
                 vertexIndices[i] = indices[i];
             }
         }
@@ -145,10 +145,10 @@ namespace hex::plugin::visualizers {
             if (minCamera[3] != 0)
                 minCamera = minCamera * (1.0F / minCamera[3]);
 
-            float max_X = std::max(std::fabs(minCamera[0]), std::fabs(maxCamera[0]));
-            float max_Y = std::max(std::fabs(minCamera[1]), std::fabs(maxCamera[1]));
+            float maxX = std::max(std::fabs(minCamera[0]), std::fabs(maxCamera[0]));
+            float maxY = std::max(std::fabs(minCamera[1]), std::fabs(maxCamera[1]));
 
-            return std::max(max_X, max_Y);
+            return std::max(maxX, maxY);
         }
 
         void setDefaultUVs(std::vector<float> &uv, size_t size) {
