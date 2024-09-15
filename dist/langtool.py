@@ -129,16 +129,19 @@ def main():
                         key in lang_data["translations"]
                         and lang_data["translations"][key] != INVALID_TRANSLATION
                     )
-                    if not has_translation and not (
-                        (command == "retranslate" or command == "untranslate")
-                        and re.compile(args.keys).fullmatch(key)
+                    if (
+                        has_translation
+                        and not (
+                            (command == "retranslate" or command == "untranslate")
+                            and re.compile(args.keys).fullmatch(key)
+                        )
+                        and not command == "fmtzh"
                     ):
                         continue
                     if command == "check":
                         print(
                             f"Error: Translation {lang_data['code']} is missing translation for key '{key}'"
                         )
-                        exit(2)
                     elif (
                         command == "translate"
                         or command == "retranslate"
@@ -148,7 +151,10 @@ def main():
                             continue
                         reference_tranlsation = (
                             " '%s'" % reference_lang_data["translations"][key]
-                            if reference_lang_data
+                            if (
+                                reference_lang_data
+                                and key in reference_lang_data["translations"]
+                            )
                             else ""
                         )
                         print(

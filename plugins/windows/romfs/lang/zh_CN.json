@@ -23,6 +23,7 @@
         "hex.windows.view.tty_console.send_eot": "发送 EOT",
         "hex.windows.view.tty_console.send_etx": "发送 ETX",
         "hex.windows.view.tty_console.send_sub": "发送 SUB",
-        "hex.windows.view.tty_console.stop_bits": "终止位"
+        "hex.windows.view.tty_console.stop_bits": "终止位",
+        "hex.windows.view.tty_console.task.transmitting": "传输数据中……"
     }
 }

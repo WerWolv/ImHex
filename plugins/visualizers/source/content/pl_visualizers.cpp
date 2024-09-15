@@ -22,7 +22,7 @@ namespace hex::plugin::visualizers {
         ContentRegistry::PatternLanguage::addVisualizer("line_plot",        drawLinePlotVisualizer,             ParamCount::exactly(1));
         ContentRegistry::PatternLanguage::addVisualizer("scatter_plot",     drawScatterPlotVisualizer,          ParamCount::exactly(2));
         ContentRegistry::PatternLanguage::addVisualizer("image",            drawImageVisualizer,                ParamCount::exactly(1));
-        ContentRegistry::PatternLanguage::addVisualizer("bitmap",           drawBitmapVisualizer,               ParamCount::exactly(3));
+        ContentRegistry::PatternLanguage::addVisualizer("bitmap",           drawBitmapVisualizer,               ParamCount::between(3, 4));
         ContentRegistry::PatternLanguage::addVisualizer("3d",               draw3DVisualizer,                   ParamCount::between(2, 6));
         ContentRegistry::PatternLanguage::addVisualizer("sound",            drawSoundVisualizer,                ParamCount::exactly(3));
         ContentRegistry::PatternLanguage::addVisualizer("coordinates",      drawCoordinateVisualizer,           ParamCount::exactly(2));
