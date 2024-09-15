@@ -174,6 +174,13 @@ namespace hex::plugin::decompress {
                         section.resize(section.size() - stream.avail_out);
                         break;
                     }
+
+                    if (res == LZMA_MEMLIMIT_ERROR) {
+                        auto usage = lzma_memusage(&stream);
+                        lzma_memlimit_set(&stream, usage);
+                        res = lzma_code(&stream, LZMA_RUN);
+                    }
+
                     if (res != LZMA_OK)
                         return false;
 
@@ -211,25 +218,48 @@ namespace hex::plugin::decompress {
                 const u8* source = compressedData.data();
                 size_t sourceSize = compressedData.size();
 
-                do {
-                    size_t blockSize = ZSTD_getFrameContentSize(source, sourceSize);
+                size_t blockSize = ZSTD_getFrameContentSize(source, sourceSize);
 
-                    if (blockSize == ZSTD_CONTENTSIZE_ERROR) {
-                        return false;
+                if (blockSize == ZSTD_CONTENTSIZE_ERROR) {
+                    return false;
+                }
+
+                if (blockSize == ZSTD_CONTENTSIZE_UNKNOWN) {
+                    // Data uses stream compression
+                    ZSTD_inBuffer dataIn = { (void*)source, sourceSize, 0 };
+
+                    size_t outSize = ZSTD_DStreamOutSize();
+                    std::vector<u8> outVec(outSize);
+                    const u8* out = outVec.data();
+
+                    size_t lastRet = 0;
+                    while (dataIn.pos < dataIn.size) {
+                        ZSTD_outBuffer dataOut = { (void*)out, outSize, 0 };
+
+                        size_t ret = ZSTD_decompressStream(dctx, &dataOut, &dataIn);
+                        if (ZSTD_isError(ret)) {
+                            return false;
+                        }
+                        lastRet = ret;
+
+                        size_t sectionSize = section.size();
+                        section.resize(sectionSize + dataOut.pos);
+                        std::memcpy(section.data() + sectionSize, out, dataOut.pos);
                     }
 
+                    // Incomplete frame
+                    if (lastRet != 0) {
+                        return false;
+                    }
+                } else {
                     section.resize(section.size() + blockSize);
 
-                    size_t decodedSize = ZSTD_decompressDCtx(dctx, section.data() + section.size() - blockSize, blockSize, source, sourceSize);
+                    size_t ret = ZSTD_decompressDCtx(dctx, section.data() + section.size() - blockSize, blockSize, source, sourceSize);
 
-                    if (ZSTD_isError(decodedSize)) {
+                    if (ZSTD_isError(ret)) {
                         return false;
                     }
-
-                    source = source + sourceSize;
-                    sourceSize = 0;
-
-                } while (sourceSize > 0);
+                }
 
                 return true;
             #else

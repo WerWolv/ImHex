@@ -24,12 +24,7 @@ namespace hex::plugin::builtin {
 
         class IEEE754STATICS {
         public:
-            IEEE754STATICS() {
-                value = 0;
-                exponentBitCount = 8;
-                mantissaBitCount = 23;
-                resultFloat = 0;
-            }
+            IEEE754STATICS() : value(0), exponentBitCount(8), mantissaBitCount(23), resultFloat(0) {}
 
             u128 value;
             i32 exponentBitCount;
@@ -567,6 +562,19 @@ namespace hex::plugin::builtin {
             auto color = ImGui::GetColorU32(ImGuiCol_ButtonActive);
 
             bool needsPop = false;
+            if (ieee754statics.exponentBitCount == 3 && ieee754statics.mantissaBitCount == 4) {
+                ImGui::PushStyleColor(ImGuiCol_Button, color);
+                needsPop = true;
+            }
+            if (ImGui::Button("hex.builtin.tools.ieee754.quarter_precision"_lang)) {
+                ieee754statics.exponentBitCount = 3;
+                ieee754statics.mantissaBitCount = 4;
+                inputFieldWidth = 0;
+            }
+            if (needsPop) ImGui::PopStyleColor();
+
+            ImGui::SameLine();
+            needsPop = false;
             if (ieee754statics.exponentBitCount == 5 && ieee754statics.mantissaBitCount == 10) {
                 ImGui::PushStyleColor(ImGuiCol_Button, color);
                 needsPop = true;
