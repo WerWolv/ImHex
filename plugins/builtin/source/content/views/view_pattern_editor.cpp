@@ -554,7 +554,7 @@ namespace hex::plugin::builtin {
             }
 
             if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0) {
-                if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
+                if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1LL)) {
                     m_hasUnevaluatedChanges = false;
 
                     auto code = m_textEditor.GetText();
@@ -1684,7 +1684,7 @@ namespace hex::plugin::builtin {
                 *m_breakpointHit = true;
                 m_resetDebuggerVariables = true;
                 while (*m_breakpointHit) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100ll));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100LL));
                 }
             });
 
@@ -1707,7 +1707,7 @@ namespace hex::plugin::builtin {
                 m_dangerousFunctionCalled = true;
 
                 while (m_dangerousFunctionsAllowed == DangerousFunctionPerms::Ask) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100ll));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100LL));
                 }
 
                 return m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
