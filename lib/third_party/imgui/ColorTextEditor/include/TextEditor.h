@@ -420,7 +420,9 @@ private:
 	int GetCharacterIndex(const Coordinates& aCoordinates) const;
 	int GetCharacterColumn(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
-	unsigned long long GetLineByteCount(int aLine) const;
+    int Utf8BytesToChars(const Coordinates &aCoordinates) const;
+    int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
+    unsigned long long GetLineByteCount(int aLine) const;
 	int GetStringCharacterCount(std::string str) const;
 	int GetLineMaxColumn(int aLine) const;
 	bool IsOnWordBoundary(const Coordinates& aAt) const;
