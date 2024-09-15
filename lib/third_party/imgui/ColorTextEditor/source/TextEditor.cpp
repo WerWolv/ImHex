@@ -304,6 +304,22 @@ TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2 &aPositi
     return SanitizeCoordinates(Coordinates(lineNo, columnCoord));
 }
 
+void TextEditor::DeleteWordLeft()  {
+    const auto wordEnd = GetCursorPosition();
+    MoveLeft();
+    const auto wordStart = FindWordStart(GetCursorPosition());
+    SetSelection(wordStart, wordEnd);
+    Backspace();
+}
+
+void TextEditor::DeleteWordRight() {
+    const auto wordStart = GetCursorPosition();
+    MoveRight();
+    const auto wordEnd = FindWordEnd(GetCursorPosition());
+    SetSelection(wordStart, wordEnd);
+    Backspace();
+}
+
 bool isWordChar(char c) {
     auto asUChar = static_cast<unsigned char>(c);
     return std::isalnum(asUChar) || c == '_' || asUChar > 0x7F;
@@ -640,21 +656,21 @@ void TextEditor::HandleKeyboardInputs() {
     // command => Ctrl
     // control => Super
     // option  => Alt
-
+    auto ctrl     = io.KeyCtrl;
+    auto alt      = io.KeyAlt;
     auto shift    = io.KeyShift;
-    auto left     = ImGui::IsKeyPressed(ImGuiKey_LeftArrow);
+   /* auto left     = ImGui::IsKeyPressed(ImGuiKey_LeftArrow);
     auto right    = ImGui::IsKeyPressed(ImGuiKey_RightArrow);
     auto up       = ImGui::IsKeyPressed(ImGuiKey_UpArrow);
     auto down     = ImGui::IsKeyPressed(ImGuiKey_DownArrow);
-    auto ctrl     = io.KeyCtrl;
-    auto alt      = io.KeyAlt;
+
     auto home     = io.ConfigMacOSXBehaviors ? io.KeySuper && left : ImGui::IsKeyPressed(ImGuiKey_Home);
     auto end      = io.ConfigMacOSXBehaviors ? io.KeySuper && right : ImGui::IsKeyPressed(ImGuiKey_End);
     auto top      = io.ConfigMacOSXBehaviors ? io.KeySuper && up : ctrl && ImGui::IsKeyPressed(ImGuiKey_Home);
     auto bottom   = io.ConfigMacOSXBehaviors ? io.KeySuper && down : ctrl && ImGui::IsKeyPressed(ImGuiKey_End);
     auto pageUp   = io.ConfigMacOSXBehaviors ? ctrl && up : ImGui::IsKeyPressed(ImGuiKey_PageUp);
     auto pageDown = io.ConfigMacOSXBehaviors ? ctrl && down : ImGui::IsKeyPressed(ImGuiKey_PageDown);
-
+*/
     if (ImGui::IsWindowFocused()) {
         if (ImGui::IsWindowHovered())
             ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput);
@@ -663,87 +679,10 @@ void TextEditor::HandleKeyboardInputs() {
         io.WantCaptureKeyboard = true;
         io.WantTextInput       = true;
 
-        bool handledKeyEvent = true;
-
-        if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Z))
-            Undo();
-        else if (!IsReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
-            Undo();
-        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Y))
-            Redo();
-        else if (!ctrl && !alt && up)
-            MoveUp(1, shift);
-        else if (!ctrl && !alt && down)
-            MoveDown(1, shift);
-        else if (!alt && left)
-            MoveLeft(1, shift, ctrl);
-        else if (!alt && right)
-            MoveRight(1, shift, ctrl);
-        else if (!alt && pageUp)
-            MoveUp(GetPageSize() - 4, shift);
-        else if (!alt && pageDown)
-            MoveDown(GetPageSize() - 4, shift);
-        else if (!alt && top)
-            MoveTop(shift);
-        else if (!alt && bottom)
-            MoveBottom(shift);
-        else if (!ctrl && !alt && home)
-            MoveHome(shift);
-        else if (!ctrl && !alt && end)
-            MoveEnd(shift);
-        else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Delete))
-            Delete();
-        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Delete)) {
-            auto wordStart = GetCursorPosition();
-            MoveRight();
-            auto wordEnd = FindWordEnd(GetCursorPosition());
-            SetSelection(wordStart, wordEnd);
-            Backspace();
-        }
-        else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
-            Backspace();
-        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Backspace)) {
-            auto wordEnd = GetCursorPosition();
-            MoveLeft();
-            auto wordStart = FindWordStart(GetCursorPosition());
-            SetSelection(wordStart, wordEnd);
-            Backspace();
-        }
-        else if (!ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Insert))
-            mOverwrite = !mOverwrite;
-        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Insert))
-            Copy();
-        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_C))
-            Copy();
-        else if (!IsReadOnly() && !ctrl && shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Insert))
-            Paste();
-        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_V))
-            Paste();
-        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_X))
-            Cut();
-        else if (!ctrl && shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Delete))
-            Cut();
-        else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_A))
-            SelectAll();
-        else if (!IsReadOnly() && !ctrl && !shift && !alt && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
+        if (!IsReadOnly() && !ctrl && !shift && !alt && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
             EnterCharacter('\n', false);
         else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_Tab))
             EnterCharacter('\t', shift);
-        else if (!ctrl && !alt && !shift && ImGui::IsKeyPressed(ImGuiKey_F3))
-            mFindReplaceHandler.FindMatch(this, true);
-        else if (!ctrl && !alt && shift && ImGui::IsKeyPressed(ImGuiKey_F3))
-            mFindReplaceHandler.FindMatch(this, false);
-        else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_C))
-            mFindReplaceHandler.SetMatchCase(this,!mFindReplaceHandler.GetMatchCase());
-        else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_R))
-            mFindReplaceHandler.SetFindRegEx(this,!mFindReplaceHandler.GetFindRegEx());
-        else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_W))
-            mFindReplaceHandler.SetWholeWord(this,!mFindReplaceHandler.GetWholeWord());
-        else
-            handledKeyEvent = false;
-
-        if (handledKeyEvent)
-            ResetCursorBlinkTime();
 
         if (!IsReadOnly() && !io.InputQueueCharacters.empty()) {
             for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
