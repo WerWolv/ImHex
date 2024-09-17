@@ -391,9 +391,12 @@ TextEditor::Coordinates TextEditor::FindWordEnd(const Coordinates &aFrom) const 
 
     while (cindex < (line.size()) && !isWordChar(line[cindex].mChar))
         ++cindex;
+    while (cindex < (line.size()) && isWordChar(line[cindex].mChar))
+        ++cindex;
 
     if (line[cindex-1].mChar == '\"')
         --cindex;
+
     return Coordinates(aFrom.mLine, GetCharacterColumn(aFrom.mLine, cindex));
 }
 
