@@ -1354,6 +1354,11 @@ namespace hex::plugin::builtin {
                             errorMarkers[key] = std::make_pair(location.length, message);
                         }
                     }
+                } else {
+                    if (m_lastEvaluationError->has_value()) {
+                        auto key = TextEditor::Coordinates((*m_lastEvaluationError)->line, 0);
+                        errorMarkers[key] = std::make_pair(0,processMessage((*m_lastEvaluationError)->message));
+                    }
                 }
 
                 if (!m_lastCompileError->empty()) {
