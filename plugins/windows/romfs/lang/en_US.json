@@ -2,6 +2,7 @@
     "code": "en-US",
     "country": "United States",
     "language": "English",
+    "fallback": true,
     "translations": {
         "hex.builtin.setting.general.context_menu_entry": "Windows context menu entry",
         "hex.builtin.setting.interface.show_resource_usage": "Show resource usage in footer",
