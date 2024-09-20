@@ -536,7 +536,7 @@ function(downloadImHexPatternsFiles dest)
             else()
                 # If it is an offline build, the imhex_patterns_SOURCE_DIR location is likely a git clone
                 # Create the directories as symbolic links, so that any changes get mirrored both ways
-                file(CREATE_LINK "${imhex_patterns_SOURCE_DIR}/${FOLDER}" "${IMHEX_MAIN_OUTPUT_DIRECTORY}/${FOLDER}" SYMBOLIC)
+                file(CREATE_LINK "${imhex_patterns_SOURCE_DIR}/${FOLDER}" "${IMHEX_MAIN_OUTPUT_DIRECTORY}/${FOLDER}" COPY_ON_ERROR SYMBOLIC)
             endif()
             install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "${dest}" PATTERN "**/_schema.json" EXCLUDE)
         endforeach ()
