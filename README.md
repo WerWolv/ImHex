@@ -351,6 +351,8 @@ All releases are being built using latest available GCC.
 For more information, check out the [Compiling](/dist/compiling) guide.
 
 ## Contributing
+[![Open in DevZero](https://assets.devzero.io/open-in-devzero.svg)](https://www.devzero.io/dashboard/recipes/new?repo-url=https://github.com/WerWolv/ImHex)
+
 See [Contributing](/CONTRIBUTING.md)
 
 ## Plugin development
