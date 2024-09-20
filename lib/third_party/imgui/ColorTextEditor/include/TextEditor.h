@@ -205,6 +205,10 @@ public:
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
 	void SetText(const std::string& aText);
 	std::string GetText() const;
+    bool isEmpty() const {
+        auto text = GetText();
+        return text.empty() || text == "\n";
+    }
 
 	void SetTextLines(const std::vector<std::string>& aLines);
 	std::vector<std::string> GetTextLines() const;
@@ -305,7 +309,7 @@ public:
         FindReplaceHandler();
         typedef std::vector<EditorState> Matches;
         Matches &GetMatches() { return mMatches; }
-        bool FindNext(TextEditor *editor,bool wrapAround);
+        bool FindNext(TextEditor *editor);
         unsigned FindMatch(TextEditor *editor,bool isNex);
         bool Replace(TextEditor *editor,bool right);
         bool ReplaceAll(TextEditor *editor);
@@ -419,10 +423,10 @@ private:
 	Coordinates FindWordStart(const Coordinates& aFrom) const;
 	Coordinates FindWordEnd(const Coordinates& aFrom) const;
 	Coordinates FindNextWord(const Coordinates& aFrom) const;
+    Coordinates StringIndexToCoordinates(int aIndex, const std::string &str) const;
 	int GetCharacterIndex(const Coordinates& aCoordinates) const;
 	int GetCharacterColumn(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
-    int Utf8BytesToChars(const Coordinates &aCoordinates) const;
     int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
     unsigned long long GetLineByteCount(int aLine) const;
 	int GetStringCharacterCount(std::string str) const;
