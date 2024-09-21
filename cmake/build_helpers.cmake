@@ -745,8 +745,8 @@ macro(addBundledLibraries)
         set_target_properties(
                 libpl
                 PROPERTIES
-                    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-                    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+                    RUNTIME_OUTPUT_DIRECTORY ${IMHEX_MAIN_OUTPUT_DIRECTORY}
+                    LIBRARY_OUTPUT_DIRECTORY ${IMHEX_MAIN_OUTPUT_DIRECTORY}
         )
     endif()
     enableUnityBuild(libpl)
