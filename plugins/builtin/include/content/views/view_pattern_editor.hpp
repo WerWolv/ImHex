@@ -249,6 +249,10 @@ namespace hex::plugin::builtin {
         std::mutex m_logMutex;
 
         PerProvider<TextEditor::Coordinates>  m_cursorPosition;
+        PerProvider<TextEditor::Coordinates> m_consoleCursorPosition;
+        PerProvider<TextEditor::Selection> m_selection;
+        PerProvider<TextEditor::Selection> m_consoleSelection;
+        PerProvider<TextEditor::Breakpoints> m_breakpoints;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
         PerProvider<std::vector<const pl::core::ast::ASTNode*>> m_callStack;

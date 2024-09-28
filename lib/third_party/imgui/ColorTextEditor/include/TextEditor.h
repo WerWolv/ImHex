@@ -189,6 +189,11 @@ public:
 		static const LanguageDefinition& Lua();
 	};
 
+    struct Selection {
+        Coordinates mStart;
+        Coordinates mEnd;
+    };
+
 	TextEditor();
 	~TextEditor();
 
@@ -199,6 +204,7 @@ public:
 	static void SetPalette(const Palette& aValue);
 
 	void SetErrorMarkers(const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
+    Breakpoints &GetBreakpoints() { return mBreakpoints; }
 	void SetBreakpoints(const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
     ImVec2 Underwaves( ImVec2 pos, uint32_t nChars, ImColor color= ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg= ImVec2(0, 0));
 
@@ -263,6 +269,7 @@ public:
 	void SetSelectionStart(const Coordinates& aPosition);
 	void SetSelectionEnd(const Coordinates& aPosition);
 	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd, SelectionMode aMode = SelectionMode::Normal);
+    Selection GetSelection() const;
 	void SelectWordUnderCursor();
 	void SelectAll();
 	bool HasSelection() const;
