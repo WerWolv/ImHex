@@ -559,6 +559,16 @@ namespace hex::plugin::builtin {
                 }
             }
 
+            if (m_textEditor.IsBreakpointsChanged()) {
+                m_breakpoints = m_textEditor.GetBreakpoints();
+                m_textEditor.ClearBreakpointsChanged();
+                const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+                auto &evaluator = runtime.getInternals().evaluator;
+                if (evaluator) {
+                    evaluator->setBreakpoints(m_breakpoints);
+                }
+            }
+
             if (m_textEditor.IsTextChanged()) {
                 m_hasUnevaluatedChanges = true;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
@@ -1245,23 +1255,23 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginChild("##debugger", size, true)) {
             auto &evaluator = runtime.getInternals().evaluator;
-            const auto &breakpoints = evaluator->getBreakpoints();
+            m_breakpoints = m_textEditor.GetBreakpoints();
+            evaluator->setBreakpoints(m_breakpoints);
             const auto line = m_textEditor.GetCursorPosition().mLine + 1;
 
-            if (!breakpoints.contains(line)) {
+            if (!m_breakpoints->contains(line)) {
                 if (ImGuiExt::IconButton(ICON_VS_DEBUG_BREAKPOINT, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                     evaluator->addBreakpoint(line);
-                    m_textEditor.SetBreakpoints(breakpoints);
                 }
                 ImGuiExt::InfoTooltip("hex.builtin.view.pattern_editor.debugger.add_tooltip"_lang);
             } else {
                 if (ImGuiExt::IconButton(ICON_VS_DEBUG_BREAKPOINT_UNVERIFIED, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                     evaluator->removeBreakpoint(line);
-                    m_textEditor.SetBreakpoints(breakpoints);
                 }
                 ImGuiExt::InfoTooltip("hex.builtin.view.pattern_editor.debugger.remove_tooltip"_lang);
             }
-
+            m_breakpoints = evaluator->getBreakpoints();
+            m_textEditor.SetBreakpoints(m_breakpoints);
             ImGui::SameLine();
 
             if (*m_breakpointHit) {
@@ -2359,15 +2369,16 @@ namespace hex::plugin::builtin {
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             auto &evaluator = runtime.getInternals().evaluator;
-            auto &breakpoints = evaluator->getBreakpoints();
+            m_breakpoints = m_textEditor.GetBreakpoints();
+            evaluator->setBreakpoints(m_breakpoints);
 
-            if (breakpoints.contains(line)) {
+            if (m_breakpoints->contains(line)) {
                 evaluator->removeBreakpoint(line);
             } else {
                 evaluator->addBreakpoint(line);
             }
-
-            m_textEditor.SetBreakpoints(breakpoints);
+            m_breakpoints = evaluator->getBreakpoints();
+            m_textEditor.SetBreakpoints(m_breakpoints);
         });
 
         /* Trigger evaluation */
