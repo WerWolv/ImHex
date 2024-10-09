@@ -1730,10 +1730,13 @@ namespace hex::plugin::builtin {
 
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
-            runtime.getInternals().evaluator->setBreakpointHitCallback([this]{
+            runtime.getInternals().evaluator->setBreakpointHitCallback([this, &runtime] {
                 m_debuggerScopeIndex = 0;
                 *m_breakpointHit = true;
                 m_resetDebuggerVariables = true;
+                auto optPauseLine = runtime.getInternals().evaluator->getPauseLine();
+                if (optPauseLine.has_value())
+                    m_textEditor.SetCursorPosition({ static_cast<int>(optPauseLine.value())-1, 0 });
                 while (*m_breakpointHit) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(100LL));
                 }
