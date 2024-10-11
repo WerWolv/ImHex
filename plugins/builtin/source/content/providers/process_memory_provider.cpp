@@ -434,7 +434,7 @@ namespace hex::plugin::builtin {
 
                 std::string name;
                 if (split.size() > 5)
-                    name = combineStrings(std::vector(split.begin() + 5, split.end()), " ");
+                    name = wolv::util::trim(combineStrings(std::vector(split.begin() + 5, split.end()), " "));
 
                 m_memoryRegions.insert({ { start, end - start }, name });
             }
