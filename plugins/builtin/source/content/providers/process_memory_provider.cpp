@@ -424,7 +424,16 @@ namespace hex::plugin::builtin {
             if (!file.isValid())
                 return;
 
-            for (const auto &line : wolv::util::splitString(file.readString(), "\n")) {
+            // procfs files don't have a defined size, so we have to just keep reading until we stop getting data
+            std::string data;
+            while (true) {
+                auto chunk = file.readString(0xFFFF);
+                if (chunk.empty())
+                    break;
+                data.append(chunk);
+            }
+
+            for (const auto &line : wolv::util::splitString(data, "\n")) {
                 const auto &split = splitString(line, " ");
                 if (split.size() < 5)
                     continue;
