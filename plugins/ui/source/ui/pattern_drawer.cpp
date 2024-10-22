@@ -1214,6 +1214,16 @@ namespace hex::ui {
     }
 
     void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime, float height) {
+        if (runtime == nullptr) {
+            this->reset();
+        } else {
+            auto runId = runtime->getRunId();
+            if (runId != m_lastRunId) {
+                this->reset();
+                m_lastRunId = runId;
+            }
+        }
+
         std::scoped_lock lock(s_resetDrawMutex);
 
         m_hoverCallback(nullptr);

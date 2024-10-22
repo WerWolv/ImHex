@@ -9,7 +9,7 @@ namespace hex::plugin::builtin {
 
     void registerPatternLanguagePragmas() {
 
-        ContentRegistry::PatternLanguage::addPragma("base_address", [](const pl::PatternLanguage &runtime, const std::string &value) {
+        ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
             auto baseAddress = strtoull(value.c_str(), nullptr, 0);
 
             ImHexApi::Provider::get()->setBaseAddress(baseAddress);
