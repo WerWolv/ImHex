@@ -1480,6 +1480,10 @@ void TextEditor::SetSelection(const Coordinates &aStart, const Coordinates &aEnd
         mCursorPositionChanged = true;
 }
 
+TextEditor::Selection TextEditor::GetSelection() const {
+    return {mState.mSelectionStart, mState.mSelectionEnd};
+}
+
 void TextEditor::SetTabSize(int aValue) {
     mTabSize = std::max(0, std::min(32, aValue));
 }
