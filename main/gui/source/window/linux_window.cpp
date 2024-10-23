@@ -74,7 +74,7 @@ namespace hex {
                     && FcPatternGetString(font, FC_FAMILY, 0, &fullName) != FcResultMatch) {
                     continue;
                 }
-                
+
                 registerFont(reinterpret_cast<const char *>(fullName), reinterpret_cast<const char *>(file));
             }
 
@@ -123,7 +123,7 @@ namespace hex {
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
         #if defined(GLFW_WAYLAND_APP_ID)
-                glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
+            glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
         #endif
     }
 

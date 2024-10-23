@@ -130,5 +130,6 @@ namespace hex::ui {
         std::function<void(const pl::ptrn::Pattern *)> m_hoverCallback = [](const pl::ptrn::Pattern *) { };
 
         pl::gen::fmt::FormatterArray m_formatters;
+        u64 m_lastRunId = 0;
     };
 }
