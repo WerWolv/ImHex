@@ -1302,6 +1302,7 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
     auto coord    = GetActualCursorCoordinates();
     u.mAddedStart = coord;
 
+
     if (mLines.empty())
         mLines.push_back(Line());
 
