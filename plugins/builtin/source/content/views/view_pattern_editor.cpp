@@ -1343,8 +1343,8 @@ namespace hex::plugin::builtin {
                 };
 
                 TextEditor::ErrorMarkers errorMarkers;
-                if (!m_callStack->empty()) {
-                    for (const auto &frame : *m_callStack | std::views::reverse) {
+                if (!(*m_callStack)->empty()) {
+                    for (const auto &frame : **m_callStack | std::views::reverse) {
                         auto location = frame->getLocation();
                         std::string message;
                         if (location.source->source == pl::api::Source::DefaultSource) {
@@ -1809,7 +1809,7 @@ namespace hex::plugin::builtin {
             if (!m_lastEvaluationResult) {
                 *m_lastEvaluationError = runtime.getEvalError();
                 *m_lastCompileError    = runtime.getCompileErrors();
-                *m_callStack           = reinterpret_cast<const std::vector<const pl::core::ast::ASTNode *> &>(runtime.getInternals().evaluator->getCallStack());
+                *m_callStack           = &runtime.getInternals().evaluator->getCallStack();
             }
 
             TaskManager::doLater([code] {
