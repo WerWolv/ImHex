@@ -5,12 +5,11 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <mutex>  // Add this for std::mutex
 
-#include <hex/ui/view.hpp>
+#include <hex/ui/view.hpp>  // Ensure that this includes necessary types (ImGuiExt::Texture, etc.)
 
 struct GLFWwindow;
-struct ImGuiSettingsHandler;
-
 
 namespace hex {
 
@@ -20,6 +19,14 @@ namespace hex {
     public:
         Window();
         ~Window();
+
+        // Delete copy constructor and copy assignment operator to prevent accidental copies
+        Window(const Window&) = delete;
+        Window& operator=(const Window&) = delete;
+
+        // Implement move constructor and move assignment operator if needed
+        Window(Window&&) noexcept = default;
+        Window& operator=(Window&&) noexcept = default;
 
         void loop();
         void fullFrame();
@@ -46,9 +53,9 @@ namespace hex {
 
         void registerEventHandlers();
 
-        GLFWwindow *m_window = nullptr;
+        std::unique_ptr<GLFWwindow> m_window = nullptr;  // Use std::unique_ptr for memory safety
 
-        std::string m_windowTitle, m_windowTitleFull;
+        std::string m_windowTitle;
 
         double m_lastStartFrameTime = 0;
         double m_lastFrameTime = 0;
@@ -63,7 +70,10 @@ namespace hex {
 
         ImGuiExt::ImHexCustomData m_imguiCustomData;
 
-        u32 m_searchBarPosition = 0;
+        // Define constant for search bar position if needed
+        static constexpr u32 kDefaultSearchBarPosition = 0;
+        u32 m_searchBarPosition = kDefaultSearchBarPosition;
+
         bool m_emergencyPopupOpen = false;
     };
 
