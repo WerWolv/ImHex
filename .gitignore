@@ -1,4 +1,6 @@
 .vscode/
+.devcontainer/
+.cache/
 .idea/
 .kdev4/
 
@@ -14,3 +16,4 @@ imgui.ini
 .DS_Store
 CMakeUserPresets.json
 Brewfile.lock.json
+compile_commands.json
