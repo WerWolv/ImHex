@@ -2,6 +2,7 @@
     "code": "zh_CN",
     "country": "China",
     "language": "Chinese (Simplified)",
+    "fallback": false,
     "translations": {
         "hex.script_loader.menu.loading": "加载中……",
         "hex.script_loader.menu.no_scripts": "空空如也",
