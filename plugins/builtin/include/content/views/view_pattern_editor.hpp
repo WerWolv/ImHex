@@ -73,6 +73,8 @@ namespace hex::plugin::builtin {
         }
 
     public:
+        std::string preprocessText(const std::string &code);
+
         struct VirtualFile {
             std::fs::path path;
             std::vector<u8> data;
