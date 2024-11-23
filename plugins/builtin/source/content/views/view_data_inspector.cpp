@@ -1,4 +1,5 @@
 #include "content/views/view_data_inspector.hpp"
+#include "ui/pattern_drawer.hpp"
 
 #include <hex/api/achievement_manager.hpp>
 #include <hex/providers/provider.hpp>
@@ -196,8 +197,13 @@ namespace hex::plugin::builtin {
 
             try {
                 // Set up the display function using the pattern's formatter
-                auto displayFunction = [value = pattern->getFormattedValue()] {
-                    ImGui::TextUnformatted(value.c_str());
+                auto displayFunction = [pattern,value = pattern->getFormattedValue()] {
+                    auto drawer = std::make_unique<hex::ui::PatternDrawer>();
+                    if (const auto &inlineVisualizeArgs = pattern->getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
+                        drawer->drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
+                    } else {
+                        ImGui::TextUnformatted(value.c_str());
+                    }
                     return value;
                 };
 

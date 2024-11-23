@@ -38,6 +38,7 @@ namespace hex::ui {
         void reset();
 
         void jumpToPattern(const pl::ptrn::Pattern *pattern) { m_jumpToPattern = pattern; }
+        void drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, bool reset);
 
     private:
         void draw(pl::ptrn::Pattern& pattern);
@@ -71,7 +72,6 @@ namespace hex::ui {
         void makeSelectable(const pl::ptrn::Pattern &pattern);
 
         void drawValueColumn(pl::ptrn::Pattern& pattern);
-        void drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, bool reset);
         void drawFavoriteColumn(const pl::ptrn::Pattern& pattern);
         bool drawNameColumn(const pl::ptrn::Pattern &pattern, bool leaf = false);
         void drawColorColumn(const pl::ptrn::Pattern& pattern);
