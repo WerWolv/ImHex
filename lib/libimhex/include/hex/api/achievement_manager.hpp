@@ -295,6 +295,7 @@ namespace hex {
     };
 
     class AchievementManager {
+        static bool m_initialized;
     public:
         AchievementManager() = delete;
 
