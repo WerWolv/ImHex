@@ -942,7 +942,7 @@
         "hex.builtin.view.pattern_editor.menu.file.save_pattern": "Сохранить шаблон",
         "hex.builtin.view.pattern_editor.menu.find": "Найти",
         "hex.builtin.view.pattern_editor.menu.find_next": "Найти далее",
-        "hex.builtin.view.pattern_editor.menu.find_previous": "найти ранее",
+        "hex.builtin.view.pattern_editor.menu.find_previous": "Найти ранее",
         "hex.builtin.view.pattern_editor.menu.replace": "Заменить",
         "hex.builtin.view.pattern_editor.menu.replace_next": "Заменить далее",
         "hex.builtin.view.pattern_editor.menu.replace_previous": "Заменить ранее",
