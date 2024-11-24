@@ -196,10 +196,10 @@ namespace hex {
 
 
     constexpr static auto AchievementsFile = "achievements.json";
-    bool AchievementManager::m_initialized = false;
+    bool AchievementManager::s_initialized = false;
 
     void AchievementManager::loadProgress() {
-        if (m_initialized)
+        if (s_initialized)
             return;
         for (const auto &directory : paths::Config.read()) {
             auto path = directory / AchievementsFile;
@@ -230,7 +230,8 @@ namespace hex {
                         }
                     }
                 }
-                m_initialized = true;
+                
+                s_initialized = true;
             } catch (const std::exception &e) {
                 log::error("Failed to load achievements: {}", e.what());
             }
@@ -239,7 +240,7 @@ namespace hex {
     }
 
     void AchievementManager::storeProgress() {
-        if (!m_initialized)
+        if (!s_initialized)
             loadProgress();
         nlohmann::json json;
         for (const auto &[categoryName, achievements] : getAchievements()) {
