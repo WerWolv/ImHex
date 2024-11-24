@@ -1163,7 +1163,8 @@ namespace hex::plugin::builtin {
 
                             std::optional<ImColor> color;
                             for (const auto &pattern : runtime.getPatternsAtAddress(address, id)) {
-                                if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
+                                auto visibility = pattern->getVisibility();
+                                if (visibility == pl::ptrn::Visibility::Hidden || visibility == pl::ptrn::Visibility::HighlightHidden)
                                     continue;
 
                                 if (color.has_value())
@@ -1343,8 +1344,8 @@ namespace hex::plugin::builtin {
                 };
 
                 TextEditor::ErrorMarkers errorMarkers;
-                if (!m_callStack->empty()) {
-                    for (const auto &frame : *m_callStack | std::views::reverse) {
+                if (!(*m_callStack)->empty()) {
+                    for (const auto &frame : **m_callStack | std::views::reverse) {
                         auto location = frame->getLocation();
                         std::string message;
                         if (location.source->source == pl::api::Source::DefaultSource) {
@@ -1353,6 +1354,11 @@ namespace hex::plugin::builtin {
                             auto key = TextEditor::Coordinates(location.line, location.column);
                             errorMarkers[key] = std::make_pair(location.length, message);
                         }
+                    }
+                } else {
+                    if (m_lastEvaluationError->has_value()) {
+                        auto key = TextEditor::Coordinates((*m_lastEvaluationError)->line, 0);
+                        errorMarkers[key] = std::make_pair(0,processMessage((*m_lastEvaluationError)->message));
                     }
                 }
 
@@ -1806,7 +1812,7 @@ namespace hex::plugin::builtin {
             if (!m_lastEvaluationResult) {
                 *m_lastEvaluationError = runtime.getEvalError();
                 *m_lastCompileError    = runtime.getCompileErrors();
-                *m_callStack           = reinterpret_cast<const std::vector<const pl::core::ast::ASTNode *> &>(runtime.getInternals().evaluator->getCallStack());
+                *m_callStack           = &runtime.getInternals().evaluator->getCallStack();
             }
 
             TaskManager::doLater([code] {
@@ -1817,6 +1823,9 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::registerEvents() {
         RequestPatternEditorSelectionChange::subscribe(this, [this](u32 line, u32 column) {
+            if (line == 0)
+                return;
+
             const TextEditor::Coordinates coords = { int(line) - 1, int(column) };
             m_textEditor.SetCursorPosition(coords);
         });
@@ -2050,11 +2059,12 @@ namespace hex::plugin::builtin {
                 const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
                 auto patterns = runtime.getPatternsAtAddress(address);
-                if (!patterns.empty() && !std::ranges::all_of(patterns, [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden; })) {
+                if (!patterns.empty() && !std::ranges::all_of(patterns, [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden || pattern->getVisibility() == pl::ptrn::Visibility::HighlightHidden; })) {
                     ImGui::BeginTooltip();
 
                     for (const auto &pattern : patterns) {
-                        if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
+                        auto visibility = pattern->getVisibility();
+                        if (visibility == pl::ptrn::Visibility::Hidden || visibility == pl::ptrn::Visibility::HighlightHidden)
                             continue;
 
                         const auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;

@@ -326,7 +326,7 @@ namespace hex::ui {
 
     void PatternDrawer::drawColorColumn(const pl::ptrn::Pattern& pattern) {
         ImGui::TableNextColumn();
-        if (pattern.getVisibility() == pl::ptrn::Visibility::Visible) {
+        if (pattern.getVisibility() != pl::ptrn::Visibility::HighlightHidden) {
             ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, (pattern.getColor() & 0x00'FF'FF'FF) | 0xC0'00'00'00);
 
             if (m_rowColoring)
@@ -994,6 +994,8 @@ namespace hex::ui {
     void PatternDrawer::draw(pl::ptrn::Pattern& pattern) {
         if (pattern.getVisibility() == pl::ptrn::Visibility::Hidden)
             return;
+        if (pattern.getVisibility() == pl::ptrn::Visibility::TreeHidden)
+            return;
 
         m_currPatternPath.push_back(pattern.getVariableName());
         ON_SCOPE_EXIT { m_currPatternPath.pop_back(); };
@@ -1214,6 +1216,16 @@ namespace hex::ui {
     }
 
     void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime, float height) {
+        if (runtime == nullptr) {
+            this->reset();
+        } else {
+            auto runId = runtime->getRunId();
+            if (runId != m_lastRunId) {
+                this->reset();
+                m_lastRunId = runId;
+            }
+        }
+
         std::scoped_lock lock(s_resetDrawMutex);
 
         m_hoverCallback(nullptr);

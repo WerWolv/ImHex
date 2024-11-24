@@ -952,12 +952,11 @@ void TextEditor::Render() {
                 auto color  = GetGlyphColor(glyph);
                 bool underwaved = false;
                 ErrorMarkers::iterator errorIt;
-                if (mErrorMarkers.size() > 0) {
-                    errorIt = mErrorMarkers.find(Coordinates(lineNo+1,i));
-                    if (errorIt != mErrorMarkers.end()) {
-                        underwaved = true;
-                    }
+
+                if (errorIt = mErrorMarkers.find(Coordinates(lineNo+1,i+1)); errorIt != mErrorMarkers.end()) {
+                    underwaved = true;
                 }
+
                 if ((color != prevColor || glyph.mChar == '\t' || glyph.mChar == ' ') && !mLineBuffer.empty()) {
                     const ImVec2 newOffset(textScreenPos.x + bufferOffset.x, textScreenPos.y + bufferOffset.y);
                     drawList->AddText(newOffset, prevColor, mLineBuffer.c_str());
@@ -966,10 +965,13 @@ void TextEditor::Render() {
                     mLineBuffer.clear();
                 }
                 if (underwaved) {
-                    auto textStart = TextDistanceToLineStart(Coordinates(lineNo, i-1)) + mTextStart;
+                    auto textStart = TextDistanceToLineStart(Coordinates(lineNo, i)) + mTextStart;
                     auto begin = ImVec2(lineStartScreenPos.x + textStart, lineStartScreenPos.y);
-                    auto end = Underwaves(begin, errorIt->second.first, mPalette[(int32_t) PaletteIndex::ErrorMarker]);
-                    mErrorHoverBoxes[Coordinates(lineNo+1,i)]=std::make_pair(begin,end);
+                    auto errorLength = errorIt->second.first;
+                    if (errorLength == 0)
+                        errorLength = line.size() - i - 1;
+                    auto end = Underwaves(begin, errorLength, mPalette[(int32_t) PaletteIndex::ErrorMarker]);
+                    mErrorHoverBoxes[Coordinates(lineNo+1,i+1)]=std::make_pair(begin,end);
                 }
 
                 prevColor = color;
@@ -1321,8 +1323,6 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
 
     auto coord    = GetActualCursorCoordinates();
     u.mAddedStart = coord;
-
-    assert(!mLines.empty());
 
     if (aChar == '\n') {
         InsertLine(coord.mLine + 1);
