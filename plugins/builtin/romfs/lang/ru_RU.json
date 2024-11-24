@@ -463,7 +463,7 @@
         "hex.builtin.setting.font.font_bold": "Жирный",
         "hex.builtin.setting.font.font_italic": "Курсив",
         "hex.builtin.setting.font.font_antialias": "Сглаживание",
-        "hex.builtin.setting.font.font_path": "Путь к шрифтам",
+        "hex.builtin.setting.font.font_path": "Шрифт",
         "hex.builtin.setting.font.pixel_perfect_default_font": "Использовать Pixel-Perfect шрифт по умолчанию.",
         "hex.builtin.setting.font.font_size": "Размер шрифта",
         "hex.builtin.setting.font.font_size.tooltip": "Размер шрифта может быть изменён только когда выбран свой шрифт.\n\nЭто связано с тем, что ImHex использует шрифт с pixel-perfect bitmap по умолчанию. Масштабирование по нецелочисленным значениям делает его более размытым.",
