@@ -247,6 +247,18 @@ int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const char *aValu
         if (*aValue == '\r') {
             // skip
             ++aValue;
+        } else if (*aValue == '\t') {
+            auto &line = mLines[aWhere.mLine];
+            auto c = GetCharacterColumn(aWhere.mLine, cindex);
+            auto r = c % mTabSize;
+            auto d = mTabSize - r;
+            auto i = d;
+            while (i-- > 0)
+                line.insert(line.begin() + cindex++, Glyph(' ', PaletteIndex::Default));
+
+            cindex += d;
+            aWhere.mColumn += d;
+            aValue++;
         } else if (*aValue == '\n') {
             if (cindex < (int)mLines[aWhere.mLine].size()) {
                 auto &newLine = InsertLine(aWhere.mLine + 1);

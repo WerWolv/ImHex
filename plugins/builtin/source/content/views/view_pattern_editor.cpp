@@ -1662,7 +1662,7 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider) {
         wolv::io::File file(path, wolv::io::File::Mode::Read);
         if (file.isValid()) {
-            auto code = file.readString();
+            auto code = preprocessText(file.readString());
 
             this->evaluatePattern(code, provider);
             m_textEditor.SetText(code);
@@ -1826,6 +1826,15 @@ namespace hex::plugin::builtin {
         });
     }
 
+    std::string ViewPatternEditor::preprocessText(const std::string &code) {
+        std::string result = wolv::util::replaceStrings(code, "\r\n", "\n");
+        result = wolv::util::replaceStrings(result, "\r", "\n");
+        result = wolv::util::replaceTabsWithSpaces(result, 4);
+        while (result.ends_with('\n'))
+            result.pop_back();
+        return result;
+    }
+
     void ViewPatternEditor::registerEvents() {
         RequestPatternEditorSelectionChange::subscribe(this, [this](u32 line, u32 column) {
             if (line == 0)
@@ -1849,8 +1858,9 @@ namespace hex::plugin::builtin {
         });
 
         RequestSetPatternLanguageCode::subscribe(this, [this](const std::string &code) {
-            m_textEditor.SetText(code);
-            m_sourceCode.set(ImHexApi::Provider::get(), code);
+            const std::string preprocessed = preprocessText(code);
+            m_textEditor.SetText(preprocessed);
+            m_sourceCode.set(ImHexApi::Provider::get(), preprocessed);
             m_hasUnevaluatedChanges = true;
         });
 
@@ -2109,7 +2119,7 @@ namespace hex::plugin::builtin {
             .basePath = "pattern_source_code.hexpat",
             .required = false,
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                const auto sourceCode = tar.readString(basePath);
+                const auto sourceCode = preprocessText(tar.readString(basePath));
 
                 m_sourceCode.set(provider, sourceCode);
 
