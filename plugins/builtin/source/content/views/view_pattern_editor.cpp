@@ -412,6 +412,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_all"_lang, "",false,!findReplaceHandler->GetReplaceWord().empty()))
                     findReplaceHandler->ReplaceAll(&m_textEditor);
 
+                if (ImGui::IsKeyPressed(ImGuiKey_Escape, false))
+                    ImGui::CloseCurrentPopup();
+
                 ImGui::EndPopup();
             }
 
@@ -1715,11 +1718,11 @@ namespace hex::plugin::builtin {
         auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
         m_runningEvaluators += 1;
-        *m_executionDone = false;
+        m_executionDone.get(provider) = false;
 
 
         m_textEditor.SetErrorMarkers({});
-        m_console->clear();
+        m_console.get(provider).clear();
         m_consoleNeedsUpdate = true;
 
         m_sectionWindowDrawer.clear();
@@ -1770,7 +1773,7 @@ namespace hex::plugin::builtin {
                 return m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
             });
 
-            runtime.setLogCallback([this](auto level, auto message) {
+            runtime.setLogCallback([this,provider](auto level, auto message) {
                 std::scoped_lock lock(m_logMutex);
 
                 for (auto line : wolv::util::splitString(message, "\n")) {
@@ -1786,7 +1789,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    m_console->emplace_back(line);
+                    m_console.get(provider).emplace_back(line);
                     m_consoleNeedsUpdate = true;
                 }
             });
@@ -1801,7 +1804,7 @@ namespace hex::plugin::builtin {
                 m_lastEvaluationProcessed = false;
 
                 std::scoped_lock lock(m_logMutex);
-                m_console->emplace_back(
+                m_console.get(provider).emplace_back(
                    hex::format("I: Evaluation took {}", std::chrono::duration<double>(runtime.getLastRunningTime()))
                 );
                 m_consoleNeedsUpdate = true;
@@ -1858,7 +1861,7 @@ namespace hex::plugin::builtin {
 
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
             m_shouldAnalyze.get(provider) = true;
-            m_envVarEntries->emplace_back(0, "", i128(0), EnvVarType::Integer);
+            m_envVarEntries.get(provider).emplace_back(0, "", i128(0), EnvVarType::Integer);
 
             m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
             m_cursorPosition.get(provider) =  TextEditor::Coordinates(0, 0);
@@ -1868,13 +1871,26 @@ namespace hex::plugin::builtin {
             if (oldProvider != nullptr) {
                 m_sourceCode.set(oldProvider, m_textEditor.GetText());
                 m_cursorPosition.set(m_textEditor.GetCursorPosition(),oldProvider);
+                m_selection.set(m_textEditor.GetSelection(),oldProvider);
+                m_consoleCursorPosition.set(m_consoleEditor.GetCursorPosition(),oldProvider);
+                m_consoleSelection.set(m_consoleEditor.GetSelection(),oldProvider);
+                m_breakpoints.set(m_textEditor.GetBreakpoints(),oldProvider);
             }
 
             if (newProvider != nullptr) {
                 m_textEditor.SetText(m_sourceCode.get(newProvider));
                 m_textEditor.SetCursorPosition(m_cursorPosition.get(newProvider));
-            } else
+                TextEditor::Selection selection = m_selection.get(newProvider);
+                m_textEditor.SetSelection(selection.mStart, selection.mEnd);
+                m_textEditor.SetBreakpoints(m_breakpoints.get(newProvider));
+                m_consoleEditor.SetText(hex::combineStrings(m_console.get(newProvider), "\n"));
+                m_consoleEditor.SetCursorPosition(m_consoleCursorPosition.get(newProvider));
+                selection = m_consoleSelection.get(newProvider);
+                m_consoleEditor.SetSelection(selection.mStart, selection.mEnd);
+            } else {
                 m_textEditor.SetText("");
+                m_consoleEditor.SetText("");
+            }
         });
 
         RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
