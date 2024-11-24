@@ -174,7 +174,7 @@ jobs:
 
   # MacOS build
   macos:
-    runs-on: macos-12
+    runs-on: macos-13
 
     strategy:
       fail-fast: false
@@ -358,7 +358,7 @@ jobs:
           gh actions-cache delete "build-macos-arm64-cache" --confirm || true
 
   macos-arm64-package:
-    runs-on: macos-12
+    runs-on: macos-13
     name: 🍎 macOS 12.1 arm64 Packaging
     needs: macos-arm64-build
     env:
