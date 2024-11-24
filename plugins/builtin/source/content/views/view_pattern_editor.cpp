@@ -1301,7 +1301,6 @@ namespace hex::plugin::builtin {
 
                     (*m_debuggerDrawer)->reset();
                     m_resetDebuggerVariables = false;
-                    m_textEditor.SetCursorPosition(TextEditor::Coordinates(pauseLine.value_or(0) - 1, 0));
 
                     if (pauseLine.has_value())
                         m_textEditor.SetCursorPosition({ int(pauseLine.value() - 1), 0 });
@@ -2398,6 +2397,11 @@ namespace hex::plugin::builtin {
 
         /* Trigger evaluation */
         ShortcutManager::addGlobalShortcut(Keys::F5 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.run_pattern", [this] {
+            auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+            if (runtime.isRunning()) {
+                m_breakpointHit = false;
+                runtime.abort();
+            }
             m_triggerAutoEvaluate = true;
         });
 
