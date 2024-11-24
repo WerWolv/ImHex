@@ -9,8 +9,8 @@
 #elif defined(OS_MACOS)
     #include <mach/mach_types.h>
     #include <mach/message.h>
-    #include <mach/arm/kern_return.h>
-    #include <mach/arm/vm_types.h>
+    #include <mach/machine/kern_return.h>
+    #include <mach/machine/vm_types.h>
     #include <mach/vm_map.h>
     #include <mach-o/dyld_images.h>
     #include <libproc.h>
