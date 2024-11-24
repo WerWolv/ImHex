@@ -2291,7 +2291,7 @@ CIMGUI_API void ImDrawList_AddText_Vec2(ImDrawList* self,const ImVec2 pos,ImU32 
 {
     return self->AddText(pos,col,text_begin,text_end);
 }
-CIMGUI_API void ImDrawList_AddText_FontPtr(ImDrawList* self,const ImFont* font,float font_size,const ImVec2 pos,ImU32 col,const char* text_begin,const char* text_end,float wrap_width,const ImVec4* cpu_fine_clip_rect)
+CIMGUI_API void ImDrawList_AddText_FontPtr(ImDrawList* self,ImFont* font,float font_size,const ImVec2 pos,ImU32 col,const char* text_begin,const char* text_end,float wrap_width,const ImVec4* cpu_fine_clip_rect)
 {
     return self->AddText(font,font_size,pos,col,text_begin,text_end,wrap_width,cpu_fine_clip_rect);
 }
@@ -2795,7 +2795,7 @@ CIMGUI_API ImGuiID igImHashStr(const char* data,size_t data_size,ImGuiID seed)
 {
     return ImHashStr(data,data_size,seed);
 }
-CIMGUI_API void igImQsort(void* base,size_t count,size_t size_of_element,int(*compare_func)(void const*,void const*))
+CIMGUI_API void igImQsort(void* base,size_t count,size_t size_of_element,int(*compare_func)(const void*,const void*))
 {
     return ImQsort(base,count,size_of_element,compare_func);
 }
@@ -2858,10 +2858,6 @@ CIMGUI_API const char* igImStrSkipBlank(const char* str)
 CIMGUI_API int igImStrlenW(const ImWchar* str)
 {
     return ImStrlenW(str);
-}
-CIMGUI_API const ImWchar* igImStrbolW(const ImWchar* buf_mid_line,const ImWchar* buf_begin)
-{
-    return ImStrbolW(buf_mid_line,buf_begin);
 }
 CIMGUI_API char igImToUpper(char c)
 {
@@ -3466,17 +3462,8 @@ CIMGUI_API void ImGuiInputTextState_ClearText(ImGuiInputTextState* self)
 {
     return self->ClearText();
 }
-CIMGUI_API void ImGuiInputTextState_ClearFreeMemory(ImGuiInputTextState* self)
-{
+CIMGUI_API void ImGuiInputTextState_ClearFreeMemory(ImGuiInputTextState* self) {
     return self->ClearFreeMemory();
-}
-CIMGUI_API int ImGuiInputTextState_GetUndoAvailCount(ImGuiInputTextState* self)
-{
-    return self->GetUndoAvailCount();
-}
-CIMGUI_API int ImGuiInputTextState_GetRedoAvailCount(ImGuiInputTextState* self)
-{
-    return self->GetRedoAvailCount();
 }
 CIMGUI_API void ImGuiInputTextState_OnKeyPressed(ImGuiInputTextState* self,int key)
 {
@@ -3557,22 +3544,6 @@ CIMGUI_API ImGuiLastItemData* ImGuiLastItemData_ImGuiLastItemData(void)
 CIMGUI_API void ImGuiLastItemData_destroy(ImGuiLastItemData* self)
 {
     IM_DELETE(self);
-}
-CIMGUI_API ImGuiStackSizes* ImGuiStackSizes_ImGuiStackSizes(void)
-{
-    return IM_NEW(ImGuiStackSizes)();
-}
-CIMGUI_API void ImGuiStackSizes_destroy(ImGuiStackSizes* self)
-{
-    IM_DELETE(self);
-}
-CIMGUI_API void ImGuiStackSizes_SetToContextState(ImGuiStackSizes* self,ImGuiContext* ctx)
-{
-    return self->SetToContextState(ctx);
-}
-CIMGUI_API void ImGuiStackSizes_CompareWithContextState(ImGuiStackSizes* self,ImGuiContext* ctx)
-{
-    return self->CompareWithContextState(ctx);
 }
 CIMGUI_API ImGuiPtrOrIndex* ImGuiPtrOrIndex_ImGuiPtrOrIndex_Ptr(void* ptr)
 {
@@ -4174,9 +4145,9 @@ CIMGUI_API void igCallContextHooks(ImGuiContext* context,ImGuiContextHookType ty
 {
     return ImGui::CallContextHooks(context,type);
 }
-CIMGUI_API void igTranslateWindowsInViewport(ImGuiViewportP* viewport,const ImVec2 old_pos,const ImVec2 new_pos)
+CIMGUI_API void igTranslateWindowsInViewport(ImGuiViewportP* viewport,const ImVec2 old_pos,const ImVec2 new_pos,const ImVec2 old_size,const ImVec2 new_size)
 {
-    return ImGui::TranslateWindowsInViewport(viewport,old_pos,new_pos);
+    return ImGui::TranslateWindowsInViewport(viewport,old_pos,new_pos,old_size,new_size);
 }
 CIMGUI_API void igScaleWindowsInViewport(ImGuiViewportP* viewport,float scale)
 {
@@ -4394,9 +4365,9 @@ CIMGUI_API void igEndDisabledOverrideReenable()
 {
     return ImGui::EndDisabledOverrideReenable();
 }
-CIMGUI_API void igLogBegin(ImGuiLogType type,int auto_open_depth)
+CIMGUI_API void igLogBegin(ImGuiLogFlags flags,int auto_open_depth)
 {
-    return ImGui::LogBegin(type,auto_open_depth);
+    return ImGui::LogBegin(flags,auto_open_depth);
 }
 CIMGUI_API void igLogToBuffer(int auto_open_depth)
 {
@@ -4542,10 +4513,6 @@ CIMGUI_API void igNavClearPreferredPosForAxis(ImGuiAxis axis)
 {
     return ImGui::NavClearPreferredPosForAxis(axis);
 }
-CIMGUI_API void igNavRestoreHighlightAfterMove()
-{
-    return ImGui::NavRestoreHighlightAfterMove();
-}
 CIMGUI_API void igNavUpdateCurrentWindowIsScrollPushableX()
 {
     return ImGui::NavUpdateCurrentWindowIsScrollPushableX();
@@ -4597,10 +4564,6 @@ CIMGUI_API bool igIsMouseKey(ImGuiKey key)
 CIMGUI_API bool igIsAliasKey(ImGuiKey key)
 {
     return ImGui::IsAliasKey(key);
-}
-CIMGUI_API bool igIsModKey(ImGuiKey key)
-{
-    return ImGui::IsModKey(key);
 }
 CIMGUI_API ImGuiKeyChord igFixupKeyChord(ImGuiKeyChord key_chord)
 {
@@ -5162,10 +5125,6 @@ CIMGUI_API ImGuiID igTableGetColumnResizeID(ImGuiTable* table,int column_n,int i
 {
     return ImGui::TableGetColumnResizeID(table,column_n,instance_no);
 }
-CIMGUI_API float igTableGetMaxColumnWidth(const ImGuiTable* table,int column_n)
-{
-    return ImGui::TableGetMaxColumnWidth(table,column_n);
-}
 CIMGUI_API void igTableSetColumnWidthAutoSingle(ImGuiTable* table,int column_n)
 {
     return ImGui::TableSetColumnWidthAutoSingle(table,column_n);
@@ -5329,10 +5288,6 @@ CIMGUI_API void igRenderFrameBorder(ImVec2 p_min,ImVec2 p_max,float rounding)
 CIMGUI_API void igRenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list,ImVec2 p_min,ImVec2 p_max,ImU32 fill_col,float grid_step,ImVec2 grid_off,float rounding,ImDrawFlags flags)
 {
     return ImGui::RenderColorRectWithAlphaCheckerboard(draw_list,p_min,p_max,fill_col,grid_step,grid_off,rounding,flags);
-}
-CIMGUI_API void igRenderNavHighlight(const ImRect bb,ImGuiID id,ImGuiNavHighlightFlags flags)
-{
-    return ImGui::RenderNavHighlight(bb,id,flags);
 }
 CIMGUI_API const char* igFindRenderedTextEnd(const char* text,const char* text_end)
 {
@@ -5569,14 +5524,6 @@ CIMGUI_API void igGcAwakeTransientWindowBuffers(ImGuiWindow* window)
 CIMGUI_API void igDebugAllocHook(ImGuiDebugAllocInfo* info,int frame_count,void* ptr,size_t size)
 {
     return ImGui::DebugAllocHook(info,frame_count,ptr,size);
-}
-CIMGUI_API void igErrorCheckEndFrameRecover(ImGuiErrorLogCallback log_callback,void* user_data)
-{
-    return ImGui::ErrorCheckEndFrameRecover(log_callback,user_data);
-}
-CIMGUI_API void igErrorCheckEndWindowRecover(ImGuiErrorLogCallback log_callback,void* user_data)
-{
-    return ImGui::ErrorCheckEndWindowRecover(log_callback,user_data);
 }
 CIMGUI_API void igErrorCheckUsingSetCursorPosToExtendParentBoundaries()
 {

@@ -1360,7 +1360,7 @@ namespace hex::plugin::builtin {
                     for (const auto &frame : **m_callStack | std::views::reverse) {
                         auto location = frame->getLocation();
                         std::string message;
-                        if (location.source->source == pl::api::Source::DefaultSource) {
+                        if (location.source->mainSource) {
                             if (m_lastEvaluationError->has_value())
                                 message = processMessage((*m_lastEvaluationError)->message);
                             auto key = TextEditor::Coordinates(location.line, location.column);
@@ -1377,7 +1377,7 @@ namespace hex::plugin::builtin {
                 if (!m_lastCompileError->empty()) {
                     for (const auto &error : *m_lastCompileError) {
                        auto source = error.getLocation().source;
-                        if (source != nullptr && source->source == pl::api::Source::DefaultSource) {
+                        if (source != nullptr && source->mainSource) {
                             auto key = TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
                             if (!errorMarkers.contains(key) ||errorMarkers[key].first < error.getLocation().length)
                                     errorMarkers[key] = std::make_pair(error.getLocation().length,processMessage(error.getMessage()));

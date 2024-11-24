@@ -165,7 +165,7 @@ namespace ImGuiExt {
 
         STBI_FREE(imageData);
 
-        result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+        result.m_textureId = texture;
 
         return result;
     }
@@ -189,14 +189,14 @@ namespace ImGuiExt {
 
         STBI_FREE(imageData);
 
-        result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+        result.m_textureId = texture;
 
         return result;
     }
 
     Texture Texture::fromGLTexture(unsigned int glTexture, int width, int height) {
         Texture texture;
-        texture.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(glTexture));
+        texture.m_textureId = glTexture;
         texture.m_width = width;
         texture.m_height = height;
 
@@ -216,7 +216,7 @@ namespace ImGuiExt {
         Texture result;
         result.m_width = width;
         result.m_height = height;
-        result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+        result.m_textureId = texture;
 
         return result;
     }
@@ -230,7 +230,7 @@ namespace ImGuiExt {
         Texture result;
         result.m_width = bitmap.width();
         result.m_height = bitmap.height();
-        result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+        result.m_textureId = texture;
 
         return result;
     }
@@ -249,37 +249,37 @@ namespace ImGuiExt {
         Texture result;
         result.m_width = bitmap.width();
         result.m_height = bitmap.height();
-        result.m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+        result.m_textureId = texture;
 
         return result;
     }
 
     Texture::Texture(Texture&& other) noexcept {
-        if (m_textureId != nullptr)
+        if (m_textureId != 0)
             glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
 
         m_textureId = other.m_textureId;
         m_width = other.m_width;
         m_height = other.m_height;
 
-        other.m_textureId = nullptr;
+        other.m_textureId = 0;
     }
 
     Texture& Texture::operator=(Texture&& other) noexcept {
-        if (m_textureId != nullptr)
+        if (m_textureId != 0)
             glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
 
         m_textureId = other.m_textureId;
         m_width = other.m_width;
         m_height = other.m_height;
 
-        other.m_textureId = nullptr;
+        other.m_textureId = 0;
         
         return *this;
     }
 
     Texture::~Texture() {
-        if (m_textureId == nullptr)
+        if (m_textureId == 0)
             return;
 
         glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
@@ -317,8 +317,6 @@ namespace ImGuiExt {
         if (!ItemAdd(bb, id))
             return false;
 
-        if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
-            flags |= ImGuiButtonFlags_Repeat;
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
@@ -350,8 +348,6 @@ namespace ImGuiExt {
         const ImRect bb(pos, pos + size);
         ItemAdd(bb, id);
 
-        if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
-            flags |= ImGuiButtonFlags_Repeat;
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
@@ -387,8 +383,6 @@ namespace ImGuiExt {
         if (!ItemAdd(bb, id))
             return false;
 
-        if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
-            flags |= ImGuiButtonFlags_Repeat;
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
@@ -425,8 +419,6 @@ namespace ImGuiExt {
         if (!ItemAdd(bb, id))
             return false;
 
-        if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
-            flags |= ImGuiButtonFlags_Repeat;
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
@@ -436,7 +428,7 @@ namespace ImGuiExt {
         // Render
         const ImU32 col = GetCustomColorU32((held && hovered) ? ImGuiCustomCol_DescButtonActive : hovered ? ImGuiCustomCol_DescButtonHovered
                                                                                                           : ImGuiCustomCol_DescButton);
-        RenderNavHighlight(bb, id);
+        RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
         RenderTextClipped(bb.Min + style.FramePadding * 2, bb.Max - style.FramePadding, label, nullptr, nullptr);
@@ -478,8 +470,6 @@ namespace ImGuiExt {
         if (!ItemAdd(bb, id))
             return false;
 
-        if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
-            flags |= ImGuiButtonFlags_Repeat;
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
@@ -489,7 +479,7 @@ namespace ImGuiExt {
         // Render
         const ImU32 col = GetCustomColorU32((held && hovered) ? ImGuiCustomCol_DescButtonActive : hovered ? ImGuiCustomCol_DescButtonHovered
                                                                                                           : ImGuiCustomCol_DescButton);
-        RenderNavHighlight(bb, id);
+        RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
         RenderTextClipped(bb.Min + style.FramePadding * 2, bb.Max - style.FramePadding, label, nullptr, nullptr);
@@ -770,7 +760,7 @@ namespace ImGuiExt {
         // Render
         const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered
                                                                                           : ImGuiCol_Button);
-        RenderNavHighlight(bb, id);
+        RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
@@ -813,7 +803,7 @@ namespace ImGuiExt {
         // Render
         const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered
                                                                                                  : ImGuiCol_MenuBarBg);
-        RenderNavHighlight(bb, id);
+        RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + padding, bb.Max - padding, symbol, nullptr, &size, style.ButtonTextAlign, &bb);
 
@@ -856,7 +846,7 @@ namespace ImGuiExt {
         // Render
         const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered
                                                                                           : ImGuiCol_Button);
-        RenderNavHighlight(bb, id);
+        RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
         RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3, 1), bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
@@ -885,7 +875,7 @@ namespace ImGuiExt {
         char buf[64];
         DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, format);
 
-        RenderNavHighlight(frame_bb, id);
+        RenderNavCursor(frame_bb, id);
         RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
 
         PushStyleVar(ImGuiStyleVar_Alpha, 0.6F);
@@ -996,7 +986,7 @@ namespace ImGuiExt {
         if (value_changed)
             MarkItemEdited(GImGui->LastItemData.ID);
 
-        RenderNavHighlight(frame_bb, id);
+        RenderNavCursor(frame_bb, id);
         RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
 
         RenderFrame(frame_bb.Min, frame_bb.Min + icon_frame_size, GetColorU32(ImGuiCol_TableBorderStrong), true, style.FrameRounding);
@@ -1022,7 +1012,6 @@ namespace ImGuiExt {
         if ((flags & (ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsScientific)) == 0)
             flags |= ImGuiInputTextFlags_CharsDecimal;
         flags |= ImGuiInputTextFlags_AutoSelectAll;
-        flags |= ImGuiInputTextFlags_NoMarkEdited;  // We call MarkItemEdited() ourselves by comparing the actual data rather than the string.
 
         if (ImGui::InputText(label, buf, IM_ARRAYSIZE(buf), flags, callback, user_data))
             value_changed = DataTypeApplyFromText(buf, data_type, p_data, format);
@@ -1072,7 +1061,7 @@ namespace ImGuiExt {
         }
 
         const ImRect check_bb(pos, pos + size);
-        RenderNavHighlight(total_bb, id);
+        RenderNavCursor(total_bb, id);
         RenderFrame(check_bb.Min, check_bb.Max, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
 
         RenderText(check_bb.Min + style.FramePadding, *v ? "1" : "0");
@@ -1207,7 +1196,7 @@ namespace ImGuiExt {
 
         bool result = false;
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
-        if (ImGui::BeginChild(hex::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+        if (ImGui::BeginChild(hex::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
             result = true;
 
             if (hasMenuBar && ImGui::BeginMenuBar()) {
