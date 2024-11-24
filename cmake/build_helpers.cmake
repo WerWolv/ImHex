@@ -307,9 +307,6 @@ endfunction()
 macro(configureCMake)
     message(STATUS "Configuring ImHex v${IMHEX_VERSION}")
 
-    # Enable C and C++ languages
-    enable_language(C CXX)
-
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code for all targets" FORCE)
 
     # Configure use of recommended build tools
@@ -383,6 +380,9 @@ macro(configureCMake)
 endmacro()
 
 function(configureProject)
+    # Enable C and C++ languages
+    enable_language(C CXX)
+
     if (XCODE)
         # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
         set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>" PARENT_SCOPE)
