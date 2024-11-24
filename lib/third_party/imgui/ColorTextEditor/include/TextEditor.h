@@ -189,6 +189,11 @@ public:
 		static const LanguageDefinition& Lua();
 	};
 
+    struct Selection {
+        Coordinates mStart;
+        Coordinates mEnd;
+    };
+
 	TextEditor();
 	~TextEditor();
 
@@ -266,6 +271,7 @@ public:
 	void SetSelectionStart(const Coordinates& aPosition);
 	void SetSelectionEnd(const Coordinates& aPosition);
 	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd, SelectionMode aMode = SelectionMode::Normal);
+    Selection GetSelection() const;
 	void SelectWordUnderCursor();
 	void SelectAll();
 	bool HasSelection() const;

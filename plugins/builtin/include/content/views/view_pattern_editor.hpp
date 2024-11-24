@@ -73,6 +73,8 @@ namespace hex::plugin::builtin {
         }
 
     public:
+        std::string preprocessText(const std::string &code);
+
         struct VirtualFile {
             std::fs::path path;
             std::vector<u8> data;
@@ -249,7 +251,11 @@ namespace hex::plugin::builtin {
         std::mutex m_logMutex;
 
         PerProvider<TextEditor::Coordinates>  m_cursorPosition;
-        PerProvider<std::unordered_set<u32>> m_breakpoints;
+
+        PerProvider<TextEditor::Coordinates> m_consoleCursorPosition;
+        PerProvider<TextEditor::Selection> m_selection;
+        PerProvider<TextEditor::Selection> m_consoleSelection;
+        PerProvider<TextEditor::Breakpoints> m_breakpoints;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
         PerProvider<const std::vector<std::unique_ptr<pl::core::ast::ASTNode>>*> m_callStack;

@@ -176,6 +176,8 @@ namespace hex::plugin::builtin {
             // Skip hidden patterns
             if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)
                 continue;
+            if (pattern->getVisibility() == pl::ptrn::Visibility::TreeHidden)
+                continue;
 
             // Set up the editing function if a write formatter is available
             auto formatWriteFunction = pattern->getWriteFormatterFunction();
