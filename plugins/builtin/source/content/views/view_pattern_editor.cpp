@@ -1163,7 +1163,8 @@ namespace hex::plugin::builtin {
 
                             std::optional<ImColor> color;
                             for (const auto &pattern : runtime.getPatternsAtAddress(address, id)) {
-                                if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
+                                auto visibility = pattern->getVisibility();
+                                if (visibility == pl::ptrn::Visibility::Hidden || visibility == pl::ptrn::Visibility::HighlightHidden)
                                     continue;
 
                                 if (color.has_value())
@@ -1817,6 +1818,9 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::registerEvents() {
         RequestPatternEditorSelectionChange::subscribe(this, [this](u32 line, u32 column) {
+            if (line == 0)
+                return;
+
             const TextEditor::Coordinates coords = { int(line) - 1, int(column) };
             m_textEditor.SetCursorPosition(coords);
         });
@@ -2050,11 +2054,12 @@ namespace hex::plugin::builtin {
                 const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
                 auto patterns = runtime.getPatternsAtAddress(address);
-                if (!patterns.empty() && !std::ranges::all_of(patterns, [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden; })) {
+                if (!patterns.empty() && !std::ranges::all_of(patterns, [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden || pattern->getVisibility() == pl::ptrn::Visibility::HighlightHidden; })) {
                     ImGui::BeginTooltip();
 
                     for (const auto &pattern : patterns) {
-                        if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
+                        auto visibility = pattern->getVisibility();
+                        if (visibility == pl::ptrn::Visibility::Hidden || visibility == pl::ptrn::Visibility::HighlightHidden)
                             continue;
 
                         const auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
