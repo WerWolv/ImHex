@@ -135,7 +135,7 @@ namespace hex {
             }
 
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
-            if (ImGui::BeginChild("##digram", size, ImGuiChildFlags_Border)) {
+            if (ImGui::BeginChild("##digram", size, ImGuiChildFlags_Borders)) {
                 auto drawList = ImGui::GetWindowDrawList();
 
                 if (m_textureValid) {
@@ -258,7 +258,7 @@ namespace hex {
             }
 
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
-            if (ImGui::BeginChild("##layered_distribution", size, ImGuiChildFlags_Border)) {
+            if (ImGui::BeginChild("##layered_distribution", size, ImGuiChildFlags_Borders)) {
                 auto drawList = ImGui::GetWindowDrawList();
 
                 if (m_textureValid) {

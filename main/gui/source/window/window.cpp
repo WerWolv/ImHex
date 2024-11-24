@@ -200,7 +200,6 @@ namespace hex {
             }
 
             // Try to recover from the exception by bringing ImGui back into a working state
-            ImGui::ErrorCheckEndFrameRecover(errorRecoverLogCallback, nullptr);
             ImGui::EndFrame();
             ImGui::UpdatePlatformWindows();
 
@@ -662,8 +661,6 @@ namespace hex {
         TaskManager::collectGarbage();
 
         this->endNativeWindowFrame();
-
-        ImGui::ErrorCheckEndFrameRecover(errorRecoverLogCallback, nullptr);
 
         // Finalize ImGui frame
         ImGui::Render();

@@ -612,6 +612,13 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     bd->Time = 0.0;
     bd->WantUpdateMonitors = true;
 
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    platform_io.Platform_SetClipboardTextFn = [](ImGuiContext*, const char* text) { glfwSetClipboardString(NULL, text); };
+    platform_io.Platform_GetClipboardTextFn = [](ImGuiContext*) { return glfwGetClipboardString(NULL); };
+#ifdef __EMSCRIPTEN__
+    platform_io.Platform_OpenInShellFn = [](ImGuiContext*, const char* url) { ImGui_ImplGlfw_EmscriptenOpenURL(url); return true; };
+#endif
+
 // IMHEX PATCH BEGIN
 #ifdef __EMSCRIPTEN__
     // Callback to handle clipboard paste from browser
@@ -620,10 +627,6 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     });
 #endif
 // IMHEX PATCH END
-
-    io.SetClipboardTextFn = ImGui_ImplGlfw_SetClipboardText;
-    io.GetClipboardTextFn = ImGui_ImplGlfw_GetClipboardText;
-    io.ClipboardUserData = bd->Window;
 
     // Create mouse cursors
     // (By design, on X11 cursors are user configurable and some cursors may be missing. When a cursor doesn't exist,
@@ -1137,10 +1140,10 @@ static void ImGui_ImplGlfw_DestroyWindow(ImGuiViewport* viewport)
 
             // Release any keys that were pressed in the window being destroyed and are still held down,
             // because we will not receive any release events after window is destroyed.
-            for (int i = 0; i < IM_ARRAYSIZE(bd->KeyOwnerWindows); i++)
+            for (int i = 0; i < IM_ARRAYSIZE(bd->KeyOwnerWindows); i++) {
                 if (bd->KeyOwnerWindows[i] == vd->Window)
                     ImGui_ImplGlfw_KeyCallback(vd->Window, i, 0, GLFW_RELEASE, 0); // Later params are only used for main viewport, on which this function is never called.
-
+            }
             glfwDestroyWindow(vd->Window);
         }
         vd->Window = nullptr;

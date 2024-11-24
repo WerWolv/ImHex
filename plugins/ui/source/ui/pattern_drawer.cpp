@@ -1392,15 +1392,17 @@ namespace hex::ui {
                 m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
                     size_t updatedFavorites = 0;
 
+                    const std::string favoriteAttribute = "hex::favorite";
+                    const std::string groupAttribute    = "hex::group";
                     for (auto &pattern : patterns) {
                         std::vector<std::string> patternPath;
 
                         size_t startFavoriteCount = m_favorites.size();
                         traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
-                            if (currPattern.hasAttribute("hex::favorite"))
+                            if (currPattern.hasAttribute(favoriteAttribute))
                                 m_favorites.insert({ patternPath, currPattern.clone() });
 
-                            if (const auto &args = currPattern.getAttributeArguments("hex::group"); !args.empty()) {
+                            if (const auto &args = currPattern.getAttributeArguments(groupAttribute); !args.empty()) {
                                 auto groupName = args.front().toString();
 
                                 if (!m_groups.contains(groupName))
