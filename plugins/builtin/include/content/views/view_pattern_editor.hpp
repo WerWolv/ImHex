@@ -251,6 +251,7 @@ namespace hex::plugin::builtin {
         std::mutex m_logMutex;
 
         PerProvider<TextEditor::Coordinates>  m_cursorPosition;
+
         PerProvider<TextEditor::Coordinates> m_consoleCursorPosition;
         PerProvider<TextEditor::Selection> m_selection;
         PerProvider<TextEditor::Selection> m_consoleSelection;

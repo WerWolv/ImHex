@@ -592,12 +592,17 @@ void TextEditor::RemoveLine(int aStart, int aEnd) {
     mErrorMarkers = std::move(etmp);
 
     Breakpoints btmp;
-    for (auto i : mBreakpoints) {
-        if (i >= aStart && i <= aEnd)
-            continue;
-        btmp.insert(i >= aStart ? i - 1 : i);
+    for (auto breakpoint : mBreakpoints) {
+        if (breakpoint <= aStart || breakpoint >= aEnd) {
+            if (breakpoint >= aEnd) {
+                btmp.insert(breakpoint - 1);
+                mBreakPointsChanged = true;
+            } else
+                btmp.insert(breakpoint);
+        }
     }
-    mBreakpoints = std::move(btmp);
+    if (mBreakPointsChanged)
+        mBreakpoints = std::move(btmp);
     if (aStart == 0 && aEnd == (int32_t)mLines.size() - 1)
         mLines.erase(mLines.begin() + aStart, mLines.end());
     else
@@ -620,12 +625,15 @@ void TextEditor::RemoveLine(int aIndex) {
     mErrorMarkers = std::move(etmp);
 
     Breakpoints btmp;
-    for (auto i : mBreakpoints) {
-        if (i == aIndex)
-            continue;
-        btmp.insert(i >= aIndex ? i - 1 : i);
+    for (auto breakpoint : mBreakpoints) {
+        if (breakpoint > aIndex) {
+            btmp.insert(breakpoint - 1);
+            mBreakPointsChanged = true;
+        }else
+            btmp.insert(breakpoint);
     }
-    mBreakpoints = std::move(btmp);
+    if (mBreakPointsChanged)
+        mBreakpoints = std::move(btmp);
 
     mLines.erase(mLines.begin() + aIndex);
     assert(!mLines.empty());
@@ -642,9 +650,15 @@ TextEditor::Line &TextEditor::InsertLine(int aIndex) {
     mErrorMarkers = std::move(etmp);
 
     Breakpoints btmp;
-    for (auto i : mBreakpoints)
-        btmp.insert(i >= aIndex ? i + 1 : i);
-    mBreakpoints = std::move(btmp);
+    for (auto breakpoint : mBreakpoints) {
+        if (breakpoint >= aIndex) {
+            btmp.insert(breakpoint + 1);
+            mBreakPointsChanged = true;
+        } else
+            btmp.insert(breakpoint);
+    }
+    if (mBreakPointsChanged)
+        mBreakpoints = std::move(btmp);
 
     return result;
 }

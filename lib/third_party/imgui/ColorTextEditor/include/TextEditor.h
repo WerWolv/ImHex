@@ -133,7 +133,7 @@ public:
 	using Keywords = std::unordered_set<std::string> ;
     using ErrorMarkers = std::map<Coordinates, std::pair<uint32_t ,std::string>>;
     using ErrorHoverBoxes = std::map<Coordinates, std::pair<ImVec2,ImVec2>>;
-    using Breakpoints = std::unordered_set<int32_t>;
+    using Breakpoints = std::unordered_set<uint32_t>;
     using Palette = std::array<ImU32, (uint32_t)PaletteIndex::Max>;
     using Char = uint8_t ;
 
@@ -229,6 +229,8 @@ public:
 	bool IsReadOnly() const { return mReadOnly; }
 	bool IsTextChanged() const { return mTextChanged; }
 	bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
+    bool IsBreakpointsChanged() const { return mBreakPointsChanged; }
+    void ClearBreakpointsChanged() { mBreakPointsChanged = false; }
 
     void SetShowCursor(bool aValue) { mShowCursor = aValue; }
     void SetShowLineNumbers(bool aValue) { mShowLineNumbers = aValue; }
@@ -468,6 +470,7 @@ private:
 	float mTextStart;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
 	int  mLeftMargin;
 	bool mCursorPositionChanged;
+    bool mBreakPointsChanged;
 	int mColorRangeMin, mColorRangeMax;
 	SelectionMode mSelectionMode;
 	bool mHandleKeyboardInputs;
