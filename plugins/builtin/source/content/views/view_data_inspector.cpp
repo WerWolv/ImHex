@@ -8,6 +8,8 @@
 
 #include <fonts/codicons_font.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/ui/visualizer_drawer.hpp>
+
 
 #include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>
@@ -200,9 +202,9 @@ namespace hex::plugin::builtin {
             try {
                 // Set up the display function using the pattern's formatter
                 auto displayFunction = [pattern,value = pattern->getFormattedValue()] {
-                    auto drawer = std::make_unique<hex::ui::PatternDrawer>();
+                    auto drawer = ui::VisualizerDrawer();
                     if (const auto &inlineVisualizeArgs = pattern->getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
-                        drawer->drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
+                        drawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
                     } else {
                         ImGui::TextUnformatted(value.c_str());
                     }

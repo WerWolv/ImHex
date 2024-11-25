@@ -339,32 +339,6 @@ namespace hex::ui {
         ImGui::TextUnformatted(pattern.getComment().c_str());
     }
 
-    void PatternDrawer::drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, bool reset) {
-        auto visualizerName = arguments.front().toString(true);
-
-        if (auto entry = visualizers.find(visualizerName); entry != visualizers.end()) {
-            const auto &[name, visualizer] = *entry;
-
-            auto paramCount = arguments.size() - 1;
-            auto [minParams, maxParams] = visualizer.parameterCount;
-
-            if (paramCount >= minParams && paramCount <= maxParams) {
-                try {
-                    visualizer.callback(pattern, reset, { arguments.begin() + 1, arguments.end() });
-                } catch (std::exception &e) {
-                    m_lastVisualizerError = e.what();
-                }
-            } else {
-                ImGui::TextUnformatted("hex.ui.pattern_drawer.visualizer.invalid_parameter_count"_lang);
-            }
-        } else {
-            ImGui::TextUnformatted("hex.ui.pattern_drawer.visualizer.unknown"_lang);
-        }
-
-        if (!m_lastVisualizerError.empty())
-            ImGui::TextUnformatted(m_lastVisualizerError.c_str());
-    }
-
     void PatternDrawer::drawValueColumn(pl::ptrn::Pattern& pattern) {
         ImGui::TableNextColumn();
 
@@ -384,11 +358,12 @@ namespace hex::ui {
             if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
                 auto previousPattern = m_currVisualizedPattern;
                 m_currVisualizedPattern = &pattern;
-
+                m_lastVisualizerError = m_visualizerDrawer.getLastVisualizerError();
                 if (!m_lastVisualizerError.empty() || m_currVisualizedPattern != previousPattern)
                     shouldReset = true;
 
                 m_lastVisualizerError.clear();
+                m_visualizerDrawer.setLastVisualizerError(m_lastVisualizerError);
 
                 ImGui::OpenPopup("Visualizer");
             }
@@ -398,14 +373,14 @@ namespace hex::ui {
 
             if (ImGui::BeginPopup("Visualizer")) {
                 if (m_currVisualizedPattern == &pattern) {
-                    drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, pattern, !m_visualizedPatterns.contains(&pattern) || shouldReset);
+                    m_visualizerDrawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, pattern, !m_visualizedPatterns.contains(&pattern) || shouldReset);
                     m_visualizedPatterns.insert(&pattern);
                 }
 
                 ImGui::EndPopup();
             }
         } else if (const auto &inlineVisualizeArgs = pattern.getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
-            drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, pattern, true);
+            m_visualizerDrawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, pattern, true);
         } else {
             ImGuiExt::TextFormatted("{}", value);
         }
@@ -1465,6 +1440,7 @@ namespace hex::ui {
         m_sortedPatterns.clear();
         m_filteredPatterns.clear();
         m_lastVisualizerError.clear();
+        m_visualizerDrawer.setLastVisualizerError(m_lastVisualizerError);
         m_currPatternPath.clear();
 
         m_favoritesUpdateTask.interrupt();

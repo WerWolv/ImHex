@@ -2,6 +2,7 @@
 
 #include <hex/api/task_manager.hpp>
 #include <hex/api/content_registry.hpp>
+#include <hex/ui/visualizer_drawer.hpp>
 
 #include <pl/patterns/pattern.hpp>
 #include <pl/pattern_visitor.hpp>
@@ -38,7 +39,6 @@ namespace hex::ui {
         void reset();
 
         void jumpToPattern(const pl::ptrn::Pattern *pattern) { m_jumpToPattern = pattern; }
-        void drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, bool reset);
 
     private:
         void draw(pl::ptrn::Pattern& pattern);
@@ -103,6 +103,7 @@ namespace hex::ui {
 
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
         u64 m_editingPatternOffset = 0;
+        hex::ui::VisualizerDrawer m_visualizerDrawer;
 
         TreeStyle m_treeStyle = TreeStyle::Default;
         bool m_rowColoring = false;
