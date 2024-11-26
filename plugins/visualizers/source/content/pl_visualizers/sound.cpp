@@ -16,8 +16,11 @@ namespace hex::plugin::visualizers {
         auto wavePattern = arguments[0].toPattern();
         auto channels = arguments[1].toUnsigned();
         auto sampleRate = arguments[2].toUnsigned();
+        u32 downSampling = wavePattern->getSize() /  300_scaled / 8 / channels;
 
-        static std::vector<i16> waveData, sampledData;
+        static std::vector<i16> waveData;
+        static std::vector<std::vector<i16>> sampledData;
+        sampledData.resize(channels);
         static ma_device audioDevice;
         static ma_device_config deviceConfig;
         static bool shouldStop = false;
@@ -28,14 +31,16 @@ namespace hex::plugin::visualizers {
             throw std::logic_error(hex::format("Invalid sample rate: {}", sampleRate));
         else if (channels == 0)
             throw std::logic_error(hex::format("Invalid channel count: {}", channels));
-
+        u64 sampledIndex;
         if (shouldReset) {
             waveData.clear();
 
             resetTask = TaskManager::createTask("hex.visualizers.pl_visualizer.task.visualizing"_lang, TaskManager::NoProgress, [=](Task &) {
                 ma_device_stop(&audioDevice);
                 waveData = patternToArray<i16>(wavePattern.get());
-                sampledData = sampleData(waveData, 300_scaled * 4);
+                if (waveData.empty())
+                    return;
+                sampledData = sampleChannels(waveData, 300_scaled * 4, channels);
                 index = 0;
 
                 deviceConfig = ma_device_config_init(ma_device_type_playback);
@@ -51,41 +56,46 @@ namespace hex::plugin::visualizers {
                     }
 
                     ma_copy_pcm_frames(pOutput, waveData.data() + index, frameCount, device->playback.format, device->playback.channels);
-                    index += frameCount;
+                    index += frameCount * device->playback.channels;
                 };
 
                 ma_device_init(nullptr, &deviceConfig, &audioDevice);
             });
         }
-
+        sampledIndex = index / downSampling;
         ImGui::BeginDisabled(resetTask.isRunning());
 
         ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(0, 0));
-        if (ImPlot::BeginPlot("##amplitude_plot", scaled(ImVec2(300, 80)), ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs)) {
-            ImPlot::SetupAxes("##time", "##amplitude", ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus, ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus);
-            ImPlot::SetupAxesLimits(0, waveData.size(), std::numeric_limits<i16>::min(), std::numeric_limits<i16>::max(), ImGuiCond_Always);
+        if (ImPlot::BeginSubplots("##AxisLinking", channels, 1, scaled(ImVec2(300, 80 * channels)), ImPlotSubplotFlags_LinkAllX | ImPlotSubplotFlags_LinkCols | ImPlotSubplotFlags_NoResize)) {
+            for (u32 i = 0; i < channels; i++) {
+                if (ImPlot::BeginPlot("##amplitude_plot", scaled(ImVec2(300, 80)), ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs)) {
+                    ImPlot::SetupAxes("##time", "##amplitude", ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_AutoFit);
 
-            double dragPos = index;
-            if (ImPlot::DragLineX(1, &dragPos, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                if (dragPos < 0) dragPos = 0;
-                if (dragPos >= waveData.size()) dragPos = waveData.size() - 1;
+                    double dragPos = sampledIndex;
+                    if (ImPlot::DragLineX(1, &dragPos, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        if (dragPos < 0) dragPos = 0;
+                        if (dragPos >= sampledData[i].size()) dragPos = sampledData[i].size() - 1;
 
-                index = dragPos;
+                        sampledIndex = dragPos;
+                    }
+                    ImPlot::PlotLine("##audio", sampledData[i].data(), sampledData[i].size());
+
+                    ImPlot::EndPlot();
+                }
             }
+            ImPlot::PopStyleVar();
 
-            ImPlot::PlotLine("##audio", sampledData.data(), sampledData.size());
-
-            ImPlot::EndPlot();
-        }
-        ImPlot::PopStyleVar();
-
-        {
-            const u64 min = 0, max = waveData.size();
-            ImGui::PushItemWidth(300_scaled);
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-            ImGui::SliderScalar("##index", ImGuiDataType_U64, &index, &min, &max, "");
-            ImGui::PopStyleVar();
-            ImGui::PopItemWidth();
+            index = sampledIndex * downSampling;
+            {
+                const u64 min = 0, max = sampledData[0].size();
+                ImGui::PushItemWidth(300_scaled);
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                ImGui::SliderScalar("##index", ImGuiDataType_U64, &sampledIndex, &min, &max, "");
+                ImGui::PopStyleVar();
+                ImGui::PopItemWidth();
+            }
+            index = sampledIndex * downSampling;
+            ImPlot::EndSubplots();
         }
 
         if (shouldStop) {
@@ -106,19 +116,21 @@ namespace hex::plugin::visualizers {
 
         if (ImGuiExt::IconButton(ICON_VS_DEBUG_STOP, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
             index = 0;
+            sampledIndex =0;
             ma_device_stop(&audioDevice);
         }
 
         ImGui::EndDisabled();
 
         ImGui::SameLine();
+        index = sampledIndex * downSampling;
 
         if (resetTask.isRunning())
             ImGuiExt::TextSpinner("");
         else
             ImGuiExt::TextFormatted("{:02d}:{:02d} / {:02d}:{:02d}",
-                                 (index / sampleRate) / 60, (index / sampleRate) % 60,
-                                 (waveData.size() / sampleRate) / 60, (waveData.size() / sampleRate) % 60);
+                                 (index / sampleRate / channels) / 60, (index / sampleRate / channels) % 60,
+                                 (waveData.size() / sampleRate / channels) / 60, (waveData.size() / sampleRate / channels) % 60);
     }
 
 }
