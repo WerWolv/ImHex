@@ -358,12 +358,11 @@ namespace hex::ui {
             if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
                 auto previousPattern = m_currVisualizedPattern;
                 m_currVisualizedPattern = &pattern;
-                m_lastVisualizerError = m_visualizerDrawer.getLastVisualizerError();
-                if (!m_lastVisualizerError.empty() || m_currVisualizedPattern != previousPattern)
+                auto lastVisualizerError = m_visualizerDrawer.getLastVisualizerError();
+                if (!lastVisualizerError.empty() || m_currVisualizedPattern != previousPattern)
                     shouldReset = true;
 
-                m_lastVisualizerError.clear();
-                m_visualizerDrawer.setLastVisualizerError(m_lastVisualizerError);
+                m_visualizerDrawer.clearLastVisualizerError();
 
                 ImGui::OpenPopup("Visualizer");
             }
@@ -1439,8 +1438,7 @@ namespace hex::ui {
         m_currVisualizedPattern = nullptr;
         m_sortedPatterns.clear();
         m_filteredPatterns.clear();
-        m_lastVisualizerError.clear();
-        m_visualizerDrawer.setLastVisualizerError(m_lastVisualizerError);
+        m_visualizerDrawer.clearLastVisualizerError();
         m_currPatternPath.clear();
 
         m_favoritesUpdateTask.interrupt();

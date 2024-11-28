@@ -17,5 +17,8 @@ namespace  hex::ui {
         void setLastVisualizerError(const std::string &error) {
             m_lastVisualizerError = error;
         }
+        void clearLastVisualizerError() {
+            m_lastVisualizerError.clear();
+        }
     };
 }

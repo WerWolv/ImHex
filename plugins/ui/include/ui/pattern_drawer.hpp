@@ -112,7 +112,6 @@ namespace hex::ui {
         const pl::ptrn::Pattern *m_jumpToPattern = nullptr;
 
         std::set<pl::ptrn::Pattern*> m_visualizedPatterns;
-        std::string m_lastVisualizerError;
 
         std::string m_filterText;
         Filter m_filter;
