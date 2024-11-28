@@ -354,7 +354,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 50);
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled({ 12, 3 }));
 
-                    if (ImGui::BeginChild(library.link, ImVec2(), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
+                    if (ImGui::BeginChild(library.link, ImVec2(), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
                         if (ImGuiExt::Hyperlink(hex::format("{}/{}", library.author, library.name).c_str())) {
                             hex::openWebpage(library.link);
                         }

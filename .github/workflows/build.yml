@@ -185,7 +185,7 @@ jobs:
           - suffix: ""
             custom_glfw: false
 
-    name: 🍎 macOS 12.0${{ matrix.suffix }}
+    name: 🍎 macOS 13${{ matrix.suffix }}
 
     steps:
     - name: 🧰 Checkout
@@ -315,7 +315,7 @@ jobs:
 
   macos-arm64-build:
     runs-on: ubuntu-22.04
-    name: 🍎 macOS 12.1 arm64
+    name: 🍎 macOS 13 arm64
     outputs:
       IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
     steps:
@@ -359,7 +359,7 @@ jobs:
 
   macos-arm64-package:
     runs-on: macos-13
-    name: 🍎 macOS 12.1 arm64 Packaging
+    name: 🍎 macOS 13 arm64 Packaging
     needs: macos-arm64-build
     env:
       IMHEX_VERSION: ${{ needs.macos-arm64-build.outputs.IMHEX_VERSION }}

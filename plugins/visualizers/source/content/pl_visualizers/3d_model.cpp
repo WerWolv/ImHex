@@ -462,7 +462,7 @@ namespace hex::plugin::visualizers {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
             ImGui::SetNextWindowSizeConstraints(scaled({ 350, 350 }), ImVec2(FLT_MAX, FLT_MAX));
-            if (ImGui::BeginChild("##image", textureSize, ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY | ImGuiChildFlags_Border, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+            if (ImGui::BeginChild("##image", textureSize, ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY | ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                 renderingWindowSize = ImGui::GetContentRegionAvail();
 
                 ImGui::Image(texture, textureSize, ImVec2(0, 1), ImVec2(1, 0));

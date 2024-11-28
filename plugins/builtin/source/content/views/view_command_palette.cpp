@@ -3,6 +3,8 @@
 #include <hex/api/content_registry.hpp>
 #include <wolv/utils/guards.hpp>
 
+#include "imstb_textedit.h"
+
 namespace hex::plugin::builtin {
 
     ViewCommandPalette::ViewCommandPalette() : View::Special("hex.builtin.view.command_palette.name") {
@@ -65,9 +67,10 @@ namespace hex::plugin::builtin {
             if (m_moveCursorToEnd) {
                 auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
                 if (textState != nullptr) {
-                    textState->Stb.cursor =
-                    textState->Stb.select_start =
-                    textState->Stb.select_end = m_commandBuffer.size();
+                    auto stb = reinterpret_cast<STB_TexteditState*>(textState->Stb);
+                    stb->cursor =
+                    stb->select_start =
+                    stb->select_end = m_commandBuffer.size();
                 }
                 m_moveCursorToEnd = false;
             }

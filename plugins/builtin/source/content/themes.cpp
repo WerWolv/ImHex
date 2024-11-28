@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
                     { "table-row-background-alt",       ImGuiCol_TableRowBgAlt          },
                     { "text-selected-background",       ImGuiCol_TextSelectedBg         },
                     { "drag-drop-target",               ImGuiCol_DragDropTarget         },
-                    { "nav-highlight",                  ImGuiCol_NavHighlight           },
+                    { "nav-highlight",                  ImGuiCol_NavCursor              },
                     { "nav-windowing-highlight",        ImGuiCol_NavWindowingHighlight  },
                     { "nav-windowing-background",       ImGuiCol_NavWindowingDimBg      },
                     { "modal-window-dim-background",    ImGuiCol_ModalWindowDimBg       },
