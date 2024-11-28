@@ -64,21 +64,26 @@ namespace hex::plugin::visualizers {
         }
         sampledIndex = index / downSampling;
         ImGui::BeginDisabled(resetTask.isRunning());
-
+        u32 waveDataSize = waveData.size();
+        u32 sampledDataSize = sampledData[0].size();
+        auto subplotFlags = ImPlotSubplotFlags_LinkAllX | ImPlotSubplotFlags_LinkCols | ImPlotSubplotFlags_NoResize;
+        auto plotFlags = ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs;
+        auto axisFlags = ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_AutoFit;
         ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(0, 0));
-        if (ImPlot::BeginSubplots("##AxisLinking", channels, 1, scaled(ImVec2(300, 80 * channels)), ImPlotSubplotFlags_LinkAllX | ImPlotSubplotFlags_LinkCols | ImPlotSubplotFlags_NoResize)) {
-            for (u32 i = 0; i < channels; i++) {
-                if (ImPlot::BeginPlot("##amplitude_plot", scaled(ImVec2(300, 80)), ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs)) {
-                    ImPlot::SetupAxes("##time", "##amplitude", ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_AutoFit);
 
+        if (ImPlot::BeginSubplots("##AxisLinking", channels, 1, scaled(ImVec2(300, 80 * channels)), subplotFlags)) {
+            for (u32 i = 0; i < channels; i++) {
+                if (ImPlot::BeginPlot("##amplitude_plot", scaled(ImVec2(300, 80)), plotFlags)) {
+
+                    ImPlot::SetupAxes("##time", "##amplitude", axisFlags, axisFlags);
                     double dragPos = sampledIndex;
                     if (ImPlot::DragLineX(1, &dragPos, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         if (dragPos < 0) dragPos = 0;
-                        if (dragPos >= sampledData[i].size()) dragPos = sampledData[i].size() - 1;
+                        if (dragPos >= sampledDataSize) dragPos = sampledDataSize - 1;
 
                         sampledIndex = dragPos;
                     }
-                    ImPlot::PlotLine("##audio", sampledData[i].data(), sampledData[i].size());
+                    ImPlot::PlotLine("##audio", sampledData[i].data(), sampledDataSize);
 
                     ImPlot::EndPlot();
                 }
@@ -87,7 +92,7 @@ namespace hex::plugin::visualizers {
 
             index = sampledIndex * downSampling;
             {
-                const u64 min = 0, max = sampledData[0].size();
+                const u64 min = 0, max = sampledDataSize-1;
                 ImGui::PushItemWidth(300_scaled);
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::SliderScalar("##index", ImGuiDataType_U64, &sampledIndex, &min, &max, "");
@@ -95,42 +100,43 @@ namespace hex::plugin::visualizers {
                 ImGui::PopItemWidth();
             }
             index = sampledIndex * downSampling;
+
+
+            if (shouldStop) {
+                shouldStop = false;
+                ma_device_stop(&audioDevice);
+            }
+
+            bool playing = ma_device_is_started(&audioDevice);
+
+            if (ImGuiExt::IconButton(playing ? ICON_VS_DEBUG_PAUSE : ICON_VS_PLAY, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+                if (playing)
+                    ma_device_stop(&audioDevice);
+                else
+                    ma_device_start(&audioDevice);
+            }
+
+            ImGui::SameLine();
+
+            if (ImGuiExt::IconButton(ICON_VS_DEBUG_STOP, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                index = 0;
+                sampledIndex = 0;
+                ma_device_stop(&audioDevice);
+            }
+
+            ImGui::EndDisabled();
+
+            ImGui::SameLine();
+            index = sampledIndex * downSampling;
+
+            if (resetTask.isRunning())
+                ImGuiExt::TextSpinner("");
+            else
+                ImGuiExt::TextFormatted("{:02d}:{:02d}:{:03d} / {:02d}:{:02d}:{:03d}",
+                                        (index / sampleRate / channels) / 60, (index / sampleRate / channels) % 60, (index * 1000 / sampleRate / channels ) % 1000,
+                                        ((waveDataSize-1) / sampleRate / channels) / 60, ((waveDataSize-1) / sampleRate / channels) % 60, ((waveDataSize-1) * 1000 / sampleRate / channels) % 1000);
             ImPlot::EndSubplots();
         }
-
-        if (shouldStop) {
-            shouldStop = false;
-            ma_device_stop(&audioDevice);
-        }
-
-        bool playing = ma_device_is_started(&audioDevice);
-
-        if (ImGuiExt::IconButton(playing ? ICON_VS_DEBUG_PAUSE : ICON_VS_PLAY, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
-            if (playing)
-                ma_device_stop(&audioDevice);
-            else
-                ma_device_start(&audioDevice);
-        }
-
-        ImGui::SameLine();
-
-        if (ImGuiExt::IconButton(ICON_VS_DEBUG_STOP, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
-            index = 0;
-            sampledIndex =0;
-            ma_device_stop(&audioDevice);
-        }
-
-        ImGui::EndDisabled();
-
-        ImGui::SameLine();
-        index = sampledIndex * downSampling;
-
-        if (resetTask.isRunning())
-            ImGuiExt::TextSpinner("");
-        else
-            ImGuiExt::TextFormatted("{:02d}:{:02d} / {:02d}:{:02d}",
-                                 (index / sampleRate / channels) / 60, (index / sampleRate / channels) % 60,
-                                 (waveData.size() / sampleRate / channels) / 60, (waveData.size() / sampleRate / channels) % 60);
     }
 
 }
