@@ -11,6 +11,7 @@
 
 #include <ui/hex_editor.hpp>
 #include <ui/pattern_drawer.hpp>
+#include <ui/visualizer_drawer.hpp>
 
 #include <filesystem>
 #include <functional>
@@ -243,6 +244,8 @@ namespace hex::plugin::builtin {
         std::map<prv::Provider*, std::function<void()>> m_sectionWindowDrawer;
 
         ui::HexEditor m_sectionHexEditor;
+        PerProvider<ui::VisualizerDrawer> m_visualizerDrawer;
+        bool m_tooltipJustOpened = false;
 
         PatternSourceCode m_sourceCode;
         PerProvider<std::vector<std::string>> m_console;
