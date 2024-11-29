@@ -2,6 +2,7 @@
 
 #include <hex/api/task_manager.hpp>
 #include <hex/api/content_registry.hpp>
+#include <hex/ui/visualizer_drawer.hpp>
 
 #include <pl/patterns/pattern.hpp>
 #include <pl/pattern_visitor.hpp>
@@ -71,7 +72,6 @@ namespace hex::ui {
         void makeSelectable(const pl::ptrn::Pattern &pattern);
 
         void drawValueColumn(pl::ptrn::Pattern& pattern);
-        void drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, bool reset);
         void drawFavoriteColumn(const pl::ptrn::Pattern& pattern);
         bool drawNameColumn(const pl::ptrn::Pattern &pattern, bool leaf = false);
         void drawColorColumn(const pl::ptrn::Pattern& pattern);
@@ -103,6 +103,7 @@ namespace hex::ui {
 
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
         u64 m_editingPatternOffset = 0;
+        hex::ui::VisualizerDrawer m_visualizerDrawer;
 
         TreeStyle m_treeStyle = TreeStyle::Default;
         bool m_rowColoring = false;
@@ -111,7 +112,6 @@ namespace hex::ui {
         const pl::ptrn::Pattern *m_jumpToPattern = nullptr;
 
         std::set<pl::ptrn::Pattern*> m_visualizedPatterns;
-        std::string m_lastVisualizerError;
 
         std::string m_filterText;
         Filter m_filter;
