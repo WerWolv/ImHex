@@ -49,7 +49,6 @@ set(LIBIMHEX_SOURCES
         source/ui/view.cpp
         source/ui/popup.cpp
         source/ui/toast.cpp
-        source/ui/visualizer_drawer.cpp
 
         source/subcommands/subcommands.cpp
 )
