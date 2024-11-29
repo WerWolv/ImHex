@@ -1093,15 +1093,13 @@ void TextEditor::Render() {
 
 
     if (mTopMargin != oldTopMargin) {
-        static float savedScrollY = 0;
         if (oldTopMargin == 0)
-            savedScrollY = ImGui::GetScrollY();
+            m_savedScrollY = ImGui::GetScrollY();
         auto window = ImGui::GetCurrentWindow();
         auto maxScroll = window->ScrollMax.y;
         if (maxScroll > 0) {
             float lineCount;
             float pixelCount;
-            static float linesAdded = 0;
             if (mTopMargin > oldTopMargin) {
                 pixelCount = mTopMargin - oldTopMargin;
                 lineCount = pixelCount / mCharAdvance.y;
@@ -1110,14 +1108,14 @@ void TextEditor::Render() {
                 lineCount = pixelCount / mCharAdvance.y;
             } else {
                 pixelCount = oldTopMargin;
-                lineCount = std::round(linesAdded);
+                lineCount = std::round(m_linesAdded);
             }
             auto state = mState;
             auto oldScrollY = ImGui::GetScrollY();
             int lineCountInt;
 
             if (mTopMargin > oldTopMargin) {
-                lineCountInt = std::round(lineCount + linesAdded - std::floor(linesAdded));
+                lineCountInt = std::round(lineCount + m_linesAdded - std::floor(m_linesAdded));
             } else
                 lineCountInt = std::round(lineCount);
             for (int i = 0; i < lineCountInt; i++) {
@@ -1126,28 +1124,26 @@ void TextEditor::Render() {
                 else
                     mLines.erase(mLines.begin() + mLines.size() - 1);
             }
-            static float pixelsAdded = 0;
             if (mTopMargin > oldTopMargin) {
-                linesAdded += lineCount;
-                pixelsAdded += pixelCount;
+                m_linesAdded += lineCount;
+                m_pixelsAdded += pixelCount;
             } else if (mTopMargin > 0) {
-                linesAdded -= lineCount;
-                pixelsAdded -= pixelCount;
+                m_linesAdded -= lineCount;
+                m_pixelsAdded -= pixelCount;
             } else {
-                linesAdded = 0;
-                pixelsAdded = 0;
+                m_linesAdded = 0;
+                m_pixelsAdded = 0;
             }
             if (oldScrollY + pixelCount < maxScroll) {
-                static float shiftedScrollY = 0;
                 if (mTopMargin > oldTopMargin)
-                    shiftedScrollY = oldScrollY + pixelCount;
+                    m_shiftedScrollY = oldScrollY + pixelCount;
                 else if (mTopMargin > 0)
-                    shiftedScrollY = oldScrollY - pixelCount;
-                else if (ImGui::GetScrollY() == shiftedScrollY)
-                    shiftedScrollY = savedScrollY;
+                    m_shiftedScrollY = oldScrollY - pixelCount;
+                else if (ImGui::GetScrollY() == m_shiftedScrollY)
+                    m_shiftedScrollY = m_savedScrollY;
                 else
-                    shiftedScrollY = ImGui::GetScrollY() - pixelCount;
-                ImGui::SetScrollY(shiftedScrollY);
+                    m_shiftedScrollY = ImGui::GetScrollY() - pixelCount;
+                ImGui::SetScrollY(m_shiftedScrollY);
             } else {
                 if (mTopMargin > oldTopMargin)
                     mScrollToBottom = true;
