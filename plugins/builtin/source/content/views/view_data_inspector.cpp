@@ -1,4 +1,5 @@
 #include "content/views/view_data_inspector.hpp"
+#include "ui/pattern_drawer.hpp"
 
 #include <hex/api/achievement_manager.hpp>
 #include <hex/providers/provider.hpp>
@@ -7,6 +8,8 @@
 
 #include <fonts/codicons_font.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/ui/visualizer_drawer.hpp>
+
 
 #include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>
@@ -198,8 +201,13 @@ namespace hex::plugin::builtin {
 
             try {
                 // Set up the display function using the pattern's formatter
-                auto displayFunction = [value = pattern->getFormattedValue()] {
-                    ImGui::TextUnformatted(value.c_str());
+                auto displayFunction = [pattern,value = pattern->getFormattedValue()] {
+                    auto drawer = ui::VisualizerDrawer();
+                    if (const auto &inlineVisualizeArgs = pattern->getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
+                        drawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
+                    } else {
+                        ImGui::TextUnformatted(value.c_str());
+                    }
                     return value;
                 };
 

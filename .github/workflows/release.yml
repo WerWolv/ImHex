@@ -90,7 +90,7 @@ jobs:
         run: tar --exclude-vcs -czvf Full.Sources.tar.gz ImHex
 
       - name: ⬇️ Download artifacts from latest workflow
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v6
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
