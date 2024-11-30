@@ -899,7 +899,7 @@ namespace ImGuiExt {
     }
 
     bool InputHexadecimal(const char *label, u32 *value, ImGuiInputTextFlags flags) {
-        return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U32, "%lX", flags | ImGuiInputTextFlags_CharsHexadecimal);
+        return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U32, "%X", flags | ImGuiInputTextFlags_CharsHexadecimal);
     }
 
     bool InputHexadecimal(const char *label, u64 *value, ImGuiInputTextFlags flags) {
