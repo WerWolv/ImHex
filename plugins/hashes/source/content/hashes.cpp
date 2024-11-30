@@ -219,9 +219,9 @@ namespace hex::plugin::hashes {
         size_t m_selectedCrc = 0;
 
         u32 m_width = 3;
-        u32 m_polynomial = 0;
-        u32 m_initialValue = 0;
-        u32 m_xorOut = 0;
+        u64 m_polynomial = 0;
+        u64 m_initialValue = 0;
+        u64 m_xorOut = 0;
         bool m_reflectIn = false, m_reflectOut = false;
     };
 
