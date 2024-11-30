@@ -128,13 +128,14 @@ public:
 		std::string mDeclaration;
 	};
 
-	typedef std::string String;
-	typedef std::unordered_map<std::string, Identifier> Identifiers;
-	typedef std::unordered_set<std::string> Keywords;
-	typedef std::map<int, std::string> ErrorMarkers;
-	typedef std::unordered_set<int> Breakpoints;
-	typedef std::array<ImU32, (unsigned)PaletteIndex::Max> Palette;
-	typedef uint8_t Char;
+    using String = std::string;
+	using Identifiers = std::unordered_map<std::string, Identifier>;
+	using Keywords = std::unordered_set<std::string> ;
+    using ErrorMarkers = std::map<Coordinates, std::pair<uint32_t ,std::string>>;
+    using ErrorHoverBoxes = std::map<Coordinates, std::pair<ImVec2,ImVec2>>;
+    using Breakpoints = std::unordered_set<uint32_t>;
+    using Palette = std::array<ImU32, (uint32_t)PaletteIndex::Max>;
+    using Char = uint8_t ;
 
 	struct Glyph
 	{
@@ -188,6 +189,11 @@ public:
 		static const LanguageDefinition& Lua();
 	};
 
+    struct Selection {
+        Coordinates mStart;
+        Coordinates mEnd;
+    };
+
 	TextEditor();
 	~TextEditor();
 
@@ -198,11 +204,17 @@ public:
 	static void SetPalette(const Palette& aValue);
 
 	void SetErrorMarkers(const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
+    Breakpoints &GetBreakpoints() { return mBreakpoints; }
 	void SetBreakpoints(const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
+    ImVec2 Underwaves( ImVec2 pos, uint32_t nChars, ImColor color= ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg= ImVec2(0, 0));
 
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
 	void SetText(const std::string& aText);
 	std::string GetText() const;
+    bool isEmpty() const {
+        auto text = GetText();
+        return text.empty() || text == "\n";
+    }
 
 	void SetTextLines(const std::vector<std::string>& aLines);
 	std::vector<std::string> GetTextLines() const;
@@ -215,11 +227,14 @@ public:
     FindReplaceHandler *GetFindReplaceHandler() { return &mFindReplaceHandler; }
 	int GetTotalLines() const { return (int)mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
+    void SetOverwrite(bool aValue) { mOverwrite = aValue; }
 
 	void SetReadOnly(bool aValue);
 	bool IsReadOnly() const { return mReadOnly; }
 	bool IsTextChanged() const { return mTextChanged; }
 	bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
+    bool IsBreakpointsChanged() const { return mBreakPointsChanged; }
+    void ClearBreakpointsChanged() { mBreakPointsChanged = false; }
 
     void SetShowCursor(bool aValue) { mShowCursor = aValue; }
     void SetShowLineNumbers(bool aValue) { mShowLineNumbers = aValue; }
@@ -260,6 +275,7 @@ public:
 	void SetSelectionStart(const Coordinates& aPosition);
 	void SetSelectionEnd(const Coordinates& aPosition);
 	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd, SelectionMode aMode = SelectionMode::Normal);
+    Selection GetSelection() const;
 	void SelectWordUnderCursor();
 	void SelectAll();
 	bool HasSelection() const;
@@ -268,13 +284,18 @@ public:
 	void Cut();
 	void Paste();
 	void Delete();
+    int32_t GetPageSize() const;
 
 	ImVec2 &GetCharAdvance() { return mCharAdvance; }
 
-	bool CanUndo() const;
+	bool CanUndo();
 	bool CanRedo() const;
 	void Undo(int aSteps = 1);
 	void Redo(int aSteps = 1);
+
+    void DeleteWordLeft();
+    void DeleteWordRight();
+    void Backspace();
 
 	static const Palette& GetDarkPalette();
 	static const Palette& GetLightPalette();
@@ -297,7 +318,7 @@ public:
         FindReplaceHandler();
         typedef std::vector<EditorState> Matches;
         Matches &GetMatches() { return mMatches; }
-        bool FindNext(TextEditor *editor,bool wrapAround);
+        bool FindNext(TextEditor *editor);
         unsigned FindMatch(TextEditor *editor,bool isNex);
         bool Replace(TextEditor *editor,bool right);
         bool ReplaceAll(TextEditor *editor);
@@ -400,7 +421,6 @@ private:
 	void ColorizeInternal();
 	float TextDistanceToLineStart(const Coordinates& aFrom) const;
 	void EnsureCursorVisible();
-	int GetPageSize() const;
 	std::string GetText(const Coordinates& aStart, const Coordinates& aEnd) const;
 	Coordinates GetActualCursorCoordinates() const;
 	Coordinates SanitizeCoordinates(const Coordinates& aValue) const;
@@ -412,10 +432,12 @@ private:
 	Coordinates FindWordStart(const Coordinates& aFrom) const;
 	Coordinates FindWordEnd(const Coordinates& aFrom) const;
 	Coordinates FindNextWord(const Coordinates& aFrom) const;
+    Coordinates StringIndexToCoordinates(int aIndex, const std::string &str) const;
 	int GetCharacterIndex(const Coordinates& aCoordinates) const;
 	int GetCharacterColumn(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
-	unsigned long long GetLineByteCount(int aLine) const;
+    int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
+    unsigned long long GetLineByteCount(int aLine) const;
 	int GetStringCharacterCount(std::string str) const;
 	int GetLineMaxColumn(int aLine) const;
 	bool IsOnWordBoundary(const Coordinates& aAt) const;
@@ -423,7 +445,6 @@ private:
 	void RemoveLine(int aIndex);
 	Line& InsertLine(int aIndex);
 	void EnterCharacter(ImWchar aChar, bool aShift);
-	void Backspace();
 	void DeleteSelection();
 	std::string GetWordUnderCursor() const;
 	std::string GetWordAt(const Coordinates& aCoords) const;
@@ -453,6 +474,7 @@ private:
 	float mTextStart;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
 	int  mLeftMargin;
 	bool mCursorPositionChanged;
+    bool mBreakPointsChanged;
 	int mColorRangeMin, mColorRangeMax;
 	SelectionMode mSelectionMode;
 	bool mHandleKeyboardInputs;
@@ -467,12 +489,16 @@ private:
     bool mCheckComments;
 	Breakpoints mBreakpoints;
 	ErrorMarkers mErrorMarkers;
+    ErrorHoverBoxes mErrorHoverBoxes;
 	ImVec2 mCharAdvance;
 	Coordinates mInteractiveStart, mInteractiveEnd;
 	std::string mLineBuffer;
 	uint64_t mStartTime;
 	std::vector<std::string> mDefines;
-
+    float m_linesAdded = 0;
+    float m_savedScrollY = 0;
+    float m_pixelsAdded = 0;
+    float m_shiftedScrollY = 0;
 	float mLastClick;
     bool mShowCursor;
     bool mShowLineNumbers;

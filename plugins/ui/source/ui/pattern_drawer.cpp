@@ -326,7 +326,7 @@ namespace hex::ui {
 
     void PatternDrawer::drawColorColumn(const pl::ptrn::Pattern& pattern) {
         ImGui::TableNextColumn();
-        if (pattern.getVisibility() == pl::ptrn::Visibility::Visible) {
+        if (pattern.getVisibility() != pl::ptrn::Visibility::HighlightHidden) {
             ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, (pattern.getColor() & 0x00'FF'FF'FF) | 0xC0'00'00'00);
 
             if (m_rowColoring)
@@ -337,32 +337,6 @@ namespace hex::ui {
     void PatternDrawer::drawCommentColumn(const pl::ptrn::Pattern& pattern) {
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(pattern.getComment().c_str());
-    }
-
-    void PatternDrawer::drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, bool reset) {
-        auto visualizerName = arguments.front().toString(true);
-
-        if (auto entry = visualizers.find(visualizerName); entry != visualizers.end()) {
-            const auto &[name, visualizer] = *entry;
-
-            auto paramCount = arguments.size() - 1;
-            auto [minParams, maxParams] = visualizer.parameterCount;
-
-            if (paramCount >= minParams && paramCount <= maxParams) {
-                try {
-                    visualizer.callback(pattern, reset, { arguments.begin() + 1, arguments.end() });
-                } catch (std::exception &e) {
-                    m_lastVisualizerError = e.what();
-                }
-            } else {
-                ImGui::TextUnformatted("hex.ui.pattern_drawer.visualizer.invalid_parameter_count"_lang);
-            }
-        } else {
-            ImGui::TextUnformatted("hex.ui.pattern_drawer.visualizer.unknown"_lang);
-        }
-
-        if (!m_lastVisualizerError.empty())
-            ImGui::TextUnformatted(m_lastVisualizerError.c_str());
     }
 
     void PatternDrawer::drawValueColumn(pl::ptrn::Pattern& pattern) {
@@ -384,11 +358,11 @@ namespace hex::ui {
             if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
                 auto previousPattern = m_currVisualizedPattern;
                 m_currVisualizedPattern = &pattern;
-
-                if (!m_lastVisualizerError.empty() || m_currVisualizedPattern != previousPattern)
+                auto lastVisualizerError = m_visualizerDrawer.getLastVisualizerError();
+                if (!lastVisualizerError.empty() || m_currVisualizedPattern != previousPattern)
                     shouldReset = true;
 
-                m_lastVisualizerError.clear();
+                m_visualizerDrawer.clearLastVisualizerError();
 
                 ImGui::OpenPopup("Visualizer");
             }
@@ -398,14 +372,14 @@ namespace hex::ui {
 
             if (ImGui::BeginPopup("Visualizer")) {
                 if (m_currVisualizedPattern == &pattern) {
-                    drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, pattern, !m_visualizedPatterns.contains(&pattern) || shouldReset);
+                    m_visualizerDrawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, pattern, !m_visualizedPatterns.contains(&pattern) || shouldReset);
                     m_visualizedPatterns.insert(&pattern);
                 }
 
                 ImGui::EndPopup();
             }
         } else if (const auto &inlineVisualizeArgs = pattern.getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
-            drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, pattern, true);
+            m_visualizerDrawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, pattern, true);
         } else {
             ImGuiExt::TextFormatted("{}", value);
         }
@@ -994,6 +968,8 @@ namespace hex::ui {
     void PatternDrawer::draw(pl::ptrn::Pattern& pattern) {
         if (pattern.getVisibility() == pl::ptrn::Visibility::Hidden)
             return;
+        if (pattern.getVisibility() == pl::ptrn::Visibility::TreeHidden)
+            return;
 
         m_currPatternPath.push_back(pattern.getVariableName());
         ON_SCOPE_EXIT { m_currPatternPath.pop_back(); };
@@ -1214,6 +1190,16 @@ namespace hex::ui {
     }
 
     void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime, float height) {
+        if (runtime == nullptr) {
+            this->reset();
+        } else {
+            auto runId = runtime->getRunId();
+            if (runId != m_lastRunId) {
+                this->reset();
+                m_lastRunId = runId;
+            }
+        }
+
         std::scoped_lock lock(s_resetDrawMutex);
 
         m_hoverCallback(nullptr);
@@ -1380,15 +1366,17 @@ namespace hex::ui {
                 m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
                     size_t updatedFavorites = 0;
 
+                    const std::string favoriteAttribute = "hex::favorite";
+                    const std::string groupAttribute    = "hex::group";
                     for (auto &pattern : patterns) {
                         std::vector<std::string> patternPath;
 
                         size_t startFavoriteCount = m_favorites.size();
                         traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
-                            if (currPattern.hasAttribute("hex::favorite"))
+                            if (currPattern.hasAttribute(favoriteAttribute))
                                 m_favorites.insert({ patternPath, currPattern.clone() });
 
-                            if (const auto &args = currPattern.getAttributeArguments("hex::group"); !args.empty()) {
+                            if (const auto &args = currPattern.getAttributeArguments(groupAttribute); !args.empty()) {
                                 auto groupName = args.front().toString();
 
                                 if (!m_groups.contains(groupName))
@@ -1450,7 +1438,7 @@ namespace hex::ui {
         m_currVisualizedPattern = nullptr;
         m_sortedPatterns.clear();
         m_filteredPatterns.clear();
-        m_lastVisualizerError.clear();
+        m_visualizerDrawer.clearLastVisualizerError();
         m_currPatternPath.clear();
 
         m_favoritesUpdateTask.interrupt();

@@ -307,9 +307,6 @@ endfunction()
 macro(configureCMake)
     message(STATUS "Configuring ImHex v${IMHEX_VERSION}")
 
-    # Enable C and C++ languages
-    enable_language(C CXX)
-
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code for all targets" FORCE)
 
     # Configure use of recommended build tools
@@ -383,6 +380,9 @@ macro(configureCMake)
 endmacro()
 
 function(configureProject)
+    # Enable C and C++ languages
+    enable_language(C CXX)
+
     if (XCODE)
         # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
         set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>" PARENT_SCOPE)
@@ -590,6 +590,12 @@ macro(setupCompilerFlags target)
         if (IMHEX_ENABLE_UNITY_BUILD AND WIN32)
             set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wa,-mbig-obj")
         endif ()
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND APPLE)
+        execute_process(COMMAND brew --prefix llvm OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+        set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
+        set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
     endif()
 
     # Disable some warnings for gcc

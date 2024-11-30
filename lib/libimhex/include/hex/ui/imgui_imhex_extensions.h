@@ -97,29 +97,25 @@ namespace ImGuiExt {
         Texture& operator=(Texture&& other) noexcept;
 
         [[nodiscard]] constexpr bool isValid() const noexcept {
-            return m_textureId != nullptr;
+            return m_textureId != 0;
         }
 
         [[nodiscard]] operator ImTextureID() const noexcept {
             return m_textureId;
         }
 
-        [[nodiscard]] operator intptr_t() const noexcept {
-            return reinterpret_cast<intptr_t>(m_textureId);
-        }
-
-        [[nodiscard]] auto getSize() const noexcept {
+        [[nodiscard]] ImVec2 getSize() const noexcept {
             return ImVec2(m_width, m_height);
         }
 
-        [[nodiscard]] constexpr auto getAspectRatio() const noexcept {
+        [[nodiscard]] constexpr float getAspectRatio() const noexcept {
             if (m_height == 0) return 1.0F;
 
             return float(m_width) / float(m_height);
         }
 
     private:
-        ImTextureID m_textureId = nullptr;
+        ImTextureID m_textureId = 0;
         int m_width = 0, m_height = 0;
     };
 
@@ -136,6 +132,8 @@ namespace ImGuiExt {
     void HelpHover(const char *text, const char *icon = "(?)", ImU32 iconColor = ImGui::GetColorU32(ImGuiCol_ButtonActive));
 
     void UnderlinedText(const char *label, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
+
+    void UnderwavedText(const char *label, ImColor textColor = ImGui::GetStyleColorVec4(ImGuiCol_Text), ImColor lineColor = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
 
     void TextSpinner(const char *label);
 

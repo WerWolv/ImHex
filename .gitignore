@@ -8,6 +8,7 @@ cmake-build-*/
 build*/
 local/
 venv/
+.cache/
 
 *.mgc
 *.kdev4

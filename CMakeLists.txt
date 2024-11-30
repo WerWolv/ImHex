@@ -32,13 +32,14 @@ include("${IMHEX_BASE_FOLDER}/cmake/ide_helpers.cmake")
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 
 # Setup project
 loadVersion(IMHEX_VERSION IMHEX_VERSION_PLAIN)
 setVariableInParent(IMHEX_VERSION ${IMHEX_VERSION})
-configureCMake()
 
+configureCMake()
 project(imhex
         LANGUAGES       C CXX
         VERSION         ${IMHEX_VERSION_PLAIN}

@@ -7,6 +7,8 @@
 
 #include <fonts/codicons_font.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <ui/pattern_drawer.hpp>
+#include <ui/visualizer_drawer.hpp>
 
 #include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>
@@ -176,12 +178,13 @@ namespace hex::plugin::builtin {
             // Skip hidden patterns
             if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)
                 continue;
+            if (pattern->getVisibility() == pl::ptrn::Visibility::TreeHidden)
+                continue;
 
             // Set up the editing function if a write formatter is available
-            auto formatWriteFunction = pattern->getWriteFormatterFunction();
             std::optional<ContentRegistry::DataInspector::impl::EditingFunction> editingFunction;
-            if (!formatWriteFunction.empty()) {
-                editingFunction = [formatWriteFunction, &pattern](const std::string &value,
+            if (!pattern->getWriteFormatterFunction().empty()) {
+                editingFunction = [&pattern](const std::string &value,
                                                                   std::endian) -> std::vector<u8> {
                     try {
                         pattern->setValue(value);
@@ -196,8 +199,13 @@ namespace hex::plugin::builtin {
 
             try {
                 // Set up the display function using the pattern's formatter
-                auto displayFunction = [value = pattern->getFormattedValue()] {
-                    ImGui::TextUnformatted(value.c_str());
+                auto displayFunction = [pattern,value = pattern->getFormattedValue()] {
+                    auto drawer = ui::VisualizerDrawer();
+                    if (const auto &inlineVisualizeArgs = pattern->getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
+                        drawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
+                    } else {
+                        ImGui::TextUnformatted(value.c_str());
+                    }
                     return value;
                 };
 
