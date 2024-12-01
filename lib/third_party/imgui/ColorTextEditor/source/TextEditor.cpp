@@ -877,7 +877,7 @@ void TextEditor::Render() {
         buf[0] = '\0';
     mTextStart = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x + mLeftMargin;
 
-    if (!isEmpty()) {
+    if (lineNo <= lineMax) {
         float spaceSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
 
         while (lineNo <= lineMax) {
