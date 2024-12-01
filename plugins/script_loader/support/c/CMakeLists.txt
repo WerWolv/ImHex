@@ -1,6 +1,12 @@
 project(c_api)
 
-add_library(c_api OBJECT
+if (IMHEX_STATIC_LINK_PLUGINS)
+    set(C_API_LIBRARY_TYPE STATIC)
+else()
+    set(C_API_LIBRARY_TYPE OBJECT)
+endif()
+
+add_library(c_api ${C_API_LIBRARY_TYPE}
     source/script_api/v1/bookmarks.cpp
     source/script_api/v1/logger.cpp
     source/script_api/v1/mem.cpp

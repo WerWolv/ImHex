@@ -20,7 +20,10 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "IMHEX_PATTERNS_PULL_MASTER": "ON",
         "CMAKE_INSTALL_PREFIX": "./install",
-        "USE_SYSTEM_CAPSTONE": "ON",
+        "IMHEX_ENABLE_UNIT_TESTS": "ON",
+        "IMHEX_ENABLE_PLUGIN_TESTS": "ON",
+        "LIBPL_ENABLE_TESTS": "ON",
+        "IMHEX_PATTERNS_ENABLE_UNIT_TESTS": "ON",
         "IMHEX_USE_DEFAULT_BUILD_SETTINGS": "ON"
       }
     },
@@ -53,7 +56,7 @@
         "name": "x86_64",
         "description": "x86_64 build",
         "configurePreset": "x86_64",
-        "targets": [ "imhex_all" ]
+        "targets": [ "imhex_all", "unit_tests" ]
     }
   ],
   "testPresets": [

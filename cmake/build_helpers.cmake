@@ -540,6 +540,10 @@ function(downloadImHexPatternsFiles dest)
             endif()
             install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "${dest}" PATTERN "**/_schema.json" EXCLUDE)
         endforeach ()
+        # Register ImHex-Patterns, if manually cloned
+        if(IMHEX_OFFLINE_BUILD)
+            add_subdirectory(${imhex_patterns_SOURCE_DIR})
+        endif()
     endif ()
 
 endfunction()
