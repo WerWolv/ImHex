@@ -56,7 +56,7 @@ namespace hex::plugin::visualizers {
                     }
 
                     ma_copy_pcm_frames(pOutput, waveData.data() + index, frameCount, device->playback.format, device->playback.channels);
-                    index += frameCount * device->playback.channels;
+                    index += static_cast<u64>(frameCount) * device->playback.channels;
                 };
 
                 ma_device_init(nullptr, &deviceConfig, &audioDevice);
