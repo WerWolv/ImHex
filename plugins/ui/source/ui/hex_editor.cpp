@@ -589,7 +589,7 @@ namespace hex::ui {
 
                         const auto rowAddress = y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
-                        if (m_separatorStride > 0 && rowAddress % m_separatorStride < m_bytesPerRow)
+                        if (m_separatorStride > 0 && rowAddress % m_separatorStride < m_bytesPerRow && !ImGui::GetIO().KeyShift)
                             ImGuiExt::TextFormattedColored(ImGui::GetStyleColorVec4(ImGuiCol_SeparatorActive), "{} {}", "hex.ui.common.segment"_lang, rowAddress / m_separatorStride);
                         else
                             ImGuiExt::TextFormatted(m_upperCaseHex ? "{:08X}: " : "{:08x}: ", rowAddress);
@@ -1063,8 +1063,8 @@ namespace hex::ui {
                                 m_encodingLineStartAddresses.clear();
                             }
                             {
-                                const auto min = 0;
-                                const auto max = m_provider->getActualSize();
+                                const u64 min = 0;
+                                const u64 max = m_provider->getActualSize();
                                 ImGui::SliderScalar("##separator_stride", ImGuiDataType_U64, &m_separatorStride, &min, &max, m_separatorStride == 0 ? "hex.ui.hex_editor.no_separator"_lang : hex::format("hex.ui.hex_editor.separator_stride"_lang, m_separatorStride).c_str());
                             }
                             ImGui::EndPopup();

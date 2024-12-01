@@ -495,7 +495,10 @@ private:
 	std::string mLineBuffer;
 	uint64_t mStartTime;
 	std::vector<std::string> mDefines;
-
+    float m_linesAdded = 0;
+    float m_savedScrollY = 0;
+    float m_pixelsAdded = 0;
+    float m_shiftedScrollY = 0;
 	float mLastClick;
     bool mShowCursor;
     bool mShowLineNumbers;

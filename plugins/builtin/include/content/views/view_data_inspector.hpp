@@ -1,15 +1,12 @@
 #pragma once
 
 #include <hex/ui/view.hpp>
-#include <hex/ui/visualizer_drawer.hpp>
+#include <ui/visualizer_drawer.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/task_manager.hpp>
 
-#include <wolv/io/file.hpp>
-
 #include <bit>
-#include <cstdio>
 #include <string>
 
 namespace hex::plugin::builtin {

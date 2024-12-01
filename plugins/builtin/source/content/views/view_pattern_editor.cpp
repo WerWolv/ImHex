@@ -1559,7 +1559,16 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::SameLine();
-            ImGuiExt::TextFormatted("{: <{}} ", hex::limitStringLength(pattern->getFormattedValue(), 64), shiftHeld ? 40 : 0);
+
+            if (const auto &inlineVisualizeArgs = pattern->getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
+                auto x = ImGui::GetCursorPosX();
+                ImGui::Dummy(ImVec2(125_scaled, ImGui::GetTextLineHeight()));
+                ImGui::SameLine();
+                ImGui::SetCursorPos(ImVec2(x, ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y));
+                m_visualizerDrawer->drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
+            } else {
+                ImGuiExt::TextFormatted("{: <{}} ", hex::limitStringLength(pattern->getFormattedValue(), 64), shiftHeld ? 40 : 0);
+            }
 
             if (shiftHeld) {
                 ImGui::Indent();
@@ -1661,7 +1670,16 @@ namespace hex::plugin::builtin {
 
                     ImGui::EndTable();
                 }
+
+                if (const auto &visualizeArgs = pattern->getAttributeArguments("hex::visualize"); !visualizeArgs.empty()) {
+                    m_visualizerDrawer->drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, *pattern, m_tooltipJustOpened);
+                }
+
                 ImGui::Unindent();
+
+                m_tooltipJustOpened = false;
+            } else {
+                m_tooltipJustOpened = true;
             }
         }
 
