@@ -18,7 +18,6 @@
 
 #include <atomic>
 #include <random>
-#include <ranges>
 
 namespace hex {
 
@@ -661,8 +660,10 @@ namespace hex {
                 m_xBlockEntropy[i] = ((m_startAddress / m_blockSize) + stride * i) * m_blockSize;
             m_xBlockEntropy.push_back(m_endAddress);
 
-            u64 index = 0;
-            for (const auto [first, second] : std::views::adjacent<2>(m_yBlockEntropySampled)) {
+            for (u64 index = 0; index < m_yBlockEntropySampled.size() - 1; index += 1) {
+                const auto first  = m_yBlockEntropySampled[index + 0];
+                const auto second = m_yBlockEntropySampled[index + 1];
+
                 const auto relativeDifference = std::abs(first - second) / std::max(first, second);
 
                 if (relativeDifference > 0.5 && index + 1 < m_xBlockEntropy.size()) {
@@ -675,8 +676,6 @@ namespace hex {
                         this->addRegion("hex.ui.diagram.entropy_analysis.entropy_spike", region, 0x602020FF);
                     }
                 }
-
-                index += 1;
             }
         }
 
