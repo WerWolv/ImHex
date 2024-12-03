@@ -761,10 +761,11 @@ void TextEditor::HandleMouseInputs() {
 
     if (ImGui::IsWindowHovered()) {
         if (!alt) {
-            auto click       = ImGui::IsMouseClicked(0);
-            auto doubleClick = ImGui::IsMouseDoubleClicked(0);
-            auto t           = ImGui::GetTime();
-            auto tripleClick = click && !doubleClick && (mLastClick != -1.0f && (t - mLastClick) < io.MouseDoubleClickTime);
+            auto click         = ImGui::IsMouseClicked(0);
+            auto doubleClick   = ImGui::IsMouseDoubleClicked(0);
+            auto rightClick    = ImGui::IsMouseClicked(1);
+            auto t     = ImGui::GetTime();
+            auto tripleClick   = click && !doubleClick && (mLastClick != -1.0f && (t - mLastClick) < io.MouseDoubleClickTime);
             bool resetBlinking = false;
             /*
             Left mouse button triple click
@@ -818,6 +819,12 @@ void TextEditor::HandleMouseInputs() {
               
                 EnsureCursorVisible();
                 mLastClick = (float)ImGui::GetTime();
+            } else if (rightClick) {
+                mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
+                mSelectionMode = SelectionMode::Normal;
+                SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                ResetCursorBlinkTime();
+                mRaiseContextMenu = true;
             }
             // Mouse left button dragging (=> update selection)
             else if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0)) {

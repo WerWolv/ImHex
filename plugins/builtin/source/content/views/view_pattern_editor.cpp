@@ -351,8 +351,9 @@ namespace hex::plugin::builtin {
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
-            if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsMouseHoveringRect(m_textEditorHoverBox.Min,m_textEditorHoverBox.Max) && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+            if (m_textEditor.raiseContextMenu())  {
                 ImGui::OpenPopup("##pattern_editor_context_menu");
+                m_textEditor.clearRaiseContextMenu();
             }
 
             if (ImGui::BeginPopup("##pattern_editor_context_menu")) {
@@ -364,6 +365,8 @@ namespace hex::plugin::builtin {
 
                 ImGui::Separator();
 
+                if (!m_textEditor.HasSelection())
+                    m_textEditor.SelectWordUnderCursor();
                 const bool hasSelection = m_textEditor.HasSelection();
                 if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.cut"_lang, Shortcut(CTRLCMD + Keys::X).toString().c_str(), false, hasSelection)) {
                     m_textEditor.Cut();
@@ -386,7 +389,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::Separator();
                 // Search and replace entries
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str(),false, m_textEditor.HasSelection())){
+                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str())){
                     m_replaceMode = false;
                     m_openFindReplacePopUp = true;
                 }
@@ -398,7 +401,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_previous"_lang, Shortcut(SHIFT + Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
                     findReplaceHandler->FindMatch(&m_textEditor,false);
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace"_lang, Shortcut(CTRLCMD +  Keys::H).toString().c_str(),false,!findReplaceHandler->GetReplaceWord().empty())) {
+                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace"_lang, Shortcut(CTRLCMD +  Keys::H).toString().c_str())) {
                     m_replaceMode = true;
                     m_openFindReplacePopUp = true;
                 }
@@ -921,9 +924,12 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
         auto findReplaceHandler = m_consoleEditor.GetFindReplaceHandler();
-        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsMouseHoveringRect(m_consoleHoverBox.Min,m_consoleHoverBox.Max) && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+        if (m_consoleEditor.raiseContextMenu()) {
             ImGui::OpenPopup("##console_context_menu");
+            m_consoleEditor.clearRaiseContextMenu();
         }
+        if (!m_consoleEditor.HasSelection())
+            m_consoleEditor.SelectWordUnderCursor();
         const bool hasSelection = m_consoleEditor.HasSelection();
         if (ImGui::BeginPopup("##console_context_menu")) {
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.copy"_lang, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
@@ -934,7 +940,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::Separator();
             // Search and replace entries
-            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str(),false, hasSelection)) {
+            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str())) {
                 m_openFindReplacePopUp = true;
                 m_replaceMode = false;
             }
