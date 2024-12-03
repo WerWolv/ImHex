@@ -244,8 +244,8 @@ public:
 
 	Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
 	void SetCursorPosition(const Coordinates& aPosition);
-    bool raiseContextMenu() { return mRaiseContextMenu; }
-    void clearRaiseContextMenu() { mRaiseContextMenu = false; }
+    bool RaiseContextMenu() { return mRaiseContextMenu; }
+    void ClearRaiseContextMenu() { mRaiseContextMenu = false; }
 	inline void SetHandleMouseInputs    (bool aValue){ mHandleMouseInputs    = aValue;}
 	inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
 

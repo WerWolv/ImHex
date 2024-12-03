@@ -351,9 +351,9 @@ namespace hex::plugin::builtin {
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
-            if (m_textEditor.raiseContextMenu())  {
+            if (m_textEditor.RaiseContextMenu())  {
                 ImGui::OpenPopup("##pattern_editor_context_menu");
-                m_textEditor.clearRaiseContextMenu();
+                m_textEditor.ClearRaiseContextMenu();
             }
 
             if (ImGui::BeginPopup("##pattern_editor_context_menu")) {
@@ -924,9 +924,9 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
         auto findReplaceHandler = m_consoleEditor.GetFindReplaceHandler();
-        if (m_consoleEditor.raiseContextMenu()) {
+        if (m_consoleEditor.RaiseContextMenu()) {
             ImGui::OpenPopup("##console_context_menu");
-            m_consoleEditor.clearRaiseContextMenu();
+            m_consoleEditor.ClearRaiseContextMenu();
         }
         if (!m_consoleEditor.HasSelection())
             m_consoleEditor.SelectWordUnderCursor();
