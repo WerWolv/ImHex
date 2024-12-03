@@ -40,7 +40,8 @@ namespace hex::plugin::builtin {
 
         /// Adapted from PatternLanguageBot
         std::vector<u8> parseByteString(const std::string &string) {
-            if (string.empty()) return {};
+            if (string.empty())
+                return {};
 
             auto byteString = std::string(string);
             std::erase(byteString, ' ');
