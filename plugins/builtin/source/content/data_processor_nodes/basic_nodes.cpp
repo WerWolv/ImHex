@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/utils.hpp>
@@ -33,9 +34,38 @@ namespace hex::plugin::builtin {
             ImGui::PushItemWidth(100_scaled);
             ImGui::InputScalar("hex.builtin.nodes.constants.buffer.size"_lang, ImGuiDataType_U32, &m_size, &StepSize, &FastStepSize);
             ImGui::PopItemWidth();
+
+            ImGui::InputTextMultiline("##buffer", m_constantString, ImVec2(150_scaled, 0), ImGuiInputTextFlags_AllowTabInput);
+        }
+
+        /// Adapted from PatternLanguageBot
+        std::vector<u8> parseByteString(const std::string &string) {
+            if (string.empty()) return {};
+
+            auto byteString = std::string(string);
+            std::erase(byteString, ' ');
+            std::erase(byteString, '\n');
+
+            if ((byteString.length() % 2) != 0)
+                throwNodeError("Invalid byte string length");
+
+            std::vector<u8> result;
+            for (u32 i = 0; i < byteString.length(); i += 2) {
+                if (!std::isxdigit(byteString[i]) || !std::isxdigit(byteString[i + 1]))
+                    throwNodeError("Invalid byte string format");
+
+                result.push_back(std::strtoul(byteString.substr(i, 2).c_str(), nullptr, 16));
+            }
+
+            return result;
         }
 
         void process() override {
+            m_buffer = parseByteString(m_constantString);
+
+            m_size = std::max<std::size_t>(m_buffer.size(), m_size);
+
+            // fill buffer with zeros if required
             if (m_buffer.size() != m_size)
                 m_buffer.resize(m_size, 0x00);
 
@@ -46,16 +76,19 @@ namespace hex::plugin::builtin {
             j = nlohmann::json::object();
 
             j["size"] = m_size;
+            j["constantString"] = m_constantString;
             j["data"] = m_buffer;
         }
 
         void load(const nlohmann::json &j) override {
             m_size   = j.at("size");
+            m_constantString = j.at("constantString").get<std::string>();
             m_buffer = j.at("data").get<std::vector<u8>>();
         }
 
     private:
         u32 m_size = 1;
+        std::string m_constantString;
         std::vector<u8> m_buffer;
     };
 
