@@ -21,6 +21,11 @@ namespace hex {
         MissingEOF
     };
 
+    enum class IPSKind {
+        IPS,
+        IPS32
+    };
+
     class Patches {
     public:
         Patches() = default;

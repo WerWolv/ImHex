@@ -201,6 +201,10 @@ namespace hex::plugin::builtin {
                     AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.modify_byte.name");
             });
 
+            EventPatchCreated::subscribe([](const unsigned char *, unsigned char, IPSKind) {
+                AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.create_patch.name");
+            });
+
 
             EventImHexStartupFinished::subscribe(AchievementManager::loadProgress);
             EventAchievementUnlocked::subscribe([](const Achievement &) {
