@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
             ImGui::InputScalar("hex.builtin.nodes.constants.buffer.size"_lang, ImGuiDataType_U32, &m_size, &StepSize, &FastStepSize);
             ImGui::PopItemWidth();
 
-            ImGui::InputTextMultiline("##buffer", m_constantString, ImVec2(150_scaled, 0), ImGuiInputTextFlags_AllowTabInput);
+            ImGui::InputTextMultiline("##buffer", m_constantString, ImVec2(150_scaled, 0), ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CharsHexadecimal);
         }
 
         /// Adapted from PatternLanguageBot
