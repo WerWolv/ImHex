@@ -820,9 +820,13 @@ void TextEditor::HandleMouseInputs() {
                 EnsureCursorVisible();
                 mLastClick = (float)ImGui::GetTime();
             } else if (rightClick) {
-                mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-                mSelectionMode = SelectionMode::Normal;
-                SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                auto cursorPosition = ScreenPosToCoordinates(ImGui::GetMousePos());
+
+                if (!HasSelection() || mState.mSelectionStart > cursorPosition || cursorPosition > mState.mSelectionEnd) {
+                    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = cursorPosition;
+                    mSelectionMode = SelectionMode::Normal;
+                    SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                }
                 ResetCursorBlinkTime();
                 mRaiseContextMenu = true;
             }
