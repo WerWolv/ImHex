@@ -17,6 +17,8 @@
         "hex.disassembler.view.disassembler.bpf.classic": "Classic",
         "hex.disassembler.view.disassembler.bpf.extended": "Extended",
         "hex.disassembler.view.disassembler.disassemble": "Disassemble",
+        "hex.disassembler.view.disassembler.export": "Export to file",
+        "hex.disassembler.view.disassembler.export.popup.error": "Failed to export to ASM file!",
         "hex.disassembler.view.disassembler.disassembling": "Disassembling...",
         "hex.disassembler.view.disassembler.disassembly.address": "Address",
         "hex.disassembler.view.disassembler.disassembly.bytes": "Byte",
