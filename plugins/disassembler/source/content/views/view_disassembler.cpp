@@ -99,7 +99,7 @@ namespace hex::plugin::disasm {
                 fs::openFileBrowser(fs::DialogMode::Save, {}, [this](const std::fs::path &path) {
                     auto p = path;
                     if (p.extension() != ".asm")
-                        p.replace_filename(std::format("{}{}", p.filename().string(), ".asm"));
+                        p.replace_filename(hex::format("{}{}", p.filename().string(), ".asm"));
                     auto file = wolv::io::File(p, wolv::io::File::Mode::Create);
 
                     if (!file.isValid()) {
@@ -108,8 +108,8 @@ namespace hex::plugin::disasm {
                     }
 
                     // as disassembly code can be quite long, we prefer writing each disassembled instruction to file
-                    for (Disassembly d : m_disassembly) {
-                        file.writeString(std::format("{} {}\n", d.mnemonic, d.operators));
+                    for (const Disassembly& d : m_disassembly) {
+                        file.writeString(hex::format("{} {}\n", d.mnemonic, d.operators));
                     }
                 });
             });
