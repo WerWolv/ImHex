@@ -210,6 +210,8 @@ public:
 
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
 	void SetText(const std::string& aText);
+    void JumpToLine(int line);
+    void JumpToCoords(const Coordinates &coords);
 	std::string GetText() const;
     bool isEmpty() const {
         auto text = GetText();
@@ -221,6 +223,7 @@ public:
 
 	std::string GetSelectedText() const;
 	std::string GetCurrentLineText()const;
+    std::string GetLineText(int line)const;
     class FindReplaceHandler;
 
 public:
@@ -244,8 +247,8 @@ public:
 
 	Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
 	void SetCursorPosition(const Coordinates& aPosition);
-    bool raiseContextMenu() { return mRaiseContextMenu; }
-    void clearRaiseContextMenu() { mRaiseContextMenu = false; }
+    bool RaiseContextMenu() { return mRaiseContextMenu; }
+    void ClearRaiseContextMenu() { mRaiseContextMenu = false; }
 	inline void SetHandleMouseInputs    (bool aValue){ mHandleMouseInputs    = aValue;}
 	inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
 

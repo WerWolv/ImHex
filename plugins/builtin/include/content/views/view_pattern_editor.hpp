@@ -282,7 +282,7 @@ namespace hex::plugin::builtin {
         bool m_parentHighlightingEnabled = true;
         bool m_replaceMode = false;
         bool m_openFindReplacePopUp = false;
-
+        bool m_openGotoLinePopUp = false;
         std::map<std::fs::path, std::string> m_patternNames;
 
         ImRect m_textEditorHoverBox;
@@ -306,7 +306,8 @@ namespace hex::plugin::builtin {
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 
-        void drawFindReplaceDialog(TextEditor *textEditor, std::string &findWord, bool &requestFocus, u64 &position, u64 &count, bool &updateCount, bool canReplace);
+        void drawTextEditorFindReplacePopup(TextEditor *textEditor);
+        void drawTextEditorGotoLinePopup(TextEditor *textEditor);
 
         void historyInsert(std::array<std::string, 256> &history, u32 &size, u32 &index, const std::string &value);
 
@@ -317,6 +318,7 @@ namespace hex::plugin::builtin {
 
         TextEditor *getEditorFromFocusedWindow();
         void setupFindReplace(TextEditor *editor);
+        void setupGotoLine(TextEditor *editor);
 
         void registerEvents();
         void registerMenuItems();
