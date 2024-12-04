@@ -521,8 +521,11 @@ namespace hex::crypt {
             return wolv::util::Unexpected(setKeyResult);
 
         std::array<u8, 16> nonceCounter = { 0 };
+
+        auto mode = mbedtls_cipher_get_cipher_mode(&ctx);
+
         // if we are in ECB mode, we don't need to set the nonce
-        if (cipherInfo->mode != MBEDTLS_MODE_ECB) {
+        if (mode != MBEDTLS_MODE_ECB) {
             std::ranges::copy(nonce, nonceCounter.begin());
             std::ranges::copy(iv, nonceCounter.begin() + 8);
         }
@@ -531,7 +534,7 @@ namespace hex::crypt {
         std::vector<u8> output(outputSize, 0x00);
 
         int cryptResult = 0;
-        if (cipherInfo->mode == MBEDTLS_MODE_ECB) {
+        if (mode == MBEDTLS_MODE_ECB) {
             cryptResult = mbedtls_cipher_crypt(&ctx, nullptr, 0, input.data(), input.size(), output.data(), &outputSize);
         } else {
             cryptResult = mbedtls_cipher_crypt(&ctx, nonceCounter.data(), nonceCounter.size(), input.data(), input.size(), output.data(), &outputSize);
