@@ -107,9 +107,16 @@ namespace hex::plugin::disasm {
                         return;
                     }
 
-                    // as disassembly code can be quite long, we prefer writing each disassembled instruction to file
+                    // As disassembly code can be quite long, we prefer writing each disassembled instruction to file
                     for (const Disassembly& d : m_disassembly) {
-                        file.writeString(hex::format("{} {}\n", d.mnemonic, d.operators));
+                        // We test for a "bugged" case that should never happen - the instruction should always have a mnemonic
+                        if (d.mnemonic.empty())
+                            continue;
+
+                        if (d.operators.empty())
+                            file.writeString(hex::format("{}\n", d.mnemonic));
+                        else
+                            file.writeString(hex::format("{} {}\n", d.mnemonic, d.operators));
                     }
                 });
             });
@@ -414,14 +421,15 @@ namespace hex::plugin::disasm {
             }
             ImGui::EndDisabled();
 
-            // Draw export to file button
+            // Draw export to file icon button
             ImGui::SameLine();
             ImGui::BeginDisabled(m_disassemblerTask.isRunning() || m_disassembly.empty());
             {
-                if (ImGui::Button("hex.disassembler.view.disassembler.export"_lang))
+                if (ImGuiExt::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                     this->exportToFile();
             }
             ImGui::EndDisabled();
+            ImGuiExt::InfoTooltip("hex.disassembler.view.disassembler.export"_lang);
 
             // Draw a spinner if the disassembler is running
             if (m_disassemblerTask.isRunning()) {
