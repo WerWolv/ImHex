@@ -29,8 +29,8 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            const auto &mode = static_cast<crypt::AESMode>(m_mode);
-            const auto &keyLength = static_cast<crypt::KeyLength>(m_keyLength);
+            const auto mode = static_cast<crypt::AESMode>(m_mode);
+            const auto keyLength = static_cast<crypt::KeyLength>(m_keyLength);
 
             const auto &key   = this->getBufferOnInput(0);
             const auto &iv    = this->getBufferOnInput(1);
