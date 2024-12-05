@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <hex/helpers/crypto.hpp>
 
 #include <hex/providers/provider.hpp>
 
 #include <wolv/utils/guards.hpp>
+#include <wolv/utils/expected.hpp>
 
 #include <mbedtls/version.h>
 #include <mbedtls/base64.h>
@@ -496,8 +498,8 @@ namespace hex::crypt {
         return encodeLeb128<i128>(value);
     }
 
-    static std::vector<u8> aes(mbedtls_cipher_type_t type, mbedtls_operation_t operation, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
-        std::vector<u8> output;
+    static wolv::util::Expected<std::vector<u8>, int> aes(mbedtls_cipher_type_t type, mbedtls_operation_t operation, const std::vector<u8> &key,
+                   std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::span<const u8> &input) {
 
         if (input.empty())
             return {};
@@ -507,38 +509,65 @@ namespace hex::crypt {
         mbedtls_cipher_context_t ctx;
         auto cipherInfo = mbedtls_cipher_info_from_type(type);
 
+        if (cipherInfo == nullptr)
+            return {};
 
-        mbedtls_cipher_setup(&ctx, cipherInfo);
-        mbedtls_cipher_setkey(&ctx, key.data(), key.size() * 8, operation);
+        int setupResult = mbedtls_cipher_setup(&ctx, cipherInfo);
+        if (setupResult != 0)
+            return wolv::util::Unexpected(setupResult);
+
+        int setKeyResult = mbedtls_cipher_setkey(&ctx, key.data(), key.size() * 8, operation);
+        if (setKeyResult != 0)
+            return wolv::util::Unexpected(setKeyResult);
 
         std::array<u8, 16> nonceCounter = { 0 };
-        std::copy(nonce.begin(), nonce.end(), nonceCounter.begin());
-        std::copy(iv.begin(), iv.end(), nonceCounter.begin() + 8);
+
+        auto mode = mbedtls_cipher_get_cipher_mode(&ctx);
+
+        // if we are in ECB mode, we don't need to set the nonce
+        if (mode != MBEDTLS_MODE_ECB) {
+            std::ranges::copy(nonce, nonceCounter.begin());
+            std::ranges::copy(iv, nonceCounter.begin() + 8);
+        }
 
         size_t outputSize = input.size() + mbedtls_cipher_get_block_size(&ctx);
-        output.resize(outputSize, 0x00);
-        mbedtls_cipher_crypt(&ctx, nonceCounter.data(), nonceCounter.size(), input.data(), input.size(), output.data(), &outputSize);
+        std::vector<u8> output(outputSize, 0x00);
 
+        int cryptResult = 0;
+        if (mode == MBEDTLS_MODE_ECB) {
+            cryptResult = mbedtls_cipher_crypt(&ctx, nullptr, 0, input.data(), input.size(), output.data(), &outputSize);
+        } else {
+            cryptResult = mbedtls_cipher_crypt(&ctx, nonceCounter.data(), nonceCounter.size(), input.data(), input.size(), output.data(), &outputSize);
+        }
+
+        // free regardless of the result
         mbedtls_cipher_free(&ctx);
+
+        if (cryptResult != 0) {
+            return wolv::util::Unexpected(cryptResult);
+        }
 
         output.resize(input.size());
 
         return output;
     }
 
-    std::vector<u8> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
+    wolv::util::Expected<std::vector<u8>, int> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
         switch (keyLength) {
             case KeyLength::Key128Bits:
-                if (key.size() != 128 / 8) return {};
+                if (key.size() != 128 / 8)
+                    return wolv::util::Unexpected(CRYPTO_ERROR_INVALID_KEY_LENGTH);
                 break;
             case KeyLength::Key192Bits:
-                if (key.size() != 192 / 8) return {};
+                if (key.size() != 192 / 8)
+                    return wolv::util::Unexpected(CRYPTO_ERROR_INVALID_KEY_LENGTH);
                 break;
             case KeyLength::Key256Bits:
-                if (key.size() != 256 / 8) return {};
+                if (key.size() != 256 / 8)
+                    return wolv::util::Unexpected(CRYPTO_ERROR_INVALID_KEY_LENGTH);
                 break;
             default:
-                return {};
+                return wolv::util::Unexpected(CRYPTO_ERROR_INVALID_KEY_LENGTH);
         }
 
         mbedtls_cipher_type_t type;
@@ -568,7 +597,7 @@ namespace hex::crypt {
                 type = MBEDTLS_CIPHER_AES_128_XTS;
                 break;
             default:
-                return {};
+                return wolv::util::Unexpected(CRYPTO_ERROR_INVALID_MODE);
         }
 
         type = mbedtls_cipher_type_t(type + u8(keyLength));
