@@ -299,7 +299,7 @@ namespace hex::plugin::builtin {
                         if (data.has_value()) {
                             const auto& bytes = data.value();
                             file.writeVector(bytes);
-                            EventPatchCreated::post(bytes.data(), bytes.size(), IPSKind::IPS);
+                            EventPatchCreated::post(bytes.data(), bytes.size(), PatchKind::IPS);
                         } else {
                             handleIPSError(data.error());
                         }
@@ -338,7 +338,7 @@ namespace hex::plugin::builtin {
                         if (data.has_value()) {
                             const std::vector<u8>& bytes = data.value();
                             file.writeVector(bytes);
-                            EventPatchCreated::post(bytes.data(), bytes.size(), IPSKind::IPS32);
+                            EventPatchCreated::post(bytes.data(), bytes.size(), PatchKind::IPS32);
                         } else {
                             handleIPSError(data.error());
                         }

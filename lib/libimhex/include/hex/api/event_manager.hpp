@@ -259,7 +259,7 @@ namespace hex {
      * @brief Called upon creation of an IPS patch.
      * As for now, the event only serves a purpose for the achievement unlock.
      */
-    EVENT_DEF(EventPatchCreated, const unsigned char *, u64, const IPSKind);
+    EVENT_DEF(EventPatchCreated, const u8*, u64, const PatchKind);
     EVENT_DEF(EventPatternEvaluating);
     EVENT_DEF(EventPatternExecuted, const std::string&);
     EVENT_DEF(EventPatternEditorChanged, const std::string&);

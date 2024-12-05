@@ -21,7 +21,7 @@ namespace hex {
         MissingEOF
     };
 
-    enum class IPSKind {
+    enum class PatchKind {
         IPS,
         IPS32
     };
