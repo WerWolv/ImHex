@@ -418,8 +418,8 @@ namespace hex::plugin::builtin {
                 ImGui::EndPopup();
             }
 
-
-            setupFindReplace(getEditorFromFocusedWindow());
+            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
+                setupFindReplace(editor);
 
             ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 2_scaled));
             if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
