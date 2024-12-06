@@ -387,6 +387,8 @@ function(configureProject)
     if (XCODE)
         # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
         set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>" PARENT_SCOPE)
+    elseif(EMSCRIPTEN)
+        set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" PARENT_SCOPE)
     else()
         set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" PARENT_SCOPE)
     endif()
