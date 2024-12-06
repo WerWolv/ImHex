@@ -244,7 +244,8 @@ public:
 
 	Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
 	void SetCursorPosition(const Coordinates& aPosition);
-
+    bool RaiseContextMenu() { return mRaiseContextMenu; }
+    void ClearRaiseContextMenu() { mRaiseContextMenu = false; }
 	inline void SetHandleMouseInputs    (bool aValue){ mHandleMouseInputs    = aValue;}
 	inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
 
@@ -502,6 +503,7 @@ private:
 	float mLastClick;
     bool mShowCursor;
     bool mShowLineNumbers;
+    bool mRaiseContextMenu = false;
 
     static const int sCursorBlinkInterval;
     static const int sCursorBlinkOnTime;

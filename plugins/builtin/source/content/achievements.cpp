@@ -1,8 +1,10 @@
+#include <iostream>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/event_manager.hpp>
 
 #include <hex/helpers/crypto.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <toasts/toast_notification.hpp>
 #include <popups/popup_notification.hpp>
@@ -192,8 +194,14 @@ namespace hex::plugin::builtin {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.create_bookmark.name");
             });
 
-            EventPatchCreated::subscribe([](u64, u8, u8) {
+            EventProviderDataModified::subscribe([](const prv::Provider *, u64, const u64, const u8*) {
+                // Warning: overlaps with the "Flood fill" achievement, since "Fill" works by writing to bytes one-by-one.
+                    // Thus, we do not check for size, that will always be equal to 1 even during a fill operation.
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.modify_byte.name");
+            });
+
+            EventPatchCreated::subscribe([](const u8 *, u8, PatchKind) {
+                AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.create_patch.name");
             });
 
 
