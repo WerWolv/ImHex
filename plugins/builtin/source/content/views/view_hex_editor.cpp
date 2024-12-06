@@ -21,8 +21,10 @@
 #include <content/popups/popup_blocking_task.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
 #include <pl/patterns/pattern.hpp>
+#include <wolv/literals.hpp>
 
 using namespace std::literals::string_literals;
+using namespace wolv::literals;
 
 namespace hex::plugin::builtin {
 
@@ -449,9 +451,24 @@ namespace hex::plugin::builtin {
 
             auto provider = ImHexApi::Provider::get();
             u32 patchCount = 0;
-            for (u64 i = 0; i < size; i += bytes.size()) {
-                auto remainingSize = std::min<size_t>(size - i, bytes.size());
-                provider->write(provider->getBaseAddress() + address + i, bytes.data(), remainingSize);
+
+            // Group the fill pattern into a larger chunk
+            constexpr static auto BatchFillSize = 1_MiB;
+            std::vector<u8> batchData;
+            if (bytes.size() < BatchFillSize) {
+                batchData.resize(std::min(alignTo(BatchFillSize, bytes.size()), size));
+                for (u64 i = 0; i < batchData.size(); i += bytes.size()) {
+                    auto remainingSize = std::min<size_t>(batchData.size() - i, bytes.size());
+                    std::copy_n(bytes.begin(), remainingSize, batchData.begin() + i);
+                }
+            } else {
+                batchData = std::move(bytes);
+            }
+
+            const auto startAddress = provider->getBaseAddress() + address;
+            for (u64 i = 0; i < size; i += batchData.size()) {
+                auto remainingSize = std::min<size_t>(size - i, batchData.size());
+                provider->write(startAddress + i, batchData.data(), remainingSize);
                 patchCount += 1;
             }
             provider->getUndoStack().groupOperations(patchCount, "hex.builtin.undo_operation.fill");
