@@ -154,7 +154,7 @@ public:
     public:
         CursorChangeBox()=default;
         explicit CursorChangeBox(const ImRect &box) : ActionableBox(box) {
-            setCallback( [this]() {
+            setCallback([]() {
                 ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
             });
         }
@@ -183,7 +183,7 @@ public:
     public:
         ErrorHoverBox()=default;
         ErrorHoverBox(const ImRect &box, const Coordinates &pos,const char *errorText) : ActionableBox(box), mPos(pos), mErrorText(errorText) {
-            setCallback( [this]() {
+            setCallback([this]() {
                 ImGui::BeginTooltip();
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
                 ImGui::Text("Error at line %d:", mPos.mLine);
