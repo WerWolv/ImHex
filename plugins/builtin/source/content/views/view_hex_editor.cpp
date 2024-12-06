@@ -456,7 +456,7 @@ namespace hex::plugin::builtin {
             constexpr static auto BatchFillSize = 1_MiB;
             std::vector<u8> batchData;
             if (bytes.size() < BatchFillSize) {
-                batchData.resize(std::min(alignTo(BatchFillSize, bytes.size()), size));
+                batchData.resize(std::min<u64>(alignTo<u64>(BatchFillSize, bytes.size()), size));
                 for (u64 i = 0; i < batchData.size(); i += bytes.size()) {
                     auto remainingSize = std::min<size_t>(batchData.size() - i, bytes.size());
                     std::copy_n(bytes.begin(), remainingSize, batchData.begin() + i);
