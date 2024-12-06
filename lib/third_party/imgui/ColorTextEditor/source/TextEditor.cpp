@@ -971,10 +971,18 @@ void TextEditor::Render() {
             // Render goto buttons
             auto lineText = GetLineText(lineNo);
             Coordinates gotoKey = Coordinates(lineNo + 1, 0);
-            bool type1 = lineText.find("E: <Source Code>:") == 0;
-            bool type2 = lineText.find("E:   -->   in <Source Code>:") == 0;
-            if (type1 || type2) {
-                std::string errorLineColumn = type1 ? lineText.substr(17) : lineText.substr(28);
+            std::string errorLineColumn;
+            bool found = false;
+            for (auto text : mClickableText) {
+                if (lineText.find(text) == 0) {
+                    errorLineColumn = lineText.substr(text.size());
+                    if (!errorLineColumn.empty()) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (found) {
                 int currLine = 0, currColumn = 0;
                 if (auto idx = errorLineColumn.find(":"); idx != std::string::npos) {
                     auto errorLine = errorLineColumn.substr(0, idx);

@@ -190,7 +190,7 @@ public:
                 ImGui::PopStyleColor();
                 ImGui::Separator();
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.2f, 1.0f));
-                ImGui::Text("%s", mErrorText.c_str());
+                ImGui::TextUnformatted(mErrorText.c_str());
                 ImGui::PopStyleColor();
                 ImGui::EndTooltip();
                 }
@@ -262,7 +262,11 @@ public:
     void ClearCursorBoxes() {
         mCursorBoxes.clear();
     }
-
+    void ClearActionables() {
+        ClearErrorMarkers();
+        ClearGotoBoxes();
+        ClearCursorBoxes();
+    }
 
     struct Selection {
         Coordinates mStart;
@@ -311,6 +315,12 @@ public:
     class FindReplaceHandler;
 
 public:
+    void AddClickableText(std::string text) {
+        mClickableText.push_back(text);
+    }
+    void ClearClickableText() {
+        mClickableText.clear();
+    }
     FindReplaceHandler *GetFindReplaceHandler() { return &mFindReplaceHandler; }
 	int GetTotalLines() const { return (int)mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
@@ -597,6 +607,8 @@ private:
 	float mLastClick;
     bool mShowCursor;
     bool mShowLineNumbers;
+
+    std::vector<std::string>  mClickableText;
 
     static const int sCursorBlinkInterval;
     static const int sCursorBlinkOnTime;
