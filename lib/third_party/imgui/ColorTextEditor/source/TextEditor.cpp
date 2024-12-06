@@ -30,7 +30,7 @@ TextEditor::Palette TextEditor::sPaletteBase = TextEditor::GetDarkPalette();
 TextEditor::FindReplaceHandler::FindReplaceHandler() : mWholeWord(false),mFindRegEx(false),mMatchCase(false)  {}
 
 TextEditor::TextEditor()
-    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mScrollToBottom(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mTopMargin(0), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true),mStartTime(ImGui::GetTime() * 1000) {
+    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mScrollToBottom(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mTopMargin(0), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true),mStartTime(ImGui::GetTime() * 1000), mBreakPointsChanged(false) {
     SetLanguageDefinition(LanguageDefinition::HLSL());
     mLines.push_back(Line());
 }
@@ -493,17 +493,20 @@ TextEditor::Coordinates TextEditor::StringIndexToCoordinates(int aIndex, const s
 int TextEditor::GetCharacterIndex(const Coordinates &aCoordinates) const {
     if (aCoordinates.mLine >= mLines.size())
         return -1;
-    auto &line = mLines[aCoordinates.mLine];
-    int c      = 0;
-    int i      = 0;
-    while (i < line.size() && c < aCoordinates.mColumn) {
-        i += UTF8CharLength(line[i].mChar);
-        if (line[i].mChar == '\t')
-            c = (c / mTabSize) * mTabSize + mTabSize;
+
+    const auto &line = mLines[aCoordinates.mLine];
+    int column = 0;
+    int index  = 0;
+    while (index < line.size() && column < aCoordinates.mColumn) {
+        const auto character = line[index].mChar;
+        index += UTF8CharLength(character);
+        if (character == '\t')
+            column = (column / mTabSize) * mTabSize + mTabSize;
         else
-            ++c;
+            ++column;
     }
-    return i;
+
+    return index;
 }
 
 int TextEditor::GetCharacterColumn(int aLine, int aIndex) const {

@@ -454,7 +454,7 @@ namespace hex::ui {
         if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
             m_selectionCallback(&pattern);
 
-            if (m_editingPattern != &pattern) {
+            if (m_editingPattern != nullptr && m_editingPattern != &pattern) {
                 this->resetEditing();
             }
         }
@@ -565,7 +565,6 @@ namespace hex::ui {
                     pattern.setValue(boolValue);
                 }
             } else if (std::holds_alternative<i128>(value)) {
-                ImGui::SetKeyboardFocusHere();
                 if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     wolv::math_eval::MathEvaluator<i128> mathEvaluator;
 
@@ -575,7 +574,6 @@ namespace hex::ui {
                     this->resetEditing();
                 }
             } else if (std::holds_alternative<u128>(value)) {
-                ImGui::SetKeyboardFocusHere();
                 if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     wolv::math_eval::MathEvaluator<u128> mathEvaluator;
 
