@@ -2,6 +2,7 @@
     "code": "pt-BR",
     "country": "Brazil",
     "language": "Portuguese",
+    "fallback": false,
     "translations": {
         "hex.builtin.setting.general.context_menu_entry": "Entrada do menu de contexto do Windows",
         "hex.builtin.setting.interface.show_resource_usage": "",

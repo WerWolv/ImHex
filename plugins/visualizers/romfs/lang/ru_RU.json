@@ -1,0 +1,22 @@
+{
+    "code": "ru-RU",
+    "language": "Russian",
+    "country": "Russia",
+    "fallback": false,
+    "translations": {
+        "hex.visualizers.pl_visualizer.3d.light_position": "Позиция источника света",
+        "hex.visualizers.pl_visualizer.3d.ambient_brightness": "Фоновая яркость",
+        "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "Рассеянная яркость",
+        "hex.visualizers.pl_visualizer.3d.specular_brightness": "Яркость отражения",
+        "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "Значение отражённого света",
+        "hex.visualizers.pl_visualizer.3d.light_color": "Цвет",
+        "hex.visualizers.pl_visualizer.3d.more_settings": "Больше настроек",
+        "hex.visualizers.pl_visualizer.3d.texture_file": "Путь к файлу с текстурами",
+        "hex.visualizers.pl_visualizer.coordinates.latitude": "Широта",
+        "hex.visualizers.pl_visualizer.coordinates.longitude": "Долгота",
+        "hex.visualizers.pl_visualizer.coordinates.query": "Найти адрес",
+        "hex.visualizers.pl_visualizer.coordinates.querying": "Выполняется поиск адреса...",
+        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "Адрес не найден",
+        "hex.visualizers.pl_visualizer.task.visualizing": "Визуализация данных..."
+    }
+}
