@@ -345,8 +345,10 @@ public:
 
 	Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
 	void SetCursorPosition(const Coordinates& aPosition);
-    Coordinates mFocusAtCoords;
-    bool mUpdateFocus = false;
+
+    bool RaiseContextMenu() { return mRaiseContextMenu; }
+    void ClearRaiseContextMenu() { mRaiseContextMenu = false; }
+
 	inline void SetHandleMouseInputs    (bool aValue){ mHandleMouseInputs    = aValue;}
 	inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
 
@@ -607,6 +609,9 @@ private:
 	float mLastClick;
     bool mShowCursor;
     bool mShowLineNumbers;
+    bool mRaiseContextMenu = false;
+    Coordinates mFocusAtCoords;
+    bool mUpdateFocus = false;
 
     std::vector<std::string>  mClickableText;
 

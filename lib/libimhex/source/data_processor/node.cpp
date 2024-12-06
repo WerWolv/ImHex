@@ -35,9 +35,6 @@ namespace hex::dp {
 
         auto &outputData = attribute->getOutputData();
 
-        if (outputData.empty())
-            throwNodeError("No data available at connected attribute");
-
         return outputData;
     }
 

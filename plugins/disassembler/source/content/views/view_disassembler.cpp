@@ -6,6 +6,7 @@
 #include <fonts/codicons_font.h>
 
 #include <cstring>
+#include <toasts/toast_notification.hpp>
 
 using namespace std::literals::string_literals;
 
@@ -89,6 +90,36 @@ namespace hex::plugin::disasm {
 
                 cs_close(&capstoneHandle);
             }
+        });
+    }
+
+    void ViewDisassembler::exportToFile() {
+        TaskManager::createTask("hex.ui.common.processing"_lang, TaskManager::NoProgress, [this](auto &) {
+            TaskManager::doLater([this] {
+                fs::openFileBrowser(fs::DialogMode::Save, {}, [this](const std::fs::path &path) {
+                    auto p = path;
+                    if (p.extension() != ".asm")
+                        p.replace_filename(hex::format("{}{}", p.filename().string(), ".asm"));
+                    auto file = wolv::io::File(p, wolv::io::File::Mode::Create);
+
+                    if (!file.isValid()) {
+                        ui::ToastError::open("hex.disassembler.view.disassembler.export.popup.error"_lang);
+                        return;
+                    }
+
+                    // As disassembly code can be quite long, we prefer writing each disassembled instruction to file
+                    for (const Disassembly& d : m_disassembly) {
+                        // We test for a "bugged" case that should never happen - the instruction should always have a mnemonic
+                        if (d.mnemonic.empty())
+                            continue;
+
+                        if (d.operators.empty())
+                            file.writeString(hex::format("{}\n", d.mnemonic));
+                        else
+                            file.writeString(hex::format("{} {}\n", d.mnemonic, d.operators));
+                    }
+                });
+            });
         });
     }
 
@@ -390,9 +421,18 @@ namespace hex::plugin::disasm {
             }
             ImGui::EndDisabled();
 
+            // Draw export to file icon button
+            ImGui::SameLine();
+            ImGui::BeginDisabled(m_disassemblerTask.isRunning() || m_disassembly.empty());
+            {
+                if (ImGuiExt::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                    this->exportToFile();
+            }
+            ImGui::EndDisabled();
+            ImGuiExt::InfoTooltip("hex.disassembler.view.disassembler.export"_lang);
+
             // Draw a spinner if the disassembler is running
             if (m_disassemblerTask.isRunning()) {
-                ImGui::SameLine();
                 ImGuiExt::TextSpinner("hex.disassembler.view.disassembler.disassembling"_lang);
             }
 
