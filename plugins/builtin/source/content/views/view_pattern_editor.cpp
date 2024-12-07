@@ -1373,7 +1373,7 @@ namespace hex::plugin::builtin {
                     for (const auto &frame : **m_callStack | std::views::reverse) {
                         auto location = frame->getLocation();
                         std::string message;
-                        if (location.source->mainSource) {
+                        if (location.source != nullptr && location.source->mainSource) {
                             if (m_lastEvaluationError->has_value())
                                 message = processMessage((*m_lastEvaluationError)->message);
                             auto key = TextEditor::Coordinates(location.line, location.column);

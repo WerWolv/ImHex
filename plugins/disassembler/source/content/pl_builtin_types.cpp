@@ -2,12 +2,14 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/http_requests.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <pl/core/evaluator.hpp>
 
 #include <pl/patterns/pattern.hpp>
 
 #include <capstone/capstone.h>
+#include <content/helpers/disassembler.hpp>
 
 
 namespace hex::plugin::disasm {
@@ -62,14 +64,34 @@ namespace hex::plugin::disasm {
 
             /* Json<data_pattern> */
             ContentRegistry::PatternLanguage::addType(nsHexDec, "Instruction", FunctionParameterCount::exactly(3), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
-                const auto arch = params[0].toUnsigned();
-                const auto mode = params[1].toUnsigned();
+                cs_arch arch;
+                cs_mode mode;
+
+                try {
+                    std::tie(arch, mode) = Disassembler::stringToSettings(params[0].toString());
+                } catch (const std::exception &e) {
+                    err::E0012.throwError(e.what());
+                }
+                const auto syntaxString = params[1].toString();
                 const auto relocatedAddress = params[2].toUnsigned();
 
                 const auto address = evaluator->getReadOffset();
 
                 csh capstone;
-                if (cs_open(static_cast<cs_arch>(arch), static_cast<cs_mode>(mode), &capstone) == CS_ERR_OK) {
+                if (cs_open(arch, mode, &capstone) == CS_ERR_OK) {
+                    cs_opt_value syntax;
+                    if (equalsIgnoreCase(syntaxString, "intel"))
+                        syntax = CS_OPT_SYNTAX_INTEL;
+                    else if (equalsIgnoreCase(syntaxString, "at&t"))
+                        syntax = CS_OPT_SYNTAX_ATT;
+                    else if (equalsIgnoreCase(syntaxString, "masm"))
+                        syntax = CS_OPT_SYNTAX_MASM;
+                    else if (equalsIgnoreCase(syntaxString, "motorola"))
+                        syntax = CS_OPT_SYNTAX_MOTOROLA;
+                    else
+                        err::E0012.throwError(hex::format("Invalid disassembler syntax name '{}'", syntaxString));
+
+                    cs_option(capstone, CS_OPT_SYNTAX, syntax);
                     cs_option(capstone, CS_OPT_SKIPDATA, CS_OPT_ON);
 
                     const auto sectionId = evaluator->getSectionId();
@@ -85,9 +107,9 @@ namespace hex::plugin::disasm {
                     auto result = std::make_unique<PatternInstruction>(evaluator, address, instruction->size, 0);
 
                     std::string instructionString;
-                    if (instruction->mnemonic[0] == '\x00')
+                    if (instruction->mnemonic[0] != '\x00')
                         instructionString += instruction->mnemonic;
-                    if (instruction->op_str[0] == '\x00') {
+                    if (instruction->op_str[0] != '\x00') {
                         instructionString += ' ';
                         instructionString += instruction->op_str;
                     }

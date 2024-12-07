@@ -28,7 +28,7 @@ namespace {
     void registerPlVisualizers() {
         using ParamCount = pl::api::FunctionParameterCount;
 
-        ContentRegistry::PatternLanguage::addVisualizer("disassembler", drawDisassemblyVisualizer, ParamCount::exactly(4));
+        ContentRegistry::PatternLanguage::addVisualizer("disassembler", drawDisassemblyVisualizer, ParamCount::exactly(3));
     }
 
 }
