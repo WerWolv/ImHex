@@ -127,7 +127,7 @@ namespace hex::plugin::disasm {
                 arch = CS_ARCH_ARM;
                 mode |= CS_MODE_THUMB;
             }
-            else if (equalsIgnoreCase(archName, "aarch64") | equalsIgnoreCase(archName, "arm64"))
+            else if (equalsIgnoreCase(archName, "aarch64") || equalsIgnoreCase(archName, "arm64"))
                 arch = CS_ARCH_ARM64;
             else if (equalsIgnoreCase(archName, "mips"))
                 arch = CS_ARCH_MIPS;
@@ -137,7 +137,7 @@ namespace hex::plugin::disasm {
                 arch = CS_ARCH_X86;
                 mode = CS_MODE_64;
             }
-            else if (equalsIgnoreCase(archName, "ppc") | equalsIgnoreCase(archName, "powerpc"))
+            else if (equalsIgnoreCase(archName, "ppc") || equalsIgnoreCase(archName, "powerpc"))
                 arch = CS_ARCH_PPC;
             else if (equalsIgnoreCase(archName, "sparc"))
                 arch = CS_ARCH_SPARC;
