@@ -57,7 +57,7 @@ jobs:
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld -fsanitize=address,leak,undefined -fno-sanitize-recover=all --coverage"  \
           -DIMHEX_OFFLINE_BUILD=ON                                                                                 \
           ..
-        make -j4
+        make -j4 unit_tests main
 
     - name: 🧪 Perform plcli Integration Tests
       run: |
