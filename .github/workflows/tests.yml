@@ -62,7 +62,7 @@ jobs:
     - name: 🧪 Perform plcli Integration Tests
       run: |
         cd lib/external/pattern_language
-        python tests/integration/integration.py ../../../build/imhex --pl
+        python tests/integration/integration.py ../../../build/bin/imhex --pl
 
     - name: 🧪 Perform Unit Tests
       run: |
