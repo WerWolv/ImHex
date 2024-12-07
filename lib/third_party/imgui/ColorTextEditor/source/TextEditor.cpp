@@ -1133,21 +1133,17 @@ void TextEditor::Render() {
     ImGuiPopupFlags_ popup_flags = ImGuiPopupFlags_None;
     ImGuiContext& g = *GImGui;
     auto oldTopMargin = mTopMargin;
-    auto popupStack = g.OpenPopupStack;
-    if (popupStack.Size > 0) {
-        for (int n = 0; n < popupStack.Size; n++){
-            if (auto window = popupStack[n].Window; window != nullptr) {
-                if (window->Size.x == mFindReplaceHandler.GetFindWindowSize().x &&
-                    window->Size.y == mFindReplaceHandler.GetFindWindowSize().y &&
-                    window->Pos.x == mFindReplaceHandler.GetFindWindowPos().x &&
-                    window->Pos.y == mFindReplaceHandler.GetFindWindowPos().y) {
-                    mTopMargin = mFindReplaceHandler.GetFindWindowSize().y;
-                }
-            }
-        }
-    } else {
+    if (g.NavWindow != nullptr) {
+        auto window = g.NavWindow;
+        std::string windowName = window->Name;
+        if (windowName.find("text_editor") != std::string::npos && (windowName.find("find_replace") != std::string::npos || windowName.find("goto_line") != std::string::npos)) {
+            std::string parentName = windowName.substr(0, windowName.find("/##text_editor"));
+            auto parent = ImGui::FindWindowByName(parentName.c_str());
+            mTopMargin = parent->Size.y;
+        } else
+            mTopMargin = 0;
+    } else
         mTopMargin = 0;
-    }
 
 
     if (mTopMargin != oldTopMargin) {
@@ -1600,6 +1596,7 @@ void TextEditor::DeleteSelection() {
 void TextEditor::JumpToLine(int line) {
     auto newPos = Coordinates(line, 0);
     JumpToCoords(newPos);
+
     setFocusAtCoords(newPos);
 }
 
@@ -1607,6 +1604,7 @@ void TextEditor::JumpToCoords(const Coordinates &aNewPos) {
     SetSelection(aNewPos, aNewPos);
     SetCursorPosition(aNewPos);
     EnsureCursorVisible();
+
     setFocusAtCoords(aNewPos);
 }
 

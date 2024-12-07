@@ -311,7 +311,6 @@ public:
         return this;
     }
 
-
     class FindReplaceHandler;
 
 public:
