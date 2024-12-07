@@ -214,6 +214,13 @@ namespace hex::plugin::builtin {
         m_consoleEditor.SetReadOnly(true);
         m_consoleEditor.SetShowCursor(false);
         m_consoleEditor.SetShowLineNumbers(false);
+        m_consoleEditor.SetSourceCodeEditor(&m_textEditor);
+        std::string sourcecode = pl::api::Source::DefaultSource;
+        std::string error = "E: ";
+        std::string end = ":";
+        std::string arrow = "  -->   in ";
+        m_consoleEditor.AddClickableText(error + sourcecode + end);
+        m_consoleEditor.AddClickableText(error + arrow + sourcecode + end);
 
         this->registerEvents();
         this->registerMenuItems();
@@ -1828,8 +1835,9 @@ namespace hex::plugin::builtin {
         m_runningEvaluators += 1;
         m_executionDone.get(provider) = false;
 
+        m_textEditor.ClearActionables();
 
-        m_textEditor.SetErrorMarkers({});
+        m_consoleEditor.ClearActionables();
         m_console.get(provider).clear();
         m_consoleNeedsUpdate = true;
 
