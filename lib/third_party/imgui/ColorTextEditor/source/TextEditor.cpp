@@ -1130,31 +1130,14 @@ void TextEditor::Render() {
         mScrollToCursor = false;
     }
 
-    for (auto [key,value] : mErrorMarkers) {
-        auto start = mErrorHoverBoxes[key].first;
-        auto end = mErrorHoverBoxes[key].second;
-        if (ImGui::IsMouseHoveringRect(start, end)) {
-            ImGui::BeginTooltip();
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
-            ImGui::Text("Error at line %d:", key.mLine);
-            ImGui::PopStyleColor();
-            ImGui::Separator();
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.2f, 1.0f));
-            ImGui::Text("%s", value.second.c_str());
-            ImGui::PopStyleColor();
-            ImGui::EndTooltip();
-        }
-    }
-
-
-    ImGuiContext &g = *GImGui;
-
+    ImGuiPopupFlags_ popup_flags = ImGuiPopupFlags_None;
+    ImGuiContext& g = *GImGui;
     auto oldTopMargin = mTopMargin;
     if (g.NavWindow != nullptr) {
         auto window = g.NavWindow;
         std::string windowName = window->Name;
-        if (windowName.find("pattern_editor") != std::string::npos && (windowName.find("find_replace") != std::string::npos || windowName.find("goto_line") != std::string::npos)) {
-            std::string parentName = windowName.substr(0, windowName.find("/##pattern_editor"));
+        if (windowName.find("text_editor") != std::string::npos && (windowName.find("find_replace") != std::string::npos || windowName.find("goto_line") != std::string::npos)) {
+            std::string parentName = windowName.substr(0, windowName.find("/##text_editor"));
             auto parent = ImGui::FindWindowByName(parentName.c_str());
             mTopMargin = parent->Size.y;
         } else

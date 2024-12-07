@@ -270,7 +270,7 @@ namespace hex::plugin::builtin {
             else
                 return;
             ImGui::SetNextWindowPos(windowPosForPopup);
-            ImGui::OpenPopup("##pattern_editor_view_find_replace_popup");
+            ImGui::OpenPopup("##text_editor_view_find_replace_popup");
         }
         drawTextEditorFindReplacePopup(editor);
 
@@ -285,7 +285,7 @@ namespace hex::plugin::builtin {
             auto style = ImGui::GetStyle();
 
 
-            auto labelSize = ImGui::CalcTextSize("Goto Line: ");
+            auto labelSize = ImGui::CalcTextSize("hex.builtin.view.pattern_editor.goto_line"_lang);
 
             auto popupSizeX =  (labelSize.x + style.FramePadding.x * 2.0F);
 
@@ -310,7 +310,7 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::SetNextWindowPos(windowPosForPopup);
-            ImGui::OpenPopup("##pattern_editor_view_goto_line_popup");
+            ImGui::OpenPopup("##text_editor_view_goto_line_popup");
 
         }
         drawTextEditorGotoLinePopup(editor);
@@ -343,11 +343,11 @@ namespace hex::plugin::builtin {
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
             if (m_textEditor.RaiseContextMenu())  {
-                ImGui::OpenPopup("##pattern_editor_context_menu");
+                ImGui::OpenPopup("##text_editor_context_menu");
                 m_textEditor.ClearRaiseContextMenu();
             }
 
-            if (ImGui::BeginPopup("##pattern_editor_context_menu")) {
+            if (ImGui::BeginPopup("##text_editor_context_menu")) {
                 // no shortcut for this
                 if (ImGui::MenuItem("hex.builtin.menu.file.import.pattern_file"_lang, nullptr, false))
                     m_importPatternFile();
@@ -631,7 +631,7 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawTextEditorFindReplacePopup(TextEditor *textEditor) {
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
-        if (ImGui::BeginPopup("##pattern_editor_view_find_replace_popup", popupFlags)) {
+        if (ImGui::BeginPopup("##text_editor_view_find_replace_popup", popupFlags)) {
             static bool firstRun = true;
             static std::string findWord;
             static bool requestFocus = false;
@@ -671,12 +671,12 @@ namespace hex::plugin::builtin {
             if (m_focusedSubWindowName.contains(consoleView))
                 childName = "##console_find_replace";
             else if (m_focusedSubWindowName.contains(textEditorView))
-                childName = "##pattern_editor_find_replace";
+                childName = "##text_editor_find_replace";
             else
                 return;
             ImGui::BeginChild(childName.c_str(), ImVec2(), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);
 
-            if (ImGui::BeginTable("##pattern_editor_find_replace_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
+            if (ImGui::BeginTable("##text_editor_find_replace_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 static bool requestFocusFind = false;
@@ -953,12 +953,12 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawTextEditorGotoLinePopup(TextEditor *textEditor) {
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
-        if (ImGui::BeginPopup("##pattern_editor_view_goto_line_popup", popupFlags)) {
+        if (ImGui::BeginPopup("##text_editor_view_goto_line_popup", popupFlags)) {
             std::string childName;
             if (m_focusedSubWindowName.contains(consoleView))
                 childName = "##console_goto_line";
             else if (m_focusedSubWindowName.contains(textEditorView))
-                childName = "##pattern_editor_goto_line";
+                childName = "##text_editor_goto_line";
             else
                 return;
             ImGui::BeginChild(childName.c_str(), ImVec2(), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);
@@ -1047,8 +1047,6 @@ namespace hex::plugin::builtin {
                     m_consoleEditor.InsertText("\n");
                 skipNewLine = false;
                 m_consoleEditor.InsertText(m_console->at(lineCount + i));
-               // if (i + 1 < linesToAdd)
-//                    m_consoleEditor.InsertText("\n");
             }
 
             m_consoleNeedsUpdate = false;
