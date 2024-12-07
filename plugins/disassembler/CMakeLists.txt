@@ -23,6 +23,7 @@ add_imhex_plugin(
         source/content/views/view_disassembler.cpp
 
         source/content/pl_visualizers/disassembler.cpp
+        source/content/pl_builtin_types.cpp
     INCLUDES
         include
         ${CAPSTONE_INCLUDE_DIR}
