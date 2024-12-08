@@ -384,7 +384,7 @@ function(configureProject)
     # Enable C and C++ languages
     enable_language(C CXX)
 
-    if (XCODE)
+    if (XCODE OR APPLE)
         # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
         set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>" PARENT_SCOPE)
     elseif(EMSCRIPTEN)
