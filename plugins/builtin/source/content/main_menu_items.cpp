@@ -297,12 +297,12 @@ namespace hex::plugin::builtin {
                         }
 
                         if (data.has_value()) {
-                            file.writeVector(data.value());
+                            const auto& bytes = data.value();
+                            file.writeVector(bytes);
+                            EventPatchCreated::post(bytes.data(), bytes.size(), PatchKind::IPS);
                         } else {
                             handleIPSError(data.error());
                         }
-
-                        AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.create_patch.name");
                     });
                 });
             });
@@ -336,12 +336,12 @@ namespace hex::plugin::builtin {
                         }
 
                         if (data.has_value()) {
-                            file.writeVector(data.value());
+                            const std::vector<u8>& bytes = data.value();
+                            file.writeVector(bytes);
+                            EventPatchCreated::post(bytes.data(), bytes.size(), PatchKind::IPS32);
                         } else {
                             handleIPSError(data.error());
                         }
-
-                        AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.create_patch.name");
                     });
                 });
             });

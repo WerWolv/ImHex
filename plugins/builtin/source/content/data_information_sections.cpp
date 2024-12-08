@@ -180,6 +180,7 @@ namespace hex::plugin::builtin {
             m_chunkBasedEntropy.reset(m_inputChunkSize, region.getStartAddress(), region.getEndAddress(),
                 provider->getBaseAddress(), provider->getActualSize());
 
+            m_chunkBasedEntropy.enableAnnotations(m_showAnnotations);
             m_byteTypesDistribution.enableAnnotations(m_showAnnotations);
 
             // Create a handle to the file

@@ -26,5 +26,5 @@ package() {
 
     install -d "$pkgdir/usr/share/imhex"
     cp -r "$srcdir/usr/share/imhex/"{constants,encodings,includes,magic,patterns} "$pkgdir/usr/share/imhex"
-    cp -r "$srcdir/usr/share/"{applications,licenses,pixmaps} "$pkgdir/usr/share"
+    cp -r "$srcdir/usr/share/"{applications,licenses,pixmaps,mime} "$pkgdir/usr/share"
 }

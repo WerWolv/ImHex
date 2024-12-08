@@ -10,6 +10,7 @@ add_imhex_plugin(
 
         source/ui/hex_editor.cpp
         source/ui/pattern_drawer.cpp
+        source/ui/visualizer_drawer.cpp
     INCLUDES
         include
     LIBRARIES

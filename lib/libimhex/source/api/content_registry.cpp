@@ -552,6 +552,11 @@ namespace hex {
                 return *s_functions;
             }
 
+            static AutoReset<std::vector<TypeDefinition>> s_types;
+            const std::vector<TypeDefinition>& getTypes() {
+                return *s_types;
+            }
+
         }
 
         static std::string getFunctionName(const pl::api::Namespace &ns, const std::string &name) {
@@ -605,6 +610,10 @@ namespace hex {
                     runtime.addFunction(ns, name, paramCount, callback);
             }
 
+            for (const auto &[ns, name, paramCount, callback] : impl::getTypes()) {
+                runtime.addType(ns, name, paramCount, callback);
+            }
+
             for (const auto &[name, callback] : impl::getPragmas()) {
                 runtime.addPragma(name, callback);
             }
@@ -636,6 +645,15 @@ namespace hex {
                 ns, name,
                 parameterCount, func,
                 true
+            });
+        }
+
+        void addType(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::TypeCallback &func) {
+            log::debug("Registered new pattern language type: {}", getFunctionName(ns, name));
+
+            impl::s_types->push_back({
+                ns, name,
+                parameterCount, func
             });
         }
 

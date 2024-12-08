@@ -18,6 +18,7 @@ namespace hex::plugin::builtin {
         m_analysisData.setOnCreateCallback([](const prv::Provider *provider, AnalysisData &data) {
             data.analyzedProvider = provider;
 
+            data.informationSections.clear();
             for (const auto &informationSectionConstructor : ContentRegistry::DataInformation::impl::getInformationSectionConstructors()) {
                 data.informationSections.push_back(informationSectionConstructor());
             }

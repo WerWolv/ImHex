@@ -41,6 +41,7 @@ namespace hex::plugin::disasm {
         std::vector<Disassembly> m_disassembly;
 
         void disassemble();
+        void exportToFile();
     };
 
 }

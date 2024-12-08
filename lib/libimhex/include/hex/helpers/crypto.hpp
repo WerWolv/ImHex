@@ -2,9 +2,14 @@
 
 #include <hex.hpp>
 
+#include <wolv/utils/expected.hpp>
+
 #include <array>
 #include <string>
 #include <vector>
+
+#define CRYPTO_ERROR_INVALID_KEY_LENGTH (-1)
+#define CRYPTO_ERROR_INVALID_MODE (-2)
 
 namespace hex::prv {
     class Provider;
@@ -60,5 +65,5 @@ namespace hex::crypt {
         Key256Bits = 2
     };
 
-    std::vector<u8> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input);
+    wolv::util::Expected<std::vector<u8>, int> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input);
 }

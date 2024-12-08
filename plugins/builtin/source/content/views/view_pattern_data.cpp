@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
             (*m_patternDrawer)->reset();
         });
 
-        EventPatternExecuted::subscribe(this, [this](auto){
+        EventPatternExecuted::subscribe(this, [this](const auto&){
             (*m_patternDrawer)->reset();
         });
 
@@ -41,11 +41,11 @@ namespace hex::plugin::builtin {
             return { m_hoveredPatternRegion };
         });
 
-        m_patternDrawer.setOnCreateCallback([this](const prv::Provider *provider, auto &drawer) {
+        m_patternDrawer.setOnCreateCallback([this](const prv::Provider *, auto &drawer) {
             drawer = std::make_unique<ui::PatternDrawer>();
 
             drawer->setSelectionCallback([](const pl::ptrn::Pattern *pattern) {
-                ImHexApi::HexEditor::setSelection(Region { pattern->getOffset(), pattern->getSize() });
+                ImHexApi::HexEditor::setSelection(Region(pattern->getOffset(), pattern->getSize()));
                 RequestPatternEditorSelectionChange::post(pattern->getLine(), 0);
             });
 
@@ -53,12 +53,11 @@ namespace hex::plugin::builtin {
                 if (pattern == nullptr)
                     m_hoveredPatternRegion = Region::Invalid();
                 else
-                    m_hoveredPatternRegion = { pattern->getOffset(), pattern->getSize() };
+                    m_hoveredPatternRegion = Region(pattern->getOffset(), pattern->getSize());
             });
 
             drawer->setTreeStyle(m_treeStyle);
             drawer->enableRowColoring(m_rowColoring);
-            drawer->enablePatternEditing(provider->isWritable());
         });
     }
 
@@ -73,9 +72,10 @@ namespace hex::plugin::builtin {
             // Make sure the runtime has finished evaluating and produced valid patterns
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
-            const auto height = std::max(ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetStyle().FramePadding.y * 2, ImGui::GetTextLineHeightWithSpacing() * 5);
+            const auto height = std::max(ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - (ImGui::GetStyle().FramePadding.y * 2), ImGui::GetTextLineHeightWithSpacing() * 5);
 
             if (*m_patternDrawer != nullptr) {
+                (*m_patternDrawer)->enablePatternEditing(ImHexApi::Provider::get()->isWritable());
                 if (!runtime.arePatternsValid()) {
                     (*m_patternDrawer)->draw({ }, nullptr, height);
                 } else {

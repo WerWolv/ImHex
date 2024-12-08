@@ -214,6 +214,13 @@ namespace hex::plugin::builtin {
         m_consoleEditor.SetReadOnly(true);
         m_consoleEditor.SetShowCursor(false);
         m_consoleEditor.SetShowLineNumbers(false);
+        m_consoleEditor.SetSourceCodeEditor(&m_textEditor);
+        std::string sourcecode = pl::api::Source::DefaultSource;
+        std::string error = "E: ";
+        std::string end = ":";
+        std::string arrow = "  -->   in ";
+        m_consoleEditor.AddClickableText(error + sourcecode + end);
+        m_consoleEditor.AddClickableText(error + arrow + sourcecode + end);
 
         this->registerEvents();
         this->registerMenuItems();
@@ -351,8 +358,9 @@ namespace hex::plugin::builtin {
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
-            if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsMouseHoveringRect(m_textEditorHoverBox.Min,m_textEditorHoverBox.Max) && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+            if (m_textEditor.RaiseContextMenu())  {
                 ImGui::OpenPopup("##pattern_editor_context_menu");
+                m_textEditor.ClearRaiseContextMenu();
             }
 
             if (ImGui::BeginPopup("##pattern_editor_context_menu")) {
@@ -364,6 +372,8 @@ namespace hex::plugin::builtin {
 
                 ImGui::Separator();
 
+                if (!m_textEditor.HasSelection())
+                    m_textEditor.SelectWordUnderCursor();
                 const bool hasSelection = m_textEditor.HasSelection();
                 if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.cut"_lang, Shortcut(CTRLCMD + Keys::X).toString().c_str(), false, hasSelection)) {
                     m_textEditor.Cut();
@@ -386,7 +396,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::Separator();
                 // Search and replace entries
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str(),false, m_textEditor.HasSelection())){
+                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str())){
                     m_replaceMode = false;
                     m_openFindReplacePopUp = true;
                 }
@@ -398,7 +408,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_previous"_lang, Shortcut(SHIFT + Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
                     findReplaceHandler->FindMatch(&m_textEditor,false);
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace"_lang, Shortcut(CTRLCMD +  Keys::H).toString().c_str(),false,!findReplaceHandler->GetReplaceWord().empty())) {
+                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace"_lang, Shortcut(CTRLCMD +  Keys::H).toString().c_str())) {
                     m_replaceMode = true;
                     m_openFindReplacePopUp = true;
                 }
@@ -418,8 +428,8 @@ namespace hex::plugin::builtin {
                 ImGui::EndPopup();
             }
 
-
-            setupFindReplace(getEditorFromFocusedWindow());
+            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
+                setupFindReplace(editor);
 
             ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 2_scaled));
             if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
@@ -921,9 +931,12 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
         auto findReplaceHandler = m_consoleEditor.GetFindReplaceHandler();
-        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsMouseHoveringRect(m_consoleHoverBox.Min,m_consoleHoverBox.Max) && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+        if (m_consoleEditor.RaiseContextMenu()) {
             ImGui::OpenPopup("##console_context_menu");
+            m_consoleEditor.ClearRaiseContextMenu();
         }
+        if (!m_consoleEditor.HasSelection())
+            m_consoleEditor.SelectWordUnderCursor();
         const bool hasSelection = m_consoleEditor.HasSelection();
         if (ImGui::BeginPopup("##console_context_menu")) {
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.copy"_lang, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
@@ -934,7 +947,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::Separator();
             // Search and replace entries
-            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str(),false, hasSelection)) {
+            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str())) {
                 m_openFindReplacePopUp = true;
                 m_replaceMode = false;
             }
@@ -1559,7 +1572,16 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::SameLine();
-            ImGuiExt::TextFormatted("{: <{}} ", hex::limitStringLength(pattern->getFormattedValue(), 64), shiftHeld ? 40 : 0);
+
+            if (const auto &inlineVisualizeArgs = pattern->getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
+                auto x = ImGui::GetCursorPosX();
+                ImGui::Dummy(ImVec2(125_scaled, ImGui::GetTextLineHeight()));
+                ImGui::SameLine();
+                ImGui::SetCursorPos(ImVec2(x, ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y));
+                m_visualizerDrawer->drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
+            } else {
+                ImGuiExt::TextFormatted("{: <{}} ", hex::limitStringLength(pattern->getFormattedValue(), 64), shiftHeld ? 40 : 0);
+            }
 
             if (shiftHeld) {
                 ImGui::Indent();
@@ -1661,7 +1683,16 @@ namespace hex::plugin::builtin {
 
                     ImGui::EndTable();
                 }
+
+                if (const auto &visualizeArgs = pattern->getAttributeArguments("hex::visualize"); !visualizeArgs.empty()) {
+                    m_visualizerDrawer->drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, *pattern, m_tooltipJustOpened);
+                }
+
                 ImGui::Unindent();
+
+                m_tooltipJustOpened = false;
+            } else {
+                m_tooltipJustOpened = true;
             }
         }
 
@@ -1729,8 +1760,9 @@ namespace hex::plugin::builtin {
         m_runningEvaluators += 1;
         m_executionDone.get(provider) = false;
 
+        m_textEditor.ClearActionables();
 
-        m_textEditor.SetErrorMarkers({});
+        m_consoleEditor.ClearActionables();
         m_console.get(provider).clear();
         m_consoleNeedsUpdate = true;
 

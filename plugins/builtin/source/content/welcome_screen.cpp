@@ -364,8 +364,7 @@ namespace hex::plugin::builtin {
             if (ImGuiExt::DimmedIconButton(ICON_VS_CLOSE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                 auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.null");
                 if (provider != nullptr)
-                    if (provider->open())
-                        EventProviderOpened::post(provider);
+                    std::ignore = provider->open();
             }
         }
 
