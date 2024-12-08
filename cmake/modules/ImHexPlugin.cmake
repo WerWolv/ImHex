@@ -56,6 +56,7 @@ macro(add_imhex_plugin)
     set_target_properties(${IMHEX_PLUGIN_NAME}
             PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}/plugins"
+            LIBRARY_OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}/plugins"
             CXX_STANDARD 23
             PREFIX ""
             SUFFIX ${IMHEX_PLUGIN_SUFFIX}
@@ -124,8 +125,6 @@ macro(add_imhex_plugin)
 
     if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt AND IMHEX_ENABLE_UNIT_TESTS AND IMHEX_ENABLE_PLUGIN_TESTS)
         add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
-        target_link_libraries(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_NAME}_tests)
-        target_compile_definitions(${IMHEX_PLUGIN_NAME}_tests PRIVATE IMHEX_PROJECT_NAME="${IMHEX_PLUGIN_NAME}-tests")
     endif()
 endmacro()
 
