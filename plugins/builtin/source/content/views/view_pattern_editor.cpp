@@ -632,7 +632,6 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::drawTextEditorFindReplacePopup(TextEditor *textEditor) {
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
         if (ImGui::BeginPopup("##text_editor_view_find_replace_popup", popupFlags)) {
-            static bool firstRun = true;
             static std::string findWord;
             static bool requestFocus = false;
             static u64 position = 0;
@@ -640,8 +639,7 @@ namespace hex::plugin::builtin {
             static bool updateCount = false;
             static bool canReplace = true;
             TextEditor::FindReplaceHandler *findReplaceHandler = textEditor->GetFindReplaceHandler();
-            if (ImGui::IsWindowAppearing() || firstRun) {
-                firstRun = false;
+            if (ImGui::IsWindowAppearing()) {
                 findReplaceHandler->resetMatches();
 
                 // Use selection as find word if there is one, otherwise use the word under the cursor
@@ -942,12 +940,31 @@ namespace hex::plugin::builtin {
                 }
             }
             // Escape key to close the popup
-            if (ImGui::IsKeyPressed(ImGuiKey_Escape, false))
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
+                m_popupWindowHeight = 0;
+                m_textEditor.SetTopMarginChanged(0);
                 ImGui::CloseCurrentPopup();
+            }
 
             ImGui::EndChild();
-
+            if (m_focusedSubWindowName.contains(textEditorView)) {
+                if (auto window = ImGui::GetCurrentWindow(); window != nullptr) {
+                    auto height = window->Size.y;
+                    auto heightChange = height - m_popupWindowHeight;
+                    auto heightChangeChange = heightChange - m_popupWindowHeightChange;
+                    if (std::fabs(heightChange) < 0.5 && std::fabs(heightChangeChange) > 1.0) {
+                        m_textEditor.SetTopMarginChanged(height);
+                    }
+                    m_popupWindowHeightChange = heightChange;
+                    m_popupWindowHeight = height;
+                }
+            }
             ImGui::EndPopup();
+            m_frPopupIsClosed = false;
+        } else if (!m_frPopupIsClosed) {
+            m_frPopupIsClosed = true;
+            m_popupWindowHeight = 0;
+            m_textEditor.SetTopMarginChanged(0);
         }
     }
 
@@ -982,12 +999,31 @@ namespace hex::plugin::builtin {
                 line = std::clamp(line, 1, textEditor->GetTotalLines());
                 textEditor->JumpToLine(line-1);
             }
-            if (ImGui::IsKeyPressed(ImGuiKey_Escape, false))
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
+                m_popupWindowHeight = 0;
+                m_textEditor.SetTopMarginChanged(0);
                 ImGui::CloseCurrentPopup();
+            }
 
             ImGui::EndChild();
-
+            if (m_focusedSubWindowName.contains(textEditorView)) {
+                if (auto window = ImGui::GetCurrentWindow(); window != nullptr) {
+                    auto height = window->Size.y;
+                    auto heightChange = height - m_popupWindowHeight;
+                    auto heightChangeChange = heightChange - m_popupWindowHeightChange;
+                    if (std::fabs(heightChange) < 0.5 && std::fabs(heightChangeChange) > 1.0) {
+                        m_textEditor.SetTopMarginChanged(height);
+                    }
+                    m_popupWindowHeightChange = heightChange;
+                    m_popupWindowHeight = height;
+                }
+            }
             ImGui::EndPopup();
+            m_gotoPopupIsClosed = false;
+        } else if (!m_gotoPopupIsClosed) {
+            m_gotoPopupIsClosed = true;
+            m_popupWindowHeight = 0;
+            m_textEditor.SetTopMarginChanged(0);
         }
     }
 
