@@ -963,6 +963,12 @@ namespace hex::ui {
         }
     }
 
+    void PatternDrawer::visit(pl::ptrn::Pattern& pattern) {
+        createDefaultEntry(pattern);
+        drawValueColumn(pattern);
+        drawCommentColumn(pattern);
+    }
+
     void PatternDrawer::draw(pl::ptrn::Pattern& pattern) {
         if (pattern.getVisibility() == pl::ptrn::Visibility::Hidden)
             return;
