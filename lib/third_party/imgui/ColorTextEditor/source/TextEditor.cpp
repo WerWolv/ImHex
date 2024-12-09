@@ -1129,63 +1129,43 @@ void TextEditor::Render() {
         EnsureCursorVisible();
         mScrollToCursor = false;
     }
-
-    ImGuiPopupFlags_ popup_flags = ImGuiPopupFlags_None;
-    ImGuiContext& g = *GImGui;
-    auto oldTopMargin = mTopMargin;
-    auto popupStack = g.OpenPopupStack;
-    if (popupStack.Size > 0) {
-        for (int n = 0; n < popupStack.Size; n++){
-            if (auto window = popupStack[n].Window; window != nullptr) {
-                if (window->Size.x == mFindReplaceHandler.GetFindWindowSize().x &&
-                    window->Size.y == mFindReplaceHandler.GetFindWindowSize().y &&
-                    window->Pos.x == mFindReplaceHandler.GetFindWindowPos().x &&
-                    window->Pos.y == mFindReplaceHandler.GetFindWindowPos().y) {
-                    mTopMargin = mFindReplaceHandler.GetFindWindowSize().y;
-                }
-            }
-        }
-    } else {
-        mTopMargin = 0;
-    }
-
-
-    if (mTopMargin != oldTopMargin) {
-        if (oldTopMargin == 0)
+    if (mTopMarginChanged) {
+        mTopMarginChanged = false;
+        if (mTopMargin == 0)
             m_savedScrollY = ImGui::GetScrollY();
         auto window = ImGui::GetCurrentWindow();
         auto maxScroll = window->ScrollMax.y;
         if (maxScroll > 0) {
             float lineCount;
             float pixelCount;
-            if (mTopMargin > oldTopMargin) {
-                pixelCount = mTopMargin - oldTopMargin;
+            if (mNewTopMargin > mTopMargin) {
+                pixelCount = mNewTopMargin - mTopMargin;
                 lineCount = pixelCount / mCharAdvance.y;
-            } else if (mTopMargin > 0) {
-                pixelCount = oldTopMargin - mTopMargin;
+            } else if (mNewTopMargin > 0) {
+                pixelCount = mTopMargin - mNewTopMargin;
                 lineCount = pixelCount / mCharAdvance.y;
             } else {
-                pixelCount = oldTopMargin;
+                pixelCount = mTopMargin;
                 lineCount = std::round(m_linesAdded);
             }
             auto state = mState;
             auto oldScrollY = ImGui::GetScrollY();
             int lineCountInt;
 
-            if (mTopMargin > oldTopMargin) {
+            if (mNewTopMargin > mTopMargin) {
                 lineCountInt = std::round(lineCount + m_linesAdded - std::floor(m_linesAdded));
             } else
                 lineCountInt = std::round(lineCount);
             for (int i = 0; i < lineCountInt; i++) {
-                if (mTopMargin > oldTopMargin)
+                if (mNewTopMargin > mTopMargin)
                     mLines.insert(mLines.begin() + mLines.size(), Line());
                 else
                     mLines.erase(mLines.begin() + mLines.size() - 1);
             }
-            if (mTopMargin > oldTopMargin) {
+            if (mNewTopMargin > mTopMargin) {
                 m_linesAdded += lineCount;
                 m_pixelsAdded += pixelCount;
-            } else if (mTopMargin > 0) {
+            } else if (mNewTopMargin > 0) {
                 m_linesAdded -= lineCount;
                 m_pixelsAdded -= pixelCount;
             } else {
@@ -1193,9 +1173,9 @@ void TextEditor::Render() {
                 m_pixelsAdded = 0;
             }
             if (oldScrollY + pixelCount < maxScroll) {
-                if (mTopMargin > oldTopMargin)
+                if (mNewTopMargin > mTopMargin)
                     m_shiftedScrollY = oldScrollY + pixelCount;
-                else if (mTopMargin > 0)
+                else if (mNewTopMargin > 0)
                     m_shiftedScrollY = oldScrollY - pixelCount;
                 else if (ImGui::GetScrollY() == m_shiftedScrollY)
                     m_shiftedScrollY = m_savedScrollY;
@@ -1203,9 +1183,10 @@ void TextEditor::Render() {
                     m_shiftedScrollY = ImGui::GetScrollY() - pixelCount;
                 ImGui::SetScrollY(m_shiftedScrollY);
             } else {
-                if (mTopMargin > oldTopMargin)
+                if (mNewTopMargin > mTopMargin)
                     mScrollToBottom = true;
             }
+            mTopMargin = mNewTopMargin;
             mState = state;
         }
     }
@@ -1600,6 +1581,7 @@ void TextEditor::DeleteSelection() {
 void TextEditor::JumpToLine(int line) {
     auto newPos = Coordinates(line, 0);
     JumpToCoords(newPos);
+
     setFocusAtCoords(newPos);
 }
 
@@ -1607,6 +1589,7 @@ void TextEditor::JumpToCoords(const Coordinates &aNewPos) {
     SetSelection(aNewPos, aNewPos);
     SetCursorPosition(aNewPos);
     EnsureCursorVisible();
+
     setFocusAtCoords(aNewPos);
 }
 
