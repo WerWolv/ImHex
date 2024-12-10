@@ -144,20 +144,22 @@ public:
     public:
         ActionableBox()=default;
         explicit ActionableBox(const ImRect &box) : mBox(box) {}
-        std::function<void()> mCallback;
         virtual bool trigger() {
             return ImGui::IsMouseHoveringRect(mBox.Min,mBox.Max);
         }
-        void setCallback(const std::function<void()> &callback) { mCallback = callback; }
+
+        virtual void callback() {}
     };
 
     class CursorChangeBox : public ActionableBox {
     public:
         CursorChangeBox()=default;
         explicit CursorChangeBox(const ImRect &box) : ActionableBox(box) {
-            setCallback([]() {
-                ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-            });
+
+        }
+
+        void callback() override {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
         }
     };
 
@@ -165,14 +167,20 @@ public:
         Coordinates mPos;
     public:
         ErrorGotoBox()=default;
-        ErrorGotoBox(const ImRect &box, const Coordinates &pos, TextEditor *editor) : ActionableBox(box), mPos(pos) {
-            setCallback( [this,editor]() {
-                editor->JumpToCoords(mPos);
-            });
+        ErrorGotoBox(const ImRect &box, const Coordinates &pos, TextEditor *editor) : ActionableBox(box), mPos(pos), mEditor(editor) {
+
         }
+
         bool trigger() override {
             return ActionableBox::trigger() && ImGui::IsMouseClicked(0);
         }
+
+        void callback() override {
+            mEditor->JumpToCoords(mPos);
+        }
+
+    private:
+        TextEditor *mEditor;
     };
 
     using ErrorGotoBoxes = std::map<Coordinates, ErrorGotoBox>;
@@ -184,18 +192,19 @@ public:
     public:
         ErrorHoverBox()=default;
         ErrorHoverBox(const ImRect &box, const Coordinates &pos,const char *errorText) : ActionableBox(box), mPos(pos), mErrorText(errorText) {
-            setCallback([this]() {
-                ImGui::BeginTooltip();
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
-                ImGui::Text("Error at line %d:", mPos.mLine);
-                ImGui::PopStyleColor();
-                ImGui::Separator();
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.2f, 1.0f));
-                ImGui::TextUnformatted(mErrorText.c_str());
-                ImGui::PopStyleColor();
-                ImGui::EndTooltip();
-                }
-            );
+
+        }
+
+        void callback() override {
+            ImGui::BeginTooltip();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
+            ImGui::Text("Error at line %d:", mPos.mLine);
+            ImGui::PopStyleColor();
+            ImGui::Separator();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.2f, 1.0f));
+            ImGui::TextUnformatted(mErrorText.c_str());
+            ImGui::PopStyleColor();
+            ImGui::EndTooltip();
         }
     };
     using ErrorHoverBoxes = std::map<Coordinates, ErrorHoverBox>;

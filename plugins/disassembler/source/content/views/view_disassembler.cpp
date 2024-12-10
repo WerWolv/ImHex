@@ -1,4 +1,5 @@
 #include "content/views/view_disassembler.hpp"
+#include "hex/api/content_registry.hpp"
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -15,6 +16,18 @@ namespace hex::plugin::disasm {
     ViewDisassembler::ViewDisassembler() : View::Window("hex.disassembler.view.disassembler.name", ICON_VS_FILE_CODE) {
         EventProviderDeleted::subscribe(this, [this](const auto*) {
             m_disassembly.clear();
+        });
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.disassemble_range" }, ICON_VS_DEBUG_LINE_BY_LINE, 3100, CTRLCMD + SHIFT + Keys::D, [this] {
+            ImGui::SetWindowFocus(this->getName().c_str());
+            this->getWindowOpenState() = true;
+
+            m_range = ui::RegionType::Region;
+            m_codeRegion = ImHexApi::HexEditor::getSelection()->getRegion();
+
+            this->disassemble();
+        }, [this]{
+            return ImHexApi::HexEditor::isSelectionValid() && !this->m_disassemblerTask.isRunning();
         });
     }
 

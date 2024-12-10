@@ -122,6 +122,7 @@
         "hex.builtin.menu.file.clear_recent": "Clear",
         "hex.builtin.menu.file.close": "Close",
         "hex.builtin.menu.file.create_file": "New File...",
+        "hex.builtin.menu.edit.disassemble_range": "Disassemble selection",
         "hex.builtin.menu.file.export": "Export...",
         "hex.builtin.menu.file.export.as_language": "Text Formatted Bytes",
         "hex.builtin.menu.file.export.as_language.popup.export_error": "Failed to export bytes to the file!",
