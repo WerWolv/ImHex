@@ -4,11 +4,13 @@
 #include <vector>
 #include <array>
 #include <memory>
+#include <functional>
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
 #include <regex>
 #include "imgui.h"
+#include "imgui_internal.h"
 
 class TextEditor
 {
@@ -132,12 +134,82 @@ public:
 	using Identifiers = std::unordered_map<std::string, Identifier>;
 	using Keywords = std::unordered_set<std::string> ;
     using ErrorMarkers = std::map<Coordinates, std::pair<uint32_t ,std::string>>;
-    using ErrorHoverBoxes = std::map<Coordinates, std::pair<ImVec2,ImVec2>>;
     using Breakpoints = std::unordered_set<uint32_t>;
     using Palette = std::array<ImU32, (uint32_t)PaletteIndex::Max>;
     using Char = uint8_t ;
 
-	struct Glyph
+    class ActionableBox {
+
+        ImRect mBox;
+    public:
+        ActionableBox()=default;
+        explicit ActionableBox(const ImRect &box) : mBox(box) {}
+        virtual bool trigger() {
+            return ImGui::IsMouseHoveringRect(mBox.Min,mBox.Max);
+        }
+
+        virtual void callback() {}
+    };
+
+    class CursorChangeBox : public ActionableBox {
+    public:
+        CursorChangeBox()=default;
+        explicit CursorChangeBox(const ImRect &box) : ActionableBox(box) {
+
+        }
+
+        void callback() override {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        }
+    };
+
+    class ErrorGotoBox : public ActionableBox {
+        Coordinates mPos;
+    public:
+        ErrorGotoBox()=default;
+        ErrorGotoBox(const ImRect &box, const Coordinates &pos, TextEditor *editor) : ActionableBox(box), mPos(pos), mEditor(editor) {
+
+        }
+
+        bool trigger() override {
+            return ActionableBox::trigger() && ImGui::IsMouseClicked(0);
+        }
+
+        void callback() override {
+            mEditor->JumpToCoords(mPos);
+        }
+
+    private:
+        TextEditor *mEditor;
+    };
+
+    using ErrorGotoBoxes = std::map<Coordinates, ErrorGotoBox>;
+    using CursorBoxes = std::map<Coordinates, CursorChangeBox>;
+
+    class ErrorHoverBox : public ActionableBox {
+        Coordinates mPos;
+        std::string mErrorText;
+    public:
+        ErrorHoverBox()=default;
+        ErrorHoverBox(const ImRect &box, const Coordinates &pos,const char *errorText) : ActionableBox(box), mPos(pos), mErrorText(errorText) {
+
+        }
+
+        void callback() override {
+            ImGui::BeginTooltip();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
+            ImGui::Text("Error at line %d:", mPos.mLine);
+            ImGui::PopStyleColor();
+            ImGui::Separator();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.2f, 1.0f));
+            ImGui::TextUnformatted(mErrorText.c_str());
+            ImGui::PopStyleColor();
+            ImGui::EndTooltip();
+        }
+    };
+    using ErrorHoverBoxes = std::map<Coordinates, ErrorHoverBox>;
+
+    struct Glyph
 	{
 		Char mChar;
 		PaletteIndex mColorIndex = PaletteIndex::Default;
@@ -188,6 +260,23 @@ public:
 		static const LanguageDefinition& AngelScript();
 		static const LanguageDefinition& Lua();
 	};
+    void ClearErrorMarkers() {
+        mErrorMarkers.clear();
+        mErrorHoverBoxes.clear();
+    }
+
+    void ClearGotoBoxes() {
+        mErrorGotoBoxes.clear();
+    }
+
+    void ClearCursorBoxes() {
+        mCursorBoxes.clear();
+    }
+    void ClearActionables() {
+        ClearErrorMarkers();
+        ClearGotoBoxes();
+        ClearCursorBoxes();
+    }
 
     struct Selection {
         Coordinates mStart;
@@ -210,6 +299,8 @@ public:
 
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
 	void SetText(const std::string& aText);
+    void JumpToLine(int line);
+    void JumpToCoords(const Coordinates &coords);
 	std::string GetText() const;
     bool isEmpty() const {
         auto text = GetText();
@@ -221,12 +312,32 @@ public:
 
 	std::string GetSelectedText() const;
 	std::string GetCurrentLineText()const;
+
+    std::string GetLineText(int line)const;
+    void SetSourceCodeEditor(TextEditor *editor) { mSourceCodeEditor = editor; }
+    TextEditor *GetSourceCodeEditor() {
+        if(mSourceCodeEditor!=nullptr)
+            return mSourceCodeEditor;
+        return this;
+    }
+
+
     class FindReplaceHandler;
 
 public:
+    void AddClickableText(std::string text) {
+        mClickableText.push_back(text);
+    }
+    void ClearClickableText() {
+        mClickableText.clear();
+    }
     FindReplaceHandler *GetFindReplaceHandler() { return &mFindReplaceHandler; }
 	int GetTotalLines() const { return (int)mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
+    void setFocusAtCoords(const Coordinates &coords) {
+        mFocusAtCoords = coords;
+        mUpdateFocus = true;
+    }
     void SetOverwrite(bool aValue) { mOverwrite = aValue; }
 
 	void SetReadOnly(bool aValue);
@@ -244,8 +355,10 @@ public:
 
 	Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
 	void SetCursorPosition(const Coordinates& aPosition);
+
     bool RaiseContextMenu() { return mRaiseContextMenu; }
     void ClearRaiseContextMenu() { mRaiseContextMenu = false; }
+
 	inline void SetHandleMouseInputs    (bool aValue){ mHandleMouseInputs    = aValue;}
 	inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
 
@@ -491,11 +604,14 @@ private:
 	Breakpoints mBreakpoints;
 	ErrorMarkers mErrorMarkers;
     ErrorHoverBoxes mErrorHoverBoxes;
+    ErrorGotoBoxes mErrorGotoBoxes;
+    CursorBoxes mCursorBoxes;
 	ImVec2 mCharAdvance;
 	Coordinates mInteractiveStart, mInteractiveEnd;
 	std::string mLineBuffer;
 	uint64_t mStartTime;
 	std::vector<std::string> mDefines;
+    TextEditor *mSourceCodeEditor=nullptr;
     float m_linesAdded = 0;
     float m_savedScrollY = 0;
     float m_pixelsAdded = 0;
@@ -504,6 +620,10 @@ private:
     bool mShowCursor;
     bool mShowLineNumbers;
     bool mRaiseContextMenu = false;
+    Coordinates mFocusAtCoords;
+    bool mUpdateFocus = false;
+
+    std::vector<std::string>  mClickableText;
 
     static const int sCursorBlinkInterval;
     static const int sCursorBlinkOnTime;

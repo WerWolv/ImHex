@@ -982,6 +982,48 @@ void TextEditor::Render() {
                 }
             }
 
+            // Render goto buttons
+            auto lineText = GetLineText(lineNo);
+            Coordinates gotoKey = Coordinates(lineNo + 1, 0);
+            std::string errorLineColumn;
+            bool found = false;
+            for (auto text : mClickableText) {
+                if (lineText.find(text) == 0) {
+                    errorLineColumn = lineText.substr(text.size());
+                    if (!errorLineColumn.empty()) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (found) {
+                int currLine = 0, currColumn = 0;
+                if (auto idx = errorLineColumn.find(":"); idx != std::string::npos) {
+                    auto errorLine = errorLineColumn.substr(0, idx);
+                    if (!errorLine.empty())
+                        currLine = std::stoi(errorLine) - 1;
+                    auto errorColumn = errorLineColumn.substr(idx + 1);
+                    if (!errorColumn.empty())
+                        currColumn = std::stoi(errorColumn) - 1;
+                }
+                TextEditor::Coordinates errorPos = {currLine, currColumn};
+                ImVec2 errorStart = ImVec2(lineStartScreenPos.x, lineStartScreenPos.y);
+                ImVec2 errorEnd = ImVec2( lineStartScreenPos.x + TextDistanceToLineStart(Coordinates(lineNo, GetLineCharacterCount(lineNo))), lineStartScreenPos.y + mCharAdvance.y);
+                ErrorGotoBox box = ErrorGotoBox(ImRect({errorStart, errorEnd}), errorPos, GetSourceCodeEditor());
+                mErrorGotoBoxes[gotoKey] = box;
+                CursorChangeBox cursorBox = CursorChangeBox(ImRect({errorStart, errorEnd}));
+                mCursorBoxes[gotoKey] = cursorBox;
+            }
+            if (mCursorBoxes.find(gotoKey) != mCursorBoxes.end()) {
+                auto box = mCursorBoxes[gotoKey];
+                if (box.trigger()) box.callback();
+            }
+
+            if (mErrorGotoBoxes.find(gotoKey) != mErrorGotoBoxes.end()) {
+                auto box = mErrorGotoBoxes[gotoKey];
+                if (box.trigger()) box.callback();
+            }
+
             // Render colorized text
             auto prevColor = line.empty() ? mPalette[(int)PaletteIndex::Default] : GetGlyphColor(line[0]);
             ImVec2 bufferOffset;
@@ -1004,16 +1046,34 @@ void TextEditor::Render() {
                     mLineBuffer.clear();
                 }
                 if (underwaved) {
-                    auto textStart = TextDistanceToLineStart(Coordinates(lineNo, i)) + mTextStart;
+                    auto textStart = TextDistanceToLineStart(Coordinates(lineNo, i));
                     auto begin = ImVec2(lineStartScreenPos.x + textStart, lineStartScreenPos.y);
                     auto errorLength = errorIt->second.first;
+                    auto errorMessage = errorIt->second.second;
                     if (errorLength == 0)
                         errorLength = line.size() - i - 1;
                     auto end = Underwaves(begin, errorLength, mPalette[(int32_t) PaletteIndex::ErrorMarker]);
-                    mErrorHoverBoxes[Coordinates(lineNo+1,i+1)]=std::make_pair(begin,end);
+                    Coordinates key = Coordinates(lineNo+1,i+1);
+                    ErrorHoverBox box = ErrorHoverBox(ImRect({begin, end}), key, errorMessage.c_str());
+                    mErrorHoverBoxes[key] = box;
+                }
+                Coordinates key = Coordinates(lineNo + 1, i + 1);
+                if (mErrorHoverBoxes.find(key) != mErrorHoverBoxes.end()) {
+                    auto box = mErrorHoverBoxes[key];
+                    if (box.trigger()) box.callback();
                 }
 
                 prevColor = color;
+
+                if (mUpdateFocus && mFocusAtCoords == Coordinates(lineNo, i)) {
+                    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = mFocusAtCoords;
+                    mSelectionMode = SelectionMode::Normal;
+                    SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                    ResetCursorBlinkTime();
+                    EnsureCursorVisible();
+                    ImGui::SetKeyboardFocusHere(-1);
+                    mUpdateFocus = false;
+                }
 
                 if (glyph.mChar == '\t') {
                     auto oldX      = bufferOffset.x;
@@ -1068,22 +1128,6 @@ void TextEditor::Render() {
     if (mScrollToCursor) {
         EnsureCursorVisible();
         mScrollToCursor = false;
-    }
-
-    for (auto [key,value] : mErrorMarkers) {
-        auto start = mErrorHoverBoxes[key].first;
-        auto end = mErrorHoverBoxes[key].second;
-        if (ImGui::IsMouseHoveringRect(start, end)) {
-            ImGui::BeginTooltip();
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
-            ImGui::Text("Error at line %d:", key.mLine);
-            ImGui::PopStyleColor();
-            ImGui::Separator();
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.2f, 1.0f));
-            ImGui::Text("%s", value.second.c_str());
-            ImGui::PopStyleColor();
-            ImGui::EndTooltip();
-        }
     }
 
     ImGuiPopupFlags_ popup_flags = ImGuiPopupFlags_None;
@@ -1551,6 +1595,19 @@ void TextEditor::DeleteSelection() {
         mFindReplaceHandler.FindAllMatches(this, findWord);
     }
     Colorize(mState.mSelectionStart.mLine, 1);
+}
+
+void TextEditor::JumpToLine(int line) {
+    auto newPos = Coordinates(line, 0);
+    JumpToCoords(newPos);
+    setFocusAtCoords(newPos);
+}
+
+void TextEditor::JumpToCoords(const Coordinates &aNewPos) {
+    SetSelection(aNewPos, aNewPos);
+    SetCursorPosition(aNewPos);
+    EnsureCursorVisible();
+    setFocusAtCoords(aNewPos);
 }
 
 void TextEditor::MoveUp(int aAmount, bool aSelect) {
@@ -2478,10 +2535,12 @@ std::string TextEditor::GetSelectedText() const {
 }
 
 std::string TextEditor::GetCurrentLineText() const {
-    auto lineLength = GetLineMaxColumn(mState.mCursorPosition.mLine);
-    return GetText(
-        Coordinates(mState.mCursorPosition.mLine, 0),
-        Coordinates(mState.mCursorPosition.mLine, lineLength));
+    return GetLineText(mState.mCursorPosition.mLine);
+}
+
+std::string TextEditor::GetLineText(int line) const {
+    auto lineLength = GetLineCharacterCount(line);
+    return GetText(Coordinates(line, 0),Coordinates(line, lineLength));
 }
 
 void TextEditor::ProcessInputs() {

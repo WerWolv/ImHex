@@ -497,6 +497,12 @@ namespace hex::plugin::builtin {
                             return node->getId() == id;
                           });
 
+            if (workspace.currNodeError.has_value()) {
+                if (workspace.currNodeError->node == node->get()) {
+                    workspace.currNodeError.reset();
+                }
+            }
+
             // Remove the node from the workspace
             workspace.nodes.erase(node);
         }
