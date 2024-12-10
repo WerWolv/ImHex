@@ -19,6 +19,7 @@
 
 #include <romfs/romfs.hpp>
 #include <numeric>
+#include "hex/helpers/logger.hpp"
 
 namespace hex::plugin::visualizers {
 
@@ -377,7 +378,7 @@ namespace hex::plugin::visualizers {
 
             if (validateVector(vectors.vertices, vertexCount, 3, "Positions", errorMessage)) {
                 if ((indexType == IndexType::Undefined || vectors.indices.empty()) && vertexCount % 3 != 0)
-                    throw std::runtime_error("Without indices vertices must be a multiple of 3");
+                    throw std::runtime_error("Error: Vertex count must % 3 != 0");
                 else
                     buffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, vectors.vertices);
             } else
@@ -429,7 +430,7 @@ namespace hex::plugin::visualizers {
 
             if (validateVector(lineVectors.vertices, vertexCount, 3, "Positions", errorMessage)) {
                 if ((indexType == IndexType::Undefined || lineVectors.indices.empty()) && vertexCount % 3 != 0)
-                    throw std::runtime_error("Without indices vertices must be a multiple of 3");
+                    throw std::runtime_error("Error: Vertex count % 3 != 0");
                 else
                     lineBuffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, lineVectors.vertices);
             } else
@@ -594,7 +595,7 @@ namespace hex::plugin::visualizers {
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::SameLine();
 
-            if (ImGuiExt::DimmedButton("hex.ui.common.reset"_lang, ImVec2(renderingWindowSize.x-ImGui::GetCursorPosX(), 0))) {
+            if (ImGuiExt::DimmedButton("hex.ui.common.reset"_lang, ImVec2(renderingWindowSize.x+5-ImGui::GetCursorPosX(), 0))) {
                 s_translation      = { {  0.0F, 0.0F, -3.0F } };
                 s_rotation         = { {  0.0F, 0.0F,  0.0F } };
                 s_scaling            = 1.0F;
@@ -649,7 +650,7 @@ namespace hex::plugin::visualizers {
                     s_badIndices.clear();
                     auto indexCount = vectors.indices.size();
                     if (indexCount < 3 || indexCount % 3 != 0) {
-                        throw std::runtime_error("Index count must be a multiple of 3");
+                        throw std::runtime_error("Error: IndexCount % 3 != 0");
                     }
                     auto booleans = std::views::transform(vectors.indices,isIndexInRange);
                     if (!std::accumulate(std::begin(booleans), std::end(booleans), true, std::logical_and<>())) {
@@ -659,7 +660,8 @@ namespace hex::plugin::visualizers {
                         badIndicesStr.pop_back();
                         badIndicesStr.pop_back();
                         badIndicesStr += hex::format(" for {} vertices",s_vertexCount);
-                        throw std::runtime_error(badIndicesStr);
+                        hex::log::debug(badIndicesStr);
+                        throw std::runtime_error("Error: Bad indices");
                     }
                 }
 
@@ -682,7 +684,7 @@ namespace hex::plugin::visualizers {
                     lineVectors.indices = patternToArray<T>(indicesPattern.get());
                     auto indexCount = lineVectors.indices.size();
                     if (indexCount < 3 || indexCount % 3 != 0) {
-                        throw std::runtime_error("Index count must be a multiple of 3");
+                        throw std::runtime_error("Error: Index count % 3 != 0");
                     }
                     s_badIndices.clear();
                     if (!std::ranges::all_of(lineVectors.indices,isIndexInRange)) {
@@ -692,7 +694,8 @@ namespace hex::plugin::visualizers {
                         badIndicesStr.pop_back();
                         badIndicesStr.pop_back();
                         badIndicesStr += hex::format(" for {} vertices",s_vertexCount);
-                        throw std::runtime_error(badIndicesStr);
+                        hex::log::error(badIndicesStr);
+                        throw std::runtime_error("Error: Bad indices");
                     }
                 }
 
