@@ -13,7 +13,6 @@
         "hex.disassembler.view.disassembler.arm.cortex_m": "Cortex-M",
         "hex.disassembler.view.disassembler.arm.default": "Default",
         "hex.disassembler.view.disassembler.arm.thumb": "Thumb",
-        "hex.disassembler.view.disassembler.base": "Endereço base",
         "hex.disassembler.view.disassembler.bpf.classic": "Classico",
         "hex.disassembler.view.disassembler.bpf.extended": "Extendido",
         "hex.disassembler.view.disassembler.disassemble": "Desmontar",
