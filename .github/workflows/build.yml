@@ -670,6 +670,7 @@ jobs:
     steps:
       - name: 🛡️ Disable AppArmor on Host
         run: |
+          nsenter -t 1 -m -u -n -i sudo aa-teardown
           nsenter -t 1 -m -u -n -i sudo systemctl disable --now apparmor.service
           nsenter -t 1 -m -u -n -i sudo sysctl --write kernel.apparmor_restrict_unprivileged_unconfined=0
           nsenter -t 1 -m -u -n -i sudo sysctl --write kernel.apparmor_restrict_unprivileged_userns=0
