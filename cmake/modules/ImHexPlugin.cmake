@@ -56,7 +56,6 @@ macro(add_imhex_plugin)
     set_target_properties(${IMHEX_PLUGIN_NAME}
             PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}/plugins"
-            LIBRARY_OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}/plugins"
             CXX_STANDARD 23
             PREFIX ""
             SUFFIX ${IMHEX_PLUGIN_SUFFIX}
@@ -65,6 +64,8 @@ macro(add_imhex_plugin)
     # Set rpath of plugin libraries to the plugins folder
     if (APPLE)
         set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES BUILD_RPATH "@executable_path/../Frameworks;@executable_path/plugins")
+    else()
+        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}/plugins")
     endif()
 
     # Setup a romfs for the plugin

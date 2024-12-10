@@ -11,10 +11,10 @@ add_dependencies(main updater)
 if (APPLE)
     set(OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}/Contents/MacOS")
 else ()
-    set(OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+    set(OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}")
 endif()
 
 set_target_properties(updater PROPERTIES
         OUTPUT_NAME "imhex-updater"
-        RUNTIME_OUTPUT_DIRECTORY ${IMHEX_MAIN_OUTPUT_DIRECTORY}
+        RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}
 )
