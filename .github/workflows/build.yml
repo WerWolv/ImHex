@@ -664,10 +664,14 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: "almalinux:9"
-      options: --privileged
+      options: --privileged --pid=host --security-opt apparmor=unconfined
 
     steps:
+      - name: 🛡️ Disable AppArmor on Host
+        run: |
+          nsenter -t 1 -m -u -n -i sudo sysctl --write kernel.apparmor_restrict_unprivileged_unconfined=0
+          nsenter -t 1 -m -u -n -i sudo sysctl --write kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: ⬇️ Install git-core and EPEL repo
         run: dnf install git-core epel-release -y
 
