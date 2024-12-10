@@ -624,8 +624,11 @@ namespace hex::plugin::visualizers {
                 if (errorMessageSize.x > renderingWindowSize.x)
                     errorMessageSize.y *= 2;
                 auto errorMessageWindowSize = ImVec2(renderingWindowSize.x, errorMessageSize.y);
-                if (ImGui::BeginChild("##error_message", errorMessageWindowSize, 0, ImGuiWindowFlags_HorizontalScrollbar))
-                    ImGui::TextColored(ImVec4(1.0F, 0.0F, 0.0F, 1.0F), s_errorMessage.c_str());
+                if (ImGui::BeginChild("##error_message", errorMessageWindowSize, 0, ImGuiWindowFlags_HorizontalScrollbar)) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0F, 0.0F, 0.0F, 1.0F));
+                    ImGui::TextUnformatted(s_errorMessage.c_str());
+                    ImGui::PopStyleColor();
+                }
                 ImGui::EndChild();
             }
 
