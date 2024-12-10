@@ -664,12 +664,25 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: "fedora:latest"
-      options: --privileged
+      image: "almalinux:9"
+      options: --privileged --pid=host --security-opt apparmor=unconfined
 
     steps:
-      - name: ⬇️ Install git-core
-        run: dnf install --disablerepo="*" --enablerepo="fedora" git-core -y
+      # This, together with the `--pid=host --security-opt apparmor=unconfined` docker options is required to allow
+      # fedpkg to work inside a Docker container running on Ubuntu again.
+      # GitHub seems to have enabled AppArmor on their Ubuntu CI runners which limits Docker in ways that cause
+      # programs inside it to fail.
+      # Without this, fedpkg will throw the unhelpful error message 'Insufficient Rights'
+      # This step uses nsenter to execute commands on the host that disable AppArmor entirely.
+      - name: 🛡️ Disable AppArmor on Host
+        run: |
+          nsenter -t 1 -m -u -n -i sudo systemctl disable --now apparmor.service
+          nsenter -t 1 -m -u -n -i sudo aa-teardown || true
+          nsenter -t 1 -m -u -n -i sudo sysctl --write kernel.apparmor_restrict_unprivileged_unconfined=0
+          nsenter -t 1 -m -u -n -i sudo sysctl --write kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: ⬇️ Install git-core and EPEL repo
+        run: dnf install git-core epel-release -y
 
       - name: 🧰 Checkout
         uses: actions/checkout@v4
@@ -688,8 +701,8 @@ jobs:
       - name: ⬇️ Update all packages and install dependencies
         run: |
           set -x
-          dnf upgrade --disablerepo="*" --enablerepo="fedora,updates" -y
-          dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
+          dnf upgrade -y
+          dnf install -y \
           fedpkg         \
           ccache
 
