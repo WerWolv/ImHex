@@ -1016,12 +1016,12 @@ void TextEditor::Render() {
             }
             if (mCursorBoxes.find(gotoKey) != mCursorBoxes.end()) {
                 auto box = mCursorBoxes[gotoKey];
-                if (box.trigger()) box.mCallback();
+                if (box.trigger()) box.callback();
             }
 
             if (mErrorGotoBoxes.find(gotoKey) != mErrorGotoBoxes.end()) {
                 auto box = mErrorGotoBoxes[gotoKey];
-                if (box.trigger()) box.mCallback();
+                if (box.trigger()) box.callback();
             }
 
             // Render colorized text
@@ -1060,7 +1060,7 @@ void TextEditor::Render() {
                 Coordinates key = Coordinates(lineNo + 1, i + 1);
                 if (mErrorHoverBoxes.find(key) != mErrorHoverBoxes.end()) {
                     auto box = mErrorHoverBoxes[key];
-                    if (box.trigger()) box.mCallback();
+                    if (box.trigger()) box.callback();
                 }
 
                 prevColor = color;
