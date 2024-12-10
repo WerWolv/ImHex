@@ -819,6 +819,7 @@
         "hex.builtin.view.hex_editor.menu.edit.open_in_new_provider": "Open selection view...",
         "hex.builtin.view.hex_editor.menu.edit.paste": "Paste",
         "hex.builtin.view.hex_editor.menu.edit.paste_all": "Paste all",
+        "hex.builtin.view.hex_editor.menu.edit.paste_all_string": "Paste all as string",
         "hex.builtin.view.hex_editor.menu.edit.remove": "Remove...",
         "hex.builtin.view.hex_editor.menu.edit.resize": "Resize...",
         "hex.builtin.view.hex_editor.menu.edit.select_all": "Select all",
