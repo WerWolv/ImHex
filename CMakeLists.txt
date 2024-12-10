@@ -23,6 +23,15 @@ option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"            
 option(IMHEX_ENABLE_PRECOMPILED_HEADERS "Enable precompiled headers"                                                            OFF)
 option(IMHEX_COMPRESS_DEBUG_INFO        "Compress debug information"                                                            ON )
 
+# if enabled, add a unit_test custom target for all the unit tests to be registered against
+if (IMHEX_ENABLE_UNIT_TESTS)
+    # should be first instance, but check anyway for consistency
+    if(NOT TARGET unit_tests)
+        enable_testing()
+        add_custom_target(unit_tests)
+    endif()
+endif()
+
 set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
 
@@ -69,13 +78,15 @@ addBundledLibraries()
 
 add_subdirectory(lib/libimhex)
 add_subdirectory(main)
-addPluginDirectories()
 
 # Add unit tests
 if (IMHEX_ENABLE_UNIT_TESTS)
-    enable_testing()
     add_subdirectory(tests EXCLUDE_FROM_ALL)
 endif ()
+
+# Do this after adding the tests, so that the plugins_test runner binary has
+# a chance of being created before being referenced by plugin tests
+addPluginDirectories()
 
 # Configure more resources that will be added to the install package
 generatePDBs()
