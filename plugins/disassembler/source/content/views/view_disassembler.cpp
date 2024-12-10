@@ -1,4 +1,5 @@
 #include "content/views/view_disassembler.hpp"
+#include "hex/api/content_registry.hpp"
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -8,13 +9,28 @@
 #include <cstring>
 #include <toasts/toast_notification.hpp>
 
+#include <wolv/literals.hpp>
+
 using namespace std::literals::string_literals;
+using namespace wolv::literals;
 
 namespace hex::plugin::disasm {
 
     ViewDisassembler::ViewDisassembler() : View::Window("hex.disassembler.view.disassembler.name", ICON_VS_FILE_CODE) {
         EventProviderDeleted::subscribe(this, [this](const auto*) {
             m_disassembly.clear();
+        });
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.disassemble_range" }, ICON_VS_DEBUG_LINE_BY_LINE, 3100, CTRLCMD + SHIFT + Keys::D, [this] {
+            ImGui::SetWindowFocus(this->getName().c_str());
+            this->getWindowOpenState() = true;
+
+            m_range = ui::RegionType::Region;
+            m_regionToDisassemble = ImHexApi::HexEditor::getSelection()->getRegion();
+
+            this->disassemble();
+        }, [this]{
+            return ImHexApi::HexEditor::isSelectionValid() && !this->m_disassemblerTask.isRunning();
         });
     }
 
@@ -27,9 +43,12 @@ namespace hex::plugin::disasm {
     void ViewDisassembler::disassemble() {
         m_disassembly.clear();
 
-        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling"_lang, m_codeRegion.getSize(), [this](auto &task) {
+        if (m_regionToDisassemble.getStartAddress() < m_imageBaseAddress)
+            return;
+
+        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling"_lang, m_regionToDisassemble.getSize(), [this](auto &task) {
             csh capstoneHandle;
-            cs_insn *instructions = nullptr;
+            cs_insn instruction;
 
             cs_mode mode = m_mode;
 
@@ -40,52 +59,45 @@ namespace hex::plugin::disasm {
                 cs_option(capstoneHandle, CS_OPT_SKIPDATA, CS_OPT_ON);
 
                 auto provider = ImHexApi::Provider::get();
-                std::vector<u8> buffer(2048, 0x00);
-                size_t size = m_codeRegion.getSize();
+                std::vector<u8> buffer(1_MiB, 0x00);
+
+                const u64 codeOffset = m_regionToDisassemble.getStartAddress() - m_imageBaseAddress;
 
                 // Read the data in chunks and disassemble it
-                for (u64 address = 0; address < size; address += 2048) {
-                    task.update(address);
+                u64 instructionLoadAddress = m_imageLoadAddress + codeOffset;
+                u64 instructionDataAddress = m_regionToDisassemble.getStartAddress();
 
+                bool hadError = false;
+                while (instructionDataAddress < m_regionToDisassemble.getEndAddress()) {
                     // Read a chunk of data
-                    size_t bufferSize = std::min(u64(2048), (size - address));
-                    provider->read(m_codeRegion.getStartAddress() + address, buffer.data(), bufferSize);
+                    size_t bufferSize = std::min<u64>(buffer.size(), (m_regionToDisassemble.getEndAddress() - instructionDataAddress));
+                    provider->read(instructionDataAddress, buffer.data(), bufferSize);
 
                     // Ask capstone to disassemble the data
-                    size_t instructionCount = cs_disasm(capstoneHandle, buffer.data(), bufferSize, m_baseAddress + address, 0, &instructions);
-                    if (instructionCount == 0)
-                        break;
+                    const u8 *code = buffer.data();
+                    while (cs_disasm_iter(capstoneHandle, &code, &bufferSize, &instructionLoadAddress, &instruction)) {
+                        task.update(instructionDataAddress);
 
-                    // Reserve enough space for the disassembly
-                    m_disassembly.reserve(m_disassembly.size() + instructionCount);
-
-                    // Convert the capstone instructions to our disassembly format
-                    u64 usedBytes = 0;
-                    for (u32 i = 0; i < instructionCount; i++) {
-                        const auto &instr       = instructions[i];
+                        // Convert the capstone instructions to our disassembly format
                         Disassembly disassembly = { };
-                        disassembly.address     = instr.address;
-                        disassembly.offset      = m_codeRegion.getStartAddress() + address + usedBytes;
-                        disassembly.size        = instr.size;
-                        disassembly.mnemonic    = instr.mnemonic;
-                        disassembly.operators   = instr.op_str;
+                        disassembly.address     = instruction.address;
+                        disassembly.offset      = instructionDataAddress - m_imageBaseAddress;
+                        disassembly.size        = instruction.size;
+                        disassembly.mnemonic    = instruction.mnemonic;
+                        disassembly.operators   = instruction.op_str;
 
-                        for (u16 j = 0; j < instr.size; j++)
-                            disassembly.bytes += hex::format("{0:02X} ", instr.bytes[j]);
+                        for (u16 j = 0; j < instruction.size; j++)
+                            disassembly.bytes += hex::format("{0:02X} ", instruction.bytes[j]);
                         disassembly.bytes.pop_back();
 
                         m_disassembly.push_back(disassembly);
 
-                        usedBytes += instr.size;
+                        instructionDataAddress += instruction.size;
+                        hadError = false;
                     }
 
-                    // If capstone couldn't disassemble all bytes in the buffer, we might have cut off an instruction
-                    // Adjust the address,so it's being disassembled when we read the next chunk
-                    if (instructionCount < bufferSize)
-                        address -= (bufferSize - usedBytes);
-
-                    // Clean up the capstone instructions
-                    cs_free(instructions, instructionCount);
+                    if (hadError) break;
+                    hadError = true;
                 }
 
                 cs_close(&capstoneHandle);
@@ -128,11 +140,18 @@ namespace hex::plugin::disasm {
         if (ImHexApi::Provider::isValid() && provider->isReadable()) {
             ImGuiExt::Header("hex.disassembler.view.disassembler.position"_lang, true);
 
-            // Draw base address input
-            ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.base"_lang, &m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
-
             // Draw region selection picker
-            ui::regionSelectionPicker(&m_codeRegion, provider, &m_range);
+            ui::regionSelectionPicker(&m_regionToDisassemble, provider, &m_range);
+
+            // Draw base address input
+            ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_load_address"_lang, &m_imageLoadAddress, ImGuiInputTextFlags_CharsHexadecimal);
+
+            // Draw code region start address input
+            ImGui::BeginDisabled(m_range == ui::RegionType::EntireData);
+            {
+                ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_base_address"_lang, &m_imageBaseAddress, ImGuiInputTextFlags_CharsHexadecimal);
+            }
+            ImGui::EndDisabled();
 
             // Draw settings
             {
@@ -414,7 +433,7 @@ namespace hex::plugin::disasm {
             }
 
             // Draw disassemble button
-            ImGui::BeginDisabled(m_disassemblerTask.isRunning());
+            ImGui::BeginDisabled(m_disassemblerTask.isRunning() || m_regionToDisassemble.getStartAddress() < m_imageBaseAddress);
             {
                 if (ImGui::Button("hex.disassembler.view.disassembler.disassemble"_lang))
                     this->disassemble();

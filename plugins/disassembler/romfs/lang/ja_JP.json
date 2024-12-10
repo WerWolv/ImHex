@@ -13,7 +13,6 @@
         "hex.disassembler.view.disassembler.arm.cortex_m": "Cortex-M",
         "hex.disassembler.view.disassembler.arm.default": "デフォルト",
         "hex.disassembler.view.disassembler.arm.thumb": "Thumb",
-        "hex.disassembler.view.disassembler.base": "ベースアドレス",
         "hex.disassembler.view.disassembler.bpf.classic": "クラシック",
         "hex.disassembler.view.disassembler.bpf.extended": "拡張",
         "hex.disassembler.view.disassembler.disassemble": "逆アセンブル",
