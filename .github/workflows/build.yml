@@ -668,6 +668,12 @@ jobs:
       options: --privileged --pid=host --security-opt apparmor=unconfined
 
     steps:
+      # This, together with the `--pid=host --security-opt apparmor=unconfined` docker options is required to allow
+      # fedpkg to work inside a Docker container running on Ubuntu again.
+      # GitHub seems to have enabled AppArmor on their Ubuntu CI runners which limits Docker in ways that cause
+      # programs inside it to fail.
+      # Without this, fedpkg will throw the unhelpful error message 'Insufficient Rights'
+      # This step uses nsenter to execute commands on the host that disable AppArmor entirely.
       - name: 🛡️ Disable AppArmor on Host
         run: |
           nsenter -t 1 -m -u -n -i sudo systemctl disable --now apparmor.service
