@@ -664,6 +664,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
+      image: "almalinux:9"
       options: --privileged --pid=host --security-opt apparmor=unconfined
 
     steps:
