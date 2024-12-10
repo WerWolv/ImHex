@@ -702,7 +702,7 @@ namespace hex::plugin::builtin {
         ImGui::SetClipboardText(result.c_str());
     }
 
-    static void pasteBytes(const Region &selection, bool selectionCheck) {
+    static void pasteBytes(const Region &selection, bool selectionCheck, bool asPlainText) {
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
             return;
@@ -711,7 +711,14 @@ namespace hex::plugin::builtin {
         if (clipboard == nullptr)
             return;
 
-        auto buffer = parseHexString(clipboard);
+        std::vector<u8> buffer;
+        if (asPlainText) {
+            // Directly reinterpret clipboard as an array of bytes
+            std::string cp = clipboard;
+            buffer = std::vector<u8>(cp.begin(), cp.end());
+        }
+        else
+            buffer = parseHexString(clipboard);
 
         if (!selectionCheck) {
             if (selection.getStartAddress() + buffer.size() >= provider->getActualSize())
@@ -1184,7 +1191,7 @@ namespace hex::plugin::builtin {
         /* Paste */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste" }, ICON_VS_OUTPUT, 1450, CurrentView + CTRLCMD + Keys::V,
                                                 [] {
-                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())), true);
+                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())), true, false);
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid,
                                                 this);
@@ -1192,7 +1199,16 @@ namespace hex::plugin::builtin {
         /* Paste All */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_all" }, ICON_VS_CLIPPY, 1500, CurrentView + CTRLCMD + SHIFT + Keys::V,
                                                 [] {
-                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())), false);
+                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())), false, false);
+                                                },
+                                                ImHexApi::HexEditor::isSelectionValid,
+                                                this);
+
+        /* Paste All as text */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_all_string" }, ICON_VS_CLIPPY, 1500,
+                                                CurrentView + CTRLCMD + SHIFT + ALT + Keys::V,
+                                                [] {
+                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())), false, true);
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid,
                                                 this);
