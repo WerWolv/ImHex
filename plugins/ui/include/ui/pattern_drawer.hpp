@@ -62,6 +62,7 @@ namespace hex::ui {
         void visit(pl::ptrn::PatternUnsigned& pattern) override;
         void visit(pl::ptrn::PatternWideCharacter& pattern) override;
         void visit(pl::ptrn::PatternWideString& pattern) override;
+        void visit(pl::ptrn::Pattern& pattern) override;
 
     private:
         constexpr static auto ChunkSize = 512;
