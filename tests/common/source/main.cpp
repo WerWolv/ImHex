@@ -53,7 +53,6 @@ int main(int argc, char **argv) {
     hex::TaskManager::exit();
     hex::EventImHexClosing::post();
     hex::EventManager::clear();
-    hex::PluginManager::unload();
 
     return result;
 }
