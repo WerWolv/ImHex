@@ -13,7 +13,6 @@
         "hex.disassembler.view.disassembler.arm.cortex_m": "Cortex-M",
         "hex.disassembler.view.disassembler.arm.default": "Alapértelmezett",
         "hex.disassembler.view.disassembler.arm.thumb": "Thumb",
-        "hex.disassembler.view.disassembler.base": "Alapcím",
         "hex.disassembler.view.disassembler.bpf.classic": "Klasszikus",
         "hex.disassembler.view.disassembler.bpf.extended": "Bővített",
         "hex.disassembler.view.disassembler.disassemble": "Disassemble",
