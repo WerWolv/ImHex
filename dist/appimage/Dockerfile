@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as build
+FROM ubuntu:24.10 as build
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493
@@ -14,22 +14,11 @@ apt update
 # general deps
 apt install -y ccache git wget
 # appimage tools deps
-apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse ninja-build
+apt install -y python3-pip python3-venv python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse ninja-build
 apt install -y squashfs-tools zsync
 
 # imhex deps
 /tmp/get_deps_debian.sh
-EOF
-
-RUN --mount=type=cache,target=/cache <<EOF
-# Download appimage-builder
-set -xe
-
-mkdir -p /cache/bin
-wget -nc https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /cache/bin/appimagetool || true
-chmod +x /cache/bin/appimagetool
-
-pip3 install git+https://github.com/AppImageCrafters/appimage-builder@f38699e
 EOF
 
 ENV PATH="/cache/bin/:${PATH}"
@@ -47,7 +36,7 @@ RUN <<EOF
 # Prepare ImHex build
 set -xe
 
-CC=gcc-12 CXX=g++-12 cmake -G "Ninja"                  \
+CC=gcc-14 CXX=g++-14 cmake -G "Ninja"                  \
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE}                   \
     -DCMAKE_INSTALL_PREFIX="/usr"                      \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache                 \
@@ -71,9 +60,18 @@ ccache -s
 EOF
 
 RUN <<EOF
-# Package ImHex as AppImage
+# Download appimage-builder
 set -xe
 
+mkdir -p /cache/bin
+wget -nc https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /cache/bin/appimagetool || true
+chmod +x /cache/bin/appimagetool
+
+python3 -m venv venv
+. venv/bin/activate
+pip3 install git+https://github.com/AppImageCrafters/appimage-builder@f38699e
+
+# Package ImHex as AppImage
 export VERSION=$(cat /imhex/VERSION)
 appimage-builder --recipe /imhex/dist/AppImageBuilder.yml
 EOF
