@@ -1,0 +1,91 @@
+<?php
+// index.php
+session_start();
+
+function analyzeFile($filePath) {
+    $fileInfo = pathinfo($filePath);
+    $fileSize = filesize($filePath);
+    $fileType = mime_content_type($filePath);
+    $fileContent = file_get_contents($filePath);
+    
+    return [
+        'name' => $fileInfo['basename'],
+        'size' => $fileSize,
+        'type' => $fileType,
+        'content' => nl2br(htmlspecialchars($fileContent))
+    ];
+}
+
+function analyzeLog($logPath) {
+    $logContent = file_get_contents($logPath);
+    return nl2br(htmlspecialchars($logContent));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_FILES['fileToUpload'])) {
+        $targetDir = "uploads/";
+        $targetFile = $targetDir . basename($_FILES["fileToUpload"]["name"]);
+        move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $targetFile);
+        $_SESSION['fileAnalysis'] = analyzeFile($targetFile);
+    } elseif (isset($_POST['logFilePath'])) {
+        $logFilePath = $_POST['logFilePath'];
+        if (file_exists($logFilePath)) {
+            $_SESSION['logAnalysis'] = analyzeLog($logFilePath);
+        } else {
+            $_SESSION['logAnalysis'] = "Log file does not exist.";
+        }
+    }
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Forensics Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { width: 80%; margin: auto; }
+        .result { margin-top: 20px; border: 1px solid #ccc; padding: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Cyber Forensics Tool</h1>
+    
+    <h2>File Analysis</h2>
+    <form action="" method="post" enctype="multipart/form-data">
+        <input type="file" name="fileToUpload" required>
+        <input type="submit" value="Upload File">
+    </form>
+
+    <?php if (isset($_SESSION['fileAnalysis'])): ?>
+        <div class="result">
+            <h3>File Analysis Result</h3>
+            <p><strong>Name:</strong> <?= $_SESSION['fileAnalysis']['name'] ?></p>
+            <p><strong>Size:</strong> <?= $_SESSION['fileAnalysis']['size'] ?> bytes</p>
+            <p><strong>Type:</strong> <?= $_SESSION['fileAnalysis']['type'] ?></p>
+            <h4>Content:</h4>
+            <pre><?= $_SESSION['fileAnalysis']['content'] ?></pre>
+        </div>
+        <?php unset($_SESSION['fileAnalysis']); ?>
+    <?php endif; ?>
+
+    <h2>Log File Analysis</h2>
+    <form action="" method="post">
+        <input type="text" name="logFilePath" placeholder="Enter log file path" required>
+        <input type="submit" value="Analyze Log">
+    </form>
+
+    <?php if (isset($_SESSION['logAnalysis'])): ?>
+        <div class="result">
+            <h3>Log Analysis Result</h3>
+            <pre><?= $_SESSION['logAnalysis'] ?></pre>
+        </div>
+        <?php unset($_SESSION['logAnalysis']); ?>
+    <?php endif; ?>
+</div>
+</body>
+</html>
