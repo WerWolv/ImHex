@@ -200,7 +200,6 @@ namespace hex {
             }
 
             // Try to recover from the exception by bringing ImGui back into a working state
-            ImGui::ErrorCheckEndFrameRecover(errorRecoverLogCallback, nullptr);
             ImGui::EndFrame();
             ImGui::UpdatePlatformWindows();
 
@@ -428,6 +427,8 @@ namespace hex {
         }
 
         // Open popups when plugins requested it
+        // We retry every frame until the popup actually opens
+        // It might not open the first time because another popup is already open
         {
             std::scoped_lock lock(m_popupMutex);
             m_popupsToOpen.remove_if([](const auto &name) {
@@ -662,8 +663,6 @@ namespace hex {
         TaskManager::collectGarbage();
 
         this->endNativeWindowFrame();
-
-        ImGui::ErrorCheckEndFrameRecover(errorRecoverLogCallback, nullptr);
 
         // Finalize ImGui frame
         ImGui::Render();

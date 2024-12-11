@@ -11,6 +11,7 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/patches.hpp>
 
 #include <wolv/types/type_name.hpp>
 
@@ -253,7 +254,12 @@ namespace hex {
     EVENT_DEF(EventWindowInitialized);
     EVENT_DEF(EventWindowDeinitializing, GLFWwindow *);
     EVENT_DEF(EventBookmarkCreated, ImHexApi::Bookmarks::Entry&);
-    EVENT_DEF(EventPatchCreated, u64, u8, u8);
+
+    /**
+     * @brief Called upon creation of an IPS patch.
+     * As for now, the event only serves a purpose for the achievement unlock.
+     */
+    EVENT_DEF(EventPatchCreated, const u8*, u64, const PatchKind);
     EVENT_DEF(EventPatternEvaluating);
     EVENT_DEF(EventPatternExecuted, const std::string&);
     EVENT_DEF(EventPatternEditorChanged, const std::string&);

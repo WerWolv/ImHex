@@ -18,6 +18,7 @@ namespace hex::plugin::builtin {
         m_analysisData.setOnCreateCallback([](const prv::Provider *provider, AnalysisData &data) {
             data.analyzedProvider = provider;
 
+            data.informationSections.clear();
             for (const auto &informationSectionConstructor : ContentRegistry::DataInformation::impl::getInformationSectionConstructors()) {
                 data.informationSections.push_back(informationSectionConstructor());
             }
@@ -159,7 +160,7 @@ namespace hex::plugin::builtin {
                         bool enabled = section->isEnabled();
 
                         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
-                        if (ImGui::BeginChild(Lang(section->getUnlocalizedName()), ImVec2(0, 0), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_MenuBar)) {
+                        if (ImGui::BeginChild(Lang(section->getUnlocalizedName()), ImVec2(0, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_MenuBar)) {
                             if (ImGui::BeginMenuBar()) {
 
                                 // Draw the enable checkbox of the section

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+    <mime-type type="application/vnd.imhex.proj">
+        <comment>ImHex Project</comment>
+        <glob pattern="*.hexproj"/>
+    </mime-type>
+</mime-info>

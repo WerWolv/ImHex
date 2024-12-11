@@ -11,6 +11,7 @@
 
 #include <ui/hex_editor.hpp>
 #include <ui/pattern_drawer.hpp>
+#include <ui/visualizer_drawer.hpp>
 
 #include <filesystem>
 #include <functional>
@@ -73,6 +74,8 @@ namespace hex::plugin::builtin {
         }
 
     public:
+        std::string preprocessText(const std::string &code);
+
         struct VirtualFile {
             std::fs::path path;
             std::vector<u8> data;
@@ -241,6 +244,8 @@ namespace hex::plugin::builtin {
         std::map<prv::Provider*, std::function<void()>> m_sectionWindowDrawer;
 
         ui::HexEditor m_sectionHexEditor;
+        PerProvider<ui::VisualizerDrawer> m_visualizerDrawer;
+        bool m_tooltipJustOpened = false;
 
         PatternSourceCode m_sourceCode;
         PerProvider<std::vector<std::string>> m_console;
@@ -249,9 +254,14 @@ namespace hex::plugin::builtin {
         std::mutex m_logMutex;
 
         PerProvider<TextEditor::Coordinates>  m_cursorPosition;
+
+        PerProvider<TextEditor::Coordinates> m_consoleCursorPosition;
+        PerProvider<TextEditor::Selection> m_selection;
+        PerProvider<TextEditor::Selection> m_consoleSelection;
+        PerProvider<TextEditor::Breakpoints> m_breakpoints;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
-        PerProvider<std::vector<const pl::core::ast::ASTNode*>> m_callStack;
+        PerProvider<const std::vector<std::unique_ptr<pl::core::ast::ASTNode>>*> m_callStack;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
         PerProvider<std::map<u64, pl::api::Section>> m_sections;

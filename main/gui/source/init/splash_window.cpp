@@ -526,7 +526,7 @@ namespace hex::init {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, w, h, 0, GL_ALPHA, GL_UNSIGNED_BYTE, px);
-            io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
+            io.Fonts->SetTexID(tex);
         }
 
         // Don't save window settings for the splash screen

@@ -13,7 +13,6 @@
         "hex.disassembler.view.disassembler.arm.cortex_m": "Cortex-M",
         "hex.disassembler.view.disassembler.arm.default": "預設",
         "hex.disassembler.view.disassembler.arm.thumb": "Thumb",
-        "hex.disassembler.view.disassembler.base": "基址",
         "hex.disassembler.view.disassembler.bpf.classic": "經典",
         "hex.disassembler.view.disassembler.bpf.extended": "擴充",
         "hex.disassembler.view.disassembler.disassemble": "解譯",

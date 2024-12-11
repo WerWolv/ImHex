@@ -10,19 +10,31 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <hex/helpers/utils.hpp>
 
 #include <imgui_internal.h>
 
 #include <atomic>
-#include <implot_internal.h>
 #include <random>
-#include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex {
 
     namespace impl {
+
+        struct AnnotationRegion {
+            UnlocalizedString unlocalizedName;
+            Region region;
+            ImColor color;
+        };
+
+        struct Tag {
+            UnlocalizedString unlocalizedName;
+            ImU64 value;
+            ImAxis axis;
+            ImGuiCol color;
+        };
 
         inline int IntegerAxisFormatter(double value, char* buffer, int size, void *userData) {
             u64 integer = static_cast<u64>(value);
@@ -135,7 +147,7 @@ namespace hex {
             }
 
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
-            if (ImGui::BeginChild("##digram", size, ImGuiChildFlags_Border)) {
+            if (ImGui::BeginChild("##digram", size, ImGuiChildFlags_Borders)) {
                 auto drawList = ImGui::GetWindowDrawList();
 
                 if (m_textureValid) {
@@ -258,7 +270,7 @@ namespace hex {
             }
 
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
-            if (ImGui::BeginChild("##layered_distribution", size, ImGuiChildFlags_Border)) {
+            if (ImGui::BeginChild("##layered_distribution", size, ImGuiChildFlags_Borders)) {
                 auto drawList = ImGui::GetWindowDrawList();
 
                 if (m_textureValid) {
@@ -379,6 +391,39 @@ namespace hex {
 
                 // Draw the plot
                 ImPlot::PlotLine("##ChunkBasedAnalysisLine", m_xBlockEntropy.data(), m_yBlockEntropySampled.data(), m_xBlockEntropy.size());
+
+                if (m_showAnnotations) {
+                    u32 id = 1;
+                    for (const auto &annotation : m_annotationRegions) {
+                        const auto &region = annotation.region;
+                        double xMin = region.getStartAddress();
+                        double xMax = region.getEndAddress();
+                        double yMin = 0.0F;
+                        double yMax = 100.0F;
+
+                        ImPlot::DragRect(id, &xMin, &yMin, &xMax, &yMax, annotation.color, ImPlotDragToolFlags_NoFit | ImPlotDragToolFlags_NoInputs);
+
+                        const auto min = ImFloor(ImPlot::PlotToPixels(xMin, yMax));
+                        const auto max = ImFloor(ImPlot::PlotToPixels(xMax, yMin)) + scaled({ 1, 1 });
+                        const auto mousePos = ImPlot::PixelsToPlot(ImGui::GetMousePos());
+                        if (ImGui::IsMouseHoveringRect(min, max)) {
+                            ImPlot::Annotation(xMin + (xMax - xMin) / 2, mousePos.y, annotation.color, ImVec2(), false, "%s", Lang(annotation.unlocalizedName).get());
+
+                            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                                ImHexApi::HexEditor::setSelection(annotation.region);
+                            }
+                        }
+
+                        id += 1;
+                    }
+
+                    for (const auto &tag : m_tags) {
+                        if (tag.axis == ImAxis_X1)
+                            ImPlot::TagX(tag.value, ImGui::GetStyleColorVec4(tag.color), "%s", Lang(tag.unlocalizedName).get());
+                        else if (tag.axis == ImAxis_Y1)
+                            ImPlot::TagY(tag.value, ImGui::GetStyleColorVec4(tag.color), "%s", Lang(tag.unlocalizedName).get());
+                    }
+                }
 
                 // The parameter updateHandle is used when using the pattern language since we don't have a provider 
                 // but just a set of bytes, we won't be able to use the drag bar correctly.
@@ -563,6 +608,10 @@ namespace hex {
             m_handlePosition = filePosition;
         }
 
+        void enableAnnotations(bool enabled) {
+            m_showAnnotations = enabled;
+        }
+
     private: 
         // Private method used to factorize the process public method 
         void processImpl(const std::vector<u8> &bytes) {
@@ -610,6 +659,41 @@ namespace hex {
             for (u64 i = 0; i < m_blockCount; ++i)
                 m_xBlockEntropy[i] = ((m_startAddress / m_blockSize) + stride * i) * m_blockSize;
             m_xBlockEntropy.push_back(m_endAddress);
+
+            for (u64 index = 0; index < m_yBlockEntropySampled.size() - 1; index += 1) {
+                const auto first  = m_yBlockEntropySampled[index + 0];
+                const auto second = m_yBlockEntropySampled[index + 1];
+
+                const auto relativeDifference = std::abs(first - second) / std::max(first, second);
+
+                if (relativeDifference > 0.5 && index + 1 < m_xBlockEntropy.size()) {
+                    const u64 start = u64(m_xBlockEntropy[index + 1]);
+                    const u64 size = u64(m_xBlockEntropy[index + 1] - m_xBlockEntropy[index + 0]);
+                    Region region = { start, size };
+                    if (first > second) {
+                        this->addRegion("hex.ui.diagram.entropy_analysis.entropy_drop", region, 0x60FF2020);
+                    } else {
+                        this->addRegion("hex.ui.diagram.entropy_analysis.entropy_spike", region, 0x602020FF);
+                    }
+                }
+            }
+        }
+
+        void addRegion(const UnlocalizedString &unlocalizedName, Region region, ImColor color) {
+            const auto existingRegion = std::ranges::find_if(m_annotationRegions, [this, &region](const impl::AnnotationRegion &annotation) {
+                auto difference = i64(region.getEndAddress()) - i64(annotation.region.getEndAddress());
+                return difference > 0 && difference < i64(m_blockSize * 32);
+            });
+
+            if (existingRegion != m_annotationRegions.end()) {
+                existingRegion->region.size += region.size;
+            } else {
+                m_annotationRegions.push_back({ unlocalizedName, region, color });
+            }
+        }
+
+        void addTag(const UnlocalizedString &name, u64 value, ImAxis axis, ImGuiCol color) {
+            m_tags.push_back({ name, value, axis, color });
         }
 
     private:
@@ -650,6 +734,11 @@ namespace hex {
         size_t m_sampleSize = 0;
 
         std::atomic<bool> m_processing = false;
+
+        std::vector<impl::AnnotationRegion> m_annotationRegions;
+        std::vector<impl::Tag> m_tags;
+
+        bool m_showAnnotations = true;
     };
 
     class DiagramByteDistribution {
@@ -748,20 +837,6 @@ namespace hex {
     };
 
     class DiagramByteTypesDistribution {
-    private:
-        struct AnnotationRegion {
-            UnlocalizedString unlocalizedName;
-            Region region;
-            ImColor color;
-        };
-
-        struct Tag {
-            UnlocalizedString unlocalizedName;
-            ImU64 value;
-            ImAxis axis;
-            ImGuiCol color;
-        };
-
     public:
         explicit DiagramByteTypesDistribution(u64 blockSize = 256, size_t sampleSize = 0x1000) : m_blockSize(blockSize), m_sampleSize(sampleSize){ }
 
@@ -1049,8 +1124,8 @@ namespace hex {
             m_xBlockTypeDistributions.push_back(m_endAddress);
         }
 
-        void addRegion(const UnlocalizedString &name, Region region, ImColor color) {
-            const auto existingRegion = std::ranges::find_if(m_annotationRegions, [this, &region](const AnnotationRegion &annotation) {
+        void addRegion(const UnlocalizedString &unlocalizedName, Region region, ImColor color) {
+            const auto existingRegion = std::ranges::find_if(m_annotationRegions, [this, &region](const impl::AnnotationRegion &annotation) {
                 auto difference = i64(region.getEndAddress()) - i64(annotation.region.getEndAddress());
                 return difference > 0 && difference < i64(m_blockSize * 32);
             });
@@ -1058,7 +1133,7 @@ namespace hex {
             if (existingRegion != m_annotationRegions.end()) {
                 existingRegion->region.size += region.size;
             } else {
-                m_annotationRegions.push_back({ name, region, color });
+                m_annotationRegions.push_back({ unlocalizedName, region, color });
             }
         }
 
@@ -1103,8 +1178,8 @@ namespace hex {
         std::array<std::vector<float>, 12> m_yBlockTypeDistributions, m_yBlockTypeDistributionsSampled;
         std::atomic<bool> m_processing = false;
 
-        std::vector<AnnotationRegion> m_annotationRegions;
-        std::vector<Tag> m_tags;
+        std::vector<impl::AnnotationRegion> m_annotationRegions;
+        std::vector<impl::Tag> m_tags;
 
         bool m_showAnnotations = true;
     };

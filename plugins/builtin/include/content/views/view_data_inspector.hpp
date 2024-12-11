@@ -1,14 +1,12 @@
 #pragma once
 
 #include <hex/ui/view.hpp>
+#include <ui/visualizer_drawer.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/task_manager.hpp>
 
-#include <wolv/io/file.hpp>
-
 #include <bit>
-#include <cstdio>
 #include <string>
 
 namespace hex::plugin::builtin {
@@ -56,6 +54,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::NumberDisplayStyle m_numberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle::Decimal;
         bool m_invert = false;
 
+        ui::VisualizerDrawer m_visualizerDrawer;
         u64 m_startAddress  = 0;
         size_t m_validBytes = 0;
         prv::Provider *m_selectedProvider = nullptr;

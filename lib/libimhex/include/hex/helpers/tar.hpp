@@ -29,7 +29,7 @@ namespace hex {
         void close();
 
         /**
-         * @brief get the error string explaining the error that occured when opening the file.
+         * @brief get the error string explaining the error that occurred when opening the file.
          * This error is a combination of the tar error and the native file open error
          */
         std::string getOpenErrorString() const;
