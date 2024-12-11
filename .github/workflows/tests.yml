@@ -84,6 +84,62 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: coverage_report.xml
 
+  tests-win:
+    name: 🧪 Unit Tests (windows)
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+    steps:
+    - name: 🧰 Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: 📜 Setup ccache
+      uses:  hendrikmuhs/ccache-action@v1
+      id:    cache-ccache
+      with:
+        key: ${{ runner.os }}-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-ccache
+        max-size: 1G
+
+    - name: 🟦 Install msys2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: mingw64
+
+    - name: ⬇️ Install dependencies
+      run: |
+        set -x
+        dist/get_deps_msys2.sh
+
+    # Windows cmake build
+    - name: 🛠️ Build
+      run: |
+        set -x
+        mkdir -p build
+        cd build
+
+        cmake -G "Ninja"                                            \
+          -DCMAKE_BUILD_TYPE=Debug                                  \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
+          -DUSE_SYSTEM_CAPSTONE=ON                                  \
+          -DIMHEX_ENABLE_UNIT_TESTS=ON                              \
+          -DIMHEX_ENABLE_PLUGIN_TESTS=ON                            \
+          -DIMHEX_PATTERNS_ENABLE_UNIT_TESTS=OFF                    \
+          -DLIBPL_ENABLE_TESTS=OFF                                  \
+          -DIMHEX_OFFLINE_BUILD=ON                                  \
+          ..
+        make -j4 unit_tests
+
+    - name: 🧪 Perform Unit Tests
+      run: |
+        cd build
+        ctest --output-on-failure
+
   langs:
     name: 🧪 Langs
     runs-on: ubuntu-22.04
