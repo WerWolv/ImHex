@@ -20,6 +20,3 @@ pacboy -S --needed --noconfirm  \
   zstd:p         \
   lz4:p          \
   gdb:p
-
-
-pacman -S --needed --noconfirm  mingw-w64-ucrt-x86_64-clang-tools-extra
