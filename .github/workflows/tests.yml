@@ -125,7 +125,9 @@ jobs:
 
         cmake -G "Ninja"                                            \
           -DCMAKE_BUILD_TYPE=Debug                                  \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"                     \
           -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
           -DUSE_SYSTEM_CAPSTONE=ON                                  \
           -DIMHEX_ENABLE_UNIT_TESTS=ON                              \
           -DIMHEX_ENABLE_PLUGIN_TESTS=ON                            \
@@ -133,7 +135,7 @@ jobs:
           -DLIBPL_ENABLE_TESTS=OFF                                  \
           -DIMHEX_OFFLINE_BUILD=ON                                  \
           ..
-        make -j4 unit_tests
+        ninja -j4 unit_tests
 
     - name: 🧪 Perform Unit Tests
       run: |
