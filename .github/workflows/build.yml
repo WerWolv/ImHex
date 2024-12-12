@@ -406,7 +406,7 @@ jobs:
           cd ..
           for i in $(seq 1 10); do
               if hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{ env.IMHEX_VERSION }}-macOS-arm64.dmg; then
-                  echo "Created dmg after ${i} attempts""
+                  echo "Created dmg after ${i} attempts"
                   break
               fi
               sleep 10
