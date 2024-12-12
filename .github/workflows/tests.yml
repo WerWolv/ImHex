@@ -38,7 +38,6 @@ jobs:
       run: |
         sudo apt update
         sudo bash dist/get_deps_debian.sh
-        sudo apt install gcovr -y
 
     - name: 🛠️ Build
       run: |
@@ -70,6 +69,10 @@ jobs:
     # Generate report from all gcov .gcda files
     - name: 🧪 Generate coverage report
       run: |
+        sudo apt install python3-pip python3-venv
+        python3 -m venv venv
+        . venv/bin/activate
+        pip3 install gcovr
         gcovr --gcov-executable /usr/bin/gcov-14 -r . build --xml coverage_report.xml --verbose
 
     - name: Upload coverage reports to Codecov
