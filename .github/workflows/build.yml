@@ -261,17 +261,17 @@ jobs:
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
-          -DCMAKE_BUILD_TYPE=Release                                                  \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
           -DIMHEX_GENERATE_PACKAGE=ON                                                               \
-          -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib"                                          \
+          -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache                                                   \
           -DCMAKE_INSTALL_PREFIX="./install"                                                        \
           -DIMHEX_PATTERNS_PULL_MASTER=ON                                                           \
-          -DIMHEX_COMMIT_HASH_LONG="1234"                                                  \
-          -DIMHEX_COMMIT_BRANCH="master"                                                 \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                  \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                 \
           ..
 
     - name: 🛠️ Build

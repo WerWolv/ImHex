@@ -45,7 +45,7 @@ jobs:
         set -x
         mkdir -p build
         cd build
-        CC=gcc-12 CXX=g++-12 cmake                                                                                 \
+        CC=gcc-14 CXX=g++-14 cmake                                                                                 \
           -DCMAKE_BUILD_TYPE=Debug                                                                                 \
           -DIMHEX_ENABLE_UNIT_TESTS=ON                                                                             \
           -DIMHEX_ENABLE_PLUGIN_TESTS=ON                                                                           \
@@ -70,7 +70,7 @@ jobs:
     # Generate report from all gcov .gcda files
     - name: 🧪 Generate coverage report
       run: |
-        gcovr --gcov-executable /usr/bin/gcov-12 -r . build --xml coverage_report.xml --verbose
+        gcovr --gcov-executable /usr/bin/gcov-14 -r . build --xml coverage_report.xml --verbose
 
     - name: Upload coverage reports to Codecov
       env:
