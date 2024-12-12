@@ -257,6 +257,7 @@ jobs:
         cd build
         CC=$(brew --prefix llvm)/bin/clang                                                          \
         CXX=$(brew --prefix llvm)/bin/clang++                                                       \
+        AR=/usr/bin/ar                                                                              \
         OBJC=$(brew --prefix llvm)/bin/clang                                                        \
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
