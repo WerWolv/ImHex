@@ -41,7 +41,7 @@ file(GLOB_RECURSE plugins "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexplug")
 # makes it sometimes break on libraries that do weird things with @rpath. Specify
 # equivalent search directories until https://gitlab.kitware.com/cmake/cmake/issues/16625
 # is fixed and in our minimum CMake version.
-set(extra_dirs "/usr/local/lib" "/lib" "/usr/lib" "/opt/homebrew/opt/llvm/lib" "/opt/homebrew/opt/llvm/lib/unwind" "/opt/homebrew/opt/llvm/lib/c++" "/opt/homebrew/lib" ${EXTRA_BUNDLE_LIBRARY_PATHS} "${BUNDLE_PATH}/Contents/MacOS/plugins" "${BUNDLE_PATH}/Contents/Frameworks")
+set(extra_dirs "/usr/local/lib" "/lib" "/usr/lib" ${EXTRA_BUNDLE_LIBRARY_PATHS} "${BUNDLE_PATH}/Contents/MacOS/plugins" "${BUNDLE_PATH}/Contents/Frameworks")
 message(STATUS "Fixing up application bundle: ${extra_dirs}")
 
 # BundleUtilities is overly verbose, so disable most of its messages
