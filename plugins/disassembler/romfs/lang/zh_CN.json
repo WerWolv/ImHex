@@ -13,7 +13,6 @@
         "hex.disassembler.view.disassembler.arm.cortex_m": "Cortex-M",
         "hex.disassembler.view.disassembler.arm.default": "默认",
         "hex.disassembler.view.disassembler.arm.thumb": "Thumb",
-        "hex.disassembler.view.disassembler.base": "基地址",
         "hex.disassembler.view.disassembler.bpf.classic": "传统 BPF（cBPF）",
         "hex.disassembler.view.disassembler.bpf.extended": "扩展 BPF（eBPF）",
         "hex.disassembler.view.disassembler.disassemble": "反汇编",
