@@ -3,6 +3,7 @@
 
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #include <pl/core/evaluator.hpp>
 

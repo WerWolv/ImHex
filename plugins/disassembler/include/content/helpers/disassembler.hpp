@@ -95,7 +95,7 @@ namespace hex::plugin::disasm {
 
         // string has to be in the form of `arch;option1,option2,option3,no-option4`
         // Not all results might make sense for capstone
-        constexpr static std::pair<cs_arch, cs_mode> stringToSettings(std::string_view string) {
+        static std::pair<cs_arch, cs_mode> stringToSettings(std::string_view string) {
             const auto archSeparator = string.find_first_of(';');
 
             std::string_view archName;
