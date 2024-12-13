@@ -118,7 +118,7 @@ if [ "$CUSTOM_GLFW" ]; then
     cd /mnt/glfw
     mkdir build
     cd build
-    CC=o64-gcc CXX=o64-g++ cmake -G "Ninja"             \
+    CC=o64-clang CXX=o64-clang++ cmake -G "Ninja"       \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
           -DBUILD_SHARED_LIBS=ON                        \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
