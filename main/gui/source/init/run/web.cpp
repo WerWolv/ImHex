@@ -43,7 +43,9 @@
 
                     // Clean up everything after the main window is closed
                     emscripten_set_beforeunload_callback(nullptr, [](int eventType, const void *reserved, void *userData) {
-                        hex::unused(eventType, reserved, userData);
+                        std::ignore = eventType;
+                        std::ignore = reserved;
+                        std::ignore = userData;
 
                         emscripten_cancel_main_loop();
 

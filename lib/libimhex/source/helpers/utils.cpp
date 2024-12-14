@@ -336,13 +336,13 @@ namespace hex {
     void startProgram(const std::string &command) {
 
         #if defined(OS_WINDOWS)
-            hex::unused(system(hex::format("start {0}", command).c_str()));
+            std::ignore = system(hex::format("start {0}", command).c_str());
         #elif defined(OS_MACOS)
-            hex::unused(system(hex::format("open {0}", command).c_str()));
+            std::ignore = system(hex::format("open {0}", command).c_str());
         #elif defined(OS_LINUX)
             executeCmd({"xdg-open", command});
         #elif defined(OS_WEB)
-            hex::unused(command);
+            std::ignore = command;
         #endif
     }
 
@@ -839,7 +839,7 @@ namespace hex {
 
             return dlopen(info.dli_fname, RTLD_LAZY);
         #else
-            hex::unused(symbol);
+            std::ignore = symbol;
             return nullptr;
         #endif
     }

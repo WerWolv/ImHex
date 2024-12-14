@@ -747,7 +747,7 @@ namespace hex::ui {
 
     void PatternDrawer::visit(pl::ptrn::PatternPadding& pattern) {
         // Do nothing
-        hex::unused(pattern);
+        std::ignore = pattern;
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternPointer& pattern) {

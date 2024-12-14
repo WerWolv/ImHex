@@ -1535,7 +1535,7 @@ namespace hex::plugin::builtin {
 
                 auto mimeType = magic::getMIMEType(provider, 0, 100_KiB, true);
                 runtime.addPragma("MIME", [&mimeType, &foundCorrectType](const pl::PatternLanguage &runtime, const std::string &value) {
-                    hex::unused(runtime);
+                    std::ignore = runtime;
 
                     if (!magic::isValidMIMEType(value))
                         return false;
@@ -2191,7 +2191,8 @@ namespace hex::plugin::builtin {
         });
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {
-            hex::unused(data, size);
+            std::ignore = data;
+            std::ignore = size;
 
             if (m_runningEvaluators != 0)
                 return std::nullopt;
@@ -2232,7 +2233,8 @@ namespace hex::plugin::builtin {
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
-            hex::unused(data, size);
+            std::ignore = data;
+            std::ignore = size;
 
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
                 const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();

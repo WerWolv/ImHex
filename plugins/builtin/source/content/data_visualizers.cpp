@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
         explicit DataVisualizerHexadecimal(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
-            hex::unused(address);
+            std::ignore = address;
 
             if (size == ByteCount)
                 ImGuiExt::TextFormatted(upperCase ? "{:0{}X}" : "{:0{}x}", *reinterpret_cast<const T*>(data), sizeof(T) * 2);
@@ -25,7 +25,8 @@ namespace hex::plugin::builtin {
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
-            hex::unused(address, startedEditing);
+            std::ignore = address;
+            std::ignore = startedEditing;
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGuiExt::getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsHexadecimal);
@@ -35,8 +36,8 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        constexpr static inline auto ByteCount = sizeof(T);
-        constexpr static inline auto CharCount = ByteCount * 2;
+        constexpr static auto ByteCount = sizeof(T);
+        constexpr static auto CharCount = ByteCount * 2;
 
         const static inline auto FormattingUpperCase = hex::format("%0{}{}X", CharCount, ImGuiExt::getFormatLengthSpecifier<T>());
         const static inline auto FormattingLowerCase = hex::format("%0{}{}x", CharCount, ImGuiExt::getFormatLengthSpecifier<T>());
@@ -54,7 +55,7 @@ namespace hex::plugin::builtin {
         DataVisualizerHexii() : DataVisualizer("hex.builtin.visualizer.hexii", ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
-            hex::unused(address);
+            std::ignore = address;
 
             if (size == ByteCount) {
                 const u8 c = data[0];
@@ -78,7 +79,8 @@ namespace hex::plugin::builtin {
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
-            hex::unused(address, startedEditing);
+            std::ignore = address;
+            std::ignore = startedEditing;
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGuiExt::getImGuiDataType<u8>(), data, ImGuiInputTextFlags_CharsHexadecimal);
@@ -108,7 +110,8 @@ namespace hex::plugin::builtin {
         explicit DataVisualizerDecimal(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
-            hex::unused(address, upperCase);
+            std::ignore = address;
+            std::ignore = upperCase;
 
             if (size == ByteCount) {
                 if (std::is_signed_v<T>)
@@ -121,7 +124,9 @@ namespace hex::plugin::builtin {
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
-            hex::unused(address, upperCase, startedEditing);
+            std::ignore = address;
+            std::ignore = upperCase;
+            std::ignore = startedEditing;
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, FormatString.c_str(), ImGuiExt::getImGuiDataType<T>(), data, ImGuiInputTextFlags_None);
@@ -131,8 +136,8 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        constexpr static inline auto ByteCount = sizeof(T);
-        constexpr static inline auto CharCount = std::numeric_limits<T>::digits10 + 2;
+        constexpr static auto ByteCount = sizeof(T);
+        constexpr static auto CharCount = std::numeric_limits<T>::digits10 + 2;
 
         const static inline auto FormatString = hex::format("%{}{}{}", CharCount, ImGuiExt::getFormatLengthSpecifier<T>(), std::is_signed_v<T> ? "d" : "u");
 
@@ -149,7 +154,7 @@ namespace hex::plugin::builtin {
         explicit DataVisualizerFloatingPoint(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
-            hex::unused(address);
+            std::ignore = address;
 
             if (size == ByteCount)
                 ImGui::Text(getFormatString(upperCase), *reinterpret_cast<const T*>(data));
@@ -158,7 +163,9 @@ namespace hex::plugin::builtin {
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
-            hex::unused(address, upperCase, startedEditing);
+            std::ignore = address;
+            std::ignore = upperCase;
+            std::ignore = startedEditing;
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGuiExt::getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsScientific);
@@ -188,7 +195,7 @@ namespace hex::plugin::builtin {
         explicit DataVisualizerFloatingPoint(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
-            hex::unused(address);
+            std::ignore = address;
 
             if (size == ByteCount)
                 ImGui::Text(getFormatString(upperCase), hex::float16ToFloat32(*reinterpret_cast<const u16*>(data)));
@@ -197,15 +204,15 @@ namespace hex::plugin::builtin {
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
-            hex::unused(startedEditing);
+            std::ignore = startedEditing;
 
             this->draw(address, data, size, upperCase);
             return false;
         }
 
     private:
-        constexpr static inline auto ByteCount = sizeof(Float16);
-        constexpr static inline auto CharCount = 14;
+        constexpr static auto ByteCount = sizeof(Float16);
+        constexpr static auto CharCount = 14;
 
         const static inline auto FormatStringUpperCase = hex::format("%{}G", CharCount);
         const static inline auto FormatStringLowerCase = hex::format("%{}g", CharCount);
@@ -223,7 +230,8 @@ namespace hex::plugin::builtin {
         DataVisualizerRGBA8() : DataVisualizer("hex.builtin.visualizer.rgba8", 4, 2) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
-            hex::unused(address, upperCase);
+            std::ignore = address;
+            std::ignore = upperCase;
 
             if (size == 4)
                 ImGui::ColorButton("##color", ImColor(data[0], data[1], data[2], data[3]), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
@@ -232,7 +240,10 @@ namespace hex::plugin::builtin {
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
-            hex::unused(address, data, size, upperCase);
+            std::ignore = address;
+            std::ignore = data;
+            std::ignore = size;
+            std::ignore = upperCase;
 
             m_currColor = { float(data[0]) / 0xFF, float(data[1]) / 0xFF, float(data[2]) / 0xFF, float(data[3]) / 0xFF };
             if (startedEditing) {
@@ -254,8 +265,8 @@ namespace hex::plugin::builtin {
             return false;
         }
 
-        std::array<float, 4> m_currColor = { 0 };
-
+    private:
+        std::array<float, 4> m_currColor = { };
     };
 
     class DataVisualizerBinary : public hex::ContentRegistry::HexEditor::DataVisualizer {
@@ -263,14 +274,15 @@ namespace hex::plugin::builtin {
         DataVisualizerBinary() : DataVisualizer("hex.builtin.visualizer.binary", 1, 8) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool) override {
-            hex::unused(address);
+            std::ignore = address;
 
             if (size == 1)
                 ImGuiExt::TextFormatted("{:08b}", *data);
         }
 
         bool drawEditing(u64 address, u8 *data, size_t, bool, bool startedEditing) override {
-            hex::unused(address, startedEditing);
+            std::ignore = address;
+            std::ignore = startedEditing;
 
             if (startedEditing) {
                 m_inputBuffer = hex::format("{:08b}", *data);

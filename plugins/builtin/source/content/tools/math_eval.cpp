@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
 
             evaluator.setFunction(
                 "clear", [&](auto args) -> std::optional<long double> {
-                    hex::unused(args);
+                    std::ignore = args;
 
                     mathHistory.clear();
                     lastMathError.clear();

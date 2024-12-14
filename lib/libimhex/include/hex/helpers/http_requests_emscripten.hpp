@@ -25,13 +25,16 @@
 
         template<typename T>
         std::future<HttpRequest::Result<T>> HttpRequest::uploadFile(const std::fs::path &path, const std::string &mimeName) {
-            hex::unused(path, mimeName);
+            std::ignore = path;
+            std::ignore = mimeName;
             throw std::logic_error("Not implemented");
         }
 
         template<typename T>
         std::future<HttpRequest::Result<T>> HttpRequest::uploadFile(std::vector<u8> data, const std::string &mimeName, const std::fs::path &fileName) {
-            hex::unused(data, mimeName, fileName);
+            std::ignore = data;
+            std::ignore = mimeName;
+            std::ignore = fileName;
             throw std::logic_error("Not implemented");
         }
 

@@ -538,7 +538,7 @@ namespace hex::plugin::builtin {
 
         // Clear project context if we go back to the welcome screen
         EventProviderChanged::subscribe([](const hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {
-            hex::unused(oldProvider);
+            std::ignore = oldProvider;
             if (newProvider == nullptr) {
                 ProjectFile::clearPath();
                 RequestUpdateWindowTitle::post();

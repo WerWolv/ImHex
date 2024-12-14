@@ -35,7 +35,7 @@ namespace hex::init {
         std::vector<std::string> args;
 
         #if defined (OS_WINDOWS)
-            hex::unused(argv);
+            std::ignore = argv;
 
             // On Windows, argv contains UTF-16 encoded strings, so we need to convert them to UTF-8
             auto convertedCommandLine = ::CommandLineToArgvW(::GetCommandLineW(), &argc);

@@ -63,7 +63,7 @@ namespace hex::plugin::hashes {
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
-            hex::unused(data);
+            std::ignore = data;
 
             auto selection = ImHexApi::HexEditor::getSelection();
 

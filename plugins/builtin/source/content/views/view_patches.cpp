@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
         });
 
         ImHexApi::HexEditor::addForegroundHighlightingProvider([this](u64 offset, const u8* buffer, size_t, bool) -> std::optional<color_t> {
-            hex::unused(buffer);
+            std::ignore = buffer;
 
             if (!ImHexApi::Provider::isValid())
                 return std::nullopt;

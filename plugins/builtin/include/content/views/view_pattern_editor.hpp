@@ -363,7 +363,7 @@ namespace hex::plugin::builtin {
                     });
 
                     wolv::io::File file(path, wolv::io::File::Mode::Read);
-                    hex::unused(runtime.preprocessString(file.readString(), pl::api::Source::DefaultSource));
+                    std::ignore = runtime.preprocessString(file.readString(), pl::api::Source::DefaultSource);
 
                     return m_patternNames[path];
                 },
