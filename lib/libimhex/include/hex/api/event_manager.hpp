@@ -130,15 +130,9 @@ namespace hex {
         static void subscribe(void *token, typename E::Callback function) {
             std::scoped_lock lock(getEventMutex());
 
-            if (getTokenStore().contains(token)) {
-                auto&& [begin, end] = getTokenStore().equal_range(token);
-                const auto eventRegistered = std::any_of(begin, end, [&](auto &item) {
-                    return item.second->first == E::Id;
-                });
-                if (eventRegistered) {
-                    log::fatal("The token '{}' has already registered the same event ('{}')", token, wolv::type::getTypeName<E>());
-                    return;
-                }
+            if (isAlreadyRegistered(token, E::Id)) {
+                log::fatal("The token '{}' has already registered the same event ('{}')", token, wolv::type::getTypeName<E>());
+                return;
             }
 
             getTokenStore().insert({ token, subscribe<E>(function) });
@@ -163,16 +157,7 @@ namespace hex {
         static void unsubscribe(void *token) noexcept {
             std::scoped_lock lock(getEventMutex());
 
-            auto &tokenStore = getTokenStore();
-            auto iter = std::find_if(tokenStore.begin(), tokenStore.end(), [&](auto &item) {
-                return item.first == token && item.second->first == E::Id;
-            });
-
-            if (iter != tokenStore.end()) {
-                getEvents().erase(iter->second);
-                tokenStore.erase(iter);
-            }
-
+            unsubscribe(token, E::Id);
         }
 
         /**
@@ -210,6 +195,9 @@ namespace hex {
         static std::multimap<void *, EventList::iterator>& getTokenStore();
         static EventList& getEvents();
         static std::recursive_mutex& getEventMutex();
+
+        static bool isAlreadyRegistered(void *token, impl::EventId id);
+        static void unsubscribe(void *token, impl::EventId id);
     };
 
     /* Default Events */
