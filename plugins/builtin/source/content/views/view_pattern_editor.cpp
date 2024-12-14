@@ -1,5 +1,5 @@
 #include "content/views/view_pattern_editor.hpp"
-#include "fonts/blendericons_font.h"
+#include <fonts/blender_icons.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>

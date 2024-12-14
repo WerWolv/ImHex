@@ -28,7 +28,7 @@
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <content/recent.hpp>
 

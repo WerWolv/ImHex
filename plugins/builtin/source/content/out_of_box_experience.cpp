@@ -1,6 +1,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <hex/api/content_registry.hpp>

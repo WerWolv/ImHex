@@ -5,7 +5,7 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <wolv/utils/string.hpp>
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <functional>
 #include <string>

@@ -16,7 +16,7 @@
 #include <filesystem>
 
 #include <imgui.h>
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <nlohmann/json.hpp>
 

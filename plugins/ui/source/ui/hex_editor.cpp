@@ -9,7 +9,7 @@
 
 #include <wolv/utils/guards.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
 namespace hex::ui {

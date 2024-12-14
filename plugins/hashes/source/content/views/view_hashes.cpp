@@ -7,7 +7,7 @@
 #include <hex/helpers/crypto.hpp>
 
 #include <hex/ui/popup.hpp>
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <vector>
 

@@ -4,7 +4,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/layout_manager.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::builtin {
 

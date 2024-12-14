@@ -9,7 +9,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/debugging.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <implot.h>

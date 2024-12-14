@@ -5,7 +5,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <ui/pattern_drawer.hpp>
 #include <ui/visualizer_drawer.hpp>

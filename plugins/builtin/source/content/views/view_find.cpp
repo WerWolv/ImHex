@@ -5,7 +5,7 @@
 
 #include <hex/providers/buffered_reader.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <array>
 #include <ranges>
