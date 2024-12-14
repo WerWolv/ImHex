@@ -744,7 +744,7 @@ jobs:
 
       - name: 📜 Fix ccache on EL9
         if: matrix.mock_release == 'epel9'
-        run: sed -i '/\. \/opt\/rh\/gcc-toolset-12\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+        run: sed -i '/\. \/opt\/rh\/gcc-toolset-14\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
 
       - name: 🟩 Copy spec file to build root
         run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
