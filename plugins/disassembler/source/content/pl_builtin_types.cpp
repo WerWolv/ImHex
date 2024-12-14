@@ -64,7 +64,7 @@ namespace hex::plugin::disasm {
             const pl::api::Namespace nsHexDec = { "builtin", "hex", "dec" };
 
             /* Json<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Instruction", FunctionParameterCount::exactly(3), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Instruction", FunctionParameterCount::exactly(4), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
                 cs_arch arch;
                 cs_mode mode;
 
@@ -74,9 +74,14 @@ namespace hex::plugin::disasm {
                     err::E0012.throwError(e.what());
                 }
                 const auto syntaxString = params[1].toString();
-                const auto relocatedAddress = params[2].toUnsigned();
+                const auto imageBaseAddress = params[2].toUnsigned();
+                const auto imageLoadAddress = params[3].toUnsigned();
 
                 const auto address = evaluator->getReadOffset();
+
+                const auto codeOffset = address - imageBaseAddress;
+
+                u64 instructionLoadAddress = imageLoadAddress + codeOffset;
 
                 csh capstone;
                 if (cs_open(arch, mode, &capstone) == CS_ERR_OK) {
@@ -99,24 +104,24 @@ namespace hex::plugin::disasm {
                     std::vector<u8> data(std::min<u64>(32, evaluator->getSectionSize(sectionId) - address));
                     evaluator->readData(address, data.data(), data.size(), sectionId);
 
-                    cs_insn *instruction = nullptr;
-                    size_t instructionCount = cs_disasm(capstone, data.data(), data.size(), relocatedAddress, 1, &instruction);
-                    if (instructionCount != 1) {
+                    cs_insn instruction;
+                    const u8 *code = data.data();
+                    size_t dataSize = data.size();
+                    if (!cs_disasm_iter(capstone, &code, &dataSize, &instructionLoadAddress, &instruction)) {
                         err::E0012.throwError("Failed to disassemble instruction");
                     }
 
-                    auto result = std::make_unique<PatternInstruction>(evaluator, address, instruction->size, 0);
+                    auto result = std::make_unique<PatternInstruction>(evaluator, address, instruction.size, 0);
 
                     std::string instructionString;
-                    if (instruction->mnemonic[0] != '\x00')
-                        instructionString += instruction->mnemonic;
-                    if (instruction->op_str[0] != '\x00') {
+                    if (instruction.mnemonic[0] != '\x00')
+                        instructionString += instruction.mnemonic;
+                    if (instruction.op_str[0] != '\x00') {
                         instructionString += ' ';
-                        instructionString += instruction->op_str;
+                        instructionString += instruction.op_str;
                     }
                     result->setInstructionString(instructionString);
 
-                    cs_free(instruction, instructionCount);
                     cs_close(&capstone);
 
                     return result;
