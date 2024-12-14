@@ -10,7 +10,7 @@
 #include <nlohmann/json.hpp>
 
 #include <imgui.h>
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
 
 namespace hex::plugin::builtin {

@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
         ~InformationProvider() override = default;
 
         void process(Task &task, prv::Provider *provider, Region region) override {
-            hex::unused(task);
+            std::ignore = task;
 
             m_provider = provider;
             m_region   = region;

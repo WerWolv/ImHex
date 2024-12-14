@@ -4,7 +4,7 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <cstring>
 #include <toasts/toast_notification.hpp>

@@ -1,4 +1,4 @@
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 #include <hex/plugin.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/task_manager.hpp>

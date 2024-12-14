@@ -115,7 +115,8 @@ namespace hex::plugin::yara {
                 return context->includeBuffer.c_str();
             },
             [](const char *ptr, void *userData) {
-                hex::unused(ptr, userData);
+                std::ignore = ptr;
+                std::ignore = userData;
             },
             &resultContext
         );

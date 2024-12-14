@@ -1,11 +1,5 @@
 #pragma once
 
-// Generated: 2023-11-12 08:44:48.641532
-
-extern const unsigned int blendericons_compressed_size;
-extern const unsigned int blendericons_compressed_data[];
-
-
 #define ICON_MIN_BI                               0xea00
 #define ICON_MAX_BI                               0xea09
 #define ICON_BI_CUBE                             "\xee\xa8\x80" //< U+ea00

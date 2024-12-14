@@ -883,7 +883,7 @@ namespace hex {
             // Register key press callback
             glfwSetInputMode(m_window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
             glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
-                hex::unused(mods);
+                std::ignore = mods;
 
 
                 // Handle A-Z keys using their ASCII value instead of the keycode

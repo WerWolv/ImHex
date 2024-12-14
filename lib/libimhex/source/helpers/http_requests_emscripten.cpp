@@ -41,17 +41,21 @@ namespace hex {
     }
 
     void HttpRequest::setProxyUrl(std::string proxy) {
-        hex::unused(proxy);
+        std::ignore = proxy;
     }
 
     void HttpRequest::setProxyState(bool state) {
-        hex::unused(state);
+        std::ignore = state;
     }
 
     void HttpRequest::checkProxyErrors() { }
 
     int HttpRequest::progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow) {
-        hex::unused(contents, dlTotal, dlNow, ulTotal, ulNow);
+        std::ignore = contents;
+        std::ignore = dlTotal;
+        std::ignore = dlNow;
+        std::ignore = ulTotal;
+        std::ignore = ulNow;
         return -1;
     }
 }

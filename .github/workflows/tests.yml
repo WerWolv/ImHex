@@ -15,7 +15,7 @@ on:
 jobs:
   tests:
     name: 🧪 Unit Tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
@@ -38,14 +38,13 @@ jobs:
       run: |
         sudo apt update
         sudo bash dist/get_deps_debian.sh
-        sudo apt install gcovr -y
 
     - name: 🛠️ Build
       run: |
         set -x
         mkdir -p build
         cd build
-        CC=gcc-12 CXX=g++-12 cmake                                                                                 \
+        CC=gcc-14 CXX=g++-14 cmake                                                                                 \
           -DCMAKE_BUILD_TYPE=Debug                                                                                 \
           -DIMHEX_ENABLE_UNIT_TESTS=ON                                                                             \
           -DIMHEX_ENABLE_PLUGIN_TESTS=ON                                                                           \
@@ -70,7 +69,11 @@ jobs:
     # Generate report from all gcov .gcda files
     - name: 🧪 Generate coverage report
       run: |
-        gcovr --gcov-executable /usr/bin/gcov-12 -r . build --xml coverage_report.xml --verbose
+        sudo apt install python3-pip python3-venv
+        python3 -m venv venv
+        . venv/bin/activate
+        pip3 install gcovr
+        gcovr --gcov-executable /usr/bin/gcov-14 -e ".+yara_rules.+" -e ".+third_party.+" -e ".+external.+" -r . build --xml coverage_report.xml --verbose
 
     - name: Upload coverage reports to Codecov
       env:

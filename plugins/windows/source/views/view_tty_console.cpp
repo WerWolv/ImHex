@@ -43,7 +43,7 @@ namespace hex::plugin::windows {
 
         ImGui::Combo(
             "hex.windows.view.tty_console.baud"_lang, &m_selectedBaudRate, [](void *data, int idx) {
-                hex::unused(data);
+                std::ignore = data;
 
                 return ViewTTYConsole::BaudRates[idx];
             },
@@ -52,7 +52,7 @@ namespace hex::plugin::windows {
 
         ImGui::Combo(
             "hex.windows.view.tty_console.num_bits"_lang, &m_selectedNumBits, [](void *data, int idx) {
-                hex::unused(data);
+                std::ignore = data;
 
                 return ViewTTYConsole::NumBits[idx];
             },
@@ -61,7 +61,7 @@ namespace hex::plugin::windows {
 
         ImGui::Combo(
             "hex.windows.view.tty_console.stop_bits"_lang, &m_selectedStopBits, [](void *data, int idx) {
-                hex::unused(data);
+                std::ignore = data;
 
                 return ViewTTYConsole::StopBits[idx];
             },
@@ -70,7 +70,7 @@ namespace hex::plugin::windows {
 
         ImGui::Combo(
             "hex.windows.view.tty_console.parity_bits"_lang, &m_selectedParityBits, [](void *data, int idx) {
-                hex::unused(data);
+                std::ignore = data;
 
                 return ViewTTYConsole::ParityBits[idx];
             },

@@ -906,10 +906,11 @@ namespace hex {
             });
 
             if (shortcut != Shortcut::None) {
+                auto callbackIfEnabled  = [enabledCallback, function]{ if (enabledCallback()) { function(); } };
                 if (shortcut.isLocal() && view != nullptr)
-                    ShortcutManager::addShortcut(view, shortcut, unlocalizedMainMenuNames.back(), function);
+                    ShortcutManager::addShortcut(view, shortcut, unlocalizedMainMenuNames.back(), callbackIfEnabled);
                 else
-                    ShortcutManager::addGlobalShortcut(shortcut, unlocalizedMainMenuNames.back(), function);
+                    ShortcutManager::addGlobalShortcut(shortcut, unlocalizedMainMenuNames.back(), callbackIfEnabled);
             }
         }
 

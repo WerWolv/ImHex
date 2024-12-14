@@ -8,7 +8,7 @@
 #include <functional>
 #include <string>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 namespace hex::ui {
 

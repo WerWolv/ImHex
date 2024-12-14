@@ -79,7 +79,7 @@ namespace hex::paths {
         #elif defined(OS_MACOS)
             return getDataPaths(includeSystemFolders);
         #elif defined(OS_LINUX) || defined(OS_WEB)
-            hex::unused(includeSystemFolders);
+            std::ignore = includeSystemFolders;
             return {xdg::ConfigHomeDir() / "imhex"};
         #endif
     }

@@ -10,7 +10,7 @@
 
 #include <content/providers/view_provider.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
 
         // Draw hex editor background highlights for bookmarks
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
-            hex::unused(data);
+            std::ignore = data;
 
             // Check all bookmarks for potential overlaps with the current address
             for (const auto &bookmark : *m_bookmarks) {
@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
 
         // Draw hex editor tooltips for bookmarks
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
-            hex::unused(data);
+            std::ignore = data;
 
             // Loop over all bookmarks
             for (const auto &[bookmark, editor] : *m_bookmarks) {

@@ -35,7 +35,7 @@ BuildRequires:  zlib-devel
 BuildRequires:  bzip2-devel
 BuildRequires:  xz-devel
 %if 0%{?rhel}
-BuildRequires:  gcc-toolset-12
+BuildRequires:  gcc-toolset-14
 %endif
 
 Provides:       bundled(gnulib)
@@ -71,9 +71,9 @@ rm -rf lib/third_party/{fmt,nlohmann_json,yara}
 
 %build
 %if 0%{?rhel}
-. /opt/rh/gcc-toolset-12/enable
+. /opt/rh/gcc-toolset-14/enable
 %set_build_flags
-CXXFLAGS+=" -std=gnu++2b"
+CXXFLAGS+=" -std=gnu++23"
 %endif
 %cmake \
  -D CMAKE_BUILD_TYPE=Release             \
@@ -94,9 +94,9 @@ CXXFLAGS+=" -std=gnu++2b"
 
 %check
 %if 0%{?rhel}
-. /opt/rh/gcc-toolset-12/enable
+. /opt/rh/gcc-toolset-14/enable
 %set_build_flags
-CXXFLAGS+=" -std=gnu++2b"
+CXXFLAGS+=" -std=gnu++23"
 %endif
 
 

@@ -112,10 +112,6 @@ namespace hex {
     }
 
     Plugin::~Plugin() {
-        if (isLoaded()) {
-            log::info("Trying to unload plugin '{}'", getPluginName());
-        }
-
         unloadLibrary(m_handle, m_path);
     }
 
@@ -335,7 +331,7 @@ namespace hex {
     void PluginManager::initializeNewPlugins() {
         for (const auto &plugin : getPlugins()) {
             if (!plugin.isLoaded())
-                hex::unused(plugin.initializePlugin());
+                std::ignore = plugin.initializePlugin();
         }
     }
 

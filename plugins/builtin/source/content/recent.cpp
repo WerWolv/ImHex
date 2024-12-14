@@ -16,7 +16,7 @@
 
 #include <content/recent.hpp>
 #include <toasts/toast_notification.hpp>
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <ranges>
 #include <unordered_set>
