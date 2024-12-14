@@ -351,16 +351,12 @@ namespace hex::plugin::builtin {
 
                 auto c = hex::changeEndianness(wideChar, endian);
 
-                std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("Invalid");
-
-                auto value = hex::format("{0}", c <= 255 ? makePrintable(c) : converter.to_bytes(c));
+                auto value = hex::format("{0}", c <= 255 ? makePrintable(c) : wolv::util::wstringToUtf8(std::wstring(&c, 1)));
                 return [value] { ImGuiExt::TextFormatted("'{0}'", value.c_str()); return value; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
-                std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("Invalid");
-
                 std::vector<u8> bytes;
-                auto wideString = converter.from_bytes(value.c_str());
+                auto wideString = wolv::util::utf8ToWstring(value.c_str(), "Invalid");
                 std::copy(wideString.begin(), wideString.end(), std::back_inserter(bytes));
 
                 if (endian != std::endian::native)
@@ -449,7 +445,7 @@ namespace hex::plugin::builtin {
                                              [](auto c) { return c == 0x00; });
                     buffer.erase(it, buffer.end());
 
-                    auto string = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>("Invalid").to_bytes(stringBuffer.data());
+                    auto string = wolv::util::utf16ToUtf8(stringBuffer, "Invalid");
                     value = copyValue = hex::encodeByteString({ string.begin(), string.end() });
 
                     if (value.size() > MaxStringLength) {

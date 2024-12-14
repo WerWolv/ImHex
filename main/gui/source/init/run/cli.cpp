@@ -8,6 +8,7 @@
 #include <hex/helpers/default_paths.hpp>
 
 #include <wolv/utils/guards.hpp>
+#include <wolv/utils/string.hpp>
 
 
 #if defined(OS_WINDOWS)
@@ -47,7 +48,7 @@ namespace hex::init {
             // Skip the first argument (the executable path) and convert the rest to a vector of UTF-8 strings
             for (int i = 1; i < argc; i += 1) {
                 std::wstring wcharArg = convertedCommandLine[i];
-                std::string  utf8Arg  = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().to_bytes(wcharArg);
+                std::string utf8Arg = wolv::util::wstringToUtf8(wcharArg);
 
                 args.push_back(utf8Arg);
             }
