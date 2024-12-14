@@ -14,7 +14,6 @@
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shellapi.h>
-    #include <codecvt>
 #endif
 
 namespace hex::init {

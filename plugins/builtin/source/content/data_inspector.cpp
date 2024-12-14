@@ -10,7 +10,6 @@
 #include <hex/providers/provider.hpp>
 
 #include <cstring>
-#include <codecvt>
 #include <string>
 
 #include <imgui_internal.h>
