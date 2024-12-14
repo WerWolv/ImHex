@@ -20,6 +20,7 @@ add_imhex_plugin(
         source/content/communication_interface.cpp
         source/content/data_inspector.cpp
         source/content/pl_builtin_functions.cpp
+        source/content/pl_builtin_types.cpp
         source/content/pl_pragmas.cpp
         source/content/settings_entries.cpp
         source/content/tools_entries.cpp
