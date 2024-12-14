@@ -240,6 +240,7 @@ macro(createPackage)
 
     if (APPLE)
         if (IMHEX_GENERATE_PACKAGE)
+            set(EXTRA_BUNDLE_LIBRARY_PATHS ${EXTRA_BUNDLE_LIBRARY_PATHS} "${IMHEX_SYSTEM_LIBRARY_PATH}")
             include(PostprocessBundle)
 
             set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})

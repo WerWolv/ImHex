@@ -3,8 +3,8 @@
 zypper install     \
   cmake            \
   ninja            \
-  gcc12            \
-  gcc12-c++        \
+  gcc14            \
+  gcc14-c++        \
   fontconfig-devel \
   freetype2-devel  \
   libcurl-devel    \
