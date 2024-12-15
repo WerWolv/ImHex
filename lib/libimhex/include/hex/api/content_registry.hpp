@@ -2,10 +2,10 @@
 
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/shortcut_manager.hpp>
 #include <hex/helpers/concepts.hpp>
 
 #include <functional>
-#include <map>
 #include <mutex>
 #include <span>
 #include <string>
@@ -24,7 +24,6 @@ enum ImGuiCustomCol : int;
 namespace hex {
 
     class View;
-    class Shortcut;
     class Task;
 
     namespace dp {
@@ -771,7 +770,7 @@ namespace hex {
                 struct MenuItem {
                     std::vector<UnlocalizedString> unlocalizedNames;
                     Icon icon;
-                    std::unique_ptr<Shortcut> shortcut;
+                    Shortcut shortcut;
                     View *view;
                     MenuCallback callback;
                     EnabledCallback enabledCallback;

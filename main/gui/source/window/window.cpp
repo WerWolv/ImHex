@@ -638,7 +638,7 @@ namespace hex {
 
                     // Pass on currently pressed keys to the shortcut handler
                     for (const auto &key : m_pressedKeys) {
-                        ShortcutManager::process(view.get(), io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
+                        ShortcutManager::process(view.get(), io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl, io.KeyAlt, io.KeyShift, io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper, focused, key);
                     }
 
                     ImGui::End();
@@ -648,7 +648,7 @@ namespace hex {
 
         // Handle global shortcuts
         for (const auto &key : m_pressedKeys) {
-            ShortcutManager::processGlobals(io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, key);
+            ShortcutManager::processGlobals(io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl, io.KeyAlt, io.KeyShift, io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper, key);
         }
 
         m_pressedKeys.clear();

@@ -904,7 +904,7 @@ namespace hex {
                 coloredIcon.color = ImGuiCustomCol_ToolbarGray;
 
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, coloredIcon, std::make_unique<Shortcut>(shortcut), view, function, enabledCallback, selectedCallback, -1 }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, coloredIcon, shortcut, view, function, enabledCallback, selectedCallback, -1 }
             });
 
             if (shortcut != Shortcut::None) {
@@ -931,14 +931,14 @@ namespace hex {
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(), nullptr, function, enabledCallback, []{ return false; }, -1 }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, Shortcut::None, nullptr, function, enabledCallback, []{ return false; }, -1 }
             });
         }
 
         void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, "", std::make_unique<Shortcut>(), nullptr, []{}, []{ return true; }, []{ return false; }, -1 }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, "", Shortcut::None, nullptr, []{}, []{ return true; }, []{ return false; }, -1 }
             });
         }
 
