@@ -380,32 +380,32 @@ namespace hex::plugin::visualizers {
             if (validateVector(vectors.vertices, vertexCount, 3, "Positions", errorMessage)) {
                 if ((indexType == IndexType::Undefined || vectors.indices.empty()) && vertexCount % 3 != 0) {
                     s_errorMessage = "Error: Vertex count must be a multiple of 3";
-                    throw std::runtime_error("");
+                    throw std::runtime_error(s_errorMessage);
                 } else
                     buffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, vectors.vertices);
             } else {
                 s_errorMessage = errorMessage;
-                throw std::runtime_error("");
+                throw std::runtime_error(s_errorMessage);
             }
 
             if (validateVector(vectors.colors, vertexCount, 4, "Colors", errorMessage))
                 buffers.colors = gl::Buffer<float>(gl::BufferType::Vertex, vectors.colors);
             else {
                 s_errorMessage = errorMessage;
-                throw std::runtime_error("");
+                throw std::runtime_error(s_errorMessage);
             }
             if (validateVector(vectors.normals, vertexCount, 3, "Normals", errorMessage))
                 buffers.normals = gl::Buffer<float>(gl::BufferType::Vertex, vectors.normals);
             else {
                 s_errorMessage = errorMessage;
-                throw std::runtime_error("");
+                throw std::runtime_error(s_errorMessage);
             }
 
             if (validateVector(vectors.uv, vertexCount, 2, "UV coordinates", errorMessage))
                 buffers.uv = gl::Buffer<float>(gl::BufferType::Vertex, vectors.uv);
             else {
                 s_errorMessage = errorMessage;
-                throw std::runtime_error("");
+                throw std::runtime_error(s_errorMessage);
             }
 
             vertexArray.addBuffer(0, buffers.vertices);
@@ -440,18 +440,18 @@ namespace hex::plugin::visualizers {
             if (validateVector(lineVectors.vertices, vertexCount, 3, "Positions", errorMessage)) {
                 if ((indexType == IndexType::Undefined || lineVectors.indices.empty()) && vertexCount % 3 != 0) {
                     s_errorMessage = "Error: Vertex count must be a multiple of 3";
-                    throw std::runtime_error("");
+                    throw std::runtime_error(s_errorMessage);
                 } else
                     lineBuffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, lineVectors.vertices);
             } else {
                 s_errorMessage = errorMessage;
-                throw std::runtime_error("");
+                throw std::runtime_error(s_errorMessage);
             }
             if (validateVector(lineVectors.colors, vertexCount, 4, "Colors", errorMessage))
                 lineBuffers.colors = gl::Buffer<float>(gl::BufferType::Vertex, lineVectors.colors);
             else {
                 s_errorMessage = errorMessage;
-                throw std::runtime_error("");
+                throw std::runtime_error(s_errorMessage);
             }
             vertexArray.addBuffer(0, lineBuffers.vertices);
             vertexArray.addBuffer(1, lineBuffers.colors, 4);
@@ -618,20 +618,6 @@ namespace hex::plugin::visualizers {
                 if (ImGuiExt::InputFilePicker("hex.visualizers.pl_visualizer.3d.texture_file"_lang, s_texturePath, {}))
                     s_shouldUpdateTexture = true;
             }
-
-            if (!s_errorMessage.empty()) {
-                auto errorMessageSize = ImGui::CalcTextSize(s_errorMessage.c_str());
-                if (errorMessageSize.x > renderingWindowSize.x)
-                    errorMessageSize.y *= 2;
-                auto errorMessageWindowSize = ImVec2(renderingWindowSize.x, errorMessageSize.y);
-                if (ImGui::BeginChild("##error_message", errorMessageWindowSize, 0, ImGuiWindowFlags_HorizontalScrollbar)) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0F, 0.0F, 0.0F, 1.0F));
-                    ImGui::TextUnformatted(s_errorMessage.c_str());
-                    ImGui::PopStyleColor();
-                }
-                ImGui::EndChild();
-            }
-
         }
 
     }
@@ -677,7 +663,7 @@ namespace hex::plugin::visualizers {
                     auto indexCount = vectors.indices.size();
                     if (indexCount < 3 || indexCount % 3 != 0) {
                         s_errorMessage = "Error: IndexCount must be a multiple of 3";
-                        throw std::runtime_error("");
+                        throw std::runtime_error(s_errorMessage);
                     }
                     auto booleans = std::views::transform(vectors.indices,isIndexInRange);
                     if (!std::accumulate(std::begin(booleans), std::end(booleans), true, std::logical_and<>())) {
@@ -687,7 +673,7 @@ namespace hex::plugin::visualizers {
                         s_errorMessage.pop_back();
                         s_errorMessage.pop_back();
                         s_errorMessage += hex::format(" for {} vertices",s_vertexCount);
-                        throw std::runtime_error("");
+                        throw std::runtime_error(s_errorMessage);
                     }
                 }
 
@@ -711,7 +697,7 @@ namespace hex::plugin::visualizers {
                     auto indexCount = lineVectors.indices.size();
                     if (indexCount < 3 || indexCount % 3 != 0) {
                         s_errorMessage = "Error: IndexCount must be a multiple of 3";
-                        throw std::runtime_error("");
+                        throw std::runtime_error(s_errorMessage);
                     }
                     s_badIndices.clear();
                     if (!std::ranges::all_of(lineVectors.indices,isIndexInRange)) {
@@ -721,7 +707,7 @@ namespace hex::plugin::visualizers {
                         s_errorMessage.pop_back();
                         s_errorMessage.pop_back();
                         s_errorMessage += hex::format(" for {} vertices",s_vertexCount);
-                        throw std::runtime_error("");
+                        throw std::runtime_error(s_errorMessage);
                     }
                 }
 
