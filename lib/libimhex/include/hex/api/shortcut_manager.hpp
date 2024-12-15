@@ -393,7 +393,7 @@ namespace hex {
         using Callback = std::function<void()>;
         struct ShortcutEntry {
             Shortcut shortcut;
-            UnlocalizedString unlocalizedName;
+            std::vector<UnlocalizedString> unlocalizedName;
             Callback callback;
         };
 
@@ -403,6 +403,7 @@ namespace hex {
          * @param unlocalizedName The unlocalized name of the shortcut
          * @param callback The callback to call when the shortcut is triggered.
          */
+        static void addGlobalShortcut(const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const Callback &callback);
         static void addGlobalShortcut(const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const Callback &callback);
 
         /**
@@ -412,6 +413,7 @@ namespace hex {
          * @param unlocalizedName The unlocalized name of the shortcut
          * @param callback The callback to call when the shortcut is triggered.
          */
+        static void addShortcut(View *view, const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const Callback &callback);
         static void addShortcut(View *view, const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const Callback &callback);
 
 
