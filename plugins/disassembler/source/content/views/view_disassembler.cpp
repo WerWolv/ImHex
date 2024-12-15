@@ -138,10 +138,10 @@ namespace hex::plugin::disasm {
     void ViewDisassembler::drawContent() {
         auto provider = ImHexApi::Provider::get();
         if (ImHexApi::Provider::isValid() && provider->isReadable()) {
-            ImGuiExt::Header("hex.disassembler.view.disassembler.position"_lang, true);
-
             // Draw region selection picker
-            ui::regionSelectionPicker(&m_regionToDisassemble, provider, &m_range);
+            ui::regionSelectionPicker(&m_regionToDisassemble, provider, &m_range, true, true);
+
+            ImGuiExt::Header("hex.disassembler.view.disassembler.position"_lang);
 
             // Draw base address input
             ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_load_address"_lang, &m_imageLoadAddress, ImGuiInputTextFlags_CharsHexadecimal);
