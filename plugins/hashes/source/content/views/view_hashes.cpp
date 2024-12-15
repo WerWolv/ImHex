@@ -7,7 +7,7 @@
 #include <hex/helpers/crypto.hpp>
 
 #include <hex/ui/popup.hpp>
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <vector>
 
@@ -63,7 +63,7 @@ namespace hex::plugin::hashes {
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
-            hex::unused(data);
+            std::ignore = data;
 
             auto selection = ImHexApi::HexEditor::getSelection();
 

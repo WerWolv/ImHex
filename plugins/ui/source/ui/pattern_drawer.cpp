@@ -31,7 +31,7 @@
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -747,7 +747,7 @@ namespace hex::ui {
 
     void PatternDrawer::visit(pl::ptrn::PatternPadding& pattern) {
         // Do nothing
-        hex::unused(pattern);
+        std::ignore = pattern;
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternPointer& pattern) {
@@ -961,6 +961,12 @@ namespace hex::ui {
             drawValueColumn(pattern);
             drawCommentColumn(pattern);
         }
+    }
+
+    void PatternDrawer::visit(pl::ptrn::Pattern& pattern) {
+        createDefaultEntry(pattern);
+        drawValueColumn(pattern);
+        drawCommentColumn(pattern);
     }
 
     void PatternDrawer::draw(pl::ptrn::Pattern& pattern) {

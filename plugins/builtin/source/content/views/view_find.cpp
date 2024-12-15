@@ -5,7 +5,7 @@
 
 #include <hex/providers/buffered_reader.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <array>
 #include <ranges>
@@ -21,7 +21,8 @@ namespace hex::plugin::builtin {
         const static auto HighlightColor = [] { return (ImGuiExt::GetCustomColorU32(ImGuiCustomCol_FindHighlight) & 0x00FFFFFF) | 0x70000000; };
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
-            hex::unused(data, size);
+            std::ignore = data;
+            std::ignore = size;
 
             if (m_searchTask.isRunning())
                 return { };
@@ -33,7 +34,8 @@ namespace hex::plugin::builtin {
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8* data, size_t size) {
-            hex::unused(data, size);
+            std::ignore = data;
+            std::ignore = size;
 
             if (m_searchTask.isRunning())
                 return;

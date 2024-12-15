@@ -4,7 +4,7 @@
 #include <hex/api/project_file_manager.hpp>
 #include <wolv/utils/guards.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::builtin {
 

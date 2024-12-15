@@ -206,15 +206,15 @@ jobs:
 
     - name: ⬇️ Install dependencies
       run: |
-        brew reinstall python 2>&1 >/dev/null || true
-        brew link --overwrite python 2>&1 >/dev/null || true
-        brew bundle --no-lock --file dist/Brewfile 2>&1 >/dev/null || true
+        brew reinstall python || true
+        brew link --overwrite --quiet python || true
+        brew bundle --no-lock --quiet --file dist/Brewfile || true
         rm -rf /usr/local/Cellar/capstone
 
     - name: ⬇️ Install classic glfw
       if: ${{! matrix.custom_glfw }}
       run: |
-        brew install glfw 2>&1 >/dev/null || true
+        brew install --quiet glfw || true
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v4
@@ -744,7 +744,7 @@ jobs:
 
       - name: 📜 Fix ccache on EL9
         if: matrix.mock_release == 'epel9'
-        run: sed -i '/\. \/opt\/rh\/gcc-toolset-12\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+        run: sed -i '/\. \/opt\/rh\/gcc-toolset-14\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
 
       - name: 🟩 Copy spec file to build root
         run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec

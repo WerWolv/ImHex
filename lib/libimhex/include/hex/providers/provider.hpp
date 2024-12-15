@@ -165,7 +165,7 @@ namespace hex::prv {
         void insert(u64 offset, u64 size);
         void remove(u64 offset, u64 size);
 
-        virtual void resizeRaw(u64 newSize) { hex::unused(newSize); }
+        virtual void resizeRaw(u64 newSize) { std::ignore = newSize; }
         virtual void insertRaw(u64 offset, u64 size);
         virtual void removeRaw(u64 offset, u64 size);
 

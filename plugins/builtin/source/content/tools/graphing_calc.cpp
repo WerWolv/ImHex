@@ -6,7 +6,7 @@
 #include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::builtin {
 

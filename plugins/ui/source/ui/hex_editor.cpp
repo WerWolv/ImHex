@@ -9,7 +9,7 @@
 
 #include <wolv/utils/guards.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
 namespace hex::ui {
@@ -21,7 +21,8 @@ namespace hex::ui {
         DataVisualizerAscii() : DataVisualizer("ASCII", 1, 1) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
-            hex::unused(address, upperCase);
+            std::ignore = address;
+            std::ignore = upperCase;
 
             if (size == 1) {
                 const char c = char(data[0]);
@@ -37,7 +38,9 @@ namespace hex::ui {
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
-            hex::unused(address, startedEditing, upperCase);
+            std::ignore = address;
+            std::ignore = startedEditing;
+            std::ignore = upperCase;
 
             if (size == 1) {
                 struct UserData {

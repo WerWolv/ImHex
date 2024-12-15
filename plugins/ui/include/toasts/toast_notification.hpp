@@ -3,7 +3,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/ui/toast.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
 

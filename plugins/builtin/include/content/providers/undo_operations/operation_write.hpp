@@ -6,7 +6,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::builtin::undo {
 

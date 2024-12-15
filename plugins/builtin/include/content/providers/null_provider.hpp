@@ -29,14 +29,22 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool open() override { return true; }
         void close() override { }
 
-        void readRaw(u64 offset, void *buffer, size_t size) override { hex::unused(offset, buffer, size); }
-        void writeRaw(u64 offset, const void *buffer, size_t size) override { hex::unused(offset, buffer, size); }
+        void readRaw(u64 offset, void *buffer, size_t size) override {
+            std::ignore = offset;
+            std::ignore = buffer;
+            std::ignore = size;
+        }
+        void writeRaw(u64 offset, const void *buffer, size_t size) override {
+            std::ignore = offset;
+            std::ignore = buffer;
+            std::ignore = size;
+        }
         [[nodiscard]] u64 getActualSize() const override { return 0x00; }
 
         [[nodiscard]] std::string getName() const override { return "None"; }
         [[nodiscard]] std::vector<Description> getDataDescription() const override { return { }; }
 
-        void loadSettings(const nlohmann::json &settings) override { hex::unused(settings); }
+        void loadSettings(const nlohmann::json &settings) override { std::ignore = settings; }
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }
 
         [[nodiscard]] std::string getTypeName() const override {

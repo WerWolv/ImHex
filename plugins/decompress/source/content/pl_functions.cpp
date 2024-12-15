@@ -93,7 +93,8 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
-                hex::unused(evaluator, params);
+                std::ignore = evaluator;
+                std::ignore = params;
                 err::E0012.throwError("hex::dec::zlib_decompress is not available. Please recompile ImHex with zlib support.");
             #endif
         });
@@ -140,7 +141,8 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
-                hex::unused(evaluator, params);
+                std::ignore = evaluator;
+                std::ignore = params;
                 err::E0012.throwError("hex::dec::bzlib_decompress is not available. Please recompile ImHex with bzip2 support.");
             #endif
 
@@ -195,7 +197,8 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
-                hex::unused(evaluator, params);
+                std::ignore = evaluator;
+                std::ignore = params;
                 err::E0012.throwError("hex::dec::lzma_decompress is not available. Please recompile ImHex with liblzma support.");
             #endif
         });
@@ -263,7 +266,8 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
-                hex::unused(evaluator, params);
+                std::ignore = evaluator;
+                std::ignore = params;
                 err::E0012.throwError("hex::dec::zstd_decompress is not available. Please recompile ImHex with zstd support.");
             #endif
         });
@@ -324,7 +328,8 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
-                hex::unused(evaluator, params);
+                std::ignore = evaluator;
+                std::ignore = params;
                 err::E0012.throwError("hex::dec::lz4_decompress is not available. Please recompile ImHex with liblz4 support.");
             #endif
         });

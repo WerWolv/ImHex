@@ -3,7 +3,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/providers/memory_provider.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <pl/patterns/pattern.hpp>
 #include <wolv/utils/lock.hpp>

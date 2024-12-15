@@ -3,7 +3,7 @@
 #include <wolv/net/socket_client.hpp>
 #include <wolv/net/socket_server.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 

@@ -185,7 +185,9 @@ namespace hex::plugin::builtin {
     }
 
     void IntelHexProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
-        hex::unused(offset, buffer, size);
+        std::ignore = offset;
+        std::ignore = buffer;
+        std::ignore = size;
     }
 
     u64 IntelHexProvider::getActualSize() const {

@@ -815,7 +815,7 @@ namespace hex {
                     return std::string(GIT_COMMIT_HASH_LONG).substr(0, 7);
                 }
             #else
-                hex::unused(longHash);
+                std::ignore = longHash;
                 return "Unknown";
             #endif
         }

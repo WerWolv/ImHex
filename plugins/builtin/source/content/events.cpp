@@ -110,8 +110,8 @@ namespace hex::plugin::builtin {
         });
 
         EventProviderChanged::subscribe([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
-            hex::unused(oldProvider);
-            hex::unused(newProvider);
+            std::ignore = oldProvider;
+            std::ignore = newProvider;
 
             RequestUpdateWindowTitle::post();
         });
