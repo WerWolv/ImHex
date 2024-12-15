@@ -138,6 +138,7 @@ namespace hex {
         constexpr Key() = default;
         constexpr Key(Keys key) : m_key(static_cast<u32>(key)) { }
 
+        bool operator==(const Key &) const = default;
         auto operator<=>(const Key &) const = default;
 
         [[nodiscard]] constexpr u32 getKeyCode() const { return m_key; }
@@ -171,7 +172,7 @@ namespace hex {
 
         Shortcut& operator=(Shortcut &&) noexcept = default;
 
-        constexpr static inline auto None = Keys(0);
+        constexpr static auto None = Keys(0);
 
         Shortcut operator+(const Key &other) const {
             Shortcut result = *this;
@@ -187,31 +188,31 @@ namespace hex {
         }
 
         bool operator<(const Shortcut &other) const {
-            u64 left = 0;
-            for (const auto &key : m_keys)
-                left |= key.getKeyCode();
-
-            u64 right = 0;
-            for (const auto &key : other.m_keys)
-                right |= key.getKeyCode();
-
-            return left < right;
+            return m_keys < other.m_keys;
         }
 
         bool operator==(const Shortcut &other) const {
-            u64 left = 0;
-            for (const auto &key : m_keys)
-                left |= key.getKeyCode();
+            return m_keys == other.m_keys;
+        }
 
-            u64 right = 0;
-            for (const auto &key : other.m_keys)
-                right |= key.getKeyCode();
+        bool match(const Shortcut &other) const {
+            auto left = m_keys;
+            auto right = other.m_keys;
+
+            left.erase(AllowWhileTyping);
+            right.erase(AllowWhileTyping);
+            left.erase(CurrentView);
+            right.erase(CurrentView);
 
             return left == right;
         }
 
         bool isLocal() const {
             return m_keys.contains(CurrentView);
+        }
+
+        bool allowWhileTyping() const {
+            return m_keys.contains(AllowWhileTyping);
         }
 
         std::string toString() const;

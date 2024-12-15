@@ -181,22 +181,26 @@ namespace hex {
 
     void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const std::function<void()> &callback) {
         log::debug("Adding global shortcut {} for {}", shortcut.toString(), unlocalizedName.back().get());
-        s_globalShortcuts->insert({ shortcut, { shortcut, unlocalizedName, callback } });
+        auto [it, inserted] = s_globalShortcuts->insert({ shortcut, { shortcut, unlocalizedName, callback } });
+        if (!inserted) log::error("Failed to add shortcut!");
     }
 
     void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const std::function<void()> &callback) {
         log::debug("Adding global shortcut {} for {}", shortcut.toString(), unlocalizedName.get());
-        s_globalShortcuts->insert({ shortcut, { shortcut, { unlocalizedName }, callback } });
+        auto [it, inserted] = s_globalShortcuts->insert({ shortcut, { shortcut, { unlocalizedName }, callback } });
+        if (!inserted) log::error("Failed to add shortcut!");
     }
 
     void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const std::function<void()> &callback) {
         log::debug("Adding shortcut {} for {}", shortcut.toString(), unlocalizedName.back().get());
-        view->m_shortcuts.insert({ shortcut + CurrentView, { shortcut, unlocalizedName, callback } });
+        auto [it, inserted] = view->m_shortcuts.insert({ shortcut + CurrentView, { shortcut, unlocalizedName, callback } });
+        if (!inserted) log::error("Failed to add shortcut!");
     }
 
     void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const std::function<void()> &callback) {
         log::debug("Adding shortcut {} for {}", shortcut.toString(), unlocalizedName.get());
-        view->m_shortcuts.insert({ shortcut + CurrentView, { shortcut, { unlocalizedName }, callback } });
+        auto [it, inserted] = view->m_shortcuts.insert({ shortcut + CurrentView, { shortcut, { unlocalizedName }, callback } });
+        if (!inserted) log::error("Failed to add shortcut!");
     }
 
     static Shortcut getShortcut(bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
@@ -224,11 +228,11 @@ namespace hex {
         if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
             return;
 
-        if (shortcuts.contains(shortcut + AllowWhileTyping)) {
-            shortcuts.at(shortcut + AllowWhileTyping).callback();
-        } else if (shortcuts.contains(shortcut)) {
-            if (!ImGui::GetIO().WantTextInput)
-                shortcuts.at(shortcut).callback();
+        for (const auto &[potentialShortcut, entry] : shortcuts) {
+            if (potentialShortcut.match(shortcut)) {
+                if (!ImGui::GetIO().WantTextInput || potentialShortcut.allowWhileTyping())
+                    entry.callback();
+            }
         }
     }
 
