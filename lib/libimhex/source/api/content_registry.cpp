@@ -211,6 +211,8 @@ namespace hex {
                         }
                     }
                 }
+
+                EventAnySettingChanged::post();
             }
 
         }
