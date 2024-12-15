@@ -492,8 +492,8 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             const auto width = ImGui::GetWindowWidth();
 
-            ImGui::TextWrapped("hex.builtin.view.hex_editor.menu.edit.paste.popup.description"_lang);
-            ImGui::Text("hex.builtin.view.hex_editor.menu.edit.paste.popup.hint"_lang);
+            ImGui::TextWrapped("%s", "hex.builtin.view.hex_editor.menu.edit.paste.popup.description"_lang.get());
+            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.paste.popup.hint"_lang);
 
             ImGui::Separator();
 
