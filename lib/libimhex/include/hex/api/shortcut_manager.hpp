@@ -163,61 +163,24 @@ namespace hex {
     class Shortcut {
     public:
         Shortcut() = default;
-        Shortcut(Keys key) : m_keys({ key }) { }
-        explicit Shortcut(std::set<Key> keys) : m_keys(std::move(keys)) { }
+        Shortcut(Keys key);
+        explicit Shortcut(std::set<Key> keys);
         Shortcut(const Shortcut &other) = default;
         Shortcut(Shortcut &&) noexcept = default;
 
-        Shortcut& operator=(const Shortcut &other) = default;
-
-        Shortcut& operator=(Shortcut &&) noexcept = default;
-
         constexpr static auto None = Keys(0);
 
-        Shortcut operator+(const Key &other) const {
-            Shortcut result = *this;
-            result.m_keys.insert(other);
+        Shortcut& operator=(const Shortcut &other) = default;
+        Shortcut& operator=(Shortcut &&) noexcept = default;
 
-            return result;
-        }
+        Shortcut operator+(const Key &other) const;
+        Shortcut &operator+=(const Key &other);
+        bool operator<(const Shortcut &other) const;
+        bool operator==(const Shortcut &other) const;
 
-        Shortcut &operator+=(const Key &other) {
-            m_keys.insert(other);
-
-            return *this;
-        }
-
-        bool operator<(const Shortcut &other) const {
-            return m_keys < other.m_keys;
-        }
-
-        bool operator==(const Shortcut &other) const {
-            return m_keys == other.m_keys;
-        }
-
-        bool match(const Shortcut &other) const {
-            auto left = m_keys;
-            auto right = other.m_keys;
-
-            left.erase(AllowWhileTyping);
-            right.erase(AllowWhileTyping);
-            left.erase(CurrentView);
-            right.erase(CurrentView);
-
-            return left == right;
-        }
-
-        bool isLocal() const {
-            return m_keys.contains(CurrentView);
-        }
-
-        bool allowWhileTyping() const {
-            return m_keys.contains(AllowWhileTyping);
-        }
-
+        bool isLocal() const;
         std::string toString() const;
-
-        const std::set<Key>& getKeys() const { return m_keys; }
+        const std::set<Key>& getKeys() const;
 
     private:
         friend Shortcut operator+(const Key &lhs, const Key &rhs);
@@ -225,12 +188,7 @@ namespace hex {
         std::set<Key> m_keys;
     };
 
-    inline Shortcut operator+(const Key &lhs, const Key &rhs) {
-        Shortcut result;
-        result.m_keys = { lhs, rhs };
-
-        return result;
-    }
+    Shortcut operator+(const Key &lhs, const Key &rhs);
 
     /**
      * @brief The ShortcutManager handles global and view-specific shortcuts.
@@ -300,7 +258,7 @@ namespace hex {
         [[nodiscard]] static std::vector<ShortcutEntry> getGlobalShortcuts();
         [[nodiscard]] static std::vector<ShortcutEntry> getViewShortcuts(const View *view);
 
-        [[nodiscard]] static bool updateShortcut(const Shortcut &oldShortcut, const Shortcut &newShortcut, View *view = nullptr);
+        [[nodiscard]] static bool updateShortcut(Shortcut oldShortcut, Shortcut newShortcut, View *view = nullptr);
     };
 
 }

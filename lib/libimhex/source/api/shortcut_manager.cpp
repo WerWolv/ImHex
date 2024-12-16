@@ -15,6 +15,47 @@ namespace hex {
 
     }
 
+    Shortcut operator+(const Key &lhs, const Key &rhs) {
+        Shortcut result;
+        result.m_keys = { lhs, rhs };
+
+        return result;
+    }
+
+    Shortcut::Shortcut(Keys key) : m_keys({ key }) {
+
+    }
+    Shortcut::Shortcut(std::set<Key> keys) : m_keys(std::move(keys)) {
+
+    }
+
+    Shortcut Shortcut::operator+(const Key &other) const {
+        Shortcut result = *this;
+        result.m_keys.insert(other);
+
+        return result;
+    }
+
+    Shortcut& Shortcut::operator+=(const Key &other) {
+        m_keys.insert(other);
+
+        return *this;
+    }
+
+    bool Shortcut::operator<(const Shortcut &other) const {
+        return m_keys < other.m_keys;
+    }
+
+    bool Shortcut::operator==(const Shortcut &other) const {
+        return m_keys == other.m_keys;
+    }
+
+    bool Shortcut::isLocal() const {
+        return m_keys.contains(CurrentView);
+    }
+
+    const std::set<Key>& Shortcut::getKeys() const { return m_keys; }
+
     std::string Shortcut::toString() const {
         std::string result;
 
@@ -169,11 +210,11 @@ namespace hex {
                     continue;
             }
 
-            result += " + ";
+            result += Concatination;
         }
 
-        if (result.ends_with(" + "))
-            result = result.substr(0, result.size() - 3);
+        if (result.ends_with(Concatination))
+            result = result.substr(0, result.size() - strlen(Concatination));
 
         return result;
     }
@@ -216,6 +257,8 @@ namespace hex {
             pressedShortcut += SUPER;
         if (focused)
             pressedShortcut += CurrentView;
+        if (ImGui::GetIO().WantTextInput)
+            pressedShortcut += AllowWhileTyping;
 
         pressedShortcut += static_cast<Keys>(keyCode);
 
@@ -228,11 +271,9 @@ namespace hex {
         if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
             return;
 
-        for (const auto &[potentialShortcut, entry] : shortcuts) {
-            if (potentialShortcut.match(shortcut)) {
-                if (!ImGui::GetIO().WantTextInput || potentialShortcut.allowWhileTyping())
-                    entry.callback();
-            }
+        if (auto it = shortcuts.find(shortcut); it != shortcuts.end()) {
+            const auto &[foundShortcut, entry] = *it;
+            entry.callback();
         }
     }
 
