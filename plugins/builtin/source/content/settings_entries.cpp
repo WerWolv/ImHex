@@ -283,7 +283,7 @@ namespace hex::plugin::builtin {
 
                 bool settingChanged = false;
 
-                ImGui::BeginDisabled(m_drawShortcut.match(m_defaultShortcut));
+                ImGui::BeginDisabled(m_drawShortcut.matches(m_defaultShortcut));
                 if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, m_defaultShortcut, m_view);
 

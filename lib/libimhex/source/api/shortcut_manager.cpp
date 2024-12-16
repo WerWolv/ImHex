@@ -54,7 +54,26 @@ namespace hex {
         return m_keys.contains(CurrentView);
     }
 
-    const std::set<Key>& Shortcut::getKeys() const { return m_keys; }
+    const std::set<Key>& Shortcut::getKeys() const {
+        return m_keys;
+    }
+
+    bool Shortcut::has(Key key) const {
+        return m_keys.contains(key);
+    }
+
+    bool Shortcut::matches(const Shortcut& other) const {
+        auto left = this->m_keys;
+        auto right = other.m_keys;
+
+        left.erase(CurrentView);
+        left.erase(AllowWhileTyping);
+        right.erase(CurrentView);
+        right.erase(AllowWhileTyping);
+
+        return left == right;
+    }
+
 
     std::string Shortcut::toString() const {
         std::string result;
@@ -342,9 +361,12 @@ namespace hex {
         return true;
     }
 
-    bool ShortcutManager::updateShortcut(const Shortcut &oldShortcut, const Shortcut &newShortcut, View *view) {
-        if (oldShortcut == newShortcut)
+    bool ShortcutManager::updateShortcut(const Shortcut &oldShortcut, Shortcut newShortcut, View *view) {
+        if (oldShortcut.matches(newShortcut))
             return true;
+
+        if (oldShortcut.has(AllowWhileTyping))
+            newShortcut += AllowWhileTyping;
 
         bool result;
         if (view != nullptr) {

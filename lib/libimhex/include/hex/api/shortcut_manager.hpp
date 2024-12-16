@@ -181,6 +181,8 @@ namespace hex {
         bool isLocal() const;
         std::string toString() const;
         const std::set<Key>& getKeys() const;
+        bool has(Key key) const;
+        bool matches(const Shortcut &other) const;
 
     private:
         friend Shortcut operator+(const Key &lhs, const Key &rhs);
@@ -258,7 +260,7 @@ namespace hex {
         [[nodiscard]] static std::vector<ShortcutEntry> getGlobalShortcuts();
         [[nodiscard]] static std::vector<ShortcutEntry> getViewShortcuts(const View *view);
 
-        [[nodiscard]] static bool updateShortcut(Shortcut oldShortcut, Shortcut newShortcut, View *view = nullptr);
+        [[nodiscard]] static bool updateShortcut(const Shortcut &oldShortcut, Shortcut newShortcut, View *view = nullptr);
     };
 
 }
