@@ -53,8 +53,10 @@ jobs:
           -DCMAKE_C_FLAGS="-fuse-ld=lld -fsanitize=address,leak,undefined -fno-sanitize-recover=all --coverage"    \
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld -fsanitize=address,leak,undefined -fno-sanitize-recover=all --coverage"  \
           -DIMHEX_OFFLINE_BUILD=ON                                                                                 \
+          -G Ninja                                                                                                 \
           ..
-        make -j4 unit_tests
+        ninja unit_tests
+        ninja imhex_all
 
     - name: 🧪 Perform plcli Integration Tests
       run: |
