@@ -73,7 +73,6 @@ namespace hex::plugin::builtin {
             return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
         }
 
-        std::string preprocessText(const std::string &code);
         void setPopupWindowHeight(u32 height) { m_popupWindowHeight = height; }
         u32 getPopupWindowHeight() const { return m_popupWindowHeight; }
 
