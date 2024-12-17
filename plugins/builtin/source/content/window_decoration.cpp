@@ -279,7 +279,7 @@ namespace hex::plugin::builtin {
                     toolbarIndex
                 ] = menuItem;
 
-                createNestedMenu(unlocalizedNames | std::views::drop(1), icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallack);
+                createNestedMenu(unlocalizedNames | std::views::drop(1), icon.glyph.c_str(), shortcut, callback, enabledCallback, selectedCallack);
             }
         }
 
@@ -535,7 +535,7 @@ namespace hex::plugin::builtin {
                 const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallback, toolbarIndex] = menuItem;
 
                 if (ImGui::BeginPopup(unlocalizedNames.front().get().c_str())) {
-                    createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallback);
+                    createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon.glyph.c_str(), shortcut, callback, enabledCallback, selectedCallback);
                     ImGui::EndPopup();
                 }
             }

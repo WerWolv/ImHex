@@ -192,7 +192,7 @@ namespace hex::plugin::builtin {
                     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
 
                     ImGui::Image(s_nightlyTexture, s_nightlyTexture.getSize());
-                    ImGuiExt::InfoTooltip("hex.builtin.welcome.nightly_build"_lang);
+                    ImGuiExt::InfoTooltip(hex::format("{0}\n\nCommit: {1}@{2}", "hex.builtin.welcome.nightly_build"_lang, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(true)).c_str());
 
                     ImGui::SetCursorPos(cursor);
                 }

@@ -197,12 +197,12 @@ namespace hex::plugin::builtin {
         }
 
 
-        std::unique_ptr<pl::ptrn::Pattern> jsonToPattern(pl::core::Evaluator *evaluator, const nlohmann::json &json) {
+        std::unique_ptr<pl::ptrn::Pattern> jsonToPattern(pl::core::Evaluator *evaluator, auto function) {
             auto object = std::make_unique<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
             std::vector<std::shared_ptr<pl::ptrn::Pattern>> patterns;
 
             try {
-                jsonToPattern(evaluator, json, patterns);
+                jsonToPattern(evaluator, function(), patterns);
                 object->setEntries(patterns);
 
                 return object;
@@ -224,7 +224,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::addType(nsHexDec, "Json", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
-                auto result = jsonToPattern(evaluator, nlohmann::json::parse(data));
+                auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::parse(data); });
                 result->setSize(data.size());
                 return result;
             });
@@ -233,7 +233,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::addType(nsHexDec, "Bson", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
-                auto result = jsonToPattern(evaluator, nlohmann::json::from_bson(data));
+                auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_bson(data); });
                 result->setSize(data.size());
                 return result;
             });
@@ -242,7 +242,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::addType(nsHexDec, "Cbor", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
-                auto result = jsonToPattern(evaluator, nlohmann::json::from_cbor(data));
+                auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_cbor(data); });
                 result->setSize(data.size());
                 return result;
             });
@@ -251,7 +251,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::addType(nsHexDec, "Bjdata", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
-                auto result = jsonToPattern(evaluator, nlohmann::json::from_bjdata(data));
+                auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_bjdata(data); });
                 result->setSize(data.size());
                 return result;
             });
@@ -260,7 +260,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::addType(nsHexDec, "Msgpack", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
-                auto result = jsonToPattern(evaluator, nlohmann::json::from_msgpack(data));
+                auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_msgpack(data); });
                 result->setSize(data.size());
                 return result;
             });
@@ -269,7 +269,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::addType(nsHexDec, "Ubjson", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
-                auto result = jsonToPattern(evaluator, nlohmann::json::from_ubjson(data));
+                auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_ubjson(data); });
                 result->setSize(data.size());
                 return result;
             });

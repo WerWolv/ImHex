@@ -148,6 +148,7 @@ namespace hex::fonts {
                     glyphRangesBuilder.AddRanges(m_fontAtlas->GetGlyphRangesKorean());
                     glyphRangesBuilder.AddRanges(m_fontAtlas->GetGlyphRangesThai());
                     glyphRangesBuilder.AddRanges(m_fontAtlas->GetGlyphRangesVietnamese());
+                    glyphRangesBuilder.AddText("⌘⌥⌃⇧⏎⇥⌫⇪");
                 }
 
                 m_glyphRange.clear();

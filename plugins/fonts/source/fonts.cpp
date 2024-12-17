@@ -26,7 +26,7 @@ namespace hex::fonts {
             },
             { -1_scaled, -1_scaled });
 
-        ImHexApi::Fonts::loadFont("Unifont", romfs::get("fonts/unifont.otf").span<u8>(), {}, {}, 0, 16);
+        ImHexApi::Fonts::loadFont("Unifont", romfs::get("fonts/unifont.otf").span<u8>(), { }, {}, 0, 16);
     }
 
 }

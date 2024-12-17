@@ -47,11 +47,11 @@ namespace hex::plugin::visualizers {
                 ImGui::TableNextRow();
 
                 // Skip days before the first day of the month
-                for (u8 i = 0; i < firstWeekDay.c_encoding() - 1; ++i)
+                for (u32 i = 0; i < firstWeekDay.c_encoding() - 1; ++i)
                     ImGui::TableNextColumn();
 
                 // Draw days
-                for (u8 i = 1; i <= u32(lastMonthDay.day()); ++i) {
+                for (u32 i = 1; i <= u32(lastMonthDay.day()); ++i) {
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{:02}", i);
 

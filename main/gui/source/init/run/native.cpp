@@ -27,14 +27,13 @@
                     handleFileOpenRequest();
                 }
 
-                // Clean up everything after the main window is closed
-                ON_SCOPE_EXIT {
-                    deinitializeImHex();
-                };
-
                 // Main window
-                Window window;
-                window.loop();
+                {
+                    Window window;
+                    window.loop();
+                }
+
+                deinitializeImHex();
 
             } while (shouldRestart);
 
