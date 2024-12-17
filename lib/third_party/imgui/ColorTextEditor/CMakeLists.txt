@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 # https://github.com/BalazsJako/ImGuiColorTextEdit
 project(imgui_color_text_editor)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     add_library(imgui_color_text_editor OBJECT

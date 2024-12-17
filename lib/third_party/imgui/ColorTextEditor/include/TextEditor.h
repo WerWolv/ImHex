@@ -343,6 +343,11 @@ public:
     }
     void SetOverwrite(bool aValue) { mOverwrite = aValue; }
 
+    std::string ReplaceStrings(std::string string, const std::string &search, const std::string &replace);
+    std::vector<std::string> SplitString(const std::string &string, const std::string &delimiter, bool removeEmpty);
+    std::string ReplaceTabsWithSpaces(const std::string& string, uint32_t tabSize);
+    std::string PreprocessText(const std::string &code);
+
 	void SetReadOnly(bool aValue);
 	bool IsReadOnly() const { return mReadOnly; }
 	bool IsTextChanged() const { return mTextChanged; }
