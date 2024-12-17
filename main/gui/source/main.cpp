@@ -16,7 +16,6 @@ namespace hex::init {
     void runCommandLine(int argc, char **argv);
 
 }
-
 /**
  * @brief Main entry point of ImHex
  * @param argc Argument count
