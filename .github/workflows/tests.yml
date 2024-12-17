@@ -75,7 +75,8 @@ jobs:
         python3 -m venv venv
         . venv/bin/activate
         pip3 install gcovr
-        gcovr --gcov-executable /usr/bin/gcov-14 -e ".+yara_rules.+" -e ".+third_party.+" -e ".+external.+" -r . build --xml coverage_report.xml --verbose
+        cd build
+        gcovr --gcov-executable /usr/bin/gcov-14 -e '.*yara_rules.*' -e '.*third_party.*' -e '.*external.*' -r .. --xml coverage_report.xml --verbose
 
     - name: Upload coverage reports to Codecov
       env:
@@ -85,7 +86,7 @@ jobs:
       with:
         fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage_report.xml
+        file: build/coverage_report.xml
 
   langs:
     name: 🧪 Langs
