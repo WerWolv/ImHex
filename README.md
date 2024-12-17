@@ -7,7 +7,7 @@
 </a>
 
 <p align="center">
-    A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.
+    A Hex Editor for Reverse Engineers, Programmers, and anyone squinting at 3 AM wondering why they chose this life.
     <br>
     <a href="https://itinerarium.github.io/phoneme-synthesis/?w=/'ˈɪmhɛks/"><strong>/ˈɪmhɛks/</strong></a>
 </p>
