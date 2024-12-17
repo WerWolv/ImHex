@@ -30,6 +30,8 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <implot.h>
 #include <implot_internal.h>
+#include <implot3d.h>
+#include <implot3d_internal.h>
 #include <imnodes.h>
 #include <imnodes_internal.h>
 
@@ -955,9 +957,10 @@ namespace hex {
         }
 
         // Initialize ImGui and all other ImGui extensions
-        GImGui   = ImGui::CreateContext(fonts);
-        GImPlot  = ImPlot::CreateContext();
-        GImNodes = ImNodes::CreateContext();
+        GImGui              = ImGui::CreateContext(fonts);
+        GImPlot             = ImPlot::CreateContext();
+        ImPlot3D::GImPlot3D = ImPlot3D::CreateContext();
+        GImNodes            = ImNodes::CreateContext();
 
         ImGuiIO &io       = ImGui::GetIO();
         ImGuiStyle &style = ImGui::GetStyle();
@@ -1054,6 +1057,7 @@ namespace hex {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
 
+        ImPlot3D::DestroyContext();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
     }
