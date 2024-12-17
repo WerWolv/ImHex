@@ -76,7 +76,7 @@ jobs:
         . venv/bin/activate
         pip3 install gcovr
         cd build
-        gcovr --gcov-executable /usr/bin/gcov-14 -e '.*yara_rules.*' -e '.*third_party.*' -e '.*external.*' -r .. --xml coverage_report.xml --verbose
+        gcovr --gcov-executable /usr/bin/gcov-14 -e '.*yara_rules.*' -e '.*third_party.*' -e '.*external.*' -r .. --xml coverage_report.xml --verbose --gcov-ignore-errors source_not_found
 
     - name: Upload coverage reports to Codecov
       env:
