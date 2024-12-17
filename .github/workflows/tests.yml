@@ -57,7 +57,7 @@ jobs:
           -DIMHEX_OFFLINE_BUILD=ON                                                                                 \
           -G Ninja                                                                                                 \
           ..
-        make -j4 unit_tests main
+        ninja unit_tests main
 
     - name: 🧪 Perform plcli Integration Tests
       run: |
@@ -139,7 +139,7 @@ jobs:
           -DLIBPL_ENABLE_TESTS=OFF                                  \
           -DIMHEX_OFFLINE_BUILD=ON                                  \
           ..
-        ninja -j4 unit_tests
+        ninja unit_tests
 
     - name: 🧪 Perform Unit Tests
       run: |
