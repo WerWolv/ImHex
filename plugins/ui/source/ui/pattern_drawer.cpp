@@ -396,6 +396,19 @@ namespace hex::ui {
             return pattern.getDisplayName();
     }
 
+    [[nodiscard]] std::vector<std::string> PatternDrawer::getPatternPath(const pl::ptrn::Pattern *pattern) const {
+        std::vector<std::string> result;
+
+        while (pattern != nullptr) {
+            result.emplace_back(pattern->getVariableName());
+            pattern = pattern->getParent();
+        }
+
+        std::reverse(result.begin(), result.end());
+
+        return result;
+    }
+
     bool PatternDrawer::createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf) {
         ImGui::TableNextRow();
 
@@ -1367,33 +1380,33 @@ namespace hex::ui {
             m_filtersUpdated = true;
 
             if (!m_favoritesUpdateTask.isRunning()) {
-                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
+                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns, runtime](auto &task) {
                     size_t updatedFavorites = 0;
 
-                    const std::string favoriteAttribute = "hex::favorite";
-                    const std::string groupAttribute    = "hex::group";
+                    {
+                        const auto favorites = runtime->getPatternsWithAttribute("hex::favorite");
+                        for (const auto &pattern : favorites) {
+                            m_favorites.insert({ getPatternPath(pattern), pattern->clone() });
+                        }
+
+                        const auto groupAttribute = "hex::group";
+                        const auto groups = runtime->getPatternsWithAttribute(groupAttribute);
+                        for (const auto &pattern : groups) {
+                            const auto arguments = pattern->getAttributeArguments(groupAttribute);
+                            if (!arguments.empty()) {
+                                const auto &groupName = arguments.front().toString();
+                                if (!m_groups.contains(groupName))
+                                    m_groups.insert({ groupName, std::vector<std::unique_ptr<pl::ptrn::Pattern>>() });
+
+                                m_groups[groupName].push_back(pattern->clone());
+                            }
+                        }
+                    }
+
                     for (auto &pattern : patterns) {
                         std::vector<std::string> patternPath;
 
                         size_t startFavoriteCount = m_favorites.size();
-                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
-                            if (currPattern.hasAttribute(favoriteAttribute))
-                                m_favorites.insert({ patternPath, currPattern.clone() });
-
-                            if (const auto &args = currPattern.getAttributeArguments(groupAttribute); !args.empty()) {
-                                auto groupName = args.front().toString();
-
-                                if (!m_groups.contains(groupName))
-                                    m_groups.insert({groupName, std::vector<std::unique_ptr<pl::ptrn::Pattern>>()});
-
-                                m_groups[groupName].push_back(currPattern.clone());
-                            }
-
-                            task.update();
-                        });
-
-                        task.update();
-
                         if (startFavoriteCount == m_favorites.size())
                             continue;
 

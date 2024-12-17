@@ -89,6 +89,8 @@ namespace hex::ui {
         void traversePatternTree(pl::ptrn::Pattern &pattern, std::vector<std::string> &patternPath, const std::function<void(pl::ptrn::Pattern&)> &callback);
         [[nodiscard]] std::string getDisplayName(const pl::ptrn::Pattern& pattern) const;
 
+        [[nodiscard]] std::vector<std::string> getPatternPath(const pl::ptrn::Pattern *pattern) const;
+
         struct Filter {
             std::vector<std::string> path;
             std::optional<pl::core::Token::Literal> value;
