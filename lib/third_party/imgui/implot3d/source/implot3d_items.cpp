@@ -702,6 +702,9 @@ template <class _Getter>
 struct RendererSurfaceFill : RendererBase {
     RendererSurfaceFill(const _Getter& getter, int x_count, int y_count, ImU32 col) : RendererBase((x_count - 1) * (y_count - 1), 6, 4),
                                                                                       Getter(getter),
+                                                                                      UV({}),
+                                                                                      Min(0.0f),
+                                                                                      Max(0.0f),
                                                                                       XCount(x_count),
                                                                                       YCount(y_count),
                                                                                       Col(col) {}

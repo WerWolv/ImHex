@@ -291,7 +291,7 @@ void DemoSurfacePlots() {
             int idx = i * N + j;
             xs[idx] = range_min + j * step;                                   // X values are constant along rows
             ys[idx] = range_min + i * step;                                   // Y values are constant along columns
-            zs[idx] = sinf(std::sqrt(xs[idx] * xs[idx] + ys[idx] * ys[idx])); // Z = sin(sqrt(X^2 + Y^2))
+            zs[idx] = sinf(sqrt(xs[idx] * xs[idx] + ys[idx] * ys[idx])); // Z = sin(sqrt(X^2 + Y^2))
         }
     }
 
