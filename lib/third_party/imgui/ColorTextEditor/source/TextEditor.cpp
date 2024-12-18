@@ -2066,12 +2066,14 @@ std::vector<std::string> TextEditor::SplitString(const std::string &string, cons
 
 
 std::string TextEditor::ReplaceTabsWithSpaces(const std::string& string, uint32_t tabSize) {
-    if (tabSize == 0)
+    if (tabSize == 0 || string.empty() || string.find('\t') == std::string::npos)
         return string;
 
     auto stringVector = SplitString(string, "\n", false);
+    auto size = stringVector.size();
     std::string result;
-    for (auto &line : stringVector) {
+    for (size_t i = 0; i < size - 1; i++) {
+        auto &line = stringVector[i];
         std::size_t pos = 0;
         while ((pos = line.find('\t', pos)) != std::string::npos) {
             auto spaces = tabSize - (pos % tabSize);
@@ -2088,8 +2090,7 @@ std::string TextEditor::PreprocessText(const std::string &code) {
     std::string result = ReplaceStrings(code, "\r\n", "\n");
     result = ReplaceStrings(result, "\r", "\n");
     result = ReplaceTabsWithSpaces(result, 4);
-    while (result.ends_with('\n'))
-        result.pop_back();
+
     return result;
 }
 
