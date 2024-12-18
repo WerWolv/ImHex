@@ -2,6 +2,7 @@
     "code": "zh-TW",
     "country": "Taiwan",
     "language": "Chinese (Traditional)",
+    "fallback": false,
     "translations": {
         "hex.builtin.setting.general.context_menu_entry": "視窗內容功能表項目",
         "hex.builtin.setting.interface.show_resource_usage": "",
