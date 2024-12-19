@@ -1,13 +1,15 @@
 #include <hex.hpp>
 
 #include <hex/api/workspace_manager.hpp>
-#include <hex/api/event_manager.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api_urls.hpp>
+
+#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_provider.hpp>
 
 #include <hex/ui/view.hpp>
 #include <toasts/toast_notification.hpp>

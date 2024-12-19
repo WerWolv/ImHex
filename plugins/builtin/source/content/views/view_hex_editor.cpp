@@ -5,6 +5,8 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 
+#include <hex/api/events/events_provider.hpp>
+
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/default_paths.hpp>
