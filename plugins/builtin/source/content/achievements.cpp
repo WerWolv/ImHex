@@ -4,6 +4,7 @@
 
 #include <hex/api/event_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
 
 #include <hex/helpers/crypto.hpp>
 #include <hex/providers/provider.hpp>

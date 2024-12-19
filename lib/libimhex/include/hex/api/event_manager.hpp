@@ -201,23 +201,16 @@ namespace hex {
     };
 
     /* Default Events */
-    
-    /**
-     * @brief Called when Imhex finished startup, and will enter the main window rendering loop
-     */
-    EVENT_DEF(EventImHexStartupFinished);
 
     EVENT_DEF(EventFileLoaded, std::fs::path);
     EVENT_DEF(EventDataChanged, prv::Provider *);
     EVENT_DEF(EventHighlightingChanged);
     EVENT_DEF(EventWindowClosing, GLFWwindow *);
     EVENT_DEF(EventRegionSelected, ImHexApi::HexEditor::ProviderRegion);
-    EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventThemeChanged);
     EVENT_DEF(EventOSThemeChanged);
     EVENT_DEF(EventDPIChanged, float, float);
     EVENT_DEF(EventWindowFocused, bool);
-    EVENT_DEF(EventImHexUpdated, SemanticVersion, SemanticVersion);
 
     EVENT_DEF(EventWindowInitialized);
     EVENT_DEF(EventWindowDeinitializing, GLFWwindow *);
@@ -233,19 +226,13 @@ namespace hex {
     EVENT_DEF(EventPatternEditorChanged, const std::string&);
     EVENT_DEF(EventStoreContentDownloaded, const std::fs::path&);
     EVENT_DEF(EventStoreContentRemoved, const std::fs::path&);
-    EVENT_DEF(EventImHexClosing);
     EVENT_DEF(EventAchievementUnlocked, const Achievement&);
     EVENT_DEF(EventSearchBoxClicked, u32);
     EVENT_DEF(EventViewOpened, View*);
-    EVENT_DEF(EventFirstLaunch);
 
     EVENT_DEF(EventFileDragged, bool);
     EVENT_DEF(EventFileDropped, std::fs::path);
 
-    /**
-     * @brief Called when a project has been loaded
-     */
-    EVENT_DEF(EventProjectOpened);
 
     EVENT_DEF_NO_LOG(EventFrameBegin);
     EVENT_DEF_NO_LOG(EventFrameEnd);
@@ -263,8 +250,4 @@ namespace hex {
     */
     EVENT_DEF(MovePerProviderData, prv::Provider *, prv::Provider *);
 
-    /**
-     * Called when ImHex managed to catch an error in a general try/catch to prevent/recover from a crash
-    */
-    EVENT_DEF(EventCrashRecovered, const std::exception &);
 }
