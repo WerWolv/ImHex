@@ -6,6 +6,7 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/api/events/requests.hpp>
 
 #include <banners/banner_button.hpp>
 #include <toasts/toast_notification.hpp>

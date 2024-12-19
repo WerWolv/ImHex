@@ -3,6 +3,7 @@
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/ui/view.hpp>
+#include <hex/api/events/requests.hpp>
 
 namespace hex::plugin::builtin {
 

@@ -1,6 +1,7 @@
 #include "content/views/view_diff.hpp"
 
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/events/requests.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/providers/buffered_reader.hpp>

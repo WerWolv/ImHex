@@ -1,5 +1,6 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/shortcut_manager.hpp>
+#include <hex/api/events/requests.hpp>
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
