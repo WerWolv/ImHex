@@ -874,16 +874,16 @@ void TextEditor::Render() {
 
     IM_ASSERT(mLineBuffer.empty());
 
-    auto contentSize = ImGui::GetCurrentWindowRead()->ContentRegionRect.Max - ImGui::GetWindowPos() - ImVec2(0,mTopMargin);
+    auto contentSize = ImGui::GetCurrentWindowRead()->ContentRegionRect.Max - ImGui::GetWindowPos();
     auto drawList    = ImGui::GetWindowDrawList();
-    float longest(mTextStart);
+    mNumberOfLinesDisplayed = GetPageSize();
 
     if (mScrollToTop) {
         mScrollToTop = false;
         ImGui::SetScrollY(0.f);
     }
 
-    if ( mScrollToBottom && ImGui::GetScrollMaxY() > ImGui::GetScrollY()) {
+    if ( mScrollToBottom && ImGui::GetScrollMaxY() >= ImGui::GetScrollY()) {
         mScrollToBottom = false;
         ImGui::SetScrollY(ImGui::GetScrollMaxY());
     }
@@ -891,10 +891,13 @@ void TextEditor::Render() {
     ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos() + ImVec2(0, mTopMargin);
     auto scrollX           = ImGui::GetScrollX();
     auto scrollY           = ImGui::GetScrollY();
-
-    auto lineNo        = (int)(std::floor(scrollY / mCharAdvance.y));
+    if (mSetTopLine)
+        SetTopLine();
+    else
+        mTopLine = std::max(0,(int)(std::floor((scrollY-mTopMargin) / mCharAdvance.y)));
+    auto lineNo        =  mTopLine;
     auto globalLineMax = (int)mLines.size();
-    auto lineMax       = std::max(0, std::min((int)mLines.size() - 1, lineNo + (int)std::ceil((scrollY + contentSize.y) / mCharAdvance.y)));
+    auto lineMax       = std::clamp(lineNo + mNumberOfLinesDisplayed, 0, globalLineMax - 1);
     mLongest = GetLongestLineLength() * mCharAdvance.x;
 
     // Deduce mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
@@ -914,7 +917,6 @@ void TextEditor::Render() {
             ImVec2 textScreenPos      = ImVec2(lineStartScreenPos.x + mTextStart, lineStartScreenPos.y);
 
             auto &line    = mLines[lineNo];
-            longest       = std::max(mTextStart + TextDistanceToLineStart(Coordinates(lineNo, GetLineMaxColumn(lineNo))), longest);
             auto columnNo = 0;
             Coordinates lineStartCoord(lineNo, 0);
             Coordinates lineEndCoord(lineNo, GetLineMaxColumn(lineNo));
@@ -1133,89 +1135,54 @@ void TextEditor::Render() {
 
             ++lineNo;
         }
-        if (lineNo < mLines.size() && ImGui::GetScrollMaxX() > 0.0f)
-            longest       = std::max(mTextStart + TextDistanceToLineStart(Coordinates(lineNo, GetLineMaxColumn(lineNo))), longest);
 
     }
 
     ImGui::Dummy(ImVec2(mLongest, (globalLineMax - lineMax - 2) * mCharAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight()));
 
-    if (mScrollToCursor) {
+    if (mScrollToCursor)
         EnsureCursorVisible();
-        mScrollToCursor = false;
-    }
+
+
     if (mTopMarginChanged) {
         mTopMarginChanged = false;
         if (mTopMargin == 0)
-            m_savedScrollY = ImGui::GetScrollY();
+            mSavedScrollY = ImGui::GetScrollY();
         auto window = ImGui::GetCurrentWindow();
         auto maxScroll = window->ScrollMax.y;
         if (maxScroll > 0) {
-            float lineCount;
             float pixelCount;
             if (mNewTopMargin > mTopMargin) {
                 pixelCount = mNewTopMargin - mTopMargin;
-                lineCount = pixelCount / mCharAdvance.y;
             } else if (mNewTopMargin > 0) {
                 pixelCount = mTopMargin - mNewTopMargin;
-                lineCount = pixelCount / mCharAdvance.y;
             } else {
                 pixelCount = mTopMargin;
-                lineCount = std::round(m_linesAdded);
             }
-            auto state = mState;
             auto oldScrollY = ImGui::GetScrollY();
-            int lineCountInt;
 
-            if (mNewTopMargin > mTopMargin) {
-                lineCountInt = std::round(lineCount + m_linesAdded - std::floor(m_linesAdded));
-            } else
-                lineCountInt = std::round(lineCount);
-            for (int i = 0; i < lineCountInt; i++) {
-                if (mNewTopMargin > mTopMargin)
-                    mLines.insert(mLines.begin() + mLines.size(), Line());
-                else
-                    mLines.erase(mLines.begin() + mLines.size() - 1);
-            }
-            if (mNewTopMargin > mTopMargin) {
-                m_linesAdded += lineCount;
-                m_pixelsAdded += pixelCount;
-            } else if (mNewTopMargin > 0) {
-                m_linesAdded -= lineCount;
-                m_pixelsAdded -= pixelCount;
-            } else {
-                m_linesAdded = 0;
-                m_pixelsAdded = 0;
-            }
-            if (oldScrollY + pixelCount < maxScroll) {
-                if (mNewTopMargin > mTopMargin)
-                    m_shiftedScrollY = oldScrollY + pixelCount;
-                else if (mNewTopMargin > 0)
-                    m_shiftedScrollY = oldScrollY - pixelCount;
-                else if (ImGui::GetScrollY() == m_shiftedScrollY)
-                    m_shiftedScrollY = m_savedScrollY;
-                else
-                    m_shiftedScrollY = ImGui::GetScrollY() - pixelCount;
-                ImGui::SetScrollY(m_shiftedScrollY);
-            } else {
-                if (mNewTopMargin > mTopMargin)
-                    mScrollToBottom = true;
-            }
+            if (mNewTopMargin > mTopMargin)
+                mShiftedScrollY = oldScrollY + pixelCount;
+            else if (mNewTopMargin > 0)
+                mShiftedScrollY = oldScrollY - pixelCount;
+            else
+                mShiftedScrollY = mSavedScrollY;
+            ImGui::SetScrollY(mShiftedScrollY);
             mTopMargin = mNewTopMargin;
-            mState = state;
         }
     }
 }
 
 void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
-    mWithinRender          = true;
     mTextChanged           = false;
     mCursorPositionChanged = false;
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(mPalette[(int)PaletteIndex::Background]));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-    if (!mIgnoreImGuiChild)
+    if (!mIgnoreImGuiChild) {
         ImGui::BeginChild(aTitle, aSize, aBorder, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
+        mWithinRender = true;
+    }
 
     if (mHandleKeyboardInputs) {
         HandleKeyboardInputs();
@@ -1231,13 +1198,15 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
     if (mHandleKeyboardInputs)
         ImGui::PopItemFlag();
 
-    if (!mIgnoreImGuiChild)
+    if (!mIgnoreImGuiChild) {
+        mScrollY = ImGui::GetScrollY();
+        mWithinRender = false;
         ImGui::EndChild();
+    }
 
     ImGui::PopStyleVar();
     ImGui::PopStyleColor();
 
-    mWithinRender = false;
 }
 
 void TextEditor::SetText(const std::string &aText) {
@@ -1598,8 +1567,6 @@ void TextEditor::DeleteSelection() {
 void TextEditor::JumpToLine(int line) {
     auto newPos = Coordinates(line, 0);
     JumpToCoords(newPos);
-
-    setFocusAtCoords(newPos);
 }
 
 void TextEditor::JumpToCoords(const Coordinates &aNewPos) {
@@ -1636,7 +1603,14 @@ void TextEditor::MoveDown(int aAmount, bool aSelect) {
     IM_ASSERT(mState.mCursorPosition.mColumn >= 0);
     ResetCursorBlinkTime();
     auto oldPos                  = mState.mCursorPosition;
-    mState.mCursorPosition.mLine = std::max(0, std::min((int)mLines.size() - 1, mState.mCursorPosition.mLine + aAmount));
+    mState.mCursorPosition.mLine = std::clamp(mState.mCursorPosition.mLine + aAmount, 0, (int)mLines.size() - 1);
+    if (oldPos.mLine == (mLines.size() - 1)) {
+        mTopLine += aAmount;
+        mTopLine = std::clamp(mTopLine, 0, (int)mLines.size() - 1);
+        SetTopLine();
+        EnsureCursorVisible();
+        return;
+    }
 
     if (mState.mCursorPosition != oldPos) {
         if (aSelect) {
@@ -1791,7 +1765,7 @@ void TextEditor::MoveTop(bool aSelect) {
 void TextEditor::TextEditor::MoveBottom(bool aSelect) {
     ResetCursorBlinkTime();
     auto oldPos = GetCursorPosition();
-    auto newPos = Coordinates((int)mLines.size() - 1, 0);
+    auto newPos = Coordinates((int)mLines.size() - 1, GetLineMaxColumn((int)mLines.size() - 1));
     SetCursorPosition(newPos);
     if (aSelect) {
         mInteractiveStart = oldPos;
@@ -2072,15 +2046,17 @@ std::string TextEditor::ReplaceTabsWithSpaces(const std::string& string, uint32_
     auto stringVector = SplitString(string, "\n", false);
     auto size = stringVector.size();
     std::string result;
-    for (size_t i = 0; i < size - 1; i++) {
+    for (size_t i = 0; i < size; i++) {
         auto &line = stringVector[i];
         std::size_t pos = 0;
         while ((pos = line.find('\t', pos)) != std::string::npos) {
             auto spaces = tabSize - (pos % tabSize);
             line.replace(pos, 1, std::string(spaces, ' '));
-            pos += tabSize;
+            pos += tabSize - 1;
         }
-        result += line + "\n";
+        result += line;
+        if (i < size - 1)
+            result += "\n";
     }
     return result;
 }
@@ -2958,43 +2934,71 @@ float TextEditor::TextDistanceToLineStart(const Coordinates &aFrom) const {
     return distance;
 }
 
+void TextEditor::SetTopLine() {
+    if (!mWithinRender) {
+        mSetTopLine = true;
+        return;
+    } else {
+        mSetTopLine = false;
+        ImGui::SetScrollY(mTopLine * mCharAdvance.y);
+        EnsureCursorVisible();
+    }
+}
+
 void TextEditor::EnsureCursorVisible() {
     if (!mWithinRender) {
         mScrollToCursor = true;
         return;
     }
 
+    auto scrollBarSize = ImGui::GetStyle().ScrollbarSize;
     float scrollX = ImGui::GetScrollX();
     float scrollY = ImGui::GetScrollY();
 
-    auto windowPadding = ImGui::GetStyle().WindowPadding * 2.0f;
+    auto windowPadding = ImGui::GetStyle().FramePadding * 2.0f;
 
-    auto height = ImGui::GetWindowHeight() - mTopMargin - windowPadding.y;
-    auto width  = ImGui::GetWindowWidth() - windowPadding.x;
+    auto height = ImGui::GetWindowHeight() - mTopMargin - scrollBarSize - mCharAdvance.y;
+    auto width  = ImGui::GetWindowWidth() - windowPadding.x - scrollBarSize;
 
-    auto top    = (int)ceil(scrollY / mCharAdvance.y);
-    auto bottom = (int)ceil((scrollY + height) / mCharAdvance.y);
+    auto top    = (int)rint((mTopMargin > scrollY ? mTopMargin -scrollY : scrollY) / mCharAdvance.y);
+    auto bottom = top + (int)rint(height / mCharAdvance.y);
 
-    auto left  = scrollX;
-    auto right = scrollX + width;
+    auto left  = (int)rint(scrollX / mCharAdvance.x);
+    auto right = left + (int)rint(width / mCharAdvance.x);
 
     auto pos = GetActualCursorCoordinates();
-    auto len = TextDistanceToLineStart(pos);
+    pos.mColumn = (int)rint(TextDistanceToLineStart(pos) / mCharAdvance.x);
 
-    if (pos.mLine <= top + 1)
-        ImGui::SetScrollY(std::max(0.0f, (pos.mLine - 1) * mCharAdvance.y));
-    if (pos.mLine >= bottom - 2)
-        ImGui::SetScrollY(std::max(0.0f, (pos.mLine + 2) * mCharAdvance.y - height));
-    if (len == 0)
-        ImGui::SetScrollX(0);
-    else if (len + mTextStart <= left + 4)
-        ImGui::SetScrollX(std::max(0.0f, len + mTextStart - 4));
-    if (len + mTextStart + mCharAdvance.x * 2 >= right - 4)
-        ImGui::SetScrollX(std::max(0.0f, len + mTextStart + 4 - width + mCharAdvance.x * 2));
+    bool mScrollToCursorX = true;
+    bool mScrollToCursorY = true;
+
+    if (pos.mLine >= top && pos.mLine <= bottom)
+        mScrollToCursorY = false;
+    if ((pos.mColumn >= left) && (pos.mColumn  <= right))
+        mScrollToCursorX = false;
+    if (!mScrollToCursorX && !mScrollToCursorY && mOldTopMargin == mTopMargin) {
+        mScrollToCursor = false;
+        mOldTopMargin = mTopMargin;
+        return;
+    }
+
+    if (mScrollToCursorY) {
+        if (pos.mLine < top)
+            ImGui::SetScrollY(std::max(0.0f, pos.mLine * mCharAdvance.y));
+        if (pos.mLine > bottom)
+            ImGui::SetScrollY(std::max(0.0f, pos.mLine * mCharAdvance.y - height));
+    }
+    if (mScrollToCursorX) {
+        if (pos.mColumn < left)
+            ImGui::SetScrollX(std::max(0.0f, pos.mColumn * mCharAdvance.x ));
+        if (pos.mColumn > right)
+            ImGui::SetScrollX(std::max(0.0f, pos.mColumn * mCharAdvance.x - width));
+    }
+    mOldTopMargin = mTopMargin;
 }
 
 int TextEditor::GetPageSize() const {
-    auto height = ImGui::GetWindowHeight() - 20.0f - mTopMargin;
+    auto height = ImGui::GetWindowHeight() - 2.0f * ImGui::GetStyle().WindowPadding.y - mTopMargin;
     return (int)floor(height / mCharAdvance.y);
 }
 
