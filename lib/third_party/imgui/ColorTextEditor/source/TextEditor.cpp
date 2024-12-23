@@ -29,8 +29,8 @@ TextEditor::Palette TextEditor::sPaletteBase = TextEditor::GetDarkPalette();
 
 TextEditor::FindReplaceHandler::FindReplaceHandler() : mWholeWord(false),mFindRegEx(false),mMatchCase(false)  {}
 
-TextEditor::TextEditor()
-    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mScrollToBottom(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mTopMargin(0), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true),mStartTime(ImGui::GetTime() * 1000), mBreakPointsChanged(false) {
+TextEditor::TextEditor() {
+    mStartTime = ImGui::GetTime() * 1000;
     SetLanguageDefinition(LanguageDefinition::HLSL());
     mLines.push_back(Line());
 }
