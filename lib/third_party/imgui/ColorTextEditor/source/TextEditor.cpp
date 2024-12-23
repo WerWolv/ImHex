@@ -1274,6 +1274,7 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
 
     mWithinRender = false;
     ImGui::SetCursorScreenPos(ImVec2(position.x,position.y+aSize.y-1));
+    ImGui::Dummy({});
 }
 
 void TextEditor::SetText(const std::string &aText) {
