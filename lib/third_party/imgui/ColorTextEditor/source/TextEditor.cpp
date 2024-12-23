@@ -1166,7 +1166,10 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
     if (!mIgnoreImGuiChild)
         ImGui::BeginChild(aTitle);
 
-    ImGui::Dummy(ImVec2(mLongest, (globalLineMax - lineMax - 2) * mCharAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight()));
+    if (mShowLineNumbers)
+        ImGui::Dummy(ImVec2(mLongest, (globalLineMax - lineMax - 2) * mCharAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight()));
+    else
+        ImGui::Dummy(ImVec2(mLongest, (globalLineMax - 1 - lineMax + GetPageSize() - 1) * mCharAdvance.y));
 
     if (mScrollToCursor)
         EnsureCursorVisible();
@@ -3062,7 +3065,7 @@ void TextEditor::EnsureCursorVisible() {
 }
 
 int TextEditor::GetPageSize() const {
-    auto height = ImGui::GetWindowHeight() - mTopMargin;
+    auto height = ImGui::GetCurrentWindow()->InnerClipRect.GetHeight() - mTopMargin - ImGui::GetStyle().FramePadding.y;
     return (int)floor(height / mCharAdvance.y);
 }
 
