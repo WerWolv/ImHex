@@ -1237,7 +1237,7 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
     mLongest        = GetLongestLineLength() * mCharAdvance.x;
     bool scroll_x = mLongest > textEditorSize.x;
     bool scroll_y = mLines.size() > 1;
-    if (scroll_y)
+    if (!aBorder && scroll_y)
         textEditorSize.x -= scrollBarSize;
     ImGui::SetCursorScreenPos(ImVec2(position.x + mLineNumberFieldWidth, position.y));
     ImGuiChildFlags childFlags  = aBorder ? ImGuiChildFlags_Borders : ImGuiChildFlags_None;
