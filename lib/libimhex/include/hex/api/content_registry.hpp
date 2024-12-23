@@ -380,7 +380,7 @@ namespace hex {
                 };
 
                 using DisplayCallback = std::function<std::string(std::string)>;
-                using ExecuteCallback = std::function<void(std::string)>;
+                using ExecuteCallback = std::function<std::optional<std::string>(std::string)>;
                 using QueryCallback   = std::function<std::vector<QueryResult>(std::string)>;
 
                 struct Entry {
@@ -416,7 +416,7 @@ namespace hex {
                 const std::string &command,
                 const UnlocalizedString &unlocalizedDescription,
                 const impl::DisplayCallback &displayCallback,
-                const impl::ExecuteCallback &executeCallback = [](auto) {});
+                const impl::ExecuteCallback &executeCallback = [](auto) { return std::nullopt; });
 
             /**
              * @brief Adds a new command handler to the command palette
