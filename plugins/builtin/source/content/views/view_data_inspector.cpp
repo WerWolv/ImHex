@@ -248,13 +248,7 @@ namespace hex::plugin::builtin {
         }
 
         if (m_selectedProvider == nullptr || !m_selectedProvider->isReadable() || m_validBytes <= 0) {
-            // Draw a message when no bytes are selected
-            std::string text = "hex.builtin.view.data_inspector.no_data"_lang;
-            auto textSize = ImGui::CalcTextSize(text.c_str());
-            auto availableSpace = ImGui::GetContentRegionAvail();
-
-            ImGui::SetCursorPos((availableSpace - textSize) / 2.0F);
-            ImGui::TextUnformatted(text.c_str());
+            ImGuiExt::TextOverlay("hex.builtin.view.data_inspector.no_data"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
 
             return;
         }

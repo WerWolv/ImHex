@@ -505,7 +505,7 @@ namespace hex::ui {
         m_frameStartSelectionRegion = selection;
 
         if (m_provider == nullptr || m_provider->getActualSize() == 0) {
-            ImGuiExt::TextFormattedCentered("{}", "hex.ui.hex_editor.no_bytes"_lang);
+            ImGuiExt::TextOverlay("hex.ui.hex_editor.no_bytes"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
         }
 
         if (!m_editingAddress.has_value() && ImGui::IsKeyPressed(ImGuiKey_Escape))

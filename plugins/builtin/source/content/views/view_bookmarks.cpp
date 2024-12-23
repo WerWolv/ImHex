@@ -290,7 +290,7 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginChild("##bookmarks")) {
             if (m_bookmarks->empty()) {
-                ImGuiExt::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
+                ImGuiExt::TextOverlay("hex.builtin.view.bookmarks.no_bookmarks"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
             }
 
             auto bookmarkToRemove = m_bookmarks->end();
