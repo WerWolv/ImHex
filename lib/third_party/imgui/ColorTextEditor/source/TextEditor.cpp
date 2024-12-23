@@ -894,9 +894,9 @@ void TextEditor::Render() {
     if (mSetTopLine)
         SetTopLine();
     else
-        mTopLine = std::max(0,(int)(std::floor((scrollY-mTopMargin) / mCharAdvance.y)));
-    auto lineNo        =  mTopLine;
-    auto globalLineMax = (int)mLines.size();
+        mTopLine = std::max<int>(0, std::floor((scrollY-mTopMargin) / mCharAdvance.y) - 1);
+    auto lineNo        = mTopLine;
+    int  globalLineMax    = mLines.size();
     auto lineMax       = std::clamp(lineNo + mNumberOfLinesDisplayed, 0, globalLineMax - 1);
     mLongest = GetLongestLineLength() * mCharAdvance.x;
 
