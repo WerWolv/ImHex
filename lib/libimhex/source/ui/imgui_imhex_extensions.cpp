@@ -1175,10 +1175,12 @@ namespace ImGuiExt {
         const auto margin   = GetStyle().FramePadding * 2;
         const auto textRect = ImRect(textPos - margin, textPos + textSize + margin);
 
-        auto drawList = GetForegroundDrawList();
+        auto drawList = GetWindowDrawList();
 
+        drawList->AddDrawCmd();
         drawList->AddRectFilled(textRect.Min, textRect.Max, GetColorU32(ImGuiCol_WindowBg) | 0xFF000000);
         drawList->AddRect(textRect.Min, textRect.Max, GetColorU32(ImGuiCol_Border));
+        drawList->AddDrawCmd();
         drawList->AddText(nullptr, 0.0F, textPos, GetColorU32(ImGuiCol_Text), text, nullptr, maxWidth);
     }
 

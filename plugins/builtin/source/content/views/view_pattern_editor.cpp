@@ -1267,16 +1267,16 @@ namespace hex::plugin::builtin {
         auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
         if (ImGui::BeginTable("##sections_table", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
+            if (sections.empty()) {
+                ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_sections"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
+            }
+
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("hex.ui.common.name"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
             ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
             ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 50_scaled);
 
             ImGui::TableHeadersRow();
-
-            if (sections.empty()) {
-                ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_sections"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
-            }
 
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
                 for (auto &[id, section] : sections) {
