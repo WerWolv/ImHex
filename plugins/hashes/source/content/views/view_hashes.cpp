@@ -194,7 +194,7 @@ namespace hex::plugin::hashes {
         ImGui::EndDisabled();
 
         ImGui::SameLine();
-        ImGuiExt::HelpHover("hex.hashes.view.hashes.hover_info"_lang);
+        ImGuiExt::HelpHover("hex.hashes.view.hashes.hover_info"_lang, ICON_VS_INFO);
 
         if (ImGui::BeginTable("##hashes", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupColumn("hex.hashes.view.hashes.table.name"_lang);

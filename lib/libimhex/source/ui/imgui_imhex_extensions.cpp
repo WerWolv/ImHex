@@ -969,10 +969,13 @@ namespace ImGuiExt {
     }
     
     bool InputTextIcon(const char *label, const char *icon, std::string &buffer, ImGuiInputTextFlags flags) {
+        return InputTextIconHint(label, icon, nullptr, buffer, flags);
+    }
+
+    bool InputTextIconHint(const char* label, const char *icon, const char *hint, std::string &buffer, ImGuiInputTextFlags flags) {
         auto window             = GetCurrentWindow();
         const ImGuiID id        = window->GetID(label);
         const ImGuiStyle &style = GImGui->Style;
-
 
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
         const ImVec2 icon_frame_size = CalcTextSize(icon) + style.FramePadding * 2.0F;
