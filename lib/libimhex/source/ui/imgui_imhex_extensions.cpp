@@ -1164,8 +1164,8 @@ namespace ImGuiExt {
         return toggled;
     }
 
-    void TextOverlay(const char *text, ImVec2 pos) {
-        const auto textSize = CalcTextSize(text);
+    void TextOverlay(const char *text, ImVec2 pos, float maxWidth) {
+        const auto textSize = CalcTextSize(text, nullptr, false, maxWidth);
         const auto textPos  = pos - textSize / 2;
         const auto margin   = GetStyle().FramePadding * 2;
         const auto textRect = ImRect(textPos - margin, textPos + textSize + margin);
@@ -1174,7 +1174,7 @@ namespace ImGuiExt {
 
         drawList->AddRectFilled(textRect.Min, textRect.Max, GetColorU32(ImGuiCol_WindowBg) | 0xFF000000);
         drawList->AddRect(textRect.Min, textRect.Max, GetColorU32(ImGuiCol_Border));
-        drawList->AddText(textPos, GetColorU32(ImGuiCol_Text), text);
+        drawList->AddText(nullptr, 0.0F, textPos, GetColorU32(ImGuiCol_Text), text, nullptr, maxWidth);
     }
 
     bool BeginBox() {

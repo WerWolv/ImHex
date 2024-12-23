@@ -295,7 +295,7 @@ namespace ImGuiExt {
     bool DimmedIconToggle(const char *icon, bool *v);
     bool DimmedIconToggle(const char *iconOn, const char *iconOff, bool *v);
 
-    void TextOverlay(const char *text, ImVec2 pos);
+    void TextOverlay(const char *text, ImVec2 pos, float maxWidth = -1);
 
     bool BeginBox();
     void EndBox();

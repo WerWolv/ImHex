@@ -1094,6 +1094,10 @@ namespace hex::plugin::builtin {
         static u32 envVarCounter = 1;
 
         if (ImGui::BeginChild("##env_vars", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+            if (envVars.size() <= 1) {
+                ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_env_vars"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
+            }
+
             if (ImGui::BeginTable("##env_vars_table", 4, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
                 ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthStretch, 0.1F);
                 ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4F);
@@ -1197,63 +1201,63 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables) {
         if (ImGui::BeginChild("##settings", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
             if (patternVariables.empty()) {
-                ImGuiExt::TextFormattedCentered("hex.builtin.view.pattern_editor.no_in_out_vars"_lang);
-            } else {
-                if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_RowBg)) {
-                    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.25F);
-                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.75F);
+                ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_in_out_vars"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
+            }
 
-                    for (auto &[name, variable] : patternVariables) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
+            if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_RowBg)) {
+                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.25F);
+                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.75F);
 
-                        ImGui::TextUnformatted(name.c_str());
+                for (auto &[name, variable] : patternVariables) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
 
-                        ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(name.c_str());
 
-                        ImGui::PushItemWidth(-1);
-                        if (variable.outVariable) {
-                            ImGuiExt::TextFormattedSelectable("{}", variable.value.toString(true).c_str());
-                        } else if (variable.inVariable) {
-                            const std::string label { "##" + name };
+                    ImGui::TableNextColumn();
 
-                            if (pl::core::Token::isSigned(variable.type)) {
-                                i64 value = hex::get_or<i128>(variable.value, 0);
-                                if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
-                                    m_hasUnevaluatedChanges = true;
-                                variable.value = i128(value);
-                            } else if (pl::core::Token::isUnsigned(variable.type)) {
-                                u64 value = hex::get_or<u128>(variable.value, 0);
-                                if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
-                                    m_hasUnevaluatedChanges = true;
-                                variable.value = u128(value);
-                            } else if (pl::core::Token::isFloatingPoint(variable.type)) {
-                                auto value = hex::get_or<double>(variable.value, 0.0);
-                                if (ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value))
-                                    m_hasUnevaluatedChanges = true;
-                                variable.value = value;
-                            } else if (variable.type == pl::core::Token::ValueType::Boolean) {
-                                auto value = hex::get_or<bool>(variable.value, false);
-                                if (ImGui::Checkbox(label.c_str(), &value))
-                                    m_hasUnevaluatedChanges = true;
-                                variable.value = value;
-                            } else if (variable.type == pl::core::Token::ValueType::Character) {
-                                std::array<char, 2> buffer = { hex::get_or<char>(variable.value, '\x00') };
-                                if (ImGui::InputText(label.c_str(), buffer.data(), buffer.size()))
-                                    m_hasUnevaluatedChanges = true;
-                                variable.value = buffer[0];
-                            } else if (variable.type == pl::core::Token::ValueType::String) {
-                                std::string buffer = hex::get_or<std::string>(variable.value, "");
-                                if (ImGui::InputText(label.c_str(), buffer))
-                                    m_hasUnevaluatedChanges = true;
-                                variable.value = buffer;
-                            }
+                    ImGui::PushItemWidth(-1);
+                    if (variable.outVariable) {
+                        ImGuiExt::TextFormattedSelectable("{}", variable.value.toString(true).c_str());
+                    } else if (variable.inVariable) {
+                        const std::string label { "##" + name };
+
+                        if (pl::core::Token::isSigned(variable.type)) {
+                            i64 value = hex::get_or<i128>(variable.value, 0);
+                            if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
+                                m_hasUnevaluatedChanges = true;
+                            variable.value = i128(value);
+                        } else if (pl::core::Token::isUnsigned(variable.type)) {
+                            u64 value = hex::get_or<u128>(variable.value, 0);
+                            if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
+                                m_hasUnevaluatedChanges = true;
+                            variable.value = u128(value);
+                        } else if (pl::core::Token::isFloatingPoint(variable.type)) {
+                            auto value = hex::get_or<double>(variable.value, 0.0);
+                            if (ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value))
+                                m_hasUnevaluatedChanges = true;
+                            variable.value = value;
+                        } else if (variable.type == pl::core::Token::ValueType::Boolean) {
+                            auto value = hex::get_or<bool>(variable.value, false);
+                            if (ImGui::Checkbox(label.c_str(), &value))
+                                m_hasUnevaluatedChanges = true;
+                            variable.value = value;
+                        } else if (variable.type == pl::core::Token::ValueType::Character) {
+                            std::array<char, 2> buffer = { hex::get_or<char>(variable.value, '\x00') };
+                            if (ImGui::InputText(label.c_str(), buffer.data(), buffer.size()))
+                                m_hasUnevaluatedChanges = true;
+                            variable.value = buffer[0];
+                        } else if (variable.type == pl::core::Token::ValueType::String) {
+                            std::string buffer = hex::get_or<std::string>(variable.value, "");
+                            if (ImGui::InputText(label.c_str(), buffer))
+                                m_hasUnevaluatedChanges = true;
+                            variable.value = buffer;
                         }
-                        ImGui::PopItemWidth();
                     }
-
-                    ImGui::EndTable();
+                    ImGui::PopItemWidth();
                 }
+
+                ImGui::EndTable();
             }
         }
         ImGui::EndChild();
@@ -1269,6 +1273,10 @@ namespace hex::plugin::builtin {
             ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 50_scaled);
 
             ImGui::TableHeadersRow();
+
+            if (sections.empty()) {
+                ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_sections"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
+            }
 
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
                 for (auto &[id, section] : sections) {
@@ -1364,6 +1372,10 @@ namespace hex::plugin::builtin {
             virtualFilePointers.emplace_back(&file);
 
         if (ImGui::BeginTable("Virtual File Tree", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
+            if (virtualFiles.empty()) {
+                ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_virtual_files"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
+            }
+            
             ImGui::TableSetupColumn("##path", ImGuiTableColumnFlags_WidthStretch);
             levelId = 1;
             drawVirtualFileTree(virtualFilePointers);
@@ -1375,7 +1387,6 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawDebugger(ImVec2 size) {
         const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-
 
         if (ImGui::BeginChild("##debugger", size, true)) {
             auto &evaluator = runtime.getInternals().evaluator;
