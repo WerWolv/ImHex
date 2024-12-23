@@ -322,23 +322,22 @@ namespace hex::plugin::builtin {
         if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
             static float height = 0;
             static bool dragging = false;
-
-            const auto availableSize = ImGui::GetContentRegionAvail();
+            const ImGuiContext& g = *GImGui;
+            if (g.CurrentWindow->Appearing)
+                return;
+            const auto availableSize = g.CurrentWindow->Size;
             const auto windowPosition = ImGui::GetCursorScreenPos();
             auto textEditorSize = availableSize;
             textEditorSize.y *= 3.5 / 5.0;
             textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-            textEditorSize.y += height;
+            textEditorSize.y = std::clamp(textEditorSize.y + height,200.0F, availableSize.y-200.0F);
 
-            if (availableSize.y > 1)
-                textEditorSize.y = std::clamp(textEditorSize.y, 1.0F, std::max(1.0F, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3));
-            const ImGuiContext& g = *GImGui;
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
                 if (name.contains(textEditorView) || name.contains(consoleView))
                     m_focusedSubWindowName = name;
             }
-            m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
+            m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, false);
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
