@@ -419,7 +419,7 @@ namespace hex::plugin::builtin {
                 setupGotoLine(editor);
             }
 
-            ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 2_scaled));
+            ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 4_scaled));
             if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
                 if (ImGui::IsItemHovered())
                     dragging = true;
@@ -1032,8 +1032,7 @@ namespace hex::plugin::builtin {
             ImGui::OpenPopup("##console_context_menu");
             m_consoleEditor.ClearRaiseContextMenu();
         }
-        if (!m_consoleEditor.HasSelection())
-            m_consoleEditor.SelectWordUnderCursor();
+
         const bool hasSelection = m_consoleEditor.HasSelection();
         if (ImGui::BeginPopup("##console_context_menu")) {
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.copy"_lang, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
