@@ -232,7 +232,7 @@ namespace hex::plugin::builtin {
         m_writable = true;
 
         if (!wolv::io::fs::exists(m_path)) {
-            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), ::strerror(ENOENT)));
+            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), std::system_category().message(ENOENT)));
             return false;
         }
 
@@ -243,7 +243,7 @@ namespace hex::plugin::builtin {
             file = wolv::io::File(m_path, wolv::io::File::Mode::Read);
             if (!file.isValid()) {
                 m_readable = false;
-                this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), ::strerror(errno)));
+                this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), std::system_category().message(errno)));
                 return false;
             }
 
@@ -315,7 +315,7 @@ namespace hex::plugin::builtin {
                 fullPath = path;
 
             if (!wolv::io::fs::exists(fullPath)) {
-                this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), ::strerror(ENOENT)));
+                this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), std::system_category().message(ENOENT)));
             }
 
             path = std::move(fullPath);
