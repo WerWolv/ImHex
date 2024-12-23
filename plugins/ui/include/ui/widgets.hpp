@@ -43,6 +43,9 @@ namespace hex::ui {
                 const auto width = ImGui::GetContentRegionAvail().x / 2 - ImGui::CalcTextSize(" - ").x / 2;
                 u64 start = region->getStartAddress(), end = region->getEndAddress();
 
+                if (end < start)
+                    end = start;
+
                 ImGui::PushItemWidth(width);
                 ImGuiExt::InputHexadecimal("##start", &start);
                 ImGui::PopItemWidth();
