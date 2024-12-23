@@ -306,7 +306,7 @@ public:
         auto text = GetText();
         return text.empty() || text == "\n";
     }
-
+    void SetTopLine();
 	void SetTextLines(const std::vector<std::string>& aLines);
 	std::vector<std::string> GetTextLines() const;
 
@@ -586,6 +586,7 @@ private:
     bool mScrollToBottom;
     float mTopMargin;
     float mNewTopMargin;
+    float mOldTopMargin;
     bool mTopMarginChanged=false;
 
 	int mTabSize;
@@ -599,6 +600,8 @@ private:
     float mLongest;
 	float mTextStart;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
 	int  mLeftMargin;
+    int mTopLine;
+    bool mSetTopLine;
 	bool mCursorPositionChanged;
     bool mBreakPointsChanged;
 	int mColorRangeMin, mColorRangeMax;
@@ -624,10 +627,10 @@ private:
 	uint64_t mStartTime;
 	std::vector<std::string> mDefines;
     TextEditor *mSourceCodeEditor=nullptr;
-    float m_linesAdded = 0;
-    float m_savedScrollY = 0;
-    float m_pixelsAdded = 0;
-    float m_shiftedScrollY = 0;
+    float mSavedScrollY = 0;
+    float mShiftedScrollY = 0;
+    float mScrollY = 0;
+    int mNumberOfLinesDisplayed;
 	float mLastClick;
     bool mShowCursor;
     bool mShowLineNumbers;
