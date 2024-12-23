@@ -576,7 +576,7 @@ private:
 
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
-	void Render();
+	void RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPos, const ImVec2 &textEditorSize);
 
 	float mLineSpacing = 1.0F;
 	Lines mLines;
@@ -597,6 +597,7 @@ private:
 	bool mScrollToTop = false;
 	bool mTextChanged = false;
 	bool mColorizerEnabled = true;
+    float mLineNumberFieldWidth = 0.0F;
     float mLongest = 0.0F;
 	float mTextStart = 20.0F;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
 	int  mLeftMargin = 10;
