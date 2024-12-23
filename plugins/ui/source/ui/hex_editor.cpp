@@ -281,7 +281,7 @@ namespace hex::ui {
 
 
 
-    void HexEditor::drawCell(u64 address, const u8 *data, size_t size, bool hovered, CellType cellType) {
+    void HexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType) {
         static DataVisualizerAscii asciiVisualizer;
 
         if (m_shouldUpdateEditingValue && address == m_editingAddress) {
@@ -320,6 +320,7 @@ namespace hex::ui {
                         std::memcpy(m_editingBytes.data(), data, size);
                     else if (m_mode == Mode::Insert) {
                         std::memset(m_editingBytes.data(), 0x00, size);
+                        std::memset(data, 0x00, size);
                         m_provider->insert(address, size);
                     }
 
