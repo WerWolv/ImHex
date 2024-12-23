@@ -1242,7 +1242,7 @@ namespace hex::ui {
             this->resetEditing();
         }
 
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - (ImGui::GetTextLineHeightWithSpacing() * 9.4F));
+        ImGui::PushItemWidth(-(ImGui::GetTextLineHeightWithSpacing() * 8));
         if (ImGuiExt::InputTextIcon("##Search", ICON_VS_FILTER, m_filterText)) {
             m_filter = parseRValueFilter(m_filterText).value_or(Filter{ });
             updateFilter();
