@@ -5,7 +5,7 @@
 #include <implot.h>
 #include <imgui.h>
 #include <miniaudio.h>
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 #include <hex/api/task_manager.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>

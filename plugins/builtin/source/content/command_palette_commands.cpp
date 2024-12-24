@@ -264,6 +264,17 @@ namespace hex::plugin::builtin {
                     return hex::format("Error: {}", *evaluator.getLastError());
                 else
                     return std::string("???");
+            }, [](auto input) -> std::optional<std::string> {
+                wolv::math_eval::MathEvaluator<long double> evaluator;
+                evaluator.registerStandardVariables();
+                evaluator.registerStandardFunctions();
+
+                std::optional<long double> result = evaluator.evaluate(input);
+                if (result.has_value()) {
+                    return hex::format("= {}", result.value());
+                } else {
+                    return std::nullopt;
+                }
             });
 
         ContentRegistry::CommandPaletteCommands::add(
@@ -275,6 +286,7 @@ namespace hex::plugin::builtin {
             },
             [](auto input) {
                 hex::openWebpage(input);
+                return std::nullopt;
             });
 
         ContentRegistry::CommandPaletteCommands::add(
@@ -286,6 +298,7 @@ namespace hex::plugin::builtin {
             },
             [](auto input) {
                 hex::executeCommand(input);
+                return std::nullopt;
             });
 
         ContentRegistry::CommandPaletteCommands::addHandler(

@@ -80,6 +80,12 @@ namespace hex::plugin::builtin {
         void registerEvents();
         void registerMenuItems();
 
+        /**
+        * Method dedicated to handling paste behaviour when using the normal "Paste" option.
+        * Decides what to do based on user settings, or opens a popup to let them decide.
+        */
+        void processPasteBehaviour(const Region &selection);
+
         ui::HexEditor m_hexEditor;
 
         bool m_shouldOpenPopup = false;

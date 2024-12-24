@@ -30,6 +30,8 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <implot.h>
 #include <implot_internal.h>
+#include <implot3d.h>
+#include <implot3d_internal.h>
 #include <imnodes.h>
 #include <imnodes_internal.h>
 
@@ -638,7 +640,7 @@ namespace hex {
 
                     // Pass on currently pressed keys to the shortcut handler
                     for (const auto &key : m_pressedKeys) {
-                        ShortcutManager::process(view.get(), io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
+                        ShortcutManager::process(view.get(), io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl, io.KeyAlt, io.KeyShift, io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper, focused, key);
                     }
 
                     ImGui::End();
@@ -648,7 +650,7 @@ namespace hex {
 
         // Handle global shortcuts
         for (const auto &key : m_pressedKeys) {
-            ShortcutManager::processGlobals(io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, key);
+            ShortcutManager::processGlobals(io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl, io.KeyAlt, io.KeyShift, io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper, key);
         }
 
         m_pressedKeys.clear();
@@ -883,7 +885,7 @@ namespace hex {
             // Register key press callback
             glfwSetInputMode(m_window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
             glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
-                hex::unused(mods);
+                std::ignore = mods;
 
 
                 // Handle A-Z keys using their ASCII value instead of the keycode
@@ -955,9 +957,10 @@ namespace hex {
         }
 
         // Initialize ImGui and all other ImGui extensions
-        GImGui   = ImGui::CreateContext(fonts);
-        GImPlot  = ImPlot::CreateContext();
-        GImNodes = ImNodes::CreateContext();
+        GImGui              = ImGui::CreateContext(fonts);
+        GImPlot             = ImPlot::CreateContext();
+        ImPlot3D::GImPlot3D = ImPlot3D::CreateContext();
+        GImNodes            = ImNodes::CreateContext();
 
         ImGuiIO &io       = ImGui::GetIO();
         ImGuiStyle &style = ImGui::GetStyle();
@@ -1054,6 +1057,7 @@ namespace hex {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
 
+        ImPlot3D::DestroyContext();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
     }

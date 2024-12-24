@@ -2,10 +2,10 @@
 
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/shortcut_manager.hpp>
 #include <hex/helpers/concepts.hpp>
 
 #include <functional>
-#include <map>
 #include <mutex>
 #include <span>
 #include <string>
@@ -24,7 +24,6 @@ enum ImGuiCustomCol : int;
 namespace hex {
 
     class View;
-    class Shortcut;
     class Task;
 
     namespace dp {
@@ -381,7 +380,7 @@ namespace hex {
                 };
 
                 using DisplayCallback = std::function<std::string(std::string)>;
-                using ExecuteCallback = std::function<void(std::string)>;
+                using ExecuteCallback = std::function<std::optional<std::string>(std::string)>;
                 using QueryCallback   = std::function<std::vector<QueryResult>(std::string)>;
 
                 struct Entry {
@@ -417,7 +416,7 @@ namespace hex {
                 const std::string &command,
                 const UnlocalizedString &unlocalizedDescription,
                 const impl::DisplayCallback &displayCallback,
-                const impl::ExecuteCallback &executeCallback = [](auto) {});
+                const impl::ExecuteCallback &executeCallback = [](auto) { return std::nullopt; });
 
             /**
              * @brief Adds a new command handler to the command palette
@@ -771,7 +770,7 @@ namespace hex {
                 struct MenuItem {
                     std::vector<UnlocalizedString> unlocalizedNames;
                     Icon icon;
-                    std::unique_ptr<Shortcut> shortcut;
+                    Shortcut shortcut;
                     View *view;
                     MenuCallback callback;
                     EnabledCallback enabledCallback;

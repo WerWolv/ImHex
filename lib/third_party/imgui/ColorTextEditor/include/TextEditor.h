@@ -76,8 +76,8 @@ public:
 		Coordinates() : mLine(0), mColumn(0) {}
 		Coordinates(int aLine, int aColumn) : mLine(aLine), mColumn(aColumn)
 		{
-			assert(aLine >= 0);
-			assert(aColumn >= 0);
+			IM_ASSERT(aLine >= 0);
+			IM_ASSERT(aColumn >= 0);
 		}
 		static Coordinates Invalid() { static Coordinates invalid(-1, -1); return invalid; }
 
@@ -306,7 +306,7 @@ public:
         auto text = GetText();
         return text.empty() || text == "\n";
     }
-
+    void SetTopLine();
 	void SetTextLines(const std::vector<std::string>& aLines);
 	std::vector<std::string> GetTextLines() const;
 
@@ -321,7 +321,6 @@ public:
         return this;
     }
 
-
     class FindReplaceHandler;
 
 public:
@@ -334,11 +333,20 @@ public:
     FindReplaceHandler *GetFindReplaceHandler() { return &mFindReplaceHandler; }
 	int GetTotalLines() const { return (int)mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
+    void SetTopMarginChanged(int newMargin) {
+        mNewTopMargin = newMargin;
+        mTopMarginChanged = true;
+    }
     void setFocusAtCoords(const Coordinates &coords) {
         mFocusAtCoords = coords;
         mUpdateFocus = true;
     }
     void SetOverwrite(bool aValue) { mOverwrite = aValue; }
+
+    std::string ReplaceStrings(std::string string, const std::string &search, const std::string &replace);
+    std::vector<std::string> SplitString(const std::string &string, const std::string &delimiter, bool removeEmpty);
+    std::string ReplaceTabsWithSpaces(const std::string& string, uint32_t tabSize);
+    std::string PreprocessText(const std::string &code);
 
 	void SetReadOnly(bool aValue);
 	bool IsReadOnly() const { return mReadOnly; }
@@ -551,6 +559,7 @@ private:
 	int GetCharacterColumn(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
     int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
+    int GetLongestLineLength() const;
     unsigned long long GetLineByteCount(int aLine) const;
 	int GetStringCharacterCount(std::string str) const;
 	int GetLineMaxColumn(int aLine) const;
@@ -567,60 +576,67 @@ private:
 
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
-	void Render();
+	void RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPos, const ImVec2 &textEditorSize);
 
-	float mLineSpacing;
+	float mLineSpacing = 1.0F;
 	Lines mLines;
-	EditorState mState;
+	EditorState mState = {};
 	UndoBuffer mUndoBuffer;
-	int mUndoIndex;
-    bool mScrollToBottom;
-    float mTopMargin;
+	int mUndoIndex = 0;
+    bool mScrollToBottom = false;
+    float mTopMargin = 0.0F;
+    float mNewTopMargin = 0.0F;
+    float mOldTopMargin = 0.0F;
+    bool mTopMarginChanged = false;
 
-	int mTabSize;
-	bool mOverwrite;
-	bool mReadOnly;
-	bool mWithinRender;
-	bool mScrollToCursor;
-	bool mScrollToTop;
-	bool mTextChanged;
-	bool mColorizerEnabled;
-	float mTextStart;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
-	int  mLeftMargin;
-	bool mCursorPositionChanged;
-    bool mBreakPointsChanged;
-	int mColorRangeMin, mColorRangeMax;
-	SelectionMode mSelectionMode;
-	bool mHandleKeyboardInputs;
-	bool mHandleMouseInputs;
-	bool mIgnoreImGuiChild;
-	bool mShowWhitespaces;
+	int mTabSize = 4;
+	bool mOverwrite = false;
+	bool mReadOnly = false;
+	bool mWithinRender = false;
+	bool mScrollToCursor = false;
+	bool mScrollToTop = false;
+	bool mTextChanged = false;
+	bool mColorizerEnabled = true;
+    float mLineNumberFieldWidth = 0.0F;
+    float mLongest = 0.0F;
+	float mTextStart = 20.0F;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
+	int  mLeftMargin = 10;
+    int mTopLine = 0;
+    bool mSetTopLine = false;
+	bool mCursorPositionChanged = false;
+    bool mBreakPointsChanged = false;
+	int mColorRangeMin = 0, mColorRangeMax = 0;
+	SelectionMode mSelectionMode = SelectionMode::Normal;
+	bool mHandleKeyboardInputs = true;
+	bool mHandleMouseInputs = true;
+	bool mIgnoreImGuiChild = false;
+	bool mShowWhitespaces = true;
 
 	static Palette sPaletteBase;
-	Palette mPalette;
-	LanguageDefinition mLanguageDefinition;
+	Palette mPalette = {};
+	LanguageDefinition mLanguageDefinition = {};
 	RegexList mRegexList;
-    bool mCheckComments;
-	Breakpoints mBreakpoints;
-	ErrorMarkers mErrorMarkers;
-    ErrorHoverBoxes mErrorHoverBoxes;
-    ErrorGotoBoxes mErrorGotoBoxes;
-    CursorBoxes mCursorBoxes;
-	ImVec2 mCharAdvance;
-	Coordinates mInteractiveStart, mInteractiveEnd;
+    bool mCheckComments = true;
+	Breakpoints mBreakpoints = {};
+	ErrorMarkers mErrorMarkers = {};
+    ErrorHoverBoxes mErrorHoverBoxes = {};
+    ErrorGotoBoxes mErrorGotoBoxes = {};
+    CursorBoxes mCursorBoxes = {};
+	ImVec2 mCharAdvance = {};
+	Coordinates mInteractiveStart = {}, mInteractiveEnd = {};
 	std::string mLineBuffer;
-	uint64_t mStartTime;
+	uint64_t mStartTime = 0;
 	std::vector<std::string> mDefines;
-    TextEditor *mSourceCodeEditor=nullptr;
-    float m_linesAdded = 0;
-    float m_savedScrollY = 0;
-    float m_pixelsAdded = 0;
-    float m_shiftedScrollY = 0;
-	float mLastClick;
-    bool mShowCursor;
-    bool mShowLineNumbers;
+    TextEditor *mSourceCodeEditor = nullptr;
+    float mSavedScrollY = 0;
+    float mShiftedScrollY = 0;
+    float mScrollY = 0;
+    int mNumberOfLinesDisplayed = 0;
+	float mLastClick = -1.0F;
+    bool mShowCursor = true;
+    bool mShowLineNumbers = true;
     bool mRaiseContextMenu = false;
-    Coordinates mFocusAtCoords;
+    Coordinates mFocusAtCoords = {};
     bool mUpdateFocus = false;
 
     std::vector<std::string>  mClickableText;

@@ -7,7 +7,7 @@
 #include <hex/helpers/crypto.hpp>
 
 #include <hex/ui/popup.hpp>
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <vector>
 
@@ -63,7 +63,7 @@ namespace hex::plugin::hashes {
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
-            hex::unused(data);
+            std::ignore = data;
 
             auto selection = ImHexApi::HexEditor::getSelection();
 
@@ -194,7 +194,7 @@ namespace hex::plugin::hashes {
         ImGui::EndDisabled();
 
         ImGui::SameLine();
-        ImGuiExt::HelpHover("hex.hashes.view.hashes.hover_info"_lang);
+        ImGuiExt::HelpHover("hex.hashes.view.hashes.hover_info"_lang, ICON_VS_INFO);
 
         if (ImGui::BeginTable("##hashes", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupColumn("hex.hashes.view.hashes.table.name"_lang);

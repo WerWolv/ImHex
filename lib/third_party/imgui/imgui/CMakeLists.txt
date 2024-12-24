@@ -20,7 +20,9 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         include/misc/freetype
     )
 
-    target_compile_options(imgui_imgui PRIVATE -Wno-unknown-warning-option)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(imgui_imgui PRIVATE -Wno-unknown-warning-option)
+    endif()
 
     find_package(Freetype REQUIRED)
 

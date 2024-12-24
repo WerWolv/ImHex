@@ -62,6 +62,7 @@ namespace hex::ui {
         void visit(pl::ptrn::PatternUnsigned& pattern) override;
         void visit(pl::ptrn::PatternWideCharacter& pattern) override;
         void visit(pl::ptrn::PatternWideString& pattern) override;
+        void visit(pl::ptrn::Pattern& pattern) override;
 
     private:
         constexpr static auto ChunkSize = 512;
@@ -87,6 +88,8 @@ namespace hex::ui {
         void resetEditing();
         void traversePatternTree(pl::ptrn::Pattern &pattern, std::vector<std::string> &patternPath, const std::function<void(pl::ptrn::Pattern&)> &callback);
         [[nodiscard]] std::string getDisplayName(const pl::ptrn::Pattern& pattern) const;
+
+        [[nodiscard]] std::vector<std::string> getPatternPath(const pl::ptrn::Pattern *pattern) const;
 
         struct Filter {
             std::vector<std::string> path;

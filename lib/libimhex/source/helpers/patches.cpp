@@ -28,7 +28,9 @@ namespace hex {
             void close() override { }
 
             void readRaw(u64 offset, void *buffer, size_t size) override {
-                hex::unused(offset, buffer, size);
+                std::ignore = offset;
+                std::ignore = buffer;
+                std::ignore = size;
             }
 
             void writeRaw(u64 offset, const void *buffer, size_t size) override {
@@ -44,7 +46,7 @@ namespace hex {
             }
 
             void resizeRaw(u64 newSize) override {
-                hex::unused(newSize);
+                std::ignore = newSize;
             }
 
             void insertRaw(u64 offset, u64 size) override {

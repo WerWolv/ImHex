@@ -191,6 +191,17 @@ namespace hex {
                 const auto entry       = insertOrGetEntry(subCategory->entries,    unlocalizedName);
 
                 entry->widget = std::move(widget);
+                if (entry->widget != nullptr) {
+                    onChange(unlocalizedCategory, unlocalizedName, [widget = entry->widget.get(), unlocalizedCategory, unlocalizedName](const SettingsValue &) {
+                        try {
+                            auto defaultValue = widget->store();
+                            widget->load(ContentRegistry::Settings::impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue));
+                            widget->onChanged();
+                        } catch (const std::exception &e) {
+                            log::error("Failed to load setting [{} / {}]: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+                        }
+                    });
+                }
 
                 return entry->widget.get();
             }
@@ -902,14 +913,21 @@ namespace hex {
                 coloredIcon.color = ImGuiCustomCol_ToolbarGray;
 
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, coloredIcon, std::make_unique<Shortcut>(shortcut), view, function, enabledCallback, selectedCallback, -1 }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, coloredIcon, shortcut, view, function, enabledCallback, selectedCallback, -1 }
             });
 
             if (shortcut != Shortcut::None) {
+                auto callbackIfEnabled  = [enabledCallback, function]{ if (enabledCallback()) { function(); } };
+
+                const auto unlocalizedShortcutName =
+                    unlocalizedMainMenuNames.size() == 1 ?
+                        std::vector { unlocalizedMainMenuNames.back() } :
+                        std::vector(unlocalizedMainMenuNames.begin() + 1, unlocalizedMainMenuNames.end());
+
                 if (shortcut.isLocal() && view != nullptr)
-                    ShortcutManager::addShortcut(view, shortcut, unlocalizedMainMenuNames.back(), function);
+                    ShortcutManager::addShortcut(view, shortcut, unlocalizedShortcutName, callbackIfEnabled);
                 else
-                    ShortcutManager::addGlobalShortcut(shortcut, unlocalizedMainMenuNames.back(), function);
+                    ShortcutManager::addGlobalShortcut(shortcut, unlocalizedShortcutName, callbackIfEnabled);
             }
         }
 
@@ -922,14 +940,14 @@ namespace hex {
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(), nullptr, function, enabledCallback, []{ return false; }, -1 }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, Shortcut::None, nullptr, function, enabledCallback, []{ return false; }, -1 }
             });
         }
 
         void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, "", std::make_unique<Shortcut>(), nullptr, []{}, []{ return true; }, []{ return false; }, -1 }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, "", Shortcut::None, nullptr, []{}, []{ return true; }, []{ return false; }, -1 }
             });
         }
 

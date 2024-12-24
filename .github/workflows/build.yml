@@ -206,15 +206,15 @@ jobs:
 
     - name: ⬇️ Install dependencies
       run: |
-        brew reinstall python 2>&1 >/dev/null || true
-        brew link --overwrite python 2>&1 >/dev/null || true
-        brew bundle --no-lock --file dist/Brewfile 2>&1 >/dev/null || true
+        brew reinstall python --quiet || true
+        brew link --overwrite --quiet python || true
+        brew bundle --no-lock --quiet --file dist/Brewfile || true
         rm -rf /usr/local/Cellar/capstone
 
     - name: ⬇️ Install classic glfw
       if: ${{! matrix.custom_glfw }}
       run: |
-        brew install glfw 2>&1 >/dev/null || true
+        brew install --quiet glfw || true
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v4
@@ -255,14 +255,15 @@ jobs:
         set -x
         mkdir -p build
         cd build
-        CC=$(brew --prefix gcc@12)/bin/gcc-12                                                       \
-        CXX=$(brew --prefix gcc@12)/bin/g++-12                                                      \
+        CC=$(brew --prefix llvm)/bin/clang                                                          \
+        CXX=$(brew --prefix llvm)/bin/clang++                                                       \
         OBJC=$(brew --prefix llvm)/bin/clang                                                        \
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
           -DIMHEX_GENERATE_PACKAGE=ON                                                               \
+          -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
@@ -304,7 +305,13 @@ jobs:
         cd bundle
         ln -s /Applications Applications
         cd ..
-        hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-x86_64.dmg
+        for i in $(seq 1 10); do
+            if hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-x86_64.dmg; then
+                echo "Created dmg after ${i} attempts"
+                break
+            fi
+            sleep 10
+        done
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v4
@@ -314,7 +321,7 @@ jobs:
         path: ./*.dmg
 
   macos-arm64-build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     name: 🍎 macOS 13 arm64
     outputs:
       IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
@@ -403,7 +410,13 @@ jobs:
           cd bundle
           ln -s /Applications Applications
           cd ..
-          hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{ env.IMHEX_VERSION }}-macOS-arm64.dmg
+          for i in $(seq 1 10); do
+              if hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{ env.IMHEX_VERSION }}-macOS-arm64.dmg; then
+                  echo "Created dmg after ${i} attempts"
+                  break
+              fi
+              sleep 10
+          done
 
       - name: ⬆️ Upload DMG
         uses: actions/upload-artifact@v4
@@ -418,11 +431,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - release_num: 22.04
-          - release_num: 24.04
+          - release_num: "24.04"
+          - release_num: "24.10"
 
     name: 🐧 Ubuntu ${{ matrix.release_num }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     container:
       image: "ubuntu:${{ matrix.release_num }}"
@@ -462,7 +475,7 @@ jobs:
           git config --global --add safe.directory '*'
           mkdir -p build
           cd build
-          CC=gcc-12 CXX=g++-12 cmake -G "Ninja"                       \
+          CC=gcc-14 CXX=g++-14 cmake -G "Ninja"                       \
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
             -DCMAKE_INSTALL_PREFIX="/usr"                             \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
@@ -497,7 +510,7 @@ jobs:
 
   # AppImage build
   appimage:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     name: ⬇️ AppImage
     steps:
       - name: 🧰 Checkout
@@ -541,7 +554,7 @@ jobs:
   # ArchLinux build
   archlinux-build:
     name: 🐧 ArchLinux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     container:
       image: archlinux:base-devel
@@ -648,20 +661,20 @@ jobs:
             release_num: rawhide
             mock_config: fedora-rawhide
           - name: Fedora
+            mock_release: f41
+            release_num: 41
+            mock_config: fedora-41
+          - name: Fedora
             mock_release: f40
             release_num: 40
             mock_config: fedora-40
-          - name: Fedora
-            mock_release: f39
-            release_num: 39
-            mock_config: fedora-39
           - name: RHEL-AlmaLinux
             mock_release: epel9
             release_num: 9
             mock_config: "alma+epel-9"
 
     name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     container:
       image: "almalinux:9"
@@ -737,7 +750,7 @@ jobs:
 
       - name: 📜 Fix ccache on EL9
         if: matrix.mock_release == 'epel9'
-        run: sed -i '/\. \/opt\/rh\/gcc-toolset-12\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+        run: sed -i '/\. \/opt\/rh\/gcc-toolset-14\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
 
       - name: 🟩 Copy spec file to build root
         run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec

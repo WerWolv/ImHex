@@ -12,13 +12,13 @@ namespace hex::plugin::builtin::undo {
             m_entry(std::move(entry)) { }
 
         void undo(prv::Provider *provider) override {
-            hex::unused(provider);
+            std::ignore = provider;
 
             ImHexApi::Bookmarks::remove(m_entry.id);
         }
 
         void redo(prv::Provider *provider) override {
-            hex::unused(provider);
+            std::ignore = provider;
 
             auto &[region, name, comment, color, locked, id] = m_entry;
 

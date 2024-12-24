@@ -28,7 +28,7 @@
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <content/recent.hpp>
 
@@ -192,7 +192,7 @@ namespace hex::plugin::builtin {
                     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
 
                     ImGui::Image(s_nightlyTexture, s_nightlyTexture.getSize());
-                    ImGuiExt::InfoTooltip("hex.builtin.welcome.nightly_build"_lang);
+                    ImGuiExt::InfoTooltip(hex::format("{0}\n\nCommit: {1}@{2}", "hex.builtin.welcome.nightly_build"_lang, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(true)).c_str());
 
                     ImGui::SetCursorPos(cursor);
                 }
@@ -538,7 +538,7 @@ namespace hex::plugin::builtin {
 
         // Clear project context if we go back to the welcome screen
         EventProviderChanged::subscribe([](const hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {
-            hex::unused(oldProvider);
+            std::ignore = oldProvider;
             if (newProvider == nullptr) {
                 ProjectFile::clearPath();
                 RequestUpdateWindowTitle::post();

@@ -20,7 +20,7 @@ permissions:
 jobs:
 
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     name: 🌍 WebAssembly
     steps:
     - name: 🧰 Checkout
@@ -49,7 +49,7 @@ jobs:
         chmod -c -R +rX "out/"
 
     - name: ⬆️ Upload artifacts
-      uses: actions/upload-pages-artifact@v2
+      uses: actions/upload-pages-artifact@v3
       with:
         path: out/
 
@@ -59,9 +59,8 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-          gh extension install actions/gh-actions-cache
-          gh actions-cache delete "build-web-cache" --confirm
-  
+          gh extension install actions/gh-actions-cache || true
+          gh actions-cache delete "build-web-cache" --confirm || true
 
   deploy:
     environment:
@@ -69,7 +68,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
       
     name: 📃 Deploy to GitHub Pages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     if: ${{ github.ref == 'refs/heads/master' && github.event.repository.fork == false }}
     needs: build
@@ -77,4 +76,4 @@ jobs:
     steps:
       - name: 🌍 Deploy
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4

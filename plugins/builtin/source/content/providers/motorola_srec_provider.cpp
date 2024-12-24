@@ -174,7 +174,7 @@ namespace hex::plugin::builtin {
     bool MotorolaSRECProvider::open() {
         auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), ::strerror(errno)));
+            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), std::system_category().message(errno)));
             return false;
         }
 

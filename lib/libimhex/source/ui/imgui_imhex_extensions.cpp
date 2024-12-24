@@ -969,10 +969,13 @@ namespace ImGuiExt {
     }
     
     bool InputTextIcon(const char *label, const char *icon, std::string &buffer, ImGuiInputTextFlags flags) {
+        return InputTextIconHint(label, icon, nullptr, buffer, flags);
+    }
+
+    bool InputTextIconHint(const char* label, const char *icon, const char *hint, std::string &buffer, ImGuiInputTextFlags flags) {
         auto window             = GetCurrentWindow();
         const ImGuiID id        = window->GetID(label);
         const ImGuiStyle &style = GImGui->Style;
-
 
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
         const ImVec2 icon_frame_size = CalcTextSize(icon) + style.FramePadding * 2.0F;
@@ -981,7 +984,9 @@ namespace ImGuiExt {
 
         SetCursorPosX(GetCursorPosX() + frame_size.x);
 
-        bool value_changed = InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth(), label_size.y + style.FramePadding.y * 2.0F), ImGuiInputTextFlags_CallbackResize | flags, UpdateStringSizeCallback, &buffer);
+        float width_adjustment = window->DC.ItemWidth < 0 ? 0 : icon_frame_size.x;
+
+        bool value_changed = InputTextEx(label, hint, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth() - width_adjustment, label_size.y + style.FramePadding.y * 2.0F), ImGuiInputTextFlags_CallbackResize | flags, UpdateStringSizeCallback, &buffer);
 
         if (value_changed)
             MarkItemEdited(GImGui->LastItemData.ID);
@@ -1164,17 +1169,19 @@ namespace ImGuiExt {
         return toggled;
     }
 
-    void TextOverlay(const char *text, ImVec2 pos) {
-        const auto textSize = CalcTextSize(text);
+    void TextOverlay(const char *text, ImVec2 pos, float maxWidth) {
+        const auto textSize = CalcTextSize(text, nullptr, false, maxWidth);
         const auto textPos  = pos - textSize / 2;
         const auto margin   = GetStyle().FramePadding * 2;
         const auto textRect = ImRect(textPos - margin, textPos + textSize + margin);
 
-        auto drawList = GetForegroundDrawList();
+        auto drawList = GetWindowDrawList();
 
+        drawList->AddDrawCmd();
         drawList->AddRectFilled(textRect.Min, textRect.Max, GetColorU32(ImGuiCol_WindowBg) | 0xFF000000);
         drawList->AddRect(textRect.Min, textRect.Max, GetColorU32(ImGuiCol_Border));
-        drawList->AddText(textPos, GetColorU32(ImGuiCol_Text), text);
+        drawList->AddDrawCmd();
+        drawList->AddText(nullptr, 0.0F, textPos, GetColorU32(ImGuiCol_Text), text, nullptr, maxWidth);
     }
 
     bool BeginBox() {

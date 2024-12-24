@@ -104,7 +104,8 @@ namespace hex::prv {
 
     void Provider::insertRaw(u64 offset, u64 size) {
         auto oldSize = this->getActualSize();
-        this->resizeRaw(oldSize + size);
+        auto newSize = oldSize + size;
+        this->resizeRaw(newSize);
 
         std::vector<u8> buffer(0x1000);
         const std::vector<u8> zeroBuffer(0x1000);
@@ -116,7 +117,7 @@ namespace hex::prv {
             position -= readSize;
 
             this->readRaw(position, buffer.data(), readSize);
-            this->writeRaw(position, zeroBuffer.data(), readSize);
+            this->writeRaw(position, zeroBuffer.data(), newSize - oldSize);
             this->writeRaw(position + size, buffer.data(), readSize);
         }
     }

@@ -1,4 +1,4 @@
-// dear imgui, v1.91.5
+// dear imgui, v1.91.6
 // (widgets code)
 
 /*
@@ -956,7 +956,7 @@ void ImGui::Scrollbar(ImGuiAxis axis)
 // - We store values as normalized ratio and in a form that allows the window content to change while we are holding on a scrollbar
 // - We handle both horizontal and vertical scrollbars, which makes the terminology not ideal.
 // Still, the code should probably be made simpler..
-bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS64* p_scroll_v, ImS64 size_visible_v, ImS64 size_contents_v, ImDrawFlags flags)
+bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS64* p_scroll_v, ImS64 size_visible_v, ImS64 size_contents_v, ImDrawFlags draw_rounding_flags)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -1047,7 +1047,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     // Render
     const ImU32 bg_col = GetColorU32(ImGuiCol_ScrollbarBg);
     const ImU32 grab_col = GetColorU32(held ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_ScrollbarGrab, alpha);
-    window->DrawList->AddRectFilled(bb_frame.Min, bb_frame.Max, bg_col, window->WindowRounding, flags);
+    window->DrawList->AddRectFilled(bb_frame.Min, bb_frame.Max, bg_col, window->WindowRounding, draw_rounding_flags);
     ImRect grab_rect;
     if (axis == ImGuiAxis_X)
         grab_rect = ImRect(ImLerp(bb.Min.x, bb.Max.x, grab_v_norm), bb.Min.y, ImLerp(bb.Min.x, bb.Max.x, grab_v_norm) + grab_h_pixels, bb.Max.y);
@@ -1079,9 +1079,7 @@ void ImGui::Image(ImTextureID user_texture_id, const ImVec2& image_size, const I
     window->DrawList->AddImage(user_texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
 }
 
-// ImageButton() is flawed as 'id' is always derived from 'texture_id' (see #2464 #1390)
-// We provide this internal helper to write your own variant while we figure out how to redesign the public ImageButton() API.
-bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& bg_col, const ImVec4& tint_col, ImGuiButtonFlags flags)
+bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID user_texture_id, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& bg_col, const ImVec4& tint_col, ImGuiButtonFlags flags)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = GetCurrentWindow();
@@ -1103,12 +1101,13 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& imag
     RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
     if (bg_col.w > 0.0f)
         window->DrawList->AddRectFilled(bb.Min + padding, bb.Max - padding, GetColorU32(bg_col));
-    window->DrawList->AddImage(texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
+    window->DrawList->AddImage(user_texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
 
     return pressed;
 }
 
-// Note that ImageButton() adds style.FramePadding*2.0f to provided size. This is in order to facilitate fitting an image in a button.
+// - ImageButton() adds style.FramePadding*2.0f to provided size. This is in order to facilitate fitting an image in a button.
+// - ImageButton() draws a background based on regular Button() color + optionally an inner background if specified. (#8165) // FIXME: Maybe that's not the best design?
 bool ImGui::ImageButton(const char* str_id, ImTextureID user_texture_id, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& bg_col, const ImVec4& tint_col)
 {
     ImGuiContext& g = *GImGui;
@@ -1121,7 +1120,7 @@ bool ImGui::ImageButton(const char* str_id, ImTextureID user_texture_id, const I
 
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 // Legacy API obsoleted in 1.89. Two differences with new ImageButton()
-// - old ImageButton() used ImTextureId as item id (created issue with multiple buttons with same image, transient texture id values, opaque computation of ID)
+// - old ImageButton() used ImTextureID as item id (created issue with multiple buttons with same image, transient texture id values, opaque computation of ID)
 // - new ImageButton() requires an explicit 'const char* str_id'
 // - old ImageButton() had frame_padding' override argument.
 // - new ImageButton() always use style.FramePadding.
@@ -3336,7 +3335,8 @@ bool ImGui::SliderAngle(const char* label, float* v_rad, float v_degrees_min, fl
         format = "%.0f deg";
     float v_deg = (*v_rad) * 360.0f / (2 * IM_PI);
     bool value_changed = SliderFloat(label, &v_deg, v_degrees_min, v_degrees_max, format, flags);
-    *v_rad = v_deg * (2 * IM_PI) / 360.0f;
+    if (value_changed)
+        *v_rad = v_deg * (2 * IM_PI) / 360.0f;
     return value_changed;
 }
 
@@ -4409,6 +4409,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
     IM_ASSERT(buf != NULL && buf_size >= 0);
     IM_ASSERT(!((flags & ImGuiInputTextFlags_CallbackHistory) && (flags & ImGuiInputTextFlags_Multiline)));        // Can't use both together (they both use up/down keys)
     IM_ASSERT(!((flags & ImGuiInputTextFlags_CallbackCompletion) && (flags & ImGuiInputTextFlags_AllowTabInput))); // Can't use both together (they both use tab key)
+    IM_ASSERT(!((flags & ImGuiInputTextFlags_ElideLeft) && (flags & ImGuiInputTextFlags_Multiline)));               // Multiline will not work with left-trimming
 
     ImGuiContext& g = *GImGui;
     ImGuiIO& io = g.IO;
@@ -4544,6 +4545,11 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         state->TextLen = (int)strlen(buf);
         memcpy(state->TextA.Data, buf, state->TextLen + 1);
 
+        // Find initial scroll position for right alignment
+        state->Scroll = ImVec2(0.0f, 0.0f);
+        if (flags & ImGuiInputTextFlags_ElideLeft)
+            state->Scroll.x += ImMax(0.0f, CalcTextSize(buf).x - frame_size.x + style.FramePadding.x * 2.0f);
+
         if (recycle_state)
         {
             // Recycle existing cursor/selection/undo stack but clamp position
@@ -4552,7 +4558,6 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         }
         else
         {
-            state->Scroll = ImVec2(0.0f, 0.0f);
             stb_textedit_initialize_state(state->Stb, !is_multiline);
         }
 
@@ -5294,8 +5299,13 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
 
         if (is_multiline || (buf_display_end - buf_display) < buf_display_max_length)
         {
+            // Find render position for right alignment
+            if (flags & ImGuiInputTextFlags_ElideLeft)
+                draw_pos.x = ImMin(draw_pos.x, frame_bb.Max.x - CalcTextSize(buf_display, NULL).x - style.FramePadding.x);
+
+            const ImVec2 draw_scroll = /*state ? ImVec2(state->Scroll.x, 0.0f) :*/ ImVec2(0.0f, 0.0f); // Preserve scroll when inactive?
             ImU32 col = GetColorU32(is_displaying_hint ? ImGuiCol_TextDisabled : ImGuiCol_Text);
-            draw_window->DrawList->AddText(g.Font, g.FontSize, draw_pos, col, buf_display, buf_display_end, 0.0f, is_multiline ? NULL : &clip_rect);
+            draw_window->DrawList->AddText(g.Font, g.FontSize, draw_pos - draw_scroll, col, buf_display, buf_display_end, 0.0f, is_multiline ? NULL : &clip_rect);
         }
     }
 

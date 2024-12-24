@@ -73,8 +73,11 @@ addPluginDirectories()
 
 # Add unit tests
 if (IMHEX_ENABLE_UNIT_TESTS)
-    enable_testing()
-    add_subdirectory(tests EXCLUDE_FROM_ALL)
+    if (NOT TARGET unit_tests)
+        enable_testing()
+        add_custom_target(unit_tests)
+        add_subdirectory(tests EXCLUDE_FROM_ALL)
+    endif ()
 endif ()
 
 # Configure more resources that will be added to the install package

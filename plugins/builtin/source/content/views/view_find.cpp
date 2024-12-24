@@ -5,7 +5,7 @@
 
 #include <hex/providers/buffered_reader.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <array>
 #include <ranges>
@@ -21,7 +21,8 @@ namespace hex::plugin::builtin {
         const static auto HighlightColor = [] { return (ImGuiExt::GetCustomColorU32(ImGuiCustomCol_FindHighlight) & 0x00FFFFFF) | 0x70000000; };
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
-            hex::unused(data, size);
+            std::ignore = data;
+            std::ignore = size;
 
             if (m_searchTask.isRunning())
                 return { };
@@ -33,7 +34,8 @@ namespace hex::plugin::builtin {
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8* data, size_t size) {
-            hex::unused(data, size);
+            std::ignore = data;
+            std::ignore = size;
 
             if (m_searchTask.isRunning())
                 return;
@@ -692,6 +694,8 @@ namespace hex::plugin::builtin {
                         ImGui::EndCombo();
                     }
 
+                    ImGui::NewLine();
+
                     if (ImGui::CollapsingHeader("hex.builtin.view.find.strings.match_settings"_lang)) {
                         ImGui::Checkbox("hex.builtin.view.find.strings.null_term"_lang, &settings.nullTermination);
 
@@ -714,7 +718,7 @@ namespace hex::plugin::builtin {
 
                     mode = SearchSettings::Mode::Sequence;
 
-                    ImGuiExt::InputTextIcon("hex.ui.common.value"_lang, ICON_VS_SYMBOL_KEY, settings.sequence);
+                    ImGuiExt::InputTextIconHint("hex.ui.common.value"_lang, ICON_VS_SYMBOL_KEY, "String", settings.sequence);
 
                     if (ImGui::BeginCombo("hex.ui.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
                         for (size_t i = 0; i < StringTypes.size() - 2; i++) {
@@ -755,7 +759,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::NewLine();
 
-                    ImGuiExt::InputTextIcon("hex.builtin.view.find.regex.pattern"_lang, ICON_VS_REGEX, settings.pattern);
+                    ImGuiExt::InputTextIconHint("hex.builtin.view.find.regex.pattern"_lang, ICON_VS_REGEX, "[A-Za-z]{2}\\d{3}", settings.pattern);
 
                     try {
                         boost::regex regex(settings.pattern);
@@ -776,7 +780,7 @@ namespace hex::plugin::builtin {
 
                     mode = SearchSettings::Mode::BinaryPattern;
 
-                    ImGuiExt::InputTextIcon("hex.builtin.view.find.binary_pattern"_lang, ICON_VS_SYMBOL_NAMESPACE, settings.input);
+                    ImGuiExt::InputTextIconHint("hex.builtin.view.find.binary_pattern"_lang, ICON_VS_SYMBOL_NAMESPACE, "AA BB ?? ?D \"XYZ\"", settings.input);
 
                     constexpr static u32 min = 1, max = 0x1000;
                     ImGui::SliderScalar("hex.builtin.view.find.binary_pattern.alignment"_lang, ImGuiDataType_U32, &settings.alignment, &min, &max);

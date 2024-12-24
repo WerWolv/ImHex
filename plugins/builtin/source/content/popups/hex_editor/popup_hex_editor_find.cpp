@@ -6,10 +6,9 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
-#include <fonts/codicons_font.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <bit>
-#include <codecvt>
 
 namespace hex::plugin::builtin {
 
@@ -286,8 +285,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case Encoding::UTF16: {
-                        std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> convert16;
-                        auto utf16 = convert16.from_bytes(s_inputString);
+                        auto utf16 = wolv::util::utf8ToUtf16(s_inputString);
 
                         for (auto &c: utf16) {
                             swapEndianness(c, Encoding::UTF16, m_stringEndianness);
@@ -299,8 +297,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case Encoding::UTF32: {
-                        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert32;
-                        auto utf32 = convert32.from_bytes(s_inputString);
+                        auto utf32 = wolv::util::utf8ToUtf32(s_inputString);
 
                         for (auto &c: utf32) {
                             swapEndianness(c, Encoding::UTF32, m_stringEndianness);

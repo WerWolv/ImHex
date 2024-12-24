@@ -7,7 +7,7 @@
 #include <string_view>
 #include <vector>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <wolv/types/static_string.hpp>
 
 namespace hex {

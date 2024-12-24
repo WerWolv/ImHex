@@ -3,7 +3,6 @@
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
 
-#include <hex/helpers/intrinsics.hpp>
 #include <hex/data_processor/attribute.hpp>
 
 #include <set>
@@ -47,8 +46,8 @@ namespace hex::dp {
         virtual void process() = 0;
         virtual void reset() { }
 
-        virtual void store(nlohmann::json &j) const { hex::unused(j); }
-        virtual void load(const nlohmann::json &j) { hex::unused(j); }
+        virtual void store(nlohmann::json &j) const { std::ignore = j; }
+        virtual void load(const nlohmann::json &j) { std::ignore = j; }
 
         struct NodeError {
             Node *node;

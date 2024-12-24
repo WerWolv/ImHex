@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
         ~InformationProvider() override = default;
 
         void process(Task &task, prv::Provider *provider, Region region) override {
-            hex::unused(task);
+            std::ignore = task;
 
             m_provider = provider;
             m_region   = region;
@@ -418,11 +418,31 @@ class InformationByteRelationshipAnalysis : public ContentRegistry::DataInformat
         void drawContent() override {
             auto availableWidth = ImGui::GetContentRegionAvail().x;
 
-            ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.digram"_lang);
-            m_digram.draw({ availableWidth, availableWidth });
+            if (availableWidth > 750_scaled) {
+                availableWidth /= 2;
+                availableWidth -= ImGui::GetStyle().FramePadding.x;
 
-            ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.layered_distribution"_lang);
-            m_layeredDistribution.draw({ availableWidth, availableWidth });
+                if (ImGui::BeginTable("##RelationshipTable", 2)) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
+                    ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.digram"_lang);
+                    m_digram.draw({ availableWidth, availableWidth });
+
+                    ImGui::TableNextColumn();
+
+                    ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.layered_distribution"_lang);
+                    m_layeredDistribution.draw({ availableWidth, availableWidth });
+
+                    ImGui::EndTable();
+                }
+            } else {
+                ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.digram"_lang);
+                m_digram.draw({ availableWidth, availableWidth });
+
+                ImGui::TextUnformatted("hex.builtin.information_section.relationship_analysis.layered_distribution"_lang);
+                m_layeredDistribution.draw({ availableWidth, availableWidth });
+            }
         }
 
         void load(const nlohmann::json &data) override {

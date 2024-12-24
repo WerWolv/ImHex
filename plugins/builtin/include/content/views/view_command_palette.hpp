@@ -5,6 +5,7 @@
 #include <imgui.h>
 
 #include <vector>
+#include <hex/api/content_registry.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -35,7 +36,7 @@ namespace hex::plugin::builtin {
         struct CommandResult {
             std::string displayResult;
             std::string matchedCommand;
-            std::function<void(std::string)> executeCallback;
+            ContentRegistry::CommandPaletteCommands::impl::ExecuteCallback executeCallback;
         };
 
         bool m_commandPaletteOpen = false;

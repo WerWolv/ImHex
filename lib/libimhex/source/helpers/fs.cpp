@@ -51,13 +51,11 @@ namespace hex::fs {
         }
 
         #if defined(OS_WINDOWS)
-            hex::unused(
-                ShellExecuteW(nullptr, L"open", filePath.c_str(), nullptr, nullptr, SW_SHOWNORMAL)
-            );
+        std::ignore = ShellExecuteW(nullptr, L"open", filePath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
-            hex::unused(system(
+            std::ignore = system(
                 hex::format("open {}", wolv::util::toUTF8String(filePath)).c_str()
-            ));
+            );
         #elif defined(OS_LINUX)
             executeCmd({"xdg-open", wolv::util::toUTF8String(filePath)});
         #endif
@@ -73,9 +71,9 @@ namespace hex::fs {
             auto args = fmt::format(L"\"{}\"", dirPath.c_str());
             ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
-            hex::unused(system(
+            std::ignore = system(
                 hex::format("open {}", wolv::util::toUTF8String(dirPath)).c_str()
-            ));
+            );
         #elif defined(OS_LINUX)
             executeCmd({"xdg-open", wolv::util::toUTF8String(dirPath)});
         #endif
@@ -91,12 +89,12 @@ namespace hex::fs {
             auto args = fmt::format(L"/select,\"{}\"", selectedFilePath.c_str());
             ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
-            hex::unused(system(
+            std::ignore = system(
                 hex::format(
                     R"(osascript -e 'tell application "Finder" to reveal POSIX file "{}"')",
                     wolv::util::toUTF8String(selectedFilePath)
                 ).c_str()
-            ));
+            );
             system(R"(osascript -e 'tell application "Finder" to activate')");
         #elif defined(OS_LINUX)
             // Fallback to only opening the folder for now

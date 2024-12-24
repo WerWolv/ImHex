@@ -4,8 +4,8 @@
 
 #include <hex/helpers/utils.hpp>
 
-#include <fonts/codicons_font.h>
-#include <fonts/blendericons_font.h>
+#include <fonts/vscode_icons.hpp>
+#include <fonts/blender_icons.hpp>
 
 namespace hex::fonts {
 
@@ -26,7 +26,7 @@ namespace hex::fonts {
             },
             { -1_scaled, -1_scaled });
 
-        ImHexApi::Fonts::loadFont("Unifont", romfs::get("fonts/unifont.otf").span<u8>(), {}, {}, 0, 16);
+        ImHexApi::Fonts::loadFont("Unifont", romfs::get("fonts/unifont.otf").span<u8>(), { }, {}, 0, 16);
     }
 
 }

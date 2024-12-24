@@ -15,13 +15,252 @@ namespace hex {
 
     }
 
+    Shortcut operator+(const Key &lhs, const Key &rhs) {
+        Shortcut result;
+        result.m_keys = { lhs, rhs };
+
+        return result;
+    }
+
+    Shortcut::Shortcut(Keys key) : m_keys({ key }) {
+
+    }
+    Shortcut::Shortcut(std::set<Key> keys) : m_keys(std::move(keys)) {
+
+    }
+
+    Shortcut Shortcut::operator+(const Key &other) const {
+        Shortcut result = *this;
+        result.m_keys.insert(other);
+
+        return result;
+    }
+
+    Shortcut& Shortcut::operator+=(const Key &other) {
+        m_keys.insert(other);
+
+        return *this;
+    }
+
+    bool Shortcut::operator<(const Shortcut &other) const {
+        return m_keys < other.m_keys;
+    }
+
+    bool Shortcut::operator==(const Shortcut &other) const {
+        return m_keys == other.m_keys;
+    }
+
+    bool Shortcut::isLocal() const {
+        return m_keys.contains(CurrentView);
+    }
+
+    const std::set<Key>& Shortcut::getKeys() const {
+        return m_keys;
+    }
+
+    bool Shortcut::has(Key key) const {
+        return m_keys.contains(key);
+    }
+
+    bool Shortcut::matches(const Shortcut& other) const {
+        auto left = this->m_keys;
+        auto right = other.m_keys;
+
+        left.erase(CurrentView);
+        left.erase(AllowWhileTyping);
+        right.erase(CurrentView);
+        right.erase(AllowWhileTyping);
+
+        return left == right;
+    }
+
+
+    std::string Shortcut::toString() const {
+        std::string result;
+
+        #if defined(OS_MACOS)
+            constexpr static auto CTRL_NAME     = "⌃";
+            constexpr static auto ALT_NAME      = "⌥";
+            constexpr static auto SHIFT_NAME    = "⇧";
+            constexpr static auto SUPER_NAME    = "⌘";
+            constexpr static auto Concatination = " ";
+        #else
+            constexpr static auto CTRL_NAME     = "CTRL";
+            constexpr static auto ALT_NAME      = "ALT";
+            constexpr static auto SHIFT_NAME    = "SHIFT";
+            constexpr static auto SUPER_NAME    = "SUPER";
+            constexpr static auto Concatination = " + ";
+        #endif
+
+        auto keys = m_keys;
+        if (keys.erase(CTRL) > 0) {
+            result += CTRL_NAME;
+            result += Concatination;
+        }
+        if (keys.erase(ALT) > 0) {
+            result += ALT_NAME;
+            result += Concatination;
+        }
+        if (keys.erase(SHIFT) > 0) {
+            result += SHIFT_NAME;
+            result += Concatination;
+        }
+        if (keys.erase(SUPER) > 0) {
+            result += SUPER_NAME;
+            result += Concatination;
+        }
+        keys.erase(CurrentView);
+
+        for (const auto &key : keys) {
+            switch (Keys(key.getKeyCode())) {
+                case Keys::Space:           result += "⎵";              break;
+                case Keys::Apostrophe:      result += "'";              break;
+                case Keys::Comma:           result += ",";              break;
+                case Keys::Minus:           result += "-";              break;
+                case Keys::Period:          result += ".";              break;
+                case Keys::Slash:           result += "/";              break;
+                case Keys::Num0:            result += "0";              break;
+                case Keys::Num1:            result += "1";              break;
+                case Keys::Num2:            result += "2";              break;
+                case Keys::Num3:            result += "3";              break;
+                case Keys::Num4:            result += "4";              break;
+                case Keys::Num5:            result += "5";              break;
+                case Keys::Num6:            result += "6";              break;
+                case Keys::Num7:            result += "7";              break;
+                case Keys::Num8:            result += "8";              break;
+                case Keys::Num9:            result += "9";              break;
+                case Keys::Semicolon:       result += ";";              break;
+                case Keys::Equals:          result += "=";              break;
+                case Keys::A:               result += "A";              break;
+                case Keys::B:               result += "B";              break;
+                case Keys::C:               result += "C";              break;
+                case Keys::D:               result += "D";              break;
+                case Keys::E:               result += "E";              break;
+                case Keys::F:               result += "F";              break;
+                case Keys::G:               result += "G";              break;
+                case Keys::H:               result += "H";              break;
+                case Keys::I:               result += "I";              break;
+                case Keys::J:               result += "J";              break;
+                case Keys::K:               result += "K";              break;
+                case Keys::L:               result += "L";              break;
+                case Keys::M:               result += "M";              break;
+                case Keys::N:               result += "N";              break;
+                case Keys::O:               result += "O";              break;
+                case Keys::P:               result += "P";              break;
+                case Keys::Q:               result += "Q";              break;
+                case Keys::R:               result += "R";              break;
+                case Keys::S:               result += "S";              break;
+                case Keys::T:               result += "T";              break;
+                case Keys::U:               result += "U";              break;
+                case Keys::V:               result += "V";              break;
+                case Keys::W:               result += "W";              break;
+                case Keys::X:               result += "X";              break;
+                case Keys::Y:               result += "Y";              break;
+                case Keys::Z:               result += "Z";              break;
+                case Keys::LeftBracket:     result += "[";              break;
+                case Keys::Backslash:       result += "\\";             break;
+                case Keys::RightBracket:    result += "]";              break;
+                case Keys::GraveAccent:     result += "`";              break;
+                case Keys::World1:          result += "WORLD1";         break;
+                case Keys::World2:          result += "WORLD2";         break;
+                case Keys::Escape:          result += "ESC";            break;
+                case Keys::Enter:           result += "⏎";              break;
+                case Keys::Tab:             result += "⇥";              break;
+                case Keys::Backspace:       result += "⌫";              break;
+                case Keys::Insert:          result += "INSERT";         break;
+                case Keys::Delete:          result += "DELETE";         break;
+                case Keys::Right:           result += "RIGHT";          break;
+                case Keys::Left:            result += "LEFT";           break;
+                case Keys::Down:            result += "DOWN";           break;
+                case Keys::Up:              result += "UP";             break;
+                case Keys::PageUp:          result += "PAGEUP";         break;
+                case Keys::PageDown:        result += "PAGEDOWN";       break;
+                case Keys::Home:            result += "HOME";           break;
+                case Keys::End:             result += "END";            break;
+                case Keys::CapsLock:        result += "⇪";              break;
+                case Keys::ScrollLock:      result += "SCROLLLOCK";     break;
+                case Keys::NumLock:         result += "NUMLOCK";        break;
+                case Keys::PrintScreen:     result += "PRINTSCREEN";    break;
+                case Keys::Pause:           result += "PAUSE";          break;
+                case Keys::F1:              result += "F1";             break;
+                case Keys::F2:              result += "F2";             break;
+                case Keys::F3:              result += "F3";             break;
+                case Keys::F4:              result += "F4";             break;
+                case Keys::F5:              result += "F5";             break;
+                case Keys::F6:              result += "F6";             break;
+                case Keys::F7:              result += "F7";             break;
+                case Keys::F8:              result += "F8";             break;
+                case Keys::F9:              result += "F9";             break;
+                case Keys::F10:             result += "F10";            break;
+                case Keys::F11:             result += "F11";            break;
+                case Keys::F12:             result += "F12";            break;
+                case Keys::F13:             result += "F13";            break;
+                case Keys::F14:             result += "F14";            break;
+                case Keys::F15:             result += "F15";            break;
+                case Keys::F16:             result += "F16";            break;
+                case Keys::F17:             result += "F17";            break;
+                case Keys::F18:             result += "F18";            break;
+                case Keys::F19:             result += "F19";            break;
+                case Keys::F20:             result += "F20";            break;
+                case Keys::F21:             result += "F21";            break;
+                case Keys::F22:             result += "F22";            break;
+                case Keys::F23:             result += "F23";            break;
+                case Keys::F24:             result += "F24";            break;
+                case Keys::F25:             result += "F25";            break;
+                case Keys::KeyPad0:         result += "KP0";            break;
+                case Keys::KeyPad1:         result += "KP1";            break;
+                case Keys::KeyPad2:         result += "KP2";            break;
+                case Keys::KeyPad3:         result += "KP3";            break;
+                case Keys::KeyPad4:         result += "KP4";            break;
+                case Keys::KeyPad5:         result += "KP5";            break;
+                case Keys::KeyPad6:         result += "KP6";            break;
+                case Keys::KeyPad7:         result += "KP7";            break;
+                case Keys::KeyPad8:         result += "KP8";            break;
+                case Keys::KeyPad9:         result += "KP9";            break;
+                case Keys::KeyPadDecimal:   result += "KPDECIMAL";      break;
+                case Keys::KeyPadDivide:    result += "KPDIVIDE";       break;
+                case Keys::KeyPadMultiply:  result += "KPMULTIPLY";     break;
+                case Keys::KeyPadSubtract:  result += "KPSUBTRACT";     break;
+                case Keys::KeyPadAdd:       result += "KPADD";          break;
+                case Keys::KeyPadEnter:     result += "KPENTER";        break;
+                case Keys::KeyPadEqual:     result += "KPEQUAL";        break;
+                case Keys::Menu:            result += "MENU";           break;
+                default:
+                    continue;
+            }
+
+            result += Concatination;
+        }
+
+        if (result.ends_with(Concatination))
+            result = result.substr(0, result.size() - strlen(Concatination));
+
+        return result;
+    }
+
+
+    void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const std::function<void()> &callback) {
+        log::debug("Adding global shortcut {} for {}", shortcut.toString(), unlocalizedName.back().get());
+        auto [it, inserted] = s_globalShortcuts->insert({ shortcut, { shortcut, unlocalizedName, callback } });
+        if (!inserted) log::error("Failed to add shortcut!");
+    }
 
     void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const std::function<void()> &callback) {
-        s_globalShortcuts->insert({ shortcut, { shortcut, unlocalizedName, callback } });
+        log::debug("Adding global shortcut {} for {}", shortcut.toString(), unlocalizedName.get());
+        auto [it, inserted] = s_globalShortcuts->insert({ shortcut, { shortcut, { unlocalizedName }, callback } });
+        if (!inserted) log::error("Failed to add shortcut!");
+    }
+
+    void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const std::function<void()> &callback) {
+        log::debug("Adding shortcut {} for {}", shortcut.toString(), unlocalizedName.back().get());
+        auto [it, inserted] = view->m_shortcuts.insert({ shortcut + CurrentView, { shortcut, unlocalizedName, callback } });
+        if (!inserted) log::error("Failed to add shortcut!");
     }
 
     void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const std::function<void()> &callback) {
-        view->m_shortcuts.insert({ shortcut + CurrentView, { shortcut, unlocalizedName, callback } });
+        log::debug("Adding shortcut {} for {}", shortcut.toString(), unlocalizedName.get());
+        auto [it, inserted] = view->m_shortcuts.insert({ shortcut + CurrentView, { shortcut, { unlocalizedName }, callback } });
+        if (!inserted) log::error("Failed to add shortcut!");
     }
 
     static Shortcut getShortcut(bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
@@ -37,6 +276,8 @@ namespace hex {
             pressedShortcut += SUPER;
         if (focused)
             pressedShortcut += CurrentView;
+        if (ImGui::GetIO().WantTextInput)
+            pressedShortcut += AllowWhileTyping;
 
         pressedShortcut += static_cast<Keys>(keyCode);
 
@@ -49,11 +290,9 @@ namespace hex {
         if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
             return;
 
-        if (shortcuts.contains(shortcut + AllowWhileTyping)) {
-            shortcuts.at(shortcut + AllowWhileTyping).callback();
-        } else if (shortcuts.contains(shortcut)) {
-            if (!ImGui::GetIO().WantTextInput)
-                shortcuts.at(shortcut).callback();
+        if (auto it = shortcuts.find(shortcut); it != shortcuts.end()) {
+            const auto &[foundShortcut, entry] = *it;
+            entry.callback();
         }
     }
 
@@ -122,9 +361,12 @@ namespace hex {
         return true;
     }
 
-    bool ShortcutManager::updateShortcut(const Shortcut &oldShortcut, const Shortcut &newShortcut, View *view) {
-        if (oldShortcut == newShortcut)
+    bool ShortcutManager::updateShortcut(const Shortcut &oldShortcut, Shortcut newShortcut, View *view) {
+        if (oldShortcut.matches(newShortcut))
             return true;
+
+        if (oldShortcut.has(AllowWhileTyping))
+            newShortcut += AllowWhileTyping;
 
         bool result;
         if (view != nullptr) {
@@ -134,9 +376,9 @@ namespace hex {
         }
 
         if (result) {
-            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                if (menuItem.view == view && *menuItem.shortcut == oldShortcut) {
-                    *menuItem.shortcut = newShortcut;
+            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable()) {
+                if (menuItem.view == view && menuItem.shortcut == oldShortcut) {
+                    menuItem.shortcut = newShortcut;
                     break;
                 }
             }
