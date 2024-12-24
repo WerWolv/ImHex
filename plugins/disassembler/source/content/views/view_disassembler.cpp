@@ -145,11 +145,15 @@ namespace hex::plugin::disasm {
 
             // Draw base address input
             ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_load_address"_lang, &m_imageLoadAddress, ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::SameLine();
+            ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_load_address.hint"_lang, ICON_VS_INFO);
 
             // Draw code region start address input
             ImGui::BeginDisabled(m_range == ui::RegionType::EntireData);
             {
                 ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_base_address"_lang, &m_imageBaseAddress, ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::SameLine();
+                ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_base_address.hint"_lang, ICON_VS_INFO);
             }
             ImGui::EndDisabled();
 
@@ -428,14 +432,14 @@ namespace hex::plugin::disasm {
                         m_mode = cs_mode(u32(m_mode) | CS_MODE_BIG_ENDIAN);
                     }
 
-                    ImGuiExt::EndBox();
                 }
+                ImGuiExt::EndBox();
             }
 
             // Draw disassemble button
             ImGui::BeginDisabled(m_disassemblerTask.isRunning() || m_regionToDisassemble.getStartAddress() < m_imageBaseAddress);
             {
-                if (ImGui::Button("hex.disassembler.view.disassembler.disassemble"_lang))
+                if (ImGuiExt::DimmedButton("hex.disassembler.view.disassembler.disassemble"_lang))
                     this->disassemble();
             }
             ImGui::EndDisabled();

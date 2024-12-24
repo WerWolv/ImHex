@@ -512,7 +512,9 @@ namespace ImGuiExt {
         PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
 
         PushStyleColor(ImGuiCol_Text, iconColor);
+        ImGui::PushID(text);
         Button(icon);
+        ImGui::PopID();
         PopStyleColor();
 
         if (IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
