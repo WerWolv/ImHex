@@ -175,7 +175,7 @@ namespace hex::plugin::hashes {
             if (m_newHashName.empty() && m_selectedHash != nullptr)
                 m_newHashName = hex::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.hashes.view.hashes.hash"_lang));
 
-            if (ImGuiExt::BeginSubWindow("hex.builtin.common.settings"_lang, nullptr, scaled({ 400, 200 }))) {
+            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, nullptr, scaled({ 400, 200 }))) {
                 if (m_selectedHash != nullptr) {
                     auto startPos = ImGui::GetCursorPosY();
                     m_selectedHash->draw();
