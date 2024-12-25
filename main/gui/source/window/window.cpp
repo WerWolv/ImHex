@@ -906,6 +906,7 @@ namespace hex {
                     }
                 }
             #else
+                std::ignore = scanCode;
                 // Emscripten doesn't support glfwGetKeyName. Just pass the value through.
             #endif
 
