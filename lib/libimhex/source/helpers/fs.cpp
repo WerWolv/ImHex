@@ -123,7 +123,13 @@ namespace hex::fs {
             // Call callback that will write the file
             Module._fileBrowserCallback(stringToNewUTF8("/savedFiles/" + filename));
 
-            let data = FS.readFile("/savedFiles/" + filename);
+            let data;
+            try {
+                data = FS.readFile("/savedFiles/" + filename);
+            } catch (e) {
+                console.log(e);
+                return;
+            }
 
             const reader = Object.assign(new FileReader(), {
                 onload: () => {
@@ -191,6 +197,7 @@ namespace hex::fs {
                     else if (!validExtensions.empty())
                         path = "file." + validExtensions[0].spec;
 
+                    std::fs::create_directory("/savedFiles");
                     callJs_saveFile(path.filename().string().c_str());
                     break;
                 }

@@ -262,3 +262,10 @@ function js_resizeCanvas() {
     canvas.width  = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     canvas.height = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
 }
+
+// Prevent some default browser shortcuts from preventing ImHex ones to work
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey) {
+        if (e.which == 83) e.preventDefault();
+    }
+})

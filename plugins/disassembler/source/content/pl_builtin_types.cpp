@@ -104,21 +104,23 @@ namespace hex::plugin::disasm {
                     std::vector<u8> data(std::min<u64>(32, evaluator->getSectionSize(sectionId) - address));
                     evaluator->readData(address, data.data(), data.size(), sectionId);
 
-                    cs_insn instruction;
+                    auto *instruction = cs_malloc(capstone);
+                    ON_SCOPE_EXIT { cs_free(instruction, 1); };
+
                     const u8 *code = data.data();
                     size_t dataSize = data.size();
-                    if (!cs_disasm_iter(capstone, &code, &dataSize, &instructionLoadAddress, &instruction)) {
+                    if (!cs_disasm_iter(capstone, &code, &dataSize, &instructionLoadAddress, instruction)) {
                         err::E0012.throwError("Failed to disassemble instruction");
                     }
 
-                    auto result = std::make_unique<PatternInstruction>(evaluator, address, instruction.size, 0);
+                    auto result = std::make_unique<PatternInstruction>(evaluator, address, instruction->size, 0);
 
                     std::string instructionString;
-                    if (instruction.mnemonic[0] != '\x00')
-                        instructionString += instruction.mnemonic;
-                    if (instruction.op_str[0] != '\x00') {
+                    if (instruction->mnemonic[0] != '\x00')
+                        instructionString += instruction->mnemonic;
+                    if (instruction->op_str[0] != '\x00') {
                         instructionString += ' ';
-                        instructionString += instruction.op_str;
+                        instructionString += instruction->op_str;
                     }
                     result->setInstructionString(instructionString);
 

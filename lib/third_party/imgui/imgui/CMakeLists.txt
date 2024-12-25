@@ -29,6 +29,8 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     target_include_directories(imgui_imgui PUBLIC ${FREETYPE_INCLUDE_DIRS})
     target_link_directories(imgui_imgui PUBLIC ${FREETYPE_LIBRARY_DIRS})
     target_link_libraries(imgui_imgui PUBLIC ${FREETYPE_LIBRARIES})
+
+    target_compile_definitions(imgui_imgui PUBLIC IMGUI_USE_LEGACY_CRC32_ADLER=1)
 endif()
 
 add_library(imgui_includes INTERFACE)

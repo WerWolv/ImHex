@@ -25,6 +25,10 @@ EM_JS(void, resizeCanvas, (), {
     js_resizeCanvas();
 });
 
+EM_JS(bool, isMacOS, (), {
+    return navigator.userAgent.indexOf('Mac OS X') != -1
+});
+
 EM_JS(void, fixCanvasInPlace, (), {
     document.getElementById('canvas').classList.add('canvas-fixed');
 });
@@ -126,6 +130,9 @@ namespace hex {
 
         if (themeFollowSystem)
             EventOSThemeChanged::post();
+
+        if (isMacOS())
+            ShortcutManager::enableMacOSMode();
     }
 
     void Window::beginNativeWindowFrame() {

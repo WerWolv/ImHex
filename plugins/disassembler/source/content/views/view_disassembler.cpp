@@ -48,12 +48,14 @@ namespace hex::plugin::disasm {
 
         m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling"_lang, m_regionToDisassemble.getSize(), [this](auto &task) {
             csh capstoneHandle;
-            cs_insn instruction;
 
             cs_mode mode = m_mode;
 
             // Create a capstone disassembler instance
             if (cs_open(Disassembler::toCapstoneArchitecture(m_architecture), mode, &capstoneHandle) == CS_ERR_OK) {
+                auto *instruction = cs_malloc(capstoneHandle);
+                ON_SCOPE_EXIT { cs_free(instruction, 1); };
+
 
                 // Tell capstone to skip data bytes
                 cs_option(capstoneHandle, CS_OPT_SKIPDATA, CS_OPT_ON);
@@ -75,24 +77,24 @@ namespace hex::plugin::disasm {
 
                     // Ask capstone to disassemble the data
                     const u8 *code = buffer.data();
-                    while (cs_disasm_iter(capstoneHandle, &code, &bufferSize, &instructionLoadAddress, &instruction)) {
+                    while (cs_disasm_iter(capstoneHandle, &code, &bufferSize, &instructionLoadAddress, instruction)) {
                         task.update(instructionDataAddress);
 
                         // Convert the capstone instructions to our disassembly format
                         Disassembly disassembly = { };
-                        disassembly.address     = instruction.address;
+                        disassembly.address     = instruction->address;
                         disassembly.offset      = instructionDataAddress - m_imageBaseAddress;
-                        disassembly.size        = instruction.size;
-                        disassembly.mnemonic    = instruction.mnemonic;
-                        disassembly.operators   = instruction.op_str;
+                        disassembly.size        = instruction->size;
+                        disassembly.mnemonic    = instruction->mnemonic;
+                        disassembly.operators   = instruction->op_str;
 
-                        for (u16 j = 0; j < instruction.size; j++)
-                            disassembly.bytes += hex::format("{0:02X} ", instruction.bytes[j]);
+                        for (u16 j = 0; j < instruction->size; j++)
+                            disassembly.bytes += hex::format("{0:02X} ", instruction->bytes[j]);
                         disassembly.bytes.pop_back();
 
                         m_disassembly.push_back(disassembly);
 
-                        instructionDataAddress += instruction.size;
+                        instructionDataAddress += instruction->size;
                         hadError = false;
                     }
 
@@ -145,11 +147,15 @@ namespace hex::plugin::disasm {
 
             // Draw base address input
             ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_load_address"_lang, &m_imageLoadAddress, ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::SameLine();
+            ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_load_address.hint"_lang, ICON_VS_INFO);
 
             // Draw code region start address input
             ImGui::BeginDisabled(m_range == ui::RegionType::EntireData);
             {
                 ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_base_address"_lang, &m_imageBaseAddress, ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::SameLine();
+                ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_base_address.hint"_lang, ICON_VS_INFO);
             }
             ImGui::EndDisabled();
 
@@ -428,14 +434,14 @@ namespace hex::plugin::disasm {
                         m_mode = cs_mode(u32(m_mode) | CS_MODE_BIG_ENDIAN);
                     }
 
-                    ImGuiExt::EndBox();
                 }
+                ImGuiExt::EndBox();
             }
 
             // Draw disassemble button
             ImGui::BeginDisabled(m_disassemblerTask.isRunning() || m_regionToDisassemble.getStartAddress() < m_imageBaseAddress);
             {
-                if (ImGui::Button("hex.disassembler.view.disassembler.disassemble"_lang))
+                if (ImGuiExt::DimmedButton("hex.disassembler.view.disassembler.disassemble"_lang))
                     this->disassemble();
             }
             ImGui::EndDisabled();
