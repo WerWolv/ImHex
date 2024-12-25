@@ -270,7 +270,7 @@ namespace hex {
         #if defined(OS_WEB)
             auto data = json.dump();
             MAIN_THREAD_EM_ASM({
-                localStorage.setItem("config", UTF8ToString($0));
+                localStorage.setItem("achievements", UTF8ToString($0));
             }, data.c_str());
         #else
             for (const auto &directory : paths::Config.write()) {
