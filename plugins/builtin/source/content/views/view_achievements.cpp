@@ -30,7 +30,14 @@ namespace hex::plugin::builtin {
         });
 
         // Load settings
-        m_showPopup = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", true);
+        {
+            bool defaultValue = true;
+            #if defined(OS_WEB)
+                defaultValue = false;
+            #endif
+
+            m_showPopup = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", defaultValue);
+        }
     }
 
     ViewAchievements::~ViewAchievements() {
