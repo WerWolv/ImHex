@@ -2513,6 +2513,11 @@ namespace hex::plugin::builtin {
                 editor->MoveUp(1, false);
         });
 
+        ShortcutManager::addShortcut(this, ALT + Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_up", [this] {
+            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
+                editor->MoveUp(-1, false);
+        });
+
         ShortcutManager::addShortcut(this, Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_up", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->MoveUp(editor->GetPageSize()-4, false);
@@ -2521,6 +2526,11 @@ namespace hex::plugin::builtin {
         ShortcutManager::addShortcut(this, Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_down", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->MoveDown(1, false);
+        });
+
+        ShortcutManager::addShortcut(this, ALT+ Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_down", [this] {
+            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
+                editor->MoveDown(-1, false);
         });
 
         ShortcutManager::addShortcut(this, Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_down", [this] {
