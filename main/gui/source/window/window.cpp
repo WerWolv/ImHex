@@ -890,20 +890,24 @@ namespace hex {
         glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
             std::ignore = mods;
 
-            // Handle A-Z keys using their ASCII value instead of the keycode
-            if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
-                std::string_view name = glfwGetKeyName(key, scanCode);
+            #if !defined(OS_WEB)
+                // Handle A-Z keys using their ASCII value instead of the keycode
+                if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
+                    std::string_view name = glfwGetKeyName(key, scanCode);
 
-                // If the key name is only one character long, use the ASCII value instead
-                // Otherwise the keyboard was set to a non-English layout and the key name
-                // is not the same as the ASCII value
-                if (!name.empty()) {
-                    const std::uint8_t byte = name[0];
-                    if (name.length() == 1 && byte <= 0x7F) {
-                        key = std::toupper(byte);
+                    // If the key name is only one character long, use the ASCII value instead
+                    // Otherwise the keyboard was set to a non-English layout and the key name
+                    // is not the same as the ASCII value
+                    if (!name.empty()) {
+                        const std::uint8_t byte = name[0];
+                        if (name.length() == 1 && byte <= 0x7F) {
+                            key = std::toupper(byte);
+                        }
                     }
                 }
-            }
+            #else
+                // Emscripten doesn't support glfwGetKeyName. Just pass the value through.
+            #endif
 
             if (key == GLFW_KEY_UNKNOWN) return;
 
