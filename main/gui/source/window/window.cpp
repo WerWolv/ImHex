@@ -529,17 +529,18 @@ namespace hex {
                     }
                 };
 
+                std::string localizedName = name.get();
                 if (currPopup->isModal())
-                    createPopup(ImGui::BeginPopupModal(name, closeButton, flags));
+                    createPopup(ImGui::BeginPopupModal(localizedName.c_str(), closeButton, flags));
                 else
-                    createPopup(ImGui::BeginPopup(name, flags));
+                    createPopup(ImGui::BeginPopup(localizedName.c_str(), flags));
 
-                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 5) {
-                    ImGui::OpenPopup(name);
+                if (!ImGui::IsPopupOpen(localizedName.c_str()) && displayFrameCount < 5) {
+                    ImGui::OpenPopup(localizedName.c_str());
                 }
 
                 if (currPopup->shouldClose() || !open) {
-                    log::debug("Closing popup '{}'", name);
+                    log::debug("Closing popup '{}'", localizedName);
                     positionSet = sizeSet = false;
 
                     currPopup = nullptr;
