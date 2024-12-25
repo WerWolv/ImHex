@@ -320,7 +320,7 @@ TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2 &aPositi
         int columnIndex = 0;
         float columnX   = 0.0f;
 
-        while ((size_t)columnIndex <= line.size()) {
+        while ((size_t)columnIndex < line.size()) {
             float columnWidth = 0.0f;
 
             if (line[columnIndex].mChar == '\t') {
