@@ -14,12 +14,12 @@
 
 namespace hex::plugin::builtin {
 
-    static std::string formatLanguageArray(prv::Provider *provider, u64 offset, size_t size, const std::string &start, const std::string &byteFormat, const std::string &end, bool removeFinalDelimiter= false) {
+    static std::string formatLanguageArray(prv::Provider *provider, u64 offset, size_t size, const std::string &start, const std::string &byteFormat, const std::string &end, bool removeFinalDelimiter = false, bool newLines = true) {
         constexpr static auto NewLineIndent = "\n    ";
         constexpr static auto LineLength = 16;
 
         std::string result;
-        result.reserve(start.size() + hex::format(byteFormat, 0x00).size() * size +  + std::string(NewLineIndent).size() / LineLength + end.size());
+        result.reserve(start.size() + hex::format(byteFormat, 0x00).size() * size + std::string(NewLineIndent).size() / LineLength + end.size());
 
         result += start;
 
@@ -29,8 +29,11 @@ namespace hex::plugin::builtin {
 
         u64 index = 0x00;
         for (u8 byte : reader) {
-            if ((index % LineLength) == 0x00)
-                result += NewLineIndent;
+
+            if (newLines) {
+                if ((index % LineLength) == 0x00)
+                    result += NewLineIndent;
+            }
 
             result += hex::format(byteFormat, byte);
 
@@ -43,7 +46,8 @@ namespace hex::plugin::builtin {
             result.pop_back();
         }
 
-        result += "\n" + end;
+        if (newLines) result += "\n";
+        result += end;
 
         return result;
     }
@@ -174,6 +178,10 @@ namespace hex::plugin::builtin {
                 "</div>\n";
 
             return result;
+        });
+
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.escaped_string", [](prv::Provider *provider, u64 offset, size_t size) {
+            return formatLanguageArray(provider, offset, size, "\"", "\\x{0:02X}", "\"", false, false);
         });
 
         ContentRegistry::DataFormatter::addFindExportFormatter("csv", "csv", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences, const auto &transformFunc) {
