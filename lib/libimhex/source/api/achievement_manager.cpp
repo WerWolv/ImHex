@@ -6,6 +6,10 @@
 
 #include <nlohmann/json.hpp>
 
+#if defined(OS_WEB)
+    #include <emscripten.h>
+#endif
+
 namespace hex {
 
     static AutoReset<std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>>> s_achievements;
