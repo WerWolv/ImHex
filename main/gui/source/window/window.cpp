@@ -81,6 +81,10 @@ namespace hex {
         EventImHexStartupFinished::post();
 
         TutorialManager::init();
+
+        #if defined(OS_MACOS)
+            ShortcutManager::enableMacOSMode();
+        #endif
     }
 
     Window::~Window() {
@@ -881,56 +885,53 @@ namespace hex {
             EventWindowFocused::post(focused == GLFW_TRUE);
         });
 
-        #if !defined(OS_WEB)
-            // Register key press callback
-            glfwSetInputMode(m_window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
-            glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
-                std::ignore = mods;
+        // Register key press callback
+        glfwSetInputMode(m_window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
+        glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
+            std::ignore = mods;
 
+            // Handle A-Z keys using their ASCII value instead of the keycode
+            if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
+                std::string_view name = glfwGetKeyName(key, scanCode);
 
-                // Handle A-Z keys using their ASCII value instead of the keycode
-                if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
-                    std::string_view name = glfwGetKeyName(key, scanCode);
-
-                    // If the key name is only one character long, use the ASCII value instead
-                    // Otherwise the keyboard was set to a non-English layout and the key name
-                    // is not the same as the ASCII value
-                    if (!name.empty()) {
-                        const std::uint8_t byte = name[0];
-                        if (name.length() == 1 && byte <= 0x7F) {
-                            key = std::toupper(byte);
-                        }
+                // If the key name is only one character long, use the ASCII value instead
+                // Otherwise the keyboard was set to a non-English layout and the key name
+                // is not the same as the ASCII value
+                if (!name.empty()) {
+                    const std::uint8_t byte = name[0];
+                    if (name.length() == 1 && byte <= 0x7F) {
+                        key = std::toupper(byte);
                     }
                 }
+            }
 
-                if (key == GLFW_KEY_UNKNOWN) return;
+            if (key == GLFW_KEY_UNKNOWN) return;
 
-                if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-                    if (key != GLFW_KEY_LEFT_CONTROL && key != GLFW_KEY_RIGHT_CONTROL &&
-                        key != GLFW_KEY_LEFT_ALT && key != GLFW_KEY_RIGHT_ALT &&
-                        key != GLFW_KEY_LEFT_SHIFT && key != GLFW_KEY_RIGHT_SHIFT &&
-                        key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
-                    ) {
-                        auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-                        win->m_unlockFrameRate = true;
+            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                if (key != GLFW_KEY_LEFT_CONTROL && key != GLFW_KEY_RIGHT_CONTROL &&
+                    key != GLFW_KEY_LEFT_ALT && key != GLFW_KEY_RIGHT_ALT &&
+                    key != GLFW_KEY_LEFT_SHIFT && key != GLFW_KEY_RIGHT_SHIFT &&
+                    key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
+                ) {
+                    auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+                    win->m_unlockFrameRate = true;
 
-                        if (!(mods & GLFW_MOD_NUM_LOCK)) {
-                            if (key == GLFW_KEY_KP_0) key = GLFW_KEY_INSERT;
-                            else if (key == GLFW_KEY_KP_1) key = GLFW_KEY_END;
-                            else if (key == GLFW_KEY_KP_2) key = GLFW_KEY_DOWN;
-                            else if (key == GLFW_KEY_KP_3) key = GLFW_KEY_PAGE_DOWN;
-                            else if (key == GLFW_KEY_KP_4) key = GLFW_KEY_LEFT;
-                            else if (key == GLFW_KEY_KP_6) key = GLFW_KEY_RIGHT;
-                            else if (key == GLFW_KEY_KP_7) key = GLFW_KEY_HOME;
-                            else if (key == GLFW_KEY_KP_8) key = GLFW_KEY_UP;
-                            else if (key == GLFW_KEY_KP_9) key = GLFW_KEY_PAGE_UP;
-                        }
-
-                        win->m_pressedKeys.push_back(key);
+                    if (!(mods & GLFW_MOD_NUM_LOCK)) {
+                        if (key == GLFW_KEY_KP_0) key = GLFW_KEY_INSERT;
+                        else if (key == GLFW_KEY_KP_1) key = GLFW_KEY_END;
+                        else if (key == GLFW_KEY_KP_2) key = GLFW_KEY_DOWN;
+                        else if (key == GLFW_KEY_KP_3) key = GLFW_KEY_PAGE_DOWN;
+                        else if (key == GLFW_KEY_KP_4) key = GLFW_KEY_LEFT;
+                        else if (key == GLFW_KEY_KP_6) key = GLFW_KEY_RIGHT;
+                        else if (key == GLFW_KEY_KP_7) key = GLFW_KEY_HOME;
+                        else if (key == GLFW_KEY_KP_8) key = GLFW_KEY_UP;
+                        else if (key == GLFW_KEY_KP_9) key = GLFW_KEY_PAGE_UP;
                     }
+
+                    win->m_pressedKeys.push_back(key);
                 }
-            });
-        #endif
+            }
+        });
 
         // Register window close callback
         glfwSetWindowCloseCallback(m_window, [](GLFWwindow *window) {
