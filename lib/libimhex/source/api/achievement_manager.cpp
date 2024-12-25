@@ -215,7 +215,16 @@ namespace hex {
             }
 
             try {
-                auto json = nlohmann::json::parse(file.readString());
+                #if defined(OS_WEB)
+                    auto data = (char *) MAIN_THREAD_EM_ASM_INT({
+                        let data = localStorage.getItem("achievements");
+                        return data ? stringToNewUTF8(data) : null;
+                    });
+                #else
+                    auto data = file.readString();
+                #endif
+
+                auto json = nlohmann::json::parse(data);
 
                 for (const auto &[categoryName, achievements] : getAchievements()) {
                     for (const auto &[achievementName, achievement] : achievements) {
@@ -254,16 +263,23 @@ namespace hex {
         if (json.empty())
             return;
 
-        for (const auto &directory : paths::Config.write()) {
-            auto path = directory / AchievementsFile;
+        #if defined(OS_WEB)
+            auto data = json.dump();
+            MAIN_THREAD_EM_ASM({
+                localStorage.setItem("config", UTF8ToString($0));
+            }, data.c_str());
+        #else
+            for (const auto &directory : paths::Config.write()) {
+                auto path = directory / AchievementsFile;
 
-            wolv::io::File file(path, wolv::io::File::Mode::Create);
-            if (!file.isValid())
-                continue;
+                wolv::io::File file(path, wolv::io::File::Mode::Create);
+                if (!file.isValid())
+                    continue;
 
-            file.writeString(json.dump(4));
-            break;
-        }
+                file.writeString(json.dump(4));
+                break;
+            }
+        #endif
     }
 
 }
