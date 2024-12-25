@@ -263,6 +263,9 @@ function js_resizeCanvas() {
     canvas.height = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
 }
 
-// Prevent default browser shortcuts from preventing ImHex ones to work
-document.addEventListener('keydown', e => { e.preventDefault(); })
-document.addEventListener('keyup', e => { e.preventDefault(); })
+// Prevent some default browser shortcuts from preventing ImHex ones to work
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey) {
+        if (e.which == 83) e.preventDefault();
+    }
+})
