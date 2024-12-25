@@ -12,6 +12,7 @@ namespace hex {
         AutoReset<std::map<Shortcut, ShortcutManager::ShortcutEntry>> s_globalShortcuts;
         std::atomic<bool> s_paused;
         std::optional<Shortcut> s_prevShortcut;
+        bool s_macOSMode = false;
 
     }
 
@@ -78,22 +79,14 @@ namespace hex {
     std::string Shortcut::toString() const {
         std::string result;
 
-        #if defined(OS_MACOS)
-            constexpr static auto CTRL_NAME     = "⌃";
-            constexpr static auto ALT_NAME      = "⌥";
-            constexpr static auto SHIFT_NAME    = "⇧";
-            constexpr static auto SUPER_NAME    = "⌘";
-            constexpr static auto Concatination = " ";
-        #else
-            constexpr static auto CTRL_NAME     = "CTRL";
-            constexpr static auto ALT_NAME      = "ALT";
-            constexpr static auto SHIFT_NAME    = "SHIFT";
-            constexpr static auto SUPER_NAME    = "SUPER";
-            constexpr static auto Concatination = " + ";
-        #endif
+        const auto CTRL_NAME     = s_macOSMode ? "⌃" : "CTRL";
+        const auto ALT_NAME      = s_macOSMode ? "⌥" : "ALT";
+        const auto SHIFT_NAME    = s_macOSMode ? "⇧" : "SHIFT";
+        const auto SUPER_NAME    = s_macOSMode ? "⌘" : "SUPER";
+        const auto Concatination = s_macOSMode ? " " : " + ";
 
         auto keys = m_keys;
-        if (keys.erase(CTRL) > 0) {
+        if (keys.erase(CTRL) > 0 || (!s_macOSMode && keys.erase(CTRLCMD) > 0)) {
             result += CTRL_NAME;
             result += Concatination;
         }
@@ -105,7 +98,7 @@ namespace hex {
             result += SHIFT_NAME;
             result += Concatination;
         }
-        if (keys.erase(SUPER) > 0) {
+        if (keys.erase(SUPER) > 0 || (s_macOSMode && keys.erase(CTRLCMD) > 0)) {
             result += SUPER_NAME;
             result += Concatination;
         }
@@ -267,13 +260,13 @@ namespace hex {
         Shortcut pressedShortcut;
 
         if (ctrl)
-            pressedShortcut += CTRL;
+            pressedShortcut += s_macOSMode ? CTRL : CTRLCMD;
         if (alt)
             pressedShortcut += ALT;
         if (shift)
             pressedShortcut += SHIFT;
         if (super)
-            pressedShortcut += SUPER;
+            pressedShortcut += s_macOSMode ? CTRLCMD : SUPER;
         if (focused)
             pressedShortcut += CurrentView;
         if (ImGui::GetIO().WantTextInput)
@@ -386,5 +379,10 @@ namespace hex {
 
         return result;
     }
+
+    void ShortcutManager::enableMacOSMode() {
+        s_macOSMode = true;
+    }
+
 
 }
