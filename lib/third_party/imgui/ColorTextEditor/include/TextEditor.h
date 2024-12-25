@@ -307,6 +307,7 @@ public:
         return text.empty() || text == "\n";
     }
     void SetTopLine();
+    void SetScrollY();
 	void SetTextLines(const std::vector<std::string>& aLines);
 	std::vector<std::string> GetTextLines() const;
 
@@ -406,7 +407,7 @@ public:
 	void Cut();
 	void Paste();
 	void Delete();
-    int32_t GetPageSize() const;
+    float GetPageSize() const;
 
 	ImVec2 &GetCharAdvance() { return mCharAdvance; }
 
@@ -600,8 +601,8 @@ private:
     float mLineNumberFieldWidth = 0.0F;
     float mLongest = 0.0F;
 	float mTextStart = 20.0F;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
-	int  mLeftMargin = 10;
-    int mTopLine = 0;
+	float  mLeftMargin = 10.0;
+    float mTopLine = 0.0F;
     bool mSetTopLine = false;
 	bool mCursorPositionChanged = false;
     bool mBreakPointsChanged = false;
@@ -631,7 +632,9 @@ private:
     float mSavedScrollY = 0;
     float mShiftedScrollY = 0;
     float mScrollY = 0;
-    int mNumberOfLinesDisplayed = 0;
+    float mScrollYIncrement = 0.0F;
+    bool mSetScrollY = false;
+    float mNumberOfLinesDisplayed = 0;
 	float mLastClick = -1.0F;
     bool mShowCursor = true;
     bool mShowLineNumbers = true;

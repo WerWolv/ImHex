@@ -311,6 +311,9 @@ TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2 &aPositi
     ImVec2 local(aPosition.x - origin.x, aPosition.y - origin.y);
 
     int lineNo = std::max(0, (int)floor(local.y / mCharAdvance.y));
+    if (local.x < mCharAdvance.x)
+        return Coordinates(lineNo, 0);
+    local.x -= mCharAdvance.x;
 
     int columnCoord = 0;
 
@@ -349,7 +352,7 @@ TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2 &aPositi
         }
     }
 
-    return SanitizeCoordinates(Coordinates(lineNo, columnCoord - (columnCoord != 0)));
+    return SanitizeCoordinates(Coordinates(lineNo, columnCoord));
 }
 
 void TextEditor::DeleteWordLeft()  {
@@ -891,14 +894,16 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
     ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
     ImVec2 position       = lineNumbersStartPos;
     auto scrollX           = ImGui::GetScrollX();
+    if (mSetScrollY)
+        SetScrollY();
     auto scrollY           = ImGui::GetScrollY();
     if (mSetTopLine)
         SetTopLine();
     else
-        mTopLine = std::max<int>(0, std::floor((scrollY-mTopMargin) / mCharAdvance.y));
+        mTopLine = std::max<float>(0.0F, (scrollY-mTopMargin) / mCharAdvance.y);
     auto lineNo        = mTopLine;
-    int  globalLineMax    = mLines.size();
-    auto lineMax       = std::clamp(lineNo + mNumberOfLinesDisplayed, 0, globalLineMax - 1);
+    float  globalLineMax    = mLines.size();
+    auto lineMax       = std::clamp(lineNo + mNumberOfLinesDisplayed, 0.0F, globalLineMax-1.0F);
     int totalDigitCount = std::floor(std::log10(globalLineMax)) + 1;
     mLongest = GetLongestLineLength() * mCharAdvance.x;
 
@@ -915,7 +920,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
         float spaceSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
 
         while (lineNo <= lineMax) {
-            ImVec2 lineStartScreenPos = ImVec2(cursorScreenPos.x + mLeftMargin, cursorScreenPos.y + lineNo * mCharAdvance.y);
+            ImVec2 lineStartScreenPos = ImVec2(cursorScreenPos.x + mLeftMargin, mTopMargin + cursorScreenPos.y + std::floor(lineNo) * mCharAdvance.y);
             ImVec2 textScreenPos      = lineStartScreenPos;
 
             auto &line    = mLines[lineNo];
@@ -941,11 +946,8 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                 ImVec2 vend(lineStartScreenPos.x + ssend, lineStartScreenPos.y + mCharAdvance.y);
                 drawList->AddRectFilled(vstart, vend, mPalette[(int)PaletteIndex::Selection]);
             }
-            float startPos = 0;
-            if (scrollY < mTopMargin)
-                startPos = mTopMargin - scrollY;
-            ImVec2 lineNoStartScreenPos = ImVec2(position.x, startPos + position.y + (lineNo - mTopLine) * mCharAdvance.y);
-            auto start = ImVec2(lineNoStartScreenPos.x + mLineNumberFieldWidth, lineNoStartScreenPos.y);
+            ImVec2 lineNoStartScreenPos = ImVec2(position.x, mTopMargin + cursorScreenPos.y + std::floor(lineNo) * mCharAdvance.y);
+            auto start = ImVec2(lineNoStartScreenPos.x + mLineNumberFieldWidth, lineStartScreenPos.y);
             bool focused = ImGui::IsWindowFocused();
             if (!mIgnoreImGuiChild)
                 ImGui::EndChild();
@@ -960,14 +962,14 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                 while (padding-- > 0) {
                     space += " ";
                 }
-                std::string lineNoStr = space + std::to_string(lineNo + 1);
-                TextUnformattedColoredAt(ImVec2(mLeftMargin + lineNoStartScreenPos.x, lineNoStartScreenPos.y), mPalette[(int) PaletteIndex::LineNumber], lineNoStr.c_str());
+                std::string lineNoStr = space + std::to_string((int)(lineNo + 1));
+                TextUnformattedColoredAt(ImVec2(mLeftMargin + lineNoStartScreenPos.x, lineStartScreenPos.y), mPalette[(int) PaletteIndex::LineNumber], lineNoStr.c_str());
             }
 
             // Draw breakpoints
             if (mBreakpoints.count(lineNo + 1) != 0) {
-                auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + mLineNumberFieldWidth, lineNoStartScreenPos.y + mCharAdvance.y);
-                drawList->AddRectFilled(ImVec2(lineNumbersStartPos.x, lineNoStartScreenPos.y), end, mPalette[(int)PaletteIndex::Breakpoint]);
+                auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + mLineNumberFieldWidth, lineStartScreenPos.y + mCharAdvance.y);
+                drawList->AddRectFilled(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)PaletteIndex::Breakpoint]);
 
                 drawList->AddCircleFilled(start + ImVec2(0, mCharAdvance.y) / 2, mCharAdvance.y / 3, mPalette[(int)PaletteIndex::Breakpoint]);
                 drawList->AddCircle(start + ImVec2(0, mCharAdvance.y) / 2, mCharAdvance.y / 3, mPalette[(int)PaletteIndex::Default]);
@@ -977,9 +979,9 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
 
                 // Highlight the current line (where the cursor is)
                 if (!HasSelection()) {
-                    auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + mLineNumberFieldWidth, lineNoStartScreenPos.y + mCharAdvance.y);
-                    drawList->AddRectFilled(ImVec2(lineNumbersStartPos.x, lineNoStartScreenPos.y), end, mPalette[(int)(focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
-                    drawList->AddRect(ImVec2(lineNumbersStartPos.x, lineNoStartScreenPos.y), end, mPalette[(int)PaletteIndex::CurrentLineEdge], 1.0f);
+                    auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + mLineNumberFieldWidth, lineStartScreenPos.y + mCharAdvance.y);
+                    drawList->AddRectFilled(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)(focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
+                    drawList->AddRect(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)PaletteIndex::CurrentLineEdge], 1.0f);
                 }
             }
             if (mShowLineNumbers && !mIgnoreImGuiChild)
@@ -1152,7 +1154,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                 mLineBuffer.clear();
             }
 
-            ++lineNo;
+            lineNo = std::floor(lineNo + 1.0F);
         }
     }
     if (!mIgnoreImGuiChild)
@@ -1167,9 +1169,9 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
         ImGui::BeginChild(aTitle);
 
     if (mShowLineNumbers)
-        ImGui::Dummy(ImVec2(mLongest, (globalLineMax - lineMax - 2) * mCharAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight()));
+        ImGui::Dummy(ImVec2(mLongest, (globalLineMax - lineMax - 2.0F) * mCharAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight()));
     else
-        ImGui::Dummy(ImVec2(mLongest, (globalLineMax - 1 - lineMax + GetPageSize() - 1) * mCharAdvance.y));
+        ImGui::Dummy(ImVec2(mLongest, (globalLineMax - 1.0f - lineMax + GetPageSize() - 1.0f ) * mCharAdvance.y - 2 * ImGuiStyle().WindowPadding.y));
 
     if (mScrollToCursor)
         EnsureCursorVisible();
@@ -1222,6 +1224,7 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
     if (mShowLineNumbers ) {
         std::string lineNumber = " " + std::to_string(mLines.size()) + " ";
         mLineNumberFieldWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, lineNumber.c_str(), nullptr, nullptr).x + mLeftMargin;
+        ImGui::SetNextWindowPos(position);
         ImGui::SetCursorScreenPos(position);
         auto lineNoSize = ImVec2(mLineNumberFieldWidth, aSize.y);
         if (!mIgnoreImGuiChild) {
@@ -1648,6 +1651,11 @@ void TextEditor::JumpToCoords(const Coordinates &aNewPos) {
 void TextEditor::MoveUp(int aAmount, bool aSelect) {
     ResetCursorBlinkTime();
     auto oldPos                  = mState.mCursorPosition;
+    if (aAmount < 0) {
+        mScrollYIncrement = -1.0;
+        SetScrollY();
+        return;
+    }
     mState.mCursorPosition.mLine = std::max(0, mState.mCursorPosition.mLine - aAmount);
     if (oldPos != mState.mCursorPosition) {
         if (aSelect) {
@@ -1671,10 +1679,16 @@ void TextEditor::MoveDown(int aAmount, bool aSelect) {
     IM_ASSERT(mState.mCursorPosition.mColumn >= 0);
     ResetCursorBlinkTime();
     auto oldPos                  = mState.mCursorPosition;
+    if (aAmount < 0) {
+        mScrollYIncrement = 1.0;
+        SetScrollY();
+        return;
+    }
+
     mState.mCursorPosition.mLine = std::clamp(mState.mCursorPosition.mLine + aAmount, 0, (int)mLines.size() - 1);
     if (oldPos.mLine == (mLines.size() - 1)) {
         mTopLine += aAmount;
-        mTopLine = std::clamp(mTopLine, 0, (int)mLines.size() - 1);
+        mTopLine = std::clamp(mTopLine, 0.0F, mLines.size() - 1.0F);
         SetTopLine();
         EnsureCursorVisible();
         return;
@@ -3002,6 +3016,17 @@ float TextEditor::TextDistanceToLineStart(const Coordinates &aFrom) const {
     return distance;
 }
 
+void TextEditor::SetScrollY() {
+    if (!mWithinRender) {
+        mSetScrollY = true;
+        return;
+    } else {
+        mSetScrollY = false;
+        auto scrollY = ImGui::GetScrollY();
+        ImGui::SetScrollY(std::clamp(scrollY+mScrollYIncrement,0.0f,ImGui::GetScrollMaxY()));
+    }
+}
+
 void TextEditor::SetTopLine() {
     if (!mWithinRender) {
         mSetTopLine = true;
@@ -3065,9 +3090,9 @@ void TextEditor::EnsureCursorVisible() {
     mOldTopMargin = mTopMargin;
 }
 
-int TextEditor::GetPageSize() const {
-    auto height = ImGui::GetCurrentWindow()->InnerClipRect.GetHeight() - mTopMargin - ImGui::GetStyle().FramePadding.y;
-    return (int)floor(height / mCharAdvance.y);
+float TextEditor::GetPageSize() const {
+    auto height = ImGui::GetCurrentWindow()->InnerClipRect.GetHeight();
+    return height / mCharAdvance.y;
 }
 
 void TextEditor::ResetCursorBlinkTime() {
