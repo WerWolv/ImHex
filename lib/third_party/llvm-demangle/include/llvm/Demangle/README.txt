@@ -34,7 +34,7 @@ differences, we want to keep the "core" generic demangling library
 identical between both copies to simplify development and testing.
 
 If you're working on the generic library, then do the work first in
-libcxxabi, then run the cp-to-llvm.sh script in src/demangle. This
+libcxxabi, then run libcxxabi/src/demangle/cp-to-llvm.sh. This
 script takes as an optional argument the path to llvm, and copies the
 changes you made to libcxxabi over.  Note that this script just
 blindly overwrites all changes to the generic library in llvm, so be
