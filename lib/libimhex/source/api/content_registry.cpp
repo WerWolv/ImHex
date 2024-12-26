@@ -1391,4 +1391,23 @@ namespace hex {
 
     }
 
+    namespace ContentRegistry::Disassembler {
+
+        namespace impl {
+
+            static AutoReset<std::map<std::string, impl::CreatorFunction>> s_architectures;
+
+            void addArchitectureCreator(impl::CreatorFunction function) {
+                const auto arch = function();
+                (*s_architectures)[arch->getName()] = std::move(function);
+            }
+
+            const std::map<std::string, impl::CreatorFunction>& getArchitectures() {
+                return *s_architectures;
+            }
+
+        }
+
+    }
+
 }

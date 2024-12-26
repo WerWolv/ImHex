@@ -25,6 +25,8 @@ add_imhex_plugin(
 
         source/content/pl_visualizers/disassembler.cpp
         source/content/pl_builtin_types.cpp
+
+        source/content/disassemblers/capstone_architectures.cpp
     INCLUDES
         include
         ${CAPSTONE_INCLUDE_DIR}

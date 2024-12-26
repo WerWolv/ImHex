@@ -17,6 +17,8 @@ namespace hex::plugin::disasm {
     void drawDisassemblyVisualizer(pl::ptrn::Pattern &, bool, std::span<const pl::core::Token::Literal> arguments);
     void registerPatternLanguageTypes();
 
+    void registerCapstoneArchitectures();
+
 }
 
 namespace {
@@ -42,4 +44,6 @@ IMHEX_PLUGIN_SETUP("Disassembler", "WerWolv", "Disassembler support") {
     registerViews();
     registerPlVisualizers();
     registerPatternLanguageTypes();
+
+    registerCapstoneArchitectures();
 }

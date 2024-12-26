@@ -6,10 +6,11 @@
 
 #include <capstone/capstone.h>
 #include <wolv/utils/string.hpp>
+#include <hex/helpers/utils.hpp>
 
 namespace hex::plugin::disasm {
 
-    enum class Architecture : i32
+    enum class BuiltinArchitecture : i32
     {
         ARM         = CS_ARCH_ARM,
         ARM64       = CS_ARCH_ARM64,
@@ -39,18 +40,18 @@ namespace hex::plugin::disasm {
         MIN         = ARM
     };
 
-    class Disassembler {
+    class CapstoneDisassembler {
     public:
-        constexpr static cs_arch toCapstoneArchitecture(Architecture architecture) {
+        constexpr static cs_arch toCapstoneArchitecture(BuiltinArchitecture architecture) {
             return static_cast<cs_arch>(architecture);
         }
 
-        static bool isSupported(Architecture architecture) {
+        static bool isSupported(BuiltinArchitecture architecture) {
             return cs_support(toCapstoneArchitecture(architecture));
         }
 
         constexpr static auto ArchitectureNames = []{
-            std::array<const char *, static_cast<u32>(Architecture::MAX) + 1> names = { };
+            std::array<const char *, static_cast<u32>(BuiltinArchitecture::MAX) + 1> names = { };
 
             names[CS_ARCH_ARM]          = "ARM";
             names[CS_ARCH_ARM64]        = "AArch64";
@@ -84,7 +85,7 @@ namespace hex::plugin::disasm {
                 return supportedCount;
             }
 
-            for (supportedCount = static_cast<i32>(Architecture::MIN); supportedCount < static_cast<i32>(Architecture::MAX) + 1; supportedCount++) {
+            for (supportedCount = static_cast<i32>(BuiltinArchitecture::MIN); supportedCount < static_cast<i32>(BuiltinArchitecture::MAX) + 1; supportedCount++) {
                 if (!cs_support(supportedCount)) {
                     break;
                 }

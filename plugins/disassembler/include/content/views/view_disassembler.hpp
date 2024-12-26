@@ -9,17 +9,9 @@
 
 #include <string>
 #include <vector>
+#include <hex/api/content_registry.hpp>
 
 namespace hex::plugin::disasm {
-
-    struct Disassembly {
-        u64 address;
-        u64 offset;
-        size_t size;
-        std::string bytes;
-        std::string mnemonic;
-        std::string operators;
-    };
 
     class ViewDisassembler : public View::Window {
     public:
@@ -36,10 +28,9 @@ namespace hex::plugin::disasm {
         ui::RegionType m_range = ui::RegionType::EntireData;
         Region m_regionToDisassemble = { };
 
-        Architecture m_architecture = Architecture::ARM;
-        cs_mode m_mode              = cs_mode(0);
+        std::unique_ptr<ContentRegistry::Disassembler::Architecture> m_currArchitecture = nullptr;
 
-        std::vector<Disassembly> m_disassembly;
+        std::vector<ContentRegistry::Disassembler::Instruction> m_disassembly;
 
         void disassemble();
         void exportToFile();
