@@ -630,7 +630,7 @@ namespace hex {
             }
 
             runtime.addDefine("__IMHEX__");
-            runtime.addDefine("__IMHEX_VERSION__", ImHexApi::System::getImHexVersion());
+            runtime.addDefine("__IMHEX_VERSION__", ImHexApi::System::getImHexVersion().get());
         }
 
         void addPragma(const std::string &name, const pl::api::PragmaHandler &handler) {

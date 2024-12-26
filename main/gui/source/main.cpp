@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     }
 
     // Log some system information to aid debugging when users share their logs
-    log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
+    log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion().get());
     log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
     log::info("Running on {} {} ({})", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture());
     #if defined(OS_LINUX)

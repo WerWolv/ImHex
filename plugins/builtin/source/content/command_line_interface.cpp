@@ -31,7 +31,7 @@ namespace hex::plugin::builtin {
         std::ignore = args;
 
         hex::log::print(std::string(romfs::get("logo.ans").string()),
-                   ImHexApi::System::getImHexVersion(),
+                   ImHexApi::System::getImHexVersion().get(),
                    ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(),
                    __DATE__, __TIME__,
                    ImHexApi::System::isPortableVersion() ? "Portable" : "Installed");
