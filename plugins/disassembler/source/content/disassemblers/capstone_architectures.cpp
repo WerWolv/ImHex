@@ -112,7 +112,9 @@ namespace hex::plugin::disasm {
     public:
         ArchitectureARM64(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::ARM64, mode) {}
 
-        void drawSettings() override { }
+        void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+        }
     };
 
     class ArchitectureMIPS : public CapstoneArchitecture {
