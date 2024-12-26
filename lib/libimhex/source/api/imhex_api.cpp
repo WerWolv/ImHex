@@ -645,6 +645,14 @@ namespace hex {
             return hex::getContainingModule(reinterpret_cast<void*>(&getLibImHexModuleHandle));
         }
 
+        void addMigrationRoutine(SemanticVersion migrationVersion, std::function<void()> function) {
+            EventImHexUpdated::subscribe([migrationVersion, function](const SemanticVersion &oldVersion, const SemanticVersion &newVersion) {
+                if (oldVersion < migrationVersion && newVersion >= migrationVersion) {
+                    function();
+                }
+            });
+        }
+
 
         const std::map<std::string, std::string>& getInitArguments() {
             return *impl::s_initArguments;
@@ -794,16 +802,11 @@ namespace hex {
             return { { name, version } };
         }
 
-        std::string getImHexVersion(bool withBuildType) {
+        SemanticVersion getImHexVersion() {
             #if defined IMHEX_VERSION
-                if (withBuildType) {
-                    return IMHEX_VERSION;
-                } else {
-                    auto version = std::string(IMHEX_VERSION);
-                    return version.substr(0, version.find('-'));
-                }
+                return SemanticVersion(IMHEX_VERSION);
             #else
-                return "Unknown";
+                return {};
             #endif
         }
 
@@ -837,7 +840,7 @@ namespace hex {
         }
 
         bool isNightlyBuild() {
-            return getImHexVersion(false).ends_with("WIP");
+            return getImHexVersion().nightly();
         }
 
         bool updateImHex(UpdateType updateType) {

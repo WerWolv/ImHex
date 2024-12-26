@@ -217,6 +217,7 @@ namespace hex {
     EVENT_DEF(EventOSThemeChanged);
     EVENT_DEF(EventDPIChanged, float, float);
     EVENT_DEF(EventWindowFocused, bool);
+    EVENT_DEF(EventImHexUpdated, SemanticVersion, SemanticVersion);
 
     /**
      * @brief Called when the provider is created.
