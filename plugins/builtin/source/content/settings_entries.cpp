@@ -285,9 +285,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::BeginDisabled(m_drawShortcut.matches(m_defaultShortcut));
                 if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, m_defaultShortcut, m_view);
-
-                    m_drawShortcut = m_defaultShortcut;
+                    this->reset();
                     if (!m_hasDuplicate) {
                         m_shortcut = m_defaultShortcut;
                         settingChanged = true;
@@ -354,6 +352,12 @@ namespace hex::plugin::builtin {
                 }
 
                 return keys;
+            }
+
+            void reset() {
+                m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, m_defaultShortcut, m_view);
+
+                m_drawShortcut = m_defaultShortcut;
             }
 
         private:
@@ -971,6 +975,21 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
         }
 
+        ImHexApi::System::addMigrationRoutine("v1.36.1", [] {
+            log::warn("Resetting shortcut key settings for them to work with this version of ImHex");
+
+            for (const auto &category : ContentRegistry::Settings::impl::getSettings()) {
+                for (const auto &subcategory : category.subCategories) {
+                    for (const auto &entry : subcategory.entries) {
+                        if (auto keybindingWidget = dynamic_cast<KeybindingWidget*>(entry.widget.get())) {
+                            keybindingWidget->reset();
+                        }
+                    }
+                }
+            }
+
+            ContentRegistry::Settings::impl::store();
+        });
     }
 
     static void loadLayoutSettings() {
