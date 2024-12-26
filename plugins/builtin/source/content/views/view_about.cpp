@@ -476,6 +476,7 @@ namespace hex::plugin::builtin {
                 { "Custom data processor nodes",    &paths::Nodes                },
                 { "Layouts",                        &paths::Layouts              },
                 { "Workspaces",                     &paths::Workspaces           },
+                { "Disassemblers",                  &paths::Disassemblers        },
             }
         };
         static_assert(PathTypes.back().first != nullptr, "All path items need to be populated!");

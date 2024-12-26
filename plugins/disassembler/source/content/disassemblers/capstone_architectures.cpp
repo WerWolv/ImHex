@@ -9,11 +9,15 @@ namespace hex::plugin::disasm {
 
     class CapstoneArchitecture : public ContentRegistry::Disassembler::Architecture {
     public:
-        explicit CapstoneArchitecture(BuiltinArchitecture architecture)
+        explicit CapstoneArchitecture(BuiltinArchitecture architecture, cs_mode mode = cs_mode(0))
             : Architecture(CapstoneDisassembler::ArchitectureNames[u32(architecture)]),
-              m_architecture(architecture) { }
+              m_architecture(architecture),
+              m_mode(mode) { }
 
         bool start() override {
+            if (m_initialized) return false;
+
+            m_instruction = nullptr;
             auto mode = m_mode;
             if (m_endian == true) {
                 mode = cs_mode(u32(mode) | CS_MODE_LITTLE_ENDIAN);
@@ -27,39 +31,43 @@ namespace hex::plugin::disasm {
 
             cs_option(m_handle, CS_OPT_SKIPDATA, CS_OPT_ON);
 
+            m_instruction = cs_malloc(m_handle);
+
+            m_initialized = true;
             return true;
         }
 
         void end() override {
+            cs_free(m_instruction, 1);
             cs_close(&m_handle);
+
+            m_initialized = false;
         }
 
         void drawSettings() override {
             ImGui::RadioButton("hex.ui.common.little_endian"_lang, &m_endian, true);
             ImGui::SameLine();
             ImGui::RadioButton("hex.ui.common.big_endian"_lang, &m_endian, false);
+            ImGui::NewLine();
         }
 
         std::optional<ContentRegistry::Disassembler::Instruction> disassemble(u64 imageBaseAddress, u64 instructionLoadAddress, u64 instructionDataAddress, std::span<const u8> code) override {
-            auto *instruction = cs_malloc(m_handle);
-            ON_SCOPE_EXIT { cs_free(instruction, 1); };
-
             auto ptr = code.data();
             auto size = code.size_bytes();
 
-            if (!cs_disasm_iter(m_handle, &ptr, &size, &instructionLoadAddress, instruction)) {
+            if (!cs_disasm_iter(m_handle, &ptr, &size, &instructionLoadAddress, m_instruction)) {
                 return std::nullopt;
             }
 
             ContentRegistry::Disassembler::Instruction disassembly = { };
-            disassembly.address     = instruction->address;
+            disassembly.address     = m_instruction->address;
             disassembly.offset      = instructionDataAddress - imageBaseAddress;
-            disassembly.size        = instruction->size;
-            disassembly.mnemonic    = instruction->mnemonic;
-            disassembly.operators   = instruction->op_str;
+            disassembly.size        = m_instruction->size;
+            disassembly.mnemonic    = m_instruction->mnemonic;
+            disassembly.operators   = m_instruction->op_str;
 
-            for (u16 j = 0; j < instruction->size; j++)
-                disassembly.bytes += hex::format("{0:02X} ", instruction->bytes[j]);
+            for (u16 j = 0; j < m_instruction->size; j++)
+                disassembly.bytes += hex::format("{0:02X} ", m_instruction->bytes[j]);
             disassembly.bytes.pop_back();
 
             return disassembly;
@@ -68,17 +76,21 @@ namespace hex::plugin::disasm {
     private:
         BuiltinArchitecture m_architecture;
         csh m_handle = 0;
+        cs_insn *m_instruction = nullptr;
 
     protected:
         cs_mode m_mode = cs_mode(0);
         int m_endian = false;
+        bool m_initialized = false;
     };
 
     class ArchitectureARM : public CapstoneArchitecture {
     public:
-        ArchitectureARM() : CapstoneArchitecture(BuiltinArchitecture::ARM) {}
+        ArchitectureARM(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::ARM, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             ImGui::RadioButton("hex.disassembler.view.disassembler.arm.arm"_lang, &m_armMode, CS_MODE_ARM);
             ImGui::SameLine();
             ImGui::RadioButton("hex.disassembler.view.disassembler.arm.thumb"_lang, &m_armMode, CS_MODE_THUMB);
@@ -98,16 +110,18 @@ namespace hex::plugin::disasm {
 
     class ArchitectureARM64 : public CapstoneArchitecture {
     public:
-        ArchitectureARM64() : CapstoneArchitecture(BuiltinArchitecture::ARM64) {}
+        ArchitectureARM64(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::ARM64, mode) {}
 
         void drawSettings() override { }
     };
 
     class ArchitectureMIPS : public CapstoneArchitecture {
     public:
-        ArchitectureMIPS() : CapstoneArchitecture(BuiltinArchitecture::MIPS) {}
+        ArchitectureMIPS(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::MIPS, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             ImGui::RadioButton("hex.disassembler.view.disassembler.mips.mips32"_lang, &m_mipsMode, CS_MODE_MIPS32);
             ImGui::SameLine();
             ImGui::RadioButton("hex.disassembler.view.disassembler.mips.mips64"_lang, &m_mipsMode, CS_MODE_MIPS64);
@@ -130,9 +144,11 @@ namespace hex::plugin::disasm {
 
     class ArchitectureX86 : public CapstoneArchitecture {
     public:
-        ArchitectureX86() : CapstoneArchitecture(BuiltinArchitecture::X86) {}
+        ArchitectureX86(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::X86, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             ImGui::RadioButton("hex.disassembler.view.disassembler.16bit"_lang, &m_x86Mode, CS_MODE_16);
             ImGui::SameLine();
             ImGui::RadioButton("hex.disassembler.view.disassembler.32bit"_lang, &m_x86Mode, CS_MODE_32);
@@ -148,9 +164,11 @@ namespace hex::plugin::disasm {
 
     class ArchitecturePowerPC : public CapstoneArchitecture {
     public:
-        ArchitecturePowerPC() : CapstoneArchitecture(BuiltinArchitecture::PPC) {}
+        ArchitecturePowerPC(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::PPC, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             ImGui::RadioButton("hex.disassembler.view.disassembler.32bit"_lang, &m_ppcMode, CS_MODE_32);
             ImGui::SameLine();
             ImGui::RadioButton("hex.disassembler.view.disassembler.64bit"_lang, &m_ppcMode, CS_MODE_64);
@@ -176,9 +194,11 @@ namespace hex::plugin::disasm {
 
     class ArchitectureSPARC : public CapstoneArchitecture {
     public:
-        ArchitectureSPARC() : CapstoneArchitecture(BuiltinArchitecture::SPARC) {}
+        ArchitectureSPARC(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::SPARC, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             ImGui::Checkbox("hex.disassembler.view.disassembler.sparc.v9"_lang, &m_v9Mode);
 
             m_mode = cs_mode(m_v9Mode ? CS_MODE_V9 : cs_mode(0));
@@ -190,23 +210,29 @@ namespace hex::plugin::disasm {
 
     class ArchitectureSystemZ : public CapstoneArchitecture {
     public:
-        ArchitectureSystemZ() : CapstoneArchitecture(BuiltinArchitecture::SYSZ) {}
+        ArchitectureSystemZ(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::SYSZ, mode) {}
 
-        void drawSettings() override { }
+        void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+        }
     };
 
     class ArchitectureXCore : public CapstoneArchitecture {
     public:
-        ArchitectureXCore() : CapstoneArchitecture(BuiltinArchitecture::XCORE) {}
+        ArchitectureXCore(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::XCORE, mode) {}
 
-        void drawSettings() override { }
+        void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+        }
     };
 
     class ArchitectureM68K : public CapstoneArchitecture {
     public:
-        ArchitectureM68K() : CapstoneArchitecture(BuiltinArchitecture::M68K) {}
+        ArchitectureM68K(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::M68K, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             std::pair<const char *, cs_mode> modes[] = {
                 {"hex.disassembler.view.disassembler.m68k.000"_lang,  CS_MODE_M68K_000},
                 { "hex.disassembler.view.disassembler.m68k.010"_lang, CS_MODE_M68K_010},
@@ -233,15 +259,19 @@ namespace hex::plugin::disasm {
 
     class ArchitectureTMS320C64X : public CapstoneArchitecture {
     public:
-        ArchitectureTMS320C64X() : CapstoneArchitecture(BuiltinArchitecture::TMS320C64X) {}
+        ArchitectureTMS320C64X(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::TMS320C64X, mode) {}
 
-        void drawSettings() override { }
+        void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+        }
     };
     class ArchitectureM680X : public CapstoneArchitecture {
     public:
-        ArchitectureM680X() : CapstoneArchitecture(BuiltinArchitecture::M680X) {}
+        ArchitectureM680X(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::M680X, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             std::pair<const char *, cs_mode> modes[] = {
                 {"hex.disassembler.view.disassembler.m680x.6301"_lang,   CS_MODE_M680X_6301 },
                 { "hex.disassembler.view.disassembler.m680x.6309"_lang,  CS_MODE_M680X_6309 },
@@ -272,25 +302,31 @@ namespace hex::plugin::disasm {
 
     class ArchitectureEVM : public CapstoneArchitecture {
     public:
-        ArchitectureEVM() : CapstoneArchitecture(BuiltinArchitecture::EVM) {}
+        ArchitectureEVM(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::EVM, mode) {}
 
-        void drawSettings() override { }
+        void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+        }
     };
 
 #if CS_API_MAJOR >= 5
 
     class ArchitectureWASM : public CapstoneArchitecture {
     public:
-        ArchitectureWASM() : CapstoneArchitecture(BuiltinArchitecture::WASM) {}
+        ArchitectureWASM(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::WASM, mode) {}
 
-        void drawSettings() override { }
+        void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+        }
     };
 
     class ArchitectureRISCV : public CapstoneArchitecture {
     public:
-        ArchitectureRISCV() : CapstoneArchitecture(BuiltinArchitecture::RISCV) {}
+        ArchitectureRISCV(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::RISCV, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             ImGui::RadioButton("hex.disassembler.view.disassembler.32bit"_lang, &m_riscvMode, CS_MODE_RISCV32);
             ImGui::SameLine();
             ImGui::RadioButton("hex.disassembler.view.disassembler.64bit"_lang, &m_riscvMode, CS_MODE_RISCV64);
@@ -307,9 +343,11 @@ namespace hex::plugin::disasm {
 
     class ArchitectureMOS65XX : public CapstoneArchitecture {
     public:
-        ArchitectureMOS65XX() : CapstoneArchitecture(BuiltinArchitecture::MOS65XX) {}
+        ArchitectureMOS65XX(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::MOS65XX, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             std::pair<const char *, cs_mode> modes[] = {
                 {"hex.disassembler.view.disassembler.mos65xx.6502"_lang,           CS_MODE_MOS65XX_6502         },
                 { "hex.disassembler.view.disassembler.mos65xx.65c02"_lang,         CS_MODE_MOS65XX_65C02        },
@@ -337,9 +375,11 @@ namespace hex::plugin::disasm {
 
     class ArchitectureBPF : public CapstoneArchitecture {
     public:
-        ArchitectureBPF() : CapstoneArchitecture(BuiltinArchitecture::BPF) {}
+        ArchitectureBPF(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::BPF, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             ImGui::RadioButton("hex.disassembler.view.disassembler.bpf.classic"_lang, &m_bpfMode, CS_MODE_BPF_CLASSIC);
             ImGui::SameLine();
             ImGui::RadioButton("hex.disassembler.view.disassembler.bpf.extended"_lang, &m_bpfMode, CS_MODE_BPF_EXTENDED);
@@ -353,9 +393,11 @@ namespace hex::plugin::disasm {
 
     class ArchitectureSuperH : public CapstoneArchitecture {
     public:
-        ArchitectureSuperH() : CapstoneArchitecture(BuiltinArchitecture::SH) {}
+        ArchitectureSuperH(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::SUPERH, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             std::pair<const char*, cs_mode> modes[] = {
                 { "hex.disassembler.view.disassembler.sh.sh2"_lang, CS_MODE_SH2 },
                 { "hex.disassembler.view.disassembler.sh.sh2a"_lang, CS_MODE_SH2A },
@@ -387,9 +429,11 @@ namespace hex::plugin::disasm {
 
     class ArchitectureTricore : public CapstoneArchitecture {
     public:
-        ArchitectureTricore() : CapstoneArchitecture(BuiltinArchitecture::TRICORE) {}
+        ArchitectureTricore(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::TRICORE, mode) {}
 
         void drawSettings() override {
+            CapstoneArchitecture::drawSettings();
+
             std::pair<const char*, cs_mode> modes[] = {
                 { "hex.disassembler.view.disassembler.tricore.110"_lang, CS_MODE_TRICORE_110 },
                 { "hex.disassembler.view.disassembler.tricore.120"_lang, CS_MODE_TRICORE_120 },

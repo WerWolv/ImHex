@@ -151,7 +151,7 @@ namespace hex::crash {
         try {
             std::rethrow_exception(std::current_exception());
         } catch (std::exception &ex) {
-            std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name()), ex.what());
+            std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::demangle(typeid(ex).name()), ex.what());
 
             handleCrash(exceptionStr);
             log::fatal("Program terminated with uncaught exception: {}", exceptionStr);

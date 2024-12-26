@@ -18,6 +18,7 @@ namespace hex::plugin::disasm {
     void registerPatternLanguageTypes();
 
     void registerCapstoneArchitectures();
+    void registerCustomArchitectures();
 
 }
 
@@ -46,4 +47,5 @@ IMHEX_PLUGIN_SETUP("Disassembler", "WerWolv", "Disassembler support") {
     registerPatternLanguageTypes();
 
     registerCapstoneArchitectures();
+    registerCustomArchitectures();
 }

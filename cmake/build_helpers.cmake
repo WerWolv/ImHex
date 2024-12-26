@@ -728,6 +728,7 @@ macro(addBundledLibraries)
     endif()
 
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
+    add_subdirectory(${EXTERNAL_LIBS_FOLDER}/disassembler EXCLUDE_FROM_ALL)
 
     if (LIBPL_SHARED_LIBRARY)
         install(

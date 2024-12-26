@@ -27,6 +27,7 @@ add_imhex_plugin(
         source/content/pl_builtin_types.cpp
 
         source/content/disassemblers/capstone_architectures.cpp
+        source/content/disassemblers/custom_architectures.cpp
     INCLUDES
         include
         ${CAPSTONE_INCLUDE_DIR}
@@ -34,4 +35,5 @@ add_imhex_plugin(
         ui
         fonts
         ${CAPSTONE_LIBRARY}
+        libdisassembler
 )

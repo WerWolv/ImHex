@@ -1461,8 +1461,8 @@ namespace hex {
 
             template<std::derived_from<Architecture> T>
             void add(auto && ...args) {
-                impl::addArchitectureCreator([args...] {
-                    return std::make_unique<T>(std::forward<decltype(args)>(args)...);
+                impl::addArchitectureCreator([...args = std::move(args)] {
+                    return std::make_unique<T>(args...);
                 });
             }
 

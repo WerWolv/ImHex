@@ -30,7 +30,7 @@ namespace hex::plugin::disasm {
             RISCV   = CS_ARCH_RISCV,
             MOS65XX = CS_ARCH_MOS65XX,
             BPF     = CS_ARCH_BPF,
-            SH      = CS_ARCH_SH,
+            SUPERH  = CS_ARCH_SH,
             TRICORE = CS_ARCH_TRICORE,
             MAX   = TRICORE,
         # else
@@ -163,7 +163,7 @@ namespace hex::plugin::disasm {
                 arch = CS_ARCH_MOS65XX;
             else if (equalsIgnoreCase(archName, "bpf"))
                 arch = CS_ARCH_BPF;
-            else if (equalsIgnoreCase(archName, "sh"))
+            else if (equalsIgnoreCase(archName, "sh") || equalsIgnoreCase(archName, "superh"))
                 arch = CS_ARCH_SH;
             else if (equalsIgnoreCase(archName, "tricore"))
                 arch = CS_ARCH_TRICORE;
