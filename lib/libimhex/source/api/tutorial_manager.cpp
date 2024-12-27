@@ -33,6 +33,13 @@ namespace hex {
                 idStack.push_back(0);
             }
 
+            void add(const char *string) {
+                const ImGuiID seed = idStack.back();
+                const ImGuiID id = ImHashStr(string, 0, seed);
+
+                idStack.push_back(id);
+            }
+
             void add(const std::string &string) {
                 const ImGuiID seed = idStack.back();
                 const ImGuiID id = ImHashStr(string.c_str(), string.length(), seed);
