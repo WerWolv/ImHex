@@ -94,6 +94,10 @@ namespace hex {
             const auto element = hex::s_highlights->find(id);
             if (element != hex::s_highlights->end()) {
                 hex::s_highlightDisplays->emplace_back(boundingBox, element->second);
+
+                const auto window = ImGui::GetCurrentWindow();
+                if (window != nullptr && window->DockNode != nullptr && window->DockNode->TabBar != nullptr)
+                    window->DockNode->TabBar->NextSelectedTabId = window->TabId;
             }
 
             if (id != 0 && boundingBox.Contains(ImGui::GetMousePos())) {
