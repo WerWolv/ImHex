@@ -142,10 +142,10 @@ namespace hex::plugin::builtin {
             hex::log::println("Loaded plugins:");
 
             for (const auto &plugin : PluginManager::getPlugins()) {
+                if (plugin.isLibraryPlugin()) continue;
+
                 hex::log::print("- \033[1m{}\033[0m", plugin.getPluginName());
-
                 hex::log::println(" by {}", plugin.getPluginAuthor());
-
                 hex::log::println("  \033[2;3m{}\033[0m", plugin.getPluginDescription());
             }
 
