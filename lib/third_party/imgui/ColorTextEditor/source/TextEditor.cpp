@@ -1211,9 +1211,13 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
     mTextChanged           = false;
     mCursorPositionChanged = false;
 
+    auto scrollBg = ImGui::GetStyleColorVec4(ImGuiCol_ScrollbarBg);
+    scrollBg.w = 0.0f;
     auto scrollBarSize = ImGui::GetStyle().ScrollbarSize;
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(mPalette[(int) PaletteIndex::Background]));
+    ImGui::PushStyleColor(ImGuiCol_ScrollbarBg, ImGui::ColorConvertFloat4ToU32(scrollBg));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarRounding,0);
     ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize,scrollBarSize);
 
     auto position = ImGui::GetCursorScreenPos();
@@ -1268,8 +1272,8 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
     if (!mIgnoreImGuiChild)
         ImGui::EndChild();
 
-    ImGui::PopStyleVar(2);
-    ImGui::PopStyleColor();
+    ImGui::PopStyleVar(3);
+    ImGui::PopStyleColor(2);
 
     mWithinRender = false;
     ImGui::SetCursorScreenPos(ImVec2(position.x,position.y+aSize.y-1));
