@@ -156,6 +156,7 @@ namespace hex::plugin::hashes {
             ImGui::OpenPopup("##CreateHash");
         }
 
+        ImGui::SetNextWindowSize(scaled({ 400, 0 }), ImGuiCond_Always);
         if (ImGui::BeginPopup("##CreateHash")) {
             ImGuiExt::InputTextIcon("hex.hashes.view.hashes.hash_name"_lang, ICON_VS_SYMBOL_KEY, m_newHashName);
 
@@ -175,7 +176,7 @@ namespace hex::plugin::hashes {
             if (m_newHashName.empty() && m_selectedHash != nullptr)
                 m_newHashName = hex::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.hashes.view.hashes.hash"_lang));
 
-            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, nullptr, scaled({ 400, 200 }))) {
+            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, nullptr, scaled({ 0, 250 }))) {
                 if (m_selectedHash != nullptr) {
                     auto startPos = ImGui::GetCursorPosY();
                     m_selectedHash->draw();
