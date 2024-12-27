@@ -496,8 +496,10 @@ namespace hex::plugin::builtin {
                     editor.SetShowWhitespaces(false);
 
                     if (!locked || (locked && !comment.empty())) {
-                        ImGuiExt::Header("hex.builtin.view.bookmarks.header.comment"_lang);
-                        editor.Render("##comment", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true);
+                        if (ImGuiExt::BeginSubWindow("hex.builtin.view.bookmarks.header.comment"_lang)) {
+                            editor.Render("##comment", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), false);
+                        }
+                        ImGuiExt::EndSubWindow();
 
                         if (editor.IsTextChanged())
                             comment = editor.GetText();
