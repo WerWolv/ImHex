@@ -622,9 +622,12 @@ namespace hex {
             #elif defined(OS_LINUX)
                 return 1.0F;
             #elif defined(OS_WEB)
+                return 1.0F;
+                /*
                 return EM_ASM_INT({
                     return window.devicePixelRatio;
                 });
+                */
             #else
                 return 1.0F;
             #endif
