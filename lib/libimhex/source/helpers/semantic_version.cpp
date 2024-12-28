@@ -39,6 +39,8 @@ namespace hex {
     }
 
     u32 SemanticVersion::major() const {
+        if (!isValid()) return 0;
+
         try {
             return std::stoul(m_parts[0]);
         } catch (...) {
@@ -47,6 +49,8 @@ namespace hex {
     }
 
     u32 SemanticVersion::minor() const {
+        if (!isValid()) return 0;
+
         try {
             return std::stoul(m_parts[1]);
         } catch (...) {
@@ -55,6 +59,8 @@ namespace hex {
     }
 
     u32 SemanticVersion::patch() const {
+        if (!isValid()) return 0;
+
         try {
             return std::stoul(m_parts[2]);
         } catch (...) {
@@ -63,6 +69,8 @@ namespace hex {
     }
 
     bool SemanticVersion::nightly() const {
+        if (!isValid()) return false;
+
         return m_parts.size() == 4 && m_parts[3] == "WIP";
     }
 
@@ -96,6 +104,8 @@ namespace hex {
     }
 
     std::string SemanticVersion::get(bool withBuildType) const {
+        if (!isValid()) return "";
+
         auto result = wolv::util::combineStrings(m_parts, ".");
 
         if (withBuildType && !m_buildType.empty())
