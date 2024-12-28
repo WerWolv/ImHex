@@ -397,22 +397,6 @@ namespace hex {
 
 
     void Window::initNative() {
-        // Setup DPI Awareness
-        {
-            using SetProcessDpiAwarenessContextFunc = HRESULT(WINAPI *)(DPI_AWARENESS_CONTEXT);
-
-            SetProcessDpiAwarenessContextFunc setProcessDpiAwarenessContext =
-                reinterpret_cast<SetProcessDpiAwarenessContextFunc>(
-                    reinterpret_cast<void*>(
-                        GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetProcessDpiAwarenessContext")
-                    )
-                );
-
-            if (setProcessDpiAwarenessContext != nullptr) {
-                setProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-            }
-        }
-
         if (ImHexApi::System::isDebugBuild()) {
             // If the application is running in debug mode, ImHex runs under the CONSOLE subsystem,
             // so we don't need to do anything besides enabling ANSI colors
