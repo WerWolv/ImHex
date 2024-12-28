@@ -23,6 +23,7 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/utils_macos.hpp>
 
 
 namespace ImGuiExt {
@@ -222,14 +223,20 @@ namespace ImGuiExt {
     }
 
     Texture Texture::fromSVG(const char *path, int width, int height, Filter filter) {
+        #if defined(OS_MACOS)
+            const auto scaleFactor = getBackingScaleFactor();
+        #else
+            const auto scaleFactor = 1.0F;
+        #endif
+
         auto document = lunasvg::Document::loadFromFile(path);
-        auto bitmap = document->renderToBitmap(width, height);
+        auto bitmap = document->renderToBitmap(width * scaleFactor, height * scaleFactor);
 
         auto texture = createMultisampleTextureFromRGBA8Array(bitmap.data(), bitmap.width(), bitmap.height(), filter);
 
         Texture result;
-        result.m_width = bitmap.width();
-        result.m_height = bitmap.height();
+        result.m_width = bitmap.width() / scaleFactor;
+        result.m_height = bitmap.height() / scaleFactor;
         result.m_textureId = texture;
 
         return result;
@@ -240,15 +247,21 @@ namespace ImGuiExt {
     }
 
     Texture Texture::fromSVG(std::span<const std::byte> buffer, int width, int height, Filter filter) {
+        #if defined(OS_MACOS)
+            const auto scaleFactor = getBackingScaleFactor();
+        #else
+            const auto scaleFactor = 1.0F;
+        #endif
+
         auto document = lunasvg::Document::loadFromData(reinterpret_cast<const char*>(buffer.data()), buffer.size());
-        auto bitmap = document->renderToBitmap(width, height);
+        auto bitmap = document->renderToBitmap(width * scaleFactor, height * scaleFactor);
         bitmap.convertToRGBA();
 
         auto texture = createMultisampleTextureFromRGBA8Array(bitmap.data(), bitmap.width(), bitmap.height(), filter);
 
         Texture result;
-        result.m_width = bitmap.width();
-        result.m_height = bitmap.height();
+        result.m_width = bitmap.width() / scaleFactor;
+        result.m_height = bitmap.height() / scaleFactor;
         result.m_textureId = texture;
 
         return result;
