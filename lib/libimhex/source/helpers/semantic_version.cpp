@@ -39,15 +39,27 @@ namespace hex {
     }
 
     u32 SemanticVersion::major() const {
-        return std::stoul(m_parts[0]);
+        try {
+            return std::stoul(m_parts[0]);
+        } catch (...) {
+            return 0;
+        }
     }
 
     u32 SemanticVersion::minor() const {
-        return std::stoul(m_parts[1]);
+        try {
+            return std::stoul(m_parts[1]);
+        } catch (...) {
+            return 0;
+        }
     }
 
     u32 SemanticVersion::patch() const {
-        return std::stoul(m_parts[2]);
+        try {
+            return std::stoul(m_parts[2]);
+        } catch (...) {
+            return 0;
+        }
     }
 
     bool SemanticVersion::nightly() const {
