@@ -81,6 +81,13 @@ namespace hex::fonts {
                 ImFontConfig config = m_config;
                 config.FontDataOwnedByAtlas = false;
 
+                // Since macOS reports half the framebuffer size that's actually available,
+                // we'll multiply all font sizes by that and then divide the global font scale
+                // by the same amount to get super crisp font rendering.
+                #if defined(OS_MACOS)
+                    fontSize *= getBackingScaleFactor();
+                #endif
+
                 config.GlyphOffset = { offset.x, offset.y };
                 auto font = m_fontAtlas->AddFontFromMemoryTTF(storedFontData.data(), int(storedFontData.size()), fontSize, &config, !glyphRange.empty() ? glyphRange.Data : m_glyphRange.Data);
                 m_fontSizes.emplace_back(scalable, fontSize);
@@ -322,7 +329,7 @@ namespace hex::fonts {
             if (pixelPerfectFont)
                 defaultFont = fontAtlas.addDefaultFont();
             else
-                defaultFont = fontAtlas.addFontFromRomFs("fonts/JetBrainsMono.ttf", 16, true, ImVec2());
+                defaultFont = fontAtlas.addFontFromRomFs("fonts/JetBrainsMono.ttf", 14, true, ImVec2());
 
             if (!fontAtlas.build()) {
                 log::fatal("Failed to load default font!");
