@@ -493,6 +493,7 @@ namespace hex {
              */
             float getNativeScale();
 
+            float getBackingScaleFactor();
 
             /**
              * @brief Gets the current main window position

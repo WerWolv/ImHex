@@ -96,9 +96,6 @@ namespace hex {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->fullFrame();
         });
-
-        // Done to get super crisp font rendering together with GLFW_COCOA_RETINA_FRAMEBUFFER
-        ImGui::GetIO().FontGlobalScale = 1.0F / getBackingScaleFactor();
     }
 
     void Window::beginNativeWindowFrame() {

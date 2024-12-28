@@ -746,6 +746,8 @@ namespace hex {
         // NOTE: This needs to be done before a new frame is started, otherwise ImGui won't handle docking correctly
         LayoutManager::process();
         WorkspaceManager::process();
+
+        ImGui::GetIO().FontGlobalScale = 1.0F / ImHexApi::System::getBackingScaleFactor();
     }
 
     void Window::initGLFW() {

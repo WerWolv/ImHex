@@ -469,11 +469,7 @@ namespace hex::init {
             if (meanScale <= 0.0F)
                 meanScale = 1.0F;
 
-            #if defined(OS_MACOS)
-                meanScale /= getBackingScaleFactor();
-            #elif defined(OS_WEB)
-                meanScale = 1.0F;
-            #endif
+            meanScale /= hex::ImHexApi::System::getBackingScaleFactor();
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
             ImHexApi::System::impl::setNativeScale(meanScale);

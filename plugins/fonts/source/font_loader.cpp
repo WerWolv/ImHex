@@ -218,15 +218,11 @@ namespace hex::fonts {
             }
 
         private:
-            float getAdjustedFontSize(float fontSize) {
+            float getAdjustedFontSize(float fontSize) const {
                 // Since macOS reports half the framebuffer size that's actually available,
                 // we'll multiply all font sizes by that and then divide the global font scale
                 // by the same amount to get super crisp font rendering.
-                #if defined(OS_MACOS)
-                    return fontSize * getBackingScaleFactor();
-                #else
-                    return fontSize;
-                #endif
+                return fontSize * hex::ImHexApi::System::getBackingScaleFactor();
             }
 
         private:

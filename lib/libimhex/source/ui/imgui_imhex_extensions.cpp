@@ -223,11 +223,7 @@ namespace ImGuiExt {
     }
 
     Texture Texture::fromSVG(const char *path, int width, int height, Filter filter) {
-        #if defined(OS_MACOS)
-            const auto scaleFactor = getBackingScaleFactor();
-        #else
-            const auto scaleFactor = 1.0F;
-        #endif
+        const auto scaleFactor = hex::ImHexApi::System::getBackingScaleFactor();
 
         auto document = lunasvg::Document::loadFromFile(path);
         auto bitmap = document->renderToBitmap(width * scaleFactor, height * scaleFactor);
@@ -247,11 +243,7 @@ namespace ImGuiExt {
     }
 
     Texture Texture::fromSVG(std::span<const std::byte> buffer, int width, int height, Filter filter) {
-        #if defined(OS_MACOS)
-            const auto scaleFactor = getBackingScaleFactor();
-        #else
-            const auto scaleFactor = 1.0F;
-        #endif
+        const auto scaleFactor = hex::ImHexApi::System::getBackingScaleFactor();
 
         auto document = lunasvg::Document::loadFromData(reinterpret_cast<const char*>(buffer.data()), buffer.size());
         auto bitmap = document->renderToBitmap(width * scaleFactor, height * scaleFactor);

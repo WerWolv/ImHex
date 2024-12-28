@@ -18,11 +18,17 @@
 #include <algorithm>
 #include <GLFW/glfw3.h>
 
+#include <hex/helpers/utils_macos.hpp>
+
 #if defined(OS_WINDOWS)
     #include <windows.h>
 #else
     #include <sys/utsname.h>
     #include <unistd.h>
+#endif
+
+#if defined(OS_WEB)
+    #include <emscripten.h>
 #endif
 
 namespace hex {
@@ -606,6 +612,22 @@ namespace hex {
 
         float getNativeScale() {
             return impl::s_nativeScale;
+        }
+
+        float getBackingScaleFactor() {
+            #if defined(OS_WINDOWS)
+                return 1.0F;
+            #elif defined(OS_MACOS)
+                return ::getBackingScaleFactor();
+            #elif defined(OS_LINUX)
+                return 1.0F;
+            #elif defined(OS_WEB)
+                return EM_ASM_INT({
+                    return window.devicePixelRatio;
+                });
+            #else
+                return 1.0F;
+            #endif
         }
 
 
