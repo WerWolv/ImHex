@@ -27,6 +27,11 @@ chmod +x imhex-*.AppImage
 ./imhex-*.AppImage
 ```
 
+If you're experiencing glib / libgtk assertion failures, you might need to setup your `XDG_DATA_DIRS` env var correctly. In this case, run the following command before executing the AppImage. (See issue [ImHex/#2038](https://github.com/WerWolv/ImHex/issues/2038))
+```bash
+export XDG_DATA_DIRS="/usr/local/share:/usr/share"
+```
+
 #### Flatpak
 To install the Flatpak, make sure you have the Flathub repository added to your system. Then simply run the following command:
 
