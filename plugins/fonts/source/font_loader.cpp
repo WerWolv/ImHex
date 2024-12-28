@@ -322,7 +322,7 @@ namespace hex::fonts {
             if (pixelPerfectFont)
                 defaultFont = fontAtlas.addDefaultFont();
             else
-                defaultFont = fontAtlas.addFontFromRomFs("fonts/firacode.ttf", fontSize * 1.1, true, ImVec2());
+                defaultFont = fontAtlas.addFontFromRomFs("fonts/JetBrainsMono.ttf", 16, true, ImVec2());
 
             if (!fontAtlas.build()) {
                 log::fatal("Failed to load default font!");
