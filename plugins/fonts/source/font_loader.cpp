@@ -65,7 +65,7 @@ namespace hex::fonts {
             Font addDefaultFont() {
                 ImFontConfig config = m_config;
                 config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-                config.SizePixels = std::floor(ImHexApi::System::getGlobalScale()) * 13.0F;
+                config.SizePixels = getAdjustedFontSize(std::floor(ImHexApi::System::getGlobalScale()) * 13.0F);
 
                 auto font = m_fontAtlas->AddFontDefault(&config);
                 m_fontSizes.emplace_back(false, config.SizePixels);
@@ -81,15 +81,8 @@ namespace hex::fonts {
                 ImFontConfig config = m_config;
                 config.FontDataOwnedByAtlas = false;
 
-                // Since macOS reports half the framebuffer size that's actually available,
-                // we'll multiply all font sizes by that and then divide the global font scale
-                // by the same amount to get super crisp font rendering.
-                #if defined(OS_MACOS)
-                    fontSize *= getBackingScaleFactor();
-                #endif
-
                 config.GlyphOffset = { offset.x, offset.y };
-                auto font = m_fontAtlas->AddFontFromMemoryTTF(storedFontData.data(), int(storedFontData.size()), fontSize, &config, !glyphRange.empty() ? glyphRange.Data : m_glyphRange.Data);
+                auto font = m_fontAtlas->AddFontFromMemoryTTF(storedFontData.data(), int(storedFontData.size()), getAdjustedFontSize(fontSize), &config, !glyphRange.empty() ? glyphRange.Data : m_glyphRange.Data);
                 m_fontSizes.emplace_back(scalable, fontSize);
 
                 m_config.MergeMode = true;
@@ -222,6 +215,18 @@ namespace hex::fonts {
                         configData.SizePixels = fontSize * newScaling;
                     }
                 }
+            }
+
+        private:
+            float getAdjustedFontSize(float fontSize) {
+                // Since macOS reports half the framebuffer size that's actually available,
+                // we'll multiply all font sizes by that and then divide the global font scale
+                // by the same amount to get super crisp font rendering.
+                #if defined(OS_MACOS)
+                    return fontSize * getBackingScaleFactor();
+                #else
+                    return fontSize;
+                #endif
             }
 
         private:
