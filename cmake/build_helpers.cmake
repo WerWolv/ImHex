@@ -537,7 +537,7 @@ function(downloadImHexPatternsFiles dest)
             # Make the pattern files available to ImHex binaries started from the build directory
             if (NOT IMHEX_OFFLINE_BUILD)
                 file(COPY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "${IMHEX_MAIN_OUTPUT_DIRECTORY}" PATTERN "**/_schema.json" EXCLUDE)
-            else()
+            elseif(NOT EXISTS ${IMHEX_MAIN_OUTPUT_DIRECTORY}/${FOLDER})
                 # If it is an offline build, the imhex_patterns_SOURCE_DIR location is likely a git clone
                 # Create the directories as symbolic links, so that any changes get mirrored both ways
                 file(CREATE_LINK "${imhex_patterns_SOURCE_DIR}/${FOLDER}" "${IMHEX_MAIN_OUTPUT_DIRECTORY}/${FOLDER}" COPY_ON_ERROR SYMBOLIC)
