@@ -52,6 +52,16 @@ namespace hex::plugin::builtin {
             ThemeManager::addTheme(themeFile.readString());
         });
         addCategory("hex.builtin.view.store.tab.yara",         "yara",         &paths::Yara);
+
+        TaskManager::doLater([this] {
+            // Force update all installed items after an update so that there's no old and incompatible versions around anymore
+            {
+                const auto prevUpdateVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
+                if (SemanticVersion(prevUpdateVersion) != ImHexApi::System::getImHexVersion()) {
+                    updateAll();
+                }
+            }
+        });
     }
 
 
@@ -197,28 +207,7 @@ namespace hex::plugin::builtin {
         ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetCursorPosX() - 25_scaled);
         ImGui::BeginDisabled(m_updateAllTask.isRunning() || m_updateCount == 0);
         if (ImGuiExt::IconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            m_updateAllTask = TaskManager::createTask("hex.builtin.task.updating_store"_lang, m_updateCount, [this](auto &task) {
-                for (auto &category : m_categories) {
-                    for (auto &entry : category.entries) {
-                        if (entry.hasUpdate) {
-                            entry.downloading = this->download(category.path, entry.fileName, entry.link);
-                            if (!m_download.valid())
-                                continue;
-
-                            m_download.wait();
-
-                            while (m_download.valid() && m_download.wait_for(100ms) != std::future_status::ready) {
-                                task.update();
-                            }
-
-                            entry.hasUpdate = false;
-                            entry.downloading = false;
-
-                            task.increment();
-                        }
-                    }
-                }
-            });
+            this->updateAll();
         }
         ImGuiExt::InfoTooltip(hex::format("hex.builtin.view.store.update_count"_lang, m_updateCount.load()).c_str());
 
@@ -345,6 +334,36 @@ namespace hex::plugin::builtin {
 
         return removed;
     }
+
+    void ViewStore::updateAll() {
+        m_updateAllTask = TaskManager::createTask("hex.builtin.task.updating_store"_lang, m_updateCount, [this](auto &task) {
+            for (auto &category : m_categories) {
+                for (auto &entry : category.entries) {
+                    if (entry.hasUpdate) {
+                        entry.downloading = this->download(category.path, entry.fileName, entry.link);
+                        if (!m_download.valid())
+                            continue;
+
+                        m_download.wait();
+
+                        while (m_download.valid() && m_download.wait_for(100ms) != std::future_status::ready) {
+                            task.update();
+                        }
+
+                        entry.hasUpdate = false;
+                        entry.downloading = false;
+
+                        task.increment();
+                    }
+                }
+            }
+
+            TaskManager::doLater([] {
+                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion().get(false));
+            });
+        });
+    }
+
 
     void ViewStore::addCategory(const UnlocalizedString &unlocalizedName, const std::string &requestName, const paths::impl::DefaultPath *path, std::function<void()> downloadCallback) {
         m_categories.push_back({ unlocalizedName, requestName, path, { }, std::move(downloadCallback) });

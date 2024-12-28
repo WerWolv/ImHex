@@ -298,7 +298,7 @@ namespace hex::plugin::builtin {
                                     ImGui::TextUnformatted("hex.builtin.oobe.server_contact.data_collected.version"_lang);
                                     ImGui::TableNextColumn();
                                     ImGuiExt::TextFormattedWrapped("{}\n{}@{}\n{}",
-                                                                ImHexApi::System::getImHexVersion(),
+                                                                ImHexApi::System::getImHexVersion().get(),
                                                                 ImHexApi::System::getCommitHash(true),
                                                                 ImHexApi::System::getCommitBranch(),
                                                                 ImHexApi::System::isPortableVersion() ? "Portable" : "Installed"

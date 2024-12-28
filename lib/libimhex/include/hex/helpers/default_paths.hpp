@@ -82,8 +82,9 @@ namespace hex::paths {
     const static inline impl::DataPath Nodes("scripts/nodes");
     const static inline impl::DataPath Layouts("layouts");
     const static inline impl::DataPath Workspaces("workspaces");
+    const static inline impl::DataPath Disassemblers("disassemblers");
 
-    constexpr static inline std::array<const impl::DefaultPath*, 20> All = {
+    constexpr static inline std::array<const impl::DefaultPath*, 21> All = {
         &Config,
         &Recent,
 
@@ -106,6 +107,7 @@ namespace hex::paths {
         &Nodes,
         &Layouts,
         &Workspaces,
+        &Disassemblers
     };
 
 }

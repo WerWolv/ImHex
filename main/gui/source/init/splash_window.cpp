@@ -331,9 +331,9 @@ namespace hex::init {
             // Draw version information
             // In debug builds, also display the current commit hash and branch
             #if defined(DEBUG)
-                const static auto VersionInfo = hex::format("{0} : {1}@{2}", ImHexApi::System::getImHexVersion(), ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
+                const static auto VersionInfo = hex::format("{0} : {1}@{2}", ImHexApi::System::getImHexVersion().get(), ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
             #else
-                const static auto VersionInfo = hex::format("{0}", ImHexApi::System::getImHexVersion());
+                const static auto VersionInfo = hex::format("{0}", ImHexApi::System::getImHexVersion().get());
             #endif
 
             drawList->AddText(ImVec2((this->m_splashBackgroundTexture.getSize().x - ImGui::CalcTextSize(VersionInfo.c_str()).x) / 2, 105), ImColor(0xFF, 0xFF, 0xFF, 0xFF), VersionInfo.c_str());
@@ -497,7 +497,7 @@ namespace hex::init {
             ImGui_ImplOpenGL3_Init("#version 150");
         #elif defined(OS_WEB)
             ImGui_ImplOpenGL3_Init();
-            ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
+            ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, "#canvas");
         #else
             ImGui_ImplOpenGL3_Init("#version 130");
         #endif

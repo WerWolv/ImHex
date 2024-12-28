@@ -39,9 +39,7 @@ namespace hex::plugin::builtin {
                     return false;
 
                 // Convert the current version string to a format that can be compared to the latest release
-                auto versionString = ImHexApi::System::getImHexVersion();
-                size_t versionLength = std::min(versionString.find_first_of('-'), versionString.length());
-                auto currVersion   = "v" + versionString.substr(0, versionLength);
+                auto currVersion   = "v" + ImHexApi::System::getImHexVersion().get(false);
 
                 // Get the latest release version string
                 auto latestVersion = releases["tag_name"].get<std::string_view>();
@@ -59,7 +57,7 @@ namespace hex::plugin::builtin {
                     ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", uuid);
                 }
 
-                TaskManager::createBackgroundTask("hex.builtin.task.sending_statistics"_lang, [uuid, versionString](auto&) {
+                TaskManager::createBackgroundTask("hex.builtin.task.sending_statistics"_lang, [uuid](auto&) {
                     // To avoid potentially flooding our database with lots of dead users
                     // from people just visiting the website, don't send telemetry data from
                     // the web version
@@ -71,7 +69,7 @@ namespace hex::plugin::builtin {
                     nlohmann::json telemetry = {
                             { "uuid", uuid },
                             { "format_version", "1" },
-                            { "imhex_version", versionString },
+                            { "imhex_version", ImHexApi::System::getImHexVersion().get(false) },
                             { "imhex_commit", fmt::format("{}@{}", ImHexApi::System::getCommitHash(true), ImHexApi::System::getCommitBranch()) },
                             { "install_type", ImHexApi::System::isPortableVersion() ? "Portable" : "Installed" },
                             { "os", ImHexApi::System::getOSName() },

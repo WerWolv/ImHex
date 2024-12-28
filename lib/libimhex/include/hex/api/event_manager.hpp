@@ -217,6 +217,7 @@ namespace hex {
     EVENT_DEF(EventOSThemeChanged);
     EVENT_DEF(EventDPIChanged, float, float);
     EVENT_DEF(EventWindowFocused, bool);
+    EVENT_DEF(EventImHexUpdated, SemanticVersion, SemanticVersion);
 
     /**
      * @brief Called when the provider is created.
@@ -258,7 +259,6 @@ namespace hex {
     EVENT_DEF(EventSearchBoxClicked, u32);
     EVENT_DEF(EventViewOpened, View*);
     EVENT_DEF(EventFirstLaunch);
-    EVENT_DEF(EventAnySettingChanged);
 
     EVENT_DEF(EventFileDragged, bool);
     EVENT_DEF(EventFileDropped, std::fs::path);

@@ -163,15 +163,18 @@ namespace hex::plugin::yara {
         }
 
         ImGui::SameLine();
+        ImGui::BeginDisabled(*m_selectedRule >= m_rulePaths->size());
         if (ImGuiExt::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            if (*m_selectedRule < m_rulePaths->size()) {
-                m_rulePaths->erase(m_rulePaths->begin() + *m_selectedRule);
-                m_selectedRule = std::min(*m_selectedRule, u32(m_rulePaths->size() - 1));
-            }
+            m_rulePaths->erase(m_rulePaths->begin() + *m_selectedRule);
+            m_selectedRule = std::min(*m_selectedRule, u32(m_rulePaths->size() - 1));
         }
+        ImGui::EndDisabled();
 
         ImGui::NewLine();
-        if (ImGui::Button("hex.yara_rules.view.yara.match"_lang)) this->applyRules();
+
+        ImGui::BeginDisabled(m_rulePaths->empty());
+        if (ImGuiExt::DimmedButton("hex.yara_rules.view.yara.match"_lang)) this->applyRules();
+        ImGui::EndDisabled();
 
         if (m_matcherTask.isRunning()) {
             ImGui::SameLine();

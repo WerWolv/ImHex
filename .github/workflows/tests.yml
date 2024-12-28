@@ -70,23 +70,24 @@ jobs:
         ctest --output-on-failure
 
     # Generate report from all gcov .gcda files
-    - name: 🧪 Generate coverage report
-      run: |
-        sudo apt install python3-pip python3-venv
-        python3 -m venv venv
-        . venv/bin/activate
-        pip3 install gcovr
-        gcovr --gcov-executable /usr/bin/gcov-14 -e ".+yara_rules.+" -e ".+third_party.+" -e ".+external.+" -r . build --xml coverage_report.xml --verbose
-
-    - name: Upload coverage reports to Codecov
-      env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      if: ${{ env.CODECOV_TOKEN }}
-      uses: codecov/codecov-action@v4
-      with:
-        fail_ci_if_error: true
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage_report.xml
+    #- name: 🧪 Generate coverage report
+    #  run: |
+    #    sudo apt install python3-pip python3-venv
+    #    python3 -m venv venv
+    #    . venv/bin/activate
+    #    pip3 install gcovr
+    #    cd build
+    #    gcovr --gcov-executable /usr/bin/gcov-14 --exclude '.*/yara_rules/' --exclude '.*/third_party/' --exclude '.*/external/' --root .. --xml coverage_report.xml --verbose --gcov-ignore-errors all
+    #
+    #- name: Upload coverage reports to Codecov
+    #  env:
+    #      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    #  if: ${{ env.CODECOV_TOKEN }}
+    #  uses: codecov/codecov-action@v4
+    #  with:
+    #    fail_ci_if_error: true
+    #    token: ${{ secrets.CODECOV_TOKEN }}
+    #    file: build/coverage_report.xml
 
   tests-win:
     name: 🧪 Unit Tests (windows)

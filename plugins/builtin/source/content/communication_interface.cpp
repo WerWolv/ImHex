@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
             nlohmann::json result;
 
             result["build"] = {
-                { "version", ImHexApi::System::getImHexVersion()   },
+                { "version", ImHexApi::System::getImHexVersion().get()   },
                 { "commit",  ImHexApi::System::getCommitHash(true) },
                 { "branch",  ImHexApi::System::getCommitBranch()   }
             };

@@ -153,12 +153,7 @@ namespace hex {
     constexpr static auto SUPER             = Key(static_cast<Keys>(0x0800'0000));
     constexpr static auto CurrentView       = Key(static_cast<Keys>(0x1000'0000));
     constexpr static auto AllowWhileTyping  = Key(static_cast<Keys>(0x2000'0000));
-
-    #if defined (OS_MACOS)
-        constexpr static auto CTRLCMD = SUPER;
-    #else
-        constexpr static auto CTRLCMD = CTRL;
-    #endif
+    constexpr static auto CTRLCMD           = Key(static_cast<Keys>(0x4000'0000));
 
     class Shortcut {
     public:
@@ -254,6 +249,8 @@ namespace hex {
 
         static void resumeShortcuts();
         static void pauseShortcuts();
+
+        static void enableMacOSMode();
 
         [[nodiscard]] static std::optional<Shortcut> getPreviousShortcut();
 

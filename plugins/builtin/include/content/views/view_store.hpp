@@ -71,6 +71,7 @@ namespace hex::plugin::builtin {
 
         bool download(const paths::impl::DefaultPath *pathType, const std::string &fileName, const std::string &url);
         bool remove(const paths::impl::DefaultPath *pathType, const std::string &fileName);
+        void updateAll();
 
     private:
         HttpRequest m_httpRequest = HttpRequest("GET", "");

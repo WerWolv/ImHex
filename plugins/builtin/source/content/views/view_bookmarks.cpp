@@ -290,7 +290,7 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginChild("##bookmarks")) {
             if (m_bookmarks->empty()) {
-                ImGuiExt::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
+                ImGuiExt::TextOverlay("hex.builtin.view.bookmarks.no_bookmarks"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
             }
 
             auto bookmarkToRemove = m_bookmarks->end();
@@ -496,8 +496,10 @@ namespace hex::plugin::builtin {
                     editor.SetShowWhitespaces(false);
 
                     if (!locked || (locked && !comment.empty())) {
-                        ImGuiExt::Header("hex.builtin.view.bookmarks.header.comment"_lang);
-                        editor.Render("##comment", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true);
+                        if (ImGuiExt::BeginSubWindow("hex.builtin.view.bookmarks.header.comment"_lang)) {
+                            editor.Render("##comment", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), false);
+                        }
+                        ImGuiExt::EndSubWindow();
 
                         if (editor.IsTextChanged())
                             comment = editor.GetText();

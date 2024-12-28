@@ -13,6 +13,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <implot.h>
+#include <implot3d.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <toasts/toast_notification.hpp>
@@ -54,6 +55,7 @@ namespace hex::plugin::builtin {
         static void drawDebugPopup() {
             static bool showImGuiDemo = false;
             static bool showImPlotDemo = false;
+            static bool showImPlot3DDemo = false;
 
             ImGui::SetNextWindowSize(scaled({ 300, 150 }), ImGuiCond_Always);
             if (ImGui::BeginPopup("DebugMenu")) {
@@ -76,6 +78,7 @@ namespace hex::plugin::builtin {
                             auto ctx = ImGui::GetCurrentContext();
                             ImGui::Checkbox("Show ImGui Demo", &showImGuiDemo);
                             ImGui::Checkbox("Show ImPlot Demo", &showImPlotDemo);
+                            ImGui::Checkbox("Show ImPlot3D Demo", &showImPlot3DDemo);
 
                             if (ImGui::Button("Trigger Breakpoint in Item") || ctx->DebugItemPickerActive)
                                 ImGui::DebugStartItemPicker();
@@ -125,6 +128,8 @@ namespace hex::plugin::builtin {
                 ImGui::ShowDemoWindow(&showImGuiDemo);
             if (showImPlotDemo)
                 ImPlot::ShowDemoWindow(&showImPlotDemo);
+            if (showImPlot3DDemo)
+                ImPlot3D::ShowDemoWindow(&showImPlot3DDemo);
         }
 
     #endif

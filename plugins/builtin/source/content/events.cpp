@@ -226,11 +226,15 @@ namespace hex::plugin::builtin {
         });
 
         EventWindowInitialized::subscribe([] {
-            if (ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
+            const auto currVersion = ImHexApi::System::getImHexVersion();
+            const auto prevLaunchVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
+            if (prevLaunchVersion == "") {
                 EventFirstLaunch::post();
             }
 
-            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
+            EventImHexUpdated::post(SemanticVersion(prevLaunchVersion), currVersion);
+
+            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", currVersion.get(false));
         });
 
         EventWindowDeinitializing::subscribe([](GLFWwindow *window) {

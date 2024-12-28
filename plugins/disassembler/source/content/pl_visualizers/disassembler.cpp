@@ -24,7 +24,7 @@ namespace hex::plugin::disasm {
         if (shouldReset) {
             auto pattern  = arguments[0].toPattern();
             auto baseAddress  = arguments[1].toUnsigned();
-            const auto [arch, mode] = Disassembler::stringToSettings(arguments[2].toString());
+            const auto [arch, mode] = CapstoneDisassembler::stringToSettings(arguments[2].toString());
 
             disassembly.clear();
 

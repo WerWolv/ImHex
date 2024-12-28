@@ -38,6 +38,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/debugging.cpp
         source/helpers/default_paths.cpp
         source/helpers/imgui_hooks.cpp
+        source/helpers/semantic_version.cpp
 
         source/test/tests.cpp
 

@@ -129,7 +129,7 @@ namespace hex {
 
 
         const auto requestedVersion = getCompatibleVersion();
-        const auto imhexVersion = ImHexApi::System::getImHexVersion();
+        const auto imhexVersion = ImHexApi::System::getImHexVersion().get();
         if (!imhexVersion.starts_with(requestedVersion)) {
             if (requestedVersion.empty()) {
                 log::warn("Plugin '{}' did not specify a compatible version, assuming it is compatible with the current version of ImHex.", wolv::util::toUTF8String(m_path.filename()));

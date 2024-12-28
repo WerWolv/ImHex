@@ -30,6 +30,8 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <implot.h>
 #include <implot_internal.h>
+#include <implot3d.h>
+#include <implot3d_internal.h>
 #include <imnodes.h>
 #include <imnodes_internal.h>
 
@@ -79,6 +81,10 @@ namespace hex {
         EventImHexStartupFinished::post();
 
         TutorialManager::init();
+
+        #if defined(OS_MACOS)
+            ShortcutManager::enableMacOSMode();
+        #endif
     }
 
     Window::~Window() {
@@ -523,17 +529,18 @@ namespace hex {
                     }
                 };
 
+                std::string localizedName = name.get();
                 if (currPopup->isModal())
-                    createPopup(ImGui::BeginPopupModal(name, closeButton, flags));
+                    createPopup(ImGui::BeginPopupModal(localizedName.c_str(), closeButton, flags));
                 else
-                    createPopup(ImGui::BeginPopup(name, flags));
+                    createPopup(ImGui::BeginPopup(localizedName.c_str(), flags));
 
-                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 5) {
-                    ImGui::OpenPopup(name);
+                if (!ImGui::IsPopupOpen(localizedName.c_str()) && displayFrameCount < 5) {
+                    ImGui::OpenPopup(localizedName.c_str());
                 }
 
                 if (currPopup->shouldClose() || !open) {
-                    log::debug("Closing popup '{}'", name);
+                    log::debug("Closing popup '{}'", localizedName);
                     positionSet = sizeSet = false;
 
                     currPopup = nullptr;
@@ -879,13 +886,12 @@ namespace hex {
             EventWindowFocused::post(focused == GLFW_TRUE);
         });
 
-        #if !defined(OS_WEB)
-            // Register key press callback
-            glfwSetInputMode(m_window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
-            glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
-                std::ignore = mods;
+        // Register key press callback
+        glfwSetInputMode(m_window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
+        glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
+            std::ignore = mods;
 
-
+            #if !defined(OS_WEB)
                 // Handle A-Z keys using their ASCII value instead of the keycode
                 if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
                     std::string_view name = glfwGetKeyName(key, scanCode);
@@ -900,35 +906,38 @@ namespace hex {
                         }
                     }
                 }
+            #else
+                std::ignore = scanCode;
+                // Emscripten doesn't support glfwGetKeyName. Just pass the value through.
+            #endif
 
-                if (key == GLFW_KEY_UNKNOWN) return;
+            if (key == GLFW_KEY_UNKNOWN) return;
 
-                if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-                    if (key != GLFW_KEY_LEFT_CONTROL && key != GLFW_KEY_RIGHT_CONTROL &&
-                        key != GLFW_KEY_LEFT_ALT && key != GLFW_KEY_RIGHT_ALT &&
-                        key != GLFW_KEY_LEFT_SHIFT && key != GLFW_KEY_RIGHT_SHIFT &&
-                        key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
-                    ) {
-                        auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-                        win->m_unlockFrameRate = true;
+            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                if (key != GLFW_KEY_LEFT_CONTROL && key != GLFW_KEY_RIGHT_CONTROL &&
+                    key != GLFW_KEY_LEFT_ALT && key != GLFW_KEY_RIGHT_ALT &&
+                    key != GLFW_KEY_LEFT_SHIFT && key != GLFW_KEY_RIGHT_SHIFT &&
+                    key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
+                ) {
+                    auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+                    win->m_unlockFrameRate = true;
 
-                        if (!(mods & GLFW_MOD_NUM_LOCK)) {
-                            if (key == GLFW_KEY_KP_0) key = GLFW_KEY_INSERT;
-                            else if (key == GLFW_KEY_KP_1) key = GLFW_KEY_END;
-                            else if (key == GLFW_KEY_KP_2) key = GLFW_KEY_DOWN;
-                            else if (key == GLFW_KEY_KP_3) key = GLFW_KEY_PAGE_DOWN;
-                            else if (key == GLFW_KEY_KP_4) key = GLFW_KEY_LEFT;
-                            else if (key == GLFW_KEY_KP_6) key = GLFW_KEY_RIGHT;
-                            else if (key == GLFW_KEY_KP_7) key = GLFW_KEY_HOME;
-                            else if (key == GLFW_KEY_KP_8) key = GLFW_KEY_UP;
-                            else if (key == GLFW_KEY_KP_9) key = GLFW_KEY_PAGE_UP;
-                        }
-
-                        win->m_pressedKeys.push_back(key);
+                    if (!(mods & GLFW_MOD_NUM_LOCK)) {
+                        if (key == GLFW_KEY_KP_0) key = GLFW_KEY_INSERT;
+                        else if (key == GLFW_KEY_KP_1) key = GLFW_KEY_END;
+                        else if (key == GLFW_KEY_KP_2) key = GLFW_KEY_DOWN;
+                        else if (key == GLFW_KEY_KP_3) key = GLFW_KEY_PAGE_DOWN;
+                        else if (key == GLFW_KEY_KP_4) key = GLFW_KEY_LEFT;
+                        else if (key == GLFW_KEY_KP_6) key = GLFW_KEY_RIGHT;
+                        else if (key == GLFW_KEY_KP_7) key = GLFW_KEY_HOME;
+                        else if (key == GLFW_KEY_KP_8) key = GLFW_KEY_UP;
+                        else if (key == GLFW_KEY_KP_9) key = GLFW_KEY_PAGE_UP;
                     }
+
+                    win->m_pressedKeys.push_back(key);
                 }
-            });
-        #endif
+            }
+        });
 
         // Register window close callback
         glfwSetWindowCloseCallback(m_window, [](GLFWwindow *window) {
@@ -955,9 +964,10 @@ namespace hex {
         }
 
         // Initialize ImGui and all other ImGui extensions
-        GImGui   = ImGui::CreateContext(fonts);
-        GImPlot  = ImPlot::CreateContext();
-        GImNodes = ImNodes::CreateContext();
+        GImGui              = ImGui::CreateContext(fonts);
+        GImPlot             = ImPlot::CreateContext();
+        ImPlot3D::GImPlot3D = ImPlot3D::CreateContext();
+        GImNodes            = ImNodes::CreateContext();
 
         ImGuiIO &io       = ImGui::GetIO();
         ImGuiStyle &style = ImGui::GetStyle();
@@ -1032,7 +1042,7 @@ namespace hex {
             ImGui_ImplOpenGL3_Init("#version 150");
         #elif defined(OS_WEB)
             ImGui_ImplOpenGL3_Init();
-            ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
+            ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, "#canvas");
         #else
             ImGui_ImplOpenGL3_Init("#version 130");
         #endif
@@ -1054,6 +1064,7 @@ namespace hex {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
 
+        ImPlot3D::DestroyContext();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
     }

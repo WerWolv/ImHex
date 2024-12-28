@@ -152,49 +152,58 @@ namespace hex::plugin::hashes {
             m_selectedHash = hashes.front().get();
         }
 
-        if (ImGui::BeginCombo("hex.hashes.view.hashes.function"_lang, m_selectedHash != nullptr ? Lang(m_selectedHash->getUnlocalizedName()) : "")) {
+        if (ImGuiExt::DimmedButton("hex.hashes.view.hashes.add"_lang)) {
+            ImGui::OpenPopup("##CreateHash");
+        }
 
-            for (const auto &hash : hashes) {
-                if (ImGui::Selectable(Lang(hash->getUnlocalizedName()), m_selectedHash == hash.get())) {
-                    m_selectedHash = hash.get();
-                    m_newHashName.clear();
+        ImGui::SetNextWindowSize(scaled({ 400, 0 }), ImGuiCond_Always);
+        if (ImGui::BeginPopup("##CreateHash")) {
+            ImGuiExt::InputTextIcon("hex.hashes.view.hashes.hash_name"_lang, ICON_VS_SYMBOL_KEY, m_newHashName);
+
+            ImGui::NewLine();
+
+            if (ImGui::BeginCombo("hex.hashes.view.hashes.function"_lang, m_selectedHash != nullptr ? Lang(m_selectedHash->getUnlocalizedName()) : "")) {
+                for (const auto &hash : hashes) {
+                    if (ImGui::Selectable(Lang(hash->getUnlocalizedName()), m_selectedHash == hash.get())) {
+                        m_selectedHash = hash.get();
+                        m_newHashName.clear();
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            if (m_newHashName.empty() && m_selectedHash != nullptr)
+                m_newHashName = hex::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.hashes.view.hashes.hash"_lang));
+
+            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, nullptr, scaled({ 0, 250 }))) {
+                if (m_selectedHash != nullptr) {
+                    auto startPos = ImGui::GetCursorPosY();
+                    m_selectedHash->draw();
+
+                    // Check if no elements have been added
+                    if (startPos == ImGui::GetCursorPosY()) {
+                        ImGuiExt::TextFormattedCentered("hex.hashes.view.hashes.no_settings"_lang);
+                    }
                 }
             }
+            ImGuiExt::EndSubWindow();
 
-            ImGui::EndCombo();
-        }
-
-        if (m_newHashName.empty() && m_selectedHash != nullptr)
-            m_newHashName = hex::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.hashes.view.hashes.hash"_lang));
-
-        if (ImGui::BeginChild("##settings", ImVec2(ImGui::GetContentRegionAvail().x, 200_scaled), true)) {
-            if (m_selectedHash != nullptr) {
-                auto startPos = ImGui::GetCursorPosY();
-                m_selectedHash->draw();
-
-                // Check if no elements have been added
-                if (startPos == ImGui::GetCursorPosY()) {
-                    ImGuiExt::TextFormattedCentered("hex.hashes.view.hashes.no_settings"_lang);
+            ImGui::BeginDisabled(m_newHashName.empty() || m_selectedHash == nullptr);
+            if (ImGuiExt::DimmedButton("hex.hashes.view.hashes.add"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                if (m_selectedHash != nullptr) {
+                    m_hashFunctions->push_back(m_selectedHash->create(m_newHashName));
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.hashes.achievement.misc.create_hash.name");
+                    ImGui::CloseCurrentPopup();
                 }
             }
+            ImGui::EndDisabled();
+
+            ImGui::EndPopup();
         }
-        ImGui::EndChild();
 
-
-        ImGuiExt::InputTextIcon("##hash_name", ICON_VS_SYMBOL_KEY, m_newHashName);
-        ImGui::SameLine();
-
-        ImGui::BeginDisabled(m_newHashName.empty() || m_selectedHash == nullptr);
-        if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            if (m_selectedHash != nullptr) {
-                m_hashFunctions->push_back(m_selectedHash->create(m_newHashName));
-                AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.hashes.achievement.misc.create_hash.name");
-            }
-        }
-        ImGui::EndDisabled();
-
-        ImGui::SameLine();
-        ImGuiExt::HelpHover("hex.hashes.view.hashes.hover_info"_lang);
+        ImGui::SameLine(0, 10_scaled);
+        ImGuiExt::HelpHover("hex.hashes.view.hashes.hover_info"_lang, ICON_VS_INFO);
 
         if (ImGui::BeginTable("##hashes", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupColumn("hex.hashes.view.hashes.table.name"_lang);
@@ -247,7 +256,7 @@ namespace hex::plugin::hashes {
                     PopupTextHash::open(function);
                 }
                 ImGui::SameLine();
-                if (ImGuiExt::IconButton(ICON_VS_X, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     indexToRemove = i;
                 }
 
