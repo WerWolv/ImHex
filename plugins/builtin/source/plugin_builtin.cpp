@@ -90,6 +90,11 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     registerMainMenuEntries();
 
+    addFooterItems();
+    addTitleBarButtons();
+    addToolbarItems();
+    addGlobalUIItems();
+
     registerEventHandlers();
     registerDataVisualizers();
     registerMiniMapVisualizers();
@@ -121,11 +126,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     loadWorkspaces();
     addWindowDecoration();
     createWelcomeScreen();
-
-    addFooterItems();
-    addTitleBarButtons();
-    addToolbarItems();
-    addGlobalUIItems();
 
     setupOutOfBoxExperience();
 }

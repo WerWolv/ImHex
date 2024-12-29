@@ -279,6 +279,10 @@ namespace hex::ui {
             m_tooltipCallback = callback;
         }
 
+        void setShowSelectionInFooter(bool showSelection) {
+            m_showSelectionInFooter = showSelection;
+        }
+
         [[nodiscard]] i64 getScrollPosition() {
             return m_scrollPosition.get();
         }
@@ -367,6 +371,7 @@ namespace hex::ui {
         bool m_showAscii = true;
         bool m_showCustomEncoding = true;
         bool m_showMiniMap = false;
+        bool m_showSelectionInFooter = false;
         int m_miniMapWidth = 5;
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
         bool m_footerCollapsed = true;

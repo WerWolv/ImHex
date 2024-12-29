@@ -313,16 +313,6 @@ namespace hex::plugin::builtin {
                 }
             }
         });
-
-        ContentRegistry::Interface::addFooterItem([] {
-            if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value()) {
-                ImGuiExt::TextFormatted("0x{0:02X} - 0x{1:02X} (0x{2:02X} | {2} bytes)",
-                    selection->getStartAddress(),
-                    selection->getEndAddress(),
-                    selection->getSize()
-                );
-            }
-        });
     }
 
     static void drawProviderContextMenu(prv::Provider *provider) {

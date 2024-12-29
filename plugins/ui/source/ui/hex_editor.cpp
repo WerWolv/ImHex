@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <ui/hex_editor.hpp>
 
 #include <hex/api/content_registry.hpp>
@@ -11,6 +10,8 @@
 
 #include <fonts/vscode_icons.hpp>
 #include <hex/providers/buffered_reader.hpp>
+
+#include <algorithm>
 
 namespace hex::ui {
 
@@ -1075,6 +1076,14 @@ namespace hex::ui {
                         }
                     }
 
+                    ImGui::SameLine(0, 15_scaled);
+                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 2_scaled);
+                    if (m_mode == Mode::Insert) {
+                        ImGui::TextUnformatted("[ INSERT ]");
+                    } else {
+                        ImGui::Dummy({});
+                    }
+
                     // Collapse button
                     ImGui::TableNextColumn();
                     {
@@ -1084,9 +1093,16 @@ namespace hex::ui {
 
                     ImGui::TableNextColumn();
 
-                    ImGui::SameLine(0, 20_scaled);
-                    if (m_mode == Mode::Insert) {
-                        ImGui::TextUnformatted("[ INSERT ]");
+                    if (m_showSelectionInFooter && this->isSelectionValid()) {
+                        const auto selection = this->getSelection();
+
+                        ImGui::SameLine(0, 15_scaled);
+                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2_scaled);
+                        ImGuiExt::TextFormattedSelectable("0x{0:02X} - 0x{1:02X} (0x{2:02X} | {2} bytes)",
+                            selection.getStartAddress(),
+                            selection.getEndAddress(),
+                            selection.getSize()
+                        );
                     }
 
                     if (!m_footerCollapsed) {

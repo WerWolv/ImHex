@@ -1110,6 +1110,26 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding", [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.setCharacterCellPadding(value.get<int>(0));
         });
+
+        static bool showSelectionInWindowFooter = true;
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_selection", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            const auto show = value.get<bool>(false);
+
+            m_hexEditor.setShowSelectionInFooter(show);
+            showSelectionInWindowFooter = !show;
+        });
+
+        ContentRegistry::Interface::addFooterItem([] {
+            if (!showSelectionInWindowFooter) return;
+
+            if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value()) {
+                ImGuiExt::TextFormatted("0x{0:02X} - 0x{1:02X} (0x{2:02X} | {2} bytes)",
+                    selection->getStartAddress(),
+                    selection->getEndAddress(),
+                    selection->getSize()
+                );
+            }
+        });
     }
 
     void ViewHexEditor::registerMenuItems() {
