@@ -824,7 +824,7 @@ namespace ImGuiExt {
         return pressed;
     }
 
-    bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg) {
+    bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg, ImVec2 iconOffset) {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
@@ -855,7 +855,7 @@ namespace ImGuiExt {
                                                                                           : ImGuiCol_Button);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3, 1), bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3, 1) + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -1101,14 +1101,14 @@ namespace ImGuiExt {
         return res;
     }
 
-    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size){
+    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size, ImVec2 iconOffset) {
         PushStyleColor(ImGuiCol_ButtonHovered, GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
         PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
         PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
         PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-        bool res = IconButton(symbol, color, size);
+        bool res = IconButton(symbol, color, size, iconOffset);
 
         PopStyleColor(4);
         PopStyleVar(1);
@@ -1116,7 +1116,7 @@ namespace ImGuiExt {
         return res;
     }
 
-    bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size) {
+    bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size, ImVec2 iconOffset) {
         bool pushed = false;
         bool toggled = false;
 
@@ -1125,7 +1125,7 @@ namespace ImGuiExt {
             pushed = true;
         }
 
-        if (DimmedIconButton(icon, GetStyleColorVec4(ImGuiCol_Text), size)) {
+        if (DimmedIconButton(icon, GetStyleColorVec4(ImGuiCol_Text), size, iconOffset)) {
             *v = !*v;
             toggled = true;
         }

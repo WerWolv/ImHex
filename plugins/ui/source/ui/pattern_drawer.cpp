@@ -302,12 +302,12 @@ namespace hex::ui {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
         if (m_favorites.contains(m_currPatternPath)) {
-            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_DELETE, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram))) {
+            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_DELETE, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram), {}, { 1_scaled, 0 })) {
                 m_favorites.erase(m_currPatternPath);
             }
         }
         else {
-            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_ADD, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled))) {
+            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_ADD, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), {}, { 1_scaled, 0 })) {
                 m_favorites.insert({ m_currPatternPath, pattern.clone() });
             }
         }
