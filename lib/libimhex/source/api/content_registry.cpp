@@ -38,6 +38,34 @@ namespace hex {
 
             static AutoReset<std::map<std::string, std::map<std::string, std::vector<OnChange>>>> s_onChangeCallbacks;
 
+            static void runAllOnChangeCallbacks() {
+                for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
+                    for (const auto &[name, callbacks] : rest) {
+                        for (const auto &[id, callback] : callbacks) {
+                            try {
+                                callback(getSetting(category, name, {}));
+                            } catch (const std::exception &e) {
+                                log::error("Failed to load setting [{}/{}]: {}", category, name, e.what());
+                            }
+                        }
+                    }
+                }
+            }
+
+            void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
+                if (auto categoryIt = s_onChangeCallbacks->find(unlocalizedCategory); categoryIt != s_onChangeCallbacks->end()) {
+                    if (auto nameIt = categoryIt->second.find(unlocalizedName); nameIt != categoryIt->second.end()) {
+                        for (const auto &[id, callback] : nameIt->second) {
+                            try {
+                                callback(value);
+                            } catch (const nlohmann::json::exception &e) {
+                                log::error("Failed to run onChange handler for setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+                            }
+                        }
+                    }
+                }
+            }
+
             static AutoReset<nlohmann::json> s_settings;
             const nlohmann::json& getSettingsData() {
                 return s_settings;
@@ -72,24 +100,26 @@ namespace hex {
                         s_settings = nlohmann::json::parse(data);
                     }
 
-                    for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
-                        for (const auto &[name, callbacks] : rest) {
-                            for (const auto &[id, callback] : callbacks) {
-                                try {
-                                    callback(getSetting(category, name, {}));
-                                } catch (const std::exception &e) {
-                                    log::error("Failed to load setting [{}/{}]: {}", category, name, e.what());
-                                }
-                            }
-                        }
-                    }
+                    runAllOnChangeCallbacks();
                 }
 
                 void store() {
-                    auto data = s_settings->dump();
+                    if (!s_settings.isValid())
+                        return;
+
+                    // During a crash settings can be empty, causing them to be overwritten.
+                    if (settingsData.empty()) {
+                        return;
+                    }
+
+                    const auto result = settingsData.dump(4);
+                    if (result.empty()) {
+                        return;
+                    }
+
                     MAIN_THREAD_EM_ASM({
                         localStorage.setItem("config", UTF8ToString($0));
-                    }, data.c_str());
+                    }, result.c_str());
                 }
 
                 void clear() {
@@ -115,17 +145,7 @@ namespace hex {
                     if (!loaded)
                         store();
 
-                    for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
-                        for (const auto &[name, callbacks] : rest) {
-                            for (const auto &[id, callback] : callbacks) {
-                                try {
-                                    callback(getSetting(category, name, {}));
-                                } catch (const std::exception &e) {
-                                    log::error("Failed to load setting [{}/{}]: {}", category, name, e.what());
-                                }
-                            }
-                        }
-                    }
+                    runAllOnChangeCallbacks();
                 }
 
                 void store() {
@@ -208,20 +228,6 @@ namespace hex {
 
             void printSettingReadError(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json::exception& e) {
                 hex::log::error("Failed to read setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
-            }
-
-            void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
-                if (auto categoryIt = s_onChangeCallbacks->find(unlocalizedCategory); categoryIt != s_onChangeCallbacks->end()) {
-                    if (auto nameIt = categoryIt->second.find(unlocalizedName); nameIt != categoryIt->second.end()) {
-                        for (const auto &[id, callback] : nameIt->second) {
-                            try {
-                                callback(value);
-                            } catch (const nlohmann::json::exception &e) {
-                                log::error("Failed to run onChange handler for setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
-                            }
-                        }
-                    }
-                }
             }
 
         }
