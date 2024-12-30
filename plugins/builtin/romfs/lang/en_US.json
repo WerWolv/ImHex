@@ -494,6 +494,7 @@
         "hex.builtin.setting.hex_editor.pattern_parent_highlighting": "Highlight pattern parents on hover",
         "hex.builtin.setting.hex_editor.paste_behaviour": "Single-Byte Paste behaviour",
         "hex.builtin.setting.hex_editor.sync_scrolling": "Synchronize editor scroll position",
+        "hex.builtin.setting.hex_editor.show_highlights": "Show colorful highlightings",
         "hex.builtin.setting.hex_editor.show_selection": "Move selection display to hex editor footer",
         "hex.builtin.setting.imhex": "ImHex",
         "hex.builtin.setting.imhex.recent_files": "Recent Files",
