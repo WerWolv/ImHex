@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
 
     std::vector<MemoryFileProvider::MenuEntry> MemoryFileProvider::getMenuEntries() {
         return {
-            MenuEntry { Lang("hex.builtin.provider.mem_file.rename"), [this] { this->renameFile(); } }
+            MenuEntry { Lang("hex.builtin.provider.mem_file.rename"), ICON_VS_TAG, [this] { this->renameFile(); } }
         };
     }
 

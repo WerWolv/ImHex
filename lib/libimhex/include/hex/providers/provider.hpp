@@ -30,6 +30,7 @@ namespace hex::prv {
 
         struct MenuEntry {
             std::string name;
+            const char *icon;
             std::function<void()> callback;
         };
 

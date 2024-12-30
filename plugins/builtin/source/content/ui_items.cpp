@@ -317,7 +317,7 @@ namespace hex::plugin::builtin {
 
     static void drawProviderContextMenu(prv::Provider *provider) {
         for (const auto &menuEntry : provider->getMenuEntries()) {
-            if (ImGui::MenuItem(menuEntry.name.c_str())) {
+            if (ImGui::MenuItemEx(menuEntry.name.c_str(), menuEntry.icon)) {
                 menuEntry.callback();
             }
         }

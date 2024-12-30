@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
 
     std::vector<prv::Provider::MenuEntry> ViewProvider::getMenuEntries() {
         return {
-            MenuEntry { Lang("hex.builtin.provider.rename"), [this] { this->renameFile(); } }
+            MenuEntry { Lang("hex.builtin.provider.rename"), ICON_VS_TAG, [this] { this->renameFile(); } }
         };
     }
 

@@ -320,7 +320,7 @@ namespace hex::plugin::builtin::recent {
                     }
 
                     if (ImGui::BeginPopup(popupID.c_str())) {
-                        if (ImGui::MenuItem("hex.ui.common.remove"_lang)) {
+                        if (ImGui::MenuItemEx("hex.ui.common.remove"_lang, ICON_VS_REMOVE)) {
                             shouldRemove = true;
                         }
                         ImGui::EndPopup();
