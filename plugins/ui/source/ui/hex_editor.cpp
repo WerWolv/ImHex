@@ -115,6 +115,16 @@ namespace hex::ui {
         return color;
     }
 
+    std::string HexEditor::formatAddress(u64 address, u32 width, bool prefix) const {
+        switch (m_addressFormat) {
+            using enum AddressFormat;
+            default:
+            case Hexadecimal: return hex::format(m_upperCaseHex ? "{0}{1:0{2}X}" : "{0}{1:0{2}x}", prefix ? "0x" : "", address, width);
+            case Decimal:     return hex::format("{0: >{1}d}", address, width);
+            case Octal:       return hex::format("{0}{1:0{2}o}", prefix ? "0o" : "", address, width);
+        }
+    }
+
     struct CustomEncodingData {
         std::string displayValue;
         size_t advance;
@@ -530,7 +540,7 @@ namespace hex::ui {
                     if (isColumnSeparatorColumn(i, columnCount))
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
 
-                    ImGui::TableSetupColumn(hex::format(m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * m_currDataVisualizer->getMaxCharsPerCell() + std::ceil((6 + m_byteCellPadding) * 1_scaled));
+                    ImGui::TableSetupColumn(formatAddress(i * bytesPerCell, m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * m_currDataVisualizer->getMaxCharsPerCell() + std::ceil((6 + m_byteCellPadding) * 1_scaled));
                 }
 
                 // ASCII column
@@ -597,7 +607,7 @@ namespace hex::ui {
                         if (m_separatorStride > 0 && rowAddress % m_separatorStride < m_bytesPerRow && !ImGui::GetIO().KeyShift)
                             ImGuiExt::TextFormattedColored(ImGui::GetStyleColorVec4(ImGuiCol_SeparatorActive), "{} {}", "hex.ui.common.segment"_lang, rowAddress / m_separatorStride);
                         else
-                            ImGuiExt::TextFormatted(m_upperCaseHex ? "{:08X}: " : "{:08x}: ", rowAddress);
+                            ImGuiExt::TextFormattedSelectable("{0}: ", formatAddress(rowAddress, 8));
 
                         ImGui::TableNextColumn();
 
@@ -1072,6 +1082,40 @@ namespace hex::ui {
                                 const u64 max = m_provider->getActualSize();
                                 ImGui::SliderScalar("##separator_stride", ImGuiDataType_U64, &m_separatorStride, &min, &max, m_separatorStride == 0 ? "hex.ui.hex_editor.no_separator"_lang : hex::format("hex.ui.hex_editor.separator_stride"_lang, m_separatorStride).c_str());
                             }
+                            {
+                                int selection = [this] {
+                                    switch (m_addressFormat) {
+                                        default:
+                                        case AddressFormat::Hexadecimal:
+                                            return 0;
+                                        case AddressFormat::Decimal:
+                                            return 1;
+                                        case AddressFormat::Octal:
+                                            return 2;
+                                    }
+                                }();
+
+                                std::array options = {
+                                    hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.hexadecimal"_lang),
+                                    hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.decimal"_lang),
+                                    hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.octal"_lang)
+                                };
+
+                                if (ImGui::SliderInt("##format", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
+                                    switch (selection) {
+                                        default:
+                                        case 0:
+                                            m_addressFormat = AddressFormat::Hexadecimal;
+                                        break;
+                                        case 1:
+                                            m_addressFormat = AddressFormat::Decimal;
+                                        break;
+                                        case 2:
+                                            m_addressFormat = AddressFormat::Octal;
+                                        break;
+                                    }
+                                }
+                            }
                             ImGui::EndPopup();
                         }
                     }
@@ -1098,9 +1142,10 @@ namespace hex::ui {
 
                         ImGui::SameLine(0, 15_scaled);
                         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2_scaled);
-                        ImGuiExt::TextFormattedSelectable("0x{0:02X} - 0x{1:02X} (0x{2:02X} | {2} bytes)",
-                            selection.getStartAddress(),
-                            selection.getEndAddress(),
+                        ImGuiExt::TextFormattedSelectable("{0} - {1} ({2} | {3} bytes)",
+                            formatAddress(selection.getStartAddress(), 2, true),
+                            formatAddress(selection.getEndAddress(), 2, true),
+                            formatAddress(selection.getSize(), 2, true),
                             selection.getSize()
                         );
                     }
@@ -1119,10 +1164,11 @@ namespace hex::ui {
                             {
                                 ImGui::PushItemWidth(-1);
                                 if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount,
-                                    hex::format("%llu / {0}  [0x{1:04X} - 0x{2:04X}]",
+                                    hex::format("%llu / {0}  [{1} - {2}]",
                                         pageCount,
-                                        pageAddress,
-                                        pageSize == 0 ? 0 : (pageAddress + pageSize - 1)).c_str()))
+                                        formatAddress(pageAddress, 4, true),
+                                        formatAddress(pageSize == 0 ? 0 : (pageAddress + pageSize - 1), 4, true)
+                                        ).c_str()))
                                     m_provider->setCurrentPage(page - 1);
                                 ImGui::PopItemWidth();
                             }
@@ -1134,9 +1180,9 @@ namespace hex::ui {
                         // Loaded data size
                         ImGui::TableNextColumn();
                         {
-                            ImGuiExt::TextFormattedSelectable("0x{0:08X} (0x{1:X} | {2})",
-                                                           m_provider->getBaseAddress(),
-                                                           m_provider->getBaseAddress() + m_provider->getActualSize(),
+                            ImGuiExt::TextFormattedSelectable("{0} ({1} | {2})",
+                                                           formatAddress(m_provider->getBaseAddress(), 8, true),
+                                                           formatAddress(m_provider->getBaseAddress() + m_provider->getActualSize(), 1, true),
                                                            ImGui::GetIO().KeyCtrl
                                                                ? hex::format("{}", m_provider->getActualSize())
                                                                : hex::toByteString(m_provider->getActualSize())
