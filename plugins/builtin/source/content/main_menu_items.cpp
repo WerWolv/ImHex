@@ -223,7 +223,7 @@ namespace hex::plugin::builtin {
                                                 provider
                                             });
 
-                            auto result = formatter.callback(provider, selection.getStartAddress(), selection.getSize());
+                            auto result = formatter.callback(provider, selection.getStartAddress(), selection.getSize(), false);
 
                             wolv::io::File file(path, wolv::io::File::Mode::Create);
                             if (!file.isValid()) {

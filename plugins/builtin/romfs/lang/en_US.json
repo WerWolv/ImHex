@@ -818,6 +818,7 @@
         "hex.builtin.view.hex_editor.goto.offset.relative": "Relative",
         "hex.builtin.view.hex_editor.menu.edit.copy": "Copy",
         "hex.builtin.view.hex_editor.menu.edit.copy_as": "Copy as",
+        "hex.builtin.view.hex_editor.menu.edit.copy_as.preview": "Copy Preview",
         "hex.builtin.view.hex_editor.menu.edit.cut": "Cut",
         "hex.builtin.view.hex_editor.menu.edit.fill": "Fill...",
         "hex.builtin.view.hex_editor.menu.edit.insert": "Insert...",

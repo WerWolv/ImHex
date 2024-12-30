@@ -1013,7 +1013,7 @@ namespace hex {
 
             namespace impl {
 
-                using Callback = std::function<std::string(prv::Provider *provider, u64 address, size_t size)>;
+                using Callback = std::function<std::string(prv::Provider *provider, u64 address, size_t size, bool preview)>;
                 struct ExportMenuEntry {
                     UnlocalizedString unlocalizedName;
                     Callback callback;

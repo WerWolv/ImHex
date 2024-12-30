@@ -1269,9 +1269,27 @@ namespace hex::plugin::builtin {
                             callback(
                                     provider,
                                     selection->getStartAddress(),
-                                    selection->size
+                                    selection->size,
+                                    false
                             ).c_str()
                     );
+                }
+
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
+                    const auto previewText = callback(
+                        provider,
+                        selection->getStartAddress(),
+                        std::min<u64>(selection->size, 32),
+                        true
+                    );
+
+                    if (!previewText.empty()) {
+                        if (ImGui::BeginTooltip()) {
+                            ImGuiExt::Header("hex.builtin.view.hex_editor.menu.edit.copy_as.preview"_lang, true);
+                            ImGui::TextDisabled("%s", previewText.c_str());
+                            ImGui::EndTooltip();
+                        }
+                    }
                 }
             }
         },
