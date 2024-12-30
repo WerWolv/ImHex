@@ -587,7 +587,7 @@ namespace hex::plugin::builtin {
 
         m_hexEditor.setHoverChangedCallback([this](u64 address, size_t size) {
             if (!showHighlights)
-                return std::nullopt;
+                return;
 
             m_hoverHighlights->clear();
 
@@ -602,8 +602,8 @@ namespace hex::plugin::builtin {
 
         m_hexEditor.setTooltipCallback([](u64 address, const u8 *data, size_t size) {
             if (!showHighlights)
-                return std::nullopt;
-            
+                return;
+
             for (const auto &[id, callback] : ImHexApi::HexEditor::impl::getTooltipFunctions()) {
                 callback(address, data, size);
             }
