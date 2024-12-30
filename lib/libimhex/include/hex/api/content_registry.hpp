@@ -622,8 +622,7 @@ namespace hex {
         /* Data Inspector Registry. Allows adding of new types to the data inspector */
         namespace DataInspector {
 
-            enum class NumberDisplayStyle
-            {
+            enum class NumberDisplayStyle : u8 {
                 Decimal,
                 Hexadecimal,
                 Octal
@@ -676,6 +675,13 @@ namespace hex {
                 impl::GeneratorFunction displayGeneratorFunction,
                 std::optional<impl::EditingFunction> editingFunction = std::nullopt
             );
+
+            /**
+             * @brief Allows adding new menu items to data inspector row context menus. Call this function inside the
+             * draw function of the data inspector row definition.
+             * @param function Callback that will draw menu items
+             */
+            void drawMenuItems(const std::function<void()> &function);
 
         }
 

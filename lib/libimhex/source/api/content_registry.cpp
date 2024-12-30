@@ -760,6 +760,14 @@ namespace hex {
             impl::s_entries->push_back({ unlocalizedName, requiredSize, maxSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
         }
 
+        void drawMenuItems(const std::function<void()> &function) {
+            if (ImGui::BeginPopup("##DataInspectorRowContextMenu")) {
+                function();
+                ImGui::Separator();
+                ImGui::EndPopup();
+            }
+        }
+
     }
 
     namespace ContentRegistry::DataProcessorNode {

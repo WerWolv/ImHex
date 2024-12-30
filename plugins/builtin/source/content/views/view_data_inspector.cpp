@@ -429,11 +429,11 @@ namespace hex::plugin::builtin {
                     m_selectedEntryName.reset();
                 }
                 if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-                    ImGui::OpenPopup("##InspectorMenu");
+                    ImGui::OpenPopup("##DataInspectorRowContextMenu");
                 }
             }
 
-            if (ImGui::BeginPopup("##InspectorMenu")) {
+            if (ImGui::BeginPopup("##DataInspectorRowContextMenu")) {
                 if (ImGui::MenuItemEx("hex.builtin.view.data_inspector.menu.copy"_lang, ICON_VS_COPY)) {
                     ImGui::SetClipboardText(copyValue.c_str());
                 }

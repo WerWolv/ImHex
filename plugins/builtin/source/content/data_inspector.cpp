@@ -13,6 +13,7 @@
 #include <string>
 
 #include <imgui_internal.h>
+#include <fonts/vscode_icons.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex::plugin::builtin {
@@ -77,48 +78,60 @@ namespace hex::plugin::builtin {
             return {};
     }
 
-    template<std::integral T, size_t Size = sizeof(T)>
-    static std::string unsignedToString(const std::vector<u8> &buffer, std::endian endian, Style style) requires(sizeof(T) <= sizeof(u64)) {
-        if (buffer.size() < Size)
-            return { };
-
-        auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? hex::format("0x{{0:0{}X}}", Size * 2) : hex::format("0o{{0:0{}o}}", Size * 3));
-
+    template<std::unsigned_integral T, size_t Size = sizeof(T)>
+    static T bufferToInteger(const std::vector<u8> &buffer, std::endian endian) {
         T value = 0x00;
         std::memcpy(&value, buffer.data(), std::min(sizeof(T), Size));
-        return hex::format(format, hex::changeEndianness(value, Size, endian));
+
+        return hex::changeEndianness(value, Size, endian);
+    }
+
+    template<std::signed_integral T, size_t Size = sizeof(T)>
+    static T bufferToInteger(const std::vector<u8> &buffer, std::endian endian) {
+        T value = 0x00;
+        std::memcpy(&value, buffer.data(), std::min(sizeof(T), Size));
+        value = hex::changeEndianness(value, Size, endian);
+        if (Size != sizeof(T))
+            value = hex::signExtend(Size * 8, value);
+
+        return value;
     }
 
     template<std::integral T, size_t Size = sizeof(T)>
-    static std::string signedToString(const std::vector<u8> &buffer, std::endian endian, Style style) requires(sizeof(T) <= sizeof(u64)) {
+    static std::string bufferToIntegerString(const std::vector<u8> &buffer, std::endian endian, Style style) requires(sizeof(T) <= sizeof(u64)) {
         if (buffer.size() < Size)
             return { };
 
         auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? hex::format("0x{{0:0{}X}}", Size * 2) : hex::format("0o{{0:0{}o}}", Size * 3));
 
-        T value = 0x00;
-        std::memcpy(&value, buffer.data(), std::min(sizeof(T), Size));
-        auto number   = hex::changeEndianness(value, Size, endian);
-        if (Size != sizeof(T))
-            number = hex::signExtend(Size * 8, number);
-
-        return hex::format(format, number);
+        return hex::format(format, bufferToInteger<T, Size>(buffer, endian));
     }
 
     template<std::integral T, size_t Size = sizeof(T)>
     static std::string integerToString(const std::vector<u8> &buffer, std::endian endian, Style style) requires(sizeof(T) <= sizeof(u64)) {
-        if constexpr (std::unsigned_integral<T>)
-            return unsignedToString<T, Size>(buffer, endian, style);
-        else if constexpr (std::signed_integral<T>)
-            return signedToString<T, Size>(buffer, endian, style);
+        if constexpr (std::integral<T>)
+            return bufferToIntegerString<T, Size>(buffer, endian, style);
         else
             return {};
     }
 
-    template<typename T>
-    static hex::ContentRegistry::DataInspector::impl::GeneratorFunction drawString(T func) {
+    template<typename T, size_t Size = sizeof(T), typename Func = void>
+    static hex::ContentRegistry::DataInspector::impl::GeneratorFunction drawString(Func func) {
         return [func](const std::vector<u8> &buffer, std::endian endian, Style style) {
-            return [value = func(buffer, endian, style)]() -> std::string { ImGui::TextUnformatted(value.c_str()); return value; };
+            return [buffer, endian, value = func(buffer, endian, style)]() -> std::string {
+                ContentRegistry::DataInspector::drawMenuItems([&] {
+                    if (ImGui::MenuItemEx("hex.builtin.inspector.jump_to_address"_lang, ICON_VS_DEBUG_STEP_OUT)) {
+                        auto address = bufferToInteger<T, Size>(buffer, endian);
+                        if (address >= 0) {
+                            ImHexApi::HexEditor::setSelection(Region { u64(address), sizeof(u8) });
+                        }
+                    }
+                });
+
+                ImGui::TextUnformatted(value.c_str());
+
+                return value;
+            };
         };
 
     }
@@ -156,62 +169,62 @@ namespace hex::plugin::builtin {
 
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.u8", sizeof(u8),
-            drawString(integerToString<u8>),
+            drawString<u8>(integerToString<u8>),
             stringToInteger<u8>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.i8", sizeof(i8),
-        drawString(integerToString<i8>),
-        stringToInteger<i8>
+            drawString<i8>(integerToString<i8>),
+            stringToInteger<i8>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.u16", sizeof(u16),
-            drawString(integerToString<u16>),
+            drawString<u16>(integerToString<u16>),
             stringToInteger<u16>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.i16", sizeof(i16),
-            drawString(integerToString<i16>),
+            drawString<i16>(integerToString<i16>),
             stringToInteger<i16>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.u24", 3,
-            drawString(integerToString<u32, 3>),
+            drawString<u32, 3>(integerToString<u32, 3>),
             stringToInteger<u32, 3>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.i24", 3,
-            drawString(integerToString<i32, 3>),
+            drawString<i32, 3>(integerToString<i32, 3>),
             stringToInteger<i32, 3>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.u32", sizeof(u32),
-            drawString(integerToString<u32>),
+            drawString<u32>(integerToString<u32>),
             stringToInteger<u32>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.i32", sizeof(i32),
-            drawString(integerToString<i32>),
+            drawString<i32>(integerToString<i32>),
             stringToInteger<i32>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.u48", 6,
-            drawString(integerToString<u64, 6>),
+            drawString<u64, 6>(integerToString<u64, 6>),
             stringToInteger<u64, 6>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.i48", 6,
-            drawString(integerToString<i64, 6>),
+            drawString<i64, 6>(integerToString<i64, 6>),
             stringToInteger<i64, 6>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.u64", sizeof(u64),
-            drawString(integerToString<u64>),
+            drawString<u64>(integerToString<u64>),
             stringToInteger<u64>
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.i64", sizeof(i64),
-            drawString(integerToString<i64>),
+            drawString<i64>(integerToString<i64>),
             stringToInteger<i64>
         );
 

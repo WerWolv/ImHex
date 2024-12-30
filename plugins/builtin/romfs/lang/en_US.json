@@ -91,6 +91,7 @@
         "hex.builtin.inspector.i48": "int48_t",
         "hex.builtin.inspector.i64": "int64_t",
         "hex.builtin.inspector.i8": "int8_t",
+        "hex.builtin.inspector.jump_to_address": "Jump to address",
         "hex.builtin.inspector.long_double": "long double (128 bit)",
         "hex.builtin.inspector.rgb565": "RGB565 Color",
         "hex.builtin.inspector.rgba8": "RGBA8 Color",
