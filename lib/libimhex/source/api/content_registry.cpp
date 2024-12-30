@@ -107,6 +107,8 @@ namespace hex {
                     if (!s_settings.isValid())
                         return;
 
+                    const auto &settingsData = *s_settings;
+
                     // During a crash settings can be empty, causing them to be overwritten.
                     if (settingsData.empty()) {
                         return;
