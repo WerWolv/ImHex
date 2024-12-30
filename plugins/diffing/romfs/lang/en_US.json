@@ -13,6 +13,7 @@
         "hex.diffing.view.diff.modified": "Modified",
         "hex.diffing.view.diff.provider_a": "Provider A",
         "hex.diffing.view.diff.provider_b": "Provider B",
+        "hex.diffing.view.diff.changes": "Changes",
         "hex.diffing.view.diff.removed": "Removed",
         "hex.diffing.view.diff.algorithm": "Diffing Algorithm",
         "hex.diffing.view.diff.settings": "No settings available",
