@@ -504,7 +504,7 @@ namespace hex::ui {
         }
 
         const auto bytesPerCell    = m_currDataVisualizer->getBytesPerCell();
-        const auto columnCount     = m_bytesPerRow / bytesPerCell;
+        const u64 columnCount      = m_bytesPerRow / bytesPerCell;
         auto byteColumnCount       = 2 + columnCount + getByteColumnSeparatorCount(columnCount) + 2 + 2;
 
         if (byteColumnCount >= IMGUI_TABLE_MAX_COLUMNS) {
