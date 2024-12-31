@@ -80,7 +80,7 @@ namespace hex::plugin::disasm {
 
     protected:
         cs_mode m_mode = cs_mode(0);
-        int m_endian = false;
+        int m_endian = true;
         bool m_initialized = false;
     };
 
