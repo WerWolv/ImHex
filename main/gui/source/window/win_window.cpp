@@ -206,13 +206,14 @@ namespace hex {
                 if (delta >= 0) {
                     sleepTicks = delta / period;
                 } else {
-
                     sleepTicks = -1 + delta / period;
                 }
 
                 sleepMilliSeconds = delta - (period * sleepTicks);
-                const double sleepTime = (1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
-                Sleep(DWORD(std::round(sleepTime)));
+                const double sleepTime = std::round(1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
+                if (sleepTime >= 0.0) {
+                    Sleep(DWORD(sleepTime));
+                }
                 timeEndPeriod(granularity);
 
                 return WVR_REDRAW;
