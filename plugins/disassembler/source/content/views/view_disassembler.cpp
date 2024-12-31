@@ -6,7 +6,6 @@
 
 #include <fonts/vscode_icons.hpp>
 
-#include <cstring>
 #include <toasts/toast_notification.hpp>
 
 #include <wolv/literals.hpp>
@@ -17,8 +16,8 @@ using namespace wolv::literals;
 namespace hex::plugin::disasm {
 
     ViewDisassembler::ViewDisassembler() : View::Window("hex.disassembler.view.disassembler.name", ICON_VS_FILE_CODE) {
-        EventProviderDeleted::subscribe(this, [this](const auto*) {
-            m_disassembly.clear();
+        EventProviderDeleted::subscribe(this, [this](const auto *provider) {
+            m_disassembly.get(provider).clear();
         });
 
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.disassemble_range" }, ICON_VS_DEBUG_LINE_BY_LINE, 3100, CTRLCMD + SHIFT + Keys::D, [this] {
@@ -41,40 +40,45 @@ namespace hex::plugin::disasm {
     }
 
     void ViewDisassembler::disassemble() {
-        m_disassembly.clear();
+        const auto provider = ImHexApi::Provider::get();
 
-        if (m_regionToDisassemble.getStartAddress() < m_imageBaseAddress)
+        m_disassembly.get(provider).clear();
+
+        if (m_regionToDisassemble.get(provider).getStartAddress() < m_imageBaseAddress)
             return;
 
-        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling"_lang, m_regionToDisassemble.getSize(), [this](auto &task) {
+        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling"_lang, m_regionToDisassemble.get(provider).getSize(), [this, provider](auto &task) {
+            const auto &currArchitecture = m_currArchitecture.get(provider);
+            const auto region = m_regionToDisassemble.get(provider);
+            auto &disassembly = m_disassembly.get(provider);
+
             // Create a capstone disassembler instance
-            if (m_currArchitecture->start()) {
-                auto provider = ImHexApi::Provider::get();
+            if (currArchitecture->start()) {
                 std::vector<u8> buffer(1_MiB, 0x00);
 
-                const u64 codeOffset = m_regionToDisassemble.getStartAddress() - m_imageBaseAddress;
+                const u64 codeOffset = region.getStartAddress() - m_imageBaseAddress;
 
                 // Read the data in chunks and disassemble it
                 u64 instructionLoadAddress = m_imageLoadAddress + codeOffset;
-                u64 instructionDataAddress = m_regionToDisassemble.getStartAddress();
+                u64 instructionDataAddress = region.getStartAddress();
 
                 bool hadError = false;
-                while (instructionDataAddress < m_regionToDisassemble.getEndAddress()) {
+                while (instructionDataAddress < region.getEndAddress()) {
                     // Read a chunk of data
-                    size_t bufferSize = std::min<u64>(buffer.size(), (m_regionToDisassemble.getEndAddress() - instructionDataAddress));
+                    size_t bufferSize = std::min<u64>(buffer.size(), (region.getEndAddress() - instructionDataAddress));
                     provider->read(instructionDataAddress, buffer.data(), bufferSize);
 
                     auto code = std::span(buffer.data(), bufferSize);
 
                     // Ask capstone to disassemble the data
                     while (true) {
-                        auto instruction = m_currArchitecture->disassemble(m_imageBaseAddress, instructionLoadAddress, instructionDataAddress, code);
+                        auto instruction = currArchitecture->disassemble(m_imageBaseAddress, instructionLoadAddress, instructionDataAddress, code);
                         if (!instruction.has_value())
                             break;
 
                         task.update(instructionDataAddress);
 
-                        m_disassembly.push_back(instruction.value());
+                        disassembly.push_back(instruction.value());
 
                         code = code.subspan(instruction->size);
                         instructionDataAddress += instruction->size;
@@ -89,15 +93,16 @@ namespace hex::plugin::disasm {
                     hadError = true;
                 }
 
-                m_currArchitecture->end();
+                currArchitecture->end();
             }
         });
     }
 
     void ViewDisassembler::exportToFile() {
-        TaskManager::createTask("hex.ui.common.processing"_lang, TaskManager::NoProgress, [this](auto &) {
-            TaskManager::doLater([this] {
-                fs::openFileBrowser(fs::DialogMode::Save, {}, [this](const std::fs::path &path) {
+        const auto provider = ImHexApi::Provider::get();
+        TaskManager::createTask("hex.ui.common.processing"_lang, TaskManager::NoProgress, [this, provider](auto &) {
+            TaskManager::doLater([this, provider] {
+                fs::openFileBrowser(fs::DialogMode::Save, {}, [this, provider](const std::fs::path &path) {
                     auto p = path;
                     if (p.extension() != ".asm")
                         p.replace_filename(hex::format("{}{}", p.filename().string(), ".asm"));
@@ -109,7 +114,7 @@ namespace hex::plugin::disasm {
                     }
 
                     // As disassembly code can be quite long, we prefer writing each disassembled instruction to file
-                    for (const ContentRegistry::Disassembler::Instruction& instruction : m_disassembly) {
+                    for (const ContentRegistry::Disassembler::Instruction& instruction : m_disassembly.get(provider)) {
                         // We test for a "bugged" case that should never happen - the instruction should always have a mnemonic
                         if (instruction.mnemonic.empty())
                             continue;
@@ -127,20 +132,27 @@ namespace hex::plugin::disasm {
     void ViewDisassembler::drawContent() {
         auto provider = ImHexApi::Provider::get();
         if (ImHexApi::Provider::isValid() && provider->isReadable()) {
+            auto &region = m_regionToDisassemble.get(provider);
+            auto &range = m_range.get(provider);
+
             // Draw region selection picker
-            ui::regionSelectionPicker(&m_regionToDisassemble, provider, &m_range, true, true);
+            ui::regionSelectionPicker(&region, provider, &range, true, true);
 
             ImGuiExt::Header("hex.disassembler.view.disassembler.position"_lang);
 
             // Draw base address input
-            ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_load_address"_lang, &m_imageLoadAddress, ImGuiInputTextFlags_CharsHexadecimal);
-            ImGui::SameLine();
-            ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_load_address.hint"_lang, ICON_VS_INFO);
+            {
+                auto &address = m_imageLoadAddress.get(provider);
+                ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_load_address"_lang, &address, ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::SameLine();
+                ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_load_address.hint"_lang, ICON_VS_INFO);
+            }
 
             // Draw code region start address input
             ImGui::BeginDisabled(m_range == ui::RegionType::EntireData);
             {
-                ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_base_address"_lang, &m_imageBaseAddress, ImGuiInputTextFlags_CharsHexadecimal);
+                auto &address = m_imageBaseAddress.get(provider);
+                ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_base_address"_lang, &address, ImGuiInputTextFlags_CharsHexadecimal);
                 ImGui::SameLine();
                 ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_base_address.hint"_lang, ICON_VS_INFO);
             }
@@ -155,13 +167,14 @@ namespace hex::plugin::disasm {
                 if (architectures.empty()) {
                     ImGuiExt::TextSpinner("hex.disassembler.view.disassembler.arch"_lang);
                 } else {
-                    if (m_currArchitecture == nullptr) {
+                    const auto &currArchitecture = m_currArchitecture.get(provider);
+                    if (currArchitecture == nullptr) {
                         m_currArchitecture = architectures.begin()->second();
                     }
 
-                    if (ImGui::BeginCombo("hex.disassembler.view.disassembler.arch"_lang, m_currArchitecture->getName().c_str())) {
+                    if (ImGui::BeginCombo("hex.disassembler.view.disassembler.arch"_lang, currArchitecture->getName().c_str())) {
                         for (const auto &[name, creator] : architectures) {
-                            if (ImGui::Selectable(name.c_str(), name == m_currArchitecture->getName())) {
+                            if (ImGui::Selectable(name.c_str(), name == currArchitecture->getName())) {
                                 m_currArchitecture = creator();
                             }
                         }
@@ -170,23 +183,25 @@ namespace hex::plugin::disasm {
 
                     // Draw sub-settings for each architecture
                     if (ImGuiExt::BeginBox()) {
-                        m_currArchitecture->drawSettings();
+                        currArchitecture->drawSettings();
                     }
                     ImGuiExt::EndBox();
                 }
             }
 
             // Draw disassemble button
-            ImGui::BeginDisabled(m_disassemblerTask.isRunning() || m_regionToDisassemble.getStartAddress() < m_imageBaseAddress);
+            ImGui::BeginDisabled(m_disassemblerTask.isRunning() || region.getStartAddress() < m_imageBaseAddress);
             {
                 if (ImGuiExt::DimmedButton("hex.disassembler.view.disassembler.disassemble"_lang))
                     this->disassemble();
             }
             ImGui::EndDisabled();
 
+            const auto &disassembly = m_disassembly.get(provider);
+
             // Draw export to file icon button
             ImGui::SameLine();
-            ImGui::BeginDisabled(m_disassemblerTask.isRunning() || m_disassembly.empty());
+            ImGui::BeginDisabled(m_disassemblerTask.isRunning() || disassembly.empty());
             {
                 if (ImGuiExt::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                     this->exportToFile();
@@ -214,12 +229,12 @@ namespace hex::plugin::disasm {
 
                 if (!m_disassemblerTask.isRunning()) {
                     ImGuiListClipper clipper;
-                    clipper.Begin(m_disassembly.size());
+                    clipper.Begin(disassembly.size());
 
                     ImGui::TableHeadersRow();
                     while (clipper.Step()) {
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            const auto &instruction = m_disassembly[i];
+                            const auto &instruction = disassembly[i];
 
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();

@@ -23,14 +23,14 @@ namespace hex::plugin::disasm {
     private:
         TaskHolder m_disassemblerTask;
 
-        u64 m_imageLoadAddress   = 0;
-        u64 m_imageBaseAddress = 0;
-        ui::RegionType m_range = ui::RegionType::EntireData;
-        Region m_regionToDisassemble = { };
+        PerProvider<u64> m_imageLoadAddress;
+        PerProvider<u64> m_imageBaseAddress;
+        PerProvider<ui::RegionType> m_range;
+        PerProvider<Region> m_regionToDisassemble;
 
-        std::unique_ptr<ContentRegistry::Disassembler::Architecture> m_currArchitecture = nullptr;
+        PerProvider<std::unique_ptr<ContentRegistry::Disassembler::Architecture>> m_currArchitecture;
 
-        std::vector<ContentRegistry::Disassembler::Instruction> m_disassembly;
+        PerProvider<std::vector<ContentRegistry::Disassembler::Instruction>> m_disassembly;
 
         void disassemble();
         void exportToFile();
