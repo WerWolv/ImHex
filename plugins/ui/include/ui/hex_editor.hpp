@@ -366,6 +366,8 @@ namespace hex::ui {
         bool m_enteredEditingMode = false;
         bool m_shouldUpdateEditingValue = false;
         std::vector<u8> m_editingBytes;
+        u32 m_maxFittingColumns = 16;
+        bool m_autoFitColumns = false;
 
         std::shared_ptr<ContentRegistry::HexEditor::MiniMapVisualizer> m_miniMapVisualizer;
 

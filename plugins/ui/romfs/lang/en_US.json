@@ -87,6 +87,7 @@
         "hex.ui.hex_editor.ascii_view": "Display ASCII column",
         "hex.ui.hex_editor.custom_encoding_view": "Display advanced decoding column",
         "hex.ui.hex_editor.columns": "Columns",
+        "hex.ui.hex_editor.fit_columns": "Fit columns to width",
         "hex.ui.hex_editor.human_readable_units_footer": "Convert sizes to human-readable units",
         "hex.ui.hex_editor.data_size": "Data Size",
         "hex.ui.hex_editor.data_cell_options": "Data Cell Options",
