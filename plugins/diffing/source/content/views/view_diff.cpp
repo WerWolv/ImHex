@@ -309,15 +309,15 @@ namespace hex::plugin::diffing {
                         switch (typeA) {
                             case DifferenceType::Mismatch:
                                 ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffChanged), ICON_VS_DIFF_MODIFIED);
-                                ImGui::SetItemTooltip("hex.diffing.view.diff.modified"_lang);
+                                ImGui::SetItemTooltip("%s", "hex.diffing.view.diff.modified"_lang.get());
                                 break;
                             case DifferenceType::Insertion:
                                 ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffAdded), ICON_VS_DIFF_ADDED);
-                                ImGui::SetItemTooltip("hex.diffing.view.diff.added"_lang);
+                                ImGui::SetItemTooltip("%s", "hex.diffing.view.diff.added"_lang.get());
                                 break;
                             case DifferenceType::Deletion:
                                 ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffRemoved), ICON_VS_DIFF_REMOVED);
-                                ImGui::SetItemTooltip("hex.diffing.view.diff.removed"_lang);
+                                ImGui::SetItemTooltip("%s", "hex.diffing.view.diff.removed"_lang.get());
                                 break;
                             default:
                                 break;
