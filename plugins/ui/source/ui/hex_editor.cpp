@@ -504,8 +504,8 @@ namespace hex::ui {
         }
 
         const auto bytesPerCell    = m_currDataVisualizer->getBytesPerCell();
-        const u16 columnCount      = m_bytesPerRow / bytesPerCell;
-        auto byteColumnCount = 2 + columnCount + getByteColumnSeparatorCount(columnCount) + 2 + 2;
+        const auto columnCount     = m_bytesPerRow / bytesPerCell;
+        auto byteColumnCount       = 2 + columnCount + getByteColumnSeparatorCount(columnCount) + 2 + 2;
 
         if (byteColumnCount >= IMGUI_TABLE_MAX_COLUMNS) {
             m_bytesPerRow = 64;
@@ -523,6 +523,8 @@ namespace hex::ui {
             m_mode = Mode::Overwrite;
 
         Region hoveredCell = Region::Invalid();
+        ImGui::PushID(m_bytesPerRow);
+        ON_SCOPE_EXIT { ImGui::PopID(); };
         if (ImGui::BeginChild("Hex View", size, ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             this->drawScrollbar(CharacterSize);
 
@@ -532,7 +534,7 @@ namespace hex::ui {
                 ImGui::TableSetupScrollFreeze(0, 2);
 
                 // Row address column
-                ImGui::TableSetupColumn("hex.ui.common.address"_lang);
+                ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * fmt::formatted_size("{:08X}: ", (m_scrollPosition + m_visibleRowCount) * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress()));
                 ImGui::TableSetupColumn("");
 
                 // Byte columns
