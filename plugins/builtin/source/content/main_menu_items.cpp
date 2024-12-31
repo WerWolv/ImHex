@@ -541,6 +541,7 @@ namespace hex::plugin::builtin {
                     glfwSetWindowMonitor(window, monitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
                 } else {
                     glfwSetWindowMonitor(window, nullptr, position.x, position.y, size.x, size.y, 0);
+                    glfwSetWindowAttrib(window, GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GLFW_FALSE : GLFW_TRUE);
                 }
 
             }, []{ return true; }, []{ return glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr; });
