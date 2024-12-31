@@ -534,7 +534,10 @@ namespace hex::ui {
                 ImGui::TableSetupScrollFreeze(0, 2);
 
                 // Row address column
-                ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * fmt::formatted_size("{:08X}: ", (m_scrollPosition + m_visibleRowCount) * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress()));
+                ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_WidthFixed,
+                    m_provider == nullptr ? 0 :
+                    CharacterSize.x * fmt::formatted_size("{:08X}: ", (m_scrollPosition + m_visibleRowCount) * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress())
+                );
                 ImGui::TableSetupColumn("");
 
                 // Byte columns
