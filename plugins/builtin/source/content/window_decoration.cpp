@@ -416,10 +416,19 @@ namespace hex::plugin::builtin {
                         const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight);
                         
                         ImGui::SetCursorPos(ImVec2());
-                        
-                        // Drawing this button late allows widgets rendered before it to grab click events, forming an "input underlay"
-                        if (ImGui::InvisibleButton("##mainMenuUnderlay", menuUnderlaySize, ImGuiButtonFlags_PressedOnDoubleClick)) {
-                            macosHandleTitlebarDoubleClickGesture(window);
+
+                        // Prevent window from being moved unless title bar is hovered
+
+                        if (!ImGui::IsAnyItemHovered()) {
+                            const auto cursorPos = ImGui::GetCursorScreenPos();
+                            if (ImGui::IsMouseHoveringRect(cursorPos, cursorPos + menuUnderlaySize) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                                macosHandleTitlebarDoubleClickGesture(window);
+                            }
+
+                            macosSetWindowMovable(window, true);
+                        } else {
+                            macosSetWindowMovable(window, false);
+
                         }
                     }
                 #endif

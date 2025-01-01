@@ -17,6 +17,7 @@
         void enumerateFontsMacos();
     
         void macosHandleTitlebarDoubleClickGesture(GLFWwindow *window);
+        void macosSetWindowMovable(GLFWwindow *window, bool movable);
         bool macosIsWindowBeingResizedByUser(GLFWwindow *window);
         void macosMarkContentEdited(GLFWwindow *window, bool edited = true);
     }

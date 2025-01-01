@@ -112,6 +112,12 @@
         }
     }
 
+    void macosSetWindowMovable(GLFWwindow *window, bool movable) {
+        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+
+        [cocoaWindow setMovable:movable];
+    }
+
     bool macosIsWindowBeingResizedByUser(GLFWwindow *window) {
         NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
         
