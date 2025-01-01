@@ -347,6 +347,10 @@ namespace hex::plugin::builtin::recent {
     }
 
     void addMenuItems() {
+        #if defined(OS_WEB)
+            return;
+        #endif
+
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
             if (ImGui::BeginMenuEx("hex.builtin.menu.file.open_recent"_lang, ICON_VS_ARCHIVE, !recent::s_recentEntriesUpdating && !s_recentEntries.empty())) {
                 // Copy to avoid changing list while iteration
