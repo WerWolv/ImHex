@@ -37,6 +37,7 @@ namespace hex {
     static LONG_PTR s_oldWndProc;
     static float s_titleBarHeight;
     static Microsoft::WRL::ComPtr<ITaskbarList4> s_taskbarList;
+    static bool s_useLayeredWindow = true;
 
     void nativeErrorMessage(const std::string &message) {
         log::fatal(message);
@@ -644,6 +645,10 @@ namespace hex {
             win->fullFrame();
             DwmFlush();
         });
+
+        // AMD GPUs seem to have issues with Layered Window rendering. Until we figure out
+        // why that is or AMD fixes the issue on their side, disable it on these GPUs.
+        s_useLayeredWindow = ImHexApi::System::getGPUVendor() != "ATI Technologies Inc.";
     }
 
     void Window::beginNativeWindowFrame() {
@@ -651,11 +656,27 @@ namespace hex {
 
         // Remove WS_POPUP style from the window to make various window management tools work
         auto hwnd = glfwGetWin32Window(m_window);
-        ::SetWindowLong(hwnd, GWL_STYLE, (GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW) & ~WS_POPUP);
-        ::SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_COMPOSITED | WS_EX_LAYERED);
+        {
+            auto style = GetWindowLong(hwnd, GWL_STYLE);
+            style |= WS_OVERLAPPEDWINDOW;
+            style &= ~WS_POPUP;
+
+            ::SetWindowLong(hwnd, GWL_STYLE, style);
+        }
+
+        // Make window composited and layered when supported to eradicate any window flickering that happens while resizing
+        {
+            auto style = GetWindowLong(hwnd, GWL_EXSTYLE);
+            style |= WS_EX_COMPOSITED;
+
+            if (s_useLayeredWindow)
+                style |= WS_EX_LAYERED;
+
+            ::SetWindowLong(hwnd, GWL_EXSTYLE, style);
+        }
 
         if (!ImHexApi::System::impl::isWindowResizable()) {
-            if (glfwGetWindowAttrib(m_window, GLFW_MAXIMIZED)) {
+            if (glfwGetWindowAttrib(m_window, GLFW_MAXIMIZED) == GLFW_TRUE) {
                 glfwRestoreWindow(m_window);
             }
         }
