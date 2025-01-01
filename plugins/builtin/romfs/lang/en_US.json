@@ -503,6 +503,7 @@
         "hex.builtin.setting.interface.native_window_decorations": "Use OS Window decorations",
         "hex.builtin.setting.interface.color": "Color theme",
         "hex.builtin.setting.interface.crisp_scaling": "Enable crisp scaling",
+        "hex.builtin.setting.interface.display_shortcut_highlights": "Highlight menu when using shortcuts",
         "hex.builtin.setting.interface.fps": "FPS Limit",
         "hex.builtin.setting.interface.fps.unlocked": "Unlocked",
         "hex.builtin.setting.interface.fps.native": "Native",

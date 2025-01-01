@@ -933,17 +933,10 @@ namespace hex {
             });
 
             if (shortcut != Shortcut::None) {
-                auto callbackIfEnabled  = [enabledCallback, function]{ if (enabledCallback()) { function(); } };
-
-                const auto unlocalizedShortcutName =
-                    unlocalizedMainMenuNames.size() == 1 ?
-                        std::vector { unlocalizedMainMenuNames.back() } :
-                        std::vector(unlocalizedMainMenuNames.begin() + 1, unlocalizedMainMenuNames.end());
-
                 if (shortcut.isLocal() && view != nullptr)
-                    ShortcutManager::addShortcut(view, shortcut, unlocalizedShortcutName, callbackIfEnabled);
+                    ShortcutManager::addShortcut(view, shortcut, unlocalizedMainMenuNames, function, enabledCallback);
                 else
-                    ShortcutManager::addGlobalShortcut(shortcut, unlocalizedShortcutName, callbackIfEnabled);
+                    ShortcutManager::addGlobalShortcut(shortcut, unlocalizedMainMenuNames, function, enabledCallback);
             }
         }
 

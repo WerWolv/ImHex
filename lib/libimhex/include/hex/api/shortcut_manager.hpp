@@ -194,10 +194,12 @@ namespace hex {
     class ShortcutManager {
     public:
         using Callback = std::function<void()>;
+        using EnabledCallback = std::function<bool()>;
         struct ShortcutEntry {
             Shortcut shortcut;
             std::vector<UnlocalizedString> unlocalizedName;
             Callback callback;
+            EnabledCallback enabledCallback;
         };
 
         /**
@@ -205,9 +207,10 @@ namespace hex {
          * @param shortcut The shortcut to add.
          * @param unlocalizedName The unlocalized name of the shortcut
          * @param callback The callback to call when the shortcut is triggered.
+         * @param enabledCallback Callback that's called to check if this shortcut is enabled
          */
-        static void addGlobalShortcut(const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const Callback &callback);
-        static void addGlobalShortcut(const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const Callback &callback);
+        static void addGlobalShortcut(const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const Callback &callback, const EnabledCallback &enabledCallback = []{ return true; });
+        static void addGlobalShortcut(const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const Callback &callback, const EnabledCallback &enabledCallback = []{ return true; });
 
         /**
          * @brief Add a view-specific shortcut. View-specific shortcuts can only be triggered when the specified view is focused.
@@ -215,9 +218,10 @@ namespace hex {
          * @param shortcut The shortcut to add.
          * @param unlocalizedName The unlocalized name of the shortcut
          * @param callback The callback to call when the shortcut is triggered.
+         * @param enabledCallback Callback that's called to check if this shortcut is enabled
          */
-        static void addShortcut(View *view, const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const Callback &callback);
-        static void addShortcut(View *view, const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const Callback &callback);
+        static void addShortcut(View *view, const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const Callback &callback, const EnabledCallback &enabledCallback = []{ return true; });
+        static void addShortcut(View *view, const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const Callback &callback, const EnabledCallback &enabledCallback = []{ return true; });
 
 
         /**
@@ -251,6 +255,9 @@ namespace hex {
         static void pauseShortcuts();
 
         static void enableMacOSMode();
+
+        [[nodiscard]] static std::optional<UnlocalizedString> getLastActivatedMenu();
+        static void resetLastActivatedMenu();
 
         [[nodiscard]] static std::optional<Shortcut> getPreviousShortcut();
 

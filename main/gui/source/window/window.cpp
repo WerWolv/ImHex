@@ -591,6 +591,8 @@ namespace hex {
     void Window::frame() {
         auto &io = ImGui::GetIO();
 
+        ShortcutManager::resetLastActivatedMenu();
+
         // Loop through all views and draw them
         for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();

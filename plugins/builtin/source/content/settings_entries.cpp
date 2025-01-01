@@ -302,7 +302,8 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 std::string fullName;
-                for (const auto &part : m_fullName) {
+                for (u32 i = m_fullName.size() == 1 ? 0 : 1; i < m_fullName.size(); i += 1) {
+                    const auto &part = m_fullName[i];
                     fullName += Lang(part).get();
                     fullName += " -> ";
                 }
@@ -804,6 +805,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.pattern_data_row_bg", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.always_show_provider_tabs", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.show_header_command_palette", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.display_shortcut_highlights", true);
 
             std::vector<std::string> languageNames;
             std::vector<nlohmann::json> languageCodes;
@@ -957,14 +959,28 @@ namespace hex::plugin::builtin {
 
         /* Shorcuts */
         {
-            EventImHexStartupFinished::subscribe([]{
+            EventImHexStartupFinished::subscribe([] {
                 for (const auto &shortcutEntry : ShortcutManager::getGlobalShortcuts()) {
-                    ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", "hex.builtin.setting.shortcuts.global", shortcutEntry.unlocalizedName.back(), nullptr, shortcutEntry.shortcut, shortcutEntry.unlocalizedName);
+                    ContentRegistry::Settings::add<KeybindingWidget>(
+                        "hex.builtin.setting.shortcuts",
+                        "hex.builtin.setting.shortcuts.global",
+                        shortcutEntry.unlocalizedName.back(),
+                        nullptr,
+                        shortcutEntry.shortcut,
+                        shortcutEntry.unlocalizedName
+                    );
                 }
 
                 for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
                     for (const auto &shortcutEntry : ShortcutManager::getViewShortcuts(view.get())) {
-                        ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", viewName, shortcutEntry.unlocalizedName.back(), view.get(), shortcutEntry.shortcut, shortcutEntry.unlocalizedName);
+                        ContentRegistry::Settings::add<KeybindingWidget>(
+                            "hex.builtin.setting.shortcuts",
+                            viewName,
+                            shortcutEntry.unlocalizedName.back(),
+                            view.get(),
+                            shortcutEntry.shortcut,
+                            shortcutEntry.unlocalizedName
+                        );
                     }
                 }
            });
