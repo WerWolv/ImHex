@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <hex/ui/view.hpp>
+#include <jthread.hpp>
 
 struct GLFWwindow;
 struct ImGuiSettingsHandler;
