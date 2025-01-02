@@ -57,6 +57,9 @@ namespace hex::plugin::disasm {
 
     void registerCustomArchitectures() {
         for (const auto &folder : hex::paths::Disassemblers.all()) {
+            if (!wolv::io::fs::exists(folder))
+                    continue;
+
             for (const auto &entry : std::fs::directory_iterator(folder)) {
                 try {
                     auto spec = ::disasm::spec::Loader::load(entry.path(), { entry.path().parent_path() });
