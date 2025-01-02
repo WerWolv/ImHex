@@ -41,6 +41,7 @@
 #include <hex/ui/toast.hpp>
 #include <wolv/utils/guards.hpp>
 #include <fmt/printf.h>
+#include <fmt/chrono.h>
 
 namespace hex {
 
@@ -231,40 +232,9 @@ namespace hex {
                 ImHexApi::System::impl::setMainWindowSize(width, height);
             }
 
-            // Determine if the application should be in long sleep mode
-            bool shouldLongSleep = !m_unlockFrameRate;
-
-            static double lockTimeout = 0;
-            if (!shouldLongSleep) {
-                lockTimeout = 0.05;
-            } else if (lockTimeout > 0) {
-                lockTimeout -= m_lastFrameTime;
-            }
-
-            if (shouldLongSleep && lockTimeout > 0)
-                shouldLongSleep = false;
-
-            m_unlockFrameRate = false;
-
             if (!glfwGetWindowAttrib(m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(m_window, GLFW_ICONIFIED)) {
                 // If the application is minimized or not visible, don't render anything
                 glfwWaitEvents();
-            } else {
-                // If the application is visible, render a frame
-
-                // If the application is in long sleep mode, only render a frame every 200ms
-                // Long sleep mode is enabled automatically after a few frames if the window content hasn't changed
-                // and no events have been received
-                if (shouldLongSleep) {
-                    // Calculate the time until the next frame
-                    constexpr static auto LongSleepFPS = 5.0;
-                    const double timeout = std::max(0.0, (1.0 / LongSleepFPS) - (glfwGetTime() - m_lastStartFrameTime));
-
-                    glfwPollEvents();
-                    glfwWaitEventsTimeout(timeout);
-                } else {
-                    glfwPollEvents();
-                }
             }
 
             m_lastStartFrameTime = glfwGetTime();
@@ -281,40 +251,18 @@ namespace hex {
 
             ImHexApi::System::impl::setLastFrameTime(glfwGetTime() - m_lastStartFrameTime);
 
-            // Limit frame rate
-            // If the target FPS are below 15, use the monitor refresh rate, if it's above 200, don't limit the frame rate
-            auto targetFPS = ImHexApi::System::getTargetFPS();
-            if (targetFPS >= 200) {
-                // Let it rip
-            } else {
-                // If the target frame rate is below 15, use the current monitor's refresh rate
-                if (targetFPS < 15) {
-                    // Fall back to 60 FPS if the monitor refresh rate cannot be determined
-                    targetFPS = 60;
+            {
+                while (true) {
+                    glfwPollEvents();
 
-                    if (auto monitor = glfwGetWindowMonitor(m_window); monitor != nullptr) {
-                        if (auto videoMode = glfwGetVideoMode(monitor); videoMode != nullptr) {
-                            targetFPS = videoMode->refreshRate;
-                        }
-                    }
-                }
+                    if (ImHexApi::System::getTargetFPS() >= 200)
+                        break;
 
-                // Sleep if we're not in long sleep mode
-                if (!shouldLongSleep) {
-                    // If anything goes wrong with these checks, make sure that we're sleeping for at least 1ms
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-                    // Sleep for the remaining time if the frame rate is above the target frame rate
-                    const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
-                    const auto targetFrameTime = 1.0 / targetFPS;
-                    if (frameTime < targetFrameTime) {
-                        glfwWaitEventsTimeout(targetFrameTime - frameTime);
-
-                        // glfwWaitEventsTimeout might return early if there's an event
-                        if (frameTime < targetFrameTime) {
-                            const auto timeToSleepMs = (int)((targetFrameTime - frameTime) * 1000);
-                            std::this_thread::sleep_for(std::chrono::milliseconds(timeToSleepMs));
-                        }
+                    {
+                        std::unique_lock lock(m_sleepMutex);
+                        m_sleepCondVar.wait_for(lock, std::chrono::microseconds(100));
+                        if (m_sleepFlag.exchange(false))
+                            break;
                     }
                 }
             }
@@ -741,8 +689,6 @@ namespace hex {
 
                 glfwSwapBuffers(m_window);
             }
-
-            m_unlockFrameRate = true;
         }
 
         // Process layout load requests
@@ -887,6 +833,11 @@ namespace hex {
             win->m_unlockFrameRate = true;
         });
 
+        glfwSetMouseButtonCallback(m_window, [](GLFWwindow *window, int, int, int) {
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->m_unlockFrameRate = true;
+        });
+
         glfwSetWindowFocusCallback(m_window, [](GLFWwindow *, int focused) {
             EventWindowFocused::post(focused == GLFW_TRUE);
         });
@@ -950,6 +901,61 @@ namespace hex {
         });
 
         glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
+
+        m_frameRateThread = std::jthread([this](const std::stop_token &stopToken) {
+            using Duration = std::chrono::duration<double, std::nano>;
+            Duration passedTime = {};
+
+            std::chrono::steady_clock::time_point startTime = {}, endTime = {};
+            Duration requestedFrameTime = {}, remainingUnlockedTime = {};
+            float targetFps = 0;
+
+            const auto nativeFps = [] -> float {
+                if (const auto monitor = glfwGetPrimaryMonitor(); monitor != nullptr) {
+                    if (const auto videoMode = glfwGetVideoMode(monitor); videoMode != nullptr) {
+                        return videoMode->refreshRate;
+                    }
+                }
+
+                return 60;
+            }();
+
+            while (!stopToken.stop_requested()) {
+                const auto iterationTime = endTime - startTime;
+                startTime = std::chrono::steady_clock::now();
+
+                targetFps = ImHexApi::System::getTargetFPS();
+
+                if (m_unlockFrameRate.exchange(false)) {
+                    remainingUnlockedTime = std::chrono::seconds(2);
+                }
+
+                // If the target frame rate is below 15, use the current monitor's refresh rate
+                if (targetFps < 15) {
+                    targetFps = nativeFps;
+                }
+
+                passedTime += iterationTime;
+                if (remainingUnlockedTime > std::chrono::nanoseconds(0)) {
+                    remainingUnlockedTime -= iterationTime;
+                } else {
+                    targetFps = 5;
+                }
+
+                requestedFrameTime = (Duration(1.0E9) / targetFps) / 1.3;
+                if (passedTime >= requestedFrameTime) {
+                    std::scoped_lock lock(m_sleepMutex);
+                    m_sleepFlag = true;
+                    m_sleepCondVar.notify_all();
+
+                    passedTime = {};
+                }
+
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+
+                endTime = std::chrono::steady_clock::now();
+            }
+        });
     }
 
     void Window::resize(i32 width, i32 height) {
