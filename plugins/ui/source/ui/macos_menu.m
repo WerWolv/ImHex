@@ -25,7 +25,6 @@ static NSInteger s_selectedTag = -1;
 
 static NSMenu* s_menuStack[1024];
 static int s_menuStackSize = 0;
-static NSInteger s_currItemIndex = 0;
 
 static MenuItemHandler* s_menuItemHandler;
 
@@ -96,15 +95,12 @@ bool macosBeginMenu(const char* label, bool enabled) {
         s_menuStackSize += 1;
     }
 
-    s_currItemIndex = 0;
-
     return true;
 }
 
 void macosEndMenu(void) {
     s_menuStack[s_menuStackSize - 1] = NULL;
     s_menuStackSize -= 1;
-    s_currItemIndex = [s_menuStack[s_menuStackSize - 1] numberOfItems] - 1;
 }
 
 bool macosMenuItem(const char* label, struct KeyEquivalent keyEquivalent, bool selected, bool enabled) {
@@ -139,9 +135,10 @@ bool macosMenuItem(const char* label, struct KeyEquivalent keyEquivalent, bool s
         [s_menuStack[s_menuStackSize - 1] addItem:menuItem];
     }
 
+    NSInteger menuIndex = [s_menuStack[s_menuStackSize - 1] indexOfItemWithTitle:title];
     NSMenuItem* menuItem = NULL;
-    if (s_currItemIndex >= 0 && s_currItemIndex < [s_menuStack[s_menuStackSize - 1] numberOfItems]) {
-        menuItem = [s_menuStack[s_menuStackSize - 1] itemAtIndex:s_currItemIndex];
+    if (menuIndex >= 0 && menuIndex < [s_menuStack[s_menuStackSize - 1] numberOfItems]) {
+        menuItem = [s_menuStack[s_menuStackSize - 1] itemAtIndex:menuIndex];
         if (menuItem != NULL) {
             if (s_constructingMenu == false) {
                 if (![title isEqualToString:menuItem.title]) {
@@ -152,16 +149,17 @@ bool macosMenuItem(const char* label, struct KeyEquivalent keyEquivalent, bool s
             menuItem.enabled = enabled;
             menuItem.state = selected ? NSControlStateValueOn : NSControlStateValueOff;
         }
-    }
 
-    if (enabled && menuItem != NULL) {
-        if ([menuItem tag] == s_selectedTag) {
-            s_selectedTag = -1;
-            return true;
+        if (enabled && menuItem != NULL) {
+            if ([menuItem tag] == s_selectedTag) {
+                s_selectedTag = -1;
+                return true;
+            }
         }
+    } else {
+        s_resetNeeded = true;
     }
 
-    s_currItemIndex++;
     return false;
 }
 
@@ -180,5 +178,4 @@ void macosSeparator(void) {
         NSMenuItem* separator = [NSMenuItem separatorItem];
         [s_menuStack[s_menuStackSize - 1] addItem:separator];
     }
-    s_currItemIndex++;
 }
