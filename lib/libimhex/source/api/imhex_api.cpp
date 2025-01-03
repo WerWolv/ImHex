@@ -11,6 +11,7 @@
 #include <wolv/utils/string.hpp>
 
 #include <utility>
+#include <numeric>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -620,7 +621,14 @@ namespace hex {
             #elif defined(OS_MACOS)
                 return ::getBackingScaleFactor();
             #elif defined(OS_LINUX)
-                return 1.0F;
+                if (std::string_view(::getenv("XDG_SESSION_TYPE")) == "x11")
+                    return 1.0F;
+                else {
+                    float xScale = 0, yScale = 0;
+                    glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &xScale, &yScale);
+
+                    return std::midpoint(xScale, yScale);
+                }
             #elif defined(OS_WEB)
                 return 1.0F;
                 /*

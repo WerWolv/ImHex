@@ -433,8 +433,16 @@ namespace hex::init {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         #endif
 
-	#if defined(OS_LINUX) && defined(GLFW_WAYLAND_APP_ID)
-	    glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
+	#if defined(OS_LINUX)
+        #if defined(GLFW_WAYLAND_APP_ID)
+	        glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
+        #endif
+
+        #if defined(GLFW_SCALE_FRAMEBUFFER)
+            glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_TRUE);
+        #endif
+
+        glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 	#endif
 
         // Make splash screen non-resizable, undecorated and transparent
@@ -457,6 +465,8 @@ namespace hex::init {
             std::exit(EXIT_FAILURE);
         }
 
+        ImHexApi::System::impl::setMainWindowHandle(m_window);
+
         // Force window to be fully opaque by default
         glfwSetWindowOpacity(m_window, 1.0F);
 
@@ -469,7 +479,7 @@ namespace hex::init {
             if (meanScale <= 0.0F)
                 meanScale = 1.0F;
 
-            meanScale /= hex::ImHexApi::System::getBackingScaleFactor();
+            meanScale /= hex::ImHexApi::System::getBackingScaleFactor();                
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
             ImHexApi::System::impl::setNativeScale(meanScale);
