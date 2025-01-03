@@ -23,7 +23,7 @@ namespace hex::plugin::hashes {
             reader.seek(region.getStartAddress());
             reader.setEndAddress(region.getEndAddress());
 
-            for (u64 address = region.getStartAddress(); address < region.getEndAddress(); address += 1_MiB) {
+            for (u64 address = region.getStartAddress(); address <= region.getEndAddress(); address += 1_MiB) {
                 u64 readSize = std::min<u64>(1_MiB, (region.getEndAddress() - address) + 1);
 
                 auto data = reader.read(address, readSize);
