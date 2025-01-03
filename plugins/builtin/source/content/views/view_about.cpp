@@ -20,6 +20,7 @@
 #include <wolv/utils/string.hpp>
 
 #include <string>
+#include <ui/menu_items.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -86,6 +87,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.help" }, 3000, [] {
+            if (menu::isNativeMenuBarUsed())
+                return;
+
             static std::string content;
             if (ImGui::InputTextWithHint("##search", "hex.builtin.view.help.documentation_search"_lang, content, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                 PopupDocsQuestion::open(content);

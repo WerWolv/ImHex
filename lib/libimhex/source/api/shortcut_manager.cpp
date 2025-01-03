@@ -233,6 +233,44 @@ namespace hex {
         return result;
     }
 
+    KeyEquivalent Shortcut::toKeyEquivalent() const {
+        #if defined(OS_MACOS)
+            if (*this == None)
+                return { };
+
+            KeyEquivalent result = {};
+            result.valid = true;
+
+            for (const auto &key : m_keys) {
+                switch (key.getKeyCode()) {
+                    case CTRL.getKeyCode():
+                        result.ctrl = true;
+                        break;
+                    case SHIFT.getKeyCode():
+                        result.shift = true;
+                        break;
+                    case ALT.getKeyCode():
+                        result.opt = true;
+                        break;
+                    case SUPER.getKeyCode():
+                    case CTRLCMD.getKeyCode():
+                        result.cmd = true;
+                        break;
+                    case CurrentView.getKeyCode(): break;
+                    case AllowWhileTyping.getKeyCode(): break;
+                    default:
+                        macosGetKey(Keys(key.getKeyCode()), &result.key);
+                        break;
+                }
+            }
+
+            return result;
+        #else
+            return { };
+        #endif
+    }
+
+
 
     void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const std::function<void()> &callback, const EnabledCallback &enabledCallback) {
         log::debug("Adding global shortcut {} for {}", shortcut.toString(), unlocalizedName.back().get());

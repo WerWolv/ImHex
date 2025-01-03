@@ -21,6 +21,7 @@
 #include <content/popups/popup_blocking_task.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
 #include <pl/patterns/pattern.hpp>
+#include <ui/menu_items.hpp>
 #include <wolv/literals.hpp>
 
 using namespace std::literals::string_literals;
@@ -1278,7 +1279,7 @@ namespace hex::plugin::builtin {
 
             bool enabled = ImHexApi::HexEditor::isSelectionValid();
             for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::impl::getExportMenuEntries()) {
-                if (ImGui::MenuItem(Lang(unlocalizedName), nullptr, false, enabled)) {
+                if (menu::menuItem(Lang(unlocalizedName), Shortcut::None, false, enabled)) {
                     ImGui::SetClipboardText(
                             callback(
                                     provider,
@@ -1424,8 +1425,14 @@ namespace hex::plugin::builtin {
         /* Jump to */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.jump_to" }, ICON_VS_DEBUG_STEP_OUT, 1850,
                                                 [] {
-                                                    auto provider   = ImHexApi::Provider::get();
-                                                    auto selection  = ImHexApi::HexEditor::getSelection();
+                                                    auto provider = ImHexApi::Provider::get();
+                                                    if (provider == nullptr)
+                                                        return;
+                                                    const auto selection  = ImHexApi::HexEditor::getSelection();
+                                                    if (!selection.has_value())
+                                                        return;
+                                                    if (selection->getSize() > sizeof(u64))
+                                                        return;
 
                                                     u64 value = 0;
                                                     provider->read(selection->getStartAddress(), &value, selection->getSize());
@@ -1438,18 +1445,18 @@ namespace hex::plugin::builtin {
                                                     };
 
                                                     ImGui::PushID(1);
-                                                    if (ImGui::MenuItem(hex::format("0x{:08X}", littleEndianValue).c_str(), "hex.ui.common.little_endian"_lang, false, canJumpTo(littleEndianValue))) {
+                                                    if (menu::menuItem(hex::format("{} | 0x{:08X}", "hex.ui.common.little_endian"_lang, littleEndianValue).c_str(), Shortcut::None, false, canJumpTo(littleEndianValue))) {
                                                         ImHexApi::HexEditor::setSelection(littleEndianValue, 1);
                                                     }
                                                     ImGui::PopID();
 
                                                     ImGui::PushID(2);
-                                                    if (ImGui::MenuItem(hex::format("0x{:08X}", bigEndianValue).c_str(), "hex.ui.common.big_endian"_lang, false, canJumpTo(bigEndianValue))) {
+                                                    if (menu::menuItem(hex::format("{} | 0x{:08X}", "hex.ui.common.big_endian"_lang, bigEndianValue).c_str(), Shortcut::None, false, canJumpTo(bigEndianValue))) {
                                                         ImHexApi::HexEditor::setSelection(bigEndianValue, 1);
                                                     }
                                                     ImGui::PopID();
 
-                                                    if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern"_lang, "", false, selection.has_value() && ContentRegistry::PatternLanguage::getRuntime().getCreatedPatternCount() > 0)) {
+                                                    if (menu::menuItem("hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern"_lang, Shortcut::None, false, selection.has_value() && ContentRegistry::PatternLanguage::getRuntime().getCreatedPatternCount() > 0)) {
                                                         auto patterns = ContentRegistry::PatternLanguage::getRuntime().getPatternsAtAddress(selection->getStartAddress());
 
                                                         if (!patterns.empty())

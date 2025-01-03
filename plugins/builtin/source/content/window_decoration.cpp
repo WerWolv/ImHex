@@ -10,6 +10,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <ui/menu_items.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <romfs/romfs.hpp>
@@ -32,21 +33,23 @@ namespace hex::plugin::builtin {
             const auto &name = menuItems.front();
 
             if (name.get() == ContentRegistry::Interface::impl::SeparatorValue) {
-                ImGui::Separator();
+                menu::menuSeparator();
                 return;
             }
 
             if (name.get() == ContentRegistry::Interface::impl::SubMenuValue) {
-                callback();
+                if (enabledCallback()) {
+                    callback();
+                }
             } else if (menuItems.size() == 1) {
-                if (ImGui::MenuItemEx(Lang(name), icon, shortcut.toString().c_str(), selectedCallback(), enabledCallback()))
+                if (menu::menuItemEx(Lang(name), icon, shortcut, selectedCallback(), enabledCallback()))
                     callback();
             } else {
                 bool isSubmenu = (menuItems.begin() + 1)->get() == ContentRegistry::Interface::impl::SubMenuValue;
 
-                if (ImGui::BeginMenuEx(Lang(name), std::next(menuItems.begin())->get() == ContentRegistry::Interface::impl::SubMenuValue ? icon : nullptr, isSubmenu ? enabledCallback() : true)) {
+                if (menu::beginMenuEx(Lang(name), std::next(menuItems.begin())->get() == ContentRegistry::Interface::impl::SubMenuValue ? icon : nullptr, isSubmenu ? enabledCallback() : true)) {
                     createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, callback, enabledCallback, selectedCallback);
-                    ImGui::EndMenu();
+                    menu::endMenu();
                 }
             }
         }
@@ -285,9 +288,9 @@ namespace hex::plugin::builtin {
         }
 
         void defineMenu(const UnlocalizedString &menuName) {
-            if (ImGui::BeginMenu(Lang(menuName))) {
+            if (menu::beginMenu(Lang(menuName))) {
                 populateMenu(menuName);
-                ImGui::EndMenu();
+                menu::endMenu();
             } else {
                 if (s_displayShortcutHighlights) {
                     if (const auto lastShortcutMenu = ShortcutManager::getLastActivatedMenu(); lastShortcutMenu.has_value()) {
@@ -301,57 +304,64 @@ namespace hex::plugin::builtin {
         }
 
         void drawMenu() {
-            auto cursorPos = ImGui::GetCursorPosX();
-            u32 fittingItems = 0;
-
             const auto &menuItems = ContentRegistry::Interface::impl::getMainMenuItems();
-            for (const auto &[priority, menuItem] : menuItems) {
-                auto menuName = Lang(menuItem.unlocalizedName);
 
-                const auto padding = ImGui::GetStyle().FramePadding.x;
-                bool lastItem = (fittingItems + 1) == menuItems.size();
-                auto width = ImGui::CalcTextSize(menuName).x + padding * (lastItem ? -3.0F : 4.0F);
-
-                if ((cursorPos + width) > (s_searchBarPosition - ImGui::CalcTextSize(ICON_VS_ELLIPSIS).x - padding * 2))
-                    break;
-
-                cursorPos += width;
-                fittingItems += 1;
-            }
-
-            if (fittingItems <= 2)
-                fittingItems = 0;
-
-            {
-                u32 count = 0;
+            if (menu::isNativeMenuBarUsed()) {
                 for (const auto &[priority, menuItem] : menuItems) {
-                    if (count >= fittingItems)
+                    defineMenu(menuItem.unlocalizedName);
+                }
+            } else {
+                auto cursorPos = ImGui::GetCursorPosX();
+                u32 fittingItems = 0;
+
+                for (const auto &[priority, menuItem] : menuItems) {
+                    auto menuName = Lang(menuItem.unlocalizedName);
+
+                    const auto padding = ImGui::GetStyle().FramePadding.x;
+                    bool lastItem = (fittingItems + 1) == menuItems.size();
+                    auto width = ImGui::CalcTextSize(menuName).x + padding * (lastItem ? -3.0F : 4.0F);
+
+                    if ((cursorPos + width) > (s_searchBarPosition - ImGui::CalcTextSize(ICON_VS_ELLIPSIS).x - padding * 2))
                         break;
 
-                    defineMenu(menuItem.unlocalizedName);
-
-                    count += 1;
+                    cursorPos += width;
+                    fittingItems += 1;
                 }
-            }
 
-            if (fittingItems == 0) {
-                if (ImGui::BeginMenu(ICON_VS_MENU)) {
+                if (fittingItems <= 2)
+                    fittingItems = 0;
+
+                {
+                    u32 count = 0;
                     for (const auto &[priority, menuItem] : menuItems) {
-                        defineMenu(menuItem.unlocalizedName);
-                    }
-                    ImGui::EndMenu();
-                }
-            } else if (fittingItems < menuItems.size()) {
-                u32 count = 0;
-                if (ImGui::BeginMenu(ICON_VS_ELLIPSIS)) {
-                    for (const auto &[priority, menuItem] : menuItems) {
-                        ON_SCOPE_EXIT { count += 1; };
-                        if (count < fittingItems)
-                            continue;
+                        if (count >= fittingItems)
+                            break;
 
                         defineMenu(menuItem.unlocalizedName);
+
+                        count += 1;
                     }
-                    ImGui::EndMenu();
+                }
+
+                if (fittingItems == 0) {
+                    if (ImGui::BeginMenu(ICON_VS_MENU)) {
+                        for (const auto &[priority, menuItem] : menuItems) {
+                            defineMenu(menuItem.unlocalizedName);
+                        }
+                        ImGui::EndMenu();
+                    }
+                } else if (fittingItems < menuItems.size()) {
+                    u32 count = 0;
+                    if (ImGui::BeginMenu(ICON_VS_ELLIPSIS)) {
+                        for (const auto &[priority, menuItem] : menuItems) {
+                            ON_SCOPE_EXIT { count += 1; };
+                            if (count < fittingItems)
+                                continue;
+
+                            defineMenu(menuItem.unlocalizedName);
+                        }
+                        ImGui::EndMenu();
+                    }
                 }
             }
         }
@@ -366,13 +376,8 @@ namespace hex::plugin::builtin {
                 ON_SCOPE_EXIT { ImGui::PopStyleVar(); };
             #endif
 
-            if (ImGui::BeginMainMenuBar()) {
-                ImGui::Dummy({});
-
-                auto window = ImHexApi::System::getMainWindowHandle();
-
-                ImGui::PopStyleVar(2);
-
+            auto window = ImHexApi::System::getMainWindowHandle();
+            if (menu::beginMainMenuBar()) {
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                     #if defined(OS_WINDOWS)
                         ImGui::SetCursorPosX(5_scaled);
@@ -406,8 +411,14 @@ namespace hex::plugin::builtin {
 
                     ImGui::EndPopup();
                 }
-
                 drawMenu();
+                menu::endMainMenuBar();
+            }
+            if (ImGui::BeginMainMenuBar()) {
+                ImGui::Dummy({});
+
+                ImGui::PopStyleVar(2);
+
                 drawTitleBar();
 
                 #if defined(OS_MACOS)
@@ -610,6 +621,10 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.display_shortcut_highlights", [](const ContentRegistry::Settings::SettingsValue &value) {
             s_displayShortcutHighlights = value.get<bool>(true);
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.use_native_menu_bar", [](const ContentRegistry::Settings::SettingsValue &value) {
+            menu::enableNativeMenuBar(value.get<bool>(true));
         });
     }
 

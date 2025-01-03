@@ -20,6 +20,7 @@
 
 #include <ranges>
 #include <unordered_set>
+#include <ui/menu_items.hpp>
 
 namespace hex::plugin::builtin::recent {
 
@@ -352,17 +353,17 @@ namespace hex::plugin::builtin::recent {
         #endif
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
-            if (ImGui::BeginMenuEx("hex.builtin.menu.file.open_recent"_lang, ICON_VS_ARCHIVE, !recent::s_recentEntriesUpdating && !s_recentEntries.empty())) {
+            if (menu::beginMenuEx("hex.builtin.menu.file.open_recent"_lang, ICON_VS_ARCHIVE, !recent::s_recentEntriesUpdating && !s_recentEntries.empty())) {
                 // Copy to avoid changing list while iteration
                 auto recentEntries = s_recentEntries;
                 for (auto &recentEntry : recentEntries) {
-                    if (ImGui::MenuItem(recentEntry.displayName.c_str())) {
+                    if (menu::menuItem(recentEntry.displayName.c_str())) {
                         loadRecentEntry(recentEntry);
                     }
                 }
 
-                ImGui::Separator();
-                if (ImGui::MenuItem("hex.builtin.menu.file.clear_recent"_lang)) {
+                menu::menuSeparator();
+                if (menu::menuItem("hex.builtin.menu.file.clear_recent"_lang)) {
                     s_recentEntries.clear();
 
                     // Remove all recent files
@@ -372,7 +373,7 @@ namespace hex::plugin::builtin::recent {
                     }
                 }
 
-                ImGui::EndMenu();
+                menu::endMenu();
             }
         });
     }
