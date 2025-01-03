@@ -1002,6 +1002,7 @@ namespace hex::plugin::builtin {
                     for (const auto &entry : subcategory.entries) {
                         if (auto keybindingWidget = dynamic_cast<KeybindingWidget*>(entry.widget.get())) {
                             keybindingWidget->reset();
+                            ContentRegistry::Settings::write<nlohmann::json>(category.unlocalizedName, entry.unlocalizedName, keybindingWidget->store());
                         }
                     }
                 }
