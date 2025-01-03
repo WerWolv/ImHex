@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hex/helpers/keys.hpp>
+
 #if defined(OS_MACOS)
 
     struct GLFWwindow;
@@ -20,6 +22,8 @@
         void macosSetWindowMovable(GLFWwindow *window, bool movable);
         bool macosIsWindowBeingResizedByUser(GLFWwindow *window);
         void macosMarkContentEdited(GLFWwindow *window, bool edited = true);
+
+        void macosGetKey(Keys key, int *output);
     }
 
 #endif

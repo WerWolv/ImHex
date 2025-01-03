@@ -32,6 +32,7 @@
 #include <wolv/utils/lock.hpp>
 
 #include <content/global_actions.hpp>
+#include <ui/menu_items.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -2074,12 +2075,12 @@ namespace hex::plugin::builtin {
             return;
 
         if (menus.size() == 1) {
-            if (ImGui::MenuItem(menus.front().c_str()))
+            if (menu::menuItem(menus.front().c_str()))
                 function();
         } else {
-            if (ImGui::BeginMenu(menus.front().c_str())) {
+            if (menu::beginMenu(menus.front().c_str())) {
                 createNestedMenu({ menus.begin() + 1, menus.end() }, function);
-                ImGui::EndMenu();
+                menu::endMenu();
             }
         }
     }
@@ -2135,30 +2136,30 @@ namespace hex::plugin::builtin {
         /* Place pattern... */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern" }, ICON_VS_LIBRARY, 3000,
             [&, this] {
-                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
-                    if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
+                if (menu::beginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
+                    if (menu::beginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
                         for (const auto &[type, size] : Types) {
-                            if (ImGui::MenuItem(type))
+                            if (menu::menuItem(type))
                                 appendVariable(type);
                         }
-                        ImGui::EndMenu();
+                        menu::endMenu();
                     }
 
-                    if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
+                    if (menu::beginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
                         for (const auto &[type, size] : Types) {
-                            if (ImGui::MenuItem(type))
+                            if (menu::menuItem(type))
                                 appendArray(type, size);
                         }
-                        ImGui::EndMenu();
+                        menu::endMenu();
                     }
 
-                    ImGui::EndMenu();
+                    menu::endMenu();
                 }
 
                 const auto &types = m_editorRuntime->getInternals().parser->getTypes();
                 const bool hasPlaceableTypes = std::ranges::any_of(types, [](const auto &type) { return !type.second->isTemplateType(); });
 
-                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom"_lang, hasPlaceableTypes)) {
+                if (menu::beginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom"_lang, hasPlaceableTypes)) {
                     const auto &selection = ImHexApi::HexEditor::getSelection();
 
                     for (const auto &[typeName, type] : types) {
@@ -2175,7 +2176,7 @@ namespace hex::plugin::builtin {
                         });
                     }
 
-                    ImGui::EndMenu();
+                    menu::endMenu();
                 }
             }, [this] {
                 return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && m_runningParsers == 0;
