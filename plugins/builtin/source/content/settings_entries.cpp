@@ -359,6 +359,7 @@ namespace hex::plugin::builtin {
                 m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, m_defaultShortcut, m_view);
 
                 m_drawShortcut = m_defaultShortcut;
+                m_shortcut = m_defaultShortcut;
             }
 
         private:
@@ -993,7 +994,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
         }
 
-        ImHexApi::System::addMigrationRoutine("v1.36.1", [] {
+        ImHexApi::System::addMigrationRoutine("v1.36.3", [] {
             log::warn("Resetting shortcut key settings for them to work with this version of ImHex");
 
             for (const auto &category : ContentRegistry::Settings::impl::getSettings()) {

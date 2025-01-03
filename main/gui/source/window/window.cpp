@@ -79,6 +79,7 @@ namespace hex {
 
         EventWindowInitialized::post();
         EventImHexStartupFinished::post();
+        RequestStartMigration::post();
 
         TutorialManager::init();
 

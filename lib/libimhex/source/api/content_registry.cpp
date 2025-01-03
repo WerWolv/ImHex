@@ -154,6 +154,14 @@ namespace hex {
                     if (!s_settings.isValid())
                         return;
 
+                    for (const auto &category : getSettings()) {
+                        for (const auto &subCategory : category.subCategories) {
+                            for (const auto &entry : subCategory.entries) {
+                                (*s_settings)[category.unlocalizedName][entry.unlocalizedName] = entry.widget->store();
+                            }
+                        }
+                    }
+
                     const auto &settingsData = *s_settings;
 
                     // During a crash settings can be empty, causing them to be overwritten.

@@ -225,7 +225,7 @@ namespace hex::plugin::builtin {
                  RequestOpenFile::post(path);
         });
 
-        EventWindowInitialized::subscribe([] {
+        RequestStartMigration::subscribe([] {
             const auto currVersion = ImHexApi::System::getImHexVersion();
             const auto prevLaunchVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
             if (prevLaunchVersion == "") {
