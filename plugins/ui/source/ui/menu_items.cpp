@@ -27,14 +27,13 @@ namespace hex::menu {
         static bool s_useNativeMenuBar = false;
         void enableNativeMenuBar(bool enabled) {
             #if !defined (OS_MACOS)
-                return;
+                std::ignore = enabled;
+            #else
+                if (!enabled) {
+                    macosClearMenu();
+                }
+                s_useNativeMenuBar = enabled;
             #endif
-
-            s_useNativeMenuBar = enabled;
-
-            if (!enabled) {
-                macosClearMenu();
-            }
         }
 
         bool isNativeMenuBarUsed() {
@@ -52,6 +51,8 @@ namespace hex::menu {
 
                     return macosBeginMainMenuBar();
                 }
+            #else
+                std::ignore = s_initialized;
             #endif
 
             return ImGui::BeginMainMenuBar();
@@ -59,11 +60,13 @@ namespace hex::menu {
 
         void endMainMenuBar() {
             #if defined(OS_MACOS)
-                if (s_useNativeMenuBar)
-                    return macosEndMainMenuBar();
+                if (s_useNativeMenuBar) {
+                    macosEndMainMenuBar();
+                    return;
+                }
             #endif
 
-            return ImGui::EndMainMenuBar();
+            ImGui::EndMainMenuBar();
         }
 
         bool beginMenu(const char *label, bool enabled) {
@@ -86,11 +89,13 @@ namespace hex::menu {
 
         void endMenu() {
             #if defined(OS_MACOS)
-                if (s_useNativeMenuBar)
-                    return macosEndMenu();
+                if (s_useNativeMenuBar) {
+                    macosEndMenu();
+                    return;
+                }
             #endif
 
-            return ImGui::EndMenu();
+            ImGui::EndMenu();
         }
 
 
@@ -127,17 +132,25 @@ namespace hex::menu {
                     return macosMenuItemSelect(label, shortcut.toKeyEquivalent(), selected, enabled);
             #endif
 
-            return ImGui::MenuItemEx(label, icon, shortcut.toString().c_str(), selected, enabled);
+            if (ImGui::MenuItemEx(label, icon, shortcut.toString().c_str(), selected != nullptr ? *selected : false, enabled)) {
+                if (selected != nullptr)
+                    *selected = !*selected;
+                return true;
+            }
+
+            return false;
         }
 
 
         void menuSeparator() {
             #if defined(OS_MACOS)
-                if (s_useNativeMenuBar)
-                    return macosSeparator();
+                if (s_useNativeMenuBar) {
+                    macosSeparator();
+                    return;
+                }
             #endif
 
-            return ImGui::Separator();
+            ImGui::Separator();
         }
 
 }
