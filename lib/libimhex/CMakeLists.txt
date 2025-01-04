@@ -139,8 +139,8 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_libraries(libimhex PUBLIC ${FOUNDATION})
     endif ()
 
-    target_link_libraries(libimhex PRIVATE microtar libwolv ${NFD_LIBRARIES} magic dl ${JTHREAD_LIBRARIES})
-    target_link_libraries(libimhex PUBLIC libpl ${IMGUI_LIBRARIES})
+    target_link_libraries(libimhex PRIVATE microtar libwolv ${NFD_LIBRARIES} magic dl)
+    target_link_libraries(libimhex PUBLIC libpl ${IMGUI_LIBRARIES} ${JTHREAD_LIBRARIES})
 
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
