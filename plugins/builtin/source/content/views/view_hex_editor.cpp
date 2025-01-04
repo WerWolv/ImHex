@@ -569,14 +569,16 @@ namespace hex::plugin::builtin {
 
             std::optional<color_t> result;
             for (const auto &[id, callback] : ImHexApi::HexEditor::impl::getBackgroundHighlightingFunctions()) {
-                if (auto color = callback(address, data, size, result.has_value()); color.has_value())
-                    result = color;
+                if (auto color = callback(address, data, size, result.has_value()); color.has_value()) {
+                    result = blendColors(result, color);
+                }
             }
 
             if (!result.has_value()) {
                 for (const auto &[id, highlighting] : ImHexApi::HexEditor::impl::getBackgroundHighlights()) {
-                    if (highlighting.getRegion().overlaps({ address, size }))
-                        return highlighting.getColor();
+                    if (highlighting.getRegion().overlaps({ address, size })) {
+                        result = blendColors(result, highlighting.getColor());
+                    }
                 }
             }
 

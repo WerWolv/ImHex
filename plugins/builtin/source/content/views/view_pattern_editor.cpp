@@ -2212,10 +2212,7 @@ namespace hex::plugin::builtin {
 
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
                 for (const auto &patternColor : runtime.getColorsAtAddress(address)) {
-                    if (color.has_value())
-                        color = ImAlphaBlendColors(*color, patternColor);
-                    else
-                        color = patternColor;
+                    color = blendColors(color, patternColor);
                 }
             }
 

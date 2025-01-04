@@ -65,11 +65,11 @@ namespace hex::plugin::builtin {
             // Check all bookmarks for potential overlaps with the current address
             std::optional<ImColor> color;
             for (const auto &bookmark : *m_bookmarks) {
+                if (!bookmark.highlightVisible)
+                    continue;
+
                 if (Region { address, size }.isWithin(bookmark.entry.region)) {
-                    if (color.has_value())
-                        color = ImAlphaBlendColors(*color, bookmark.entry.color);
-                    else
-                        color = bookmark.entry.color;
+                    color = blendColors(color, bookmark.entry.color);
                 }
             }
 
