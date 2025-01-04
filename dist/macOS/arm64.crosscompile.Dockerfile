@@ -1,4 +1,4 @@
-# This image is is provided for reference, but a (probably more up to date) image should be available at https://github.com/iTrooz/macos-crosscompile
+# This image is provided for reference, but a (probably more up to date) image should be available at https://github.com/iTrooz/macos-crosscompile
 FROM ubuntu:22.04
 
 ENV PATH                $PATH:/osxcross/target/bin
