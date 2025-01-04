@@ -140,7 +140,7 @@ namespace hex::plugin::builtin {
         return Provider::storeSettings(settings);
     }
 
-    [[nodiscard]] std::string ViewProvider::getTypeName() const {
+    [[nodiscard]] UnlocalizedString ViewProvider::getTypeName() const {
         return "hex.builtin.provider.view";
     }
 

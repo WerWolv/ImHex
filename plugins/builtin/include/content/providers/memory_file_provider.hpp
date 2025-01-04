@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
 
         std::vector<MenuEntry> getMenuEntries() override;
 
-        [[nodiscard]] std::string getTypeName() const override {
+        [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.mem_file";
         }
 
