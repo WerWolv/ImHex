@@ -290,7 +290,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 // Draw help info for the expressions
-                ImGuiExt::HelpHover("hex.builtin.view.highlight_rules.help_text"_lang);
+                ImGuiExt::HelpHover("hex.builtin.view.highlight_rules.help_text"_lang, ICON_VS_INFO);
 
                 ImGui::PopID();
             } else {

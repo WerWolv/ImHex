@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 #include <content/helpers/diagrams.hpp>
+#include <fonts/vscode_icons.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
@@ -115,7 +116,7 @@ namespace hex::plugin::builtin {
                             ImGuiExt::TextFormatted("{}", m_dataMimeType);
                             ImGui::SameLine();
                             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                            ImGuiExt::HelpHover("hex.builtin.information_section.magic.octet_stream_warning"_lang);
+                            ImGuiExt::HelpHover("hex.builtin.information_section.magic.octet_stream_warning"_lang, ICON_VS_INFO);
                             ImGui::PopStyleVar();
                         } else {
                             ImGuiExt::TextFormatted("{}", m_dataMimeType);

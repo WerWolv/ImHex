@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
                                     ImGui::SameLine();
                                     if (auto description = section->getUnlocalizedDescription(); !description.empty()) {
                                         ImGui::SameLine();
-                                        ImGuiExt::HelpHover(Lang(description));
+                                        ImGuiExt::HelpHover(Lang(description), ICON_VS_INFO);
                                     }
 
                                     // Draw settings gear on the right
