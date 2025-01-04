@@ -828,25 +828,15 @@ namespace hex {
             #endif
         });
 
-        glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
+        static const auto unlockFrameRate = [](GLFWwindow *window, auto ...) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
-        });
+        };
 
-        glfwSetMouseButtonCallback(m_window, [](GLFWwindow *window, int, int, int) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->m_unlockFrameRate = true;
-        });
-
-        glfwSetScrollCallback(m_window, [](GLFWwindow *window, double, double) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->m_unlockFrameRate = true;
-        });
-
-        glfwSetWindowFocusCallback(m_window, [](GLFWwindow *window, int) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->m_unlockFrameRate = true;
-        });
+        glfwSetCursorPosCallback(m_window, unlockFrameRate);
+        glfwSetMouseButtonCallback(m_window, unlockFrameRate);
+        glfwSetScrollCallback(m_window, unlockFrameRate);
+        glfwSetWindowFocusCallback(m_window, unlockFrameRate);
 
         glfwSetWindowFocusCallback(m_window, [](GLFWwindow *, int focused) {
             EventWindowFocused::post(focused == GLFW_TRUE);
@@ -885,8 +875,7 @@ namespace hex {
                     key != GLFW_KEY_LEFT_SHIFT && key != GLFW_KEY_RIGHT_SHIFT &&
                     key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
                 ) {
-                    auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-                    win->m_unlockFrameRate = true;
+                    unlockFrameRate(window);
 
                     if (!(mods & GLFW_MOD_NUM_LOCK)) {
                         if (key == GLFW_KEY_KP_0) key = GLFW_KEY_INSERT;
@@ -900,6 +889,7 @@ namespace hex {
                         else if (key == GLFW_KEY_KP_9) key = GLFW_KEY_PAGE_UP;
                     }
 
+                    auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
                     win->m_pressedKeys.push_back(key);
                 }
             }
