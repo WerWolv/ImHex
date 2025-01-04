@@ -838,6 +838,16 @@ namespace hex {
             win->m_unlockFrameRate = true;
         });
 
+        glfwSetScrollCallback(m_window, [](GLFWwindow *window, double, double) {
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->m_unlockFrameRate = true;
+        });
+
+        glfwSetWindowFocusCallback(m_window, [](GLFWwindow *window, int) {
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->m_unlockFrameRate = true;
+        });
+
         glfwSetWindowFocusCallback(m_window, [](GLFWwindow *, int focused) {
             EventWindowFocused::post(focused == GLFW_TRUE);
         });
