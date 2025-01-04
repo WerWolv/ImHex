@@ -1573,13 +1573,13 @@ namespace hex::plugin::builtin {
                         if (end == std::string::npos)
                             return std::nullopt;
                         value.resize(end);
-                        //value = value.substr(0, end);
+
                         value = wolv::util::trim(value);
 
                         return BinaryPattern(value);
                     }();
 
-                    const auto address = [value = value] mutable -> std::optional<u64> {
+                    const auto address = [value = value, provider] mutable -> std::optional<u64> {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
@@ -1593,11 +1593,20 @@ namespace hex::plugin::builtin {
                         value = wolv::util::trim(value);
 
                         size_t end = 0;
-                        auto result = std::stoull(value, &end, 0);
+                        auto result = std::stoll(value, &end, 0);
                         if (end != value.length())
                             return std::nullopt;
 
-                        return result;
+                        if (result < 0) {
+                            const auto size = provider->getActualSize();
+                            if (-result > size) {
+                                return std::nullopt;
+                            }
+
+                            return size + result;
+                        } else {
+                            return result;
+                        }
                     }();
 
                     if (!address)
