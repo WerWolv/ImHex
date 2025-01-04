@@ -176,7 +176,7 @@ namespace hex {
 
                 class SliderDataSize : public Widget {
                 public:
-                    SliderDataSize(u64 defaultValue, u64 min, u64 max) : m_value(defaultValue), m_min(min), m_max(max) { }
+                    SliderDataSize(u64 defaultValue, u64 min, u64 max, u64 stepSize) : m_value(defaultValue), m_min(min), m_max(max), m_stepSize(stepSize) { }
                     bool draw(const std::string &name) override;
 
                     void load(const nlohmann::json &data) override;
@@ -187,6 +187,7 @@ namespace hex {
                 protected:
                     u64 m_value;
                     u64 m_min, m_max;
+                    u64 m_stepSize;
                 };
 
                 class ColorPicker : public Widget {

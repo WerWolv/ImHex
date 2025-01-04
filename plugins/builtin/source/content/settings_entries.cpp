@@ -749,7 +749,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
             ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "", "hex.builtin.setting.general.auto_backup_time");
-            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "", "hex.builtin.setting.general.max_mem_file_size", 128_MiB, 0_bytes, 32_GiB)
+            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "", "hex.builtin.setting.general.max_mem_file_size", 512_MiB, 0_bytes, 32_GiB, 1_MiB)
                 .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc");
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);

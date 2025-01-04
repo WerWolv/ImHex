@@ -913,8 +913,9 @@ namespace ImGuiExt {
         return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U64, "%llX", flags | ImGuiInputTextFlags_CharsHexadecimal);
     }
 
-    bool SliderBytes(const char *label, u64 *value, u64 min, u64 max, ImGuiSliderFlags flags) {
+    bool SliderBytes(const char *label, u64 *value, u64 min, u64 max, u64 stepSize, ImGuiSliderFlags flags) {
         std::string format;
+
         if (*value < 1024) {
             format = hex::format("{} Bytes", *value);
         } else if (*value < 1024 * 1024) {
@@ -925,7 +926,15 @@ namespace ImGuiExt {
             format = hex::format("{:.2f} GB", *value / (1024.0 * 1024.0 * 1024.0));
         }
 
-        return ImGui::SliderScalar(label, ImGuiDataType_U64, value, &min, &max, format.c_str(), flags | ImGuiSliderFlags_Logarithmic);
+        *value /= stepSize;
+        min /= stepSize;
+        max /= stepSize;
+
+        auto result = ImGui::SliderScalar(label, ImGuiDataType_U64, value, &min, &max, format.c_str(), flags | ImGuiSliderFlags_Logarithmic);
+
+        *value *= stepSize;
+
+        return result;
     }
 
     void SmallProgressBar(float fraction, float yOffset) {

@@ -333,7 +333,7 @@ namespace hex {
 
 
             bool SliderDataSize::draw(const std::string &name) {
-                return ImGuiExt::SliderBytes(name.c_str(), &m_value, m_min, m_max);
+                return ImGuiExt::SliderBytes(name.c_str(), &m_value, m_min, m_max, m_stepSize);
             }
 
             void SliderDataSize::load(const nlohmann::json &data) {
