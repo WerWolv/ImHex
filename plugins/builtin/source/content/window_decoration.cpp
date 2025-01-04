@@ -28,6 +28,7 @@ namespace hex::plugin::builtin {
         ImGuiExt::Texture s_logoTexture;
         bool s_showSearchBar = true;
         bool s_displayShortcutHighlights = true;
+        bool s_useNativeMenuBar = false;
 
         void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, const ContentRegistry::Interface::impl::MenuCallback &callback, const ContentRegistry::Interface::impl::EnabledCallback &enabledCallback, const ContentRegistry::Interface::impl::SelectedCallback &selectedCallback) {
             const auto &name = menuItems.front();
@@ -377,6 +378,7 @@ namespace hex::plugin::builtin {
             #endif
 
             auto window = ImHexApi::System::getMainWindowHandle();
+            menu::enableNativeMenuBar(s_useNativeMenuBar);
             if (menu::beginMainMenuBar()) {
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                     #if defined(OS_WINDOWS)
@@ -414,6 +416,8 @@ namespace hex::plugin::builtin {
                 drawMenu();
                 menu::endMainMenuBar();
             }
+            menu::enableNativeMenuBar(false);
+
             if (ImGui::BeginMainMenuBar()) {
                 ImGui::Dummy({});
 
@@ -624,7 +628,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.use_native_menu_bar", [](const ContentRegistry::Settings::SettingsValue &value) {
-            menu::enableNativeMenuBar(value.get<bool>(true));
+            s_useNativeMenuBar = value.get<bool>(true);
         });
     }
 

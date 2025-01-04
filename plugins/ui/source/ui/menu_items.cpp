@@ -29,9 +29,6 @@ namespace hex::menu {
             #if !defined (OS_MACOS)
                 std::ignore = enabled;
             #else
-                if (!enabled) {
-                    macosClearMenu();
-                }
                 s_useNativeMenuBar = enabled;
             #endif
         }
@@ -50,6 +47,8 @@ namespace hex::menu {
                     }
 
                     return macosBeginMainMenuBar();
+                } else {
+                    macosClearMenu();
                 }
             #else
                 std::ignore = s_initialized;
