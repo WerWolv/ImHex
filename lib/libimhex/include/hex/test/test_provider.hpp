@@ -47,7 +47,7 @@ namespace hex::test {
             return m_data->size();
         }
 
-        [[nodiscard]] std::string getTypeName() const override { return "hex.test.provider.test"; }
+        [[nodiscard]] UnlocalizedString getTypeName() const override { return "hex.test.provider.test"; }
 
         bool open() override { return true; }
         void close() override { }
