@@ -1151,7 +1151,7 @@
         "hex.builtin.popup.safety_backup.title": "Restore lost data",
         "hex.builtin.welcome.start.create_file": "Create New File",
         "hex.builtin.welcome.start.open_file": "Open File",
-        "hex.builtin.welcome.start.open_other": "Other Providers",
+        "hex.builtin.welcome.start.open_other": "Other Data Sources",
         "hex.builtin.welcome.start.open_project": "Open Project",
         "hex.builtin.welcome.start.recent": "Recent Files",
         "hex.builtin.welcome.start.recent.auto_backups": "Auto Backups",
