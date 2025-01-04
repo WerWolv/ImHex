@@ -1599,7 +1599,7 @@ namespace hex::plugin::builtin {
 
                         if (result < 0) {
                             const auto size = provider->getActualSize();
-                            if (-result > size) {
+                            if (u64(-result) > size) {
                                 return std::nullopt;
                             }
 
