@@ -75,7 +75,8 @@ namespace hex::plugin::builtin {
                             { "os", ImHexApi::System::getOSName() },
                             { "os_version", ImHexApi::System::getOSVersion() },
                             { "arch", ImHexApi::System::getArchitecture() },
-                            { "gpu_vendor", ImHexApi::System::getGPUVendor() }
+                            { "gpu_vendor", ImHexApi::System::getGPUVendor() },
+                            { "corporate_env", ImHexApi::System::isCorporateEnvironment() }
                     };
 
                     HttpRequest telemetryRequest("POST", ImHexApiURL + "/telemetry"s);

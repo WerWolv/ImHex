@@ -23,6 +23,7 @@
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
+    #include <DSRole.h>
 #else
     #include <sys/utsname.h>
     #include <unistd.h>
@@ -728,6 +729,27 @@ namespace hex {
 
         const std::string &getGLRenderer() {
             return impl::s_glRenderer;
+        }
+
+        bool isCorporateEnvironment() {
+            #if defined(OS_WINDOWS)
+                {
+                    DSROLE_PRIMARY_DOMAIN_INFO_BASIC * info;
+                    if ((DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, (PBYTE *)&info) == ERROR_SUCCESS) && (info != nullptr))
+                    {
+                        bool result = std::wstring(info->DomainNameFlat).empty();
+                        DsRoleFreeMemory(info);
+
+                        return result;
+                    } else {
+                        DWORD size = 1024;
+                        ::GetComputerNameExA(ComputerNameDnsDomain, nullptr, &size);
+                        return size > 0;
+                    }
+                }
+            #else
+                return false;
+            #endif
         }
 
         bool isPortableVersion() {

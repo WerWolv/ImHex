@@ -583,6 +583,14 @@ namespace hex {
             const std::string& getGLRenderer();
 
             /**
+             * @brief Checks if ImHex is being run in a "Corporate Environment"
+             * This function simply checks for common telltale signs such as if the machine is joined a
+             * domain. It's not super accurate, but it's still useful for statistics
+             * @return True if it is
+             */
+            bool isCorporateEnvironment();
+
+            /**
              * @brief Checks if ImHex is running in portable mode
              * @return Whether ImHex is running in portable mode
              */

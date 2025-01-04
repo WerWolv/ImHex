@@ -308,11 +308,12 @@ namespace hex::plugin::builtin {
                                     ImGui::TableNextColumn();
                                     ImGui::TextUnformatted("hex.builtin.oobe.server_contact.data_collected.os"_lang);
                                     ImGui::TableNextColumn();
-                                    ImGuiExt::TextFormattedWrapped("{}\n{}\n{}\n{}",
+                                    ImGuiExt::TextFormattedWrapped("{}\n{}\n{}\n{}\nCorporate Environment: {}",
                                                                 ImHexApi::System::getOSName(),
                                                                 ImHexApi::System::getOSVersion(),
                                                                 ImHexApi::System::getArchitecture(),
-                                                                ImHexApi::System::getGPUVendor());
+                                                                ImHexApi::System::getGPUVendor(),
+                                                                ImHexApi::System::isCorporateEnvironment() ? "Yes" : "No");
 
                                     ImGui::EndTable();
                                 }
