@@ -60,7 +60,7 @@ namespace hex::init {
         }
 
         RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
-            m_tasks.push_back(Task{ name, function, async });
+            m_tasks.push_back(Task{ name, function, async, false });
         });
     }
 
@@ -220,14 +220,17 @@ namespace hex::init {
 
             auto startTime = std::chrono::high_resolution_clock::now();
 
-            // Loop over all registered init tasks
-            for (auto it = m_tasks.begin(); it != m_tasks.end(); ++it) {
-                // Construct a new task callback
-                this->createTask(*it);
-            }
-
             // Check every 100ms if all tasks have run
             while (true) {
+                // Loop over all registered init tasks
+                for (auto it = m_tasks.begin(); it != m_tasks.end(); ++it) {
+                    // Construct a new task callback
+                    if (!it->running) {
+                        this->createTask(*it);
+                        it->running = true;
+                    }
+                }
+
                 {
                     std::scoped_lock lock(m_tasksMutex);
                     if (m_completedTaskCount >= m_totalTaskCount)

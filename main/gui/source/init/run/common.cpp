@@ -27,7 +27,7 @@ namespace hex::init {
 
         // Add initialization tasks to run
         TaskManager::init();
-        for (const auto &[name, task, async] : init::getInitTasks())
+        for (const auto &[name, task, async, running] : init::getInitTasks())
             splashWindow->addStartupTask(name, task, async);
 
         splashWindow->startStartupTasks();

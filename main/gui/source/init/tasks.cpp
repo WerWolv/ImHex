@@ -251,7 +251,7 @@ namespace hex::init {
 
     // Run all exit tasks, and print to console
     void runExitTasks() {
-        for (const auto &[name, task, async] : init::getExitTasks()) {
+        for (const auto &[name, task, async, running] : init::getExitTasks()) {
             const bool result = task();
             log::info("Exit task '{0}' finished {1}", name, result ? "successfully" : "unsuccessfully");
         }
@@ -259,18 +259,18 @@ namespace hex::init {
 
     std::vector<Task> getInitTasks() {
         return {
-            { "Setting up environment",  setupEnvironment,    false },
-            { "Creating directories",    createDirectories,   false },
-            { "Loading settings",        loadSettings,        false },
-            { "Loading plugins",         loadPlugins,         false },
+            { "Setting up environment",  setupEnvironment,    false, false },
+            { "Creating directories",    createDirectories,   false, false },
+            { "Loading settings",        loadSettings,        false, false },
+            { "Loading plugins",         loadPlugins,         false, false },
         };
     }
 
     std::vector<Task> getExitTasks() {
         return {
-            { "Prepare exit",            prepareExit,      false },
-            { "Unloading plugins",       unloadPlugins,    false },
-            { "Deleting old files",      deleteOldFiles,   false },
+            { "Prepare exit",            prepareExit,      false, false },
+            { "Unloading plugins",       unloadPlugins,    false, false },
+            { "Deleting old files",      deleteOldFiles,   false, false },
         };
     }
 
