@@ -101,6 +101,7 @@ namespace hex::plugin::builtin {
                     return false;
                 } else {
                     for (size_t n = 0; n < m_paths.size(); n++) {
+                        ImGui::PushID(n + 1);
                         const bool isSelected = (m_itemIndex == n);
                         if (ImGui::Selectable(wolv::util::toUTF8String(m_paths[n]).c_str(), isSelected)) {
                             m_itemIndex = n;
@@ -109,6 +110,8 @@ namespace hex::plugin::builtin {
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();
                         }
+
+                        ImGui::PopID();
                     }
                     ImGui::EndListBox();
                 }
@@ -146,6 +149,7 @@ namespace hex::plugin::builtin {
                 if (data.is_array()) {
                     std::vector<std::string> pathStrings = data;
 
+                    m_paths.clear();
                     for (const auto &pathString : pathStrings) {
                         m_paths.emplace_back(pathString);
                     }
