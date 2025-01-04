@@ -63,12 +63,17 @@ namespace hex::plugin::builtin {
             std::ignore = data;
 
             // Check all bookmarks for potential overlaps with the current address
+            std::optional<ImColor> color;
             for (const auto &bookmark : *m_bookmarks) {
-                if (Region { address, size }.isWithin(bookmark.entry.region))
-                    return bookmark.entry.color;
+                if (Region { address, size }.isWithin(bookmark.entry.region)) {
+                    if (color.has_value())
+                        color = ImAlphaBlendColors(*color, bookmark.entry.color);
+                    else
+                        color = bookmark.entry.color;
+                }
             }
 
-            return std::nullopt;
+            return color;
         });
 
         // Draw hex editor tooltips for bookmarks
