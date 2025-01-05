@@ -67,6 +67,7 @@ cmake /imhex                                                                    
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                                \
     -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake                                      \
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+    -DLIBROMFS_COMPRESS_RESOURCES=OFF                                                                   \
     -DCMAKE_BUILD_TYPE=Release
 
 ninja -j $JOBS
