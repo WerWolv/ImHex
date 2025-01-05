@@ -833,6 +833,10 @@ function(generatePDBs)
                 ) || (exit 0)
                 COMMAND_EXPAND_LISTS)
 
+        if (IMHEX_REPLACE_DWARF_WITH_PDB)
+            file(COPY_FILE ${CMAKE_BINARY_DIR}/${PDB}.pdb ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb)
+        endif ()
+
         install(FILES ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb DESTINATION ".")
 
         add_dependencies(imhex_all ${PDB}_pdb)
