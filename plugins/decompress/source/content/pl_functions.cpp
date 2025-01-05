@@ -155,7 +155,8 @@ namespace hex::plugin::decompress {
                 auto &section = evaluator->getSection(params[1].toUnsigned());
 
                 lzma_stream stream = LZMA_STREAM_INIT;
-                if (lzma_auto_decoder(&stream, 0x10000, LZMA_IGNORE_CHECK) != Z_OK) {
+                constexpr int64_t memlimit = 0x40000000;  // 1GiB
+                if (lzma_auto_decoder(&stream, memlimit, LZMA_IGNORE_CHECK) != LZMA_OK) {
                     return false;
                 }
 
@@ -179,8 +180,8 @@ namespace hex::plugin::decompress {
 
                     if (res == LZMA_MEMLIMIT_ERROR) {
                         auto usage = lzma_memusage(&stream);
-                        lzma_memlimit_set(&stream, usage);
-                        res = lzma_code(&stream, LZMA_RUN);
+                        evaluator->getConsole().log(pl::core::LogConsole::Level::Warning, fmt::format("lzma_decompress memory usage {} bytes would exceed the limit ({} bytes), aborting", usage, memlimit));
+                        return false;
                     }
 
                     if (res != LZMA_OK)

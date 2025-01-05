@@ -158,7 +158,7 @@ namespace hex::plugin::builtin {
         }
 
         {
-            const auto metadataContent = hex::format("{}\n{}", MetadataHeaderMagic, ImHexApi::System::getImHexVersion());
+            const auto metadataContent = hex::format("{}\n{}", MetadataHeaderMagic, ImHexApi::System::getImHexVersion().get(false));
             tar.writeString(MetadataPath, metadataContent);
         }
 

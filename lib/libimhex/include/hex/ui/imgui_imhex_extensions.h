@@ -144,13 +144,13 @@ namespace ImGuiExt {
 
     bool TitleBarButton(const char *label, ImVec2 size_arg);
     bool ToolBarButton(const char *symbol, ImVec4 color);
-    bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg = ImVec2(0, 0));
+    bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg = ImVec2(0, 0), ImVec2 iconOffset = ImVec2(0, 0));
 
     bool InputIntegerPrefix(const char* label, const char *prefix, void *value, ImGuiDataType type, const char *format, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputHexadecimal(const char* label, u32 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputHexadecimal(const char* label, u64 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
 
-    bool SliderBytes(const char *label, u64 *value, u64 min, u64 max, ImGuiSliderFlags flags = ImGuiSliderFlags_None);
+    bool SliderBytes(const char *label, u64 *value, u64 min, u64 max, u64 stepSize = 1, ImGuiSliderFlags flags = ImGuiSliderFlags_None);
 
     inline bool HasSecondPassed() {
         return static_cast<ImU32>(ImGui::GetTime() * 100) % 100 <= static_cast<ImU32>(ImGui::GetIO().DeltaTime * 100);
@@ -291,8 +291,8 @@ namespace ImGuiExt {
     bool BitCheckbox(const char* label, bool* v);
 
     bool DimmedButton(const char* label, ImVec2 size = ImVec2(0, 0));
-    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size = ImVec2(0, 0));
-    bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size);
+    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size = ImVec2(0, 0), ImVec2 iconOffset = ImVec2(0, 0));
+    bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size = ImVec2(0, 0), ImVec2 iconOffset = ImVec2(0, 0));
     bool DimmedIconToggle(const char *icon, bool *v);
     bool DimmedIconToggle(const char *iconOn, const char *iconOff, bool *v);
 

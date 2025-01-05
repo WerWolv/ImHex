@@ -23,6 +23,7 @@
 #include <wolv/literals.hpp>
 
 #include <romfs/romfs.hpp>
+#include <ui/menu_items.hpp>
 
 using namespace std::literals::string_literals;
 using namespace wolv::literals;
@@ -212,7 +213,7 @@ namespace hex::plugin::builtin {
 
         void drawExportLanguageMenu() {
             for (const auto &formatter : ContentRegistry::DataFormatter::impl::getExportMenuEntries()) {
-                if (ImGui::MenuItem(Lang(formatter.unlocalizedName), nullptr, false, ImHexApi::Provider::get()->getActualSize() > 0)) {
+                if (menu::menuItem(Lang(formatter.unlocalizedName), Shortcut::None, false, ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->getActualSize() > 0)) {
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [&formatter](const auto &path) {
                         TaskManager::createTask("hex.builtin.task.exporting_data"_lang, TaskManager::NoProgress, [&formatter, path](auto&){
                             auto provider = ImHexApi::Provider::get();
@@ -223,7 +224,7 @@ namespace hex::plugin::builtin {
                                                 provider
                                             });
 
-                            auto result = formatter.callback(provider, selection.getStartAddress(), selection.getSize());
+                            auto result = formatter.callback(provider, selection.getStartAddress(), selection.getSize(), false);
 
                             wolv::io::File file(path, wolv::io::File::Mode::Create);
                             if (!file.isValid()) {
@@ -379,7 +380,7 @@ namespace hex::plugin::builtin {
         /* Open Other */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_other"}, ICON_VS_TELESCOPE, 1150, [] {
             for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
-                if (ImGui::MenuItem(Lang(unlocalizedProviderName)))
+                if (menu::menuItem(Lang(unlocalizedProviderName)))
                     ImHexApi::Provider::createProvider(unlocalizedProviderName);
             }
         }, noRunningTasks);
@@ -541,6 +542,7 @@ namespace hex::plugin::builtin {
                     glfwSetWindowMonitor(window, monitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
                 } else {
                     glfwSetWindowMonitor(window, nullptr, position.x, position.y, size.x, size.y, 0);
+                    glfwSetWindowAttrib(window, GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GLFW_FALSE : GLFW_TRUE);
                 }
 
             }, []{ return true; }, []{ return glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr; });
@@ -555,7 +557,7 @@ namespace hex::plugin::builtin {
                 if (view->hasViewMenuItemEntry()) {
                     auto &state = view->getWindowOpenState();
 
-                    if (ImGui::MenuItemEx(Lang(view->getUnlocalizedName()), view->getIcon(), "", state, ImHexApi::Provider::isValid() && !LayoutManager::isLayoutLocked()))
+                    if (menu::menuItemEx(Lang(view->getUnlocalizedName()), view->getIcon(), Shortcut::None, state, ImHexApi::Provider::isValid() && !LayoutManager::isLayoutLocked()))
                         state = !state;
                 }
             }
@@ -576,7 +578,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, ICON_VS_LAYOUT, 1150, [] {
             bool locked = LayoutManager::isLayoutLocked();
-            if (ImGui::MenuItemEx("hex.builtin.menu.workspace.layout.lock"_lang, ICON_VS_LOCK, nullptr, locked, ImHexApi::Provider::isValid())) {
+            if (menu::menuItemEx("hex.builtin.menu.workspace.layout.lock"_lang, ICON_VS_LOCK, Shortcut::None, locked, ImHexApi::Provider::isValid())) {
                 LayoutManager::lockLayout(!locked);
                 ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", !locked);
             }
@@ -586,14 +588,14 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, 2000, [] {
             for (const auto &path : romfs::list("layouts")) {
-                if (ImGui::MenuItem(wolv::util::capitalizeString(path.stem().string()).c_str(), "", false, ImHexApi::Provider::isValid())) {
+                if (menu::menuItem(wolv::util::capitalizeString(path.stem().string()).c_str(), Shortcut::None, false, ImHexApi::Provider::isValid())) {
                     LayoutManager::loadFromString(std::string(romfs::get(path).string()));
                 }
             }
 
             bool shiftPressed = ImGui::GetIO().KeyShift;
             for (auto &[name, path] : LayoutManager::getLayouts()) {
-                if (ImGui::MenuItem(hex::format("{}{}", name, shiftPressed ? " " ICON_VS_X : "").c_str(), "", false, ImHexApi::Provider::isValid())) {
+                if (menu::menuItem(hex::format("{}{}", name, shiftPressed ? " " ICON_VS_X : "").c_str(), Shortcut::None, false, ImHexApi::Provider::isValid())) {
                     if (shiftPressed) {
                         LayoutManager::removeLayout(name);
                         break;
@@ -626,7 +628,7 @@ namespace hex::plugin::builtin {
                 const auto &[name, workspace] = *it;
 
                 bool canRemove = shiftPressed && !workspace.builtin;
-                if (ImGui::MenuItem(hex::format("{}{}", name, canRemove ? " " ICON_VS_X : "").c_str(), "", it == WorkspaceManager::getCurrentWorkspace(), ImHexApi::Provider::isValid())) {
+                if (menu::menuItem(hex::format("{}{}", name, canRemove ? " " ICON_VS_X : "").c_str(), Shortcut::None, it == WorkspaceManager::getCurrentWorkspace(), ImHexApi::Provider::isValid())) {
                     if (canRemove) {
                         WorkspaceManager::removeWorkspace(name);
                         break;

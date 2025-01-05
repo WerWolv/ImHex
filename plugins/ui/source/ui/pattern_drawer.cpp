@@ -302,12 +302,12 @@ namespace hex::ui {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
         if (m_favorites.contains(m_currPatternPath)) {
-            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_DELETE, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram))) {
+            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_DELETE, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram), {}, { 1_scaled, 0 })) {
                 m_favorites.erase(m_currPatternPath);
             }
         }
         else {
-            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_ADD, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled))) {
+            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_ADD, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), {}, { 1_scaled, 0 })) {
                 m_favorites.insert({ m_currPatternPath, pattern.clone() });
             }
         }
@@ -1151,7 +1151,7 @@ namespace hex::ui {
         }
     
         ImGui::TableSetupScrollFreeze(0, 1);
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.favorites"_lang, ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentDisable, ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.favorites"_lang, ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_IndentDisable | (m_favorites.empty() ? ImGuiTableColumnFlags_None : ImGuiTableColumnFlags_NoHide), ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.var_name"_lang,  ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.color"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.start"_lang,     ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("start"));

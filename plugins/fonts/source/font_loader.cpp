@@ -65,7 +65,7 @@ namespace hex::fonts {
             Font addDefaultFont() {
                 ImFontConfig config = m_config;
                 config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-                config.SizePixels = std::floor(ImHexApi::System::getGlobalScale()) * 13.0F;
+                config.SizePixels = std::floor(getAdjustedFontSize(ImHexApi::System::getGlobalScale() * 13.0F));
 
                 auto font = m_fontAtlas->AddFontDefault(&config);
                 m_fontSizes.emplace_back(false, config.SizePixels);
@@ -82,7 +82,7 @@ namespace hex::fonts {
                 config.FontDataOwnedByAtlas = false;
 
                 config.GlyphOffset = { offset.x, offset.y };
-                auto font = m_fontAtlas->AddFontFromMemoryTTF(storedFontData.data(), int(storedFontData.size()), fontSize, &config, !glyphRange.empty() ? glyphRange.Data : m_glyphRange.Data);
+                auto font = m_fontAtlas->AddFontFromMemoryTTF(storedFontData.data(), int(storedFontData.size()), getAdjustedFontSize(fontSize), &config, !glyphRange.empty() ? glyphRange.Data : m_glyphRange.Data);
                 m_fontSizes.emplace_back(scalable, fontSize);
 
                 m_config.MergeMode = true;
@@ -218,6 +218,14 @@ namespace hex::fonts {
             }
 
         private:
+            float getAdjustedFontSize(float fontSize) const {
+                // Since macOS reports half the framebuffer size that's actually available,
+                // we'll multiply all font sizes by that and then divide the global font scale
+                // by the same amount to get super crisp font rendering.
+                return fontSize * hex::ImHexApi::System::getBackingScaleFactor();
+            }
+
+        private:
             ImFontAtlas* m_fontAtlas;
             std::vector<std::pair<bool, float>> m_fontSizes;
             ImFontConfig m_config;
@@ -322,7 +330,7 @@ namespace hex::fonts {
             if (pixelPerfectFont)
                 defaultFont = fontAtlas.addDefaultFont();
             else
-                defaultFont = fontAtlas.addFontFromRomFs("fonts/firacode.ttf", fontSize * 1.1, true, ImVec2());
+                defaultFont = fontAtlas.addFontFromRomFs("fonts/JetBrainsMono.ttf", 14 * ImHexApi::System::getGlobalScale(), true, ImVec2());
 
             if (!fontAtlas.build()) {
                 log::fatal("Failed to load default font!");

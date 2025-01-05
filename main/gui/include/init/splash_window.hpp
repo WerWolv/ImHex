@@ -21,6 +21,7 @@ namespace hex::init {
         std::string name;
         std::function<bool()> callback;
         bool async;
+        bool running;
     };
 
     enum FrameResult{ Success, Failure, Running };

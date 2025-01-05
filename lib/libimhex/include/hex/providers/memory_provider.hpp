@@ -38,7 +38,7 @@ namespace hex::prv {
 
         [[nodiscard]] std::string getName() const override { return m_name; }
 
-        [[nodiscard]] std::string getTypeName() const override { return "MemoryProvider"; }
+        [[nodiscard]] UnlocalizedString getTypeName() const override { return "MemoryProvider"; }
     private:
         void renameFile();
 

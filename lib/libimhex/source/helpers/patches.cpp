@@ -81,7 +81,7 @@ namespace hex {
                 return "";
             }
 
-            [[nodiscard]] std::string getTypeName() const override { return ""; }
+            [[nodiscard]] UnlocalizedString getTypeName() const override { return ""; }
 
             const std::map<u64, u8>& getPatches() const {
                 return m_patches;

@@ -69,7 +69,7 @@ namespace hex::plugin::disasm {
                 cs_mode mode;
 
                 try {
-                    std::tie(arch, mode) = Disassembler::stringToSettings(params[0].toString());
+                    std::tie(arch, mode) = CapstoneDisassembler::stringToSettings(params[0].toString());
                 } catch (const std::exception &e) {
                     err::E0012.throwError(e.what());
                 }

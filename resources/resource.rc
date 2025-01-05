@@ -1,6 +1,7 @@
 #pragma code_page(65001)
 
 GLFW_ICON ICON dist/windows/icon.ico
+1 24 "dist/windows/imhex.manifest"
 
 1 VERSIONINFO
     FILEVERSION     PROJECT_VERSION_MAJOR,PROJECT_VERSION_MINOR,PROJECT_VERSION_PATCH

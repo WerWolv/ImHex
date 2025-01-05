@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
             // Force update all installed items after an update so that there's no old and incompatible versions around anymore
             {
                 const auto prevUpdateVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
-                if (prevUpdateVersion != ImHexApi::System::getImHexVersion()) {
+                if (SemanticVersion(prevUpdateVersion) != ImHexApi::System::getImHexVersion()) {
                     updateAll();
                 }
             }
@@ -359,7 +359,7 @@ namespace hex::plugin::builtin {
             }
 
             TaskManager::doLater([] {
-                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
+                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion().get(false));
             });
         });
     }

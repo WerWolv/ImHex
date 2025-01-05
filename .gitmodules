@@ -28,7 +28,7 @@
 	ignore = dirty
 [submodule "lib/third_party/lunasvg"]
 	path = lib/third_party/lunasvg
-	url = https://github.com/sammycage/lunasvg
+	url = https://github.com/WerWolv/lunasvg
 	ignore = dirty
 
 [submodule "lib/external/libromfs"]
@@ -44,3 +44,6 @@
 [submodule "lib/third_party/HashLibPlus"]
 	path = lib/third_party/HashLibPlus
     url = https://github.com/WerWolv/HashLibPlus
+[submodule "lib/external/disassembler"]
+	path = lib/external/disassembler
+	url = https://github.com/WerWolv/Disassembler

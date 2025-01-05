@@ -101,6 +101,7 @@ namespace hex::plugin::builtin {
                     return false;
                 } else {
                     for (size_t n = 0; n < m_paths.size(); n++) {
+                        ImGui::PushID(n + 1);
                         const bool isSelected = (m_itemIndex == n);
                         if (ImGui::Selectable(wolv::util::toUTF8String(m_paths[n]).c_str(), isSelected)) {
                             m_itemIndex = n;
@@ -109,6 +110,8 @@ namespace hex::plugin::builtin {
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();
                         }
+
+                        ImGui::PopID();
                     }
                     ImGui::EndListBox();
                 }
@@ -146,6 +149,7 @@ namespace hex::plugin::builtin {
                 if (data.is_array()) {
                     std::vector<std::string> pathStrings = data;
 
+                    m_paths.clear();
                     for (const auto &pathString : pathStrings) {
                         m_paths.emplace_back(pathString);
                     }
@@ -285,9 +289,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::BeginDisabled(m_drawShortcut.matches(m_defaultShortcut));
                 if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, m_defaultShortcut, m_view);
-
-                    m_drawShortcut = m_defaultShortcut;
+                    this->reset();
                     if (!m_hasDuplicate) {
                         m_shortcut = m_defaultShortcut;
                         settingChanged = true;
@@ -304,7 +306,8 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 std::string fullName;
-                for (const auto &part : m_fullName) {
+                for (u32 i = m_fullName.size() == 1 ? 0 : 1; i < m_fullName.size(); i += 1) {
+                    const auto &part = m_fullName[i];
                     fullName += Lang(part).get();
                     fullName += " -> ";
                 }
@@ -354,6 +357,13 @@ namespace hex::plugin::builtin {
                 }
 
                 return keys;
+            }
+
+            void reset() {
+                m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, m_defaultShortcut, m_view);
+
+                m_drawShortcut = m_defaultShortcut;
+                m_shortcut = m_defaultShortcut;
             }
 
         private:
@@ -743,7 +753,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
             ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "", "hex.builtin.setting.general.auto_backup_time");
-            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "", "hex.builtin.setting.general.max_mem_file_size", 128_MiB, 0_bytes, 32_GiB)
+            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "", "hex.builtin.setting.general.max_mem_file_size", 512_MiB, 0_bytes, 32_GiB, 1_MiB)
                 .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc");
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
@@ -800,6 +810,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.pattern_data_row_bg", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.always_show_provider_tabs", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.show_header_command_palette", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.display_shortcut_highlights", true);
 
             std::vector<std::string> languageNames;
             std::vector<nlohmann::json> languageCodes;
@@ -826,10 +837,16 @@ namespace hex::plugin::builtin {
                 ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.native_window_decorations", !getDefaultBorderlessWindowMode()).requiresRestart();
             #endif
 
+            #if defined (OS_MACOS)
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.use_native_menu_bar", true);
+            #endif
+
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.restore_window_pos", false);
 
             ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.highlight_color", ImColor(0x80, 0x80, 0xC0, 0x60));
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.sync_scrolling", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.show_selection", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.show_highlights", true);
             ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.byte_padding", 0, 0, 50);
             ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.char_padding", 0, 0, 50);
 
@@ -951,14 +968,28 @@ namespace hex::plugin::builtin {
 
         /* Shorcuts */
         {
-            EventImHexStartupFinished::subscribe([]{
+            EventImHexStartupFinished::subscribe([] {
                 for (const auto &shortcutEntry : ShortcutManager::getGlobalShortcuts()) {
-                    ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", "hex.builtin.setting.shortcuts.global", shortcutEntry.unlocalizedName.back(), nullptr, shortcutEntry.shortcut, shortcutEntry.unlocalizedName);
+                    ContentRegistry::Settings::add<KeybindingWidget>(
+                        "hex.builtin.setting.shortcuts",
+                        "hex.builtin.setting.shortcuts.global",
+                        shortcutEntry.unlocalizedName.back(),
+                        nullptr,
+                        shortcutEntry.shortcut,
+                        shortcutEntry.unlocalizedName
+                    );
                 }
 
                 for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
                     for (const auto &shortcutEntry : ShortcutManager::getViewShortcuts(view.get())) {
-                        ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", viewName, shortcutEntry.unlocalizedName.back(), view.get(), shortcutEntry.shortcut, shortcutEntry.unlocalizedName);
+                        ContentRegistry::Settings::add<KeybindingWidget>(
+                            "hex.builtin.setting.shortcuts",
+                            viewName,
+                            shortcutEntry.unlocalizedName.back(),
+                            view.get(),
+                            shortcutEntry.shortcut,
+                            shortcutEntry.unlocalizedName
+                        );
                     }
                 }
            });
@@ -971,6 +1002,22 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
         }
 
+        ImHexApi::System::addMigrationRoutine("v1.36.3", [] {
+            log::warn("Resetting shortcut key settings for them to work with this version of ImHex");
+
+            for (const auto &category : ContentRegistry::Settings::impl::getSettings()) {
+                for (const auto &subcategory : category.subCategories) {
+                    for (const auto &entry : subcategory.entries) {
+                        if (auto keybindingWidget = dynamic_cast<KeybindingWidget*>(entry.widget.get())) {
+                            keybindingWidget->reset();
+                            ContentRegistry::Settings::write<nlohmann::json>(category.unlocalizedName, entry.unlocalizedName, keybindingWidget->store());
+                        }
+                    }
+                }
+            }
+
+            ContentRegistry::Settings::impl::store();
+        });
     }
 
     static void loadLayoutSettings() {

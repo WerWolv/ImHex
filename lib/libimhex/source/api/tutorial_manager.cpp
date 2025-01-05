@@ -33,6 +33,13 @@ namespace hex {
                 idStack.push_back(0);
             }
 
+            void add(const char *string) {
+                const ImGuiID seed = idStack.back();
+                const ImGuiID id = ImHashStr(string, 0, seed);
+
+                idStack.push_back(id);
+            }
+
             void add(const std::string &string) {
                 const ImGuiID seed = idStack.back();
                 const ImGuiID id = ImHashStr(string.c_str(), string.length(), seed);
@@ -87,6 +94,10 @@ namespace hex {
             const auto element = hex::s_highlights->find(id);
             if (element != hex::s_highlights->end()) {
                 hex::s_highlightDisplays->emplace_back(boundingBox, element->second);
+
+                const auto window = ImGui::GetCurrentWindow();
+                if (window != nullptr && window->DockNode != nullptr && window->DockNode->TabBar != nullptr)
+                    window->DockNode->TabBar->NextSelectedTabId = window->TabId;
             }
 
             if (id != 0 && boundingBox.Contains(ImGui::GetMousePos())) {

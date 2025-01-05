@@ -26,7 +26,7 @@
     #include <hex/helpers/utils_linux.hpp>
 #endif
 
-struct ImVec2;
+#include <imgui.h>
 
 namespace hex {
 
@@ -339,5 +339,7 @@ namespace hex {
      *          that is defined in the current module.
      */
     [[nodiscard]] void* getContainingModule(void* symbol);
+
+    [[nodiscard]] std::optional<ImColor> blendColors(const std::optional<ImColor> &a, const std::optional<ImColor> &b);
 
 }

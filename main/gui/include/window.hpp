@@ -1,5 +1,6 @@
 #pragma once
 
+#include <condition_variable>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -7,6 +8,7 @@
 #include <vector>
 
 #include <hex/ui/view.hpp>
+#include <jthread.hpp>
 
 struct GLFWwindow;
 struct ImGuiSettingsHandler;
@@ -59,12 +61,17 @@ namespace hex {
         std::list<std::string> m_popupsToOpen;
         std::vector<int> m_pressedKeys;
 
-        bool m_unlockFrameRate = false;
+        std::atomic<bool> m_unlockFrameRate = false;
 
         ImGuiExt::ImHexCustomData m_imguiCustomData;
 
         u32 m_searchBarPosition = 0;
         bool m_emergencyPopupOpen = false;
+
+        std::jthread m_frameRateThread;
+        std::atomic<bool> m_sleepFlag;
+        std::condition_variable m_sleepCondVar;
+        std::mutex m_sleepMutex;
     };
 
 }

@@ -328,12 +328,12 @@ To use ImHex, the following minimal system requirements need to be met.
     - RHEL/AlmaLinux
     - Arch Linux
     - Basically any other distro will work as well when compiling ImHex from sources.
-- **CPU**: x86_64 (64 Bit)
+- **CPU**: Officially supported are x86_64 and ARM64, though any Little Endian 64 bit CPU should work.
 - **GPU**: OpenGL 3.0 or higher 
   - Integrated Intel HD iGPUs are supported, however certain drivers are known to cause various graphical artifacts, especially on Windows. Use at your own risk.
   - In case you don't have a GPU available, there are software rendered releases available for Windows and macOS
-- **RAM**: 256MB, more may be required for more complicated analysis
-- **Storage**: 150MB
+- **RAM**: ~150MiB, more is required for more complex analysis
+- **Storage**: 150MiB
 
 ## Installing
 
@@ -342,8 +342,10 @@ Information on how to install ImHex can be found in the [Install](/INSTALL.md) g
 ## Compiling
 
 To compile ImHex on any platform, GCC (or Clang) is required with a version that supports C++23 or higher. 
-On macOS, Clang is also required to compile some ObjC code.
-All releases are being built using latest available GCC.
+Windows and Linux releases are being built using latest available GCC.
+MacOS releases are being built using latest available LLVM Clang.
+
+Important to note is, the MSVC and AppleClang compilers are both **NOT** supported since they're both generally severely outdated and lack features GCC and LLVM Clang have.
 
 > [!NOTE]
 > Many dependencies are bundled into the repository using submodules so make sure to clone it using the `--recurse-submodules` option.

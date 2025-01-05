@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
         void insertRaw(u64 offset, u64 size) override;
         void removeRaw(u64 offset, u64 size) override;
 
-        [[nodiscard]] std::string getTypeName() const override {
+        [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.base64";
         }
     };

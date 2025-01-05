@@ -30,6 +30,7 @@ namespace hex::prv {
 
         struct MenuEntry {
             std::string name;
+            const char *icon;
             std::function<void()> callback;
         };
 
@@ -151,7 +152,7 @@ namespace hex::prv {
          * like "hex.builtin.provider.mem_file" or "hex.builtin.provider.file"
          * @return The provider's type name
          */
-        [[nodiscard]] virtual std::string getTypeName() const = 0;
+        [[nodiscard]] virtual UnlocalizedString getTypeName() const = 0;
 
         /**
          * @brief Gets a human readable representation of the current provider

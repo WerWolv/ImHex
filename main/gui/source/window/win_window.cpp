@@ -37,6 +37,7 @@ namespace hex {
     static LONG_PTR s_oldWndProc;
     static float s_titleBarHeight;
     static Microsoft::WRL::ComPtr<ITaskbarList4> s_taskbarList;
+    static bool s_useLayeredWindow = true;
 
     void nativeErrorMessage(const std::string &message) {
         log::fatal(message);
@@ -206,13 +207,14 @@ namespace hex {
                 if (delta >= 0) {
                     sleepTicks = delta / period;
                 } else {
-
                     sleepTicks = -1 + delta / period;
                 }
 
                 sleepMilliSeconds = delta - (period * sleepTicks);
-                const double sleepTime = (1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
-                Sleep(DWORD(std::round(sleepTime)));
+                const double sleepTime = std::round(1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
+                if (sleepTime >= 0.0) {
+                    Sleep(DWORD(sleepTime));
+                }
                 timeEndPeriod(granularity);
 
                 return WVR_REDRAW;
@@ -256,8 +258,15 @@ namespace hex {
                     RegionTop * (cursor.y < (window.top + border.y)) |
                     RegionBottom * (cursor.y >= (window.bottom - border.y));
 
-                if (result != 0 && (ImGui::IsAnyItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId))) {
+                if (result != 0 && (ImGui::IsAnyItemHovered())) {
                     break;
+                }
+
+                if (ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)) {
+                    if (result == RegionClient)
+                        return HTCLIENT;
+                    else
+                        return HTCAPTION;
                 }
 
                 std::string_view hoveredWindowName = GImGui->HoveredWindow == nullptr ? "" : GImGui->HoveredWindow->Name;
@@ -390,22 +399,6 @@ namespace hex {
 
 
     void Window::initNative() {
-        // Setup DPI Awareness
-        {
-            using SetProcessDpiAwarenessContextFunc = HRESULT(WINAPI *)(DPI_AWARENESS_CONTEXT);
-
-            SetProcessDpiAwarenessContextFunc setProcessDpiAwarenessContext =
-                reinterpret_cast<SetProcessDpiAwarenessContextFunc>(
-                    reinterpret_cast<void*>(
-                        GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetProcessDpiAwarenessContext")
-                    )
-                );
-
-            if (setProcessDpiAwarenessContext != nullptr) {
-                setProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-            }
-        }
-
         if (ImHexApi::System::isDebugBuild()) {
             // If the application is running in debug mode, ImHex runs under the CONSOLE subsystem,
             // so we don't need to do anything besides enabling ANSI colors
@@ -652,6 +645,10 @@ namespace hex {
             win->fullFrame();
             DwmFlush();
         });
+
+        // AMD GPUs seem to have issues with Layered Window rendering. Until we figure out
+        // why that is or AMD fixes the issue on their side, disable it on these GPUs.
+        s_useLayeredWindow = ImHexApi::System::getGPUVendor() != "ATI Technologies Inc.";
     }
 
     void Window::beginNativeWindowFrame() {
@@ -659,11 +656,27 @@ namespace hex {
 
         // Remove WS_POPUP style from the window to make various window management tools work
         auto hwnd = glfwGetWin32Window(m_window);
-        ::SetWindowLong(hwnd, GWL_STYLE, (GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW) & ~WS_POPUP);
-        ::SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_COMPOSITED | WS_EX_LAYERED);
+        {
+            auto style = GetWindowLong(hwnd, GWL_STYLE);
+            style |= WS_OVERLAPPEDWINDOW;
+            style &= ~WS_POPUP;
+
+            ::SetWindowLong(hwnd, GWL_STYLE, style);
+        }
+
+        // Make window composited and layered when supported to eradicate any window flickering that happens while resizing
+        {
+            auto style = GetWindowLong(hwnd, GWL_EXSTYLE);
+            style |= WS_EX_COMPOSITED;
+
+            if (s_useLayeredWindow)
+                style |= WS_EX_LAYERED;
+
+            ::SetWindowLong(hwnd, GWL_EXSTYLE, style);
+        }
 
         if (!ImHexApi::System::impl::isWindowResizable()) {
-            if (glfwGetWindowAttrib(m_window, GLFW_MAXIMIZED)) {
+            if (glfwGetWindowAttrib(m_window, GLFW_MAXIMIZED) == GLFW_TRUE) {
                 glfwRestoreWindow(m_window);
             }
         }

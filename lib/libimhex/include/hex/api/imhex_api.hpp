@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/helpers/semantic_version.hpp>
 
 #include <functional>
 #include <optional>
@@ -492,6 +493,7 @@ namespace hex {
              */
             float getNativeScale();
 
+            float getBackingScaleFactor();
 
             /**
              * @brief Gets the current main window position
@@ -581,6 +583,14 @@ namespace hex {
             const std::string& getGLRenderer();
 
             /**
+             * @brief Checks if ImHex is being run in a "Corporate Environment"
+             * This function simply checks for common telltale signs such as if the machine is joined a
+             * domain. It's not super accurate, but it's still useful for statistics
+             * @return True if it is
+             */
+            bool isCorporateEnvironment();
+
+            /**
              * @brief Checks if ImHex is running in portable mode
              * @return Whether ImHex is running in portable mode
              */
@@ -618,7 +628,7 @@ namespace hex {
              * @brief Gets the current ImHex version
              * @return ImHex version
              */
-            std::string getImHexVersion(bool withBuildType = true);
+            SemanticVersion getImHexVersion();
 
             /**
              * @brief Gets the current git commit hash
@@ -694,6 +704,13 @@ namespace hex {
              * @return Module handle
              */
             void* getLibImHexModuleHandle();
+
+            /**
+             * Adds a new migration routine that will be executed when upgrading from a lower version than specified in migrationVersion
+             * @param migrationVersion Upgrade point version
+             * @param function Function to run
+             */
+            void addMigrationRoutine(SemanticVersion migrationVersion, std::function<void()> function);
 
         }
 

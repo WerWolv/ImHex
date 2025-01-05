@@ -38,6 +38,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/debugging.cpp
         source/helpers/default_paths.cpp
         source/helpers/imgui_hooks.cpp
+        source/helpers/semantic_version.cpp
 
         source/test/tests.cpp
 
@@ -133,13 +134,14 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     if (WIN32)
         set_target_properties(libimhex PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
         target_link_options(libimhex PRIVATE -Wl,--export-all-symbols)
+        target_link_libraries(libimhex PRIVATE Netapi32.lib)
     elseif (APPLE)
         find_library(FOUNDATION NAMES Foundation)
         target_link_libraries(libimhex PUBLIC ${FOUNDATION})
     endif ()
 
-    target_link_libraries(libimhex PRIVATE microtar libwolv ${NFD_LIBRARIES} magic dl ${JTHREAD_LIBRARIES})
-    target_link_libraries(libimhex PUBLIC libpl ${IMGUI_LIBRARIES})
+    target_link_libraries(libimhex PRIVATE microtar libwolv ${NFD_LIBRARIES} magic dl)
+    target_link_libraries(libimhex PUBLIC libpl ${IMGUI_LIBRARIES} ${JTHREAD_LIBRARIES})
 
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()

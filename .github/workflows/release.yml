@@ -63,7 +63,7 @@ jobs:
           token: ${{ secrets.RELEASE_TOKEN }}
 
   release-upload-artifacts:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Release Upload Artifacts
 
     steps:

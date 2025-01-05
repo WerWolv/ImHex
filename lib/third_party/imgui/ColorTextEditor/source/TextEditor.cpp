@@ -911,7 +911,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
     char buf[16];
 
     if (mShowLineNumbers)
-        snprintf(buf, 16, " %d ", globalLineMax);
+        snprintf(buf, 16, " %d ", int(globalLineMax));
     else
         buf[0] = '\0';
     mTextStart = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x + mLeftMargin;

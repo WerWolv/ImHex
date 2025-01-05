@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
         void loadSettings(const nlohmann::json &settings) override;
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
 
-        [[nodiscard]] std::string getTypeName() const override {
+        [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.gdb";
         }
 

@@ -8,6 +8,7 @@
 #include <hex/providers/buffered_reader.hpp>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -842,6 +843,17 @@ namespace hex {
             std::ignore = symbol;
             return nullptr;
         #endif
+    }
+
+    std::optional<ImColor> blendColors(const std::optional<ImColor> &a, const std::optional<ImColor> &b) {
+        if (!a.has_value() && !b.has_value())
+            return std::nullopt;
+        else if (a.has_value() && !b.has_value())
+            return a;
+        else if (!a.has_value() && b.has_value())
+            return b;
+        else
+            return ImAlphaBlendColors(a.value(), b.value());
     }
 
 }

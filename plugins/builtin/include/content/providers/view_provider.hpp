@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<Description> getDataDescription() const override;
-        [[nodiscard]] std::string getTypeName() const override;
+        [[nodiscard]] UnlocalizedString getTypeName() const override;
 
         void loadSettings(const nlohmann::json &settings) override;
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;

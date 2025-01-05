@@ -38,6 +38,34 @@ namespace hex {
 
             static AutoReset<std::map<std::string, std::map<std::string, std::vector<OnChange>>>> s_onChangeCallbacks;
 
+            static void runAllOnChangeCallbacks() {
+                for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
+                    for (const auto &[name, callbacks] : rest) {
+                        for (const auto &[id, callback] : callbacks) {
+                            try {
+                                callback(getSetting(category, name, {}));
+                            } catch (const std::exception &e) {
+                                log::error("Failed to load setting [{}/{}]: {}", category, name, e.what());
+                            }
+                        }
+                    }
+                }
+            }
+
+            void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
+                if (auto categoryIt = s_onChangeCallbacks->find(unlocalizedCategory); categoryIt != s_onChangeCallbacks->end()) {
+                    if (auto nameIt = categoryIt->second.find(unlocalizedName); nameIt != categoryIt->second.end()) {
+                        for (const auto &[id, callback] : nameIt->second) {
+                            try {
+                                callback(value);
+                            } catch (const nlohmann::json::exception &e) {
+                                log::error("Failed to run onChange handler for setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+                            }
+                        }
+                    }
+                }
+            }
+
             static AutoReset<nlohmann::json> s_settings;
             const nlohmann::json& getSettingsData() {
                 return s_settings;
@@ -72,24 +100,28 @@ namespace hex {
                         s_settings = nlohmann::json::parse(data);
                     }
 
-                    for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
-                        for (const auto &[name, callbacks] : rest) {
-                            for (const auto &[id, callback] : callbacks) {
-                                try {
-                                    callback(getSetting(category, name, {}));
-                                } catch (const std::exception &e) {
-                                    log::error("Failed to load setting [{}/{}]: {}", category, name, e.what());
-                                }
-                            }
-                        }
-                    }
+                    runAllOnChangeCallbacks();
                 }
 
                 void store() {
-                    auto data = s_settings->dump();
+                    if (!s_settings.isValid())
+                        return;
+
+                    const auto &settingsData = *s_settings;
+
+                    // During a crash settings can be empty, causing them to be overwritten.
+                    if (settingsData.empty()) {
+                        return;
+                    }
+
+                    const auto result = settingsData.dump(4);
+                    if (result.empty()) {
+                        return;
+                    }
+
                     MAIN_THREAD_EM_ASM({
                         localStorage.setItem("config", UTF8ToString($0));
-                    }, data.c_str());
+                    }, result.c_str());
                 }
 
                 void clear() {
@@ -115,17 +147,7 @@ namespace hex {
                     if (!loaded)
                         store();
 
-                    for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
-                        for (const auto &[name, callbacks] : rest) {
-                            for (const auto &[id, callback] : callbacks) {
-                                try {
-                                    callback(getSetting(category, name, {}));
-                                } catch (const std::exception &e) {
-                                    log::error("Failed to load setting [{}/{}]: {}", category, name, e.what());
-                                }
-                            }
-                        }
-                    }
+                    runAllOnChangeCallbacks();
                 }
 
                 void store() {
@@ -135,7 +157,7 @@ namespace hex {
                     const auto &settingsData = *s_settings;
 
                     // During a crash settings can be empty, causing them to be overwritten.
-                    if (settingsData.empty()) {
+                    if (s_settings->empty()) {
                         return;
                     }
 
@@ -208,20 +230,6 @@ namespace hex {
 
             void printSettingReadError(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json::exception& e) {
                 hex::log::error("Failed to read setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
-            }
-
-            void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
-                if (auto categoryIt = s_onChangeCallbacks->find(unlocalizedCategory); categoryIt != s_onChangeCallbacks->end()) {
-                    if (auto nameIt = categoryIt->second.find(unlocalizedName); nameIt != categoryIt->second.end()) {
-                        for (const auto &[id, callback] : nameIt->second) {
-                            try {
-                                callback(value);
-                            } catch (const nlohmann::json::exception &e) {
-                                log::error("Failed to run onChange handler for setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
-                            }
-                        }
-                    }
-                }
             }
 
         }
@@ -325,7 +333,7 @@ namespace hex {
 
 
             bool SliderDataSize::draw(const std::string &name) {
-                return ImGuiExt::SliderBytes(name.c_str(), &m_value, m_min, m_max);
+                return ImGuiExt::SliderBytes(name.c_str(), &m_value, m_min, m_max, m_stepSize);
             }
 
             void SliderDataSize::load(const nlohmann::json &data) {
@@ -630,7 +638,7 @@ namespace hex {
             }
 
             runtime.addDefine("__IMHEX__");
-            runtime.addDefine("__IMHEX_VERSION__", ImHexApi::System::getImHexVersion());
+            runtime.addDefine("__IMHEX_VERSION__", ImHexApi::System::getImHexVersion().get());
         }
 
         void addPragma(const std::string &name, const pl::api::PragmaHandler &handler) {
@@ -750,6 +758,14 @@ namespace hex {
             log::debug("Registered new data inspector format: {}", unlocalizedName.get());
 
             impl::s_entries->push_back({ unlocalizedName, requiredSize, maxSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
+        }
+
+        void drawMenuItems(const std::function<void()> &function) {
+            if (ImGui::BeginPopup("##DataInspectorRowContextMenu")) {
+                function();
+                ImGui::Separator();
+                ImGui::EndPopup();
+            }
         }
 
     }
@@ -917,17 +933,10 @@ namespace hex {
             });
 
             if (shortcut != Shortcut::None) {
-                auto callbackIfEnabled  = [enabledCallback, function]{ if (enabledCallback()) { function(); } };
-
-                const auto unlocalizedShortcutName =
-                    unlocalizedMainMenuNames.size() == 1 ?
-                        std::vector { unlocalizedMainMenuNames.back() } :
-                        std::vector(unlocalizedMainMenuNames.begin() + 1, unlocalizedMainMenuNames.end());
-
                 if (shortcut.isLocal() && view != nullptr)
-                    ShortcutManager::addShortcut(view, shortcut, unlocalizedShortcutName, callbackIfEnabled);
+                    ShortcutManager::addShortcut(view, shortcut, unlocalizedMainMenuNames, function, enabledCallback);
                 else
-                    ShortcutManager::addGlobalShortcut(shortcut, unlocalizedShortcutName, callbackIfEnabled);
+                    ShortcutManager::addGlobalShortcut(shortcut, unlocalizedMainMenuNames, function, enabledCallback);
             }
         }
 
@@ -1385,6 +1394,25 @@ namespace hex {
 
             void addInformationSectionCreator(const CreateCallback &callback) {
                 s_informationSectionConstructors->emplace_back(callback);
+            }
+
+        }
+
+    }
+
+    namespace ContentRegistry::Disassembler {
+
+        namespace impl {
+
+            static AutoReset<std::map<std::string, impl::CreatorFunction>> s_architectures;
+
+            void addArchitectureCreator(impl::CreatorFunction function) {
+                const auto arch = function();
+                (*s_architectures)[arch->getName()] = std::move(function);
+            }
+
+            const std::map<std::string, impl::CreatorFunction>& getArchitectures() {
+                return *s_architectures;
             }
 
         }

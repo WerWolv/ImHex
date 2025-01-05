@@ -32,6 +32,7 @@
 #include <wolv/utils/lock.hpp>
 
 #include <content/global_actions.hpp>
+#include <ui/menu_items.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -348,9 +349,9 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginPopup("##text_editor_context_menu")) {
                 // no shortcut for this
-                if (ImGui::MenuItem("hex.builtin.menu.file.import.pattern_file"_lang, nullptr, false))
+                if (ImGui::MenuItemEx("hex.builtin.menu.file.import.pattern_file"_lang, ICON_VS_SIGN_IN, nullptr, false))
                     m_importPatternFile();
-                if (ImGui::MenuItem("hex.builtin.menu.file.export.pattern_file"_lang, nullptr, false))
+                if (ImGui::MenuItemEx("hex.builtin.menu.file.export.pattern_file"_lang, ICON_VS_SIGN_OUT, nullptr, false))
                     m_exportPatternFile();
 
                 ImGui::Separator();
@@ -358,28 +359,28 @@ namespace hex::plugin::builtin {
                 if (!m_textEditor.HasSelection())
                     m_textEditor.SelectWordUnderCursor();
                 const bool hasSelection = m_textEditor.HasSelection();
-                if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.cut"_lang, Shortcut(CTRLCMD + Keys::X).toString().c_str(), false, hasSelection)) {
+                if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.cut"_lang, ICON_VS_COMBINE, Shortcut(CTRLCMD + Keys::X).toString().c_str(), false, hasSelection)) {
                     m_textEditor.Cut();
                 }
-                if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.copy"_lang, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
+                if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.copy"_lang, ICON_VS_COPY, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
                     m_textEditor.Copy();
                 }
-                if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.paste"_lang, Shortcut(CTRLCMD + Keys::V).toString().c_str())) {
+                if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.paste"_lang, ICON_VS_OUTPUT, Shortcut(CTRLCMD + Keys::V).toString().c_str())) {
                     m_textEditor.Paste();
                 }
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("hex.builtin.menu.edit.undo"_lang, Shortcut(CTRLCMD + Keys::Z).toString().c_str(), false, m_textEditor.CanUndo())) {
+                if (ImGui::MenuItemEx("hex.builtin.menu.edit.undo"_lang, ICON_VS_DISCARD, Shortcut(CTRLCMD + Keys::Z).toString().c_str(), false, m_textEditor.CanUndo())) {
                     m_textEditor.Undo();
                 }
-                if (ImGui::MenuItem("hex.builtin.menu.edit.redo"_lang, Shortcut(CTRLCMD + Keys::Y).toString().c_str(), false, m_textEditor.CanRedo())) {
+                if (ImGui::MenuItemEx("hex.builtin.menu.edit.redo"_lang, ICON_VS_REDO, Shortcut(CTRLCMD + Keys::Y).toString().c_str(), false, m_textEditor.CanRedo())) {
                     m_textEditor.Redo();
                 }
 
                 ImGui::Separator();
                 // Search and replace entries
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str())){
+                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.find"_lang, ICON_VS_SEARCH, Shortcut(CTRLCMD + Keys::F).toString().c_str())){
                     m_replaceMode = false;
                     m_openFindReplacePopUp = true;
                 }
@@ -391,7 +392,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_previous"_lang, Shortcut(SHIFT + Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
                     findReplaceHandler->FindMatch(&m_textEditor,false);
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace"_lang, Shortcut(CTRLCMD +  Keys::H).toString().c_str())) {
+                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.replace"_lang, ICON_VS_REPLACE, Shortcut(CTRLCMD +  Keys::H).toString().c_str())) {
                     m_replaceMode = true;
                     m_openFindReplacePopUp = true;
                 }
@@ -402,10 +403,10 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_previous"_lang, "",false,!findReplaceHandler->GetReplaceWord().empty()))
                     findReplaceHandler->Replace(&m_textEditor,false);
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_all"_lang, "",false,!findReplaceHandler->GetReplaceWord().empty()))
+                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.replace_all"_lang, ICON_VS_REPLACE_ALL, "",false,!findReplaceHandler->GetReplaceWord().empty()))
                     findReplaceHandler->ReplaceAll(&m_textEditor);
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.goto_line"_lang, Shortcut(ALT + Keys::G).toString().c_str()))
+                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.goto_line"_lang, ICON_VS_DEBUG_STEP_INTO, Shortcut(ALT + Keys::G).toString().c_str()))
                     m_openGotoLinePopUp = true;
 
                 if (ImGui::IsKeyPressed(ImGuiKey_Escape, false))
@@ -1573,13 +1574,13 @@ namespace hex::plugin::builtin {
                         if (end == std::string::npos)
                             return std::nullopt;
                         value.resize(end);
-                        //value = value.substr(0, end);
+
                         value = wolv::util::trim(value);
 
                         return BinaryPattern(value);
                     }();
 
-                    const auto address = [value = value] mutable -> std::optional<u64> {
+                    const auto address = [value = value, provider] mutable -> std::optional<u64> {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
@@ -1593,11 +1594,20 @@ namespace hex::plugin::builtin {
                         value = wolv::util::trim(value);
 
                         size_t end = 0;
-                        auto result = std::stoull(value, &end, 0);
+                        auto result = std::stoll(value, &end, 0);
                         if (end != value.length())
                             return std::nullopt;
 
-                        return result;
+                        if (result < 0) {
+                            const auto size = provider->getActualSize();
+                            if (u64(-result) > size) {
+                                return std::nullopt;
+                            }
+
+                            return size + result;
+                        } else {
+                            return result;
+                        }
                     }();
 
                     if (!address)
@@ -2065,12 +2075,12 @@ namespace hex::plugin::builtin {
             return;
 
         if (menus.size() == 1) {
-            if (ImGui::MenuItem(menus.front().c_str()))
+            if (menu::menuItem(menus.front().c_str()))
                 function();
         } else {
-            if (ImGui::BeginMenu(menus.front().c_str())) {
+            if (menu::beginMenu(menus.front().c_str())) {
                 createNestedMenu({ menus.begin() + 1, menus.end() }, function);
-                ImGui::EndMenu();
+                menu::endMenu();
             }
         }
     }
@@ -2126,30 +2136,30 @@ namespace hex::plugin::builtin {
         /* Place pattern... */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern" }, ICON_VS_LIBRARY, 3000,
             [&, this] {
-                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
-                    if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
+                if (menu::beginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
+                    if (menu::beginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
                         for (const auto &[type, size] : Types) {
-                            if (ImGui::MenuItem(type))
+                            if (menu::menuItem(type))
                                 appendVariable(type);
                         }
-                        ImGui::EndMenu();
+                        menu::endMenu();
                     }
 
-                    if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
+                    if (menu::beginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
                         for (const auto &[type, size] : Types) {
-                            if (ImGui::MenuItem(type))
+                            if (menu::menuItem(type))
                                 appendArray(type, size);
                         }
-                        ImGui::EndMenu();
+                        menu::endMenu();
                     }
 
-                    ImGui::EndMenu();
+                    menu::endMenu();
                 }
 
                 const auto &types = m_editorRuntime->getInternals().parser->getTypes();
                 const bool hasPlaceableTypes = std::ranges::any_of(types, [](const auto &type) { return !type.second->isTemplateType(); });
 
-                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom"_lang, hasPlaceableTypes)) {
+                if (menu::beginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom"_lang, hasPlaceableTypes)) {
                     const auto &selection = ImHexApi::HexEditor::getSelection();
 
                     for (const auto &[typeName, type] : types) {
@@ -2166,7 +2176,7 @@ namespace hex::plugin::builtin {
                         });
                     }
 
-                    ImGui::EndMenu();
+                    menu::endMenu();
                 }
             }, [this] {
                 return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && m_runningParsers == 0;
@@ -2202,10 +2212,7 @@ namespace hex::plugin::builtin {
 
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
                 for (const auto &patternColor : runtime.getColorsAtAddress(address)) {
-                    if (color.has_value())
-                        color = ImAlphaBlendColors(*color, patternColor);
-                    else
-                        color = patternColor;
+                    color = blendColors(color, patternColor);
                 }
             }
 

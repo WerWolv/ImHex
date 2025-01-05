@@ -217,6 +217,7 @@ namespace hex {
     EVENT_DEF(EventOSThemeChanged);
     EVENT_DEF(EventDPIChanged, float, float);
     EVENT_DEF(EventWindowFocused, bool);
+    EVENT_DEF(EventImHexUpdated, SemanticVersion, SemanticVersion);
 
     /**
      * @brief Called when the provider is created.
@@ -296,6 +297,7 @@ namespace hex {
     EVENT_DEF(RequestChangeTheme, std::string);
     EVENT_DEF(RequestOpenPopup, std::string);
     EVENT_DEF(RequestAddVirtualFile, std::fs::path, std::vector<u8>, Region);
+    EVENT_DEF(RequestStartMigration);
 
     /**
      * @brief Creates a provider from it's unlocalized name, and add it to the provider list

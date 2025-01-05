@@ -254,7 +254,10 @@ namespace hex::plugin::builtin {
 
                     // Draw recent entries
                     ImGui::Dummy({});
-                    recent::draw();
+
+                    #if !defined(OS_WEB)
+                        recent::draw();
+                    #endif
 
                     ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
                     ImGui::TableNextColumn();

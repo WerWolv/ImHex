@@ -23,6 +23,7 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/utils_macos.hpp>
 
 
 namespace ImGuiExt {
@@ -222,14 +223,16 @@ namespace ImGuiExt {
     }
 
     Texture Texture::fromSVG(const char *path, int width, int height, Filter filter) {
+        const auto scaleFactor = hex::ImHexApi::System::getBackingScaleFactor();
+
         auto document = lunasvg::Document::loadFromFile(path);
-        auto bitmap = document->renderToBitmap(width, height);
+        auto bitmap = document->renderToBitmap(width * scaleFactor, height * scaleFactor);
 
         auto texture = createMultisampleTextureFromRGBA8Array(bitmap.data(), bitmap.width(), bitmap.height(), filter);
 
         Texture result;
-        result.m_width = bitmap.width();
-        result.m_height = bitmap.height();
+        result.m_width = bitmap.width() / scaleFactor;
+        result.m_height = bitmap.height() / scaleFactor;
         result.m_textureId = texture;
 
         return result;
@@ -240,15 +243,17 @@ namespace ImGuiExt {
     }
 
     Texture Texture::fromSVG(std::span<const std::byte> buffer, int width, int height, Filter filter) {
+        const auto scaleFactor = hex::ImHexApi::System::getBackingScaleFactor();
+
         auto document = lunasvg::Document::loadFromData(reinterpret_cast<const char*>(buffer.data()), buffer.size());
-        auto bitmap = document->renderToBitmap(width, height);
+        auto bitmap = document->renderToBitmap(width * scaleFactor, height * scaleFactor);
         bitmap.convertToRGBA();
 
         auto texture = createMultisampleTextureFromRGBA8Array(bitmap.data(), bitmap.width(), bitmap.height(), filter);
 
         Texture result;
-        result.m_width = bitmap.width();
-        result.m_height = bitmap.height();
+        result.m_width = bitmap.width() / scaleFactor;
+        result.m_height = bitmap.height() / scaleFactor;
         result.m_textureId = texture;
 
         return result;
@@ -819,7 +824,7 @@ namespace ImGuiExt {
         return pressed;
     }
 
-    bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg) {
+    bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg, ImVec2 iconOffset) {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
@@ -850,7 +855,7 @@ namespace ImGuiExt {
                                                                                           : ImGuiCol_Button);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3, 1), bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3, 1) + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -908,8 +913,9 @@ namespace ImGuiExt {
         return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U64, "%llX", flags | ImGuiInputTextFlags_CharsHexadecimal);
     }
 
-    bool SliderBytes(const char *label, u64 *value, u64 min, u64 max, ImGuiSliderFlags flags) {
+    bool SliderBytes(const char *label, u64 *value, u64 min, u64 max, u64 stepSize, ImGuiSliderFlags flags) {
         std::string format;
+
         if (*value < 1024) {
             format = hex::format("{} Bytes", *value);
         } else if (*value < 1024 * 1024) {
@@ -920,7 +926,15 @@ namespace ImGuiExt {
             format = hex::format("{:.2f} GB", *value / (1024.0 * 1024.0 * 1024.0));
         }
 
-        return ImGui::SliderScalar(label, ImGuiDataType_U64, value, &min, &max, format.c_str(), flags | ImGuiSliderFlags_Logarithmic);
+        *value /= stepSize;
+        min /= stepSize;
+        max /= stepSize;
+
+        auto result = ImGui::SliderScalar(label, ImGuiDataType_U64, value, &min, &max, format.c_str(), flags | ImGuiSliderFlags_Logarithmic);
+
+        *value *= stepSize;
+
+        return result;
     }
 
     void SmallProgressBar(float fraction, float yOffset) {
@@ -1096,14 +1110,14 @@ namespace ImGuiExt {
         return res;
     }
 
-    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size){
+    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size, ImVec2 iconOffset) {
         PushStyleColor(ImGuiCol_ButtonHovered, GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
         PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
         PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
         PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-        bool res = IconButton(symbol, color, size);
+        bool res = IconButton(symbol, color, size, iconOffset);
 
         PopStyleColor(4);
         PopStyleVar(1);
@@ -1111,7 +1125,7 @@ namespace ImGuiExt {
         return res;
     }
 
-    bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size) {
+    bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size, ImVec2 iconOffset) {
         bool pushed = false;
         bool toggled = false;
 
@@ -1120,7 +1134,7 @@ namespace ImGuiExt {
             pushed = true;
         }
 
-        if (DimmedIconButton(icon, GetStyleColorVec4(ImGuiCol_Text), size)) {
+        if (DimmedIconButton(icon, GetStyleColorVec4(ImGuiCol_Text), size, iconOffset)) {
             *v = !*v;
             toggled = true;
         }

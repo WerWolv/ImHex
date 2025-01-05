@@ -43,7 +43,6 @@ namespace hex {
         plugins when needed.
     */
     namespace ContentRegistry {
-
         /* Settings Registry. Allows adding of new entries into the ImHex preferences window. */
         namespace Settings {
 
@@ -177,7 +176,7 @@ namespace hex {
 
                 class SliderDataSize : public Widget {
                 public:
-                    SliderDataSize(u64 defaultValue, u64 min, u64 max) : m_value(defaultValue), m_min(min), m_max(max) { }
+                    SliderDataSize(u64 defaultValue, u64 min, u64 max, u64 stepSize) : m_value(defaultValue), m_min(min), m_max(max), m_stepSize(stepSize) { }
                     bool draw(const std::string &name) override;
 
                     void load(const nlohmann::json &data) override;
@@ -188,6 +187,7 @@ namespace hex {
                 protected:
                     u64 m_value;
                     u64 m_min, m_max;
+                    u64 m_stepSize;
                 };
 
                 class ColorPicker : public Widget {
@@ -623,8 +623,7 @@ namespace hex {
         /* Data Inspector Registry. Allows adding of new types to the data inspector */
         namespace DataInspector {
 
-            enum class NumberDisplayStyle
-            {
+            enum class NumberDisplayStyle : u8 {
                 Decimal,
                 Hexadecimal,
                 Octal
@@ -677,6 +676,13 @@ namespace hex {
                 impl::GeneratorFunction displayGeneratorFunction,
                 std::optional<impl::EditingFunction> editingFunction = std::nullopt
             );
+
+            /**
+             * @brief Allows adding new menu items to data inspector row context menus. Call this function inside the
+             * draw function of the data inspector row definition.
+             * @param function Callback that will draw menu items
+             */
+            void drawMenuItems(const std::function<void()> &function);
 
         }
 
@@ -1008,7 +1014,7 @@ namespace hex {
 
             namespace impl {
 
-                using Callback = std::function<std::string(prv::Provider *provider, u64 address, size_t size)>;
+                using Callback = std::function<std::string(prv::Provider *provider, u64 address, size_t size, bool preview)>;
                 struct ExportMenuEntry {
                     UnlocalizedString unlocalizedName;
                     Callback callback;
@@ -1354,6 +1360,7 @@ namespace hex {
 
         }
 
+        /* Data Information Registry. Allows adding new analyzers to the data information view */
         namespace DataInformation {
 
             class InformationSection {
@@ -1415,6 +1422,54 @@ namespace hex {
             void addInformationSection(auto && ...args) {
                 impl::addInformationSectionCreator([args...] {
                     return std::make_unique<T>(std::forward<decltype(args)>(args)...);
+                });
+            }
+
+        }
+
+        /* Disassembler Registry. Allows adding new disassembler architectures */
+        namespace Disassembler {
+
+            struct Instruction {
+                u64 address;
+                u64 offset;
+                size_t size;
+                std::string bytes;
+                std::string mnemonic;
+                std::string operators;
+            };
+
+            class Architecture {
+            public:
+                explicit Architecture(std::string name) : m_name(std::move(name)) {}
+                virtual ~Architecture() = default;
+
+                virtual bool start() = 0;
+                virtual void end() = 0;
+
+                virtual std::optional<Instruction> disassemble(u64 imageBaseAddress, u64 instructionLoadAddress, u64 instructionDataAddress, std::span<const u8> code) = 0;
+                virtual void drawSettings() = 0;
+
+                [[nodiscard]] const std::string& getName() const { return m_name; }
+
+            private:
+                std::string m_name;
+            };
+
+            namespace impl {
+
+                using CreatorFunction = std::function<std::unique_ptr<Architecture>()>;
+
+                void addArchitectureCreator(CreatorFunction function);
+
+                const std::map<std::string, CreatorFunction>& getArchitectures();
+
+            }
+
+            template<std::derived_from<Architecture> T>
+            void add(auto && ...args) {
+                impl::addArchitectureCreator([...args = std::move(args)] {
+                    return std::make_unique<T>(args...);
                 });
             }
 

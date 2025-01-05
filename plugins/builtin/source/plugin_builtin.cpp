@@ -75,7 +75,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "pl",             "",  "Interact with the pattern language",           hex::plugin::builtin::handlePatternLanguageCommand  },
     { "hexdump",        "",  "Generate a hex dump of the provided file",     hex::plugin::builtin::handleHexdumpCommand          },
     { "demangle",       "",  "Demangle a mangled symbol",                    hex::plugin::builtin::handleDemangleCommand         },
-    { "reset-settings", "",  "Demangle a mangled symbol",                    hex::plugin::builtin::handleSettingsResetCommand    },
+    { "reset-settings", "",  "Resets all settings back to default",          hex::plugin::builtin::handleSettingsResetCommand    },
 };
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
@@ -89,6 +89,11 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     extractBundledFiles();
 
     registerMainMenuEntries();
+
+    addFooterItems();
+    addTitleBarButtons();
+    addToolbarItems();
+    addGlobalUIItems();
 
     registerEventHandlers();
     registerDataVisualizers();
@@ -121,11 +126,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     loadWorkspaces();
     addWindowDecoration();
     createWelcomeScreen();
-
-    addFooterItems();
-    addTitleBarButtons();
-    addToolbarItems();
-    addGlobalUIItems();
 
     setupOutOfBoxExperience();
 }

@@ -87,7 +87,7 @@ public:
 
     void setTypeName(std::string typeName) { m_typeName = std::move(typeName);}
     void setName(std::string name) { m_name = std::move(name);}
-    [[nodiscard]] std::string getTypeName() const override { return m_typeName; }
+    [[nodiscard]] hex::UnlocalizedString getTypeName() const override { return m_typeName; }
     [[nodiscard]] std::string getName() const override { return m_name; }
 
 private:

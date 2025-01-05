@@ -180,13 +180,13 @@ namespace hex::plugin::builtin {
         FileProvider::MenuEntry loadMenuItem;
 
         if (m_loadedIntoMemory)
-            loadMenuItem = { "hex.builtin.provider.file.menu.direct_access"_lang, [this] { this->convertToDirectAccess(); } };
+            loadMenuItem = { "hex.builtin.provider.file.menu.direct_access"_lang, ICON_VS_ARROW_SWAP, [this] { this->convertToDirectAccess(); } };
         else
-            loadMenuItem = { "hex.builtin.provider.file.menu.into_memory"_lang, [this] { this->convertToMemoryFile(); } };
+            loadMenuItem = { "hex.builtin.provider.file.menu.into_memory"_lang, ICON_VS_ARROW_SWAP, [this] { this->convertToMemoryFile(); } };
 
         return {
-            { "hex.builtin.provider.file.menu.open_folder"_lang, [this] { fs::openFolderWithSelectionExternal(m_path); } },
-            { "hex.builtin.provider.file.menu.open_file"_lang,   [this] { fs::openFileExternal(m_path); } },
+            { "hex.builtin.provider.file.menu.open_folder"_lang, ICON_VS_FOLDER_OPENED, [this] { fs::openFolderWithSelectionExternal(m_path); } },
+            { "hex.builtin.provider.file.menu.open_file"_lang,   ICON_VS_FILE, [this] { fs::openFileExternal(m_path); } },
             loadMenuItem
         };
     }
