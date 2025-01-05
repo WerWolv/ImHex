@@ -1261,7 +1261,7 @@ namespace hex::plugin::builtin {
 
         /* Copy custom encoding */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as", "hex.builtin.view.hex_editor.copy.custom_encoding" }, "あ", 1300,
-                                                Shortcut::None,
+                                                SHIFT + ALT + Keys::C,
                                                 [this] {
                                                     auto selection = ImHexApi::HexEditor::getSelection();
                                                     auto customEncoding = m_hexEditor.getCustomEncoding();
