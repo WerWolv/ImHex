@@ -207,7 +207,7 @@ jobs:
     - name: ⬇️ Install dependencies
       run: |
         brew reinstall python --quiet || true
-        brew link --overwrite --quiet python || true
+        brew link --overwrite --quiet python 2>/dev/null || true
         brew bundle --no-lock --quiet --file dist/Brewfile || true
         rm -rf /usr/local/Cellar/capstone
 
