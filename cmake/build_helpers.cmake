@@ -816,7 +816,7 @@ function(generatePDBs)
             set(GENERATED_PDB plugins/${PDB})
         endif ()
 
-        if (IMHEX_REPLACE_DWARF_WITH_PDB)
+        if (NOT IMHEX_REPLACE_DWARF_WITH_PDB)
             set(PDB_OUTPUT_PATH ${CMAKE_BINARY_DIR}/${GENERATED_PDB})
         else ()
             set(PDB_OUTPUT_PATH)
