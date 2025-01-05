@@ -26,7 +26,7 @@ namespace hex::ui {
             std::ignore = upperCase;
 
             if (size == 1) {
-                const char c = char(data[0]);
+                const auto c = static_cast<char>(data[0]);
                 if (std::isprint(c) != 0) {
                     const std::array<char, 2> string = { c, 0x00 };
                     ImGui::TextUnformatted(string.data());
@@ -134,8 +134,14 @@ namespace hex::ui {
     static CustomEncodingData queryCustomEncodingData(prv::Provider *provider, const EncodingFile &encodingFile, u64 address) {
         const auto longestSequence = encodingFile.getLongestSequence();
 
-        if (longestSequence == 0)
-            return { ".", 1, 0xFFFF8000 };
+        if (longestSequence == 0) {
+            return {
+                .displayValue = ".",
+                .advance = 1,
+                .color = 0xFFFF8000
+            };
+
+        }
 
         size_t size = std::min<size_t>(longestSequence, provider->getActualSize() - address);
 
@@ -156,7 +162,11 @@ namespace hex::ui {
                 return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue);
         }();
 
-        return { std::string(decoded), advance, color };
+        return {
+            .displayValue = std::string(decoded),
+            .advance = advance,
+            .color = color
+        };
     }
 
     static auto getCellPosition() {
@@ -172,7 +182,7 @@ namespace hex::ui {
     }
 
     void HexEditor::drawScrollbar(ImVec2 characterSize) {
-        ImS64 numRows = m_provider == nullptr ? 0 : (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+        ImS64 numRows = m_provider == nullptr ? 0LLU : (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0LLU : 1LLU);
 
         auto window = ImGui::GetCurrentWindowRead();
         const auto outerRect = window->Rect();
@@ -191,8 +201,8 @@ namespace hex::ui {
                 ImGui::GetWindowScrollbarID(window, axis),
                 axis,
                 &m_scrollPosition.get(),
-                (std::ceil(innerRect.Max.y - innerRect.Min.y) / characterSize.y),
-                std::nextafterf(numRows + ImGui::GetWindowSize().y / characterSize.y, std::numeric_limits<float>::max()),
+                static_cast<ImS64>(std::ceil(innerRect.Max.y - innerRect.Min.y) / characterSize.y),
+                static_cast<ImS64>(std::nextafterf(static_cast<float>(numRows) + (ImGui::GetWindowSize().y / characterSize.y), std::numeric_limits<float>::max())),
                 roundingCorners);
             ImGui::PopID();
         }
@@ -443,47 +453,56 @@ namespace hex::ui {
         }
     }
 
-
-    void HexEditor::drawSelectionFrame(u32 x, u32 y, Region selection, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &backgroundColor) const {
+    void HexEditor::drawBackgroundHighlight(const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &backgroundColor) const {
         auto drawList = ImGui::GetWindowDrawList();
 
-        // Draw background color
         drawList->AddRectFilled(cellPos, cellPos + cellSize, backgroundColor);
+    }
+
+    void HexEditor::drawSelection(u32 x, u32 y, Region region, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &frameColor) const {
+        switch (m_mode) {
+            case Mode::Overwrite: this->drawFrame(x, y, region, byteAddress, bytesPerCell, cellPos, cellSize, frameColor); break;
+            case Mode::Insert: this->drawInsertCursor(region, byteAddress, cellPos, cellSize, frameColor); break;
+        }
+    }
+
+    void HexEditor::drawFrame(u32 x, u32 y, Region region, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &frameColor) const {
+        auto drawList = ImGui::GetWindowDrawList();
 
         if (!this->isSelectionValid()) return;
 
-        if (!Region { byteAddress, 1 }.isWithin(selection))
+        if (!Region { byteAddress, 1 }.isWithin(region))
             return;
 
-        const color_t SelectionFrameColor = ImGui::GetColorU32(ImGuiCol_Text);
+        // Draw vertical line at the left of first byte and the start of the line
+        if (x == 0 || byteAddress == region.getStartAddress())
+            drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(0, cellSize.y)), frameColor, 1_scaled);
 
-        switch (m_mode) {
-            case Mode::Overwrite: {
-                // Draw vertical line at the left of first byte and the start of the line
-                if (x == 0 || byteAddress == selection.getStartAddress())
-                    drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImColor(SelectionFrameColor), 1_scaled);
+        // Draw vertical line at the right of the last byte and the end of the line
+        if (x == u16((m_bytesPerRow / bytesPerCell) - 1) || (byteAddress + bytesPerCell) > region.getEndAddress())
+            drawList->AddLine(ImTrunc(cellPos + ImVec2(cellSize.x, 0)), ImTrunc(cellPos + cellSize), frameColor, 1_scaled);
 
-                // Draw vertical line at the right of the last byte and the end of the line
-                if (x == u16((m_bytesPerRow / bytesPerCell) - 1) || (byteAddress + bytesPerCell) > selection.getEndAddress())
-                    drawList->AddLine(ImTrunc(cellPos + ImVec2(cellSize.x, 0)), ImTrunc(cellPos + cellSize), ImColor(SelectionFrameColor), 1_scaled);
+        // Draw horizontal line at the top of the bytes
+        if (y == 0 || (byteAddress - m_bytesPerRow) < region.getStartAddress())
+            drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(cellSize.x, 0)), frameColor, 1_scaled);
 
-                // Draw horizontal line at the top of the bytes
-                if (y == 0 || (byteAddress - m_bytesPerRow) < selection.getStartAddress())
-                    drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(cellSize.x, 0)), ImColor(SelectionFrameColor), 1_scaled);
+        // Draw horizontal line at the bottom of the bytes
+        if ((byteAddress + m_bytesPerRow) > region.getEndAddress())
+            drawList->AddLine(ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImTrunc(cellPos + cellSize + scaled({ 1, 0 })), frameColor, 1_scaled);
+    }
 
-                // Draw horizontal line at the bottom of the bytes
-                if ((byteAddress + m_bytesPerRow) > selection.getEndAddress())
-                    drawList->AddLine(ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImTrunc(cellPos + cellSize + scaled({ 1, 0 })), ImColor(SelectionFrameColor), 1_scaled);
+    void HexEditor::drawInsertCursor(Region region, u64 byteAddress, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &frameColor) const {
+        auto drawList = ImGui::GetWindowDrawList();
 
-                break;
-            }
-            case Mode::Insert: {
-                bool cursorVisible = (!ImGui::GetIO().ConfigInputTextCursorBlink) || (m_cursorBlinkTimer <= 0.0F) || std::fmod(m_cursorBlinkTimer, 1.20F) <= 0.80F;
-                if (cursorVisible && byteAddress == selection.getStartAddress()) {
-                    // Draw vertical line at the left of first byte and the start of the line
-                    drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImColor(SelectionFrameColor), 1_scaled);
-                }
-            }
+        if (!this->isSelectionValid()) return;
+
+        if (!Region { byteAddress, 1 }.isWithin(region))
+            return;
+
+        bool cursorVisible = (!ImGui::GetIO().ConfigInputTextCursorBlink) || (m_cursorBlinkTimer <= 0.0F) || std::fmod(m_cursorBlinkTimer, 1.20F) <= 0.80F;
+        if (cursorVisible && byteAddress == region.getStartAddress()) {
+            // Draw vertical line at the left of first byte and the start of the line
+            drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(0, cellSize.y)), frameColor, 1_scaled);
         }
     }
 
@@ -536,7 +555,7 @@ namespace hex::ui {
                 // Row address column
                 ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_WidthFixed,
                     m_provider == nullptr ? 0 :
-                    CharacterSize.x * fmt::formatted_size("{:08X}: ", (m_scrollPosition + m_visibleRowCount) * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress())
+                    CharacterSize.x * fmt::formatted_size("{:08X}: ", ((m_scrollPosition + m_visibleRowCount) * m_bytesPerRow) + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress())
                 );
                 ImGui::TableSetupColumn("");
 
@@ -697,8 +716,10 @@ namespace hex::ui {
 
                                 // Draw highlights and selection
                                 if (backgroundColor.has_value()) {
+                                    this->drawBackgroundHighlight(cellStartPos, adjustedCellSize, backgroundColor.value());
+
                                     // Draw frame around mouse selection
-                                    this->drawSelectionFrame(x, y, selection, byteAddress, bytesPerCell, cellStartPos, adjustedCellSize, backgroundColor.value());
+                                    this->drawSelection(x, y, selection, byteAddress, bytesPerCell, cellStartPos, adjustedCellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
                                 }
 
                                 const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + adjustedCellSize, false) && ImGui::IsWindowHovered();
@@ -742,7 +763,7 @@ namespace hex::ui {
                             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
                             if (ImGui::BeginTable("##ascii_column", m_bytesPerRow)) {
                                 for (u64 x = 0; x < m_bytesPerRow; x++)
-                                    ImGui::TableSetupColumn(hex::format("##ascii_cell{}", x).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x + m_characterCellPadding * 1_scaled);
+                                    ImGui::TableSetupColumn(hex::format("##ascii_cell{}", x).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x + (m_characterCellPadding * 1_scaled));
 
                                 ImGui::TableNextRow();
 
@@ -767,7 +788,7 @@ namespace hex::ui {
 
                                         // Draw highlights and selection
                                         if (backgroundColor.has_value()) {
-                                            this->drawSelectionFrame(x, y, selection, byteAddress, 1, cellStartPos, asciiCellSize, backgroundColor.value());
+                                            this->drawSelection(x, y, selection, byteAddress, 1, cellStartPos, asciiCellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
                                         }
 
                                         // Set cell foreground color
@@ -867,7 +888,7 @@ namespace hex::ui {
 
                                             // Draw highlights and selection
                                             if (backgroundColor.has_value()) {
-                                                this->drawSelectionFrame(x, y, selection, address, 1, cellStartPos, cellSize, backgroundColor.value());
+                                                this->drawSelection(x, y, selection, address, 1, cellStartPos, cellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
                                             }
 
                                             auto startPos = ImGui::GetCursorPos();
@@ -947,7 +968,7 @@ namespace hex::ui {
                         // Check if the targetRowNumber is outside the current visible range
                         if (ImS64(targetRowNumber) < currentTopRow) {
                             // If target is above the current view, scroll just enough to bring it into view at the top
-                            m_scrollPosition = targetRowNumber - m_visibleRowCount * m_jumpPivot;
+                            m_scrollPosition = targetRowNumber - (m_visibleRowCount * m_jumpPivot);
                         } else if (ImS64(targetRowNumber) > currentBottomRow) {
                             // If target is below the current view, scroll just enough to bring it into view at the bottom
                             m_scrollPosition = targetRowNumber - (m_visibleRowCount - 3);
