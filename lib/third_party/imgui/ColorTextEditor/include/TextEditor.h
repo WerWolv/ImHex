@@ -342,6 +342,7 @@ public:
         mFocusAtCoords = coords;
         mUpdateFocus = true;
     }
+    bool GetWindowFocused() { return mWindowFocused; }
     void SetOverwrite(bool aValue) { mOverwrite = aValue; }
 
     std::string ReplaceStrings(std::string string, const std::string &search, const std::string &replace);
@@ -641,6 +642,7 @@ private:
     bool mRaiseContextMenu = false;
     Coordinates mFocusAtCoords = {};
     bool mUpdateFocus = false;
+    bool mWindowFocused = false;
 
     std::vector<std::string>  mClickableText;
 

@@ -203,13 +203,10 @@ void TextEditor::Advance(Coordinates &aCoordinates) const {
 }
 
 void TextEditor::DeleteRange(const Coordinates &aStart, const Coordinates &aEnd) {
-    IM_ASSERT(aEnd >= aStart);
-    IM_ASSERT(!mReadOnly);
+    if (mReadOnly || aEnd <= aStart)
+        return;
 
     // printf("D(%d.%d)-(%d.%d)\n", aStart.mLine, aStart.mColumn, aEnd.mLine, aEnd.mColumn);
-
-    if (aEnd == aStart)
-        return;
 
     auto start = GetCharacterIndex(aStart);
     auto end   = GetCharacterIndex(aEnd);
@@ -293,7 +290,8 @@ int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const char *aValu
 }
 
 void TextEditor::AddUndo(UndoRecord &aValue) {
-    IM_ASSERT(!mReadOnly);
+    if (mReadOnly)
+        return;
     // printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
     //	aValue.mBefore.mCursorPosition.mLine, aValue.mBefore.mCursorPosition.mColumn,
     //	aValue.mAdded.c_str(), aValue.mAddedStart.mLine, aValue.mAddedStart.mColumn, aValue.mAddedEnd.mLine, aValue.mAddedEnd.mColumn,
@@ -587,8 +585,8 @@ bool TextEditor::IsOnWordBoundary(const Coordinates &aAt) const {
 }
 
 void TextEditor::RemoveLine(int aStart, int aEnd) {
-    IM_ASSERT(!mReadOnly);
-    IM_ASSERT(aEnd >= aStart);
+    if (mReadOnly || aEnd < aStart)
+        return;
 
     ErrorMarkers etmp;
     for (auto &i : mErrorMarkers) {
@@ -620,8 +618,8 @@ void TextEditor::RemoveLine(int aStart, int aEnd) {
 }
 
 void TextEditor::RemoveLine(int aIndex) {
-    IM_ASSERT(!mReadOnly);
-    IM_ASSERT(mLines.size() > 1);
+    if (mReadOnly || mLines.size() <= 1)
+        return;
 
     ErrorMarkers etmp;
     for (auto &i : mErrorMarkers) {
@@ -948,7 +946,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
             }
             ImVec2 lineNoStartScreenPos = ImVec2(position.x, mTopMargin + cursorScreenPos.y + std::floor(lineNo) * mCharAdvance.y);
             auto start = ImVec2(lineNoStartScreenPos.x + mLineNumberFieldWidth, lineStartScreenPos.y);
-            bool focused = ImGui::IsWindowFocused();
+            mWindowFocused = ImGui::IsWindowFocused();
             if (!mIgnoreImGuiChild)
                 ImGui::EndChild();
             // Draw line number (right aligned)
@@ -980,7 +978,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                 // Highlight the current line (where the cursor is)
                 if (!HasSelection()) {
                     auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + mLineNumberFieldWidth, lineStartScreenPos.y + mCharAdvance.y);
-                    drawList->AddRectFilled(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)(focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
+                    drawList->AddRectFilled(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)(mWindowFocused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
                     drawList->AddRect(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)PaletteIndex::CurrentLineEdge], 1.0f);
                 }
             }
@@ -991,7 +989,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                 ImGui::BeginChild(aTitle);
             if (mState.mCursorPosition.mLine == lineNo && mShowCursor) {
                 // Render the cursor
-                if (focused) {
+                if (mWindowFocused) {
                     auto timeEnd = ImGui::GetTime() * 1000;
                     auto elapsed = timeEnd - mStartTime;
                     if (elapsed > sCursorBlinkOnTime) {
@@ -1330,7 +1328,8 @@ void TextEditor::SetTextLines(const std::vector<std::string> &aLines) {
 }
 
 void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
-    IM_ASSERT(!mReadOnly);
+    if (mReadOnly)
+        return;
 
     UndoRecord u;
 
@@ -1900,12 +1899,10 @@ void TextEditor::MoveEnd(bool aSelect) {
 }
 
 void TextEditor::Delete() {
-    ResetCursorBlinkTime();
-    IM_ASSERT(!mReadOnly);
-
-    if (isEmpty())
+    if (mReadOnly || isEmpty())
         return;
 
+    ResetCursorBlinkTime();
     UndoRecord u;
     u.mBefore = mState;
 
@@ -1957,11 +1954,10 @@ void TextEditor::Delete() {
 }
 
 void TextEditor::Backspace() {
-    ResetCursorBlinkTime();
-    IM_ASSERT(!mReadOnly);
-
-    if (isEmpty())
+    if (mReadOnly || isEmpty())
         return;
+
+    ResetCursorBlinkTime();
 
     UndoRecord u;
     u.mBefore = mState;

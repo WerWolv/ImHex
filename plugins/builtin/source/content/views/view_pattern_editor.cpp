@@ -1036,15 +1036,15 @@ namespace hex::plugin::builtin {
 
         const bool hasSelection = m_consoleEditor.HasSelection();
         if (ImGui::BeginPopup("##console_context_menu")) {
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.copy"_lang, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
+            if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.copy"_lang, ICON_VS_COPY, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
                 m_consoleEditor.Copy();
             }
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.select_all"_lang, Shortcut(CTRLCMD + Keys::A).toString().c_str())) {
+            if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.select_all"_lang, ICON_VS_LIST_SELECTION, Shortcut(CTRLCMD + Keys::A).toString().c_str())) {
                 m_consoleEditor.SelectAll();
             }
             ImGui::Separator();
             // Search and replace entries
-            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str())) {
+            if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.find"_lang, ICON_VS_SEARCH, Shortcut(CTRLCMD + Keys::F).toString().c_str())) {
                 m_openFindReplacePopUp = true;
                 m_replaceMode = false;
             }
@@ -1057,7 +1057,7 @@ namespace hex::plugin::builtin {
 
             ImGui::Separator();
 
-            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.goto_line"_lang, Shortcut(ALT + Keys::G).toString().c_str()))
+            if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.goto_line"_lang, ICON_VS_DEBUG_STEP_INTO, Shortcut(ALT + Keys::G).toString().c_str()))
                 m_openGotoLinePopUp = true;
 
 

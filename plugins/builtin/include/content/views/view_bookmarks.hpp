@@ -28,13 +28,16 @@ namespace hex::plugin::builtin {
         bool importBookmarks(hex::prv::Provider *provider, const nlohmann::json &json);
         bool exportBookmarks(hex::prv::Provider *provider, nlohmann::json &json);
 
+        void registerEvents();
         void registerMenuItems();
+        void registerHandlers();
 
     private:
         std::string m_currFilter;
 
         PerProvider<std::list<Bookmark>> m_bookmarks;
         PerProvider<u64> m_currBookmarkId;
+        TextEditor *m_currTextEditor;
     };
 
 }
