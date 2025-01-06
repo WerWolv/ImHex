@@ -789,6 +789,12 @@ namespace hex::plugin::builtin {
                                                                   }
                                                               });
 
+            ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.accent", ImGui::GetStyleColorVec4(ImGuiCol_Button))
+                .setChangedCallback([](auto &widget) {
+                    auto colorPicker = static_cast<Widgets::ColorPicker *>(&widget);
+                    ThemeManager::setAccentColor(colorPicker->getColor());
+                });
+
             ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor")
             .requiresRestart();
 
