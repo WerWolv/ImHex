@@ -205,9 +205,12 @@ jobs:
         max-size: 1G
 
     - name: ⬇️ Install dependencies
+      env:
+        # Make brew not display useless errors
+        HOMEBREW_TESTS: 1
       run: |
         brew reinstall python --quiet || true
-        brew link --overwrite --quiet python || true
+        brew link --overwrite --quiet python 2>/dev/null || true
         brew bundle --no-lock --quiet --file dist/Brewfile || true
         rm -rf /usr/local/Cellar/capstone
 
