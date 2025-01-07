@@ -268,6 +268,24 @@ namespace hex {
             }
 
             m_lastFrameTime = glfwGetTime() - m_lastStartFrameTime;
+
+            // Unlock frame rate if any mouse button is being held down to allow drag scrolling to be smooth
+            if (ImGui::IsAnyMouseDown())
+                m_unlockFrameRate = true;
+
+            // Unlock frame rate if any modifier key is held down since they don't generate key repeat events
+            if (
+                ImGui::IsKeyPressed(ImGuiKey_LeftCtrl) || ImGui::IsKeyPressed(ImGuiKey_RightCtrl) ||
+                ImGui::IsKeyPressed(ImGuiKey_LeftShift) || ImGui::IsKeyPressed(ImGuiKey_RightShift) ||
+                ImGui::IsKeyPressed(ImGuiKey_LeftSuper) || ImGui::IsKeyPressed(ImGuiKey_RightSuper) ||
+                ImGui::IsKeyPressed(ImGuiKey_LeftAlt) || ImGui::IsKeyPressed(ImGuiKey_RightAlt)
+            ) {
+                m_unlockFrameRate = true;
+            }
+
+            // Unlock frame rate if there's more than one viewport since these don't call the glfw callbacks registered here
+            if (ImGui::GetPlatformIO().Viewports.size() > 1)
+                m_unlockFrameRate = true;
         }
 
         // Hide the window as soon as the render loop exits to make the window

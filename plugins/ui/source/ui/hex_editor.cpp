@@ -788,6 +788,8 @@ namespace hex::ui {
 
                                         // Draw highlights and selection
                                         if (backgroundColor.has_value()) {
+                                            this->drawBackgroundHighlight(cellStartPos, asciiCellSize, backgroundColor.value());
+
                                             this->drawSelection(x, y, selection, byteAddress, 1, cellStartPos, asciiCellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
                                         }
 
@@ -888,6 +890,8 @@ namespace hex::ui {
 
                                             // Draw highlights and selection
                                             if (backgroundColor.has_value()) {
+                                                this->drawBackgroundHighlight(cellStartPos, cellSize, backgroundColor.value());
+
                                                 this->drawSelection(x, y, selection, address, 1, cellStartPos, cellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
                                             }
 

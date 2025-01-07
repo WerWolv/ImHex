@@ -16,6 +16,7 @@ namespace hex {
         AutoReset<std::map<std::string, ThemeManager::StyleHandler>> s_styleHandlers;
         AutoReset<std::string> s_imageTheme;
         AutoReset<std::string> s_currTheme;
+        AutoReset<std::optional<float>> s_accentColor;
 
         std::recursive_mutex s_themeMutex;
     }
@@ -155,10 +156,26 @@ namespace hex {
                         continue;
                     }
 
-                    auto color = parseColorString(value.get<std::string>());
+                    auto colorString = value.get<std::string>();
+                    bool accentableColor = false;
+                    if (colorString.starts_with("*")) {
+                        colorString = colorString.substr(1);
+                        accentableColor = true;
+                    }
+                    auto color = parseColorString(colorString);
+
                     if (!color.has_value()) {
-                        log::warn("Invalid color '{}' for '{}.{}'", value.get<std::string>(), type, key);
+                        log::warn("Invalid color '{}' for '{}.{}'", colorString, type, key);
                         continue;
+                    }
+
+                    if (accentableColor && s_accentColor->has_value()) {
+                        float h, s, v;
+                        ImGui::ColorConvertRGBtoHSV(color->Value.x, color->Value.y, color->Value.z, h, s, v);
+
+                        h = s_accentColor->value();
+
+                        ImGui::ColorConvertHSVtoRGB(h, s, v, color->Value.x, color->Value.y, color->Value.z);
                     }
 
                     (*s_themeHandlers)[type].setFunction((*s_themeHandlers)[type].colorMap.at(key), color.value());
@@ -234,6 +251,14 @@ namespace hex {
         s_themeHandlers->clear();
         s_imageTheme->clear();
         s_currTheme->clear();
+    }
+
+    void ThemeManager::setAccentColor(const ImColor &color) {
+        float h, s, v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, h, s, v);
+
+        s_accentColor = h;
+        reapplyCurrentTheme();
     }
 
 
