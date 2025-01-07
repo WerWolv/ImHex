@@ -1179,8 +1179,6 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
 
     if (mTopMarginChanged) {
         mTopMarginChanged = false;
-        if (mTopMargin == 0)
-            mSavedScrollY = ImGui::GetScrollY();
         auto window = ImGui::GetCurrentWindow();
         auto maxScroll = window->ScrollMax.y;
         if (maxScroll > 0) {
@@ -1196,10 +1194,8 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
 
             if (mNewTopMargin > mTopMargin)
                 mShiftedScrollY = oldScrollY + pixelCount;
-            else if (mNewTopMargin > 0)
-                mShiftedScrollY = oldScrollY - pixelCount;
             else
-                mShiftedScrollY = mSavedScrollY;
+                mShiftedScrollY = oldScrollY - pixelCount;
             ImGui::SetScrollY(mShiftedScrollY);
             mTopMargin = mNewTopMargin;
         }
