@@ -1024,7 +1024,7 @@ namespace hex {
 
                 struct FindOccurrence {
                     Region region;
-                    enum class DecodeType { ASCII, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
+                    enum class DecodeType { ASCII, UTF8, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
                     std::endian endian = std::endian::native;
                     bool selected;
                 };

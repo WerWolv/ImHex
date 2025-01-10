@@ -151,6 +151,9 @@ namespace hex {
         static void addInteractiveHelpText(std::initializer_list<std::variant<Lang, std::string, int>> &&ids, UnlocalizedString unlocalizedString);
         static void addInteractiveHelpLink(std::initializer_list<std::variant<Lang, std::string, int>> &&ids, std::string link);
 
+        static void setLastItemInteractiveHelpPopup(std::function<void()> callback);
+        static void setLastItemInteractiveHelpLink(std::string link);
+
 
         /**
          * @brief Draws the tutorial
