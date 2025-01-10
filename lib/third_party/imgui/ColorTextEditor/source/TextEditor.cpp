@@ -2518,7 +2518,6 @@ bool TextEditor::FindReplaceHandler::Replace(TextEditor *editor, bool next) {
         u.mAfter = editor->mState;
         editor->AddUndo(u);
         editor->mTextChanged = true;
-        mMatches.erase(mMatches.begin() + matchIndex - 1);
 
         return true;
     }
