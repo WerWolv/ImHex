@@ -288,7 +288,7 @@ namespace hex::plugin::builtin {
                 bool settingChanged = false;
 
                 ImGui::BeginDisabled(m_drawShortcut.matches(m_defaultShortcut));
-                if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                if (ImGui::Button("X", ImGui::GetStyle().FramePadding * 2 + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
                     this->reset();
                     if (!m_hasDuplicate) {
                         m_shortcut = m_defaultShortcut;
@@ -789,11 +789,15 @@ namespace hex::plugin::builtin {
                                                                   }
                                                               });
 
-            ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.accent", ImGui::GetStyleColorVec4(ImGuiCol_Button))
-                .setChangedCallback([](auto &widget) {
-                    auto colorPicker = static_cast<Widgets::ColorPicker *>(&widget);
-                    ThemeManager::setAccentColor(colorPicker->getColor());
-                });
+            ContentRegistry::Settings::add<Widgets::ColorPicker>(
+                "hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.accent",
+                ImGui::GetStyleColorVec4(ImGuiCol_Button),
+                ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoDragDrop | ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs
+            )
+            .setChangedCallback([](auto &widget) {
+                auto colorPicker = static_cast<Widgets::ColorPicker *>(&widget);
+                ThemeManager::setAccentColor(colorPicker->getColor());
+            });
 
             ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor")
             .requiresRestart();

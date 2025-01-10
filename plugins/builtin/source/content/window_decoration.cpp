@@ -13,6 +13,7 @@
 #include <ui/menu_items.hpp>
 
 #include <fonts/vscode_icons.hpp>
+#include <hex/api/tutorial_manager.hpp>
 #include <romfs/romfs.hpp>
 #include <wolv/utils/guards.hpp>
 
@@ -206,7 +207,7 @@ namespace hex::plugin::builtin {
 
             // Draw custom title bar buttons
             if (!titleBarButtons.empty()) {
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 7_scaled - buttonSize.x * float((titleBarButtonsVisible ? 4 : 0) + titleBarButtons.size()));
+                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 7_scaled - (buttonSize.x + ImGui::GetStyle().ItemSpacing.x) * float((titleBarButtonsVisible ? 4 : 0) + titleBarButtons.size()));
 
                 if (ImGui::GetCursorPosX() > (searchBoxPos.x + searchBoxSize.x)) {
                     for (const auto &[icon, tooltip, callback] : titleBarButtons) {
