@@ -344,16 +344,16 @@ namespace hex::plugin::visualizers {
         bool validateVector(const std::vector<float> &vector, u32 vertexCount, u32 divisor, const std::string &name,std::string &errorMessage) {
             if (!vector.empty()) {
                 if (vector.size() % divisor != 0) {
-                    errorMessage = name + std::string("hex.visualizers.pl_visualizer.3d.error_message_count"_lang) + std::to_string(divisor);
+                    errorMessage = hex::format("hex.visualizers.pl_visualizer.3d.error_message_count"_lang, name , std::to_string(divisor));
                     return false;
                 }
             } else {
-                errorMessage = name + std::string("hex.visualizers.pl_visualizer.3d.error_message_not_empty"_lang);
+                errorMessage = hex::format("hex.visualizers.pl_visualizer.3d.error_message_not_empty"_lang, name);
                 return false;
             }
             auto vectorCount = vector.size()/divisor;
             if (vectorCount != vertexCount) {
-                errorMessage =  std::string("hex.visualizers.pl_visualizer.3d.error_message_expected"_lang) + std::to_string(vertexCount) + " " + name + std::string("hex.visualizers.pl_visualizer.3d.error_message_but_got"_lang) + std::to_string(vectorCount);
+                errorMessage =  hex::format("hex.visualizers.pl_visualizer.3d.error_message_expected"_lang, std::to_string(vertexCount), std::to_string(vectorCount));
                 return false;
             }
             return true;
