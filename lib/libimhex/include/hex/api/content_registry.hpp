@@ -20,6 +20,7 @@ using ImGuiDataType = int;
 using ImGuiInputTextFlags = int;
 struct ImColor;
 enum ImGuiCustomCol : int;
+typedef int ImGuiColorEditFlags;
 
 namespace hex {
 
@@ -192,7 +193,7 @@ namespace hex {
 
                 class ColorPicker : public Widget {
                 public:
-                    explicit ColorPicker(ImColor defaultColor);
+                    explicit ColorPicker(ImColor defaultColor, ImGuiColorEditFlags flags = 0);
 
                     bool draw(const std::string &name) override;
 
@@ -202,7 +203,8 @@ namespace hex {
                     [[nodiscard]] ImColor getColor() const;
 
                 protected:
-                    std::array<float, 4> m_value{};
+                    std::array<float, 4> m_value = {}, m_defaultValue = {};
+                    ImGuiColorEditFlags m_flags;
                 };
 
                 class DropDown : public Widget {
@@ -1022,7 +1024,7 @@ namespace hex {
 
                 struct FindOccurrence {
                     Region region;
-                    enum class DecodeType { ASCII, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
+                    enum class DecodeType { ASCII, UTF8, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
                     std::endian endian = std::endian::native;
                     bool selected;
                 };

@@ -349,17 +349,34 @@ namespace hex {
             }
 
 
-            ColorPicker::ColorPicker(ImColor defaultColor) {
-                m_value = {
-                        defaultColor.Value.x,
-                        defaultColor.Value.y,
-                        defaultColor.Value.z,
-                        defaultColor.Value.w
+            ColorPicker::ColorPicker(ImColor defaultColor, ImGuiColorEditFlags flags) {
+                m_defaultValue = m_value = {
+                    defaultColor.Value.x,
+                    defaultColor.Value.y,
+                    defaultColor.Value.z,
+                    defaultColor.Value.w
                 };
+                m_flags = flags;
             }
 
             bool ColorPicker::draw(const std::string &name) {
-                return ImGui::ColorEdit4(name.c_str(), m_value.data(), ImGuiColorEditFlags_NoInputs);
+                ImGui::PushID(name.c_str());
+                auto result = ImGui::ColorEdit4("##color_picker", m_value.data(), ImGuiColorEditFlags_NoInputs | m_flags);
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("X", ImGui::GetStyle().FramePadding * 2 + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
+                    m_value = m_defaultValue;
+                    result = true;
+                }
+
+                ImGui::SameLine();
+
+                ImGui::TextUnformatted(name.c_str());
+
+                ImGui::PopID();
+
+                return result;
             }
 
             void ColorPicker::load(const nlohmann::json &data) {

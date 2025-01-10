@@ -1115,7 +1115,7 @@ namespace hex::plugin::builtin {
         });
 
         m_hexEditor.setBytesPerRow(ContentRegistry::Settings::read<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow()));
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.highlight_color", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.setSelectionColor(value.get<int>(0x60C08080));
         });
         ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", [this](const ContentRegistry::Settings::SettingsValue &value) {
