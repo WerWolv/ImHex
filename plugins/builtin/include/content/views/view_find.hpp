@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
                 Value
             } mode = Mode::Strings;
 
-            enum class StringType : int { ASCII = 0, UTF16LE = 1, UTF16BE = 2, ASCII_UTF16LE = 3, ASCII_UTF16BE = 4 };
+            enum class StringType : int { ASCII = 0, UTF8 = 1, UTF16LE = 2, UTF16BE = 3, ASCII_UTF16LE = 4, ASCII_UTF16BE = 5 };
 
             struct Strings {
                 int minLength = 5;

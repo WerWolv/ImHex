@@ -629,7 +629,6 @@ private:
 	uint64_t mStartTime = 0;
 	std::vector<std::string> mDefines;
     TextEditor *mSourceCodeEditor = nullptr;
-    float mSavedScrollY = 0;
     float mShiftedScrollY = 0;
     float mScrollY = 0;
     float mScrollYIncrement = 0.0F;

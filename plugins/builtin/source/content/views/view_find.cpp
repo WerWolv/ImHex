@@ -202,6 +202,8 @@ namespace hex::plugin::builtin {
         const auto [decodeType, endian] = [&] -> std::pair<Occurrence::DecodeType, std::endian> {
             if (settings.type == ASCII)
                 return { Occurrence::DecodeType::ASCII, std::endian::native };
+            if (settings.type == UTF8)
+                return { Occurrence::DecodeType::UTF8, std::endian::native };
             else if (settings.type == SearchSettings::StringType::UTF16BE)
                 return { Occurrence::DecodeType::UTF16, std::endian::big };
             else if (settings.type == SearchSettings::StringType::UTF16LE)
@@ -210,11 +212,13 @@ namespace hex::plugin::builtin {
                 return { Occurrence::DecodeType::Binary, std::endian::native };
         }();
 
-        size_t countedCharacters = 0;
+        i64 countedCharacters = 0;
         u64 startAddress = reader.begin().getAddress();
         u64 endAddress = reader.end().getAddress();
 
         u64 progress = 0;
+        u64 codePointWidth = 0;
+        i8 remainingCharacters = 0;
         for (u8 byte : reader) {
             bool validChar =
                 (settings.lowerCaseLetters    && std::islower(byte))  ||
@@ -233,6 +237,42 @@ namespace hex::plugin::builtin {
                 // Check if first byte of UTF-16 encoded string is 0x00
                 if (countedCharacters % 2 == 0)
                     validChar = byte == 0x00;
+            } else if (settings.type == UTF8) {
+                if ((byte & 0b1000'0000) == 0b0000'0000) {
+                    // ASCII range
+                    codePointWidth = 1;
+                    remainingCharacters = 0;
+                    validChar = true;
+                } else if ((byte & 0b1100'0000) == 0b1000'0000) {
+                    // Continuation mark
+
+                    if (remainingCharacters > 0) {
+                        remainingCharacters -= 1;
+                        validChar = true;
+                    } else {
+                        countedCharacters -= std::max<i64>(0, codePointWidth - (remainingCharacters + 1));
+                        codePointWidth = 0;
+                        remainingCharacters = 0;
+                        validChar = false;
+                    }
+                } else if ((byte & 0b1110'0000) == 0b1100'0000) {
+                    // Two bytes
+                    codePointWidth = 2;
+                    remainingCharacters = codePointWidth - 1;
+                    validChar = true;
+                } else if ((byte & 0b1111'0000) == 0b1110'0000) {
+                    // Three bytes
+                    codePointWidth = 3;
+                    remainingCharacters = codePointWidth - 1;
+                    validChar = true;
+                } else if ((byte & 0b1111'1000) == 0b1111'0000) {
+                    // Four bytes
+                    codePointWidth = 4;
+                    remainingCharacters = codePointWidth - 1;
+                    validChar = true;
+                } else {
+                    validChar = false;
+                }
             }
 
             task.update(progress);
@@ -240,9 +280,9 @@ namespace hex::plugin::builtin {
             if (validChar)
                 countedCharacters++;
             if (!validChar || startAddress + countedCharacters == endAddress) {
-                if (countedCharacters >= size_t(settings.minLength)) {
+                if (countedCharacters >= settings.minLength) {
                     if (!settings.nullTermination || byte == 0x00) {
-                        results.push_back(Occurrence { Region { startAddress, countedCharacters }, decodeType, endian, false });
+                        results.push_back(Occurrence { Region { startAddress, size_t(countedCharacters) }, decodeType, endian, false });
                     }
                 }
 
@@ -563,6 +603,11 @@ namespace hex::plugin::builtin {
                     case ASCII:
                         result = hex::encodeByteString(bytes);
                         break;
+                    case UTF8:
+                        result = std::string(bytes.begin(), bytes.end());
+                        result = wolv::util::replaceStrings(result, "\n", "");
+                        result = wolv::util::replaceStrings(result, "\r", "");
+                        break;
                     case UTF16:
                         for (size_t i = occurrence.endian == std::endian::little ? 0 : 1; i < bytes.size(); i += 2)
                             result += hex::encodeByteString({ bytes[i] });
@@ -667,8 +712,9 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
 
             if (ImGui::BeginTabBar("SearchMethods")) {
-                const std::array<std::string, 5> StringTypes = {
+                const std::array<std::string, 6> StringTypes = {
                         "hex.ui.common.encoding.ascii"_lang,
+                        "hex.ui.common.encoding.utf8"_lang,
                         "hex.ui.common.encoding.utf16le"_lang,
                         "hex.ui.common.encoding.utf16be"_lang,
                         hex::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16le"_lang),

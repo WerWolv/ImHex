@@ -299,6 +299,8 @@ namespace hex {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        TutorialManager::drawTutorial();
+
         EventFrameBegin::post();
 
         // Handle all undocked floating windows
@@ -632,8 +634,6 @@ namespace hex {
 
     void Window::frameEnd() {
         EventFrameEnd::post();
-
-        TutorialManager::drawTutorial();
 
         // Clean up all tasks that are done
         TaskManager::collectGarbage();
