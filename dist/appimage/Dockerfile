@@ -31,7 +31,10 @@ ARG BUILD_TYPE=RelWithDebInfo
 ARG GIT_COMMIT_HASH
 ARG GIT_BRANCH
 WORKDIR /build
-SHELL ["bash", "-c"] # Ubuntu sh doesnt support string substitution
+
+# Ubuntu sh doesnt support string substitution
+SHELL ["bash", "-c"]
+
 RUN <<EOF
 # Prepare ImHex build
 set -xe
