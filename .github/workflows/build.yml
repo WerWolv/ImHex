@@ -86,6 +86,12 @@ jobs:
 
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
+    - name: 🗝️ Generate build provenance attestations
+      uses: actions/attest-build-provenance@v2
+      with:
+        subject-path: |
+          imhex-*.msi
+
     - name: ⬆️ Upload Windows Installer
       uses: actions/upload-artifact@v4
       with:
@@ -316,6 +322,12 @@ jobs:
             sleep 10
         done
 
+    - name: 🗝️ Generate build provenance attestations
+      uses: actions/attest-build-provenance@v2
+      with:
+        subject-path: |
+          ./*.dmg
+
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v4
       with:
@@ -421,6 +433,12 @@ jobs:
               sleep 10
           done
 
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            ./*.dmg
+
       - name: ⬆️ Upload DMG
         uses: actions/upload-artifact@v4
         with:
@@ -504,6 +522,12 @@ jobs:
           dpkg-deb -Zzstd --build build/DebDir
           mv build/DebDir.deb imhex-${{ env.IMHEX_VERSION }}-Ubuntu-${{ matrix.release_num }}-x86_64.deb
 
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            ./*.deb
+
       - name: ⬆️ Upload DEB
         uses: actions/upload-artifact@v4
         with:
@@ -539,6 +563,12 @@ jobs:
           docker buildx build . -f dist/appimage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
           --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" --output out
 
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            out/*.AppImage
+            out/*.AppImage.zsync
 
       - name: ⬆️ Upload AppImage
         uses: actions/upload-artifact@v4
@@ -644,6 +674,12 @@ jobs:
           rm imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
           rm *imhex-bin-debug* # rm debug package which is created for some reason
           mv *.pkg.tar.zst imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            build/imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
 
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
         uses: actions/upload-artifact@v4
@@ -777,6 +813,12 @@ jobs:
         run: |
           mv $GITHUB_WORKSPACE/results_imhex/${{ env.IMHEX_VERSION }}/*/imhex-${{ env.IMHEX_VERSION }}-0.*.x86_64.rpm \
           $GITHUB_WORKSPACE/imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
 
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v4
