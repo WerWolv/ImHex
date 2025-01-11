@@ -872,7 +872,7 @@
         "hex.builtin.view.hex_editor.shortcut.enter_editing": "Enter editing mode",
         "hex.builtin.view.hex_editor.shortcut.selection_right": "Extend selection to the right",
         "hex.builtin.view.hex_editor.shortcut.cursor_right": "Move cursor to the right",
-        "hex.builtin.view.hex_editor.shortcut.selection_left": "Move cursor to the left",
+        "hex.builtin.view.hex_editor.shortcut.selection_left": "Extend selection to the left",
         "hex.builtin.view.hex_editor.shortcut.cursor_left": "Move cursor to the left",
         "hex.builtin.view.hex_editor.shortcut.selection_up": "Extend selection up",
         "hex.builtin.view.hex_editor.shortcut.cursor_up": "Move cursor up one line",
