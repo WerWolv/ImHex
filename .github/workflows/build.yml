@@ -501,7 +501,7 @@ jobs:
       - name: 📦 Bundle DEB
         run: |
           cp -r build/DEBIAN build/DebDir
-          dpkg-deb -Zgzip --build build/DebDir
+          dpkg-deb -Zzstd --build build/DebDir
           mv build/DebDir.deb imhex-${{ env.IMHEX_VERSION }}-Ubuntu-${{ matrix.release_num }}-x86_64.deb
 
       - name: ⬆️ Upload DEB
