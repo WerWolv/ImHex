@@ -1458,6 +1458,8 @@ namespace hex::plugin::builtin {
                                                     }
                                                     ImGui::PopID();
 
+                                                    menu::menuSeparator();
+
                                                     if (menu::menuItem("hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern"_lang, Shortcut::None, false, selection.has_value() && ContentRegistry::PatternLanguage::getRuntime().getCreatedPatternCount() > 0)) {
                                                         auto patterns = ContentRegistry::PatternLanguage::getRuntime().getPatternsAtAddress(selection->getStartAddress());
 
