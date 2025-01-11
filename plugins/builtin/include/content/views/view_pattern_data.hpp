@@ -15,6 +15,7 @@ namespace hex::plugin::builtin {
 
     private:
         bool m_rowColoring = false;
+        u32 m_maxFilterItems = 128;
         ui::PatternDrawer::TreeStyle m_treeStyle = ui::PatternDrawer::TreeStyle::Default;
 
         PerProvider<std::unique_ptr<ui::PatternDrawer>> m_patternDrawer;

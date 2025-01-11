@@ -248,9 +248,17 @@ namespace hex::ui {
 
         std::vector<std::string> treePath;
         for (auto &pattern : m_sortedPatterns) {
-            traversePatternTree(*pattern, treePath, [this, &treePath](auto &pattern){
-                if (matchesFilter(m_filter.path, treePath, false))
-                    m_filteredPatterns.push_back(&pattern);
+            if (m_filteredPatterns.size() > m_maxFilterDisplayItems)
+                break;
+
+            traversePatternTree(*pattern, treePath, [this, &treePath](auto &pattern) {
+                if (m_filteredPatterns.size() > m_maxFilterDisplayItems)
+                    return;
+
+                if (matchesFilter(m_filter.path, treePath, false)) {
+                    if (pattern.getValue() == m_filter.value)
+                        m_filteredPatterns.push_back(&pattern);
+                }
             });
         }
     }

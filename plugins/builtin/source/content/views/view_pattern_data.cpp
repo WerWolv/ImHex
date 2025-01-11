@@ -25,6 +25,12 @@ namespace hex::plugin::builtin {
                 drawer->enableRowColoring(m_rowColoring);
         });
 
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.pattern_data_max_filter_items", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_maxFilterItems = value.get<u32>(128);
+            for (auto &drawer : m_patternDrawer.all())
+                drawer->setMaxFilterDisplayItems(m_maxFilterItems);
+        });
+
         EventPatternEvaluating::subscribe(this, [this]{
             (*m_patternDrawer)->reset();
         });
