@@ -18,11 +18,18 @@ jobs:
   win:
     runs-on: windows-2022
     name: 🪟 Windows MINGW64
+
     defaults:
       run:
         shell: msys2 {0}
+
     env:
       CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+
+    permissions:
+      id-token: write
+      attestations: write
+
     steps:
     - name: 🧰 Checkout
       uses: actions/checkout@v4
@@ -128,12 +135,16 @@ jobs:
   win-plugin-template-test:
     runs-on: windows-2022
     name: 🧪 Plugin Template Test
+
     defaults:
       run:
         shell: msys2 {0}
+
     needs: win
+
     env:
       IMHEX_SDK_PATH: "${{ github.workspace }}/out/sdk"
+
     steps:
       - name: 🧰 Checkout ImHex
         uses: actions/checkout@v4
@@ -181,6 +192,10 @@ jobs:
   # MacOS build
   macos:
     runs-on: macos-13
+
+    permissions:
+      id-token: write
+      attestations: write
 
     strategy:
       fail-fast: false
@@ -338,8 +353,10 @@ jobs:
   macos-arm64-build:
     runs-on: ubuntu-24.04
     name: 🍎 macOS 13 arm64
+
     outputs:
       IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
+
     steps:
     - name: 🧰 Checkout
       uses: actions/checkout@v4
@@ -383,8 +400,14 @@ jobs:
     runs-on: macos-13
     name: 🍎 macOS 13 arm64 Packaging
     needs: macos-arm64-build
+
     env:
       IMHEX_VERSION: ${{ needs.macos-arm64-build.outputs.IMHEX_VERSION }}
+
+    permissions:
+      id-token: write
+      attestations: write
+
     steps:
       - name: ⬇️ Download artifact
         uses: actions/download-artifact@v4
@@ -461,6 +484,10 @@ jobs:
     container:
       image: "ubuntu:${{ matrix.release_num }}"
       options: --privileged
+
+    permissions:
+      id-token: write
+      attestations: write
 
     steps:
       - name: ⬇️ Install setup dependencies
@@ -539,6 +566,11 @@ jobs:
   appimage:
     runs-on: ubuntu-24.04
     name: ⬇️ AppImage
+
+    permissions:
+      id-token: write
+      attestations: write
+
     steps:
       - name: 🧰 Checkout
         uses: actions/checkout@v4
@@ -591,6 +623,10 @@ jobs:
 
     container:
       image: archlinux:base-devel
+
+    permissions:
+      id-token: write
+      attestations: write
 
     steps:
       - name: ⬇️ Update all packages
@@ -718,6 +754,10 @@ jobs:
     container:
       image: "almalinux:9"
       options: --privileged --pid=host --security-opt apparmor=unconfined
+
+    permissions:
+      id-token: write
+      attestations: write
 
     steps:
       # This, together with the `--pid=host --security-opt apparmor=unconfined` docker options is required to allow
