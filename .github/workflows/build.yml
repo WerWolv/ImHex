@@ -867,3 +867,85 @@ jobs:
           name: ${{ matrix.name }} ${{ matrix.release_num }} RPM x86_64
           path: |
             imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
+
+  webassembly-build:
+    runs-on: ubuntu-24.04
+    name: 🌍 Web
+    permissions:
+      pages: write
+      id-token: write
+      actions: write
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 📁 Restore docker /cache
+        uses: actions/cache@v4
+        with:
+          path: cache
+          key: web-cache-${{ hashFiles('**/CMakeLists.txt') }}
+
+      - name: 🐳 Inject /cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v2
+        with:
+          cache-source: cache
+          cache-target: /cache
+
+      - name: 🛠️ Build using docker
+        run: |
+          docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out --target raw
+
+      - name: 🔨 Fix permissions
+        run: |
+          chmod -c -R +rX "out/"
+
+      - name: ⬆️ Upload artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: out/
+
+      - name: 🔨 Copy necessary files
+        run: |
+          cp dist/web/serve.py out/start_imhex_web.py
+
+      - name: ⬆️ Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: ImHex Web
+          path: out/*
+
+        # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
+      - name: 🗑️ Delete old cache
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install actions/gh-actions-cache || true
+          gh actions-cache delete "build-web-cache" --confirm || true
+
+  webassembly-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+      actions: write
+    name: 📃 Deploy to GitHub Pages
+    runs-on: ubuntu-24.04
+
+    if: ${{ github.ref == 'refs/heads/master' && github.event.repository.fork == false }}
+    needs: webassembly-build
+
+    steps:
+      - name: 🌍 Deploy WebAssembly Build to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 🗑️ Delete artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: github-pages
