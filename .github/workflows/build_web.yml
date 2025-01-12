@@ -51,7 +51,6 @@ jobs:
     - name: ⬆️ Upload artifacts
       uses: actions/upload-pages-artifact@v3
       with:
-        name: github_pages
         path: out/
 
     - name: 🔨 Copy necessary files
@@ -93,4 +92,4 @@ jobs:
       - name: 🗑️ Delete artifact
         uses: geekyeggo/delete-artifact@v5
         with:
-          name: github_pages
+          name: github-pages
