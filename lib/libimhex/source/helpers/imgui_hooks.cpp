@@ -1,4 +1,5 @@
 #include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_gui.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>

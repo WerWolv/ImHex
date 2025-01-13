@@ -205,15 +205,10 @@ namespace hex {
     EVENT_DEF(EventFileLoaded, std::fs::path);
     EVENT_DEF(EventDataChanged, prv::Provider *);
     EVENT_DEF(EventHighlightingChanged);
-    EVENT_DEF(EventWindowClosing, GLFWwindow *);
     EVENT_DEF(EventRegionSelected, ImHexApi::HexEditor::ProviderRegion);
     EVENT_DEF(EventThemeChanged);
     EVENT_DEF(EventOSThemeChanged);
-    EVENT_DEF(EventDPIChanged, float, float);
-    EVENT_DEF(EventWindowFocused, bool);
 
-    EVENT_DEF(EventWindowInitialized);
-    EVENT_DEF(EventWindowDeinitializing, GLFWwindow *);
     EVENT_DEF(EventBookmarkCreated, ImHexApi::Bookmarks::Entry&);
 
     /**
@@ -228,16 +223,9 @@ namespace hex {
     EVENT_DEF(EventStoreContentRemoved, const std::fs::path&);
     EVENT_DEF(EventAchievementUnlocked, const Achievement&);
     EVENT_DEF(EventSearchBoxClicked, u32);
-    EVENT_DEF(EventViewOpened, View*);
 
     EVENT_DEF(EventFileDragged, bool);
     EVENT_DEF(EventFileDropped, std::fs::path);
-
-
-    EVENT_DEF_NO_LOG(EventFrameBegin);
-    EVENT_DEF_NO_LOG(EventFrameEnd);
-    EVENT_DEF_NO_LOG(EventSetTaskBarIconState, u32, u32, u32);
-    EVENT_DEF_NO_LOG(EventImGuiElementRendered, ImGuiID, const std::array<float, 4>&);
 
     /**
      * @brief Send an event to the main Imhex instance

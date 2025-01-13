@@ -4,6 +4,7 @@
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/api/events/requests.hpp>
+#include <hex/api/events/events_gui.hpp>
 
 namespace hex::plugin::builtin {
 

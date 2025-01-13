@@ -11,6 +11,7 @@
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/api/events/requests.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
+#include <hex/api/events/events_gui.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
