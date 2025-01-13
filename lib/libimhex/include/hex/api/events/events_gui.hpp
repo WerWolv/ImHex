@@ -19,6 +19,8 @@ namespace hex {
     EVENT_DEF(EventWindowInitialized);
     EVENT_DEF(EventWindowDeinitializing, GLFWwindow *);
 
+    EVENT_DEF(EventOSThemeChanged);
+
     EVENT_DEF_NO_LOG(EventFrameBegin);
     EVENT_DEF_NO_LOG(EventFrameEnd);
     EVENT_DEF_NO_LOG(EventSetTaskBarIconState, u32, u32, u32);

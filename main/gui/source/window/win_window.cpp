@@ -12,6 +12,8 @@
     #include <hex/helpers/logger.hpp>
     #include <hex/helpers/default_paths.hpp>
 
+    #include <hex/api/events/events_gui.hpp>
+
     #include <imgui.h>
     #include <imgui_internal.h>
 

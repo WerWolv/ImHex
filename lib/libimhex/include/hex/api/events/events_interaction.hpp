@@ -13,7 +13,6 @@ namespace hex {
     EVENT_DEF(EventHighlightingChanged);
     EVENT_DEF(EventRegionSelected, ImHexApi::HexEditor::ProviderRegion);
     EVENT_DEF(EventThemeChanged);
-    EVENT_DEF(EventOSThemeChanged);
 
     EVENT_DEF(EventBookmarkCreated, ImHexApi::Bookmarks::Entry&);
 

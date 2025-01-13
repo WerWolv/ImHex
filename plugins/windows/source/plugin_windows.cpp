@@ -3,6 +3,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/api/events/events_gui.hpp>
 
 #include <romfs/romfs.hpp>
 #include <nlohmann/json.hpp>
