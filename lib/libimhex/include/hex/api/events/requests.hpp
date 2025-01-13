@@ -3,6 +3,9 @@
 #include <hex.hpp>
 #include <hex/api/event_manager.hpp>
 
+/* Forward declarations */
+namespace pl::ptrn { class Pattern; }
+
 namespace hex {
 
     EVENT_DEF(RequestAddInitTask, std::string, bool, std::function<bool()>);

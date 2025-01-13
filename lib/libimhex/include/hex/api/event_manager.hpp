@@ -11,7 +11,6 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/patches.hpp>
 
 #include <wolv/types/type_name.hpp>
 
@@ -31,15 +30,6 @@
 #define EVENT_DEF(event_name, ...)          EVENT_DEF_IMPL(event_name, #event_name, true, __VA_ARGS__)
 #define EVENT_DEF_NO_LOG(event_name, ...)   EVENT_DEF_IMPL(event_name, #event_name, false, __VA_ARGS__)
 
-
-/* Forward declarations */
-struct GLFWwindow;
-namespace hex {
-    class Achievement;
-    class View;
-}
-
-namespace pl::ptrn { class Pattern; }
 
 namespace hex {
 
@@ -100,7 +90,8 @@ namespace hex {
 
     /**
      * @brief The EventManager allows subscribing to and posting events to different parts of the program.
-     * To create a new event, use the EVENT_DEF macro. This will create a new event type with the given name and parameters
+     * To create a new event, use the EVENT_DEF macro. This will create a new event type with the given name and parameters.
+     * Events should be created in an `events_*.hpp` category file under the `events` folder, and never directly here.
      */
     class EventManager {
     public:

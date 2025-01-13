@@ -1,6 +1,10 @@
 #pragma once
 
 #include <hex/api/event_manager.hpp>
+#include <hex/helpers/patches.hpp>
+
+/* Forward declarations */
+namespace hex { class Achievement; }
 
 namespace hex {
 

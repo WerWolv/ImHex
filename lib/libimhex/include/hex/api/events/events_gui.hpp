@@ -2,6 +2,12 @@
 
 #include <hex/api/event_manager.hpp>
 
+/* Forward declarations */
+struct GLFWwindow;
+namespace hex {
+    class View;
+}
+
 namespace hex {
 
     EVENT_DEF(EventViewOpened, View*);
