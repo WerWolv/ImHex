@@ -3,7 +3,6 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
-#include <hex/api/event_manager.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/layout_manager.hpp>
 

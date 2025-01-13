@@ -1,5 +1,4 @@
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api/event_manager.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
 #include <hex/helpers/auto_reset.hpp>

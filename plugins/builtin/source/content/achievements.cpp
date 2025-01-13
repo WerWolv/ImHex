@@ -2,7 +2,6 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 
-#include <hex/api/event_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
 
