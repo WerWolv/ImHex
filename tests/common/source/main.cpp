@@ -1,12 +1,11 @@
 #include <hex.hpp>
 
-#include <hex/api/event_manager.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/test/tests.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
 
 #include <cstdlib>
 

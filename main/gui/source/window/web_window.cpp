@@ -5,7 +5,7 @@
 #include <emscripten.h>
 #include <emscripten/html5.h>
 
-#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>

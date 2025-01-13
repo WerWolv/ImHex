@@ -4,7 +4,7 @@
     #include <emscripten/html5.h>
 
     #include <hex/api/imhex_api.hpp>
-    #include <hex/api/event_manager.hpp>
+    #include <hex/api/events/requests_lifecycle.hpp>
     #include <hex/api/task_manager.hpp>
 
     #include <window.hpp>

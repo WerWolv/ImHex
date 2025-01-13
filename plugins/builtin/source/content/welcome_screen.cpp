@@ -8,7 +8,6 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api_urls.hpp>
 
-#include <hex/api/event_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/requests_gui.hpp>

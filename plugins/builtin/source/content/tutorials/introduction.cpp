@@ -1,5 +1,4 @@
 #include <content/providers/memory_file_provider.hpp>
-#include <hex/api/event_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/ui/view.hpp>
