@@ -263,7 +263,12 @@ namespace hex::fonts {
         }
 
         float getFontSize() {
-            return float(ContentRegistry::Settings::read<int>("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13)) * ImHexApi::System::getGlobalScale();
+            const auto pixelPerfectFont = ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
+
+            if (pixelPerfectFont)
+                return 13.0F * ImHexApi::System::getGlobalScale();
+            else
+                return float(ContentRegistry::Settings::read<int>("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13)) * ImHexApi::System::getGlobalScale();
         }
 
     }
