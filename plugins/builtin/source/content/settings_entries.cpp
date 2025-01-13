@@ -656,11 +656,14 @@ namespace hex::plugin::builtin {
                 bool changed = false;
 
                 const auto &fonts = hex::getFonts();
+                const bool pixelPerfectFont = ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
 
                 bool customFont = false;
                 std::string pathPreview = "";
-                if (m_path.empty()) {
-                    pathPreview = "Default Font";
+                if (m_path.empty() && pixelPerfectFont) {
+                    pathPreview = "Pixel-Perfect Default Font (Proggy Clean)";
+                } else if (m_path.empty() && !pixelPerfectFont) {
+                    pathPreview = "Smooth Default Font (JetbrainsMono)";
                 } else if (fonts.contains(m_path)) {
                     pathPreview = fonts.at(m_path);
                 } else {
@@ -669,9 +672,17 @@ namespace hex::plugin::builtin {
                 }
 
                 if (ImGui::BeginCombo(name.c_str(), pathPreview.c_str())) {
-                    if (ImGui::Selectable("Default Font", m_path.empty())) {
+
+                    if (ImGui::Selectable("Pixel-Perfect Default Font (Proggy Clean)", m_path.empty() && pixelPerfectFont)) {
                         m_path.clear();
                         changed = true;
+                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
+                    }
+
+                    if (ImGui::Selectable("Smooth Default Font (JetbrainsMono)", m_path.empty() && !pixelPerfectFont)) {
+                        m_path.clear();
+                        changed = true;
+                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", false);
                     }
 
                     if (ImGui::Selectable("Custom Font", customFont)) {
@@ -878,6 +889,7 @@ namespace hex::plugin::builtin {
                 s_showScalingWarning = ImHexApi::Fonts::getCustomFontPath().empty() &&
                     ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
             };
+            ContentRegistry::Settings::onChange("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", scaleWarningHandler);
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false)
                 .requiresRestart();
@@ -897,20 +909,10 @@ namespace hex::plugin::builtin {
 
             const auto customFontSettingsEnabled = [customFontEnabledSetting, customFontPathSetting] {
                 auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
-                auto &fontPath = static_cast<Widgets::FilePicker &>(customFontPathSetting.getWidget());
+                const bool pixelPerfectFont = ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
 
-                return customFontsEnabled.isChecked() && !fontPath.getPath().empty();
+                return customFontsEnabled.isChecked() && !pixelPerfectFont;
             };
-
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.pixel_perfect_default_font", true)
-                .setChangedCallback(scaleWarningHandler)
-                .setEnabledCallback([customFontPathSetting, customFontEnabledSetting] {
-                    auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
-                    auto &fontPath = static_cast<Widgets::FilePicker &>(customFontPathSetting.getWidget());
-
-                    return customFontsEnabled.isChecked()&& fontPath.getPath().empty();
-                })
-                .requiresRestart();
 
             ContentRegistry::Settings::add<Widgets::Label>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_info")
                     .setEnabledCallback(customFontsEnabled);
