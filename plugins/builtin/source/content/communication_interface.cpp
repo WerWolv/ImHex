@@ -1,6 +1,6 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/event_manager.hpp>
-#include <hex/api/events/requests.hpp>
+#include <hex/api/events/requests_interaction.hpp>
 
 #include <nlohmann/json.hpp>
 

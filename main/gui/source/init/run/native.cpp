@@ -1,7 +1,7 @@
 #if !defined(OS_WEB)
 
     #include <hex/api/event_manager.hpp>
-    #include <hex/api/events/requests.hpp>
+    #include <hex/api/events/requests_lifecycle.hpp>
     #include <wolv/utils/guards.hpp>
 
     #include <init/run.hpp>

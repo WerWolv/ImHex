@@ -1,6 +1,6 @@
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/event_manager.hpp>
-#include <hex/api/events/requests.hpp>
+#include <hex/api/events/requests_lifecycle.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/helpers/default_paths.hpp>

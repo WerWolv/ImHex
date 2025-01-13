@@ -2,7 +2,7 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/providers/memory_provider.hpp>
-#include <hex/api/events/requests.hpp>
+#include <hex/api/events/requests_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
 

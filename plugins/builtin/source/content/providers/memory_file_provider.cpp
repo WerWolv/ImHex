@@ -8,7 +8,8 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/event_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
-#include <hex/api/events/requests.hpp>
+#include <hex/api/events/requests_provider.hpp>
+#include <hex/api/events/requests_gui.hpp>
 
 #include <wolv/io/file.hpp>
 

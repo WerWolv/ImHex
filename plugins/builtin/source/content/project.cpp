@@ -10,8 +10,8 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/event_manager.hpp>
-#include <hex/api/events/requests.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
+#include <hex/api/events/requests_gui.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>

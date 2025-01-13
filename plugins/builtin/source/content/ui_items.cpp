@@ -4,7 +4,7 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_gui.hpp>
-#include <hex/api/events/requests.hpp>
+#include <hex/api/events/requests_gui.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>

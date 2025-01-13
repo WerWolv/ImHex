@@ -4,7 +4,7 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
-#include <hex/api/events/requests.hpp>
+#include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/task_manager.hpp>
 

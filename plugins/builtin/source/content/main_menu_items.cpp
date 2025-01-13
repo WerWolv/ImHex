@@ -8,7 +8,7 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api/events/requests.hpp>
+#include <hex/api/events/requests_gui.hpp>
 #include <hex/api/tutorial_manager.hpp>
 
 #include <hex/helpers/crypto.hpp>
