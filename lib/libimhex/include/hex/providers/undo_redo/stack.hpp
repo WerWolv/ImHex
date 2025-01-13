@@ -2,7 +2,7 @@
 
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
-#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/providers/undo_redo/operations/operation.hpp>
 
