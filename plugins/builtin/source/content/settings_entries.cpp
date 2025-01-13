@@ -705,6 +705,31 @@ namespace hex::plugin::builtin {
             }
         };
 
+        class SliderPoints : public ContentRegistry::Settings::Widgets::SliderFloat {
+        public:
+            SliderPoints(float defaultValue, float min, float max) : SliderFloat(defaultValue, min, max) { }
+            bool draw(const std::string &name) override {
+                float value = pixelsToPoints(m_value);
+                float min = pixelsToPoints(m_min);
+                float max = pixelsToPoints(m_max);
+
+                auto changed = ImGui::SliderFloat(name.c_str(), &value, min, max, "%.0f pt");
+
+                m_value = pointsToPixels(value);
+
+                return changed;
+            }
+
+        private:
+            float pixelsToPoints(float pixels) {
+                return pixels * (72_scaled / 96.0F);
+            }
+
+            float pointsToPixels(float points) {
+                return points / (72_scaled / 96.0F);
+            }
+        };
+
 
         bool getDefaultBorderlessWindowMode() {
             bool result;
@@ -918,7 +943,7 @@ namespace hex::plugin::builtin {
                     .setEnabledCallback(customFontsEnabled);
 
 
-            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 13, 0, 100)
+            ContentRegistry::Settings::add<SliderPoints>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 18, 2, 100)
                     .requiresRestart()
                     .setEnabledCallback(customFontSettingsEnabled);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_bold", false)
