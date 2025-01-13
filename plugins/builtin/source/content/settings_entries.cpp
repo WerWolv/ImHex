@@ -943,7 +943,7 @@ namespace hex::plugin::builtin {
                     .setEnabledCallback(customFontsEnabled);
 
 
-            ContentRegistry::Settings::add<SliderPoints>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 18, 2, 100)
+            ContentRegistry::Settings::add<SliderPoints>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 16, 2, 100)
                     .requiresRestart()
                     .setEnabledCallback(customFontSettingsEnabled);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_bold", false)
