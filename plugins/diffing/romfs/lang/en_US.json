@@ -2,6 +2,7 @@
     "code": "en-US",
     "country": "United States",
     "language": "English",
+    "fallback": true,
     "translations": {
         "hex.diffing.algorithm.simple.name": "Simple byte-by-byte algorithm",
         "hex.diffing.algorithm.simple.description": "Naïve O(N) byte-by-byte comparison.\nCan only identify byte modifications and insertions / deletions at the end of the data",

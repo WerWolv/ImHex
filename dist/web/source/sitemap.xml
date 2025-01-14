@@ -17,6 +17,12 @@
     <priority>1.00</priority>
   </url>
   <url>
+    <title>Russian</title>
+    <loc>https://web.imhex.werwolv.net?lang=ru-RU</loc>
+    <lastmod>2024-08-08T22:38:00+00:00</lastmod>
+    <priority>1.00</priority>
+  </url>
+  <url>
     <title>Deutsch</title>
     <loc>https://web.imhex.werwolv.net?lang=de-DE</loc>
     <lastmod>2024-01-02T11:44:00+00:00</lastmod>
