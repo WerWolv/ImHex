@@ -78,7 +78,7 @@ namespace hex::plugin::yara {
                         if (ImGuiExt::BeginSubWindow(categoryName.c_str())) {
                             for (const auto &match : category.matchedRules) {
                                 const auto &ruleName = match.metadata.contains("name") ? match.metadata.at("name") : match.identifier;
-                                ImGui::TextUnformatted(ruleName.c_str());
+                                ImGuiExt::TextFormattedSelectable("{}", ruleName);
                             }
                         }
                         ImGuiExt::EndSubWindow();

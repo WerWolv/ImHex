@@ -42,13 +42,13 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{}", name);
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormattedWrapped("{}", value);
+                    ImGuiExt::TextFormattedWrappedSelectable("{}", value);
                 }
 
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("{}", "hex.ui.common.region"_lang);
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("0x{:X} - 0x{:X}", m_region.getStartAddress(), m_region.getEndAddress());
+                ImGuiExt::TextFormattedSelectable("0x{:X} - 0x{:X}", m_region.getStartAddress(), m_region.getEndAddress());
 
                 ImGui::EndTable();
             }
@@ -103,7 +103,7 @@ namespace hex::plugin::builtin {
                         if (m_dataDescription == "data") {
                             ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.information_section.magic.octet_stream_text"_lang, m_dataDescription);
                         } else {
-                            ImGuiExt::TextFormattedWrapped("{}", m_dataDescription);
+                            ImGuiExt::TextFormattedWrappedSelectable("{}", m_dataDescription);
                         }
                     }
 
@@ -119,7 +119,7 @@ namespace hex::plugin::builtin {
                             ImGuiExt::HelpHover("hex.builtin.information_section.magic.octet_stream_warning"_lang, ICON_VS_INFO);
                             ImGui::PopStyleVar();
                         } else {
-                            ImGuiExt::TextFormatted("{}", m_dataMimeType);
+                            ImGuiExt::TextFormattedSelectable("{}", m_dataMimeType);
                         }
                     }
 
@@ -127,14 +127,14 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted("hex.builtin.information_section.magic.apple_type"_lang);
                         ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{}", m_dataAppleCreatorType);
+                        ImGuiExt::TextFormattedSelectable("{}", m_dataAppleCreatorType);
                     }
 
                     if (!m_dataExtensions.empty()) {
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted("hex.builtin.information_section.magic.extension"_lang);
                         ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{}", m_dataExtensions);
+                        ImGuiExt::TextFormattedSelectable("{}", m_dataExtensions);
                     }
 
                     ImGui::EndTable();
@@ -257,7 +257,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("{}", "hex.builtin.information_section.info_analysis.block_size"_lang);
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("hex.builtin.information_section.info_analysis.block_size.desc"_lang, m_chunkBasedEntropy.getSize(), m_chunkBasedEntropy.getChunkSize());
+                ImGuiExt::TextFormattedSelectable("hex.builtin.information_section.info_analysis.block_size.desc"_lang, m_chunkBasedEntropy.getSize(), m_chunkBasedEntropy.getChunkSize());
 
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("{}", "hex.builtin.information_section.info_analysis.file_entropy"_lang);
@@ -277,7 +277,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("{}", "hex.builtin.information_section.info_analysis.highest_entropy"_lang);
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("{:.5f} @", m_highestBlockEntropy);
+                ImGuiExt::TextFormattedSelectable("{:.5f} @", m_highestBlockEntropy);
                 ImGui::SameLine();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
@@ -290,7 +290,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("{}", "hex.builtin.information_section.info_analysis.lowest_entropy"_lang);
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("{:.5f} @", m_lowestBlockEntropy);
+                ImGuiExt::TextFormattedSelectable("{:.5f} @", m_lowestBlockEntropy);
                 ImGui::SameLine();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));

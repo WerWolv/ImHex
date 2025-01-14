@@ -235,11 +235,13 @@ namespace ImGuiExt {
 
     inline void TextFormattedWrappedSelectable(std::string_view fmt, auto &&...args) {
         // Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
-        auto text = wolv::util::wrapMonospacedString(
+        auto text = wolv::util::trim(wolv::util::wrapMonospacedString(
                 hex::format(fmt, std::forward<decltype(args)>(args)...),
                 ImGui::CalcTextSize("M").x,
                 ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize
-        );
+        ));
+
+        auto textSize = ImGui::CalcTextSize(text.c_str());
 
         ImGui::PushID(text.c_str());
 
@@ -251,7 +253,7 @@ namespace ImGuiExt {
                 "##",
                 const_cast<char *>(text.c_str()),
                 text.size(),
-                ImVec2(0, -FLT_MIN),
+                ImVec2(0, textSize.y),
                 ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll
         );
         ImGui::PopItemWidth();
