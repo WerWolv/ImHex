@@ -269,7 +269,7 @@ namespace hex::plugin::builtin {
     std::pair<Region, bool> IntelHexProvider::getRegionValidity(u64 address) const {
         auto intervals = m_data.overlapping({ address, address });
         if (intervals.empty()) {
-            return Provider::getRegionValidity(address);
+            return { Region(address, 1), false };
         }
 
         decltype(m_data)::Interval closestInterval = { 0, 0 };
@@ -277,8 +277,8 @@ namespace hex::plugin::builtin {
             if (interval.start <= closestInterval.end)
                 closestInterval = interval;
         }
-        return { Region { closestInterval.start, (closestInterval.end - closestInterval.start) + 1}, true };
 
+        return { Region { closestInterval.start, (closestInterval.end - closestInterval.start) + 1}, Provider::getRegionValidity(address).second };
     }
 
     void IntelHexProvider::loadSettings(const nlohmann::json &settings) {
