@@ -116,6 +116,10 @@ namespace hex::plugin::builtin {
             hex::subcommands::forwardSubCommand("open", fullPaths);
     }
 
+    void handleNewCommand(const std::vector<std::string> &) {
+        hex::subcommands::forwardSubCommand("new", {});
+    }
+
     void handleCalcCommand(const std::vector<std::string> &args) {
         if (args.empty()) {
             hex::log::println("No expression provided!");
@@ -385,6 +389,10 @@ namespace hex::plugin::builtin {
             for (auto &arg : args) {
                 RequestOpenFile::post(arg);
             }
+        });
+
+        hex::subcommands::registerSubCommand("new", [](const std::vector<std::string> &){
+            RequestOpenWindow::post("Create File");
         });
     }
 

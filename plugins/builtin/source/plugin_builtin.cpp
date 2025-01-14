@@ -66,6 +66,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "verbose",        "v", "Enables verbose debug logging",                hex::plugin::builtin::handleVerboseCommand          },
 
     { "open",           "o", "Open files passed as argument. [default]",     hex::plugin::builtin::handleOpenCommand             },
+    { "new",            "n", "Create a new empty file",                      hex::plugin::builtin::handleNewCommand              },
 
     { "calc",           "",  "Evaluate a mathematical expression",           hex::plugin::builtin::handleCalcCommand             },
     { "hash",           "",  "Calculate the hash of a file",                 hex::plugin::builtin::handleHashCommand             },

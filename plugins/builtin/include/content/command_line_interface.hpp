@@ -12,6 +12,7 @@ namespace hex::plugin::builtin {
     void handleVerboseCommand(const std::vector<std::string> &args);
 
     void handleOpenCommand(const std::vector<std::string> &args);
+    void handleNewCommand(const std::vector<std::string> &args);
 
     void handleCalcCommand(const std::vector<std::string> &args);
     void handleHashCommand(const std::vector<std::string> &args);

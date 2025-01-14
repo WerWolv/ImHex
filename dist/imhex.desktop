@@ -1,4 +1,5 @@
 [Desktop Entry]
+Version=1.0
 Name=ImHex
 Comment=ImHex Hex Editor
 GenericName=Hex Editor
@@ -10,3 +11,8 @@ Categories=Development;IDE;
 StartupWMClass=imhex
 Keywords=static-analysis;reverse-engineering;disassembler;disassembly;hacking;forensics;hex-editor;cybersecurity;security;binary-analysis;
 MimeType=application/vnd.imhex.proj;
+Actions=NewFile;
+
+[Desktop Action NewFile]
+Exec=imhex --new
+Name=Create New File
