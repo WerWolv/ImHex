@@ -309,21 +309,27 @@ namespace hex {
             pressedShortcut += s_macOSMode ? CTRLCMD : SUPER;
         if (focused)
             pressedShortcut += CurrentView;
-        if (ImGui::GetIO().WantTextInput)
-            pressedShortcut += AllowWhileTyping;
 
         pressedShortcut += static_cast<Keys>(keyCode);
 
         return pressedShortcut;
     }
 
-    static void processShortcut(const Shortcut &shortcut, const std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
+    static void processShortcut(Shortcut shortcut, const std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
         if (s_paused) return;
 
         if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
             return;
 
-        if (auto it = shortcuts.find(shortcut); it != shortcuts.end()) {
+        const bool currentlyTyping = ImGui::GetIO().WantTextInput;
+
+        auto it = shortcuts.find(shortcut + AllowWhileTyping);
+        if (!currentlyTyping && it == shortcuts.end()) {
+            if (it == shortcuts.end())
+                it = shortcuts.find(shortcut);
+        }
+
+        if (it != shortcuts.end()) {
             const auto &[foundShortcut, entry] = *it;
 
             if (entry.enabledCallback()) {
