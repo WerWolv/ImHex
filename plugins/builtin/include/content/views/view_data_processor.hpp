@@ -25,7 +25,10 @@ namespace hex::plugin::builtin {
                 ctx->AttributeFlagStack = GImNodes->AttributeFlagStack;
 
                 return ctx;
-            }(), ImNodes::DestroyContext };
+            }(), [](ImNodesContext *ptr) {
+                if (ptr != nullptr)
+                    ImNodes::DestroyContext(ptr);
+            } };
 
             std::list<std::unique_ptr<dp::Node>> nodes;
             std::list<dp::Node*> endNodes;

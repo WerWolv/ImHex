@@ -887,7 +887,9 @@ namespace hex::plugin::builtin {
 
         bool popWorkspace = false;
         // Set the ImNodes context to the current workspace context
+        auto prevContext = ImNodes::GetCurrentContext();
         ImNodes::SetCurrentContext(workspace.context.get());
+        ON_SCOPE_EXIT { ImNodes::SetCurrentContext(prevContext); };
 
         this->drawContextMenus(workspace);
 
