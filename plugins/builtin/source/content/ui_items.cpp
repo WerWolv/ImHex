@@ -439,6 +439,8 @@ namespace hex::plugin::builtin {
 
                 ImGui::PushStyleColor(ImGuiCol_TabSelected, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
                 ImGui::PushStyleColor(ImGuiCol_TabDimmedSelected, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+
+                ImGui::GetCurrentWindow()->WorkRect.Max.x -= 25_scaled;
                 auto providerSelectorVisible = ImGui::BeginTabBar("provider_switcher", ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_AutoSelectNewTabs);
                 ImGui::PopStyleColor(2);
 
