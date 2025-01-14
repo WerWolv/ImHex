@@ -21,180 +21,11 @@ namespace hex::plugin::builtin {
 
     ViewBookmarks::ViewBookmarks() : View::Window("hex.builtin.view.bookmarks.name", ICON_VS_BOOKMARK) {
 
-        // Handle bookmark add requests sent by the API
-        RequestAddBookmark::subscribe(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
-            if (name.empty()) {
-                name = hex::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
-            }
-
-            if (color == 0x00)
-                color = ImGui::GetColorU32(ImGuiCol_Header);
-
-            m_currBookmarkId += 1;
-            u64 bookmarkId = m_currBookmarkId;
-            if (id != nullptr)
-                *id = bookmarkId;
-
-            auto bookmark = ImHexApi::Bookmarks::Entry {
-                region,
-                name,
-                std::move(comment),
-                color,
-                true,
-                bookmarkId
-            };
-
-            m_bookmarks->emplace_back(std::move(bookmark), TextEditor(), true);
-
-            ImHexApi::Provider::markDirty();
-
-            EventBookmarkCreated::post(m_bookmarks->back().entry);
-            EventHighlightingChanged::post();
-        });
-
-        RequestRemoveBookmark::subscribe([this](u64 id) {
-            std::erase_if(m_bookmarks.get(), [id](const auto &bookmark) {
-                return bookmark.entry.id == id;
-            });
-        });
-
-        // Draw hex editor background highlights for bookmarks
-        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
-            std::ignore = data;
-
-            // Check all bookmarks for potential overlaps with the current address
-            std::optional<ImColor> color;
-            for (const auto &bookmark : *m_bookmarks) {
-                if (!bookmark.highlightVisible)
-                    continue;
-
-                if (Region { address, size }.isWithin(bookmark.entry.region)) {
-                    color = blendColors(color, bookmark.entry.color);
-                }
-            }
-
-            return color;
-        });
-
-        // Draw hex editor tooltips for bookmarks
-        ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
-            std::ignore = data;
-
-            // Loop over all bookmarks
-            for (const auto &[bookmark, editor, highlightVisible] : *m_bookmarks) {
-                if (!highlightVisible)
-                    continue;
-
-                // Make sure the bookmark overlaps the currently hovered address
-                if (!Region { address, size }.isWithin(bookmark.region))
-                    continue;
-
-                // Draw tooltip
-                ImGui::BeginTooltip();
-
-                ImGui::PushID(&bookmark);
-                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-
-                    {
-                        // Draw bookmark header
-                        ImGui::ColorButton("##color", ImColor(bookmark.color));
-                        ImGui::SameLine(0, 10);
-                        ImGuiExt::TextFormatted("{} ", bookmark.name);
-
-                        // Draw extra information table when holding down shift
-                        if (ImGui::GetIO().KeyShift) {
-                            ImGui::Indent();
-                            if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-
-                                ImGui::TableNextRow();
-                                ImGui::TableNextColumn();
-
-                                // Draw region
-                                ImGui::TableNextRow();
-                                ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("{}: ", "hex.ui.common.region"_lang.get());
-                                ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ] ", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
-
-                                // Draw comment if it's not empty
-                                if (!bookmark.comment.empty() && bookmark.comment[0] != '\x00') {
-                                    ImGui::TableNextRow();
-                                    ImGui::TableNextColumn();
-                                    ImGuiExt::TextFormatted("{}: ", "hex.builtin.view.bookmarks.header.comment"_lang.get());
-                                    ImGui::TableNextColumn();
-                                    ImGui::PushTextWrapPos(ImGui::CalcTextSize("X").x * 40);
-                                    ImGuiExt::TextFormattedWrapped("{}", bookmark.comment);
-                                    ImGui::PopTextWrapPos();
-                                }
-
-                                ImGui::EndTable();
-                            }
-                            ImGui::Unindent();
-                        }
-                    }
 
 
-                    ImGui::PushStyleColor(ImGuiCol_TableRowBg, bookmark.color);
-                    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, bookmark.color);
-                    ImGui::EndTable();
-                    ImGui::PopStyleColor(2);
-                }
-                ImGui::PopID();
-
-                ImGui::EndTooltip();
-            }
-        });
-
-        // Handle saving / restoring of bookmarks in projects
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "bookmarks.json",
-            .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
-                auto fileContent = tar.readString(basePath);
-                if (fileContent.empty())
-                    return true;
-
-                auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
-                m_bookmarks.get(provider).clear();
-                return this->importBookmarks(provider, data);
-            },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
-                nlohmann::json data;
-
-                bool result = this->exportBookmarks(provider, data);
-                tar.writeString(basePath, data.dump(4));
-
-                return result;
-            }
-        });
-
-        ContentRegistry::Reports::addReportProvider([this](prv::Provider *provider) -> std::string {
-            std::string result;
-
-            const auto &bookmarks = m_bookmarks.get(provider);
-            if (bookmarks.empty())
-                return "";
-
-            result += "## Bookmarks\n\n";
-
-            for (const auto &[bookmark, editor, highlightVisible] : bookmarks) {
-                result += hex::format("### <span style=\"background-color: #{:06X}80\">{} [0x{:04X} - 0x{:04X}]</span>\n\n", hex::changeEndianness(bookmark.color, std::endian::big) >> 8, bookmark.name, bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
-
-                for (const auto &line : hex::splitString(bookmark.comment, "\n"))
-                    result += hex::format("> {}\n", line);
-                result += "\n";
-
-                result += "```\n";
-                result += hex::generateHexView(bookmark.region.getStartAddress(), bookmark.region.getSize(), provider);
-                result += "\n```\n\n";
-            }
-
-            return result;
-        });
-
+        this->registerEvents();
         this->registerMenuItems();
+        this->registerHandlers();
     }
 
     ViewBookmarks::~ViewBookmarks() {
@@ -510,10 +341,15 @@ namespace hex::plugin::builtin {
                     editor.SetShowLineNumbers(!locked);
                     editor.SetShowCursor(!locked);
                     editor.SetShowWhitespaces(false);
+                    editor.SetColorizerEnable(false);
 
-                    if (!locked || (locked && !comment.empty())) {
+                    if (!locked || !comment.empty()) {
                         if (ImGuiExt::BeginSubWindow("hex.builtin.view.bookmarks.header.comment"_lang)) {
                             editor.Render("##comment", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), false);
+                            if (editor.GetWindowFocused())
+                                m_currTextEditor = &editor;
+                            else if (m_currTextEditor == &editor)
+                                m_currTextEditor = nullptr;
                         }
                         ImGuiExt::EndSubWindow();
 
@@ -597,6 +433,46 @@ namespace hex::plugin::builtin {
         return true;
     }
 
+    void ViewBookmarks::registerEvents() {
+        // Handle bookmark add requests sent by the API
+        RequestAddBookmark::subscribe(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
+            if (name.empty()) {
+                name = hex::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
+            }
+
+            if (color == 0x00)
+                color = ImGui::GetColorU32(ImGuiCol_Header);
+
+            m_currBookmarkId += 1;
+            u64 bookmarkId = m_currBookmarkId;
+            if (id != nullptr)
+                *id = bookmarkId;
+
+            auto bookmark = ImHexApi::Bookmarks::Entry {
+                    region,
+                    name,
+                    std::move(comment),
+                    color,
+                    true,
+                    bookmarkId
+            };
+
+            m_bookmarks->emplace_back(std::move(bookmark), TextEditor(), true);
+
+            ImHexApi::Provider::markDirty();
+
+            EventBookmarkCreated::post(m_bookmarks->back().entry);
+            EventHighlightingChanged::post();
+        });
+
+        RequestRemoveBookmark::subscribe([this](u64 id) {
+            std::erase_if(m_bookmarks.get(), [id](const auto &bookmark) {
+                return bookmark.entry.id == id;
+            });
+        });
+
+    }
+
     void ViewBookmarks::registerMenuItems() {
         /* Create bookmark */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, ICON_VS_BOOKMARK, 1900, CTRLCMD + Keys::B, [&] {
@@ -633,6 +509,312 @@ namespace hex::plugin::builtin {
         }, [this]{
             return ImHexApi::Provider::isValid() && !m_bookmarks->empty();
         });
+    }
+
+    void ViewBookmarks::registerHandlers() {
+        // Draw hex editor background highlights for bookmarks
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
+            std::ignore = data;
+
+            // Check all bookmarks for potential overlaps with the current address
+            std::optional<ImColor> color;
+            for (const auto &bookmark : *m_bookmarks) {
+                if (!bookmark.highlightVisible)
+                    continue;
+
+                if (Region { address, size }.isWithin(bookmark.entry.region)) {
+                    color = blendColors(color, bookmark.entry.color);
+                }
+            }
+
+            return color;
+        });
+
+        // Draw hex editor tooltips for bookmarks
+        ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
+            std::ignore = data;
+
+            // Loop over all bookmarks
+            for (const auto &[bookmark, editor, highlightVisible] : *m_bookmarks) {
+                if (!highlightVisible)
+                    continue;
+
+                // Make sure the bookmark overlaps the currently hovered address
+                if (!Region { address, size }.isWithin(bookmark.region))
+                    continue;
+
+                // Draw tooltip
+                ImGui::BeginTooltip();
+
+                ImGui::PushID(&bookmark);
+                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
+                    {
+                        // Draw bookmark header
+                        ImGui::ColorButton("##color", ImColor(bookmark.color));
+                        ImGui::SameLine(0, 10);
+                        ImGuiExt::TextFormatted("{} ", bookmark.name);
+
+                        // Draw extra information table when holding down shift
+                        if (ImGui::GetIO().KeyShift) {
+                            ImGui::Indent();
+                            if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+
+                                // Draw region
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormatted("{}: ", "hex.ui.common.region"_lang.get());
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ] ", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
+
+                                // Draw comment if it's not empty
+                                if (!bookmark.comment.empty() && bookmark.comment[0] != '\x00') {
+                                    ImGui::TableNextRow();
+                                    ImGui::TableNextColumn();
+                                    ImGuiExt::TextFormatted("{}: ", "hex.builtin.view.bookmarks.header.comment"_lang.get());
+                                    ImGui::TableNextColumn();
+                                    ImGui::PushTextWrapPos(ImGui::CalcTextSize("X").x * 40);
+                                    ImGuiExt::TextFormattedWrapped("{}", bookmark.comment);
+                                    ImGui::PopTextWrapPos();
+                                }
+
+                                ImGui::EndTable();
+                            }
+                            ImGui::Unindent();
+                        }
+                    }
+
+
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBg, bookmark.color);
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, bookmark.color);
+                    ImGui::EndTable();
+                    ImGui::PopStyleColor(2);
+                }
+                ImGui::PopID();
+
+                ImGui::EndTooltip();
+            }
+        });
+
+        // Handle saving / restoring of bookmarks in projects
+        ProjectFile::registerPerProviderHandler({
+                                                        .basePath = "bookmarks.json",
+                                                        .required = false,
+                                                        .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
+                                                            auto fileContent = tar.readString(basePath);
+                                                            if (fileContent.empty())
+                                                                return true;
+
+                                                            auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
+                                                            m_bookmarks.get(provider).clear();
+                                                            return this->importBookmarks(provider, data);
+                                                        },
+                                                        .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
+                                                            nlohmann::json data;
+
+                                                            bool result = this->exportBookmarks(provider, data);
+                                                            tar.writeString(basePath, data.dump(4));
+
+                                                            return result;
+                                                        }
+                                                });
+
+        ContentRegistry::Reports::addReportProvider([this](prv::Provider *provider) -> std::string {
+            std::string result;
+
+            const auto &bookmarks = m_bookmarks.get(provider);
+            if (bookmarks.empty())
+                return "";
+
+            result += "## Bookmarks\n\n";
+
+            for (const auto &[bookmark, editor, highlightVisible] : bookmarks) {
+                result += hex::format("### <span style=\"background-color: #{:06X}80\">{} [0x{:04X} - 0x{:04X}]</span>\n\n", hex::changeEndianness(bookmark.color, std::endian::big) >> 8, bookmark.name, bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
+
+                for (const auto &line : hex::splitString(bookmark.comment, "\n"))
+                    result += hex::format("> {}\n", line);
+                result += "\n";
+
+                result += "```\n";
+                result += hex::generateHexView(bookmark.region.getStartAddress(), bookmark.region.getSize(), provider);
+                result += "\n```\n\n";
+            }
+
+            return result;
+        });
+
+
+
+        //   ShortcutManager::addShortcut(this, CTRLCMD + Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.copy", [this] {
+        //       editor.Copy();
+        //   });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.copy", [this] {
+            if (m_currTextEditor) m_currTextEditor->Copy();
+        });
+
+        //   ShortcutManager::addShortcut(this, SHIFT + Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.paste", [this] {
+        //            if (m_currTextEditor) editor.Paste();
+        //    });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::V + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.paste", [this] {
+            if (m_currTextEditor) m_currTextEditor->Paste();
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::X + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.cut", [this] {
+            if (m_currTextEditor)  m_currTextEditor->Cut();
+        });
+
+        //  ShortcutManager::addShortcut(this, SHIFT + Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.cut", [this] {
+        //if (m_currTextEditor)  m_currTextEditor.Cut();
+        //  });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Z + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.undo", [this] {
+            if (m_currTextEditor) m_currTextEditor->Undo();
+        });
+
+        //  ShortcutManager::addShortcut(this, ALT + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.undo", [this] {
+        //            if (m_currTextEditor)  m_currTextEditor.Undo();
+        //  });
+
+        ShortcutManager::addShortcut(this, Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete", [this] {
+            if (m_currTextEditor) m_currTextEditor->Delete();
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Y + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.redo", [this] {
+            if (m_currTextEditor) m_currTextEditor->Redo();
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::A + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_all", [this] {
+            if (m_currTextEditor) m_currTextEditor->SelectAll();
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_right", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveRight(1, true, false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_right", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveRight(1, true, true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_left", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveLeft(1, true, false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_left", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveLeft(1, true, true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_up", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveUp(1, true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT +Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_up", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveUp(m_currTextEditor->GetPageSize()-4, true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_down", [this] {
+            if (m_currTextEditor)  m_currTextEditor->MoveDown(1, true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT +Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_down", [this] {
+            if (m_currTextEditor)  m_currTextEditor->MoveDown(m_currTextEditor->GetPageSize()-4, true);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_top", [this] {
+            if (m_currTextEditor)  m_currTextEditor->MoveTop(true);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_bottom", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveBottom(true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_home", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveHome(true);
+        });
+
+        ShortcutManager::addShortcut(this, SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_end", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveEnd(true);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_right", [this] {
+            if (m_currTextEditor)   m_currTextEditor->DeleteWordRight();
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_left", [this] {
+            if (m_currTextEditor) m_currTextEditor->DeleteWordLeft();
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.backspace", [this] {
+            if (m_currTextEditor)  m_currTextEditor->Backspace();
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.toggle_insert", [this] {
+            if (m_currTextEditor) m_currTextEditor->SetOverwrite(!m_currTextEditor->IsOverwrite());
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_right", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveRight(1, false, true);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_right", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveRight(1, false, false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_left", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveLeft(1, false, true);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_left", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveLeft(1, false, false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_up", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveUp(1, false);
+        });
+
+        ShortcutManager::addShortcut(this, ALT + Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_up", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveUp(-1, false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_up", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveUp(m_currTextEditor->GetPageSize()-4, false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_down", [this] {
+            if (m_currTextEditor)  m_currTextEditor->MoveDown(1, false);
+        });
+
+        ShortcutManager::addShortcut(this, ALT+ Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_down", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveDown(-1, false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_down", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveDown(m_currTextEditor->GetPageSize()-4, false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_top", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveTop(false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_bottom", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveBottom(false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_home", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveHome(false);
+        });
+
+        ShortcutManager::addShortcut(this, Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_end", [this] {
+            if (m_currTextEditor) m_currTextEditor->MoveEnd(false);
+        });
+
+
     }
 
 }
