@@ -721,11 +721,11 @@ namespace hex::plugin::builtin {
             }
 
         private:
-            constexpr static float pixelsToPoints(float pixels) {
+            static float pixelsToPoints(float pixels) {
                 return pixels * (72_scaled / 96.0F);
             }
 
-            constexpr static float pointsToPixels(float points) {
+            static float pointsToPixels(float points) {
                 return points / (72_scaled / 96.0F);
             }
         };
