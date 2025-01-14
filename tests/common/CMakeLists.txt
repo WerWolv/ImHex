@@ -5,4 +5,8 @@ project(tests_common)
 add_library(tests_common STATIC
         source/main.cpp
 )
+
 target_link_libraries(tests_common PUBLIC libimhex ${FMT_LIBRARIES} libwolv)
+add_dependencies(unit_tests ${PROJECT_NAME})
+
+target_compile_definitions(tests_common PUBLIC IMHEX_PROJECT_NAME="${PROJECT_NAME}")
