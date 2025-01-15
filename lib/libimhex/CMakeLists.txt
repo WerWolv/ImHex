@@ -50,6 +50,7 @@ set(LIBIMHEX_SOURCES
         source/ui/view.cpp
         source/ui/popup.cpp
         source/ui/toast.cpp
+        source/ui/banner.cpp
 
         source/subcommands/subcommands.cpp
 )

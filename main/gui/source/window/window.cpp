@@ -1,4 +1,5 @@
 #include "window.hpp"
+#include "hex/ui/banner.hpp"
 
 #include <hex.hpp>
 
@@ -550,6 +551,44 @@ namespace hex {
 
             std::erase_if(impl::ToastBase::getQueuedToasts(), [](const auto &toast){
                 return toast->getAppearTime() > 0 && (toast->getAppearTime() + impl::ToastBase::VisibilityTime) < ImGui::GetTime();
+            });
+        }
+
+        // Draw Banners
+        {
+            const bool onWelcomeScreen = !ImHexApi::Provider::isValid();
+
+            float startY = (ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0F) * (onWelcomeScreen ? 2 : 3);
+            const auto height = 30_scaled;
+
+            for (const auto &banner : impl::BannerBase::getOpenBanners() | std::views::take(5)) {
+                ImGui::PushID(banner.get());
+                {
+                    ImGui::SetNextWindowPos(ImVec2(1_scaled, startY));
+                    ImGui::SetNextWindowSize(ImVec2(ImHexApi::System::getMainWindowSize().x - 2_scaled, height));
+                    ImGui::PushStyleColor(ImGuiCol_WindowBg, banner->getColor().Value);
+                    if (ImGui::Begin("##Banner", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
+                        if (ImGui::BeginChild("##Content", ImGui::GetContentRegionAvail() - ImVec2(20_scaled, 0))) {
+                            banner->draw();
+                        }
+                        ImGui::EndChild();
+
+                        ImGui::SameLine();
+
+                        if (ImGui::CloseButton(ImGui::GetID("BannerCloseButton"), ImGui::GetCursorScreenPos())) {
+                            banner->close();
+                        }
+                    }
+                    ImGui::End();
+                    ImGui::PopStyleColor();
+                }
+                ImGui::PopID();
+
+                startY += height;
+            }
+
+            std::erase_if(impl::BannerBase::getOpenBanners(), [](const auto &banner) {
+                return banner->shouldClose();
             });
         }
 
