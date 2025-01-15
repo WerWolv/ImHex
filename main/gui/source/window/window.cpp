@@ -934,17 +934,24 @@ namespace hex {
                 ) {
                     unlockFrameRate(window);
 
-                    if (!(mods & GLFW_MOD_NUM_LOCK)) {
-                        if (key == GLFW_KEY_KP_0) key = GLFW_KEY_INSERT;
-                        else if (key == GLFW_KEY_KP_1) key = GLFW_KEY_END;
-                        else if (key == GLFW_KEY_KP_2) key = GLFW_KEY_DOWN;
-                        else if (key == GLFW_KEY_KP_3) key = GLFW_KEY_PAGE_DOWN;
-                        else if (key == GLFW_KEY_KP_4) key = GLFW_KEY_LEFT;
-                        else if (key == GLFW_KEY_KP_6) key = GLFW_KEY_RIGHT;
-                        else if (key == GLFW_KEY_KP_7) key = GLFW_KEY_HOME;
-                        else if (key == GLFW_KEY_KP_8) key = GLFW_KEY_UP;
-                        else if (key == GLFW_KEY_KP_9) key = GLFW_KEY_PAGE_UP;
-                    }
+                    // Windows and Linux use the numpad for special actions when NumLock is disabled such as arrow keys or
+                    // the insert, home and end keys. GLFW however still returns the original numpad keys that are being pressed.
+                    // Translate them here to the desired keys.
+                    // macOS doesn't seem to have the concept of NumLock at all. They repurposed it as the "Clear" key so this
+                    // conversion makes no sense there.
+                    #if !defined(OS_MACOS)
+                        if (!(mods & GLFW_MOD_NUM_LOCK)) {
+                            if (key == GLFW_KEY_KP_0) key = GLFW_KEY_INSERT;
+                            else if (key == GLFW_KEY_KP_1) key = GLFW_KEY_END;
+                            else if (key == GLFW_KEY_KP_2) key = GLFW_KEY_DOWN;
+                            else if (key == GLFW_KEY_KP_3) key = GLFW_KEY_PAGE_DOWN;
+                            else if (key == GLFW_KEY_KP_4) key = GLFW_KEY_LEFT;
+                            else if (key == GLFW_KEY_KP_6) key = GLFW_KEY_RIGHT;
+                            else if (key == GLFW_KEY_KP_7) key = GLFW_KEY_HOME;
+                            else if (key == GLFW_KEY_KP_8) key = GLFW_KEY_UP;
+                            else if (key == GLFW_KEY_KP_9) key = GLFW_KEY_PAGE_UP;
+                        }
+                    #endif
 
                     auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
                     win->m_pressedKeys.push_back(key);
