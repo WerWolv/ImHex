@@ -694,16 +694,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextColumn();
 
-                static int findFlags = ImGuiInputTextFlags_None;
-                if (requestFocus && m_findHistoryIndex == m_findHistorySize)
-                    findFlags |= ImGuiInputTextFlags_AutoSelectAll;
-                else
-                    findFlags &= ~ImGuiInputTextFlags_AutoSelectAll;
-
-                if (m_findHistoryIndex != m_findHistorySize && requestFocusFind ) {
-                    findFlags |= ImGuiInputTextFlags_ReadOnly;
-                } else
-                    findFlags &= ~ImGuiInputTextFlags_ReadOnly;
+                static int findFlags = ImGuiInputTextFlags_EnterReturnsTrue;
 
                 std::string hint = "hex.builtin.view.pattern_editor.find_hint"_lang.operator std::string();
                 if (m_findHistorySize > 0) {
@@ -739,6 +730,8 @@ namespace hex::plugin::builtin {
                     findWord = m_findHistory[m_findHistoryIndex];
                     findReplaceHandler->SetFindWord(textEditor,findWord);
                     position = findReplaceHandler->FindPosition(textEditor,textEditor->GetCursorPosition(), true);
+                    if (ImGuiInputTextState* input_state = ImGui::GetInputTextState(ImGui::GetID("###findInputTextWidget")))
+                        input_state->ReloadUserBufAndMoveToEnd();
                     count = findReplaceHandler->GetMatches().size();
                     updateCount = true;
                     requestFocusFind = true;
@@ -805,12 +798,12 @@ namespace hex::plugin::builtin {
                         counterString = "hex.builtin.view.pattern_editor.no_results"_lang.operator std::string();
                     else {
                         if (position > 1999)
-                            counterString = "?";
+                            counterString = "? ";
                         else
                             counterString = hex::format("{} ", position);
                         counterString += "hex.builtin.view.pattern_editor.of"_lang.operator const char *();
                         if (count > 1999)
-                            counterString += "1999+";
+                            counterString += " 1999+";
                         else
                             counterString += hex::format(" {}", count);
                     }
@@ -842,11 +835,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
 
-                    static int replaceFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
-                    if (m_replaceHistoryIndex != m_replaceHistorySize && requestFocusReplace) {
-                        replaceFlags |= ImGuiInputTextFlags_ReadOnly;
-                    } else
-                        replaceFlags &= ~ImGuiInputTextFlags_ReadOnly;
+                    static int replaceFlags = ImGuiInputTextFlags_EnterReturnsTrue;
 
                     hint = "hex.builtin.view.pattern_editor.replace_hint"_lang.operator std::string();
                     if (m_replaceHistorySize > 0) {
@@ -869,12 +858,7 @@ namespace hex::plugin::builtin {
                                 if (position == count)
                                     position -= 1;
                                 count -= 1;
-                                if (count == 0)
-                                    requestFocusFind = true;
-                                else
-                                    requestFocusReplace = true;
-                            } else
-                                requestFocusFind = true;
+                            }
                             updateCount = true;
                         }
 
@@ -885,6 +869,7 @@ namespace hex::plugin::builtin {
                             enterPressedFind = false;
                             requestFocusFind = false;
                         }
+                        requestFocusReplace = true;
                     }
 
                     if (requestFocus || requestFocusReplace) {
@@ -901,7 +886,8 @@ namespace hex::plugin::builtin {
 
                         replaceWord = m_replaceHistory[m_replaceHistoryIndex];
                         findReplaceHandler->SetReplaceWord(replaceWord);
-
+                        if (ImGuiInputTextState* input_state = ImGui::GetInputTextState(ImGui::GetID("###replaceInputTextWidget")))
+                            input_state->ReloadUserBufAndMoveToEnd();
                         requestFocusReplace = true;
                     }
 
