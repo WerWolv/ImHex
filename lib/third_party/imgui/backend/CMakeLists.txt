@@ -1,20 +1,20 @@
 cmake_minimum_required(VERSION 3.16)
-# https://github.com/ocornut/imgui with custom modifications made to the OpenGL 3 and GLFW backends
-project(imgui_custom)
+# https://github.com/ocornut/imgui backends with custom modifications made to the OpenGL 3 and GLFW backends
+project(imgui_backend)
 
 set(CMAKE_CXX_STANDARD 17)
 
 if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
-    add_library(imgui_custom OBJECT
+    add_library(imgui_backend OBJECT
         source/imgui_impl_opengl3.cpp
         source/imgui_impl_glfw.cpp
     )
 
-    target_include_directories(imgui_custom PUBLIC
+    target_include_directories(imgui_backend PUBLIC
         include
     )
 
-    target_link_libraries(imgui_custom PRIVATE imgui_includes)
+    target_link_libraries(imgui_backend PRIVATE imgui_includes)
 
     find_package(OpenGL REQUIRED)
     find_package(Freetype REQUIRED)
@@ -35,9 +35,9 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         set(GLFW_LIBRARIES "glfw3")
     endif ()
 
-    target_include_directories(imgui_custom PUBLIC ${FREETYPE_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
-    target_link_directories(imgui_custom PUBLIC ${FREETYPE_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
-    target_link_libraries(imgui_custom PUBLIC ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES})
+    target_include_directories(imgui_backend PUBLIC ${FREETYPE_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
+    target_link_directories(imgui_backend PUBLIC ${FREETYPE_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
+    target_link_libraries(imgui_backend PUBLIC ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES})
 endif()
 
 target_include_directories(imgui_all_includes INTERFACE include)
