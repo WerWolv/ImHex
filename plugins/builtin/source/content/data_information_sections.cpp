@@ -42,7 +42,9 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{}", name);
                     ImGui::TableNextColumn();
+                    ImGui::PushID(name.c_str());
                     ImGuiExt::TextFormattedWrappedSelectable("{}", value);
+                    ImGui::PopID();
                 }
 
                 ImGui::TableNextColumn();
