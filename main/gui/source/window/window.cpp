@@ -558,13 +558,14 @@ namespace hex {
         {
             const bool onWelcomeScreen = !ImHexApi::Provider::isValid();
 
-            float startY = (ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0F) * (onWelcomeScreen ? 2 : 3);
+            const auto windowPos = ImHexApi::System::getMainWindowPosition();
+            float startY = windowPos.y + ((ImGui::GetTextLineHeight() + (ImGui::GetStyle().FramePadding.y * 2.0F)) * (onWelcomeScreen ? 2 : 3));
             const auto height = 30_scaled;
 
             for (const auto &banner : impl::BannerBase::getOpenBanners() | std::views::take(5)) {
                 ImGui::PushID(banner.get());
                 {
-                    ImGui::SetNextWindowPos(ImVec2(1_scaled, startY));
+                    ImGui::SetNextWindowPos(ImVec2(windowPos.x + 1_scaled, startY));
                     ImGui::SetNextWindowSize(ImVec2(ImHexApi::System::getMainWindowSize().x - 2_scaled, height));
                     ImGui::PushStyleColor(ImGuiCol_WindowBg, banner->getColor().Value);
                     if (ImGui::Begin("##Banner", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
