@@ -1,5 +1,7 @@
 #include <hex.hpp>
 
+#include <clocale>
+
 #include <hex/helpers/logger.hpp>
 
 #include "window.hpp"
