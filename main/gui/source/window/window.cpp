@@ -524,7 +524,7 @@ namespace hex {
             for (const auto &toast : impl::ToastBase::getQueuedToasts() | std::views::take(4)) {
                 const auto toastHeight = 60_scaled;
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5_scaled);
-                ImGui::SetNextWindowSize(ImVec2(280_scaled, toastHeight));
+                ImGui::SetNextWindowSize(ImVec2(350_scaled, toastHeight));
                 ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }) - scaled({ 0, (10 + toastHeight) * index }), ImGuiCond_Always, ImVec2(1, 1));
                 if (ImGui::Begin(hex::format("##Toast_{}", index).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
                     auto drawList = ImGui::GetWindowDrawList();
@@ -565,9 +565,18 @@ namespace hex {
             for (const auto &banner : impl::BannerBase::getOpenBanners() | std::views::take(5)) {
                 ImGui::PushID(banner.get());
                 {
+                    auto &style = ImGui::GetStyle();
                     ImGui::SetNextWindowPos(ImVec2(windowPos.x + 1_scaled, startY));
                     ImGui::SetNextWindowSize(ImVec2(ImHexApi::System::getMainWindowSize().x - 2_scaled, height));
                     ImGui::PushStyleColor(ImGuiCol_WindowBg, banner->getColor().Value);
+                    auto prevShadowOffset = style.WindowShadowOffsetDist;
+                    auto prevShadowAngle = style.WindowShadowOffsetAngle;
+                    style.WindowShadowOffsetDist = 12_scaled;
+                    style.WindowShadowOffsetAngle =  0.5 * std::numbers::pi;
+                    ON_SCOPE_EXIT {
+                        style.WindowShadowOffsetDist = prevShadowOffset;
+                        style.WindowShadowOffsetAngle = prevShadowAngle;
+                    };
                     if (ImGui::Begin("##Banner", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
                         if (ImGui::BeginChild("##Content", ImGui::GetContentRegionAvail() - ImVec2(20_scaled, 0))) {
                             banner->draw();
