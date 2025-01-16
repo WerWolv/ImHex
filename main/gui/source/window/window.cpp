@@ -21,6 +21,7 @@
 
 #include <chrono>
 #include <csignal>
+#include <numbers>
 
 #include <romfs/romfs.hpp>
 
