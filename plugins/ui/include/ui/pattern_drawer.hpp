@@ -10,6 +10,7 @@
 #include <pl/formatters.hpp>
 
 #include <set>
+#include <pl/patterns/pattern_error.hpp>
 
 struct ImGuiTableSortSpecs;
 
@@ -64,6 +65,7 @@ namespace hex::ui {
         void visit(pl::ptrn::PatternUnsigned& pattern) override;
         void visit(pl::ptrn::PatternWideCharacter& pattern) override;
         void visit(pl::ptrn::PatternWideString& pattern) override;
+        void visit(pl::ptrn::PatternError& pattern) override;
         void visit(pl::ptrn::Pattern& pattern) override;
 
     private:

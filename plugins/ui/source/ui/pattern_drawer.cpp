@@ -984,6 +984,15 @@ namespace hex::ui {
         }
     }
 
+    void PatternDrawer::visit(pl::ptrn::PatternError& pattern) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerError));
+        createDefaultEntry(pattern);
+        drawValueColumn(pattern);
+        drawCommentColumn(pattern);
+        ImGui::PopStyleColor();
+    }
+
+
     void PatternDrawer::visit(pl::ptrn::Pattern& pattern) {
         createDefaultEntry(pattern);
         drawValueColumn(pattern);
