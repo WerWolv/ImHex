@@ -8,6 +8,8 @@
 #include <nlohmann/json.hpp>
 
 #include "content/command_line_interface.hpp"
+#include <banners/banner_icon.hpp>
+#include <fonts/vscode_icons.hpp>
 
 using namespace hex;
 
@@ -129,4 +131,9 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     createWelcomeScreen();
 
     setupOutOfBoxExperience();
+
+    // Show a warning banner on debug builds
+    #if defined(DEBUG)
+        ui::BannerIcon::open(ICON_VS_ERROR, "You're running a Debug build of ImHex. Performance will be degraded!", ImColor(153, 58, 58));
+    #endif
 }
