@@ -1476,7 +1476,7 @@ namespace hex::plugin::builtin {
                 TextEditor::ErrorMarkers errorMarkers;
                 if (!(*m_callStack)->empty()) {
                     for (const auto &frame : **m_callStack | std::views::reverse) {
-                        auto location = frame->getLocation();
+                        auto location = frame.node->getLocation();
                         std::string message;
                         if (location.source != nullptr && location.source->mainSource) {
                             if (m_lastEvaluationError->has_value())
