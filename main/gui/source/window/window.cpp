@@ -560,8 +560,15 @@ namespace hex {
             const bool onWelcomeScreen = !ImHexApi::Provider::isValid();
 
             const auto windowPos = ImHexApi::System::getMainWindowPosition();
-            float startY = windowPos.y + ((ImGui::GetTextLineHeight() + (ImGui::GetStyle().FramePadding.y * 2.0F)) * (onWelcomeScreen ? 2 : 3));
+            float startY = windowPos.y + ImGui::GetTextLineHeight() + ((ImGui::GetTextLineHeight() + (ImGui::GetStyle().FramePadding.y * 2.0F)) * (onWelcomeScreen ? 1 : 2));
             const auto height = 30_scaled;
+
+            // Offset banner based on the size of the title bar. On macOS it's slightly taller
+            #if defined(OS_MACOS)
+                startY += 2 * 8_scaled;
+            #else
+                startY += 2 * ImGui::GetStyle().FramePadding.y;
+            #endif
 
             for (const auto &banner : impl::BannerBase::getOpenBanners() | std::views::take(5)) {
                 ImGui::PushID(banner.get());
