@@ -206,7 +206,7 @@ namespace hex::plugin::builtin {
                 object->setEntries(patterns);
 
                 return object;
-            } catch (const nlohmann::json::exception &e) {
+            } catch (const std::exception &e) {
                 pl::core::err::E0012.throwError(e.what());
             }
         }
