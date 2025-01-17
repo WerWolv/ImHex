@@ -1,3 +1,15 @@
+# Some libraries we use set the BUILD_SHARED_LIBS variable to ON, which causes CMake to
+# display a warning about options being set using set() instead of option().
+# Explicitly set the policy to NEW to suppress the warning.
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
+set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+
+set(CMAKE_POLICY_DEFAULT_CMP0177 OLD)
+cmake_policy(SET CMP0177 OLD)
+
+set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
+
 include(FetchContent)
 
 if(IMHEX_STRIP_RELEASE)
@@ -370,15 +382,6 @@ macro(configureCMake)
             message(WARNING "LTO is not supported: ${output_error}")
         endif ()
     endif ()
-
-    # Some libraries we use set the BUILD_SHARED_LIBS variable to ON, which causes CMake to
-    # display a warning about options being set using set() instead of option().
-    # Explicitly set the policy to NEW to suppress the warning.
-    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-
-    set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
-
-    set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
 endmacro()
 
 function(configureProject)
@@ -800,7 +803,7 @@ function(generatePDBs)
             URL "https://github.com/rainers/cv2pdb/releases/download/v0.52/cv2pdb-0.52.zip"
             DOWNLOAD_EXTRACT_TIMESTAMP ON
     )
-    FetchContent_Populate(cv2pdb)
+    FetchContent_MakeAvailable(cv2pdb)
 
     set(PDBS_TO_GENERATE main main-forwarder libimhex ${PLUGINS} libpl)
     foreach (PDB ${PDBS_TO_GENERATE})
