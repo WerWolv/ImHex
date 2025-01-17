@@ -81,7 +81,6 @@ if (IMHEX_ENABLE_UNIT_TESTS)
 endif ()
 
 # Configure more resources that will be added to the install package
-generatePDBs()
 generateSDKDirectory()
 
 # Handle package generation
