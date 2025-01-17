@@ -14,29 +14,28 @@ AppDir:
     - "{{ARCHITECTURE_PACKAGE}}"
     allow_unauthenticated: true
     sources:
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular main restricted
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular-updates main restricted
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular universe
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular-updates universe
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular multiverse
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular-updates multiverse
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular-backports main restricted
-        universe multiverse
-    - sourceline: deb http://security.ubuntu.com/ubuntu oracular-security main restricted
-    - sourceline: deb http://security.ubuntu.com/ubuntu oracular-security universe
-    - sourceline: deb http://security.ubuntu.com/ubuntu oracular-security multiverse
+    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular main restricted
+    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular-updates main restricted
+    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular universe
+    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular-updates universe
+    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular multiverse
+    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular-updates multiverse
+    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular-backports main restricted universe multiverse
+    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://security.ubuntu.com/ubuntu oracular-security main restricted
+    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://security.ubuntu.com/ubuntu oracular-security universe
+    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://security.ubuntu.com/ubuntu oracular-security multiverse
     include:
     - librsvg2-common
-    - libbz2-1.0:{{ARCHITECTURE_PACKAGE}}
-    - libcap2:{{ARCHITECTURE_PACKAGE}}
-    - libdbus-1-3:{{ARCHITECTURE_PACKAGE}}
-    - libfontconfig1:{{ARCHITECTURE_PACKAGE}}
-    - libgpg-error0:{{ARCHITECTURE_PACKAGE}}
-    - liblzma5:{{ARCHITECTURE_PACKAGE}}
-    - libnss-mdns:{{ARCHITECTURE_PACKAGE}}
-    - libpcre3:{{ARCHITECTURE_PACKAGE}}
-    - libselinux1:{{ARCHITECTURE_PACKAGE}}
-    - libtinfo6:{{ARCHITECTURE_PACKAGE}}
+    - libbz2-1.0
+    - libcap2
+    - libdbus-1-3
+    - libfontconfig1
+    - libgpg-error0
+    - liblzma5
+    - libnss-mdns
+    - libpcre3
+    - libselinux1
+    - libtinfo6
   files:
     include:
     - /lib/x86_64-linux-gnu/libLLVM-13.so.1
