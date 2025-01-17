@@ -128,4 +128,6 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %{_datadir}/mime/packages/%{name}.xml
 %{_libdir}/libimhex.so*
 %{_libdir}/%{name}/
+%{_libdir}/*.hexpluglib
+/usr/lib/debug/%{_libdir}/*.debug
 %{_metainfodir}/net.werwolv.%{name}.metainfo.xml
