@@ -14,16 +14,8 @@ AppDir:
     - "{{ARCHITECTURE_PACKAGE}}"
     allow_unauthenticated: true
     sources:
-    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular main restricted
-    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular-updates main restricted
-    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular universe
-    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular-updates universe
-    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular multiverse
-    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular-updates multiverse
-    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://us.archive.ubuntu.com/ubuntu/ oracular-backports main restricted universe multiverse
-    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://security.ubuntu.com/ubuntu oracular-security main restricted
-    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://security.ubuntu.com/ubuntu oracular-security universe
-    - sourceline: deb [arch={{ARCHITECTURE_PACKAGE}}] http://security.ubuntu.com/ubuntu oracular-security multiverse
+    - sourceline: 'deb [arch=amd64] http://us.archive.ubuntu.com/ubuntu/ oracular main restricted universe multiverse'
+    - sourceline: 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ oracular main restricted universe multiverse'
     include:
     - librsvg2-common
     - libbz2-1.0
