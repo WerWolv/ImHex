@@ -912,6 +912,7 @@ namespace hex {
                     ImGui::GetIO().MousePos = ImVec2();
                 }
             #elif defined(OS_WEB)
+                auto win = static_cast<Window *>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
                 win->fullFrame();
             #endif
         });
