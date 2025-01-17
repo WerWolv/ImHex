@@ -877,6 +877,12 @@ function(generateSDKDirectory)
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake DESTINATION "${SDK_PATH}/cmake")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/cmake/sdk/ DESTINATION "${SDK_PATH}")
     install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_PATH}/lib")
+
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/ui DESTINATION "${SDK_PATH}/lib" PATTERN "**/source/*" EXCLUDE)
+    install(TARGETS ui ARCHIVE DESTINATION "${SDK_PATH}/lib")
+
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/fonts DESTINATION "${SDK_PATH}/lib" PATTERN "**/source/*" EXCLUDE)
+    install(TARGETS fonts ARCHIVE DESTINATION "${SDK_PATH}/lib")
 endfunction()
 
 function(addIncludesFromLibrary target library)
