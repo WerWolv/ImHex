@@ -255,7 +255,7 @@ jobs:
       run: |
         brew reinstall python --quiet || true
         brew link --overwrite --quiet python 2>/dev/null || true
-        brew bundle --no-lock --quiet --file dist/Brewfile || true
+        brew bundle --no-lock --quiet --file dist/macOS/Brewfile || true
         rm -rf /usr/local/Cellar/capstone
 
     - name: ⬇️ Install classic glfw
@@ -626,7 +626,7 @@ jobs:
 
       - name: 🛠️ Build using docker
         run: |
-          docker buildx build . -f dist/appimage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
+          docker buildx build . -f dist/AppImage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
           --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" \
           --build-arg "ARCHITECTURE_PACKAGE=${{ matrix.architecture_package }}" --build-arg "ARCHITECTURE_FILE_NAME=${{ matrix.architecture }}" --output out
 

@@ -80,7 +80,7 @@ pip3 install git+https://github.com/AppImageCrafters/appimage-builder@f38699e
 export VERSION=$(cat /imhex/VERSION)
 export ARCHITECTURE_PACKAGE=${ARCHITECTURE_PACKAGE}
 export ARCHITECTURE_FILE_NAME=${ARCHITECTURE_FILE_NAME}
-appimage-builder --recipe /imhex/dist/AppImageBuilder.yml
+appimage-builder --recipe /imhex/dist/AppImage/AppImageBuilder.yml
 EOF
 
 FROM scratch
