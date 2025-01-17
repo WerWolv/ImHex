@@ -874,19 +874,32 @@ namespace hex {
             glfwSetWindowSize(m_window, width, height);
         }
 
+        static const auto unlockFrameRate = [](GLFWwindow *, auto ...) {
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
+            if (win == nullptr)
+                return;
+
+            win->m_unlockFrameRate = true;
+        };
+
+        static const auto isMainWindow = [](GLFWwindow *window) {
+            return window == ImHexApi::System::getMainWindowHandle();
+        };
+
         // Register window move callback
         glfwSetWindowPosCallback(m_window, [](GLFWwindow *window, int x, int y) {
-            ImHexApi::System::impl::setMainWindowPosition(x, y);
+            unlockFrameRate(window);
 
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->m_unlockFrameRate = true;
-            win->fullFrame();
+            if (!isMainWindow(window)) return;
+
+            ImHexApi::System::impl::setMainWindowPosition(x, y);
         });
 
         // Register window resize callback
         glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, [[maybe_unused]] int width, [[maybe_unused]] int height) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->m_unlockFrameRate = true;
+            unlockFrameRate(window);
+
+            if (!isMainWindow(window)) return;
 
             #if !defined(OS_WINDOWS)
                 if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
@@ -902,11 +915,6 @@ namespace hex {
                 win->fullFrame();
             #endif
         });
-
-        static const auto unlockFrameRate = [](GLFWwindow *window, auto ...) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->m_unlockFrameRate = true;
-        };
 
         glfwSetCursorPosCallback(m_window, unlockFrameRate);
         glfwSetMouseButtonCallback(m_window, unlockFrameRate);
@@ -971,14 +979,18 @@ namespace hex {
                         }
                     #endif
 
-                    auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-                    win->m_pressedKeys.push_back(key);
+                    auto win = static_cast<Window *>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
+                    win->m_pressedKeys.insert(key);
                 }
             }
         });
 
         // Register window close callback
         glfwSetWindowCloseCallback(m_window, [](GLFWwindow *window) {
+            unlockFrameRate(window);
+
+            if (!isMainWindow(window)) return;
+
             EventWindowClosing::post(window);
         });
 
@@ -1139,6 +1151,8 @@ namespace hex {
         #else
             ImGui_ImplOpenGL3_Init("#version 130");
         #endif
+
+        ImGui_ImplGlfw_SetCallbacksChainForAllWindows(true);
 
         for (const auto &plugin : PluginManager::getPlugins())
             plugin.setImGuiContext(ImGui::GetCurrentContext());
