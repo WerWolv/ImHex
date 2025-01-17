@@ -11,32 +11,23 @@ AppDir:
     exec_args: $@
   apt:
     arch:
-    - amd64
+    - "{{ARCHITECTURE_PACKAGE}}"
     allow_unauthenticated: true
     sources:
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular main restricted
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular-updates main restricted
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular universe
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular-updates universe
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular multiverse
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular-updates multiverse
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular-backports main restricted
-        universe multiverse
-    - sourceline: deb http://security.ubuntu.com/ubuntu oracular-security main restricted
-    - sourceline: deb http://security.ubuntu.com/ubuntu oracular-security universe
-    - sourceline: deb http://security.ubuntu.com/ubuntu oracular-security multiverse
+    - sourceline: 'deb [arch=amd64] http://us.archive.ubuntu.com/ubuntu/ oracular main restricted universe multiverse'
+    - sourceline: 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ oracular main restricted universe multiverse'
     include:
     - librsvg2-common
-    - libbz2-1.0:amd64
-    - libcap2:amd64
-    - libdbus-1-3:amd64
-    - libfontconfig1:amd64
-    - libgpg-error0:amd64
-    - liblzma5:amd64
-    - libnss-mdns:amd64
-    - libpcre3:amd64
-    - libselinux1:amd64
-    - libtinfo6:amd64
+    - libbz2-1.0
+    - libcap2
+    - libdbus-1-3
+    - libfontconfig1
+    - libgpg-error0
+    - liblzma5
+    - libnss-mdns
+    - libpcre3
+    - libselinux1
+    - libtinfo6
   files:
     include:
     - /lib/x86_64-linux-gnu/libLLVM-13.so.1
@@ -133,6 +124,6 @@ AppDir:
     - usr/share/doc/*/NEWS.*
     - usr/share/doc/*/TODO.*
 AppImage:
-  arch: x86_64
-  update-information: gh-releases-zsync|WerWolv|ImHex|latest|imhex-*-x86_64.AppImage.zsync
-  file_name: imhex-{{VERSION}}-x86_64.AppImage
+  arch: "{{ARCHITECTURE_APPIMAGE_BUILDER}}"
+  update-information: gh-releases-zsync|WerWolv|ImHex|latest|imhex-*-{{ARCHITECTURE_FILE_NAME}}.AppImage.zsync
+  file_name: imhex-{{VERSION}}-{{ARCHITECTURE_FILE_NAME}}.AppImage

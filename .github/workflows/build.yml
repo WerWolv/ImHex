@@ -107,6 +107,8 @@ jobs:
         for plugin in install/plugins/*.hexplug; do
           ./cv2pdb/cv2pdb.exe $plugin
         done
+        
+        rm -rf cv2pdb
 
     - name: 📦 Bundle MSI
       run: |
@@ -255,7 +257,7 @@ jobs:
       run: |
         brew reinstall python --quiet || true
         brew link --overwrite --quiet python 2>/dev/null || true
-        brew bundle --no-lock --quiet --file dist/Brewfile || true
+        brew bundle --no-lock --quiet --file dist/macOS/Brewfile || true
         rm -rf /usr/local/Cellar/capstone
 
     - name: ⬇️ Install classic glfw
@@ -587,8 +589,21 @@ jobs:
 
   # AppImage build
   appimage:
-    runs-on: ubuntu-24.04
-    name: ⬇️ AppImage
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: "x86_64"
+            architecture_package: "amd64"
+            architecture_appimage_builder: "x86_64"
+            image: ubuntu-24.04
+          - architecture: "arm64"
+            architecture_package: "arm64"
+            architecture_appimage_builder: "aarch64"
+            image: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.image }}
+    name: ⬇️ AppImage ${{ matrix.architecture }}
 
     permissions:
       id-token: write
@@ -615,8 +630,10 @@ jobs:
 
       - name: 🛠️ Build using docker
         run: |
-          docker buildx build . -f dist/appimage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
-          --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" --output out
+          docker buildx build . -f dist/AppImage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
+          --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" \
+          --build-arg "ARCHITECTURE_PACKAGE=${{ matrix.architecture_package }}" --build-arg "ARCHITECTURE_FILE_NAME=${{ matrix.architecture }}" --build-arg "ARCHITECTURE_APPIMAGE_BUILDER=${{ matrix.architecture_appimage_builder }}" \
+          --output out
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
@@ -629,14 +646,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: Linux AppImage x86_64
+          name: Linux AppImage ${{ matrix.architecture }}
           path: 'out/*.AppImage'
 
       - name: ⬆️ Upload AppImage zsync
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: Linux AppImage zsync x86_64
+          name: Linux AppImage zsync ${{ matrix.architecture }}
           path: 'out/*.AppImage.zsync'
 
   # ArchLinux build
