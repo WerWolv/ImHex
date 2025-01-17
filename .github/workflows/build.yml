@@ -107,6 +107,8 @@ jobs:
         for plugin in install/plugins/*.hexplug; do
           ./cv2pdb/cv2pdb.exe $plugin
         done
+        
+        rm -rf cv2pdb
 
     - name: 📦 Bundle MSI
       run: |
