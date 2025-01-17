@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
                 bookmarkId
             };
 
-            m_bookmarks->emplace_back(std::move(bookmark), TextEditor(), true);
+            m_bookmarks->emplace_back(std::move(bookmark), true);
 
             ImHexApi::Provider::markDirty();
 
@@ -81,7 +81,7 @@ namespace hex::plugin::builtin {
             std::ignore = data;
 
             // Loop over all bookmarks
-            for (const auto &[bookmark, editor, highlightVisible] : *m_bookmarks) {
+            for (const auto &[bookmark, highlightVisible] : *m_bookmarks) {
                 if (!highlightVisible)
                     continue;
 
@@ -179,7 +179,7 @@ namespace hex::plugin::builtin {
 
             result += "## Bookmarks\n\n";
 
-            for (const auto &[bookmark, editor, highlightVisible] : bookmarks) {
+            for (const auto &[bookmark, highlightVisible] : bookmarks) {
                 result += hex::format("### <span style=\"background-color: #{:06X}80\">{} [0x{:04X} - 0x{:04X}]</span>\n\n", hex::changeEndianness(bookmark.color, std::endian::big) >> 8, bookmark.name, bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
                 for (const auto &line : hex::splitString(bookmark.comment, "\n"))
@@ -309,7 +309,7 @@ namespace hex::plugin::builtin {
 
             // Draw all bookmarks
             for (auto it = m_bookmarks->begin(); it != m_bookmarks->end(); ++it) {
-                auto &[bookmark, editor, highlightVisible] = *it;
+                auto &[bookmark, highlightVisible] = *it;
                 auto &[region, name, comment, color, locked, bookmarkId] = bookmark;
 
                 // Apply filter
@@ -368,15 +368,16 @@ namespace hex::plugin::builtin {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - 100_scaled);
 
                 {
+                    ImGui::PushStyleColor(ImGuiCol_Button, 0x00);
                     // Draw jump to region button
-                    if (ImGuiExt::DimmedIconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                    if (ImGuiExt::IconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                         ImHexApi::HexEditor::setSelection(region);
                     ImGui::SetItemTooltip("%s", "hex.builtin.view.bookmarks.tooltip.jump_to"_lang.get());
 
-                    ImGui::SameLine(0, 1_scaled);
+                    ImGui::SameLine(0, 0);
 
                     // Draw open in new view button
-                    if (ImGuiExt::DimmedIconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    if (ImGuiExt::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         auto provider = ImHexApi::Provider::get();
                         TaskManager::doLater([region, provider, name]{
                             auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
@@ -393,13 +394,15 @@ namespace hex::plugin::builtin {
                     }
                     ImGui::SetItemTooltip("%s", "hex.builtin.view.bookmarks.tooltip.open_in_view"_lang.get());
 
-                    ImGui::SameLine(0, 4_scaled);
+                    ImGui::SameLine(0, 0);
 
                     // Draw highlight visible toggle
-                    if (ImGuiExt::DimmedIconButton(highlightVisible ? ICON_VS_EYE : ICON_VS_EYE_CLOSED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    if (ImGuiExt::IconButton(highlightVisible ? ICON_VS_EYE : ICON_VS_EYE_CLOSED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         highlightVisible = !highlightVisible;
                         EventHighlightingChanged::post();
                     }
+
+                    ImGui::PopStyleColor();
                 }
 
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2());
@@ -505,20 +508,15 @@ namespace hex::plugin::builtin {
                         ImGui::EndTable();
                     }
 
-                    // Draw comment if the bookmark is locked or an input text box if it's unlocked
-                    editor.SetReadOnly(locked);
-                    editor.SetShowLineNumbers(!locked);
-                    editor.SetShowCursor(!locked);
-                    editor.SetShowWhitespaces(false);
-
                     if (!locked || (locked && !comment.empty())) {
                         if (ImGuiExt::BeginSubWindow("hex.builtin.view.bookmarks.header.comment"_lang)) {
-                            editor.Render("##comment", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), false);
+                            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_ChildBg));
+                            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
+                            ImGui::InputTextMultiline("##comment", comment, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), locked ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+                            ImGui::PopStyleVar();
+                            ImGui::PopStyleColor();
                         }
                         ImGuiExt::EndSubWindow();
-
-                        if (editor.IsTextChanged())
-                            comment = editor.GetText();
                     }
 
                     ImGui::NewLine();
@@ -550,8 +548,6 @@ namespace hex::plugin::builtin {
             if (!region.contains("address") || !region.contains("size"))
                 continue;
 
-            TextEditor editor;
-            editor.SetText(bookmark["comment"]);
             m_bookmarks.get(provider).push_back({
                 {
                     .region     = { region["address"], region["size"] },
@@ -561,7 +557,6 @@ namespace hex::plugin::builtin {
                     .locked     = bookmark["locked"],
                     .id         = bookmark.contains("id") ? bookmark["id"].get<u64>() : m_currBookmarkId.get(provider),
                 },
-                editor,
                 bookmark.contains("highlightVisible") ? bookmark["highlightVisible"].get<bool>() : true,
             });
             if (bookmark.contains("id"))
@@ -576,10 +571,10 @@ namespace hex::plugin::builtin {
     bool ViewBookmarks::exportBookmarks(prv::Provider *provider, nlohmann::json &json) {
         json["bookmarks"] = nlohmann::json::array();
         size_t index = 0;
-        for (const auto &[bookmark, editor, highlightVisible]  : m_bookmarks.get(provider)) {
+        for (const auto &[bookmark, highlightVisible]  : m_bookmarks.get(provider)) {
             json["bookmarks"][index] = {
                     { "name",       bookmark.name },
-                    { "comment",    editor.GetText() },
+                    { "comment",    bookmark.comment },
                     { "color",      bookmark.color },
                     { "region", {
                             { "address",    bookmark.region.address },
