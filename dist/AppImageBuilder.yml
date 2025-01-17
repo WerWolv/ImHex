@@ -11,7 +11,7 @@ AppDir:
     exec_args: $@
   apt:
     arch:
-    - {{ARCHITECTURE_PACKAGE}}
+    - "{{ARCHITECTURE_PACKAGE}}"
     allow_unauthenticated: true
     sources:
     - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular main restricted
