@@ -587,8 +587,17 @@ jobs:
 
   # AppImage build
   appimage:
-    runs-on: ubuntu-24.04
-    name: ⬇️ AppImage
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: "x86_64"
+            image: ubuntu-24.04
+          - architecture: "arm64"
+            image: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.image }}
+    name: ⬇️ AppImage ${{ matrix.architecture }}
 
     permissions:
       id-token: write
@@ -629,14 +638,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: Linux AppImage x86_64
+          name: Linux AppImage ${{ matrix.architecture }}
           path: 'out/*.AppImage'
 
       - name: ⬆️ Upload AppImage zsync
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: Linux AppImage zsync x86_64
+          name: Linux AppImage zsync ${{ matrix.architecture }}
           path: 'out/*.AppImage.zsync'
 
   # ArchLinux build
