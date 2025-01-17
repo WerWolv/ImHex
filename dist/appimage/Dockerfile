@@ -30,6 +30,8 @@ ARG LTO=ON
 ARG BUILD_TYPE=RelWithDebInfo
 ARG GIT_COMMIT_HASH
 ARG GIT_BRANCH
+ARG ARCHITECTURE_PACKAGE
+ARG ARCHITECTURE_FILE_NAME
 WORKDIR /build
 
 # Ubuntu sh doesnt support string substitution
@@ -76,6 +78,8 @@ pip3 install git+https://github.com/AppImageCrafters/appimage-builder@f38699e
 
 # Package ImHex as AppImage
 export VERSION=$(cat /imhex/VERSION)
+export ARCHITECTURE_PACKAGE=${ARCHITECTURE_PACKAGE}
+export ARCHITECTURE_FILE_NAME=${ARCHITECTURE_FILE_NAME}
 appimage-builder --recipe /imhex/dist/AppImageBuilder.yml
 EOF
 

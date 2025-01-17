@@ -11,7 +11,7 @@ AppDir:
     exec_args: $@
   apt:
     arch:
-    - amd64
+    - {{ARCHITECTURE_PACKAGE}}
     allow_unauthenticated: true
     sources:
     - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ oracular main restricted
@@ -27,16 +27,16 @@ AppDir:
     - sourceline: deb http://security.ubuntu.com/ubuntu oracular-security multiverse
     include:
     - librsvg2-common
-    - libbz2-1.0:amd64
-    - libcap2:amd64
-    - libdbus-1-3:amd64
-    - libfontconfig1:amd64
-    - libgpg-error0:amd64
-    - liblzma5:amd64
-    - libnss-mdns:amd64
-    - libpcre3:amd64
-    - libselinux1:amd64
-    - libtinfo6:amd64
+    - libbz2-1.0:{{ARCHITECTURE_PACKAGE}}
+    - libcap2:{{ARCHITECTURE_PACKAGE}}
+    - libdbus-1-3:{{ARCHITECTURE_PACKAGE}}
+    - libfontconfig1:{{ARCHITECTURE_PACKAGE}}
+    - libgpg-error0:{{ARCHITECTURE_PACKAGE}}
+    - liblzma5:{{ARCHITECTURE_PACKAGE}}
+    - libnss-mdns:{{ARCHITECTURE_PACKAGE}}
+    - libpcre3:{{ARCHITECTURE_PACKAGE}}
+    - libselinux1:{{ARCHITECTURE_PACKAGE}}
+    - libtinfo6:{{ARCHITECTURE_PACKAGE}}
   files:
     include:
     - /lib/x86_64-linux-gnu/libLLVM-13.so.1
@@ -133,6 +133,6 @@ AppDir:
     - usr/share/doc/*/NEWS.*
     - usr/share/doc/*/TODO.*
 AppImage:
-  arch: x86_64
-  update-information: gh-releases-zsync|WerWolv|ImHex|latest|imhex-*-x86_64.AppImage.zsync
-  file_name: imhex-{{VERSION}}-x86_64.AppImage
+  arch: {{ARCHITECTURE}}
+  update-information: gh-releases-zsync|WerWolv|ImHex|latest|imhex-*-{{ARCHITECTURE_FILE_NAME}}.AppImage.zsync
+  file_name: imhex-{{VERSION}}-{{ARCHITECTURE_FILE_NAME}}.AppImage

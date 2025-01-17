@@ -592,8 +592,10 @@ jobs:
       matrix:
         include:
           - architecture: "x86_64"
+            architecture_package: "amd64"
             image: ubuntu-24.04
           - architecture: "arm64"
+            architecture_package: "arm64"
             image: ubuntu-24.04-arm
 
     runs-on: ${{ matrix.image }}
@@ -625,7 +627,8 @@ jobs:
       - name: 🛠️ Build using docker
         run: |
           docker buildx build . -f dist/appimage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
-          --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" --output out
+          --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" \
+          --build-arg "ARCHITECTURE_PACKAGE=${{ matrix.architecture_package }}" --build-arg "ARCHITECTURE_FILE_NAME=${{ matrix.architecture }}" --output out
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
