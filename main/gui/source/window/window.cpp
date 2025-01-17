@@ -902,8 +902,12 @@ namespace hex {
             if (!isMainWindow(window)) return;
 
             #if !defined(OS_WINDOWS)
-                if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
+                if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED)) {
+                    int x = 0, y = 0;
+                    glfwGetWindowPos(window, &x, &y);
+                    ImHexApi::System::impl::setMainWindowPosition(x, y);
                     ImHexApi::System::impl::setMainWindowSize(width, height);
+                }
             #endif
 
             #if defined(OS_MACOS)
