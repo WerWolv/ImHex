@@ -133,6 +133,6 @@ AppDir:
     - usr/share/doc/*/NEWS.*
     - usr/share/doc/*/TODO.*
 AppImage:
-  arch: {{ARCHITECTURE_FILE_NAME}}
+  arch: "{{ARCHITECTURE_FILE_NAME}}"
   update-information: gh-releases-zsync|WerWolv|ImHex|latest|imhex-*-{{ARCHITECTURE_FILE_NAME}}.AppImage.zsync
   file_name: imhex-{{VERSION}}-{{ARCHITECTURE_FILE_NAME}}.AppImage
