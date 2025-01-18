@@ -900,7 +900,7 @@ namespace hex::plugin::builtin {
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.pattern_parent_highlighting", true);
 
-            std::vector<std::string> pasteBehaviourNames = { "Ask me next time", "Paste everything", "Paste over selection" };
+            std::vector<std::string> pasteBehaviourNames = { "hex.builtin.setting.hex_editor.paste_behaviour.none", "hex.builtin.setting.hex_editor.paste_behaviour.everything", "hex.builtin.setting.hex_editor.paste_behaviour.selection" };
             std::vector<nlohmann::json> pasteBehaviourValues = { "none", "everything", "selection" };
             ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.paste_behaviour",
                                                               pasteBehaviourNames,

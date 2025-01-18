@@ -402,7 +402,7 @@ namespace hex {
             bool DropDown::draw(const std::string &name) {
                 auto preview = "";
                 if (static_cast<size_t>(m_value) < m_items.size())
-                    preview = m_items[m_value].c_str();
+                    preview = m_items[m_value].get().c_str();
 
                 bool changed = false;
                 if (ImGui::BeginCombo(name.c_str(), Lang(preview))) {
