@@ -56,18 +56,19 @@ namespace hex {
             }
         }
 
-        void loadLanguage(const std::string &language) {
+        void loadLanguage(std::string language) {
             auto &definitions = ContentRegistry::Language::impl::getLanguageDefinitions();
 
+            const auto& fallbackLanguage = getFallbackLanguage();
             if (!definitions.contains(language))
-                return;
+                language = fallbackLanguage;
 
             s_currStrings->clear();
 
             loadLanguageDefinitions(definitions.at(language));
 
-            const auto& fallbackLanguage = getFallbackLanguage();
-            loadLanguageDefinitions(definitions.at(fallbackLanguage));
+            if (language != fallbackLanguage)
+                loadLanguageDefinitions(definitions.at(fallbackLanguage));
 
             s_selectedLanguage = language;
         }
