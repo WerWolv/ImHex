@@ -123,7 +123,7 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %doc README.md
 %{_bindir}/imhex
 %{_bindir}/imhex-updater
-%{_datadir}/pixmaps/%{name}.png
+%{_datadir}/pixmaps/%{name}.svg
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/mime/packages/%{name}.xml
 %{_libdir}/libimhex.so*
