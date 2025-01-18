@@ -502,7 +502,6 @@
         "hex.builtin.setting.folders.remove_folder": "从列表中移除当前目录",
         "hex.builtin.setting.font": "字体",
         "hex.builtin.setting.font.custom_font": "自定义字体",
-        "hex.builtin.setting.font.custom_font_enable": "使用自定义字体",
         "hex.builtin.setting.font.custom_font_info": "仅当选择自定义字体时，以下设置才可用。",
         "hex.builtin.setting.font.font_antialias": "抗锯齿",
         "hex.builtin.setting.font.font_bold": "粗体",

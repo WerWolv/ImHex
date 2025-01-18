@@ -449,7 +449,6 @@
         "hex.builtin.setting.folders.remove_folder": "목록에서 현재 선택된 폴더 제거",
         "hex.builtin.setting.font": "글꼴",
         "hex.builtin.setting.font.custom_font": "사용자 정의 글꼴",
-        "hex.builtin.setting.font.custom_font_enable": "사용자 정의 글꼴",
         "hex.builtin.setting.font.custom_font_info": "",
         "hex.builtin.setting.font.font_antialias": "안티에일리어싱",
         "hex.builtin.setting.font.font_bold": "굵게",

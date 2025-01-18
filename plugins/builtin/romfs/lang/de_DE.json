@@ -450,7 +450,6 @@
         "hex.builtin.setting.folders.remove_folder": "Ausgewählter Ordner von Liste entfernen",
         "hex.builtin.setting.font": "Schriftart",
         "hex.builtin.setting.font.custom_font": "Schriftart",
-        "hex.builtin.setting.font.custom_font_enable": "Benutzerdefinierte Schriftart aktivieren",
         "hex.builtin.setting.font.custom_font_info": "Die folgenden Einstellungen sind nur verfügbar wenn eine benutzerdefinierte Schriftart ausgewählt ist.",
         "hex.builtin.setting.font.font_antialias": "Schrift Anti-Aliasing",
         "hex.builtin.setting.font.font_bold": "Fett",

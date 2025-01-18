@@ -443,7 +443,6 @@
         "hex.builtin.setting.font": "Betűtípus",
         "hex.builtin.setting.font.glyphs": "Szimbólumok",
         "hex.builtin.setting.font.custom_font": "Saját betűtípus",
-        "hex.builtin.setting.font.custom_font_enable": "Saját betűtípus használata",
         "hex.builtin.setting.font.custom_font_info": "Az alábbi beállítások csak egyéni betűtípusok esetén érhetők el.",
         "hex.builtin.setting.font.font_bold": "Félkövér",
         "hex.builtin.setting.font.font_italic": "Dőlt",

@@ -753,7 +753,6 @@ namespace hex {
 
                 const std::vector<Font>& getFonts();
 
-                void setCustomFontPath(const std::fs::path &path);
                 void setFontSize(float size);
                 void setFontAtlas(ImFontAtlas *fontAtlas);
 
@@ -772,12 +771,6 @@ namespace hex {
 
             ImFont* Bold();
             ImFont* Italic();
-
-            /**
-             * @brief Gets the current custom font path
-             * @return The current custom font path
-             */
-            const std::filesystem::path& getCustomFontPath();
 
             /**
              * @brief Gets the current font size

@@ -288,19 +288,20 @@ namespace hex::fonts {
 
         fontAtlas.enableUnicodeCharacters(shouldLoadUnicode);
 
+        auto pixelPerfectFont = ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
+
+        std::fs::path customFontPath;
         // If a custom font is set in the settings, load the rest of the settings as well
-        if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false)) {
+        if (!pixelPerfectFont) {
             fontAtlas.setBold(ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false));
             fontAtlas.setItalic(ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false));
             fontAtlas.setAntiAliasing(ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", true));
 
-            ImHexApi::Fonts::impl::setCustomFontPath(findCustomFontPath());
+            customFontPath = findCustomFontPath();
         }
         ImHexApi::Fonts::impl::setFontSize(getFontSize());
 
-
         const auto fontSize = ImHexApi::Fonts::getFontSize();
-        const auto &customFontPath = ImHexApi::Fonts::getCustomFontPath();
 
         // Try to load the custom font if one was set
         std::optional<Font> defaultFont;
@@ -314,8 +315,6 @@ namespace hex::fonts {
 
         // If there's no custom font set, or it failed to load, fall back to the default font
         if (!defaultFont.has_value()) {
-            auto pixelPerfectFont = ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
-
             if (pixelPerfectFont)
                 defaultFont = fontAtlas.addDefaultFont();
             else

@@ -993,11 +993,6 @@ namespace hex {
                 return *s_fonts;
             }
 
-            static AutoReset<std::fs::path> s_customFontPath;
-            void setCustomFontPath(const std::fs::path &path) {
-                s_customFontPath = path;
-            }
-
             static float s_fontSize = DefaultFontSize;
             void setFontSize(float size) {
                 s_fontSize = size;
@@ -1077,10 +1072,6 @@ namespace hex {
                 flags,
                 defaultSize
             });
-        }
-
-        const std::fs::path& getCustomFontPath() {
-            return impl::s_customFontPath;
         }
 
         float getFontSize() {
