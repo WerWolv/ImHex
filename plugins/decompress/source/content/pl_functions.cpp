@@ -131,7 +131,7 @@ namespace hex::plugin::decompress {
                     }
                     if (res != BZ_OK) {
                         section.resize(section.size() - stream.avail_out);
-                        return stream.next_in - compressedData.data();
+                        return reinterpret_cast<const u8*>(stream.next_in) - compressedData.data();
                     }
 
                     if (stream.avail_out != 0)
@@ -143,7 +143,7 @@ namespace hex::plugin::decompress {
                     stream.avail_out = prevSectionSize;
                 }
 
-                return stream.next_in - compressedData.data();
+                return reinterpret_cast<const u8*>(stream.next_in) - compressedData.data();
             #else
                 std::ignore = evaluator;
                 std::ignore = params;
@@ -251,7 +251,7 @@ namespace hex::plugin::decompress {
                         size_t ret = ZSTD_decompressStream(dctx, &dataOut, &dataIn);
                         if (ZSTD_isError(ret)) {
                             section.resize(section.size() - (dataOut.size - dataOut.pos));
-                            return dataIn.pos - compressedData.data();
+                            return i128(dataIn.pos);
                         }
                         lastRet = ret;
 
@@ -262,7 +262,7 @@ namespace hex::plugin::decompress {
 
                     // Incomplete frame
                     if (lastRet != 0) {
-                        return dataIn.pos - compressedData.data();
+                        return i128(dataIn.pos);
                     }
                 } else {
                     section.resize(section.size() + blockSize);
@@ -293,7 +293,7 @@ namespace hex::plugin::decompress {
                     LZ4F_decompressionContext_t dctx;
                     LZ4F_errorCode_t err = LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION);
                     if (LZ4F_isError(err)) {
-                       return false;
+                       return 0;
                     }
 
                     std::vector<u8> outBuffer(1024 * 1024);
@@ -325,11 +325,11 @@ namespace hex::plugin::decompress {
                         auto decompressedSize = LZ4_decompress_safe(reinterpret_cast<const char*>(compressedData.data()), reinterpret_cast<char *>(section.data()), compressedData.size(), static_cast<int>(section.size()));
 
                         if (decompressedSize < 0) {
-                            return false;
+                            return 0;
                         } else if (decompressedSize > 0) {
                             // Successful decompression
                             section.resize(decompressedSize);
-                            return compressedData.size();
+                            return i128(compressedData.size());
                         } else {
                             // Buffer too small, resize and try again
                             section.resize(section.size() * 2);
