@@ -59,7 +59,7 @@ namespace hex::plugin::decompress {
 
                 z_stream stream = { };
                 if (inflateInit2(&stream, windowSize) != Z_OK) {
-                    return false;
+                    return 0;
                 }
 
                 section.resize(100);
@@ -79,8 +79,10 @@ namespace hex::plugin::decompress {
                         section.resize(section.size() - stream.avail_out);
                         break;
                     }
-                    if (res != Z_OK)
-                        return false;
+                    if (res != Z_OK) {
+                        section.resize(section.size() - stream.avail_out);
+                        return stream.next_in - compressedData.data();
+                    }
 
                     if (stream.avail_out != 0)
                         break;
@@ -91,7 +93,7 @@ namespace hex::plugin::decompress {
                     stream.avail_out = prevSectionSize;
                 }
 
-                return true;
+                return stream.next_in - compressedData.data();
             #else
                 std::ignore = evaluator;
                 std::ignore = params;
@@ -107,7 +109,7 @@ namespace hex::plugin::decompress {
 
                 bz_stream stream = { };
                 if (BZ2_bzDecompressInit(&stream, 0, 1) != Z_OK) {
-                    return false;
+                    return 0;
                 }
 
                 section.resize(100);
@@ -127,8 +129,10 @@ namespace hex::plugin::decompress {
                         section.resize(section.size() - stream.avail_out);
                         break;
                     }
-                    if (res != BZ_OK)
-                        return false;
+                    if (res != BZ_OK) {
+                        section.resize(section.size() - stream.avail_out);
+                        return stream.next_in - compressedData.data();
+                    }
 
                     if (stream.avail_out != 0)
                         break;
@@ -139,7 +143,7 @@ namespace hex::plugin::decompress {
                     stream.avail_out = prevSectionSize;
                 }
 
-                return true;
+                return stream.next_in - compressedData.data();
             #else
                 std::ignore = evaluator;
                 std::ignore = params;
@@ -157,7 +161,7 @@ namespace hex::plugin::decompress {
                 lzma_stream stream = LZMA_STREAM_INIT;
                 constexpr int64_t memlimit = 0x40000000;  // 1GiB
                 if (lzma_auto_decoder(&stream, memlimit, LZMA_IGNORE_CHECK) != LZMA_OK) {
-                    return false;
+                    return 0;
                 }
 
                 section.resize(100);
@@ -181,11 +185,15 @@ namespace hex::plugin::decompress {
                     if (res == LZMA_MEMLIMIT_ERROR) {
                         auto usage = lzma_memusage(&stream);
                         evaluator->getConsole().log(pl::core::LogConsole::Level::Warning, fmt::format("lzma_decompress memory usage {} bytes would exceed the limit ({} bytes), aborting", usage, memlimit));
-                        return false;
+
+                        section.resize(section.size() - stream.avail_out);
+                        return stream.next_in - compressedData.data();
                     }
 
-                    if (res != LZMA_OK)
-                        return false;
+                    if (res != LZMA_OK) {
+                        section.resize(section.size() - stream.avail_out);
+                        return stream.next_in - compressedData.data();
+                    }
 
                     if (stream.avail_out != 0)
                         break;
@@ -196,7 +204,7 @@ namespace hex::plugin::decompress {
                     stream.avail_out = prevSectionSize;
                 }
 
-                return true;
+                return stream.next_in - compressedData.data();
             #else
                 std::ignore = evaluator;
                 std::ignore = params;
@@ -212,7 +220,7 @@ namespace hex::plugin::decompress {
 
                 ZSTD_DCtx* dctx = ZSTD_createDCtx();
                 if (dctx == nullptr) {
-                    return false;
+                    return 0;
                 }
 
                 ON_SCOPE_EXIT {
@@ -225,7 +233,7 @@ namespace hex::plugin::decompress {
                 size_t blockSize = ZSTD_getFrameContentSize(source, sourceSize);
 
                 if (blockSize == ZSTD_CONTENTSIZE_ERROR) {
-                    return false;
+                    return 0;
                 }
 
                 if (blockSize == ZSTD_CONTENTSIZE_UNKNOWN) {
@@ -242,7 +250,8 @@ namespace hex::plugin::decompress {
 
                         size_t ret = ZSTD_decompressStream(dctx, &dataOut, &dataIn);
                         if (ZSTD_isError(ret)) {
-                            return false;
+                            section.resize(section.size() - (dataOut.size - dataOut.pos));
+                            return dataIn.pos - compressedData.data();
                         }
                         lastRet = ret;
 
@@ -253,7 +262,7 @@ namespace hex::plugin::decompress {
 
                     // Incomplete frame
                     if (lastRet != 0) {
-                        return false;
+                        return dataIn.pos - compressedData.data();
                     }
                 } else {
                     section.resize(section.size() + blockSize);
@@ -261,11 +270,11 @@ namespace hex::plugin::decompress {
                     size_t ret = ZSTD_decompressDCtx(dctx, section.data() + section.size() - blockSize, blockSize, source, sourceSize);
 
                     if (ZSTD_isError(ret)) {
-                        return false;
+                        return 0;
                     }
                 }
 
-                return true;
+                return i128(sourceSize);
             #else
                 std::ignore = evaluator;
                 std::ignore = params;
@@ -299,7 +308,7 @@ namespace hex::plugin::decompress {
                         size_t ret = LZ4F_decompress(dctx, dstPtr, &dstCapacity, sourcePointer, &srcSize, nullptr);
                         if (LZ4F_isError(ret)) {
                             LZ4F_freeDecompressionContext(dctx);
-                            return false;
+                            return sourcePointer - compressedData.data();
                         }
 
                         section.insert(section.end(), outBuffer.begin(), outBuffer.begin() + dstCapacity);
@@ -307,6 +316,8 @@ namespace hex::plugin::decompress {
                     }
 
                     LZ4F_freeDecompressionContext(dctx);
+
+                    return sourcePointer - compressedData.data();
                 } else {
                     section.resize(1024 * 1024);
 
@@ -318,16 +329,13 @@ namespace hex::plugin::decompress {
                         } else if (decompressedSize > 0) {
                             // Successful decompression
                             section.resize(decompressedSize);
-                            break;
+                            return compressedData.size();
                         } else {
                             // Buffer too small, resize and try again
                             section.resize(section.size() * 2);
                         }
                     }
                 }
-
-
-                return true;
             #else
                 std::ignore = evaluator;
                 std::ignore = params;
