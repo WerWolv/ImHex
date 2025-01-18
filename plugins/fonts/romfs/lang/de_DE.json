@@ -1,0 +1,18 @@
+{
+    "code": "de-DE",
+    "country": "Germany",
+    "fallback": false,
+    "language": "German",
+    "translations": {
+        "hex.fonts.setting.font": "Schriftart",
+        "hex.fonts.setting.font.custom_font": "Schriftart",
+        "hex.fonts.setting.font.custom_font_info": "Die folgenden Einstellungen sind nur verfügbar wenn eine benutzerdefinierte Schriftart ausgewählt ist.",
+        "hex.fonts.setting.font.font_antialias": "Schrift Anti-Aliasing",
+        "hex.fonts.setting.font.font_bold": "Fett",
+        "hex.fonts.setting.font.font_italic": "Kursiv",
+        "hex.fonts.setting.font.font_path": "Schriftart",
+        "hex.fonts.setting.font.font_size": "Schriftgrösse",
+        "hex.fonts.setting.font.glyphs": "Glyphen",
+        "hex.fonts.setting.font.load_all_unicode_chars": "Alle Unicode Zeichen laden"
+    }
+}

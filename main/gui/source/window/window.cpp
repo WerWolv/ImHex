@@ -296,6 +296,23 @@ namespace hex {
     }
 
     void Window::frameBegin() {
+        // Create font textures if necessary
+        {
+            const auto &fontDefinitions = ImHexApi::Fonts::impl::getFontDefinitions();
+            auto &currentFont = ImGui::GetIO().Fonts;
+            for (const auto &[name, font] : fontDefinitions) {
+                // If the texture for this atlas has been built already, don't do it again
+                if (font->ContainerAtlas->TexID != 0)
+                    continue;
+
+                currentFont = font->ContainerAtlas;
+                ImGui_ImplOpenGL3_CreateFontsTexture();
+            }
+
+            // Make the first font in the list the default UI font
+            currentFont = fontDefinitions.begin()->second->ContainerAtlas;
+        }
+
         // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -1060,17 +1077,8 @@ namespace hex {
     void Window::initImGui() {
         IMGUI_CHECKVERSION();
 
-        auto fonts = ImHexApi::Fonts::getFontAtlas();
-
-        if (fonts == nullptr) {
-            fonts = IM_NEW(ImFontAtlas)();
-
-            fonts->AddFontDefault();
-            fonts->Build();
-        }
-
         // Initialize ImGui and all other ImGui extensions
-        GImGui              = ImGui::CreateContext(fonts);
+        GImGui              = ImGui::CreateContext();
         GImPlot             = ImPlot::CreateContext();
         ImPlot3D::GImPlot3D = ImPlot3D::CreateContext();
         GImNodes            = ImNodes::CreateContext();
@@ -1105,7 +1113,6 @@ namespace hex {
         auto scale = ImHexApi::System::getGlobalScale();
         style.ScaleAllSizes(scale);
         io.DisplayFramebufferScale = ImVec2(scale, scale);
-        io.Fonts->SetTexID(fonts->TexID);
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing            = 10.0F;

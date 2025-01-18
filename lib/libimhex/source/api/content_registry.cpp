@@ -223,6 +223,8 @@ namespace hex {
                             log::error("Failed to load setting [{} / {}]: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
                         }
                     });
+
+                    runOnChangeHandlers(unlocalizedCategory, unlocalizedName, getSetting(unlocalizedCategory, unlocalizedName, entry->widget->store()));
                 }
 
                 return entry->widget.get();

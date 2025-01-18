@@ -19,6 +19,7 @@
 #include <nlohmann/json.hpp>
 
 #include <utility>
+#include <romfs/romfs.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -650,98 +651,6 @@ namespace hex::plugin::builtin {
             i32 m_currIndex = 0;
         };
 
-        class FontFilePicker : public ContentRegistry::Settings::Widgets::FilePicker {
-        public:
-            bool draw(const std::string &name) override {
-                bool changed = false;
-
-                const auto &fonts = hex::getFonts();
-                const bool pixelPerfectFont = ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
-
-                bool customFont = false;
-                std::string pathPreview = "";
-                if (m_path.empty() && pixelPerfectFont) {
-                    pathPreview = "Pixel-Perfect Default Font (Proggy Clean)";
-                } else if (m_path.empty() && !pixelPerfectFont) {
-                    pathPreview = "Smooth Default Font (JetbrainsMono)";
-                } else if (fonts.contains(m_path)) {
-                    pathPreview = fonts.at(m_path);
-                } else {
-                    pathPreview = wolv::util::toUTF8String(m_path.filename());
-                    customFont = true;
-                }
-
-                bool pixelPerfectFontSelected = false;
-                if (ImGui::BeginCombo(name.c_str(), pathPreview.c_str())) {
-                    if (ImGui::Selectable("Pixel-Perfect Default Font (Proggy Clean)", m_path.empty() && pixelPerfectFont)) {
-                        m_path.clear();
-                        changed = true;
-                        pixelPerfectFontSelected = true;
-                    }
-
-                    if (ImGui::Selectable("Smooth Default Font (JetbrainsMono)", m_path.empty() && !pixelPerfectFont)) {
-                        m_path.clear();
-                        changed = true;
-                    }
-
-                    if (ImGui::Selectable("Custom Font", customFont)) {
-                        changed = fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } }, [this](const std::fs::path &path) {
-                            m_path = path;
-                        });
-                    }
-
-                    for (const auto &[path, fontName] : fonts) {
-                        if (ImGui::Selectable(limitStringLength(fontName, 50).c_str(), m_path == path)) {
-                            m_path = path;
-                            changed = true;
-                        }
-                        ImGui::SetItemTooltip("%s", fontName.c_str());
-                    }
-
-                    ImGui::EndCombo();
-                }
-
-                if (changed) {
-                    m_pixelPerfectFont = pixelPerfectFontSelected;
-                }
-
-                return changed;
-            }
-
-            bool isPixelPerfectFontSelected() const {
-                return m_pixelPerfectFont;
-            }
-
-        private:
-            bool m_pixelPerfectFont = false;
-        };
-
-        class SliderPoints : public ContentRegistry::Settings::Widgets::SliderFloat {
-        public:
-            SliderPoints(float defaultValue, float min, float max) : SliderFloat(defaultValue, min, max) { }
-            bool draw(const std::string &name) override {
-                float value = pixelsToPoints(m_value);
-                float min = pixelsToPoints(m_min);
-                float max = pixelsToPoints(m_max);
-
-                auto changed = ImGui::SliderFloat(name.c_str(), &value, min, max, "%.0f pt");
-
-                m_value = pointsToPixels(value);
-
-                return changed;
-            }
-
-        private:
-            static float pixelsToPoints(float pixels) {
-                return pixels * (72_scaled / 96.0F);
-            }
-
-            static float pointsToPixels(float points) {
-                return points / (72_scaled / 96.0F);
-            }
-        };
-
-
         bool getDefaultBorderlessWindowMode() {
             bool result;
 
@@ -917,47 +826,6 @@ namespace hex::plugin::builtin {
                                                               pasteBehaviourNames,
                                                               pasteBehaviourValues,
                                                               "none");
-        }
-
-        /* Fonts */
-        {
-            const auto scaleWarningHandler = [](auto&) {
-                s_showScalingWarning = ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
-            };
-            ContentRegistry::Settings::onChange("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", scaleWarningHandler);
-
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false)
-                .requiresRestart();
-
-            auto customFontPathSetting = ContentRegistry::Settings::add<FontFilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
-                    .requiresRestart()
-                    .setChangedCallback([scaleWarningHandler](Widgets::Widget &widget) {
-                        scaleWarningHandler(widget);
-
-                        auto &fontPicker = static_cast<FontFilePicker&>(widget);
-                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", fontPicker.isPixelPerfectFontSelected());
-                    });
-
-            const auto fontCustomizationEnabled = [customFontPathSetting ] {
-                auto &fontPicker = static_cast<FontFilePicker&>(customFontPathSetting.getWidget());
-
-                return !fontPicker.isPixelPerfectFontSelected();
-            };
-
-            ContentRegistry::Settings::add<Widgets::Label>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_info");
-
-            ContentRegistry::Settings::add<SliderPoints>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 16, 2, 100)
-                    .requiresRestart()
-                    .setEnabledCallback(fontCustomizationEnabled);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_bold", false)
-                    .requiresRestart()
-                    .setEnabledCallback(fontCustomizationEnabled);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_italic", false)
-                    .requiresRestart()
-                    .setEnabledCallback(fontCustomizationEnabled);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_antialias", true)
-                    .requiresRestart()
-                    .setEnabledCallback(fontCustomizationEnabled);
         }
 
         /* Folders */

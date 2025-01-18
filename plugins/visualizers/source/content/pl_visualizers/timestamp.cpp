@@ -22,8 +22,6 @@ namespace hex::plugin::visualizers {
         auto lastMonthDay = std::chrono::year_month_day_last(date.year(), date.month() / std::chrono::last);
         auto firstWeekDay = std::chrono::weekday(std::chrono::year_month_day(date.year(), date.month(), std::chrono::day(1)));
 
-        const auto scale = 1_scaled * (ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize);
-
         // Draw calendar
         if (ImGui::BeginTable("##month_table", 2)) {
             ImGui::TableNextRow();
@@ -32,7 +30,7 @@ namespace hex::plugin::visualizers {
             // Draw centered month name and year
             ImGuiExt::TextFormattedCenteredHorizontal("{:%B %Y}", tm);
 
-            if (ImGui::BeginTable("##days_table", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_NoHostExtendX, ImVec2(160, 120) * scale)) {
+            if (ImGui::BeginTable("##days_table", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_NoHostExtendX, scaled(ImVec2(160, 120)))) {
                 constexpr static auto ColumnFlags = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide;
                 ImGui::TableSetupColumn("M", ColumnFlags);
                 ImGui::TableSetupColumn("T", ColumnFlags);
@@ -68,7 +66,7 @@ namespace hex::plugin::visualizers {
             ImGui::TableNextColumn();
 
             // Draw analog clock
-            const auto size = ImVec2(120, 120) * scale;
+            const auto size = scaled(ImVec2(120, 120));
             if (ImGui::BeginChild("##clock", size + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()))) {
                 // Draw centered digital hour, minute and seconds
                 ImGuiExt::TextFormattedCenteredHorizontal("{:%H:%M:%S}", tm);

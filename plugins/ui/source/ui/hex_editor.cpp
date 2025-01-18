@@ -12,6 +12,7 @@
 #include <hex/providers/buffered_reader.hpp>
 
 #include <algorithm>
+#include <fonts/fonts.hpp>
 
 namespace hex::ui {
 
@@ -1280,7 +1281,9 @@ namespace hex::ui {
         if (tableSize.y <= 0)
             tableSize.y = height;
 
+        ImGui::PushFont(fonts::HexEditor());
         this->drawEditor(tableSize);
+        ImGui::PopFont();
 
         if (tableSize.y > 0)
             this->drawFooter(footerSize);

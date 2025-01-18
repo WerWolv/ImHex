@@ -32,6 +32,7 @@
 #include <wolv/utils/lock.hpp>
 
 #include <content/global_actions.hpp>
+#include <fonts/fonts.hpp>
 #include <ui/menu_items.hpp>
 
 namespace hex::plugin::builtin {
@@ -338,7 +339,11 @@ namespace hex::plugin::builtin {
                 if (name.contains(textEditorView) || name.contains(consoleView))
                     m_focusedSubWindowName = name;
             }
+
+            ImGui::PushFont(fonts::CodeEditor());
             m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, false);
+            ImGui::PopFont();
+
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
@@ -1073,7 +1078,10 @@ namespace hex::plugin::builtin {
             m_consoleNeedsUpdate = false;
         }
 
+        ImGui::PushFont(fonts::CodeEditor());
         m_consoleEditor.Render("##console", size, true);
+        ImGui::PopFont();
+
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
 

@@ -33,7 +33,6 @@ namespace hex::plugin::builtin {
                         try {
                             auto defaultValue = widget->store();
                             widget->load(ContentRegistry::Settings::impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue));
-                            widget->onChanged();
                         } catch (const std::exception &e) {
                             log::error("Failed to load setting [{} / {}]: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
                         }
