@@ -654,6 +654,7 @@ macro(addBundledLibraries)
     set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 
     if(NOT USE_SYSTEM_FMT)
+        set(FMT_INSTALL OFF CACHE BOOL "Disable install targets for libfmt" FORCE)
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/fmt EXCLUDE_FROM_ALL)
         set(FMT_LIBRARIES fmt::fmt-header-only)
     else()
