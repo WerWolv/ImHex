@@ -671,18 +671,17 @@ namespace hex::plugin::builtin {
                     customFont = true;
                 }
 
+                bool pixelPerfectFontSelected = false;
                 if (ImGui::BeginCombo(name.c_str(), pathPreview.c_str())) {
-
                     if (ImGui::Selectable("Pixel-Perfect Default Font (Proggy Clean)", m_path.empty() && pixelPerfectFont)) {
                         m_path.clear();
                         changed = true;
-                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
+                        pixelPerfectFontSelected = true;
                     }
 
                     if (ImGui::Selectable("Smooth Default Font (JetbrainsMono)", m_path.empty() && !pixelPerfectFont)) {
                         m_path.clear();
                         changed = true;
-                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", false);
                     }
 
                     if (ImGui::Selectable("Custom Font", customFont)) {
@@ -701,8 +700,19 @@ namespace hex::plugin::builtin {
                     ImGui::EndCombo();
                 }
 
+                if (changed) {
+                    m_pixelPerfectFont = pixelPerfectFontSelected;
+                }
+
                 return changed;
             }
+
+            bool isPixelPerfectFontSelected() const {
+                return m_pixelPerfectFont;
+            }
+
+        private:
+            bool m_pixelPerfectFont = false;
         };
 
         class SliderPoints : public ContentRegistry::Settings::Widgets::SliderFloat {
@@ -929,7 +939,12 @@ namespace hex::plugin::builtin {
 
             auto customFontPathSetting = ContentRegistry::Settings::add<FontFilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
                     .requiresRestart()
-                    .setChangedCallback(scaleWarningHandler)
+                    .setChangedCallback([scaleWarningHandler](Widgets::Widget &widget) {
+                        scaleWarningHandler(widget);
+
+                        auto &fontPicker = static_cast<FontFilePicker&>(widget);
+                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", fontPicker.isPixelPerfectFontSelected());
+                    })
                     .setEnabledCallback(customFontsEnabled);
 
             const auto customFontSettingsEnabled = [customFontEnabledSetting, customFontPathSetting] {
