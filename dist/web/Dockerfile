@@ -94,7 +94,7 @@ COPY --from=build [             \
     "/build/wasm-config.js",    \
     "/build/enable-threads.js", \
     "/build/favicon.ico",       \
-    "/build/icon.png",          \
+    "/build/icon.svg",          \
     "/build/manifest.json",     \
     "/build/robots.txt",        \
     "/build/sitemap.xml",       \

@@ -117,7 +117,7 @@ namespace hex::plugin::builtin {
 
             // Draw the ImHex icon
             if (!m_logoTexture.isValid())
-                m_logoTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/logo.png").span(), ImGuiExt::Texture::Filter::Linear);
+                m_logoTexture = ImGuiExt::Texture::fromSVG(romfs::get("assets/common/logo.svg").span(), 0, 0, ImGuiExt::Texture::Filter::Linear);
 
             ImGui::Image(m_logoTexture, scaled({ 100, 100 }));
             if (ImGui::IsItemClicked()) {
