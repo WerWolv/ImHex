@@ -87,9 +87,9 @@ jobs:
     - name: 🛠️ Build
       run: |
         cd build
-        ninja install
+        ninja
 
-    - name: 🪲 Create PDBs
+    - name: 🪲 Create PDBs for MSI
       run: |
         cd build
         
@@ -117,6 +117,29 @@ jobs:
         mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-x86_64.msi
 
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
+
+    - name: 🪲 Create PDBs for ZIP
+      run: |
+        cd build
+        ninja install
+        cd install
+
+        mkdir cv2pdb
+        cd cv2pdb
+        wget https://github.com/rainers/cv2pdb/releases/download/v0.52/cv2pdb-0.52.zip
+        unzip cv2pdb-0.52.zip
+        cd ..
+        
+        cv2pdb/cv2pdb.exe imhex.exe
+        cv2pdb/cv2pdb.exe imhex-gui.exe
+        cv2pdb/cv2pdb.exe libimhex.dll
+        cv2pdb/cv2pdb.exe libpl.dll
+        
+        for plugin in plugins/*.hexplug; do
+          cv2pdb/cv2pdb.exe $plugin
+        done
+        
+        rm -rf cv2pdb
 
     - name: 🗝️ Generate build provenance attestations
       uses: actions/attest-build-provenance@v2
