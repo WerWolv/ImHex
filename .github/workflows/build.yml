@@ -87,7 +87,7 @@ jobs:
     - name: 🛠️ Build
       run: |
         cd build
-        ninja
+        ninja install
 
     - name: 🪲 Create PDBs for MSI
       run: |
@@ -120,9 +120,7 @@ jobs:
 
     - name: 🪲 Create PDBs for ZIP
       run: |
-        cd build
-        ninja install
-        cd install
+        cd build/install
 
         mkdir cv2pdb
         cd cv2pdb
