@@ -97,15 +97,15 @@ jobs:
         cd cv2pdb
         wget https://github.com/rainers/cv2pdb/releases/download/v0.52/cv2pdb-0.52.zip
         unzip cv2pdb-0.52.zip
-        cd ..
+        cd ../install
         
-        ./cv2pdb/cv2pdb.exe install/imhex.exe
-        ./cv2pdb/cv2pdb.exe install/imhex-gui.exe
-        ./cv2pdb/cv2pdb.exe install/libimhex.dll
-        ./cv2pdb/cv2pdb.exe install/libpl.dll
+        ../cv2pdb/cv2pdb.exe imhex.exe
+        ../cv2pdb/cv2pdb.exe imhex-gui.exe
+        ../cv2pdb/cv2pdb.exe libimhex.dll
+        ../cv2pdb/cv2pdb.exe libpl.dll
         
-        for plugin in install/plugins/*.hexplug; do
-          ./cv2pdb/cv2pdb.exe $plugin
+        for plugin in plugins/*.hexplug; do
+          ../cv2pdb/cv2pdb.exe $plugin
         done
         
         rm -rf cv2pdb
