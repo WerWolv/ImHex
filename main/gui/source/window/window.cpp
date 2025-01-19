@@ -1,5 +1,4 @@
 #include "window.hpp"
-#include "hex/ui/banner.hpp"
 
 #include <hex.hpp>
 
@@ -18,6 +17,7 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
+#include <hex/ui/banner.hpp>
 
 #include <chrono>
 #include <csignal>
@@ -309,8 +309,7 @@ namespace hex {
                 ImGui_ImplOpenGL3_CreateFontsTexture();
             }
 
-            // Make the first font in the list the default UI font
-            currentFont = fontDefinitions.begin()->second->ContainerAtlas;
+            currentFont = ImHexApi::Fonts::getFont("hex.fonts.font.default")->ContainerAtlas;
         }
 
         // Start new ImGui Frame
