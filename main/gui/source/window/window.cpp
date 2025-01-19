@@ -11,7 +11,6 @@
 #include <hex/api/tutorial_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
 
@@ -666,16 +665,13 @@ namespace hex {
             view->trackViewOpenState();
 
             if (view->getWindowOpenState()) {
-                bool hasWindow = window != nullptr;
-                bool focused   = false;
-
                 // Get the currently focused view
-                if (hasWindow && (window->Flags & ImGuiWindowFlags_Popup) != ImGuiWindowFlags_Popup) {
+                if (window != nullptr && (window->Flags & ImGuiWindowFlags_Popup) != ImGuiWindowFlags_Popup) {
                     auto windowName = View::toWindowName(name);
                     ImGui::Begin(windowName.c_str());
 
                     // Detect if the window is focused
-                    focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
+                    const bool focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
 
                     // Dock the window if it's not already docked
                     if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
