@@ -19,7 +19,7 @@ namespace hex::fonts {
 
     private:
         std::string m_selectedFontName;
-        bool m_pixelPerfectFont = false;
+        bool m_pixelPerfectFont = true;
     };
 
     class SliderPoints : public ContentRegistry::Settings::Widgets::SliderFloat {

@@ -15,18 +15,18 @@ namespace hex::fonts {
 
     bool buildFontAtlas(FontAtlas *fontAtlas, std::fs::path fontPath, bool pixelPerfectFont, float fontSize, bool loadUnicodeCharacters, bool bold, bool italic, bool antialias);
 
-    static AutoReset<std::map<ImFont*, FontAtlas>> s_fontAtlases;
+    static AutoReset<std::map<ImFont*, std::unique_ptr<FontAtlas>>> s_fontAtlases;
 
-    void loadFont(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImFont **font) {
+    void loadFont(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImFont **font, float scale) {
         const auto &settings = static_cast<const FontSelector&>(widget);
 
-        FontAtlas atlas;
+        auto atlas = std::make_unique<FontAtlas>();
 
         const bool atlasBuilt = buildFontAtlas(
-            &atlas,
+            atlas.get(),
             settings.getFontPath(),
             settings.isPixelPerfectFont(),
-            settings.getFontSize(),
+            settings.getFontSize() * scale,
             true,
             settings.isBold(),
             settings.isItalic(),
@@ -35,10 +35,10 @@ namespace hex::fonts {
 
         if (!atlasBuilt) {
             buildFontAtlas(
-                &atlas,
+                atlas.get(),
                 "",
                 false,
-                settings.getFontSize(),
+                settings.getFontSize() * scale,
                 false,
                 settings.isBold(),
                 settings.isItalic(),
@@ -48,32 +48,9 @@ namespace hex::fonts {
             log::error("Failed to load font {}! Reverting back to default font!", name.get());
         }
 
-        if (*font != nullptr) {
-            EventDPIChanged::unsubscribe(*font);
-        }
+        *font = atlas->getAtlas()->Fonts[0];
 
-        *font = atlas.getAtlas()->Fonts[0];
-
-        s_fontAtlases->insert_or_assign(*font, std::move(atlas));
         (*s_fontAtlases)[*font] = std::move(atlas);
-
-        EventDPIChanged::subscribe(*font, [&atlas, font](float, float newScaling) {
-            atlas.updateFontScaling(newScaling);
-
-            if (atlas.build()) {
-                auto &io = ImGui::GetIO();
-                auto prevFont = io.Fonts;
-
-                {
-                    io.Fonts = atlas.getAtlas();
-                    ImGui_ImplOpenGL3_DestroyFontsTexture();
-                    ImGui_ImplOpenGL3_CreateFontsTexture();
-                    io.Fonts = prevFont;
-                }
-
-                *font = atlas.getAtlas()->Fonts[0];
-            }
-        });
     }
 
     bool setupFonts() {
@@ -87,10 +64,13 @@ namespace hex::fonts {
                         return;
                     }
 
-                    loadFont(widget, name, &font);
+                    loadFont(widget, name, &font, ImHexApi::System::getGlobalScale());
                 });
 
-            loadFont(widget.getWidget(), name, &font);
+            loadFont(widget.getWidget(), name, &font, ImHexApi::System::getGlobalScale());
+            EventDPIChanged::subscribe(font, [&widget, name, &font](float, float newScaling) {
+                loadFont(widget.getWidget(), name, &font, newScaling);
+            });
         }
 
         return true;

@@ -901,6 +901,11 @@ namespace hex {
             if (!isMainWindow(window)) return;
 
             ImHexApi::System::impl::setMainWindowPosition(x, y);
+
+            int width = 0, height = 0;
+            glfwGetWindowSize(window, &width, &height);
+            ImHexApi::System::impl::setMainWindowPosition(x, y);
+            ImHexApi::System::impl::setMainWindowSize(width, height);
         });
 
         // Register window resize callback
@@ -1090,6 +1095,8 @@ namespace hex {
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.FontGlobalScale = 1.0F;
+
+        ImGui::GetCurrentContext()->FontAtlasOwnedByContext = false;
 
         if (glfwGetPrimaryMonitor() != nullptr) {
             if (ImHexApi::System::isMutliWindowModeEnabled())

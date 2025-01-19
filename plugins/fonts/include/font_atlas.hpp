@@ -40,9 +40,9 @@ namespace hex::fonts {
             enableUnicodeCharacters(false);
 
             // Set the default configuration for the font atlas
-            m_config.OversampleH = m_config.OversampleV = 1;
-            m_config.PixelSnapH = true;
-            m_config.MergeMode = false;
+            m_defaultConfig.OversampleH = m_defaultConfig.OversampleV = 1;
+            m_defaultConfig.PixelSnapH = true;
+            m_defaultConfig.MergeMode = false;
 
             // Make sure the font atlas doesn't get too large, otherwise weaker GPUs might reject it
             m_fontAtlas->Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;
@@ -52,42 +52,23 @@ namespace hex::fonts {
         FontAtlas(const FontAtlas &) = delete;
         FontAtlas &operator=(const FontAtlas &) = delete;
 
-        FontAtlas(FontAtlas &&other) noexcept {
-            this->m_fontAtlas = other.m_fontAtlas;
-            other.m_fontAtlas = nullptr;
-
-            this->m_fontSizes = std::move(other.m_fontSizes);
-            this->m_config = other.m_config;
-            this->m_glyphRange = std::move(other.m_glyphRange);
-            this->m_fontData = std::move(other.m_fontData);
-        }
-
-        FontAtlas &operator=(FontAtlas &&other) noexcept {
-            this->m_fontAtlas = other.m_fontAtlas;
-            other.m_fontAtlas = nullptr;
-
-            this->m_fontSizes = std::move(other.m_fontSizes);
-            this->m_config = other.m_config;
-            this->m_glyphRange = std::move(other.m_glyphRange);
-            this->m_fontData = std::move(other.m_fontData);
-
-            return *this;
-        }
-
         ~FontAtlas() {
-            if (m_fontAtlas != nullptr)
+            if (m_fontAtlas != nullptr) {
+                m_fontAtlas->Locked = false;
                 IM_DELETE(m_fontAtlas);
+                m_fontAtlas = nullptr;
+            }
         }
 
         Font addDefaultFont() {
-            ImFontConfig config = m_config;
+            auto &config = m_fontConfigs.emplace_back(m_defaultConfig);
             config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
             config.SizePixels = std::floor(getAdjustedFontSize(ImHexApi::System::getGlobalScale() * 13.0F));
 
             auto font = m_fontAtlas->AddFontDefault(&config);
             m_fontSizes.emplace_back(false, config.SizePixels);
 
-            m_config.MergeMode = true;
+            m_defaultConfig.MergeMode = true;
 
             return Font(font);
         }
@@ -95,14 +76,14 @@ namespace hex::fonts {
         Font addFontFromMemory(const std::vector<u8> &fontData, float fontSize, bool scalable, ImVec2 offset, const ImVector<ImWchar> &glyphRange = {}) {
             auto &storedFontData = m_fontData.emplace_back(fontData);
 
-            ImFontConfig config = m_config;
+            auto &config = m_fontConfigs.emplace_back(m_defaultConfig);
             config.FontDataOwnedByAtlas = false;
 
             config.GlyphOffset = { offset.x, offset.y };
             auto font = m_fontAtlas->AddFontFromMemoryTTF(storedFontData.data(), int(storedFontData.size()), getAdjustedFontSize(fontSize), &config, !glyphRange.empty() ? glyphRange.Data : m_glyphRange.Data);
             m_fontSizes.emplace_back(scalable, fontSize);
 
-            m_config.MergeMode = true;
+            m_defaultConfig.MergeMode = true;
 
             return Font(font);
         }
@@ -121,23 +102,23 @@ namespace hex::fonts {
 
         void setBold(bool enabled) {
             if (enabled)
-                m_config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
+                m_defaultConfig.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
             else
-                m_config.FontBuilderFlags &= ~ImGuiFreeTypeBuilderFlags_Bold;
+                m_defaultConfig.FontBuilderFlags &= ~ImGuiFreeTypeBuilderFlags_Bold;
         }
 
         void setItalic(bool enabled) {
             if (enabled)
-                m_config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
+                m_defaultConfig.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
             else
-                m_config.FontBuilderFlags &= ~ImGuiFreeTypeBuilderFlags_Oblique;
+                m_defaultConfig.FontBuilderFlags &= ~ImGuiFreeTypeBuilderFlags_Oblique;
         }
 
         void setAntiAliasing(bool enabled) {
             if (enabled)
-                m_config.FontBuilderFlags &= ~ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
+                m_defaultConfig.FontBuilderFlags &= ~ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
             else
-                m_config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
+                m_defaultConfig.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
         }
 
         void enableUnicodeCharacters(bool enabled) {
@@ -177,14 +158,12 @@ namespace hex::fonts {
         }
 
         [[nodiscard]] ImFontAtlas* getAtlas() {
-            auto result = m_fontAtlas;
-
-            return result;
+            return m_fontAtlas;
         }
 
         float calculateFontDescend(const ImHexApi::Fonts::Font &font, float fontSize) const {
             auto atlas = std::make_unique<ImFontAtlas>();
-            auto cfg = m_config;
+            auto cfg = m_defaultConfig;
 
             // Calculate the expected font size
             auto size = fontSize;
@@ -214,11 +193,8 @@ namespace hex::fonts {
         }
 
         void reset() {
-            /*IM_DELETE(m_fontAtlas);
-            m_fontAtlas = IM_NEW(ImFontAtlas);*/
-
             m_fontData.clear();
-            m_config.MergeMode = false;
+            m_defaultConfig.MergeMode = false;
         }
 
         void updateFontScaling(float newScaling) {
@@ -242,9 +218,10 @@ namespace hex::fonts {
         }
 
     private:
-        ImFontAtlas* m_fontAtlas;
+        ImFontAtlas* m_fontAtlas = nullptr;
         std::vector<std::pair<bool, float>> m_fontSizes;
-        ImFontConfig m_config;
+        ImFontConfig m_defaultConfig;
+        std::list<ImFontConfig> m_fontConfigs;
         ImVector<ImWchar> m_glyphRange;
 
         std::list<std::vector<u8>> m_fontData;
