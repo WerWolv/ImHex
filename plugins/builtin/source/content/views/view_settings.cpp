@@ -90,7 +90,7 @@ namespace hex::plugin::builtin {
                     }
 
                     // Draw all settings of that category
-                    for (auto &subCategory : category.subCategories) {
+                    for (auto [index, subCategory] : category.subCategories | std::views::enumerate) {
 
                         // Skip empty subcategories
                         if (subCategory.entries.empty())
@@ -132,7 +132,9 @@ namespace hex::plugin::builtin {
 
                         }
                         ImGuiExt::EndSubWindow();
-                        ImGui::NewLine();
+
+                        if (index != i64(category.subCategories.size()) - 1)
+                            ImGui::NewLine();
                     }
                 }
                 ImGui::EndChild();
