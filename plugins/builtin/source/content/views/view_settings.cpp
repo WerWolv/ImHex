@@ -90,7 +90,9 @@ namespace hex::plugin::builtin {
                     }
 
                     // Draw all settings of that category
-                    for (auto [index, subCategory] : category.subCategories | std::views::enumerate) {
+                    u32 index = 0;
+                    for (auto &subCategory : category.subCategories) {
+                        ON_SCOPE_EXIT { index += 1; };
 
                         // Skip empty subcategories
                         if (subCategory.entries.empty())
