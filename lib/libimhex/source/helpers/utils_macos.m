@@ -48,6 +48,17 @@
         return [[NSScreen mainScreen] backingScaleFactor];
     }
 
+    void macOSCloseButtonPressed(void);
+
+    @interface CloseButtonHandler : NSObject
+    @end
+
+    @implementation CloseButtonHandler
+    - (void)pressed:(id)sender {
+        macOSCloseButtonPressed();
+    }
+    @end
+
     void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode) {
         NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
 
@@ -61,6 +72,10 @@
             [cocoaWindow setHasShadow:YES];
             [cocoaWindow setBackgroundColor:[NSColor colorWithWhite: 0 alpha: 0.001f]];
         }
+
+        NSButton *closeButton = [cocoaWindow standardWindowButton:NSWindowCloseButton];
+        [closeButton setAction:@selector(pressed:)];
+        [closeButton setTarget:[CloseButtonHandler alloc]];
     }
 
     bool isMacosFullScreenModeEnabled(GLFWwindow *window) {

@@ -856,4 +856,11 @@ namespace hex {
             return ImAlphaBlendColors(a.value(), b.value());
     }
 
+    extern "C" void macOSCloseButtonPressed() {
+        auto windowHandle = ImHexApi::System::getMainWindowHandle();
+
+        glfwHideWindow(windowHandle);
+        glfwIconifyWindow(windowHandle);
+    }
+
 }
