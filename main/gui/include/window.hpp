@@ -9,6 +9,7 @@
 
 #include <hex/ui/view.hpp>
 #include <jthread.hpp>
+#include <hex/helpers/opengl.hpp>
 
 struct GLFWwindow;
 struct ImGuiSettingsHandler;
@@ -47,6 +48,10 @@ namespace hex {
         void exitImGui();
 
         void registerEventHandlers();
+        void loadPostProcessingShader();
+
+        void drawImGui();
+        void drawWithShader();
 
         GLFWwindow *m_window = nullptr;
 
@@ -72,6 +77,8 @@ namespace hex {
         std::atomic<bool> m_sleepFlag;
         std::condition_variable m_sleepCondVar;
         std::mutex m_sleepMutex;
+
+        gl::Shader m_postProcessingShader;
     };
 
 }

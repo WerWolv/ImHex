@@ -807,6 +807,8 @@ namespace hex::gl {
         void bind() const;
         void unbind() const;
 
+        bool isValid() const { return m_program != 0; }
+
         void setUniform(std::string_view name, const int &value);
         void setUniform(std::string_view name, const float &value);
 

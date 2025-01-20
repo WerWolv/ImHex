@@ -81,6 +81,9 @@ namespace hex::gl {
             std::vector<char> log(512);
             glGetShaderInfoLog(m_program, log.size(), nullptr, log.data());
             log::error("Failed to link shader: {}", log.data());
+
+            glDeleteProgram(m_program);
+            m_program = 0;
         }
     }
 

@@ -28,6 +28,7 @@
 #include <imgui_internal.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <imgui_impl_opengl3_loader.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <implot.h>
 #include <implot_internal.h>
@@ -43,6 +44,7 @@
 #include <wolv/utils/guards.hpp>
 #include <fmt/printf.h>
 #include <fmt/chrono.h>
+#include <hex/helpers/opengl.hpp>
 
 namespace hex {
 
@@ -75,6 +77,7 @@ namespace hex {
         this->initImGui();
         this->setupNativeWindow();
         this->registerEventHandlers();
+        this->loadPostProcessingShader();
 
         ContentRegistry::Settings::impl::store();
         ContentRegistry::Settings::impl::load();
@@ -150,6 +153,36 @@ namespace hex {
                 }
         });
     }
+
+    void Window::loadPostProcessingShader() {
+
+        for (const auto &folder : paths::Resources.all()) {
+            auto vertexShaderPath = folder / "shader.vert";
+            auto fragmentShaderPath = folder / "shader.frag";
+
+            if (!wolv::io::fs::exists(vertexShaderPath))
+                continue;
+            if (!wolv::io::fs::exists(fragmentShaderPath))
+                continue;
+
+            auto vertexShaderFile = wolv::io::File(vertexShaderPath, wolv::io::File::Mode::Read);
+            if (!vertexShaderFile.isValid())
+                continue;
+
+            auto fragmentShaderFile = wolv::io::File(fragmentShaderPath, wolv::io::File::Mode::Read);
+            if (!fragmentShaderFile.isValid())
+                continue;
+
+            const auto vertexShaderSource = vertexShaderFile.readString();
+            const auto fragmentShaderSource = fragmentShaderFile.readString();
+            m_postProcessingShader = gl::Shader(vertexShaderSource, fragmentShaderSource);
+            if (!m_postProcessingShader.isValid())
+                continue;
+
+            break;
+        }
+    }
+
 
     void handleException() {
         try {
@@ -758,20 +791,12 @@ namespace hex {
         glfwMakeContextCurrent(backupContext);
 
         if (shouldRender) {
-            auto* drawData = ImGui::GetDrawData();
-            
-            // Avoid accidentally clearing the viewport when the application is minimized,
-            // otherwise the OS will display an empty frame during deminimization on macOS
-            if (drawData->DisplaySize.x != 0 && drawData->DisplaySize.y != 0) {
-                int displayWidth, displayHeight;
-                glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
-                glViewport(0, 0, displayWidth, displayHeight);
-                glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
-                glClear(GL_COLOR_BUFFER_BIT);
-                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            if (m_postProcessingShader.isValid())
+                drawWithShader();
+            else
+                drawImGui();
 
-                glfwSwapBuffers(m_window);
-            }
+            glfwSwapBuffers(m_window);
         }
 
         // Process layout load requests
@@ -780,6 +805,92 @@ namespace hex {
         WorkspaceManager::process();
 
         ImGui::GetIO().FontGlobalScale = 1.0F / ImHexApi::System::getBackingScaleFactor();
+    }
+
+    void Window::drawImGui() {
+        auto* drawData = ImGui::GetDrawData();
+
+        // Avoid accidentally clearing the viewport when the application is minimized,
+        // otherwise the OS will display an empty frame during deminimization on macOS
+        if (drawData->DisplaySize.x != 0 && drawData->DisplaySize.y != 0) {
+            int displayWidth, displayHeight;
+            glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
+            glViewport(0, 0, displayWidth, displayHeight);
+            glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
+            glClear(GL_COLOR_BUFFER_BIT);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        }
+    }
+
+    void Window::drawWithShader() {
+        int displayWidth, displayHeight;
+        glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
+
+        GLuint fbo, texture;
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+        // Create a texture to render into
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, displayWidth, displayHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // Attach the texture to the framebuffer
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+        // Check if framebuffer is complete
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            log::error("Framebuffer is not complete!");
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+        drawImGui();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        GLuint quadVAO, quadVBO;
+        float quadVertices[] = {
+            // positions   // texCoords
+            -1.0f,  1.0f,  0.0f, 1.0f,
+            -1.0f, -1.0f,  0.0f, 0.0f,
+             1.0f, -1.0f,  1.0f, 0.0f,
+
+            -1.0f,  1.0f,  0.0f, 1.0f,
+             1.0f, -1.0f,  1.0f, 0.0f,
+             1.0f,  1.0f,  1.0f, 1.0f
+        };
+
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+        glBindVertexArray(0);
+
+        m_postProcessingShader.bind();
+
+        glBindVertexArray(quadVAO);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        m_postProcessingShader.unbind();
+
+        glDeleteVertexArrays(1, &quadVAO);
+        glDeleteBuffers(1, &quadVBO);
+        glDeleteTextures(1, &texture);
+        glDeleteFramebuffers(1, &fbo);
     }
 
     void Window::initGLFW() {
@@ -813,6 +924,7 @@ namespace hex {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
         if (initialWindowProperties.has_value()) {
             glfwWindowHint(GLFW_MAXIMIZED, initialWindowProperties->maximized);
