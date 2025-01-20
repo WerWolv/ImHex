@@ -18,7 +18,7 @@ namespace hex::plugin::visualizers {
             auto b = arguments[2].toFloatingPoint();
             auto a = arguments[3].toFloatingPoint();
 
-            ImGui::ColorButton("color", ImVec4(r / 255.0F, g / 255.0F, b / 255.0F, a / 255.0F), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+            ImGui::ColorButton("##color_visualizer", ImVec4(r / 255.0F, g / 255.0F, b / 255.0F, a / 255.0F), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
         }
 
         void drawGaugeInlineVisualizer(pl::ptrn::Pattern &, bool, std::span<const pl::core::Token::Literal> arguments) {
