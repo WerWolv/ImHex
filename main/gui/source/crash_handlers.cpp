@@ -20,7 +20,9 @@
 #include <exception>
 #include <typeinfo>
 
-#if defined (OS_MACOS)
+#if defined (OS_WINDOWS)
+    #include <windows.h>
+#elif defined (OS_MACOS)
     #include <sys/utsname.h>
 #endif
 
@@ -166,22 +168,45 @@ namespace hex::crash {
 
         // Register signal handlers
         {
-            #define HANDLE_SIGNAL(name)              \
-            std::signal(name, [](int signalNumber) { \
-                signalHandler(signalNumber, #name);  \
-            })
+            #if defined(OS_WINDOWS)
+                #define HANDLE_SIGNAL(name) case name: signalHandler(name, #name); break
+                SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* exceptionInfo) -> LONG {
+                    switch (exceptionInfo->ExceptionRecord->ExceptionCode) {
+                        HANDLE_SIGNAL(EXCEPTION_ACCESS_VIOLATION);
+                        HANDLE_SIGNAL(EXCEPTION_ILLEGAL_INSTRUCTION);
+                        HANDLE_SIGNAL(EXCEPTION_INT_DIVIDE_BY_ZERO);
+                        HANDLE_SIGNAL(EXCEPTION_STACK_OVERFLOW);
+                        HANDLE_SIGNAL(EXCEPTION_DATATYPE_MISALIGNMENT);
+                        HANDLE_SIGNAL(EXCEPTION_ARRAY_BOUNDS_EXCEEDED);
+                    }
 
-            HANDLE_SIGNAL(SIGSEGV);
-            HANDLE_SIGNAL(SIGILL);
-            HANDLE_SIGNAL(SIGABRT);
-            HANDLE_SIGNAL(SIGFPE);
-            HANDLE_SIGNAL(SIGINT);
+                    return EXCEPTION_CONTINUE_SEARCH;
+                });
+                #undef HANDLE_SIGNAL
+            #else
+                #define HANDLE_SIGNAL(name)                         \
+                    {                                               \
+                        struct sigaction action = { };              \
+                        action.sa_handler = [](int signalNumber) {  \
+                            signalHandler(signalNumber, #name);     \
+                        };                                          \
+                        sigemptyset(&action.sa_mask);               \
+                        action.sa_flags = 0;                        \
+                        sigaction(name, &action, nullptr);          \
+                    }
 
-            #if defined (SIGBUS)
-                HANDLE_SIGNAL(SIGBUS);
+                HANDLE_SIGNAL(SIGSEGV);
+                HANDLE_SIGNAL(SIGILL);
+                HANDLE_SIGNAL(SIGABRT);
+                HANDLE_SIGNAL(SIGFPE);
+                HANDLE_SIGNAL(SIGINT);
+
+                #if defined (SIGBUS)
+                    HANDLE_SIGNAL(SIGBUS);
+                #endif
+
+                #undef HANDLE_SIGNAL
             #endif
-
-            #undef HANDLE_SIGNAL
         }
 
         // Configure the uncaught exception handler
