@@ -9,7 +9,6 @@
 #include <fonts/vscode_icons.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <hex/api/event_manager.hpp>
 
 namespace hex::plugin::windows {
 
