@@ -13,6 +13,7 @@
     #include <hex/helpers/default_paths.hpp>
 
     #include <hex/api/events/events_gui.hpp>
+    #include <hex/api/events/requests_gui.hpp>
 
     #include <imgui.h>
     #include <imgui_internal.h>
