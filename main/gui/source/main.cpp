@@ -4,8 +4,8 @@
 
 #include <hex/helpers/logger.hpp>
 
-#include "window.hpp"
-#include "init/splash_window.hpp"
+#include <window.hpp>
+#include <messaging.hpp>
 
 #include "crash_handlers.hpp"
 
@@ -37,6 +37,9 @@ int main(int argc, char **argv) {
 
     // Run platform-specific initialization code
     Window::initNative();
+
+    // Setup messaging system to allow sending commands to the main ImHex instance
+    hex::messaging::setupMessaging();
 
     // Handle command line arguments if any have been passed
     if (argc > 1) {

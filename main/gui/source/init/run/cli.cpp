@@ -65,9 +65,6 @@ namespace hex::init {
             PluginManager::load(dir);
         }
 
-        // Setup messaging system to allow sending commands to the main ImHex instance
-        hex::messaging::setupMessaging();
-
         // Process the arguments
         hex::subcommands::processArguments(args);
 
