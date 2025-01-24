@@ -91,11 +91,13 @@ namespace hex::plugin::builtin {
                 return;
 
             static std::string content;
+            ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 2_scaled);
             if (ImGui::InputTextWithHint("##search", "hex.builtin.view.help.documentation_search"_lang, content, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                PopupDocsQuestion::open(content);
+                openWebpage(fmt::format("https://docs.werwolv.net/imhex?q={}", content));
                 content.clear();
                 ImGui::CloseCurrentPopup();
             }
+            ImGui::PopStyleVar();
         });
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 4000);
