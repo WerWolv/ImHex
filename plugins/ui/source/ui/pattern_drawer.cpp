@@ -256,7 +256,7 @@ namespace hex::ui {
                     return;
 
                 if (matchesFilter(m_filter.path, treePath, false)) {
-                    if (pattern.getValue() == m_filter.value)
+                    if (!m_filter.value.has_value() || pattern.getValue() == m_filter.value)
                         m_filteredPatterns.push_back(&pattern);
                 }
             });
