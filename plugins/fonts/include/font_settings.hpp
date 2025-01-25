@@ -52,6 +52,8 @@ namespace hex::fonts {
         FontFilePicker m_fontFilePicker;
         SliderPoints m_fontSize;
         ContentRegistry::Settings::Widgets::Checkbox m_bold, m_italic, m_antiAliased;
+
+        bool m_applyEnabled = false;
     };
 
     ContentRegistry::Settings::Widgets::Widget::Interface& addFontSettingsWidget(UnlocalizedString name);

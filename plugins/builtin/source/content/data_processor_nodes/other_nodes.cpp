@@ -290,14 +290,14 @@ namespace hex::plugin::builtin {
         NodeVisualizerImage() : Node("hex.builtin.nodes.visualizer.image.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            if (!m_texture.has_value()) {
+            if (!m_texture.isValid() && !m_data.empty()) {
                 m_texture = ImGuiExt::Texture::fromImage(m_data.data(), m_data.size(), ImGuiExt::Texture::Filter::Nearest);
             }
 
-            ImGui::Image(*m_texture, scaled(ImVec2(m_texture->getAspectRatio() * 200, 200)));
+            ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 200, 200)));
             if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
-                ImGui::Image(*m_texture, scaled(ImVec2(m_texture->getAspectRatio() * 600, 600)));
+                ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 600, 600)));
                 ImGui::EndTooltip();
             }
         }
@@ -306,11 +306,12 @@ namespace hex::plugin::builtin {
             const auto &rawData = this->getBufferOnInput(0);
 
             m_data = rawData;
+            m_texture = {};
         }
 
     private:
         std::vector<u8> m_data;
-        std::optional<ImGuiExt::Texture> m_texture;
+        ImGuiExt::Texture m_texture;
     };
 
     class NodeVisualizerImageRGBA : public dp::Node {
@@ -318,14 +319,14 @@ namespace hex::plugin::builtin {
         NodeVisualizerImageRGBA() : Node("hex.builtin.nodes.visualizer.image_rgba.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.width"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.height") }) { }
 
         void drawNode() override {
-            if (!m_texture.has_value()) {
+            if (!m_texture.isValid() && !m_data.empty()) {
                 m_texture = ImGuiExt::Texture::fromImage(m_data.data(), m_data.size(), ImGuiExt::Texture::Filter::Nearest);
             }
 
-            ImGui::Image(*m_texture, scaled(ImVec2(m_texture->getAspectRatio() * 200, 200)));
+            ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 200, 200)));
             if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
-                ImGui::Image(*m_texture, scaled(ImVec2(m_texture->getAspectRatio() * 600, 600)));
+                ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 600, 600)));
                 ImGui::EndTooltip();
             }
         }
@@ -342,11 +343,12 @@ namespace hex::plugin::builtin {
                 throwNodeError(hex::format("Image requires at least {} bytes of data, but only {} bytes are available", requiredBytes, rawData.size()));
 
             m_data = rawData;
+            m_texture = {};
         }
 
     private:
         std::vector<u8> m_data;
-        std::optional<ImGuiExt::Texture> m_texture;
+        ImGuiExt::Texture m_texture;
     };
 
     class NodeVisualizerByteDistribution : public dp::Node {

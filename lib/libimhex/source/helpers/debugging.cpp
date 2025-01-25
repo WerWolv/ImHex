@@ -12,4 +12,13 @@ namespace hex::dbg {
 
     }
 
+    static bool s_debugMode = false;
+    bool debugModeEnabled() {
+        return s_debugMode;
+    }
+
+    void setDebugModeEnabled(bool enabled) {
+        s_debugMode = enabled;
+    }
+
 }
