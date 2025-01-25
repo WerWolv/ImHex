@@ -103,6 +103,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginListBox("##patterns_accept", ImVec2(400_scaled, 0))) {
                     u32 index = 0;
                     for (const auto &[path, author, description] : m_view->m_possiblePatternFiles.get(provider)) {
+                        ImGui::PushID(index + 1);
                         auto fileName = wolv::util::toUTF8String(path.filename());
 
                         std::string displayValue;
@@ -141,6 +142,8 @@ namespace hex::plugin::builtin {
                         ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
                         index++;
+
+                        ImGui::PopID();
                     }
 
                     // Close the popup if there aren't any patterns available
