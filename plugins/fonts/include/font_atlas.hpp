@@ -24,6 +24,8 @@ namespace hex::fonts {
             return m_font->Descent;
         }
 
+        ImFont* getFont() { return m_font; }
+
     private:
         explicit Font(ImFont *font) : m_font(font) { }
 
@@ -62,9 +64,12 @@ namespace hex::fonts {
         Font addDefaultFont() {
             auto &config = m_fontConfigs.emplace_back(m_defaultConfig);
             config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-            config.SizePixels = std::floor(getAdjustedFontSize(ImHexApi::System::getGlobalScale() * 13.0F));
+            config.SizePixels = std::max(1.0F, std::floor(ImHexApi::System::getGlobalScale() * 13.0F));
 
             auto font = m_fontAtlas->AddFontDefault(&config);
+
+            font->Scale = 1.0 / std::floor(ImHexApi::System::getBackingScaleFactor());
+
             m_fontSizes.emplace_back(false, config.SizePixels);
 
             m_defaultConfig.MergeMode = true;
@@ -79,7 +84,9 @@ namespace hex::fonts {
             config.FontDataOwnedByAtlas = false;
 
             config.GlyphOffset = { offset.x, offset.y };
-            auto font = m_fontAtlas->AddFontFromMemoryTTF(storedFontData.data(), int(storedFontData.size()), getAdjustedFontSize(fontSize), &config, !glyphRange.empty() ? glyphRange.Data : m_glyphRange.Data);
+            auto font = m_fontAtlas->AddFontFromMemoryTTF(storedFontData.data(), int(storedFontData.size()), fontSize, &config, !glyphRange.empty() ? glyphRange.Data : m_glyphRange.Data);
+            font->Scale = 1.0 / ImHexApi::System::getBackingScaleFactor();
+
             m_fontSizes.emplace_back(scalable, fontSize);
 
             m_defaultConfig.MergeMode = true;
@@ -207,13 +214,6 @@ namespace hex::fonts {
                     configData.SizePixels = fontSize * newScaling;
                 }
             }
-        }
-
-        float getAdjustedFontSize(float fontSize) const {
-            // Since macOS reports half the framebuffer size that's actually available,
-            // we'll multiply all font sizes by that and then divide the global font scale
-            // by the same amount to get super crisp font rendering.
-            return fontSize * hex::ImHexApi::System::getBackingScaleFactor();
         }
 
     private:

@@ -55,8 +55,8 @@ namespace hex::fonts {
         // If there's no custom font set, or it failed to load, fall back to the default font
         if (!defaultFont.has_value()) {
             if (pixelPerfectFont) {
+                fontSize = std::max(1.0F, std::floor(ImHexApi::System::getGlobalScale() * 13.0F));
                 defaultFont = fontAtlas->addDefaultFont();
-                fontSize = std::floor(fontAtlas->getAdjustedFontSize(ImHexApi::System::getGlobalScale() * 13.0F));
             } else
                 defaultFont = fontAtlas->addFontFromRomFs("fonts/JetBrainsMono.ttf", fontSize, true, ImVec2());
 
