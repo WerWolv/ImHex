@@ -341,7 +341,7 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::PushFont(fonts::CodeEditor());
-            m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, false);
+            m_textEditor.Render("##pattern_editor", textEditorSize, false);
             ImGui::PopFont();
 
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
