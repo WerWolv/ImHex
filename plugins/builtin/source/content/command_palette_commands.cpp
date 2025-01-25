@@ -7,6 +7,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/providers/provider.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <wolv/math_eval/math_evaluator.hpp>
 #include <wolv/utils/guards.hpp>
@@ -297,7 +298,25 @@ namespace hex::plugin::builtin {
                 return hex::format("hex.builtin.command.cmd.result"_lang, input.data());
             },
             [](auto input) {
-                hex::executeCommand(input);
+                if (input.starts_with("imhex ")) {
+                    // Handle ImHex internal commands
+                    auto command = input.substr(6);
+                    auto parts = splitConversionCommandInput(command);
+                    if (!parts.empty()) {
+                        if (parts.size() == 2 && parts[0] == "debug") {
+                            if (parts[1] == "on") {
+                                ContentRegistry::Settings::write<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.debug_mode_enabled", true);
+                                ui::ToastInfo::open("Debug mode enabled!");
+                            } else if (parts[1] == "off") {
+                                ContentRegistry::Settings::write<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.debug_mode_enabled", false);
+                                ui::ToastInfo::open("Debug mode disabled!");
+                            }
+                        }
+                    }
+                } else {
+                    hex::executeCommand(input);
+                }
+
                 return std::nullopt;
             });
 

@@ -3,6 +3,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/debugging.hpp>
 
 #include <romfs/romfs.hpp>
 #include <nlohmann/json.hpp>
@@ -135,5 +136,9 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     // Show a warning banner on debug builds
     #if defined(DEBUG)
         ui::BannerIcon::open(ICON_VS_ERROR, "You're running a Debug build of ImHex. Performance will be degraded!", ImColor(153, 58, 58));
+        dbg::setDebugModeEnabled(true);
+    #else
+        const auto enabled = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.debug_mode_enabled", false);
+        dbg::setDebugModeEnabled(enabled);
     #endif
 }
