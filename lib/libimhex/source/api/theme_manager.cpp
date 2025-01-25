@@ -1,5 +1,5 @@
 #include <hex/api/theme_manager.hpp>
-#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>

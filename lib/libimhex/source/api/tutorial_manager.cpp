@@ -2,6 +2,7 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/api/events/events_gui.hpp>
 
 #include <hex/helpers/auto_reset.hpp>
 

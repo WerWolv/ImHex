@@ -4,6 +4,9 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 
+#include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/requests_interaction.hpp>
+
 #include <pl/patterns/pattern.hpp>
 #include <pl/core/preprocessor.hpp>
 #include <pl/core/parser.hpp>

@@ -1,6 +1,7 @@
 #include "content/views/view_settings.hpp"
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <nlohmann/json.hpp>

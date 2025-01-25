@@ -9,6 +9,10 @@
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 #include <hex/api/tutorial_manager.hpp>
+#include <hex/api/events/requests_lifecycle.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
+#include <hex/api/events/requests_gui.hpp>
+#include <hex/api/events/events_gui.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>

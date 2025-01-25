@@ -8,7 +8,6 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/shortcut_manager.hpp>
-#include <hex/api/event_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 
 #include <hex/providers/provider.hpp>

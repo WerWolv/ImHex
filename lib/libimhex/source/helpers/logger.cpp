@@ -1,7 +1,6 @@
 #include <hex/helpers/logger.hpp>
 
 #include <hex/api/task_manager.hpp>
-#include <hex/api/event_manager.hpp>
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/fmt.hpp>

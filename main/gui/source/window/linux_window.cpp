@@ -4,7 +4,8 @@
 
     #include <hex/api/imhex_api.hpp>
     #include <hex/api/content_registry.hpp>
-    #include <hex/api/event_manager.hpp>
+    #include <hex/api/events/events_gui.hpp>
+    #include <hex/api/events/requests_gui.hpp>
 
     #include <hex/helpers/utils.hpp>
     #include <hex/helpers/utils_linux.hpp>

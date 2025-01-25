@@ -2,6 +2,8 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/events/events_provider.hpp>
+
 #include <wolv/utils/guards.hpp>
 
 #include <fonts/vscode_icons.hpp>

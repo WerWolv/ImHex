@@ -1,4 +1,9 @@
-#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
+#include <hex/api/events/events_gui.hpp>
+#include <hex/api/events/requests_lifecycle.hpp>
+#include <hex/api/events/requests_interaction.hpp>
+#include <hex/api/events/requests_gui.hpp>
 
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/content_registry.hpp>

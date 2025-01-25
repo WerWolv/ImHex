@@ -2,6 +2,7 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/api/events/events_provider.hpp>
 
 #include <toasts/toast_notification.hpp>
 

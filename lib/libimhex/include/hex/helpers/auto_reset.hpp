@@ -1,6 +1,5 @@
 #pragma once
 
-#include <hex/api/event_manager.hpp>
 #include <hex/api/imhex_api.hpp>
 
 namespace hex {

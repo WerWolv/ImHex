@@ -7,7 +7,6 @@
 #include <memory>
 #include <list>
 
-#include <hex/api/event_manager.hpp>
 #include <hex/api/task_manager.hpp>
 
 #include <romfs/romfs.hpp>
