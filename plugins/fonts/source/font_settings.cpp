@@ -153,20 +153,25 @@ namespace hex::fonts {
     bool FontSelector::drawPopup() {
         bool changed = false;
         if (ImGui::BeginPopup("Fonts")) {
-            m_fontFilePicker.draw("hex.fonts.setting.font.custom_font"_lang);
+            if (m_fontFilePicker.draw("hex.fonts.setting.font.custom_font"_lang)) m_applyEnabled = true;
 
             ImGui::BeginDisabled(m_fontFilePicker.isPixelPerfectFontSelected());
             {
-                m_fontSize.draw("hex.fonts.setting.font.font_size"_lang);
-                m_bold.draw("hex.fonts.setting.font.font_bold"_lang);
-                m_italic.draw("hex.fonts.setting.font.font_italic"_lang);
-                m_antiAliased.draw("hex.fonts.setting.font.font_antialias"_lang);
+                if (m_fontSize.draw("hex.fonts.setting.font.font_size"_lang)) m_applyEnabled = true;
+                if (m_bold.draw("hex.fonts.setting.font.font_bold"_lang)) m_applyEnabled = true;
+                if (m_italic.draw("hex.fonts.setting.font.font_italic"_lang)) m_applyEnabled = true;
+                if (m_antiAliased.draw("hex.fonts.setting.font.font_antialias"_lang)) m_applyEnabled = true;
             }
             ImGui::EndDisabled();
 
             ImGui::NewLine();
-            if (ImGui::Button("hex.ui.common.apply"_lang))
+
+            ImGui::BeginDisabled(!m_applyEnabled);
+            if (ImGui::Button("hex.ui.common.apply"_lang)) {
                 changed = true;
+                m_applyEnabled = false;
+            }
+            ImGui::EndDisabled();
 
             ImGui::EndPopup();
         }
