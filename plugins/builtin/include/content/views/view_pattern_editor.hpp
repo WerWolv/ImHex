@@ -24,12 +24,12 @@ namespace pl::ptrn { class Pattern; }
 namespace hex::plugin::builtin {
 
 
-    constexpr static auto textEditorView    = "/Pattern editor_";
+    constexpr static auto textEditorView    = "/##pattern_editor_";
     constexpr static auto consoleView       = "/##console_";
     constexpr static auto variablesView     = "/##env_vars_";
     constexpr static auto settingsView      = "/##settings_";
     constexpr static auto sectionsView      = "/##sections_table_";
-    constexpr static auto virtualFilesView  = "/Virtual File Tree_";
+    constexpr static auto virtualFilesView  = "/##Virtual_File_Tree_";
     constexpr static auto debuggerView      = "/##debugger_";
 
     class PatternSourceCode {
