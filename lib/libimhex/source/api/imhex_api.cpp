@@ -638,13 +638,7 @@ namespace hex {
                     return std::midpoint(xScale, yScale);
                 }
             #elif defined(OS_WEB)
-                return MAIN_THREAD_EM_ASM_INT({
-                    try {
-                        return window.devicePixelRatio;
-                    } catch (e) {
-                        return 1.0;
-                    }
-                });
+                return 1.0F;
             #else
                 return 1.0F;
             #endif

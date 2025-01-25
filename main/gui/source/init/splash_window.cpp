@@ -482,7 +482,12 @@ namespace hex::init {
             if (meanScale <= 0.0F)
                 meanScale = 1.0F;
 
-            meanScale /= hex::ImHexApi::System::getBackingScaleFactor();                
+            meanScale /= hex::ImHexApi::System::getBackingScaleFactor();
+
+            // Force native scale factor to 1.0 on web builds
+            #if defined(OS_WEB)
+                meanScale = 1.0F;
+            #endif
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
             ImHexApi::System::impl::setNativeScale(meanScale);
