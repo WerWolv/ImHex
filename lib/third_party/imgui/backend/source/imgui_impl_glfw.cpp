@@ -386,13 +386,23 @@ static void ImGui_ImplGlfw_UpdateKeyModifiers(GLFWwindow* window, int mods)
     // IMHEX PATCH BEGIN
     ImGuiIO& io = ImGui::GetIO();
 
-    static bool isX11 = std::string_view(std::getenv("XDG_SESSION_TYPE")) == "x11";
+#ifdef __linux__
+    static bool isX11 = [] {
+        const auto sessionType = std::getenv("XDG_SESSION_TYPE");
+        if (sessionType == nullptr)
+            return false;
+        
+        return std::string_view(sessionType) == "x11";
+    }();
+
     if (isX11) {
         io.AddKeyEvent(ImGuiMod_Ctrl,  (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) || (glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS));
         io.AddKeyEvent(ImGuiMod_Shift, (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)   == GLFW_PRESS) || (glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT)   == GLFW_PRESS));
         io.AddKeyEvent(ImGuiMod_Alt,   (glfwGetKey(window, GLFW_KEY_LEFT_ALT)     == GLFW_PRESS) || (glfwGetKey(window, GLFW_KEY_RIGHT_ALT)     == GLFW_PRESS));
         io.AddKeyEvent(ImGuiMod_Super, (glfwGetKey(window, GLFW_KEY_LEFT_SUPER)   == GLFW_PRESS) || (glfwGetKey(window, GLFW_KEY_RIGHT_SUPER)   == GLFW_PRESS));
-    } else {
+    } else
+#endif
+    {
         io.AddKeyEvent(ImGuiMod_Ctrl,  (mods & GLFW_MOD_CONTROL) != 0);
         io.AddKeyEvent(ImGuiMod_Shift, (mods & GLFW_MOD_SHIFT)   != 0);
         io.AddKeyEvent(ImGuiMod_Alt,   (mods & GLFW_MOD_ALT)     != 0);
