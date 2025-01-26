@@ -24,6 +24,10 @@
         void macosMarkContentEdited(GLFWwindow *window, bool edited = true);
 
         void macosGetKey(Keys key, int *output);
+
+        bool macosIsMainInstance();
+        void macosSendMessageToMainInstance(const unsigned char *data, size_t size);
+        void macosInstallEventListener();
     }
 
 #endif

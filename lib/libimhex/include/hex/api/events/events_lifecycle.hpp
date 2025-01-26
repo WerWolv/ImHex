@@ -69,4 +69,11 @@ namespace hex {
      */
     EVENT_DEF(EventProjectOpened);
 
+    /**
+     * @brief Called when a native message was received from another ImHex instance
+     * @param eventType Type name of the event
+     * @param args Decoded arguments sent from other instance
+     */
+    EVENT_DEF(EventNativeMessageReceived, std::string, std::vector<u8>);
+
 }

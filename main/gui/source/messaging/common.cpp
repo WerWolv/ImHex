@@ -26,6 +26,10 @@ namespace hex::messaging {
                 sendToOtherInstance(eventName, eventData);
             }
         });
+
+        EventNativeMessageReceived::subscribe([](const std::string &eventName, const std::vector<u8> &eventData) {
+            messageReceived(eventName, eventData);
+        });
     }
 
     void setupMessaging() {

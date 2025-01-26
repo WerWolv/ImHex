@@ -17,6 +17,7 @@
 
     #import <Cocoa/Cocoa.h>
     #import <Foundation/Foundation.h>
+    #import <AppleScriptObjC/AppleScriptObjC.h>
 
     #include <hex/helpers/keys.hpp>
 
@@ -145,6 +146,74 @@
         NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
 
         [cocoaWindow setDocumentEdited:edited];
+    }
+
+    static NSArray* getRunningInstances(NSString *bundleIdentifier) {
+        return [NSRunningApplication runningApplicationsWithBundleIdentifier: bundleIdentifier];
+    }
+
+    bool macosIsMainInstance(void) {
+        NSArray *applications = getRunningInstances(@"net.WerWolv.ImHex");
+        return applications.count == 0;
+    }
+
+    extern void macosEventDataReceived(const unsigned char *data, size_t length);
+    static OSErr handleAppleEvent(const AppleEvent *event, AppleEvent *reply, void *refcon) {
+        (void)reply;
+        (void)refcon;
+
+        // Extract the raw binary data from the event's parameter
+        AEDesc paramDesc;
+        OSErr err = AEGetParamDesc(event, keyDirectObject, typeWildCard, &paramDesc);
+        if (err != noErr) {
+            NSLog(@"Failed to get parameter: %d", err);
+            return err;
+        }
+
+        // Convert the AEDesc to NSData
+        NSAppleEventDescriptor *descriptor = [[NSAppleEventDescriptor alloc] initWithAEDescNoCopy:&paramDesc];
+        NSData *binaryData = descriptor.data;
+
+        // Process the binary data
+        if (binaryData) {
+            macosEventDataReceived(binaryData.bytes, binaryData.length);
+        }
+
+        return noErr;
+    }
+
+    void macosInstallEventListener(void) {
+        AEInstallEventHandler('misc', 'imhx', NewAEEventHandlerUPP(handleAppleEvent), 0, false);
+    }
+
+    void macosSendMessageToMainInstance(const unsigned char *data, size_t size) {
+        NSString *bundleIdentifier = @"net.WerWolv.ImHex";
+
+        NSData *binaryData = [NSData dataWithBytes:data length:size];
+        // Find the target application by its bundle identifier
+        NSAppleEventDescriptor *targetApp = [NSAppleEventDescriptor descriptorWithBundleIdentifier:bundleIdentifier];
+        if (!targetApp) {
+            NSLog(@"Application with bundle identifier %@ not found.", bundleIdentifier);
+            return;
+        }
+
+        // Create the Apple event
+        NSAppleEventDescriptor *event = [[NSAppleEventDescriptor alloc] initWithEventClass:'misc'
+                                                                                   eventID:'imhx'
+                                                                          targetDescriptor:targetApp
+                                                                                  returnID:kAutoGenerateReturnID
+                                                                             transactionID:kAnyTransactionID];
+
+        // Add a parameter with raw binary data
+        NSAppleEventDescriptor *binaryDescriptor = [NSAppleEventDescriptor descriptorWithDescriptorType:typeData
+                                                                                                   data:binaryData];
+        [event setParamDescriptor:binaryDescriptor forKeyword:keyDirectObject];
+
+        // Send the event
+        OSStatus status = AESendMessage([event aeDesc], NULL, kAENoReply, kAEDefaultTimeout);
+        if (status != noErr) {
+            NSLog(@"Failed to send Apple event: %d", status);
+        }
     }
 
     @interface HexDocument : NSDocument
