@@ -213,8 +213,6 @@
         OSStatus status = AESendMessage([event aeDesc], NULL, kAENoReply, kAEDefaultTimeout);
         if (status != noErr) {
             NSLog(@"Failed to send Apple event: %d", status);
-        } else {
-            NSLog(@"Apple event with raw binary data sent successfully.");
         }
     }
 
