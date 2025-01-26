@@ -59,6 +59,22 @@
     }
     @end
 
+    @interface ImHexAppDelegate : NSObject<NSApplicationDelegate>
+    @end
+
+    @implementation ImHexAppDelegate
+        - (void) application:(NSApplication*)sender openFiles:(NSArray*)filenames
+        {
+            NSLog(@"A");
+
+            [NSApp replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
+        }
+
+        - (IBAction) clickAction:(id)sender {
+          NSLog(@"B");
+        }
+    @end
+
     void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode) {
         NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
 
@@ -76,6 +92,9 @@
         NSButton *closeButton = [cocoaWindow standardWindowButton:NSWindowCloseButton];
         [closeButton setAction:@selector(pressed:)];
         [closeButton setTarget:[CloseButtonHandler alloc]];
+
+        NSApplication *app = [NSApplication sharedApplication];
+        [app setDelegate:[ImHexAppDelegate alloc]];
     }
 
     bool isMacosFullScreenModeEnabled(GLFWwindow *window) {
