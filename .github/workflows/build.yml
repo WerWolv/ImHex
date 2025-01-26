@@ -372,7 +372,7 @@ jobs:
       run: |
         git clone https://github.com/sindresorhus/create-dmg
         cd create-dmg
-        npm i
+        npm i && npm -g i
         cd ../build/install
         create-dmg ImHex.app
         mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-x86_64.dmg
@@ -485,7 +485,7 @@ jobs:
         run: |
           git clone https://github.com/sindresorhus/create-dmg
           cd create-dmg
-          npm i
+          npm i && npm -g i
           cd ../build/install
           create-dmg ImHex.app
           mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-arm64.dmg
