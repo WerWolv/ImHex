@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
 
         // Add the settings menu item to the Extras menu
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name" }, ICON_VS_SETTINGS_GEAR, 4000, Shortcut::None, [&, this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name" }, ICON_VS_SETTINGS_GEAR, 4000, CTRLCMD + Keys::Comma, [&, this] {
             this->getWindowOpenState() = true;
         });
 
