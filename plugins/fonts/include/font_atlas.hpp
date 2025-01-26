@@ -64,7 +64,7 @@ namespace hex::fonts {
         Font addDefaultFont() {
             auto &config = m_fontConfigs.emplace_back(m_defaultConfig);
             config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-            config.SizePixels = std::max(1.0F, std::floor(ImHexApi::System::getGlobalScale() * 13.0F));
+            config.SizePixels = std::max(1.0F, std::floor(ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor() * 13.0F));
 
             auto font = m_fontAtlas->AddFontDefault(&config);
 
