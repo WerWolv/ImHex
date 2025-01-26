@@ -374,7 +374,7 @@ jobs:
         cd create-dmg
         npm i && npm -g i
         cd ../build/install
-        create-dmg ImHex.app
+        create-dmg ImHex.app || true
         mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-x86_64.dmg
 
     - name: 🗝️ Generate build provenance attestations
@@ -487,7 +487,7 @@ jobs:
           cd create-dmg
           npm i && npm -g i
           cd ../build/install
-          create-dmg ImHex.app
+          create-dmg ImHex.app || true
           mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-arm64.dmg
 
       - name: 🗝️ Generate build provenance attestations
