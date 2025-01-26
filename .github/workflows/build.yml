@@ -370,6 +370,7 @@ jobs:
 
     - name: 📦 Create DMG
       run: |
+        brew install imagemagick
         git clone https://github.com/sindresorhus/create-dmg
         cd create-dmg
         npm i && npm -g i
@@ -483,6 +484,7 @@ jobs:
 
       - name: 📦 Create DMG
         run: |
+          brew install imagemagick
           git clone https://github.com/sindresorhus/create-dmg
           cd create-dmg
           npm i && npm -g i
