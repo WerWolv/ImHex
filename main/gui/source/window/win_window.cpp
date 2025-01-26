@@ -12,6 +12,7 @@
     #include <hex/helpers/default_paths.hpp>
 
     #include <hex/api/events/events_gui.hpp>
+    #include <hex/api/events/events_lifecycle.hpp>
     #include <hex/api/events/requests_gui.hpp>
 
     #include <imgui.h>
@@ -93,7 +94,7 @@ namespace hex {
 
                 std::vector<u8> eventData(messageData + nullIndex + 1, messageData + messageSize);
 
-                hex::messaging::messageReceived(eventName, eventData);
+                EventNativeMessageReceived::post(eventName, eventData);
                 break;
             }
             case WM_SETTINGCHANGE: {

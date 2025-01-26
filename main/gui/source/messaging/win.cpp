@@ -42,16 +42,20 @@ namespace hex::messaging {
         log::debug("Sending event {} to another instance (not us)", eventName);
 
         // Get the window we want to send it to
-        HWND imHexWindow = *getImHexWindow();
+        auto potentialWindow = getImHexWindow();
+        if (!potentialWindow.has_value())
+            return;
+
+        HWND imHexWindow = potentialWindow.value();
 
         // Create the message
-        std::vector<u8> fulleventData(eventName.begin(), eventName.end());
-        fulleventData.push_back('\0');
+        std::vector<u8> fullEventData(eventName.begin(), eventName.end());
+        fullEventData.push_back('\0');
 
-        fulleventData.insert(fulleventData.end(), args.begin(), args.end());
+        fullEventData.insert(fullEventData.end(), args.begin(), args.end());
         
-        u8 *data = &fulleventData[0];
-        DWORD dataSize = fulleventData.size();
+        u8 *data = &fullEventData[0];
+        DWORD dataSize = fullEventData.size();
 
         COPYDATASTRUCT message = {
             .dwData = 0,

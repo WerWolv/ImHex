@@ -3,20 +3,30 @@
 #include <stdexcept>
 
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/utils_macos.hpp>
 
 #include "messaging.hpp"
 
 namespace hex::messaging {
 
     void sendToOtherInstance(const std::string &eventName, const std::vector<u8> &args) {
-        std::ignore = eventName;
-        std::ignore = args;
-        log::error("Unimplemented function 'sendToOtherInstance()' called");
+        log::debug("Sending event {} to another instance (not us)", eventName);
+
+        // Create the message
+        std::vector<u8> fullEventData(eventName.begin(), eventName.end());
+        fullEventData.push_back('\0');
+
+        fullEventData.insert(fullEventData.end(), args.begin(), args.end());
+
+        u8 *data = &fullEventData[0];
+        auto dataSize = fullEventData.size();
+
+        macosSendMessageToMainInstance(data, dataSize);
     }
 
-    // Not implemented, so lets say we are the main instance every time so events are forwarded to ourselves
     bool setupNative() {
-        return true;
+        macosInstallEventListener();
+        return macosIsMainInstance();
     }
 }
 
