@@ -88,7 +88,10 @@ namespace hex::fonts {
                 const ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->getDescent() - fontAtlas->calculateFontDescend(font, fontSize)) };
 
                 // Load the font
-                fontAtlas->addFontFromMemory(font.fontData, font.defaultSize.value_or(fontSize), !font.defaultSize.has_value(), offset, glyphRanges.back());
+                float size = fontSize;
+                if (font.defaultSize.has_value())
+                    size = font.defaultSize.value() * ImHexApi::System::getBackingScaleFactor();
+                fontAtlas->addFontFromMemory(font.fontData, size, !font.defaultSize.has_value(), offset, glyphRanges.back());
             }
         }
 
