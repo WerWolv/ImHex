@@ -100,7 +100,6 @@
 #endif
 
 // GLFW
-#include <string_view>
 #include <GLFW/glfw3.h>
 
 #ifdef _WIN32
@@ -121,6 +120,11 @@
 // IMHEX PATCH END
 #ifndef _WIN32
 #include <unistd.h>             // for usleep()
+#endif
+
+#ifdef __linux__
+#include <string_view>
+#include <cstdlib>
 #endif
 
 #ifdef __EMSCRIPTEN__
@@ -391,7 +395,7 @@ static void ImGui_ImplGlfw_UpdateKeyModifiers(GLFWwindow* window, int mods)
         const auto sessionType = std::getenv("XDG_SESSION_TYPE");
         if (sessionType == nullptr)
             return false;
-        
+
         return std::string_view(sessionType) == "x11";
     }();
 
