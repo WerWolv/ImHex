@@ -488,7 +488,7 @@ jobs:
           git clone https://github.com/sindresorhus/create-dmg
           cd create-dmg
           npm i && npm -g i
-          cd out
+          cd ../out
           create-dmg ImHex.app || true
           mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-arm64.dmg
 
