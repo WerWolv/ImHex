@@ -19,6 +19,7 @@
 
 #include <romfs/romfs.hpp>
 #include <numeric>
+#include <hex/helpers/auto_reset.hpp>
 
 namespace hex::plugin::visualizers {
 
@@ -85,7 +86,7 @@ namespace hex::plugin::visualizers {
 
         IndexType s_indexType;
 
-        ImGuiExt::Texture s_modelTexture;
+        AutoReset<ImGuiExt::Texture> s_modelTexture;
 
         gl::Vector<float, 3> s_translation      = { {  0.0F, 0.0F, -3.0F } };
         gl::Vector<float, 3> s_rotation         = { {  0.0F, 0.0F,  0.0F } };
@@ -94,7 +95,7 @@ namespace hex::plugin::visualizers {
         gl::Vector<float, 3> s_lightColor       = { {  1.0F, 1.0F,  1.0F } };
         gl::Matrix<float, 4, 4> s_rotate        = gl::Matrix<float, 4, 4>::identity();
 
-        ImGuiExt::Texture s_texture;
+        AutoReset<ImGuiExt::Texture> s_texture;
         std::fs::path s_texturePath;
 
         u32 s_vertexCount;
@@ -806,7 +807,7 @@ namespace hex::plugin::visualizers {
                 }
 
                 if (s_drawTexture)
-                    glBindTexture(GL_TEXTURE_2D, s_modelTexture);
+                    glBindTexture(GL_TEXTURE_2D, *s_modelTexture);
 
                 buffers.indices.bind();
                 if (buffers.indices.getSize() == 0)

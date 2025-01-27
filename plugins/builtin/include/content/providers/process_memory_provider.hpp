@@ -11,6 +11,7 @@
 
 #include <set>
 #include <thread>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <nlohmann/json.hpp>
 

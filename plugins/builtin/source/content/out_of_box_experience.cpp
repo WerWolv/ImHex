@@ -10,6 +10,7 @@
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <romfs/romfs.hpp>
 #include <wolv/hash/uuid.hpp>
@@ -24,8 +25,8 @@ namespace hex::plugin::builtin {
 
     namespace {
 
-        ImGuiExt::Texture s_imhexBanner;
-        ImGuiExt::Texture s_compassTexture, s_globeTexture;
+        AutoReset<ImGuiExt::Texture> s_imhexBanner;
+        AutoReset<ImGuiExt::Texture> s_compassTexture, s_globeTexture;
         std::list<std::pair<std::fs::path, ImGuiExt::Texture>> s_screenshots;
         nlohmann::json s_screenshotDescriptions;
 
@@ -77,9 +78,9 @@ namespace hex::plugin::builtin {
 
                 // Draw banner
                 ImGui::SetCursorPos(scaled({ 25 * bannerSlideIn, 25 }));
-                const auto bannerSize = s_imhexBanner.getSize() / (3.0F * (1.0F / ImHexApi::System::getGlobalScale()));
+                const auto bannerSize = s_imhexBanner->getSize() / (3.0F * (1.0F / ImHexApi::System::getGlobalScale()));
                 ImGui::Image(
-                    s_imhexBanner,
+                    *s_imhexBanner,
                     bannerSize,
                     { 0, 0 }, { 1, 1 },
                     { 1, 1, 1, (bannerFadeIn - 0.5F) * 2.0F }
@@ -222,9 +223,9 @@ namespace hex::plugin::builtin {
                             currLanguage = languages.begin();
 
                         // Draw globe image
-                        const auto imageSize = s_compassTexture.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
+                        const auto imageSize = s_compassTexture->getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
                         ImGui::SetCursorPos((ImGui::GetWindowSize() / 2 - imageSize / 2) - ImVec2(0, 50_scaled));
-                        ImGui::Image(s_globeTexture, imageSize);
+                        ImGui::Image(*s_globeTexture, imageSize);
 
                         ImGui::NewLine();
                         ImGui::NewLine();
@@ -372,9 +373,9 @@ namespace hex::plugin::builtin {
                         ImGui::NewLine();
 
                         // Draw compass image
-                        const auto imageSize = s_compassTexture.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
+                        const auto imageSize = s_compassTexture->getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
                         ImGui::SetCursorPos((ImGui::GetWindowSize() / 2 - imageSize / 2) - ImVec2(0, 50_scaled));
-                        ImGui::Image(s_compassTexture, imageSize);
+                        ImGui::Image(*s_compassTexture, imageSize);
 
                         // Draw information text about playing the tutorial
                         ImGui::SetCursorPosX(0);

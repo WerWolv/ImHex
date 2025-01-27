@@ -3,6 +3,7 @@
 #include <content/visualizer_helpers.hpp>
 
 #include <imgui.h>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
@@ -12,7 +13,7 @@ namespace hex::plugin::visualizers {
 
 
     void drawImageVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
-        static ImGuiExt::Texture texture;
+        static AutoReset<ImGuiExt::Texture> texture;
         static float scale = 1.0F;
 
         if (shouldReset) {
@@ -20,11 +21,11 @@ namespace hex::plugin::visualizers {
 
             auto data = pattern->getBytes();
             texture = ImGuiExt::Texture::fromImage(data.data(), data.size(), ImGuiExt::Texture::Filter::Nearest);
-            scale = 200_scaled / texture.getSize().x;
+            scale = 200_scaled / texture->getSize().x;
         }
 
         if (texture.isValid())
-            ImGui::Image(texture, texture.getSize() * scale);
+            ImGui::Image(*texture, texture->getSize() * scale);
 
         if (ImGui::IsWindowHovered()) {
             auto scrollDelta = ImGui::GetIO().MouseWheel;
@@ -36,7 +37,7 @@ namespace hex::plugin::visualizers {
     }
 
     void drawBitmapVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
-        static ImGuiExt::Texture texture;
+        static AutoReset<ImGuiExt::Texture> texture;
         static float scale = 1.0F;
 
         if (shouldReset) {
@@ -62,7 +63,7 @@ namespace hex::plugin::visualizers {
         }
 
         if (texture.isValid())
-            ImGui::Image(texture, texture.getSize() * scale);
+            ImGui::Image(*texture, texture->getSize() * scale);
 
         if (ImGui::IsWindowHovered()) {
             auto scrollDelta = ImGui::GetIO().MouseWheel;

@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <random>
+#include <hex/helpers/auto_reset.hpp>
 
 namespace hex {
 

@@ -925,11 +925,6 @@ namespace hex {
             }
         });
 
-        if (!glfwInit()) {
-            log::fatal("Failed to initialize GLFW!");
-            std::abort();
-        }
-
         configureGLFW();
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -1297,7 +1292,6 @@ namespace hex {
 
     void Window::exitGLFW() {
         glfwDestroyWindow(m_window);
-        glfwTerminate();
 
         m_window = nullptr;
     }

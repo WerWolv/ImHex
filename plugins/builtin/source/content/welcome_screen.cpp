@@ -41,7 +41,7 @@
 namespace hex::plugin::builtin {
 
     namespace {
-        ImGuiExt::Texture s_bannerTexture, s_nightlyTexture, s_backdropTexture, s_infoBannerTexture;
+        AutoReset<ImGuiExt::Texture> s_bannerTexture, s_nightlyTexture, s_backdropTexture, s_infoBannerTexture;
 
         std::string s_tipOfTheDay;
 
@@ -173,7 +173,7 @@ namespace hex::plugin::builtin {
         void drawWelcomeScreenContentSimplified() {
             const ImVec2 backdropSize = scaled({ 350, 350 });
             ImGui::SetCursorPos((ImGui::GetContentRegionAvail() - backdropSize) / 2);
-            ImGui::Image(s_backdropTexture, backdropSize);
+            ImGui::Image(*s_backdropTexture, backdropSize);
 
             ImGuiExt::TextFormattedCentered("hex.builtin.welcome.drop_file"_lang);
         }
@@ -193,7 +193,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, 0))) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::Image(s_bannerTexture, s_bannerTexture.getSize());
+                    ImGui::Image(*s_bannerTexture, s_bannerTexture->getSize());
 
                     if (ImHexApi::System::isNightlyBuild()) {
                         auto cursor = ImGui::GetCursorPos();
@@ -202,7 +202,7 @@ namespace hex::plugin::builtin {
                         ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 15_scaled);
                         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
 
-                        ImGui::Image(s_nightlyTexture, s_nightlyTexture.getSize());
+                        ImGui::Image(*s_nightlyTexture, s_nightlyTexture->getSize());
                         ImGuiExt::InfoTooltip(hex::format("{0}\n\nCommit: {1}@{2}", "hex.builtin.welcome.nightly_build"_lang, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(true)).c_str());
 
                         ImGui::SetCursorPos(cursor);
@@ -344,7 +344,7 @@ namespace hex::plugin::builtin {
                         ImGuiExt::EndSubWindow();
                     }
 
-                    if (s_infoBannerTexture.isValid()) {
+                    if (s_infoBannerTexture->isValid()) {
                         static bool hovered = false;
 
                         ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Border));
@@ -352,7 +352,7 @@ namespace hex::plugin::builtin {
 
                         if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.info"_lang, nullptr, ImVec2(), ImGuiChildFlags_AutoResizeX)) {
                             const auto height = 80_scaled;
-                            ImGui::Image(s_infoBannerTexture, ImVec2(height * s_infoBannerTexture.getAspectRatio(), height));
+                            ImGui::Image(*s_infoBannerTexture, ImVec2(height * s_infoBannerTexture->getAspectRatio(), height));
                             hovered = ImGui::IsItemHovered();
 
                             if (ImGui::IsItemClicked()) {
@@ -464,7 +464,7 @@ namespace hex::plugin::builtin {
                         auto imagePos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
 
                         ImGui::SetCursorPos(imagePos);
-                        ImGui::Image(s_backdropTexture, imageSize);
+                        ImGui::Image(*s_backdropTexture, imageSize);
 
                         auto loadDefaultText = "hex.builtin.layouts.none.restore_default"_lang;
                         auto textSize = ImGui::CalcTextSize(loadDefaultText);
@@ -544,7 +544,7 @@ namespace hex::plugin::builtin {
             s_nightlyTexture = changeTextureSvg(hex::format("assets/{}/nightly.svg", "common"), 35_scaled);
             s_backdropTexture = changeTexture(hex::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
 
-            if (!s_bannerTexture.isValid()) {
+            if (!s_bannerTexture->isValid()) {
                 log::error("Failed to load banner texture!");
             }
         });
@@ -671,14 +671,14 @@ namespace hex::plugin::builtin {
                 if (wolv::io::fs::exists(infoBannerPath)) {
                     s_infoBannerTexture = ImGuiExt::Texture::fromImage(infoBannerPath, ImGuiExt::Texture::Filter::Linear);
 
-                    if (s_infoBannerTexture.isValid())
+                    if (s_infoBannerTexture->isValid())
                         break;
                 }
             }
 
             auto allowNetworking = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", false)
                 && ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0) != 0;
-            if (!s_infoBannerTexture.isValid() && allowNetworking) {
+            if (!s_infoBannerTexture->isValid() && allowNetworking) {
                 TaskManager::createBackgroundTask("hex.builtin.task.loading_banner"_lang, [](auto&) {
                     HttpRequest request("GET",
                         ImHexApiURL + hex::format("/info/{}/image", hex::toLower(ImHexApi::System::getOSName())));

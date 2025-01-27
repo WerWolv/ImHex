@@ -60,8 +60,6 @@ namespace hex {
         double m_lastStartFrameTime = 0;
         double m_lastFrameTime = 0;
 
-        ImGuiExt::Texture m_logoTexture;
-
         std::mutex m_popupMutex;
         std::list<std::string> m_popupsToOpen;
         std::set<int> m_pressedKeys;

@@ -306,7 +306,7 @@ namespace hex::plugin::builtin {
             const auto &rawData = this->getBufferOnInput(0);
 
             m_data = rawData;
-            m_texture = {};
+            m_texture.reset();
         }
 
     private:
@@ -332,7 +332,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            m_texture = { };
+            m_texture.reset();
 
             const auto &rawData = this->getBufferOnInput(0);
             const auto &width = this->getIntegerOnInput(1);
@@ -343,7 +343,7 @@ namespace hex::plugin::builtin {
                 throwNodeError(hex::format("Image requires at least {} bytes of data, but only {} bytes are available", requiredBytes, rawData.size()));
 
             m_data = rawData;
-            m_texture = {};
+            m_texture.reset();
         }
 
     private:

@@ -14,6 +14,7 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/api/localization_manager.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 namespace hex {
 

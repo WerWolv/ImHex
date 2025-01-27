@@ -444,6 +444,8 @@ namespace hex {
                 bool isWindowResizable();
 
                 void addAutoResetObject(hex::impl::AutoResetBase *object);
+                void removeAutoResetObject(hex::impl::AutoResetBase *object);
+
                 void cleanup();
 
             }

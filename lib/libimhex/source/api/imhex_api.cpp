@@ -574,13 +574,22 @@ namespace hex {
                 return s_windowResizable;
             }
 
-            static std::vector<hex::impl::AutoResetBase*> s_autoResetObjects;
+            static auto& getAutoResetObjects() {
+                static std::set<hex::impl::AutoResetBase*> autoResetObjects;
+
+                return autoResetObjects;
+            }
+
             void addAutoResetObject(hex::impl::AutoResetBase *object) {
-                s_autoResetObjects.emplace_back(object);
+                getAutoResetObjects().insert(object);
+            }
+
+            void removeAutoResetObject(hex::impl::AutoResetBase *object) {
+                getAutoResetObjects().erase(object);
             }
 
             void cleanup() {
-                for (const auto &object : s_autoResetObjects)
+                for (const auto &object : getAutoResetObjects())
                     object->reset();
             }
 

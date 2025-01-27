@@ -23,6 +23,20 @@ namespace hex {
             ImHexApi::System::impl::addAutoResetObject(this);
         }
 
+        AutoReset(const T &value) : AutoReset() {
+            m_value = value;
+            m_valid = true;
+        }
+
+        AutoReset(T &&value) noexcept : AutoReset() {
+            m_value = std::move(value);
+            m_valid = true;
+        }
+
+        ~AutoReset() {
+            ImHexApi::System::impl::removeAutoResetObject(this);
+        }
+
         T* operator->() {
             return &m_value;
         }

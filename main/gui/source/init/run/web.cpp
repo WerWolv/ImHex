@@ -2,6 +2,7 @@
 
     #include <emscripten.h>
     #include <emscripten/html5.h>
+    #include <GLFW/glfw3.h>
 
     #include <hex/api/imhex_api.hpp>
     #include <hex/api/events/requests_lifecycle.hpp>
@@ -49,9 +50,12 @@
 
                         emscripten_cancel_main_loop();
 
+                        ON_SCOPE_EXIT { glfwTerminate(); };
+
                         try {
                             saveFsData();
                             deinitializeImHex();
+
                             return "";
                         } catch (const std::exception &e) {
                             static std::string message;
@@ -64,6 +68,12 @@
                     splashWindow.reset();
 
                     emscripten_cancel_main_loop();
+
+                    // Initialize GLFW
+                    if (!glfwInit()) {
+                        log::fatal("Failed to initialize GLFW!");
+                        std::abort();
+                    }
 
                     // Main window
                     static std::optional<Window> window;
