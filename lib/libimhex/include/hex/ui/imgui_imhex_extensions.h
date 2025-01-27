@@ -79,17 +79,16 @@ namespace ImGuiExt {
         Texture(const Texture&) = delete;
         Texture(Texture&& other) noexcept;
 
-         [[nodiscard]] static Texture fromImage(const ImU8 *buffer, int size, Filter filter = Filter::Nearest);
-         [[nodiscard]] static Texture fromImage(std::span<const std::byte> buffer, Filter filter = Filter::Nearest);
-         [[nodiscard]] static Texture fromImage(const char *path, Filter filter = Filter::Nearest);
-         [[nodiscard]] static Texture fromImage(const std::fs::path &path, Filter filter = Filter::Nearest);
-         [[nodiscard]] static Texture fromGLTexture(unsigned int texture, int width, int height);
-         [[nodiscard]] static Texture fromBitmap(const ImU8 *buffer, int size, int width, int height, Filter filter = Filter::Nearest);
-         [[nodiscard]] static Texture fromBitmap(std::span<const std::byte> buffer, int width, int height, Filter filter = Filter::Nearest);
-         [[nodiscard]] static Texture fromSVG(const char *path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
-         [[nodiscard]] static Texture fromSVG(const std::fs::path &path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
-         [[nodiscard]] static Texture fromSVG(std::span<const std::byte> buffer, int width = 0, int height = 0, Filter filter = Filter::Nearest);
-
+        [[nodiscard]] static Texture fromImage(const ImU8 *buffer, int size, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromImage(std::span<const std::byte> buffer, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromImage(const char *path, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromImage(const std::fs::path &path, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromGLTexture(unsigned int texture, int width, int height);
+        [[nodiscard]] static Texture fromBitmap(const ImU8 *buffer, int size, int width, int height, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromBitmap(std::span<const std::byte> buffer, int width, int height, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromSVG(const char *path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromSVG(const std::fs::path &path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromSVG(std::span<const std::byte> buffer, int width = 0, int height = 0, Filter filter = Filter::Nearest);
 
         ~Texture();
 
@@ -113,6 +112,8 @@ namespace ImGuiExt {
 
             return float(m_width) / float(m_height);
         }
+
+        void reset();
 
     private:
         ImTextureID m_textureId = 0;

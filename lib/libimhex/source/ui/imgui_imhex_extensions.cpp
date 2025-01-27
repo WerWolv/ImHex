@@ -284,10 +284,14 @@ namespace ImGuiExt {
     }
 
     Texture::~Texture() {
-        if (m_textureId == 0)
-            return;
+        this->reset();
+    }
 
-        glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+    void Texture::reset() {
+        if (m_textureId != 0) {
+            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+            m_textureId = 0;
+        }
     }
 
     float GetTextWrapPos() {

@@ -65,6 +65,10 @@ namespace hex::init {
     }
 
     WindowSplash::~WindowSplash() {
+        // Clear textures before deinitializing glfw
+        m_splashBackgroundTexture.reset();
+        m_splashTextTexture.reset();
+
         this->exitImGui();
         this->exitGLFW();
     }
@@ -584,7 +588,6 @@ namespace hex::init {
 
     void WindowSplash::exitGLFW() const {
         glfwDestroyWindow(m_window);
-        glfwTerminate();
     }
 
     void WindowSplash::exitImGui() const {
