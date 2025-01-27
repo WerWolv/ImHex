@@ -866,27 +866,7 @@ namespace hex {
     }
 
     extern "C" void macosEventDataReceived(const u8 *data, size_t length) {
-        ssize_t nullIndex = -1;
-
-        auto messageData = reinterpret_cast<const char*>(data);
-
-        for (size_t i = 0; i < length; i++) {
-            if (messageData[i] == '\0') {
-                nullIndex = i;
-                break;
-            }
-        }
-
-        if (nullIndex == -1) {
-            log::warn("Received invalid forwarded event");
-            return;
-        }
-
-        std::string eventName(messageData, nullIndex);
-
-        std::vector<u8> eventData(messageData + nullIndex + 1, messageData + length);
-
-        EventNativeMessageReceived::post(eventName, eventData);
+        EventNativeMessageReceived::post(std::vector<u8>(data, data + length));
     }
 
 }

@@ -35,9 +35,9 @@ namespace hex::plugin::builtin {
         if (path.extension() == ".hexproj") {
             if (!ProjectFile::load(path)) {
                 ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
-            } else {
-                return;
             }
+
+            return;
         }
 
         auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
@@ -51,6 +51,9 @@ namespace hex::plugin::builtin {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
             }
         }
+
+        glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
+        glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
     }
 
     void registerEventHandlers() {

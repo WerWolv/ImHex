@@ -71,30 +71,10 @@ namespace hex {
                 // Handle opening files in existing instance
 
                 auto message = reinterpret_cast<COPYDATASTRUCT *>(lParam);
-                if (message == nullptr) break;
-
-                ssize_t nullIndex = -1;
-
-                auto messageData = static_cast<const char*>(message->lpData);
-                size_t messageSize = message->cbData;
-
-                for (size_t i = 0; i < messageSize; i++) {
-                    if (messageData[i] == '\0') {
-                        nullIndex = i;
-                        break;
-                    }
-                }
-
-                if (nullIndex == -1) {
-                    log::warn("Received invalid forwarded event");
+                if (message == nullptr)
                     break;
-                }
 
-                std::string eventName(messageData, nullIndex);
-
-                std::vector<u8> eventData(messageData + nullIndex + 1, messageData + messageSize);
-
-                EventNativeMessageReceived::post(eventName, eventData);
+                EventNativeMessageReceived::post(std::vector<u8>(message->lpData, message->lpData + message->cbData));
                 break;
             }
             case WM_SETTINGCHANGE: {
