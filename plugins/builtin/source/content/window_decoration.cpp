@@ -386,7 +386,7 @@ namespace hex::plugin::builtin {
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                     #if defined(OS_WINDOWS)
                         ImGui::SetCursorPosX(5_scaled);
-                        ImGui::Image(s_logoTexture, s_logoTexture.getSize() * u32(1_scaled));
+                        ImGui::Image(*s_logoTexture, s_logoTexture->getSize() * u32(1_scaled));
                         ImGui::SetCursorPosX(5_scaled);
                         ImGui::InvisibleButton("##logo", ImVec2(menuBarHeight, menuBarHeight));
                         if (ImGui::IsItemHovered() && ImGui::IsAnyMouseDown())
