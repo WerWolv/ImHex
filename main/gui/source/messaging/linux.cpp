@@ -29,7 +29,7 @@ namespace hex::messaging {
         int fifo = open(CommunicationPipePath, O_WRONLY);
         if (fifo < 0) return;
 
-        ::write(fifo, data, dataSize);
+        std::ignore = ::write(fifo, data, dataSize);
         close(fifo);
     }
 

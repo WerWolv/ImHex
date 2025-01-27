@@ -74,7 +74,9 @@ namespace hex {
                 if (message == nullptr)
                     break;
 
-                EventNativeMessageReceived::post(std::vector<u8>(message->lpData, message->lpData + message->cbData));
+                const auto data = reinterpret_cast<const u8*>(message->lpData);
+                const auto size = message->cbData;
+                EventNativeMessageReceived::post(std::vector<u8>(data, data + size));
                 break;
             }
             case WM_SETTINGCHANGE: {
