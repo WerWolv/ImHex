@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
         [[nodiscard]] ImVec2 getMinSize() const override { return scaled({ 700, 400 }); }
-        [[nodiscard]] ImVec2 getMaxSize() const override { return scaled({ 700, 400 }); }
+        [[nodiscard]] ImVec2 getMaxSize() const override { return scaled({ 1400, 800 }); }
 
     private:
         bool m_restartRequested = false;
