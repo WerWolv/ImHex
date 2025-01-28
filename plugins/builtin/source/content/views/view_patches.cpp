@@ -22,7 +22,11 @@ namespace hex::plugin::builtin {
             .basePath = "patches.json",
             .required = false,
             .load = [](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                auto json = nlohmann::json::parse(tar.readString(basePath));
+                auto content = tar.readString(basePath);
+                if (content.empty())
+                    return true;
+
+                auto json = nlohmann::json::parse(content);
                 auto patches = json.at("patches").get<std::map<u64, u8>>();
 
                 for (const auto &[address, value] : patches) {
