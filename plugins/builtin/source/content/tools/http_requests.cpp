@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
         ImGuiExt::Header("hex.builtin.tools.http_requests.response"_lang);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_ChildBg));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
-        ImGui::InputTextMultiline("##comment", body, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputTextMultiline("##comment", responseText, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), ImGuiInputTextFlags_ReadOnly);
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
 
