@@ -1,7 +1,6 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <imgui.h>
-#include <TextEditor.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <hex/helpers/http_requests.hpp>
@@ -15,38 +14,11 @@ namespace hex::plugin::builtin {
     using namespace std::literals::chrono_literals;
 
     void drawHTTPRequestMaker() {
-        static std::string url, body, output;
+        static std::string url, body, output, responseText;
         static std::vector<std::pair<std::string, std::string>> headers;
         static int method = 0;
-        static TextEditor responseEditor, bodyEditor;
         static HttpRequest request("", "");
         static std::future<HttpRequest::Result<std::string>> response;
-
-        AT_FIRST_TIME {
-            responseEditor.SetReadOnly(true);
-            responseEditor.SetShowLineNumbers(false);
-            responseEditor.SetShowWhitespaces(true);
-            responseEditor.SetShowCursor(false);
-
-            auto languageDef = TextEditor::LanguageDefinition();
-            for (auto &[name, identifier] : languageDef.mIdentifiers)
-                identifier.mDeclaration = "";
-            languageDef.mCaseSensitive   = false;
-            languageDef.mAutoIndentation = false;
-            languageDef.mCommentStart = "";
-            languageDef.mCommentEnd = "";
-            languageDef.mSingleLineComment = "";
-            languageDef.mDocComment = "";
-            languageDef.mGlobalDocComment = "";
-
-            responseEditor.SetLanguageDefinition(languageDef);
-
-            bodyEditor.SetShowLineNumbers(true);
-            bodyEditor.SetShowWhitespaces(true);
-            bodyEditor.SetShowCursor(true);
-
-            bodyEditor.SetLanguageDefinition(languageDef);
-        };
 
         constexpr static auto Methods = std::array{
             "GET",
@@ -130,7 +102,11 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.builtin.tools.http_requests.body"_lang)) {
-                    bodyEditor.Render("Body", ImGui::GetContentRegionAvail(), true);
+                    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_ChildBg));
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
+                    ImGui::InputTextMultiline("##comment", body, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled));
+                    ImGui::PopStyleVar();
+                    ImGui::PopStyleColor();
                     ImGui::EndTabItem();
                 }
 
@@ -140,16 +116,20 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
 
         ImGuiExt::Header("hex.builtin.tools.http_requests.response"_lang);
-        responseEditor.Render("Response", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_ChildBg));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
+        ImGui::InputTextMultiline("##comment", body, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), ImGuiInputTextFlags_ReadOnly);
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor();
 
         if (response.valid() && response.wait_for(0s) != std::future_status::timeout) {
             const auto result = response.get();
             const auto data = result.getData();
 
             if (const auto status = result.getStatusCode(); status != 0)
-                responseEditor.SetText("Status: " + std::to_string(result.getStatusCode()) + "\n\n" + data);
+                responseText = "Status: " + std::to_string(result.getStatusCode()) + "\n\n" + data;
             else
-                responseEditor.SetText("Status: No Response");
+                responseText = "Status: No Response";
         }
 
     }
