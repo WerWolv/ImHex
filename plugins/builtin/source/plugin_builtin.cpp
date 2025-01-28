@@ -76,7 +76,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "encode",         "",  "Encode a string",                              hex::plugin::builtin::handleEncodeCommand           },
     { "decode",         "",  "Decode a string",                              hex::plugin::builtin::handleDecodeCommand           },
     { "magic",          "",  "Identify file types",                          hex::plugin::builtin::handleMagicCommand            },
-    { "pl",             "",  "Interact with the pattern language",           hex::plugin::builtin::handlePatternLanguageCommand  },
+    { "pl",             "",  "Interact with the pattern language",           hex::plugin::builtin::handlePatternLanguageCommand, SubCommand::Type::SubCommand },
     { "hexdump",        "",  "Generate a hex dump of the provided file",     hex::plugin::builtin::handleHexdumpCommand          },
     { "demangle",       "",  "Demangle a mangled symbol",                    hex::plugin::builtin::handleDemangleCommand         },
     { "reset-settings", "",  "Resets all settings back to default",          hex::plugin::builtin::handleSettingsResetCommand    },

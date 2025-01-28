@@ -53,7 +53,7 @@ namespace hex::subcommands {
         while (argsIter != args.end()) {
             const std::string &arg = *argsIter;
 
-            if (!currentSubCommandArgs.empty() && arg.starts_with("--")) {
+            if (!currentSubCommandArgs.empty() && arg.starts_with("--") && !(currentSubCommand.has_value() && currentSubCommand->type == SubCommand::Type::SubCommand)) {
                 // Save command to run
                 if (currentSubCommand) {
                     subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);

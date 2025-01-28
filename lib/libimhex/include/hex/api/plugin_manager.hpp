@@ -15,11 +15,17 @@ struct ImGuiContext;
 namespace hex {
 
     struct SubCommand {
+        enum class Type : u8 {
+            Option,
+            SubCommand
+        };
+
         std::string commandLong;
         std::string commandShort;
 
         std::string commandDescription;
         std::function<void(const std::vector<std::string>&)> callback;
+        Type type = Type::Option;
     };
 
     struct Feature {
