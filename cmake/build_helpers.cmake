@@ -124,7 +124,7 @@ macro(configurePackingResources)
             set(CPACK_WIX_PRODUCT_ICON "${PROJECT_SOURCE_DIR}/resources/dist/windows/icon.ico")
             set(CPACK_WIX_UI_BANNER "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_banner.png")
             set(CPACK_WIX_UI_DIALOG "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_dialog.png")
-            set(CPACK_WIX_CULTURES "en-US;de-DE;ja-JP;it-IT;pt-BR;zh-CN;zh-TW")
+            set(CPACK_WIX_CULTURES "en-US;de-DE;ja-JP;it-IT;pt-BR;zh-CN;zh-TW;ru-RU")
             set(CPACK_PACKAGE_INSTALL_DIRECTORY "ImHex")
             set_property(INSTALL "$<TARGET_FILE_NAME:main>"
                     PROPERTY CPACK_START_MENU_SHORTCUTS "ImHex"
