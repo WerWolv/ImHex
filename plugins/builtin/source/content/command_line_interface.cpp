@@ -388,6 +388,9 @@ namespace hex::plugin::builtin {
     void registerCommandForwarders() {
         hex::subcommands::registerSubCommand("open", [](const std::vector<std::string> &args){
             for (auto &arg : args) {
+                if (arg.starts_with("--"))
+                    break;
+
                 RequestOpenFile::post(arg);
             }
         });

@@ -53,7 +53,7 @@ namespace hex::subcommands {
         while (argsIter != args.end()) {
             const std::string &arg = *argsIter;
 
-            if (arg == "--othercmd") {
+            if (!currentSubCommandArgs.empty() && arg.starts_with("--")) {
                 // Save command to run
                 if (currentSubCommand) {
                     subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
@@ -61,10 +61,10 @@ namespace hex::subcommands {
 
                 currentSubCommand = std::nullopt;
                 currentSubCommandArgs = { };
-
             } else if (currentSubCommand) {
                 // Add current argument to the current command
                 currentSubCommandArgs.push_back(arg);
+                argsIter += 1;
             } else { 
                 // Get next subcommand from current argument
                 currentSubCommand = findSubCommand(arg);
@@ -72,9 +72,9 @@ namespace hex::subcommands {
                     log::error("No subcommand named '{}' found", arg);
                     exit(EXIT_FAILURE);
                 }
-            }
 
-            argsIter += 1;
+                argsIter += 1;
+            }
         }
 
         // Save last command to run
@@ -83,8 +83,8 @@ namespace hex::subcommands {
         }
 
         // Run the subcommands
-        for (auto &[subcommand, args] : subCommands) {
-            subcommand.callback(args);
+        for (auto &[subcommand, subCommandArgs] : subCommands) {
+            subcommand.callback(subCommandArgs);
         }
 
         // Exit the process if it's not the main instance (the commands have been forwarded to another instance)

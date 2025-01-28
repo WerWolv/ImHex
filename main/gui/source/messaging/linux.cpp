@@ -38,7 +38,7 @@ namespace hex::messaging {
         if (mkfifo(CommunicationPipePath, 0600) < 0) return;
 
         static int fifo = 0;
-        fifo = open(CommunicationPipePath, O_RDWR);
+        fifo = open(CommunicationPipePath, O_RDWR | O_NONBLOCK);
 
         static auto listenerThread = std::jthread([](const std::stop_token &stopToken){
             std::vector<u8> buffer(0xFFFF);
@@ -46,9 +46,9 @@ namespace hex::messaging {
                 int result = ::read(fifo, buffer.data(), buffer.size());
                 if (result > 0) {
                     EventNativeMessageReceived::post(std::vector<u8>{ buffer.begin(), buffer.begin() + result });
+                } else {
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
                 }
-
-                std::this_thread::sleep_for(std::chrono::seconds(1));
             }
         });
 
