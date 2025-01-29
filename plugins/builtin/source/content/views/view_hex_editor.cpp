@@ -1041,8 +1041,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::registerEvents() {
-        RequestHexEditorSelectionChange::subscribe(this, [this](Region region) {
-            auto provider = ImHexApi::Provider::get();
+        RequestHexEditorSelectionChange::subscribe(this, [this](ImHexApi::HexEditor::ProviderRegion region) {
+            auto provider = region.getProvider();
 
             if (region == Region::Invalid() || provider == nullptr) {
                 m_selectionStart->reset();
@@ -1058,6 +1058,7 @@ namespace hex::plugin::builtin {
 
             if (region.size != 0) {
                 provider->setCurrentPage(page.value());
+                m_hexEditor.setProvider(provider);
                 this->setSelection(region);
                 this->jumpIfOffScreen();
             }

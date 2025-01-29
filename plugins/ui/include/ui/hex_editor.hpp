@@ -144,7 +144,7 @@ namespace hex::ui {
             if (!m_selectionStart.has_value()) m_selectionStart = start;
             if (!m_selectionEnd.has_value())   m_selectionEnd = end;
 
-            if (auto bytesPerCell = m_currDataVisualizer->getBytesPerCell(); bytesPerCell > 1) {
+            if (auto bytesPerCell = m_currDataVisualizer == nullptr ? 1 : m_currDataVisualizer->getBytesPerCell(); bytesPerCell > 1) {
                 if (end > start) {
                     start = alignDown(start, bytesPerCell);
                     end   = alignDown(end, bytesPerCell) + (bytesPerCell - 1);

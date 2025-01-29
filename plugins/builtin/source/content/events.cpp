@@ -50,6 +50,8 @@ namespace hex::plugin::builtin {
                 EventProviderOpened::post(fileProvider);
                 AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
             }
+
+            ImHexApi::Provider::setCurrentProvider(provider);
         }
 
         glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());

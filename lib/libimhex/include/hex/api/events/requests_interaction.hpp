@@ -17,7 +17,7 @@ namespace hex {
      *
      * @param region the region that should be selected
      */
-    EVENT_DEF(RequestHexEditorSelectionChange, Region);
+    EVENT_DEF(RequestHexEditorSelectionChange, ImHexApi::HexEditor::ProviderRegion);
 
     /**
      * @brief Requests the Pattern editor to move selection

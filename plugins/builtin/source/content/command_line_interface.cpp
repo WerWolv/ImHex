@@ -15,6 +15,7 @@
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/default_paths.hpp>
+#include <hex/helpers/debugging.hpp>
 
 #include <hex/subcommands/subcommands.hpp>
 
@@ -121,9 +122,31 @@ namespace hex::plugin::builtin {
         hex::subcommands::forwardSubCommand("new", {});
     }
 
+    void handleSelectCommand(const std::vector<std::string> &args) {
+        if (args.size() == 1)
+            hex::subcommands::forwardSubCommand("select", { args[0] });
+        else if (args.size() == 2)
+            hex::subcommands::forwardSubCommand("select", { args[0], args[1] });
+        else {
+            hex::log::println("Usage: imhex --select <start> [<end>]");
+            std::exit(EXIT_FAILURE);
+        }
+    }
+
+    void handlePatternCommand(const std::vector<std::string> &args) {
+        if (args.size() == 1)
+            hex::subcommands::forwardSubCommand("pattern", { args[0] });
+        else {
+            hex::log::println("Usage: imhex --pattern <pattern source code>");
+            hex::log::println("Usage: imhex --pattern <pattern file path>");
+            std::exit(EXIT_FAILURE);
+        }
+    }
+
     void handleCalcCommand(const std::vector<std::string> &args) {
         if (args.empty()) {
             hex::log::println("No expression provided!");
+            hex::log::println("Usage:   imhex --calc <math expression>");
             hex::log::println("Example: imhex --calc \"5 * 7\"");
             std::exit(EXIT_FAILURE);
         }
@@ -384,6 +407,10 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void handleDebugModeCommand(const std::vector<std::string> &) {
+        hex::dbg::setDebugModeEnabled(true);
+    }
+
 
     void registerCommandForwarders() {
         hex::subcommands::registerSubCommand("open", [](const std::vector<std::string> &args){
@@ -397,6 +424,39 @@ namespace hex::plugin::builtin {
 
         hex::subcommands::registerSubCommand("new", [](const std::vector<std::string> &){
             RequestOpenWindow::post("Create File");
+        });
+
+        hex::subcommands::registerSubCommand("select", [](const std::vector<std::string> &args){
+            try {
+                if (args.size() == 1)
+                    ImHexApi::HexEditor::setSelection(std::stoull(args[0]), 1);
+                else if (args.size() == 2) {
+                    const auto start = std::stoull(args[0]);
+                    const auto size = (std::stoull(args[1]) - start) + 1;
+                    ImHexApi::HexEditor::setSelection(start, size);
+                } else {
+                    log::error("Invalid number of arguments for select command!");
+                }
+            } catch (const std::exception &e) {
+                log::error("Failed to set requested selection region! {}", e.what());
+            }
+        });
+
+        hex::subcommands::registerSubCommand("pattern", [](const std::vector<std::string> &args){
+            std::string patternSourceCode;
+            if (std::fs::exists(args[0])) {
+                wolv::io::File file(args[0], wolv::io::File::Mode::Read);
+                if (!file.isValid()) {
+                    patternSourceCode = args[0];
+                } else {
+                    patternSourceCode = file.readString();
+                }
+            } else {
+                patternSourceCode = args[0];
+            }
+
+            RequestSetPatternLanguageCode::post(patternSourceCode);
+            RequestRunPatternCode::post();
         });
     }
 
