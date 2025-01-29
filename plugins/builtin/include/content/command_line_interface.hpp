@@ -14,6 +14,8 @@ namespace hex::plugin::builtin {
     void handleOpenCommand(const std::vector<std::string> &args);
     void handleNewCommand(const std::vector<std::string> &args);
 
+    void handleSelectCommand(const std::vector<std::string> &args);
+    void handlePatternCommand(const std::vector<std::string> &args);
     void handleCalcCommand(const std::vector<std::string> &args);
     void handleHashCommand(const std::vector<std::string> &args);
     void handleEncodeCommand(const std::vector<std::string> &args);
@@ -23,6 +25,7 @@ namespace hex::plugin::builtin {
     void handleHexdumpCommand(const std::vector<std::string> &args);
     void handleDemangleCommand(const std::vector<std::string> &args);
     void handleSettingsResetCommand(const std::vector<std::string> &args);
+    void handleDebugModeCommand(const std::vector<std::string> &args);
 
 
     void registerCommandForwarders();
