@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
 
                 try {
                     if (!value.contains('.')) {
-                        m_value = i128(std::stoull(value, nullptr, 0) * static_cast<long double>(m_multiplier));
+                        m_value = i128(double(std::stoull(value, nullptr, 0) * static_cast<long double>(m_multiplier)));
                     } else {
                         m_value = std::stod(value) * m_multiplier;
                     }
