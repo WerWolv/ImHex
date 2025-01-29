@@ -226,4 +226,46 @@ namespace hex::fonts {
         std::list<std::vector<u8>> m_fontData;
     };
 
+    class Color {
+    public:
+        static void DeGamma() {
+            color.rgba[0] = std::pow(color.rgba[0] / 255.0F, 2.2F) * 255.0F;
+            color.rgba[1] = std::pow(color.rgba[1] / 255.0F, 2.2F) * 255.0F;
+            color.rgba[2] = std::pow(color.rgba[2] / 255.0F, 2.2F) * 255.0F;
+
+        }
+
+        static void Gamma() {
+            color.rgba[0] = std::pow(color.rgba[0] / 255.0F, 1.0F / 2.2F) * 255.0F;
+            color.rgba[1] = std::pow(color.rgba[1] / 255.0F, 1.0F / 2.2F) * 255.0F;
+            color.rgba[2] = std::pow(color.rgba[2] / 255.0F, 1.0F / 2.2F) * 255.0F;
+        }
+
+        static u32 LuminanceFromLinearRGB(uint8_t r, uint8_t g, uint8_t b)
+        {
+            // Luminance Y is defined by the CIE 1931 XYZ color space. Linear RGB to Y is a weighted average based on factors from the color conversion matrix:
+            // Y = 0.2126*R + 0.7152*G + 0.0722*B. Computed on the integer pipe.
+            color.rgba[0] = r;
+            color.rgba[1] = g;
+            color.rgba[2] = b;
+            color.rgba[3] = (4732UL * r + 46871UL * g + 13933UL * b) >> 16;
+            return color.color;
+        }
+
+        static u32  AddAlpha(u8 r, u8 g, u8 b) {
+            color.rgba[0] = r;
+            color.rgba[1] = g;
+            color.rgba[2] = b;
+            // auto alpha = color.color ? 0xFF : 0x00;
+            //  color.rgba[3] = alpha;
+            color.rgba[3] = std::max(r, std::max(g, b));
+            return color.color;
+        }
+        union COLOR{
+            u8 rgba[4];
+            u32 color;
+        };
+        inline static COLOR color;
+    };
+
 }
