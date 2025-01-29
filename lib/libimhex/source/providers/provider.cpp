@@ -154,10 +154,10 @@ namespace hex::prv {
             auto overlayOffset = overlay->getAddress();
             auto overlaySize   = overlay->getSize();
 
-            i128 overlapMin = std::max(offset, overlayOffset);
-            i128 overlapMax = std::min(offset + size, overlayOffset + overlaySize);
+            u64 overlapMin = std::max(offset, overlayOffset);
+            u64 overlapMax = std::min(offset + size, overlayOffset + overlaySize);
             if (overlapMax > overlapMin)
-                std::memcpy(static_cast<u8 *>(buffer) + std::max<i128>(0, overlapMin - offset), overlay->getData().data() + std::max<i128>(0, overlapMin - overlayOffset), overlapMax - overlapMin);
+                std::memcpy(static_cast<u8 *>(buffer) + std::max<u64>(0, overlapMin - offset), overlay->getData().data() + std::max<u64>(0, overlapMin - overlayOffset), overlapMax - overlapMin);
         }
     }
 

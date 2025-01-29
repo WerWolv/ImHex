@@ -54,12 +54,12 @@ namespace hex::plugin::decompress {
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "zlib_decompress", FunctionParameterCount::exactly(3), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(ZLIB)
                 auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(params[1].toUnsigned());
-                auto windowSize = params[2].toUnsigned();
+                auto &section = evaluator->getSection(u64(params[1].toUnsigned()));
+                auto windowSize = u64(params[2].toUnsigned());
 
                 z_stream stream = { };
                 if (inflateInit2(&stream, windowSize) != Z_OK) {
-                    return 0;
+                    return u128(0);
                 }
 
                 section.resize(100);
@@ -81,7 +81,7 @@ namespace hex::plugin::decompress {
                     }
                     if (res != Z_OK) {
                         section.resize(section.size() - stream.avail_out);
-                        return stream.next_in - compressedData.data();
+                        return u128(stream.next_in - compressedData.data());
                     }
 
                     if (stream.avail_out != 0)
@@ -93,7 +93,7 @@ namespace hex::plugin::decompress {
                     stream.avail_out = prevSectionSize;
                 }
 
-                return stream.next_in - compressedData.data();
+                return u128(stream.next_in - compressedData.data());
             #else
                 std::ignore = evaluator;
                 std::ignore = params;
@@ -105,11 +105,11 @@ namespace hex::plugin::decompress {
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "bzip_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(BZIP2)
                 auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(params[1].toUnsigned());
+                auto &section = evaluator->getSection(u64(params[1].toUnsigned()));
 
                 bz_stream stream = { };
                 if (BZ2_bzDecompressInit(&stream, 0, 1) != Z_OK) {
-                    return 0;
+                    return u128(0);
                 }
 
                 section.resize(100);
@@ -131,7 +131,7 @@ namespace hex::plugin::decompress {
                     }
                     if (res != BZ_OK) {
                         section.resize(section.size() - stream.avail_out);
-                        return reinterpret_cast<const u8*>(stream.next_in) - compressedData.data();
+                        return u128(reinterpret_cast<const u8*>(stream.next_in) - compressedData.data());
                     }
 
                     if (stream.avail_out != 0)
@@ -143,7 +143,7 @@ namespace hex::plugin::decompress {
                     stream.avail_out = prevSectionSize;
                 }
 
-                return reinterpret_cast<const u8*>(stream.next_in) - compressedData.data();
+                return u128(reinterpret_cast<const u8*>(stream.next_in) - compressedData.data());
             #else
                 std::ignore = evaluator;
                 std::ignore = params;
@@ -156,12 +156,12 @@ namespace hex::plugin::decompress {
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "lzma_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(LIBLZMA)
                 auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(params[1].toUnsigned());
+                auto &section = evaluator->getSection(u64(params[1].toUnsigned()));
 
                 lzma_stream stream = LZMA_STREAM_INIT;
-                constexpr int64_t memlimit = 0x40000000;  // 1GiB
-                if (lzma_auto_decoder(&stream, memlimit, LZMA_IGNORE_CHECK) != LZMA_OK) {
-                    return 0;
+                constexpr static i64 MemoryLimit = 0x40000000;  // 1GiB
+                if (lzma_auto_decoder(&stream, MemoryLimit, LZMA_IGNORE_CHECK) != LZMA_OK) {
+                    return u128(0);
                 }
 
                 section.resize(100);
@@ -184,15 +184,15 @@ namespace hex::plugin::decompress {
 
                     if (res == LZMA_MEMLIMIT_ERROR) {
                         auto usage = lzma_memusage(&stream);
-                        evaluator->getConsole().log(pl::core::LogConsole::Level::Warning, fmt::format("lzma_decompress memory usage {} bytes would exceed the limit ({} bytes), aborting", usage, memlimit));
+                        evaluator->getConsole().log(pl::core::LogConsole::Level::Warning, fmt::format("lzma_decompress memory usage {} bytes would exceed the limit ({} bytes), aborting", usage, MemoryLimit));
 
                         section.resize(section.size() - stream.avail_out);
-                        return stream.next_in - compressedData.data();
+                        return u128(stream.next_in - compressedData.data());
                     }
 
                     if (res != LZMA_OK) {
                         section.resize(section.size() - stream.avail_out);
-                        return stream.next_in - compressedData.data();
+                        return u128(stream.next_in - compressedData.data());
                     }
 
                     if (stream.avail_out != 0)
@@ -204,7 +204,7 @@ namespace hex::plugin::decompress {
                     stream.avail_out = prevSectionSize;
                 }
 
-                return stream.next_in - compressedData.data();
+                return u128(stream.next_in - compressedData.data());
             #else
                 std::ignore = evaluator;
                 std::ignore = params;
@@ -216,11 +216,11 @@ namespace hex::plugin::decompress {
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "zstd_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(ZSTD)
                 auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(params[1].toUnsigned());
+                auto &section = evaluator->getSection(i64(params[1].toUnsigned()));
 
                 ZSTD_DCtx* dctx = ZSTD_createDCtx();
                 if (dctx == nullptr) {
-                    return 0;
+                    return u128(0);
                 }
 
                 ON_SCOPE_EXIT {
@@ -233,7 +233,7 @@ namespace hex::plugin::decompress {
                 size_t blockSize = ZSTD_getFrameContentSize(source, sourceSize);
 
                 if (blockSize == ZSTD_CONTENTSIZE_ERROR) {
-                    return 0;
+                    return u128(0);
                 }
 
                 if (blockSize == ZSTD_CONTENTSIZE_UNKNOWN) {
@@ -270,7 +270,7 @@ namespace hex::plugin::decompress {
                     size_t ret = ZSTD_decompressDCtx(dctx, section.data() + section.size() - blockSize, blockSize, source, sourceSize);
 
                     if (ZSTD_isError(ret)) {
-                        return 0;
+                        return u128(0);
                     }
                 }
 
@@ -286,14 +286,14 @@ namespace hex::plugin::decompress {
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "lz4_decompress", FunctionParameterCount::exactly(3), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(LZ4)
                 auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(params[1].toUnsigned());
+                auto &section = evaluator->getSection(u64(params[1].toUnsigned()));
                 bool frame = params[2].toBoolean();
 
                 if (frame) {
                     LZ4F_decompressionContext_t dctx;
                     LZ4F_errorCode_t err = LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION);
                     if (LZ4F_isError(err)) {
-                       return 0;
+                       return u128(0);
                     }
 
                     std::vector<u8> outBuffer(1024 * 1024);
@@ -308,7 +308,7 @@ namespace hex::plugin::decompress {
                         size_t ret = LZ4F_decompress(dctx, dstPtr, &dstCapacity, sourcePointer, &srcSize, nullptr);
                         if (LZ4F_isError(ret)) {
                             LZ4F_freeDecompressionContext(dctx);
-                            return sourcePointer - compressedData.data();
+                            return u128(sourcePointer - compressedData.data());
                         }
 
                         section.insert(section.end(), outBuffer.begin(), outBuffer.begin() + dstCapacity);
@@ -317,7 +317,7 @@ namespace hex::plugin::decompress {
 
                     LZ4F_freeDecompressionContext(dctx);
 
-                    return sourcePointer - compressedData.data();
+                    return u128(sourcePointer - compressedData.data());
                 } else {
                     section.resize(1024 * 1024);
 
@@ -325,7 +325,7 @@ namespace hex::plugin::decompress {
                         auto decompressedSize = LZ4_decompress_safe(reinterpret_cast<const char*>(compressedData.data()), reinterpret_cast<char *>(section.data()), compressedData.size(), static_cast<int>(section.size()));
 
                         if (decompressedSize < 0) {
-                            return 0;
+                            return u128(0);
                         } else if (decompressedSize > 0) {
                             // Successful decompression
                             section.resize(decompressedSize);

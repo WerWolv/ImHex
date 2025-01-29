@@ -35,7 +35,7 @@ namespace hex::plugin::disasm {
                 auto data = pattern->getBytes();
                 cs_insn *instructions = nullptr;
 
-                size_t instructionCount = cs_disasm(capstone, data.data(), data.size(), baseAddress, 0, &instructions);
+                size_t instructionCount = cs_disasm(capstone, data.data(), data.size(), u64(baseAddress), 0, &instructions);
                 for (size_t i = 0; i < instructionCount; i++) {
                     disassembly.push_back({ instructions[i].address, { instructions[i].bytes, instructions[i].bytes + instructions[i].size }, hex::format("{} {}", instructions[i].mnemonic, instructions[i].op_str) });
                 }

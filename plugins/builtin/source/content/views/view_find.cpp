@@ -165,7 +165,7 @@ namespace hex::plugin::builtin {
         value = hex::changeEndianness(value, bytes.size(), endian);
 
         if (std::signed_integral<T>)
-            value = hex::signExtend(bytes.size() * 8, value);
+            value = T(hex::signExtend(bytes.size() * 8, value));
 
         return hex::format("{}", value);
     }

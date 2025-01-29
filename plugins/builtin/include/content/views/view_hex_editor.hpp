@@ -61,7 +61,7 @@ namespace hex::plugin::builtin {
             m_hexEditor.setSelection(region);
         }
 
-        void setSelection(u128 start, u128 end) {
+        void setSelection(u64 start, u64 end) {
             m_hexEditor.setSelection(start, end);
         }
 

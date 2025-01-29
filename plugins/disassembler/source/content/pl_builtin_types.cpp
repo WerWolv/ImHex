@@ -73,9 +73,10 @@ namespace hex::plugin::disasm {
                 } catch (const std::exception &e) {
                     err::E0012.throwError(e.what());
                 }
+
                 const auto syntaxString = params[1].toString();
-                const auto imageBaseAddress = params[2].toUnsigned();
-                const auto imageLoadAddress = params[3].toUnsigned();
+                const auto imageBaseAddress = u64(params[2].toUnsigned());
+                const auto imageLoadAddress = u64(params[3].toUnsigned());
 
                 const auto address = evaluator->getReadOffset();
 

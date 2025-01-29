@@ -77,17 +77,17 @@ namespace hex::plugin::builtin {
                                 case Unit::Unitless:
                                 case Unit::Decimal:
                                     if (isInteger)
-                                        return hex::format("{0}", value / multipler);
+                                        return hex::format("{0}", i64(value / multipler));
                                     else
-                                        return hex::format("{0:.3f}", value / multipler);
+                                        return hex::format("{0:.3f}", double(value / multipler));
                                 case Unit::Hexadecimal:
-                                    return hex::format("0x{0:x}", u128(value / multipler));
+                                    return hex::format("0x{0:x}", u64(value / multipler));
                                 case Unit::Binary:
-                                    return hex::format("0b{0:b}", u128(value / multipler));
+                                    return hex::format("0b{0:b}", u64(value / multipler));
                                 case Unit::Octal:
-                                    return hex::format("0o{0:o}", u128(value / multipler));
+                                    return hex::format("0o{0:o}", u64(value / multipler));
                                 case Unit::Bytes:
-                                    return hex::format("{0}", u128(value / multipler));
+                                    return hex::format("{0}", u64(value / multipler));
                                 default:
                                     return "hex.builtin.command.convert.invalid_conversion"_lang;
                             }
@@ -100,17 +100,17 @@ namespace hex::plugin::builtin {
                                 case Unit::Bits:
                                 case Unit::Decimal:
                                     if (isInteger)
-                                        return hex::format("{0}", value / multipler);
+                                        return hex::format("{0}", i64(value / multipler));
                                     else
-                                        return hex::format("{0:.3f}", value / multipler);
+                                        return hex::format("{0:.3f}", double(value / multipler));
                                 case Unit::Hexadecimal:
-                                    return hex::format("0x{0:x}", u128(value / multipler));
+                                    return hex::format("0x{0:x}", u64(value / multipler));
                                 case Unit::Binary:
-                                    return hex::format("0b{0:b}", u128(value / multipler));
+                                    return hex::format("0b{0:b}", u64(value / multipler));
                                 case Unit::Octal:
-                                    return hex::format("0o{0:o}", u128(value / multipler));
+                                    return hex::format("0o{0:o}", u64(value / multipler));
                                 case Unit::Bytes:
-                                    return hex::format("{0}", u128((value / multipler) / 8));
+                                    return hex::format("{0}", u64((value / multipler) / 8));
                                 default:
                                     return "hex.builtin.command.convert.invalid_conversion"_lang;
                             }
@@ -123,17 +123,17 @@ namespace hex::plugin::builtin {
                                 case Unit::Bytes:
                                 case Unit::Decimal:
                                     if (isInteger)
-                                        return hex::format("{0}", value / multipler);
+                                        return hex::format("{0}", i64(value / multipler));
                                     else
-                                        return hex::format("{0:.3f}", value / multipler);
+                                        return hex::format("{0:.3f}", double(value / multipler));
                                 case Unit::Hexadecimal:
-                                    return hex::format("0x{0:x}", u128(value / multipler));
+                                    return hex::format("0x{0:x}", u64(value / multipler));
                                 case Unit::Binary:
-                                    return hex::format("0b{0:b}", u128(value / multipler));
+                                    return hex::format("0b{0:b}", u64(value / multipler));
                                 case Unit::Octal:
-                                    return hex::format("0o{0:o}", u128(value / multipler));
+                                    return hex::format("0o{0:o}", u64(value / multipler));
                                 case Unit::Bits:
-                                    return hex::format("{0}", u128((value / multipler) * 8));
+                                    return hex::format("{0}", u64((value / multipler) * 8));
                                 default:
                                     return "hex.builtin.command.convert.invalid_conversion"_lang;
                             }

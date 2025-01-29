@@ -18,8 +18,8 @@ namespace hex::plugin::builtin {
         NodeReadData() : Node("hex.builtin.nodes.data_access.read.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.read.address"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.read.size"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.data_access.read.data") }) { }
 
         void process() override {
-            const auto &address = this->getIntegerOnInput(0);
-            const auto &size    = this->getIntegerOnInput(1);
+            const auto &address = u64(this->getIntegerOnInput(0));
+            const auto &size    = u64(this->getIntegerOnInput(1));
 
             std::vector<u8> data;
             data.resize(size);
@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
         NodeWriteData() : Node("hex.builtin.nodes.data_access.write.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.write.address"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.data_access.write.data") }) { }
 
         void process() override {
-            const auto &address = this->getIntegerOnInput(0);
+            const auto &address = u64(this->getIntegerOnInput(0));
             const auto &data    = this->getBufferOnInput(1);
 
             if (!data.empty()) {
@@ -86,7 +86,7 @@ namespace hex::plugin::builtin {
 
         void process() override {
             const auto &input = this->getIntegerOnInput(0);
-            auto size = this->getIntegerOnInput(1);
+            auto size = u64(this->getIntegerOnInput(1));
 
             if (size == 0) {
                 for (u32 i = 0; i < sizeof(input); i++) {
@@ -198,7 +198,7 @@ namespace hex::plugin::builtin {
 
         void process() override {
             const auto &buffer = this->getBufferOnInput(0);
-            const auto &count  = this->getIntegerOnInput(1);
+            const auto &count  = u64(this->getIntegerOnInput(1));
 
             std::vector<u8> output;
             output.resize(buffer.size() * count);
@@ -217,7 +217,7 @@ namespace hex::plugin::builtin {
         void process() override {
             auto buffer     = this->getBufferOnInput(0);
             const auto &patch      = this->getBufferOnInput(1);
-            const auto &address    = this->getIntegerOnInput(2);
+            const auto &address    = i64(this->getIntegerOnInput(2));
 
             if (address < 0 || static_cast<u128>(address) >= buffer.size())
                 throwNodeError("Address out of range");
@@ -335,8 +335,8 @@ namespace hex::plugin::builtin {
             m_texture.reset();
 
             const auto &rawData = this->getBufferOnInput(0);
-            const auto &width = this->getIntegerOnInput(1);
-            const auto &height = this->getIntegerOnInput(2);
+            const auto &width  = u64(this->getIntegerOnInput(1));
+            const auto &height = u64(this->getIntegerOnInput(2));
 
             const size_t requiredBytes = width * height * 4;
             if (requiredBytes > rawData.size())

@@ -115,7 +115,7 @@ namespace hex::plugin::builtin {
     void ViewDataInspector::executeInspectors() {
         // Decode bytes using custom inspectors defined using the pattern language
         const std::map<std::string, pl::core::Token::Literal> inVariables = {
-                { "numberDisplayStyle", u128(m_numberDisplayStyle) }
+                { "numberDisplayStyle", u128(u64(m_numberDisplayStyle)) }
         };
 
         // Setup a new pattern language runtime

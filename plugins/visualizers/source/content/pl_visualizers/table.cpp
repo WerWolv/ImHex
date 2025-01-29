@@ -15,7 +15,7 @@ namespace hex::plugin::visualizers {
 
     void drawTableVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static std::vector<std::string> tableContent;
-        static u128 width = 0, height = 0;
+        static u64 width = 0, height = 0;
 
         if (shouldReset) {
             tableContent.clear();
@@ -29,8 +29,8 @@ namespace hex::plugin::visualizers {
                 throw std::logic_error("Table visualizer requires an array pattern as the first argument.");
             }
 
-            width = arguments[1].toUnsigned();
-            height = arguments[2].toUnsigned();
+            width  = u64(arguments[1].toUnsigned());
+            height = u64(arguments[2].toUnsigned());
 
             auto iterable = dynamic_cast<pl::ptrn::IIterable*>(pattern.get());
             iterable->forEachEntry(0, iterable->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
@@ -42,9 +42,9 @@ namespace hex::plugin::visualizers {
             throw std::logic_error(hex::format("Table visualizer cannot have more than {} columns.", IMGUI_TABLE_MAX_COLUMNS));
 
         if (ImGui::BeginTable("##visualizer_table", width, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
-            for (u128 i = 0; i < height; i += 1) {
+            for (u64 i = 0; i < height; i += 1) {
                 ImGui::TableNextRow();
-                for (u128 j = 0; j < width; j += 1) {
+                for (u64 j = 0; j < width; j += 1) {
                     ImGui::TableSetColumnIndex(j);
                     if (i * width + j < tableContent.size())
                         ImGui::TextUnformatted(tableContent[(i * width) + j].c_str());
