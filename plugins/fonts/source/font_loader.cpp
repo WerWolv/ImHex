@@ -12,9 +12,7 @@
 #include <wolv/utils/string.hpp>
 #include <freetype/freetype.h>
 #include "imgui_impl_opengl3_loader.h"
-#include <freetype2/ft2build.h>
-#include FT_FREETYPE_H
-#include FT_LCD_FILTER_H
+
 #include <font_atlas.hpp>
 #include <string.h>
 
@@ -24,7 +22,11 @@ namespace hex::fonts {
         if (fontAtlas == nullptr) {
             return false;
         }
-
+        FT_Library ft = nullptr;
+        if (FT_Init_FreeType(&ft) != 0) {
+            log::fatal("Failed to initialize FreeType");
+                    return false;
+        }
         fontAtlas->reset();
         bool result = false;
         u32 fontIndex = 0;
@@ -102,7 +104,7 @@ namespace hex::fonts {
                 glyphRanges.push_back(glyphRange);
 
                 // Calculate the glyph offset for the font
-                const ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->getDescent() - fontAtlas->calculateFontDescend(font, fontSize)) };
+                const ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->calculateFontDescend(ft, fontSize) - fontAtlas->calculateFontDescend(ft, font, fontSize)) };
 
                 // Load the font
                 float size = fontSize;
@@ -113,12 +115,6 @@ namespace hex::fonts {
                 memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, font.name.c_str(), nameSize);
                 fontIndex += 1;
             }
-        }
-
-        FT_Library ft;
-        if (FT_Init_FreeType(&ft) != 0) {
-            log::fatal("Failed to initialize FreeType");
-            return false;
         }
 
         std::vector<int> rect_ids;
@@ -232,6 +228,10 @@ namespace hex::fonts {
                 free(image);
             }
             result = true;
+        }
+        if (ft  != nullptr) {
+            FT_Done_FreeType(ft);
+            ft = nullptr;
         }
         return result;
     }

@@ -3,6 +3,9 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_freetype.h>
+#include <freetype2/ft2build.h>
+#include FT_FREETYPE_H
+#include FT_LCD_FILTER_H
 
 #include <memory>
 #include <list>
@@ -22,6 +25,34 @@ namespace hex::fonts {
 
         float getDescent() const {
             return m_font->Descent;
+        }
+
+        float calculateFontDescend(FT_Library ft, float fontSize) const {
+
+            if (ft == nullptr) {
+                log::fatal("FreeType not initialized");
+                return 0.0f;
+            }
+
+            FT_Face face;
+            if (FT_New_Memory_Face(ft, reinterpret_cast<const FT_Byte *>(m_font->ConfigData->FontData), m_font->ConfigData->FontDataSize, 0, &face) != 0) {
+                log::fatal("Failed to load face");
+                return 0.0f;
+            }
+
+            // Calculate the expected font size
+            auto size = fontSize;
+            if (m_font->FontSize > 0.0F)
+                size = m_font->FontSize * std::max(1.0F, std::floor(ImHexApi::System::getGlobalScale()));
+            else
+                size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
+
+            if (FT_Set_Pixel_Sizes(face, size, size) != 0) {
+                log::fatal("Failed to set pixel size");
+                return 0.0f;
+            }
+
+            return face->size->metrics.descender / 64.0F;
         }
 
         ImFont* getFont() { return m_font; }
@@ -167,9 +198,16 @@ namespace hex::fonts {
             return m_fontAtlas;
         }
 
-        float calculateFontDescend(const ImHexApi::Fonts::Font &font, float fontSize) const {
-            auto atlas = std::make_unique<ImFontAtlas>();
-            auto cfg = m_defaultConfig;
+        float calculateFontDescend( FT_Library ft, const ImHexApi::Fonts::Font &font, float fontSize) const {
+            if (ft == nullptr) {
+                log::fatal("FreeType not initialized");
+                return 0.0f;
+            }
+            FT_Face face;
+            if (FT_New_Memory_Face(ft, reinterpret_cast<const FT_Byte *>(font.fontData.data()), font.fontData.size(), 0, &face) != 0) {
+                log::fatal("Failed to load face");
+                return 0.0f;
+            }
 
             // Calculate the expected font size
             auto size = fontSize;
@@ -178,24 +216,12 @@ namespace hex::fonts {
             else
                 size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
 
-            cfg.MergeMode = false;
-            cfg.SizePixels = size;
-            cfg.FontDataOwnedByAtlas = false;
-
-            // Construct a range that only contains the first glyph of the font
-            ImVector<ImWchar> queryRange;
-            {
-                auto firstGlyph = font.glyphRanges.empty() ? m_glyphRange.front() : font.glyphRanges.front().begin;
-                queryRange.push_back(firstGlyph);
-                queryRange.push_back(firstGlyph);
+            if (FT_Set_Pixel_Sizes(face, size, size) != 0) {
+                log::fatal("Failed to set pixel size");
+                return false;
             }
-            queryRange.push_back(0x00);
 
-            // Build the font atlas with the query range
-            auto newFont = atlas->AddFontFromMemoryTTF(const_cast<u8 *>(font.fontData.data()), int(font.fontData.size()), 0, &cfg, queryRange.Data);
-            atlas->Build();
-
-            return newFont->Descent;
+            return face->size->metrics.descender / 64.0F;
         }
 
         void reset() {
