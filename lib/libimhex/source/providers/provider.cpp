@@ -107,8 +107,8 @@ namespace hex::prv {
         auto newSize = oldSize + size;
         this->resizeRaw(newSize);
 
-        std::vector<u8> buffer(0x1000);
-        const std::vector<u8> zeroBuffer(0x1000);
+        std::vector<u8> buffer(0x1000, 0x00);
+        const std::vector<u8> zeroBuffer(0x1000, 0x00);
 
         auto position = oldSize;
         while (position > offset) {
