@@ -501,7 +501,7 @@ jobs:
               break;
             fi
           done
-        mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-arm64.dmg
+          mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-arm64.dmg
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
