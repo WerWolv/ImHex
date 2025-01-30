@@ -376,7 +376,12 @@ jobs:
         cd create-dmg
         npm i && npm -g i
         cd ../build/install
-        create-dmg ImHex.app || true
+        for i in $(seq 1 10); do
+          create-dmg ImHex.app || true
+          if ls -d *.dmg 1>/dev/null 2>/dev/null; then
+            break;
+          fi
+        done
         mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-x86_64.dmg
 
     - name: 🗝️ Generate build provenance attestations
@@ -490,8 +495,13 @@ jobs:
           cd create-dmg
           npm i && npm -g i
           cd ../out
-          create-dmg ImHex.app || true
-          mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-arm64.dmg
+          for i in $(seq 1 10); do
+            create-dmg ImHex.app || true
+            if ls -d *.dmg 1>/dev/null 2>/dev/null; then
+              break;
+            fi
+          done
+        mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-arm64.dmg
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
