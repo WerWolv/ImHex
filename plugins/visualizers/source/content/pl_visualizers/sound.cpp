@@ -14,8 +14,8 @@ namespace hex::plugin::visualizers {
 
     void drawSoundVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         auto wavePattern = arguments[0].toPattern();
-        auto channels = arguments[1].toUnsigned();
-        auto sampleRate = arguments[2].toUnsigned();
+        auto channels    = u64(arguments[1].toUnsigned());
+        auto sampleRate  = u64(arguments[2].toUnsigned());
         u32 downSampling = wavePattern->getSize() /  300_scaled / 8 / channels;
 
         static std::vector<i16> waveData;

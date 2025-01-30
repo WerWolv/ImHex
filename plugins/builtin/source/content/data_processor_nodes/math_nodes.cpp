@@ -114,7 +114,7 @@ namespace hex::plugin::builtin {
                 median = input[medianIndex];
             }
 
-            this->setFloatOnOutput(1, median);
+            this->setFloatOnOutput(1, double(median));
         }
     };
 

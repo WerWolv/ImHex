@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            m_value = this->getIntegerOnInput(0);
+            m_value = u64(this->getIntegerOnInput(0));
         }
 
     private:

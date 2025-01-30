@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
                         u64 hexValue = 0;
                         for (u32 index = 0; auto &bitValue : bitValues) {
                             hexValue <<= bitValue.bits;
-                            hexValue |= u64(intColor[index]) & hex::bitmask(bitValue.bits);
+                            hexValue |= u64(intColor[index]) & u64(hex::bitmask(bitValue.bits));
                             index += 1;
                         }
 

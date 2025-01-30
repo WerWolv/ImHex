@@ -120,7 +120,7 @@ namespace hex::ui {
             m_cursorPosition = end;
         }
         void setSelection(const Region &region) { this->setSelection(region.getStartAddress(), region.getEndAddress()); }
-        void setSelection(u128 start, u128 end) {
+        void setSelection(u64 start, u64 end) {
             if (!ImHexApi::Provider::isValid() || m_provider == nullptr)
                 return;
 
@@ -135,7 +135,7 @@ namespace hex::ui {
 
             const size_t maxAddress = m_provider->getActualSize() + m_provider->getBaseAddress() - 1;
 
-            constexpr static auto alignDown = [](u128 value, u128 alignment) {
+            constexpr static auto alignDown = [](u64 value, u64 alignment) {
                 return value & ~(alignment - 1);
             };
 
@@ -154,8 +154,8 @@ namespace hex::ui {
                 }
             }
 
-            m_selectionStart = std::clamp<u128>(start, 0, maxAddress);
-            m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
+            m_selectionStart = std::clamp<u64>(start, 0, maxAddress);
+            m_selectionEnd = std::clamp<u64>(end, 0, maxAddress);
             m_cursorPosition = m_selectionEnd;
 
             if (m_selectionChanged) {

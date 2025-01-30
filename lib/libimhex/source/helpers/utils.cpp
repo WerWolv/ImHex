@@ -52,7 +52,7 @@ namespace hex {
 
         u8 index = sizeof(data) - 2;
         while (value != 0 && index != 0) {
-            data[index] = '0' + value % 10;
+            data[index] = static_cast<char>('0' + (value % 10));
             value /= 10;
             index--;
         }
@@ -67,7 +67,7 @@ namespace hex {
 
         u8 index = sizeof(data) - 2;
         while (unsignedValue != 0 && index != 0) {
-            data[index] = '0' + unsignedValue % 10;
+            data[index] = static_cast<char>('0' + (unsignedValue % 10));
             unsignedValue /= 10;
             index--;
         }

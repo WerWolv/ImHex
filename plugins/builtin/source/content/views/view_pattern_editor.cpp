@@ -1137,7 +1137,7 @@ namespace hex::plugin::builtin {
                         using enum EnvVarType;
                         case Integer:
                             {
-                                i64 displayValue = hex::get_or<i128>(value, 0);
+                                i64 displayValue = i64(hex::get_or<i128>(value, 0));
                                 ImGui::InputScalar("###value", ImGuiDataType_S64, &displayValue);
                                 value = i128(displayValue);
                                 break;
@@ -1221,12 +1221,12 @@ namespace hex::plugin::builtin {
                         const std::string label { "##" + name };
 
                         if (pl::core::Token::isSigned(variable.type)) {
-                            i64 value = hex::get_or<i128>(variable.value, 0);
+                            i64 value = i64(hex::get_or<i128>(variable.value, 0));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
                                 m_hasUnevaluatedChanges = true;
                             variable.value = i128(value);
                         } else if (pl::core::Token::isUnsigned(variable.type)) {
-                            u64 value = hex::get_or<u128>(variable.value, 0);
+                            u64 value = u64(hex::get_or<u128>(variable.value, 0));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
                                 m_hasUnevaluatedChanges = true;
                             variable.value = u128(value);

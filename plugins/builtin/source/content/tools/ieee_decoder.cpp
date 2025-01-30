@@ -412,7 +412,7 @@ namespace hex::plugin::builtin {
                         ieee754statics.resultFloat = std::numeric_limits<long double>::infinity();
                         ieee754.numberType = NumberType::Infinity;
                         ieee754.valueType = ieee754.signBits == 1 ? ValueType::NegativeInfinity : ValueType::PositiveInfinity;
-                        ieee754.exponentBits = (u128(1) << ieee754statics.exponentBitCount) - 1;
+                        ieee754.exponentBits = i64((u128(1) << ieee754statics.exponentBitCount) - 1);
                         ieee754.mantissaBits = 0;
 
                     } else if (-std::rint(log2Result) > ieee754.exponentBias + ieee754statics.mantissaBitCount - 1) {
@@ -434,7 +434,7 @@ namespace hex::plugin::builtin {
                         ieee754statics.resultFloat = std::numeric_limits<long double>::signaling_NaN();
                         ieee754.valueType = ValueType::SignalingNaN;
                         ieee754.numberType = NumberType::NaN;
-                        ieee754.exponentBits = (u128(1) << ieee754statics.exponentBitCount) - 1;
+                        ieee754.exponentBits = i64((u128(1) << ieee754statics.exponentBitCount) - 1);
                         ieee754.mantissaBits = 1;
 
                     } else if (inputType == InputType::QuietNotANumber || inputType == InputType::NotANumber ) {
@@ -442,8 +442,8 @@ namespace hex::plugin::builtin {
                         ieee754statics.resultFloat = std::numeric_limits<long double>::quiet_NaN();
                         ieee754.valueType = ValueType::QuietNaN;
                         ieee754.numberType = NumberType::NaN;
-                        ieee754.exponentBits = (u128(1) << ieee754statics.exponentBitCount) - 1;
-                        ieee754.mantissaBits = (u128(1) << (ieee754statics.mantissaBitCount - 1));
+                        ieee754.exponentBits = i64((u128(1) << ieee754statics.exponentBitCount) - 1);
+                        ieee754.mantissaBits = i64((u128(1) << (ieee754statics.mantissaBitCount - 1)));
 
                     } else if (static_cast<i64>(std::floor(log2Result)) + ieee754.exponentBias <= 0) {
 
@@ -645,7 +645,7 @@ namespace hex::plugin::builtin {
             // Result.
             ImGui::TableNextColumn();
 
-            u64 mask = hex::bitmask(totalBitCount+1);
+            const auto mask = u64(hex::bitmask(totalBitCount + 1));
             std::string maskString = hex::format("0x{:X}  ", mask);
 
             auto style = ImGui::GetStyle();
@@ -653,7 +653,7 @@ namespace hex::plugin::builtin {
                                         ImGui::CalcTextSize(maskString.c_str()).x + style.FramePadding.x * 2.0F);
             ImGui::PushItemWidth(inputFieldWidth);
 
-            u64 newValue = ieee754statics.value & mask;
+            u64 newValue = u64(ieee754statics.value & mask);
             if (ImGuiExt::InputHexadecimal("##hex", &newValue, flags))
                 ieee754statics.value = newValue;
             ImGui::PopItemWidth();
@@ -668,7 +668,7 @@ namespace hex::plugin::builtin {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
-            ieee754.exponentBias = (u128(1) << (ieee754statics.exponentBitCount - 1)) - 1;
+            ieee754.exponentBias = u64((u128(1) << (ieee754statics.exponentBitCount - 1)) - 1);
 
             ieee754.signValue = ieee754.signBits == 0 ? 1.0 : -1.0;
 

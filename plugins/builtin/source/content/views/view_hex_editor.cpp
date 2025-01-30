@@ -67,7 +67,7 @@ namespace hex::plugin::builtin {
                 }
                 if (ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, m_input)) {
                     if (auto result = m_evaluator.evaluate(m_input); result.has_value()) {
-                        const auto inputResult = result.value();
+                        const auto inputResult = u64(result.value());
                         auto provider = ImHexApi::Provider::get();
 
                         switch (m_mode) {
