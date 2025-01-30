@@ -49,6 +49,8 @@ jobs:
           -DCMAKE_BUILD_TYPE=Debug                                                                                 \
           -DIMHEX_ENABLE_UNIT_TESTS=ON                                                                             \
           -DIMHEX_ENABLE_PLUGIN_TESTS=ON                                                                           \
+          -DIMHEX_PATTERNS_ENABLE_UNIT_TESTS=OFF                                                                   \
+          -DLIBPL_ENABLE_TESTS=OFF                                                                                 \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                                       \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                                     \
           -DCMAKE_C_FLAGS="-fuse-ld=lld -fsanitize=address,leak,undefined -fno-sanitize-recover=all --coverage"    \
@@ -56,13 +58,12 @@ jobs:
           -DIMHEX_OFFLINE_BUILD=ON                                                                                 \
           -G Ninja                                                                                                 \
           ..
-        ninja unit_tests
-        ninja imhex_all
+        ninja unit_tests main
 
     - name: 🧪 Perform plcli Integration Tests
       run: |
         cd lib/external/pattern_language
-        python tests/integration/integration.py ../../../build/imhex --pl
+        python tests/integration/integration.py ../../../build/bin/imhex --pl
 
     - name: 🧪 Perform Unit Tests
       run: |
@@ -88,6 +89,64 @@ jobs:
     #    fail_ci_if_error: true
     #    token: ${{ secrets.CODECOV_TOKEN }}
     #    file: build/coverage_report.xml
+
+  tests-win:
+    name: 🧪 Unit Tests (windows)
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+    steps:
+    - name: 🧰 Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: 📜 Setup ccache
+      uses:  hendrikmuhs/ccache-action@v1
+      id:    cache-ccache
+      with:
+        key: ${{ runner.os }}-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-ccache
+        max-size: 1G
+
+    - name: 🟦 Install msys2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: mingw64
+
+    - name: ⬇️ Install dependencies
+      run: |
+        set -x
+        dist/get_deps_msys2.sh
+
+    # Windows cmake build
+    - name: 🛠️ Build
+      run: |
+        set -x
+        mkdir -p build
+        cd build
+
+        cmake -G "Ninja"                                            \
+          -DCMAKE_BUILD_TYPE=Debug                                  \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"                     \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
+          -DUSE_SYSTEM_CAPSTONE=ON                                  \
+          -DIMHEX_ENABLE_UNIT_TESTS=ON                              \
+          -DIMHEX_ENABLE_PLUGIN_TESTS=ON                            \
+          -DIMHEX_PATTERNS_ENABLE_UNIT_TESTS=OFF                    \
+          -DLIBPL_ENABLE_TESTS=OFF                                  \
+          -DIMHEX_OFFLINE_BUILD=ON                                  \
+          ..
+        ninja unit_tests
+
+    - name: 🧪 Perform Unit Tests
+      run: |
+        cd build
+        ctest --output-on-failure
 
   langs:
     name: 🧪 Langs

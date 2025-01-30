@@ -150,7 +150,7 @@ namespace hex::plugin::builtin {
 
     class PopupSelect : public ViewHexEditor::Popup {
     public:
-        
+
         PopupSelect(u64 address, size_t size): m_region({address, size}) {}
 
         void draw(ViewHexEditor *editor) override {
@@ -646,8 +646,6 @@ namespace hex::plugin::builtin {
         EventProviderChanged::unsubscribe(this);
         EventProviderOpened::unsubscribe(this);
         EventHighlightingChanged::unsubscribe(this);
-
-        ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow());
     }
 
     void ViewHexEditor::drawPopup() {
@@ -717,9 +715,15 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::drawContent() {
+        const auto prevBytesPerRow = m_hexEditor.getBytesPerRow();
+
         m_hexEditor.setProvider(ImHexApi::Provider::get());
 
         m_hexEditor.draw();
+
+        if(prevBytesPerRow != m_hexEditor.getBytesPerRow()) {
+            ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow());
+        }
 
         this->drawPopup();
     }

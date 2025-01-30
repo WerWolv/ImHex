@@ -18,4 +18,5 @@ pacboy -S --needed --noconfirm  \
   bzip2:p        \
   xz:p           \
   zstd:p         \
-  lz4:p
+  lz4:p          \
+  gdb:p

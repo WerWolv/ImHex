@@ -64,6 +64,8 @@ macro(add_imhex_plugin)
     # Set rpath of plugin libraries to the plugins folder
     if (APPLE)
         set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES BUILD_RPATH "@executable_path/../Frameworks;@executable_path/plugins")
+    else()
+        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}/plugins")
     endif()
 
     # Setup a romfs for the plugin
@@ -124,8 +126,6 @@ macro(add_imhex_plugin)
 
     if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt AND IMHEX_ENABLE_UNIT_TESTS AND IMHEX_ENABLE_PLUGIN_TESTS)
         add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
-        target_link_libraries(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_NAME}_tests)
-        target_compile_definitions(${IMHEX_PLUGIN_NAME}_tests PRIVATE IMHEX_PROJECT_NAME="${IMHEX_PLUGIN_NAME}-tests")
     endif()
 endmacro()
 

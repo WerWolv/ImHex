@@ -50,6 +50,9 @@ int main(int argc, char **argv) {
         hex::log::info("Failed!");
 
     hex::TaskManager::exit();
+
+    hex::ImHexApi::System::impl::cleanup();
+
     hex::EventImHexClosing::post();
     hex::EventManager::clear();
     hex::PluginManager::unload();

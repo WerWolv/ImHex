@@ -393,8 +393,10 @@ function(configureProject)
     if (XCODE)
         # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
         set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>" PARENT_SCOPE)
-    else()
+    elseif(EMSCRIPTEN OR APPLE)
         set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" PARENT_SCOPE)
+    else()
+        set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" PARENT_SCOPE)
     endif()
 endfunction()
 
@@ -506,16 +508,16 @@ function(downloadImHexPatternsFiles dest)
 
         # Maybe patterns are cloned to a subdirectory
         if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
-            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")        
+            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")
         endif()
 
         # Or a sibling directory
         if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
-            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ImHex-Patterns")        
+            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ImHex-Patterns")
         endif()
     endif ()
 
-    if (NOT EXISTS ${imhex_patterns_SOURCE_DIR}) 
+    if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
         message(WARNING "Failed to locate ImHex-Patterns repository, some resources will be missing during install!")
     elseif(XCODE)
         # The Xcode build has multiple configurations, which each need a copy of these files
@@ -533,10 +535,24 @@ function(downloadImHexPatternsFiles dest)
             file(GENERATE OUTPUT "${dest}/${relativePath}" INPUT "${imhex_patterns_SOURCE_DIR}/${relativePath}")
         endforeach()
     else()
+        # Make sure the IMHEX_MAIN_OUTPUT_DIRECTORY exists, as CREATE_LINK doesn't create missing intermediate directories
+        file(MAKE_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}")
         set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic nodes)
         foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
+            # Make the pattern files available to ImHex binaries started from the build directory
+            if (NOT IMHEX_OFFLINE_BUILD)
+                file(COPY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "${IMHEX_MAIN_OUTPUT_DIRECTORY}" PATTERN "**/_schema.json" EXCLUDE)
+            elseif(NOT EXISTS ${IMHEX_MAIN_OUTPUT_DIRECTORY}/${FOLDER})
+                # If it is an offline build, the imhex_patterns_SOURCE_DIR location is likely a git clone
+                # Create the directories as symbolic links, so that any changes get mirrored both ways
+                file(CREATE_LINK "${imhex_patterns_SOURCE_DIR}/${FOLDER}" "${IMHEX_MAIN_OUTPUT_DIRECTORY}/${FOLDER}" COPY_ON_ERROR SYMBOLIC)
+            endif()
             install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "${dest}" PATTERN "**/_schema.json" EXCLUDE)
         endforeach ()
+        # Register ImHex-Patterns, if manually cloned
+        if(IMHEX_OFFLINE_BUILD AND EXISTS ${imhex_patterns_SOURCE_DIR}/CMakeLists.txt AND IMHEX_PATTERNS_ENABLE_UNIT_TESTS)
+            add_subdirectory(${imhex_patterns_SOURCE_DIR})
+        endif()
     endif ()
 
 endfunction()
@@ -751,8 +767,8 @@ macro(addBundledLibraries)
         set_target_properties(
                 libpl
                 PROPERTIES
-                    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-                    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+                    RUNTIME_OUTPUT_DIRECTORY ${IMHEX_MAIN_OUTPUT_DIRECTORY}
+                    LIBRARY_OUTPUT_DIRECTORY ${IMHEX_MAIN_OUTPUT_DIRECTORY}
         )
     endif()
     enableUnityBuild(libpl)
