@@ -15,7 +15,10 @@ namespace hex::ui {
         void drawContent() override {
             const std::string buttonText = Lang(m_buttonText);
             const auto buttonSize = ImGui::CalcTextSize(buttonText.c_str());
-
+            const auto iconSize = ImGui::CalcTextSize(m_icon);
+            const auto textHeight = std::max(ImGui::CalcTextSize(Lang(m_message)).y, iconSize.y);
+            const auto textOffset = (ImGui::GetWindowHeight() - textHeight) / 2;
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + textOffset);
             ImGui::TextUnformatted(m_icon);
             ImGui::SameLine(0, 10_scaled);
 
