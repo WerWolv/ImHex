@@ -615,7 +615,7 @@ namespace hex {
 
             const auto windowPos = ImHexApi::System::getMainWindowPosition();
             float startY = windowPos.y + ImGui::GetTextLineHeight() + ((ImGui::GetTextLineHeight() + (ImGui::GetStyle().FramePadding.y * 2.0F)) * (onWelcomeScreen ? 1 : 2));
-            const auto height = 30_scaled;
+            const auto height = ImGui::GetTextLineHeightWithSpacing() * 1.5f;
 
             // Offset banner based on the size of the title bar. On macOS it's slightly taller
             #if defined(OS_MACOS)
