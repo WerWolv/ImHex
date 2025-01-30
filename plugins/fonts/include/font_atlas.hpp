@@ -6,6 +6,7 @@
 #include <freetype2/ft2build.h>
 #include FT_FREETYPE_H
 #include FT_LCD_FILTER_H
+#include FT_BITMAP_H
 
 #include <memory>
 #include <list>
@@ -292,6 +293,19 @@ namespace hex::fonts {
             u32 color;
         };
         inline static COLOR color;
+    };
+
+    class Bitmap {
+        u32 m_width;
+        u32 m_height;
+        u32 m_pitch;
+        std::vector<u8> m_data;
+    public:
+        Bitmap(u32 width, u32 height, u32 pitch, u8 *data) : m_width(width), m_height(height), m_pitch(pitch), m_data(std::vector<u8>(data, data + pitch * height)) {}
+        u32 getWidth() const { return m_width; }
+        u32 getHeight() const { return m_height; }
+        u32 getPitch() const { return m_pitch; }
+        const std::vector<u8> &getData() const { return m_data; }
     };
 
 }

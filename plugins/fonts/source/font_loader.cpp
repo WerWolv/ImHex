@@ -14,7 +14,6 @@
 #include "imgui_impl_opengl3_loader.h"
 
 #include <font_atlas.hpp>
-#include <string.h>
 
 namespace hex::fonts {
 
@@ -28,7 +27,7 @@ namespace hex::fonts {
                     return false;
         }
         fontAtlas->reset();
-        bool result = false;
+        bool result;
         u32 fontIndex = 0;
         auto io = ImGui::GetIO();
         io.Fonts = fontAtlas->getAtlas();
@@ -117,11 +116,8 @@ namespace hex::fonts {
             }
         }
 
-        std::vector<int> rect_ids;
-        std::map<unsigned, FT_ULong> charCodes;
-
-        FT_Int major, minor, patch;
-        FT_Library_Version(ft, &major, &minor, &patch);
+        std::vector<i32> rect_ids;
+        std::map<i32,Bitmap> bitmapMap;
 
         FT_Library_SetLcdFilter(ft, FT_LCD_FILTER_DEFAULT);
         FT_Face face;
@@ -165,7 +161,7 @@ namespace hex::fonts {
             }
 
             FT_Bitmap bitmap = face->glyph->bitmap;
-
+            Bitmap bitmapSave = Bitmap(bitmap.width, bitmap.rows, bitmap.pitch, bitmap.buffer);
             auto width = bitmap.width / 3;
             auto height = bitmap.rows;
             if (width * height == 0) {
@@ -175,11 +171,11 @@ namespace hex::fonts {
             FT_GlyphSlot slot = face->glyph;
             FT_Size size = face->size;
             slot->bitmap.pixel_mode = FT_PIXEL_MODE_BGRA;
-            int advance = (float) std::floor(slot->advance.x / 64.0f);
+            i32 advance = (float) std::floor(slot->advance.x / 64.0f);
             ImVec2 offset = ImVec2(slot->metrics.horiBearingX / 64.0f, (size->metrics.ascender - slot->metrics.horiBearingY) / 64.0f);
-            int rect_id = fontAtlas->getAtlas()->AddCustomRectFontGlyph(io.Fonts->Fonts[0], charCode, width, height, advance, offset);
+            i32 rect_id = fontAtlas->getAtlas()->AddCustomRectFontGlyph(io.Fonts->Fonts[0], charCode, width, height, advance, offset);
             rect_ids.push_back(rect_id);
-            charCodes.insert(std::pair<unsigned, FT_ULong>(rect_id, charCode));
+            bitmapMap.insert(std::pair<i32, Bitmap>(rect_id, bitmapSave));
             charCode = FT_Get_Next_Char(face, charCode, &gIndex);
         }
 
@@ -189,47 +185,34 @@ namespace hex::fonts {
         // build rgba atlas
         result = io.Fonts->Build();
         // Retrieve texture in RGBA format
-        unsigned char *tex_pixels = nullptr;
-        int tex_width, tex_height;
+        u8 *tex_pixels = nullptr;
+        i32 tex_width, tex_height;
         io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_width, &tex_height);
         u32 *u32_tex_pixels = reinterpret_cast<u32 *>(tex_pixels);
 
         for (auto rect_id: rect_ids) {
             if (const ImFontAtlasCustomRect *rect = io.Fonts->GetCustomRectByIndex(rect_id)) {
-                if (rect->X == 0xFFFF || rect->Y == 0xFFFF)
+                if (rect->X == 0xFFFF || rect->Y == 0xFFFF || !bitmapMap.contains(rect_id))
                     continue;
 
-                charCode = charCodes[rect_id];
-                FT_UInt glyph_index = FT_Get_Char_Index(face, charCode);
-                if (FT_Load_Glyph(face, glyph_index, FT_LOAD_TARGET_LCD | FT_LOAD_RENDER | FT_LOAD_CROP_BITMAP) != 0) {
-                    log::fatal("Failed to load glyph");
-                    return false;
-                }
-
-                FT_Bitmap bitmap = face->glyph->bitmap;
-                u32 bmapWidth = bitmap.width / 3;
-                u32 imageWidth = bmapWidth, imageHeight = bitmap.rows;
-
-                u32 *image = reinterpret_cast<u32 *>(malloc(imageHeight * imageWidth * sizeof(u32)));
-
-                for (size_t i = 0; i < bitmap.rows; i++) {
-                    for (size_t j = 0; j < bmapWidth; j++) {
-                        const unsigned char *bitmapBuffer = &bitmap.buffer[i * bitmap.pitch + 3 * j];
-                        image[i * imageWidth + j] = Color::AddAlpha(*bitmapBuffer, *(bitmapBuffer + 1), *(bitmapBuffer + 2));
-                    }
-                }
+                Bitmap bitmapSaved = bitmapMap.at(rect_id);
+                u32 bmapWidth = bitmapSaved.getWidth() / 3;
+                u32 imageWidth = bmapWidth, imageHeight = bitmapSaved.getHeight();
+                const u8 *bitmapBuffer = bitmapSaved.getData().data();
 
                 // Fill the custom rectangle with bitmap data
                 for (u32 y = 0; y < imageHeight; y++) {
                     ImU32 *p = u32_tex_pixels + (rect->Y + y) * tex_width + (rect->X);
-                    for (u32 x = 0; x < imageWidth; x++)
-                        *p++ = image[y * imageWidth + x];
+                    for (u32 x = 0; x < imageWidth; x++) {
+                        const u8 *bitmapPtr = &bitmapBuffer[y * bitmapSaved.getPitch() + 3 * x];
+                        *p++ = Color::AddAlpha(*bitmapPtr, *(bitmapPtr + 1), *(bitmapPtr + 2));
+                    }
                 }
-                free(image);
             }
             result = true;
         }
-        if (ft  != nullptr) {
+        if (ft != nullptr) {
+            FT_Done_Face(face);
             FT_Done_FreeType(ft);
             ft = nullptr;
         }
