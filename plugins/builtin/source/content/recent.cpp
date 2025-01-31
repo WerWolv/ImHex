@@ -151,7 +151,7 @@ namespace hex::plugin::builtin::recent {
     }
 
     void updateRecentEntries() {
-        TaskManager::createBackgroundTask("hex.builtin.task.updating_recents"_lang, [](auto&) {
+        TaskManager::createBackgroundTask("hex.builtin.task.updating_recents", [](auto&) {
             if (s_recentEntriesUpdating)
                 return;
 

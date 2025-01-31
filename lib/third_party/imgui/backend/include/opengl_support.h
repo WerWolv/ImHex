@@ -2,7 +2,10 @@
 
 #if !defined(WINGDIAPI)
 #define WINGDIAPI extern "C"
-#define APIENTRY
+#endif
+
+#if !defined(APIENTRY)
+    #define APIENTRY
 #endif
 
 #if defined(OS_WEB)

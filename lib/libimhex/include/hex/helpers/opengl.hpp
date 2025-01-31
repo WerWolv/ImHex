@@ -189,43 +189,43 @@ namespace hex::gl {
 
 
         T &getElement(int row,int col) {
-            return this->mat[row*Columns+col];
+            return this->mat[row * Columns+col];
         }
 
         Vector<T,Rows> getColumn(int col) {
             Vector<T,Rows> result;
             for (size_t i = 0; i < Rows; i++)
-                result[i] = this->mat[i*Columns+col];
+                result[i] = this->mat[i * Columns + col];
             return result;
         }
 
         Vector<T,Columns> getRow(int row) {
             Vector<T,Columns> result;
             for (size_t i = 0; i < Columns; i++)
-                result[i] = this->mat[row*Columns+i];
+                result[i] = this->mat[row * Columns+i];
             return result;
         }
 
         void updateRow(int row, Vector<T,Columns> values) {
             for (size_t i = 0; i < Columns; i++)
-                this->mat[row*Columns+i] = values[i];
+                this->mat[row * Columns + i] = values[i];
         }
 
         void updateColumn(int col, Vector<T,Rows> values) {
             for (size_t i = 0; i < Rows; i++)
-                this->mat[i*Columns+col] = values[i];
+                this->mat[i * Columns + col] = values[i];
         }
 
-        void updateElement( int row,int col, T value) {
-            this->mat[row*Columns + col] = value;
+        void updateElement(int row, int col, T value) {
+            this->mat[row * Columns + col] = value;
         }
 
-        T &operator()( const unsigned&row, const unsigned&col) {
-            return this->mat[row*Columns + col];
+        T &operator()(const unsigned &row, const unsigned &col) {
+            return this->mat[row * Columns + col];
         }
 
-        const T &operator()(const unsigned& row, const unsigned& col) const {
-            return this->mat[row*Columns + col];
+        const T &operator()(const unsigned &row, const unsigned &col) const {
+            return this->mat[row * Columns + col];
         }
 
         Matrix& operator=(const Matrix& A) {
@@ -243,7 +243,7 @@ namespace hex::gl {
 
             for (size_t i = 0; i < Rows; i++)
                 for (size_t j = 0; j < Columns; j++)
-                    result(i, j) = this->mat[i*Columns+j] + A(i, j);
+                    result(i, j) = this->mat[i * Columns + j] + A(i, j);
             return result;
         }
 
@@ -252,7 +252,7 @@ namespace hex::gl {
 
             for (size_t i = 0; i < Rows; i++)
                 for (size_t j = 0; j < Columns; j++)
-                    result(i, j) = this->mat[i*Columns+j] - A(i, j);
+                    result(i, j) = this->mat[i * Columns + j] - A(i, j);
             return result;
         }
 
@@ -269,7 +269,7 @@ namespace hex::gl {
             Matrix  t(0);
             for (size_t i = 0; i < Columns; i++)
                 for (size_t j = 0; j < Rows; j++)
-                    t.updateElement(i, j, this->mat[j*Rows+i]);
+                    t.updateElement(i, j, this->mat[j * Rows + i]);
 
             return t;
         }

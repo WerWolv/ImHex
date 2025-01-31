@@ -100,7 +100,7 @@ namespace hex::plugin::disasm {
 
     void ViewDisassembler::exportToFile() {
         const auto provider = ImHexApi::Provider::get();
-        TaskManager::createTask("hex.ui.common.processing"_lang, TaskManager::NoProgress, [this, provider](auto &) {
+        TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [this, provider](auto &) {
             TaskManager::doLater([this, provider] {
                 fs::openFileBrowser(fs::DialogMode::Save, {}, [this, provider](const std::fs::path &path) {
                     auto p = path;

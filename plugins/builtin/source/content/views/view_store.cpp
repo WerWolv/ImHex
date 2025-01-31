@@ -336,7 +336,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::updateAll() {
-        m_updateAllTask = TaskManager::createTask("hex.builtin.task.updating_store"_lang, m_updateCount, [this](auto &task) {
+        m_updateAllTask = TaskManager::createTask("hex.builtin.task.updating_store", m_updateCount, [this](auto &task) {
             for (auto &category : m_categories) {
                 for (auto &entry : category.entries) {
                     if (entry.hasUpdate) {

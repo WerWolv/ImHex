@@ -576,7 +576,7 @@ namespace hex {
             namespace impl {
 
                 void add(std::unique_ptr<View> &&view);
-                const std::map<std::string, std::unique_ptr<View>>& getEntries();
+                const std::map<UnlocalizedString, std::unique_ptr<View>>& getEntries();
 
             }
 
@@ -1110,9 +1110,9 @@ namespace hex {
 
                 [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const { return m_unlocalizedName; }
 
-            protected:
-                const static int TextInputFlags;
+                [[nodiscard]] static int DefaultTextInputFlags();
 
+            protected:
                 bool drawDefaultScalarEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const;
                 bool drawDefaultTextEditingTextBox(u64 address, std::string &data, ImGuiInputTextFlags flags) const;
 

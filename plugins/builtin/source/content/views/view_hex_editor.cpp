@@ -521,7 +521,7 @@ namespace hex::plugin::builtin {
         }
 
         [[nodiscard]] UnlocalizedString getTitle() const override {
-            return "hex.builtin.view.hex_editor.menu.edit.paste.popup.title"_lang;
+            return "hex.builtin.view.hex_editor.menu.edit.paste.popup.title";
         }
 
     private:
@@ -737,7 +737,7 @@ namespace hex::plugin::builtin {
             return;
 
         fs::openFileBrowser(fs::DialogMode::Save, {}, [provider](const auto &path) {
-            PopupBlockingTask::open(TaskManager::createTask("hex.builtin.task.saving_data"_lang, TaskManager::NoProgress, [=](Task &){
+            PopupBlockingTask::open(TaskManager::createTask("hex.builtin.task.saving_data", TaskManager::NoProgress, [=](Task &){
                 provider->saveAs(path);
             }));
         });
@@ -1196,7 +1196,7 @@ namespace hex::plugin::builtin {
 
                                                     ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                                                     [this](const auto &path) {
-                                                        TaskManager::createTask("hex.builtin.task.loading_encoding_file"_lang, 0, [this, path](auto&) {
+                                                        TaskManager::createTask("hex.builtin.task.loading_encoding_file", 0, [this, path](auto&) {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
                                                             ImHexApi::Provider::markDirty();
 
