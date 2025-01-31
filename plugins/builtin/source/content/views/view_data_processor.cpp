@@ -86,7 +86,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::string m_name = Lang(this->getUnlocalizedName());
+        std::string m_name = Lang(this->getUnlocalizedName()).get();
         int m_type = 0;
 
         std::variant<i128, long double, std::vector<u8>> m_value;
@@ -156,7 +156,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::string m_name = Lang(this->getUnlocalizedName());
+        std::string m_name = Lang(this->getUnlocalizedName()).get();
         int m_type = 0;
 
         std::variant<i128, long double, std::vector<u8>> m_value;
@@ -344,7 +344,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::string m_name = "hex.builtin.nodes.custom.custom.header"_lang;
+        std::string m_name = "hex.builtin.nodes.custom.custom.header"_lang.get();
 
         bool m_editable = false;
 

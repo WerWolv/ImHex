@@ -546,7 +546,7 @@ namespace hex {
                             const auto maxWindowPos = ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize();
                             if (currWindowPos.x > maxWindowPos.x || currWindowPos.y > maxWindowPos.y || currWindowPos.x < minWindowPos.x || currWindowPos.y < minWindowPos.y) {
                                 positionSet = false;
-                                GImGui->MovingWindow = nullptr;
+                                ImGui::GetCurrentContext()->MovingWindow = nullptr;
                             }
                         }
 
@@ -1142,7 +1142,7 @@ namespace hex {
             Duration requestedFrameTime = {}, remainingUnlockedTime = {};
             float targetFps = 0;
 
-            const auto nativeFps = [] -> float {
+            const auto nativeFps = []() -> float {
                 if (const auto monitor = glfwGetPrimaryMonitor(); monitor != nullptr) {
                     if (const auto videoMode = glfwGetVideoMode(monitor); videoMode != nullptr) {
                         return videoMode->refreshRate;

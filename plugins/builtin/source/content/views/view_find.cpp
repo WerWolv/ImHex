@@ -199,7 +199,7 @@ namespace hex::plugin::builtin {
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
-        const auto [decodeType, endian] = [&] -> std::pair<Occurrence::DecodeType, std::endian> {
+        const auto [decodeType, endian] = [&]() -> std::pair<Occurrence::DecodeType, std::endian> {
             if (settings.type == ASCII)
                 return { Occurrence::DecodeType::ASCII, std::endian::native };
             if (settings.type == UTF8)
@@ -344,7 +344,7 @@ namespace hex::plugin::builtin {
         auto occurrence = reader.begin();
         u64 progress = 0;
 
-        auto searchPredicate = [&] -> bool(*)(u8, u8) {
+        auto searchPredicate = [&]() -> bool(*)(u8, u8) {
             if (!settings.ignoreCase)
                 return [](u8 left, u8 right) -> bool {
                     return left == right;

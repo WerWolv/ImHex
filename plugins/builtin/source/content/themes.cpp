@@ -203,11 +203,11 @@ namespace hex::plugin::builtin {
 
                 ThemeManager::addThemeHandler("imhex", ImHexColorMap,
                    [](u32 colorId) -> ImColor {
-                       return static_cast<ImGuiExt::ImHexCustomData *>(GImGui->IO.UserData)->Colors[colorId];
+                       return static_cast<ImGuiExt::ImHexCustomData *>(ImGui::GetCurrentContext()->IO.UserData)->Colors[colorId];
 
                    },
                    [](u32 colorId, ImColor color) {
-                       static_cast<ImGuiExt::ImHexCustomData *>(GImGui->IO.UserData)->Colors[colorId] = color;
+                       static_cast<ImGuiExt::ImHexCustomData *>(ImGui::GetCurrentContext()->IO.UserData)->Colors[colorId] = color;
                    }
                 );
             }

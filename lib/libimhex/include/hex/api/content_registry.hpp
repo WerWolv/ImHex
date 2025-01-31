@@ -721,7 +721,7 @@ namespace hex {
                 add(impl::Entry {
                     unlocalizedCategory,
                     unlocalizedName,
-                    [=, ...args = std::forward<Args>(args)] mutable {
+                    [=, ...args = std::forward<Args>(args)]() mutable {
                         auto node = std::make_unique<T>(std::forward<Args>(args)...);
                         node->setUnlocalizedName(unlocalizedName);
                         return node;
@@ -1002,7 +1002,7 @@ namespace hex {
             void add(bool addToList = true) {
                 auto typeName = T().getTypeName();
 
-                impl::add(typeName, [] -> std::unique_ptr<prv::Provider> {
+                impl::add(typeName, []() -> std::unique_ptr<prv::Provider> {
                     return std::make_unique<T>();
                 });
 

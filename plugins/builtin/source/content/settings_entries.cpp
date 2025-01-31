@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
         class FPSWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
             bool draw(const std::string &name) override {
-                auto format = [this] -> std::string {
+                auto format = [this]() -> std::string {
                     if (m_value > 200)
                         return "hex.builtin.setting.interface.fps.unlocked"_lang;
                     else if (m_value < 15)
@@ -177,7 +177,7 @@ namespace hex::plugin::builtin {
         class ScalingWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
             bool draw(const std::string &name) override {
-                auto format = [this] -> std::string {
+                auto format = [this]() -> std::string {
                     if (m_value == 0)
                         return hex::format("{} (x{:.1f})", "hex.builtin.setting.interface.scaling.native"_lang, ImHexApi::System::getNativeScale());
                     else
@@ -219,7 +219,7 @@ namespace hex::plugin::builtin {
         class AutoBackupWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
             bool draw(const std::string &name) override {
-                auto format = [this] -> std::string {
+                auto format = [this]() -> std::string {
                     auto value = m_value * 30;
                     if (value == 0)
                         return "hex.ui.common.off"_lang;

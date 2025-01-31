@@ -570,7 +570,7 @@ endmacro()
 macro(setupCompilerFlags target)
     # IMHEX_COMMON_FLAGS: flags common for C, C++, Objective C, etc.. compilers
 
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         # Define strict compilation flags
         if (IMHEX_STRICT_WARNINGS)
             set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wall -Wextra -Wpedantic -Werror")
@@ -584,6 +584,8 @@ macro(setupCompilerFlags target)
 
         # Disable some warnings
         set(IMHEX_C_CXX_FLAGS "-Wno-array-bounds -Wno-deprecated-declarations -Wno-unknown-pragmas")
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        set(IMHEX_CXX_FLAGS "/EHsc")
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")

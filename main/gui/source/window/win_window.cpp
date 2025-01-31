@@ -255,7 +255,7 @@ namespace hex {
                         return HTCAPTION;
                 }
 
-                std::string_view hoveredWindowName = GImGui->HoveredWindow == nullptr ? "" : GImGui->HoveredWindow->Name;
+                std::string_view hoveredWindowName = ImGui::GetCurrentContext()->HoveredWindow == nullptr ? "" : GImGui->HoveredWindow->Name;
 
                 if (!ImHexApi::System::impl::isWindowResizable()) {
                     if (result != RegionClient) {

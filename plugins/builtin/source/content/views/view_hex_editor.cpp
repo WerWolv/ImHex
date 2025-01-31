@@ -1200,7 +1200,7 @@ namespace hex::plugin::builtin {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
                                                             ImHexApi::Provider::markDirty();
 
-                                                            TaskManager::doLater([this, encoding = std::move(encoding)] mutable {
+                                                            TaskManager::doLater([this, encoding = std::move(encoding)]() mutable {
                                                                 m_hexEditor.setCustomEncoding(std::move(encoding));
                                                             });
                                                         });

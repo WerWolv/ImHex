@@ -327,7 +327,7 @@ namespace hex::plugin::builtin {
         if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
             static float height = 0;
             static bool dragging = false;
-            const ImGuiContext& g = *GImGui;
+            const ImGuiContext& g = *ImGui::GetCurrentContext();
             if (g.CurrentWindow->Appearing)
                 return;
             const auto availableSize = g.CurrentWindow->Size;
@@ -1292,7 +1292,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     if (ImGuiExt::DimmedIconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         auto dataProvider = std::make_shared<prv::MemoryProvider>(section.data);
-                        auto hexEditor = auto(m_sectionHexEditor);
+                        auto hexEditor = ui::HexEditor(m_sectionHexEditor);
 
                         hexEditor.setBackgroundHighlightCallback([this, id, &runtime](u64 address, const u8 *, size_t) -> std::optional<color_t> {
                             if (m_runningEvaluators != 0)
@@ -1318,14 +1318,14 @@ namespace hex::plugin::builtin {
                         auto patternProvider = ImHexApi::Provider::get();
 
 
-                        m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider, hexEditor, patternDrawer = std::make_shared<ui::PatternDrawer>(), &runtime] mutable {
+                        m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider, hexEditor, patternDrawer = std::make_shared<ui::PatternDrawer>(), &runtime]() mutable {
                             hexEditor.setProvider(dataProvider.get());
                             hexEditor.draw(480_scaled);
                             patternDrawer->setSelectionCallback([&](const pl::ptrn::Pattern *pattern) {
                                 hexEditor.setSelection(Region { pattern->getOffset(), pattern->getSize() });
                             });
 
-                            const auto &patterns = [&, this] -> const auto& {
+                            const auto &patterns = [&, this]() -> const auto& {
                                 if (patternProvider->isReadable() && *m_executionDone) {
                                     return runtime.getPatterns(id);
                                 } else {
@@ -1556,7 +1556,7 @@ namespace hex::plugin::builtin {
 
                 // Format: [ AA BB CC DD ] @ 0x12345678
                 runtime.addPragma("magic", [provider, &foundCorrectType](pl::PatternLanguage &, const std::string &value) -> bool {
-                    const auto pattern = [value = value] mutable -> std::optional<BinaryPattern> {
+                    const auto pattern = [value = value]() mutable -> std::optional<BinaryPattern> {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
@@ -1577,7 +1577,7 @@ namespace hex::plugin::builtin {
                         return BinaryPattern(value);
                     }();
 
-                    const auto address = [value = value, provider] mutable -> std::optional<u64> {
+                    const auto address = [value = value, provider]() mutable -> std::optional<u64> {
                         value = wolv::util::trim(value);
 
                         if (value.empty())

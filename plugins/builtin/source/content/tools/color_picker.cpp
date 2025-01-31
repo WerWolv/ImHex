@@ -181,7 +181,7 @@ namespace hex::plugin::builtin {
                         return hex::format("{{ {}%, {}%, {}%, {}% }}", u32(floatColor[0] * 100), u32(floatColor[1] * 100), u32(floatColor[2] * 100), u32(floatColor[3] * 100));
                     });
 
-                    drawValue("hex.builtin.tools.color.formats.color_name"_lang, [&] -> std::string {
+                    drawValue("hex.builtin.tools.color.formats.color_name"_lang, [&]() -> std::string {
                         const static auto ColorTable = [] {
                             auto colorMap = nlohmann::json::parse(romfs::get("assets/common/color_names.json").string()).get<std::map<std::string, std::string>>();
 
