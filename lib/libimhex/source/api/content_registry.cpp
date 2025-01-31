@@ -33,7 +33,7 @@ namespace hex {
         namespace impl {
 
             struct OnChange {
-                u32 id;
+                u64 id;
                 OnChangeCallback callback;
             };
 
@@ -714,15 +714,15 @@ namespace hex {
 
         namespace impl {
 
-            static AutoReset<std::map<std::string, std::unique_ptr<View>>> s_views;
-            const std::map<std::string, std::unique_ptr<View>>& getEntries() {
+            static AutoReset<std::map<UnlocalizedString, std::unique_ptr<View>>> s_views;
+            const std::map<UnlocalizedString, std::unique_ptr<View>>& getEntries() {
                 return *s_views;
             }
 
             void add(std::unique_ptr<View> &&view) {
             log::debug("Registered new view: {}", view->getUnlocalizedName().get());
 
-            s_views->insert({ view->getUnlocalizedName(), std::move(view) });
+            s_views->emplace(view->getUnlocalizedName(), std::move(view));
         }
 
         }
@@ -1126,7 +1126,9 @@ namespace hex {
 
     namespace ContentRegistry::HexEditor {
 
-        const int DataVisualizer::TextInputFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysOverwrite;
+        int DataVisualizer::DefaultTextInputFlags() {
+            return ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysOverwrite;
+        }
 
         bool DataVisualizer::drawDefaultScalarEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const {
             struct UserData {
@@ -1144,7 +1146,7 @@ namespace hex {
             };
 
             ImGui::PushID(reinterpret_cast<void*>(address));
-            ImGuiExt::InputScalarCallback("##editing_input", dataType, data, format, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+            ImGuiExt::InputScalarCallback("##editing_input", dataType, data, format, flags | DefaultTextInputFlags() | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                 auto &userData = *static_cast<UserData*>(data->UserData);
 
                 if (data->CursorPos >= userData.maxChars)
@@ -1175,7 +1177,7 @@ namespace hex {
             };
 
             ImGui::PushID(reinterpret_cast<void*>(address));
-            ImGui::InputText("##editing_input", data.data(), data.size() + 1, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+            ImGui::InputText("##editing_input", data.data(), data.size() + 1, flags | DefaultTextInputFlags() | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                 auto &userData = *static_cast<UserData*>(data->UserData);
 
                 userData.data->resize(data->BufSize);

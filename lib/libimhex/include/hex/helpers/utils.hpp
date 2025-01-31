@@ -37,7 +37,7 @@ namespace hex {
     template<typename T>
     [[nodiscard]] std::vector<std::vector<T>> sampleChannels(const std::vector<T> &data, size_t count, size_t channels) {
         if (channels == 0) return {};
-        size_t signalLength = std::max(1.0, double(data.size()) / channels);
+        size_t signalLength = std::max<double>(1.0, double(data.size()) / channels);
 
         size_t stride = std::max(1.0, double(signalLength) / count);
 

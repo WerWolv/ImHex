@@ -25,15 +25,17 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         set(GLFW_INCLUDE_DIRS ${glfw3_INCLUDE_DIRS})
         set(GLFW_LIBRARIES ${glfw3_LIBRARIES})
 
-        if (NOT glfw3_FOUND OR "${GLFW_LIBRARIES}" STREQUAL "")
+        if (NOT glfw3_FOUND AND "${GLFW_LIBRARIES}" STREQUAL "")
             find_package(PkgConfig REQUIRED)
             pkg_search_module(GLFW REQUIRED glfw3)
+
+            if ("${GLFW_LIBRARIES}" MATCHES ".+dll")
+                set(GLFW_LIBRARIES "glfw3")
+            endif ()
+        else()
+            set(GLFW_LIBRARIES GLFW::GLFW)
         endif ()
     endif()
-
-    if ("${GLFW_LIBRARIES}" MATCHES ".+dll")
-        set(GLFW_LIBRARIES "glfw3")
-    endif ()
 
     target_include_directories(imgui_backend PUBLIC ${FREETYPE_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
     target_link_directories(imgui_backend PUBLIC ${FREETYPE_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})

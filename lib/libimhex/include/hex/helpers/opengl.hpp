@@ -9,6 +9,7 @@
 #include <map>
 #include <span>
 #include <string>
+#include <numbers>
 
 #include <opengl_support.h>
 #include <GLFW/glfw3.h>
@@ -219,11 +220,11 @@ namespace hex::gl {
             this->mat[row*Columns + col] = value;
         }
 
-        T &operator()( const int &row,const int &col) {
+        T &operator()( const unsigned&row, const unsigned&col) {
             return this->mat[row*Columns + col];
         }
 
-        const T &operator()(const unsigned& row,const unsigned& col ) const {
+        const T &operator()(const unsigned& row, const unsigned& col) const {
             return this->mat[row*Columns + col];
         }
 
@@ -401,7 +402,7 @@ namespace hex::gl {
         T Sx, Cx, Sy, Cy, Sz, Cz;
         Vector<T,3> angles = ypr;
         if(!radians)
-            angles *= M_PI/180;
+            angles *= std::numbers::pi / 180;
 
         Sx = -sin(angles[0]); Cx = cos(angles[0]);
         Sy = -sin(angles[1]); Cy = cos(angles[1]);
@@ -524,7 +525,7 @@ namespace hex::gl {
         Vector<T,3> rotationVector3 = {{rotationVector[0], rotationVector[1], rotationVector[2]}};
         T theta = rotationVector3.magnitude();
         if (!radians)
-            theta *= M_PI / 180;
+            theta *= std::numbers::pi / 180;
         Vector<T,3> axis = rotationVector3;
         if (theta != 0)
             axis = axis.normalize();

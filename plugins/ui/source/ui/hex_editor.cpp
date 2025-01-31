@@ -62,7 +62,7 @@ namespace hex::ui {
                 ImGui::PushID(reinterpret_cast<void*>(address));
                 ON_SCOPE_EXIT { ImGui::PopID(); };
                 std::array<char, 2> buffer = { std::isprint(data[0]) != 0 ? char(data[0]) : '.', 0x00 };
-                ImGui::InputText("##editing_input", buffer.data(), buffer.size(), TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+                ImGui::InputText("##editing_input", buffer.data(), buffer.size(), DefaultTextInputFlags() | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                     auto &userData = *static_cast<UserData*>(data->UserData);
 
                     if (data->BufTextLen >= userData.maxChars) {

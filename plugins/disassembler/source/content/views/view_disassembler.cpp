@@ -47,7 +47,7 @@ namespace hex::plugin::disasm {
         if (m_regionToDisassemble.get(provider).getStartAddress() < m_imageBaseAddress)
             return;
 
-        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling"_lang, m_regionToDisassemble.get(provider).getSize(), [this, provider](auto &task) {
+        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling", m_regionToDisassemble.get(provider).getSize(), [this, provider](auto &task) {
             const auto &currArchitecture = m_currArchitecture.get(provider);
             const auto region = m_regionToDisassemble.get(provider);
             auto &disassembly = m_disassembly.get(provider);

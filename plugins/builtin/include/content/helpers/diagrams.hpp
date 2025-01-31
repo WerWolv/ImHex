@@ -56,7 +56,7 @@ namespace hex {
 
                 std::map<u64, std::vector<u8>> orderedData;
                 for (u32 i = 0; i < sequenceCount; i++) {
-                    ssize_t offset = random() % size;
+                    i64 offset = random() % size;
 
                     std::vector<u8> sequence;
                     sequence.resize(std::min<size_t>(sequenceCount, size - offset));
@@ -93,7 +93,7 @@ namespace hex {
 
                 std::map<u64, std::vector<u8>> orderedData;
                 for (u32 i = 0; i < sequenceCount; i++) {
-                    ssize_t offset = random() % inputBuffer.size();
+                    i64 offset = random() % inputBuffer.size();
 
                     std::vector<u8> sequence;
                     sequence.reserve(sampleSize);

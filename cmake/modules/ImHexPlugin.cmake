@@ -36,8 +36,8 @@ macro(add_imhex_plugin)
 
     # Add include directories and link libraries
     target_include_directories(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_INCLUDES})
-    target_link_libraries(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_LIBRARIES})
-    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${FMT_LIBRARIES} imgui_all_includes libwolv)
+    target_link_libraries(${IMHEX_PLUGIN_NAME} PUBLIC libimhex)
+    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE ${FMT_LIBRARIES} imgui_all_includes libwolv ${IMHEX_PLUGIN_LIBRARIES})
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl)
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl-gen)
 
@@ -62,7 +62,11 @@ macro(add_imhex_plugin)
     )
 
     # Set rpath of plugin libraries to the plugins folder
-    if (APPLE)
+    if (WIN32)
+        if (IMHEX_PLUGIN_LIBRARY_PLUGIN)
+            set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+        endif()
+    elseif (APPLE)
         set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES BUILD_RPATH "@executable_path/../Frameworks;@executable_path/plugins")
     endif()
 

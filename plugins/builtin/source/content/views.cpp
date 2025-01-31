@@ -63,7 +63,7 @@ namespace hex::plugin::builtin {
                 if (!view->shouldStoreWindowState())
                     continue;
 
-                buffer->appendf("%s=%d\n", name.c_str(), view->getWindowOpenState());
+                buffer->appendf("%s=%d\n", name.get().c_str(), view->getWindowOpenState());
             }
         });
     }
