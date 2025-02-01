@@ -1509,7 +1509,7 @@ namespace hex::plugin::builtin {
                         if (source != nullptr && source->mainSource) {
                             auto key = TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
                             if (!errorMarkers.contains(key) ||errorMarkers[key].first < error.getLocation().length)
-                                    errorMarkers[key] = std::make_pair(error.getLocation().length,processMessage(error.getMessage()));
+                                    errorMarkers[key] = std::make_pair(u32(error.getLocation().length), processMessage(error.getMessage()));
                         }
                     }
                 }
@@ -1901,7 +1901,7 @@ namespace hex::plugin::builtin {
         EventHighlightingChanged::post();
 
         TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
-            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+            auto runtimeLock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
@@ -1942,7 +1942,7 @@ namespace hex::plugin::builtin {
                 return m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
             });
 
-            runtime.setLogCallback([this,provider](auto level, auto message) {
+            runtime.setLogCallback([this, provider](auto level, auto message) {
                 std::scoped_lock lock(m_logMutex);
 
                 for (auto line : wolv::util::splitString(message, "\n")) {

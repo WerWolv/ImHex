@@ -56,8 +56,6 @@
         "value": "x64"
       },
       "cacheVariables": {
-        "CMAKE_C_FLAGS": "/std:clatest",
-        "CMAKE_CXX_FLAGS": "/std:c++latest",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       }
     }

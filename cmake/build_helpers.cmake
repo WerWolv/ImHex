@@ -10,6 +10,41 @@ if (POLICY CMP0177)
     cmake_policy(SET CMP0177 OLD)
 endif()
 
+function(addCFlag)
+    if (ARGC EQUAL 1)
+        add_compile_options($<$<COMPILE_LANGUAGE:C>:${ARGV0}>)
+    elseif (ARGC EQUAL 2)
+        target_compile_options(${ARGV1} PRIVATE $<$<COMPILE_LANGUAGE:C>:${ARGV0}>)
+    endif()
+endfunction()
+
+function(addCXXFlag)
+    if (ARGC EQUAL 1)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${ARGV0}>)
+    elseif (ARGC EQUAL 2)
+        target_compile_options(${ARGV1} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${ARGV0}>)
+    endif()
+endfunction()
+
+function(addObjCFlag)
+    if (ARGC EQUAL 1)
+        add_compile_options($<$<COMPILE_LANGUAGE:OBJC>:${ARGV0}>)
+    elseif (ARGC EQUAL 2)
+        target_compile_options(${ARGV1} PRIVATE $<$<COMPILE_LANGUAGE:OBJC>:${ARGV0}>)
+    endif()
+endfunction()
+
+function(addCCXXFlag)
+    addCFlag(${ARGV0} ${ARGV1})
+    addCXXFlag(${ARGV0} ${ARGV1})
+endfunction()
+
+function(addCommonFlag)
+    addCFlag(${ARGV0} ${ARGV1})
+    addCXXFlag(${ARGV0} ${ARGV1})
+    addObjCFlag(${ARGV0} ${ARGV1})
+endfunction()
+
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
 
 include(FetchContent)
@@ -359,8 +394,7 @@ macro(configureCMake)
             set(CMAKE_LINKER ${LD_LLD_PATH})
 
             if (NOT XCODE)
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=lld")
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=lld")
+                add_compile_options(-fuse-ld=lld)
             endif()
         else ()
             message(WARNING "lld not found, using default linker!")
@@ -561,36 +595,40 @@ macro(setupDebugCompressionFlag)
         elseif (COMPRESS_AVAILABLE_COMPILER AND COMPRESS_AVAILABLE_LINKER)
             message("Using default compression for debug info because both compiler and linker support it")
             set(DEBUG_COMPRESSION_FLAG "-gz" CACHE STRING "Cache to use for debug info compression")
+        else()
+            set(DEBUG_COMPRESSION_FLAG "" CACHE STRING "Cache to use for debug info compression")
         endif()
     endif()
 
-    set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} ${DEBUG_COMPRESSION_FLAG}")
+    addCommonFlag(${DEBUG_COMPRESSION_FLAG})
 endmacro()
 
 macro(setupCompilerFlags target)
-    # IMHEX_COMMON_FLAGS: flags common for C, C++, Objective C, etc.. compilers
-
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         # Define strict compilation flags
         if (IMHEX_STRICT_WARNINGS)
-            set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wall -Wextra -Wpedantic -Werror")
+            addCommonFlag("-Wall" ${target})
+            addCommonFlag("-Wextra" ${target})
+            addCommonFlag("-Wpedantic" ${target})
+            addCommonFlag("-Werror" ${target})
         endif()
 
         if (UNIX AND NOT APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-            set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -rdynamic")
+            addCommonFlag("-rdynamic" ${target})
         endif()
 
-        set(IMHEX_CXX_FLAGS "-fexceptions -frtti")
+        addCXXFlag("-fexceptions" ${target})
+        addCXXFlag("-frtti" ${target})
 
         # Disable some warnings
-        set(IMHEX_C_CXX_FLAGS "-Wno-array-bounds -Wno-deprecated-declarations -Wno-unknown-pragmas")
-    elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-        set(IMHEX_CXX_FLAGS "/DWIN32 /D_WINDOWS /GR /EHsc /bigobj")
+        addCCXXFlag("-Wno-array-bounds" ${target})
+        addCCXXFlag("-Wno-deprecated-declarations" ${target})
+        addCCXXFlag("-Wno-unknown-pragmas" ${target})
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         if (IMHEX_ENABLE_UNITY_BUILD AND WIN32)
-            set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wa,-mbig-obj")
+            addCommonFlag("-Wa,mbig-obj" ${target})
         endif ()
     endif()
 
@@ -598,36 +636,45 @@ macro(setupCompilerFlags target)
         execute_process(COMMAND brew --prefix llvm OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
         set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
         set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
-        set(IMHEX_C_CXX_FLAGS "-Wno-unknown-warning-option")
+        addCCXXFlag("-Wno-unknown-warning-option" ${target})
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        addCommonFlag("/bigobj" ${target})
+        addCFlag("/std:clatest" ${target})
+        addCXXFlag("/std:c++latest" ${target})
     endif()
 
     # Disable some warnings for gcc
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -Wno-restrict -Wno-stringop-overread -Wno-stringop-overflow -Wno-dangling-reference")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        addCCXXFlag("-Wno-restrict" ${target})
+        addCCXXFlag("-Wno-stringop-overread" ${target})
+        addCCXXFlag("-Wno-stringop-overflow" ${target})
+        addCCXXFlag("-Wno-dangling-reference" ${target})
     endif()
 
     # Define emscripten-specific disabled warnings
     if (EMSCRIPTEN)
-        set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -pthread -Wno-dollar-in-identifier-extension -Wno-pthreads-mem-growth")
+        addCCXXFlag("-pthread" ${target})
+        addCCXXFlag("-Wno-dollar-in-identifier-extension" ${target})
+        addCCXXFlag("-Wno-pthreads-mem-growth" ${target})
     endif ()
 
     if (IMHEX_COMPRESS_DEBUG_INFO)
         setupDebugCompressionFlag()
     endif()
 
-    # Set actual CMake flags
-    set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
-    set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS}    ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}  ${IMHEX_CXX_FLAGS}")
-    set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} ${IMHEX_COMMON_FLAGS}")
-
     # Only generate minimal debug information for stacktraces in RelWithDebInfo builds
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g1")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g1")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        # Add flags for debug info in inline functions
-        set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -gstatement-frontiers -ginline-points")
-        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -gstatement-frontiers -ginline-points")
+    if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+        if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+            addCCXXFlag("-g1" ${target})
+        endif()
+
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            # Add flags for debug info in inline functions
+            addCCXXFlag("-gstatement-frontiers" ${target})
+            addCCXXFlag("-ginline-points" ${target})
+        endif()
     endif()
 endmacro()
 
