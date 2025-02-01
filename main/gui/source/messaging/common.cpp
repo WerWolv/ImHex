@@ -28,7 +28,7 @@ namespace hex::messaging {
         });
 
         EventNativeMessageReceived::subscribe([](const std::vector<u8> &rawData) {
-            ssize_t nullIndex = -1;
+            i64 nullIndex = -1;
 
             auto messageData = reinterpret_cast<const char*>(rawData.data());
             size_t messageSize = rawData.size();

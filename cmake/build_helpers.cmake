@@ -585,7 +585,7 @@ macro(setupCompilerFlags target)
         # Disable some warnings
         set(IMHEX_C_CXX_FLAGS "-Wno-array-bounds -Wno-deprecated-declarations -Wno-unknown-pragmas")
     elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-        set(IMHEX_CXX_FLAGS "/EHsc")
+        set(IMHEX_CXX_FLAGS "/DWIN32 /D_WINDOWS /GR /EHsc")
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")

@@ -32,6 +32,22 @@ namespace hex::log::impl {
 //#define IMGUI_API __declspec( dllexport )
 //#define IMGUI_API __declspec( dllimport )
 
+#if EXPORT_SYMBOLS == 1
+    #define IMGUI_API           __declspec(dllexport)
+    #define IMGUI_IMPL_API      __declspec(dllexport)
+    #define IMPLOT_API          __declspec(dllexport)
+    #define IMPLOT_IMPL_API     __declspec(dllexport)
+    #define IMPLOT3D_API        __declspec(dllexport)
+    #define IMPLOT3D_IMPL_API   __declspec(dllexport)
+#else
+    #define IMGUI_API           __declspec(dllimport)
+    #define IMGUI_IMPL_API      __declspec(dllimport)
+    #define IMPLOT_API          __declspec(dllimport)
+    #define IMPLOT_IMPL_API     __declspec(dllimport)
+    #define IMPLOT3D_API        __declspec(dllimport)
+    #define IMPLOT3D_IMPL_API   __declspec(dllimport)
+#endif
+
 //---- Don't define obsolete functions/enums/behaviors. Consider enabling from time to time after updating to avoid using soon-to-be obsolete function/names.
 //#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 //#define IMGUI_DISABLE_OBSOLETE_KEYIO                      // 1.87: disable legacy io.KeyMap[]+io.KeysDown[] in favor io.AddKeyEvent(). This will be folded into IMGUI_DISABLE_OBSOLETE_FUNCTIONS in a few versions.

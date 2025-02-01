@@ -202,7 +202,7 @@ namespace hex::plugin::builtin {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.modify_byte.name");
             });
 
-            EventPatchCreated::subscribe([](const u8 *, u8, PatchKind) {
+            EventPatchCreated::subscribe([](const u8 *, u64, PatchKind) {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.create_patch.name");
             });
 

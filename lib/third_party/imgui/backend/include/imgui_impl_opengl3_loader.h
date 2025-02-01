@@ -5011,7 +5011,15 @@ typedef void (APIENTRYP PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC) (GLenum target,
 #endif
 
 #ifndef GL3W_API
+#ifdef _MSC_VER
+#if EXPORT_SYMBOLS == 1
+#define GL3W_API __declspec(dllexport)
+#else
+#define GL3W_API __declspec(dllimport)
+#endif
+#else
 #define GL3W_API
+#endif
 #endif
 
 #ifndef __gl_h_

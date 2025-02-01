@@ -32,11 +32,21 @@
     #include <shellapi.h>
     #include <timeapi.h>
     #include <VersionHelpers.h>
+    #include <cstdio>
+
+    #if !defined(STDIN_FILENO)
+        #define STDIN_FILENO 0
+    #endif
+
+    #if !defined(STDOUT_FILENO)
+        #define STDOUT_FILENO 1
+    #endif
+
+    #if !defined(STDERR_FILENO)
+        #define STDERR_FILENO 2
+    #endif
 
 namespace hex {
-
-    template<typename T>
-    using WinUniquePtr = std::unique_ptr<std::remove_pointer_t<T>, BOOL(*)(T)>;
 
     static LONG_PTR s_oldWndProc;
     static float s_titleBarHeight;
@@ -418,10 +428,10 @@ namespace hex {
         DropManager() = default;
         virtual ~DropManager() = default;
 
-        ULONG AddRef()  override { return 1; }
-        ULONG Release() override { return 0; }
+        ULONG STDMETHODCALLTYPE AddRef()  override { return 1; }
+        ULONG STDMETHODCALLTYPE Release() override { return 0; }
 
-        HRESULT QueryInterface(REFIID riid, void **ppvObject) override {
+        HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject) override {
             if (riid == IID_IDropTarget) {
                 *ppvObject = this;
 
@@ -578,14 +588,14 @@ namespace hex {
         EventThemeChanged::subscribe([this]{
             auto hwnd = glfwGetWin32Window(m_window);
 
-            static auto user32Dll = WinUniquePtr<HMODULE>(LoadLibraryA("user32.dll"), FreeLibrary);
+            static auto user32Dll = LoadLibraryA("user32.dll");
             if (user32Dll != nullptr) {
                 using SetWindowCompositionAttributeFunc = BOOL(WINAPI*)(HWND, WINCOMPATTRDATA*);
 
                 const auto setWindowCompositionAttribute =
                     reinterpret_cast<SetWindowCompositionAttributeFunc>(
                         reinterpret_cast<void*>(
-                            GetProcAddress(user32Dll.get(), "SetWindowCompositionAttribute")
+                            GetProcAddress(user32Dll, "SetWindowCompositionAttribute")
                         )
                     );
 
