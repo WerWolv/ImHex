@@ -340,14 +340,29 @@ namespace hex {
             auto &currentFont = ImGui::GetIO().Fonts;
             for (const auto &[name, font] : fontDefinitions) {
                 // If the texture for this atlas has been built already, don't do it again
-                if (font->ContainerAtlas->TexID != 0)
+                if (font == nullptr || font->ContainerAtlas->TexID != 0)
                     continue;
 
                 currentFont = font->ContainerAtlas;
                 ImGui_ImplOpenGL3_CreateFontsTexture();
             }
 
-            currentFont = ImHexApi::Fonts::getFont("hex.fonts.font.default")->ContainerAtlas;
+            {
+                const auto &font = ImHexApi::Fonts::getFont("hex.fonts.font.default");
+
+                if (font == nullptr) {
+                    const auto &io = ImGui::GetIO();
+                    io.Fonts->Clear();
+
+                    ImFontConfig cfg;
+                    cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+                    cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
+                    io.Fonts->AddFontDefault(&cfg);
+                    ImGui_ImplOpenGL3_CreateFontsTexture();
+                } else {
+                    currentFont = font->ContainerAtlas;
+                }
+            }
         }
 
         // Start new ImGui Frame
