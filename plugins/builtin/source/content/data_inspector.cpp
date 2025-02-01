@@ -368,8 +368,11 @@ namespace hex::plugin::builtin {
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 std::vector<u8> bytes;
-                auto wideString = wolv::util::utf8ToWstring(value.c_str(), "Invalid");
-                std::copy(wideString.begin(), wideString.end(), std::back_inserter(bytes));
+                auto wideString = wolv::util::utf8ToWstring(value.c_str(), "");
+				if (wideString.empty()) return bytes;
+
+				bytes.resize(wideString.size() * sizeof(wchar_t));
+				std::memcpy(bytes.data(), wideString.data(), bytes.size());
 
                 if (endian != std::endian::native)
                     std::reverse(bytes.begin(), bytes.end());

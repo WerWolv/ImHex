@@ -1493,7 +1493,7 @@ namespace hex::plugin::builtin {
                             if (m_lastEvaluationError->has_value())
                                 message = processMessage((*m_lastEvaluationError)->message);
                             auto key = TextEditor::Coordinates(location.line, location.column);
-                            errorMarkers[key] = std::make_pair(location.length, message);
+                            errorMarkers[key] = std::make_pair(u32(location.length), message);
                         }
                     }
                 } else {

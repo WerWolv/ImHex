@@ -6,10 +6,16 @@
 #include <wolv/io/file.hpp>
 
 // <yara/types.h>'s RE type has a zero-sized array, which is not allowed in ISO C++.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#include <yara.h>
-#pragma GCC diagnostic pop
+#if !defined(_MSC_VER)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+
+    #include <yara.h>
+
+#if !defined(_MSC_VER)
+    #pragma GCC diagnostic pop
+#endif
 
 namespace hex::plugin::yara {
 
