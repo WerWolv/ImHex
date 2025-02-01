@@ -462,7 +462,7 @@ namespace hex {
             if (s_providers->empty())
                 EventProviderChanged::post(provider, nullptr);
 
-            EventProviderClosed::post(it->get());
+            EventProviderClosed::post(providerToRemove);
             RequestUpdateWindowTitle::post();
 
             // Do the destruction of the provider in the background once all tasks have finished
