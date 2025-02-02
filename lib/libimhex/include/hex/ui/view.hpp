@@ -98,6 +98,14 @@ namespace hex {
 
         [[nodiscard]] static std::string toWindowName(const UnlocalizedString &unlocalizedName);
 
+        [[nodiscard]] bool isFocused() const { return m_focused; }
+
+        /**
+         * @brief Used for focus handling. Don't use this directly
+         * @param focused Whether this view is focused
+         */
+        void setFocused(bool focused) { m_focused = focused; }
+
     public:
         class Window;
         class Special;
@@ -110,6 +118,7 @@ namespace hex {
         std::map<Shortcut, ShortcutManager::ShortcutEntry> m_shortcuts;
         bool m_windowJustOpened = false;
         const char *m_icon;
+        bool m_focused = false;
 
         friend class ShortcutManager;
     };
