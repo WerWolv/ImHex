@@ -30,4 +30,6 @@ apt install -y \
   libzstd-dev           \
   liblz4-dev
 
+echo "deb https://deb.debian.org/debian unstable main" &>> /etc/apt/sources.list
+apt-update
 apt install -y -t unstable --no-install-recommends libmbedtls-dev
