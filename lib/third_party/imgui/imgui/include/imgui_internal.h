@@ -1,4 +1,4 @@
-// dear imgui, v1.91.7
+// dear imgui, v1.91.8
 // (internal structures/api)
 
 // You may use this file to debug, understand or extend Dear ImGui features but we don't provide any guarantee of forward compatibility.
@@ -130,10 +130,17 @@ Index of this file:
 // [SECTION] Forward declarations
 //-----------------------------------------------------------------------------
 
+// Utilities
+// (other types which are not forwarded declared are: ImBitArray<>, ImSpan<>, ImSpanAllocator<>, ImPool<>, ImChunkStream<>)
 struct ImBitVector;                 // Store 1-bit per value
 struct ImRect;                      // An axis-aligned rectangle (2 points)
+struct ImGuiTextIndex;              // Maintain a line index for a text buffer.
+
+// ImDrawList/ImFontAtlas
 struct ImDrawDataBuilder;           // Helper to build a ImDrawData instance
 struct ImDrawListSharedData;        // Data shared between all ImDrawList instances
+
+// ImGui
 struct ImGuiBoxSelectState;         // Box-selection state (currently used by multi-selection, could potentially be used by others)
 struct ImGuiColorMod;               // Stacked color modifier, backup of modified data so we can restore it
 struct ImGuiContext;                // Main Dear ImGui context
@@ -232,7 +239,7 @@ extern IMGUI_API ImGuiContext* GImGui;  // Current implicit context pointer
 #endif
 
 // Debug Logging for ShowDebugLogWindow(). This is designed for relatively rare events so please don't spam.
-#define IMGUI_DEBUG_LOG_ERROR(...)      do { ImGuiContext& g2 = *GImGui; if (g2.DebugLogFlags & ImGuiDebugLogFlags_EventError) IMGUI_DEBUG_LOG(__VA_ARGS__); else g2.DebugLogSkippedErrors++; } while (0)
+#define IMGUI_DEBUG_LOG_ERROR(...)      do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventError)       IMGUI_DEBUG_LOG(__VA_ARGS__); else g.DebugLogSkippedErrors++; } while (0)
 #define IMGUI_DEBUG_LOG_ACTIVEID(...)   do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventActiveId)    IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
 #define IMGUI_DEBUG_LOG_FOCUS(...)      do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventFocus)       IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
 #define IMGUI_DEBUG_LOG_POPUP(...)      do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventPopup)       IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
@@ -474,7 +481,7 @@ static inline double ImRsqrt(double x)          { return 1.0 / sqrt(x); }
 template<typename T> static inline T ImMin(T lhs, T rhs)                        { return lhs < rhs ? lhs : rhs; }
 template<typename T> static inline T ImMax(T lhs, T rhs)                        { return lhs >= rhs ? lhs : rhs; }
 template<typename T> static inline T ImClamp(T v, T mn, T mx)                   { return (v < mn) ? mn : (v > mx) ? mx : v; }
-template<typename T> static inline T ImLerp(T a, T b, float t)                  { return (T)(a + (b - a) * (T)t); }
+template<typename T> static inline T ImLerp(T a, T b, float t)                  { return (T)(a + (b - a) * t); }
 template<typename T> static inline void ImSwap(T& a, T& b)                      { T tmp = a; a = b; b = tmp; }
 template<typename T> static inline T ImAddClampOverflow(T a, T b, T mn, T mx)   { if (b < 0 && (a < mn - b)) return mn; if (b > 0 && (a > mx - b)) return mx; return a + b; }
 template<typename T> static inline T ImSubClampOverflow(T a, T b, T mn, T mx)   { if (b > 0 && (a < mn + b)) return mn; if (b < 0 && (a > mx + b)) return mx; return a - b; }
@@ -749,6 +756,7 @@ struct ImGuiTextIndex
 
 // Helper: ImGuiStorage
 IMGUI_API ImGuiStoragePair* ImLowerBound(ImGuiStoragePair* in_begin, ImGuiStoragePair* in_end, ImGuiID key);
+
 //-----------------------------------------------------------------------------
 // [SECTION] ImDrawList support
 //-----------------------------------------------------------------------------
@@ -2666,6 +2674,12 @@ struct IMGUI_API ImGuiWindowTempData
     ImGuiLayoutType         ParentLayoutType;       // Layout type of parent window at the time of Begin()
     ImU32                   ModalDimBgColor;
 
+    // Status flags
+    ImGuiItemStatusFlags    WindowItemStatusFlags;
+    ImGuiItemStatusFlags    ChildItemStatusFlags;
+    ImGuiItemStatusFlags    DockTabItemStatusFlags;
+    ImRect                  DockTabItemRect;
+
     // Local parameters stacks
     // We store the current settings outside of the vectors to increase memory locality (reduce cache misses). The vectors are rarely modified. Also it allows us to not heap allocate for short-lived windows which are not using those settings.
     float                   ItemWidth;              // Current item width (>0.0: width in pixels, <0.0: align xx pixels to the right of window).
@@ -2768,7 +2782,9 @@ struct IMGUI_API ImGuiWindow
     ImGuiStorage            StateStorage;
     ImVector<ImGuiOldColumns> ColumnsStorage;
     float                   FontWindowScale;                    // User scale multiplier per-window, via SetWindowFontScale()
+    float                   FontWindowScaleParents;
     float                   FontDpiScale;
+    float                   FontRefSize;                        // This is a copy of window->CalcFontSize() at the time of Begin(), trying to phase out CalcFontSize() especially as it may be called on non-current window.
     int                     SettingsOffset;                     // Offset into SettingsWindows[] (offsets are always valid as we only grow the array from the back)
 
     ImDrawList*             DrawList;                           // == &DrawListInst (for backward compatibility reason with code using imgui_internal.h we keep this a pointer)
@@ -2802,8 +2818,6 @@ struct IMGUI_API ImGuiWindow
     ImGuiDockNode*          DockNode;                           // Which node are we docked into. Important: Prefer testing DockIsActive in many cases as this will still be set when the dock node is hidden.
     ImGuiDockNode*          DockNodeAsHost;                     // Which node are we owning (for parent windows)
     ImGuiID                 DockId;                             // Backup of last valid DockNode->ID, so single window remember their dock node id even when they are not bound any more
-    ImGuiItemStatusFlags    DockTabItemStatusFlags;
-    ImRect                  DockTabItemRect;
 
 public:
     ImGuiWindow(ImGuiContext* context, const char* name);
@@ -2817,7 +2831,7 @@ public:
 
     // We don't use g.FontSize because the window may be != g.CurrentWindow.
     ImRect      Rect() const            { return ImRect(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
-    float       CalcFontSize() const    { ImGuiContext& g = *Ctx; float scale = g.FontBaseSize * FontWindowScale * FontDpiScale; if (ParentWindow) scale *= ParentWindow->FontWindowScale; return scale; }
+    float       CalcFontSize() const    { ImGuiContext& g = *Ctx; return g.FontBaseSize * FontWindowScale * FontDpiScale * FontWindowScaleParents; }
     ImRect      TitleBarRect() const    { return ImRect(Pos, ImVec2(Pos.x + SizeFull.x, Pos.y + TitleBarHeight)); }
     ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight; return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight); }
 };
@@ -2840,7 +2854,8 @@ enum ImGuiTabItemFlagsPrivate_
     ImGuiTabItemFlags_SectionMask_              = ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_Trailing,
     ImGuiTabItemFlags_NoCloseButton             = 1 << 20,  // Track whether p_open was set or not (we'll need this info on the next frame to recompute ContentWidth during layout)
     ImGuiTabItemFlags_Button                    = 1 << 21,  // Used by TabItemButton, change the tab item behavior to mimic a button
-    ImGuiTabItemFlags_Unsorted                  = 1 << 22,  // [Docking] Trailing tabs with the _Unsorted flag will be sorted based on the DockOrder of their Window.
+    ImGuiTabItemFlags_Invisible                 = 1 << 22,  // To reserve space e.g. with ImGuiTabItemFlags_Leading
+    ImGuiTabItemFlags_Unsorted                  = 1 << 23,  // [Docking] Trailing tabs with the _Unsorted flag will be sorted based on the DockOrder of their Window.
 };
 
 // Storage for one active tab item (sizeof() 48 bytes)
@@ -3105,6 +3120,7 @@ struct IMGUI_API ImGuiTable
     ImGuiTableDrawChannelIdx    DummyDrawChannel;           // Redirect non-visible columns here.
     ImGuiTableDrawChannelIdx    Bg2DrawChannelCurrent;      // For Selectable() and other widgets drawing across columns after the freezing line. Index within DrawSplitter.Channels[]
     ImGuiTableDrawChannelIdx    Bg2DrawChannelUnfrozen;
+    ImS8                        NavLayer;                   // ImGuiNavLayer at the time of BeginTable().
     bool                        IsLayoutLocked;             // Set by TableUpdateLayout() which is called when beginning the first row.
     bool                        IsInsideRow;                // Set when inside TableBeginRow()/TableEndRow().
     bool                        IsInitializing;
@@ -3247,6 +3263,7 @@ namespace ImGui
     // Fonts, drawing
     IMGUI_API void          SetCurrentFont(ImFont* font);
     inline ImFont*          GetDefaultFont() { ImGuiContext& g = *GImGui; return g.IO.FontDefault ? g.IO.FontDefault : g.IO.Fonts->Fonts[0]; }
+    IMGUI_API void          PushPasswordFont();
     inline ImDrawList*      GetForegroundDrawList(ImGuiWindow* window) { return GetForegroundDrawList(window->Viewport); }
     IMGUI_API void          AddDrawListToDrawDataEx(ImDrawData* draw_data, ImVector<ImDrawList*>* out_list, ImDrawList* draw_list);
 
@@ -3332,7 +3349,7 @@ namespace ImGui
     IMGUI_API bool          ItemHoverable(const ImRect& bb, ImGuiID id, ImGuiItemFlags item_flags);
     IMGUI_API bool          IsWindowContentHoverable(ImGuiWindow* window, ImGuiHoveredFlags flags = 0);
     IMGUI_API bool          IsClippedEx(const ImRect& bb, ImGuiID id);
-    IMGUI_API void          SetLastItemData(ImGuiID item_id, ImGuiItemFlags in_flags, ImGuiItemStatusFlags status_flags, const ImRect& item_rect);
+    IMGUI_API void          SetLastItemData(ImGuiID item_id, ImGuiItemFlags item_flags, ImGuiItemStatusFlags status_flags, const ImRect& item_rect);
     IMGUI_API ImVec2        CalcItemSize(ImVec2 size, float default_w, float default_h);
     IMGUI_API float         CalcWrapWidthForPos(const ImVec2& pos, float wrap_pos_x);
     IMGUI_API void          PushMultiItemsWidths(int components, float width_full);
@@ -3670,6 +3687,7 @@ namespace ImGui
     IMGUI_API void          TabBarQueueReorderFromMousePos(ImGuiTabBar* tab_bar, ImGuiTabItem* tab, ImVec2 mouse_pos);
     IMGUI_API bool          TabBarProcessReorder(ImGuiTabBar* tab_bar);
     IMGUI_API bool          TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImGuiTabItemFlags flags, ImGuiWindow* docked_window);
+    IMGUI_API void          TabItemSpacing(const char* str_id, ImGuiTabItemFlags flags, float width);
     IMGUI_API ImVec2        TabItemCalcSize(const char* label, bool has_close_button_or_unsaved_marker);
     IMGUI_API ImVec2        TabItemCalcSize(ImGuiWindow* window);
     IMGUI_API void          TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col);
@@ -3869,6 +3887,7 @@ IMGUI_API void      ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas,
 IMGUI_API void      ImFontAtlasBuildRender32bppRectFromString(ImFontAtlas* atlas, int x, int y, int w, int h, const char* in_str, char in_marker_char, unsigned int in_marker_pixel_value);
 IMGUI_API void      ImFontAtlasBuildMultiplyCalcLookupTable(unsigned char out_table[256], float in_multiply_factor);
 IMGUI_API void      ImFontAtlasBuildMultiplyRectAlpha8(const unsigned char table[256], unsigned char* pixels, int x, int y, int w, int h, int stride);
+IMGUI_API void      ImFontAtlasBuildGetOversampleFactors(const ImFontConfig* cfg, int* out_oversample_h, int* out_oversample_v);
 
 //-----------------------------------------------------------------------------
 // [SECTION] Test Engine specific hooks (imgui_test_engine)

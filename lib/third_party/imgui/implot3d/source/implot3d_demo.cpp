@@ -15,10 +15,16 @@
 // [SECTION] User Namespace
 // [SECTION] Helpers
 // [SECTION] Plots
+// [SECTION] Axes
 // [SECTION] Custom
 // [SECTION] Demo Window
 // [SECTION] Style Editor
 // [SECTION] User Namespace Implementation
+
+// We define this to avoid accidentally using the deprecated API
+#ifndef IMPLOT_DISABLE_OBSOLETE_FUNCTIONS
+#define IMPLOT_DISABLE_OBSOLETE_FUNCTIONS
+#endif
 
 #include "implot3d.h"
 #include "implot3d_internal.h"
@@ -122,7 +128,7 @@ void DemoScatterPlots() {
         ImPlot3D::PlotScatter("Data 1", xs1, ys1, zs1, 100);
         ImPlot3D::PushStyleVar(ImPlot3DStyleVar_FillAlpha, 0.25f);
         ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, 6, ImPlot3D::GetColormapColor(1), IMPLOT3D_AUTO, ImPlot3D::GetColormapColor(1));
-        ImPlot3D::PlotScatter("Data 2", xs2, ys2, zs1, 50);
+        ImPlot3D::PlotScatter("Data 2", xs2, ys2, zs2, 50);
         ImPlot3D::PopStyleVar();
         ImPlot3D::EndPlot();
     }
@@ -279,37 +285,91 @@ void DemoQuadPlots() {
 void DemoSurfacePlots() {
     constexpr int N = 20;
     static float xs[N * N], ys[N * N], zs[N * N];
+    static float t = 0.0f;
+    t += ImGui::GetIO().DeltaTime;
 
     // Define the range for X and Y
-    constexpr float range_min = -5.0f;
-    constexpr float range_max = 5.0f;
-    constexpr float step = (range_max - range_min) / (N - 1);
+    constexpr float min_val = -1.0f;
+    constexpr float max_val = 1.0f;
+    constexpr float step = (max_val - min_val) / (N - 1);
 
     // Populate the xs, ys, and zs arrays
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             int idx = i * N + j;
-            xs[idx] = range_min + j * step;                                   // X values are constant along rows
-            ys[idx] = range_min + i * step;                                   // Y values are constant along columns
-            zs[idx] = sinf(sqrt(xs[idx] * xs[idx] + ys[idx] * ys[idx])); // Z = sin(sqrt(X^2 + Y^2))
+            xs[idx] = min_val + j * step;                                             // X values are constant along rows
+            ys[idx] = min_val + i * step;                                             // Y values are constant along columns
+            zs[idx] = ImSin(2 * t + ImSqrt((xs[idx] * xs[idx] + ys[idx] * ys[idx]))); // z = sin(2t + sqrt(x^2 + y^2))
         }
     }
 
+    // Choose fill color
+    ImGui::Text("Fill color");
+    static int selected_fill = 1; // Colormap by default
+    static ImVec4 solid_color = ImVec4(0.8f, 0.8f, 0.2f, 0.6f);
+    const char* colormaps[] = {"Viridis", "Plasma", "Hot", "Cool", "Pink", "Jet",
+                               "Twilight", "RdBu", "BrBG", "PiYG", "Spectral", "Greys"};
+    static int sel_colormap = 5; // Jet by default
+    {
+        ImGui::Indent();
+
+        // Choose solid color
+        ImGui::RadioButton("Solid", &selected_fill, 0);
+        if (selected_fill == 0) {
+            ImGui::SameLine();
+            ImGui::ColorEdit4("##SurfaceSolidColor", (float*)&solid_color);
+        }
+
+        // Choose colormap
+        ImGui::RadioButton("Colormap", &selected_fill, 1);
+        if (selected_fill == 1) {
+            ImGui::SameLine();
+            ImGui::Combo("##SurfaceColormap", &sel_colormap, colormaps, IM_ARRAYSIZE(colormaps));
+        }
+        ImGui::Unindent();
+    }
+
+    // Choose range
+    static bool custom_range = false;
+    static float range_min = -1.0f;
+    static float range_max = 1.0f;
+    ImGui::Checkbox("Custom range", &custom_range);
+    {
+        ImGui::Indent();
+
+        if (!custom_range)
+            ImGui::BeginDisabled();
+        ImGui::SliderFloat("Range min", &range_min, -1.0f, range_max - 0.01f);
+        ImGui::SliderFloat("Range max", &range_max, range_min + 0.01f, 1.0f);
+        if (!custom_range)
+            ImGui::EndDisabled();
+
+        ImGui::Unindent();
+    }
+
     // Begin the plot
-    ImPlot3D::PushColormap("Hot");
-    if (ImPlot3D::BeginPlot("Surface Plots")) {
+    if (selected_fill == 1)
+        ImPlot3D::PushColormap(colormaps[sel_colormap]);
+    if (ImPlot3D::BeginPlot("Surface Plots", ImVec2(-1, 400), ImPlot3DFlags_NoClip)) {
         // Set styles
+        ImPlot3D::SetupAxesLimits(-1, 1, -1, 1, -1.5, 1.5);
         ImPlot3D::PushStyleVar(ImPlot3DStyleVar_FillAlpha, 0.8f);
+        if (selected_fill == 0)
+            ImPlot3D::SetNextFillStyle(solid_color);
         ImPlot3D::SetNextLineStyle(ImPlot3D::GetColormapColor(1));
 
         // Plot the surface
-        ImPlot3D::PlotSurface("Wave Surface", xs, ys, zs, N, N);
+        if (custom_range)
+            ImPlot3D::PlotSurface("Wave Surface", xs, ys, zs, N, N, (double)range_min, (double)range_max);
+        else
+            ImPlot3D::PlotSurface("Wave Surface", xs, ys, zs, N, N);
 
         // End the plot
         ImPlot3D::PopStyleVar();
         ImPlot3D::EndPlot();
     }
-    ImPlot3D::PopColormap();
+    if (selected_fill == 1)
+        ImPlot3D::PopColormap();
 }
 
 void DemoMeshPlots() {
@@ -419,8 +479,8 @@ void DemoMarkersAndText() {
 
         // Filled markers
         for (int m = 0; m < ImPlot3DMarker_COUNT; ++m) {
-            xs[1] = xs[0] + ImCos(zs[0] / float(ImPlot3DMarker_COUNT) * 2 * IM_PI) * 0.5;
-            ys[1] = ys[0] + ImSin(zs[0] / float(ImPlot3DMarker_COUNT) * 2 * IM_PI) * 0.5;
+            xs[1] = xs[0] + ImCos(zs[0] / float(ImPlot3DMarker_COUNT) * 2 * IM_PI) * 0.5f;
+            ys[1] = ys[0] + ImSin(zs[0] / float(ImPlot3DMarker_COUNT) * 2 * IM_PI) * 0.5f;
 
             ImGui::PushID(m);
             ImPlot3D::SetNextMarkerStyle(m, mk_size, IMPLOT3D_AUTO_COL, mk_weight);
@@ -437,8 +497,8 @@ void DemoMarkersAndText() {
 
         // Open markers
         for (int m = 0; m < ImPlot3DMarker_COUNT; ++m) {
-            xs[1] = xs[0] + ImCos(zs[0] / float(ImPlot3DMarker_COUNT) * 2 * IM_PI) * 0.5;
-            ys[1] = ys[0] - ImSin(zs[0] / float(ImPlot3DMarker_COUNT) * 2 * IM_PI) * 0.5;
+            xs[1] = xs[0] + ImCos(zs[0] / float(ImPlot3DMarker_COUNT) * 2 * IM_PI) * 0.5f;
+            ys[1] = ys[0] - ImSin(zs[0] / float(ImPlot3DMarker_COUNT) * 2 * IM_PI) * 0.5f;
 
             ImGui::PushID(m);
             ImPlot3D::SetNextMarkerStyle(m, mk_size, ImVec4(0, 0, 0, 0), mk_weight);
@@ -477,6 +537,53 @@ void DemoNaNValues() {
     if (ImPlot3D::BeginPlot("##NaNValues")) {
         ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square);
         ImPlot3D::PlotLine("Line", data1, data2, data3, 5, flags);
+        ImPlot3D::EndPlot();
+    }
+}
+
+//-----------------------------------------------------------------------------
+// [SECTION] Axes
+//-----------------------------------------------------------------------------
+
+void DemoBoxScale() {
+    constexpr int N = 100;
+    float xs[N], ys[N], zs[N];
+    for (int i = 0; i < N; ++i) {
+        float t = i / (float)(N - 1);
+        xs[i] = sinf(t * 2.0f * IM_PI);
+        ys[i] = cosf(t * 4.0f * IM_PI);
+        zs[i] = t * 2.0f - 1.0f;
+    }
+
+    static float scale[3] = {1.0f, 1.0f, 1.0f};
+    ImGui::SliderFloat3("Box Scale", scale, 0.1f, 2.0f, "%.2f");
+
+    if (ImPlot3D::BeginPlot("##BoxScale")) {
+        ImPlot3D::SetupBoxScale(scale[0], scale[1], scale[2]);
+        ImPlot3D::PlotLine("3D Curve", xs, ys, zs, N);
+        ImPlot3D::EndPlot();
+    }
+}
+
+void DemoTickLabels() {
+    static bool custom_ticks = false;
+    static bool custom_labels = true;
+    ImGui::Checkbox("Show Custom Ticks", &custom_ticks);
+    if (custom_ticks) {
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Custom Labels", &custom_labels);
+    }
+    const double pi = 3.14;
+    const char* pi_str[] = {"PI"};
+    static double letters_ticks[] = {0.0, 0.2, 0.4, 0.6, 0.8, 1.0};
+    static const char* letters_labels[] = {"A", "B", "C", "D", "E", "F"};
+    if (ImPlot3D::BeginPlot("##Ticks")) {
+        ImPlot3D::SetupAxesLimits(2, 5, 0, 1, 0, 1);
+        if (custom_ticks) {
+            ImPlot3D::SetupAxisTicks(ImAxis3D_X, &pi, 1, custom_labels ? pi_str : nullptr, true);
+            ImPlot3D::SetupAxisTicks(ImAxis3D_Y, letters_ticks, 6, custom_labels ? letters_labels : nullptr, false);
+            ImPlot3D::SetupAxisTicks(ImAxis3D_Z, 0, 1, 6, custom_labels ? letters_labels : nullptr, false);
+        }
         ImPlot3D::EndPlot();
     }
 }
@@ -635,7 +742,6 @@ void ShowDemoWindow(bool* p_open) {
     if (show_imgui_demo)
         ImGui::ShowDemoWindow(&show_imgui_demo);
 
-
     ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(600, 750), ImGuiCond_FirstUseEver);
     ImGui::Begin("ImPlot3D Demo", p_open, ImGuiWindowFlags_MenuBar);
@@ -666,6 +772,11 @@ void ShowDemoWindow(bool* p_open) {
             DemoHeader("Realtime Plots", DemoRealtimePlots);
             DemoHeader("Markers and Text", DemoMarkersAndText);
             DemoHeader("NaN Values", DemoNaNValues);
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Axes")) {
+            DemoHeader("Box Scale", DemoBoxScale);
+            DemoHeader("Tick Labels", DemoTickLabels);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Custom")) {
@@ -862,11 +973,11 @@ void ShowStyleEditor(ImPlot3DStyle* ref) {
             filter.Draw("Filter colors", ImGui::GetFontSize() * 16);
 
             static ImGuiColorEditFlags alpha_flags = ImGuiColorEditFlags_AlphaPreviewHalf;
-            if (ImGui::RadioButton("Opaque", alpha_flags == ImGuiColorEditFlags_None))
-                alpha_flags = ImGuiColorEditFlags_None;
+            if (ImGui::RadioButton("Opaque", alpha_flags == ImGuiColorEditFlags_AlphaOpaque))
+                alpha_flags = ImGuiColorEditFlags_AlphaOpaque;
             ImGui::SameLine();
-            if (ImGui::RadioButton("Alpha", alpha_flags == ImGuiColorEditFlags_AlphaPreview))
-                alpha_flags = ImGuiColorEditFlags_AlphaPreview;
+            if (ImGui::RadioButton("Alpha", alpha_flags == ImGuiColorEditFlags_None))
+                alpha_flags = ImGuiColorEditFlags_None;
             ImGui::SameLine();
             if (ImGui::RadioButton("Both", alpha_flags == ImGuiColorEditFlags_AlphaPreviewHalf))
                 alpha_flags = ImGuiColorEditFlags_AlphaPreviewHalf;
