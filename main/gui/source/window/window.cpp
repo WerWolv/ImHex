@@ -728,6 +728,7 @@ namespace hex {
 
                     // Detect if the window is focused
                     const bool focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
+                    view->setFocused(focused);
 
                     // Dock the window if it's not already docked
                     if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
