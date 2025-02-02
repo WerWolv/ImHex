@@ -52,29 +52,32 @@ namespace hex::plugin::builtin {
             }
         }
 
-        if (TaskManager::getRunningBlockingTaskCount() > 0) {
-            auto tasks = TaskManager::getRunningTasks();
-            ImGui::SetNextWindowSize(scaled({ 300, 200 }), ImGuiCond_Always);
-            ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize() / 2, ImGuiCond_Always, ImVec2(0.5F, 0.5F));
-            if (ImGui::BeginPopupModal("hex.builtin.popup.foreground_task.title"_lang, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
-                for (const auto &task : tasks) {
-                    if (task->isBlocking()) {
-                        ImGui::NewLine();
-                        ImGui::TextUnformatted(Lang(task->getUnlocalizedName()));
-                        ImGui::NewLine();
+        ImGui::SetNextWindowSize(scaled({ 300, 200 }), ImGuiCond_Always);
+        ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize() / 2, ImGuiCond_Always, ImVec2(0.5F, 0.5F));
+        if (ImGui::BeginPopupModal("hex.builtin.popup.foreground_task.title"_lang, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+            for (const auto &task : TaskManager::getRunningTasks()) {
+                if (task->isBlocking()) {
+                    ImGui::NewLine();
+                    ImGui::TextUnformatted(Lang(task->getUnlocalizedName()));
+                    ImGui::NewLine();
 
-                        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("[-]").x) / 2);
-                        ImGuiExt::TextSpinner("");
+                    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("[-]").x) / 2);
+                    ImGuiExt::TextSpinner("");
 
-                        ImGui::NewLine();
-                        const auto progress = task->getMaxValue() == 0 ? -1 : float(task->getValue()) / float(task->getMaxValue());
-                        ImGuiExt::ProgressBar(progress, ImVec2(0, 10_scaled));
-                        break;
-                    }
+                    ImGui::NewLine();
+                    const auto progress = task->getMaxValue() == 0 ? -1 : float(task->getValue()) / float(task->getMaxValue());
+                    ImGuiExt::ProgressBar(progress, ImVec2(0, 10_scaled));
+                    break;
                 }
+            }
 
-                ImGui::EndPopup();
-            } else {
+            if (TaskManager::getRunningBlockingTaskCount() == 0) {
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        } else {
+            if (TaskManager::getRunningBlockingTaskCount() > 0) {
                 ImGui::OpenPopup("hex.builtin.popup.foreground_task.title"_lang);
             }
         }
