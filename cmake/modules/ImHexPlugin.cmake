@@ -30,7 +30,7 @@ macro(add_imhex_plugin)
     endif()
 
     if (IMHEX_PLUGIN_LIBRARY_PLUGIN)
-        install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" DESTINATION "${CMAKE_INSTALL_PREFIX}/${SDK_PATH}/lib/plugins/${IMHEX_PLUGIN_NAME}/")
+        install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" DESTINATION "${SDK_PATH}/lib/plugins/${IMHEX_PLUGIN_NAME}")
     endif()
 
     # Define new project for plugin
