@@ -958,13 +958,12 @@ namespace hex::ui {
 
                     // Handle jumping to selection
                     if (m_shouldJumpToSelection) {
-                        m_shouldJumpToSelection = false;
+                        const auto jumpAddress = this->getCursorPosition().value_or(0);
 
-                        auto newSelection = getSelection();
-                        m_provider->setCurrentPage(m_provider->getPageOfAddress(newSelection.address).value_or(0));
+                        m_provider->setCurrentPage(m_provider->getPageOfAddress(jumpAddress).value_or(0));
 
                         const auto pageAddress = m_provider->getCurrentPageAddress() + m_provider->getBaseAddress();
-                        const auto targetRowNumber = (newSelection.getStartAddress() - pageAddress) / m_bytesPerRow;
+                        const auto targetRowNumber = (jumpAddress - pageAddress) / m_bytesPerRow;
 
                         // Calculate the current top and bottom row numbers of the viewport
                         ImS64 currentTopRow = m_scrollPosition;
@@ -980,6 +979,7 @@ namespace hex::ui {
                         }
 
                         m_jumpPivot = 0.0F;
+                        m_shouldJumpToSelection = false;
                     }
 
                 }
