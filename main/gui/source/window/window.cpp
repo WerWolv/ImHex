@@ -643,6 +643,7 @@ namespace hex {
                 auto &style = ImGui::GetStyle();
                 ImGui::SetNextWindowPos(ImVec2(windowPos.x + 1_scaled, startY));
                 ImGui::SetNextWindowSize(ImVec2(ImHexApi::System::getMainWindowSize().x - 2_scaled, height));
+                ImGui::SetNextWindowViewport(viewport->ID);
                 ImGui::PushStyleColor(ImGuiCol_WindowBg, banner->getColor().Value);
                 auto prevShadowOffset = style.WindowShadowOffsetDist;
                 auto prevShadowAngle = style.WindowShadowOffsetAngle;
