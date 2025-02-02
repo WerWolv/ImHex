@@ -22,7 +22,7 @@ namespace hex {
     class Task {
     public:
         Task() = default;
-        Task(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function);
+        Task(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function);
 
         Task(const Task&) = delete;
         Task(Task &&other) noexcept;
@@ -57,6 +57,7 @@ namespace hex {
         void setInterruptCallback(std::function<void()> callback);
 
         [[nodiscard]] bool isBackgroundTask() const;
+        [[nodiscard]] bool isBlocking() const;
         [[nodiscard]] bool isFinished() const;
         [[nodiscard]] bool hadException() const;
         [[nodiscard]] bool wasInterrupted() const;
@@ -84,6 +85,7 @@ namespace hex {
 
         std::atomic<bool> m_shouldInterrupt = false;
         std::atomic<bool> m_background = true;
+        std::atomic<bool> m_blocking = false;
 
         std::atomic<bool> m_interrupted = false;
         std::atomic<bool> m_finished = false;
@@ -163,6 +165,24 @@ namespace hex {
         static TaskHolder createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void()> function);
 
         /**
+         * @brief Creates a new asynchronous task that shows a blocking modal window
+         * @param unlocalizedName Name of the task
+         * @param maxValue Maximum value of the task
+         * @param function Function to be executed
+         * @return A TaskHolder holding a weak reference to the task
+         */
+        static TaskHolder createBlockingTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void(Task &)> function);
+
+        /**
+        * @brief Creates a new asynchronous task that shows a blocking modal window
+        * @param unlocalizedName Name of the task
+        * @param maxValue Maximum value of the task
+        * @param function Function to be executed
+        * @return A TaskHolder holding a weak reference to the task
+        */
+        static TaskHolder createBlockingTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void()> function);
+
+        /**
          * @brief Creates a new synchronous task that will execute the given function at the start of the next frame
          * @param function Function to be executed
          */
@@ -202,12 +222,13 @@ namespace hex {
 
         static size_t getRunningTaskCount();
         static size_t getRunningBackgroundTaskCount();
+        static size_t getRunningBlockingTaskCount();
 
         static const std::list<std::shared_ptr<Task>>& getRunningTasks();
         static void runDeferredCalls();
 
     private:
-        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function);
+        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function);
     };
 
 }

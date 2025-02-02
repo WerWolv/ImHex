@@ -941,7 +941,7 @@ namespace ImGuiExt {
         return result;
     }
 
-    void SmallProgressBar(float fraction, float yOffset) {
+    void ProgressBar(float fraction, ImVec2 size_value, float yOffset) {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return;
@@ -950,7 +950,7 @@ namespace ImGuiExt {
         const ImGuiStyle &style = g.Style;
 
         ImVec2 pos  = window->DC.CursorPos + ImVec2(0, yOffset);
-        ImVec2 size = CalcItemSize(ImVec2(100, 5) * hex::ImHexApi::System::getGlobalScale(), 100, g.FontSize + style.FramePadding.y * 2.0F);
+        ImVec2 size = CalcItemSize(size_value, ImGui::GetContentRegionAvail().x, g.FontSize + style.FramePadding.y * 2.0F);
         ImRect bb(pos, pos + size);
         ItemSize(size, 0);
         if (!ItemAdd(bb, 0))

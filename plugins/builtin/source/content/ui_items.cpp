@@ -51,6 +51,33 @@ namespace hex::plugin::builtin {
                 break;
             }
         }
+
+        if (TaskManager::getRunningBlockingTaskCount() > 0) {
+            auto tasks = TaskManager::getRunningTasks();
+            ImGui::SetNextWindowSize(scaled({ 300, 200 }), ImGuiCond_Always);
+            ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize() / 2, ImGuiCond_Always, ImVec2(0.5F, 0.5F));
+            if (ImGui::BeginPopupModal("hex.builtin.popup.foreground_task.title"_lang, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+                for (const auto &task : tasks) {
+                    if (task->isBlocking()) {
+                        ImGui::NewLine();
+                        ImGui::TextUnformatted(Lang(task->getUnlocalizedName()));
+                        ImGui::NewLine();
+
+                        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("[-]").x) / 2);
+                        ImGuiExt::TextSpinner("");
+
+                        ImGui::NewLine();
+                        const auto progress = task->getMaxValue() == 0 ? -1 : float(task->getValue()) / float(task->getMaxValue());
+                        ImGuiExt::ProgressBar(progress, ImVec2(0, 10_scaled));
+                        break;
+                    }
+                }
+
+                ImGui::EndPopup();
+            } else {
+                ImGui::OpenPopup("hex.builtin.popup.foreground_task.title"_lang);
+            }
+        }
     }
 
     static void drawDebugPopup() {
@@ -257,7 +284,7 @@ namespace hex::plugin::builtin {
                 {
                     ImGuiExt::TextSpinner(hex::format("({})", taskCount).c_str());
                     ImGui::SameLine();
-                    ImGuiExt::SmallProgressBar(progress, (ImGui::GetCurrentWindowRead()->MenuBarHeight - 10_scaled) / 2.0);
+                    ImGuiExt::ProgressBar(progress, scaled({ 100, 5 }), (ImGui::GetCurrentWindowRead()->MenuBarHeight - 10_scaled) / 2.0);
                     ImGui::SameLine();
                 }
                 const auto widgetEnd = ImGui::GetCursorPos();
@@ -284,7 +311,11 @@ namespace hex::plugin::builtin {
                         ImGui::SameLine();
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                         ImGui::SameLine();
-                        ImGuiExt::SmallProgressBar(task->getMaxValue() == 0 ? -1 : (float(task->getValue()) / float(task->getMaxValue())), (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2);
+                        ImGuiExt::ProgressBar(
+                            task->getMaxValue() == 0 ? -1 : (float(task->getValue()) / float(task->getMaxValue())),
+                            scaled({ 100, 5 }),
+                            (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2
+                        );
                         ImGui::SameLine();
 
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
