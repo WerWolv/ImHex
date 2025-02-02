@@ -543,16 +543,16 @@ function(downloadImHexPatternsFiles dest)
 
         # Maybe patterns are cloned to a subdirectory
         if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
-            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")        
+            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")
         endif()
 
         # Or a sibling directory
         if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
-            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ImHex-Patterns")        
+            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ImHex-Patterns")
         endif()
     endif ()
 
-    if (NOT EXISTS ${imhex_patterns_SOURCE_DIR}) 
+    if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
         message(WARNING "Failed to locate ImHex-Patterns repository, some resources will be missing during install!")
     elseif(XCODE)
         # The Xcode build has multiple configurations, which each need a copy of these files
@@ -843,17 +843,20 @@ function(enableUnityBuild TARGET)
     endif ()
 endfunction()
 
-function(generateSDKDirectory)
+function(setSDKPaths)
     if (WIN32)
-        set(SDK_PATH "./sdk")
+        set(SDK_PATH "./sdk" PARENT_SCOPE)
     elseif (APPLE)
-        set(SDK_PATH "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/Resources/sdk")
+        set(SDK_PATH "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/Resources/sdk" PARENT_SCOPE)
     else()
-        set(SDK_PATH "share/imhex/sdk")
+        set(SDK_PATH "share/imhex/sdk" PARENT_SCOPE)
     endif()
 
-    set(SDK_BUILD_PATH "${CMAKE_BINARY_DIR}/sdk")
+    set(SDK_BUILD_PATH "${CMAKE_BINARY_DIR}/sdk" PARENT_SCOPE)
+endfunction()
 
+function(generateSDKDirectory)
+    setSDKPaths()
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex DESTINATION "${SDK_PATH}/lib" PATTERN "**/source/*" EXCLUDE)
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/imgui DESTINATION "${SDK_PATH}/lib/third_party" PATTERN "**/source/*" EXCLUDE)

@@ -1,4 +1,5 @@
 macro(add_imhex_plugin)
+    setSDKPaths()
     # Parse arguments
     set(options LIBRARY_PLUGIN)
     set(oneValueArgs NAME IMHEX_VERSION)
@@ -26,6 +27,10 @@ macro(add_imhex_plugin)
             set(IMHEX_PLUGIN_LIBRARY_TYPE MODULE)
             set(IMHEX_PLUGIN_SUFFIX ".hexplug")
         endif()
+    endif()
+
+    if (IMHEX_PLUGIN_LIBRARY_PLUGIN)
+        install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" DESTINATION "${CMAKE_INSTALL_PREFIX}/${SDK_PATH}/lib/plugins/${IMHEX_PLUGIN_NAME}/")
     endif()
 
     # Define new project for plugin
