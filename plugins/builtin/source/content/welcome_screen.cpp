@@ -243,7 +243,7 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted(ICON_VS_ARROW_RIGHT);
                             ImGui::SameLine(0, 2_scaled);
 
-                            if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, nullptr, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 6), ImGuiChildFlags_AutoResizeX)) {
+                            if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, nullptr, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 5.8), ImGuiChildFlags_AutoResizeX)) {
                                 for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
                                     if (ImGuiExt::Hyperlink(Lang(unlocalizedProviderName))) {
                                         ImHexApi::Provider::createProvider(unlocalizedProviderName);
