@@ -376,7 +376,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventProviderCreated::subscribe(this, [this](auto *provider) {
+        EventProviderOpened::subscribe(this, [this](auto *provider) {
             m_mainWorkspace.get(provider) = { };
             m_workspaceStack.get(provider).push_back(&m_mainWorkspace.get(provider));
         });
@@ -429,7 +429,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewDataProcessor::~ViewDataProcessor() {
-        EventProviderCreated::unsubscribe(this);
+        EventProviderOpened::unsubscribe(this);
         EventProviderChanged::unsubscribe(this);
         RequestChangeTheme::unsubscribe(this);
         EventFileLoaded::unsubscribe(this);

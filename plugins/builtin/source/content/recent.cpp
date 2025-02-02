@@ -238,15 +238,17 @@ namespace hex::plugin::builtin::recent {
             }
             return;
         }
+
         auto *provider = ImHexApi::Provider::createProvider(recentEntry.type, true);
         if (provider != nullptr) {
             provider->loadSettings(recentEntry.data);
 
-            if (!provider->open() || !provider->isAvailable()) {
-                ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
-                return;
-            }
+            TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
+                if (!provider->open() || !provider->isAvailable()) {
+                    ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                }
+            });
 
             EventProviderOpened::post(provider);
 
