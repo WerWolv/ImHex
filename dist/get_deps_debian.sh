@@ -29,3 +29,5 @@ apt install -y \
   liblzma-dev           \
   libzstd-dev           \
   liblz4-dev
+
+apt install -y -t unstable --no-install-recommends libmbedtls-dev

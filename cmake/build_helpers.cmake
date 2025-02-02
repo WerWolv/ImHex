@@ -809,7 +809,7 @@ macro(addBundledLibraries)
     endif()
     enableUnityBuild(libpl)
 
-    find_package(mbedTLS 3.4.0 REQUIRED)
+    find_package(MbedTLS 3.4.0 REQUIRED)
     find_package(Magic 5.39 REQUIRED)
 
     if (NOT IMHEX_DISABLE_STACKTRACE)

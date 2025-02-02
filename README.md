@@ -386,6 +386,7 @@ To develop plugins for ImHex, use the following template project to get started.
 - Thanks to aquynh for [capstone](https://github.com/aquynh/capstone) which is the base of the disassembly window
 - Thanks to rxi for [microtar](https://github.com/rxi/microtar) used for extracting downloaded store assets 
 - Thanks to VirusTotal for [Yara](https://github.com/VirusTotal/yara) used by the Yara plugin
+- Thanks to paul-elliot-arm for [Mbed-TLS](https://github.com/Mbed-TLS/mbedtls) used for crypto by the Yara plugin 
 - Thanks to Martinsos for [edlib](https://github.com/Martinsos/edlib) used for sequence searching in the diffing view
 - Thanks to ron4fun for [HashLibPlus](https://github.com/ron4fun/HashLibPlus) which implements every hashing algorithm under the sun
 - Thanks to mackron for [miniaudio](https://github.com/mackron/miniaudio) used to play audio files
