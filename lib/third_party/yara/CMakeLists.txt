@@ -102,7 +102,7 @@ set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/time/time.c
 )
 
-find_package(mbedTLS 2.26.0 REQUIRED)
+find_package(MbedTLS 3.4.0 REQUIRED)
 
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
 
@@ -122,15 +122,15 @@ endif ()
 target_include_directories(
         libyara
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/yara> $<BUILD_INTERFACE:${LIBYARA_SOURCE_PATH}/include>
-        PRIVATE ${LIBYARA_SOURCE_PATH} ${MBEDTLS_INCLUDE_DIR}
+        PRIVATE ${LIBYARA_SOURCE_PATH} MbedTLS::mbedtls}
 )
 
-target_link_directories(libyara PRIVATE ${MBEDTLS_LIBRARY_DIR})
+target_link_directories(libyara PRIVATE MbedTLS::mbedtls)
 
 if (UNIX)
-    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES} pthread)
+    target_link_libraries(libyara PRIVATE magic MbedTLS::mbedtls pthread)
 else ()
-    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES})
+    target_link_libraries(libyara PRIVATE magic MbedTLS::mbedtls)
 endif ()
 
 include(GNUInstallDirs)

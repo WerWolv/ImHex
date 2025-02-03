@@ -39,9 +39,8 @@ set(LIBPL_ENABLE_CLI OFF CACHE BOOL "" FORCE)
 add_subdirectory(lib/external/pattern_language EXCLUDE_FROM_ALL)
 
 find_package(CURL REQUIRED)
-find_package(mbedTLS 3.4.0 REQUIRED)
+find_package(MbedTLS 3.4.0 REQUIRED)
 set(CURL_LIBRARIES ${CURL_LIBRARIES} PARENT_SCOPE)
-set(MBEDTLS_LIBRARIES ${MBEDTLS_LIBRARIES} PARENT_SCOPE)
 
 add_subdirectory(lib/libimhex)
 

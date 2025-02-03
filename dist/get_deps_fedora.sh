@@ -12,10 +12,11 @@ dnf install -y      \
   mesa-libGL-devel  \
   glfw-devel        \
   lld               \
-  mbedtls-devel     \
+  mbedtls-devel-3.6.2-1.el10_0 \
   gtk3-devel        \
   libzstd-devel     \
   zlib-devel        \
   bzip2-devel       \
   xz-devel          \
   lz4-devel
+
