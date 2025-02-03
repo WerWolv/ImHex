@@ -126,12 +126,6 @@ generate_export_header(libimhex)
 target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIR} ${MAGIC_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${LIBBACKTRACE_INCLUDE_DIRS})
 target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR} ${MAGIC_LIBRARY_DIRS})
 
-if (NOT EMSCRIPTEN)
-    # curl is only used in non-emscripten builds
-    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} CURL::libcurl)
-endif()
-
-
 if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     if (WIN32)
         set_target_properties(libimhex PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -150,6 +144,11 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
 
     if (NOT WIN32)
         target_link_libraries(libimhex PRIVATE dl)
+    endif()
+
+    if (NOT EMSCRIPTEN)
+        # curl is only used in non-emscripten builds
+        target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} CURL::libcurl)
     endif()
 
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
