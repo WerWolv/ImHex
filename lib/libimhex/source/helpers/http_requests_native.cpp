@@ -180,7 +180,7 @@ namespace hex {
                 std::string header = hex::format("{}: {}", key, value);
                 headersList = curl_slist_append(headersList, header.c_str());
             }
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headersList);
 
             auto result = curl_easy_perform(curl);
             if (result != CURLE_OK){
