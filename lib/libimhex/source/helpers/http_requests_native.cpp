@@ -1,6 +1,7 @@
 #if !defined(OS_WEB)
 
 #include <hex/helpers/http_requests.hpp>
+#include <curl/curl.h>
 
 namespace hex {
 
@@ -9,6 +10,19 @@ namespace hex {
         std::string s_proxyUrl;
         bool s_proxyState;
 
+    }
+
+    int progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow) {
+        auto &request = *static_cast<HttpRequest *>(contents);
+
+        if (dlTotal > 0)
+            request.setProgress(float(dlNow) / dlTotal);
+        else if (ulTotal > 0)
+            request.setProgress(float(ulNow) / ulTotal);
+        else
+            request.setProgress(0.0F);
+
+        return request.isCanceled() ? CURLE_ABORTED_BY_CALLBACK : CURLE_OK;
     }
 
     HttpRequest::HttpRequest(std::string method, std::string url) : m_method(std::move(method)), m_url(std::move(url)) {
@@ -95,18 +109,100 @@ namespace hex {
         }
     }
 
-    int HttpRequest::progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow) {
-        auto &request = *static_cast<HttpRequest *>(contents);
+    namespace impl {
 
-        if (dlTotal > 0)
-            request.m_progress = float(dlNow) / dlTotal;
-        else if (ulTotal > 0)
-            request.m_progress = float(ulNow) / ulTotal;
-        else
-            request.m_progress = 0.0F;
+        void setWriteFunctions(CURL *curl, wolv::io::File &file) {
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, HttpRequest::writeToFile);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
+        }
 
-        return request.m_canceled ? CURLE_ABORTED_BY_CALLBACK : CURLE_OK;
+        void setWriteFunctions(CURL *curl, std::vector<u8> &data) {
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, HttpRequest::writeToVector);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+        }
+
+        void setupFileUpload(CURL *curl, wolv::io::File &file, const std::string &fileName, const std::string &mimeName) {
+            curl_mime *mime     = curl_mime_init(curl);
+            curl_mimepart *part = curl_mime_addpart(mime);
+
+
+            curl_mime_data_cb(part, file.getSize(),
+                [](char *buffer, size_t size, size_t nitems, void *arg) -> size_t {
+                    auto handle = static_cast<FILE*>(arg);
+
+                    return fread(buffer, size, nitems, handle);
+                },
+                [](void *arg, curl_off_t offset, int origin) -> int {
+                    auto handle = static_cast<FILE*>(arg);
+
+                    if (fseek(handle, offset, origin) != 0)
+                        return CURL_SEEKFUNC_CANTSEEK;
+                    else
+                        return CURL_SEEKFUNC_OK;
+                },
+                [](void *arg) {
+                    auto handle = static_cast<FILE*>(arg);
+
+                    fclose(handle);
+                },
+                file.getHandle());
+            curl_mime_filename(part, fileName.c_str());
+            curl_mime_name(part, mimeName.c_str());
+
+            curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
+        }
+
+        void setupFileUpload(CURL *curl, const std::vector<u8> &data, const std::fs::path &fileName, const std::string &mimeName) {
+            curl_mime *mime     = curl_mime_init(curl);
+            curl_mimepart *part = curl_mime_addpart(mime);
+
+            curl_mime_data(part, reinterpret_cast<const char *>(data.data()), data.size());
+            auto fileNameStr = wolv::util::toUTF8String(fileName.filename());
+            curl_mime_filename(part, fileNameStr.c_str());
+            curl_mime_name(part, mimeName.c_str());
+
+            curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
+        }
+
+        int executeCurl(CURL *curl, const std::string &url, const std::string &method, const std::string &body, std::map<std::string, std::string> &headers) {
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
+
+            if (!body.empty()) {
+                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
+            }
+
+            curl_slist *headersList = nullptr;
+            headersList = curl_slist_append(headersList, "Cache-Control: no-cache");
+            ON_SCOPE_EXIT { curl_slist_free_all(headersList); };
+
+            for (auto &[key, value] : headers) {
+                std::string header = hex::format("{}: {}", key, value);
+                headersList = curl_slist_append(headersList, header.c_str());
+            }
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+            auto result = curl_easy_perform(curl);
+            if (result != CURLE_OK){
+                return result;
+            }
+
+            return 0;
+        }
+
+        long getStatusCode(CURL *curl) {
+            long statusCode = 0;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &statusCode);
+
+            return statusCode;
+        }
+
+        std::string getStatusText(int result) {
+            return curl_easy_strerror(CURLcode(result));
+        }
+
     }
+
 
 }
 

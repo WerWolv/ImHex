@@ -29,6 +29,8 @@
 #include <content/popups/popup_unsaved_changes.hpp>
 #include <content/popups/popup_crash_recovered.hpp>
 
+#include <GLFW/glfw3.h>
+
 namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {

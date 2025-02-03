@@ -3,6 +3,7 @@
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/semantic_version.hpp>
+#include <hex/helpers/fs.hpp>
 
 #include <functional>
 #include <optional>
@@ -11,8 +12,7 @@
 #include <vector>
 #include <map>
 #include <set>
-
-#include <wolv/io/fs.hpp>
+#include <memory>
 
 using ImGuiID = unsigned int;
 struct ImVec2;

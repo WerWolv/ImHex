@@ -26,6 +26,8 @@
 #include <romfs/romfs.hpp>
 #include <ui/menu_items.hpp>
 
+#include <GLFW/glfw3.h>
+
 using namespace std::literals::string_literals;
 using namespace wolv::literals;
 

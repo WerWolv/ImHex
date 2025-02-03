@@ -19,6 +19,8 @@
 #include <romfs/romfs.hpp>
 #include <wolv/utils/guards.hpp>
 
+#include <GLFW/glfw3.h>
+
 namespace hex::plugin::builtin {
 
     // Function that draws the provider popup, defiend in the ui_items.cpp file

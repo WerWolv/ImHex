@@ -12,7 +12,6 @@
 #include <numbers>
 
 #include <opengl_support.h>
-#include <GLFW/glfw3.h>
 #include "imgui.h"
 
 namespace hex::gl {
