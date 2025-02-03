@@ -123,8 +123,8 @@ setupCompilerFlags(libimhex)
 include(GenerateExportHeader)
 generate_export_header(libimhex)
 
-target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIR} ${MAGIC_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${LIBBACKTRACE_INCLUDE_DIRS})
-target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR} ${MAGIC_LIBRARY_DIRS})
+target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} include ${XDGPP_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS})
+target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE}} ${MAGIC_LIBRARY_DIRS})
 
 if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     if (WIN32)
@@ -151,10 +151,14 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} CURL::libcurl)
     endif()
 
+    target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_INCLUDE_DIR} ${LIBBACKTRACE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS})
+    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARIES})
+    target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR})
+
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
 
-target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${LUNASVG_LIBRARIES} ${BOOST_LIBRARIES})
+target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${FMT_LIBRARIES} ${LUNASVG_LIBRARIES} ${BOOST_LIBRARIES})
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 
