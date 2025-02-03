@@ -124,7 +124,6 @@ include(GenerateExportHeader)
 generate_export_header(libimhex)
 
 target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} include ${XDGPP_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS})
-target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE}} ${MAGIC_LIBRARY_DIRS})
 
 if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     if (WIN32)
@@ -153,7 +152,7 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
 
     target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_INCLUDE_DIR} ${LIBBACKTRACE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS})
     target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARIES})
-    target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR})
+    target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR} ${MAGIC_LIBRARY_DIRS})
 
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
