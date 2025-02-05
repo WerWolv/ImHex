@@ -338,7 +338,7 @@ namespace hex::plugin::builtin {
                 std::set<Key> keys;
 
                 for (const auto &key : data.get<std::vector<u32>>())
-                    keys.insert(Key(Keys(key)));
+                    keys.insert(Key(scanCodeToKey(key)));
 
                 if (keys.empty())
                     return;
@@ -354,7 +354,7 @@ namespace hex::plugin::builtin {
 
                 for (const auto &key : m_shortcut.getKeys()) {
                     if (key != CurrentView)
-                        keys.push_back(key.getKeyCode());
+                        keys.push_back(keyToScanCode(Keys(key.getKeyCode())));
                 }
 
                 return keys;

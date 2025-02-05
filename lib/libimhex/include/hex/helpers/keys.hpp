@@ -121,3 +121,4 @@ enum Keys {
 };
 
 Keys scanCodeToKey(int scanCode);
+int keyToScanCode(Keys key);
