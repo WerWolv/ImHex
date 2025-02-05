@@ -67,8 +67,7 @@ macro(add_imhex_plugin)
     )
 
     # Link plugins against libpl if it's a shared library
-    get_target_property(libpl_target_type libpl TYPE)
-    if (libpl_target_type STREQUAL "SHARED_LIBRARY")
+    if (IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libpl)
     endif ()
 
