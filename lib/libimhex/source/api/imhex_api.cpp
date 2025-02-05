@@ -638,8 +638,8 @@ namespace hex {
             #elif defined(OS_MACOS)
                 return ::getBackingScaleFactor();
             #elif defined(OS_LINUX)
-                const auto sessionType = ::getenv("XDG_SESSION_TYPE");
-                if (sessionType == nullptr || std::string_view(sessionType) == "x11")
+                const auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
+                if (!sessionType.has_value() || sessionType == "x11")
                     return 1.0F;
                 else {
                     float xScale = 0, yScale = 0;
