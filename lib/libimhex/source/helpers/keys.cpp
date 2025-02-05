@@ -116,7 +116,7 @@ Keys scanCodeToKey(int scanCode) {
         case GLFW_KEY_KP_ENTER:         return Keys::KeyPadEnter;
         case GLFW_KEY_KP_EQUAL:         return Keys::KeyPadEqual;
         case GLFW_KEY_MENU:             return Keys::Menu;
-        default:                        return Keys::Invalid;
+        default:                        return Keys(scanCode);
     }
 }
 
@@ -234,6 +234,6 @@ int keyToScanCode(Keys key) {
         case Keys::KeyPadEnter:         return GLFW_KEY_KP_ENTER;
         case Keys::KeyPadEqual:         return GLFW_KEY_KP_EQUAL;
         case Keys::Menu:                return GLFW_KEY_MENU;
-        default:                        return 0;
+        default:                        return int(key);
     }
 }
