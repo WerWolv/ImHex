@@ -34,6 +34,7 @@ set -xe
 
 mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 
+/vcpkg/vcpkg x-update-baseline
 /vcpkg/vcpkg install --triplet=wasm32-emscripten libmagic
 /vcpkg/vcpkg install --triplet=wasm32-emscripten freetype
 /vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
