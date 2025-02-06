@@ -327,7 +327,7 @@ namespace hex::plugin::builtin {
         if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
             static float height = 0;
             static bool dragging = false;
-            const ImGuiContext& g = *GImGui;
+            const ImGuiContext& g = *ImGui::GetCurrentContext();
             if (g.CurrentWindow->Appearing)
                 return;
             const auto availableSize = g.CurrentWindow->Size;
@@ -592,7 +592,7 @@ namespace hex::plugin::builtin {
                     auto code = m_textEditor.GetText();
                     EventPatternEditorChanged::post(code);
 
-                    TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern"_lang, [this, code = std::move(code), provider](auto &){
+                    TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code = std::move(code), provider](auto &){
                         this->parsePattern(code, provider);
 
                         if (m_runAutomatically)
@@ -1292,7 +1292,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     if (ImGuiExt::DimmedIconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         auto dataProvider = std::make_shared<prv::MemoryProvider>(section.data);
-                        auto hexEditor = auto(m_sectionHexEditor);
+                        auto hexEditor = ui::HexEditor(m_sectionHexEditor);
 
                         hexEditor.setBackgroundHighlightCallback([this, id, &runtime](u64 address, const u8 *, size_t) -> std::optional<color_t> {
                             if (m_runningEvaluators != 0)
@@ -1318,14 +1318,14 @@ namespace hex::plugin::builtin {
                         auto patternProvider = ImHexApi::Provider::get();
 
 
-                        m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider, hexEditor, patternDrawer = std::make_shared<ui::PatternDrawer>(), &runtime] mutable {
+                        m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider, hexEditor, patternDrawer = std::make_shared<ui::PatternDrawer>(), &runtime]() mutable {
                             hexEditor.setProvider(dataProvider.get());
                             hexEditor.draw(480_scaled);
                             patternDrawer->setSelectionCallback([&](const pl::ptrn::Pattern *pattern) {
                                 hexEditor.setSelection(Region { pattern->getOffset(), pattern->getSize() });
                             });
 
-                            const auto &patterns = [&, this] -> const auto& {
+                            const auto &patterns = [&, this]() -> const auto& {
                                 if (patternProvider->isReadable() && *m_executionDone) {
                                     return runtime.getPatterns(id);
                                 } else {
@@ -1493,7 +1493,7 @@ namespace hex::plugin::builtin {
                             if (m_lastEvaluationError->has_value())
                                 message = processMessage((*m_lastEvaluationError)->message);
                             auto key = TextEditor::Coordinates(location.line, location.column);
-                            errorMarkers[key] = std::make_pair(location.length, message);
+                            errorMarkers[key] = std::make_pair(u32(location.length), message);
                         }
                     }
                 } else {
@@ -1509,7 +1509,7 @@ namespace hex::plugin::builtin {
                         if (source != nullptr && source->mainSource) {
                             auto key = TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
                             if (!errorMarkers.contains(key) ||errorMarkers[key].first < error.getLocation().length)
-                                    errorMarkers[key] = std::make_pair(error.getLocation().length,processMessage(error.getMessage()));
+                                    errorMarkers[key] = std::make_pair(u32(error.getLocation().length), processMessage(error.getMessage()));
                         }
                     }
                 }
@@ -1531,7 +1531,7 @@ namespace hex::plugin::builtin {
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
-            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data"_lang, [this, provider](const Task &task) {
+            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider](const Task &task) {
                 if (!m_autoLoadPatterns)
                     return;
 
@@ -1556,7 +1556,7 @@ namespace hex::plugin::builtin {
 
                 // Format: [ AA BB CC DD ] @ 0x12345678
                 runtime.addPragma("magic", [provider, &foundCorrectType](pl::PatternLanguage &, const std::string &value) -> bool {
-                    const auto pattern = [value = value] mutable -> std::optional<BinaryPattern> {
+                    const auto pattern = [value = value]() mutable -> std::optional<BinaryPattern> {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
@@ -1577,7 +1577,7 @@ namespace hex::plugin::builtin {
                         return BinaryPattern(value);
                     }();
 
-                    const auto address = [value = value, provider] mutable -> std::optional<u64> {
+                    const auto address = [value = value, provider]() mutable -> std::optional<u64> {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
@@ -1834,7 +1834,7 @@ namespace hex::plugin::builtin {
             m_textEditor.SetText(code);
             m_sourceCode.set(provider, code);
 
-            TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern"_lang, [this, code, provider](auto&) { this->parsePattern(code, provider); });
+            TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
 
@@ -1900,8 +1900,8 @@ namespace hex::plugin::builtin {
 
         EventHighlightingChanged::post();
 
-        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating"_lang, TaskManager::NoProgress, [this, code, provider](auto &task) {
-            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
+            auto runtimeLock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
@@ -1942,7 +1942,7 @@ namespace hex::plugin::builtin {
                 return m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
             });
 
-            runtime.setLogCallback([this,provider](auto level, auto message) {
+            runtime.setLogCallback([this, provider](auto level, auto message) {
                 std::scoped_lock lock(m_logMutex);
 
                 for (auto line : wolv::util::splitString(message, "\n")) {

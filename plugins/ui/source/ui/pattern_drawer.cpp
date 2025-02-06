@@ -1397,7 +1397,7 @@ namespace hex::ui {
             m_filtersUpdated = true;
 
             if (!m_favoritesUpdateTask.isRunning()) {
-                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns, runtime](auto &task) {
+                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating", TaskManager::NoProgress, [this, patterns, runtime](auto &task) {
                     size_t updatedFavorites = 0;
 
                     {

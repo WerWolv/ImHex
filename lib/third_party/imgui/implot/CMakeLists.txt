@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 # https://github.com/epezent/implot
 project(imgui_implot)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 
 if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     add_library(imgui_implot OBJECT

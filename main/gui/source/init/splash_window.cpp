@@ -529,19 +529,7 @@ namespace hex::init {
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
             cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
             io.Fonts->AddFontDefault(&cfg);
-
-            std::uint8_t *px;
-            int w, h;
-            io.Fonts->GetTexDataAsAlpha8(&px, &w, &h);
-
-            // Create new font atlas
-            GLuint tex;
-            glGenTextures(1, &tex);
-            glBindTexture(GL_TEXTURE_2D, tex);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, w, h, 0, GL_ALPHA, GL_UNSIGNED_BYTE, px);
-            io.Fonts->SetTexID(tex);
+            ImGui_ImplOpenGL3_CreateFontsTexture();
         }
 
         // Don't save window settings for the splash screen
@@ -554,7 +542,7 @@ namespace hex::init {
     void WindowSplash::loadAssets() {
 
         // Load splash screen image from romfs
-        const auto backingScale = ImHexApi::System::getNativeScale() * ImHexApi::System::getBackingScaleFactor();
+        const auto backingScale = ImHexApi::System::getNativeScale();
         this->m_splashBackgroundTexture = ImGuiExt::Texture::fromSVG(romfs::get("splash_background.svg").span(), WindowSize.x * backingScale, WindowSize.y * backingScale, ImGuiExt::Texture::Filter::Linear);
         this->m_splashTextTexture = ImGuiExt::Texture::fromSVG(romfs::get("splash_text.svg").span(), WindowSize.x * backingScale, WindowSize.y * backingScale, ImGuiExt::Texture::Filter::Linear);
 

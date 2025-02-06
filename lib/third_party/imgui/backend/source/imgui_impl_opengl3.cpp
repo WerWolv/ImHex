@@ -113,6 +113,11 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#if !defined(WINGDIAPI)
+#define WINGDIAPI extern "C"
+#define APIENTRY
+#endif
+
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
 #include "imgui_impl_opengl3.h"

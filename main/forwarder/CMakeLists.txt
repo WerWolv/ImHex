@@ -11,3 +11,9 @@ set_target_properties(main-forwarder PROPERTIES
         OUTPUT_NAME "imhex"
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../..
 )
+
+if (WIN32)
+    if (MSVC)
+        target_link_options(main-forwarder PRIVATE /MANIFEST:NO)
+    endif()
+endif()

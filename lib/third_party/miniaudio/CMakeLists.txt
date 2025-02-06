@@ -6,7 +6,8 @@ add_library(miniaudio STATIC
 )
 
 target_include_directories(miniaudio PUBLIC include)
-
 if (APPLE)
     set_source_files_properties(source/miniaudio.c PROPERTIES LANGUAGE OBJC)
+elseif (NOT MSVC)
+    target_compile_options(miniaudio PRIVATE -Wno-unused-result)
 endif ()

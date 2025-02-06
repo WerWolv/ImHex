@@ -184,7 +184,7 @@ namespace ImGuiExt {
     void StyleCustomColorsLight();
     void StyleCustomColorsClassic();
 
-    void SmallProgressBar(float fraction, float yOffset = 0.0F);
+    void ProgressBar(float fraction, ImVec2 size_value = ImVec2(0, 0), float yOffset = 0.0F);
 
     inline void TextFormatted(std::string_view fmt, auto &&...args) {
         if constexpr (sizeof...(args) == 0) {

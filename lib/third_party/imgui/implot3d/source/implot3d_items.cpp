@@ -266,8 +266,8 @@ void SetNextLineStyle(const ImVec4& col, float weight) {
 void SetNextFillStyle(const ImVec4& col, float alpha) {
     ImPlot3DContext& gp = *GImPlot3D;
     ImPlot3DNextItemData& n = gp.NextItemData;
-    gp.NextItemData.Colors[ImPlot3DCol_Fill] = col;
-    gp.NextItemData.FillAlpha = alpha;
+    n.Colors[ImPlot3DCol_Fill] = col;
+    n.FillAlpha = alpha;
 }
 
 void SetNextMarkerStyle(ImPlot3DMarker marker, float size, const ImVec4& fill, float weight, const ImVec4& outline) {
@@ -700,14 +700,14 @@ struct RendererQuadFill : RendererBase {
 
 template <class _Getter>
 struct RendererSurfaceFill : RendererBase {
-    RendererSurfaceFill(const _Getter& getter, int x_count, int y_count, ImU32 col) : RendererBase((x_count - 1) * (y_count - 1), 6, 4),
-                                                                                      Getter(getter),
-                                                                                      UV({}),
-                                                                                      Min(0.0f),
-                                                                                      Max(0.0f),
-                                                                                      XCount(x_count),
-                                                                                      YCount(y_count),
-                                                                                      Col(col) {}
+    RendererSurfaceFill(const _Getter& getter, int x_count, int y_count, ImU32 col, double scale_min, double scale_max) : RendererBase((x_count - 1) * (y_count - 1), 6, 4),
+                                                                                                                          Getter(getter),
+                                                                                                                          XCount(x_count),
+                                                                                                                          YCount(y_count),
+                                                                                                                          Col(col),
+                                                                                                                          ScaleMin(scale_min),
+                                                                                                                          ScaleMax(scale_max) {}
+
     void Init(ImDrawList3D& draw_list_3d) const {
         UV = draw_list_3d._SharedData->TexUvWhitePixel;
 
@@ -744,8 +744,14 @@ struct RendererSurfaceFill : RendererBase {
         const ImPlot3DNextItemData& n = GetItemData();
         if (n.IsAutoFill) {
             float alpha = GImPlot3D->NextItemData.FillAlpha;
+            float min = Min;
+            float max = Max;
+            if (ScaleMin != 0.0 || ScaleMax != 0.0) {
+                min = (float)ScaleMin;
+                max = (float)ScaleMax;
+            }
             for (int i = 0; i < 4; i++) {
-                ImVec4 col = SampleColormap(ImClamp(ImRemap01(p_plot[i].z, Min, Max), 0.0f, 1.0f));
+                ImVec4 col = SampleColormap(ImClamp(ImRemap01(p_plot[i].z, min, max), 0.0f, 1.0f));
                 col.w *= alpha;
                 cols[i] = ImGui::ColorConvertFloat4ToU32(col);
             }
@@ -810,6 +816,8 @@ struct RendererSurfaceFill : RendererBase {
     const int XCount;
     const int YCount;
     const ImU32 Col;
+    const double ScaleMin;
+    const double ScaleMax;
 };
 
 //-----------------------------------------------------------------------------
@@ -851,7 +859,7 @@ template <typename _IndexerX, typename _IndexerY, typename _IndexerZ>
 struct GetterXYZ {
     GetterXYZ(_IndexerX x, _IndexerY y, _IndexerZ z, int count) : IndexerX(x), IndexerY(y), IndexerZ(z), Count(count) {}
     template <typename I> IMPLOT3D_INLINE ImPlot3DPoint operator()(I idx) const {
-        return ImPlot3DPoint(IndexerX(idx), IndexerY(idx), IndexerZ(idx));
+        return ImPlot3DPoint((float)IndexerX(idx), (float)IndexerY(idx), (float)IndexerZ(idx));
     }
     const _IndexerX IndexerX;
     const _IndexerY IndexerY;
@@ -1240,14 +1248,14 @@ CALL_INSTANTIATE_FOR_NUMERIC_TYPES()
 //-----------------------------------------------------------------------------
 
 template <typename _Getter>
-void PlotSurfaceEx(const char* label_id, const _Getter& getter, int x_count, int y_count, ImPlot3DSurfaceFlags flags) {
+void PlotSurfaceEx(const char* label_id, const _Getter& getter, int x_count, int y_count, double scale_min, double scale_max, ImPlot3DSurfaceFlags flags) {
     if (BeginItemEx(label_id, getter, flags, ImPlot3DCol_Fill)) {
         const ImPlot3DNextItemData& n = GetItemData();
 
         // Render fill
         if (getter.Count >= 4 && n.RenderFill) {
             const ImU32 col_fill = ImGui::GetColorU32(n.Colors[ImPlot3DCol_Fill]);
-            RenderPrimitives<RendererSurfaceFill>(getter, x_count, y_count, col_fill);
+            RenderPrimitives<RendererSurfaceFill>(getter, x_count, y_count, col_fill, scale_min, scale_max);
         }
 
         // Render lines
@@ -1267,16 +1275,16 @@ void PlotSurfaceEx(const char* label_id, const _Getter& getter, int x_count, int
     }
 }
 
-IMPLOT3D_TMP void PlotSurface(const char* label_id, const T* xs, const T* ys, const T* zs, int x_count, int y_count, ImPlot3DSurfaceFlags flags, int offset, int stride) {
+IMPLOT3D_TMP void PlotSurface(const char* label_id, const T* xs, const T* ys, const T* zs, int x_count, int y_count, double scale_min, double scale_max, ImPlot3DSurfaceFlags flags, int offset, int stride) {
     int count = x_count * y_count;
     if (count < 4)
         return;
     GetterXYZ<IndexerIdx<T>, IndexerIdx<T>, IndexerIdx<T>> getter(IndexerIdx<T>(xs, count, offset, stride), IndexerIdx<T>(ys, count, offset, stride), IndexerIdx<T>(zs, count, offset, stride), count);
-    return PlotSurfaceEx(label_id, getter, x_count, y_count, flags);
+    return PlotSurfaceEx(label_id, getter, x_count, y_count, scale_min, scale_max, flags);
 }
 
 #define INSTANTIATE_MACRO(T) \
-    template IMPLOT3D_API void PlotSurface<T>(const char* label_id, const T* xs, const T* ys, const T* zs, int x_count, int y_count, ImPlot3DSurfaceFlags flags, int offset, int stride);
+    template IMPLOT3D_API void PlotSurface<T>(const char* label_id, const T* xs, const T* ys, const T* zs, int x_count, int y_count, double scale_min, double scale_max, ImPlot3DSurfaceFlags flags, int offset, int stride);
 CALL_INSTANTIATE_FOR_NUMERIC_TYPES()
 #undef INSTANTIATE_MACRO
 

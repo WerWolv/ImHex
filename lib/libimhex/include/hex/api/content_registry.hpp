@@ -576,7 +576,7 @@ namespace hex {
             namespace impl {
 
                 void add(std::unique_ptr<View> &&view);
-                const std::map<std::string, std::unique_ptr<View>>& getEntries();
+                const std::map<UnlocalizedString, std::unique_ptr<View>>& getEntries();
 
             }
 
@@ -721,7 +721,7 @@ namespace hex {
                 add(impl::Entry {
                     unlocalizedCategory,
                     unlocalizedName,
-                    [=, ...args = std::forward<Args>(args)] mutable {
+                    [=, ...args = std::forward<Args>(args)]() mutable {
                         auto node = std::make_unique<T>(std::forward<Args>(args)...);
                         node->setUnlocalizedName(unlocalizedName);
                         return node;
@@ -1002,7 +1002,7 @@ namespace hex {
             void add(bool addToList = true) {
                 auto typeName = T().getTypeName();
 
-                impl::add(typeName, [] -> std::unique_ptr<prv::Provider> {
+                impl::add(typeName, []() -> std::unique_ptr<prv::Provider> {
                     return std::make_unique<T>();
                 });
 
@@ -1110,9 +1110,9 @@ namespace hex {
 
                 [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const { return m_unlocalizedName; }
 
-            protected:
-                const static int TextInputFlags;
+                [[nodiscard]] static int DefaultTextInputFlags();
 
+            protected:
                 bool drawDefaultScalarEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const;
                 bool drawDefaultTextEditingTextBox(u64 address, std::string &data, ImGuiInputTextFlags flags) const;
 

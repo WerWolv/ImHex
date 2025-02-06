@@ -22,7 +22,7 @@ namespace hex::plugin::builtin {
                 ImNodesContext *ctx = ImNodes::CreateContext();
                 ctx->Style = ImNodes::GetStyle();
                 ctx->Io = ImNodes::GetIO();
-                ctx->AttributeFlagStack = GImNodes->AttributeFlagStack;
+                ctx->AttributeFlagStack = ImNodes::GetCurrentContext()->AttributeFlagStack;
 
                 return ctx;
             }(), [](ImNodesContext *ptr) {

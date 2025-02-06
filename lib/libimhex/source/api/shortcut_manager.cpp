@@ -310,7 +310,7 @@ namespace hex {
         if (focused)
             pressedShortcut += CurrentView;
 
-        pressedShortcut += static_cast<Keys>(keyCode);
+        pressedShortcut += scanCodeToKey(keyCode);
 
         return pressedShortcut;
     }

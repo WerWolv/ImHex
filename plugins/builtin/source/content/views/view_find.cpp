@@ -199,7 +199,7 @@ namespace hex::plugin::builtin {
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
-        const auto [decodeType, endian] = [&] -> std::pair<Occurrence::DecodeType, std::endian> {
+        const auto [decodeType, endian] = [&]() -> std::pair<Occurrence::DecodeType, std::endian> {
             if (settings.type == ASCII)
                 return { Occurrence::DecodeType::ASCII, std::endian::native };
             if (settings.type == UTF8)
@@ -344,7 +344,7 @@ namespace hex::plugin::builtin {
         auto occurrence = reader.begin();
         u64 progress = 0;
 
-        auto searchPredicate = [&] -> bool(*)(u8, u8) {
+        auto searchPredicate = [&]() -> bool(*)(u8, u8) {
             if (!settings.ignoreCase)
                 return [](u8 left, u8 right) -> bool {
                     return left == right;
@@ -550,7 +550,7 @@ namespace hex::plugin::builtin {
         m_occurrenceTree->clear();
         EventHighlightingChanged::post();
 
-        m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching"_lang, searchRegion.getSize(), [this, settings = m_searchSettings, searchRegion](auto &task) {
+        m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching", searchRegion.getSize(), [this, settings = m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
             switch (settings.mode) {
@@ -974,7 +974,7 @@ namespace hex::plugin::builtin {
                 m_filterTask.interrupt();
 
             if (!m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_lang, currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
+                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data", currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
                     u64 progress = 0;
                     std::erase_if(currOccurrences, [this, provider, &task, &progress](const auto &region) {
                         task.update(progress);

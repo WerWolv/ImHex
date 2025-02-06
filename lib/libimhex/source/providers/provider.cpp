@@ -332,7 +332,7 @@ namespace hex::prv {
         else if (category == "description")
             return magic::getDescription(this);
         else if (category == "provider_type")
-            return this->getTypeName();
+            return this->getTypeName().get();
         else
             return 0;
     }

@@ -19,6 +19,8 @@
 #include <romfs/romfs.hpp>
 #include <wolv/utils/guards.hpp>
 
+#include <GLFW/glfw3.h>
+
 namespace hex::plugin::builtin {
 
     // Function that draws the provider popup, defiend in the ui_items.cpp file
@@ -33,7 +35,7 @@ namespace hex::plugin::builtin {
         bool s_displayShortcutHighlights = true;
         bool s_useNativeMenuBar = false;
 
-        void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, const ContentRegistry::Interface::impl::MenuCallback &callback, const ContentRegistry::Interface::impl::EnabledCallback &enabledCallback, const ContentRegistry::Interface::impl::SelectedCallback &selectedCallback) {
+        void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, View *view, const ContentRegistry::Interface::impl::MenuCallback &callback, const ContentRegistry::Interface::impl::EnabledCallback &enabledCallback, const ContentRegistry::Interface::impl::SelectedCallback &selectedCallback) {
             const auto &name = menuItems.front();
 
             if (name.get() == ContentRegistry::Interface::impl::SeparatorValue) {
@@ -46,13 +48,13 @@ namespace hex::plugin::builtin {
                     callback();
                 }
             } else if (menuItems.size() == 1) {
-                if (menu::menuItemEx(Lang(name), icon, shortcut, selectedCallback(), enabledCallback()))
+                if (menu::menuItemEx(Lang(name), icon, shortcut, selectedCallback(), enabledCallback() && (view == nullptr || view->isFocused())))
                     callback();
             } else {
                 bool isSubmenu = (menuItems.begin() + 1)->get() == ContentRegistry::Interface::impl::SubMenuValue;
 
                 if (menu::beginMenuEx(Lang(name), std::next(menuItems.begin())->get() == ContentRegistry::Interface::impl::SubMenuValue ? icon : nullptr, isSubmenu ? enabledCallback() : true)) {
-                    createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, callback, enabledCallback, selectedCallback);
+                    createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, view, callback, enabledCallback, selectedCallback);
                     menu::endMenu();
                 }
             }
@@ -287,7 +289,7 @@ namespace hex::plugin::builtin {
                     toolbarIndex
                 ] = menuItem;
 
-                createNestedMenu(unlocalizedNames | std::views::drop(1), icon.glyph.c_str(), shortcut, callback, enabledCallback, selectedCallack);
+                createNestedMenu(unlocalizedNames | std::views::drop(1), icon.glyph.c_str(), shortcut, view, callback, enabledCallback, selectedCallack);
             }
         }
 
@@ -572,7 +574,7 @@ namespace hex::plugin::builtin {
                 const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallback, toolbarIndex] = menuItem;
 
                 if (ImGui::BeginPopup(unlocalizedNames.front().get().c_str())) {
-                    createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon.glyph.c_str(), shortcut, callback, enabledCallback, selectedCallback);
+                    createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon.glyph.c_str(), shortcut, view, callback, enabledCallback, selectedCallback);
                     ImGui::EndPopup();
                 }
             }

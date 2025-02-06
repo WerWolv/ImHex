@@ -47,12 +47,21 @@ namespace {
             ZeroMemory(&stackFrame, sizeof(STACKFRAME64));
 
             image = IMAGE_FILE_MACHINE_AMD64;
-            stackFrame.AddrPC.Offset = context.Rip;
-            stackFrame.AddrPC.Mode = AddrModeFlat;
-            stackFrame.AddrFrame.Offset = context.Rsp;
-            stackFrame.AddrFrame.Mode = AddrModeFlat;
-            stackFrame.AddrStack.Offset = context.Rsp;
-            stackFrame.AddrStack.Mode = AddrModeFlat;
+            #if defined(_X86_)
+                stackFrame.AddrPC.Offset = context.Eip;
+                stackFrame.AddrPC.Mode = AddrModeFlat;
+                stackFrame.AddrFrame.Offset = context.Esp;
+                stackFrame.AddrFrame.Mode = AddrModeFlat;
+                stackFrame.AddrStack.Offset = context.Esp;
+                stackFrame.AddrStack.Mode = AddrModeFlat;
+            #else
+                stackFrame.AddrPC.Offset = context.Rip;
+                stackFrame.AddrPC.Mode = AddrModeFlat;
+                stackFrame.AddrFrame.Offset = context.Rsp;
+                stackFrame.AddrFrame.Mode = AddrModeFlat;
+                stackFrame.AddrStack.Offset = context.Rsp;
+                stackFrame.AddrStack.Mode = AddrModeFlat;
+            #endif
 
             while (true) {
                 if (StackWalk64(

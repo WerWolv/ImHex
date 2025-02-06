@@ -15,7 +15,12 @@
 #include <string>
 
 #include <magic.h>
-#include <unistd.h>
+
+#if defined(_MSC_VER)
+    #include <direct.h>
+#else
+    #include <unistd.h>
+#endif
 
 #if defined(OS_WINDOWS)
     #define MAGIC_PATH_SEPARATOR ";"

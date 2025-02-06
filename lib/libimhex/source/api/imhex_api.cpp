@@ -462,7 +462,7 @@ namespace hex {
             if (s_providers->empty())
                 EventProviderChanged::post(provider, nullptr);
 
-            EventProviderClosed::post(it->get());
+            EventProviderClosed::post(providerToRemove);
             RequestUpdateWindowTitle::post();
 
             // Do the destruction of the provider in the background once all tasks have finished
@@ -638,7 +638,8 @@ namespace hex {
             #elif defined(OS_MACOS)
                 return ::getBackingScaleFactor();
             #elif defined(OS_LINUX)
-                if (std::string_view(::getenv("XDG_SESSION_TYPE")) == "x11")
+                const auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
+                if (!sessionType.has_value() || sessionType == "x11")
                     return 1.0F;
                 else {
                     float xScale = 0, yScale = 0;

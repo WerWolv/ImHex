@@ -367,7 +367,7 @@ namespace hex::plugin::builtin {
         }
 
         m_changeEventAcknowledgementPending = true;
-        ui::BannerButton::open(ICON_VS_INFO, "hex.builtin.provider.file.reload_changes"_lang, ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this] {
+        ui::BannerButton::open(ICON_VS_INFO, "hex.builtin.provider.file.reload_changes", ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this] {
             this->close();
             (void)this->open(!m_loadedIntoMemory);
 

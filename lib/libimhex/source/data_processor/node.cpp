@@ -41,7 +41,7 @@ namespace hex::dp {
     const i128& Node::getIntegerOnInput(u32 index) {
         auto attribute = this->getConnectedInputAttribute(index);
 
-        auto &outputData = [&] -> std::vector<u8>& {
+        auto &outputData = [&]() -> std::vector<u8>&{
             if (attribute != nullptr) {
                 if (attribute->getType() != Attribute::Type::Integer)
                     throwNodeError("Tried to read integer from non-integer attribute");
@@ -68,7 +68,7 @@ namespace hex::dp {
     const double& Node::getFloatOnInput(u32 index) {
         auto attribute = this->getConnectedInputAttribute(index);
 
-        auto &outputData = [&] -> std::vector<u8>& {
+        auto &outputData = [&]() -> std::vector<u8>&{
             if (attribute != nullptr) {
                 if (attribute->getType() != Attribute::Type::Float)
                     throwNodeError("Tried to read integer from non-float attribute");

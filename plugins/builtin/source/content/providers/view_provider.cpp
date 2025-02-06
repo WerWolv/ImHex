@@ -54,6 +54,7 @@ namespace hex::plugin::builtin {
         EventProviderClosing::subscribe(this, [this](const prv::Provider *provider, bool*) {
             if (m_provider == provider)
                 ImHexApi::Provider::remove(this, false);
+            m_provider = nullptr;
         });
 
         return true;

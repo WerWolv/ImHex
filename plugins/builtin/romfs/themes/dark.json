@@ -50,7 +50,7 @@
             "table-header-background": "#303033FF",
             "table-row-background": "#00000000",
             "table-row-background-alt": "#FFFFFF0F",
-            "text": "#FFFFFFFF",
+            "text": "#EAEAEAFF",
             "text-disabled": "#7F7F7FFF",
             "text-selected-background": "*#4296F959",
             "title-background": "#232323FF",

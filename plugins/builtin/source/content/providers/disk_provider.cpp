@@ -270,7 +270,7 @@ namespace hex::plugin::builtin {
 
                 std::memcpy(static_cast<u8 *>(buffer) + (offset - startOffset), m_sectorBuffer.data() + (offset & (m_sectorSize - 1)), std::min<u64>(m_sectorSize, size));
 
-                size = std::max<ssize_t>(static_cast<ssize_t>(size) - m_sectorSize, 0);
+                size = std::max<i64>(static_cast<i64>(size) - m_sectorSize, 0);
                 offset += m_sectorSize;
             }
 

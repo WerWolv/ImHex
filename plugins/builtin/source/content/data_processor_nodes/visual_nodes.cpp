@@ -56,7 +56,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::optional<float> m_value;
+        std::optional<double> m_value;
     };
 
     class NodeDisplayBuffer : public dp::Node {

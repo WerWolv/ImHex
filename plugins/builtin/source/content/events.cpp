@@ -29,6 +29,8 @@
 #include <content/popups/popup_unsaved_changes.hpp>
 #include <content/popups/popup_crash_recovered.hpp>
 
+#include <GLFW/glfw3.h>
+
 namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {
@@ -190,20 +192,23 @@ namespace hex::plugin::builtin {
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     return;
                 }
-                if (!provider->open()) {
-                    ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
-                    return;
-                }
+
+                TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
+                    if (!provider->open()) {
+                        ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                        TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    }
+                });
 
                 EventProviderOpened::post(provider);
             }
             else if (!provider->hasLoadInterface()) {
-                if (!provider->open() || !provider->isAvailable()) {
-                    ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
-                    return;
-                }
+                TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
+                    if (!provider->open() || !provider->isAvailable()) {
+                        ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                        TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    }
+                });
 
                 EventProviderOpened::post(provider);
             }

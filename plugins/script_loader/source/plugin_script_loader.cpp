@@ -92,7 +92,7 @@ std::vector<const Script*> loadAllScripts() {
                 if (menuJustOpened) {
                     menuJustOpened = false;
                     if (!updaterTask.isRunning()) {
-                        updaterTask = TaskManager::createBackgroundTask("hex.script_loader.task.updating"_lang, [] (auto&) {
+                        updaterTask = TaskManager::createBackgroundTask("hex.script_loader.task.updating", [] (auto&) {
                             scripts = loadAllScripts();
                         });
                     }
@@ -110,7 +110,7 @@ std::vector<const Script*> loadAllScripts() {
                         continue;
 
                     if (ImGui::MenuItem(name.c_str(), loader->getTypeName().c_str())) {
-                        runnerTask = TaskManager::createTask("hex.script_loader.task.running"_lang, TaskManager::NoProgress, [entryPoint](auto&) {
+                        runnerTask = TaskManager::createTask("hex.script_loader.task.running", TaskManager::NoProgress, [entryPoint](auto&) {
                             entryPoint();
                         });
                     }
@@ -124,7 +124,7 @@ std::vector<const Script*> loadAllScripts() {
             return !runnerTask.isRunning();
         });
 
-        updaterTask = TaskManager::createBackgroundTask("hex.script_loader.task.updating"_lang, [] (auto&) {
+        updaterTask = TaskManager::createBackgroundTask("hex.script_loader.task.updating", [] (auto&) {
             scripts = loadAllScripts();
         });
     }

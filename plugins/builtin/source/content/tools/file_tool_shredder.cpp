@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(selectedFile.empty());
             {
                 if (ImGui::Button("hex.builtin.tools.file_tools.shredder.shred"_lang)) {
-                    shredderTask = TaskManager::createTask("hex.builtin.tools.file_tools.shredder.shredding"_lang, 0, [](auto &task) {
+                    shredderTask = TaskManager::createTask("hex.builtin.tools.file_tools.shredder.shredding", 0, [](auto &task) {
                         ON_SCOPE_EXIT {
                             selectedFile.clear();
                         };
@@ -69,7 +69,7 @@ namespace hex::plugin::builtin {
                         } else {
                             /* Gutmann's method. Secure for magnetic storage */
                             std::random_device rd;
-                            std::uniform_int_distribution<u8> dist(0x00, 0xFF);
+                            std::uniform_int_distribution<u16> dist(0x00, 0xFF);
 
                             /* Fill fixed patterns */
                             overwritePattern = {
@@ -111,9 +111,9 @@ namespace hex::plugin::builtin {
 
                             /* Fill random patterns */
                             for (u8 i = 0; i < 4; i++)
-                                overwritePattern[i] = { dist(rd), dist(rd), dist(rd) };
+                                overwritePattern[i] = { u8(dist(rd)), u8(dist(rd)), u8(dist(rd)) };
                             for (u8 i = 0; i < 4; i++)
-                                overwritePattern[overwritePattern.size() - 1 - i] = { dist(rd), dist(rd), dist(rd) };
+                                overwritePattern[overwritePattern.size() - 1 - i] = { u8(dist(rd)), u8(dist(rd)), u8(dist(rd)) };
                         }
 
                         size_t fileSize = file.getSize();

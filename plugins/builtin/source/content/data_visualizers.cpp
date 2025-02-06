@@ -234,9 +234,9 @@ namespace hex::plugin::builtin {
             std::ignore = upperCase;
 
             if (size == 4)
-                ImGui::ColorButton("##color", ImColor(data[0], data[1], data[2], data[3]), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+                ImGui::ColorButton("##color", ImColor(data[0], data[1], data[2], data[3]), ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             else
-                ImGui::ColorButton("##color", ImColor(0, 0, 0, 0xFF), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+                ImGui::ColorButton("##color", ImColor(0, 0, 0, 0xFF), ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
@@ -250,7 +250,7 @@ namespace hex::plugin::builtin {
                 ImGui::OpenPopup("##color_popup");
             }
 
-            ImGui::ColorButton("##color", ImColor(m_currColor[0], m_currColor[1], m_currColor[2], m_currColor[3]), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+            ImGui::ColorButton("##color", ImColor(m_currColor[0], m_currColor[1], m_currColor[2], m_currColor[3]), ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
 
             if (ImGui::BeginPopup("##color_popup")) {
                 if (ImGui::ColorPicker4("##picker", m_currColor.data(), ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_InputRGB)) {

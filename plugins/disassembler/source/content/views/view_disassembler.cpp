@@ -47,7 +47,7 @@ namespace hex::plugin::disasm {
         if (m_regionToDisassemble.get(provider).getStartAddress() < m_imageBaseAddress)
             return;
 
-        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling"_lang, m_regionToDisassemble.get(provider).getSize(), [this, provider](auto &task) {
+        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling", m_regionToDisassemble.get(provider).getSize(), [this, provider](auto &task) {
             const auto &currArchitecture = m_currArchitecture.get(provider);
             const auto region = m_regionToDisassemble.get(provider);
             auto &disassembly = m_disassembly.get(provider);
@@ -100,7 +100,7 @@ namespace hex::plugin::disasm {
 
     void ViewDisassembler::exportToFile() {
         const auto provider = ImHexApi::Provider::get();
-        TaskManager::createTask("hex.ui.common.processing"_lang, TaskManager::NoProgress, [this, provider](auto &) {
+        TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [this, provider](auto &) {
             TaskManager::doLater([this, provider] {
                 fs::openFileBrowser(fs::DialogMode::Save, {}, [this, provider](const std::fs::path &path) {
                     auto p = path;

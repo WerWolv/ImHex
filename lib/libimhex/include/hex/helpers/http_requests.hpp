@@ -12,10 +12,6 @@
 
 #if defined(OS_WEB)
     #include <emscripten/fetch.h>
-
-    using curl_off_t = long;
-#else
-    #include <curl/curl.h>
 #endif
 
 typedef void CURL;
@@ -121,18 +117,18 @@ namespace hex {
 
         static std::string urlDecode(const std::string &input);
 
-    protected:
-        void setDefaultConfig();
+        void setProgress(float progress) { m_progress = progress; }
+        bool isCanceled() const { return m_canceled; }
+
+        static size_t writeToVector(void *contents, size_t size, size_t nmemb, void *userdata);
+        static size_t writeToFile(void *contents, size_t size, size_t nmemb, void *userdata);
 
         template<typename T>
         Result<T> executeImpl(std::vector<u8> &data);
 
-        static size_t writeToVector(void *contents, size_t size, size_t nmemb, void *userdata);
-        static size_t writeToFile(void *contents, size_t size, size_t nmemb, void *userdata);
-        static int progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow);
-
     private:
         static void checkProxyErrors();
+        void setDefaultConfig();
 
     private:
         #if defined(OS_WEB)

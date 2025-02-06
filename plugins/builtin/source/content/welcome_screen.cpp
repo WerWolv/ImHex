@@ -99,7 +99,7 @@ namespace hex::plugin::builtin {
                                 }
                             }
 
-                            TaskManager::createBackgroundTask("hex.builtin.task.uploading_crash"_lang, [path = m_logFilePath, data](auto&){
+                            TaskManager::createBackgroundTask("hex.builtin.task.uploading_crash", [path = m_logFilePath, data](auto&){
                                 HttpRequest request("POST", ImHexApiURL + std::string("/crash_upload"));
                                 request.uploadFile(std::vector<u8>(data.begin(), data.end()), "file", path.filename()).wait();
                             });
@@ -243,7 +243,7 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted(ICON_VS_ARROW_RIGHT);
                             ImGui::SameLine(0, 2_scaled);
 
-                            if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, nullptr, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 6), ImGuiChildFlags_AutoResizeX)) {
+                            if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, nullptr, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 5.8), ImGuiChildFlags_AutoResizeX)) {
                                 for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
                                     if (ImGuiExt::Hyperlink(Lang(unlocalizedProviderName))) {
                                         ImHexApi::Provider::createProvider(unlocalizedProviderName);
@@ -679,7 +679,7 @@ namespace hex::plugin::builtin {
             auto allowNetworking = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", false)
                 && ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0) != 0;
             if (!s_infoBannerTexture->isValid() && allowNetworking) {
-                TaskManager::createBackgroundTask("hex.builtin.task.loading_banner"_lang, [](auto&) {
+                TaskManager::createBackgroundTask("hex.builtin.task.loading_banner", [](auto&) {
                     HttpRequest request("GET",
                         ImHexApiURL + hex::format("/info/{}/image", hex::toLower(ImHexApi::System::getOSName())));
 

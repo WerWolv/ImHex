@@ -101,10 +101,9 @@ namespace hex {
     public:
         UnlocalizedString() = default;
 
-        template<typename T>
-        UnlocalizedString(T &&arg) : m_unlocalizedString(std::forward<T>(arg)) {
-            static_assert(!std::same_as<std::remove_cvref_t<T>, Lang>, "Expected a unlocalized name, got a localized one!");
-        }
+        UnlocalizedString(const std::string &string) : m_unlocalizedString(string) { }
+        UnlocalizedString(const char *string) : m_unlocalizedString(string) { }
+        UnlocalizedString(const Lang& arg) = delete;
 
         [[nodiscard]] operator std::string() const {
             return m_unlocalizedString;
@@ -149,3 +148,10 @@ namespace hex {
     }
 
 }
+
+template<>
+struct std::hash<hex::UnlocalizedString> {
+    std::size_t operator()(const hex::UnlocalizedString &string) const noexcept {
+        return std::hash<std::string>{}(string.get());
+    }
+};

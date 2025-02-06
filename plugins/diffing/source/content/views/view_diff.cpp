@@ -94,7 +94,7 @@ namespace hex::plugin::diffing {
 
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
         auto commonSize = std::max(providerA->getActualSize(), providerB->getActualSize());
-        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing"_lang, commonSize, [this, providerA, providerB](Task &) {
+        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing", commonSize, [this, providerA, providerB](Task &) {
             auto differences = m_algorithm->analyze(providerA, providerB);
 
             auto providers = ImHexApi::Provider::getProviders();

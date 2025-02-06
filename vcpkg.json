@@ -1,0 +1,16 @@
+{
+    "name": "vcpkg",
+    "version": "1.0.0",
+    "builtin-baseline": "19f945ab2c1e816de6bbb812fc1514e3dc52c287",
+    "dependencies": [
+        "libmagic",
+        "freetype",
+        "mbedtls",
+        "zlib",
+        "bzip2",
+        "liblzma",
+        "zstd",
+        "glfw3",
+        "curl"
+    ]
+}

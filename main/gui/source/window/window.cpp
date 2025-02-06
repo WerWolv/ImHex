@@ -340,14 +340,29 @@ namespace hex {
             auto &currentFont = ImGui::GetIO().Fonts;
             for (const auto &[name, font] : fontDefinitions) {
                 // If the texture for this atlas has been built already, don't do it again
-                if (font->ContainerAtlas->TexID != 0)
+                if (font == nullptr || font->ContainerAtlas->TexID != 0)
                     continue;
 
                 currentFont = font->ContainerAtlas;
                 ImGui_ImplOpenGL3_CreateFontsTexture();
             }
 
-            currentFont = ImHexApi::Fonts::getFont("hex.fonts.font.default")->ContainerAtlas;
+            {
+                const auto &font = ImHexApi::Fonts::getFont("hex.fonts.font.default");
+
+                if (font == nullptr) {
+                    const auto &io = ImGui::GetIO();
+                    io.Fonts->Clear();
+
+                    ImFontConfig cfg;
+                    cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+                    cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
+                    io.Fonts->AddFontDefault(&cfg);
+                    ImGui_ImplOpenGL3_CreateFontsTexture();
+                } else {
+                    currentFont = font->ContainerAtlas;
+                }
+            }
         }
 
         // Start new ImGui Frame
@@ -546,7 +561,7 @@ namespace hex {
                             const auto maxWindowPos = ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize();
                             if (currWindowPos.x > maxWindowPos.x || currWindowPos.y > maxWindowPos.y || currWindowPos.x < minWindowPos.x || currWindowPos.y < minWindowPos.y) {
                                 positionSet = false;
-                                GImGui->MovingWindow = nullptr;
+                                ImGui::GetCurrentContext()->MovingWindow = nullptr;
                             }
                         }
 
@@ -611,11 +626,12 @@ namespace hex {
 
         // Draw Banners
         {
-            const bool onWelcomeScreen = !ImHexApi::Provider::isValid();
+            const auto currentProvider = ImHexApi::Provider::get();
+            const bool onWelcomeScreen = currentProvider == nullptr || !currentProvider->isAvailable();
 
             const auto windowPos = ImHexApi::System::getMainWindowPosition();
             float startY = windowPos.y + ImGui::GetTextLineHeight() + ((ImGui::GetTextLineHeight() + (ImGui::GetStyle().FramePadding.y * 2.0F)) * (onWelcomeScreen ? 1 : 2));
-            const auto height = 30_scaled;
+            const auto height = ImGui::GetTextLineHeightWithSpacing() * 1.5f;
 
             // Offset banner based on the size of the title bar. On macOS it's slightly taller
             #if defined(OS_MACOS)
@@ -628,6 +644,7 @@ namespace hex {
                 auto &style = ImGui::GetStyle();
                 ImGui::SetNextWindowPos(ImVec2(windowPos.x + 1_scaled, startY));
                 ImGui::SetNextWindowSize(ImVec2(ImHexApi::System::getMainWindowSize().x - 2_scaled, height));
+                ImGui::SetNextWindowViewport(viewport->ID);
                 ImGui::PushStyleColor(ImGuiCol_WindowBg, banner->getColor().Value);
                 auto prevShadowOffset = style.WindowShadowOffsetDist;
                 auto prevShadowAngle = style.WindowShadowOffsetAngle;
@@ -711,6 +728,7 @@ namespace hex {
 
                     // Detect if the window is focused
                     const bool focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
+                    view->setFocused(focused);
 
                     // Dock the window if it's not already docked
                     if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
@@ -1142,7 +1160,7 @@ namespace hex {
             Duration requestedFrameTime = {}, remainingUnlockedTime = {};
             float targetFps = 0;
 
-            const auto nativeFps = [] -> float {
+            const auto nativeFps = []() -> float {
                 if (const auto monitor = glfwGetPrimaryMonitor(); monitor != nullptr) {
                     if (const auto videoMode = glfwGetVideoMode(monitor); videoMode != nullptr) {
                         return videoMode->refreshRate;

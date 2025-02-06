@@ -86,7 +86,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::string m_name = Lang(this->getUnlocalizedName());
+        std::string m_name = Lang(this->getUnlocalizedName()).get();
         int m_type = 0;
 
         std::variant<i128, long double, std::vector<u8>> m_value;
@@ -156,7 +156,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::string m_name = Lang(this->getUnlocalizedName());
+        std::string m_name = Lang(this->getUnlocalizedName()).get();
         int m_type = 0;
 
         std::variant<i128, long double, std::vector<u8>> m_value;
@@ -344,7 +344,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::string m_name = "hex.builtin.nodes.custom.custom.header"_lang;
+        std::string m_name = "hex.builtin.nodes.custom.custom.header"_lang.get();
 
         bool m_editable = false;
 
@@ -376,7 +376,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventProviderCreated::subscribe(this, [this](auto *provider) {
+        EventProviderOpened::subscribe(this, [this](auto *provider) {
             m_mainWorkspace.get(provider) = { };
             m_workspaceStack.get(provider).push_back(&m_mainWorkspace.get(provider));
         });
@@ -429,7 +429,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewDataProcessor::~ViewDataProcessor() {
-        EventProviderCreated::unsubscribe(this);
+        EventProviderOpened::unsubscribe(this);
         EventProviderChanged::unsubscribe(this);
         RequestChangeTheme::unsubscribe(this);
         EventFileLoaded::unsubscribe(this);
@@ -537,7 +537,7 @@ namespace hex::plugin::builtin {
         // Reset any potential node errors
         workspace.currNodeError.reset();
 
-        m_evaluationTask = TaskManager::createTask("hex.builtin.task.evaluating_nodes"_lang, 0, [this, workspace = &workspace](Task& task) {
+        m_evaluationTask = TaskManager::createTask("hex.builtin.task.evaluating_nodes", 0, [this, workspace = &workspace](Task& task) {
             task.setInterruptCallback([]{
                 dp::Node::interrupt();
             });

@@ -25,7 +25,7 @@ bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Bi
 const int TextEditor::sCursorBlinkInterval = 1200;
 const int TextEditor::sCursorBlinkOnTime = 800;
 
-TextEditor::Palette TextEditor::sPaletteBase = TextEditor::GetDarkPalette();
+TextEditor::Palette sPaletteBase = TextEditor::GetDarkPalette();
 
 TextEditor::FindReplaceHandler::FindReplaceHandler() : mWholeWord(false),mFindRegEx(false),mMatchCase(false)  {}
 
@@ -78,6 +78,8 @@ void TextEditor::SetLanguageDefinition(const LanguageDefinition &aLanguageDef) {
 
     Colorize();
 }
+
+const TextEditor::Palette& TextEditor::GetPalette() { return sPaletteBase; }
 
 void TextEditor::SetPalette(const Palette &aValue) {
     sPaletteBase = aValue;

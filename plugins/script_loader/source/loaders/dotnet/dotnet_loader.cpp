@@ -111,7 +111,7 @@ namespace hex::script::loader {
                         = getExport<hostfxr_set_error_writer_fn>(hostfxrLibrary, "hostfxr_set_error_writer");
             }
 
-            hostfxr_set_error_writer([] HOSTFXR_CALLTYPE (const char_t *) { });
+            hostfxr_set_error_writer([] (const char_t *) { });
 
             return
                 hostfxr_initialize_for_runtime_config != nullptr &&
@@ -146,7 +146,7 @@ namespace hex::script::loader {
                 hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), hex::format("{}", (void*)pInvokeOverride).c_str());
             #endif
 
-            hostfxr_set_error_writer([] HOSTFXR_CALLTYPE (const char_t *message) {
+            hostfxr_set_error_writer([](const char_t *message) {
                 #if defined(OS_WINDOWS)
                     log::error("{}", utf16ToUtf8(message));
                 #else
