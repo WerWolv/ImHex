@@ -53,7 +53,9 @@ namespace hex::plugin::builtin {
                         callback();
                     else {
                         if (!ShortcutManager::runShortcut(shortcut, ContentRegistry::Views::getFocusedView())) {
-                            callback();
+                            if (!ShortcutManager::runShortcut(shortcut)) {
+                                callback();
+                            }
                         }
                     }
                 }
