@@ -138,8 +138,8 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_libraries(libimhex PUBLIC ${FOUNDATION})
     endif ()
 
-    target_link_libraries(libimhex PRIVATE microtar libwolv ${NFD_LIBRARIES} magic)
-    target_link_libraries(libimhex PUBLIC libpl ${IMGUI_LIBRARIES} ${JTHREAD_LIBRARIES})
+    target_link_libraries(libimhex PRIVATE libpl microtar ${NFD_LIBRARIES} magic)
+    target_link_libraries(libimhex PUBLIC libwolv libpl_includes libpl-gen ${IMGUI_LIBRARIES} ${JTHREAD_LIBRARIES})
 
     if (NOT WIN32)
         target_link_libraries(libimhex PRIVATE dl)
