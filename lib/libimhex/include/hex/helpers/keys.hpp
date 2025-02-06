@@ -120,4 +120,5 @@ enum Keys {
     Menu
 };
 
-Keys scanCodeToKey(int scanCode);
+enum Keys scanCodeToKey(int scanCode);
+int keyToScanCode(enum Keys key);

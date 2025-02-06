@@ -103,7 +103,6 @@ jobs:
         cv2pdb/cv2pdb.exe imhex.exe
         cv2pdb/cv2pdb.exe imhex-gui.exe
         cv2pdb/cv2pdb.exe libimhex.dll
-        cv2pdb/cv2pdb.exe libpl.dll
         
         for plugin in plugins/*.hexplug; do
           cv2pdb/cv2pdb.exe $plugin
@@ -132,7 +131,6 @@ jobs:
         cv2pdb/cv2pdb.exe imhex.exe
         cv2pdb/cv2pdb.exe imhex-gui.exe
         cv2pdb/cv2pdb.exe libimhex.dll
-        cv2pdb/cv2pdb.exe libpl.dll
         
         for plugin in plugins/*.hexplug; do
           cv2pdb/cv2pdb.exe $plugin

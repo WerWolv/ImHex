@@ -135,6 +135,8 @@ namespace hex {
          */
         static void processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode);
 
+        static void runShortcut(const Shortcut &shortcut, const View *view = nullptr);
+
         /**
          * @brief Clear all shortcuts
          */

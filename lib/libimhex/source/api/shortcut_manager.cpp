@@ -342,12 +342,19 @@ namespace hex {
         }
     }
 
+    void ShortcutManager::runShortcut(const Shortcut &shortcut, const View *view) {
+        if (view == nullptr)
+            processShortcut(shortcut, s_globalShortcuts);
+        else
+            processShortcut(shortcut, view->m_shortcuts);
+    }
+
     void ShortcutManager::process(const View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
         const Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, focused, keyCode);
         if (keyCode != 0)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
-        processShortcut(pressedShortcut, currentView->m_shortcuts);
+        runShortcut(pressedShortcut, currentView);
     }
 
     void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {
@@ -355,7 +362,7 @@ namespace hex {
         if (keyCode != 0)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
-        processShortcut(pressedShortcut, s_globalShortcuts);
+        runShortcut(pressedShortcut);
     }
 
     std::optional<UnlocalizedString> ShortcutManager::getLastActivatedMenu() {
