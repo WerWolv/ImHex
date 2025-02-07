@@ -5,12 +5,8 @@ ENV MACOSX_DEPLOYMENT_TARGET 13.0
 
 # -- DOWNLOADING STUFF
 
-# Install vcpkg
-RUN cd / &&\
-    git clone --depth 1 https://github.com/Microsoft/vcpkg.git vcpkg &&\
-    cd /vcpkg &&\
-    ./bootstrap-vcpkg.sh -disableMetrics && \
-    git -C /vcpkg pull
+# Update vcpkg
+RUN git -C /vcpkg pull
 
 ## Install make
 RUN --mount=type=cache,target=/var/lib/apt/lists/ apt update && apt install -y make
