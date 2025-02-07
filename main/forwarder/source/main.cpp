@@ -75,7 +75,7 @@ int launchExecutable() {
 
     // Create pipes for stdout redirection
     if (!::CreatePipe(&hChildStdoutRead, &hChildStdoutWrite, &saAttr, 0)) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     // Set up the STARTUPINFO structure for the child process
@@ -101,7 +101,7 @@ int launchExecutable() {
         &si,                    // STARTUPINFO
         &pi                     // PROCESS_INFORMATION
     )) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     // Close unnecessary pipe handles in the parent process
