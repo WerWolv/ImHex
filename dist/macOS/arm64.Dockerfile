@@ -10,7 +10,7 @@ RUN cd / &&\
     git clone --depth 1 https://github.com/Microsoft/vcpkg.git vcpkg &&\
     cd /vcpkg &&\
     ./bootstrap-vcpkg.sh -disableMetrics && \
-    /vcpkg/vcpkg x-update-baseline
+    git -C /vcpkg pull
 
 ## Install make
 RUN --mount=type=cache,target=/var/lib/apt/lists/ apt update && apt install -y make
