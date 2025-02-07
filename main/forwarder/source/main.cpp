@@ -64,29 +64,71 @@ int launchExecutable() {
     auto executablePath = wolv::io::fs::getExecutablePath();
     auto executableFullPath = executablePath->parent_path() / "imhex-gui.exe";
 
-    ::PROCESS_INFORMATION process = { };
-    ::STARTUPINFOW startupInfo = { .cb = sizeof(::STARTUPINFOW) };
+    // Handles for the pipes
+    HANDLE hChildStdoutRead, hChildStdoutWrite;
 
-    // Create a new process for imhex-gui.exe with the same command line as the current process
-    if (::CreateProcessW(executableFullPath.wstring().c_str(), ::GetCommandLineW(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &process) == FALSE) {
-        // Handle error if the process could not be created
+    // Security attributes to allow the pipes to be inherited
+    SECURITY_ATTRIBUTES saAttr;
+    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.lpSecurityDescriptor = nullptr;
+    saAttr.bInheritHandle = TRUE;
 
-        // Get formatted error message from the OS
-        auto errorCode = ::GetLastError();
-        auto errorMessageString = std::system_category().message(int(errorCode));
-
-        // Generate error message
-        auto errorMessage = fmt::format("Failed to start ImHex:\n\nError code: 0x{:08X}\n\n{}", errorCode, errorMessageString);
-
-        // Display a message box with the error
-        ::MessageBoxA(nullptr, errorMessage.c_str(), "ImHex Forwarder", MB_OK | MB_ICONERROR);
-
-        return EXIT_FAILURE;
+    // Create pipes for stdout redirection
+    if (!::CreatePipe(&hChildStdoutRead, &hChildStdoutWrite, &saAttr, 0)) {
+        return 1;
     }
 
-    // Wait for the main ImHex process to exit
-    ::WaitForSingleObject(process.hProcess, INFINITE);
-    ::CloseHandle(process.hProcess);
+    // Set up the STARTUPINFO structure for the child process
+    STARTUPINFO si;
+    ::ZeroMemory(&si, sizeof(STARTUPINFO));
+    si.cb = sizeof(STARTUPINFO);
+    si.hStdOutput = hChildStdoutWrite; // Redirect stdout to the parent process
+    si.dwFlags |= STARTF_USESTDHANDLES; // Enable redirection of stdin, stdout, stderr
+
+    PROCESS_INFORMATION pi;
+    ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+
+    // Create the child process
+    if (!::CreateProcessW(
+        executableFullPath.c_str(),
+        ::GetCommandLineW(),    // Command line
+        nullptr,                // Process security attributes
+        nullptr,                // Thread security attributes
+        TRUE,                   // Inherit handles
+        0,                      // Creation flags
+        nullptr,                // Environment
+        nullptr,                // Current directory
+        &si,                    // STARTUPINFO
+        &pi                     // PROCESS_INFORMATION
+    )) {
+        return 1;
+    }
+
+    // Close unnecessary pipe handles in the parent process
+    ::CloseHandle(hChildStdoutWrite);
+
+    // Read the child process's stdout and stderr and redirect them to the parent's stdout
+    DWORD bytesRead;
+    std::array<char, 4096> buffer;
+
+    while (true) {
+        // Read from stdout
+        if (::ReadFile(hChildStdoutRead, buffer.data(), buffer.size(), &bytesRead, nullptr)) {
+            // Write to the parent's stdout
+            if (bytesRead > 0)
+                ::WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), buffer.data(), bytesRead, &bytesRead, nullptr);
+        } else {
+            break;
+        }
+    }
+
+    // Wait for the child process to exit
+   ::WaitForSingleObject(pi.hProcess, INFINITE);
+
+    // Clean up
+   ::CloseHandle(pi.hProcess);
+   ::CloseHandle(pi.hThread);
+   ::CloseHandle(hChildStdoutRead);
 
     return EXIT_SUCCESS;
 }
