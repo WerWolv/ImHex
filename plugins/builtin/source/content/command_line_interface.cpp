@@ -30,18 +30,20 @@ namespace hex::plugin::builtin {
     using namespace hex::literals;
 
     void handleVersionCommand(const std::vector<std::string> &args) {
-        if (args.empty()) {
-            hex::log::print(std::string(romfs::get("logo.ans").string()),
-                       ImHexApi::System::getImHexVersion().get(),
-                       ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(),
-                       __DATE__, __TIME__,
-                       ImHexApi::System::isPortableVersion() ? "Portable" : "Installed");
-        } else if (args.size() == 1 && args[0] == "plain") {
-            hex::log::print("{}", ImHexApi::System::getImHexVersion().get());
-        } else {
-            std::exit(EXIT_FAILURE);
-        }
+        std::ignore = args;
 
+        hex::log::print(std::string(romfs::get("logo.ans").string()),
+                   ImHexApi::System::getImHexVersion().get(),
+                   ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(),
+                   __DATE__, __TIME__,
+                   ImHexApi::System::isPortableVersion() ? "Portable" : "Installed");
+
+        std::exit(EXIT_SUCCESS);
+    }
+
+    void handleVersionShortCommand(const std::vector<std::string> &args) {
+        std::ignore = args;
+        hex::log::println("{}", ImHexApi::System::getImHexVersion().get());
         std::exit(EXIT_SUCCESS);
     }
 
