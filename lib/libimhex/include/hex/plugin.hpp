@@ -88,7 +88,7 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
         ImGui::SetCurrentContext(ctx);                                                                                          \
         GImGui = ctx;                                                                                                           \
     }                                                                                                                           \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                              \
+    extern "C" void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                                                  \
         hex::PluginManager::addPlugin(name, hex::PluginFunctions {                                                              \
             nullptr,                                                                                                            \
             WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME),                                                           \
@@ -124,7 +124,7 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
         return PluginSubCommandsFunctionHelper<PluginFunctionHelperInstantiation>::getSubCommands();                            \
     }                                                                                                                           \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin();                                                                     \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                              \
+    extern "C" void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                                                  \
         hex::PluginManager::addPlugin(name, hex::PluginFunctions {                                                              \
             initializePlugin,                                                                                                   \
             nullptr,                                                                                                            \
