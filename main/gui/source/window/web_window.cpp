@@ -10,6 +10,8 @@
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/theme_manager.hpp>
 
+#include <GLFW/glfw3.h>
+
 #include <imgui.h>
 #include <imgui_internal.h>
 

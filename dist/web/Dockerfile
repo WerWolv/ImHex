@@ -13,8 +13,8 @@ RUN <<EOF
 set -xe
 
 git clone https://github.com/microsoft/vcpkg /vcpkg
-/vcpkg/bootstrap-vcpkg.sh
 git -C /vcpkg pull
+/vcpkg/bootstrap-vcpkg.sh
 sed -i 's/vcpkg_install_make(${EXTRA_ARGS})/vcpkg_install_make(${EXTRA_ARGS} SUBPATH src)/g' /vcpkg/ports/libmagic/portfile.cmake
 EOF
 
@@ -68,6 +68,7 @@ cmake /imhex                                                                    
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                                \
     -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake                                      \
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+    -DLIBROMFS_COMPRESS_RESOURCES=OFF                                                                   \
     -DCMAKE_BUILD_TYPE=Release
 
 ninja -j $JOBS
