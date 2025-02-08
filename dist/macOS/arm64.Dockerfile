@@ -6,7 +6,15 @@ ENV MACOSX_DEPLOYMENT_TARGET 13.0
 # -- DOWNLOADING STUFF
 
 # Update vcpkg
-RUN git -C /vcpkg pull
+RUN <<EOF
+cp /vcpkg/triplets/community/arm-osx-mytriplet.cmake /tmp/arm-osx-mytriplet.cmake
+git -C /vcpkg clean -ffdx
+git -C /vcpkg checkout origin/master
+git -C /vcpkg reset --hard
+git -C /vcpkg pull
+/vcpkg/bootstrap-vcpkg.sh
+cp /tmp/arm-osx-mytriplet.cmake /vcpkg/triplets/community/arm-osx-mytriplet.cmake
+EOF
 
 ## Install make
 RUN --mount=type=cache,target=/var/lib/apt/lists/ apt update && apt install -y make
