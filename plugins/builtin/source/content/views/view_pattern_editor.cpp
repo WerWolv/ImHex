@@ -1071,12 +1071,14 @@ namespace hex::plugin::builtin {
             const auto linesToAdd = m_console->size() - lineCount;
 
 
+            std::string content;
             for (size_t i = 0; i < linesToAdd; i += 1) {
                 if (!skipNewLine)
-                    m_consoleEditor.InsertText("\n");
+                    content += '\n';
                 skipNewLine = false;
-                m_consoleEditor.InsertText(m_console->at(lineCount + i));
+                content += m_console->at(lineCount + i);
             }
+            m_consoleEditor.SetText(content);
 
             m_consoleNeedsUpdate = false;
         }

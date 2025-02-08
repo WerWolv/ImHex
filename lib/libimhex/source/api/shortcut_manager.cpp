@@ -315,11 +315,12 @@ namespace hex {
         return pressedShortcut;
     }
 
-    static void processShortcut(Shortcut shortcut, const std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
-        if (s_paused) return;
+    static bool processShortcut(Shortcut shortcut, const std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
+        if (s_paused)
+            return true;
 
         if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
-            return;
+            return true;
 
         const bool currentlyTyping = ImGui::GetIO().WantTextInput;
 
@@ -338,15 +339,19 @@ namespace hex {
                 if (!entry.unlocalizedName.empty()) {
                     s_lastShortcutMainMenu = entry.unlocalizedName.front();
                 }
+
+                return true;
             }
         }
+
+        return false;
     }
 
-    void ShortcutManager::runShortcut(const Shortcut &shortcut, const View *view) {
+    bool ShortcutManager::runShortcut(const Shortcut &shortcut, const View *view) {
         if (view == nullptr)
-            processShortcut(shortcut, s_globalShortcuts);
+            return processShortcut(shortcut, s_globalShortcuts);
         else
-            processShortcut(shortcut, view->m_shortcuts);
+            return processShortcut(shortcut, view->m_shortcuts);
     }
 
     void ShortcutManager::process(const View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {

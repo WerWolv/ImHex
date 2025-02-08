@@ -64,6 +64,7 @@ namespace hex::plugin::builtin {
 IMHEX_PLUGIN_SUBCOMMANDS() {
     { "help",           "h", "Print help about this command",                hex::plugin::builtin::handleHelpCommand             },
     { "version",        "",  "Print ImHex version",                          hex::plugin::builtin::handleVersionCommand          },
+    { "version-short",  "",  "Print only the version info in plain text",    hex::plugin::builtin::handleVersionShortCommand     },
     { "plugins",        "",  "Lists all plugins that have been installed",   hex::plugin::builtin::handlePluginsCommand          },
     { "language",       "",  "Changes the language ImHex uses",              hex::plugin::builtin::handleLanguageCommand         },
     { "verbose",        "v", "Enables verbose debug logging",                hex::plugin::builtin::handleVerboseCommand          },

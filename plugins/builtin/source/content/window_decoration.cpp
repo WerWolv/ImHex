@@ -51,8 +51,13 @@ namespace hex::plugin::builtin {
                 if (menu::menuItemEx(Lang(name), icon, shortcut, selectedCallback(), enabledCallback())) {
                     if (shortcut == Shortcut::None)
                         callback();
-                    else
-                        ShortcutManager::runShortcut(shortcut, view);
+                    else {
+                        if (!ShortcutManager::runShortcut(shortcut, ContentRegistry::Views::getFocusedView())) {
+                            if (!ShortcutManager::runShortcut(shortcut)) {
+                                callback();
+                            }
+                        }
+                    }
                 }
             } else {
                 bool isSubmenu = (menuItems.begin() + 1)->get() == ContentRegistry::Interface::impl::SubMenuValue;

@@ -154,6 +154,107 @@ namespace hex::plugin::builtin {
                 });
         }
 
+        void drawTiles(ImDrawList *drawList, ImVec2 position, ImVec2 size, float lineDistance) {
+            const auto tileCount = size / lineDistance;
+
+            struct Segment {
+                i32 x, y;
+                bool operator==(const Segment&) const = default;
+            };
+            static std::list<Segment> segments;
+            static std::optional<Segment> colTile;
+            static ImGuiDir direction;
+            static auto rng = std::mt19937(std::random_device{}());
+            static bool over = true;
+            static i32 overCounter = 0;
+            static u32 spaceCount = 0;
+
+            if (ImGui::IsKeyPressed(ImGuiKey_Space, false)) {
+                spaceCount += 1;
+
+                if (spaceCount >= 5) {
+                    spaceCount = 0;
+                    segments = { { 10, 10 }, { 10, 11 }, { 10, 12 } };
+                    direction = ImGuiDir_Right;
+                    colTile.reset();
+                    over = false;
+                }
+            }
+
+            if (over)
+                return;
+
+            const auto drawTile = [&](u32 x, u32 y) {
+                drawList->AddRectFilled(
+                    {
+                        position.x + (float(x) * lineDistance),
+                        position.y + (float(y) * lineDistance)
+                    },
+                    {
+                        position.x + (float(x + 1) * lineDistance) - 1_scaled,
+                        position.y + (float(y + 1) * lineDistance) - 1_scaled
+                    }, ImGui::GetColorU32(ImGuiCol_Text, 0.1F)
+                );
+            };
+
+            if (colTile.has_value()) {
+                drawTile(colTile->x, colTile->y);
+            }
+
+            for (const auto &[x, y] : segments) {
+                drawTile(x, y);
+            }
+
+            if (overCounter != 0) {
+                for (u32 x = 0; x < u32(tileCount.x); x += 1) {
+                    for (u32 y = 0; y < u32(tileCount.y); y += 1) {
+                        if ((x + y) % 2 == u32(overCounter % 2))
+                            drawTile(x, y);
+                    }
+                }
+            }
+
+            static double lastTick = 0;
+            double tick = ImGui::GetTime();
+            if (lastTick + 0.2 < tick) {
+                Segment nextSegment = segments.front();
+                switch (direction) {
+                    case ImGuiDir_Up:       nextSegment.y -= 1; break;
+                    case ImGuiDir_Down:     nextSegment.y += 1; break;
+                    case ImGuiDir_Left:     nextSegment.x -= 1; break;
+                    case ImGuiDir_Right:    nextSegment.x += 1; break;
+                    default: break;
+                }
+
+                if (overCounter == 0) {
+                    for (const auto &segment : segments) {
+                        if (segment == nextSegment) overCounter = 5;
+                        if (segment.x < 0 || segment.y < 0) overCounter = 5;
+                        if (segment.x > i32(tileCount.x) || segment.y > i32(tileCount.y)) overCounter = 5;
+                    }
+
+                    segments.push_front(nextSegment);
+
+                    if (colTile.has_value() && nextSegment != *colTile) {
+                        segments.pop_back();
+                    } else {
+                        colTile = { i32(rng() % u32(tileCount.x)), i32(rng() % u32(tileCount.x)) };
+                    }
+                } else {
+                    overCounter -= 1;
+                    if (overCounter <= 0)
+                      over = true;
+                }
+
+                lastTick = tick;
+            }
+
+            if (ImGui::IsKeyDown(ImGuiKey_UpArrow)    && direction != ImGuiDir_Down)   direction = ImGuiDir_Up;
+            if (ImGui::IsKeyDown(ImGuiKey_DownArrow)  && direction != ImGuiDir_Up)     direction = ImGuiDir_Down;
+            if (ImGui::IsKeyDown(ImGuiKey_LeftArrow)  && direction != ImGuiDir_Right)  direction = ImGuiDir_Left;
+            if (ImGui::IsKeyDown(ImGuiKey_RightArrow) && direction != ImGuiDir_Left)   direction = ImGuiDir_Right;
+        }
+
         void drawWelcomeScreenBackground() {
             const auto position = ImGui::GetWindowPos();
             const auto size = ImGui::GetWindowSize();
@@ -168,6 +269,8 @@ namespace hex::plugin::builtin {
             for (auto y = position.y; y < position.y + size.y + lineDistance; y += lineDistance) {
                 drawList->AddLine({ position.x, y }, { position.x + size.x, y }, lineColor);
             }
+
+            drawTiles(drawList, position, size, lineDistance);
         }
 
         void drawWelcomeScreenContentSimplified() {

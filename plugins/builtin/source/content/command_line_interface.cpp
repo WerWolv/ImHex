@@ -41,6 +41,12 @@ namespace hex::plugin::builtin {
         std::exit(EXIT_SUCCESS);
     }
 
+    void handleVersionShortCommand(const std::vector<std::string> &args) {
+        std::ignore = args;
+        hex::log::println("{}", ImHexApi::System::getImHexVersion().get());
+        std::exit(EXIT_SUCCESS);
+    }
+
     void handleHelpCommand(const std::vector<std::string> &args) {
         std::ignore = args;
 

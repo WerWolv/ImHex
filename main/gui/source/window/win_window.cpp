@@ -402,13 +402,6 @@ namespace hex {
         } else if (hex::getEnvironmentVariable("__IMHEX_FORWARD_CONSOLE__") == "1") {
             // Check for the __IMHEX_FORWARD_CONSOLE__ environment variable that was set by the forwarder application
 
-            // If it's present, attach to its console window
-            ::AttachConsole(ATTACH_PARENT_PROCESS);
-
-            // Reopen stdin, stdout and stderr to the console if not in debug mode
-            reopenConsoleHandle(STD_INPUT_HANDLE,  STDIN_FILENO,  stdin);
-            reopenConsoleHandle(STD_OUTPUT_HANDLE, STDOUT_FILENO, stdout);
-
             // Enable ANSI colors in the console
             log::impl::enableColorPrinting();
         } else {

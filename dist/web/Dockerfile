@@ -14,6 +14,7 @@ set -xe
 
 git clone https://github.com/microsoft/vcpkg /vcpkg
 /vcpkg/bootstrap-vcpkg.sh
+git -C /vcpkg pull
 sed -i 's/vcpkg_install_make(${EXTRA_ARGS})/vcpkg_install_make(${EXTRA_ARGS} SUBPATH src)/g' /vcpkg/ports/libmagic/portfile.cmake
 EOF
 
@@ -34,7 +35,6 @@ set -xe
 
 mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 
-/vcpkg/vcpkg x-update-baseline
 /vcpkg/vcpkg install --triplet=wasm32-emscripten libmagic
 /vcpkg/vcpkg install --triplet=wasm32-emscripten freetype
 /vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
@@ -68,7 +68,6 @@ cmake /imhex                                                                    
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                                \
     -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake                                      \
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
-    -DLIBROMFS_COMPRESS_RESOURCES=OFF                                                                   \
     -DCMAKE_BUILD_TYPE=Release
 
 ninja -j $JOBS
