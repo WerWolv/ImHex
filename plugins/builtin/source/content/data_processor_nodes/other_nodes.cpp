@@ -320,7 +320,7 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             if (!m_texture.isValid() && !m_data.empty()) {
-                m_texture = ImGuiExt::Texture::fromImage(m_data.data(), m_data.size(), ImGuiExt::Texture::Filter::Nearest);
+                m_texture = ImGuiExt::Texture::fromBitmap(m_data.data(), m_data.size(), m_width, m_height, ImGuiExt::Texture::Filter::Nearest);
             }
 
             ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 200, 200)));
@@ -343,12 +343,15 @@ namespace hex::plugin::builtin {
                 throwNodeError(hex::format("Image requires at least {} bytes of data, but only {} bytes are available", requiredBytes, rawData.size()));
 
             m_data = rawData;
+            m_width = width;
+            m_height = height;
             m_texture.reset();
         }
 
     private:
         std::vector<u8> m_data;
         ImGuiExt::Texture m_texture;
+        u32 m_width, m_height;
     };
 
     class NodeVisualizerByteDistribution : public dp::Node {
