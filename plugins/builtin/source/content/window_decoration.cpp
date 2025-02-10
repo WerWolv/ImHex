@@ -10,6 +10,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <random>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <ui/menu_items.hpp>
 
@@ -94,7 +95,7 @@ namespace hex::plugin::builtin {
         void drawSidebar(ImVec2 dockSpaceSize, ImVec2 sidebarPos, float sidebarWidth) {
             static i32 openWindow = -1;
             u32 index = 0;
-            u32 drawIndex = 0;
+            u32 drawIndex = 1;
             ImGui::PushID("SideBarWindows");
             for (const auto &[icon, callback, enabledCallback] : ContentRegistry::Interface::impl::getSidebarItems()) {
                 ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * drawIndex);
@@ -589,15 +590,15 @@ namespace hex::plugin::builtin {
             }
         });
 
+        constexpr static auto DefaultImHexTitle = "ImHex";
+        static std::string s_applicationName = DefaultImHexTitle;
 
-        constexpr static auto ImHexTitle = "ImHex";
-
-        s_windowTitle = ImHexTitle;
+        s_windowTitle = DefaultImHexTitle;
 
         // Handle updating the window title
         RequestUpdateWindowTitle::subscribe([] {
             std::string prefix, postfix;
-            std::string title = ImHexTitle;
+            std::string title = DefaultImHexTitle;
 
             if (ProjectFile::hasPath()) {
                 // If a project is open, show the project name instead of the file name
@@ -626,8 +627,10 @@ namespace hex::plugin::builtin {
 
             auto window = ImHexApi::System::getMainWindowHandle();
             if (window != nullptr) {
-                if (title != ImHexTitle)
-                    title = std::string(ImHexTitle) + " - " + title;
+                if (title != DefaultImHexTitle)
+                    title = std::string(DefaultImHexTitle) + " - " + title;
+
+                title = wolv::util::replaceStrings(title, DefaultImHexTitle, s_applicationName);
 
                 glfwSetWindowTitle(window, title.c_str());
             }
@@ -643,6 +646,20 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.use_native_menu_bar", [](const ContentRegistry::Settings::SettingsValue &value) {
             s_useNativeMenuBar = value.get<bool>(true);
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.randomize_window_title", [](const ContentRegistry::Settings::SettingsValue &value) {
+            const bool randomTitle = value.get<bool>(false);
+            if (randomTitle) {
+                s_applicationName.clear();
+                std::mt19937_64 rng(std::random_device{}());
+                for (u32 i = 0; i < 24; i += 1) {
+                    s_applicationName += char(rng() % ('Z' - 'A' + 1)) + 'A';
+                }
+            } else {
+                s_applicationName = DefaultImHexTitle;
+            }
+            RequestUpdateWindowTitle::post();
         });
     }
 

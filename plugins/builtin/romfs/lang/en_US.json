@@ -505,6 +505,7 @@
         "hex.builtin.setting.interface.fps.native": "Native",
         "hex.builtin.setting.interface.language": "Language",
         "hex.builtin.setting.interface.multi_windows": "Enable Multi Window support",
+        "hex.builtin.setting.interface.randomize_window_title": "Use a randomized Window Title",
         "hex.builtin.setting.interface.scaling_factor": "Scaling",
         "hex.builtin.setting.interface.scaling.native": "Native",
         "hex.builtin.setting.interface.scaling.fractional_warning": "The default font does not support fractional scaling. For better results, select a custom font in the 'Font' tab.",
