@@ -406,7 +406,7 @@ namespace hex {
                 ImGuiExt::UnderlinedText("Plugin folders");
                 if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2(0, 100_scaled))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch, 0.2);
+                    ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch, 0.2F);
                     ImGui::TableSetupColumn("Exists", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() * 3);
 
                     ImGui::TableHeadersRow();
@@ -649,7 +649,7 @@ namespace hex {
                 auto prevShadowOffset = style.WindowShadowOffsetDist;
                 auto prevShadowAngle = style.WindowShadowOffsetAngle;
                 style.WindowShadowOffsetDist = 12_scaled;
-                style.WindowShadowOffsetAngle =  0.5 * std::numbers::pi;
+                style.WindowShadowOffsetAngle =  0.5F * std::numbers::pi_v<float>;
                 ON_SCOPE_EXIT {
                     style.WindowShadowOffsetDist = prevShadowOffset;
                     style.WindowShadowOffsetAngle = prevShadowAngle;

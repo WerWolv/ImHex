@@ -91,7 +91,7 @@ namespace hex::plugin::builtin {
         T value = 0x00;
         std::memcpy(&value, buffer.data(), std::min(sizeof(T), Size));
         value = hex::changeEndianness(value, Size, endian);
-        if (Size != sizeof(T))
+        if constexpr (Size != sizeof(T))
             value = T(hex::signExtend(Size * 8, value));
 
         return value;

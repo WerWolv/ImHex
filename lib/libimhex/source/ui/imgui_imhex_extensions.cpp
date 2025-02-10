@@ -667,10 +667,8 @@ namespace ImGuiExt {
     }
 
     ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx) {
-        switch (idx) {
-            default:
-                return { };
-        }
+        std::ignore = idx;
+        return {};
     }
 
     void StyleCustomColorsDark() {
@@ -859,7 +857,7 @@ namespace ImGuiExt {
                                                                                           : ImGuiCol_Button);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3, 1) + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3F, 1) + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 

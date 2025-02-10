@@ -170,7 +170,7 @@ namespace hex::gl {
         m_buffer = other.m_buffer;
         m_size = other.m_size;
         m_type = other.m_type;
-        other.m_buffer = -1;
+        other.m_buffer = 0;
     }
 
     template<typename T>
@@ -178,7 +178,7 @@ namespace hex::gl {
         m_buffer = other.m_buffer;
         m_size = other.m_size;
         m_type = other.m_type;
-        other.m_buffer = -1;
+        other.m_buffer = 0;
         return *this;
     }
 
@@ -231,12 +231,12 @@ namespace hex::gl {
 
     VertexArray::VertexArray(VertexArray &&other) noexcept {
         m_array = other.m_array;
-        other.m_array = -1;
+        other.m_array = 0;
     }
 
     VertexArray& VertexArray::operator=(VertexArray &&other) noexcept {
         m_array = other.m_array;
-        other.m_array = -1;
+        other.m_array = 0;
         return *this;
     }
 
@@ -268,7 +268,7 @@ namespace hex::gl {
 
     Texture::Texture(Texture &&other) noexcept {
         m_texture = other.m_texture;
-        other.m_texture = -1;
+        other.m_texture = 0;
 
         m_width = other.m_width;
         m_height = other.m_height;
@@ -276,7 +276,7 @@ namespace hex::gl {
 
     Texture& Texture::operator=(Texture &&other) noexcept {
         m_texture = other.m_texture;
-        other.m_texture = -1;
+        other.m_texture = 0;
         return *this;
     }
 
@@ -302,7 +302,7 @@ namespace hex::gl {
 
     GLuint Texture::release() {
         auto copy = m_texture;
-        m_texture = -1;
+        m_texture = 0;
 
         return copy;
     }
@@ -327,16 +327,16 @@ namespace hex::gl {
 
     FrameBuffer::FrameBuffer(FrameBuffer &&other) noexcept {
         m_frameBuffer = other.m_frameBuffer;
-        other.m_frameBuffer = -1;
+        other.m_frameBuffer = 0;
         m_renderBuffer = other.m_renderBuffer;
-        other.m_renderBuffer = -1;
+        other.m_renderBuffer = 0;
     }
 
     FrameBuffer& FrameBuffer::operator=(FrameBuffer &&other) noexcept {
         m_frameBuffer = other.m_frameBuffer;
-        other.m_frameBuffer = -1;
+        other.m_frameBuffer = 0;
         m_renderBuffer = other.m_renderBuffer;
-        other.m_renderBuffer = -1;
+        other.m_renderBuffer = 0;
         return *this;
     }
 

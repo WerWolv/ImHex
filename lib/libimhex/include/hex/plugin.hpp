@@ -15,7 +15,7 @@
 
 #if defined(_MSC_VER)
     #include <windows.h>
-    #define PLUGIN_ENTRY_POINT extern "C" BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fwdReason, LPVOID lpReserved) { return TRUE; }
+    #define PLUGIN_ENTRY_POINT extern "C" BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID) { return TRUE; }
 #else
     #define PLUGIN_ENTRY_POINT
 #endif

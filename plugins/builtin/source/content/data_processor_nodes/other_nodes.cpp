@@ -351,7 +351,7 @@ namespace hex::plugin::builtin {
     private:
         std::vector<u8> m_data;
         ImGuiExt::Texture m_texture;
-        u32 m_width, m_height;
+        u32 m_width = 0, m_height = 0;
     };
 
     class NodeVisualizerByteDistribution : public dp::Node {

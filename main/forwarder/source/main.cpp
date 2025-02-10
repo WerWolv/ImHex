@@ -27,6 +27,7 @@
 #include <wolv/io/fs.hpp>
 
 #include <fmt/format.h>
+#include <array>
 
 void setupConsoleWindow() {
     // Get the handle of the console window

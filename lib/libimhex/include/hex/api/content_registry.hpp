@@ -328,7 +328,7 @@ namespace hex {
                             result = defaultValue;
 
                         return result.get<T>();
-                    } catch (const nlohmann::json::exception &e) {
+                    } catch (const nlohmann::json::exception &) {
                         return defaultValue;
                     }
                 }

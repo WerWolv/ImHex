@@ -179,7 +179,7 @@ namespace hex::plugin::builtin {
             // Draw background
             {
                 const ImVec2 margin = scaled({ 15, 15 });
-                drawList->AddRectFilled(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_WindowBg, 200.0/255.0));
+                drawList->AddRectFilled(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_WindowBg, 200.0F / 255.0F));
                 drawList->AddRect(windowPos + margin, (windowPos + windowSize) - margin, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight), 10_scaled, ImDrawFlags_None, 7.5_scaled);
             }
 
