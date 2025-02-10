@@ -334,6 +334,9 @@ namespace hex {
     }
 
     void Window::frameBegin() {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+
         // Create font textures if necessary
         {
             const auto &fontDefinitions = ImHexApi::Fonts::impl::getFontDefinitions();
@@ -345,6 +348,8 @@ namespace hex {
 
                 currentFont = font->ContainerAtlas;
                 ImGui_ImplOpenGL3_CreateFontsTexture();
+                currentFont->ClearInputData();
+                currentFont->ClearTexData();
             }
 
             {
@@ -359,6 +364,8 @@ namespace hex {
                     cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
                     io.Fonts->AddFontDefault(&cfg);
                     ImGui_ImplOpenGL3_CreateFontsTexture();
+                    io.Fonts->ClearInputData();
+                    io.Fonts->ClearTexData();
                 } else {
                     currentFont = font->ContainerAtlas;
                 }
@@ -366,8 +373,7 @@ namespace hex {
         }
 
         // Start new ImGui Frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+
         ImGui::NewFrame();
 
         TutorialManager::drawTutorial();
