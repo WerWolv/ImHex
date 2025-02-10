@@ -743,6 +743,17 @@ namespace ImGuiExt {
         End();
     }
 
+    void DisableWindowResize(ImGuiDir dir) {
+        const auto window = GetCurrentWindow();
+        const auto borderId = GetWindowResizeBorderID(window, dir);
+        if (borderId == GetHoveredID()) {
+            GImGui->ActiveIdMouseButton = 0;
+            SetHoveredID(0);
+        }
+        if (borderId == GetActiveID())
+            SetActiveID(0, window);
+    }
+
 
     bool TitleBarButton(const char *label, ImVec2 size_arg) {
         ImGuiWindow *window = GetCurrentWindow();

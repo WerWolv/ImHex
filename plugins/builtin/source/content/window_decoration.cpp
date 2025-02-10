@@ -125,7 +125,6 @@ namespace hex::plugin::builtin {
 
                 bool open = static_cast<u32>(openWindow) == index;
                 if (open) {
-
                     ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -1_scaled));
                     ImGui::SetNextWindowSizeConstraints(ImVec2(0, dockSpaceSize.y + 5_scaled), ImVec2(FLT_MAX, dockSpaceSize.y + 5_scaled));
 
@@ -140,6 +139,11 @@ namespace hex::plugin::builtin {
                         if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !sideBarFocused) {
                             openWindow = -1;
                         }
+
+                        ImGuiExt::DisableWindowResize(ImGuiDir_Up);
+                        ImGuiExt::DisableWindowResize(ImGuiDir_Down);
+                        ImGuiExt::DisableWindowResize(ImGuiDir_Left);
+
                     }
                     ImGui::End();
                     ImGui::PopStyleVar();
