@@ -56,7 +56,7 @@ namespace hex::plugin::builtin {
         void reloadCustomNodes();
         void updateNodePositions();
 
-        std::vector<Workspace*> &getWorkspaceStack() { return *m_workspaceStack; }
+        std::vector<Workspace*> &getWorkspaceStack() { return m_workspaceStack; }
 
     private:
         void drawContextMenus(ViewDataProcessor::Workspace &workspace);
@@ -76,8 +76,8 @@ namespace hex::plugin::builtin {
 
         std::vector<CustomNode> m_customNodes;
 
-        PerProvider<Workspace> m_mainWorkspace;
-        PerProvider<std::vector<Workspace*>> m_workspaceStack;
+        Workspace m_mainWorkspace;
+        std::vector<Workspace*> m_workspaceStack;
         TaskHolder m_evaluationTask;
     };
 

@@ -36,6 +36,8 @@
 
 #include <content/global_actions.hpp>
 #include <fonts/fonts.hpp>
+#include <hex/project/project.hpp>
+#include <hex/project/project_manager.hpp>
 #include <ui/menu_items.hpp>
 
 namespace hex::plugin::builtin {
@@ -333,9 +335,9 @@ namespace hex::plugin::builtin {
             const auto availableSize = g.CurrentWindow->Size;
             const auto windowPosition = ImGui::GetCursorScreenPos();
             auto textEditorSize = availableSize;
-            textEditorSize.y *= 3.5 / 5.0;
+            textEditorSize.y *= 3.5F / 5.0F;
             textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-            textEditorSize.y = std::clamp(textEditorSize.y + height,200.0F, availableSize.y-200.0F);
+            textEditorSize.y = std::clamp(textEditorSize.y + height, 200.0F, availableSize.y - 200.0F);
 
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
@@ -1425,7 +1427,7 @@ namespace hex::plugin::builtin {
                     const auto &currScope = evaluator->getScope(-m_debuggerScopeIndex);
                     if (ImGui::BeginCombo("##scope", displayValue(currScope.parent, m_debuggerScopeIndex).c_str())) {
                         for (size_t i = 0; i < evaluator->getScopeCount(); i++) {
-                            auto &scope = evaluator->getScope(-i);
+                            auto &scope = evaluator->getScope(-i32(i));
 
                             if (ImGui::Selectable(displayValue(scope.parent, i).c_str(), i == size_t(m_debuggerScopeIndex))) {
                                 m_debuggerScopeIndex = i;
@@ -2296,6 +2298,16 @@ namespace hex::plugin::builtin {
 
                 tar.writeString(basePath, wolv::util::trim(sourceCode));
                 return true;
+            }
+        });
+
+        proj::ProjectManager::registerContentHandler({
+            .type = "hex.builtin.project.content_type.pattern",
+            .load = [this](const proj::Content &content) {
+                m_textEditor.SetText(content.getData());
+            },
+            .store = [this](proj::Content &content) {
+                content.setData(wolv::util::trim(m_textEditor.GetText()));
             }
         });
 

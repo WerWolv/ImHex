@@ -51,6 +51,8 @@ add_imhex_plugin(
 
         source/content/helpers/demangle.cpp
 
+        source/content/sidebar/project_explorer.cpp
+
         source/content/data_processor_nodes/basic_nodes.cpp
         source/content/data_processor_nodes/control_nodes.cpp
         source/content/data_processor_nodes/decode_nodes.cpp

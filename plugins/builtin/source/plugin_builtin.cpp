@@ -45,6 +45,7 @@ namespace hex::plugin::builtin {
     void registerReportGenerators();
     void registerTutorials();
     void registerDataInformationSections();
+    void registerProjectExplorer();
     void loadWorkspaces();
 
     void addWindowDecoration();
@@ -140,6 +141,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerReportGenerators();
     registerTutorials();
     registerDataInformationSections();
+    registerProjectExplorer();
     loadWorkspaces();
     addWindowDecoration();
     createWelcomeScreen();

@@ -32,8 +32,8 @@ namespace hex::plugin::builtin {
     private:
         std::string m_currFilter;
 
-        PerProvider<std::list<Bookmark>> m_bookmarks;
-        PerProvider<u64> m_currBookmarkId;
+        std::list<Bookmark> m_bookmarks;
+        u64 m_currBookmarkId;
     };
 
 }

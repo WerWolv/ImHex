@@ -12,6 +12,7 @@
 #include <content/providers/view_provider.hpp>
 
 #include <fonts/vscode_icons.hpp>
+#include <hex/project/project_manager.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -45,16 +46,16 @@ namespace hex::plugin::builtin {
                 bookmarkId
             };
 
-            m_bookmarks->emplace_back(std::move(bookmark), true);
+            m_bookmarks.emplace_back(std::move(bookmark), true);
 
             ImHexApi::Provider::markDirty();
 
-            EventBookmarkCreated::post(m_bookmarks->back().entry);
+            EventBookmarkCreated::post(m_bookmarks.back().entry);
             EventHighlightingChanged::post();
         });
 
         RequestRemoveBookmark::subscribe([this](u64 id) {
-            std::erase_if(m_bookmarks.get(), [id](const auto &bookmark) {
+            std::erase_if(m_bookmarks, [id](const auto &bookmark) {
                 return bookmark.entry.id == id;
             });
         });
@@ -65,7 +66,7 @@ namespace hex::plugin::builtin {
 
             // Check all bookmarks for potential overlaps with the current address
             std::optional<ImColor> color;
-            for (const auto &bookmark : *m_bookmarks) {
+            for (const auto &bookmark : m_bookmarks) {
                 if (!bookmark.highlightVisible)
                     continue;
 
@@ -82,7 +83,7 @@ namespace hex::plugin::builtin {
             std::ignore = data;
 
             // Loop over all bookmarks
-            for (const auto &[bookmark, highlightVisible] : *m_bookmarks) {
+            for (const auto &[bookmark, highlightVisible] : m_bookmarks) {
                 if (!highlightVisible)
                     continue;
 
@@ -158,7 +159,7 @@ namespace hex::plugin::builtin {
                     return true;
 
                 auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
-                m_bookmarks.get(provider).clear();
+                m_bookmarks.clear();
                 return this->importBookmarks(provider, data);
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
@@ -170,11 +171,26 @@ namespace hex::plugin::builtin {
                 return result;
             }
         });
+        proj::ProjectManager::registerContentHandler({
+            .type = "hex.builtin.project.content_type.bookmarks",
+            .load = [this](const proj::Content &content) {
+                m_bookmarks.clear();
+
+                const auto data = content.isEmpty() ? nlohmann::json() : nlohmann::json::parse(content.getData());
+                this->importBookmarks(ImHexApi::Provider::get(), data);
+                EventHighlightingChanged::post();
+            },
+            .store = [this](proj::Content &content) {
+                nlohmann::json data;
+                this->exportBookmarks(ImHexApi::Provider::get(), data);
+                content.setData(data.dump(4));
+            }
+        });
 
         ContentRegistry::Reports::addReportProvider([this](prv::Provider *provider) -> std::string {
             std::string result;
 
-            const auto &bookmarks = m_bookmarks.get(provider);
+            const auto &bookmarks = m_bookmarks;
             if (bookmarks.empty())
                 return "";
 
@@ -252,7 +268,7 @@ namespace hex::plugin::builtin {
     void ViewBookmarks::drawDropTarget(std::list<Bookmark>::iterator it, float height) {
         height = std::max(height, 1.0F);
 
-        if (it != m_bookmarks->begin()) {
+        if (it != m_bookmarks.begin()) {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() - height);
         } else {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + height);
@@ -261,7 +277,7 @@ namespace hex::plugin::builtin {
         ImGui::InvisibleButton("##DropTarget", ImVec2(ImGui::GetContentRegionAvail().x, height * 2.0F));
         const auto dropTarget = ImRect(ImGui::GetItemRectMin(), ImVec2(ImGui::GetItemRectMax().x, ImGui::GetItemRectMin().y + 2_scaled));
 
-        if (it == m_bookmarks->begin()) {
+        if (it == m_bookmarks.begin()) {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() - height);
         }
 
@@ -274,13 +290,13 @@ namespace hex::plugin::builtin {
                 u64 droppedBookmarkId = *static_cast<const u64*>(payload->Data);
 
                 // Find the correct bookmark with that id
-                auto droppedIter = std::ranges::find_if(m_bookmarks->begin(), m_bookmarks->end(), [droppedBookmarkId](const auto &bookmarkItem) {
+                auto droppedIter = std::ranges::find_if(m_bookmarks.begin(), m_bookmarks.end(), [droppedBookmarkId](const auto &bookmarkItem) {
                     return bookmarkItem.entry.id == droppedBookmarkId;
                 });
 
                 // Swap the two bookmarks
-                if (droppedIter != m_bookmarks->end()) {
-                    m_bookmarks->splice(it, m_bookmarks, droppedIter);
+                if (droppedIter != m_bookmarks.end()) {
+                    m_bookmarks.splice(it, m_bookmarks, droppedIter);
 
                     EventHighlightingChanged::post();
                 }
@@ -298,18 +314,18 @@ namespace hex::plugin::builtin {
         ImGui::PopItemWidth();
 
         if (ImGui::BeginChild("##bookmarks")) {
-            if (m_bookmarks->empty()) {
+            if (m_bookmarks.empty()) {
                 ImGuiExt::TextOverlay("hex.builtin.view.bookmarks.no_bookmarks"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
             }
 
-            auto bookmarkToRemove = m_bookmarks->end();
+            auto bookmarkToRemove = m_bookmarks.end();
             const auto defaultItemSpacing = ImGui::GetStyle().ItemSpacing.y;
 
             ImGui::Dummy({ ImGui::GetContentRegionAvail().x, 0 });
-            drawDropTarget(m_bookmarks->begin(), defaultItemSpacing);
+            drawDropTarget(m_bookmarks.begin(), defaultItemSpacing);
 
             // Draw all bookmarks
-            for (auto it = m_bookmarks->begin(); it != m_bookmarks->end(); ++it) {
+            for (auto it = m_bookmarks.begin(); it != m_bookmarks.end(); ++it) {
                 auto &[bookmark, highlightVisible] = *it;
                 auto &[region, name, comment, color, locked, bookmarkId] = bookmark;
 
@@ -529,15 +545,15 @@ namespace hex::plugin::builtin {
             }
 
             // Remove the bookmark that was marked for removal
-            if (bookmarkToRemove != m_bookmarks->end()) {
-                m_bookmarks->erase(bookmarkToRemove);
+            if (bookmarkToRemove != m_bookmarks.end()) {
+                m_bookmarks.erase(bookmarkToRemove);
                 EventHighlightingChanged::post();
             }
         }
         ImGui::EndChild();
     }
 
-    bool ViewBookmarks::importBookmarks(prv::Provider *provider, const nlohmann::json &json) {
+    bool ViewBookmarks::importBookmarks(prv::Provider *, const nlohmann::json &json) {
         if (!json.contains("bookmarks"))
             return false;
 
@@ -549,30 +565,32 @@ namespace hex::plugin::builtin {
             if (!region.contains("address") || !region.contains("size"))
                 continue;
 
-            m_bookmarks.get(provider).push_back({
+            m_bookmarks.push_back({
                 {
                     .region     = { region["address"], region["size"] },
                     .name       = bookmark["name"],
                     .comment    = bookmark["comment"],
                     .color      = bookmark["color"],
                     .locked     = bookmark["locked"],
-                    .id         = bookmark.contains("id") ? bookmark["id"].get<u64>() : m_currBookmarkId.get(provider),
+                    .id         = bookmark.contains("id") ? bookmark["id"].get<u64>() : m_currBookmarkId,
                 },
                 bookmark.contains("highlightVisible") ? bookmark["highlightVisible"].get<bool>() : true,
             });
             if (bookmark.contains("id"))
-                m_currBookmarkId.get(provider) = std::max<u64>(m_currBookmarkId.get(provider), bookmark["id"].get<i64>() + 1);
+                m_currBookmarkId = std::max<u64>(m_currBookmarkId, bookmark["id"].get<i64>() + 1);
             else
-                m_currBookmarkId.get(provider) += 1;
+                m_currBookmarkId += 1;
         }
+
+        EventHighlightingChanged::post();
 
         return true;
     }
 
-    bool ViewBookmarks::exportBookmarks(prv::Provider *provider, nlohmann::json &json) {
+    bool ViewBookmarks::exportBookmarks(prv::Provider *, nlohmann::json &json) {
         json["bookmarks"] = nlohmann::json::array();
         size_t index = 0;
-        for (const auto &[bookmark, highlightVisible]  : m_bookmarks.get(provider)) {
+        for (const auto &[bookmark, highlightVisible]  : m_bookmarks) {
             json["bookmarks"][index] = {
                     { "name",       bookmark.name },
                     { "comment",    bookmark.comment },
@@ -627,7 +645,7 @@ namespace hex::plugin::builtin {
                 wolv::io::File(path, wolv::io::File::Mode::Create).writeString(json.dump(4));
             });
         }, [this]{
-            return ImHexApi::Provider::isValid() && !m_bookmarks->empty();
+            return ImHexApi::Provider::isValid() && !m_bookmarks.empty();
         });
     }
 

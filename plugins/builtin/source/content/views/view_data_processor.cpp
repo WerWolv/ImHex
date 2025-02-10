@@ -14,6 +14,7 @@
 
 #include <imnodes.h>
 #include <imnodes_internal.h>
+#include <hex/project/project_manager.hpp>
 #include <nlohmann/json.hpp>
 
 #include <wolv/io/file.hpp>
@@ -361,28 +362,39 @@ namespace hex::plugin::builtin {
         ProjectFile::registerPerProviderHandler({
             .basePath = "data_processor.json",
             .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
+            .load = [this](prv::Provider *, const std::fs::path &basePath, const Tar &tar) {
                 std::string save = tar.readString(basePath);
 
-                ViewDataProcessor::loadNodes(m_mainWorkspace.get(provider), nlohmann::json::parse(save));
+                this->loadNodes(m_mainWorkspace, nlohmann::json::parse(save));
                 m_updateNodePositions = true;
 
                 return true;
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                tar.writeString(basePath, ViewDataProcessor::saveNodes(m_mainWorkspace.get(provider)).dump(4));
+            .store = [this](prv::Provider *, const std::fs::path &basePath, const Tar &tar) {
+                tar.writeString(basePath, this->saveNodes(m_mainWorkspace).dump(4));
 
                 return true;
             }
         });
+        proj::ProjectManager::registerContentHandler({
+            .type = "hex.builtin.project.content_type.data_processor",
+            .load = [this](const proj::Content &content) {
+                const nlohmann::json data = content.isEmpty() ? nlohmann::json() : nlohmann::json::parse(content.getData());
+                this->loadNodes(m_mainWorkspace, data);
+                m_updateNodePositions = true;
+            },
+            .store = [this](proj::Content &content) {
+                content.setData(this->saveNodes(m_mainWorkspace).dump(4));
+            }
+        });
 
-        EventProviderOpened::subscribe(this, [this](auto *provider) {
-            m_mainWorkspace.get(provider) = { };
-            m_workspaceStack.get(provider).push_back(&m_mainWorkspace.get(provider));
+        EventProviderOpened::subscribe(this, [this](auto *) {
+            m_mainWorkspace = { };
+            m_workspaceStack.push_back(&m_mainWorkspace);
         });
 
         EventProviderChanged::subscribe(this, [this](const auto *, const auto *) {
-            for (auto *workspace : *m_workspaceStack) {
+            for (auto *workspace : m_workspaceStack) {
                 for (auto &node : workspace->nodes) {
                     node->setCurrentOverlay(nullptr);
                 }
@@ -399,7 +411,7 @@ namespace hex::plugin::builtin {
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Read);
                                     if (file.isValid()) {
-                                        ViewDataProcessor::loadNodes(*m_mainWorkspace, nlohmann::json::parse(file.readString()));
+                                        ViewDataProcessor::loadNodes(m_mainWorkspace, nlohmann::json::parse(file.readString()));
                                         m_updateNodePositions = true;
                                     }
                                 });
@@ -411,17 +423,17 @@ namespace hex::plugin::builtin {
                                 [&, this](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Create);
                                     if (file.isValid())
-                                        file.writeString(ViewDataProcessor::saveNodes(*m_mainWorkspace).dump(4));
+                                        file.writeString(ViewDataProcessor::saveNodes(m_mainWorkspace).dump(4));
                                 });
         }, [this]{
-            return !m_workspaceStack->empty() && !m_workspaceStack->back()->nodes.empty() && ImHexApi::Provider::isValid();
+            return !m_workspaceStack.empty() && !m_workspaceStack.back()->nodes.empty() && ImHexApi::Provider::isValid();
         });
 
         ContentRegistry::FileHandler::add({ ".hexnode" }, [this](const auto &path) {
             wolv::io::File file(path, wolv::io::File::Mode::Read);
             if (!file.isValid()) return false;
 
-            ViewDataProcessor::loadNodes(*m_mainWorkspace, file.readString());
+            ViewDataProcessor::loadNodes(m_mainWorkspace, file.readString());
             m_updateNodePositions = true;
 
             return true;
@@ -884,7 +896,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataProcessor::drawContent() {
-        auto &workspace = *m_workspaceStack->back();
+        auto &workspace = *m_workspaceStack.back();
 
         ImGui::BeginDisabled(m_evaluationTask.isRunning());
 
@@ -962,7 +974,7 @@ namespace hex::plugin::builtin {
                 ImGuiExt::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
 
             // Draw a close button if there is more than one workspace on the stack
-            if (m_workspaceStack->size() > 1) {
+            if (m_workspaceStack.size() > 1) {
                 ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 1.5F, ImGui::GetTextLineHeightWithSpacing() * 0.2F));
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0F, 4.0F));
                 if (ImGuiExt::DimmedIconButton(ICON_VS_CLOSE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
@@ -1079,7 +1091,7 @@ namespace hex::plugin::builtin {
 
         // Remove the top-most workspace from the stack if requested
         if (popWorkspace) {
-            m_workspaceStack->pop_back();
+            m_workspaceStack.pop_back();
             m_updateNodePositions = true;
         }
     }
