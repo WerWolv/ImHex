@@ -159,6 +159,8 @@ namespace ImGuiExt {
 
     void OpenPopupInWindow(const char *window_name, const char *popup_name);
 
+    void DisableWindowResize(ImGuiDir dir);
+
     struct ImHexCustomData {
         ImVec4 Colors[ImGuiCustomCol_COUNT];
 

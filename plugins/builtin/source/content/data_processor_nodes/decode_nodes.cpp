@@ -23,8 +23,8 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGui::Combo("hex.builtin.nodes.crypto.aes.mode"_lang, &m_mode, "ECB\0CBC\0CFB128\0CTR\0GCM\0CCM\0OFB\0");
-            ImGui::Combo("hex.builtin.nodes.crypto.aes.key_length"_lang, &m_keyLength, "128 Bits\000192 Bits\000256 Bits\000");
+            ImGui::Combo("hex.builtin.nodes.crypto.aes.mode"_lang, &m_mode, "ECB\x00""CBC\x00""CFB128\x00""CTR\x00""GCM\x00""CCM\x00""OFB\x00");
+            ImGui::Combo("hex.builtin.nodes.crypto.aes.key_length"_lang, &m_keyLength, "128 Bits\x00""192 Bits\x00""256 Bits\x00");
             ImGui::PopItemWidth();
         }
 

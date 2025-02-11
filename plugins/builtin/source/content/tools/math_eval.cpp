@@ -106,8 +106,8 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginTable("##mathWrapper", 3)) {
             ImGui::TableSetupColumn("##keypad", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize);
-            ImGui::TableSetupColumn("##results", ImGuiTableColumnFlags_WidthStretch, 0.666);
-            ImGui::TableSetupColumn("##variables", ImGuiTableColumnFlags_WidthStretch, 0.666);
+            ImGui::TableSetupColumn("##results", ImGuiTableColumnFlags_WidthStretch, 0.666F);
+            ImGui::TableSetupColumn("##variables", ImGuiTableColumnFlags_WidthStretch, 0.666F);
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();

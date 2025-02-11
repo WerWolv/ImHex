@@ -83,8 +83,8 @@ namespace hex::plugin::visualizers {
                 // Draw clock sections and numbers
                 for (u8 i = 0; i < 12; ++i) {
                     auto text = hex::format("{}", (((i + 2) % 12) + 1));
-                    drawList->AddLine(center + sectionPos(i) * size / 2.2, center + sectionPos(i) * size / 2, ImGui::GetColorU32(ImGuiCol_TextDisabled), 1_scaled);
-                    drawList->AddText(center + sectionPos(i) * size / 3 - ImGui::CalcTextSize(text.c_str()) / 2, ImGui::GetColorU32(ImGuiCol_Text), text.c_str());
+                    drawList->AddLine(center + sectionPos(i) * size / 2.2F, center + sectionPos(i) * size / 2, ImGui::GetColorU32(ImGuiCol_TextDisabled), 1_scaled);
+                    drawList->AddText(center + sectionPos(i) * size / 3.0F - ImGui::CalcTextSize(text.c_str()) / 2, ImGui::GetColorU32(ImGuiCol_Text), text.c_str());
                 }
 
                 // Draw hour hand

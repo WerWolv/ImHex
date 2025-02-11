@@ -490,9 +490,9 @@ namespace hex::plugin::builtin {
             if (ImGui::Begin("ImHexDockSpace", nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus)) {
                 if (!ImHexApi::Provider::isValid()) {
                     static auto title = []{
-                        std::array<char, 256> title = {};
-                        ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindowRead()->Name, ImGui::GetID("ImHexMainDock"));
-                        return title;
+                        std::array<char, 256> result = {};
+                        ImFormatString(result.data(), result.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindowRead()->Name, ImGui::GetID("ImHexMainDock"));
+                        return result;
                     }();
 
                     if (ImGui::Begin(title.data(), nullptr, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBringToFrontOnFocus)) {

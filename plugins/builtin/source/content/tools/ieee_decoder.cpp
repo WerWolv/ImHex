@@ -375,7 +375,7 @@ namespace hex::plugin::builtin {
             if (inputType == InputType::Regular) {
                 try {
                     ieee754statics.resultFloat = stod(decimalFloatingPointNumberString);
-                } catch(const std::invalid_argument& _) {
+                } catch (const std::invalid_argument &) {
                     inputType = InputType::Invalid;
                 }
             } else if (inputType == InputType::Infinity) {

@@ -278,7 +278,7 @@ namespace hex {
 
         std::string result;
         for (i16 bit = hex::bit_width(number) - 1; bit >= 0; bit -= 1)
-            result += (number & (0b1 << bit)) == 0 ? '0' : '1';
+            result += (number & (0b1LLU << bit)) == 0 ? '0' : '1';
 
         return result;
     }
