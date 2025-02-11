@@ -140,7 +140,7 @@ jobs:
 
     - name: 🗝️ Generate build provenance attestations
       uses: actions/attest-build-provenance@v2
-      if: github.event.pull_request.head.repo.full_name == github.repository
+      if: ${{ github.event.repository.fork == false }}
       with:
         subject-path: |
           imhex-*.msi
@@ -384,7 +384,7 @@ jobs:
 
     - name: 🗝️ Generate build provenance attestations
       uses: actions/attest-build-provenance@v2
-      if: github.event.pull_request.head.repo.full_name == github.repository
+      if: ${{ github.event.repository.fork == false }}
       with:
         subject-path: |
           ./*.dmg
@@ -503,7 +503,7 @@ jobs:
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.repository.fork == false }}
         with:
           subject-path: |
             ./*.dmg
@@ -597,7 +597,7 @@ jobs:
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.repository.fork == false }}
         with:
           subject-path: |
             ./*.deb
@@ -659,7 +659,7 @@ jobs:
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.repository.fork == false }}
         with:
           subject-path: |
             out/*.AppImage
@@ -776,7 +776,7 @@ jobs:
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.repository.fork == false }}
         with:
           subject-path: |
             build/imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
@@ -920,7 +920,7 @@ jobs:
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.repository.fork == false }}
         with:
           subject-path: |
             imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
