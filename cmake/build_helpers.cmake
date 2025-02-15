@@ -663,7 +663,10 @@ macro(setupCompilerFlags target)
         # Enable hardening flags
         addCommonFlag("-U_FORTIFY_SOURCE" ${target})
         addCommonFlag("-D_FORTIFY_SOURCE=3" ${target})
-        addCommonFlag("-fstack-protector-strong" ${target})
+
+        if (NOT EMSCRIPTEN)
+            addCommonFlag("-fstack-protector-strong" ${target})
+        endif()
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
