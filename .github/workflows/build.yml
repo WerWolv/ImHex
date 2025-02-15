@@ -15,8 +15,8 @@ env:
 
 jobs:
 
-  # Windows build
-  win:
+  # Windows MINGW build
+  win_mingw:
     runs-on: windows-2022
     name: 🪟 Windows MINGW64
 
@@ -178,6 +178,72 @@ jobs:
         path: |
           build/install/*
 
+  win_msvc:
+    runs-on: windows-2022
+    name: 🪟 Windows MSVC
+
+    env:
+      CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+
+    permissions:
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 📜 Setup ccache
+        uses:  hendrikmuhs/ccache-action@v1
+        id:    cache-ccache
+        with:
+          key: ${{ runner.os }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-ccache
+          max-size: 1G
+
+      - name: 📦 Install vcpkg
+        uses: friendlyanon/setup-vcpkg@v1
+        with: { committish: 7e21420f775f72ae938bdeb5e6068f722088f06a }
+
+      - name: ⬇️ Install dependencies
+        run: |
+          cp dist/vcpkg.json vcpkg.json
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.100'
+
+      - name: 📜 Set version variable
+        run: |
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+
+      # Windows cmake build
+      - name: 🛠️ Configure CMake
+        run: |
+          set -x
+          mkdir -p build
+          cd build
+          
+          cmake -G "Ninja"                                                                      \
+            --preset vs2022 -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                  \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                            \
+            -DCMAKE_INSTALL_PREFIX="$PWD/install"                                               \
+            -DIMHEX_PATTERNS_PULL_MASTER=ON                                                     \
+            -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                            \
+            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                           \
+            -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                            \
+            ..
+
+      - name: 🛠️ Build
+        run: |
+          cd build
+          ninja
+
   win-plugin-template-test:
     runs-on: windows-2022
     name: 🧪 Plugin Template Test
@@ -186,7 +252,7 @@ jobs:
       run:
         shell: msys2 {0}
 
-    needs: win
+    needs: win_mingw
 
     env:
       IMHEX_SDK_PATH: "${{ github.workspace }}/out/sdk"
