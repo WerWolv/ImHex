@@ -195,6 +195,11 @@ jobs:
         with:
           submodules: recursive
 
+      - name: 🫧 Setup Visual Studio Dev Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
       - name: 📜 Setup ccache
         uses:  hendrikmuhs/ccache-action@v1
         id:    cache-ccache
@@ -231,8 +236,8 @@ jobs:
           cmake -G "Ninja" -B build                                                   `
             --preset vs2022                                                           `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
-            -DCMAKE_C_COMPILER="$((Get-Command cl.exe).Path)"                         `
-            -DCMAKE_CXX_COMPILER="$((Get-Command cl.exe).Path)"                       `
+            -DCMAKE_C_COMPILER="$($(Get-Command cl.exe).Path)"                         `
+            -DCMAKE_CXX_COMPILER="$($(Get-Command cl.exe).Path)"                       `
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                                        `
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                      `
             -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE"                                      `
