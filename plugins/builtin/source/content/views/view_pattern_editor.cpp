@@ -333,9 +333,9 @@ namespace hex::plugin::builtin {
             const auto availableSize = g.CurrentWindow->Size;
             const auto windowPosition = ImGui::GetCursorScreenPos();
             auto textEditorSize = availableSize;
-            textEditorSize.y *= 3.5 / 5.0;
+            textEditorSize.y *= 3.5F / 5.0F;
             textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-            textEditorSize.y = std::clamp(textEditorSize.y + height,200.0F, availableSize.y-200.0F);
+            textEditorSize.y = std::clamp(textEditorSize.y + height, 200.0F, availableSize.y - 200.0F);
 
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
