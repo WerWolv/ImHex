@@ -119,7 +119,7 @@ namespace hex::ui {
 
         void drawOffsetColumns(const pl::ptrn::Pattern& pattern) {
             auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern);
-            if (bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr) {
+            if (bitfieldMember != nullptr && bitfieldMember->getParent() != nullptr) {
                 drawOffsetColumnForBitfieldMember(*bitfieldMember);
                 return;
             }
@@ -179,7 +179,7 @@ namespace hex::ui {
                 return;
             }
 
-            if (auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
+            if (auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParent() != nullptr)
                 drawSizeColumnForBitfieldMember(*bitfieldMember);
             else {
                 ImGui::TableNextColumn();
