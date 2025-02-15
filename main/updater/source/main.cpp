@@ -80,9 +80,9 @@ std::string getUpdateType() {
             return "win-msi";
     #elif defined (OS_MACOS)
         #if defined(__x86_64__)
-            return "mac-dmg-x86";
-        #elif defined(__arm__)
-            return "mac-dmg-arm";
+            return "macos-dmg-x86";
+        #elif defined(__arm64__)
+            return "macos-dmg-arm";
         #endif
     #elif defined (OS_LINUX)
         if (hex::executeCommand("grep 'ID=ubuntu' /etc/os-release") == 0) {
@@ -113,15 +113,15 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
     };
 
     constexpr static auto UpdateHandlers = {
-        UpdateHandler { "win-msi",              ".msi",  "msiexec /i {} /qb"                                        },
-        UpdateHandler { "macos-dmg-x86",        ".dmg",  "hdiutil attach {}"                                        },
-        UpdateHandler { "macos-dmg-arm",        ".dmg",  "hdiutil attach {}"                                        },
-        UpdateHandler { "linux-deb-24.04",      ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
-        UpdateHandler { "linux-deb-24.10",      ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
-        UpdateHandler { "linux-rpm-40",         ".rpm",  "sudo rpm -i {}"                                           },
-        UpdateHandler { "linux-rpm-41",         ".rpm",  "sudo rpm -i {}"                                           },
-        UpdateHandler { "linux-rpm-rawhide",    ".rpm",  "sudo rpm -i {}"                                           },
-        UpdateHandler { "linux-arch",           ".zst",  "sudo pacman -Syy && sudo pacman -U --noconfirm {}"        }
+        UpdateHandler { "win-msi",              ".msi",  "msiexec /i \"{}\" /qb"                                        },
+        UpdateHandler { "macos-dmg-x86",        ".dmg",  "hdiutil attach -autoopen \"{}\""                              },
+        UpdateHandler { "macos-dmg-arm",        ".dmg",  "hdiutil attach -autoopen \"{}\""                              },
+        UpdateHandler { "linux-deb-24.04",      ".deb",  "sudo apt update && sudo apt install -y --fix-broken \"{}\""   },
+        UpdateHandler { "linux-deb-24.10",      ".deb",  "sudo apt update && sudo apt install -y --fix-broken \"{}\""   },
+        UpdateHandler { "linux-rpm-40",         ".rpm",  "sudo rpm -i \"{}\""                                           },
+        UpdateHandler { "linux-rpm-41",         ".rpm",  "sudo rpm -i \"{}\""                                           },
+        UpdateHandler { "linux-rpm-rawhide",    ".rpm",  "sudo rpm -i \"{}\""                                           },
+        UpdateHandler { "linux-arch",           ".zst",  "sudo pacman -Syy && sudo pacman -U --noconfirm \"{}\""        }
     };
 
     for (const auto &handler : UpdateHandlers) {

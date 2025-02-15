@@ -341,7 +341,7 @@ namespace hex {
 #if defined(OS_WINDOWS)
         std::ignore = system(hex::format("start \"\" {0}", command).c_str());
 #elif defined(OS_MACOS)
-        std::ignore = system(hex::format("open {0}", command).c_str());
+        std::ignore = system(hex::format("{0}", command).c_str());
 #elif defined(OS_LINUX)
         executeCmd({"xdg-open", command});
 #elif defined(OS_WEB)
