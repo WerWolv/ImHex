@@ -9,7 +9,7 @@
 namespace hex::plugin::builtin {
 
     ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name") {
-        EventProviderOpened::subscribe(this, [this](const hex::prv::Provider *provider) {
+        EventProviderCreated::subscribe(this, [this](const hex::prv::Provider *provider) {
             if (provider->hasLoadInterface() && !provider->shouldSkipLoadInterface())
                 this->getWindowOpenState() = true;
         });
@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewProviderSettings::~ViewProviderSettings() {
-        EventProviderOpened::unsubscribe(this);
+        EventProviderCreated::unsubscribe(this);
     }
 
     void ViewProviderSettings::drawContent() {
