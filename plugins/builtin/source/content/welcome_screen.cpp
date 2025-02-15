@@ -761,9 +761,9 @@ namespace hex::plugin::builtin {
             });
         } else {
             std::random_device rd;
-            if (!ImHexApi::System::isCorporateEnvironment()) {
+            if (ImHexApi::System::isCorporateEnvironment()) {
                 if (rd() % 25 == 0) {
-                    ui::BannerButton::open(ICON_VS_HEART, "Using ImHex for professional work? Ask your boss to sponsor us!", ImColor(0x68, 0xA7, 0x70), "Donate Now!", [] {
+                    ui::BannerButton::open(ICON_VS_HEART, "Using ImHex for professional work? Ask your boss to sponsor us and get private E-Mail support and more!", ImColor(0x68, 0xA7, 0x70), "Donate Now!", [] {
                         hex::openWebpage("https://imhex.werwolv.net/donate_work");
                     });
                 }
