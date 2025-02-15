@@ -1070,7 +1070,7 @@
         "hex.builtin.welcome.start.recent.auto_backups": "自动备份",
         "hex.builtin.welcome.start.recent.auto_backups.backup": "备份于 {:%年-%月-%日 %时:%分:%秒}",
         "hex.builtin.welcome.tip_of_the_day": "每日提示",
-        "hex.builtin.welcome.update.desc": "ImHex {0} 已发布！在这里下载。",
+        "hex.builtin.welcome.update.desc": "ImHex {0} 已发布！",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "新的更新可用！"
     }

@@ -1159,7 +1159,7 @@
         "hex.builtin.welcome.start.recent.auto_backups": "Auto Backups",
         "hex.builtin.welcome.start.recent.auto_backups.backup": "Backup from {:%Y-%m-%d %H:%M:%S}",
         "hex.builtin.welcome.tip_of_the_day": "Tip of the Day",
-        "hex.builtin.welcome.update.desc": "ImHex {0} just released! Download it here.",
+        "hex.builtin.welcome.update.desc": "ImHex {0} just released!",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "New Update available!",
         "hex.builtin.welcome.quick_settings.simplified": "Simplified"

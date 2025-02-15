@@ -541,6 +541,15 @@ namespace hex::plugin::builtin {
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save", ImGuiCustomCol_ToolbarBlue);
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save_as", ImGuiCustomCol_ToolbarBlue);
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.bookmark.create", ImGuiCustomCol_ToolbarGreen);
+
+            const auto &initArgs = ImHexApi::System::getInitArguments();
+            if (auto it = initArgs.find("update-available"); it != initArgs.end()) {
+                ContentRegistry::Interface::addTitleBarButton(ICON_VS_GIFT, "hex.builtin.welcome.update.title", [] {
+                    ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
+                });
+
+                ui::ToastInfo::open(hex::format("hex.builtin.welcome.update.desc"_lang, it->second));
+            }
         });
     }
 

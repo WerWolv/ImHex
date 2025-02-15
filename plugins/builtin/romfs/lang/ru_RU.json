@@ -1129,7 +1129,7 @@
         "hex.builtin.welcome.start.recent.auto_backups": "Резервные копии",
         "hex.builtin.welcome.start.recent.auto_backups.backup": "Резервная копия от {:%Y-%m-%d %H:%M:%S}",
         "hex.builtin.welcome.tip_of_the_day": "Подсказка дня",
-        "hex.builtin.welcome.update.desc": "ImHex {0} только что вышел! Его можно скачать здесь.",
+        "hex.builtin.welcome.update.desc": "ImHex {0} только что вышел!",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "Доступно новое обновление!",
         "hex.builtin.welcome.quick_settings.simplified": "Простой режим"

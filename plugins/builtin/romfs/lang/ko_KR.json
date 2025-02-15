@@ -1006,7 +1006,7 @@
         "hex.builtin.welcome.start.recent.auto_backups": "",
         "hex.builtin.welcome.start.recent.auto_backups.backup": "",
         "hex.builtin.welcome.tip_of_the_day": "오늘의 팁",
-        "hex.builtin.welcome.update.desc": "ImHex {0}이(가) 출시되었습니다! 여기서 다운로드하세요.",
+        "hex.builtin.welcome.update.desc": "ImHex {0}이(가) 출시되었습니다!",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "새 업데이트를 사용할 수 있습니다!"
     }

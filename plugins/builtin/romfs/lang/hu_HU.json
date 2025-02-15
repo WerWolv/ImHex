@@ -1033,7 +1033,7 @@
         "hex.builtin.welcome.start.recent.auto_backups": "Automatikus mentések",
         "hex.builtin.welcome.start.recent.auto_backups.backup": "Biztonsági mentés: {:%Y-%m-%d %H:%M:%S}",
         "hex.builtin.welcome.tip_of_the_day": "A nap tippje",
-        "hex.builtin.welcome.update.desc": "Megjelent az ImHex {0}! Itt töltheted le.",
+        "hex.builtin.welcome.update.desc": "Megjelent az ImHex {0}!.",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "Elérhető egy új frissítés!",
         "hex.builtin.welcome.quick_settings.simplified": "Egyszerűsített"

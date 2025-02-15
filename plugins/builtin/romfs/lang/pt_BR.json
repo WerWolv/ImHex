@@ -1006,7 +1006,7 @@
         "hex.builtin.welcome.start.recent.auto_backups": "",
         "hex.builtin.welcome.start.recent.auto_backups.backup": "",
         "hex.builtin.welcome.tip_of_the_day": "Dica do Dia",
-        "hex.builtin.welcome.update.desc": "ImHex {0} acabou de lançar! Baixe aqui.",
+        "hex.builtin.welcome.update.desc": "ImHex {0} acabou de lançar!",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "Nova atualização disponivel!"
     }
