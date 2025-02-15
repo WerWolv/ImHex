@@ -1425,7 +1425,7 @@ namespace hex::plugin::builtin {
                     const auto &currScope = evaluator->getScope(-m_debuggerScopeIndex);
                     if (ImGui::BeginCombo("##scope", displayValue(currScope.parent, m_debuggerScopeIndex).c_str())) {
                         for (size_t i = 0; i < evaluator->getScopeCount(); i++) {
-                            auto &scope = evaluator->getScope(-i);
+                            auto &scope = evaluator->getScope(-i32(i));
 
                             if (ImGui::Selectable(displayValue(scope.parent, i).c_str(), i == size_t(m_debuggerScopeIndex))) {
                                 m_debuggerScopeIndex = i;
