@@ -225,16 +225,16 @@ jobs:
         run: |
           mkdir -p build
           
-          cmake -G "Ninja" -B build                                                               `
-            --preset vs2022 -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                    `
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                  `
-            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                              `
-            -DCMAKE_INSTALL_PREFIX="$PWD/install"                                                 `
-            -DIMHEX_PATTERNS_PULL_MASTER=ON                                                       `
-            -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                              `
-            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                             `
-            -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                              `
+          cmake -G "Ninja" -B build                                                                         `
+            --preset vs2022 -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" `
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                              `
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                            `
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                        `
+            -DCMAKE_INSTALL_PREFIX="$PWD/install"                                                           `
+            -DIMHEX_PATTERNS_PULL_MASTER=ON                                                                 `
+            -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                        `
+            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                       `
+            -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                                        `
             .
 
       - name: 🛠️ Build
