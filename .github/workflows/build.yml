@@ -41,8 +41,8 @@ jobs:
       uses:  hendrikmuhs/ccache-action@v1
       id:    cache-ccache
       with:
-        key: ${{ runner.os }}-ccache-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-ccache
+        key: ${{ runner.os }}-mingw-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-mingw-ccache
         max-size: 1G
 
     - name: 🟦 Install msys2
@@ -199,8 +199,8 @@ jobs:
         uses:  hendrikmuhs/ccache-action@v1
         id:    cache-ccache
         with:
-          key: ${{ runner.os }}-ccache-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-ccache
+          key: ${{ runner.os }}-msvc-ccache-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-msvc-ccache
           max-size: 1G
 
       - name: 📦 Install vcpkg
@@ -218,12 +218,11 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+          "IMHEX_VERSION=$(Get-Content VERSION -Raw)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       # Windows cmake build
       - name: 🛠️ Configure CMake
         run: |
-          set -x
           mkdir -p build
           cd build
           
