@@ -37,6 +37,8 @@
 
 #include <string>
 #include <random>
+#include <banners/banner_button.hpp>
+#include <banners/banner_icon.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -765,6 +767,21 @@ namespace hex::plugin::builtin {
             TaskManager::doLater([]{
                 AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.crash.name");
             });
+        } else {
+            std::random_device rd;
+            if (!ImHexApi::System::isCorporateEnvironment()) {
+                if (rd() % 25 == 0) {
+                    ui::BannerButton::open(ICON_VS_HEART, "Using ImHex for professional work? Ask your boss to sponsor us!", ImColor(0x68, 0xA7, 0x70), "Donate Now!", [] {
+                        hex::openWebpage("https://imhex.werwolv.net/donate_work");
+                    });
+                }
+            } else {
+                if (rd() % 75 == 0) {
+                    ui::BannerButton::open(ICON_VS_HEART, "ImHex needs your help to stay alive! Donate now to fund infrastructure and further development", ImColor(0x68, 0xA7, 0x70), "Donate Now!", [] {
+                        hex::openWebpage("https://github.com/sponsors/WerWolv");
+                    });
+                }
+            }
         }
 
         // Load info banner texture either locally or from the server
