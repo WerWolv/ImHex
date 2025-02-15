@@ -211,6 +211,9 @@ jobs:
         run: |
           cp dist/vcpkg.json vcpkg.json
 
+      - name: ⬇️ Install CMake and Ninja
+        uses: lukka/get-cmake@latest
+
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v4
         with:
