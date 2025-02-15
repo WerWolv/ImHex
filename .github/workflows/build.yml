@@ -232,8 +232,8 @@ jobs:
           
           cmake -G "Ninja" -B build                                                                         `
             --preset vs2022 -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" `
-            -DCMAKE_C_COMPILER=cl.exe                                                                       `
-            -DCMAKE_CXX_COMPILER=cl.exe                                                                     `
+            -DCMAKE_C_COMPILER="cl.exe"                                                                     `
+            -DCMAKE_CXX_COMPILER="cl.exe"                                                                   `
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                              `
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                            `
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                        `
