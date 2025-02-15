@@ -247,9 +247,13 @@ namespace hex::plugin::builtin {
                 EventFirstLaunch::post();
             }
 
-            EventImHexUpdated::post(SemanticVersion(prevLaunchVersion), currVersion);
+            const auto prevLaunchVersionParsed = SemanticVersion(prevLaunchVersion);
 
-            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", currVersion.get(false));
+            if (currVersion != prevLaunchVersionParsed) {
+                EventImHexUpdated::post(prevLaunchVersionParsed, currVersion);
+
+                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", currVersion.get(false));
+            }
         });
 
         EventWindowDeinitializing::subscribe([](GLFWwindow *window) {
