@@ -100,7 +100,7 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
     };
 
     constexpr static auto UpdateHandlers = {
-        UpdateHandler { "win-msi",          ".msi",  "msiexec /passive /package {}"                             },
+        UpdateHandler { "win-msi",          ".msi",  "msiexec /i {} /qb"                                        },
         UpdateHandler { "macos-dmg",        ".dmg",  "hdiutil attach {}"                                        },
         UpdateHandler { "linux-deb-22.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
         UpdateHandler { "linux-deb-23.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },

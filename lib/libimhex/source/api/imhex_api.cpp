@@ -936,7 +936,7 @@ namespace hex {
             }
 
             EventImHexClosing::subscribe([executablePath, updateTypeString] {
-                hex::executeCommand(
+                hex::startProgram(
                         hex::format("\"{}\" \"{}\"",
                                     wolv::util::toUTF8String(executablePath),
                                     updateTypeString
