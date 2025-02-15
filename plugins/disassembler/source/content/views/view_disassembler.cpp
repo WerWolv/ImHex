@@ -80,6 +80,9 @@ namespace hex::plugin::disasm {
 
                         disassembly.push_back(instruction.value());
 
+                        if (instruction->size == 0 || instruction->size > code.size())
+                            break;
+
                         code = code.subspan(instruction->size);
                         instructionDataAddress += instruction->size;
                         instructionLoadAddress += instruction->size;
