@@ -230,8 +230,8 @@ jobs:
                     
           cmake -G "Ninja" -B build                                                                   `
             --preset vs2022 -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
-            -DCMAKE_C_COMPILER='cl.exe'                                                               `
-            -DCMAKE_CXX_COMPILER='cl.exe'                                                             `
+            -DCMAKE_C_COMPILER='$(Get-Command cl.exe).Source'                                         `
+            -DCMAKE_CXX_COMPILER='$(Get-Command cl.exe).Source'                                       `
             -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE"                                                      `
             -DIMHEX_PATTERNS_PULL_MASTER=ON                                                           `
             -DIMHEX_COMMIT_HASH_LONG='$env:GITHUB_SHA'                                                `
