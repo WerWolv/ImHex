@@ -248,7 +248,7 @@ namespace hex::plugin::builtin {
                             }, nullptr);
                             ImPlot::SetupAxisTicks(ImAxis_Y1, 0, largestFrameTime * 1.25F, 3);
 
-                            static std::vector<double> values(100);
+                            static std::vector<double> values(100, 0.0);
 
                             values.push_back(ImHexApi::System::getLastFrameTime());
                             if (values.size() > 100)
