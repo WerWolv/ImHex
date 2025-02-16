@@ -914,7 +914,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
         }
 
-        ImHexApi::System::addMigrationRoutine("v1.36.3", [] {
+        ImHexApi::System::addMigrationRoutine("v1.37.0", [] {
             log::warn("Resetting shortcut key settings for them to work with this version of ImHex");
 
             for (const auto &category : ContentRegistry::Settings::impl::getSettings()) {
