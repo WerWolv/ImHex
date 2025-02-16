@@ -32,11 +32,17 @@ def main(args: list) -> int:
 
     sorted_commits = {}
     for commit in master_commits:
-        category, commit_name = commit.split(":", 1)
+        if commit == "":
+            continue
 
-        if category not in sorted_commits:
-            sorted_commits[category] = []
-        sorted_commits[category].append(commit_name)
+        try:
+            category, commit_name = commit.split(":", 1)
+
+            if category not in sorted_commits:
+                sorted_commits[category] = []
+            sorted_commits[category].append(commit_name)
+        except:
+            print(f"Failed to parse commit: {commit}")
 
     for category in sorted_commits:
         print(f"## {category}\n")
