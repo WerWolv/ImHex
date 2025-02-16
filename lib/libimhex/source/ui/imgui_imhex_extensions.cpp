@@ -821,8 +821,11 @@ namespace ImGuiExt {
         PushStyleColor(ImGuiCol_Text, color);
 
         // Render
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered
-                                                                                                 : ImGuiCol_MenuBarBg);
+        ImU32 col = 0x00;
+        if (held)
+            col = GetColorU32(ImGuiCol_ScrollbarGrabActive);
+        else if (hovered)
+            col = GetColorU32(ImGuiCol_ScrollbarGrabHovered);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + padding, bb.Max - padding, symbol, nullptr, &size, style.ButtonTextAlign, &bb);

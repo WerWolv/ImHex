@@ -35,6 +35,16 @@ namespace hex::plugin::builtin {
         bool s_showSearchBar = true;
         bool s_displayShortcutHighlights = true;
         bool s_useNativeMenuBar = false;
+        bool s_showTitlebarBackDrop = true;
+
+        void drawTitleBarBackDrop() {
+            if (!s_showTitlebarBackDrop)
+                return;
+
+            const auto size = ImHexApi::System::getMainWindowSize();
+            const auto pos = ImHexApi::System::getMainWindowPosition() - ImVec2(0, size.y / 2 - 20_scaled);
+            ImGui::GetWindowDrawList()->AddShadowCircle(pos, size.x / 4, ImGui::GetColorU32(ImGuiCol_ButtonActive, 0.8), size.x / 4, ImVec2());
+        }
 
         void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, View *view, const ContentRegistry::Interface::impl::MenuCallback &callback, const ContentRegistry::Interface::impl::EnabledCallback &enabledCallback, const ContentRegistry::Interface::impl::SelectedCallback &selectedCallback) {
             const auto &name = menuItems.front();
@@ -399,6 +409,7 @@ namespace hex::plugin::builtin {
             auto window = ImHexApi::System::getMainWindowHandle();
             menu::enableNativeMenuBar(s_useNativeMenuBar);
             if (menu::beginMainMenuBar()) {
+                drawTitleBarBackDrop();
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                     #if defined(OS_WINDOWS)
                         ImGui::SetCursorPosX(5_scaled);
@@ -477,6 +488,7 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
             if (ImGui::BeginMenuBar()) {
+                drawTitleBarBackDrop();
                 for (const auto &callback : ContentRegistry::Interface::impl::getToolbarItems()) {
                     callback();
                     ImGui::SameLine();
@@ -650,6 +662,10 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.use_native_menu_bar", [](const ContentRegistry::Settings::SettingsValue &value) {
             s_useNativeMenuBar = value.get<bool>(true);
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_titlebar_backdrop", [](const ContentRegistry::Settings::SettingsValue &value) {
+            s_showTitlebarBackDrop = value.get<bool>(true);
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.randomize_window_title", [](const ContentRegistry::Settings::SettingsValue &value) {
