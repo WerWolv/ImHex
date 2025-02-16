@@ -1953,7 +1953,8 @@ namespace hex::plugin::builtin {
             runtime.setLogCallback([this, provider](auto level, auto message) {
                 std::scoped_lock lock(m_logMutex);
 
-                for (auto line : wolv::util::splitString(message, "\n")) {
+                auto lines = wolv::util::splitString(message, "\n");
+                for (auto &line : lines) {
                     if (!wolv::util::trim(line).empty()) {
                         switch (level) {
                             using enum pl::core::LogConsole::Level;
