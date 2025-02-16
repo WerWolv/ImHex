@@ -629,11 +629,12 @@ endmacro()
 macro(setupCompilerFlags target)
     if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         addCommonFlag("/W4" ${target})
-        addCommonFlag("/wd4242" ${target})
-        addCommonFlag("/wd4244" ${target})
-        addCommonFlag("/wd4267" ${target})
-        addCommonFlag("/wd4996" ${target})
-        addCommonFlag("/wd4127" ${target})
+        addCommonFlag("/wd4127" ${target}) # conditional expression is constant
+        addCommonFlag("/wd4242" ${target}) # 'identifier': conversion from 'type1' to 'type2', possible loss of data
+        addCommonFlag("/wd4244" ${target}) # 'conversion': conversion from 'type1' to 'type2', possible loss of data
+        addCommonFlag("/wd4267" ${target}) # 'var': conversion from 'size_t' to 'type', possible loss of data
+        addCommonFlag("/wd4305" ${target}) # truncation from 'double' to 'float'
+        addCommonFlag("/wd4996" ${target}) # 'function': was declared deprecated
 
         if (IMHEX_STRICT_WARNINGS)
             addCommonFlag("/WX" ${target})
