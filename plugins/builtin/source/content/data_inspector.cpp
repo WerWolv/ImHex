@@ -747,7 +747,7 @@ namespace hex::plugin::builtin {
             auto copyValue = hex::format("#{:02X}{:02X}{:02X}", u8(0xFF * (color.Value.x)), u8(0xFF * (color.Value.y)), u8(0xFF * (color.Value.z)), 0xFF);
 
             return [color, copyValue] {
-                ImGui::ColorButton("##inspectorColor", color, ImGuiColorEditFlags_None, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+                ImGui::ColorButton("##inspectorColor", color, ImGuiColorEditFlags_AlphaOpaque, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
                 return copyValue;
             };
         });

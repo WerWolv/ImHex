@@ -1696,7 +1696,7 @@ namespace hex::plugin::builtin {
         ImGui::PushID(pattern);
         {
             const bool shiftHeld = ImGui::GetIO().KeyShift;
-            ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
+            ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()), ImGuiColorEditFlags_AlphaOpaque);
             ImGui::SameLine(0, 10);
             ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{} ", pattern->getFormattedName());
             ImGui::SameLine(0, 5);

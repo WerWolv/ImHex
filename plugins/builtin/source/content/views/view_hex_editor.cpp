@@ -622,7 +622,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        ImGui::ColorButton(tooltip.getValue().c_str(), ImColor(tooltip.getColor()));
+                        ImGui::ColorButton(tooltip.getValue().c_str(), ImColor(tooltip.getColor()), ImGuiColorEditFlags_AlphaOpaque);
                         ImGui::SameLine(0, 10);
                         ImGui::TextUnformatted(tooltip.getValue().c_str());
 
