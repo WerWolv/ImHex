@@ -1089,10 +1089,6 @@ namespace hex::plugin::builtin {
         ImGui::PopFont();
 
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
-        if (m_patternEvaluating && m_runningEvaluators == 0) {
-            m_patternEvaluating = false;
-            m_textEditor.JumpToLine();
-        }
     }
 
     void ViewPatternEditor::drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars) {
