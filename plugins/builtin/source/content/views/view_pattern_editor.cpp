@@ -579,7 +579,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (m_textEditor.IsTextChanged()) {
+            if (m_textEditor.IsTextChanged() && !m_hasUnevaluatedChanges) {
                 m_hasUnevaluatedChanges = true;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
@@ -587,7 +587,6 @@ namespace hex::plugin::builtin {
 
             if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0) {
                 if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1LL)) {
-                    m_hasUnevaluatedChanges = false;
 
                     auto code = m_textEditor.GetText();
                     EventPatternEditorChanged::post(code);
@@ -598,6 +597,8 @@ namespace hex::plugin::builtin {
                         if (m_runAutomatically)
                             m_triggerAutoEvaluate = true;
                     });
+                    m_hasUnevaluatedChanges = false;
+                    m_textEditor.SetTextChanged();
                 }
             }
 
@@ -1088,6 +1089,10 @@ namespace hex::plugin::builtin {
         ImGui::PopFont();
 
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
+        if (m_patternEvaluating && m_runningEvaluators == 0) {
+            m_patternEvaluating = false;
+            m_textEditor.JumpToLine();
+        }
     }
 
     void ViewPatternEditor::drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars) {
@@ -1899,6 +1904,7 @@ namespace hex::plugin::builtin {
 
         m_accessHistory = {};
         m_accessHistoryIndex = 0;
+        m_patternEvaluating = true;
 
         EventHighlightingChanged::post();
 
