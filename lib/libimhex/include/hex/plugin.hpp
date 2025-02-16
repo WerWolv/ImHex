@@ -81,7 +81,6 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
 #define IMHEX_LIBRARY_SETUP(name) IMHEX_LIBRARY_SETUP_IMPL(name)
 
 #define IMHEX_LIBRARY_SETUP_IMPL(name)                                                                                          \
-    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloaded library '{}'", name); } } HANDLER; }    \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)();                             \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *WOLV_TOKEN_CONCAT(getLibraryName_, IMHEX_PLUGIN_NAME)() { return name; }         \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(setImGuiContext_, IMHEX_PLUGIN_NAME)(ImGuiContext *ctx) {             \
@@ -107,7 +106,6 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)()
 
 #define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                                      \
-    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::debug("Unloaded plugin '{}'", name); } } HANDLER; }    \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                                                 \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginAuthor() { return author; }                                             \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginDescription() { return description; }                                   \
