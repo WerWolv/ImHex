@@ -872,7 +872,8 @@ namespace hex {
 
         SemanticVersion getImHexVersion() {
             #if defined IMHEX_VERSION
-                return SemanticVersion(IMHEX_VERSION);
+                static auto version = SemanticVersion(IMHEX_VERSION);
+                return version;
             #else
                 return {};
             #endif
