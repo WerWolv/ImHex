@@ -1858,8 +1858,11 @@ void TextEditor::TextEditor::MoveBottom(bool aSelect) {
 void TextEditor::MoveHome(bool aSelect) {
     ResetCursorBlinkTime();
     auto oldPos = mState.mCursorPosition;
-    SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, 0));
-
+    auto &line = mLines[mState.mCursorPosition.mLine];
+    auto home=0;
+    while (isspace(line[home].mChar))
+        home++;
+    SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, home));
     if (mState.mCursorPosition != oldPos) {
         if (aSelect) {
             if (oldPos == mInteractiveStart)
