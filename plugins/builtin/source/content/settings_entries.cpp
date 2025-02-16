@@ -27,8 +27,6 @@ namespace hex::plugin::builtin {
 
     namespace {
 
-        bool s_showScalingWarning = true;
-
         /*
             Values of this setting:
             0 - do not check for updates on startup
@@ -190,11 +188,6 @@ namespace hex::plugin::builtin {
                     m_value = 0;
                 else if (m_value > 10)
                     m_value = 10;
-
-                if (s_showScalingWarning && (u32(m_value * 10) % 10) != 0) {
-                    ImGui::SameLine();
-                    ImGuiExt::HelpHover("hex.builtin.setting.interface.scaling.fractional_warning"_lang, ICON_VS_WARNING, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
-                }
 
                 return changed;
             }
