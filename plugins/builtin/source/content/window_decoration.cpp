@@ -12,7 +12,7 @@
 #include <imgui_internal.h>
 #include <random>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <ui/menu_items.hpp>
+#include <hex/helpers/menu_items.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <hex/api/tutorial_manager.hpp>

@@ -66,7 +66,10 @@ if (APPLE)
         endif ()
     endif ()
 
-    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_macos.m)
+    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES}
+            source/helpers/utils_macos.m
+            source/helpers/macos_menu.m
+    )
 endif ()
 
 if (IMHEX_EXTERNAL_PLUGIN_BUILD)

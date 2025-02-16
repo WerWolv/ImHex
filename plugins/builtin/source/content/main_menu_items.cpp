@@ -24,7 +24,7 @@
 #include <wolv/literals.hpp>
 
 #include <romfs/romfs.hpp>
-#include <ui/menu_items.hpp>
+#include <hex/helpers/menu_items.hpp>
 
 #include <GLFW/glfw3.h>
 

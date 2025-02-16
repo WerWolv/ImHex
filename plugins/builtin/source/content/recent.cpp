@@ -21,7 +21,7 @@
 
 #include <ranges>
 #include <unordered_set>
-#include <ui/menu_items.hpp>
+#include <hex/helpers/menu_items.hpp>
 
 namespace hex::plugin::builtin::recent {
 

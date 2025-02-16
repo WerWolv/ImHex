@@ -36,7 +36,7 @@
 
 #include <content/global_actions.hpp>
 #include <fonts/fonts.hpp>
-#include <ui/menu_items.hpp>
+#include <hex/helpers/menu_items.hpp>
 
 namespace hex::plugin::builtin {
 

@@ -25,7 +25,7 @@
 #include <content/popups/popup_blocking_task.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
 #include <pl/patterns/pattern.hpp>
-#include <ui/menu_items.hpp>
+#include <hex/helpers/menu_items.hpp>
 #include <wolv/literals.hpp>
 
 using namespace std::literals::string_literals;
