@@ -715,8 +715,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: cache
-          key: appimage-ccache-${{ github.run_id }}
-          restore-keys: appimage-cache
+          key: appimage-ccache-${{ matrix.architecture }}-${{ github.run_id }}
+          restore-keys: appimage-ccache-${{ matrix.architecture }}
 
       - name: 🐳 Inject /cache into docker
         uses: reproducible-containers/buildkit-cache-dance@v2
