@@ -30,7 +30,11 @@ namespace hex {
 
             return handle;
         #else
-            auto handle = uintptr_t(dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY));
+            const auto pathString = wolv::util::toUTF8String(path);
+
+            auto handle = uintptr_t(dlopen(pathString.c_str(), RTLD_NOLOAD));
+            if (handle == 0)
+                handle = uintptr_t(dlopen(pathString.c_str(), RTLD_NOW | RTLD_GLOBAL));
 
             if (handle == 0) {
                 log::error("Loading library '{}' failed: {}!", wolv::util::toUTF8String(path.filename()), dlerror());
