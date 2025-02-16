@@ -435,10 +435,10 @@ namespace hex::plugin::builtin {
         hex::subcommands::registerSubCommand("select", [](const std::vector<std::string> &args){
             try {
                 if (args.size() == 1)
-                    ImHexApi::HexEditor::setSelection(std::stoull(args[0]), 1);
+                    ImHexApi::HexEditor::setSelection(std::stoull(args[0], nullptr, 0), 1);
                 else if (args.size() == 2) {
-                    const auto start = std::stoull(args[0]);
-                    const auto size = (std::stoull(args[1]) - start) + 1;
+                    const auto start = std::stoull(args[0], nullptr, 0);
+                    const auto size = (std::stoull(args[1], nullptr, 0) - start) + 1;
                     ImHexApi::HexEditor::setSelection(start, size);
                 } else {
                     log::error("Invalid number of arguments for select command!");
