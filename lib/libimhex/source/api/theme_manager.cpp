@@ -16,7 +16,7 @@ namespace hex {
         AutoReset<std::map<std::string, ThemeManager::StyleHandler>> s_styleHandlers;
         AutoReset<std::string> s_imageTheme;
         AutoReset<std::string> s_currTheme;
-        AutoReset<std::optional<float>> s_accentColor;
+        AutoReset<std::optional<std::array<float, 2>>> s_accentColor;
 
         std::recursive_mutex s_themeMutex;
     }
@@ -173,7 +173,8 @@ namespace hex {
                         float h, s, v;
                         ImGui::ColorConvertRGBtoHSV(color->Value.x, color->Value.y, color->Value.z, h, s, v);
 
-                        h = s_accentColor->value();
+                        h = s_accentColor->value()[0];
+                        v = s_accentColor->value()[1];
 
                         ImGui::ColorConvertHSVtoRGB(h, s, v, color->Value.x, color->Value.y, color->Value.z);
                     }
@@ -257,7 +258,7 @@ namespace hex {
         float h, s, v;
         ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, h, s, v);
 
-        s_accentColor = h;
+        *s_accentColor = { h, v };
         reapplyCurrentTheme();
     }
 
