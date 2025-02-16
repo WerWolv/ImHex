@@ -927,7 +927,7 @@ jobs:
           path: /var/cache/dnf
           key: ${{ matrix.mock_release }}-dnf-${{ github.run_id }}
           restore-keys: |
-            ${{ matrix.mock_release }}-dnf-
+            ${{ matrix.mock_release }}-dnf
 
       - name: ⬇️ Update all packages and install dependencies
         run: |
