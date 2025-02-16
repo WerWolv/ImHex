@@ -16,3 +16,4 @@ CMakeUserPresets.json
 Brewfile.lock.json
 
 .vs/
+vcpkg.json

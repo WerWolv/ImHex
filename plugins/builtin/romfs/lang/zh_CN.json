@@ -123,7 +123,7 @@
         "hex.builtin.inspector.rgba8": "RGBA8 颜色",
         "hex.builtin.inspector.sleb128": "有符号LEB128",
         "hex.builtin.inspector.string": "字符串",
-        "hex.builtin.inspector.string16": "宽字符串",
+        "hex.builtin.inspector.wstring": "宽字符串",
         "hex.builtin.inspector.time": "time_t",
         "hex.builtin.inspector.time32": "time32_t",
         "hex.builtin.inspector.time64": "time64_t",
@@ -135,7 +135,7 @@
         "hex.builtin.inspector.u8": "uint8_t",
         "hex.builtin.inspector.uleb128": "无符号LEB128",
         "hex.builtin.inspector.utf8": "UTF-8 码位",
-        "hex.builtin.inspector.wide": "宽字符",
+        "hex.builtin.inspector.wide": "wchar_t",
         "hex.builtin.layouts.default": "默认",
         "hex.builtin.layouts.none.restore_default": "恢复默认布局",
         "hex.builtin.menu.edit": "编辑",
@@ -1070,7 +1070,7 @@
         "hex.builtin.welcome.start.recent.auto_backups": "自动备份",
         "hex.builtin.welcome.start.recent.auto_backups.backup": "备份于 {:%年-%月-%日 %时:%分:%秒}",
         "hex.builtin.welcome.tip_of_the_day": "每日提示",
-        "hex.builtin.welcome.update.desc": "ImHex {0} 已发布！在这里下载。",
+        "hex.builtin.welcome.update.desc": "ImHex {0} 已发布！",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "新的更新可用！"
     }

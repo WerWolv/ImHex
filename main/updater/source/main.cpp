@@ -79,13 +79,26 @@ std::string getUpdateType() {
         if (!hex::ImHexApi::System::isPortableVersion())
             return "win-msi";
     #elif defined (OS_MACOS)
-        return "mac-dmg";
+        #if defined(__x86_64__)
+            return "macos-dmg-x86";
+        #elif defined(__arm64__)
+            return "macos-dmg-arm";
+        #endif
     #elif defined (OS_LINUX)
-        if (hex::executeCommand("lsb_release -a | grep Ubuntu") == 0) {
-            if (hex::executeCommand("lsb_release -a | grep 22.") == 0)
-                return "linux-deb-22.04";
-            else if (hex::executeCommand("lsb_release -a | grep 23.") == 0)
-                return "linux-deb-23.04";
+        if (hex::executeCommand("grep 'ID=ubuntu' /etc/os-release") == 0) {
+            if (hex::executeCommand("grep 'VERSION_ID=\"24.04\"' /etc/os-release") == 0)
+                return "linux-deb-24.04";
+            else if (hex::executeCommand("grep 'VERSION_ID=\"24.10\"' /etc/os-release") == 0)
+                return "linux-deb-24.10";
+        } else if (hex::executeCommand("grep 'ID=fedora' /etc/os-release") == 0) {
+            if (hex::executeCommand("grep 'VERSION_ID=\"40\"' /etc/os-release") == 0)
+                return "linux-rpm-40";
+            else if (hex::executeCommand("grep 'VERSION_ID=\"41\"' /etc/os-release") == 0)
+                return "linux-rpm-41";
+            else if (hex::executeCommand("grep 'VERSION_ID=\"rawhide\"' /etc/os-release") == 0)
+                return "linux-rpm-rawhide";
+        } else if (hex::executeCommand("grep '^NAME=\"Arch Linux\"' /etc/os-release") == 0) {
+            return "linux-arch";
         }
     #endif
 
@@ -100,10 +113,15 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
     };
 
     constexpr static auto UpdateHandlers = {
-        UpdateHandler { "win-msi",          ".msi",  "msiexec /passive /package {}"                             },
-        UpdateHandler { "macos-dmg",        ".dmg",  "hdiutil attach {}"                                        },
-        UpdateHandler { "linux-deb-22.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
-        UpdateHandler { "linux-deb-23.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
+        UpdateHandler { "win-msi",              ".msi",  "msiexec /i \"{}\" /qb"                                        },
+        UpdateHandler { "macos-dmg-x86",        ".dmg",  "hdiutil attach -autoopen \"{}\""                              },
+        UpdateHandler { "macos-dmg-arm",        ".dmg",  "hdiutil attach -autoopen \"{}\""                              },
+        UpdateHandler { "linux-deb-24.04",      ".deb",  "sudo apt update && sudo apt install -y --fix-broken \"{}\""   },
+        UpdateHandler { "linux-deb-24.10",      ".deb",  "sudo apt update && sudo apt install -y --fix-broken \"{}\""   },
+        UpdateHandler { "linux-rpm-40",         ".rpm",  "sudo rpm -i \"{}\""                                           },
+        UpdateHandler { "linux-rpm-41",         ".rpm",  "sudo rpm -i \"{}\""                                           },
+        UpdateHandler { "linux-rpm-rawhide",    ".rpm",  "sudo rpm -i \"{}\""                                           },
+        UpdateHandler { "linux-arch",           ".zst",  "sudo pacman -Syy && sudo pacman -U --noconfirm \"{}\""        }
     };
 
     for (const auto &handler : UpdateHandlers) {

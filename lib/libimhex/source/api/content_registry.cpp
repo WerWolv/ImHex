@@ -736,6 +736,15 @@ namespace hex {
                 return nullptr;
         }
 
+        View* getFocusedView() {
+            for (const auto &[unlocalizedName, view] : *impl::s_views) {
+                if (view->isFocused())
+                    return view.get();
+            }
+
+            return nullptr;
+        }
+
     }
 
     namespace ContentRegistry::Tools {

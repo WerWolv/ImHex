@@ -400,8 +400,8 @@ namespace hex::gl {
 
         T Sx, Cx, Sy, Cy, Sz, Cz;
         Vector<T,3> angles = ypr;
-        if(!radians)
-            angles *= std::numbers::pi / 180;
+        if (!radians)
+            angles *= std::numbers::pi_v<T> / 180;
 
         Sx = -sin(angles[0]); Cx = cos(angles[0]);
         Sy = -sin(angles[1]); Cy = cos(angles[1]);
@@ -814,11 +814,11 @@ namespace hex::gl {
 
         template<size_t N>
         void setUniform(std::string_view name, const Vector<float, N> &value) {
-            if (N == 2)
+            if constexpr (N == 2)
                 glUniform2f(getUniformLocation(name), value[0], value[1]);
-            else if (N == 3)
+            else if constexpr (N == 3)
                 glUniform3f(getUniformLocation(name), value[0], value[1], value[2]);
-            else if (N == 4)
+            else if constexpr (N == 4)
                 glUniform4f(getUniformLocation(name), value[0], value[1], value[2],value[3]);
         }
 

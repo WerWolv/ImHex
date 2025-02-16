@@ -94,7 +94,7 @@
         "hex.builtin.inspector.rgba8": "Color RGBA8",
         "hex.builtin.inspector.sleb128": "LEB128 con Signo",
         "hex.builtin.inspector.string": "Cadena ",
-        "hex.builtin.inspector.string16": "Cadena (wide)",
+        "hex.builtin.inspector.wstring": "Cadena (wide)",
         "hex.builtin.inspector.time": "time_t",
         "hex.builtin.inspector.time32": "time32_t",
         "hex.builtin.inspector.time64": "time64_t",
@@ -106,7 +106,7 @@
         "hex.builtin.inspector.u8": "",
         "hex.builtin.inspector.uleb128": "LEB128 sin Signo",
         "hex.builtin.inspector.utf8": "Código UTF-8",
-        "hex.builtin.inspector.wide": "Carácter (wide)",
+        "hex.builtin.inspector.wide": "wchar_t",
         "hex.builtin.layouts.default": "Por defecto",
         "hex.builtin.layouts.none.restore_default": "",
         "hex.builtin.menu.edit": "Editar",
@@ -1005,7 +1005,7 @@
         "hex.builtin.welcome.start.recent.auto_backups": "",
         "hex.builtin.welcome.start.recent.auto_backups.backup": "",
         "hex.builtin.welcome.tip_of_the_day": "Consejo del día",
-        "hex.builtin.welcome.update.desc": "¡ImHex {0} está disponible! Descárguelo aquí.",
+        "hex.builtin.welcome.update.desc": "¡ImHex {0} está disponible!",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "Nueva actualización disponible!"
     }

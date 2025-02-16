@@ -97,6 +97,7 @@ namespace hex::fonts {
 
         // Build the font atlas
         if (fontAtlas->build()) {
+            fontAtlas->reset();
             return true;
         }
 

@@ -333,9 +333,9 @@ namespace hex::plugin::builtin {
             const auto availableSize = g.CurrentWindow->Size;
             const auto windowPosition = ImGui::GetCursorScreenPos();
             auto textEditorSize = availableSize;
-            textEditorSize.y *= 3.5 / 5.0;
+            textEditorSize.y *= 3.5F / 5.0F;
             textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-            textEditorSize.y = std::clamp(textEditorSize.y + height,200.0F, availableSize.y-200.0F);
+            textEditorSize.y = std::clamp(textEditorSize.y + height, 200.0F, availableSize.y - 200.0F);
 
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
@@ -1072,12 +1072,14 @@ namespace hex::plugin::builtin {
             const auto linesToAdd = m_console->size() - lineCount;
 
 
+            std::string content;
             for (size_t i = 0; i < linesToAdd; i += 1) {
                 if (!skipNewLine)
-                    m_consoleEditor.InsertText("\n");
+                    content += '\n';
                 skipNewLine = false;
-                m_consoleEditor.InsertText(m_console->at(lineCount + i));
+                content += m_console->at(lineCount + i);
             }
+            m_consoleEditor.SetText(content);
 
             m_consoleNeedsUpdate = false;
         }
@@ -1428,7 +1430,7 @@ namespace hex::plugin::builtin {
                     const auto &currScope = evaluator->getScope(-m_debuggerScopeIndex);
                     if (ImGui::BeginCombo("##scope", displayValue(currScope.parent, m_debuggerScopeIndex).c_str())) {
                         for (size_t i = 0; i < evaluator->getScopeCount(); i++) {
-                            auto &scope = evaluator->getScope(-i);
+                            auto &scope = evaluator->getScope(-i32(i));
 
                             if (ImGui::Selectable(displayValue(scope.parent, i).c_str(), i == size_t(m_debuggerScopeIndex))) {
                                 m_debuggerScopeIndex = i;

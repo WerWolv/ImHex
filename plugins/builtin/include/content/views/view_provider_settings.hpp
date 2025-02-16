@@ -17,6 +17,7 @@ namespace hex::plugin::builtin {
 
         ImVec2 getMinSize() const override { return { -1, -1 }; }
         ImVec2 getMaxSize() const override { return this->getMinSize(); }
+        ImGuiWindowFlags getWindowFlags() const override { return ImGuiWindowFlags_AlwaysAutoResize; }
 
         bool hasCloseButton() const override {
             return false;

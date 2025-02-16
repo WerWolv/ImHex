@@ -334,6 +334,9 @@ namespace hex {
     }
 
     void Window::frameBegin() {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+
         // Create font textures if necessary
         {
             const auto &fontDefinitions = ImHexApi::Fonts::impl::getFontDefinitions();
@@ -345,6 +348,8 @@ namespace hex {
 
                 currentFont = font->ContainerAtlas;
                 ImGui_ImplOpenGL3_CreateFontsTexture();
+                currentFont->ClearInputData();
+                currentFont->ClearTexData();
             }
 
             {
@@ -359,6 +364,8 @@ namespace hex {
                     cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
                     io.Fonts->AddFontDefault(&cfg);
                     ImGui_ImplOpenGL3_CreateFontsTexture();
+                    io.Fonts->ClearInputData();
+                    io.Fonts->ClearTexData();
                 } else {
                     currentFont = font->ContainerAtlas;
                 }
@@ -366,8 +373,7 @@ namespace hex {
         }
 
         // Start new ImGui Frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+
         ImGui::NewFrame();
 
         TutorialManager::drawTutorial();
@@ -406,7 +412,7 @@ namespace hex {
                 ImGuiExt::UnderlinedText("Plugin folders");
                 if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2(0, 100_scaled))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch, 0.2);
+                    ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch, 0.2F);
                     ImGui::TableSetupColumn("Exists", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() * 3);
 
                     ImGui::TableHeadersRow();
@@ -649,7 +655,7 @@ namespace hex {
                 auto prevShadowOffset = style.WindowShadowOffsetDist;
                 auto prevShadowAngle = style.WindowShadowOffsetAngle;
                 style.WindowShadowOffsetDist = 12_scaled;
-                style.WindowShadowOffsetAngle =  0.5 * std::numbers::pi;
+                style.WindowShadowOffsetAngle =  0.5F * std::numbers::pi_v<float>;
                 ON_SCOPE_EXIT {
                     style.WindowShadowOffsetDist = prevShadowOffset;
                     style.WindowShadowOffsetAngle = prevShadowAngle;

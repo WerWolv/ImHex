@@ -131,6 +131,7 @@ macro(detectOS)
         add_compile_definitions(WIN32_LEAN_AND_MEAN)
         add_compile_definitions(NOMINMAX)
         add_compile_definitions(UNICODE)
+        add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
     elseif (APPLE)
         add_compile_definitions(OS_MACOS)
         set(CMAKE_INSTALL_BINDIR ".")
@@ -626,13 +627,26 @@ macro(setupDebugCompressionFlag)
 endmacro()
 
 macro(setupCompilerFlags target)
-    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        addCommonFlag("/W4" ${target})
+        addCommonFlag("/wd4127" ${target}) # conditional expression is constant
+        addCommonFlag("/wd4242" ${target}) # 'identifier': conversion from 'type1' to 'type2', possible loss of data
+        addCommonFlag("/wd4244" ${target}) # 'conversion': conversion from 'type1' to 'type2', possible loss of data
+        addCommonFlag("/wd4267" ${target}) # 'var': conversion from 'size_t' to 'type', possible loss of data
+        addCommonFlag("/wd4305" ${target}) # truncation from 'double' to 'float'
+        addCommonFlag("/wd4996" ${target}) # 'function': was declared deprecated
+
+        if (IMHEX_STRICT_WARNINGS)
+            addCommonFlag("/WX" ${target})
+        endif()
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        addCommonFlag("-Wall" ${target})
+        addCommonFlag("-Wextra" ${target})
+        addCommonFlag("-Wpedantic" ${target})
+
         # Define strict compilation flags
         if (IMHEX_STRICT_WARNINGS)
-            addCommonFlag("-Wall" ${target})
-            addCommonFlag("-Wextra" ${target})
-            addCommonFlag("-Wpedantic" ${target})
-            addCommonFlag("-Werror" ${target})
+             addCommonFlag("-Werror" ${target})
         endif()
 
         if (UNIX AND NOT APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -646,6 +660,14 @@ macro(setupCompilerFlags target)
         addCCXXFlag("-Wno-array-bounds" ${target})
         addCCXXFlag("-Wno-deprecated-declarations" ${target})
         addCCXXFlag("-Wno-unknown-pragmas" ${target})
+
+        # Enable hardening flags
+        addCommonFlag("-U_FORTIFY_SOURCE" ${target})
+        addCommonFlag("-D_FORTIFY_SOURCE=3" ${target})
+
+        if (NOT EMSCRIPTEN)
+            addCommonFlag("-fstack-protector-strong" ${target})
+        endif()
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -659,6 +681,12 @@ macro(setupCompilerFlags target)
         set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
         set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
         addCCXXFlag("-Wno-unknown-warning-option" ${target})
+
+        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+            add_compile_definitions(_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG)
+        else()
+            add_compile_definitions(_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE)
+        endif()
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -801,11 +829,7 @@ macro(addBundledLibraries)
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)
     set(LIBPL_ENABLE_PRECOMPILED_HEADERS ${IMHEX_ENABLE_PRECOMPILED_HEADERS} CACHE BOOL "" FORCE)
 
-    if (WIN32 AND NOT MSVC)
-        set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "" FORCE)
-    else()
-        set(LIBPL_SHARED_LIBRARY OFF CACHE BOOL "" FORCE)
-    endif()
+    set(LIBPL_SHARED_LIBRARY OFF CACHE BOOL "" FORCE)
 
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/disassembler EXCLUDE_FROM_ALL)

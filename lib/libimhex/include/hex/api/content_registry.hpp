@@ -328,7 +328,7 @@ namespace hex {
                             result = defaultValue;
 
                         return result.get<T>();
-                    } catch (const nlohmann::json::exception &e) {
+                    } catch (const nlohmann::json::exception &) {
                         return defaultValue;
                     }
                 }
@@ -597,6 +597,12 @@ namespace hex {
              * @return The view if it exists, nullptr otherwise
              */
             View* getViewByName(const UnlocalizedString &unlocalizedName);
+
+            /**
+             * @brief Gets the currently focused view
+             * @return The view that is focused right now. nullptr if none is focused
+             */
+            View* getFocusedView();
         }
 
         /* Tools Registry. Allows adding new entries to the tools window */

@@ -283,7 +283,7 @@ namespace hex::init {
                 const auto highlightBytes = [&](ImVec2 start, size_t count, ImColor color, float opacity) {
                     // Dimensions and number of bytes that are drawn. Taken from the splash screen image
                     const auto hexSize = ImVec2(29, 18);
-                    const auto hexSpacing = ImVec2(17.4, 15);
+                    const auto hexSpacing = ImVec2(17.4F, 15);
                     const auto hexStart = ImVec2(27, 127);
 
                     constexpr auto HexCount = ImVec2(13, 7);

@@ -648,7 +648,17 @@ namespace hex {
                     return std::midpoint(xScale, yScale);
                 }
             #elif defined(OS_WEB)
-                return 1.0F;
+                return MAIN_THREAD_EM_ASM_DOUBLE({
+                    try {
+                        if (navigator.platform === "MacIntel") {
+                            return 2.0;
+                        } else {
+                            return 1.0;
+                        }
+                    } catch (e) {
+                        return 1.0;
+                    }
+                });
             #else
                 return 1.0F;
             #endif
@@ -749,13 +759,14 @@ namespace hex {
                     DSROLE_PRIMARY_DOMAIN_INFO_BASIC * info;
                     if ((DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, (PBYTE *)&info) == ERROR_SUCCESS) && (info != nullptr))
                     {
-                        bool result = std::wstring(info->DomainNameFlat).empty();
+                        bool result = std::wstring(info->DomainNameFlat) != L"WORKGROUP";
                         DsRoleFreeMemory(info);
 
                         return result;
                     } else {
-                        DWORD size = 1024;
-                        ::GetComputerNameExA(ComputerNameDnsDomain, nullptr, &size);
+                        DWORD size = 128;
+                        char buffer[128];
+                        ::GetComputerNameExA(ComputerNameDnsDomain, buffer, &size);
                         return size > 0;
                     }
                 }
@@ -935,7 +946,7 @@ namespace hex {
             }
 
             EventImHexClosing::subscribe([executablePath, updateTypeString] {
-                hex::executeCommand(
+                hex::startProgram(
                         hex::format("\"{}\" \"{}\"",
                                     wolv::util::toUTF8String(executablePath),
                                     updateTypeString

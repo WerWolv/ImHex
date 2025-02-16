@@ -136,6 +136,14 @@ namespace hex {
         static void processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode);
 
         /**
+         * @brief Runs the callback of a shortcut as if it was pressed on the keyboard
+         * @param shortcut Shortcut to run
+         * @param view View the shortcut belongs to or nullptr to run a global shortcut
+         * @return True if a callback was executed, false if not
+         */
+        static bool runShortcut(const Shortcut &shortcut, const View *view = nullptr);
+
+        /**
          * @brief Clear all shortcuts
          */
         static void clearShortcuts();

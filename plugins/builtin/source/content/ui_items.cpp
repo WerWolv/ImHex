@@ -179,7 +179,7 @@ namespace hex::plugin::builtin {
             // Draw background
             {
                 const ImVec2 margin = scaled({ 15, 15 });
-                drawList->AddRectFilled(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_WindowBg, 200.0/255.0));
+                drawList->AddRectFilled(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_WindowBg, 200.0F / 255.0F));
                 drawList->AddRect(windowPos + margin, (windowPos + windowSize) - margin, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight), 10_scaled, ImDrawFlags_None, 7.5_scaled);
             }
 
@@ -541,6 +541,15 @@ namespace hex::plugin::builtin {
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save", ImGuiCustomCol_ToolbarBlue);
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save_as", ImGuiCustomCol_ToolbarBlue);
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.bookmark.create", ImGuiCustomCol_ToolbarGreen);
+
+            const auto &initArgs = ImHexApi::System::getInitArguments();
+            if (auto it = initArgs.find("update-available"); it != initArgs.end()) {
+                ContentRegistry::Interface::addTitleBarButton(ICON_VS_GIFT, "hex.builtin.welcome.update.title", [] {
+                    ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
+                });
+
+                ui::ToastInfo::open(hex::format("hex.builtin.welcome.update.desc"_lang, it->second));
+            }
         });
     }
 

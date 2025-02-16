@@ -114,7 +114,7 @@ namespace hex::prv {
          * @param size number of bytes to read
          * @param overlays apply overlays and patches is true. Same as readRaw() if false
          */
-        void read(u64 offset, void *buffer, size_t size, bool overlays = true);
+        virtual void read(u64 offset, void *buffer, size_t size, bool overlays = true);
         
         /**
          * @brief Write data to the patches of this provider. Will not directly modify provider.
@@ -122,7 +122,7 @@ namespace hex::prv {
          * @param buffer buffer to take data to write from
          * @param size number of bytes to write
          */
-        void write(u64 offset, const void *buffer, size_t size);
+        virtual void write(u64 offset, const void *buffer, size_t size);
 
         /**
          * @brief Read data from this provider, without applying overlays and patches
@@ -194,11 +194,11 @@ namespace hex::prv {
         [[nodiscard]] virtual std::vector<Description> getDataDescription() const;
         [[nodiscard]] virtual std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument);
 
-        void undo();
-        void redo();
+        virtual void undo();
+        virtual void redo();
 
-        [[nodiscard]] bool canUndo() const;
-        [[nodiscard]] bool canRedo() const;
+        [[nodiscard]] virtual bool canUndo() const;
+        [[nodiscard]] virtual bool canRedo() const;
 
         [[nodiscard]] virtual bool hasFilePicker() const;
         virtual bool handleFilePicker();
@@ -232,7 +232,7 @@ namespace hex::prv {
             return m_undoRedoStack.add<T>(std::forward<decltype(args)...>(args)...);
         }
 
-        [[nodiscard]] undo::Stack& getUndoStack() { return m_undoRedoStack; }
+        [[nodiscard]] virtual undo::Stack& getUndoStack() { return m_undoRedoStack; }
 
     protected:
         u32 m_currPage    = 0;

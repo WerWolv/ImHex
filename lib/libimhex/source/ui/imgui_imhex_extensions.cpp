@@ -667,10 +667,8 @@ namespace ImGuiExt {
     }
 
     ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx) {
-        switch (idx) {
-            default:
-                return { };
-        }
+        std::ignore = idx;
+        return {};
     }
 
     void StyleCustomColorsDark() {
@@ -745,6 +743,17 @@ namespace ImGuiExt {
         End();
     }
 
+    void DisableWindowResize(ImGuiDir dir) {
+        const auto window = GetCurrentWindow();
+        const auto borderId = GetWindowResizeBorderID(window, dir);
+        if (borderId == GetHoveredID()) {
+            GImGui->ActiveIdMouseButton = 0;
+            SetHoveredID(0);
+        }
+        if (borderId == GetActiveID())
+            SetActiveID(0, window);
+    }
+
 
     bool TitleBarButton(const char *label, ImVec2 size_arg) {
         ImGuiWindow *window = GetCurrentWindow();
@@ -812,8 +821,11 @@ namespace ImGuiExt {
         PushStyleColor(ImGuiCol_Text, color);
 
         // Render
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered
-                                                                                                 : ImGuiCol_MenuBarBg);
+        ImU32 col = 0x00;
+        if (held)
+            col = GetColorU32(ImGuiCol_ScrollbarGrabActive);
+        else if (hovered)
+            col = GetColorU32(ImGuiCol_ScrollbarGrabHovered);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + padding, bb.Max - padding, symbol, nullptr, &size, style.ButtonTextAlign, &bb);
@@ -859,7 +871,7 @@ namespace ImGuiExt {
                                                                                           : ImGuiCol_Button);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3, 1) + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3F, 1) + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
