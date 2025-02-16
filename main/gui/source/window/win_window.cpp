@@ -70,6 +70,9 @@ namespace hex {
                 const auto newScale = LOWORD(wParam) / 96.0F;
                 const auto oldScale = ImHexApi::System::getNativeScale();
 
+                if (u32(oldScale * 10) == u32(newScale * 10))
+                    break;
+
                 EventDPIChanged::post(oldScale, newScale);
                 ImHexApi::System::impl::setNativeScale(newScale);
 
