@@ -409,7 +409,6 @@ namespace hex::plugin::builtin {
             auto window = ImHexApi::System::getMainWindowHandle();
             menu::enableNativeMenuBar(s_useNativeMenuBar);
             if (menu::beginMainMenuBar()) {
-                drawTitleBarBackDrop();
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                     #if defined(OS_WINDOWS)
                         ImGui::SetCursorPosX(5_scaled);
@@ -449,6 +448,7 @@ namespace hex::plugin::builtin {
             menu::enableNativeMenuBar(false);
 
             if (ImGui::BeginMainMenuBar()) {
+                drawTitleBarBackDrop();
                 ImGui::Dummy({});
 
                 ImGui::PopStyleVar(2);
