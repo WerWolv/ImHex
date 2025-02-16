@@ -492,7 +492,9 @@ namespace hex::init {
                 meanScale = 1.0F;
             #endif
 
-            meanScale /= hex::ImHexApi::System::getBackingScaleFactor();
+            #if !defined(OS_LINUX)
+                meanScale /= hex::ImHexApi::System::getBackingScaleFactor();
+            #endif
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
             ImHexApi::System::impl::setNativeScale(meanScale);
