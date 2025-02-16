@@ -38,15 +38,16 @@ namespace hex::plugin::builtin {
 
         m_httpRequest.setTimeout(30'0000);
 
-        addCategory("hex.builtin.view.store.tab.patterns",     "patterns",     &paths::Patterns);
-        addCategory("hex.builtin.view.store.tab.includes",     "includes",     &paths::PatternsInclude);
-        addCategory("hex.builtin.view.store.tab.magic",        "magic",        &paths::Magic, []{
+        addCategory("hex.builtin.view.store.tab.patterns",     "patterns",      &paths::Patterns);
+        addCategory("hex.builtin.view.store.tab.includes",     "includes",      &paths::PatternsInclude);
+        addCategory("hex.builtin.view.store.tab.magic",        "magic",         &paths::Magic, []{
             magic::compile();
         });
-        addCategory("hex.builtin.view.store.tab.nodes",        "nodes",        &paths::Nodes);
-        addCategory("hex.builtin.view.store.tab.encodings",    "encodings",    &paths::Encodings);
-        addCategory("hex.builtin.view.store.tab.constants",    "constants",    &paths::Constants);
-        addCategory("hex.builtin.view.store.tab.themes",       "themes",       &paths::Themes, [this]{
+        addCategory("hex.builtin.view.store.tab.nodes",        "nodes",         &paths::Nodes);
+        addCategory("hex.builtin.view.store.tab.encodings",    "encodings",     &paths::Encodings);
+        addCategory("hex.builtin.view.store.tab.disassemblers","disassemblers", &paths::Disassemblers);
+        addCategory("hex.builtin.view.store.tab.constants",    "constants",     &paths::Constants);
+        addCategory("hex.builtin.view.store.tab.themes",       "themes",        &paths::Themes, [this]{
             auto themeFile = wolv::io::File(m_downloadPath, wolv::io::File::Mode::Read);
 
             ThemeManager::addTheme(themeFile.readString());

@@ -1059,6 +1059,7 @@
         "hex.builtin.view.store.row.authors": "Authors",
         "hex.builtin.view.store.row.name": "Name",
         "hex.builtin.view.store.tab.constants": "Constants",
+        "hex.builtin.view.store.tab.disassemblers": "Disassemblers",
         "hex.builtin.view.store.tab.encodings": "Encodings",
         "hex.builtin.view.store.tab.includes": "Libraries",
         "hex.builtin.view.store.tab.magic": "Magic Files",
