@@ -500,6 +500,7 @@ jobs:
       run: |
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_OUTPUT
         docker buildx build . -f dist/macOS/arm64.Dockerfile --progress=plain --build-arg 'JOBS=4' --build-arg "BUILD_TYPE=$(BUILD_TYPE)" --build-context imhex=$(pwd) --output out
+        cp resources/dist/macos/Entitlements.plist out/Entitlements.plist
 
     - name: ⬆️ Upload artifacts
       uses: actions/upload-artifact@v4
@@ -546,7 +547,7 @@ jobs:
           cd out
           mv imhex.app ImHex.app
           codesign --remove-signature ImHex.app
-          codesign --force --deep --sign - ImHex.app
+          codesign --force --deep --entitlements Entitlements.plist --sign - ImHex.app
 
       - name: 📁 Fix permissions
         run: |
