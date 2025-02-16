@@ -330,15 +330,20 @@ namespace ImGuiExt {
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
         // Render
+        BeginGroup();
+        TextDisabled("%s", icon);
+        SameLine();
+
         const ImU32 col = hovered ? GetColorU32(ImGuiCol_ButtonHovered) : GetColorU32(ImGuiCol_ButtonActive);
         PushStyleColor(ImGuiCol_Text, ImU32(col));
-
-        Text("%s %s", icon, label);
+        TextUnformatted(label);
 
         if (hovered)
             GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
 
         PopStyleColor();
+
+        EndGroup();
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
         return pressed;

@@ -280,7 +280,7 @@ namespace hex::plugin::builtin::recent {
                         icon = ICON_VS_FILE_BINARY;
                     }
                   
-                    if (ImGuiExt::Hyperlink(hex::format("{} {}", icon, hex::limitStringLength(recentEntry.displayName, 32)).c_str())) {
+                    if (ImGuiExt::IconHyperlink(icon, hex::limitStringLength(recentEntry.displayName, 32).c_str())) {
                         loadRecentEntry(recentEntry);
                         break;
                     }
@@ -341,7 +341,7 @@ namespace hex::plugin::builtin::recent {
 
                 if (s_autoBackupsFound) {
                     ImGui::Separator();
-                    if (ImGuiExt::Hyperlink(hex::format("{} {}", ICON_VS_ARCHIVE, "hex.builtin.welcome.start.recent.auto_backups"_lang).c_str()))
+                    if (ImGuiExt::IconHyperlink(ICON_VS_ARCHIVE, "hex.builtin.welcome.start.recent.auto_backups"_lang))
                         PopupAutoBackups::open();
                 }
             }
