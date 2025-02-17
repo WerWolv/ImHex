@@ -34,8 +34,6 @@ namespace hex::plugin::disasm {
     }
 
     ViewDisassembler::~ViewDisassembler() {
-        EventDataChanged::unsubscribe(this);
-        EventRegionSelected::unsubscribe(this);
         EventProviderDeleted::unsubscribe(this);
     }
 
