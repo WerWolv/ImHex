@@ -1,5 +1,6 @@
 #pragma once
 
+#include <hex.hpp>
 #include <string>
 #include <vector>
 #include <filesystem>
@@ -7,7 +8,7 @@
 
 #include <wolv/io/fs.hpp>
 
-namespace hex::fs {
+EXPORT_MODULE namespace hex::fs {
 
     enum class DialogMode {
         Open,

@@ -749,13 +749,14 @@ namespace hex {
                     DSROLE_PRIMARY_DOMAIN_INFO_BASIC * info;
                     if ((DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, (PBYTE *)&info) == ERROR_SUCCESS) && (info != nullptr))
                     {
-                        bool result = std::wstring(info->DomainNameFlat).empty();
+                        bool result = std::wstring(info->DomainNameFlat) != L"WORKGROUP";
                         DsRoleFreeMemory(info);
 
                         return result;
                     } else {
-                        DWORD size = 1024;
-                        ::GetComputerNameExA(ComputerNameDnsDomain, nullptr, &size);
+                        DWORD size = 128;
+                        char buffer[128];
+                        ::GetComputerNameExA(ComputerNameDnsDomain, buffer, &size);
                         return size > 0;
                     }
                 }
@@ -871,7 +872,8 @@ namespace hex {
 
         SemanticVersion getImHexVersion() {
             #if defined IMHEX_VERSION
-                return SemanticVersion(IMHEX_VERSION);
+                static auto version = SemanticVersion(IMHEX_VERSION);
+                return version;
             #else
                 return {};
             #endif
@@ -935,7 +937,7 @@ namespace hex {
             }
 
             EventImHexClosing::subscribe([executablePath, updateTypeString] {
-                hex::executeCommand(
+                hex::startProgram(
                         hex::format("\"{}\" \"{}\"",
                                     wolv::util::toUTF8String(executablePath),
                                     updateTypeString

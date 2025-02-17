@@ -564,7 +564,7 @@ namespace hex::ui {
                 ImGui::TableSetupColumn("");
 
                 // Byte columns
-                for (u16 i = 0; i < columnCount; i++) {
+                for (u64 i = 0; i < columnCount; i++) {
                     if (isColumnSeparatorColumn(i, columnCount))
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
 

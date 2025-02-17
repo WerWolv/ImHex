@@ -15,8 +15,8 @@ env:
 
 jobs:
 
-  # Windows build
-  win:
+  # Windows MINGW build
+  win_mingw:
     runs-on: windows-2022
     name: 🪟 Windows MINGW64
 
@@ -41,8 +41,8 @@ jobs:
       uses:  hendrikmuhs/ccache-action@v1
       id:    cache-ccache
       with:
-        key: ${{ runner.os }}-ccache-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-ccache
+        key: ${{ runner.os }}-mingw-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-mingw-ccache
         max-size: 1G
 
     - name: 🟦 Install msys2
@@ -140,7 +140,7 @@ jobs:
 
     - name: 🗝️ Generate build provenance attestations
       uses: actions/attest-build-provenance@v2
-      if: github.event.pull_request.head.repo.full_name == github.repository
+      if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
       with:
         subject-path: |
           imhex-*.msi
@@ -178,6 +178,80 @@ jobs:
         path: |
           build/install/*
 
+  win_msvc:
+    runs-on: windows-2022
+    name: 🪟 Windows MSVC
+
+    env:
+      CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+
+    permissions:
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 🫧 Setup Visual Studio Dev Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
+      - name: 📜 Setup ccache
+        uses:  hendrikmuhs/ccache-action@v1
+        id:    cache-ccache
+        with:
+          key: ${{ runner.os }}-msvc-ccache-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-msvc-ccache
+          max-size: 1G
+
+      - name: 📦 Install vcpkg
+        uses: friendlyanon/setup-vcpkg@v1
+        with: { committish: 7e21420f775f72ae938bdeb5e6068f722088f06a }
+
+      - name: ⬇️ Install dependencies
+        run: |
+          cp dist/vcpkg.json vcpkg.json
+
+      - name: ⬇️ Install CMake and Ninja
+        uses: lukka/get-cmake@latest
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.100'
+
+      - name: 📜 Set version variable
+        run: |
+          "IMHEX_VERSION=$(Get-Content VERSION -Raw)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # Windows cmake build
+      - name: 🛠️ Configure CMake
+        run: |
+          mkdir -p build
+                    
+          cmake -G "Ninja" -B build                                                   `
+            --preset vs2022                                                           `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DCMAKE_C_COMPILER="$($(Get-Command cl.exe).Path)"                         `
+            -DCMAKE_CXX_COMPILER="$($(Get-Command cl.exe).Path)"                       `
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache                                        `
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                      `
+            -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE"                                      `
+            -DIMHEX_PATTERNS_PULL_MASTER=ON                                           `
+            -DIMHEX_COMMIT_HASH_LONG="$env:GITHUB_SHA"                                `
+            -DIMHEX_COMMIT_BRANCH="$($env:GITHUB_REF -replace '.*/', '')"             `
+            -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                  `
+            .
+
+      - name: 🛠️ Build
+        run: |
+          cd build
+          ninja
+
   win-plugin-template-test:
     runs-on: windows-2022
     name: 🧪 Plugin Template Test
@@ -186,7 +260,7 @@ jobs:
       run:
         shell: msys2 {0}
 
-    needs: win
+    needs: win_mingw
 
     env:
       IMHEX_SDK_PATH: "${{ github.workspace }}/out/sdk"
@@ -369,7 +443,7 @@ jobs:
 
     - name: 📦 Create DMG
       run: |
-        brew install imagemagick
+        brew install graphicsmagick imagemagick
         git clone https://github.com/sindresorhus/create-dmg
         cd create-dmg
         npm i && npm -g i
@@ -384,7 +458,7 @@ jobs:
 
     - name: 🗝️ Generate build provenance attestations
       uses: actions/attest-build-provenance@v2
-      if: github.event.pull_request.head.repo.full_name == github.repository
+      if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
       with:
         subject-path: |
           ./*.dmg
@@ -426,6 +500,7 @@ jobs:
       run: |
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_OUTPUT
         docker buildx build . -f dist/macOS/arm64.Dockerfile --progress=plain --build-arg 'JOBS=4' --build-arg "BUILD_TYPE=$(BUILD_TYPE)" --build-context imhex=$(pwd) --output out
+        cp resources/dist/macos/Entitlements.plist out/Entitlements.plist
 
     - name: ⬆️ Upload artifacts
       uses: actions/upload-artifact@v4
@@ -448,7 +523,7 @@ jobs:
     needs: macos-arm64
 
     env:
-      IMHEX_VERSION: ${{ needs.macos-arm64-build.outputs.IMHEX_VERSION }}
+      IMHEX_VERSION: ${{ needs.macos-arm64.outputs.IMHEX_VERSION }}
 
     permissions:
       id-token: write
@@ -472,7 +547,7 @@ jobs:
           cd out
           mv imhex.app ImHex.app
           codesign --remove-signature ImHex.app
-          codesign --force --deep --sign - ImHex.app
+          codesign --force --deep --entitlements Entitlements.plist --sign - ImHex.app
 
       - name: 📁 Fix permissions
         run: |
@@ -488,7 +563,7 @@ jobs:
 
       - name: 📦 Create DMG
         run: |
-          brew install imagemagick
+          brew install graphicsmagick imagemagick
           git clone https://github.com/sindresorhus/create-dmg
           cd create-dmg
           npm i && npm -g i
@@ -503,7 +578,7 @@ jobs:
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
             ./*.dmg
@@ -597,7 +672,7 @@ jobs:
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
             ./*.deb
@@ -641,8 +716,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: cache
-          key: appimage-ccache-${{ github.run_id }}
-          restore-keys: appimage-cache
+          key: appimage-ccache-${{ matrix.architecture }}-${{ github.run_id }}
+          restore-keys: appimage-ccache-${{ matrix.architecture }}
 
       - name: 🐳 Inject /cache into docker
         uses: reproducible-containers/buildkit-cache-dance@v2
@@ -659,7 +734,7 @@ jobs:
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
             out/*.AppImage
@@ -776,7 +851,7 @@ jobs:
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
             build/imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
@@ -852,7 +927,7 @@ jobs:
           path: /var/cache/dnf
           key: ${{ matrix.mock_release }}-dnf-${{ github.run_id }}
           restore-keys: |
-            ${{ matrix.mock_release }}-dnf-
+            ${{ matrix.mock_release }}-dnf
 
       - name: ⬇️ Update all packages and install dependencies
         run: |
@@ -920,7 +995,7 @@ jobs:
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
             imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm

@@ -9,7 +9,7 @@ On Linux, ImHex is built through regular GCC (or optionally Clang).
 cd ImHex
 mkdir -p build
 cd build
-CC=gcc-12 CXX=g++-12                          \
+CC=gcc-14 CXX=g++-14                          \
 cmake -G "Ninja"                              \
     -DCMAKE_BUILD_TYPE=Release                \
     -DCMAKE_INSTALL_PREFIX="/usr"             \

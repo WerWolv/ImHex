@@ -66,7 +66,10 @@ if (APPLE)
         endif ()
     endif ()
 
-    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_macos.m)
+    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES}
+            source/helpers/utils_macos.m
+            source/helpers/macos_menu.m
+    )
 endif ()
 
 if (IMHEX_EXTERNAL_PLUGIN_BUILD)
@@ -77,6 +80,15 @@ else()
         add_library(libimhex STATIC ${LIBIMHEX_SOURCES})
     else()
         add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
+    endif()
+
+    if (IMHEX_ENABLE_CXX_MODULES)
+        target_sources(libimhex
+                PUBLIC
+                FILE_SET cxx_modules TYPE CXX_MODULES
+                FILES
+                include/hex.cppm
+        )
     endif()
 
     set(LIBIMHEX_LIBRARY_TYPE PUBLIC)

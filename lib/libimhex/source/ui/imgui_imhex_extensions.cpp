@@ -330,15 +330,20 @@ namespace ImGuiExt {
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
         // Render
+        BeginGroup();
+        TextDisabled("%s", icon);
+        SameLine();
+
         const ImU32 col = hovered ? GetColorU32(ImGuiCol_ButtonHovered) : GetColorU32(ImGuiCol_ButtonActive);
         PushStyleColor(ImGuiCol_Text, ImU32(col));
-
-        Text("%s %s", icon, label);
+        TextUnformatted(label);
 
         if (hovered)
             GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
 
         PopStyleColor();
+
+        EndGroup();
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
         return pressed;
@@ -821,8 +826,11 @@ namespace ImGuiExt {
         PushStyleColor(ImGuiCol_Text, color);
 
         // Render
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered
-                                                                                                 : ImGuiCol_MenuBarBg);
+        ImU32 col = 0x00;
+        if (held)
+            col = GetColorU32(ImGuiCol_ScrollbarGrabActive);
+        else if (hovered)
+            col = GetColorU32(ImGuiCol_ScrollbarGrabHovered);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + padding, bb.Max - padding, symbol, nullptr, &size, style.ButtonTextAlign, &bb);

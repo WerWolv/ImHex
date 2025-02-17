@@ -161,12 +161,11 @@ namespace hex {
 
         const float currScaleFactor = MAIN_THREAD_EM_ASM_DOUBLE({
             try {
-                // Take square root of scaling to counter scaling applied by Browser
-                return Math.sqrt(window.devicePixelRatio);
+                return window.devicePixelRatio;
             } catch (e) {
                 return 1.0;
             }
-        });
+        }) / ImHexApi::System::getBackingScaleFactor();
         if (prevScaleFactor != 0 && prevScaleFactor != currScaleFactor) {
             EventDPIChanged::post(prevScaleFactor, currScaleFactor);
             resizeCanvas();

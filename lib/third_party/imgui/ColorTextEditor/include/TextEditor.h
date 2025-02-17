@@ -299,7 +299,7 @@ public:
 
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
 	void SetText(const std::string& aText);
-    void JumpToLine(int line);
+    void JumpToLine(int line=-1);
     void JumpToCoords(const Coordinates &coords);
 	std::string GetText() const;
     bool isEmpty() const {
@@ -352,6 +352,7 @@ public:
 	void SetReadOnly(bool aValue);
 	bool IsReadOnly() const { return mReadOnly; }
 	bool IsTextChanged() const { return mTextChanged; }
+    void SetTextChanged(bool aValue=false) { mTextChanged = aValue; }
 	bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
     bool IsBreakpointsChanged() const { return mBreakPointsChanged; }
     void ClearBreakpointsChanged() { mBreakPointsChanged = false; }
@@ -578,7 +579,7 @@ private:
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
 	void RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPos, const ImVec2 &textEditorSize);
-
+    void SetFocus();
 	float mLineSpacing = 1.0F;
 	Lines mLines;
 	EditorState mState = {};

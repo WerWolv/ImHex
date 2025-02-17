@@ -44,7 +44,7 @@ namespace hex::paths {
 
             if (includeSystemFolders) {
                 if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value()) {
-                    paths.push_back(*executablePath);
+                    paths.push_back(executablePath->parent_path());
                 }
             }
 

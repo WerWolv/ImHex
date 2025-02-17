@@ -46,7 +46,8 @@ namespace hex::plugin::disasm {
 
             for (u8 byte : instruction.bytes)
                 disassembly.bytes += hex::format("{0:02X} ", byte);
-            disassembly.bytes.pop_back();
+            if (!disassembly.bytes.empty())
+                disassembly.bytes.pop_back();
 
             return disassembly;
         }

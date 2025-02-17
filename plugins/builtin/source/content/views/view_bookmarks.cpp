@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
 
                     {
                         // Draw bookmark header
-                        ImGui::ColorButton("##color", ImColor(bookmark.color));
+                        ImGui::ColorButton("##color", ImColor(bookmark.color), ImGuiColorEditFlags_AlphaOpaque);
                         ImGui::SameLine(0, 10);
                         ImGuiExt::TextFormatted("{} ", bookmark.name);
 

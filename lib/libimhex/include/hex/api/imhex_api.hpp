@@ -20,7 +20,7 @@ struct ImFontAtlas;
 struct ImFont;
 struct GLFWwindow;
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     namespace impl {
         class AutoResetBase;
@@ -767,7 +767,7 @@ namespace hex {
             void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<u32> defaultSize = std::nullopt);
             void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<u32> defaultSize = std::nullopt);
 
-            constexpr static float DefaultFontSize = 13.0;
+            constexpr float DefaultFontSize = 13.0;
 
             void registerFont(const UnlocalizedString &fontName);
             ImFont* getFont(const UnlocalizedString &fontName);

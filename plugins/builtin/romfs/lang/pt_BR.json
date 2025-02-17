@@ -94,7 +94,7 @@
         "hex.builtin.inspector.rgba8": "RGBA8 Color",
         "hex.builtin.inspector.sleb128": "",
         "hex.builtin.inspector.string": "String",
-        "hex.builtin.inspector.string16": "Wide String",
+        "hex.builtin.inspector.wstring": "Wide String",
         "hex.builtin.inspector.time": "time_t",
         "hex.builtin.inspector.time32": "time32_t",
         "hex.builtin.inspector.time64": "time64_t",
@@ -106,7 +106,7 @@
         "hex.builtin.inspector.u8": "uint8_t",
         "hex.builtin.inspector.uleb128": "",
         "hex.builtin.inspector.utf8": "UTF-8 code point",
-        "hex.builtin.inspector.wide": "Wide Character",
+        "hex.builtin.inspector.wide": "wchar_t",
         "hex.builtin.layouts.default": "Default",
         "hex.builtin.layouts.none.restore_default": "",
         "hex.builtin.menu.edit": "Editar",
@@ -1006,7 +1006,7 @@
         "hex.builtin.welcome.start.recent.auto_backups": "",
         "hex.builtin.welcome.start.recent.auto_backups.backup": "",
         "hex.builtin.welcome.tip_of_the_day": "Dica do Dia",
-        "hex.builtin.welcome.update.desc": "ImHex {0} acabou de lançar! Baixe aqui.",
+        "hex.builtin.welcome.update.desc": "ImHex {0} acabou de lançar!",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "Nova atualização disponivel!"
     }

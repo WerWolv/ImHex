@@ -10,7 +10,7 @@
 #include <fmt/core.h>
 #include <wolv/types/static_string.hpp>
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     namespace LocalizationManager {
 

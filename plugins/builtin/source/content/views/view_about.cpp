@@ -20,7 +20,7 @@
 #include <wolv/utils/string.hpp>
 
 #include <string>
-#include <ui/menu_items.hpp>
+#include <hex/helpers/menu_items.hpp>
 
 namespace hex::plugin::builtin {
 

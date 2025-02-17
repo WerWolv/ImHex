@@ -286,6 +286,7 @@ namespace hex::plugin::builtin {
         bool m_replaceMode = false;
         bool m_openFindReplacePopUp = false;
         bool m_openGotoLinePopUp = false;
+        bool m_patternEvaluating = false;
         std::map<std::fs::path, std::string> m_patternNames;
 
         ImRect m_textEditorHoverBox;

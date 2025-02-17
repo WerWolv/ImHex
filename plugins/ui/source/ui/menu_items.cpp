@@ -1,4 +1,4 @@
-#include <ui/menu_items.hpp>
+#include <../../../../lib/libimhex/include/hex/helpers/menu_items.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>

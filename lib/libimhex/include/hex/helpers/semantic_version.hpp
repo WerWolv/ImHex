@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     class SemanticVersion {
     public:

@@ -463,16 +463,16 @@ namespace hex::plugin::builtin {
 
             ImGui::PushItemWidth(300_scaled);
             if (ImGui::BeginListBox("hex.builtin.provider.disk.selected_disk"_lang)) {
-                ImGui::PushID(1);
                 for (const auto &[path, friendlyName] : m_availableDrives) {
+                    ImGui::PushID(path.c_str());
                     if (ImGui::Selectable(friendlyName.c_str(), m_path == path)) {
                         m_path = path;
                         m_friendlyName = friendlyName;
                     }
+                    ImGui::PopID();
 
                     ImGuiExt::InfoTooltip(path.c_str());
                 }
-                ImGui::PopID();
 
                 ImGui::EndListBox();
             }
