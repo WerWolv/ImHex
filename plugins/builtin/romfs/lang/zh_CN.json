@@ -849,7 +849,7 @@
         "hex.builtin.view.hex_editor.menu.edit.paste_all": "粘贴全部",
         "hex.builtin.view.hex_editor.menu.edit.remove": "删除……",
         "hex.builtin.view.hex_editor.menu.edit.resize": "修改大小……",
-        "hex.builtin.view.hex_editor.menu.edit.select": "选择",
+        "hex.builtin.view.hex_editor.menu.edit.select": "选择……",
         "hex.builtin.view.hex_editor.menu.edit.select_all": "全选",
         "hex.builtin.view.hex_editor.menu.edit.set_base": "设置基地址",
         "hex.builtin.view.hex_editor.menu.edit.set_page_size": "设置页面大小",
