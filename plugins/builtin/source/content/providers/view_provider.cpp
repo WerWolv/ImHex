@@ -52,9 +52,10 @@ namespace hex::plugin::builtin {
             return false;
 
         EventProviderClosing::subscribe(this, [this](const prv::Provider *provider, bool*) {
-            if (m_provider == provider)
+            if (m_provider == provider) {
                 ImHexApi::Provider::remove(this, false);
-            m_provider = nullptr;
+                m_provider = nullptr;
+            }
         });
 
         return true;
