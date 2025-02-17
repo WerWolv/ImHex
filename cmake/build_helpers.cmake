@@ -381,6 +381,10 @@ endfunction()
 macro(configureCMake)
     message(STATUS "Configuring ImHex v${IMHEX_VERSION}")
 
+    if (DEFINED CMAKE_TOOLCHAIN_FILE)
+        message(STATUS "Using toolchain file: \"${CMAKE_TOOLCHAIN_FILE}\"")
+    endif()
+
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code for all targets" FORCE)
 
     # Configure use of recommended build tools
