@@ -82,6 +82,15 @@ else()
         add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
     endif()
 
+    if (IMHEX_ENABLE_CXX_MODULES)
+        target_sources(libimhex
+                PUBLIC
+                FILE_SET cxx_modules TYPE CXX_MODULES
+                FILES
+                include/hex.cppm
+        )
+    endif()
+
     set(LIBIMHEX_LIBRARY_TYPE PUBLIC)
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()

@@ -639,6 +639,7 @@ macro(setupCompilerFlags target)
         addCommonFlag("/wd4267" ${target}) # 'var': conversion from 'size_t' to 'type', possible loss of data
         addCommonFlag("/wd4305" ${target}) # truncation from 'double' to 'float'
         addCommonFlag("/wd4996" ${target}) # 'function': was declared deprecated
+        addCommonFlag("/wd5244" ${target}) # 'include' in the purview of module 'module' appears erroneous
 
         if (IMHEX_STRICT_WARNINGS)
             addCommonFlag("/WX" ${target})
