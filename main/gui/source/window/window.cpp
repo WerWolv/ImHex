@@ -343,7 +343,7 @@ namespace hex {
             auto &currentFont = ImGui::GetIO().Fonts;
             for (const auto &[name, font] : fontDefinitions) {
                 // If the texture for this atlas has been built already, don't do it again
-                if (font == nullptr || font->ContainerAtlas->TexID != 0)
+                if (font == nullptr || font->ContainerAtlas == nullptr || font->ContainerAtlas->TexID != 0)
                     continue;
 
                 currentFont = font->ContainerAtlas;
