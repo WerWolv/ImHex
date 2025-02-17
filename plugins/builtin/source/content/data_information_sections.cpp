@@ -7,6 +7,8 @@
 #include <fonts/vscode_icons.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/helpers/logger.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <wolv/literals.hpp>
 

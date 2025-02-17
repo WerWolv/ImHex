@@ -2,6 +2,7 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
 

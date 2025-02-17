@@ -4,6 +4,7 @@
 #include <hex/api_urls.hpp>
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <popups/popup_notification.hpp>
 #include <toasts/toast_notification.hpp>

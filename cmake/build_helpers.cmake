@@ -665,6 +665,7 @@ macro(setupCompilerFlags target)
         addCCXXFlag("-Wno-array-bounds" ${target})
         addCCXXFlag("-Wno-deprecated-declarations" ${target})
         addCCXXFlag("-Wno-unknown-pragmas" ${target})
+        addCXXFlag("-Wno-include-angled-in-module-purview" ${target})
 
         # Enable hardening flags
         addCommonFlag("-U_FORTIFY_SOURCE" ${target})

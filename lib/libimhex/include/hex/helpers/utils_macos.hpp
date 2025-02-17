@@ -4,7 +4,9 @@
 
 #if defined(OS_MACOS)
 
-    struct GLFWwindow;
+    #if !defined(HEX_MODULE_EXPORT)
+        struct GLFWwindow;
+    #endif
 
     extern "C" {
 

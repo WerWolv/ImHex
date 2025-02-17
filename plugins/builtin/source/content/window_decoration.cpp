@@ -4,6 +4,7 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/requests_gui.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>

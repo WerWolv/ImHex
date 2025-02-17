@@ -14,21 +14,25 @@
 #include <set>
 #include <memory>
 
-using ImGuiID = unsigned int;
-struct ImVec2;
-struct ImFontAtlas;
-struct ImFont;
+#if !defined(HEX_MODULE_EXPORT)
+    using ImGuiID = unsigned int;
+    struct ImVec2;
+    struct ImFontAtlas;
+    struct ImFont;
+#endif
 struct GLFWwindow;
 
 EXPORT_MODULE namespace hex {
 
-    namespace impl {
-        class AutoResetBase;
-    }
+    #if !defined(HEX_MODULE_EXPORT)
+        namespace impl {
+            class AutoResetBase;
+        }
 
-    namespace prv {
-        class Provider;
-    }
+        namespace prv {
+            class Provider;
+        }
+    #endif
 
     namespace ImHexApi {
 

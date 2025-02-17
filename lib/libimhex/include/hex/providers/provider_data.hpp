@@ -12,9 +12,11 @@
 
 namespace hex {
 
-    namespace prv {
-        class Provider;
-    }
+    #if !defined(HEX_MODULE_EXPORT)
+        namespace prv {
+            class Provider;
+        }
+    #endif
 
     template<typename T>
     class PerProvider {

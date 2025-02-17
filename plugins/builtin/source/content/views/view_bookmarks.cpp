@@ -5,6 +5,7 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_interaction.hpp>
+#include <hex/api/events/events_interaction.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/providers/provider.hpp>
