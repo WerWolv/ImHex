@@ -32,7 +32,7 @@ include("${IMHEX_BASE_FOLDER}/cmake/ide_helpers.cmake")
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+set(CMAKE_CXX_SCAN_FOR_MODULES ${IMHEX_ENABLE_CXX_MODULES})
 set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
