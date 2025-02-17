@@ -850,7 +850,7 @@
         "hex.builtin.view.hex_editor.menu.file.save": "Save",
         "hex.builtin.view.hex_editor.menu.file.save_as": "Save As...",
         "hex.builtin.view.hex_editor.menu.file.search": "Search...",
-        "hex.builtin.view.hex_editor.menu.edit.select": "Select",
+        "hex.builtin.view.hex_editor.menu.edit.select": "Select...",
         "hex.builtin.view.hex_editor.name": "Hex editor",
         "hex.builtin.view.hex_editor.search.find": "Find",
         "hex.builtin.view.hex_editor.search.hex": "Hex",
