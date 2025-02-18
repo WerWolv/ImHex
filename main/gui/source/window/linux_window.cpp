@@ -161,7 +161,7 @@ namespace hex {
             FILE *pipe = popen("dbus-send --session --print-reply --dest=org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Settings.Read string:'org.freedesktop.appearance' string:'color-scheme' 2>&1", "r");
             if (pipe == nullptr) return;
 
-            while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
+            while (fgets(buffer.data(), buffer.size() - 1, pipe) != nullptr)
                 result += buffer.data();
 
             auto exitCode = WEXITSTATUS(pclose(pipe));
