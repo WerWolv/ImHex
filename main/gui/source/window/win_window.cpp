@@ -13,6 +13,7 @@
 
     #include <hex/api/events/events_gui.hpp>
     #include <hex/api/events/events_lifecycle.hpp>
+    #include <hex/api/events/events_interaction.hpp>
     #include <hex/api/events/requests_gui.hpp>
 
     #include <imgui.h>
