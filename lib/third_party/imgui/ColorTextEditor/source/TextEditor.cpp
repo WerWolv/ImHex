@@ -871,8 +871,10 @@ void TextEditor::SetFocus() {
     SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
     ResetCursorBlinkTime();
     EnsureCursorVisible();
-    ImGui::SetKeyboardFocusHere(-1);
-    mUpdateFocus = false;
+    if (!this->mReadOnly) {
+        ImGui::SetKeyboardFocusHere(-1);
+        mUpdateFocus = false;
+    }
 }
 
 void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPos, const ImVec2 &textEditorSize) {
