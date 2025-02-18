@@ -46,15 +46,6 @@ macro(add_imhex_plugin)
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl)
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl-gen)
 
-    if (NOT IMHEX_PLUGIN_LIBRARY_PLUGIN)
-        set_target_properties(${IMHEX_PLUGIN_NAME}
-            PROPERTIES
-                C_VISIBILITY_PRESET hidden
-                CPP_VISIBILITY_PRESET hidden
-                VISIBILITY_INLINES_HIDDEN ON
-        )
-    endif()
-
     precompileHeaders(${IMHEX_PLUGIN_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
     # Add IMHEX_PROJECT_NAME and IMHEX_VERSION define
