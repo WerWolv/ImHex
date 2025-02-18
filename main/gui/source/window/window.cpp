@@ -334,6 +334,9 @@ namespace hex {
     }
 
     void Window::frameBegin() {
+        // Run all deferred calls
+        TaskManager::runDeferredCalls();
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
 
@@ -353,7 +356,7 @@ namespace hex {
             }
 
             {
-                const auto &font = ImHexApi::Fonts::getFont("hex.fonts.font.default");
+                auto font = ImHexApi::Fonts::getFont("hex.fonts.font.default");
 
                 if (font == nullptr) {
                     const auto &io = ImGui::GetIO();
@@ -362,13 +365,15 @@ namespace hex {
                     ImFontConfig cfg;
                     cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
                     cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
-                    io.Fonts->AddFontDefault(&cfg);
+                    font = io.Fonts->AddFontDefault(&cfg);
                     ImGui_ImplOpenGL3_CreateFontsTexture();
                     io.Fonts->ClearInputData();
                     io.Fonts->ClearTexData();
                 } else {
                     currentFont = font->ContainerAtlas;
                 }
+
+                ImGui::SetCurrentFont(font);
             }
         }
 
@@ -682,9 +687,6 @@ namespace hex {
                 return banner->shouldClose();
             });
         }
-
-        // Run all deferred calls
-        TaskManager::runDeferredCalls();
     }
 
     void Window::frame() {
