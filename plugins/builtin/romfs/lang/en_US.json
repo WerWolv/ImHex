@@ -1143,7 +1143,7 @@
         "hex.builtin.welcome.learn.imhex.link": "https://docs.werwolv.net/imhex/",
         "hex.builtin.welcome.learn.imhex.title": "ImHex Documentation",
         "hex.builtin.welcome.learn.plugins.desc": "Extend ImHex with additional features using plugins",
-        "hex.builtin.welcome.learn.plugins.link": "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide",
+        "hex.builtin.welcome.learn.plugins.link": "https://docs.werwolv.net/imhex/common/extending-imhex",
         "hex.builtin.welcome.learn.plugins.title": "Plugins API",
         "hex.builtin.popup.create_workspace.title": "Create new Workspace",
         "hex.builtin.popup.create_workspace.desc": "Enter a name for the new Workspace",

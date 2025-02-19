@@ -995,7 +995,7 @@
         "hex.builtin.welcome.learn.pattern.link": "https://docs.werwolv.net/pattern-language/",
         "hex.builtin.welcome.learn.pattern.title": "ImHexオリジナル言語について",
         "hex.builtin.welcome.learn.plugins.desc": "ImHexの機能を拡張する",
-        "hex.builtin.welcome.learn.plugins.link": "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide",
+        "hex.builtin.welcome.learn.plugins.link": "https://docs.werwolv.net/imhex/common/extending-imhex",
         "hex.builtin.welcome.learn.plugins.title": "プラグインAPI",
         "hex.builtin.welcome.quick_settings.simplified": "",
         "hex.builtin.welcome.start.create_file": "新規ファイルを作成",

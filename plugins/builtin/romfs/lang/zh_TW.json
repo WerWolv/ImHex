@@ -995,7 +995,7 @@
         "hex.builtin.welcome.learn.pattern.link": "https://docs.werwolv.net/pattern-language/",
         "hex.builtin.welcome.learn.pattern.title": "模式語言說明文件",
         "hex.builtin.welcome.learn.plugins.desc": " 使用外掛程式來拓展 ImHex 的功能",
-        "hex.builtin.welcome.learn.plugins.link": "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide",
+        "hex.builtin.welcome.learn.plugins.link": "https://docs.werwolv.net/imhex/common/extending-imhex",
         "hex.builtin.welcome.learn.plugins.title": "外掛程式 API",
         "hex.builtin.welcome.quick_settings.simplified": "",
         "hex.builtin.welcome.start.create_file": "建立新檔案",

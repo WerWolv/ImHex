@@ -1058,7 +1058,7 @@
         "hex.builtin.welcome.learn.pattern.link": "https://docs.werwolv.net/pattern-language/",
         "hex.builtin.welcome.learn.pattern.title": "模式文档",
         "hex.builtin.welcome.learn.plugins.desc": "通过插件扩展 ImHex 获得更多功能",
-        "hex.builtin.welcome.learn.plugins.link": "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide",
+        "hex.builtin.welcome.learn.plugins.link": "https://docs.werwolv.net/imhex/common/extending-imhex",
         "hex.builtin.welcome.learn.plugins.title": "插件 API",
         "hex.builtin.welcome.nightly_build": "你正在运行ImHex的夜间构建。\n\n请在GitHub问题跟踪器上报告您遇到的任何错误！",
         "hex.builtin.welcome.quick_settings.simplified": "简化",
