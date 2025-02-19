@@ -502,7 +502,7 @@ function(verifyCompiler)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "17.0.0")
         message(FATAL_ERROR "ImHex requires Clang 17.0.0 or newer. Please use the latest Clang version.")
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        
+
     elseif (NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
         message(FATAL_ERROR "ImHex can only be compiled with GCC or Clang. ${CMAKE_CXX_COMPILER_ID} is not supported.")
     endif()
@@ -564,6 +564,9 @@ function(downloadImHexPatternsFiles dest)
         message(STATUS "Downloading ImHex-Patterns repo branch ${PATTERNS_BRANCH}...")
         FetchContent_MakeAvailable(imhex_patterns)
         message(STATUS "Finished downloading ImHex-Patterns")
+
+    elseif (IMHEX_ENABLE_EXTERNAL_PATTERNS)
+        set(imhex_patterns_SOURCE_DIR $ENV{PATTERNS_DIR})
 
     else ()
         set(imhex_patterns_SOURCE_DIR "")
