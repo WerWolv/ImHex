@@ -6,6 +6,8 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/encoding_file.hpp>
 
+#include <hex/api/events/events_interaction.hpp>
+
 #include <imgui.h>
 #include <hex/ui/view.hpp>
 

@@ -27,8 +27,6 @@ namespace hex::plugin::builtin {
 
     namespace {
 
-        bool s_showScalingWarning = true;
-
         /*
             Values of this setting:
             0 - do not check for updates on startup
@@ -190,11 +188,6 @@ namespace hex::plugin::builtin {
                     m_value = 0;
                 else if (m_value > 10)
                     m_value = 10;
-
-                if (s_showScalingWarning && (u32(m_value * 10) % 10) != 0) {
-                    ImGui::SameLine();
-                    ImGuiExt::HelpHover("hex.builtin.setting.interface.scaling.fractional_warning"_lang, ICON_VS_WARNING, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
-                }
 
                 return changed;
             }
@@ -757,6 +750,8 @@ namespace hex::plugin::builtin {
                 ThemeManager::setAccentColor(colorPicker->getColor());
             });
 
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.show_titlebar_backdrop", true);
+
             ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor")
             .requiresRestart();
 
@@ -808,6 +803,8 @@ namespace hex::plugin::builtin {
             #if defined (OS_MACOS)
                 ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.use_native_menu_bar", true);
             #endif
+
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.randomize_window_title", false);
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.restore_window_pos", false);
 
@@ -912,7 +909,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
         }
 
-        ImHexApi::System::addMigrationRoutine("v1.36.3", [] {
+        ImHexApi::System::addMigrationRoutine("v1.37.0", [] {
             log::warn("Resetting shortcut key settings for them to work with this version of ImHex");
 
             for (const auto &category : ContentRegistry::Settings::impl::getSettings()) {

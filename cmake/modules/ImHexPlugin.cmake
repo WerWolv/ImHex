@@ -66,11 +66,6 @@ macro(add_imhex_plugin)
             SUFFIX ${IMHEX_PLUGIN_SUFFIX}
     )
 
-    # Link plugins against libpl if it's a shared library
-    if (IMHEX_EXTERNAL_PLUGIN_BUILD)
-        target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libpl)
-    endif ()
-
     # Set rpath of plugin libraries to the plugins folder
     if (WIN32)
         if (IMHEX_PLUGIN_LIBRARY_PLUGIN)

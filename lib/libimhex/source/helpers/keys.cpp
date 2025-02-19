@@ -2,7 +2,7 @@
 
 #include <GLFW/glfw3.h>
 
-Keys scanCodeToKey(int scanCode) {
+enum Keys scanCodeToKey(int scanCode) {
     switch (scanCode) {
         case GLFW_KEY_SPACE:            return Keys::Space;
         case GLFW_KEY_APOSTROPHE:       return Keys::Apostrophe;
@@ -120,7 +120,7 @@ Keys scanCodeToKey(int scanCode) {
     }
 }
 
-int keyToScanCode(Keys key) {
+int keyToScanCode(enum Keys key) {
     switch (key) {
         case Keys::Space:               return GLFW_KEY_SPACE;
         case Keys::Apostrophe:          return GLFW_KEY_APOSTROPHE;

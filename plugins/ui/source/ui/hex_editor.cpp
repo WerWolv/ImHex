@@ -304,6 +304,9 @@ namespace hex::ui {
 
 
     void HexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType) {
+        ImGui::PushID(address + 1);
+        ON_SCOPE_EXIT { ImGui::PopID(); };
+
         static DataVisualizerAscii asciiVisualizer;
 
         if (m_shouldUpdateEditingValue && address == m_editingAddress) {
@@ -561,7 +564,7 @@ namespace hex::ui {
                 ImGui::TableSetupColumn("");
 
                 // Byte columns
-                for (u16 i = 0; i < columnCount; i++) {
+                for (u64 i = 0; i < columnCount; i++) {
                     if (isColumnSeparatorColumn(i, columnCount))
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
 

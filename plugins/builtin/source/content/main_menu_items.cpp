@@ -19,12 +19,13 @@
 #include <toasts/toast_notification.hpp>
 #include <popups/popup_text_input.hpp>
 #include <hex/api/workspace_manager.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <wolv/io/file.hpp>
 #include <wolv/literals.hpp>
 
 #include <romfs/romfs.hpp>
-#include <ui/menu_items.hpp>
+#include <hex/helpers/menu_items.hpp>
 
 #include <GLFW/glfw3.h>
 

@@ -6,6 +6,7 @@
 namespace hex::plugin::builtin {
 
     void handleVersionCommand(const std::vector<std::string> &args);
+    void handleVersionShortCommand(const std::vector<std::string> &args);
     void handleHelpCommand(const std::vector<std::string> &args);
     void handlePluginsCommand(const std::vector<std::string> &args);
     void handleLanguageCommand(const std::vector<std::string> &args);

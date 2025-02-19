@@ -2,6 +2,7 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
 
@@ -56,7 +57,7 @@ namespace hex::plugin::builtin {
                         auto region = occurrence.value.region;
                         const auto value = this->decodeValue(ImHexApi::Provider::get(), occurrence.value, 256);
 
-                        ImGui::ColorButton("##color", ImColor(HighlightColor()));
+                        ImGui::ColorButton("##color", ImColor(HighlightColor()), ImGuiColorEditFlags_AlphaOpaque);
                         ImGui::SameLine(0, 10);
                         ImGuiExt::TextFormatted("{} ", value);
 

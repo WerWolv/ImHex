@@ -204,7 +204,7 @@ namespace hex::plugin::diffing {
 
         const auto availableSize = ImGui::GetContentRegionAvail();
         auto diffingColumnSize = availableSize;
-        diffingColumnSize.y *= 3.5 / 5.0;
+        diffingColumnSize.y *= 3.5F / 5.0F;
         diffingColumnSize.y -= ImGui::GetTextLineHeightWithSpacing();
         diffingColumnSize.y += height;
 

@@ -159,6 +159,8 @@ namespace ImGuiExt {
 
     void OpenPopupInWindow(const char *window_name, const char *popup_name);
 
+    void DisableWindowResize(ImGuiDir dir);
+
     struct ImHexCustomData {
         ImVec4 Colors[ImGuiCustomCol_COUNT];
 
@@ -201,6 +203,7 @@ namespace ImGuiExt {
         ImGui::PushID(text.c_str());
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
 
         ImGui::PushItemWidth(ImGui::CalcTextSize(text.c_str()).x + ImGui::GetStyle().FramePadding.x * 2);
@@ -208,7 +211,7 @@ namespace ImGuiExt {
         ImGui::PopItemWidth();
 
         ImGui::PopStyleColor();
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar(2);
 
         ImGui::PopID();
     }
@@ -247,6 +250,7 @@ namespace ImGuiExt {
         ImGui::PushID(text.c_str());
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
 
         ImGui::PushItemWidth(ImGui::CalcTextSize(text.c_str()).x + ImGui::GetStyle().FramePadding.x * 2);
@@ -260,7 +264,7 @@ namespace ImGuiExt {
         ImGui::PopItemWidth();
 
         ImGui::PopStyleColor();
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar(2);
 
         ImGui::PopID();
     }

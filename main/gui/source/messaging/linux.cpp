@@ -42,12 +42,18 @@ namespace hex::messaging {
 
         static auto listenerThread = std::jthread([](const std::stop_token &stopToken){
             std::vector<u8> buffer(0xFFFF);
-            while (!stopToken.stop_requested()) {
+
+            while (true) {
                 int result = ::read(fifo, buffer.data(), buffer.size());
                 if (result > 0) {
                     EventNativeMessageReceived::post(std::vector<u8>{ buffer.begin(), buffer.begin() + result });
-                } else {
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                }
+
+                if (stopToken.stop_requested())
+                    break;
+
+                if (result <= 0) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
             }
         });

@@ -30,9 +30,11 @@
 
 namespace hex {
 
-    namespace prv {
-        class Provider;
-    }
+    #if !defined(HEX_MODULE_EXPORT)
+        namespace prv {
+            class Provider;
+        }
+    #endif
 
     template<typename T>
     [[nodiscard]] std::vector<std::vector<T>> sampleChannels(const std::vector<T> &data, size_t count, size_t channels) {
@@ -278,7 +280,7 @@ namespace hex {
 
         std::string result;
         for (i16 bit = hex::bit_width(number) - 1; bit >= 0; bit -= 1)
-            result += (number & (0b1 << bit)) == 0 ? '0' : '1';
+            result += (number & (0b1LLU << bit)) == 0 ? '0' : '1';
 
         return result;
     }

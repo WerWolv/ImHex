@@ -85,6 +85,36 @@ namespace hex::fonts {
         FontAtlas(const FontAtlas &) = delete;
         FontAtlas &operator=(const FontAtlas &) = delete;
 
+        FontAtlas(FontAtlas &&other) noexcept {
+            m_fontAtlas = other.m_fontAtlas;
+            other.m_fontAtlas = nullptr;
+
+            m_defaultConfig = other.m_defaultConfig;
+            m_fontSizes = std::move(other.m_fontSizes);
+            m_fontConfigs = std::move(other.m_fontConfigs);
+            m_glyphRange = std::move(other.m_glyphRange);
+            m_fontData = std::move(other.m_fontData); 
+        }
+
+        FontAtlas& operator=(FontAtlas &&other) noexcept {
+            if (this != &other) {
+                if (m_fontAtlas != nullptr) {
+                    IM_DELETE(m_fontAtlas);
+                }
+
+                m_fontAtlas = other.m_fontAtlas;
+                other.m_fontAtlas = nullptr;
+
+                m_defaultConfig = other.m_defaultConfig;
+                m_fontSizes = std::move(other.m_fontSizes);
+                m_fontConfigs = std::move(other.m_fontConfigs);
+                m_glyphRange = std::move(other.m_glyphRange);
+                m_fontData = std::move(other.m_fontData);
+            }
+
+            return *this;
+        }
+
         ~FontAtlas() {
             if (m_fontAtlas != nullptr) {
                 m_fontAtlas->Locked = false;

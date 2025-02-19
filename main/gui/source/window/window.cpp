@@ -334,21 +334,29 @@ namespace hex {
     }
 
     void Window::frameBegin() {
+        // Run all deferred calls
+        TaskManager::runDeferredCalls();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+
         // Create font textures if necessary
         {
             const auto &fontDefinitions = ImHexApi::Fonts::impl::getFontDefinitions();
             auto &currentFont = ImGui::GetIO().Fonts;
             for (const auto &[name, font] : fontDefinitions) {
                 // If the texture for this atlas has been built already, don't do it again
-                if (font == nullptr || font->ContainerAtlas->TexID != 0)
+                if (font == nullptr || font->ContainerAtlas == nullptr || font->ContainerAtlas->TexID != 0)
                     continue;
 
                 currentFont = font->ContainerAtlas;
                 ImGui_ImplOpenGL3_CreateFontsTexture();
+                currentFont->ClearInputData();
+                currentFont->ClearTexData();
             }
 
             {
-                const auto &font = ImHexApi::Fonts::getFont("hex.fonts.font.default");
+                auto font = ImHexApi::Fonts::getFont("hex.fonts.font.default");
 
                 if (font == nullptr) {
                     const auto &io = ImGui::GetIO();
@@ -357,17 +365,20 @@ namespace hex {
                     ImFontConfig cfg;
                     cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
                     cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
-                    io.Fonts->AddFontDefault(&cfg);
+                    font = io.Fonts->AddFontDefault(&cfg);
                     ImGui_ImplOpenGL3_CreateFontsTexture();
+                    io.Fonts->ClearInputData();
+                    io.Fonts->ClearTexData();
                 } else {
                     currentFont = font->ContainerAtlas;
                 }
+
+                ImGui::SetCurrentFont(font);
             }
         }
 
         // Start new ImGui Frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+
         ImGui::NewFrame();
 
         TutorialManager::drawTutorial();
@@ -406,7 +417,7 @@ namespace hex {
                 ImGuiExt::UnderlinedText("Plugin folders");
                 if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2(0, 100_scaled))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch, 0.2);
+                    ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch, 0.2F);
                     ImGui::TableSetupColumn("Exists", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() * 3);
 
                     ImGui::TableHeadersRow();
@@ -649,7 +660,7 @@ namespace hex {
                 auto prevShadowOffset = style.WindowShadowOffsetDist;
                 auto prevShadowAngle = style.WindowShadowOffsetAngle;
                 style.WindowShadowOffsetDist = 12_scaled;
-                style.WindowShadowOffsetAngle =  0.5 * std::numbers::pi;
+                style.WindowShadowOffsetAngle =  0.5F * std::numbers::pi_v<float>;
                 ON_SCOPE_EXIT {
                     style.WindowShadowOffsetDist = prevShadowOffset;
                     style.WindowShadowOffsetAngle = prevShadowAngle;
@@ -676,9 +687,6 @@ namespace hex {
                 return banner->shouldClose();
             });
         }
-
-        // Run all deferred calls
-        TaskManager::runDeferredCalls();
     }
 
     void Window::frame() {

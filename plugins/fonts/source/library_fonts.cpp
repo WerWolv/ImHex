@@ -16,7 +16,7 @@ namespace hex::fonts {
 
     bool buildFontAtlas(FontAtlas *fontAtlas, std::fs::path fontPath, bool pixelPerfectFont, float fontSize, bool loadUnicodeCharacters, bool bold, bool italic, bool antialias);
 
-    static AutoReset<std::map<ImFont*, std::unique_ptr<FontAtlas>>> s_fontAtlases;
+    static AutoReset<std::map<UnlocalizedString, std::unique_ptr<FontAtlas>>> s_fontAtlases;
 
     void loadFont(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImFont **font, float scale) {
         const auto &settings = static_cast<const FontSelector&>(widget);
@@ -51,7 +51,7 @@ namespace hex::fonts {
 
         *font = atlas->getAtlas()->Fonts[0];
 
-        (*s_fontAtlases)[*font] = std::move(atlas);
+        (*s_fontAtlases)[name] = std::move(atlas);
     }
 
     bool setupFonts() {
@@ -65,7 +65,9 @@ namespace hex::fonts {
                         return;
                     }
 
-                    loadFont(widget, name, &font, ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor());
+                    TaskManager::doLater([&name, &font, &widget] {
+                        loadFont(widget, name, &font, ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor());
+                    });
                 });
 
             loadFont(widget.getWidget(), name, &font, ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor());

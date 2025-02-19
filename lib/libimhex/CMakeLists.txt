@@ -66,7 +66,10 @@ if (APPLE)
         endif ()
     endif ()
 
-    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_macos.m)
+    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES}
+            source/helpers/utils_macos.m
+            source/helpers/macos_menu.m
+    )
 endif ()
 
 if (IMHEX_EXTERNAL_PLUGIN_BUILD)
@@ -77,6 +80,15 @@ else()
         add_library(libimhex STATIC ${LIBIMHEX_SOURCES})
     else()
         add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
+    endif()
+
+    if (IMHEX_ENABLE_CXX_MODULES)
+        target_sources(libimhex
+                PUBLIC
+                FILE_SET cxx_modules TYPE CXX_MODULES
+                FILES
+                include/hex.cppm
+        )
     endif()
 
     set(LIBIMHEX_LIBRARY_TYPE PUBLIC)
@@ -138,8 +150,8 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_libraries(libimhex PUBLIC ${FOUNDATION})
     endif ()
 
-    target_link_libraries(libimhex PRIVATE microtar libwolv ${NFD_LIBRARIES} magic)
-    target_link_libraries(libimhex PUBLIC libpl ${IMGUI_LIBRARIES} ${JTHREAD_LIBRARIES})
+    target_link_libraries(libimhex PRIVATE libpl microtar ${NFD_LIBRARIES} magic)
+    target_link_libraries(libimhex PUBLIC libwolv libpl_includes libpl-gen ${IMGUI_LIBRARIES} ${JTHREAD_LIBRARIES})
 
     if (NOT WIN32)
         target_link_libraries(libimhex PRIVATE dl)

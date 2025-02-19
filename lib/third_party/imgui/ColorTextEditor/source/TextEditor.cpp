@@ -865,6 +865,18 @@ inline void TextUnformattedColoredAt(const ImVec2 &pos, const ImU32 &color, cons
     ImGui::PopStyleColor();
 }
 
+void TextEditor::SetFocus() {
+    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = mFocusAtCoords;
+    mSelectionMode = SelectionMode::Normal;
+    SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+    ResetCursorBlinkTime();
+    EnsureCursorVisible();
+    if (!this->mReadOnly) {
+        ImGui::SetKeyboardFocusHere(-1);
+        mUpdateFocus = false;
+    }
+}
+
 void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPos, const ImVec2 &textEditorSize) {
     /* Compute mCharAdvance regarding scaled font size (Ctrl + mouse wheel)*/
     const float fontSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
@@ -1068,6 +1080,10 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
             auto prevColor = line.empty() ? mPalette[(int)PaletteIndex::Default] : GetGlyphColor(line[0]);
             ImVec2 bufferOffset;
 
+            if (mUpdateFocus && mFocusAtCoords == Coordinates(lineNo, 0)) {
+                SetFocus();
+            }
+
             for (int i = 0; i < line.size();) {
                 auto &glyph = line[i];
                 auto color  = GetGlyphColor(glyph);
@@ -1106,13 +1122,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                 prevColor = color;
 
                 if (mUpdateFocus && mFocusAtCoords == Coordinates(lineNo, i)) {
-                    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = mFocusAtCoords;
-                    mSelectionMode = SelectionMode::Normal;
-                    SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
-                    ResetCursorBlinkTime();
-                    EnsureCursorVisible();
-                    ImGui::SetKeyboardFocusHere(-1);
-                    mUpdateFocus = false;
+                    SetFocus();
                 }
 
                 if (glyph.mChar == '\t') {
@@ -1206,7 +1216,6 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
 
 void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
     mWithinRender          = true;
-    mTextChanged           = false;
     mCursorPositionChanged = false;
 
     auto scrollBg = ImGui::GetStyleColorVec4(ImGuiCol_ScrollbarBg);
@@ -1634,7 +1643,10 @@ void TextEditor::DeleteSelection() {
 }
 
 void TextEditor::JumpToLine(int line) {
-    auto newPos = Coordinates(line, 0);
+    auto newPos = mState.mCursorPosition;
+    if (line != -1) {
+        newPos = Coordinates(line , 0);
+    }
     JumpToCoords(newPos);
 }
 
@@ -1858,8 +1870,11 @@ void TextEditor::TextEditor::MoveBottom(bool aSelect) {
 void TextEditor::MoveHome(bool aSelect) {
     ResetCursorBlinkTime();
     auto oldPos = mState.mCursorPosition;
-    SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, 0));
-
+    auto &line = mLines[mState.mCursorPosition.mLine];
+    auto home=0;
+    while (isspace(line[home].mChar))
+        home++;
+    SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, home));
     if (mState.mCursorPosition != oldPos) {
         if (aSelect) {
             if (oldPos == mInteractiveStart)

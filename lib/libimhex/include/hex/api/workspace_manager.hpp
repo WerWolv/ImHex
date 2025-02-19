@@ -6,7 +6,7 @@
 #include <map>
 #include <string>
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     class WorkspaceManager {
     public:

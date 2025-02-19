@@ -9,7 +9,7 @@
  * that want to store any data to a Project File.
  *
  */
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     namespace prv {
         class Provider;

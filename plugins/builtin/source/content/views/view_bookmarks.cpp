@@ -5,6 +5,7 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_interaction.hpp>
+#include <hex/api/events/events_interaction.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/providers/provider.hpp>
@@ -100,7 +101,7 @@ namespace hex::plugin::builtin {
 
                     {
                         // Draw bookmark header
-                        ImGui::ColorButton("##color", ImColor(bookmark.color));
+                        ImGui::ColorButton("##color", ImColor(bookmark.color), ImGuiColorEditFlags_AlphaOpaque);
                         ImGui::SameLine(0, 10);
                         ImGuiExt::TextFormatted("{} ", bookmark.name);
 

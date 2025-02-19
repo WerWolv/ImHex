@@ -34,8 +34,6 @@ namespace hex::plugin::disasm {
     }
 
     ViewDisassembler::~ViewDisassembler() {
-        EventDataChanged::unsubscribe(this);
-        EventRegionSelected::unsubscribe(this);
         EventProviderDeleted::unsubscribe(this);
     }
 
@@ -79,6 +77,9 @@ namespace hex::plugin::disasm {
                         task.update(instructionDataAddress);
 
                         disassembly.push_back(instruction.value());
+
+                        if (instruction->size == 0 || instruction->size > code.size())
+                            break;
 
                         code = code.subspan(instruction->size);
                         instructionDataAddress += instruction->size;

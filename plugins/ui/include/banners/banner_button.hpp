@@ -13,7 +13,7 @@ namespace hex::ui {
             : Banner(color), m_icon(icon), m_message(std::move(message)), m_buttonText(std::move(buttonText)), m_buttonCallback(std::move(buttonCallback)) { }
 
         void drawContent() override {
-            const std::string buttonText = Lang(m_buttonText);
+            const std::string buttonText = hex::format(" {} ", Lang(m_buttonText).get());
             const auto buttonSize = ImGui::CalcTextSize(buttonText.c_str());
             const auto iconSize = ImGui::CalcTextSize(m_icon);
             const auto textHeight = std::max(ImGui::CalcTextSize(Lang(m_message)).y, iconSize.y);
@@ -37,11 +37,14 @@ namespace hex::ui {
 
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - buttonSize.x - 20_scaled);
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2_scaled);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
+            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_Tab));
             if (ImGui::SmallButton(buttonText.c_str())) {
                 m_buttonCallback();
                 this->close();
             }
-            ImGui::PopStyleVar(1);
+            ImGui::PopStyleColor();
+            ImGui::PopStyleVar(2);
         }
 
     private:

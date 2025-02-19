@@ -13,6 +13,7 @@
 
     #include <hex/api/events/events_gui.hpp>
     #include <hex/api/events/events_lifecycle.hpp>
+    #include <hex/api/events/events_interaction.hpp>
     #include <hex/api/events/requests_gui.hpp>
 
     #include <imgui.h>
@@ -69,6 +70,9 @@ namespace hex {
 
                 const auto newScale = LOWORD(wParam) / 96.0F;
                 const auto oldScale = ImHexApi::System::getNativeScale();
+
+                if (u32(oldScale * 10) == u32(newScale * 10))
+                    break;
 
                 EventDPIChanged::post(oldScale, newScale);
                 ImHexApi::System::impl::setNativeScale(newScale);
@@ -201,17 +205,20 @@ namespace hex {
 
                 i64 sleepTicks = 0;
                 i64 sleepMilliSeconds = 0;
-                if (delta >= 0) {
-                    sleepTicks = delta / period;
-                } else {
-                    sleepTicks = -1 + delta / period;
+                if (period > 0) {
+                    if (delta >= 0) {
+                        sleepTicks = delta / period;
+                    } else {
+                        sleepTicks = -1 + delta / period;
+                    }
+
+                    sleepMilliSeconds = delta - (period * sleepTicks);
+                    const double sleepTime = std::round(1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
+                    if (sleepTime >= 0.0) {
+                        Sleep(DWORD(sleepTime));
+                    }
                 }
 
-                sleepMilliSeconds = delta - (period * sleepTicks);
-                const double sleepTime = std::round(1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
-                if (sleepTime >= 0.0) {
-                    Sleep(DWORD(sleepTime));
-                }
                 timeEndPeriod(granularity);
 
                 return WVR_REDRAW;
@@ -401,13 +408,6 @@ namespace hex {
             log::impl::enableColorPrinting();
         } else if (hex::getEnvironmentVariable("__IMHEX_FORWARD_CONSOLE__") == "1") {
             // Check for the __IMHEX_FORWARD_CONSOLE__ environment variable that was set by the forwarder application
-
-            // If it's present, attach to its console window
-            ::AttachConsole(ATTACH_PARENT_PROCESS);
-
-            // Reopen stdin, stdout and stderr to the console if not in debug mode
-            reopenConsoleHandle(STD_INPUT_HANDLE,  STDIN_FILENO,  stdin);
-            reopenConsoleHandle(STD_OUTPUT_HANDLE, STDOUT_FILENO, stdout);
 
             // Enable ANSI colors in the console
             log::impl::enableColorPrinting();

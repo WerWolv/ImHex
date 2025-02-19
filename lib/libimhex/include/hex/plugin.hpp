@@ -15,7 +15,7 @@
 
 #if defined(_MSC_VER)
     #include <windows.h>
-    #define PLUGIN_ENTRY_POINT extern "C" BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fwdReason, LPVOID lpReserved) { return TRUE; }
+    #define PLUGIN_ENTRY_POINT extern "C" BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID) { return TRUE; }
 #else
     #define PLUGIN_ENTRY_POINT
 #endif
@@ -81,14 +81,13 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
 #define IMHEX_LIBRARY_SETUP(name) IMHEX_LIBRARY_SETUP_IMPL(name)
 
 #define IMHEX_LIBRARY_SETUP_IMPL(name)                                                                                          \
-    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloaded library '{}'", name); } } HANDLER; }    \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)();                             \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *WOLV_TOKEN_CONCAT(getLibraryName_, IMHEX_PLUGIN_NAME)() { return name; }         \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(setImGuiContext_, IMHEX_PLUGIN_NAME)(ImGuiContext *ctx) {             \
         ImGui::SetCurrentContext(ctx);                                                                                          \
         GImGui = ctx;                                                                                                           \
     }                                                                                                                           \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                              \
+    extern "C" void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                                                  \
         hex::PluginManager::addPlugin(name, hex::PluginFunctions {                                                              \
             nullptr,                                                                                                            \
             WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME),                                                           \
@@ -107,7 +106,6 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)()
 
 #define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                                      \
-    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::debug("Unloaded plugin '{}'", name); } } HANDLER; }    \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                                                 \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginAuthor() { return author; }                                             \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginDescription() { return description; }                                   \
@@ -124,7 +122,7 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
         return PluginSubCommandsFunctionHelper<PluginFunctionHelperInstantiation>::getSubCommands();                            \
     }                                                                                                                           \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin();                                                                     \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                              \
+    extern "C" void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                                                  \
         hex::PluginManager::addPlugin(name, hex::PluginFunctions {                                                              \
             initializePlugin,                                                                                                   \
             nullptr,                                                                                                            \

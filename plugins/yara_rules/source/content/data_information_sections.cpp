@@ -7,6 +7,7 @@
 
 #include <content/yara_rule.hpp>
 #include <romfs/romfs.hpp>
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::yara {
 

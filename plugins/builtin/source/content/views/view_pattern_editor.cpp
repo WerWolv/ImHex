@@ -36,7 +36,7 @@
 
 #include <content/global_actions.hpp>
 #include <fonts/fonts.hpp>
-#include <ui/menu_items.hpp>
+#include <hex/helpers/menu_items.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -333,9 +333,9 @@ namespace hex::plugin::builtin {
             const auto availableSize = g.CurrentWindow->Size;
             const auto windowPosition = ImGui::GetCursorScreenPos();
             auto textEditorSize = availableSize;
-            textEditorSize.y *= 3.5 / 5.0;
+            textEditorSize.y *= 3.5F / 5.0F;
             textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-            textEditorSize.y = std::clamp(textEditorSize.y + height,200.0F, availableSize.y-200.0F);
+            textEditorSize.y = std::clamp(textEditorSize.y + height, 200.0F, availableSize.y - 200.0F);
 
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
@@ -579,7 +579,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (m_textEditor.IsTextChanged()) {
+            if (m_textEditor.IsTextChanged() && !m_hasUnevaluatedChanges) {
                 m_hasUnevaluatedChanges = true;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
@@ -587,7 +587,6 @@ namespace hex::plugin::builtin {
 
             if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0) {
                 if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1LL)) {
-                    m_hasUnevaluatedChanges = false;
 
                     auto code = m_textEditor.GetText();
                     EventPatternEditorChanged::post(code);
@@ -598,6 +597,8 @@ namespace hex::plugin::builtin {
                         if (m_runAutomatically)
                             m_triggerAutoEvaluate = true;
                     });
+                    m_hasUnevaluatedChanges = false;
+                    m_textEditor.SetTextChanged();
                 }
             }
 
@@ -1071,12 +1072,14 @@ namespace hex::plugin::builtin {
             const auto linesToAdd = m_console->size() - lineCount;
 
 
+            std::string content;
             for (size_t i = 0; i < linesToAdd; i += 1) {
                 if (!skipNewLine)
-                    m_consoleEditor.InsertText("\n");
+                    content += '\n';
                 skipNewLine = false;
-                m_consoleEditor.InsertText(m_console->at(lineCount + i));
+                content += m_console->at(lineCount + i);
             }
+            m_consoleEditor.SetText(content);
 
             m_consoleNeedsUpdate = false;
         }
@@ -1423,7 +1426,7 @@ namespace hex::plugin::builtin {
                     const auto &currScope = evaluator->getScope(-m_debuggerScopeIndex);
                     if (ImGui::BeginCombo("##scope", displayValue(currScope.parent, m_debuggerScopeIndex).c_str())) {
                         for (size_t i = 0; i < evaluator->getScopeCount(); i++) {
-                            auto &scope = evaluator->getScope(-i);
+                            auto &scope = evaluator->getScope(-i32(i));
 
                             if (ImGui::Selectable(displayValue(scope.parent, i).c_str(), i == size_t(m_debuggerScopeIndex))) {
                                 m_debuggerScopeIndex = i;
@@ -1689,7 +1692,7 @@ namespace hex::plugin::builtin {
         ImGui::PushID(pattern);
         {
             const bool shiftHeld = ImGui::GetIO().KeyShift;
-            ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
+            ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()), ImGuiColorEditFlags_AlphaOpaque);
             ImGui::SameLine(0, 10);
             ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{} ", pattern->getFormattedName());
             ImGui::SameLine(0, 5);
@@ -1897,6 +1900,7 @@ namespace hex::plugin::builtin {
 
         m_accessHistory = {};
         m_accessHistoryIndex = 0;
+        m_patternEvaluating = true;
 
         EventHighlightingChanged::post();
 
@@ -1945,7 +1949,8 @@ namespace hex::plugin::builtin {
             runtime.setLogCallback([this, provider](auto level, auto message) {
                 std::scoped_lock lock(m_logMutex);
 
-                for (auto line : wolv::util::splitString(message, "\n")) {
+                auto lines = wolv::util::splitString(message, "\n");
+                for (auto &line : lines) {
                     if (!wolv::util::trim(line).empty()) {
                         switch (level) {
                             using enum pl::core::LogConsole::Level;

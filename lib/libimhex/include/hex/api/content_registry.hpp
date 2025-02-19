@@ -16,27 +16,31 @@
 #include <nlohmann/json.hpp>
 #include <wolv/io/fs.hpp>
 
-using ImGuiDataType = int;
-using ImGuiInputTextFlags = int;
-struct ImColor;
-enum ImGuiCustomCol : int;
-typedef int ImGuiColorEditFlags;
+#if !defined(HEX_MODULE_EXPORT)
+    using ImGuiDataType = int;
+    using ImGuiInputTextFlags = int;
+    struct ImColor;
+    enum ImGuiCustomCol : int;
+    typedef int ImGuiColorEditFlags;
+#endif
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
-    class View;
-    class Task;
+    #if !defined(HEX_MODULE_EXPORT)
+        class View;
+        class Task;
 
-    namespace dp {
-        class Node;
-    }
-    namespace prv {
-        class Provider;
-    }
+        namespace dp {
+            class Node;
+        }
+        namespace prv {
+            class Provider;
+        }
 
-    namespace LocalizationManager {
-        class LanguageDefinition;
-    }
+        namespace LocalizationManager {
+            class LanguageDefinition;
+        }
+    #endif
 
     /*
         The Content Registry is the heart of all features in ImHex that are in some way extendable by Plugins.
@@ -328,7 +332,7 @@ namespace hex {
                             result = defaultValue;
 
                         return result.get<T>();
-                    } catch (const nlohmann::json::exception &e) {
+                    } catch (const nlohmann::json::exception &) {
                         return defaultValue;
                     }
                 }
@@ -597,6 +601,12 @@ namespace hex {
              * @return The view if it exists, nullptr otherwise
              */
             View* getViewByName(const UnlocalizedString &unlocalizedName);
+
+            /**
+             * @brief Gets the currently focused view
+             * @return The view that is focused right now. nullptr if none is focused
+             */
+            View* getFocusedView();
         }
 
         /* Tools Registry. Allows adding new entries to the tools window */

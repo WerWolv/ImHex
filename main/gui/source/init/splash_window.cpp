@@ -283,7 +283,7 @@ namespace hex::init {
                 const auto highlightBytes = [&](ImVec2 start, size_t count, ImColor color, float opacity) {
                     // Dimensions and number of bytes that are drawn. Taken from the splash screen image
                     const auto hexSize = ImVec2(29, 18);
-                    const auto hexSpacing = ImVec2(17.4, 15);
+                    const auto hexSpacing = ImVec2(17.4F, 15);
                     const auto hexStart = ImVec2(27, 127);
 
                     constexpr auto HexCount = ImVec2(13, 7);
@@ -488,7 +488,13 @@ namespace hex::init {
             if (meanScale <= 0.0F)
                 meanScale = 1.0F;
 
-            meanScale /= hex::ImHexApi::System::getBackingScaleFactor();
+            #if defined(OS_WEB)
+                meanScale = 1.0F;
+            #endif
+
+            #if !defined(OS_LINUX)
+                meanScale /= hex::ImHexApi::System::getBackingScaleFactor();
+            #endif
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
             ImHexApi::System::impl::setNativeScale(meanScale);

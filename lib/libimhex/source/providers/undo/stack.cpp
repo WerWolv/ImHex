@@ -1,5 +1,6 @@
 #include <hex/providers/undo_redo/stack.hpp>
 #include <hex/providers/undo_redo/operations/operation_group.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/providers/provider.hpp>
 
@@ -121,6 +122,8 @@ namespace hex::prv::undo {
 
         // Do the operation
         this->getLastOperation()->redo(m_provider);
+
+        EventDataChanged::post(m_provider);
 
         return true;
     }

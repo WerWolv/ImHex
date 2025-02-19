@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
             return m_provider->isWritable();
     }
     [[nodiscard]] bool ViewProvider::isResizable() const {
-        return true;
+        return false;
     }
 
     [[nodiscard]] bool ViewProvider::isSavable() const {
@@ -52,9 +52,10 @@ namespace hex::plugin::builtin {
             return false;
 
         EventProviderClosing::subscribe(this, [this](const prv::Provider *provider, bool*) {
-            if (m_provider == provider)
+            if (m_provider == provider) {
                 ImHexApi::Provider::remove(this, false);
-            m_provider = nullptr;
+                m_provider = nullptr;
+            }
         });
 
         return true;
@@ -71,7 +72,7 @@ namespace hex::plugin::builtin {
             return;
 
         m_size += size;
-        m_provider->insert(offset + m_startAddress, size);
+        m_provider->insert(offset, size);
     }
 
     void ViewProvider::removeRaw(u64 offset, u64 size) {
@@ -79,21 +80,35 @@ namespace hex::plugin::builtin {
             return;
 
         m_size -= size;
-        m_provider->remove(offset + m_startAddress, size);
+        m_provider->remove(offset, size);
+    }
+
+    void ViewProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
+        if (m_provider == nullptr)
+            return;
+
+        m_provider->read(offset, buffer, size, overlays);
+    }
+
+    void ViewProvider::write(u64 offset, const void *buffer, size_t size) {
+        if (m_provider == nullptr)
+            return;
+
+        m_provider->write(offset, buffer, size);
     }
 
     void ViewProvider::readRaw(u64 offset, void *buffer, size_t size) {
         if (m_provider == nullptr)
             return;
 
-        m_provider->read(offset + m_startAddress, buffer, size);
+        m_provider->readRaw(offset, buffer, size);
     }
 
     void ViewProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if (m_provider == nullptr)
             return;
 
-        m_provider->write(offset + m_startAddress, buffer, size);
+        m_provider->writeRaw(offset, buffer, size);
     }
 
     [[nodiscard]] u64 ViewProvider::getActualSize() const {
