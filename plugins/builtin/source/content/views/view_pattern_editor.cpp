@@ -1079,7 +1079,7 @@ namespace hex::plugin::builtin {
                 skipNewLine = false;
                 content += m_console->at(lineCount + i);
             }
-            m_consoleEditor.SetText(content);
+            m_consoleEditor.InsertText(content);
 
             m_consoleNeedsUpdate = false;
         }
