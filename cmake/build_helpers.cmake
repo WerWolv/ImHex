@@ -666,12 +666,15 @@ macro(setupCompilerFlags target)
         addCCXXFlag("-Wno-unknown-pragmas" ${target})
 
         # Enable hardening flags
-        addCommonFlag("-U_FORTIFY_SOURCE" ${target})
-        addCommonFlag("-D_FORTIFY_SOURCE=3" ${target})
+        if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+            addCommonFlag("-U_FORTIFY_SOURCE" ${target})
+            addCommonFlag("-D_FORTIFY_SOURCE=3" ${target})
 
-        if (NOT EMSCRIPTEN)
-            addCommonFlag("-fstack-protector-strong" ${target})
+            if (NOT EMSCRIPTEN)
+                addCommonFlag("-fstack-protector-strong" ${target})
+            endif()
         endif()
+
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
