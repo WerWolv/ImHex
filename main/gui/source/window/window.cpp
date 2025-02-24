@@ -1213,7 +1213,7 @@ namespace hex {
                     if (m_remainingUnlockedTime > std::chrono::nanoseconds(0)) {
                         m_remainingUnlockedTime -= iterationTime;
                     } else {
-                        targetFps = 0.01;
+                        targetFps = 5;
                     }
 
                     requestedFrameTime = (Duration(1.0E9) / targetFps) / 1.3;
