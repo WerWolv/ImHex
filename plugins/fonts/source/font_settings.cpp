@@ -37,13 +37,18 @@ namespace hex::fonts {
                 });
             }
 
+            u32 index = 0;
             for (const auto &[path, fontName] : hex::getFonts()) {
+                ImGui::PushID(index);
                 if (ImGui::Selectable(limitStringLength(fontName, 50).c_str(), m_path == path)) {
                     m_path = path;
                     m_pixelPerfectFont = false;
                     changed = true;
                 }
                 ImGui::SetItemTooltip("%s", fontName.c_str());
+                ImGui::PopID();
+
+                index += 1;
             }
 
             ImGui::EndCombo();
