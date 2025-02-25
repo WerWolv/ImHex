@@ -5,6 +5,7 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/menu_items.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <loaders/dotnet/dotnet_loader.hpp>
@@ -88,7 +89,7 @@ std::vector<const Script*> loadAllScripts() {
         hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
             static bool menuJustOpened = true;
 
-            if (ImGui::BeginMenuEx("hex.script_loader.menu.run_script"_lang, ICON_VS_LIBRARY)) {
+            if (menu::beginMenuEx("hex.script_loader.menu.run_script"_lang, ICON_VS_LIBRARY)) {
                 if (menuJustOpened) {
                     menuJustOpened = false;
                     if (!updaterTask.isRunning()) {
@@ -99,9 +100,9 @@ std::vector<const Script*> loadAllScripts() {
                 }
 
                 if (updaterTask.isRunning()) {
-                    ImGuiExt::TextSpinner("hex.script_loader.menu.loading"_lang);
+                    menu::menuItem("hex.script_loader.menu.loading"_lang, Shortcut::None, false, false);
                 } else if (scripts.empty()) {
-                    ImGui::TextUnformatted("hex.script_loader.menu.no_scripts"_lang);
+                    menu::menuItem("hex.script_loader.menu.no_scripts"_lang, Shortcut::None, false, false);
                 }
 
                 for (const auto &script : scripts) {
@@ -109,14 +110,14 @@ std::vector<const Script*> loadAllScripts() {
                     if (background)
                         continue;
 
-                    if (ImGui::MenuItem(name.c_str(), loader->getTypeName().c_str())) {
+                    if (menu::menuItem(name.c_str())) {
                         runnerTask = TaskManager::createTask("hex.script_loader.task.running", TaskManager::NoProgress, [entryPoint](auto&) {
                             entryPoint();
                         });
                     }
                 }
 
-                ImGui::EndMenu();
+                menu::endMenu();
             } else {
                 menuJustOpened = true;
             }
