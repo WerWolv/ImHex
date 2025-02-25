@@ -1233,6 +1233,7 @@ namespace hex {
                     m_wakeupCondVar.wait_for(lock, requestedFrameTime, [&] {
                         return m_wakeupFlag || stopToken.stop_requested();
                     });
+                    m_wakeupFlag = false;
                 }
 
                 endTime = std::chrono::steady_clock::now();
