@@ -100,6 +100,9 @@ namespace hex {
     }
 
     Window::~Window() {
+        m_frameRateThread.request_stop();
+        m_frameRateThread.join();
+
         EventProviderDeleted::unsubscribe(this);
         RequestCloseImHex::unsubscribe(this);
         RequestUpdateWindowTitle::unsubscribe(this);
