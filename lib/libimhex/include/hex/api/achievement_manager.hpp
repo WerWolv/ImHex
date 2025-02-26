@@ -16,7 +16,7 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/auto_reset.hpp>
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     class AchievementManager;
 

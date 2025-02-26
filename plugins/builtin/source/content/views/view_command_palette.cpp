@@ -3,6 +3,7 @@
 #include <hex/api/content_registry.hpp>
 #include <wolv/utils/guards.hpp>
 #include <hex/api/events/requests_gui.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include "imstb_textedit.h"
 

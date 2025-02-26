@@ -22,6 +22,7 @@
 #include <toasts/toast_notification.hpp>
 
 #include <csignal>
+#include <hex/api/events/events_interaction.hpp>
 
 namespace hex::plugin::builtin {
 

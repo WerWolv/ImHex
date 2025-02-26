@@ -11,7 +11,7 @@
 #include <condition_variable>
 #include <source_location>
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     class TaskHolder;
     class TaskManager;

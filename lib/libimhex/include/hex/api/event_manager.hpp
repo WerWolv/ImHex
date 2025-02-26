@@ -31,7 +31,7 @@
 #define EVENT_DEF_NO_LOG(event_name, ...)   EVENT_DEF_IMPL(event_name, #event_name, false, __VA_ARGS__)
 
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     namespace impl {
 

@@ -9,7 +9,9 @@
 #include <set>
 #include <string>
 
-struct ImGuiWindow;
+#if !defined(HEX_MODULE_EXPORT)
+    struct ImGuiWindow;
+#endif
 
 struct KeyEquivalent {
     bool valid;
@@ -17,7 +19,7 @@ struct KeyEquivalent {
     int key;
 };
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     class View;
 

@@ -65,7 +65,9 @@ namespace hex::fonts {
                         return;
                     }
 
-                    loadFont(widget, name, &font, ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor());
+                    TaskManager::doLater([&name, &font, &widget] {
+                        loadFont(widget, name, &font, ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor());
+                    });
                 });
 
             loadFont(widget.getWidget(), name, &font, ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor());

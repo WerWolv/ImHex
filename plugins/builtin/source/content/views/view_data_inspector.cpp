@@ -4,6 +4,7 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>

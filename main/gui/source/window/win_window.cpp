@@ -13,6 +13,7 @@
 
     #include <hex/api/events/events_gui.hpp>
     #include <hex/api/events/events_lifecycle.hpp>
+    #include <hex/api/events/events_interaction.hpp>
     #include <hex/api/events/requests_gui.hpp>
 
     #include <imgui.h>
@@ -204,17 +205,20 @@ namespace hex {
 
                 i64 sleepTicks = 0;
                 i64 sleepMilliSeconds = 0;
-                if (delta >= 0) {
-                    sleepTicks = delta / period;
-                } else {
-                    sleepTicks = -1 + delta / period;
+                if (period > 0) {
+                    if (delta >= 0) {
+                        sleepTicks = delta / period;
+                    } else {
+                        sleepTicks = -1 + delta / period;
+                    }
+
+                    sleepMilliSeconds = delta - (period * sleepTicks);
+                    const double sleepTime = std::round(1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
+                    if (sleepTime >= 0.0) {
+                        Sleep(DWORD(sleepTime));
+                    }
                 }
 
-                sleepMilliSeconds = delta - (period * sleepTicks);
-                const double sleepTime = std::round(1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
-                if (sleepTime >= 0.0) {
-                    Sleep(DWORD(sleepTime));
-                }
                 timeEndPeriod(granularity);
 
                 return WVR_REDRAW;
@@ -614,7 +618,7 @@ namespace hex {
 
         glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
             auto *win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->m_unlockFrameRate = true;
+            win->unlockFrameRate();
 
             glViewport(0, 0, width, height);
             ImHexApi::System::impl::setMainWindowSize(width, height);

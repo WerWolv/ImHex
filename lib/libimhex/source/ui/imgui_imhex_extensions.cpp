@@ -288,6 +288,9 @@ namespace ImGuiExt {
     }
 
     void Texture::reset() {
+        if (glDeleteTextures == nullptr)
+            return;
+
         if (m_textureId != 0) {
             glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
             m_textureId = 0;

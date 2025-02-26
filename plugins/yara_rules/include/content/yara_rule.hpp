@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <atomic>
 #include <wolv/utils/expected.hpp>
 
 namespace hex::plugin::yara {

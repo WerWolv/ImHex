@@ -10,7 +10,7 @@
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     class TutorialManager {
     public:

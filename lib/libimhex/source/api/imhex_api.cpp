@@ -7,6 +7,7 @@
 #include <hex/api/events/requests_lifecycle.hpp>
 #include <hex/api/events/requests_provider.hpp>
 #include <hex/api/events/requests_gui.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/fmt.hpp>

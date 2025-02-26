@@ -4,9 +4,11 @@
 
 #include <string>
 
-struct ImGuiTextBuffer;
+#if !defined(HEX_MODULE_EXPORT)
+    struct ImGuiTextBuffer;
+#endif
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     class LayoutManager {
     public:

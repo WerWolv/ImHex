@@ -8,7 +8,7 @@
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
 
-namespace hex::log {
+EXPORT_MODULE namespace hex::log {
 
     namespace impl {
 

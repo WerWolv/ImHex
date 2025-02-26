@@ -30,9 +30,11 @@
 
 namespace hex {
 
-    namespace prv {
-        class Provider;
-    }
+    #if !defined(HEX_MODULE_EXPORT)
+        namespace prv {
+            class Provider;
+        }
+    #endif
 
     template<typename T>
     [[nodiscard]] std::vector<std::vector<T>> sampleChannels(const std::vector<T> &data, size_t count, size_t channels) {

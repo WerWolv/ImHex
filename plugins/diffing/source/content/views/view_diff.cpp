@@ -122,6 +122,7 @@ namespace hex::plugin::diffing {
             column.provider = -1;
             column.hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
             column.diffTree.clear();
+            column.differences.clear();
         }
     }
 
@@ -354,32 +355,34 @@ namespace hex::plugin::diffing {
                         // Draw changes
                         ImGui::TableNextColumn();
                         ImGui::Indent();
-                        switch (typeA) {
-                            case DifferenceType::Insertion:
-                                data.resize(std::min<u64>(17, (regionA.end - regionA.start) + 1));
-                                providers[a.provider]->read(regionA.start, data.data(), data.size());
-                                drawByteString(data);
-                                break;
-                            case DifferenceType::Mismatch:
-                                data.resize(std::min<u64>(17, (regionA.end - regionA.start) + 1));
-                                providers[a.provider]->read(regionA.start, data.data(), data.size());
-                                drawByteString(data);
+                        if (a.provider != -1 && b.provider != -1) {
+                            switch (typeA) {
+                                case DifferenceType::Insertion:
+                                    data.resize(std::min<u64>(17, (regionA.end - regionA.start) + 1));
+                                    providers[a.provider]->read(regionA.start, data.data(), data.size());
+                                    drawByteString(data);
+                                    break;
+                                case DifferenceType::Mismatch:
+                                    data.resize(std::min<u64>(17, (regionA.end - regionA.start) + 1));
+                                    providers[a.provider]->read(regionA.start, data.data(), data.size());
+                                    drawByteString(data);
 
-                                ImGui::SameLine(0, 0);
-                                ImGuiExt::TextFormatted(" {}  ", ICON_VS_ARROW_RIGHT);
-                                ImGui::SameLine(0, 0);
+                                    ImGui::SameLine(0, 0);
+                                    ImGuiExt::TextFormatted(" {}  ", ICON_VS_ARROW_RIGHT);
+                                    ImGui::SameLine(0, 0);
 
-                                data.resize(std::min<u64>(17, (regionB.end - regionB.start) + 1));
-                                providers[b.provider]->read(regionB.start, data.data(), data.size());
-                                drawByteString(data);
-                                break;
-                            case DifferenceType::Deletion:
-                                data.resize(std::min<u64>(17, (regionB.end - regionB.start) + 1));
-                                providers[b.provider]->read(regionB.start, data.data(), data.size());
-                                drawByteString(data);
-                                break;
-                            default:
-                                break;
+                                    data.resize(std::min<u64>(17, (regionB.end - regionB.start) + 1));
+                                    providers[b.provider]->read(regionB.start, data.data(), data.size());
+                                    drawByteString(data);
+                                    break;
+                                case DifferenceType::Deletion:
+                                    data.resize(std::min<u64>(17, (regionB.end - regionB.start) + 1));
+                                    providers[b.provider]->read(regionB.start, data.data(), data.size());
+                                    drawByteString(data);
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                         ImGui::Unindent();
 

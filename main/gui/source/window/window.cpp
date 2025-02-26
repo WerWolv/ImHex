@@ -100,6 +100,9 @@ namespace hex {
     }
 
     Window::~Window() {
+        m_frameRateThread.request_stop();
+        m_frameRateThread.join();
+
         EventProviderDeleted::unsubscribe(this);
         RequestCloseImHex::unsubscribe(this);
         RequestUpdateWindowTitle::unsubscribe(this);
@@ -300,7 +303,7 @@ namespace hex {
 
                     {
                         std::unique_lock lock(m_sleepMutex);
-                        m_sleepCondVar.wait_for(lock, std::chrono::microseconds(100));
+                        m_sleepCondVar.wait(lock);
                         if (m_sleepFlag.exchange(false))
                             break;
                     }
@@ -311,7 +314,7 @@ namespace hex {
 
             // Unlock frame rate if any mouse button is being held down to allow drag scrolling to be smooth
             if (ImGui::IsAnyMouseDown())
-                m_unlockFrameRate = true;
+                this->unlockFrameRate();
 
             // Unlock frame rate if any modifier key is held down since they don't generate key repeat events
             if (
@@ -320,12 +323,12 @@ namespace hex {
                 ImGui::IsKeyPressed(ImGuiKey_LeftSuper) || ImGui::IsKeyPressed(ImGuiKey_RightSuper) ||
                 ImGui::IsKeyPressed(ImGuiKey_LeftAlt) || ImGui::IsKeyPressed(ImGuiKey_RightAlt)
             ) {
-                m_unlockFrameRate = true;
+                this->unlockFrameRate();
             }
 
             // Unlock frame rate if there's more than one viewport since these don't call the glfw callbacks registered here
             if (ImGui::GetPlatformIO().Viewports.size() > 1)
-                m_unlockFrameRate = true;
+                this->unlockFrameRate();
         }
 
         // Hide the window as soon as the render loop exits to make the window
@@ -334,6 +337,9 @@ namespace hex {
     }
 
     void Window::frameBegin() {
+        // Run all deferred calls
+        TaskManager::runDeferredCalls();
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
 
@@ -353,7 +359,7 @@ namespace hex {
             }
 
             {
-                const auto &font = ImHexApi::Fonts::getFont("hex.fonts.font.default");
+                auto font = ImHexApi::Fonts::getFont("hex.fonts.font.default");
 
                 if (font == nullptr) {
                     const auto &io = ImGui::GetIO();
@@ -362,13 +368,15 @@ namespace hex {
                     ImFontConfig cfg;
                     cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
                     cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
-                    io.Fonts->AddFontDefault(&cfg);
+                    font = io.Fonts->AddFontDefault(&cfg);
                     ImGui_ImplOpenGL3_CreateFontsTexture();
                     io.Fonts->ClearInputData();
                     io.Fonts->ClearTexData();
                 } else {
                     currentFont = font->ContainerAtlas;
                 }
+
+                ImGui::SetCurrentFont(font);
             }
         }
 
@@ -682,9 +690,6 @@ namespace hex {
                 return banner->shouldClose();
             });
         }
-
-        // Run all deferred calls
-        TaskManager::runDeferredCalls();
     }
 
     void Window::frame() {
@@ -927,6 +932,23 @@ namespace hex {
         #endif
     }
 
+    void Window::unlockFrameRate() {
+        {
+            std::scoped_lock lock(m_wakeupMutex);
+            m_remainingUnlockedTime = std::chrono::seconds(2);
+        }
+
+        this->forceNewFrame();
+    }
+
+    void Window::forceNewFrame() {
+        std::scoped_lock lock(m_wakeupMutex);
+        m_wakeupFlag = true;
+        m_wakeupCondVar.notify_all();
+    }
+
+
+
     void Window::initGLFW() {
         auto initialWindowProperties = ImHexApi::System::getInitialWindowProperties();
         glfwSetErrorCallback([](int error, const char *desc) {
@@ -1027,7 +1049,7 @@ namespace hex {
             if (win == nullptr)
                 return;
 
-            win->m_unlockFrameRate = true;
+            win->unlockFrameRate();
         };
 
         static const auto isMainWindow = [](GLFWwindow *window) {
@@ -1163,7 +1185,7 @@ namespace hex {
             Duration passedTime = {};
 
             std::chrono::steady_clock::time_point startTime = {}, endTime = {};
-            Duration requestedFrameTime = {}, remainingUnlockedTime = {};
+            Duration requestedFrameTime = {};
             float targetFps = 0;
 
             const auto nativeFps = []() -> float {
@@ -1182,32 +1204,37 @@ namespace hex {
 
                 targetFps = ImHexApi::System::getTargetFPS();
 
-                if (m_unlockFrameRate.exchange(false)) {
-                    remainingUnlockedTime = std::chrono::seconds(2);
-                }
-
                 // If the target frame rate is below 15, use the current monitor's refresh rate
                 if (targetFps < 15) {
                     targetFps = nativeFps;
                 }
 
                 passedTime += iterationTime;
-                if (remainingUnlockedTime > std::chrono::nanoseconds(0)) {
-                    remainingUnlockedTime -= iterationTime;
-                } else {
-                    targetFps = 5;
-                }
-
-                requestedFrameTime = (Duration(1.0E9) / targetFps) / 1.3;
-                if (passedTime >= requestedFrameTime) {
+                {
                     std::scoped_lock lock(m_sleepMutex);
-                    m_sleepFlag = true;
-                    m_sleepCondVar.notify_all();
 
-                    passedTime = {};
+                    if (m_remainingUnlockedTime > std::chrono::nanoseconds(0)) {
+                        m_remainingUnlockedTime -= iterationTime;
+                    } else {
+                        targetFps = 5;
+                    }
+
+                    requestedFrameTime = (Duration(1.0E9) / targetFps) / 1.3;
+                    if (passedTime >= requestedFrameTime) {
+                        m_sleepFlag = true;
+                        m_sleepCondVar.notify_all();
+
+                        passedTime = {};
+                    }
                 }
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                {
+                    std::unique_lock lock(m_wakeupMutex);
+                    m_wakeupCondVar.wait_for(lock, requestedFrameTime, [&] {
+                        return m_wakeupFlag || stopToken.stop_requested();
+                    });
+                    m_wakeupFlag = false;
+                }
 
                 endTime = std::chrono::steady_clock::now();
             }

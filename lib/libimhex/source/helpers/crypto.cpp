@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <bit>
+#include <span>
 
 #if MBEDTLS_VERSION_MAJOR <= 2
 

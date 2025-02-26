@@ -3,6 +3,7 @@
 #include <hex/providers/provider.hpp>
 
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/events/events_interaction.hpp>
 #include <nlohmann/json.hpp>
 
 #include <content/providers/undo_operations/operation_write.hpp>
