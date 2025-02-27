@@ -29,7 +29,7 @@ namespace hex::plugin::disasm {
 
             this->disassemble();
         }, [this]{
-            return ImHexApi::HexEditor::isSelectionValid() && !this->m_disassemblerTask.isRunning();
+            return ImHexApi::HexEditor::isSelectionValid() && !m_disassemblerTask.isRunning() && *m_currArchitecture != nullptr;
         });
     }
 
@@ -49,6 +49,9 @@ namespace hex::plugin::disasm {
             const auto &currArchitecture = m_currArchitecture.get(provider);
             const auto region = m_regionToDisassemble.get(provider);
             auto &disassembly = m_disassembly.get(provider);
+
+            if (currArchitecture == nullptr)
+                return;
 
             // Create a capstone disassembler instance
             if (currArchitecture->start()) {
