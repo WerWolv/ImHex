@@ -618,7 +618,7 @@ namespace hex {
 
         glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
             auto *win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->m_unlockFrameRate = true;
+            win->unlockFrameRate();
 
             glViewport(0, 0, width, height);
             ImHexApi::System::impl::setMainWindowSize(width, height);

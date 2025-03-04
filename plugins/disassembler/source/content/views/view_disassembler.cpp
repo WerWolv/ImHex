@@ -29,7 +29,7 @@ namespace hex::plugin::disasm {
 
             this->disassemble();
         }, [this]{
-            return ImHexApi::HexEditor::isSelectionValid() && !this->m_disassemblerTask.isRunning();
+            return ImHexApi::HexEditor::isSelectionValid() && !m_disassemblerTask.isRunning() && *m_currArchitecture != nullptr;
         });
     }
 
@@ -50,8 +50,15 @@ namespace hex::plugin::disasm {
             const auto region = m_regionToDisassemble.get(provider);
             auto &disassembly = m_disassembly.get(provider);
 
+            if (currArchitecture == nullptr)
+                return;
+
             // Create a capstone disassembler instance
             if (currArchitecture->start()) {
+                ON_SCOPE_EXIT {
+                    currArchitecture->end();
+                };
+
                 std::vector<u8> buffer(1_MiB, 0x00);
 
                 const u64 codeOffset = region.getStartAddress() - m_imageBaseAddress;
@@ -93,8 +100,6 @@ namespace hex::plugin::disasm {
                     if (hadError) break;
                     hadError = true;
                 }
-
-                currArchitecture->end();
             }
         });
     }
@@ -136,59 +141,64 @@ namespace hex::plugin::disasm {
             auto &region = m_regionToDisassemble.get(provider);
             auto &range = m_range.get(provider);
 
-            // Draw region selection picker
-            ui::regionSelectionPicker(&region, provider, &range, true, true);
-
-            ImGuiExt::Header("hex.disassembler.view.disassembler.position"_lang);
-
-            // Draw base address input
+            ImGui::BeginDisabled(m_disassemblerTask.isRunning());
             {
-                auto &address = m_imageLoadAddress.get(provider);
-                ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_load_address"_lang, &address, ImGuiInputTextFlags_CharsHexadecimal);
-                ImGui::SameLine();
-                ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_load_address.hint"_lang, ICON_VS_INFO);
-            }
+                // Draw region selection picker
+                ui::regionSelectionPicker(&region, provider, &range, true, true);
 
-            // Draw code region start address input
-            ImGui::BeginDisabled(m_range == ui::RegionType::EntireData);
-            {
-                auto &address = m_imageBaseAddress.get(provider);
-                ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_base_address"_lang, &address, ImGuiInputTextFlags_CharsHexadecimal);
-                ImGui::SameLine();
-                ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_base_address.hint"_lang, ICON_VS_INFO);
+                ImGuiExt::Header("hex.disassembler.view.disassembler.position"_lang);
+
+                // Draw base address input
+                {
+                    auto &address = m_imageLoadAddress.get(provider);
+                    ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_load_address"_lang, &address, ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::SameLine();
+                    ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_load_address.hint"_lang, ICON_VS_INFO);
+                }
+
+                // Draw code region start address input
+                ImGui::BeginDisabled(m_range == ui::RegionType::EntireData);
+                {
+                    auto &address = m_imageBaseAddress.get(provider);
+                    ImGuiExt::InputHexadecimal("hex.disassembler.view.disassembler.image_base_address"_lang, &address, ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::SameLine();
+                    ImGuiExt::HelpHover("hex.disassembler.view.disassembler.image_base_address.hint"_lang, ICON_VS_INFO);
+                }
+                ImGui::EndDisabled();
+
+                // Draw settings
+                {
+                    ImGuiExt::Header("hex.ui.common.settings"_lang);
+
+                    // Draw architecture selector
+                    const auto &architectures = ContentRegistry::Disassembler::impl::getArchitectures();
+                    if (architectures.empty()) {
+                        ImGuiExt::TextSpinner("hex.disassembler.view.disassembler.arch"_lang);
+                    } else {
+                        const auto &currArchitecture = m_currArchitecture.get(provider);
+                        if (currArchitecture == nullptr) {
+                            m_currArchitecture = architectures.begin()->second();
+                        }
+
+                        if (ImGui::BeginCombo("hex.disassembler.view.disassembler.arch"_lang, currArchitecture->getName().c_str())) {
+                            for (const auto &[name, creator] : architectures) {
+                                if (ImGui::Selectable(name.c_str(), name == currArchitecture->getName())) {
+                                    m_currArchitecture = creator();
+                                }
+                            }
+                            ImGui::EndCombo();
+                        }
+
+                        // Draw sub-settings for each architecture
+                        if (ImGuiExt::BeginBox()) {
+                            currArchitecture->drawSettings();
+                        }
+                        ImGuiExt::EndBox();
+                    }
+                }
             }
             ImGui::EndDisabled();
 
-            // Draw settings
-            {
-                ImGuiExt::Header("hex.ui.common.settings"_lang);
-
-                // Draw architecture selector
-                const auto &architectures = ContentRegistry::Disassembler::impl::getArchitectures();
-                if (architectures.empty()) {
-                    ImGuiExt::TextSpinner("hex.disassembler.view.disassembler.arch"_lang);
-                } else {
-                    const auto &currArchitecture = m_currArchitecture.get(provider);
-                    if (currArchitecture == nullptr) {
-                        m_currArchitecture = architectures.begin()->second();
-                    }
-
-                    if (ImGui::BeginCombo("hex.disassembler.view.disassembler.arch"_lang, currArchitecture->getName().c_str())) {
-                        for (const auto &[name, creator] : architectures) {
-                            if (ImGui::Selectable(name.c_str(), name == currArchitecture->getName())) {
-                                m_currArchitecture = creator();
-                            }
-                        }
-                        ImGui::EndCombo();
-                    }
-
-                    // Draw sub-settings for each architecture
-                    if (ImGuiExt::BeginBox()) {
-                        currArchitecture->drawSettings();
-                    }
-                    ImGuiExt::EndBox();
-                }
-            }
 
             // Draw disassemble button
             ImGui::BeginDisabled(m_disassemblerTask.isRunning() || region.getStartAddress() < m_imageBaseAddress);

@@ -53,6 +53,9 @@ namespace hex {
         void drawImGui();
         void drawWithShader();
 
+        void unlockFrameRate();
+        void forceNewFrame();
+
         GLFWwindow *m_window = nullptr;
 
         std::string m_windowTitle, m_windowTitleFull;
@@ -64,17 +67,22 @@ namespace hex {
         std::list<std::string> m_popupsToOpen;
         std::set<int> m_pressedKeys;
 
-        std::atomic<bool> m_unlockFrameRate = true;
-
         ImGuiExt::ImHexCustomData m_imguiCustomData;
 
         u32 m_searchBarPosition = 0;
         bool m_emergencyPopupOpen = false;
 
         std::jthread m_frameRateThread;
+        std::chrono::duration<double, std::nano> m_remainingUnlockedTime;
+
+        std::mutex m_sleepMutex;
         std::atomic<bool> m_sleepFlag;
         std::condition_variable m_sleepCondVar;
-        std::mutex m_sleepMutex;
+
+        std::mutex m_wakeupMutex;
+        std::atomic<bool> m_wakeupFlag;
+        std::condition_variable m_wakeupCondVar;
+
 
         gl::Shader m_postProcessingShader;
     };
