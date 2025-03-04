@@ -829,7 +829,7 @@ macro(addBundledLibraries)
     endif()
 
     if (USE_SYSTEM_BOOST)
-        find_package(Boost REQUIRED)
+        find_package(Boost REQUIRED CONFIG COMPONENTS regex)
         set(BOOST_LIBRARIES Boost::regex)
     else()
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/boost ${CMAKE_CURRENT_BINARY_DIR}/boost EXCLUDE_FROM_ALL)
