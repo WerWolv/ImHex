@@ -1695,15 +1695,22 @@ void ImDrawList::AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const Im
     PathBezierQuadraticCurveTo(p2, p3, num_segments);
     PathStroke(col, 0, thickness);
 }
-
+// IMHEX PATCH BEGIN
+extern ImDrawCallback ImGui_ImplOpenGL3_UseFontShaders;
 void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)
 {
-    if ((col & IM_COL32_A_MASK) == 0)
+    AddCallback(ImGui_ImplOpenGL3_UseFontShaders, NULL);
+    if ((col & IM_COL32_A_MASK) == 0) {
+        AddCallback(ImGui_ImplOpenGL3_UseFontShaders, NULL);
         return;
+    }
 
     // Accept null ranges
-    if (text_begin == text_end || text_begin[0] == 0)
+    if (text_begin == text_end || text_begin[0] == 0) {
+        AddCallback(ImGui_ImplOpenGL3_UseFontShaders, NULL);
         return;
+    }
+    // IMHEX PATCH END
     // No need to strlen() here: font->RenderText() will do it and may early out.
 
     // Pull default font/size from the shared ImDrawListSharedData instance
@@ -1723,6 +1730,9 @@ void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32
         clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect->w);
     }
     font->RenderText(this, font_size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != NULL);
+    // IMHEX PATCH BEGIN
+    AddCallback(ImGui_ImplOpenGL3_UseFontShaders, NULL);
+    // IMHEX PATCH END
 }
 
 void ImDrawList::AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end)
@@ -3307,14 +3317,22 @@ void    ImFontAtlas::GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_wid
     if (!TexPixelsRGBA32)
     {
         unsigned char* pixels = NULL;
-        GetTexDataAsAlpha8(&pixels, NULL, NULL);
+// IMHEX PATCH BEGIN
+        ImS32 width;
+        ImS32 height;
+        GetTexDataAsAlpha8(&pixels, &width, &height);
+// IMHEX PATCH EWND
         if (pixels)
         {
             TexPixelsRGBA32 = (unsigned int*)IM_ALLOC((size_t)TexWidth * (size_t)TexHeight * 4);
             const unsigned char* src = pixels;
             unsigned int* dst = TexPixelsRGBA32;
-            for (int n = TexWidth * TexHeight; n > 0; n--)
-                *dst++ = IM_COL32(255, 255, 255, (unsigned int)(*src++));
+// IMHEX PATCH BEGIN
+            for (int n = TexWidth * TexHeight; n > 0; n--) {
+                const unsigned int alpha8 = (unsigned int)(*src++);
+                *dst++ = IM_COL32(alpha8, alpha8, alpha8, alpha8);
+            }
+// IMHEX PATCH END
         }
     }
 
@@ -5269,14 +5287,16 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
                 }
 
                 // Support for untinted glyphs
-                ImU32 glyph_col = glyph->Colored ? col_untinted : col;
+                // IMHEX PATCH BEGIN
+                //ImU32 glyph_col = glyph->Colored ? col_untinted : col;
 
                 // We are NOT calling PrimRectUV() here because non-inlined causes too much overhead in a debug builds. Inlined here:
                 {
-                    vtx_write[0].pos.x = x1; vtx_write[0].pos.y = y1; vtx_write[0].col = glyph_col; vtx_write[0].uv.x = u1; vtx_write[0].uv.y = v1;
-                    vtx_write[1].pos.x = x2; vtx_write[1].pos.y = y1; vtx_write[1].col = glyph_col; vtx_write[1].uv.x = u2; vtx_write[1].uv.y = v1;
-                    vtx_write[2].pos.x = x2; vtx_write[2].pos.y = y2; vtx_write[2].col = glyph_col; vtx_write[2].uv.x = u2; vtx_write[2].uv.y = v2;
-                    vtx_write[3].pos.x = x1; vtx_write[3].pos.y = y2; vtx_write[3].col = glyph_col; vtx_write[3].uv.x = u1; vtx_write[3].uv.y = v2;
+                    vtx_write[0].pos.x = x1; vtx_write[0].pos.y = y1; vtx_write[0].col = col; vtx_write[0].uv.x = u1; vtx_write[0].uv.y = v1;
+                    vtx_write[1].pos.x = x2; vtx_write[1].pos.y = y1; vtx_write[1].col = col; vtx_write[1].uv.x = u2; vtx_write[1].uv.y = v1;
+                    vtx_write[2].pos.x = x2; vtx_write[2].pos.y = y2; vtx_write[2].col = col; vtx_write[2].uv.x = u2; vtx_write[2].uv.y = v2;
+                    vtx_write[3].pos.x = x1; vtx_write[3].pos.y = y2; vtx_write[3].col = col; vtx_write[3].uv.x = u1; vtx_write[3].uv.y = v2;
+                // IMHEX PATCH END
                     idx_write[0] = (ImDrawIdx)(vtx_index); idx_write[1] = (ImDrawIdx)(vtx_index + 1); idx_write[2] = (ImDrawIdx)(vtx_index + 2);
                     idx_write[3] = (ImDrawIdx)(vtx_index); idx_write[4] = (ImDrawIdx)(vtx_index + 2); idx_write[5] = (ImDrawIdx)(vtx_index + 3);
                     vtx_write += 4;

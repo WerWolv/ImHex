@@ -283,59 +283,152 @@ namespace hex::fonts {
         std::list<std::vector<u8>> m_fontData;
     };
 
-    class Color {
-    public:
-        static void DeGamma() {
-            color.rgba[0] = std::pow(color.rgba[0] / 255.0F, 2.2F) * 255.0F;
-            color.rgba[1] = std::pow(color.rgba[1] / 255.0F, 2.2F) * 255.0F;
-            color.rgba[2] = std::pow(color.rgba[2] / 255.0F, 2.2F) * 255.0F;
-
-        }
-
-        static void Gamma() {
-            color.rgba[0] = std::pow(color.rgba[0] / 255.0F, 1.0F / 2.2F) * 255.0F;
-            color.rgba[1] = std::pow(color.rgba[1] / 255.0F, 1.0F / 2.2F) * 255.0F;
-            color.rgba[2] = std::pow(color.rgba[2] / 255.0F, 1.0F / 2.2F) * 255.0F;
-        }
-
-        static u32 LuminanceFromLinearRGB(uint8_t r, uint8_t g, uint8_t b)
-        {
-            // Luminance Y is defined by the CIE 1931 XYZ color space. Linear RGB to Y is a weighted average based on factors from the color conversion matrix:
-            // Y = 0.2126*R + 0.7152*G + 0.0722*B. Computed on the integer pipe.
-            color.rgba[0] = r;
-            color.rgba[1] = g;
-            color.rgba[2] = b;
-            color.rgba[3] = (4732UL * r + 46871UL * g + 13933UL * b) >> 16;
-            return color.color;
-        }
-
-        static u32  AddAlpha(u8 r, u8 g, u8 b) {
-            color.rgba[0] = r;
-            color.rgba[1] = g;
-            color.rgba[2] = b;
-            // auto alpha = color.color ? 0xFF : 0x00;
-            //  color.rgba[3] = alpha;
-            color.rgba[3] = std::max(r, std::max(g, b));
-            return color.color;
-        }
-        union COLOR{
-            u8 rgba[4];
-            u32 color;
-        };
-        inline static COLOR color;
-    };
 
     class Bitmap {
-        u32 m_width;
-        u32 m_height;
-        u32 m_pitch;
-        std::vector<u8> m_data;
+        ImU32 m_width;
+        ImU32 m_height;
+        ImU32 m_pitch;
+        std::vector<ImU8> m_data;
     public:
-        Bitmap(u32 width, u32 height, u32 pitch, u8 *data) : m_width(width), m_height(height), m_pitch(pitch), m_data(std::vector<u8>(data, data + pitch * height)) {}
-        u32 getWidth() const { return m_width; }
-        u32 getHeight() const { return m_height; }
-        u32 getPitch() const { return m_pitch; }
-        const std::vector<u8> &getData() const { return m_data; }
+        Bitmap(ImU32 width, ImU32 height, ImU32 pitch, ImU8 *data) : m_width(width), m_height(height), m_pitch(pitch), m_data(std::vector<ImU8>(data, data + pitch * height)) {}
+        Bitmap(ImU32 width, ImU32 height, ImU32 pitch) : m_width(width), m_height(height), m_pitch(pitch) { m_data.resize(pitch * height); }
+        void clear() { m_data.clear(); }
+        //ImU8 convertToGray(ImU32 x, ImU32 y) const;
+        void resizeWithoutFilter(ImU32 &width, ImU32 &height, ImU32 &pitch, ImU8 *data);
+        void resize(ImU32 &width, ImU32 &height, ImU32 skipX, ImU32 skipY);
+        ImU32 getWidth() const { return m_width; }
+        ImU32 getHeight() const { return m_height; }
+        ImU32 getPitch() const { return m_pitch; }
+        const std::vector<ImU8> &getData() const { return m_data; }
+        ImU8 *getData() { return m_data.data(); }
+        void setData( ImU32 width, ImU32 height, ImU32 pitch, std::vector<ImU8> data) {
+            m_width = width;
+            m_height = height;
+            m_pitch = pitch;
+            m_data = std::move(data);
+        }
+        ImU32 crossCorrelate( ImU8 *input, ImU32 inLen, ImU32 skipY);
+        void lcdFilter();
+        //void blend( Bitmap &bitmap, ImU32 x, ImU32 y);
     };
 
+    class RGBA {
+
+
+    public:
+
+        static float IntToFloat(ImU8 col) {
+            return col / 255.0F;
+        }
+
+        static ImVec4 ConvertToFloatVec() {
+            return ImVec4(IntToFloat(color.rgbaVec[0]), IntToFloat(color.rgbaVec[1]), IntToFloat(color.rgbaVec[2]), IntToFloat(color.rgbaVec[3]));
+        }
+
+        static ImU8 floatToInt(float col) {
+            return std::clamp((unsigned)std::floor(col*255u),0u,255u);
+        }
+
+        static void convertFromFloatVec(ImVec4 colorVec) {
+            color.rgbaVec[0] = floatToInt(colorVec.x);
+            color.rgbaVec[1] = floatToInt(colorVec.y);
+            color.rgbaVec[2] = floatToInt(colorVec.z);
+            color.rgbaVec[3] = floatToInt(colorVec.w);
+        }
+
+        static void fromLinearRGB() {
+            auto lRGB = ConvertToFloatVec();
+            color.rgbaVec[0] =  lRGB.x <= 0.04045 ? lRGB.x * 12.92 : pow(lRGB.x, 1.0/2.4) * 1.055 - 0.055;
+            color.rgbaVec[1] =  lRGB.y <= 0.04045 ? lRGB.y * 12.92 : pow(lRGB.y, 1.0/2.4) * 1.055 - 0.055;
+            color.rgbaVec[2] =  lRGB.z <= 0.04045 ? lRGB.z * 12.92 : pow(lRGB.z, 1.0/2.4) * 1.055 - 0.055;
+        }
+
+        static void toLinearRGB() {
+            auto sRGB = ConvertToFloatVec();
+            color.rgbaVec[0] =  sRGB.x <= 0.0031308 ? sRGB.x / 12.92 : pow((sRGB.x + 0.055) / 1.055, 2.4);
+            color.rgbaVec[1] =  sRGB.y <= 0.0031308 ? sRGB.y / 12.92 : pow((sRGB.y + 0.055) / 1.055, 2.4);
+            color.rgbaVec[2] =  sRGB.z <= 0.0031308 ? sRGB.z / 12.92 : pow((sRGB.z + 0.055) / 1.055, 2.4);
+        }
+
+        static ImU8 LuminosityFromLinearRGB()
+        {
+            // Luminosity Y is defined by the CIE 1931 XYZ color space. Linear RGB to Y is a weighted average based on factors from the color conversion matrix:
+            // Y = 0.2126*R + 0.7152*G + 0.0722*B. Computed on the integer pipe.
+            return (4732UL * color.rgbaVec[0] + 46871UL * color.rgbaVec[1] + 13933UL * color.rgbaVec[2]) >> 16;
+        }
+        static ImU8 LuminosityFromSRGB()
+        {
+            auto save = RGBA::getRgba();
+            toLinearRGB();
+            // Luminosity Y is defined by the CIE 1931 XYZ color space. sRGB to Y is a weighted average based on factors from the color conversion matrix:
+            // Y = 0.2126*R + 0.7152*G + 0.0722*B. Computed on the integer pipe.
+            ImU8 grayScale = (4732UL * color.rgbaVec[0] + 46871UL * color.rgbaVec[1] + 13933UL * color.rgbaVec[2]) >> 16;
+            setRgbaVec(grayScale, grayScale, grayScale, grayScale);
+            fromLinearRGB();
+            auto result = getRgbaVec()[0];
+            setRgba(save);
+            return result;
+        }
+
+
+        static ImU8 Luminance() {
+            float value = std::max(color.rgbaVec[0], std::max(color.rgbaVec[1], color.rgbaVec[2])) / 255.0;
+            float X2 = std::min(color.rgbaVec[0], std::min(color.rgbaVec[1], color.rgbaVec[2])) / 255.0;
+            return (value + X2) / 2.0;
+        }
+
+        static void PreMultiplyAlpha() {
+            color.rgbaVec[0] = color.rgbaVec[0] * color.rgbaVec[3] / 255;
+            color.rgbaVec[1] = color.rgbaVec[1] * color.rgbaVec[3] / 255;
+            color.rgbaVec[2] = color.rgbaVec[2] * color.rgbaVec[3] / 255;
+        }
+
+        static ImU32  AddAlpha(ImU8 r, ImU8 g, ImU8 b) {
+            color.rgbaVec[0] = r;
+            color.rgbaVec[1] = g;
+            color.rgbaVec[2] = b;
+            color.rgbaVec[3] = (r+g+b)/3;//luminance
+            return color.rgba;
+        }
+
+        RGBA (ImU8 r, ImU8 g, ImU8 b, ImU8 a) {
+            color.rgbaVec[0] = r;
+            color.rgbaVec[1] = b;
+            color.rgbaVec[2] = g;
+            color.rgbaVec[3] = a;
+        }
+
+        RGBA (ImU32 rgba) {
+            color.rgba = rgba;
+        }
+
+        bool isColorDark() {
+            return Luminance() < 0.5f;
+        }
+
+        static ImU8 *getRgbaVec() {
+            return color.rgbaVec;
+        }
+
+        static ImU32 getRgba() {
+            return color.rgba;
+        }
+
+        static void setRgba(ImU32 rgba) {
+            color.rgba = rgba;
+        }
+
+        static void setRgbaVec(ImU8 r, ImU8 g, ImU8 b, ImU8 a) {
+            color.rgbaVec[0] = r;
+            color.rgbaVec[1] = g;
+            color.rgbaVec[2] = b;
+            color.rgbaVec[3] = a;
+        }
+
+        union RGBAU{
+            ImU8 rgbaVec[4];
+            ImU32 rgba;
+        };
+        inline static RGBAU color;
+    };
 }
