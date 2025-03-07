@@ -260,9 +260,6 @@ namespace ImGuiExt {
     }
 
     Texture::Texture(Texture&& other) noexcept {
-        if (m_textureId != 0)
-            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
-
         m_textureId = other.m_textureId;
         m_width = other.m_width;
         m_height = other.m_height;
@@ -271,8 +268,10 @@ namespace ImGuiExt {
     }
 
     Texture& Texture::operator=(Texture&& other) noexcept {
-        if (m_textureId != 0)
-            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+        if (this == &other)
+            return *this;
+
+        this->reset();
 
         m_textureId = other.m_textureId;
         m_width = other.m_width;
@@ -288,6 +287,11 @@ namespace ImGuiExt {
     }
 
     void Texture::reset() {
+        #if !defined(OS_WEB)
+            if (glDeleteTextures == nullptr)
+                return;
+        #endif
+
         if (m_textureId != 0) {
             glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
             m_textureId = 0;

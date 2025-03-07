@@ -100,6 +100,9 @@ namespace hex {
     }
 
     Window::~Window() {
+        m_frameRateThread.request_stop();
+        m_frameRateThread.join();
+
         EventProviderDeleted::unsubscribe(this);
         RequestCloseImHex::unsubscribe(this);
         RequestUpdateWindowTitle::unsubscribe(this);
@@ -300,7 +303,7 @@ namespace hex {
 
                     {
                         std::unique_lock lock(m_sleepMutex);
-                        m_sleepCondVar.wait_for(lock, std::chrono::microseconds(100));
+                        m_sleepCondVar.wait(lock);
                         if (m_sleepFlag.exchange(false))
                             break;
                     }
@@ -1213,7 +1216,7 @@ namespace hex {
                     if (m_remainingUnlockedTime > std::chrono::nanoseconds(0)) {
                         m_remainingUnlockedTime -= iterationTime;
                     } else {
-                        targetFps = 0.01;
+                        targetFps = 5;
                     }
 
                     requestedFrameTime = (Duration(1.0E9) / targetFps) / 1.3;
@@ -1230,6 +1233,7 @@ namespace hex {
                     m_wakeupCondVar.wait_for(lock, requestedFrameTime, [&] {
                         return m_wakeupFlag || stopToken.stop_requested();
                     });
+                    m_wakeupFlag = false;
                 }
 
                 endTime = std::chrono::steady_clock::now();
