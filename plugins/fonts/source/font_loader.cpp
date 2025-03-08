@@ -46,7 +46,6 @@ namespace hex::fonts {
 
                 std::ranges::transform(fontName.begin(), fontName.end(), fontName.begin(), [](unsigned char c) { return std::tolower(c); });
                 if (fontName.find("proggy") != std::string::npos || fontName.find("unifont") != std::string::npos) {
-                    //fontAtlas->getAtlas()->BuildRGBA32Atlas();
                     continue;
                 }
 
@@ -62,14 +61,16 @@ namespace hex::fonts {
                 else
                     fontSizePt  = fontSizePx * 72.0f / 96.0f;
 
+                if (FT_Set_Pixel_Sizes(face, 3*fontSizePt, fontSizePt) != 0) {
+                    log::fatal("Failed to set pixel size");
+                    return false;
+                }
+
                 FT_UInt gIndex;
                 FT_ULong charCode = FT_Get_First_Char(face, &gIndex);
 
                 while (gIndex != 0) {
-                    if (FT_Set_Pixel_Sizes(face, 3*fontSizePt, fontSizePt) != 0) {
-                        log::fatal("Failed to set pixel size");
-                        return false;
-                    }
+
 
                     FT_UInt glyph_index = FT_Get_Char_Index(face, charCode);
                     if (FT_Load_Glyph(face, glyph_index, FT_LOAD_TARGET_NORMAL | FT_LOAD_RENDER) != 0) {
@@ -85,24 +86,13 @@ namespace hex::fonts {
                     bitmapNoFilter.lcdFilter();
                     auto width = bitmapNoFilter.getWidth() / 3;
                     auto height = bitmapNoFilter.getHeight();
-
-                    if (FT_Set_Pixel_Sizes(face, fontSizePt, fontSizePt) != 0) {
-                        log::fatal("Failed to set pixel size");
-                        return false;
-                    }
-
-                    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_TARGET_NORMAL | FT_LOAD_RENDER | FT_LOAD_COMPUTE_METRICS) != 0) {
-                        log::fatal("Failed to load glyph");
-                        return false;
-                    }
-
                     FT_GlyphSlot slot = face->glyph;
                     FT_Size size = face->size;
 
-                    ImVec2 offset = ImVec2((slot->metrics.horiBearingX / 64.0f) - 1.0f, (size->metrics.ascender - slot->metrics.horiBearingY) / 64.0f);
+                    ImVec2 offset = ImVec2((slot->metrics.horiBearingX / 64.0f / 3.0f) - 1.0f, (size->metrics.ascender - slot->metrics.horiBearingY) / 64.0f);
                     if (fontName.find("codicon") != std::string::npos)
                         offset.x -= 1.0f;
-                    ImS32 advance = (float) slot->advance.x / 64.0f;
+                    ImS32 advance = (float) slot->advance.x / 64.0f / 3.0f;
 
                     ImS32 rect_id = io.Fonts->AddCustomRectFontGlyph(io.Fonts->Fonts[0], charCode, width, height, advance, offset);
                     rect_ids.push_back(rect_id);
