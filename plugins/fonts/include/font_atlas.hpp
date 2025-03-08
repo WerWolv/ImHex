@@ -3,7 +3,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_freetype.h>
-#include <freetype2/ft2build.h>
+#include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_LCD_FILTER_H
 #include FT_BITMAP_H

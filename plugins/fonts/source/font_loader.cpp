@@ -1,3 +1,7 @@
+#if defined(_MSC_VER)
+#include <windows.h>
+#endif
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <list>
