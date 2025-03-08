@@ -161,8 +161,8 @@ namespace hex::fonts {
     void Bitmap::resize(ImU32 &width, ImU32 &height, ImU32 skipX, ImU32 skipY) {
         if (m_width < width + skipX || m_height < height + skipY)
             return;
-        auto padding = -width & 3;
-        auto pitch = width + padding;
+        auto pitch = (width + 3) & (-4);
+        auto padding = pitch - width;
         bool clearPadding = true;
         if (pitch <= m_width) {
             width = pitch;

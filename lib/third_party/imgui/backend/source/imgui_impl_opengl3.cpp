@@ -446,6 +446,7 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     // IMHEX PATCH BEGIN
+#if !defined(__EMSCRIPTEN__)
     if (useFontShaders) {
         if (usingDarkTheme) {
             glEnable(GL_FRAMEBUFFER_SRGB);
@@ -455,6 +456,9 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
         glDisable(GL_FRAMEBUFFER_SRGB);
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
+#else
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+#endif
     // IMHEX PATCH END
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
