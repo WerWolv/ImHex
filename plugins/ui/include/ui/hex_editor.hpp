@@ -108,6 +108,7 @@ namespace hex::ui {
         void drawFooter(const ImVec2 &size);
         void drawTooltip(u64 address, const u8 *data, size_t size) const;
         void drawScrollbar(ImVec2 characterSize);
+        void drawHorizontalScrollbar(ImVec2 characterSize);
         void drawMinimap(ImVec2 characterSize);
 
         void handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered);
@@ -344,6 +345,7 @@ namespace hex::ui {
         std::optional<u64> m_selectionEnd;
         std::optional<u64> m_cursorPosition;
         ScrollPosition m_scrollPosition;
+        ScrollPosition m_horizontalScrollPosition;
 
         Region m_frameStartSelectionRegion = Region::Invalid();
         Region m_hoveredRegion = Region::Invalid();
