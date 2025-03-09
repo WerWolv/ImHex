@@ -683,7 +683,7 @@ namespace hex::ui {
 
                         double addressWidth = ImGui::GetCursorPosX();
                         {
-                            const auto rowAddress = y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                            const auto rowAddress = y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress() + rowOffsetBytes;
 
                             if (m_separatorStride > 0 && rowAddress % m_separatorStride < m_bytesPerRow && !ImGui::GetIO().KeyShift)
                                 ImGuiExt::TextFormattedColored(ImGui::GetStyleColorVec4(ImGuiCol_SeparatorActive), "{} {}", "hex.ui.common.segment"_lang, rowAddress / m_separatorStride);
@@ -1014,7 +1014,7 @@ namespace hex::ui {
                                 if (targetColumnNumber < static_cast<u64>(m_horizontalScrollPosition)) {
                                     m_horizontalScrollPosition = targetColumnNumber;
                                 }
-                                if (targetColumnNumber >= static_cast<u64>(m_horizontalScrollPosition) && (targetColumnNumber > currentWindowsCapcityColumn + 1)) {
+                                if (targetColumnNumber >= static_cast<u64>(m_horizontalScrollPosition) && (targetColumnNumber > currentWindowsCapcityColumn)) {
                                     m_horizontalScrollPosition = targetColumnNumber - currentWindowsCapcityColumn + 1;
                                 }
                             }
