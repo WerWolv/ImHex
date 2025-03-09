@@ -872,7 +872,7 @@ void TextEditor::SetFocus() {
     ResetCursorBlinkTime();
     EnsureCursorVisible();
     if (!this->mReadOnly) {
-        ImGui::SetKeyboardFocusHere(-1);
+        ImGui::SetKeyboardFocusHere(0);
         mUpdateFocus = false;
     }
 }
@@ -977,6 +977,15 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                     space += " ";
                 }
                 std::string lineNoStr = space + std::to_string((int)(lineNo + 1));
+                ImGui::SetCursorScreenPos(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y));
+                if (ImGui::InvisibleButton(lineNoStr.c_str(),ImVec2(mLineNumberFieldWidth,mCharAdvance.y))) {
+                    if (mBreakpoints.contains(lineNo + 1))
+                        mBreakpoints.erase(lineNo + 1);
+                    else
+                        mBreakpoints.insert(lineNo + 1);
+                    mBreakPointsChanged = true;
+                    JumpToCoords(mState.mCursorPosition);
+                }
                 TextUnformattedColoredAt(ImVec2(mLeftMargin + lineNoStartScreenPos.x, lineStartScreenPos.y), mPalette[(int) PaletteIndex::LineNumber], lineNoStr.c_str());
             }
 
