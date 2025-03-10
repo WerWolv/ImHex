@@ -618,8 +618,9 @@ namespace hex::ui {
                 for (u64 i = 0; i < columnCount; i++) {
                     if (isColumnSeparatorColumn(i, columnCount))
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
-
-                    ImGui::TableSetupColumn(formatAddress(i * bytesPerCell, m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * m_currDataVisualizer->getMaxCharsPerCell() + std::ceil((6 + m_byteCellPadding) * 1_scaled));
+                    
+                    const auto address = i * bytesPerCell + rowOffsetBytes;
+                    ImGui::TableSetupColumn(formatAddress(address, m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * m_currDataVisualizer->getMaxCharsPerCell() + std::ceil((6 + m_byteCellPadding) * 1_scaled));
                 }
 
                 // ASCII column
@@ -683,7 +684,7 @@ namespace hex::ui {
 
                         double addressWidth = ImGui::GetCursorPosX();
                         {
-                            const auto rowAddress = y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress() + rowOffsetBytes;
+                            auto rowAddress = y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                             if (m_separatorStride > 0 && rowAddress % m_separatorStride < m_bytesPerRow && !ImGui::GetIO().KeyShift)
                                 ImGuiExt::TextFormattedColored(ImGui::GetStyleColorVec4(ImGuiCol_SeparatorActive), "{} {}", "hex.ui.common.segment"_lang, rowAddress / m_separatorStride);
