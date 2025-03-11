@@ -12,6 +12,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/freetype.hpp>
 
 #include <wolv/utils/string.hpp>
 #include <freetype/freetype.h>
@@ -39,7 +40,7 @@ namespace hex::fonts {
             fontName = "proggy";
         } else {
             ImVector<ImS32> rect_ids;
-            std::map<ImS32, Bitmap> bitmapLCD;
+            std::map<ImS32, ft::Bitmap> bitmapLCD;
             ImU32 fontCount = io.Fonts->ConfigData.Size;
             for (ImU32 i = 0; i < fontCount; i++) {
                 fontName = io.Fonts->ConfigData[i].Name;
@@ -78,7 +79,7 @@ namespace hex::fonts {
                         return false;
                     }
 
-                    Bitmap bitmapNoFilter = Bitmap(face->glyph->bitmap.width, face->glyph->bitmap.rows, face->glyph->bitmap.pitch, face->glyph->bitmap.buffer);
+                    ft::Bitmap bitmapNoFilter = ft::Bitmap(face->glyph->bitmap.width, face->glyph->bitmap.rows, face->glyph->bitmap.pitch, face->glyph->bitmap.buffer);
                     if (face->glyph->bitmap.width * face->glyph->bitmap.rows == 0) {
                         charCode = FT_Get_Next_Char(face, charCode, &gIndex);
                         continue;
@@ -114,7 +115,7 @@ namespace hex::fonts {
                     if (rect->X == 0xFFFF || rect->Y == 0xFFFF || !bitmapLCD.contains(rect_id))
                         continue;
 
-                    Bitmap bitmapSaved = bitmapLCD.at(rect_id);
+                    ft::Bitmap bitmapSaved = bitmapLCD.at(rect_id);
                     ImU32 imageWidth = bitmapSaved.getWidth() / 3;
                     ImU32 imageHeight = bitmapSaved.getHeight();
                     const ImU8 *bitmapBuffer = bitmapSaved.getData();
@@ -123,7 +124,7 @@ namespace hex::fonts {
                         ImU32 *p = tex_pixels + (rect->Y + y) * tex_width + (rect->X);
                         for (ImU32 x = 0; x < imageWidth; x++) {
                             const ImU8 *bitmapPtr = &bitmapBuffer[y * bitmapSaved.getPitch() + 3 * x];
-                             *p++ = RGBA::AddAlpha(*bitmapPtr, *(bitmapPtr + 1), *(bitmapPtr + 2));
+                             *p++ = ft::RGBA::addAlpha(*bitmapPtr, *(bitmapPtr + 1), *(bitmapPtr + 2));
                         }
                     }
                 }
@@ -136,10 +137,12 @@ namespace hex::fonts {
         return true;
     }
 
-    bool buildFontAtlas(FontAtlas *fontAtlas, std::fs::path fontPath, bool pixelPerfectFont, float fontSize, bool loadUnicodeCharacters, bool bold, bool italic, bool antialias) {
+    bool buildFontAtlas(FontAtlas *fontAtlas, std::fs::path fontPath, bool pixelPerfectFont, float fontSize, bool loadUnicodeCharacters, bool bold, bool italic,const std::string &antiAliasType) {
         if (fontAtlas == nullptr) {
             return false;
         }
+        bool antialias = antiAliasType == "grayscale";
+        bool monochrome = antiAliasType == "none";
         FT_Library ft = nullptr;
         if (FT_Init_FreeType(&ft) != 0) {
             log::fatal("Failed to initialize FreeType");
@@ -162,7 +165,8 @@ namespace hex::fonts {
         if (!pixelPerfectFont) {
             fontAtlas->setBold(bold);
             fontAtlas->setItalic(italic);
-            fontAtlas->setAntiAliasing(antialias);
+            if (antialias || monochrome)
+               fontAtlas->setAntiAliasing(antialias);
         } else {
             fontPath.clear();
         }
@@ -174,10 +178,10 @@ namespace hex::fonts {
             std::string defaultFontName = defaultFont.has_value() ? fontPath.filename().string() : "Custom Font";
             memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
             fontIndex += 1;
-            //if (!fontAtlas->build()) {
-            //    log::error("Failed to load custom font '{}'! Falling back to default font", wolv::util::toUTF8String(fontPath));
-            //    defaultFont.reset();
-            // }
+            if ((antialias || monochrome) && !fontAtlas->build()) {
+                log::error("Failed to load custom font '{}'! Falling back to default font", wolv::util::toUTF8String(fontPath));
+                defaultFont.reset();
+            }
         }
 
         // If there's no custom font set, or it failed to load, fall back to the default font
@@ -228,7 +232,12 @@ namespace hex::fonts {
             }
         }
 
-        if (antialias) {
+        if (ft != nullptr) {
+            FT_Done_FreeType(ft);
+            ft = nullptr;
+        }
+
+        if (antialias || monochrome) {
             if (!fontAtlas->build()) {
                 log::fatal("Failed to load font!");
                 return false;

@@ -204,8 +204,8 @@ namespace hex::fonts {
         return m_italic.isChecked();
     }
 
-    [[nodiscard]] bool FontSelector::isAntiAliased() const {
-        return m_antiAliased.isChecked();
+    [[nodiscard]] const std::string FontSelector::antiAliasingType() const {
+        return m_antiAliased.getValue();
     }
 
 
