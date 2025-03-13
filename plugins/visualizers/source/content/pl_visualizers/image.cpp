@@ -145,14 +145,14 @@ namespace hex::plugin::visualizers {
         if (iterable == nullptr || iterable->getEntryCount() <= 0)
             return texture;
         auto content = iterable->getEntry(0);
-        auto colorTypeSize = content->getSize()*2;
-
+        auto colorTypeSize = content->getSize()*2*width*height/indices.size();
+        auto actualHeight = indices.size() / width;
         if (colorTypeSize == 1) {
-            texture = unmapColors<u8>(colorTablePattern, indices, width, height);
+            texture = unmapColors<u8>(colorTablePattern, indices, width, actualHeight);
         } else if (colorTypeSize == 2) {
-            texture = unmapColors<u16>(colorTablePattern, indices, width, height);
+            texture = unmapColors<u16>(colorTablePattern, indices, width, actualHeight);
         } else if (colorTypeSize == 4) {
-            texture = unmapColors<u32>(colorTablePattern, indices, width, height);
+            texture = unmapColors<u32>(colorTablePattern, indices, width, actualHeight);
         }
         return texture;
     }
