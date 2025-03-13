@@ -46,7 +46,7 @@ namespace hex::fonts {
                 fontName = io.Fonts->ConfigData[i].Name;
 
                 std::ranges::transform(fontName.begin(), fontName.end(), fontName.begin(), [](unsigned char c) { return std::tolower(c); });
-                if (fontName.find("proggy") != std::string::npos || fontName.find("unifont") != std::string::npos) {
+                if (fontName == "noscalable") {
                     continue;
                 }
 
@@ -226,8 +226,14 @@ namespace hex::fonts {
                 if (font.defaultSize.has_value())
                     size = font.defaultSize.value() * ImHexApi::System::getBackingScaleFactor();
                 fontAtlas->addFontFromMemory(font.fontData, size, !font.defaultSize.has_value(), offset, glyphRanges.back());
-                auto nameSize = font.name.size();
-                memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, font.name.c_str(), nameSize);
+                if (!font.scalable.value_or(true)) {
+                    std::string fontName = "NonScalable";
+                    auto nameSize = fontName.size();
+                    memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, fontName.c_str(), nameSize);
+                } else {
+                    auto nameSize = font.name.size();
+                    memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, font.name.c_str(), nameSize);
+                }
                 fontIndex += 1;
             }
         }

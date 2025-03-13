@@ -141,6 +141,10 @@ namespace hex::fonts {
 
         Font addFontFromMemory(const std::vector<u8> &fontData, float fontSize, bool scalable, ImVec2 offset, const ImVector<ImWchar> &glyphRange = {}) {
             auto &storedFontData = m_fontData.emplace_back(fontData);
+            if (storedFontData.empty()) {
+                log::fatal("Failed to load font data");
+                return Font();
+            }
 
             auto &config = m_fontConfigs.emplace_back(m_defaultConfig);
             config.FontDataOwnedByAtlas = false;
