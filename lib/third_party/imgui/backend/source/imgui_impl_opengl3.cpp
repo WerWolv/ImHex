@@ -462,7 +462,9 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
 #else
+    // IMHEX PATCH END
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    // IMHEX PATCH BEGIN
 #endif
     // IMHEX PATCH END
     glDisable(GL_CULL_FACE);
@@ -513,6 +515,7 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
     {
             // IMHEX PATCH BEGIN
         { 2.0f/(R-L),   0.0f,        Gamma,   0.0f },
+     // { 2.0f/(R-L),   0.0f,         0.0f,   0.0f },
             // IMHEX PATCH END
         { 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
         { 0.0f,         0.0f,        -1.0f,   0.0f },
@@ -652,6 +655,10 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
                 // User callback, registered via ImDrawList::AddCallback()
                 // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
                 // IMHEX PATCH BEGIN
+                //if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
+                //    ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
+                //else
+                //    pcmd->UserCallback(cmd_list, pcmd);
                 if (pcmd->UserCallback != ImDrawCallback_ResetRenderState)
                     pcmd->UserCallback(cmd_list, pcmd);
                 ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
