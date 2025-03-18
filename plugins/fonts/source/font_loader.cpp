@@ -46,7 +46,7 @@ namespace hex::fonts {
                 fontName = io.Fonts->ConfigData[i].Name;
 
                 std::ranges::transform(fontName.begin(), fontName.end(), fontName.begin(), [](unsigned char c) { return std::tolower(c); });
-                if (fontName == "noscalable") {
+                if (fontName == "nonscalable") {
                     continue;
                 }
 
