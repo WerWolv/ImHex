@@ -5,7 +5,10 @@
 
 #include <fonts/vscode_icons.hpp>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/api/imhex_api.hpp>
+#include <hex/providers/memory_provider.hpp>
 
 #include <jthread.hpp>
 #include <string>
@@ -71,19 +74,62 @@ namespace hex::plugin::builtin {
                 }
                 ImGui::PopItemWidth();
 
+                ImGui::SameLine();
+
+                ImGui::BeginDisabled(!client.isConnected() || !ImHexApi::Provider::isValid());
+                {
+                    if (ImGuiExt::IconButton(ICON_VS_SEND, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        auto provider = ImHexApi::Provider::get();
+                        if (provider != nullptr) {
+                            std::vector<u8> data;
+                            data.resize(provider->getSize());
+                            provider->readRaw(0, data.data(), provider->getSize());
+                            client.writeBytes(data);
+                        }
+                    }
+                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+                        if (ImHexApi::Provider::isValid()) {
+                            ImGui::SetTooltip(hex::format("{} ({})", "hex.builtin.tools.tcp_client_server.send_current_provider"_lang, ImHexApi::Provider::get()->getName()).c_str());
+                        }
+                        else {
+                            ImGui::SetTooltip("hex.builtin.tools.tcp_client_server.send_current_provider"_lang);
+                        }
+                    }
+                }
+                ImGui::EndDisabled();
+
                 if (port < 1)
                     port = 1;
                 else if (port > 65535)
                     port = 65535;
 
                 ImGuiExt::Header("hex.builtin.tools.tcp_client_server.messages"_lang);
-                if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, 200_scaled))) {
+                if (ImGui::BeginTable("##response", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, 200_scaled))) {
+                    ImGui::TableSetupColumn("##ID", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("##Value");
+                    
                     {
                         std::scoped_lock lock(receiverMutex);
+                        u32 index = 0;
                         for (const auto &message : messages) {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
+
+                            ImGui::PushID(index);
+                            ImGuiExt::TextFormatted("{}", index);
+                            ImGui::TableNextColumn();
+
                             ImGuiExt::TextFormattedSelectable("{}", message.c_str());
+                            if (ImGui::TableGetHoveredRow() == (int)index) {
+                                ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_Header));
+                                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                                    std::vector<uint8_t> data(message.begin(), message.end());
+                                    ImHexApi::Provider::add<prv::MemoryProvider>(data, hex::format("hex.builtin.tools.tcp_client_server.tcp_message"_lang, index));
+                                }
+                            }
+                            ImGui::PopID();
+
+                            index += 1;
                         }
                     }
 
@@ -166,15 +212,29 @@ namespace hex::plugin::builtin {
 
                 ImGuiExt::Header("hex.builtin.tools.tcp_client_server.messages"_lang);
 
-                if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, 200_scaled))) {
+                if (ImGui::BeginTable("##response", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, 200_scaled))) {
+                    ImGui::TableSetupColumn("##ID", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("##Value");
+
                     {
                         std::scoped_lock lock(receiverMutex);
                         u32 index = 0;
                         for (const auto &message : messages) {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
+
                             ImGui::PushID(index);
+                            ImGuiExt::TextFormatted("{}", index);
+                            ImGui::TableNextColumn();
+
                             ImGuiExt::TextFormattedSelectable("{}", message.c_str());
+                            if (ImGui::TableGetHoveredRow() == (int)index) {
+                                ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_Header));
+                                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                                    std::vector<uint8_t> data(message.begin(), message.end());
+                                    ImHexApi::Provider::add<prv::MemoryProvider>(data, hex::format("hex.builtin.tools.tcp_client_server.tcp_message"_lang, index));
+                                }
+                            }
                             ImGui::PopID();
 
                             index += 1;
