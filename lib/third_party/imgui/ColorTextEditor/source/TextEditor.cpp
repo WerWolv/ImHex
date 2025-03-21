@@ -263,7 +263,6 @@ int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const char *aValu
             while (i-- > 0)
                 line.insert(line.begin() + cindex++, Glyph(' ', PaletteIndex::Default));
 
-            cindex += d;
             aWhere.mColumn += d;
             aValue++;
         } else if (*aValue == '\n') {
@@ -872,7 +871,7 @@ void TextEditor::SetFocus() {
     ResetCursorBlinkTime();
     EnsureCursorVisible();
     if (!this->mReadOnly) {
-        ImGui::SetKeyboardFocusHere(-1);
+        ImGui::SetKeyboardFocusHere(0);
         mUpdateFocus = false;
     }
 }
@@ -977,6 +976,15 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                     space += " ";
                 }
                 std::string lineNoStr = space + std::to_string((int)(lineNo + 1));
+                ImGui::SetCursorScreenPos(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y));
+                if (ImGui::InvisibleButton(lineNoStr.c_str(),ImVec2(mLineNumberFieldWidth,mCharAdvance.y))) {
+                    if (mBreakpoints.contains(lineNo + 1))
+                        mBreakpoints.erase(lineNo + 1);
+                    else
+                        mBreakpoints.insert(lineNo + 1);
+                    mBreakPointsChanged = true;
+                    JumpToCoords(mState.mCursorPosition);
+                }
                 TextUnformattedColoredAt(ImVec2(mLeftMargin + lineNoStartScreenPos.x, lineStartScreenPos.y), mPalette[(int) PaletteIndex::LineNumber], lineNoStr.c_str());
             }
 
@@ -1288,24 +1296,28 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
 }
 
 void TextEditor::SetText(const std::string &aText) {
+    UndoRecord u;
+    u.mBefore = mState;
+    u.mRemoved = GetText();
+    u.mRemovedStart = Coordinates(0, 0);
+    u.mRemovedEnd = Coordinates((int)mLines.size()-1, GetLineMaxColumn((int)mLines.size()-1));
     mLines.resize(1);
     mLines[0].clear();
     std::string text = PreprocessText(aText);
     for (auto chr : text) {
-        if (chr == '\r') {
-            // ignore the carriage return character
-        } else if (chr == '\n')
+        if (chr == '\n')
             mLines.push_back(Line());
-        else {
+        else
             mLines.back().push_back(Glyph(chr, PaletteIndex::Default));
-        }
     }
-
+    u.mAdded = text;
+    u.mAddedStart = Coordinates(0, 0);
+    u.mAddedEnd = Coordinates((int)mLines.size()-1, GetLineMaxColumn((int)mLines.size()-1));
     mTextChanged = true;
     mScrollToTop = true;
-
-    mUndoBuffer.clear();
-    mUndoIndex = 0;
+    u.mAfter = mState;
+    if (!mReadOnly)
+        AddUndo(u);
 
     Colorize();
 }
