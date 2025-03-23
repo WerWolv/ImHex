@@ -1,0 +1,62 @@
+import os
+import sys
+import csv
+import pytsk3
+import argparse
+import pandas as pd
+
+class ForWind:
+    def __init__(self, image_path):
+        self.image_path = image_path
+        self.img_info = None
+        self.file_system = None
+
+    def open_image(self):
+        try:
+            self.img_info = pytsk3.Img_Info(self.image_path)
+            self.file_system = pytsk3.FS_Info(self.img_info)
+            print(f"Successfully opened image: {self.image_path}")
+        except Exception as e:
+            print(f"Error opening image: {e}")
+            sys.exit(1)
+
+    def list_files(self, directory='/'):
+        directory_object = self.file_system.open_dir(directory)
+        file_list = []
+        for entry in directory_object:
+            if entry.info.name.name not in [b'.', b'..']:
+                file_info = {
+                    'name': entry.info.name.name.decode('utf-8'),
+                    'size': entry.info.meta.size,
+                    'type': 'directory' if entry.info.meta.type == pytsk3.TSK_FS_META_TYPE_DIR else 'file',
+                    'mtime': entry.info.meta.mtime,
+                    'ctime': entry.info.meta.crtime,
+                    'atime': entry.info.meta.atime
+                }
+                file_list.append(file_info)
+                if entry.info.meta.type == pytsk3.TSK_FS_META_TYPE_DIR:
+                    file_list.extend(self.list_files(entry.info.name.name.decode('utf-8')))
+        return file_list
+
+    def export_to_csv(self, file_list, output_file):
+        df = pd.DataFrame(file_list)
+        df.to_csv(output_file, index=False)
+        print(f"Exported file list to {output_file}")
+
+    def analyze(self):
+        self.open_image()
+        file_list = self.list_files()
+        return file_list
+
+def main():
+    parser = argparse.ArgumentParser(description='ForWind: A Windows Forensic Analysis Tool')
+    parser.add_argument('image', help='Path to the disk image file')
+    parser.add_argument('-o', '--output', help='Output CSV file', default='file_list.csv')
+    args = parser.parse_args()
+
+    forwind = ForWind(args.image)
+    file_list = forwind.analyze()
+    forwind.export_to_csv(file_list, args.output)
+
+if __name__ == '__main__':
+    main()
