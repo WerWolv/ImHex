@@ -942,7 +942,7 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
         // IMHEX PATCH BEGIN
         "    else {\n"
         "       Out_Color = Frag_Color;\n"
-        "       SRC1_Color = texture(Texture, Frag_UV.st) * Frag_Color.aaaa;\n"
+        "       SRC1_Color = vec4(texture(Texture, Frag_UV.st).rgb * Frag_Color.aaa,1.0);\n"
         "    }\n"
             // IMHEX PATCH END
         "}\n";
