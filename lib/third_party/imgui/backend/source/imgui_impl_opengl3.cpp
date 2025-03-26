@@ -421,19 +421,9 @@ void    ImGui_ImplOpenGL3_NewFrame()
 
 // IMHEX PATCH BEGIN
 bool useFontShaders = false;
-bool usingDarkTheme = false;
-bool isColorDark(ImU32 color) {
-    float r = (color         & 0xFF) / 255.0f;
-    float g = ((color >> 8)  & 0xFF) / 255.0f;
-    float b = ((color >> 16) & 0xFF) / 255.0f;
-    float luminance = 0.2126f * r + 0.7152f * g + 0.0722f * b;
-    return luminance < 0.5f;
-}
 
 void FontShadersOn(const ImDrawList *parent_list, const ImDrawCmd *cmd) {
     useFontShaders = !useFontShaders;
-    auto color = ImGui::GetColorU32(ImGuiCol_WindowBg);
-    usingDarkTheme = isColorDark(color);
 }
 void FontShadersOff(const ImDrawList *parent_list, const ImDrawCmd *cmd) {
     useFontShaders = !useFontShaders;
@@ -453,12 +443,8 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
     // IMHEX PATCH BEGIN
 #if !defined(__EMSCRIPTEN__)
     if (useFontShaders) {
-        if (usingDarkTheme) {
-            glEnable(GL_FRAMEBUFFER_SRGB);
-        }
         glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR,GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     } else {
-        glDisable(GL_FRAMEBUFFER_SRGB);
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
 #else
@@ -503,12 +489,9 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
 #endif
 // IMHEX PATCH BEGIN
     float Gamma;
-    if (useFontShaders) {
-        if (usingDarkTheme)
-            Gamma = 1.6f;
-        else
-            Gamma = 1.8f;
-    } else
+    if (useFontShaders)
+        Gamma = 1.0f;
+    else
         Gamma = 0.0f;
 // IMHEX PATCH END
     const float ortho_projection[4][4] =
@@ -654,15 +637,18 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
             {
                 // User callback, registered via ImDrawList::AddCallback()
                 // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
+                if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
+                    ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
                 // IMHEX PATCH BEGIN
-                //if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
-                //    ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
-                //else
-                //    pcmd->UserCallback(cmd_list, pcmd);
-                if (pcmd->UserCallback != ImDrawCallback_ResetRenderState)
+                else if (pcmd->UserCallback == ImGui_ImplOpenGL3_TurnFontShadersOn) {
+                    ImGui_ImplOpenGL3_TurnFontShadersOn(cmd_list, pcmd);
+                    ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
+                } else if (pcmd->UserCallback == ImGui_ImplOpenGL3_TurnFontShadersOff) {
+                    ImGui_ImplOpenGL3_TurnFontShadersOff(cmd_list, pcmd);
+                    ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
+                } // IMHEX PATCH END
+                else
                     pcmd->UserCallback(cmd_list, pcmd);
-                ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
-                // IMHEX PATCH END
             }
             else
             {
@@ -891,34 +877,14 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
         "void main()\n"
         "{\n"
         "    Frag_UV = UV;\n"
+        // IMHEX PATCH BEGIN
+        "    mat4 projMtx = ProjMtx;\n"
+        "    projMtx[0][2] = 0.0;\n"
         "    Frag_mat = ProjMtx;\n"
-        // IMHEX PATCH BEGIN
-        "    float Gamma = ProjMtx[0][2];\n"
-        "    vec4 fragColor = Color;\n"
-        "    vec4 glPos;\n"
-        "    if (Gamma > 0.0)\n"
-        "    {\n"
-        "        float l = max(Color.r, max(Color.g, Color.b));\n"
-        "        if (l < 0.55 && Gamma < 1.6)\n"
-        "        {\n"
-        "             Gamma = Gamma * 1.25;\n"
-        "        }\n"
-        "        else if (l < 0.55 && Gamma >  1.7)\n"
-        "        {\n"
-        "            Gamma = Gamma / 1.25;\n"
-        "        }\n"
-        "        fragColor = vec4(  pow(Color.rgb * vec3(Color.a), vec3(Gamma)), Color.a);\n"
-        "        glPos = vec4(Position.x * ProjMtx[0][0] + ProjMtx[3][0], Position.y * ProjMtx[1][1] + ProjMtx[3][1],0.0,ProjMtx[3][3]);\n"
-        "    }\n"
-        "    else\n"
-        "    {\n"
-        // IMHEX PATCH END
-        "        fragColor = Color;\n"
-        "        glPos = ProjMtx * vec4(Position.xy,0,1);\n"
-        // IMHEX PATCH BEGIN
-        "    }\n"
-        "    Frag_Color = fragColor;\n"
-        "    gl_Position = glPos;\n"
+        "    Frag_Color = Color;\n"
+        "    gl_Position = projMtx * vec4(Position.xy,0,1);\n"
+      //"    Frag_Color = Color;\n"
+     // "    gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
         // IMHEX PATCH END
         "}\n";
 
@@ -969,30 +935,16 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
         "void main()\n"
         "{\n"
         // IMHEX PATCH BEGIN
-        "    vec4 sample_tex = texture(Texture, Frag_UV.st);\n"
-        "    vec4 outColor = Frag_Color * sample_tex;\n"
-        "    float a = outColor.a;\n"
-        "    vec4 src1Color = sample_tex * vec4(a);\n"
         "    float Gamma = Frag_mat[0][2];\n"
-        "    if (Gamma == 0.0 || Gamma > 1.7)\n"
-        "    {\n"
-        "        src1Color = src1Color * vec4(a);\n"
-        "    }\n"
-        "    else\n"
-        "    {\n"
-        "        if (max(sample_tex.r, max(sample_tex.g, sample_tex.b)) < 0.001 )\n"
-        "        {\n"
-        "            src1Color = vec4(a);\n"
-        "        }\n"
-        "        else\n"
-        "        {\n"
-        "            src1Color = vec4(sample_tex.rgb * vec3(a), a);\n"
-        "        }\n"
-        "    }\n"
-        "    SRC1_Color = src1Color;\n"
-        "    Out_Color = outColor;\n"
-        //"    Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
+        "    if (Gamma == 0.0)\n"
         // IMHEX PATCH END
+        "       Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
+        // IMHEX PATCH BEGIN
+        "    else {\n"
+        "       Out_Color = Frag_Color;\n"
+        "       SRC1_Color = texture(Texture, Frag_UV.st) * Frag_Color.aaaa;\n"
+        "    }\n"
+            // IMHEX PATCH END
         "}\n";
 
     // Select shaders matching our GLSL versions

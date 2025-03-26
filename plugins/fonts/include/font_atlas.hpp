@@ -261,6 +261,10 @@ namespace hex::fonts {
 
         void reset() {
             m_fontData.clear();
+            m_glyphRange.clear();
+            m_fontSizes.clear();
+            m_fontConfigs.clear();
+            m_fontAtlas->Clear();
             m_defaultConfig.MergeMode = false;
         }
 

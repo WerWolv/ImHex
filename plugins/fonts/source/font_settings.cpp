@@ -5,6 +5,7 @@
 #include <hex/helpers/utils.hpp>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 namespace hex::fonts {
     constexpr static auto PixelPerfectName = "Pixel-Perfect Default Font (Proggy Clean)";
@@ -99,12 +100,17 @@ namespace hex::fonts {
         return customFont;
     }
 
+    static float getDpi() {
+        auto dpi = ImGui::GetCurrentContext()->CurrentDpiScale * 96.0F;
+        return dpi ? dpi : 96.0F;
+    }
+
     static float pixelsToPoints(float pixels) {
-        return pixels * (72_scaled / 96.0F);
+        return pixels * (72.0_scaled / getDpi());
     }
 
     static float pointsToPixels(float points) {
-        return points / (72_scaled / 96.0F);
+        return points / (72.0_scaled / getDpi());
     }
 
     bool SliderPoints::draw(const std::string &name) {

@@ -22,7 +22,7 @@
 
 namespace hex::fonts {
 
-    bool BuildSubPixelAtlas(FontAtlas *fontAtlas) {
+    bool BuildSubPixelAtlas(FontAtlas *fontAtlas, float fontSizePx) {
         FT_Library ft = nullptr;
         if (FT_Init_FreeType(&ft) != 0) {
             log::fatal("Failed to initialize FreeType");
@@ -55,14 +55,13 @@ namespace hex::fonts {
                     return false;
                 }
 
-                auto fontSizePx = io.Fonts->ConfigData[i].SizePixels;
                 float fontSizePt;
                 if (fontName.find("icon") != std::string::npos)
                     fontSizePt = fontSizePx;
                 else
                     fontSizePt  = fontSizePx * 72.0f / 96.0f;
 
-                if (FT_Set_Pixel_Sizes(face, 3*fontSizePt, fontSizePt) != 0) {
+                if (FT_Set_Pixel_Sizes(face, fontSizePt, fontSizePt) != 0) {
                     log::fatal("Failed to set pixel size");
                     return false;
                 }
@@ -74,35 +73,35 @@ namespace hex::fonts {
 
 
                     FT_UInt glyph_index = FT_Get_Char_Index(face, charCode);
-                    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_TARGET_NORMAL | FT_LOAD_RENDER) != 0) {
+                    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_TARGET_LCD | FT_LOAD_TARGET_LIGHT  | FT_LOAD_RENDER) != 0) {
                         IM_ASSERT(true && "Failed to load glyph");
                         return false;
                     }
 
-                    ft::Bitmap bitmapNoFilter = ft::Bitmap(face->glyph->bitmap.width, face->glyph->bitmap.rows, face->glyph->bitmap.pitch, face->glyph->bitmap.buffer);
+                    ft::Bitmap bitmap_lcd = ft::Bitmap(face->glyph->bitmap.width, face->glyph->bitmap.rows, face->glyph->bitmap.pitch, face->glyph->bitmap.buffer);
                     if (face->glyph->bitmap.width * face->glyph->bitmap.rows == 0) {
                         charCode = FT_Get_Next_Char(face, charCode, &gIndex);
                         continue;
                     }
-                    bitmapNoFilter.lcdFilter();
-                    auto width = bitmapNoFilter.getWidth() / 3;
-                    auto height = bitmapNoFilter.getHeight();
+
+                    auto width = bitmap_lcd.getWidth() / 3;
+                    auto height = bitmap_lcd.getHeight();
                     FT_GlyphSlot slot = face->glyph;
                     FT_Size size = face->size;
 
-                    ImVec2 offset = ImVec2((slot->metrics.horiBearingX / 64.0f / 3.0f) - 1.0f, (size->metrics.ascender - slot->metrics.horiBearingY) / 64.0f);
+                    ImVec2 offset = ImVec2((slot->metrics.horiBearingX / 64.0f), (size->metrics.ascender - slot->metrics.horiBearingY) / 64.0f);
                     if (fontName.find("codicon") != std::string::npos)
                         offset.x -= 1.0f;
-                    ImS32 advance = (float) slot->advance.x / 64.0f / 3.0f;
+                    ImS32 advance = (float) slot->advance.x / 64.0f;
 
                     ImS32 rect_id = io.Fonts->AddCustomRectFontGlyph(io.Fonts->Fonts[0], charCode, width, height, advance, offset);
                     rect_ids.push_back(rect_id);
-                    bitmapLCD.insert(std::make_pair(rect_id, bitmapNoFilter));
+                    bitmapLCD.insert(std::make_pair(rect_id, bitmap_lcd));
                     charCode = FT_Get_Next_Char(face, charCode, &gIndex);
                 }
                 FT_Done_Face(face);
             }
-
+            fontAtlas->getAtlas()->FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_SubPixel;
             fontAtlas->build();
             ImU8 *tex_pixels_ch = nullptr;
             ImS32 tex_width;
@@ -115,16 +114,16 @@ namespace hex::fonts {
                     if (rect->X == 0xFFFF || rect->Y == 0xFFFF || !bitmapLCD.contains(rect_id))
                         continue;
 
-                    ft::Bitmap bitmapSaved = bitmapLCD.at(rect_id);
-                    ImU32 imageWidth = bitmapSaved.getWidth() / 3;
-                    ImU32 imageHeight = bitmapSaved.getHeight();
-                    const ImU8 *bitmapBuffer = bitmapSaved.getData();
+                    ft::Bitmap bitmapLCDSaved = bitmapLCD.at(rect_id);
+                    ImU32 imageWidth = bitmapLCDSaved.getWidth() / 3;
+                    ImU32 imageHeight = bitmapLCDSaved.getHeight();
+                    const ImU8 *bitmapBuffer = bitmapLCDSaved.getData();
 
                     for (ImU32 y = 0; y < imageHeight; y++) {
                         ImU32 *p = tex_pixels + (rect->Y + y) * tex_width + (rect->X);
                         for (ImU32 x = 0; x < imageWidth; x++) {
-                            const ImU8 *bitmapPtr = &bitmapBuffer[y * bitmapSaved.getPitch() + 3 * x];
-                             *p++ = ft::RGBA::addAlpha(*bitmapPtr, *(bitmapPtr + 1), *(bitmapPtr + 2));
+                            const ImU8 *bitmapPtrLCD = &bitmapBuffer[y * bitmapLCDSaved.getPitch() + 3 * x];
+                             *p++ = ft::RGBA::addAlpha(*bitmapPtrLCD, *(bitmapPtrLCD + 1), *(bitmapPtrLCD + 2));
                         }
                     }
                 }
@@ -174,7 +173,7 @@ namespace hex::fonts {
         // Try to load the custom font if one was set
         std::optional<Font> defaultFont;
         if (!fontPath.empty()) {
-            defaultFont = fontAtlas->addFontFromFile(fontPath, fontSize, true, ImVec2());
+            defaultFont = fontAtlas->addFontFromFile(fontPath, std::rint(fontSize), true, ImVec2());
             std::string defaultFontName = defaultFont.has_value() ? fontPath.filename().string() : "Custom Font";
             memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
             fontIndex += 1;
@@ -250,6 +249,6 @@ namespace hex::fonts {
             }
             return true;
         } else
-           return BuildSubPixelAtlas(fontAtlas);
+           return BuildSubPixelAtlas(fontAtlas,fontSize);
     }
 }
