@@ -5,7 +5,7 @@
 #include <hex/helpers/utils.hpp>
 
 #include <imgui.h>
-#include <imgui_internal.h>
+#include "hex/api/imhex_api.hpp"
 
 namespace hex::fonts {
     constexpr static auto PixelPerfectName = "Pixel-Perfect Default Font (Proggy Clean)";
@@ -100,27 +100,14 @@ namespace hex::fonts {
         return customFont;
     }
 
-    static float getDpi() {
-        auto dpi = ImGui::GetCurrentContext()->CurrentDpiScale * 96.0F;
-        return dpi ? dpi : 96.0F;
-    }
-
-    static float pixelsToPoints(float pixels) {
-        return pixels * (72.0_scaled / getDpi());
-    }
-
-    static float pointsToPixels(float points) {
-        return points / (72.0_scaled / getDpi());
-    }
-
     bool SliderPoints::draw(const std::string &name) {
-        float value = pixelsToPoints(m_value);
-        float min = pixelsToPoints(m_min);
-        float max = pixelsToPoints(m_max);
+        float value = ImHexApi::Fonts::pixelsToPoints(m_value);
+        float min = ImHexApi::Fonts::pixelsToPoints(m_min);
+        float max = ImHexApi::Fonts::pixelsToPoints(m_max);
 
         auto changed = ImGui::SliderFloat(name.c_str(), &value, min, max, "%.0f pt");
 
-        m_value = pointsToPixels(value);
+        m_value = ImHexApi::Fonts::pointsToPixels(value);
 
         return changed;
     }
@@ -211,6 +198,8 @@ namespace hex::fonts {
     }
 
     [[nodiscard]] const std::string FontSelector::antiAliasingType() const {
+        if (isPixelPerfectFont())
+            return "none";
         return m_antiAliased.getValue();
     }
 

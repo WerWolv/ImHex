@@ -22,7 +22,7 @@
 
 namespace hex::fonts {
 
-    bool BuildSubPixelAtlas(FontAtlas *fontAtlas, float fontSizePx) {
+    bool BuildSubPixelAtlas(FontAtlas *fontAtlas, float fontSize) {
         FT_Library ft = nullptr;
         if (FT_Init_FreeType(&ft) != 0) {
             log::fatal("Failed to initialize FreeType");
@@ -55,13 +55,13 @@ namespace hex::fonts {
                     return false;
                 }
 
-                float fontSizePt;
+                float actualFontSize;
                 if (fontName.find("icon") != std::string::npos)
-                    fontSizePt = fontSizePx;
+                    actualFontSize = ImHexApi::Fonts::pointsToPixels(fontSize);
                 else
-                    fontSizePt  = fontSizePx * 72.0f / 96.0f;
+                    actualFontSize  = fontSize;
 
-                if (FT_Set_Pixel_Sizes(face, fontSizePt, fontSizePt) != 0) {
+                if (FT_Set_Pixel_Sizes(face, actualFontSize, actualFontSize) != 0) {
                     log::fatal("Failed to set pixel size");
                     return false;
                 }
@@ -140,6 +140,7 @@ namespace hex::fonts {
         if (fontAtlas == nullptr) {
             return false;
         }
+        auto realFontSize = ImHexApi::Fonts::pointsToPixels(fontSize);
         bool antialias = antiAliasType == "grayscale";
         bool monochrome = antiAliasType == "none";
         FT_Library ft = nullptr;
@@ -173,7 +174,7 @@ namespace hex::fonts {
         // Try to load the custom font if one was set
         std::optional<Font> defaultFont;
         if (!fontPath.empty()) {
-            defaultFont = fontAtlas->addFontFromFile(fontPath, std::rint(fontSize), true, ImVec2());
+            defaultFont = fontAtlas->addFontFromFile(fontPath, realFontSize, true, ImVec2());
             std::string defaultFontName = defaultFont.has_value() ? fontPath.filename().string() : "Custom Font";
             memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
             fontIndex += 1;
@@ -192,7 +193,7 @@ namespace hex::fonts {
                 memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
                 fontIndex += 1;
             } else {
-                defaultFont = fontAtlas->addFontFromRomFs("fonts/JetBrainsMono.ttf", fontSize, true, ImVec2());
+                defaultFont = fontAtlas->addFontFromRomFs("fonts/JetBrainsMono.ttf", realFontSize, true, ImVec2());
                 std::string defaultFontName = "JetBrains Mono";
                 memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
                 fontIndex += 1;
@@ -218,10 +219,10 @@ namespace hex::fonts {
                 glyphRanges.push_back(glyphRange);
 
                 // Calculate the glyph offset for the font
-                const ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->calculateFontDescend(ft, fontSize) - fontAtlas->calculateFontDescend(ft, font, fontSize)) };
+                const ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->calculateFontDescend(ft, realFontSize) - fontAtlas->calculateFontDescend(ft, font, realFontSize)) };
 
                 // Load the font
-                float size = fontSize;
+                float size = realFontSize;
                 if (font.defaultSize.has_value())
                     size = font.defaultSize.value() * ImHexApi::System::getBackingScaleFactor();
                 fontAtlas->addFontFromMemory(font.fontData, size, !font.defaultSize.has_value(), offset, glyphRanges.back());

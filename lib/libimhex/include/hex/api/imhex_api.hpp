@@ -3,6 +3,7 @@
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/semantic_version.hpp>
+#include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 
 #include <functional>
@@ -13,6 +14,7 @@
 #include <map>
 #include <set>
 #include <memory>
+#include "imgui_internal.h"
 
 #if !defined(HEX_MODULE_EXPORT)
     using ImGuiID = unsigned int;
@@ -776,6 +778,10 @@ EXPORT_MODULE namespace hex {
 
             void registerFont(const UnlocalizedString &fontName);
             ImFont* getFont(const UnlocalizedString &fontName);
+
+            float getDpi();
+            float pixelsToPoints(float pixels);
+            float pointsToPixels(float points);
 
         }
 

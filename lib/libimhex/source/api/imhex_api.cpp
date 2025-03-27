@@ -1119,6 +1119,18 @@ namespace hex {
             return impl::s_italicFont;
         }
 
+        float getDpi() {
+            auto dpi = ImGui::GetCurrentContext()->CurrentDpiScale * 96.0F;
+            return dpi ? dpi : 96.0F;
+        }
+
+        float pixelsToPoints(float pixels) {
+            return pixels * (72.0_scaled / getDpi());
+        }
+
+        float pointsToPixels(float points) {
+            return points / (72.0_scaled / getDpi());
+        }
 
     }
 
