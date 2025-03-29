@@ -33,17 +33,15 @@ namespace hex::fonts {
         auto io = ImGui::GetIO();
         io.Fonts = fontAtlas->getAtlas();
 
-        std::string fontName;
         if (io.Fonts->ConfigData.Size <= 0) {
-            //Fixme: This really shouldn't happen and can't go back
-            // to imhex api from here.
-            fontName = "proggy";
+            log::fatal("No font data found");
+            return false;
         } else {
             ImVector<ImS32> rect_ids;
             std::map<ImS32, ft::Bitmap> bitmapLCD;
             ImU32 fontCount = io.Fonts->ConfigData.Size;
             for (ImU32 i = 0; i < fontCount; i++) {
-                fontName = io.Fonts->ConfigData[i].Name;
+                std::string fontName = io.Fonts->ConfigData[i].Name;
 
                 std::ranges::transform(fontName.begin(), fontName.end(), fontName.begin(), [](unsigned char c) { return std::tolower(c); });
                 if (fontName == "nonscalable") {
