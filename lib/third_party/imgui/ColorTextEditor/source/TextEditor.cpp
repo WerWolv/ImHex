@@ -1886,6 +1886,11 @@ void TextEditor::MoveHome(bool aSelect) {
     auto home=0;
     while (isspace(line[home].mChar))
         home++;
+
+    if (home == oldPos.mColumn && oldPos.mColumn != 0) {
+        home = 0;
+    }
+
     SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, home));
     if (mState.mCursorPosition != oldPos) {
         if (aSelect) {
