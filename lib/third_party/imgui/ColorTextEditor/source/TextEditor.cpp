@@ -1887,7 +1887,7 @@ void TextEditor::MoveHome(bool aSelect) {
     while (isspace(line[home].mChar))
         home++;
 
-    if (home == oldPos.mColumn && oldPos.mColumn != 0) {
+    if (home >= oldPos.mColumn && oldPos.mColumn != 0) {
         home = 0;
     }
 
