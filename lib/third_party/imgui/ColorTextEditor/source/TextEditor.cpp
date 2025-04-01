@@ -1790,7 +1790,7 @@ void TextEditor::MoveLeft(int aAmount, bool aSelect, bool aWordMode) {
         }
     } else
         mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-    SetSelection(mInteractiveStart, mInteractiveEnd, aSelect && aWordMode ? SelectionMode::Word : SelectionMode::Normal);
+    SetSelection(mInteractiveStart, mInteractiveEnd, SelectionMode::Normal);
 
     EnsureCursorVisible();
 }
@@ -1846,7 +1846,7 @@ void TextEditor::MoveRight(int aAmount, bool aSelect, bool aWordMode) {
         }
     } else
         mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-    SetSelection(mInteractiveStart, mInteractiveEnd, aSelect && aWordMode ? SelectionMode::Word : SelectionMode::Normal);
+    SetSelection(mInteractiveStart, mInteractiveEnd, SelectionMode::Normal);
 
     EnsureCursorVisible();
 }
