@@ -4,9 +4,12 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 
+#include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/requests_interaction.hpp>
+
 #include <pl/patterns/pattern.hpp>
-#include <pl/core/preprocessor.hpp>
 #include <pl/core/parser.hpp>
+#include <pl/core/lexer.hpp>
 #include <pl/core/ast/ast_node_variable_decl.hpp>
 #include <pl/core/ast/ast_node_builtin_type.hpp>
 
@@ -32,7 +35,8 @@
 #include <wolv/utils/lock.hpp>
 
 #include <content/global_actions.hpp>
-#include <ui/menu_items.hpp>
+#include <fonts/fonts.hpp>
+#include <hex/helpers/menu_items.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -43,7 +47,7 @@ namespace hex::plugin::builtin {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             constexpr static std::array keywords = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch", "import", "as", "from"
+                    "struct", "union","using",  "enum", "bitfield",  "unsigned", "signed","be", "le", "if", "else", "this", "parent","while","match",  "for", "fn", "return", "namespace", "in", "out", "break", "continue", "ref", "null", "const", "try", "catch", "import", "as",  "from","false", "true",  "addressof", "sizeof", "typenameof", "$"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
@@ -56,8 +60,15 @@ namespace hex::plugin::builtin {
                 id.mDeclaration = "";
                 langDef.mIdentifiers.insert(std::make_pair(std::string(name), id));
             }
-
-            langDef.mTokenize = [](const char *inBegin, const char *inEnd, const char *&outBegin, const char *&outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
+            constexpr static std::array directives = {
+                    "include", "define", "ifdef", "ifndef", "endif", "undef", "pragma", "error"
+            };
+            for (const auto name : directives) {
+                TextEditor::Identifier id;
+                id.mDeclaration = "";
+                langDef.mPreprocIdentifiers.insert(std::make_pair(std::string(name), id));
+            }
+            langDef.mTokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
                 paletteIndex = TextEditor::PaletteIndex::Max;
 
                 while (inBegin < inEnd && isascii(*inBegin) && std::isblank(*inBegin))
@@ -70,13 +81,16 @@ namespace hex::plugin::builtin {
                 } else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::Identifier;
                 } else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = TextEditor::PaletteIndex::Number;
+                    paletteIndex = TextEditor::PaletteIndex::NumericLiteral;
                 } else if (TokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::CharLiteral;
                 } else if (TokenizeCStyleString(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = TextEditor::PaletteIndex::String;
+                    paletteIndex = TextEditor::PaletteIndex::StringLiteral;
+                } else if (TokenizeCStyleSeparator(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = TextEditor::PaletteIndex::Separator;
+                } else if (TokenizeCStyleOperator(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = TextEditor::PaletteIndex::Operator;
                 }
-
                 return paletteIndex != TextEditor::PaletteIndex::Max;
             };
 
@@ -88,8 +102,9 @@ namespace hex::plugin::builtin {
             langDef.mAutoIndentation = true;
             langDef.mPreprocChar     = '#';
 
-            langDef.mGlobalDocComment = "/*!";
-            langDef.mDocComment      = "/**";
+            langDef.mGlobalDocComment    = "/*!";
+            langDef.mBlockDocComment     = "/**";
+            langDef.mDocComment          = "///";
 
             langDef.mName = "Pattern Language";
 
@@ -103,15 +118,16 @@ namespace hex::plugin::builtin {
         static bool initialized = false;
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
-            langDef.mTokenize = [](const char *inBegin, const char *inEnd, const char *&outBegin, const char *&outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
-                if (std::string_view(inBegin).starts_with("D: "))
-                    paletteIndex = TextEditor::PaletteIndex::Comment;
-                else if (std::string_view(inBegin).starts_with("I: "))
-                    paletteIndex = TextEditor::PaletteIndex::Default;
-                else if (std::string_view(inBegin).starts_with("W: "))
-                    paletteIndex = TextEditor::PaletteIndex::Preprocessor;
-                else if (std::string_view(inBegin).starts_with("E: "))
-                    paletteIndex = TextEditor::PaletteIndex::ErrorMarker;
+            langDef.mTokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
+                std::string_view inView(inBegin, inEnd);
+                if (inView.starts_with("D: "))
+                    paletteIndex = TextEditor::PaletteIndex::DefaultText;
+                else if (inView.starts_with("I: "))
+                    paletteIndex = TextEditor::PaletteIndex::DebugText;
+                else if (inView.starts_with("W: "))
+                    paletteIndex = TextEditor::PaletteIndex::WarningText;
+                else if (inView.starts_with("E: "))
+                    paletteIndex = TextEditor::PaletteIndex::ErrorText;
                 else
                     paletteIndex = TextEditor::PaletteIndex::Max;
 
@@ -323,22 +339,26 @@ namespace hex::plugin::builtin {
         if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
             static float height = 0;
             static bool dragging = false;
-            const ImGuiContext& g = *GImGui;
+            const ImGuiContext& g = *ImGui::GetCurrentContext();
             if (g.CurrentWindow->Appearing)
                 return;
             const auto availableSize = g.CurrentWindow->Size;
             const auto windowPosition = ImGui::GetCursorScreenPos();
             auto textEditorSize = availableSize;
-            textEditorSize.y *= 3.5 / 5.0;
+            textEditorSize.y *= 3.5F / 5.0F;
             textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-            textEditorSize.y = std::clamp(textEditorSize.y + height,200.0F, availableSize.y-200.0F);
+            textEditorSize.y = std::clamp(textEditorSize.y + height, 200.0F, availableSize.y - 200.0F);
 
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
                 if (name.contains(textEditorView) || name.contains(consoleView))
                     m_focusedSubWindowName = name;
             }
-            m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, false);
+
+            ImGui::PushFont(fonts::CodeEditor());
+            m_textEditor.Render("##pattern_editor", textEditorSize, false);
+            ImGui::PopFont();
+
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
             TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
@@ -571,31 +591,35 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (m_textEditor.IsTextChanged()) {
+            if (m_textEditor.IsTextChanged() && !m_hasUnevaluatedChanges) {
+                m_textEditor.SetTextChanged(false);
                 m_hasUnevaluatedChanges = true;
+                m_textHighlighter.m_needsToUpdateColors = false;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
             }
 
-            if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0) {
-                if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1LL)) {
-                    m_hasUnevaluatedChanges = false;
+            if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0 && m_textHighlighter.getRunningColorizers() == 0) {
+                if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
 
                     auto code = m_textEditor.GetText();
                     EventPatternEditorChanged::post(code);
 
-                    TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern"_lang, [this, code = std::move(code), provider](auto &){
+                    TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code = std::move(code), provider](auto &){
                         this->parsePattern(code, provider);
 
                         if (m_runAutomatically)
                             m_triggerAutoEvaluate = true;
                     });
+                    m_hasUnevaluatedChanges = false;
+                    //m_textEditor.SetTextChanged();
                 }
             }
 
             if (m_triggerAutoEvaluate.exchange(false)) {
                 this->evaluatePattern(m_textEditor.GetText(), provider);
             }
+            m_textHighlighter.highlightSourceCode();
         }
 
         if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
@@ -633,9 +657,9 @@ namespace hex::plugin::builtin {
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
         if (ImGui::BeginPopup("##text_editor_view_find_replace_popup", popupFlags)) {
             static std::string findWord;
-            static bool requestFocus = false;
             static u64 position = 0;
             static u64 count = 0;
+            static bool requestFocus = false;
             static bool updateCount = false;
             static bool canReplace = true;
             TextEditor::FindReplaceHandler *findReplaceHandler = textEditor->GetFindReplaceHandler();
@@ -694,16 +718,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextColumn();
 
-                static int findFlags = ImGuiInputTextFlags_None;
-                if (requestFocus && m_findHistoryIndex == m_findHistorySize)
-                    findFlags |= ImGuiInputTextFlags_AutoSelectAll;
-                else
-                    findFlags &= ~ImGuiInputTextFlags_AutoSelectAll;
-
-                if (m_findHistoryIndex != m_findHistorySize && requestFocusFind ) {
-                    findFlags |= ImGuiInputTextFlags_ReadOnly;
-                } else
-                    findFlags &= ~ImGuiInputTextFlags_ReadOnly;
+                static int findFlags = ImGuiInputTextFlags_EnterReturnsTrue;
 
                 std::string hint = "hex.builtin.view.pattern_editor.find_hint"_lang.operator std::string();
                 if (m_findHistorySize > 0) {
@@ -739,6 +754,8 @@ namespace hex::plugin::builtin {
                     findWord = m_findHistory[m_findHistoryIndex];
                     findReplaceHandler->SetFindWord(textEditor,findWord);
                     position = findReplaceHandler->FindPosition(textEditor,textEditor->GetCursorPosition(), true);
+                    if (ImGuiInputTextState* input_state = ImGui::GetInputTextState(ImGui::GetID("###findInputTextWidget")))
+                        input_state->ReloadUserBufAndMoveToEnd();
                     count = findReplaceHandler->GetMatches().size();
                     updateCount = true;
                     requestFocusFind = true;
@@ -805,12 +822,12 @@ namespace hex::plugin::builtin {
                         counterString = "hex.builtin.view.pattern_editor.no_results"_lang.operator std::string();
                     else {
                         if (position > 1999)
-                            counterString = "?";
+                            counterString = "? ";
                         else
                             counterString = hex::format("{} ", position);
                         counterString += "hex.builtin.view.pattern_editor.of"_lang.operator const char *();
                         if (count > 1999)
-                            counterString += "1999+";
+                            counterString += " 1999+";
                         else
                             counterString += hex::format(" {}", count);
                     }
@@ -842,11 +859,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
 
-                    static int replaceFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
-                    if (m_replaceHistoryIndex != m_replaceHistorySize && requestFocusReplace) {
-                        replaceFlags |= ImGuiInputTextFlags_ReadOnly;
-                    } else
-                        replaceFlags &= ~ImGuiInputTextFlags_ReadOnly;
+                    static int replaceFlags = ImGuiInputTextFlags_EnterReturnsTrue;
 
                     hint = "hex.builtin.view.pattern_editor.replace_hint"_lang.operator std::string();
                     if (m_replaceHistorySize > 0) {
@@ -869,12 +882,7 @@ namespace hex::plugin::builtin {
                                 if (position == count)
                                     position -= 1;
                                 count -= 1;
-                                if (count == 0)
-                                    requestFocusFind = true;
-                                else
-                                    requestFocusReplace = true;
-                            } else
-                                requestFocusFind = true;
+                            }
                             updateCount = true;
                         }
 
@@ -885,6 +893,7 @@ namespace hex::plugin::builtin {
                             enterPressedFind = false;
                             requestFocusFind = false;
                         }
+                        requestFocusReplace = true;
                     }
 
                     if (requestFocus || requestFocusReplace) {
@@ -901,7 +910,8 @@ namespace hex::plugin::builtin {
 
                         replaceWord = m_replaceHistory[m_replaceHistoryIndex];
                         findReplaceHandler->SetReplaceWord(replaceWord);
-
+                        if (ImGuiInputTextState* input_state = ImGui::GetInputTextState(ImGui::GetID("###replaceInputTextWidget")))
+                            input_state->ReloadUserBufAndMoveToEnd();
                         requestFocusReplace = true;
                     }
 
@@ -1077,17 +1087,22 @@ namespace hex::plugin::builtin {
             const auto linesToAdd = m_console->size() - lineCount;
 
 
+            std::string content;
             for (size_t i = 0; i < linesToAdd; i += 1) {
                 if (!skipNewLine)
-                    m_consoleEditor.InsertText("\n");
+                    content += '\n';
                 skipNewLine = false;
-                m_consoleEditor.InsertText(m_console->at(lineCount + i));
+                content += m_console->at(lineCount + i);
             }
+            m_consoleEditor.InsertText(content);
 
             m_consoleNeedsUpdate = false;
         }
 
+        ImGui::PushFont(fonts::CodeEditor());
         m_consoleEditor.Render("##console", size, true);
+        ImGui::PopFont();
+
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
 
@@ -1140,7 +1155,7 @@ namespace hex::plugin::builtin {
                         using enum EnvVarType;
                         case Integer:
                             {
-                                i64 displayValue = hex::get_or<i128>(value, 0);
+                                i64 displayValue = i64(hex::get_or<i128>(value, 0));
                                 ImGui::InputScalar("###value", ImGuiDataType_S64, &displayValue);
                                 value = i128(displayValue);
                                 break;
@@ -1224,12 +1239,12 @@ namespace hex::plugin::builtin {
                         const std::string label { "##" + name };
 
                         if (pl::core::Token::isSigned(variable.type)) {
-                            i64 value = hex::get_or<i128>(variable.value, 0);
+                            i64 value = i64(hex::get_or<i128>(variable.value, 0));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
                                 m_hasUnevaluatedChanges = true;
                             variable.value = i128(value);
                         } else if (pl::core::Token::isUnsigned(variable.type)) {
-                            u64 value = hex::get_or<u128>(variable.value, 0);
+                            u64 value = u64(hex::get_or<u128>(variable.value, 0));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
                                 m_hasUnevaluatedChanges = true;
                             variable.value = u128(value);
@@ -1295,7 +1310,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     if (ImGuiExt::DimmedIconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         auto dataProvider = std::make_shared<prv::MemoryProvider>(section.data);
-                        auto hexEditor = auto(m_sectionHexEditor);
+                        auto hexEditor = ui::HexEditor(m_sectionHexEditor);
 
                         hexEditor.setBackgroundHighlightCallback([this, id, &runtime](u64 address, const u8 *, size_t) -> std::optional<color_t> {
                             if (m_runningEvaluators != 0)
@@ -1321,14 +1336,14 @@ namespace hex::plugin::builtin {
                         auto patternProvider = ImHexApi::Provider::get();
 
 
-                        m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider, hexEditor, patternDrawer = std::make_shared<ui::PatternDrawer>(), &runtime] mutable {
+                        m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider, hexEditor, patternDrawer = std::make_shared<ui::PatternDrawer>(), &runtime]() mutable {
                             hexEditor.setProvider(dataProvider.get());
                             hexEditor.draw(480_scaled);
                             patternDrawer->setSelectionCallback([&](const pl::ptrn::Pattern *pattern) {
                                 hexEditor.setSelection(Region { pattern->getOffset(), pattern->getSize() });
                             });
 
-                            const auto &patterns = [&, this] -> const auto& {
+                            const auto &patterns = [&, this]() -> const auto& {
                                 if (patternProvider->isReadable() && *m_executionDone) {
                                     return runtime.getPatterns(id);
                                 } else {
@@ -1426,7 +1441,7 @@ namespace hex::plugin::builtin {
                     const auto &currScope = evaluator->getScope(-m_debuggerScopeIndex);
                     if (ImGui::BeginCombo("##scope", displayValue(currScope.parent, m_debuggerScopeIndex).c_str())) {
                         for (size_t i = 0; i < evaluator->getScopeCount(); i++) {
-                            auto &scope = evaluator->getScope(-i);
+                            auto &scope = evaluator->getScope(-i32(i));
 
                             if (ImGui::Selectable(displayValue(scope.parent, i).c_str(), i == size_t(m_debuggerScopeIndex))) {
                                 m_debuggerScopeIndex = i;
@@ -1490,13 +1505,13 @@ namespace hex::plugin::builtin {
                 TextEditor::ErrorMarkers errorMarkers;
                 if (!(*m_callStack)->empty()) {
                     for (const auto &frame : **m_callStack | std::views::reverse) {
-                        auto location = frame->getLocation();
+                        auto location = frame.node->getLocation();
                         std::string message;
                         if (location.source != nullptr && location.source->mainSource) {
                             if (m_lastEvaluationError->has_value())
                                 message = processMessage((*m_lastEvaluationError)->message);
                             auto key = TextEditor::Coordinates(location.line, location.column);
-                            errorMarkers[key] = std::make_pair(location.length, message);
+                            errorMarkers[key] = std::make_pair(u32(location.length), message);
                         }
                     }
                 } else {
@@ -1512,7 +1527,7 @@ namespace hex::plugin::builtin {
                         if (source != nullptr && source->mainSource) {
                             auto key = TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
                             if (!errorMarkers.contains(key) ||errorMarkers[key].first < error.getLocation().length)
-                                    errorMarkers[key] = std::make_pair(error.getLocation().length,processMessage(error.getMessage()));
+                                    errorMarkers[key] = std::make_pair(u32(error.getLocation().length), processMessage(error.getMessage()));
                         }
                     }
                 }
@@ -1534,7 +1549,7 @@ namespace hex::plugin::builtin {
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
-            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data"_lang, [this, provider](const Task &task) {
+            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider](const Task &task) {
                 if (!m_autoLoadPatterns)
                     return;
 
@@ -1559,7 +1574,7 @@ namespace hex::plugin::builtin {
 
                 // Format: [ AA BB CC DD ] @ 0x12345678
                 runtime.addPragma("magic", [provider, &foundCorrectType](pl::PatternLanguage &, const std::string &value) -> bool {
-                    const auto pattern = [value = value] mutable -> std::optional<BinaryPattern> {
+                    const auto pattern = [value = value]() mutable -> std::optional<BinaryPattern> {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
@@ -1580,7 +1595,7 @@ namespace hex::plugin::builtin {
                         return BinaryPattern(value);
                     }();
 
-                    const auto address = [value = value, provider] mutable -> std::optional<u64> {
+                    const auto address = [value = value, provider]() mutable -> std::optional<u64> {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
@@ -1692,9 +1707,9 @@ namespace hex::plugin::builtin {
         ImGui::PushID(pattern);
         {
             const bool shiftHeld = ImGui::GetIO().KeyShift;
-            ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
+            ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()), ImGuiColorEditFlags_AlphaOpaque);
             ImGui::SameLine(0, 10);
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{} ", pattern->getFormattedName());
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], "{} ", pattern->getFormattedName());
             ImGui::SameLine(0, 5);
             ImGuiExt::TextFormatted("{}", pattern->getDisplayName());
             ImGui::SameLine();
@@ -1837,7 +1852,8 @@ namespace hex::plugin::builtin {
             m_textEditor.SetText(code);
             m_sourceCode.set(provider, code);
 
-            TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern"_lang, [this, code, provider](auto&) { this->parsePattern(code, provider); });
+            m_textHighlighter.m_needsToUpdateColors = false;
+            TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
 
@@ -1846,6 +1862,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
         const auto &ast = m_editorRuntime->parseString(code, pl::api::Source::DefaultSource);
+        m_textEditor.SetLongestLineLength(m_editorRuntime->getInternals().lexer.get()->getLongestLineLength());
 
         auto &patternVariables = m_patternVariables.get(provider);
         auto oldPatternVariables = std::move(patternVariables);
@@ -1877,6 +1894,8 @@ namespace hex::plugin::builtin {
             patternVariables = std::move(oldPatternVariables);
         }
 
+        m_textHighlighter.m_needsToUpdateColors = true;
+        m_changesWereParsed = true;
         m_runningParsers -= 1;
     }
 
@@ -1900,11 +1919,12 @@ namespace hex::plugin::builtin {
 
         m_accessHistory = {};
         m_accessHistoryIndex = 0;
+        m_patternEvaluating = true;
 
         EventHighlightingChanged::post();
 
-        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating"_lang, TaskManager::NoProgress, [this, code, provider](auto &task) {
-            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
+            auto runtimeLock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
@@ -1945,10 +1965,11 @@ namespace hex::plugin::builtin {
                 return m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
             });
 
-            runtime.setLogCallback([this,provider](auto level, auto message) {
+            runtime.setLogCallback([this, provider](auto level, auto message) {
                 std::scoped_lock lock(m_logMutex);
 
-                for (auto line : wolv::util::splitString(message, "\n")) {
+                auto lines = wolv::util::splitString(message, "\n");
+                for (auto &line : lines) {
                     if (!wolv::util::trim(line).empty()) {
                         switch (level) {
                             using enum pl::core::LogConsole::Level;
@@ -2022,6 +2043,7 @@ namespace hex::plugin::builtin {
             m_textEditor.SetText(code);
             m_sourceCode.set(ImHexApi::Provider::get(), code);
             m_hasUnevaluatedChanges = true;
+            m_textHighlighter.m_needsToUpdateColors = false;
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", [this](const ContentRegistry::Settings::SettingsValue &value) {
@@ -2063,6 +2085,8 @@ namespace hex::plugin::builtin {
                 m_textEditor.SetText("");
                 m_consoleEditor.SetText("");
             }
+            m_hasUnevaluatedChanges = true;
+            m_textHighlighter.m_needsToUpdateColors = false;
         });
 
         RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
@@ -2286,7 +2310,7 @@ namespace hex::plugin::builtin {
                     m_textEditor.SetText(sourceCode);
 
                 m_hasUnevaluatedChanges = true;
-
+                m_textHighlighter.m_needsToUpdateColors = false;
                 return true;
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
