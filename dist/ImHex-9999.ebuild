@@ -4,11 +4,11 @@
 
 EAPI=7
 
+RESTRICT="network-sandbox"
 DESCRIPTION="A hex editor for reverse engineers, programmers, and eyesight"
 HOMEPAGE="https://github.com/WerWolv/ImHex"
 SRC_URI=""
-EGIT_REPO_URI="https://github.com/WerWolv/ImHex.git"
-
+EGIT_REPO_URI="https://github.com/jopadan/ImHex.git"
 inherit git-r3 cmake
 
 LICENSE="GPL-2"
@@ -20,7 +20,7 @@ DEPEND=""
 RDEPEND="${DEPEND}
 		media-libs/glfw
 		sys-apps/file
-		net-libs/mbedtls
+		net-libs/mbedtls:3
 		dev-cpp/nlohmann_json
 		sys-apps/dbus
 		sys-apps/xdg-desktop-portal
