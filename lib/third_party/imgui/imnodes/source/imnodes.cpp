@@ -31,7 +31,7 @@
 #define sscanf sscanf_s
 #endif
 
-ImNodesContext* GImNodes = NULL;
+IMGUI_API ImNodesContext* GImNodes = NULL;
 
 namespace IMNODES_NAMESPACE
 {

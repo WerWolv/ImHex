@@ -2,6 +2,7 @@
 
 #include <hex/helpers/fs.hpp>
 
+#include <array>
 #include <vector>
 
 namespace hex::paths {

@@ -13,6 +13,13 @@
 #include <wolv/utils/preproc.hpp>
 #include <wolv/utils/guards.hpp>
 
+#if defined(_MSC_VER)
+    #include <windows.h>
+    #define PLUGIN_ENTRY_POINT extern "C" BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID) { return TRUE; }
+#else
+    #define PLUGIN_ENTRY_POINT
+#endif
+
 namespace {
     struct PluginFunctionHelperInstantiation {};
 }
@@ -45,7 +52,11 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
 #if defined (IMHEX_STATIC_LINK_PLUGINS)
     #define IMHEX_PLUGIN_VISIBILITY_PREFIX static
 #else
-    #define IMHEX_PLUGIN_VISIBILITY_PREFIX extern "C" [[gnu::visibility("default")]]
+    #if defined(_MSC_VER)
+        #define IMHEX_PLUGIN_VISIBILITY_PREFIX extern "C" __declspec(dllexport)
+    #else
+        #define IMHEX_PLUGIN_VISIBILITY_PREFIX extern "C" [[gnu::visibility("default")]]
+    #endif
 #endif
 
 #define IMHEX_FEATURE_ENABLED(feature) WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(IMHEX_PLUGIN_, IMHEX_PLUGIN_NAME), _FEATURE_), feature)
@@ -70,14 +81,13 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
 #define IMHEX_LIBRARY_SETUP(name) IMHEX_LIBRARY_SETUP_IMPL(name)
 
 #define IMHEX_LIBRARY_SETUP_IMPL(name)                                                                                          \
-    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloaded library '{}'", name); } } HANDLER; }    \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)();                             \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *WOLV_TOKEN_CONCAT(getLibraryName_, IMHEX_PLUGIN_NAME)() { return name; }         \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(setImGuiContext_, IMHEX_PLUGIN_NAME)(ImGuiContext *ctx) {             \
         ImGui::SetCurrentContext(ctx);                                                                                          \
         GImGui = ctx;                                                                                                           \
     }                                                                                                                           \
-    extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                   \
+    extern "C" void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                                                  \
         hex::PluginManager::addPlugin(name, hex::PluginFunctions {                                                              \
             nullptr,                                                                                                            \
             WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME),                                                           \
@@ -92,10 +102,10 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
             nullptr                                                                                                             \
         });                                                                                                                     \
     }                                                                                                                           \
+    PLUGIN_ENTRY_POINT                                                                                                          \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)()
 
 #define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                                      \
-    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::debug("Unloaded plugin '{}'", name); } } HANDLER; }    \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                                                 \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginAuthor() { return author; }                                             \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginDescription() { return description; }                                   \
@@ -112,7 +122,7 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
         return PluginSubCommandsFunctionHelper<PluginFunctionHelperInstantiation>::getSubCommands();                            \
     }                                                                                                                           \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin();                                                                     \
-    extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                   \
+    extern "C" void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                                                  \
         hex::PluginManager::addPlugin(name, hex::PluginFunctions {                                                              \
             initializePlugin,                                                                                                   \
             nullptr,                                                                                                            \
@@ -127,6 +137,7 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
             getFeatures                                                                                                         \
         });                                                                                                                     \
     }                                                                                                                           \
+    PLUGIN_ENTRY_POINT                                                                                                          \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin()
 
 /**

@@ -1,6 +1,14 @@
 #include <hex/api/imhex_api.hpp>
 
-#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
+#include <hex/api/events/events_gui.hpp>
+#include <hex/api/events/requests_interaction.hpp>
+#include <hex/api/events/requests_lifecycle.hpp>
+#include <hex/api/events/requests_provider.hpp>
+#include <hex/api/events/requests_gui.hpp>
+#include <hex/api/events/events_interaction.hpp>
+
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
@@ -455,7 +463,7 @@ namespace hex {
             if (s_providers->empty())
                 EventProviderChanged::post(provider, nullptr);
 
-            EventProviderClosed::post(it->get());
+            EventProviderClosed::post(providerToRemove);
             RequestUpdateWindowTitle::post();
 
             // Do the destruction of the provider in the background once all tasks have finished
@@ -567,13 +575,22 @@ namespace hex {
                 return s_windowResizable;
             }
 
-            static std::vector<hex::impl::AutoResetBase*> s_autoResetObjects;
+            static auto& getAutoResetObjects() {
+                static std::set<hex::impl::AutoResetBase*> autoResetObjects;
+
+                return autoResetObjects;
+            }
+
             void addAutoResetObject(hex::impl::AutoResetBase *object) {
-                s_autoResetObjects.emplace_back(object);
+                getAutoResetObjects().insert(object);
+            }
+
+            void removeAutoResetObject(hex::impl::AutoResetBase *object) {
+                getAutoResetObjects().erase(object);
             }
 
             void cleanup() {
-                for (const auto &object : s_autoResetObjects)
+                for (const auto &object : getAutoResetObjects())
                     object->reset();
             }
 
@@ -622,7 +639,8 @@ namespace hex {
             #elif defined(OS_MACOS)
                 return ::getBackingScaleFactor();
             #elif defined(OS_LINUX)
-                if (std::string_view(::getenv("XDG_SESSION_TYPE")) == "x11")
+                const auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
+                if (!sessionType.has_value() || sessionType == "x11")
                     return 1.0F;
                 else {
                     float xScale = 0, yScale = 0;
@@ -632,11 +650,6 @@ namespace hex {
                 }
             #elif defined(OS_WEB)
                 return 1.0F;
-                /*
-                return EM_ASM_INT({
-                    return window.devicePixelRatio;
-                });
-                */
             #else
                 return 1.0F;
             #endif
@@ -737,13 +750,14 @@ namespace hex {
                     DSROLE_PRIMARY_DOMAIN_INFO_BASIC * info;
                     if ((DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, (PBYTE *)&info) == ERROR_SUCCESS) && (info != nullptr))
                     {
-                        bool result = std::wstring(info->DomainNameFlat).empty();
+                        bool result = std::wstring(info->DomainNameFlat) != L"WORKGROUP";
                         DsRoleFreeMemory(info);
 
                         return result;
                     } else {
-                        DWORD size = 1024;
-                        ::GetComputerNameExA(ComputerNameDnsDomain, nullptr, &size);
+                        DWORD size = 128;
+                        char buffer[128];
+                        ::GetComputerNameExA(ComputerNameDnsDomain, buffer, &size);
                         return size > 0;
                     }
                 }
@@ -859,7 +873,8 @@ namespace hex {
 
         SemanticVersion getImHexVersion() {
             #if defined IMHEX_VERSION
-                return SemanticVersion(IMHEX_VERSION);
+                static auto version = SemanticVersion(IMHEX_VERSION);
+                return version;
             #else
                 return {};
             #endif
@@ -923,7 +938,7 @@ namespace hex {
             }
 
             EventImHexClosing::subscribe([executablePath, updateTypeString] {
-                hex::executeCommand(
+                hex::startProgram(
                         hex::format("\"{}\" \"{}\"",
                                     wolv::util::toUTF8String(executablePath),
                                     updateTypeString
@@ -993,11 +1008,6 @@ namespace hex {
                 return *s_fonts;
             }
 
-            static AutoReset<std::fs::path> s_customFontPath;
-            void setCustomFontPath(const std::fs::path &path) {
-                s_customFontPath = path;
-            }
-
             static float s_fontSize = DefaultFontSize;
             void setFontSize(float size) {
                 s_fontSize = size;
@@ -1015,6 +1025,10 @@ namespace hex {
                 s_italicFont = italic;
             }
 
+            static AutoReset<std::map<UnlocalizedString, ImFont*>> s_fontDefinitions;
+            std::map<UnlocalizedString, ImFont*>& getFontDefinitions() {
+                return *s_fontDefinitions;
+            }
 
         }
 
@@ -1079,16 +1093,20 @@ namespace hex {
             });
         }
 
-        const std::fs::path& getCustomFontPath() {
-            return impl::s_customFontPath;
-        }
-
         float getFontSize() {
             return impl::s_fontSize;
         }
 
         ImFontAtlas* getFontAtlas() {
             return impl::s_fontAtlas;
+        }
+
+        void registerFont(const UnlocalizedString &fontName) {
+            (*impl::s_fontDefinitions)[fontName] = nullptr;
+        }
+
+        ImFont* getFont(const UnlocalizedString &fontName) {
+            return (*impl::s_fontDefinitions)[fontName];
         }
 
         ImFont* Bold() {

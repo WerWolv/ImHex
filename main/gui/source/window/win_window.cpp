@@ -1,21 +1,26 @@
-#include <hex/api/content_registry.hpp>
-#include <hex/api/theme_manager.hpp>
-
 #include "window.hpp"
-
 
 #if defined(OS_WINDOWS)
 
     #include "messaging.hpp"
 
+    #include <hex/api/content_registry.hpp>
+    #include <hex/api/theme_manager.hpp>
+
     #include <hex/helpers/utils.hpp>
     #include <hex/helpers/logger.hpp>
     #include <hex/helpers/default_paths.hpp>
+
+    #include <hex/api/events/events_gui.hpp>
+    #include <hex/api/events/events_lifecycle.hpp>
+    #include <hex/api/events/events_interaction.hpp>
+    #include <hex/api/events/requests_gui.hpp>
 
     #include <imgui.h>
     #include <imgui_internal.h>
 
     #define GLFW_EXPOSE_NATIVE_WIN32
+    #include <GLFW/glfw3.h>
     #include <GLFW/glfw3native.h>
     #undef GLFW_EXPOSE_NATIVE_WIN32
 
@@ -28,11 +33,22 @@
     #include <fcntl.h>
     #include <shellapi.h>
     #include <timeapi.h>
+    #include <VersionHelpers.h>
+    #include <cstdio>
+
+    #if !defined(STDIN_FILENO)
+        #define STDIN_FILENO 0
+    #endif
+
+    #if !defined(STDOUT_FILENO)
+        #define STDOUT_FILENO 1
+    #endif
+
+    #if !defined(STDERR_FILENO)
+        #define STDERR_FILENO 2
+    #endif
 
 namespace hex {
-
-    template<typename T>
-    using WinUniquePtr = std::unique_ptr<std::remove_pointer_t<T>, BOOL(*)(T)>;
 
     static LONG_PTR s_oldWndProc;
     static float s_titleBarHeight;
@@ -55,6 +71,9 @@ namespace hex {
                 const auto newScale = LOWORD(wParam) / 96.0F;
                 const auto oldScale = ImHexApi::System::getNativeScale();
 
+                if (u32(oldScale * 10) == u32(newScale * 10))
+                    break;
+
                 EventDPIChanged::post(oldScale, newScale);
                 ImHexApi::System::impl::setNativeScale(newScale);
 
@@ -67,30 +86,12 @@ namespace hex {
                 // Handle opening files in existing instance
 
                 auto message = reinterpret_cast<COPYDATASTRUCT *>(lParam);
-                if (message == nullptr) break;
-
-                ssize_t nullIndex = -1;
-
-                auto messageData = static_cast<const char*>(message->lpData);
-                size_t messageSize = message->cbData;
-
-                for (size_t i = 0; i < messageSize; i++) {
-                    if (messageData[i] == '\0') {
-                        nullIndex = i;
-                        break;
-                    }
-                }
-
-                if (nullIndex == -1) {
-                    log::warn("Received invalid forwarded event");
+                if (message == nullptr)
                     break;
-                }
 
-                std::string eventName(messageData, nullIndex);
-
-                std::vector<u8> eventData(messageData + nullIndex + 1, messageData + messageSize);
-
-                hex::messaging::messageReceived(eventName, eventData);
+                const auto data = reinterpret_cast<const u8*>(message->lpData);
+                const auto size = message->cbData;
+                EventNativeMessageReceived::post(std::vector<u8>(data, data + size));
                 break;
             }
             case WM_SETTINGCHANGE: {
@@ -204,17 +205,20 @@ namespace hex {
 
                 i64 sleepTicks = 0;
                 i64 sleepMilliSeconds = 0;
-                if (delta >= 0) {
-                    sleepTicks = delta / period;
-                } else {
-                    sleepTicks = -1 + delta / period;
+                if (period > 0) {
+                    if (delta >= 0) {
+                        sleepTicks = delta / period;
+                    } else {
+                        sleepTicks = -1 + delta / period;
+                    }
+
+                    sleepMilliSeconds = delta - (period * sleepTicks);
+                    const double sleepTime = std::round(1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
+                    if (sleepTime >= 0.0) {
+                        Sleep(DWORD(sleepTime));
+                    }
                 }
 
-                sleepMilliSeconds = delta - (period * sleepTicks);
-                const double sleepTime = std::round(1000.0 * double(sleepMilliSeconds) / double(performanceFrequency.QuadPart));
-                if (sleepTime >= 0.0) {
-                    Sleep(DWORD(sleepTime));
-                }
                 timeEndPeriod(granularity);
 
                 return WVR_REDRAW;
@@ -269,7 +273,7 @@ namespace hex {
                         return HTCAPTION;
                 }
 
-                std::string_view hoveredWindowName = GImGui->HoveredWindow == nullptr ? "" : GImGui->HoveredWindow->Name;
+                std::string_view hoveredWindowName = ImGui::GetCurrentContext()->HoveredWindow == nullptr ? "" : GImGui->HoveredWindow->Name;
 
                 if (!ImHexApi::System::impl::isWindowResizable()) {
                     if (result != RegionClient) {
@@ -389,8 +393,7 @@ namespace hex {
 
         // Windows versions before Windows 10 have issues with transparent framebuffers
         // causing the entire window to be slightly transparent ignoring all configurations
-        OSVERSIONINFOA versionInfo = { };
-        if (::GetVersionExA(&versionInfo) && versionInfo.dwMajorVersion >= 10) {
+        if (::IsWindows10OrGreater()) {
             glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         } else {
             glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
@@ -405,13 +408,6 @@ namespace hex {
             log::impl::enableColorPrinting();
         } else if (hex::getEnvironmentVariable("__IMHEX_FORWARD_CONSOLE__") == "1") {
             // Check for the __IMHEX_FORWARD_CONSOLE__ environment variable that was set by the forwarder application
-
-            // If it's present, attach to its console window
-            ::AttachConsole(ATTACH_PARENT_PROCESS);
-
-            // Reopen stdin, stdout and stderr to the console if not in debug mode
-            reopenConsoleHandle(STD_INPUT_HANDLE,  STDIN_FILENO,  stdin);
-            reopenConsoleHandle(STD_OUTPUT_HANDLE, STDOUT_FILENO, stdout);
 
             // Enable ANSI colors in the console
             log::impl::enableColorPrinting();
@@ -433,10 +429,10 @@ namespace hex {
         DropManager() = default;
         virtual ~DropManager() = default;
 
-        ULONG AddRef()  override { return 1; }
-        ULONG Release() override { return 0; }
+        ULONG STDMETHODCALLTYPE AddRef()  override { return 1; }
+        ULONG STDMETHODCALLTYPE Release() override { return 0; }
 
-        HRESULT QueryInterface(REFIID riid, void **ppvObject) override {
+        HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject) override {
             if (riid == IID_IDropTarget) {
                 *ppvObject = this;
 
@@ -593,14 +589,14 @@ namespace hex {
         EventThemeChanged::subscribe([this]{
             auto hwnd = glfwGetWin32Window(m_window);
 
-            static auto user32Dll = WinUniquePtr<HMODULE>(LoadLibraryA("user32.dll"), FreeLibrary);
+            static auto user32Dll = LoadLibraryA("user32.dll");
             if (user32Dll != nullptr) {
                 using SetWindowCompositionAttributeFunc = BOOL(WINAPI*)(HWND, WINCOMPATTRDATA*);
 
                 const auto setWindowCompositionAttribute =
                     reinterpret_cast<SetWindowCompositionAttributeFunc>(
                         reinterpret_cast<void*>(
-                            GetProcAddress(user32Dll.get(), "SetWindowCompositionAttribute")
+                            GetProcAddress(user32Dll, "SetWindowCompositionAttribute")
                         )
                     );
 
@@ -622,7 +618,7 @@ namespace hex {
 
         glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
             auto *win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->m_unlockFrameRate = true;
+            win->unlockFrameRate();
 
             glViewport(0, 0, width, height);
             ImHexApi::System::impl::setMainWindowSize(width, height);

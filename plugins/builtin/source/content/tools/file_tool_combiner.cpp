@@ -110,7 +110,7 @@ namespace hex::plugin::builtin {
                 ImGuiExt::TextSpinner("hex.builtin.tools.file_tools.combiner.combining"_lang);
             } else {
                 if (ImGui::Button("hex.builtin.tools.file_tools.combiner.combine"_lang)) {
-                    combinerTask = TaskManager::createTask("hex.builtin.tools.file_tools.combiner.combining"_lang, 0, [](auto &task) {
+                    combinerTask = TaskManager::createTask("hex.builtin.tools.file_tools.combiner.combining", 0, [](auto &task) {
                         wolv::io::File output(outputPath, wolv::io::File::Mode::Create);
 
                         if (!output.isValid()) {

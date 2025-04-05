@@ -1,4 +1,5 @@
 macro(add_imhex_plugin)
+    setSDKPaths()
     # Parse arguments
     set(options LIBRARY_PLUGIN)
     set(oneValueArgs NAME IMHEX_VERSION)
@@ -26,6 +27,10 @@ macro(add_imhex_plugin)
             set(IMHEX_PLUGIN_LIBRARY_TYPE MODULE)
             set(IMHEX_PLUGIN_SUFFIX ".hexplug")
         endif()
+    endif()
+
+    if (IMHEX_PLUGIN_LIBRARY_PLUGIN)
+        install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" DESTINATION "${SDK_PATH}/lib/plugins/${IMHEX_PLUGIN_NAME}")
     endif()
 
     # Define new project for plugin
@@ -62,7 +67,11 @@ macro(add_imhex_plugin)
     )
 
     # Set rpath of plugin libraries to the plugins folder
-    if (APPLE)
+    if (WIN32)
+        if (IMHEX_PLUGIN_LIBRARY_PLUGIN)
+            set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+        endif()
+    elseif (APPLE)
         set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES BUILD_RPATH "@executable_path/../Frameworks;@executable_path/plugins")
     endif()
 

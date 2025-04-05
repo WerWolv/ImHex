@@ -15,6 +15,7 @@
 // [SECTION] Macros and Defines
 // [SECTION] Forward declarations and basic types
 // [SECTION] Flags & Enumerations
+// [SECTION] Callbacks
 // [SECTION] Context
 // [SECTION] Begin/End Plot
 // [SECTION] Setup
@@ -30,7 +31,6 @@
 // [SECTION] ImPlot3DBox
 // [SECTION] ImPlot3DQuat
 // [SECTION] ImPlot3DStyle
-// [SECTION] Callbacks
 // [SECTION] Meshes
 
 #pragma once
@@ -97,6 +97,7 @@ enum ImPlot3DFlags_ {
     ImPlot3DFlags_NoLegend = 1 << 1,    // Hide plot legend
     ImPlot3DFlags_NoMouseText = 1 << 2, // Hide mouse position in plot coordinates
     ImPlot3DFlags_NoClip = 1 << 3,      // Disable 3D box clipping
+    ImPlot3DFlags_NoMenus = 1 << 4,     // The user will not be able to open context menus
     ImPlot3DFlags_CanvasOnly = ImPlot3DFlags_NoTitle | ImPlot3DFlags_NoLegend | ImPlot3DFlags_NoMouseText,
 };
 
@@ -248,6 +249,7 @@ enum ImPlot3DAxisFlags_ {
     ImPlot3DAxisFlags_LockMin = 1 << 4,      // The axis minimum value will be locked when panning/zooming
     ImPlot3DAxisFlags_LockMax = 1 << 5,      // The axis maximum value will be locked when panning/zooming
     ImPlot3DAxisFlags_AutoFit = 1 << 6,      // Axis will be auto-fitting to data extents
+    ImPlot3DAxisFlags_Invert = 1 << 7,       // The axis will be inverted
     ImPlot3DAxisFlags_Lock = ImPlot3DAxisFlags_LockMin | ImPlot3DAxisFlags_LockMax,
     ImPlot3DAxisFlags_NoDecorations = ImPlot3DAxisFlags_NoLabel | ImPlot3DAxisFlags_NoGridLines | ImPlot3DAxisFlags_NoTickLabels,
 };
@@ -287,6 +289,13 @@ enum ImPlot3DColormap_ {
     ImPlot3DColormap_Spectral = 14, // Same as matplotlib "Spectral"
     ImPlot3DColormap_Greys = 15,    // White/black
 };
+
+//-----------------------------------------------------------------------------
+// [SECTION] Callbacks
+//-----------------------------------------------------------------------------
+
+// Callback signature for axis tick label formatter
+typedef int (*ImPlot3DFormatter)(float value, char* buff, int size, void* user_data);
 
 namespace ImPlot3D {
 
@@ -353,11 +362,22 @@ IMPLOT3D_API void SetupAxis(ImAxis3D axis, const char* label = nullptr, ImPlot3D
 
 IMPLOT3D_API void SetupAxisLimits(ImAxis3D axis, double v_min, double v_max, ImPlot3DCond cond = ImPlot3DCond_Once);
 
+IMPLOT3D_API void SetupAxisFormat(ImAxis3D idx, ImPlot3DFormatter formatter, void* data = nullptr);
+
+// Sets an axis' ticks and optionally the labels. To keep the default ticks, set #keep_default=true
+IMPLOT3D_API void SetupAxisTicks(ImAxis3D axis, const double* values, int n_ticks, const char* const labels[] = nullptr, bool keep_default = false);
+
+// Sets an axis' ticks and optionally the labels for the next plot. To keep the default ticks, set #keep_default=true
+IMPLOT3D_API void SetupAxisTicks(ImAxis3D axis, double v_min, double v_max, int n_ticks, const char* const labels[] = nullptr, bool keep_default = false);
+
 // Sets the label and/or flags for primary X/Y/Z axes (shorthand for three calls to SetupAxis)
 IMPLOT3D_API void SetupAxes(const char* x_label, const char* y_label, const char* z_label, ImPlot3DAxisFlags x_flags = 0, ImPlot3DAxisFlags y_flags = 0, ImPlot3DAxisFlags z_flags = 0);
 
 // Sets the X/Y/Z axes range limits. If ImPlotCond_Always is used, the axes limits will be locked (shorthand for two calls to SetupAxisLimits)
 IMPLOT3D_API void SetupAxesLimits(double x_min, double x_max, double y_min, double y_max, double z_min, double z_max, ImPlot3DCond cond = ImPlot3DCond_Once);
+
+// Sets the plot box X/Y/Z scale. A scale of 1.0 is the default. Values greater than 1.0 enlarge the plot, while values between 0.0 and 1.0 shrink it.
+IMPLOT3D_API void SetupBoxScale(float x, float y, float z);
 
 IMPLOT3D_API void SetupLegend(ImPlot3DLocation location, ImPlot3DLegendFlags flags = 0);
 
@@ -373,7 +393,8 @@ IMPLOT3D_TMP void PlotTriangle(const char* label_id, const T* xs, const T* ys, c
 
 IMPLOT3D_TMP void PlotQuad(const char* label_id, const T* xs, const T* ys, const T* zs, int count, ImPlot3DQuadFlags flags = 0, int offset = 0, int stride = sizeof(T));
 
-IMPLOT3D_TMP void PlotSurface(const char* label_id, const T* xs, const T* ys, const T* zs, int x_count, int y_count, ImPlot3DSurfaceFlags flags = 0, int offset = 0, int stride = sizeof(T));
+// Plot the surface defined by a grid of vertices. The grid is defined by the x and y arrays, and the z array contains the height of each vertex. A total of x_count * y_count vertices are expected for each array. Leave #scale_min and #scale_max both at 0 for automatic color scaling, or set them to a predefined range.
+IMPLOT3D_TMP void PlotSurface(const char* label_id, const T* xs, const T* ys, const T* zs, int x_count, int y_count, double scale_min = 0.0, double scale_max = 0.0, ImPlot3DSurfaceFlags flags = 0, int offset = 0, int stride = sizeof(T));
 
 IMPLOT3D_API void PlotMesh(const char* label_id, const ImPlot3DPoint* vtx, const unsigned int* idx, int vtx_count, int idx_count, ImPlot3DMeshFlags flags = 0);
 
@@ -523,51 +544,51 @@ struct ImPlot3DPoint {
     }
 
     // Binary operators
-    ImPlot3DPoint operator*(float rhs) const;
-    ImPlot3DPoint operator/(float rhs) const;
-    ImPlot3DPoint operator+(const ImPlot3DPoint& rhs) const;
-    ImPlot3DPoint operator-(const ImPlot3DPoint& rhs) const;
-    ImPlot3DPoint operator*(const ImPlot3DPoint& rhs) const;
-    ImPlot3DPoint operator/(const ImPlot3DPoint& rhs) const;
+    IMPLOT3D_API ImPlot3DPoint operator*(float rhs) const;
+    IMPLOT3D_API ImPlot3DPoint operator/(float rhs) const;
+    IMPLOT3D_API ImPlot3DPoint operator+(const ImPlot3DPoint& rhs) const;
+    IMPLOT3D_API ImPlot3DPoint operator-(const ImPlot3DPoint& rhs) const;
+    IMPLOT3D_API ImPlot3DPoint operator*(const ImPlot3DPoint& rhs) const;
+    IMPLOT3D_API ImPlot3DPoint operator/(const ImPlot3DPoint& rhs) const;
 
     // Unary operator
-    ImPlot3DPoint operator-() const;
+    IMPLOT3D_API ImPlot3DPoint operator-() const;
 
     // Compound assignment operators
-    ImPlot3DPoint& operator*=(float rhs);
-    ImPlot3DPoint& operator/=(float rhs);
-    ImPlot3DPoint& operator+=(const ImPlot3DPoint& rhs);
-    ImPlot3DPoint& operator-=(const ImPlot3DPoint& rhs);
-    ImPlot3DPoint& operator*=(const ImPlot3DPoint& rhs);
-    ImPlot3DPoint& operator/=(const ImPlot3DPoint& rhs);
+    IMPLOT3D_API ImPlot3DPoint& operator*=(float rhs);
+    IMPLOT3D_API ImPlot3DPoint& operator/=(float rhs);
+    IMPLOT3D_API ImPlot3DPoint& operator+=(const ImPlot3DPoint& rhs);
+    IMPLOT3D_API ImPlot3DPoint& operator-=(const ImPlot3DPoint& rhs);
+    IMPLOT3D_API ImPlot3DPoint& operator*=(const ImPlot3DPoint& rhs);
+    IMPLOT3D_API ImPlot3DPoint& operator/=(const ImPlot3DPoint& rhs);
 
     // Comparison operators
-    bool operator==(const ImPlot3DPoint& rhs) const;
-    bool operator!=(const ImPlot3DPoint& rhs) const;
+    IMPLOT3D_API bool operator==(const ImPlot3DPoint& rhs) const;
+    IMPLOT3D_API bool operator!=(const ImPlot3DPoint& rhs) const;
 
     // Dot product
-    float Dot(const ImPlot3DPoint& rhs) const;
+    IMPLOT3D_API float Dot(const ImPlot3DPoint& rhs) const;
 
     // Cross product
-    ImPlot3DPoint Cross(const ImPlot3DPoint& rhs) const;
+    IMPLOT3D_API ImPlot3DPoint Cross(const ImPlot3DPoint& rhs) const;
 
     // Get vector length
-    float Length() const;
+    IMPLOT3D_API float Length() const;
 
     // Get vector squared length
-    float LengthSquared() const;
+    IMPLOT3D_API float LengthSquared() const;
 
     // Normalize to unit length
-    void Normalize();
+    IMPLOT3D_API void Normalize();
 
     // Return vector normalized to unit length
-    ImPlot3DPoint Normalized() const;
+    IMPLOT3D_API ImPlot3DPoint Normalized() const;
 
     // Friend binary operators to allow commutative behavior
-    friend ImPlot3DPoint operator*(float lhs, const ImPlot3DPoint& rhs);
+    IMPLOT3D_API friend ImPlot3DPoint operator*(float lhs, const ImPlot3DPoint& rhs);
 
     // Check if the point is NaN
-    bool IsNaN() const;
+    IMPLOT3D_API bool IsNaN() const;
 
 #ifdef IMPLOT3D_POINT_CLASS_EXTRA
     IMPLOT3D_POINT_CLASS_EXTRA // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImPlot3DPoint
@@ -607,13 +628,13 @@ struct ImPlot3DBox {
     constexpr ImPlot3DBox(const ImPlot3DPoint& min, const ImPlot3DPoint& max) : Min(min), Max(max) {}
 
     // Method to expand the box to include a point
-    void Expand(const ImPlot3DPoint& point);
+    IMPLOT3D_API void Expand(const ImPlot3DPoint& point);
 
     // Method to check if a point is inside the box
-    bool Contains(const ImPlot3DPoint& point) const;
+    IMPLOT3D_API bool Contains(const ImPlot3DPoint& point) const;
 
     // Method to clip a line segment against the box
-    bool ClipLineSegment(const ImPlot3DPoint& p0, const ImPlot3DPoint& p1, ImPlot3DPoint& p0_clipped, ImPlot3DPoint& p1_clipped) const;
+    IMPLOT3D_API bool ClipLineSegment(const ImPlot3DPoint& p0, const ImPlot3DPoint& p1, ImPlot3DPoint& p0_clipped, ImPlot3DPoint& p1_clipped) const;
 };
 
 //-----------------------------------------------------------------------------
@@ -627,8 +648,8 @@ struct ImPlot3DRange {
     constexpr ImPlot3DRange() : Min(0.0f), Max(0.0f) {}
     constexpr ImPlot3DRange(float min, float max) : Min(min), Max(max) {}
 
-    void Expand(float value);
-    bool Contains(float value) const;
+    IMPLOT3D_API void Expand(float value);
+    IMPLOT3D_API bool Contains(float value) const;
     float Size() const { return Max - Min; }
 };
 
@@ -643,41 +664,41 @@ struct ImPlot3DQuat {
     constexpr ImPlot3DQuat() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
     constexpr ImPlot3DQuat(float _x, float _y, float _z, float _w) : x(_x), y(_y), z(_z), w(_w) {}
 
-    ImPlot3DQuat(float _angle, const ImPlot3DPoint& _axis);
+    IMPLOT3D_API ImPlot3DQuat(float _angle, const ImPlot3DPoint& _axis);
 
     // Set quaternion from two vectors
-    static ImPlot3DQuat FromTwoVectors(const ImPlot3DPoint& v0, const ImPlot3DPoint& v1);
+    IMPLOT3D_API static ImPlot3DQuat FromTwoVectors(const ImPlot3DPoint& v0, const ImPlot3DPoint& v1);
 
     // Get quaternion length
-    float Length() const;
+    IMPLOT3D_API float Length() const;
 
     // Get normalized quaternion
-    ImPlot3DQuat Normalized() const;
+    IMPLOT3D_API ImPlot3DQuat Normalized() const;
 
     // Conjugate of the quaternion
-    ImPlot3DQuat Conjugate() const;
+    IMPLOT3D_API ImPlot3DQuat Conjugate() const;
 
     // Inverse of the quaternion
-    ImPlot3DQuat Inverse() const;
+    IMPLOT3D_API ImPlot3DQuat Inverse() const;
 
     // Binary operators
-    ImPlot3DQuat operator*(const ImPlot3DQuat& rhs) const;
+    IMPLOT3D_API ImPlot3DQuat operator*(const ImPlot3DQuat& rhs) const;
 
     // Normalize the quaternion in place
-    ImPlot3DQuat& Normalize();
+    IMPLOT3D_API ImPlot3DQuat& Normalize();
 
     // Rotate a 3D point using the quaternion
-    ImPlot3DPoint operator*(const ImPlot3DPoint& point) const;
+    IMPLOT3D_API ImPlot3DPoint operator*(const ImPlot3DPoint& point) const;
 
     // Comparison operators
-    bool operator==(const ImPlot3DQuat& rhs) const;
-    bool operator!=(const ImPlot3DQuat& rhs) const;
+    IMPLOT3D_API bool operator==(const ImPlot3DQuat& rhs) const;
+    IMPLOT3D_API bool operator!=(const ImPlot3DQuat& rhs) const;
 
     // Interpolate between two quaternions
-    static ImPlot3DQuat Slerp(const ImPlot3DQuat& q1, const ImPlot3DQuat& q2, float t);
+    IMPLOT3D_API static ImPlot3DQuat Slerp(const ImPlot3DQuat& q1, const ImPlot3DQuat& q2, float t);
 
     // Get quaternion dot product
-    float Dot(const ImPlot3DQuat& rhs) const;
+    IMPLOT3D_API float Dot(const ImPlot3DQuat& rhs) const;
 
 #ifdef IMPLOT3D_QUAT_CLASS_EXTRA
     IMPLOT3D_QUAT_CLASS_EXTRA // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImPlot3DQuat
@@ -711,13 +732,6 @@ struct ImPlot3DStyle {
     // Constructor
     IMPLOT3D_API ImPlot3DStyle();
 };
-
-//-----------------------------------------------------------------------------
-// [SECTION] Callbacks
-//-----------------------------------------------------------------------------
-
-// Callback signature for axis tick label formatter
-typedef int (*ImPlot3DFormatter)(float value, char* buff, int size, void* user_data);
 
 //-----------------------------------------------------------------------------
 // [SECTION] Meshes

@@ -12,6 +12,7 @@
 #include <hex/providers/buffered_reader.hpp>
 
 #include <algorithm>
+#include <fonts/fonts.hpp>
 
 namespace hex::ui {
 
@@ -61,7 +62,7 @@ namespace hex::ui {
                 ImGui::PushID(reinterpret_cast<void*>(address));
                 ON_SCOPE_EXIT { ImGui::PopID(); };
                 std::array<char, 2> buffer = { std::isprint(data[0]) != 0 ? char(data[0]) : '.', 0x00 };
-                ImGui::InputText("##editing_input", buffer.data(), buffer.size(), TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+                ImGui::InputText("##editing_input", buffer.data(), buffer.size(), DefaultTextInputFlags() | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                     auto &userData = *static_cast<UserData*>(data->UserData);
 
                     if (data->BufTextLen >= userData.maxChars) {
@@ -303,6 +304,9 @@ namespace hex::ui {
 
 
     void HexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType) {
+        ImGui::PushID(address + 1);
+        ON_SCOPE_EXIT { ImGui::PopID(); };
+
         static DataVisualizerAscii asciiVisualizer;
 
         if (m_shouldUpdateEditingValue && address == m_editingAddress) {
@@ -560,7 +564,7 @@ namespace hex::ui {
                 ImGui::TableSetupColumn("");
 
                 // Byte columns
-                for (u16 i = 0; i < columnCount; i++) {
+                for (u64 i = 0; i < columnCount; i++) {
                     if (isColumnSeparatorColumn(i, columnCount))
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
 
@@ -957,13 +961,12 @@ namespace hex::ui {
 
                     // Handle jumping to selection
                     if (m_shouldJumpToSelection) {
-                        m_shouldJumpToSelection = false;
+                        const auto jumpAddress = this->getCursorPosition().value_or(0);
 
-                        auto newSelection = getSelection();
-                        m_provider->setCurrentPage(m_provider->getPageOfAddress(newSelection.address).value_or(0));
+                        m_provider->setCurrentPage(m_provider->getPageOfAddress(jumpAddress).value_or(0));
 
                         const auto pageAddress = m_provider->getCurrentPageAddress() + m_provider->getBaseAddress();
-                        const auto targetRowNumber = (newSelection.getStartAddress() - pageAddress) / m_bytesPerRow;
+                        const auto targetRowNumber = (jumpAddress - pageAddress) / m_bytesPerRow;
 
                         // Calculate the current top and bottom row numbers of the viewport
                         ImS64 currentTopRow = m_scrollPosition;
@@ -979,6 +982,7 @@ namespace hex::ui {
                         }
 
                         m_jumpPivot = 0.0F;
+                        m_shouldJumpToSelection = false;
                     }
 
                 }
@@ -1280,7 +1284,9 @@ namespace hex::ui {
         if (tableSize.y <= 0)
             tableSize.y = height;
 
+        ImGui::PushFont(fonts::HexEditor());
         this->drawEditor(tableSize);
+        ImGui::PopFont();
 
         if (tableSize.y > 0)
             this->drawFooter(footerSize);

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <hex/api/event_manager.hpp>
 #include <hex/api/imhex_api.hpp>
 
 namespace hex {
@@ -22,6 +21,20 @@ namespace hex {
 
         AutoReset() {
             ImHexApi::System::impl::addAutoResetObject(this);
+        }
+
+        AutoReset(const T &value) : AutoReset() {
+            m_value = value;
+            m_valid = true;
+        }
+
+        AutoReset(T &&value) noexcept : AutoReset() {
+            m_value = std::move(value);
+            m_valid = true;
+        }
+
+        ~AutoReset() {
+            ImHexApi::System::impl::removeAutoResetObject(this);
         }
 
         T* operator->() {

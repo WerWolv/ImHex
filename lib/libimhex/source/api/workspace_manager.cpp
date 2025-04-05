@@ -14,10 +14,10 @@
 
 namespace hex {
 
-    AutoReset<std::map<std::string, WorkspaceManager::Workspace>> WorkspaceManager::s_workspaces;
-    decltype(WorkspaceManager::s_workspaces)::Type::iterator WorkspaceManager::s_currentWorkspace  = s_workspaces->end();
-    decltype(WorkspaceManager::s_workspaces)::Type::iterator WorkspaceManager::s_previousWorkspace = s_workspaces->end();
-    decltype(WorkspaceManager::s_workspaces)::Type::iterator WorkspaceManager::s_workspaceToRemove = s_workspaces->end();
+    static AutoReset<std::map<std::string, WorkspaceManager::Workspace>> s_workspaces;
+    static decltype(s_workspaces)::Type::iterator s_currentWorkspace  = s_workspaces->end();
+    static decltype(s_workspaces)::Type::iterator s_previousWorkspace = s_workspaces->end();
+    static decltype(s_workspaces)::Type::iterator s_workspaceToRemove = s_workspaces->end();
 
     void WorkspaceManager::createWorkspace(const std::string& name, const std::string &layout) {
         s_currentWorkspace = s_workspaces->insert_or_assign(name, Workspace {
@@ -133,7 +133,10 @@ namespace hex {
         if (s_previousWorkspace != s_currentWorkspace) {
             log::info("Updating workspace");
             if (s_previousWorkspace != s_workspaces->end()) {
+                auto newWorkspace = s_currentWorkspace;
+                s_currentWorkspace = s_previousWorkspace;
                 exportToFile(s_previousWorkspace->second.path, s_previousWorkspace->first, s_previousWorkspace->second.builtin);
+                s_currentWorkspace = newWorkspace;
             }
 
             LayoutManager::closeAllViews();
@@ -174,7 +177,13 @@ namespace hex {
         }
     }
 
+    const std::map<std::string, WorkspaceManager::Workspace>& WorkspaceManager::getWorkspaces() {
+        return *s_workspaces;
+    }
 
+    const std::map<std::string, WorkspaceManager::Workspace>::iterator& WorkspaceManager::getCurrentWorkspace() {
+        return s_currentWorkspace;
+    }
 
 
 }

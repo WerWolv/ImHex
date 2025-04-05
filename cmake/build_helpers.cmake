@@ -1,3 +1,73 @@
+# Some libraries we use set the BUILD_SHARED_LIBS variable to ON, which causes CMake to
+# display a warning about options being set using set() instead of option().
+# Explicitly set the policy to NEW to suppress the warning.
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
+set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+
+if (POLICY CMP0177)
+    set(CMAKE_POLICY_DEFAULT_CMP0177 OLD)
+    cmake_policy(SET CMP0177 OLD)
+endif()
+
+function(getTarget target type)
+    get_target_property(IMPORTED_TARGET ${target} IMPORTED)
+    if (IMPORTED_TARGET)
+        set(${type} INTERFACE PARENT_SCOPE)
+    else()
+        set(${type} PRIVATE PARENT_SCOPE)
+    endif()
+endfunction()
+
+function(addCFlag)
+    if (ARGC EQUAL 1)
+        add_compile_options($<$<COMPILE_LANGUAGE:C>:${ARGV0}>)
+    elseif (ARGC EQUAL 2)
+        getTarget(${ARGV1} TYPE)
+        target_compile_options(${ARGV1} ${TYPE} $<$<COMPILE_LANGUAGE:C>:${ARGV0}>)
+    endif()
+endfunction()
+
+function(addCXXFlag)
+    if (ARGC EQUAL 1)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${ARGV0}>)
+    elseif (ARGC EQUAL 2)
+        getTarget(${ARGV1} TYPE)
+        target_compile_options(${ARGV1} ${TYPE} $<$<COMPILE_LANGUAGE:CXX>:${ARGV0}>)
+    endif()
+endfunction()
+
+function(addObjCFlag)
+    if (ARGC EQUAL 1)
+        add_compile_options($<$<COMPILE_LANGUAGE:OBJC>:${ARGV0}>)
+    elseif (ARGC EQUAL 2)
+        getTarget(${ARGV1} TYPE)
+        target_compile_options(${ARGV1} ${TYPE} $<$<COMPILE_LANGUAGE:OBJC>:${ARGV0}>)
+    endif()
+endfunction()
+
+function(addLinkerFlag)
+    if (ARGC EQUAL 1)
+        add_link_options(${ARGV0})
+    elseif (ARGC EQUAL 2)
+        getTarget(${ARGV1} TYPE)
+        target_link_options(${ARGV1} ${TYPE} ${ARGV0})
+    endif()
+endfunction()
+
+function(addCCXXFlag)
+    addCFlag(${ARGV0} ${ARGV1})
+    addCXXFlag(${ARGV0} ${ARGV1})
+endfunction()
+
+function(addCommonFlag)
+    addCFlag(${ARGV0} ${ARGV1})
+    addCXXFlag(${ARGV0} ${ARGV1})
+    addObjCFlag(${ARGV0} ${ARGV1})
+endfunction()
+
+set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
+
 include(FetchContent)
 
 if(IMHEX_STRIP_RELEASE)
@@ -59,7 +129,9 @@ macro(detectOS)
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
         add_compile_definitions(WIN32_LEAN_AND_MEAN)
+        add_compile_definitions(NOMINMAX)
         add_compile_definitions(UNICODE)
+        add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
     elseif (APPLE)
         add_compile_definitions(OS_MACOS)
         set(CMAKE_INSTALL_BINDIR ".")
@@ -110,7 +182,7 @@ macro(configurePackingResources)
             set(CPACK_WIX_PRODUCT_ICON "${PROJECT_SOURCE_DIR}/resources/dist/windows/icon.ico")
             set(CPACK_WIX_UI_BANNER "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_banner.png")
             set(CPACK_WIX_UI_DIALOG "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_dialog.png")
-            set(CPACK_WIX_CULTURES "en-US;de-DE;ja-JP;it-IT;pt-BR;zh-CN;zh-TW")
+            set(CPACK_WIX_CULTURES "en-US;de-DE;ja-JP;it-IT;pt-BR;zh-CN;zh-TW;ru-RU")
             set(CPACK_PACKAGE_INSTALL_DIRECTORY "ImHex")
             set_property(INSTALL "$<TARGET_FILE_NAME:main>"
                     PROPERTY CPACK_START_MENU_SHORTCUTS "ImHex"
@@ -226,7 +298,7 @@ macro(createPackage)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/imhex)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.mime.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mime/packages RENAME imhex.xml)
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.png)
+        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.svg DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.svg)
         downloadImHexPatternsFiles("./share/imhex")
 
         # install AppStream file
@@ -257,6 +329,7 @@ macro(createPackage)
 
             install(FILES ${IMHEX_ICON} DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/Resources")
             install(TARGETS main BUNDLE DESTINATION ".")
+            install(TARGETS updater BUNDLE DESTINATION ".")
 
             # Update library references to make the bundle portable
             postprocess_bundle(imhex_all main)
@@ -309,6 +382,10 @@ endfunction()
 macro(configureCMake)
     message(STATUS "Configuring ImHex v${IMHEX_VERSION}")
 
+    if (DEFINED CMAKE_TOOLCHAIN_FILE)
+        message(STATUS "Using toolchain file: \"${CMAKE_TOOLCHAIN_FILE}\"")
+    endif()
+
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code for all targets" FORCE)
 
     # Configure use of recommended build tools
@@ -343,9 +420,9 @@ macro(configureCMake)
         if (LD_LLD_PATH)
             set(CMAKE_LINKER ${LD_LLD_PATH})
 
-            if (NOT XCODE)
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=lld")
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=lld")
+            if (NOT XCODE AND NOT MSVC)
+                set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -fuse-ld=lld)
+                set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fuse-ld=lld)
             endif()
         else ()
             message(WARNING "lld not found, using default linker!")
@@ -370,15 +447,6 @@ macro(configureCMake)
             message(WARNING "LTO is not supported: ${output_error}")
         endif ()
     endif ()
-
-    # Some libraries we use set the BUILD_SHARED_LIBS variable to ON, which causes CMake to
-    # display a warning about options being set using set() instead of option().
-    # Explicitly set the policy to NEW to suppress the warning.
-    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-
-    set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
-
-    set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
 endmacro()
 
 function(configureProject)
@@ -434,6 +502,8 @@ function(verifyCompiler)
         message(FATAL_ERROR "ImHex requires GCC 12.0.0 or newer. Please use the latest GCC version.")
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "17.0.0")
         message(FATAL_ERROR "ImHex requires Clang 17.0.0 or newer. Please use the latest Clang version.")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        
     elseif (NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
         message(FATAL_ERROR "ImHex can only be compiled with GCC or Clang. ${CMAKE_CXX_COMPILER_ID} is not supported.")
     endif()
@@ -501,16 +571,16 @@ function(downloadImHexPatternsFiles dest)
 
         # Maybe patterns are cloned to a subdirectory
         if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
-            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")        
+            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")
         endif()
 
         # Or a sibling directory
         if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
-            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ImHex-Patterns")        
+            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ImHex-Patterns")
         endif()
     endif ()
 
-    if (NOT EXISTS ${imhex_patterns_SOURCE_DIR}) 
+    if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
         message(WARNING "Failed to locate ImHex-Patterns repository, some resources will be missing during install!")
     elseif(XCODE)
         # The Xcode build has multiple configurations, which each need a copy of these files
@@ -553,34 +623,66 @@ macro(setupDebugCompressionFlag)
         elseif (COMPRESS_AVAILABLE_COMPILER AND COMPRESS_AVAILABLE_LINKER)
             message("Using default compression for debug info because both compiler and linker support it")
             set(DEBUG_COMPRESSION_FLAG "-gz" CACHE STRING "Cache to use for debug info compression")
+        else()
+            set(DEBUG_COMPRESSION_FLAG "" CACHE STRING "Cache to use for debug info compression")
         endif()
     endif()
 
-    set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} ${DEBUG_COMPRESSION_FLAG}")
+    addCommonFlag(${DEBUG_COMPRESSION_FLAG})
 endmacro()
 
 macro(setupCompilerFlags target)
-    # IMHEX_COMMON_FLAGS: flags common for C, C++, Objective C, etc.. compilers
+    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        addCommonFlag("/W4" ${target})
+        addCommonFlag("/wd4127" ${target}) # conditional expression is constant
+        addCommonFlag("/wd4242" ${target}) # 'identifier': conversion from 'type1' to 'type2', possible loss of data
+        addCommonFlag("/wd4244" ${target}) # 'conversion': conversion from 'type1' to 'type2', possible loss of data
+        addCommonFlag("/wd4267" ${target}) # 'var': conversion from 'size_t' to 'type', possible loss of data
+        addCommonFlag("/wd4305" ${target}) # truncation from 'double' to 'float'
+        addCommonFlag("/wd4996" ${target}) # 'function': was declared deprecated
+        addCommonFlag("/wd5244" ${target}) # 'include' in the purview of module 'module' appears erroneous
 
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        if (IMHEX_STRICT_WARNINGS)
+            addCommonFlag("/WX" ${target})
+        endif()
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        addCommonFlag("-Wall" ${target})
+        addCommonFlag("-Wextra" ${target})
+        addCommonFlag("-Wpedantic" ${target})
+
         # Define strict compilation flags
         if (IMHEX_STRICT_WARNINGS)
-            set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wall -Wextra -Wpedantic -Werror")
+             addCommonFlag("-Werror" ${target})
         endif()
 
         if (UNIX AND NOT APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-            set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -rdynamic")
+            addCommonFlag("-rdynamic" ${target})
         endif()
 
-        set(IMHEX_CXX_FLAGS "-fexceptions -frtti")
+        addCXXFlag("-fexceptions" ${target})
+        addCXXFlag("-frtti" ${target})
 
         # Disable some warnings
-        set(IMHEX_C_CXX_FLAGS "-Wno-array-bounds -Wno-deprecated-declarations -Wno-unknown-pragmas")
+        addCCXXFlag("-Wno-array-bounds" ${target})
+        addCCXXFlag("-Wno-deprecated-declarations" ${target})
+        addCCXXFlag("-Wno-unknown-pragmas" ${target})
+        addCXXFlag("-Wno-include-angled-in-module-purview" ${target})
+
+        # Enable hardening flags
+        if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+            addCommonFlag("-U_FORTIFY_SOURCE" ${target})
+            addCommonFlag("-D_FORTIFY_SOURCE=3" ${target})
+
+            if (NOT EMSCRIPTEN)
+                addCommonFlag("-fstack-protector-strong" ${target})
+            endif()
+        endif()
+
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        if (IMHEX_ENABLE_UNITY_BUILD AND WIN32)
-            set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wa,-mbig-obj")
+        if (WIN32)
+            addLinkerFlag("-Wa,mbig-obj" ${target})
         endif ()
     endif()
 
@@ -588,36 +690,51 @@ macro(setupCompilerFlags target)
         execute_process(COMMAND brew --prefix llvm OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
         set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
         set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
-        set(IMHEX_C_CXX_FLAGS "-Wno-unknown-warning-option")
+        addCCXXFlag("-Wno-unknown-warning-option" ${target})
+
+        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+            add_compile_definitions(_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG)
+        else()
+            add_compile_definitions(_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE)
+        endif()
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        addCommonFlag("/bigobj" ${target})
+        addCFlag("/std:clatest" ${target})
+        addCXXFlag("/std:c++latest" ${target})
     endif()
 
     # Disable some warnings for gcc
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -Wno-restrict -Wno-stringop-overread -Wno-stringop-overflow -Wno-dangling-reference")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        addCCXXFlag("-Wno-restrict" ${target})
+        addCCXXFlag("-Wno-stringop-overread" ${target})
+        addCCXXFlag("-Wno-stringop-overflow" ${target})
+        addCCXXFlag("-Wno-dangling-reference" ${target})
     endif()
 
     # Define emscripten-specific disabled warnings
     if (EMSCRIPTEN)
-        set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -pthread -Wno-dollar-in-identifier-extension -Wno-pthreads-mem-growth")
+        addCCXXFlag("-pthread" ${target})
+        addCCXXFlag("-Wno-dollar-in-identifier-extension" ${target})
+        addCCXXFlag("-Wno-pthreads-mem-growth" ${target})
     endif ()
 
     if (IMHEX_COMPRESS_DEBUG_INFO)
         setupDebugCompressionFlag()
     endif()
 
-    # Set actual CMake flags
-    set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
-    set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS}    ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}  ${IMHEX_CXX_FLAGS}")
-    set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} ${IMHEX_COMMON_FLAGS}")
-
     # Only generate minimal debug information for stacktraces in RelWithDebInfo builds
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g1")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g1")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        # Add flags for debug info in inline functions
-        set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -gstatement-frontiers -ginline-points")
-        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -gstatement-frontiers -ginline-points")
+    if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+        if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+            addCCXXFlag("-g1" ${target})
+        endif()
+
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            # Add flags for debug info in inline functions
+            addCCXXFlag("-gstatement-frontiers" ${target})
+            addCCXXFlag("-ginline-points" ${target})
+        endif()
     endif()
 endmacro()
 
@@ -649,6 +766,7 @@ macro(addBundledLibraries)
     set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 
     if(NOT USE_SYSTEM_FMT)
+        set(FMT_INSTALL OFF CACHE BOOL "Disable install targets for libfmt" FORCE)
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/fmt EXCLUDE_FROM_ALL)
         set(FMT_LIBRARIES fmt::fmt-header-only)
     else()
@@ -688,8 +806,8 @@ macro(addBundledLibraries)
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/lunasvg EXCLUDE_FROM_ALL)
         set(LUNASVG_LIBRARIES lunasvg)
     else()
-        find_package(LunaSVG REQUIRED)
-        set(LUNASVG_LIBRARIES lunasvg)
+        find_package(lunasvg REQUIRED)
+        set(LUNASVG_LIBRARIES lunasvg::lunasvg)
     endif()
 
     if (NOT USE_SYSTEM_LLVM)
@@ -711,7 +829,7 @@ macro(addBundledLibraries)
     endif()
 
     if (USE_SYSTEM_BOOST)
-        find_package(Boost REQUIRED)
+        find_package(Boost REQUIRED CONFIG COMPONENTS regex)
         set(BOOST_LIBRARIES Boost::regex)
     else()
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/boost ${CMAKE_CURRENT_BINARY_DIR}/boost EXCLUDE_FROM_ALL)
@@ -721,11 +839,7 @@ macro(addBundledLibraries)
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)
     set(LIBPL_ENABLE_PRECOMPILED_HEADERS ${IMHEX_ENABLE_PRECOMPILED_HEADERS} CACHE BOOL "" FORCE)
 
-    if (WIN32)
-        set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "" FORCE)
-    else()
-        set(LIBPL_SHARED_LIBRARY OFF CACHE BOOL "" FORCE)
-    endif()
+    set(LIBPL_SHARED_LIBRARY OFF CACHE BOOL "" FORCE)
 
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/disassembler EXCLUDE_FROM_ALL)
@@ -785,76 +899,20 @@ function(enableUnityBuild TARGET)
     endif ()
 endfunction()
 
-function(generatePDBs)
-    if (NOT IMHEX_GENERATE_PDBS)
-        return()
-    endif ()
+function(setSDKPaths)
+    if (WIN32)
+        set(SDK_PATH "./sdk" PARENT_SCOPE)
+    elseif (APPLE)
+        set(SDK_PATH "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/Resources/sdk" PARENT_SCOPE)
+    else()
+        set(SDK_PATH "share/imhex/sdk" PARENT_SCOPE)
+    endif()
 
-    if (NOT WIN32 OR CMAKE_BUILD_TYPE STREQUAL "Debug")
-        return()
-    endif ()
-
-    include(FetchContent)
-    FetchContent_Declare(
-            cv2pdb
-            URL "https://github.com/rainers/cv2pdb/releases/download/v0.52/cv2pdb-0.52.zip"
-            DOWNLOAD_EXTRACT_TIMESTAMP ON
-    )
-    FetchContent_Populate(cv2pdb)
-
-    set(PDBS_TO_GENERATE main main-forwarder libimhex ${PLUGINS} libpl)
-    foreach (PDB ${PDBS_TO_GENERATE})
-        if (PDB STREQUAL "main")
-            set(GENERATED_PDB imhex)
-        elseif (PDB STREQUAL "main-forwarder")
-            set(GENERATED_PDB imhex-gui)
-        elseif (PDB STREQUAL "libimhex")
-            set(GENERATED_PDB libimhex)
-        elseif (PDB STREQUAL "libpl")
-            set(GENERATED_PDB libpl)
-        else ()
-            set(GENERATED_PDB plugins/${PDB})
-        endif ()
-
-        if (NOT IMHEX_REPLACE_DWARF_WITH_PDB)
-            set(PDB_OUTPUT_PATH ${CMAKE_BINARY_DIR}/${GENERATED_PDB})
-        else ()
-            set(PDB_OUTPUT_PATH)
-        endif()
-
-        add_custom_target(${PDB}_pdb DEPENDS ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb)
-        add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                COMMAND
-                (
-                    ${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
-                    ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe $<TARGET_FILE:${PDB}> ${PDB_OUTPUT_PATH} &&
-                    ${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}
-                ) || (exit 0)
-                COMMAND_EXPAND_LISTS)
-
-        if (IMHEX_REPLACE_DWARF_WITH_PDB)
-            install(CODE "file(COPY_FILE ${CMAKE_BINARY_DIR}/${PDB}.pdb ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb RESULT copy_result)")
-        endif ()
-
-        install(FILES ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb DESTINATION ".")
-
-        add_dependencies(imhex_all ${PDB}_pdb)
-    endforeach ()
-
+    set(SDK_BUILD_PATH "${CMAKE_BINARY_DIR}/sdk" PARENT_SCOPE)
 endfunction()
 
 function(generateSDKDirectory)
-    if (WIN32)
-        set(SDK_PATH "./sdk")
-    elseif (APPLE)
-        set(SDK_PATH "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/Resources/sdk")
-    else()
-        set(SDK_PATH "share/imhex/sdk")
-    endif()
-
-    set(SDK_BUILD_PATH "${CMAKE_BINARY_DIR}/sdk")
-
+    setSDKPaths()
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex DESTINATION "${SDK_PATH}/lib" PATTERN "**/source/*" EXCLUDE)
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/imgui DESTINATION "${SDK_PATH}/lib/third_party" PATTERN "**/source/*" EXCLUDE)
@@ -872,6 +930,18 @@ function(generateSDKDirectory)
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake DESTINATION "${SDK_PATH}/cmake")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/cmake/sdk/ DESTINATION "${SDK_PATH}")
     install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_PATH}/lib")
+
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/ui/include DESTINATION "${SDK_PATH}/lib/ui/include")
+    install(FILES ${CMAKE_SOURCE_DIR}/plugins/ui/CMakeLists.txt DESTINATION "${SDK_PATH}/lib/ui/")
+    if (WIN32)
+        install(TARGETS ui ARCHIVE DESTINATION "${SDK_PATH}/lib")
+    endif()
+
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/fonts/include DESTINATION "${SDK_PATH}/lib/fonts/include")
+    install(FILES ${CMAKE_SOURCE_DIR}/plugins/fonts/CMakeLists.txt DESTINATION "${SDK_PATH}/lib/fonts/")
+    if (WIN32)
+        install(TARGETS fonts ARCHIVE DESTINATION "${SDK_PATH}/lib")
+    endif()
 endfunction()
 
 function(addIncludesFromLibrary target library)

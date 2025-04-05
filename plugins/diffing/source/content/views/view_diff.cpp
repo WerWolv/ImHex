@@ -1,6 +1,7 @@
 #include "content/views/view_diff.hpp"
 
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/events/requests_gui.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/providers/buffered_reader.hpp>
@@ -93,7 +94,7 @@ namespace hex::plugin::diffing {
 
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
         auto commonSize = std::max(providerA->getActualSize(), providerB->getActualSize());
-        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing"_lang, commonSize, [this, providerA, providerB](Task &) {
+        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing", commonSize, [this, providerA, providerB](Task &) {
             auto differences = m_algorithm->analyze(providerA, providerB);
 
             auto providers = ImHexApi::Provider::getProviders();
@@ -121,6 +122,7 @@ namespace hex::plugin::diffing {
             column.provider = -1;
             column.hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
             column.diffTree.clear();
+            column.differences.clear();
         }
     }
 
@@ -203,7 +205,7 @@ namespace hex::plugin::diffing {
 
         const auto availableSize = ImGui::GetContentRegionAvail();
         auto diffingColumnSize = availableSize;
-        diffingColumnSize.y *= 3.5 / 5.0;
+        diffingColumnSize.y *= 3.5F / 5.0F;
         diffingColumnSize.y -= ImGui::GetTextLineHeightWithSpacing();
         diffingColumnSize.y += height;
 
@@ -353,32 +355,34 @@ namespace hex::plugin::diffing {
                         // Draw changes
                         ImGui::TableNextColumn();
                         ImGui::Indent();
-                        switch (typeA) {
-                            case DifferenceType::Insertion:
-                                data.resize(std::min<u64>(17, (regionA.end - regionA.start) + 1));
-                                providers[a.provider]->read(regionA.start, data.data(), data.size());
-                                drawByteString(data);
-                                break;
-                            case DifferenceType::Mismatch:
-                                data.resize(std::min<u64>(17, (regionA.end - regionA.start) + 1));
-                                providers[a.provider]->read(regionA.start, data.data(), data.size());
-                                drawByteString(data);
+                        if (a.provider != -1 && b.provider != -1) {
+                            switch (typeA) {
+                                case DifferenceType::Insertion:
+                                    data.resize(std::min<u64>(17, (regionA.end - regionA.start) + 1));
+                                    providers[a.provider]->read(regionA.start, data.data(), data.size());
+                                    drawByteString(data);
+                                    break;
+                                case DifferenceType::Mismatch:
+                                    data.resize(std::min<u64>(17, (regionA.end - regionA.start) + 1));
+                                    providers[a.provider]->read(regionA.start, data.data(), data.size());
+                                    drawByteString(data);
 
-                                ImGui::SameLine(0, 0);
-                                ImGuiExt::TextFormatted(" {}  ", ICON_VS_ARROW_RIGHT);
-                                ImGui::SameLine(0, 0);
+                                    ImGui::SameLine(0, 0);
+                                    ImGuiExt::TextFormatted(" {}  ", ICON_VS_ARROW_RIGHT);
+                                    ImGui::SameLine(0, 0);
 
-                                data.resize(std::min<u64>(17, (regionB.end - regionB.start) + 1));
-                                providers[b.provider]->read(regionB.start, data.data(), data.size());
-                                drawByteString(data);
-                                break;
-                            case DifferenceType::Deletion:
-                                data.resize(std::min<u64>(17, (regionB.end - regionB.start) + 1));
-                                providers[b.provider]->read(regionB.start, data.data(), data.size());
-                                drawByteString(data);
-                                break;
-                            default:
-                                break;
+                                    data.resize(std::min<u64>(17, (regionB.end - regionB.start) + 1));
+                                    providers[b.provider]->read(regionB.start, data.data(), data.size());
+                                    drawByteString(data);
+                                    break;
+                                case DifferenceType::Deletion:
+                                    data.resize(std::min<u64>(17, (regionB.end - regionB.start) + 1));
+                                    providers[b.provider]->read(regionB.start, data.data(), data.size());
+                                    drawByteString(data);
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                         ImGui::Unindent();
 

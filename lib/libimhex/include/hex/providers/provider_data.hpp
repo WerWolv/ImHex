@@ -1,7 +1,10 @@
 #pragma once
 
 #include <hex/api/imhex_api.hpp>
-#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
+#include <hex/api/events/requests_provider.hpp>
+
 
 #include <map>
 #include <ranges>
@@ -9,9 +12,11 @@
 
 namespace hex {
 
-    namespace prv {
-        class Provider;
-    }
+    #if !defined(HEX_MODULE_EXPORT)
+        namespace prv {
+            class Provider;
+        }
+    #endif
 
     template<typename T>
     class PerProvider {

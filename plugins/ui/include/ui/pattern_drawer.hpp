@@ -10,6 +10,7 @@
 #include <pl/formatters.hpp>
 
 #include <set>
+#include <pl/patterns/pattern_error.hpp>
 
 struct ImGuiTableSortSpecs;
 
@@ -36,6 +37,8 @@ namespace hex::ui {
         void setHoverCallback(std::function<void(const pl::ptrn::Pattern *)> callback) { m_hoverCallback = std::move(callback); }
         void enableRowColoring(bool enabled) { m_rowColoring = enabled; }
         void enablePatternEditing(bool enabled) { m_editingEnabled = enabled; }
+        void setMaxFilterDisplayItems(u32 count) { m_maxFilterDisplayItems = count; }
+
         void reset();
 
         void jumpToPattern(const pl::ptrn::Pattern *pattern) { m_jumpToPattern = pattern; }
@@ -62,6 +65,7 @@ namespace hex::ui {
         void visit(pl::ptrn::PatternUnsigned& pattern) override;
         void visit(pl::ptrn::PatternWideCharacter& pattern) override;
         void visit(pl::ptrn::PatternWideString& pattern) override;
+        void visit(pl::ptrn::PatternError& pattern) override;
         void visit(pl::ptrn::Pattern& pattern) override;
 
     private:
@@ -134,5 +138,7 @@ namespace hex::ui {
 
         pl::gen::fmt::FormatterArray m_formatters;
         u64 m_lastRunId = 0;
+
+        u32 m_maxFilterDisplayItems = 128;
     };
 }

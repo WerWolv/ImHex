@@ -14,8 +14,9 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/api/localization_manager.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     class AchievementManager;
 
@@ -361,7 +362,7 @@ namespace hex {
          * @brief Returns all registered achievements
          * @return All achievements
          */
-        static const std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>>& getAchievements();
+        static const std::unordered_map<UnlocalizedString, std::unordered_map<UnlocalizedString, std::unique_ptr<Achievement>>>& getAchievements();
 
         /**
          * @brief Returns all achievement start nodes
@@ -369,14 +370,14 @@ namespace hex {
          * @param rebuild Whether to rebuild the list of start nodes
          * @return All achievement start nodes
          */
-        static const std::unordered_map<std::string, std::vector<AchievementNode*>>& getAchievementStartNodes(bool rebuild = true);
+        static const std::unordered_map<UnlocalizedString, std::vector<AchievementNode*>>& getAchievementStartNodes(bool rebuild = true);
 
         /**
          * @brief Returns all achievement nodes
          * @param rebuild Whether to rebuild the list of nodes
          * @return All achievement nodes
          */
-        static const std::unordered_map<std::string, std::list<AchievementNode>>& getAchievementNodes(bool rebuild = true);
+        static const std::unordered_map<UnlocalizedString, std::list<AchievementNode>>& getAchievementNodes(bool rebuild = true);
 
         /**
          * @brief Loads the progress of all achievements from the achievements save file

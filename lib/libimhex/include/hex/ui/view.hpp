@@ -8,7 +8,6 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/shortcut_manager.hpp>
-#include <hex/api/event_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 
 #include <hex/providers/provider.hpp>
@@ -99,6 +98,14 @@ namespace hex {
 
         [[nodiscard]] static std::string toWindowName(const UnlocalizedString &unlocalizedName);
 
+        [[nodiscard]] bool isFocused() const { return m_focused; }
+
+        /**
+         * @brief Used for focus handling. Don't use this directly
+         * @param focused Whether this view is focused
+         */
+        void setFocused(bool focused) { m_focused = focused; }
+
     public:
         class Window;
         class Special;
@@ -111,6 +118,7 @@ namespace hex {
         std::map<Shortcut, ShortcutManager::ShortcutEntry> m_shortcuts;
         bool m_windowJustOpened = false;
         const char *m_icon;
+        bool m_focused = false;
 
         friend class ShortcutManager;
     };
@@ -175,7 +183,7 @@ namespace hex {
 
                 ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
                 ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-                if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), this->hasCloseButton() ? &this->getWindowOpenState() : nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | this->getWindowFlags())) {
+                if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), this->hasCloseButton() ? &this->getWindowOpenState() : nullptr, ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
                     this->drawContent();
 
                     ImGui::EndPopup();

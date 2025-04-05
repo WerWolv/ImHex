@@ -1,9 +1,11 @@
 #include <hex.hpp>
 
+#include <clocale>
+
 #include <hex/helpers/logger.hpp>
 
-#include "window.hpp"
-#include "init/splash_window.hpp"
+#include <window.hpp>
+#include <messaging.hpp>
 
 #include "crash_handlers.hpp"
 
@@ -25,6 +27,8 @@ namespace hex::init {
 int main(int argc, char **argv) {
     using namespace hex;
 
+    std::setlocale(LC_ALL, "en_US.utf8");
+
     // Set the main thread's name to "Main"
     TaskManager::setCurrentThreadName("Main");
 
@@ -33,6 +37,9 @@ int main(int argc, char **argv) {
 
     // Run platform-specific initialization code
     Window::initNative();
+
+    // Setup messaging system to allow sending commands to the main ImHex instance
+    hex::messaging::setupMessaging();
 
     // Handle command line arguments if any have been passed
     if (argc > 1) {
@@ -43,9 +50,11 @@ int main(int argc, char **argv) {
     log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion().get());
     log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
     log::info("Running on {} {} ({})", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture());
+
     #if defined(OS_LINUX)
-    auto distro = ImHexApi::System::getLinuxDistro().value();
-    log::info("Linux distribution: {}. Version: {}", distro.name, distro.version == "" ? "None" : distro.version);
+        if (auto distro = ImHexApi::System::getLinuxDistro(); distro.has_value()) {
+            log::info("Linux distribution: {}. Version: {}", distro->name, distro->version == "" ? "None" : distro->version);
+        }
     #endif
 
 

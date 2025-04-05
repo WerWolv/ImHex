@@ -44,4 +44,7 @@ namespace hex::dbg {
         }
     }
 
+    bool debugModeEnabled();
+    void setDebugModeEnabled(bool enabled);
+
 }

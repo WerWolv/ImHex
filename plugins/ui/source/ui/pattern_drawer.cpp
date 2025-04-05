@@ -119,7 +119,7 @@ namespace hex::ui {
 
         void drawOffsetColumns(const pl::ptrn::Pattern& pattern) {
             auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern);
-            if (bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr) {
+            if (bitfieldMember != nullptr && bitfieldMember->getParent() != nullptr) {
                 drawOffsetColumnForBitfieldMember(*bitfieldMember);
                 return;
             }
@@ -179,7 +179,7 @@ namespace hex::ui {
                 return;
             }
 
-            if (auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
+            if (auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParent() != nullptr)
                 drawSizeColumnForBitfieldMember(*bitfieldMember);
             else {
                 ImGui::TableNextColumn();
@@ -248,9 +248,17 @@ namespace hex::ui {
 
         std::vector<std::string> treePath;
         for (auto &pattern : m_sortedPatterns) {
-            traversePatternTree(*pattern, treePath, [this, &treePath](auto &pattern){
-                if (matchesFilter(m_filter.path, treePath, false))
-                    m_filteredPatterns.push_back(&pattern);
+            if (m_filteredPatterns.size() > m_maxFilterDisplayItems)
+                break;
+
+            traversePatternTree(*pattern, treePath, [this, &treePath](auto &pattern) {
+                if (m_filteredPatterns.size() > m_maxFilterDisplayItems)
+                    return;
+
+                if (matchesFilter(m_filter.path, treePath, false)) {
+                    if (!m_filter.value.has_value() || pattern.getValue() == m_filter.value)
+                        m_filteredPatterns.push_back(&pattern);
+                }
             });
         }
     }
@@ -976,6 +984,15 @@ namespace hex::ui {
         }
     }
 
+    void PatternDrawer::visit(pl::ptrn::PatternError& pattern) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerError));
+        createDefaultEntry(pattern);
+        drawValueColumn(pattern);
+        drawCommentColumn(pattern);
+        ImGui::PopStyleColor();
+    }
+
+
     void PatternDrawer::visit(pl::ptrn::Pattern& pattern) {
         createDefaultEntry(pattern);
         drawValueColumn(pattern);
@@ -1380,7 +1397,7 @@ namespace hex::ui {
             m_filtersUpdated = true;
 
             if (!m_favoritesUpdateTask.isRunning()) {
-                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns, runtime](auto &task) {
+                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating", TaskManager::NoProgress, [this, patterns, runtime](auto &task) {
                     size_t updatedFavorites = 0;
 
                     {

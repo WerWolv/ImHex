@@ -15,14 +15,12 @@
 namespace hex::plugin::visualizers {
 
     void drawTimestampVisualizer(pl::ptrn::Pattern &, bool, std::span<const pl::core::Token::Literal> arguments) {
-        time_t timestamp = arguments[0].toUnsigned();
+        time_t timestamp = u64(arguments[0].toUnsigned());
         auto tm = fmt::gmtime(timestamp);
         auto date = std::chrono::year_month_day(std::chrono::year(tm.tm_year + 1900), std::chrono::month(tm.tm_mon + 1), std::chrono::day(tm.tm_mday));
 
         auto lastMonthDay = std::chrono::year_month_day_last(date.year(), date.month() / std::chrono::last);
         auto firstWeekDay = std::chrono::weekday(std::chrono::year_month_day(date.year(), date.month(), std::chrono::day(1)));
-
-        const auto scale = 1_scaled * (ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize);
 
         // Draw calendar
         if (ImGui::BeginTable("##month_table", 2)) {
@@ -32,7 +30,7 @@ namespace hex::plugin::visualizers {
             // Draw centered month name and year
             ImGuiExt::TextFormattedCenteredHorizontal("{:%B %Y}", tm);
 
-            if (ImGui::BeginTable("##days_table", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_NoHostExtendX, ImVec2(160, 120) * scale)) {
+            if (ImGui::BeginTable("##days_table", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_NoHostExtendX, scaled(ImVec2(160, 120)))) {
                 constexpr static auto ColumnFlags = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide;
                 ImGui::TableSetupColumn("M", ColumnFlags);
                 ImGui::TableSetupColumn("T", ColumnFlags);
@@ -68,7 +66,7 @@ namespace hex::plugin::visualizers {
             ImGui::TableNextColumn();
 
             // Draw analog clock
-            const auto size = ImVec2(120, 120) * scale;
+            const auto size = scaled(ImVec2(120, 120));
             if (ImGui::BeginChild("##clock", size + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()))) {
                 // Draw centered digital hour, minute and seconds
                 ImGuiExt::TextFormattedCenteredHorizontal("{:%H:%M:%S}", tm);
@@ -85,8 +83,8 @@ namespace hex::plugin::visualizers {
                 // Draw clock sections and numbers
                 for (u8 i = 0; i < 12; ++i) {
                     auto text = hex::format("{}", (((i + 2) % 12) + 1));
-                    drawList->AddLine(center + sectionPos(i) * size / 2.2, center + sectionPos(i) * size / 2, ImGui::GetColorU32(ImGuiCol_TextDisabled), 1_scaled);
-                    drawList->AddText(center + sectionPos(i) * size / 3 - ImGui::CalcTextSize(text.c_str()) / 2, ImGui::GetColorU32(ImGuiCol_Text), text.c_str());
+                    drawList->AddLine(center + sectionPos(i) * size / 2.2F, center + sectionPos(i) * size / 2, ImGui::GetColorU32(ImGuiCol_TextDisabled), 1_scaled);
+                    drawList->AddText(center + sectionPos(i) * size / 3.0F - ImGui::CalcTextSize(text.c_str()) / 2, ImGui::GetColorU32(ImGuiCol_Text), text.c_str());
                 }
 
                 // Draw hour hand

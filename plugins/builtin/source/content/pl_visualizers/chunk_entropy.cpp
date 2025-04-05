@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
         // Compute data
         if (shouldReset) {
             auto pattern   = arguments[0].toPattern();
-            auto chunkSize = arguments[1].toUnsigned();
+            auto chunkSize = u64(arguments[1].toUnsigned());
             analyzer.process(pattern->getBytes(), chunkSize);
         }
 

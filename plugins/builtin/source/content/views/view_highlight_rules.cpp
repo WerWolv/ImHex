@@ -2,6 +2,9 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/events_interaction.hpp>
+
 #include <wolv/utils/guards.hpp>
 
 #include <fonts/vscode_icons.hpp>
@@ -166,7 +169,7 @@ namespace hex::plugin::builtin {
 
         // Initialize the selected rule iterators to point to the end of the rules lists
         m_selectedRule = m_rules->end();
-        EventProviderCreated::subscribe([this](prv::Provider *provider) {
+        EventProviderOpened::subscribe([this](prv::Provider *provider) {
             m_selectedRule.get(provider) = m_rules.get(provider).end();
         });
     }

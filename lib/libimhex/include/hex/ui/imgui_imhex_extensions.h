@@ -79,17 +79,16 @@ namespace ImGuiExt {
         Texture(const Texture&) = delete;
         Texture(Texture&& other) noexcept;
 
-        static Texture fromImage(const ImU8 *buffer, int size, Filter filter = Filter::Nearest);
-        static Texture fromImage(std::span<const std::byte> buffer, Filter filter = Filter::Nearest);
-        static Texture fromImage(const char *path, Filter filter = Filter::Nearest);
-        static Texture fromImage(const std::fs::path &path, Filter filter = Filter::Nearest);
-        static Texture fromGLTexture(unsigned int texture, int width, int height);
-        static Texture fromBitmap(const ImU8 *buffer, int size, int width, int height, Filter filter = Filter::Nearest);
-        static Texture fromBitmap(std::span<const std::byte> buffer, int width, int height, Filter filter = Filter::Nearest);
-        static Texture fromSVG(const char *path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
-        static Texture fromSVG(const std::fs::path &path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
-        static Texture fromSVG(std::span<const std::byte> buffer, int width = 0, int height = 0, Filter filter = Filter::Nearest);
-
+        [[nodiscard]] static Texture fromImage(const ImU8 *buffer, int size, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromImage(std::span<const std::byte> buffer, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromImage(const char *path, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromImage(const std::fs::path &path, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromGLTexture(unsigned int texture, int width, int height);
+        [[nodiscard]] static Texture fromBitmap(const ImU8 *buffer, int size, int width, int height, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromBitmap(std::span<const std::byte> buffer, int width, int height, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromSVG(const char *path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromSVG(const std::fs::path &path, int width = 0, int height = 0, Filter filter = Filter::Nearest);
+        [[nodiscard]] static Texture fromSVG(std::span<const std::byte> buffer, int width = 0, int height = 0, Filter filter = Filter::Nearest);
 
         ~Texture();
 
@@ -113,6 +112,8 @@ namespace ImGuiExt {
 
             return float(m_width) / float(m_height);
         }
+
+        void reset();
 
     private:
         ImTextureID m_textureId = 0;
@@ -158,6 +159,8 @@ namespace ImGuiExt {
 
     void OpenPopupInWindow(const char *window_name, const char *popup_name);
 
+    void DisableWindowResize(ImGuiDir dir);
+
     struct ImHexCustomData {
         ImVec4 Colors[ImGuiCustomCol_COUNT];
 
@@ -183,7 +186,7 @@ namespace ImGuiExt {
     void StyleCustomColorsLight();
     void StyleCustomColorsClassic();
 
-    void SmallProgressBar(float fraction, float yOffset = 0.0F);
+    void ProgressBar(float fraction, ImVec2 size_value = ImVec2(0, 0), float yOffset = 0.0F);
 
     inline void TextFormatted(std::string_view fmt, auto &&...args) {
         if constexpr (sizeof...(args) == 0) {
@@ -200,14 +203,15 @@ namespace ImGuiExt {
         ImGui::PushID(text.c_str());
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
 
         ImGui::PushItemWidth(ImGui::CalcTextSize(text.c_str()).x + ImGui::GetStyle().FramePadding.x * 2);
-        ImGui::InputText("##", const_cast<char *>(text.c_str()), text.size(), ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll);
+        ImGui::InputText("##", const_cast<char *>(text.c_str()), text.size() + 1, ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll);
         ImGui::PopItemWidth();
 
         ImGui::PopStyleColor();
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar(2);
 
         ImGui::PopID();
     }
@@ -235,29 +239,32 @@ namespace ImGuiExt {
 
     inline void TextFormattedWrappedSelectable(std::string_view fmt, auto &&...args) {
         // Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
-        auto text = wolv::util::wrapMonospacedString(
+        auto text = wolv::util::trim(wolv::util::wrapMonospacedString(
                 hex::format(fmt, std::forward<decltype(args)>(args)...),
                 ImGui::CalcTextSize("M").x,
                 ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize
-        );
+        ));
+
+        auto textSize = ImGui::CalcTextSize(text.c_str());
 
         ImGui::PushID(text.c_str());
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
 
         ImGui::PushItemWidth(ImGui::CalcTextSize(text.c_str()).x + ImGui::GetStyle().FramePadding.x * 2);
         ImGui::InputTextMultiline(
                 "##",
                 const_cast<char *>(text.c_str()),
-                text.size(),
-                ImVec2(0, -FLT_MIN),
+                text.size() + 1,
+                ImVec2(0, textSize.y),
                 ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll
         );
         ImGui::PopItemWidth();
 
         ImGui::PopStyleColor();
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar(2);
 
         ImGui::PopID();
     }

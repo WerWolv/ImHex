@@ -1,7 +1,10 @@
 #include <iostream>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
-#include <hex/api/event_manager.hpp>
+
+#include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/helpers/crypto.hpp>
 #include <hex/providers/provider.hpp>
@@ -200,7 +203,7 @@ namespace hex::plugin::builtin {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.modify_byte.name");
             });
 
-            EventPatchCreated::subscribe([](const u8 *, u8, PatchKind) {
+            EventPatchCreated::subscribe([](const u8 *, u64, PatchKind) {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.create_patch.name");
             });
 

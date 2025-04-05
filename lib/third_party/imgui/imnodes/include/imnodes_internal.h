@@ -17,7 +17,7 @@
 
 struct ImNodesContext;
 
-extern ImNodesContext* GImNodes;
+IMGUI_API extern ImNodesContext* GImNodes;
 
 // [SECTION] internal enums
 

@@ -10,16 +10,24 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/auto_reset.hpp>
 
-struct ImGuiContext;
+#if !defined(HEX_MODULE_EXPORT)
+    struct ImGuiContext;
+#endif
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
     struct SubCommand {
+        enum class Type : u8 {
+            Option,
+            SubCommand
+        };
+
         std::string commandLong;
         std::string commandShort;
 
         std::string commandDescription;
         std::function<void(const std::vector<std::string>&)> callback;
+        Type type = Type::Option;
     };
 
     struct Feature {

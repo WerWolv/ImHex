@@ -2,7 +2,6 @@
 
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
-#include <hex/api/event_manager.hpp>
 
 #include <hex/providers/undo_redo/operations/operation.hpp>
 
@@ -35,7 +34,6 @@ namespace hex::prv::undo {
         template<std::derived_from<Operation> T>
         bool add(auto && ... args) {
             auto result = this->add(std::make_unique<T>(std::forward<decltype(args)>(args)...));
-            EventDataChanged::post(m_provider);
 
             return result;
         }

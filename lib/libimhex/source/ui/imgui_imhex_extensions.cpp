@@ -260,9 +260,6 @@ namespace ImGuiExt {
     }
 
     Texture::Texture(Texture&& other) noexcept {
-        if (m_textureId != 0)
-            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
-
         m_textureId = other.m_textureId;
         m_width = other.m_width;
         m_height = other.m_height;
@@ -271,8 +268,10 @@ namespace ImGuiExt {
     }
 
     Texture& Texture::operator=(Texture&& other) noexcept {
-        if (m_textureId != 0)
-            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+        if (this == &other)
+            return *this;
+
+        this->reset();
 
         m_textureId = other.m_textureId;
         m_width = other.m_width;
@@ -284,10 +283,19 @@ namespace ImGuiExt {
     }
 
     Texture::~Texture() {
-        if (m_textureId == 0)
-            return;
+        this->reset();
+    }
 
-        glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+    void Texture::reset() {
+        #if !defined(OS_WEB)
+            if (glDeleteTextures == nullptr)
+                return;
+        #endif
+
+        if (m_textureId != 0) {
+            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+            m_textureId = 0;
+        }
     }
 
     float GetTextWrapPos() {
@@ -326,15 +334,20 @@ namespace ImGuiExt {
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
         // Render
+        BeginGroup();
+        TextDisabled("%s", icon);
+        SameLine();
+
         const ImU32 col = hovered ? GetColorU32(ImGuiCol_ButtonHovered) : GetColorU32(ImGuiCol_ButtonActive);
         PushStyleColor(ImGuiCol_Text, ImU32(col));
-
-        Text("%s %s", icon, label);
+        TextUnformatted(label);
 
         if (hovered)
             GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
 
         PopStyleColor();
+
+        EndGroup();
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
         return pressed;
@@ -663,10 +676,8 @@ namespace ImGuiExt {
     }
 
     ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx) {
-        switch (idx) {
-            default:
-                return { };
-        }
+        std::ignore = idx;
+        return {};
     }
 
     void StyleCustomColorsDark() {
@@ -741,6 +752,17 @@ namespace ImGuiExt {
         End();
     }
 
+    void DisableWindowResize(ImGuiDir dir) {
+        const auto window = GetCurrentWindow();
+        const auto borderId = GetWindowResizeBorderID(window, dir);
+        if (borderId == GetHoveredID()) {
+            GImGui->ActiveIdMouseButton = 0;
+            SetHoveredID(0);
+        }
+        if (borderId == GetActiveID())
+            SetActiveID(0, window);
+    }
+
 
     bool TitleBarButton(const char *label, ImVec2 size_arg) {
         ImGuiWindow *window = GetCurrentWindow();
@@ -808,8 +830,11 @@ namespace ImGuiExt {
         PushStyleColor(ImGuiCol_Text, color);
 
         // Render
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered
-                                                                                                 : ImGuiCol_MenuBarBg);
+        ImU32 col = 0x00;
+        if (held)
+            col = GetColorU32(ImGuiCol_ScrollbarGrabActive);
+        else if (hovered)
+            col = GetColorU32(ImGuiCol_ScrollbarGrabHovered);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + padding, bb.Max - padding, symbol, nullptr, &size, style.ButtonTextAlign, &bb);
@@ -855,7 +880,7 @@ namespace ImGuiExt {
                                                                                           : ImGuiCol_Button);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3, 1) + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3F, 1) + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -937,7 +962,7 @@ namespace ImGuiExt {
         return result;
     }
 
-    void SmallProgressBar(float fraction, float yOffset) {
+    void ProgressBar(float fraction, ImVec2 size_value, float yOffset) {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return;
@@ -946,7 +971,7 @@ namespace ImGuiExt {
         const ImGuiStyle &style = g.Style;
 
         ImVec2 pos  = window->DC.CursorPos + ImVec2(0, yOffset);
-        ImVec2 size = CalcItemSize(ImVec2(100, 5) * hex::ImHexApi::System::getGlobalScale(), 100, g.FontSize + style.FramePadding.y * 2.0F);
+        ImVec2 size = CalcItemSize(size_value, ImGui::GetContentRegionAvail().x, g.FontSize + style.FramePadding.y * 2.0F);
         ImRect bb(pos, pos + size);
         ItemSize(size, 0);
         if (!ItemAdd(bb, 0))

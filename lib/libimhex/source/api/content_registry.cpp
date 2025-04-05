@@ -1,5 +1,6 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/shortcut_manager.hpp>
+#include <hex/api/events/requests_provider.hpp>
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
@@ -32,7 +33,7 @@ namespace hex {
         namespace impl {
 
             struct OnChange {
-                u32 id;
+                u64 id;
                 OnChangeCallback callback;
             };
 
@@ -223,6 +224,8 @@ namespace hex {
                             log::error("Failed to load setting [{} / {}]: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
                         }
                     });
+
+                    runOnChangeHandlers(unlocalizedCategory, unlocalizedName, getSetting(unlocalizedCategory, unlocalizedName, entry->widget->store()));
                 }
 
                 return entry->widget.get();
@@ -402,7 +405,7 @@ namespace hex {
             bool DropDown::draw(const std::string &name) {
                 auto preview = "";
                 if (static_cast<size_t>(m_value) < m_items.size())
-                    preview = m_items[m_value].c_str();
+                    preview = m_items[m_value].get().c_str();
 
                 bool changed = false;
                 if (ImGui::BeginCombo(name.c_str(), Lang(preview))) {
@@ -711,15 +714,15 @@ namespace hex {
 
         namespace impl {
 
-            static AutoReset<std::map<std::string, std::unique_ptr<View>>> s_views;
-            const std::map<std::string, std::unique_ptr<View>>& getEntries() {
+            static AutoReset<std::map<UnlocalizedString, std::unique_ptr<View>>> s_views;
+            const std::map<UnlocalizedString, std::unique_ptr<View>>& getEntries() {
                 return *s_views;
             }
 
             void add(std::unique_ptr<View> &&view) {
             log::debug("Registered new view: {}", view->getUnlocalizedName().get());
 
-            s_views->insert({ view->getUnlocalizedName(), std::move(view) });
+            s_views->emplace(view->getUnlocalizedName(), std::move(view));
         }
 
         }
@@ -731,6 +734,15 @@ namespace hex {
                 return views[unlocalizedName].get();
             else
                 return nullptr;
+        }
+
+        View* getFocusedView() {
+            for (const auto &[unlocalizedName, view] : *impl::s_views) {
+                if (view->isFocused())
+                    return view.get();
+            }
+
+            return nullptr;
         }
 
     }
@@ -1123,7 +1135,9 @@ namespace hex {
 
     namespace ContentRegistry::HexEditor {
 
-        const int DataVisualizer::TextInputFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysOverwrite;
+        int DataVisualizer::DefaultTextInputFlags() {
+            return ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysOverwrite;
+        }
 
         bool DataVisualizer::drawDefaultScalarEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const {
             struct UserData {
@@ -1141,7 +1155,7 @@ namespace hex {
             };
 
             ImGui::PushID(reinterpret_cast<void*>(address));
-            ImGuiExt::InputScalarCallback("##editing_input", dataType, data, format, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+            ImGuiExt::InputScalarCallback("##editing_input", dataType, data, format, flags | DefaultTextInputFlags() | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                 auto &userData = *static_cast<UserData*>(data->UserData);
 
                 if (data->CursorPos >= userData.maxChars)
@@ -1172,7 +1186,7 @@ namespace hex {
             };
 
             ImGui::PushID(reinterpret_cast<void*>(address));
-            ImGui::InputText("##editing_input", data.data(), data.size() + 1, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+            ImGui::InputText("##editing_input", data.data(), data.size() + 1, flags | DefaultTextInputFlags() | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                 auto &userData = *static_cast<UserData*>(data->UserData);
 
                 userData.data->resize(data->BufSize);

@@ -3,16 +3,17 @@
 #include <content/visualizer_helpers.hpp>
 
 #include <imgui.h>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex::plugin::visualizers {
-    std::vector<u32> getIndices(pl::ptrn::Pattern *colorTablePattern, u128 width, u128 height);
-    ImGuiExt::Texture getTexture(pl::ptrn::Pattern *colorTablePattern, std::vector<u32>& indices, u128 width, u128 height);
+    std::vector<u32> getIndices(pl::ptrn::Pattern *colorTablePattern, u64 width, u64 height);
+    ImGuiExt::Texture getTexture(pl::ptrn::Pattern *colorTablePattern, std::vector<u32>& indices, u64 width, u64 height);
 
 
     void drawImageVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
-        static ImGuiExt::Texture texture;
+        static AutoReset<ImGuiExt::Texture> texture;
         static float scale = 1.0F;
 
         if (shouldReset) {
@@ -20,11 +21,11 @@ namespace hex::plugin::visualizers {
 
             auto data = pattern->getBytes();
             texture = ImGuiExt::Texture::fromImage(data.data(), data.size(), ImGuiExt::Texture::Filter::Nearest);
-            scale = 200_scaled / texture.getSize().x;
+            scale = 200_scaled / texture->getSize().x;
         }
 
         if (texture.isValid())
-            ImGui::Image(texture, texture.getSize() * scale);
+            ImGui::Image(*texture, texture->getSize() * scale);
 
         if (ImGui::IsWindowHovered()) {
             auto scrollDelta = ImGui::GetIO().MouseWheel;
@@ -36,13 +37,13 @@ namespace hex::plugin::visualizers {
     }
 
     void drawBitmapVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
-        static ImGuiExt::Texture texture;
+        static AutoReset<ImGuiExt::Texture> texture;
         static float scale = 1.0F;
 
         if (shouldReset) {
             auto pattern  = arguments[0].toPattern();
-            auto width  = arguments[1].toUnsigned();
-            auto height = arguments[2].toUnsigned();
+            auto width    = u64(arguments[1].toUnsigned());
+            auto height   = u64(arguments[2].toUnsigned());
             bool hasColorTable = false;
 
             if (arguments.size() == 4) {
@@ -57,12 +58,12 @@ namespace hex::plugin::visualizers {
 
             if (!hasColorTable) {
                 auto data = pattern->getBytes();
-                texture = ImGuiExt::Texture::fromBitmap(data.data(), data.size(), width, height,ImGuiExt::Texture::Filter::Nearest);
+                texture = ImGuiExt::Texture::fromBitmap(data.data(), data.size(), width, height, ImGuiExt::Texture::Filter::Nearest);
             }
         }
 
         if (texture.isValid())
-            ImGui::Image(texture, texture.getSize() * scale);
+            ImGui::Image(*texture, texture->getSize() * scale);
 
         if (ImGui::IsWindowHovered()) {
             auto scrollDelta = ImGui::GetIO().MouseWheel;
@@ -74,7 +75,7 @@ namespace hex::plugin::visualizers {
         }
     }
 
-    template <typename T>  ImGuiExt::Texture unmapColors(pl::ptrn::Pattern *colorTablePattern, std::vector<u32>& indices, u128 width, u128 height) {
+    template <typename T>  ImGuiExt::Texture unmapColors(pl::ptrn::Pattern *colorTablePattern, std::vector<u32>& indices, u64 width, u64 height) {
         std::vector<T> colorTable = patternToArray<T>(colorTablePattern);
         auto colorCount = colorTable.size();
         auto indexCount = indices.size();
@@ -93,7 +94,7 @@ namespace hex::plugin::visualizers {
         return texture;
     }
 
-    std::vector<u32> getIndices(pl::ptrn::Pattern *pattern, u128 width, u128 height) {
+    std::vector<u32> getIndices(pl::ptrn::Pattern *pattern, u64 width, u64 height) {
         auto indexCount = 2 * width * height / pattern->getSize();
         std::vector<u32> indices;
         auto *iterable = dynamic_cast<pl::ptrn::IIterable *>(pattern);
@@ -137,7 +138,7 @@ namespace hex::plugin::visualizers {
         return indices;
     }
 
-    ImGuiExt::Texture getTexture(pl::ptrn::Pattern *colorTablePattern, std::vector<u32>& indices, u128 width, u128 height) {
+    ImGuiExt::Texture getTexture(pl::ptrn::Pattern *colorTablePattern, std::vector<u32>& indices, u64 width, u64 height) {
         ImGuiExt::Texture texture;
         auto iterable = dynamic_cast<pl::ptrn::IIterable *>(colorTablePattern);
 

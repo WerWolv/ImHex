@@ -3,7 +3,7 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
-#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/layout_manager.hpp>
 
 #include <hex/helpers/http_requests.hpp>
@@ -19,14 +19,13 @@
 #include <nlohmann/json.hpp>
 
 #include <utility>
+#include <romfs/romfs.hpp>
 
 namespace hex::plugin::builtin {
 
     using namespace wolv::literals;
 
     namespace {
-
-        bool s_showScalingWarning = true;
 
         /*
             Values of this setting:
@@ -63,7 +62,7 @@ namespace hex::plugin::builtin {
         class FPSWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
             bool draw(const std::string &name) override {
-                auto format = [this] -> std::string {
+                auto format = [this]() -> std::string {
                     if (m_value > 200)
                         return "hex.builtin.setting.interface.fps.unlocked"_lang;
                     else if (m_value < 15)
@@ -176,7 +175,7 @@ namespace hex::plugin::builtin {
         class ScalingWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
             bool draw(const std::string &name) override {
-                auto format = [this] -> std::string {
+                auto format = [this]() -> std::string {
                     if (m_value == 0)
                         return hex::format("{} (x{:.1f})", "hex.builtin.setting.interface.scaling.native"_lang, ImHexApi::System::getNativeScale());
                     else
@@ -189,11 +188,6 @@ namespace hex::plugin::builtin {
                     m_value = 0;
                 else if (m_value > 10)
                     m_value = 10;
-
-                if (s_showScalingWarning && (u32(m_value * 10) % 10) != 0) {
-                    ImGui::SameLine();
-                    ImGuiExt::HelpHover("hex.builtin.setting.interface.scaling.fractional_warning"_lang, ICON_VS_WARNING, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
-                }
 
                 return changed;
             }
@@ -218,7 +212,7 @@ namespace hex::plugin::builtin {
         class AutoBackupWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
             bool draw(const std::string &name) override {
-                auto format = [this] -> std::string {
+                auto format = [this]() -> std::string {
                     auto value = m_value * 30;
                     if (value == 0)
                         return "hex.ui.common.off"_lang;
@@ -337,7 +331,7 @@ namespace hex::plugin::builtin {
                 std::set<Key> keys;
 
                 for (const auto &key : data.get<std::vector<u32>>())
-                    keys.insert(Key(Keys(key)));
+                    keys.insert(Key(scanCodeToKey(key)));
 
                 if (keys.empty())
                     return;
@@ -353,7 +347,7 @@ namespace hex::plugin::builtin {
 
                 for (const auto &key : m_shortcut.getKeys()) {
                     if (key != CurrentView)
-                        keys.push_back(key.getKeyCode());
+                        keys.push_back(keyToScanCode(Keys(key.getKeyCode())));
                 }
 
                 return keys;
@@ -650,51 +644,6 @@ namespace hex::plugin::builtin {
             i32 m_currIndex = 0;
         };
 
-        class FontFilePicker : public ContentRegistry::Settings::Widgets::FilePicker {
-        public:
-            bool draw(const std::string &name) override {
-                bool changed = false;
-
-                const auto &fonts = hex::getFonts();
-
-                bool customFont = false;
-                std::string pathPreview = "";
-                if (m_path.empty()) {
-                    pathPreview = "Default Font";
-                } else if (fonts.contains(m_path)) {
-                    pathPreview = fonts.at(m_path);
-                } else {
-                    pathPreview = wolv::util::toUTF8String(m_path.filename());
-                    customFont = true;
-                }
-
-                if (ImGui::BeginCombo(name.c_str(), pathPreview.c_str())) {
-                    if (ImGui::Selectable("Default Font", m_path.empty())) {
-                        m_path.clear();
-                        changed = true;
-                    }
-
-                    if (ImGui::Selectable("Custom Font", customFont)) {
-                        changed = fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } }, [this](const std::fs::path &path) {
-                            m_path = path;
-                        });
-                    }
-
-                    for (const auto &[path, fontName] : fonts) {
-                        if (ImGui::Selectable(fontName.c_str(), m_path == path)) {
-                            m_path = path;
-                            changed = true;
-                        }
-                    }
-
-                    ImGui::EndCombo();
-                }
-
-                return changed;
-            }
-        };
-
-
         bool getDefaultBorderlessWindowMode() {
             bool result;
 
@@ -755,6 +704,8 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "", "hex.builtin.setting.general.auto_backup_time");
             ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "", "hex.builtin.setting.general.max_mem_file_size", 512_MiB, 0_bytes, 32_GiB, 1_MiB)
                 .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc");
+            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.pattern_data_max_filter_items", 128, 32, 1024);
+
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
@@ -798,6 +749,8 @@ namespace hex::plugin::builtin {
                 auto colorPicker = static_cast<Widgets::ColorPicker *>(&widget);
                 ThemeManager::setAccentColor(colorPicker->getColor());
             });
+
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.show_titlebar_backdrop", true);
 
             ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor")
             .requiresRestart();
@@ -851,6 +804,8 @@ namespace hex::plugin::builtin {
                 ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.use_native_menu_bar", true);
             #endif
 
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.randomize_window_title", false);
+
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.restore_window_pos", false);
 
             ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.highlight_color", ImColor(0x80, 0x80, 0xC0, 0x60));
@@ -862,70 +817,12 @@ namespace hex::plugin::builtin {
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.pattern_parent_highlighting", true);
 
-            std::vector<std::string> pasteBehaviourNames = { "Ask me next time", "Paste everything", "Paste over selection" };
+            std::vector<std::string> pasteBehaviourNames = { "hex.builtin.setting.hex_editor.paste_behaviour.none", "hex.builtin.setting.hex_editor.paste_behaviour.everything", "hex.builtin.setting.hex_editor.paste_behaviour.selection" };
             std::vector<nlohmann::json> pasteBehaviourValues = { "none", "everything", "selection" };
             ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.paste_behaviour",
                                                               pasteBehaviourNames,
                                                               pasteBehaviourValues,
                                                               "none");
-        }
-
-        /* Fonts */
-        {
-            const auto scaleWarningHandler = [](auto&) {
-                s_showScalingWarning = ImHexApi::Fonts::getCustomFontPath().empty() &&
-                    ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.pixel_perfect_default_font", true);
-            };
-
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false)
-                .requiresRestart();
-
-            auto customFontEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_enable", false).requiresRestart();
-
-            const auto customFontsEnabled = [customFontEnabledSetting] {
-                auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
-
-                return customFontsEnabled.isChecked();
-            };
-
-            auto customFontPathSetting = ContentRegistry::Settings::add<FontFilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
-                    .requiresRestart()
-                    .setChangedCallback(scaleWarningHandler)
-                    .setEnabledCallback(customFontsEnabled);
-
-            const auto customFontSettingsEnabled = [customFontEnabledSetting, customFontPathSetting] {
-                auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
-                auto &fontPath = static_cast<Widgets::FilePicker &>(customFontPathSetting.getWidget());
-
-                return customFontsEnabled.isChecked() && !fontPath.getPath().empty();
-            };
-
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.pixel_perfect_default_font", true)
-                .setChangedCallback(scaleWarningHandler)
-                .setEnabledCallback([customFontPathSetting, customFontEnabledSetting] {
-                    auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
-                    auto &fontPath = static_cast<Widgets::FilePicker &>(customFontPathSetting.getWidget());
-
-                    return customFontsEnabled.isChecked()&& fontPath.getPath().empty();
-                })
-                .requiresRestart();
-
-            ContentRegistry::Settings::add<Widgets::Label>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_info")
-                    .setEnabledCallback(customFontsEnabled);
-
-
-            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 13, 0, 100)
-                    .requiresRestart()
-                    .setEnabledCallback(customFontSettingsEnabled);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_bold", false)
-                    .requiresRestart()
-                    .setEnabledCallback(customFontSettingsEnabled);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_italic", false)
-                    .requiresRestart()
-                    .setEnabledCallback(customFontSettingsEnabled);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_antialias", true)
-                    .requiresRestart()
-                    .setEnabledCallback(customFontSettingsEnabled);
         }
 
         /* Folders */
@@ -1012,7 +909,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
         }
 
-        ImHexApi::System::addMigrationRoutine("v1.36.3", [] {
+        ImHexApi::System::addMigrationRoutine("v1.37.0", [] {
             log::warn("Resetting shortcut key settings for them to work with this version of ImHex");
 
             for (const auto &category : ContentRegistry::Settings::impl::getSettings()) {

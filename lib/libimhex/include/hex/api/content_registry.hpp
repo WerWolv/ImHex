@@ -16,27 +16,31 @@
 #include <nlohmann/json.hpp>
 #include <wolv/io/fs.hpp>
 
-using ImGuiDataType = int;
-using ImGuiInputTextFlags = int;
-struct ImColor;
-enum ImGuiCustomCol : int;
-typedef int ImGuiColorEditFlags;
+#if !defined(HEX_MODULE_EXPORT)
+    using ImGuiDataType = int;
+    using ImGuiInputTextFlags = int;
+    struct ImColor;
+    enum ImGuiCustomCol : int;
+    typedef int ImGuiColorEditFlags;
+#endif
 
-namespace hex {
+EXPORT_MODULE namespace hex {
 
-    class View;
-    class Task;
+    #if !defined(HEX_MODULE_EXPORT)
+        class View;
+        class Task;
 
-    namespace dp {
-        class Node;
-    }
-    namespace prv {
-        class Provider;
-    }
+        namespace dp {
+            class Node;
+        }
+        namespace prv {
+            class Provider;
+        }
 
-    namespace LocalizationManager {
-        class LanguageDefinition;
-    }
+        namespace LocalizationManager {
+            class LanguageDefinition;
+        }
+    #endif
 
     /*
         The Content Registry is the heart of all features in ImHex that are in some way extendable by Plugins.
@@ -209,7 +213,8 @@ namespace hex {
 
                 class DropDown : public Widget {
                 public:
-                    explicit DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem) : m_items(items), m_settingsValues(settingsValues), m_defaultItem(defaultItem) { }
+                    explicit DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem) : m_items(items.begin(), items.end()), m_settingsValues(settingsValues), m_defaultItem(defaultItem) { }
+                    explicit DropDown(const std::vector<UnlocalizedString> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem) : m_items(items), m_settingsValues(settingsValues), m_defaultItem(defaultItem) { }
 
                     bool draw(const std::string &name) override;
 
@@ -220,7 +225,7 @@ namespace hex {
                     const nlohmann::json& getValue() const;
 
                 protected:
-                    std::vector<std::string> m_items;
+                    std::vector<UnlocalizedString> m_items;
                     std::vector<nlohmann::json> m_settingsValues;
                     nlohmann::json m_defaultItem;
 
@@ -327,7 +332,7 @@ namespace hex {
                             result = defaultValue;
 
                         return result.get<T>();
-                    } catch (const nlohmann::json::exception &e) {
+                    } catch (const nlohmann::json::exception &) {
                         return defaultValue;
                     }
                 }
@@ -575,7 +580,7 @@ namespace hex {
             namespace impl {
 
                 void add(std::unique_ptr<View> &&view);
-                const std::map<std::string, std::unique_ptr<View>>& getEntries();
+                const std::map<UnlocalizedString, std::unique_ptr<View>>& getEntries();
 
             }
 
@@ -596,6 +601,12 @@ namespace hex {
              * @return The view if it exists, nullptr otherwise
              */
             View* getViewByName(const UnlocalizedString &unlocalizedName);
+
+            /**
+             * @brief Gets the currently focused view
+             * @return The view that is focused right now. nullptr if none is focused
+             */
+            View* getFocusedView();
         }
 
         /* Tools Registry. Allows adding new entries to the tools window */
@@ -720,7 +731,7 @@ namespace hex {
                 add(impl::Entry {
                     unlocalizedCategory,
                     unlocalizedName,
-                    [=, ...args = std::forward<Args>(args)] mutable {
+                    [=, ...args = std::forward<Args>(args)]() mutable {
                         auto node = std::make_unique<T>(std::forward<Args>(args)...);
                         node->setUnlocalizedName(unlocalizedName);
                         return node;
@@ -1001,7 +1012,7 @@ namespace hex {
             void add(bool addToList = true) {
                 auto typeName = T().getTypeName();
 
-                impl::add(typeName, [] -> std::unique_ptr<prv::Provider> {
+                impl::add(typeName, []() -> std::unique_ptr<prv::Provider> {
                     return std::make_unique<T>();
                 });
 
@@ -1109,9 +1120,9 @@ namespace hex {
 
                 [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const { return m_unlocalizedName; }
 
-            protected:
-                const static int TextInputFlags;
+                [[nodiscard]] static int DefaultTextInputFlags();
 
+            protected:
                 bool drawDefaultScalarEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const;
                 bool drawDefaultTextEditingTextBox(u64 address, std::string &data, ImGuiInputTextFlags flags) const;
 

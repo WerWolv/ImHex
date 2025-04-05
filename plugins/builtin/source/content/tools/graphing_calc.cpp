@@ -2,6 +2,8 @@
 
 #include <wolv/math_eval/math_evaluator.hpp>
 
+#include <array>
+
 #include <imgui.h>
 #include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>

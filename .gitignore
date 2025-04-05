@@ -7,6 +7,7 @@ build*/
 local/
 venv/
 .cache/
+install/
 
 *.mgc
 *.kdev4
@@ -14,3 +15,6 @@ imgui.ini
 .DS_Store
 CMakeUserPresets.json
 Brewfile.lock.json
+
+.vs/
+vcpkg.json

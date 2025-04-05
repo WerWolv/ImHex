@@ -18,7 +18,6 @@ namespace hex::plugin::builtin {
     private:
         struct Bookmark {
             ImHexApi::Bookmarks::Entry entry;
-            TextEditor editor;
             bool highlightVisible;
         };
 

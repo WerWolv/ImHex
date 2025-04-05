@@ -1,4 +1,4 @@
-FROM emscripten/emsdk:3.1.51 as build
+FROM emscripten/emsdk:3.1.51 AS build
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493
@@ -13,6 +13,7 @@ RUN <<EOF
 set -xe
 
 git clone https://github.com/microsoft/vcpkg /vcpkg
+git -C /vcpkg pull
 /vcpkg/bootstrap-vcpkg.sh
 sed -i 's/vcpkg_install_make(${EXTRA_ARGS})/vcpkg_install_make(${EXTRA_ARGS} SUBPATH src)/g' /vcpkg/ports/libmagic/portfile.cmake
 EOF
@@ -27,7 +28,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 ' >> /emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake
 EOF
 
-ENV VCPKG_DEFAULT_BINARY_CACHE /cache/vcpkg
+ENV VCPKG_DEFAULT_BINARY_CACHE=/cache/vcpkg
 RUN --mount=type=cache,target=/cache <<EOF
 # Install dependencies with vcpkg
 set -xe
@@ -45,7 +46,7 @@ EOF
 
 # Build ImHex
 ARG JOBS=4
-ENV CCACHE_DIR /cache/ccache
+ENV CCACHE_DIR=/cache/ccache
 
 RUN mkdir /build
 WORKDIR /build
@@ -80,7 +81,7 @@ EOF
 # See https://stackoverflow.com/questions/41701849/cannot-modify-accept-encoding-with-fetch https://github.com/AnthumChris/fetch-progress-indicators/issues/13
 RUN du -b /build/imhex.wasm | cut -f1 > imhex.wasm.size
 
-FROM scratch as raw
+FROM scratch AS raw
 COPY --from=build [             \
     # ImHex                     \
     "/build/imhex.wasm",        \
@@ -94,7 +95,7 @@ COPY --from=build [             \
     "/build/wasm-config.js",    \
     "/build/enable-threads.js", \
     "/build/favicon.ico",       \
-    "/build/icon.png",          \
+    "/build/icon.svg",          \
     "/build/manifest.json",     \
     "/build/robots.txt",        \
     "/build/sitemap.xml",       \

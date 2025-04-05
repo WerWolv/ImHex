@@ -97,6 +97,16 @@ static inline ImU32 ImMixU32(ImU32 a, ImU32 b, ImU32 s) {
 #endif
 }
 
+// Fills a buffer with n samples linear interpolated from vmin to vmax
+template <typename T>
+void FillRange(ImVector<T>& buffer, int n, T vmin, T vmax) {
+    buffer.resize(n);
+    T step = (vmax - vmin) / (n - 1);
+    for (int i = 0; i < n; ++i) {
+        buffer[i] = vmin + i * step;
+    }
+}
+
 } // namespace ImPlot3D
 
 //-----------------------------------------------------------------------------
@@ -109,24 +119,30 @@ struct ImPlot3DTicker;
 // [SECTION] Callbacks
 //------------------------------------------------------------------------------
 
-typedef void (*ImPlot3DLocator)(ImPlot3DTicker& ticker, const ImPlot3DRange& range, ImPlot3DFormatter formatter, void* formatter_data);
+typedef void (*ImPlot3DLocator)(ImPlot3DTicker& ticker, const ImPlot3DRange& range, float pixels, ImPlot3DFormatter formatter, void* formatter_data);
 
 //-----------------------------------------------------------------------------
 // [SECTION] Structs
 //-----------------------------------------------------------------------------
 
 struct ImDrawList3D {
-    ImVector<ImDrawIdx> IdxBuffer = {};             // Index buffer
-    ImVector<ImDrawVert> VtxBuffer = {};            // Vertex buffer
-    ImVector<float> ZBuffer = {};                   // Z buffer. Depth value for each triangle
-    unsigned int _VtxCurrentIdx = 0;                // [Internal] current vertex index
-    ImDrawVert* _VtxWritePtr = nullptr;             // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    ImDrawIdx* _IdxWritePtr = nullptr;              // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    float* _ZWritePtr = nullptr;                    // [Internal] point within ZBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    ImDrawListFlags _Flags = ImDrawListFlags_None;  // [Internal] draw list flags
-    ImDrawListSharedData* _SharedData = nullptr;    // [Internal] shared draw list data
+    ImVector<ImDrawIdx> IdxBuffer;     // Index buffer
+    ImVector<ImDrawVert> VtxBuffer;    // Vertex buffer
+    ImVector<float> ZBuffer;           // Z buffer. Depth value for each triangle
+    unsigned int _VtxCurrentIdx;       // [Internal] current vertex index
+    ImDrawVert* _VtxWritePtr;          // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
+    ImDrawIdx* _IdxWritePtr;           // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
+    float* _ZWritePtr;                 // [Internal] point within ZBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
+    ImDrawListFlags _Flags;            // [Internal] draw list flags
+    ImDrawListSharedData* _SharedData; // [Internal] shared draw list data
 
     ImDrawList3D() {
+        _VtxCurrentIdx = 0;
+        _VtxWritePtr = nullptr;
+        _IdxWritePtr = nullptr;
+        _ZWritePtr = nullptr;
+        _Flags = ImDrawListFlags_None;
+        _SharedData = nullptr;
     }
 
     void PrimReserve(int idx_count, int vtx_count);
@@ -360,7 +376,7 @@ struct ImPlot3DTick {
     int Idx;
 
     ImPlot3DTick(double value, bool major, bool show_label) {
-        PlotPos = value;
+        PlotPos = (float)value;
         Major = major;
         ShowLabel = show_label;
         TextOffset = -1;
@@ -434,10 +450,12 @@ struct ImPlot3DAxis {
     ImPlot3DFormatter Formatter;
     void* FormatterData;
     ImPlot3DLocator Locator;
+    bool ShowDefaultTicks;
     // Fit data
     bool FitThisFrame;
     ImPlot3DRange FitExtents;
     // User input
+    bool Hovered;
     bool Held;
 
     // Constructor
@@ -451,36 +469,48 @@ struct ImPlot3DAxis {
         Formatter = nullptr;
         FormatterData = nullptr;
         Locator = nullptr;
+        ShowDefaultTicks = true;
         // Fit data
         FitThisFrame = true;
         FitExtents.Min = HUGE_VAL;
         FitExtents.Max = -HUGE_VAL;
         // User input
+        Hovered = false;
         Held = false;
     }
 
+    inline void Reset() {
+        Formatter = nullptr;
+        FormatterData = nullptr;
+        Locator = nullptr;
+        ShowDefaultTicks = true;
+        FitExtents.Min = HUGE_VAL;
+        FitExtents.Max = -HUGE_VAL;
+        Ticker.Reset();
+    }
+
     inline void SetRange(double v1, double v2) {
-        Range.Min = ImMin(v1, v2);
-        Range.Max = ImMax(v1, v2);
+        Range.Min = (float)ImMin(v1, v2);
+        Range.Max = (float)ImMax(v1, v2);
     }
 
     inline bool SetMin(double _min, bool force = false) {
         if (!force && IsLockedMin())
             return false;
-        _min = ImPlot3D::ImConstrainNan(ImPlot3D::ImConstrainInf(_min));
+        _min = ImPlot3D::ImConstrainNan((float)ImPlot3D::ImConstrainInf(_min));
         if (_min >= Range.Max)
             return false;
-        Range.Min = _min;
+        Range.Min = (float)_min;
         return true;
     }
 
     inline bool SetMax(double _max, bool force = false) {
         if (!force && IsLockedMax())
             return false;
-        _max = ImPlot3D::ImConstrainNan(ImPlot3D::ImConstrainInf(_max));
+        _max = ImPlot3D::ImConstrainNan((float)ImPlot3D::ImConstrainInf(_max));
         if (_max <= Range.Min)
             return false;
-        Range.Max = _max;
+        Range.Max = (float)_max;
         return true;
     }
 
@@ -488,6 +518,9 @@ struct ImPlot3DAxis {
     inline bool IsLockedMin() const { return IsRangeLocked() || ImPlot3D::ImHasFlag(Flags, ImPlot3DAxisFlags_LockMin); }
     inline bool IsLockedMax() const { return IsRangeLocked() || ImPlot3D::ImHasFlag(Flags, ImPlot3DAxisFlags_LockMax); }
     inline bool IsLocked() const { return IsLockedMin() && IsLockedMax(); }
+    inline bool IsInputLockedMin() const { return IsLockedMin() || IsAutoFitting(); }
+    inline bool IsInputLockedMax() const { return IsLockedMax() || IsAutoFitting(); }
+    inline bool IsInputLocked() const { return IsLocked() || IsAutoFitting(); }
 
     inline void SetLabel(const char* label) {
         Label.Buf.shrink(0);
@@ -504,8 +537,6 @@ struct ImPlot3DAxis {
     bool IsAutoFitting() const;
     void ExtendFit(float value);
     void ApplyFit();
-    float PlotToNDC(float value) const;
-    float NDCToPlot(float value) const;
 };
 
 // Holds plot state information that must persist after EndPlot
@@ -520,9 +551,10 @@ struct ImPlot3DPlot {
     ImRect FrameRect;  // Outermost bounding rectangle that encapsulates whole the plot/title/padding/etc
     ImRect CanvasRect; // Frame rectangle reduced by padding
     ImRect PlotRect;   // Bounding rectangle for the actual plot area
-    // Rotation & Axes
-    ImPlot3DQuat Rotation;
-    ImPlot3DAxis Axes[3];
+    // Rotation & axes & box
+    ImPlot3DQuat Rotation;  // Current rotation quaternion
+    ImPlot3DAxis Axes[3];   // X, Y, Z axes
+    ImPlot3DPoint BoxScale; // Scale factor for plot box X, Y, Z axes
     // Animation
     float AnimationTime;               // Remaining animation time
     ImPlot3DQuat RotationAnimationEnd; // End rotation for animation
@@ -550,6 +582,7 @@ struct ImPlot3DPlot {
         Rotation = ImPlot3DQuat(0.0f, 0.0f, 0.0f, 1.0f);
         for (int i = 0; i < 3; i++)
             Axes[i] = ImPlot3DAxis();
+        BoxScale = ImPlot3DPoint(1.0f, 1.0f, 1.0f);
         AnimationTime = 0.0f;
         RotationAnimationEnd = Rotation;
         SetupLocked = false;
@@ -575,6 +608,7 @@ struct ImPlot3DPlot {
     ImPlot3DPoint RangeMax() const;
     ImPlot3DPoint RangeCenter() const;
     void SetRange(const ImPlot3DPoint& min, const ImPlot3DPoint& max);
+    float GetBoxZoom() const;
 };
 
 struct ImPlot3DContext {
@@ -680,7 +714,7 @@ int Formatter_Default(float value, char* buff, int size, void* data);
 // [SECTION] Locator
 //------------------------------------------------------------------------------
 
-void Locator_Default(ImPlot3DTicker& ticker, const ImPlot3DRange& range, ImPlot3DFormatter formatter, void* formatter_data);
+void Locator_Default(ImPlot3DTicker& ticker, const ImPlot3DRange& range, float pixels, ImPlot3DFormatter formatter, void* formatter_data);
 
 } // namespace ImPlot3D
 

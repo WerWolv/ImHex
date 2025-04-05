@@ -22,6 +22,7 @@ option(IMHEX_ENABLE_STD_ASSERTS         "Enable debug asserts in the C++ std lib
 option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                            OFF)
 option(IMHEX_ENABLE_PRECOMPILED_HEADERS "Enable precompiled headers"                                                            OFF)
 option(IMHEX_COMPRESS_DEBUG_INFO        "Compress debug information"                                                            ON )
+option(IMHEX_ENABLE_CXX_MODULES         "Enable C++20 Module compilation. Testing only!"                                        OFF)
 
 set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
@@ -31,6 +32,7 @@ include("${IMHEX_BASE_FOLDER}/cmake/ide_helpers.cmake")
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_SCAN_FOR_MODULES ${IMHEX_ENABLE_CXX_MODULES})
 set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
@@ -81,7 +83,6 @@ if (IMHEX_ENABLE_UNIT_TESTS)
 endif ()
 
 # Configure more resources that will be added to the install package
-generatePDBs()
 generateSDKDirectory()
 
 # Handle package generation

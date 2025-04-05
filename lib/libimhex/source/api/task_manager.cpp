@@ -63,8 +63,11 @@ namespace hex {
     }
 
 
-    Task::Task(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
-    : m_unlocalizedName(std::move(unlocalizedName)), m_maxValue(maxValue), m_function(std::move(function)), m_background(background) { }
+    Task::Task(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function)
+    : m_unlocalizedName(std::move(unlocalizedName)),
+      m_maxValue(maxValue),
+      m_function(std::move(function)),
+      m_background(background), m_blocking(blocking) { }
 
     Task::Task(hex::Task &&other) noexcept {
         {
@@ -132,6 +135,11 @@ namespace hex {
     bool Task::isBackgroundTask() const {
         return m_background;
     }
+
+    bool Task::isBlocking() const {
+        return m_blocking;
+    }
+
 
     bool Task::isFinished() const {
         return m_finished;
@@ -327,11 +335,11 @@ namespace hex {
         s_tasksFinishedCallbacks.clear();
     }
 
-    TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, std::function<void(Task&)> function) {
+    TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task&)> function) {
         std::scoped_lock lock(s_queueMutex);
 
         // Construct new task
-        auto task = std::make_shared<Task>(std::move(unlocalizedName), maxValue, background, std::move(function));
+        auto task = std::make_shared<Task>(std::move(unlocalizedName), maxValue, background, blocking, std::move(function));
 
         s_tasks.emplace_back(task);
 
@@ -346,12 +354,12 @@ namespace hex {
 
     TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void(Task &)> function) {
         log::debug("Creating task {}", unlocalizedName.get());
-        return createTask(std::move(unlocalizedName), maxValue, false, std::move(function));
+        return createTask(std::move(unlocalizedName), maxValue, false, false, std::move(function));
     }
 
     TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void()> function) {
         log::debug("Creating task {}", unlocalizedName.get());
-        return createTask(std::move(unlocalizedName), maxValue, false,
+        return createTask(std::move(unlocalizedName), maxValue, false, false,
             [function = std::move(function)](Task&) {
                 function();
             }
@@ -360,12 +368,26 @@ namespace hex {
 
     TaskHolder TaskManager::createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void(Task &)> function) {
         log::debug("Creating background task {}", unlocalizedName.get());
-        return createTask(std::move(unlocalizedName), 0, true, std::move(function));
+        return createTask(std::move(unlocalizedName), 0, true, false, std::move(function));
     }
 
     TaskHolder TaskManager::createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void()> function) {
         log::debug("Creating background task {}", unlocalizedName.get());
-        return createTask(std::move(unlocalizedName), 0, true,
+        return createTask(std::move(unlocalizedName), 0, true, false,
+            [function = std::move(function)](Task&) {
+                function();
+            }
+        );
+    }
+
+    TaskHolder TaskManager::createBlockingTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void(Task &)> function) {
+        log::debug("Creating blocking task {}", unlocalizedName.get());
+        return createTask(std::move(unlocalizedName), maxValue, true, true, std::move(function));
+    }
+
+    TaskHolder TaskManager::createBlockingTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void()> function) {
+        log::debug("Creating blocking task {}", unlocalizedName.get());
+        return createTask(std::move(unlocalizedName), maxValue, true, true,
             [function = std::move(function)](Task&) {
                 function();
             }
@@ -411,6 +433,14 @@ namespace hex {
 
         return std::ranges::count_if(s_tasks, [](const auto &task){
             return task->isBackgroundTask();
+        });
+    }
+
+    size_t TaskManager::getRunningBlockingTaskCount() {
+        std::scoped_lock lock(s_queueMutex);
+
+        return std::ranges::count_if(s_tasks, [](const auto &task){
+            return task->isBlocking();
         });
     }
 

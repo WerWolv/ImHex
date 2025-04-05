@@ -4,6 +4,7 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -59,7 +60,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataInspector::updateInspectorRows() {
-        m_updateTask = TaskManager::createBackgroundTask("hex.builtin.task.updating_inspector"_lang, [this](auto &) {
+        m_updateTask = TaskManager::createBackgroundTask("hex.builtin.task.updating_inspector", [this](auto &) {
             this->updateInspectorRowsTask();
         });
     }
@@ -115,7 +116,7 @@ namespace hex::plugin::builtin {
     void ViewDataInspector::executeInspectors() {
         // Decode bytes using custom inspectors defined using the pattern language
         const std::map<std::string, pl::core::Token::Literal> inVariables = {
-                { "numberDisplayStyle", u128(m_numberDisplayStyle) }
+                { "numberDisplayStyle", u128(u64(m_numberDisplayStyle)) }
         };
 
         // Setup a new pattern language runtime

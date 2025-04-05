@@ -40,16 +40,20 @@ namespace hex::init {
             // On Windows, argv contains UTF-16 encoded strings, so we need to convert them to UTF-8
             auto convertedCommandLine = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
             if (convertedCommandLine == nullptr) {
-                log::error("Failed to convert command line arguments to UTF-8");
+                log::error("Failed to get command line arguments");
                 std::exit(EXIT_FAILURE);
             }
 
             // Skip the first argument (the executable path) and convert the rest to a vector of UTF-8 strings
             for (int i = 1; i < argc; i += 1) {
                 std::wstring wcharArg = convertedCommandLine[i];
-                std::string utf8Arg = wolv::util::wstringToUtf8(wcharArg);
+                auto utf8Arg = wolv::util::wstringToUtf8(wcharArg);
+                if (!utf8Arg.has_value()) {
+                    log::error("Failed to convert command line arguments to UTF-8");
+                    std::exit(EXIT_FAILURE);
+                }
 
-                args.push_back(utf8Arg);
+                args.push_back(*utf8Arg);
             }
 
             ::LocalFree(convertedCommandLine);
@@ -64,9 +68,6 @@ namespace hex::init {
         for (const auto &dir : paths::Plugins.read()) {
             PluginManager::load(dir);
         }
-
-        // Setup messaging system to allow sending commands to the main ImHex instance
-        hex::messaging::setupMessaging();
 
         // Process the arguments
         hex::subcommands::processArguments(args);

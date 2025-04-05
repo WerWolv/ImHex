@@ -4,6 +4,7 @@
 #include <hex/api_urls.hpp>
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <popups/popup_notification.hpp>
 #include <toasts/toast_notification.hpp>
@@ -38,15 +39,16 @@ namespace hex::plugin::builtin {
 
         m_httpRequest.setTimeout(30'0000);
 
-        addCategory("hex.builtin.view.store.tab.patterns",     "patterns",     &paths::Patterns);
-        addCategory("hex.builtin.view.store.tab.includes",     "includes",     &paths::PatternsInclude);
-        addCategory("hex.builtin.view.store.tab.magic",        "magic",        &paths::Magic, []{
+        addCategory("hex.builtin.view.store.tab.patterns",     "patterns",      &paths::Patterns);
+        addCategory("hex.builtin.view.store.tab.includes",     "includes",      &paths::PatternsInclude);
+        addCategory("hex.builtin.view.store.tab.magic",        "magic",         &paths::Magic, []{
             magic::compile();
         });
-        addCategory("hex.builtin.view.store.tab.nodes",        "nodes",        &paths::Nodes);
-        addCategory("hex.builtin.view.store.tab.encodings",    "encodings",    &paths::Encodings);
-        addCategory("hex.builtin.view.store.tab.constants",    "constants",    &paths::Constants);
-        addCategory("hex.builtin.view.store.tab.themes",       "themes",       &paths::Themes, [this]{
+        addCategory("hex.builtin.view.store.tab.nodes",        "nodes",         &paths::Nodes);
+        addCategory("hex.builtin.view.store.tab.encodings",    "encodings",     &paths::Encodings);
+        addCategory("hex.builtin.view.store.tab.disassemblers","disassemblers", &paths::Disassemblers);
+        addCategory("hex.builtin.view.store.tab.constants",    "constants",     &paths::Constants);
+        addCategory("hex.builtin.view.store.tab.themes",       "themes",        &paths::Themes, [this]{
             auto themeFile = wolv::io::File(m_downloadPath, wolv::io::File::Mode::Read);
 
             ThemeManager::addTheme(themeFile.readString());
@@ -336,7 +338,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::updateAll() {
-        m_updateAllTask = TaskManager::createTask("hex.builtin.task.updating_store"_lang, m_updateCount, [this](auto &task) {
+        m_updateAllTask = TaskManager::createTask("hex.builtin.task.updating_store", m_updateCount, [this](auto &task) {
             for (auto &category : m_categories) {
                 for (auto &entry : category.entries) {
                     if (entry.hasUpdate) {

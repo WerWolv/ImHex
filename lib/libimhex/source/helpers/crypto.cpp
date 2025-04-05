@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <bit>
+#include <span>
 
 #if MBEDTLS_VERSION_MAJOR <= 2
 
@@ -470,7 +471,7 @@ namespace hex::crypt {
         std::vector<u8> bytes;
         u8 byte;
         while (true) {
-            byte = value & 0x7F;
+            byte = u8(value & 0x7F);
             value >>= 7;
             if constexpr(std::signed_integral<T>) {
                 if (value == 0 && (byte & 0x40) == 0) {

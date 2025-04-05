@@ -33,6 +33,9 @@
 namespace hex::plugin::builtin {
 
     bool ProcessMemoryProvider::open() {
+        if (m_selectedProcess == nullptr)
+            return false;
+
         #if defined(OS_WINDOWS)
             m_processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, m_selectedProcess->id);
             if (m_processHandle == nullptr)

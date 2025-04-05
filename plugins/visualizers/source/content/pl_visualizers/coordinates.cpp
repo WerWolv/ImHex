@@ -60,7 +60,7 @@ namespace hex::plugin::visualizers {
             ImGuiExt::TextSpinner("hex.visualizers.pl_visualizer.coordinates.querying"_lang);
         } else if (address.empty()) {
             if (ImGuiExt::DimmedButton("hex.visualizers.pl_visualizer.coordinates.query"_lang)) {
-                addressTask = TaskManager::createBackgroundTask("hex.visualizers.pl_visualizer.coordinates.querying"_lang, [lat = latitude, lon = longitude](auto &) {
+                addressTask = TaskManager::createBackgroundTask("hex.visualizers.pl_visualizer.coordinates.querying", [lat = latitude, lon = longitude](auto &) {
                     constexpr static auto ApiURL = "https://geocode.maps.co/reverse?lat={}&lon={}&format=jsonv2";
 
                     HttpRequest request("GET", hex::format(ApiURL, lat, lon));
@@ -90,7 +90,7 @@ namespace hex::plugin::visualizers {
                                                   jsonAddr["country"].get<std::string>());
                         }
                     } catch (std::exception &) {
-                        address = std::string("hex.visualizers.pl_visualizer.coordinates.querying_no_address"_lang);
+                        address = "hex.visualizers.pl_visualizer.coordinates.querying_no_address"_lang.get();
                     }
                 });
             }

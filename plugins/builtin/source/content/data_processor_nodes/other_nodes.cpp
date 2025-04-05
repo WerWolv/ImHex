@@ -1,7 +1,7 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/data_processor/node.hpp>
@@ -19,8 +19,8 @@ namespace hex::plugin::builtin {
         NodeReadData() : Node("hex.builtin.nodes.data_access.read.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.read.address"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.read.size"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.data_access.read.data") }) { }
 
         void process() override {
-            const auto &address = this->getIntegerOnInput(0);
-            const auto &size    = this->getIntegerOnInput(1);
+            const auto &address = u64(this->getIntegerOnInput(0));
+            const auto &size    = u64(this->getIntegerOnInput(1));
 
             std::vector<u8> data;
             data.resize(size);
@@ -36,7 +36,7 @@ namespace hex::plugin::builtin {
         NodeWriteData() : Node("hex.builtin.nodes.data_access.write.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.write.address"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.data_access.write.data") }) { }
 
         void process() override {
-            const auto &address = this->getIntegerOnInput(0);
+            const auto &address = u64(this->getIntegerOnInput(0));
             const auto &data    = this->getBufferOnInput(1);
 
             if (!data.empty()) {
@@ -87,7 +87,7 @@ namespace hex::plugin::builtin {
 
         void process() override {
             const auto &input = this->getIntegerOnInput(0);
-            auto size = this->getIntegerOnInput(1);
+            auto size = u64(this->getIntegerOnInput(1));
 
             if (size == 0) {
                 for (u32 i = 0; i < sizeof(input); i++) {
@@ -199,7 +199,7 @@ namespace hex::plugin::builtin {
 
         void process() override {
             const auto &buffer = this->getBufferOnInput(0);
-            const auto &count  = this->getIntegerOnInput(1);
+            const auto &count  = u64(this->getIntegerOnInput(1));
 
             std::vector<u8> output;
             output.resize(buffer.size() * count);
@@ -218,7 +218,7 @@ namespace hex::plugin::builtin {
         void process() override {
             auto buffer     = this->getBufferOnInput(0);
             const auto &patch      = this->getBufferOnInput(1);
-            const auto &address    = this->getIntegerOnInput(2);
+            const auto &address    = i64(this->getIntegerOnInput(2));
 
             if (address < 0 || static_cast<u128>(address) >= buffer.size())
                 throwNodeError("Address out of range");
@@ -291,6 +291,10 @@ namespace hex::plugin::builtin {
         NodeVisualizerImage() : Node("hex.builtin.nodes.visualizer.image.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
+            if (!m_texture.isValid() && !m_data.empty()) {
+                m_texture = ImGuiExt::Texture::fromImage(m_data.data(), m_data.size(), ImGuiExt::Texture::Filter::Nearest);
+            }
+
             ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 200, 200)));
             if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
@@ -302,10 +306,12 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &rawData = this->getBufferOnInput(0);
 
-            m_texture = ImGuiExt::Texture::fromImage(rawData.data(), rawData.size(), ImGuiExt::Texture::Filter::Nearest);
+            m_data = rawData;
+            m_texture.reset();
         }
 
     private:
+        std::vector<u8> m_data;
         ImGuiExt::Texture m_texture;
     };
 
@@ -314,6 +320,10 @@ namespace hex::plugin::builtin {
         NodeVisualizerImageRGBA() : Node("hex.builtin.nodes.visualizer.image_rgba.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.width"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.height") }) { }
 
         void drawNode() override {
+            if (!m_texture.isValid() && !m_data.empty()) {
+                m_texture = ImGuiExt::Texture::fromBitmap(m_data.data(), m_data.size(), m_width, m_height, ImGuiExt::Texture::Filter::Nearest);
+            }
+
             ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 200, 200)));
             if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
@@ -323,21 +333,26 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            m_texture = { };
+            m_texture.reset();
 
             const auto &rawData = this->getBufferOnInput(0);
-            const auto &width = this->getIntegerOnInput(1);
-            const auto &height = this->getIntegerOnInput(2);
+            const auto &width  = u64(this->getIntegerOnInput(1));
+            const auto &height = u64(this->getIntegerOnInput(2));
 
             const size_t requiredBytes = width * height * 4;
             if (requiredBytes > rawData.size())
                 throwNodeError(hex::format("Image requires at least {} bytes of data, but only {} bytes are available", requiredBytes, rawData.size()));
 
-            m_texture = ImGuiExt::Texture::fromBitmap(rawData.data(), rawData.size(), width, height, ImGuiExt::Texture::Filter::Nearest);
+            m_data = rawData;
+            m_width = width;
+            m_height = height;
+            m_texture.reset();
         }
 
     private:
+        std::vector<u8> m_data;
         ImGuiExt::Texture m_texture;
+        u32 m_width = 0, m_height = 0;
     };
 
     class NodeVisualizerByteDistribution : public dp::Node {

@@ -2,6 +2,8 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/api/events/requests_gui.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
 

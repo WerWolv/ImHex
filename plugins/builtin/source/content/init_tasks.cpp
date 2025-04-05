@@ -1,6 +1,6 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
-#include <hex/api/event_manager.hpp>
+#include <hex/api/events/events_gui.hpp>
 #include <hex/api_urls.hpp>
 
 #include <hex/api/task_manager.hpp>
@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
                     ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", uuid);
                 }
 
-                TaskManager::createBackgroundTask("hex.builtin.task.sending_statistics"_lang, [uuid](auto&) {
+                TaskManager::createBackgroundTask("hex.builtin.task.sending_statistics", [uuid](auto&) {
                     // To avoid potentially flooding our database with lots of dead users
                     // from people just visiting the website, don't send telemetry data from
                     // the web version
@@ -93,7 +93,7 @@ namespace hex::plugin::builtin {
         }
 
         bool checkForUpdates() {
-            TaskManager::createBackgroundTask("hex.builtin.task.check_updates"_lang, [](auto&) { checkForUpdatesSync(); });
+            TaskManager::createBackgroundTask("hex.builtin.task.check_updates", [](auto&) { checkForUpdatesSync(); });
             return true;
         }
 

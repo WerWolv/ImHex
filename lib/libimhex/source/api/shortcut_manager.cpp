@@ -309,21 +309,28 @@ namespace hex {
             pressedShortcut += s_macOSMode ? CTRLCMD : SUPER;
         if (focused)
             pressedShortcut += CurrentView;
-        if (ImGui::GetIO().WantTextInput)
-            pressedShortcut += AllowWhileTyping;
 
-        pressedShortcut += static_cast<Keys>(keyCode);
+        pressedShortcut += scanCodeToKey(keyCode);
 
         return pressedShortcut;
     }
 
-    static void processShortcut(const Shortcut &shortcut, const std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
-        if (s_paused) return;
+    static bool processShortcut(Shortcut shortcut, const std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
+        if (s_paused)
+            return true;
 
         if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
-            return;
+            return true;
 
-        if (auto it = shortcuts.find(shortcut); it != shortcuts.end()) {
+        const bool currentlyTyping = ImGui::GetIO().WantTextInput;
+
+        auto it = shortcuts.find(shortcut + AllowWhileTyping);
+        if (!currentlyTyping && it == shortcuts.end()) {
+            if (it == shortcuts.end())
+                it = shortcuts.find(shortcut);
+        }
+
+        if (it != shortcuts.end()) {
             const auto &[foundShortcut, entry] = *it;
 
             if (entry.enabledCallback()) {
@@ -332,8 +339,19 @@ namespace hex {
                 if (!entry.unlocalizedName.empty()) {
                     s_lastShortcutMainMenu = entry.unlocalizedName.front();
                 }
+
+                return true;
             }
         }
+
+        return false;
+    }
+
+    bool ShortcutManager::runShortcut(const Shortcut &shortcut, const View *view) {
+        if (view == nullptr)
+            return processShortcut(shortcut, s_globalShortcuts);
+        else
+            return processShortcut(shortcut, view->m_shortcuts);
     }
 
     void ShortcutManager::process(const View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
@@ -341,7 +359,7 @@ namespace hex {
         if (keyCode != 0)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
-        processShortcut(pressedShortcut, currentView->m_shortcuts);
+        runShortcut(pressedShortcut, currentView);
     }
 
     void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {
@@ -349,7 +367,7 @@ namespace hex {
         if (keyCode != 0)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
-        processShortcut(pressedShortcut, s_globalShortcuts);
+        runShortcut(pressedShortcut);
     }
 
     std::optional<UnlocalizedString> ShortcutManager::getLastActivatedMenu() {

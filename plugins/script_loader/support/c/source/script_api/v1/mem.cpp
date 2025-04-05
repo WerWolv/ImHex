@@ -102,7 +102,7 @@ SCRIPT_API(void registerProvider, const char *typeName, const char *name, Script
     auto typeNameString = std::string(typeName);
     auto nameString = std::string(name);
 
-    hex::ContentRegistry::Provider::impl::add(typeNameString, [typeNameString, nameString, readFunc, writeFunc, getSizeFunc] -> std::unique_ptr<hex::prv::Provider> {
+    hex::ContentRegistry::Provider::impl::add(typeNameString, [typeNameString, nameString, readFunc, writeFunc, getSizeFunc]() -> std::unique_ptr<hex::prv::Provider> {
         auto provider = std::make_unique<ScriptDataProvider>();
         provider->setTypeName(typeNameString);
         provider->setName(nameString);

@@ -45,6 +45,15 @@
 
         "IMHEX_IDE_HELPERS_OVERRIDE_XCODE_COMPILER": "ON"
       }
+    },
+    {
+      "name": "vs2022",
+      "displayName": "Visual Studio 2022",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
     }
   ],
   "buildPresets": [

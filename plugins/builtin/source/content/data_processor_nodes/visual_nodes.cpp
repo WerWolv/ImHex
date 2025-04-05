@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            m_value = this->getIntegerOnInput(0);
+            m_value = u64(this->getIntegerOnInput(0));
         }
 
     private:
@@ -56,7 +56,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::optional<float> m_value;
+        std::optional<double> m_value;
     };
 
     class NodeDisplayBuffer : public dp::Node {

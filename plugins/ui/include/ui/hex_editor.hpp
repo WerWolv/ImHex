@@ -6,6 +6,8 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/encoding_file.hpp>
 
+#include <hex/api/events/events_interaction.hpp>
+
 #include <imgui.h>
 #include <hex/ui/view.hpp>
 
@@ -120,7 +122,7 @@ namespace hex::ui {
             m_cursorPosition = end;
         }
         void setSelection(const Region &region) { this->setSelection(region.getStartAddress(), region.getEndAddress()); }
-        void setSelection(u128 start, u128 end) {
+        void setSelection(u64 start, u64 end) {
             if (!ImHexApi::Provider::isValid() || m_provider == nullptr)
                 return;
 
@@ -135,7 +137,7 @@ namespace hex::ui {
 
             const size_t maxAddress = m_provider->getActualSize() + m_provider->getBaseAddress() - 1;
 
-            constexpr static auto alignDown = [](u128 value, u128 alignment) {
+            constexpr static auto alignDown = [](u64 value, u64 alignment) {
                 return value & ~(alignment - 1);
             };
 
@@ -144,7 +146,7 @@ namespace hex::ui {
             if (!m_selectionStart.has_value()) m_selectionStart = start;
             if (!m_selectionEnd.has_value())   m_selectionEnd = end;
 
-            if (auto bytesPerCell = m_currDataVisualizer->getBytesPerCell(); bytesPerCell > 1) {
+            if (auto bytesPerCell = m_currDataVisualizer == nullptr ? 1 : m_currDataVisualizer->getBytesPerCell(); bytesPerCell > 1) {
                 if (end > start) {
                     start = alignDown(start, bytesPerCell);
                     end   = alignDown(end, bytesPerCell) + (bytesPerCell - 1);
@@ -154,8 +156,8 @@ namespace hex::ui {
                 }
             }
 
-            m_selectionStart = std::clamp<u128>(start, 0, maxAddress);
-            m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
+            m_selectionStart = std::clamp<u64>(start, 0, maxAddress);
+            m_selectionEnd = std::clamp<u64>(end, 0, maxAddress);
             m_cursorPosition = m_selectionEnd;
 
             if (m_selectionChanged) {

@@ -1,0 +1,129 @@
+# appimage-builder recipe see https://appimage-builder.readthedocs.io for details
+version: 1
+AppDir:
+  path: .AppDir
+  app_info:
+    id: imhex
+    name: ImHex
+    icon: imhex
+    version: "{{VERSION}}"
+    exec: usr/bin/imhex
+    exec_args: $@
+  apt:
+    arch:
+    - "{{ARCHITECTURE_PACKAGE}}"
+    allow_unauthenticated: true
+    sources:
+    - sourceline: 'deb [arch=amd64] http://us.archive.ubuntu.com/ubuntu/ oracular main restricted universe multiverse'
+    - sourceline: 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ oracular main restricted universe multiverse'
+    include:
+    - librsvg2-common
+    - libbz2-1.0
+    - libcap2
+    - libdbus-1-3
+    - libfontconfig1
+    - libgpg-error0
+    - liblzma5
+    - libnss-mdns
+    - libpcre3
+    - libselinux1
+    - libtinfo6
+  files:
+    include:
+    - /lib/x86_64-linux-gnu/libLLVM-13.so.1
+    - /lib/x86_64-linux-gnu/libOpenGL.so.0
+    - /lib/x86_64-linux-gnu/libX11.so.6
+    - /lib/x86_64-linux-gnu/libXau.so.6
+    - /lib/x86_64-linux-gnu/libXcomposite.so.1
+    - /lib/x86_64-linux-gnu/libXcursor.so.1
+    - /lib/x86_64-linux-gnu/libXdamage.so.1
+    - /lib/x86_64-linux-gnu/libXdmcp.so.6
+    - /lib/x86_64-linux-gnu/libXext.so.6
+    - /lib/x86_64-linux-gnu/libXfixes.so.3
+    - /lib/x86_64-linux-gnu/libXi.so.6
+    - /lib/x86_64-linux-gnu/libXinerama.so.1
+    - /lib/x86_64-linux-gnu/libXrandr.so.2
+    - /lib/x86_64-linux-gnu/libXrender.so.1
+    - /lib/x86_64-linux-gnu/libXxf86vm.so.1
+    - /lib/x86_64-linux-gnu/libatk-1.0.so.0
+    - /lib/x86_64-linux-gnu/libatk-bridge-2.0.so.0
+    - /lib/x86_64-linux-gnu/libatspi.so.0
+    - /lib/x86_64-linux-gnu/libblkid.so.1
+    - /lib/x86_64-linux-gnu/libbrotlicommon.so.1
+    - /lib/x86_64-linux-gnu/libbrotlidec.so.1
+    - /lib/x86_64-linux-gnu/libbsd.so.0
+    - /lib/x86_64-linux-gnu/libcairo-gobject.so.2
+    - /lib/x86_64-linux-gnu/libcairo.so.2
+    - /lib/x86_64-linux-gnu/libcurl-gnutls.so.4
+    - /lib/x86_64-linux-gnu/libdatrie.so.1
+    - /lib/x86_64-linux-gnu/libedit.so.2
+    - /lib/x86_64-linux-gnu/libelf.so.1
+    - /lib/x86_64-linux-gnu/libepoxy.so.0
+    - /lib/x86_64-linux-gnu/libffi.so.8
+    - /lib/x86_64-linux-gnu/libfontconfig.so.1
+    - /lib/x86_64-linux-gnu/libfreetype.so.6
+    - /lib/x86_64-linux-gnu/libfribidi.so.0
+    - /lib/x86_64-linux-gnu/libgcrypt.so.20
+    - /lib/x86_64-linux-gnu/libgdk-3.so.0
+    - /lib/x86_64-linux-gnu/libgdk_pixbuf-2.0.so.0
+    - /lib/x86_64-linux-gnu/libgio-2.0.so.0
+    - /lib/x86_64-linux-gnu/libglfw.so.3
+    - /lib/x86_64-linux-gnu/libglib-2.0.so.0
+    - /lib/x86_64-linux-gnu/libgmodule-2.0.so.0
+    - /lib/x86_64-linux-gnu/libgmp.so.10
+    - /lib/x86_64-linux-gnu/libgnutls.so.30
+    - /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+    - /lib/x86_64-linux-gnu/libgraphite2.so.3
+    - /lib/x86_64-linux-gnu/libharfbuzz.so.0
+    - /lib/x86_64-linux-gnu/libhogweed.so.6
+    - /lib/x86_64-linux-gnu/libicudata.so.70
+    - /lib/x86_64-linux-gnu/libicuuc.so.70
+    - /lib/x86_64-linux-gnu/libidn2.so.0
+    - /lib/x86_64-linux-gnu/libjpeg.so.8
+    - /lib/x86_64-linux-gnu/liblber-2.5.so.0
+    - /lib/x86_64-linux-gnu/libldap-2.5.so.0
+    - /lib/x86_64-linux-gnu/liblz4.so.1
+    - /lib/x86_64-linux-gnu/libmagic.so.1
+    - /lib/x86_64-linux-gnu/libmbedcrypto.so.7
+    - /lib/x86_64-linux-gnu/libmbedtls.so.14
+    - /lib/x86_64-linux-gnu/libmbedx509.so.1
+    - /lib/x86_64-linux-gnu/libmd.so.0
+    - /lib/x86_64-linux-gnu/libmount.so.1
+    - /lib/x86_64-linux-gnu/libnettle.so.8
+    - /lib/x86_64-linux-gnu/libp11-kit.so.0
+    - /lib/x86_64-linux-gnu/libpango-1.0.so.0
+    - /lib/x86_64-linux-gnu/libpangocairo-1.0.so.0
+    - /lib/x86_64-linux-gnu/libpangoft2-1.0.so.0
+    - /lib/x86_64-linux-gnu/libpcre2-8.so.0
+    - /lib/x86_64-linux-gnu/libpixman-1.so.0
+    - /lib/x86_64-linux-gnu/libpng16.so.16
+    - /lib/x86_64-linux-gnu/libsasl2.so.2
+    - /lib/x86_64-linux-gnu/libsensors.so.5
+    - /lib/x86_64-linux-gnu/libstdc++.so.6
+    - /lib/x86_64-linux-gnu/libsystemd.so.0
+    - /lib/x86_64-linux-gnu/libtasn1.so.6
+    - /lib/x86_64-linux-gnu/libthai.so.0
+    - /lib/x86_64-linux-gnu/libunistring.so.2
+    - /lib/x86_64-linux-gnu/libuuid.so.1
+    - /lib/x86_64-linux-gnu/libvulkan.so.1
+    - /lib/x86_64-linux-gnu/libwayland-client.so.0
+    - /lib/x86_64-linux-gnu/libwayland-cursor.so.0
+    - /lib/x86_64-linux-gnu/libwayland-egl.so.1
+    - /lib/x86_64-linux-gnu/libxcb-dri2.so.0
+    - /lib/x86_64-linux-gnu/libxcb-dri3.so.0
+    - /lib/x86_64-linux-gnu/libxcb-present.so.0
+    - /lib/x86_64-linux-gnu/libxcb-sync.so.1
+    - /lib/x86_64-linux-gnu/libxkbcommon.so.0
+    - /lib/x86_64-linux-gnu/libxml2.so.2
+    - /lib/x86_64-linux-gnu/libxshmfence.so.1
+    - /lib/x86_64-linux-gnu/libzstd.so.1
+    exclude:
+    - usr/share/man
+    - usr/share/doc/*/README.*
+    - usr/share/doc/*/changelog.*
+    - usr/share/doc/*/NEWS.*
+    - usr/share/doc/*/TODO.*
+AppImage:
+  arch: "{{ARCHITECTURE_APPIMAGE_BUILDER}}"
+  update-information: gh-releases-zsync|WerWolv|ImHex|latest|imhex-*-{{ARCHITECTURE_FILE_NAME}}.AppImage.zsync
+  file_name: imhex-{{VERSION}}-{{ARCHITECTURE_FILE_NAME}}.AppImage

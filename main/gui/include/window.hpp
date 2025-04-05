@@ -9,6 +9,7 @@
 
 #include <hex/ui/view.hpp>
 #include <jthread.hpp>
+#include <hex/helpers/opengl.hpp>
 
 struct GLFWwindow;
 struct ImGuiSettingsHandler;
@@ -47,6 +48,13 @@ namespace hex {
         void exitImGui();
 
         void registerEventHandlers();
+        void loadPostProcessingShader();
+
+        void drawImGui();
+        void drawWithShader();
+
+        void unlockFrameRate();
+        void forceNewFrame();
 
         GLFWwindow *m_window = nullptr;
 
@@ -55,13 +63,9 @@ namespace hex {
         double m_lastStartFrameTime = 0;
         double m_lastFrameTime = 0;
 
-        ImGuiExt::Texture m_logoTexture;
-
         std::mutex m_popupMutex;
         std::list<std::string> m_popupsToOpen;
-        std::vector<int> m_pressedKeys;
-
-        std::atomic<bool> m_unlockFrameRate = false;
+        std::set<int> m_pressedKeys;
 
         ImGuiExt::ImHexCustomData m_imguiCustomData;
 
@@ -69,9 +73,18 @@ namespace hex {
         bool m_emergencyPopupOpen = false;
 
         std::jthread m_frameRateThread;
+        std::chrono::duration<double, std::nano> m_remainingUnlockedTime;
+
+        std::mutex m_sleepMutex;
         std::atomic<bool> m_sleepFlag;
         std::condition_variable m_sleepCondVar;
-        std::mutex m_sleepMutex;
+
+        std::mutex m_wakeupMutex;
+        std::atomic<bool> m_wakeupFlag;
+        std::condition_variable m_wakeupCondVar;
+
+
+        gl::Shader m_postProcessingShader;
     };
 
 }

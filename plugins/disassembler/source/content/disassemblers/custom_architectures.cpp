@@ -10,9 +10,11 @@ namespace hex::plugin::disasm {
 
     class CustomArchitecture : public ContentRegistry::Disassembler::Architecture {
     public:
-        CustomArchitecture(::disasm::spec::Spec spec) : Architecture(spec.getName()), m_spec(std::move(spec)) {}
+        CustomArchitecture(std::string name, std::fs::path path) : Architecture(std::move(name)), m_path(std::move(path)) {}
 
         bool start() override {
+            m_spec = ::disasm::spec::Loader::load(m_path, { m_path.parent_path() });
+            
             return true;
         }
 
@@ -30,7 +32,7 @@ namespace hex::plugin::disasm {
             std::ignore = instructionLoadAddress;
             std::ignore = code;
 
-            auto instructions = m_spec.disassemble(code, 1);
+            const auto instructions = m_spec.disassemble(code, 1);
             if (instructions.empty()) {
                 return std::nullopt;
             }
@@ -46,13 +48,16 @@ namespace hex::plugin::disasm {
 
             for (u8 byte : instruction.bytes)
                 disassembly.bytes += hex::format("{0:02X} ", byte);
-            disassembly.bytes.pop_back();
+            if (!disassembly.bytes.empty())
+                disassembly.bytes.pop_back();
 
             return disassembly;
         }
 
     private:
+        std::fs::path m_path;
         ::disasm::spec::Spec m_spec;
+
     };
 
     void registerCustomArchitectures() {
@@ -64,7 +69,7 @@ namespace hex::plugin::disasm {
                 try {
                     auto spec = ::disasm::spec::Loader::load(entry.path(), { entry.path().parent_path() });
 
-                    ContentRegistry::Disassembler::add<CustomArchitecture>(std::move(spec));
+                    ContentRegistry::Disassembler::add<CustomArchitecture>(spec.getName(), entry.path());
                 } catch (const std::exception &e) {
                     log::error("Failed to load disassembler config '{}': {}", wolv::util::toUTF8String(entry.path()), e.what());
                 }

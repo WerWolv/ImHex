@@ -25,12 +25,12 @@ namespace pl::ptrn { class Pattern; }
 namespace hex::plugin::builtin {
 
 
-    constexpr static auto textEditorView    = "/Pattern editor_";
+    constexpr static auto textEditorView    = "/##pattern_editor_";
     constexpr static auto consoleView       = "/##console_";
     constexpr static auto variablesView     = "/##env_vars_";
     constexpr static auto settingsView      = "/##settings_";
     constexpr static auto sectionsView      = "/##sections_table_";
-    constexpr static auto virtualFilesView  = "/Virtual File Tree_";
+    constexpr static auto virtualFilesView  = "/##Virtual_File_Tree_";
     constexpr static auto debuggerView      = "/##debugger_";
 
     class PatternSourceCode {
@@ -128,6 +128,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginListBox("##patterns_accept", ImVec2(400_scaled, 0))) {
                     u32 index = 0;
                     for (const auto &[path, author, description] : m_view->m_possiblePatternFiles.get(provider)) {
+                        ImGui::PushID(index + 1);
                         auto fileName = wolv::util::toUTF8String(path.filename());
 
                         std::string displayValue;
@@ -166,6 +167,8 @@ namespace hex::plugin::builtin {
                         ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
                         index++;
+
+                        ImGui::PopID();
                     }
 
                     // Close the popup if there aren't any patterns available
@@ -287,7 +290,7 @@ namespace hex::plugin::builtin {
         PerProvider<TextEditor::Breakpoints> m_breakpoints;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
-        PerProvider<const std::vector<std::unique_ptr<pl::core::ast::ASTNode>>*> m_callStack;
+        PerProvider<const std::vector<pl::core::Evaluator::StackTrace>*> m_callStack;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
         PerProvider<std::map<u64, pl::api::Section>> m_sections;
@@ -309,6 +312,7 @@ namespace hex::plugin::builtin {
         bool m_replaceMode = false;
         bool m_openFindReplacePopUp = false;
         bool m_openGotoLinePopUp = false;
+        bool m_patternEvaluating = false;
         std::map<std::fs::path, std::string> m_patternNames;
 
         ImRect m_textEditorHoverBox;

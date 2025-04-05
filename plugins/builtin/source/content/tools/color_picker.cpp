@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
                         u64 hexValue = 0;
                         for (u32 index = 0; auto &bitValue : bitValues) {
                             hexValue <<= bitValue.bits;
-                            hexValue |= u64(intColor[index]) & hex::bitmask(bitValue.bits);
+                            hexValue |= u64(intColor[index]) & u64(hex::bitmask(bitValue.bits));
                             index += 1;
                         }
 
@@ -181,7 +181,7 @@ namespace hex::plugin::builtin {
                         return hex::format("{{ {}%, {}%, {}%, {}% }}", u32(floatColor[0] * 100), u32(floatColor[1] * 100), u32(floatColor[2] * 100), u32(floatColor[3] * 100));
                     });
 
-                    drawValue("hex.builtin.tools.color.formats.color_name"_lang, [&] -> std::string {
+                    drawValue("hex.builtin.tools.color.formats.color_name"_lang, [&]() -> std::string {
                         const static auto ColorTable = [] {
                             auto colorMap = nlohmann::json::parse(romfs::get("assets/common/color_names.json").string()).get<std::map<std::string, std::string>>();
 

@@ -10,6 +10,9 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include <GLFW/glfw3.h>
+#include <hex/api/events/events_lifecycle.hpp>
+
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shellapi.h>
@@ -28,7 +31,6 @@
 #endif
 
 namespace hex {
-
     float operator""_scaled(long double value) {
         return value * ImHexApi::System::getGlobalScale();
     }
@@ -50,7 +52,7 @@ namespace hex {
 
         u8 index = sizeof(data) - 2;
         while (value != 0 && index != 0) {
-            data[index] = '0' + value % 10;
+            data[index] = static_cast<char>('0' + (value % 10));
             value /= 10;
             index--;
         }
@@ -65,7 +67,7 @@ namespace hex {
 
         u8 index = sizeof(data) - 2;
         while (unsignedValue != 0 && index != 0) {
-            data[index] = '0' + unsignedValue % 10;
+            data[index] = static_cast<char>('0' + (unsignedValue % 10));
             unsignedValue /= 10;
             index--;
         }
@@ -161,25 +163,25 @@ namespace hex {
         switch (unitIndex) {
             case 0:
                 result += ((value == 1) ? " Byte" : " Bytes");
-                break;
+            break;
             case 1:
                 result += " kiB";
-                break;
+            break;
             case 2:
                 result += " MiB";
-                break;
+            break;
             case 3:
                 result += " GiB";
-                break;
+            break;
             case 4:
                 result += " TiB";
-                break;
+            break;
             case 5:
                 result += " PiB";
-                break;
+            break;
             case 6:
                 result += " EiB";
-                break;
+            break;
             default:
                 result = "A lot!";
         }
@@ -336,15 +338,15 @@ namespace hex {
 
     void startProgram(const std::string &command) {
 
-        #if defined(OS_WINDOWS)
-            std::ignore = system(hex::format("start {0}", command).c_str());
-        #elif defined(OS_MACOS)
-            std::ignore = system(hex::format("open {0}", command).c_str());
-        #elif defined(OS_LINUX)
-            executeCmd({"xdg-open", command});
-        #elif defined(OS_WEB)
-            std::ignore = command;
-        #endif
+#if defined(OS_WINDOWS)
+        std::ignore = system(hex::format("start \"\" {0}", command).c_str());
+#elif defined(OS_MACOS)
+        std::ignore = system(hex::format("{0}", command).c_str());
+#elif defined(OS_LINUX)
+        executeCmd({"xdg-open", command});
+#elif defined(OS_WEB)
+        std::ignore = command;
+#endif
     }
 
     int executeCommand(const std::string &command) {
@@ -355,19 +357,19 @@ namespace hex {
         if (!url.contains("://"))
             url = "https://" + url;
 
-        #if defined(OS_WINDOWS)
-            ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-        #elif defined(OS_MACOS)
-            openWebpageMacos(url.c_str());
-        #elif defined(OS_LINUX)
-            executeCmd({"xdg-open", url});
-        #elif defined(OS_WEB)
-            EM_ASM({
-                window.open(UTF8ToString($0), '_blank');
-            }, url.c_str());
-        #else
-            #warning "Unknown OS, can't open webpages"
-        #endif
+#if defined(OS_WINDOWS)
+        ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+#elif defined(OS_MACOS)
+        openWebpageMacos(url.c_str());
+#elif defined(OS_LINUX)
+        executeCmd({"xdg-open", url});
+#elif defined(OS_WEB)
+        EM_ASM({
+            window.open(UTF8ToString($0), '_blank');
+        }, url.c_str());
+#else
+#warning "Unknown OS, can't open webpages"
+#endif
     }
 
     std::optional<u8> hexCharToValue(char c) {
@@ -389,31 +391,31 @@ namespace hex {
                 switch (byte) {
                     case '\\':
                         result += "\\";
-                        break;
+                    break;
                     case '\a':
                         result += "\\a";
-                        break;
+                    break;
                     case '\b':
                         result += "\\b";
-                        break;
+                    break;
                     case '\f':
                         result += "\\f";
-                        break;
+                    break;
                     case '\n':
                         result += "\\n";
-                        break;
+                    break;
                     case '\r':
                         result += "\\r";
-                        break;
+                    break;
                     case '\t':
                         result += "\\t";
-                        break;
+                    break;
                     case '\v':
                         result += "\\v";
-                        break;
+                    break;
                     default:
                         result += hex::format("\\x{:02X}", byte);
-                        break;
+                    break;
                 }
             }
         }
@@ -440,46 +442,46 @@ namespace hex {
                 switch (escapeChar) {
                     case 'a':
                         result.push_back('\a');
-                        break;
+                    break;
                     case 'b':
                         result.push_back('\b');
-                        break;
+                    break;
                     case 'f':
                         result.push_back('\f');
-                        break;
+                    break;
                     case 'n':
                         result.push_back('\n');
-                        break;
+                    break;
                     case 'r':
                         result.push_back('\r');
-                        break;
+                    break;
                     case 't':
                         result.push_back('\t');
-                        break;
+                    break;
                     case 'v':
                         result.push_back('\v');
-                        break;
+                    break;
                     case '\\':
                         result.push_back('\\');
-                        break;
+                    break;
                     case 'x':
-                        {
-                            u8 byte = 0x00;
-                            if ((offset + 1) >= string.length()) return {};
+                    {
+                        u8 byte = 0x00;
+                        if ((offset + 1) >= string.length()) return {};
 
-                            for (u8 i = 0; i < 2; i++) {
-                                byte <<= 4;
-                                if (auto hexValue = hexCharToValue(c()); hexValue.has_value())
-                                    byte |= hexValue.value();
-                                else
-                                    return {};
+                        for (u8 i = 0; i < 2; i++) {
+                            byte <<= 4;
+                            if (auto hexValue = hexCharToValue(c()); hexValue.has_value())
+                                byte |= hexValue.value();
+                            else
+                                return {};
 
-                                offset++;
-                            }
-
-                            result.push_back(byte);
+                            offset++;
                         }
-                        break;
+
+                        result.push_back(byte);
+                    }
+                    break;
                     default:
                         return {};
                 }
@@ -648,27 +650,27 @@ namespace hex {
     }
 
     bool isProcessElevated() {
-        #if defined(OS_WINDOWS)
-            bool elevated = false;
-            HANDLE token  = INVALID_HANDLE_VALUE;
+#if defined(OS_WINDOWS)
+        bool elevated = false;
+        HANDLE token  = INVALID_HANDLE_VALUE;
 
-            if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token)) {
-                TOKEN_ELEVATION elevation;
-                DWORD elevationSize = sizeof(TOKEN_ELEVATION);
+        if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token)) {
+            TOKEN_ELEVATION elevation;
+            DWORD elevationSize = sizeof(TOKEN_ELEVATION);
 
-                if (::GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation), &elevationSize))
-                    elevated = elevation.TokenIsElevated;
-            }
+            if (::GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation), &elevationSize))
+                elevated = elevation.TokenIsElevated;
+        }
 
-            if (token != INVALID_HANDLE_VALUE)
-                ::CloseHandle(token);
+        if (token != INVALID_HANDLE_VALUE)
+            ::CloseHandle(token);
 
-            return elevated;
-        #elif defined(OS_LINUX) || defined(OS_MACOS)
-            return getuid() == 0 || getuid() != geteuid();
-        #else
-            return false;
-        #endif
+        return elevated;
+#elif defined(OS_LINUX) || defined(OS_MACOS)
+        return getuid() == 0 || getuid() != geteuid();
+#else
+        return false;
+#endif
     }
 
     std::optional<std::string> getEnvironmentVariable(const std::string &env) {
@@ -686,7 +688,7 @@ namespace hex {
             return string;
 
         // If the string is longer than the max length, find the last space before the max length
-        auto it = string.begin() + maxLength;
+        auto it = string.begin() + maxLength / 2;
         while (it != string.begin() && !std::isspace(*it)) --it;
 
         // If there's no space before the max length, just cut the string
@@ -804,45 +806,45 @@ namespace hex {
     }
 
     std::string formatSystemError(i32 error) {
-        #if defined(OS_WINDOWS)
-            wchar_t *message = nullptr;
-            auto wLength = FormatMessageW(
-                FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                nullptr, error,
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                (wchar_t*)&message, 0,
-                nullptr
-            );
-            ON_SCOPE_EXIT { LocalFree(message); };
+#if defined(OS_WINDOWS)
+        wchar_t *message = nullptr;
+        auto wLength = FormatMessageW(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr, error,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            (wchar_t*)&message, 0,
+            nullptr
+        );
+        ON_SCOPE_EXIT { LocalFree(message); };
 
-            auto length = ::WideCharToMultiByte(CP_UTF8, 0, message, wLength, nullptr, 0, nullptr, nullptr);
-            std::string result(length, '\x00');
-            ::WideCharToMultiByte(CP_UTF8, 0, message, wLength, result.data(), length, nullptr, nullptr);
+        auto length = ::WideCharToMultiByte(CP_UTF8, 0, message, wLength, nullptr, 0, nullptr, nullptr);
+        std::string result(length, '\x00');
+        ::WideCharToMultiByte(CP_UTF8, 0, message, wLength, result.data(), length, nullptr, nullptr);
 
-            return result;
-        #else
-            return std::system_category().message(error);
-        #endif
+        return result;
+#else
+        return std::system_category().message(error);
+#endif
     }
 
 
     void* getContainingModule(void* symbol) {
-        #if defined(OS_WINDOWS)
-            MEMORY_BASIC_INFORMATION mbi;
-            if (VirtualQuery(symbol, &mbi, sizeof(mbi)))
-                return mbi.AllocationBase;
+#if defined(OS_WINDOWS)
+        MEMORY_BASIC_INFORMATION mbi;
+        if (VirtualQuery(symbol, &mbi, sizeof(mbi)))
+            return mbi.AllocationBase;
 
+        return nullptr;
+#elif !defined(OS_WEB)
+        Dl_info info = {};
+        if (dladdr(symbol, &info) == 0)
             return nullptr;
-        #elif !defined(OS_WEB)
-            Dl_info info = {};
-            if (dladdr(symbol, &info) == 0)
-                return nullptr;
 
-            return dlopen(info.dli_fname, RTLD_LAZY);
-        #else
-            std::ignore = symbol;
-            return nullptr;
-        #endif
+        return dlopen(info.dli_fname, RTLD_LAZY);
+#else
+        std::ignore = symbol;
+        return nullptr;
+#endif
     }
 
     std::optional<ImColor> blendColors(const std::optional<ImColor> &a, const std::optional<ImColor> &b) {
@@ -854,6 +856,17 @@ namespace hex {
             return b;
         else
             return ImAlphaBlendColors(a.value(), b.value());
+    }
+
+    extern "C" void macOSCloseButtonPressed() {
+        auto windowHandle = ImHexApi::System::getMainWindowHandle();
+
+        glfwHideWindow(windowHandle);
+        glfwIconifyWindow(windowHandle);
+    }
+
+    extern "C" void macosEventDataReceived(const u8 *data, size_t length) {
+        EventNativeMessageReceived::post(std::vector<u8>(data, data + length));
     }
 
 }

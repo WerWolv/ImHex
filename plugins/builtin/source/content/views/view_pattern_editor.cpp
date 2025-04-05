@@ -594,7 +594,6 @@ namespace hex::plugin::builtin {
             if (m_textEditor.IsTextChanged() && !m_hasUnevaluatedChanges) {
                 m_textEditor.SetTextChanged(false);
                 m_hasUnevaluatedChanges = true;
-                m_textHighlighter.m_needsToUpdateColors = false;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
             }

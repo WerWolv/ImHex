@@ -9,9 +9,9 @@
 #include <map>
 #include <span>
 #include <string>
+#include <numbers>
 
 #include <opengl_support.h>
-#include <GLFW/glfw3.h>
 #include "imgui.h"
 
 namespace hex::gl {
@@ -188,43 +188,43 @@ namespace hex::gl {
 
 
         T &getElement(int row,int col) {
-            return this->mat[row*Columns+col];
+            return this->mat[row * Columns+col];
         }
 
         Vector<T,Rows> getColumn(int col) {
             Vector<T,Rows> result;
             for (size_t i = 0; i < Rows; i++)
-                result[i] = this->mat[i*Columns+col];
+                result[i] = this->mat[i * Columns + col];
             return result;
         }
 
         Vector<T,Columns> getRow(int row) {
             Vector<T,Columns> result;
             for (size_t i = 0; i < Columns; i++)
-                result[i] = this->mat[row*Columns+i];
+                result[i] = this->mat[row * Columns+i];
             return result;
         }
 
         void updateRow(int row, Vector<T,Columns> values) {
             for (size_t i = 0; i < Columns; i++)
-                this->mat[row*Columns+i] = values[i];
+                this->mat[row * Columns + i] = values[i];
         }
 
         void updateColumn(int col, Vector<T,Rows> values) {
             for (size_t i = 0; i < Rows; i++)
-                this->mat[i*Columns+col] = values[i];
+                this->mat[i * Columns + col] = values[i];
         }
 
-        void updateElement( int row,int col, T value) {
-            this->mat[row*Columns + col] = value;
+        void updateElement(int row, int col, T value) {
+            this->mat[row * Columns + col] = value;
         }
 
-        T &operator()( const int &row,const int &col) {
-            return this->mat[row*Columns + col];
+        T &operator()(const unsigned &row, const unsigned &col) {
+            return this->mat[row * Columns + col];
         }
 
-        const T &operator()(const unsigned& row,const unsigned& col ) const {
-            return this->mat[row*Columns + col];
+        const T &operator()(const unsigned &row, const unsigned &col) const {
+            return this->mat[row * Columns + col];
         }
 
         Matrix& operator=(const Matrix& A) {
@@ -242,7 +242,7 @@ namespace hex::gl {
 
             for (size_t i = 0; i < Rows; i++)
                 for (size_t j = 0; j < Columns; j++)
-                    result(i, j) = this->mat[i*Columns+j] + A(i, j);
+                    result(i, j) = this->mat[i * Columns + j] + A(i, j);
             return result;
         }
 
@@ -251,7 +251,7 @@ namespace hex::gl {
 
             for (size_t i = 0; i < Rows; i++)
                 for (size_t j = 0; j < Columns; j++)
-                    result(i, j) = this->mat[i*Columns+j] - A(i, j);
+                    result(i, j) = this->mat[i * Columns + j] - A(i, j);
             return result;
         }
 
@@ -268,7 +268,7 @@ namespace hex::gl {
             Matrix  t(0);
             for (size_t i = 0; i < Columns; i++)
                 for (size_t j = 0; j < Rows; j++)
-                    t.updateElement(i, j, this->mat[j*Rows+i]);
+                    t.updateElement(i, j, this->mat[j * Rows + i]);
 
             return t;
         }
@@ -400,8 +400,8 @@ namespace hex::gl {
 
         T Sx, Cx, Sy, Cy, Sz, Cz;
         Vector<T,3> angles = ypr;
-        if(!radians)
-            angles *= M_PI/180;
+        if (!radians)
+            angles *= std::numbers::pi_v<T> / 180;
 
         Sx = -sin(angles[0]); Cx = cos(angles[0]);
         Sy = -sin(angles[1]); Cy = cos(angles[1]);
@@ -524,7 +524,7 @@ namespace hex::gl {
         Vector<T,3> rotationVector3 = {{rotationVector[0], rotationVector[1], rotationVector[2]}};
         T theta = rotationVector3.magnitude();
         if (!radians)
-            theta *= M_PI / 180;
+            theta *= std::numbers::pi / 180;
         Vector<T,3> axis = rotationVector3;
         if (theta != 0)
             axis = axis.normalize();
@@ -807,16 +807,18 @@ namespace hex::gl {
         void bind() const;
         void unbind() const;
 
+        bool isValid() const { return m_program != 0; }
+
         void setUniform(std::string_view name, const int &value);
         void setUniform(std::string_view name, const float &value);
 
         template<size_t N>
         void setUniform(std::string_view name, const Vector<float, N> &value) {
-            if (N == 2)
+            if constexpr (N == 2)
                 glUniform2f(getUniformLocation(name), value[0], value[1]);
-            else if (N == 3)
+            else if constexpr (N == 3)
                 glUniform3f(getUniformLocation(name), value[0], value[1], value[2]);
-            else if (N == 4)
+            else if constexpr (N == 4)
                 glUniform4f(getUniformLocation(name), value[0], value[1], value[2],value[3]);
         }
 

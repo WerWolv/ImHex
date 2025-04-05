@@ -19,7 +19,7 @@ namespace hex::plugin::disasm {
 
             m_instruction = nullptr;
             auto mode = m_mode;
-            if (m_endian == true) {
+            if (bool(m_endian)) {
                 mode = cs_mode(u32(mode) | CS_MODE_LITTLE_ENDIAN);
             } else {
                 mode = cs_mode(u32(mode) | CS_MODE_BIG_ENDIAN);

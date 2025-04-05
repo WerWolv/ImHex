@@ -2,6 +2,8 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/providers/memory_provider.hpp>
+#include <hex/api/events/requests_interaction.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
 
@@ -23,6 +25,12 @@ namespace hex::plugin::builtin {
             m_rowColoring = bool(value.get<int>(false));
             for (auto &drawer : m_patternDrawer.all())
                 drawer->enableRowColoring(m_rowColoring);
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.pattern_data_max_filter_items", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_maxFilterItems = value.get<u32>(128);
+            for (auto &drawer : m_patternDrawer.all())
+                drawer->setMaxFilterDisplayItems(m_maxFilterItems);
         });
 
         EventPatternEvaluating::subscribe(this, [this]{

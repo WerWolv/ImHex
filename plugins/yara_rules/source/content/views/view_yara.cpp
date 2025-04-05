@@ -250,7 +250,7 @@ namespace hex::plugin::yara {
         if (provider == nullptr)
             return;
 
-        m_matcherTask = TaskManager::createTask("hex.yara_rules.view.yara.matching"_lang, 0, [this, provider](auto &task) {
+        m_matcherTask = TaskManager::createTask("hex.yara_rules.view.yara.matching", 0, [this, provider](auto &task) {
             std::vector<YaraRule::Result> results;
             for (const auto &[fileName, filePath] : *m_rulePaths) {
                 YaraRule rule(filePath);
