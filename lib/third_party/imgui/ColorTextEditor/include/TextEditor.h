@@ -9,40 +9,62 @@
 #include <unordered_map>
 #include <map>
 #include <regex>
+#include <chrono>
 #include "imgui.h"
 #include "imgui_internal.h"
-
+using strConstIter = std::string::const_iterator;
 class TextEditor
 {
 public:
 	enum class PaletteIndex
 	{
 		Default,
-		Keyword,
-		Number,
-		String,
-		CharLiteral,
-		Punctuation,
-		Preprocessor,
 		Identifier,
-		KnownIdentifier,
-		PreprocIdentifier,
-        GlobalDocComment,
-		DocComment,
-		Comment,
-		MultiLineComment,
-		PreprocessorDeactivated,
-		Background,
+		Directive,
+		Operator,
+		Separator,
+		BuiltInType,
+		Keyword,
+		NumericLiteral,
+		StringLiteral,
+		CharLiteral,
 		Cursor,
-		Selection,
-		ErrorMarker,
-		Breakpoint,
+		Background,
 		LineNumber,
+		Selection,
+		Breakpoint,
+		ErrorMarker,
+		PreprocessorDeactivated,
 		CurrentLineFill,
 		CurrentLineFillInactive,
 		CurrentLineEdge,
+		ErrorText,
+		WarningText,
+		DebugText,
+		DefaultText,
+		Attribute,
+		PatternVariable,
+		LocalVariable,
+		CalculatedPointer,
+		TemplateArgument,
+		Function,
+		View,
+		FunctionVariable,
+		FunctionParameter,
+		UserDefinedType,
+		PlacedVariable,
+		GlobalVariable,
+		NameSpace,
+		TypeDef,
+		UnkIdentifier,
+		DocComment,
+		DocBlockComment,
+		BlockComment,
+		GlobalDocComment,
+		Comment,
+		PreprocIdentifier,
 		Max
-	};
+    };
 
 	enum class SelectionMode
 	{
@@ -135,8 +157,8 @@ public:
 	using Keywords = std::unordered_set<std::string> ;
     using ErrorMarkers = std::map<Coordinates, std::pair<uint32_t ,std::string>>;
     using Breakpoints = std::unordered_set<uint32_t>;
-    using Palette = std::array<ImU32, (uint32_t)PaletteIndex::Max>;
-    using Char = uint8_t ;
+    using Palette = std::array<ImU32, (uint64_t )PaletteIndex::Max>;
+    using Glyph = uint8_t ;
 
     class ActionableBox {
 
@@ -209,35 +231,286 @@ public:
     };
     using ErrorHoverBoxes = std::map<Coordinates, ErrorHoverBox>;
 
-    struct Glyph
-	{
-		Char mChar;
-		PaletteIndex mColorIndex = PaletteIndex::Default;
+    class Line {
+    public:
+        struct FlagBits {
 		bool mComment : 1;
-		bool mMultiLineComment : 1;
+		bool mBlockComment : 1;
 		bool mPreprocessor : 1;
 		bool mDocComment : 1;
         bool mGlobalDocComment : 1;
 		bool mDeactivated : 1;
+        bool mBlockDocComment : 1;
+        };
+        union Flags {
+            Flags(char value) : mValue(value) {}
+            Flags(FlagBits bits) : mBits(bits) {}
+            FlagBits mBits;
+            char mValue;
+        };
 
-		Glyph(Char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex), mComment(false),
-        mMultiLineComment(false), mPreprocessor(false), mDocComment(false), mGlobalDocComment(false), mDeactivated(false) {}
-	};
+        class LineIterator {
+        public:
+            strConstIter mLineIter;
+            strConstIter mColorizedIter;
+            strConstIter mFlagsIter;
 
-	typedef std::vector<Glyph> Line;
-	typedef std::vector<Line> Lines;
+            LineIterator() = default;
+
+            char operator*() {
+                return *mLineIter;
+            }
+
+            LineIterator operator++() {
+                LineIterator iter = *this;
+                ++iter.mLineIter;
+                ++iter.mColorizedIter;
+                ++iter.mFlagsIter;
+                return iter;
+            }
+
+            bool operator!=(const LineIterator &other) const {
+                return mLineIter != other.mLineIter || mColorizedIter != other.mColorizedIter || mFlagsIter != other.mFlagsIter;
+            }
+
+            bool operator==(const LineIterator &other) const {
+                return mLineIter == other.mLineIter && mColorizedIter == other.mColorizedIter && mFlagsIter == other.mFlagsIter;
+            }
+
+            LineIterator operator+(int n) {
+                LineIterator iter = *this;
+                iter.mLineIter += n;
+                iter.mColorizedIter += n;
+                iter.mFlagsIter += n;
+                return iter;
+            }
+
+            int operator-(LineIterator l) {
+                return mLineIter - l.mLineIter;
+            }
+        };
+
+        LineIterator begin() const {
+            LineIterator iter;
+            iter.mLineIter = mLine.begin();
+            iter.mColorizedIter = mColorizedLine.begin();
+            iter.mFlagsIter = mFlags.begin();
+            return iter;
+        }
+
+        LineIterator end() const {
+            LineIterator iter;
+            iter.mLineIter = mLine.end();
+            iter.mColorizedIter = mColorizedLine.end();
+            iter.mFlagsIter = mFlags.end();
+            return iter;
+        }
+
+        std::string mLine;
+        std::string mColorizedLine;
+        std::string mFlags;
+        bool mColorized = false;
+        Line() : mLine(), mColorizedLine(), mFlags(), mColorized(false) {}
+
+        explicit Line(const char *line) {
+            Line(std::string(line));
+        }
+
+        explicit Line(const std::string &line) : mLine(line), mColorizedLine(std::string(line.size(), 0x00)), mFlags(std::string(line.size(), 0x00)), mColorized(false) {}
+        Line(const Line &line) : mLine(line.mLine), mColorizedLine(line.mColorizedLine), mFlags(line.mFlags),  mColorized(line.mColorized) {}
+
+        Line &operator=(const Line &line) {
+            mLine = line.mLine;
+            mColorizedLine = line.mColorizedLine;
+            mFlags = line.mFlags;
+            mColorized = line.mColorized;
+            return *this;
+        }
+
+        Line &operator=(Line &&line) noexcept {
+            mLine = std::move(line.mLine);
+            mColorizedLine = std::move(line.mColorizedLine);
+            mFlags = std::move(line.mFlags);
+            mColorized = line.mColorized;
+            return *this;
+        }
+
+        size_t size() const {
+            return mLine.size();
+        }
+        enum class LinePart {
+            Line,
+            Colorized,
+            Flags
+        };
+
+        char front(LinePart part = LinePart::Line) const {
+            if (part == LinePart::Line && !mLine.empty())
+                return mLine.front();
+            if (part == LinePart::Colorized && !mColorizedLine.empty())
+                return mColorizedLine.front();
+            if (part == LinePart::Flags && !mFlags.empty())
+                return mFlags.front();
+            return 0x00;
+        }
+
+        void push_back(char c) {
+            mLine.push_back(c);
+            mColorizedLine.push_back(0x00);
+            mFlags.push_back(0x00);
+            mColorized = false;
+        }
+
+        bool empty() const {
+            return mLine.empty();
+        }
+
+
+        std::string substr(size_t start, size_t length = (size_t)-1, LinePart part = LinePart::Line ) const {
+            if (length == (size_t)-1)
+                length = mLine.size() - start;
+            auto utfLength = Utf8CharsToBytes(mLine, start, length);
+            if (part == LinePart::Line && utfLength > 0)
+                return mLine.substr(start, utfLength);
+            if (part == LinePart::Colorized && utfLength > 0)
+                return mColorizedLine.substr(start, utfLength);
+            if (part == LinePart::Flags && utfLength > 0)
+                return mFlags.substr(start, utfLength);
+            return "";
+        }
+
+        template<LinePart part=LinePart::Line>
+        char operator[](size_t index) const {
+            if (part == LinePart::Line)
+                return mLine[index];
+            if (part == LinePart::Colorized)
+                return mColorizedLine[index];
+            return mFlags[index];
+        }
+
+        template<LinePart part=LinePart::Line>
+        const char &operator[](size_t index) {
+            if (part == LinePart::Line)
+                return mLine[index];
+            if (part == LinePart::Colorized)
+                return mColorizedLine[index];
+            return mFlags[index];
+        }
+
+        void SetNeedsUpdate(bool needsUpdate) {
+            mColorized = !needsUpdate;
+        }
+
+        void append(const char *text) {
+            append(std::string(text));
+        }
+
+        void append(const char text) {
+            append(std::string(1, text));
+        }
+
+        void append(const std::string &text) {
+            mLine.append(text);
+            mColorized = false;
+        }
+
+        void append(const Line &line) {
+            append(line.begin(), line.end());
+        }
+
+        void append(LineIterator begin, LineIterator end) {
+            if (begin.mLineIter < end.mLineIter)
+                mLine.append(begin.mLineIter, end.mLineIter);
+            if (begin.mColorizedIter < end.mColorizedIter)
+                mColorizedLine.append(begin.mColorizedIter, end.mColorizedIter);
+            if (begin.mFlagsIter < end.mFlagsIter)
+                mFlags.append(begin.mFlagsIter, end.mFlagsIter);
+            mColorized = false;
+        }
+
+        void insert(LineIterator iter, const std::string &text) {
+            if (iter == end())
+                append(text);
+            else
+                insert(iter, text.begin(), text.end());
+        }
+
+        void insert(LineIterator iter, const char text) {
+            if (iter == end())
+                append(text);
+            else
+                insert(iter,std::string(1, text));
+        }
+
+        void insert(LineIterator iter, strConstIter beginString, strConstIter endString) {
+            if (iter == end())
+                append(std::string(beginString, endString));
+            else {
+                mLine.insert(iter.mLineIter, beginString, endString);
+                mColorized = false;
+            }
+        }
+
+        void insert(LineIterator iter,const Line &line) {
+            if (iter == end())
+                append(line.begin(), line.end());
+            else
+                insert(iter, line.begin(), line.end());
+        }
+
+        void insert(LineIterator iter,LineIterator beginLine, LineIterator endLine) {
+            if (iter == end())
+                append(beginLine, endLine);
+            else {
+                mLine.insert(iter.mLineIter, beginLine.mLineIter, endLine.mLineIter);
+                mColorized = false;
+            }
+        }
+
+        void erase(LineIterator begin) {
+            mLine.erase(begin.mLineIter);
+            mColorized = false;
+        }
+
+        void erase(LineIterator begin, size_t count) {
+            if (count == (size_t) -1)
+                count = mLine.size() - (begin.mLineIter - mLine.begin());
+            mLine.erase(begin.mLineIter, begin.mLineIter + count);
+            mColorized = false;
+        }
+
+        void SetLine(const std::string &text) {
+            mLine = text;
+            mColorized = false;
+        }
+
+        void SetLine(const Line &text) {
+            mLine = text.mLine;
+            mColorizedLine = text.mColorizedLine;
+            mFlags = text.mFlags;
+            mColorized = text.mColorized;
+        }
+
+
+        bool NeedsUpdate() const {
+            return !mColorized;
+        }
+
+    };
+
+    using Lines = std::vector<Line>;
 
 	struct LanguageDefinition
 	{
 		typedef std::pair<std::string, PaletteIndex> TokenRegexString;
 		typedef std::vector<TokenRegexString> TokenRegexStrings;
-		typedef bool(*TokenizeCallback)(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end, PaletteIndex & paletteIndex);
+		typedef bool(*TokenizeCallback)(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end, PaletteIndex &paletteIndex);
 
 		std::string mName;
 		Keywords mKeywords;
 		Identifiers mIdentifiers;
 		Identifiers mPreprocIdentifiers;
-		std::string mCommentStart, mCommentEnd, mSingleLineComment, mGlobalDocComment, mDocComment;
+		std::string mSingleLineComment, mCommentEnd, mCommentStart, mGlobalDocComment, mDocComment, mBlockDocComment;
 		char mPreprocChar;
 		bool mAutoIndentation;
 
@@ -301,12 +574,75 @@ public:
 	void SetText(const std::string& aText);
     void JumpToLine(int line=-1);
     void JumpToCoords(const Coordinates &coords);
+    void SetLongestLineLength(size_t line) {
+        mLongestLineLength = line;
+    }
 	std::string GetText() const;
     bool isEmpty() const {
-        auto text = GetText();
-        return text.empty() || text == "\n";
+        if (mLines.empty())
+            return true;
+        if (mLines.size() == 1) {
+            if (mLines[0].empty())
+                return true;
+            if (mLines[0].size() == 1 && mLines[0].front() == '\n')
+                return true;
+        }
+        return false;
     }
+
     void SetTopLine();
+    uint32_t GetTopLine() const {
+        return static_cast<uint32_t>(std::floor(mTopLine));
+    }
+    uint32_t GetBottomLine() const {
+        return static_cast<uint32_t>(std::ceil(mTopLine+mNumberOfLinesDisplayed));
+    }
+    void SetNeedsUpdate (uint32_t line, bool needsUpdate) {
+        if (line < mLines.size())
+            mLines[line].SetNeedsUpdate(needsUpdate);
+    }
+
+    void SetColorizedLineSize(size_t line) {
+        if (line < mLines.size()) {
+            const auto &size = mLines[line].mLine.size();
+            if (mLines[line].mColorizedLine.size() != size) {
+                mLines[line].mColorizedLine.resize(size);
+                std::fill(mLines[line].mColorizedLine.begin(), mLines[line].mColorizedLine.end(), 0x00);
+            }
+        }
+    }
+
+    void SetColorizedLine(size_t line, const std::string &tokens) {
+        if (line < mLines.size()) {
+            auto &lineTokens = mLines[line].mColorizedLine;
+            if (lineTokens.size() != tokens.size()) {
+                lineTokens.resize(tokens.size());
+                std::fill(lineTokens.begin(), lineTokens.end(), 0x00);
+            }
+            size_t i = 0;
+            while (i < tokens.size()) {
+                if (tokens[i] < 0) {
+                    auto bytes = -tokens[i];
+                    int tokenLength=0;
+                    for (int j = 0; j < bytes; j++)
+                        tokenLength += tokens[i + j + 2] << (j * 8);
+                    for (int j = 0; j < tokenLength; j++)
+                        lineTokens[i + j] = tokens[i + j];
+                    i += tokenLength;
+                } else if (tokens[i] > 0) {
+                    lineTokens[i] = tokens[i];
+                    if (i < lineTokens.size() && tokens[i] == tokens[i+1]) {
+                        lineTokens[i + 1] = tokens[i + 1];
+                        i+=2;
+                    } else
+                        i++;
+                } else
+                    i++;
+            }
+        }
+        SetNeedsUpdate(line, false);
+    }
+
     void SetScrollY();
 	void SetTextLines(const std::vector<std::string>& aLines);
 	std::vector<std::string> GetTextLines() const;
@@ -350,9 +686,18 @@ public:
     std::string PreprocessText(const std::string &code);
 
 	void SetReadOnly(bool aValue);
+    bool IsEndOfLine(const Coordinates &aCoordinates) const;
+    bool IsEndOfFile(const Coordinates &aCoordinates) const;
 	bool IsReadOnly() const { return mReadOnly; }
 	bool IsTextChanged() const { return mTextChanged; }
-    void SetTextChanged(bool aValue=false) { mTextChanged = aValue; }
+    void SetTextChanged(bool aValue) { mTextChanged = aValue; }
+    void SetTimeStamp(int code) {
+        auto now = std::chrono::high_resolution_clock::now();
+        if (code == 0)
+            mLinesTimestamp = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
+        else
+            mColorizedLinesTimestamp = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
+    }
 	bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
     bool IsBreakpointsChanged() const { return mBreakPointsChanged; }
     void ClearBreakpointsChanged() { mBreakPointsChanged = false; }
@@ -552,7 +897,7 @@ private:
 	void DeleteRange(const Coordinates& aStart, const Coordinates& aEnd);
 	int InsertTextAt(Coordinates& aWhere, const char* aValue);
 	void AddUndo(UndoRecord& aValue);
-	Coordinates ScreenPosToCoordinates(const ImVec2& aPosition) const;
+  	Coordinates ScreenPosToCoordinates(const ImVec2& aPosition) const;
 	Coordinates FindWordStart(const Coordinates& aFrom) const;
 	Coordinates FindWordEnd(const Coordinates& aFrom) const;
 	Coordinates FindNextWord(const Coordinates& aFrom) const;
@@ -561,7 +906,7 @@ private:
 	int GetCharacterColumn(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
     int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
-    int GetLongestLineLength() const;
+    static int Utf8CharsToBytes(std::string line, uint32_t start, uint32_t numChars);
     unsigned long long GetLineByteCount(int aLine) const;
 	int GetStringCharacterCount(std::string str) const;
 	int GetLineMaxColumn(int aLine) const;
@@ -569,21 +914,25 @@ private:
 	void RemoveLine(int aStart, int aEnd);
 	void RemoveLine(int aIndex);
 	Line& InsertLine(int aIndex);
-	void EnterCharacter(ImWchar aChar, bool aShift);
+    void InsertLine(int aIndex, const std::string &aText);
+    void EnterCharacter(ImWchar aChar, bool aShift);
 	void DeleteSelection();
 	std::string GetWordUnderCursor() const;
 	std::string GetWordAt(const Coordinates& aCoords) const;
-	ImU32 GetGlyphColor(const Glyph& aGlyph) const;
+    TextEditor::PaletteIndex GetColorIndexFromFlags(Line::Flags flags);
     void ResetCursorBlinkTime();
-
+    uint32_t SkipSpaces(const Coordinates &aFrom) const;
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
 	void RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPos, const ImVec2 &textEditorSize);
     void SetFocus();
 	float mLineSpacing = 1.0F;
 	Lines mLines;
+    uint64_t mLinesTimestamp = 0;
+    uint64_t mColorizedLinesTimestamp = 0;
 	EditorState mState = {};
 	UndoBuffer mUndoBuffer;
+    UndoBuffer mEdits;
 	int mUndoIndex = 0;
     bool mScrollToBottom = false;
     float mTopMargin = 0.0F;
@@ -600,7 +949,7 @@ private:
 	bool mTextChanged = false;
 	bool mColorizerEnabled = true;
     float mLineNumberFieldWidth = 0.0F;
-    float mLongest = 0.0F;
+    size_t mLongestLineLength = 0;
 	float mTextStart = 20.0F;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
 	float  mLeftMargin = 10.0;
     float mTopLine = 0.0F;
@@ -647,8 +996,9 @@ private:
     static const int sCursorBlinkOnTime;
 };
 
-bool TokenizeCStyleString(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);
-bool TokenizeCStyleCharacterLiteral(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);
-bool TokenizeCStyleIdentifier(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);
-bool TokenizeCStyleNumber(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);
-bool TokenizeCStylePunctuation(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);
+bool TokenizeCStyleString(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end);
+bool TokenizeCStyleCharacterLiteral(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end);
+bool TokenizeCStyleIdentifier(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end);
+bool TokenizeCStyleNumber(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end);
+bool TokenizeCStyleOperator(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end);
+bool TokenizeCStyleSeparator(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end);
