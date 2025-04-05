@@ -133,7 +133,10 @@ namespace hex {
         if (s_previousWorkspace != s_currentWorkspace) {
             log::info("Updating workspace");
             if (s_previousWorkspace != s_workspaces->end()) {
+                auto newWorkspace = s_currentWorkspace;
+                s_currentWorkspace = s_previousWorkspace;
                 exportToFile(s_previousWorkspace->second.path, s_previousWorkspace->first, s_previousWorkspace->second.builtin);
+                s_currentWorkspace = newWorkspace;
             }
 
             LayoutManager::closeAllViews();
