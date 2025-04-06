@@ -170,7 +170,7 @@ namespace hex::plugin::builtin {
                     if (!std::isprint(byte))
                         return ".";
                     char b(byte);
-                    if (b==' ') return "&nbsp";
+                    if (b==' ') return "&nbsp;";
                     else if (b=='"') return "&quot;";
                     else if (b=='\'') return "&apos;";
                     else if (b=='&') return "&amp;";
