@@ -43,19 +43,25 @@ namespace hex {
 
         std::fs::path layoutPath;
         for (const auto &path : paths::Layouts.write()) {
-            layoutPath = path / fileName;
-        }
+            size_t outSize = 0;
+            const char* iniData = ImGui::SaveIniSettingsToMemory(&outSize);
 
-        if (layoutPath.empty()) {
-            log::error("Failed to save layout '{}'. No writable path found", name);
+            layoutPath = path / fileName;
+            wolv::io::File file = wolv::io::File(layoutPath, wolv::io::File::Mode::Write);
+            if (!file.isValid()) {
+                log::warn("Failed to save layout '{}'. Could not open file '{}', continuing with next path", name, layoutPath.c_str());
+                continue;
+            }
+            size_t written = file.writeBuffer((const u8*) iniData, outSize);
+            if (written != outSize) {
+                log::warn("Failed to save layout '{}'. Could not write file '{}', continuing with next path", name, layoutPath.c_str());
+                continue;
+            }
+            log::info("Layout '{}' saved to '{}'", name, layoutPath.c_str());
+            LayoutManager::reload();
             return;
         }
-
-        const auto pathString = wolv::util::toUTF8String(layoutPath);
-        ImGui::SaveIniSettingsToDisk(pathString.c_str());
-        log::info("Layout '{}' saved to {}", name, pathString);
-
-        LayoutManager::reload();
+        log::error("Failed to save layout '{}'. No writable path found", name);
     }
 
     std::string LayoutManager::saveToString() {
