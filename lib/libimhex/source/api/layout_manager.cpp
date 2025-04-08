@@ -50,16 +50,13 @@ namespace hex {
             wolv::io::File file = wolv::io::File(layoutPath, wolv::io::File::Mode::Write);
             if (!file.isValid()) {
                 log::warn("Failed to save layout '{}'. Could not open file '{}', continuing with next path", name, layoutPath.c_str());
-                file.close();
                 continue;
             }
             size_t written = file.writeBuffer((const u8*) iniData, outSize);
             if (written != outSize) {
                 log::warn("Failed to save layout '{}'. Could not write file '{}', continuing with next path", name, layoutPath.c_str());
-                file.close();
                 continue;
             }
-            file.close();
             log::info("Layout '{}' saved to '{}'", name, layoutPath.c_str());
             LayoutManager::reload();
             return;
