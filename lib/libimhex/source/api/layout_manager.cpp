@@ -40,19 +40,33 @@ namespace hex {
         fileName = wolv::util::replaceStrings(fileName, " ", "_");
         std::ranges::transform(fileName, fileName.begin(), tolower);
         fileName += ".hexlyt";
-        
-        std::vector<std::fs::path> writablePaths = paths::Layouts.write();
-        if (writablePaths.empty()) {
-            log::error("Failed to save layout '{}'. No writable path found", name);
-            return;
+
+        std::fs::path layoutPath;
+        for (const auto &path : paths::Layouts.write()) {
+            if (fs::isPathWritable(path)) {
+                size_t outSize = 0;
+                const char* iniData = ImGui::SaveIniSettingsToMemory(&outSize);
+
+                layoutPath = path / fileName;
+                wolv::io::File file = wolv::io::File(layoutPath, wolv::io::File::Mode::Write);
+                if (!file.isValid()) {
+                    log::warn("Failed to save layout '{}'. Could not open file '{}', continuing with next path", name, layoutPath.c_str());
+                    file.close();
+                    continue;
+                }
+                size_t written = file.writeBuffer((const u8*) iniData, outSize);
+                if (written != outSize) {
+                    log::warn("Failed to save layout '{}'. Could not write file '{}', continuing with next path", name, layoutPath.c_str());
+                    file.close();
+                    continue;
+                }
+                file.close();
+                log::info("Layout '{}' saved to '{}'", name, layoutPath.c_str());
+                LayoutManager::reload();
+                return;
+            }
         }
-        std::fs::path layoutPath = writablePaths.front() / fileName;
-
-        const auto pathString = wolv::util::toUTF8String(layoutPath);
-        ImGui::SaveIniSettingsToDisk(pathString.c_str());
-        log::info("Layout '{}' saved to {}", name, pathString);
-
-        LayoutManager::reload();
+        log::error("Failed to save layout '{}'. No writable path found", name);
     }
 
     std::string LayoutManager::saveToString() {
