@@ -802,8 +802,14 @@ namespace hex::plugin::visualizers {
                     s_shouldUpdateTexture = false;
                     s_modelTexture = ImGuiExt::Texture::fromImage(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
                     if (s_modelTexture.isValid()) {
-                        s_drawTexture = true;
-                    }
+                        const ImGuiExt::Texture &modelTexture = s_modelTexture.operator*();
+                        if (modelTexture.isValid()) {
+                            s_drawTexture = true;
+                            // how do we clear the error message when texture isvalid?
+                        } else
+                            throw std::runtime_error("hex.visualizers.pl_visualizer.3d.error_message_invalid_texture_file"_lang.get());
+                    } else
+                        throw std::runtime_error("hex.visualizers.pl_visualizer.3d.error_message_invalid_texture_file"_lang.get());
                 }
 
                 if (s_drawTexture)
@@ -914,8 +920,10 @@ namespace hex::plugin::visualizers {
                 }
             }
         }
-
-        s_texturePath = textureFile;
+        if (!textureFile.empty() && s_texturePath.empty())
+            s_texturePath = textureFile;
+        else if (textureFile.empty() && !s_texturePath.empty())
+            textureFile = s_texturePath.string();
         s_drawTexture = !textureFile.empty();
         if (shouldReset)
             s_shouldReset = true;
