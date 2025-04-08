@@ -40,16 +40,13 @@ namespace hex {
         fileName = wolv::util::replaceStrings(fileName, " ", "_");
         std::ranges::transform(fileName, fileName.begin(), tolower);
         fileName += ".hexlyt";
-
-        std::fs::path layoutPath;
-        for (const auto &path : paths::Layouts.write()) {
-            layoutPath = path / fileName;
-        }
-
-        if (layoutPath.empty()) {
+        
+        std::vector<std::fs::path> writablePaths = paths::Layouts.write();
+        if (writablePaths.empty()) {
             log::error("Failed to save layout '{}'. No writable path found", name);
             return;
         }
+        std::fs::path layoutPath = writablePaths.front() / fileName;
 
         const auto pathString = wolv::util::toUTF8String(layoutPath);
         ImGui::SaveIniSettingsToDisk(pathString.c_str());
