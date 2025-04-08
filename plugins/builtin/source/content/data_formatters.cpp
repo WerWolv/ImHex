@@ -136,17 +136,31 @@ namespace hex::plugin::builtin {
                 "    <code>\n"
                 "        <span class=\"offsetheader\">Hex View&nbsp;&nbsp;00 01 02 03 04 05 06 07&nbsp; 08 09 0A 0B 0C 0D 0E 0F</span>";
 
+            auto html_safe = [](u8 byte) -> std::string {
+                if (!std::isprint(byte))
+                    return ".";
+                char b(byte);
+                if (b==' ') return "&nbsp;";
+                else if (b=='"') return "&quot;";
+                else if (b=='\'') return "&apos;";
+                else if (b=='&') return "&amp;";
+                else if (b=='<') return "&lt;";
+                else if (b=='>') return "&gt;";
+                else return std::string{b};
+            };
+
             auto reader = prv::ProviderReader(provider);
             reader.seek(offset);
             reader.setEndAddress((offset + size) - 1);
 
             u64 address = offset & ~u64(0x0F);
+
             std::string asciiRow;
             for (u8 byte : reader) {
                 if ((address % 0x10) == 0) {
                     result += hex::format("  {}", asciiRow);
-                    result +=  hex::format("<br>\n        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp;&nbsp;<span class=\"hexcolumn\">", address);
-
+                    result += hex::format("<br>\n        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp;&nbsp;<span class=\"hexcolumn\">", address);
+                    
                     asciiRow.clear();
 
                     if (address == (offset & ~u64(0x0F))) {
@@ -165,19 +179,6 @@ namespace hex::plugin::builtin {
                     tagStart = "<span class=\"zerobyte\">";
                     tagEnd = "</span>";
                 }
-
-                auto html_safe = [](u8 byte) -> std::string {
-                    if (!std::isprint(byte))
-                        return ".";
-                    char b(byte);
-                    if (b==' ') return "&nbsp;";
-                    else if (b=='"') return "&quot;";
-                    else if (b=='\'') return "&apos;";
-                    else if (b=='&') return "&amp;";
-                    else if (b=='<') return "&lt;";
-                    else if (b=='>') return "&gt;";
-                    else return std::string{b};
-                };
 
                 result += hex::format("{0}{2:02X}{1} ", tagStart, tagEnd, byte);
                 asciiRow += html_safe(byte);
