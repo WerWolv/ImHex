@@ -1479,8 +1479,8 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
             SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex + spacesToInsert)));
         } else {
             auto spacesToRemove = (cindex % mTabSize);
-            if (spacesToRemove == 0) spacesToRemove = 4;
-
+            if (spacesToRemove == 0) spacesToRemove = mTabSize;
+            spacesToRemove = std::min(spacesToRemove, (int32_t) line.size());
             for (int j = 0; j < spacesToRemove; j++) {
                 if ((line.begin() + cindex - 1)->mChar == ' ') {
                     line.erase(line.begin() + cindex - 1);
