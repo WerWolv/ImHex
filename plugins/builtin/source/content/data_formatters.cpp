@@ -160,7 +160,7 @@ namespace hex::plugin::builtin {
                 if ((address % 0x10) == 0) {
                     result += hex::format("  {}", asciiRow);
                     result += hex::format("<br>\n        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp;&nbsp;<span class=\"hexcolumn\">", address);
-                    
+
                     asciiRow.clear();
 
                     if (address == (offset & ~u64(0x0F))) {
