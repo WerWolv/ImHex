@@ -66,25 +66,6 @@ public:
 		Max
     };
 
-	enum class SelectionMode
-	{
-		Normal,
-		Word,
-		Line
-	};
-
-	struct Breakpoint
-	{
-		int mLine;
-		bool mEnabled;
-		std::string mCondition;
-
-		Breakpoint()
-			: mLine(-1)
-			, mEnabled(false)
-		{}
-	};
-
 	// Represents a character coordinate from the user's point of view,
 	// i. e. consider an uniform grid (assuming fixed-width font) on the
 	// screen as it is rendered, and each cell has its own coordinate, starting from 0.
@@ -369,13 +350,16 @@ public:
         std::string substr(size_t start, size_t length = (size_t)-1, LinePart part = LinePart::Line ) const {
             if (length == (size_t)-1)
                 length = mLine.size() - start;
-            auto utfLength = Utf8CharsToBytes(mLine, start, length);
-            if (part == LinePart::Line && utfLength > 0)
-                return mLine.substr(start, utfLength);
-            if (part == LinePart::Colorized && utfLength > 0)
-                return mColorizedLine.substr(start, utfLength);
-            if (part == LinePart::Flags && utfLength > 0)
-                return mFlags.substr(start, utfLength);
+            if (start >= mLine.size())
+                return "";
+            if (start + length >= mLine.size())
+                length = mLine.size() - start;
+            if (part == LinePart::Line && length > 0)
+                return mLine.substr(start, length);
+            if (part == LinePart::Colorized && length > 0)
+                return mColorizedLine.substr(start, length);
+            if (part == LinePart::Flags && length > 0)
+                return mFlags.substr(start, length);
             return "";
         }
 
@@ -743,7 +727,7 @@ public:
 
 	void SetSelectionStart(const Coordinates& aPosition);
 	void SetSelectionEnd(const Coordinates& aPosition);
-	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd, SelectionMode aMode = SelectionMode::Normal);
+	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd);
     Selection GetSelection() const;
 	void SelectWordUnderCursor();
 	void SelectAll();
@@ -900,6 +884,7 @@ private:
   	Coordinates ScreenPosToCoordinates(const ImVec2& aPosition) const;
 	Coordinates FindWordStart(const Coordinates& aFrom) const;
 	Coordinates FindWordEnd(const Coordinates& aFrom) const;
+    Coordinates FindPreviousWord(const Coordinates& aFrom) const;
 	Coordinates FindNextWord(const Coordinates& aFrom) const;
     Coordinates StringIndexToCoordinates(int aIndex, const std::string &str) const;
 	int GetCharacterIndex(const Coordinates& aCoordinates) const;
@@ -932,7 +917,6 @@ private:
     uint64_t mColorizedLinesTimestamp = 0;
 	EditorState mState = {};
 	UndoBuffer mUndoBuffer;
-    UndoBuffer mEdits;
 	int mUndoIndex = 0;
     bool mScrollToBottom = false;
     float mTopMargin = 0.0F;
@@ -957,7 +941,6 @@ private:
 	bool mCursorPositionChanged = false;
     bool mBreakPointsChanged = false;
 	int mColorRangeMin = 0, mColorRangeMax = 0;
-	SelectionMode mSelectionMode = SelectionMode::Normal;
 	bool mHandleKeyboardInputs = true;
 	bool mHandleMouseInputs = true;
 	bool mIgnoreImGuiChild = false;

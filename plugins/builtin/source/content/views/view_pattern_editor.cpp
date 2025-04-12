@@ -8,7 +8,6 @@
 #include <hex/api/events/requests_interaction.hpp>
 
 #include <pl/patterns/pattern.hpp>
-#include <pl/core/parser.hpp>
 #include <pl/core/lexer.hpp>
 #include <pl/core/ast/ast_node_variable_decl.hpp>
 #include <pl/core/ast/ast_node_builtin_type.hpp>
@@ -47,7 +46,7 @@ namespace hex::plugin::builtin {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             constexpr static std::array keywords = {
-                    "struct", "union","using",  "enum", "bitfield",  "unsigned", "signed","be", "le", "if", "else", "this", "parent","while","match",  "for", "fn", "return", "namespace", "in", "out", "break", "continue", "ref", "null", "const", "try", "catch", "import", "as",  "from","false", "true",  "addressof", "sizeof", "typenameof", "$"
+                    "struct", "union","using",  "enum", "bitfield",  "unsigned", "signed","be", "le", "if", "else", "this", "parent","while","match",  "for", "fn", "return", "namespace", "in", "out", "break", "continue", "ref", "null", "const", "try", "catch", "import", "as",  "from","false", "true",  "addressof", "sizeof", "typenameof"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
@@ -594,11 +593,12 @@ namespace hex::plugin::builtin {
             if (m_textEditor.IsTextChanged() && !m_hasUnevaluatedChanges) {
                 m_textEditor.SetTextChanged(false);
                 m_hasUnevaluatedChanges = true;
+                m_changesWereParsed = false;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
             }
 
-            if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0 && m_textHighlighter.getRunningColorizers() == 0) {
+            if (m_hasUnevaluatedChanges && !m_textHighlighter.m_needsToUpdateColors && m_runningEvaluators == 0 && m_runningParsers == 0 && m_textHighlighter.getRunningColorizers() == 0) {
                 if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
 
                     auto code = m_textEditor.GetText();
@@ -1154,7 +1154,7 @@ namespace hex::plugin::builtin {
                         using enum EnvVarType;
                         case Integer:
                             {
-                                i64 displayValue = i64(hex::get_or<i128>(value, 0));
+                                i64 displayValue = i64(hex::get_or<i128>(value, 0ull));
                                 ImGui::InputScalar("###value", ImGuiDataType_S64, &displayValue);
                                 value = i128(displayValue);
                                 break;
@@ -1186,7 +1186,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        envVars.insert(std::next(iter), { envVarCounter++, "", i128(0), EnvVarType::Integer });
+                        envVars.insert(std::next(iter), { envVarCounter++, "", i128(0ll), EnvVarType::Integer });
                     }
 
                     ImGui::SameLine();
@@ -1238,12 +1238,12 @@ namespace hex::plugin::builtin {
                         const std::string label { "##" + name };
 
                         if (pl::core::Token::isSigned(variable.type)) {
-                            i64 value = i64(hex::get_or<i128>(variable.value, 0));
+                            i64 value = i64(hex::get_or<i128>(variable.value, 0ll));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
                                 m_hasUnevaluatedChanges = true;
                             variable.value = i128(value);
                         } else if (pl::core::Token::isUnsigned(variable.type)) {
-                            u64 value = u64(hex::get_or<u128>(variable.value, 0));
+                            u64 value = u64(hex::get_or<u128>(variable.value, 0ull));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
                                 m_hasUnevaluatedChanges = true;
                             variable.value = u128(value);
@@ -1861,7 +1861,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
         const auto &ast = m_editorRuntime->parseString(code, pl::api::Source::DefaultSource);
-        m_textEditor.SetLongestLineLength(m_editorRuntime->getInternals().lexer.get()->getLongestLineLength());
+        m_textEditor.SetLongestLineLength(m_editorRuntime->getInternals().preprocessor.get()->getLongestLineLength());
 
         auto &patternVariables = m_patternVariables.get(provider);
         auto oldPatternVariables = std::move(patternVariables);
@@ -2054,7 +2054,7 @@ namespace hex::plugin::builtin {
 
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
             m_shouldAnalyze.get(provider) = true;
-            m_envVarEntries.get(provider).emplace_back(0, "", i128(0), EnvVarType::Integer);
+            m_envVarEntries.get(provider).emplace_back(0, "", i128(0ll), EnvVarType::Integer);
 
             m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
             m_cursorPosition.get(provider) =  TextEditor::Coordinates(0, 0);
