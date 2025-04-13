@@ -1074,26 +1074,28 @@ namespace hex::plugin::builtin {
         }
         if (m_consoleNeedsUpdate) {
             std::scoped_lock lock(m_logMutex);
-            bool skipNewLine = false;
+           // bool skipNewLine = false;
             auto lineCount = m_consoleEditor.GetTextLines().size();
             if (m_console->size() < lineCount || (lineCount == 1 && m_consoleEditor.GetLineText(0).empty())) {
                 m_consoleEditor.SetText("");
                 lineCount = 0;
-                skipNewLine = true;
+           //     skipNewLine = true;
             }
 
-            m_consoleEditor.JumpToLine(lineCount);
+            //m_consoleEditor.JumpToLine(lineCount+1);
             const auto linesToAdd = m_console->size() - lineCount;
 
 
-            std::string content;
+           // std::string content;
             for (size_t i = 0; i < linesToAdd; i += 1) {
-                if (!skipNewLine)
-                    content += '\n';
-                skipNewLine = false;
-                content += m_console->at(lineCount + i);
+                //if (!skipNewLine)
+                m_consoleEditor.AppendLine(m_console->at(lineCount + i));
+                //skipNewLine = false;
+                //content += m_console->at(lineCount + i);
+                //if (i + 1 < linesToAdd)
+                //    content += '\n';
             }
-            m_consoleEditor.InsertText(content);
+            //m_consoleEditor.InsertText(content);
 
             m_consoleNeedsUpdate = false;
         }

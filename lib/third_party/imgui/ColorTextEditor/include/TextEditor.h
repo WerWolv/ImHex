@@ -66,23 +66,16 @@ public:
 		Max
     };
 
-	// Represents a character coordinate from the user's point of view,
-	// i. e. consider an uniform grid (assuming fixed-width font) on the
-	// screen as it is rendered, and each cell has its own coordinate, starting from 0.
-	// Tabs are counted as [1..mTabSize] count empty spaces, depending on
-	// how many space is necessary to reach the next tab stop.
-	// For example, coordinate (1, 5) represents the character 'B' in a line "\tABC", when mTabSize = 4,
-	// because it is rendered as "    ABC" on the screen.
+	// indices of the arrays that contain the lines (vector) and the columns (a string) of the
+    // text editor. Negative values indicate the distance to the last element of the array.
+    // When comparing coordinates ensure they have the same sign because coordinates don't have
+    // information about the size of the array. Currently positive coordinates are always bigger
+    // than negatives even if that gives a wrong result.
 	struct Coordinates
 	{
 		int mLine, mColumn;
 		Coordinates() : mLine(0), mColumn(0) {}
-		Coordinates(int aLine, int aColumn) : mLine(aLine), mColumn(aColumn)
-		{
-			IM_ASSERT(aLine >= 0);
-			IM_ASSERT(aColumn >= 0);
-		}
-		static Coordinates Invalid() { static Coordinates invalid(-1, -1); return invalid; }
+		Coordinates(int aLine, int aColumn) : mLine(aLine), mColumn(aColumn) {}
 
 		bool operator ==(const Coordinates& o) const
 		{
@@ -212,6 +205,19 @@ public:
     };
     using ErrorHoverBoxes = std::map<Coordinates, ErrorHoverBox>;
 
+    // A line of text in the pattern editor consists of three strings; the character encoding, the color encoding and the flags.
+    // The char encoding is utf-8, the color encoding are indices to the color palette and the flags are used to override the colors 
+    // depending on priorities; e.g. comments, strings, etc. The color encoding is compressed for speed. The token size is stored with
+    // color index. Because tokens may be bigger than 256 characters, the number of bytes needed to store the token length is stored first
+    // as a negative number to indicate that the color is in compressed form, then the token length and after that the index of the color in
+    // the palette. To help with word boundary searches the string index that corresponds to the last character of the token is also given
+    // the color index. For single char tokens only the color index is stored as a single byte. For two byte tokens then it simply
+    // stores the color twice. The flags can be accessed via a union that can be used to access each bit or the entire char. Here are come examples
+    //  of the encodings using fictitious values.
+    //  character encodings:   "// this is a comment"
+    //  color encodings:       {2, 2, 0, -1, 4, 5, 0, 8, 8, 0, 8, 0, -1, 7, 8}"
+    //  flags:                {4,4,4,4,4,4,4,4,4,4,4,4,4,4,4}
+    
     class Line {
     public:
         struct FlagBits {
@@ -232,152 +238,139 @@ public:
 
         class LineIterator {
         public:
-            strConstIter mLineIter;
-            strConstIter mColorizedIter;
-            strConstIter mFlagsIter;
+            strConstIter mCharsIter;
+            strConstIter mColorsIter;
 
             LineIterator() = default;
 
             char operator*() {
-                return *mLineIter;
+                return *mCharsIter;
             }
 
             LineIterator operator++() {
                 LineIterator iter = *this;
-                ++iter.mLineIter;
-                ++iter.mColorizedIter;
-                ++iter.mFlagsIter;
+                ++iter.mCharsIter;
+                ++iter.mColorsIter;
                 return iter;
             }
 
             bool operator!=(const LineIterator &other) const {
-                return mLineIter != other.mLineIter || mColorizedIter != other.mColorizedIter || mFlagsIter != other.mFlagsIter;
+                return mCharsIter != other.mCharsIter || mColorsIter != other.mColorsIter;
             }
 
             bool operator==(const LineIterator &other) const {
-                return mLineIter == other.mLineIter && mColorizedIter == other.mColorizedIter && mFlagsIter == other.mFlagsIter;
+                return mCharsIter == other.mCharsIter && mColorsIter == other.mColorsIter;
             }
 
             LineIterator operator+(int n) {
                 LineIterator iter = *this;
-                iter.mLineIter += n;
-                iter.mColorizedIter += n;
-                iter.mFlagsIter += n;
+                iter.mCharsIter += n;
+                iter.mColorsIter += n;
                 return iter;
             }
 
             int operator-(LineIterator l) {
-                return mLineIter - l.mLineIter;
+                return mCharsIter - l.mCharsIter;
             }
         };
 
         LineIterator begin() const {
             LineIterator iter;
-            iter.mLineIter = mLine.begin();
-            iter.mColorizedIter = mColorizedLine.begin();
-            iter.mFlagsIter = mFlags.begin();
+            iter.mCharsIter = mChars.begin();
+            iter.mColorsIter = mColors.begin();
             return iter;
         }
 
         LineIterator end() const {
             LineIterator iter;
-            iter.mLineIter = mLine.end();
-            iter.mColorizedIter = mColorizedLine.end();
-            iter.mFlagsIter = mFlags.end();
+            iter.mCharsIter = mChars.end();
+            iter.mColorsIter = mColors.end();
             return iter;
         }
 
-        std::string mLine;
-        std::string mColorizedLine;
+        std::string mChars;
+        std::string mColors;
         std::string mFlags;
         bool mColorized = false;
-        Line() : mLine(), mColorizedLine(), mFlags(), mColorized(false) {}
+        Line() : mChars(), mColors(), mFlags(), mColorized(false) {}
 
         explicit Line(const char *line) {
             Line(std::string(line));
         }
 
-        explicit Line(const std::string &line) : mLine(line), mColorizedLine(std::string(line.size(), 0x00)), mFlags(std::string(line.size(), 0x00)), mColorized(false) {}
-        Line(const Line &line) : mLine(line.mLine), mColorizedLine(line.mColorizedLine), mFlags(line.mFlags),  mColorized(line.mColorized) {}
+        explicit Line(const std::string &line) : mChars(line), mColors(std::string(line.size(), 0x00)), mFlags(std::string(line.size(), 0x00)), mColorized(false) {}
+        Line(const Line &line) : mChars(line.mChars), mColors(line.mColors), mFlags(line.mFlags),  mColorized(line.mColorized) {}
 
         Line &operator=(const Line &line) {
-            mLine = line.mLine;
-            mColorizedLine = line.mColorizedLine;
-            mFlags = line.mFlags;
+            mChars = line.mChars;
+            mColors = line.mColors;
             mColorized = line.mColorized;
             return *this;
         }
 
         Line &operator=(Line &&line) noexcept {
-            mLine = std::move(line.mLine);
-            mColorizedLine = std::move(line.mColorizedLine);
-            mFlags = std::move(line.mFlags);
+            mChars = std::move(line.mChars);
+            mColors = std::move(line.mColors);
             mColorized = line.mColorized;
             return *this;
         }
 
         size_t size() const {
-            return mLine.size();
+            return mChars.size();
         }
         enum class LinePart {
-            Line,
-            Colorized,
-            Flags
+            Chars,
+            Colors
         };
 
-        char front(LinePart part = LinePart::Line) const {
-            if (part == LinePart::Line && !mLine.empty())
-                return mLine.front();
-            if (part == LinePart::Colorized && !mColorizedLine.empty())
-                return mColorizedLine.front();
-            if (part == LinePart::Flags && !mFlags.empty())
-                return mFlags.front();
+        char front(LinePart part = LinePart::Chars) const {
+            if (part == LinePart::Chars && !mChars.empty())
+                return mChars.front();
+            if (part == LinePart::Colors && !mColors.empty())
+                return mColors.front();
             return 0x00;
         }
 
         void push_back(char c) {
-            mLine.push_back(c);
-            mColorizedLine.push_back(0x00);
-            mFlags.push_back(0x00);
+            mChars.push_back(c);
+            mColors.push_back(0x00);
             mColorized = false;
         }
 
         bool empty() const {
-            return mLine.empty();
+            return mChars.empty();
         }
 
 
-        std::string substr(size_t start, size_t length = (size_t)-1, LinePart part = LinePart::Line ) const {
+        std::string substr(size_t start, size_t length = (size_t)-1, LinePart part = LinePart::Chars ) const {
             if (length == (size_t)-1)
-                length = mLine.size() - start;
-            if (start >= mLine.size())
+                length = mChars.size() - start;
+            if (start >= mChars.size())
                 return "";
-            if (start + length >= mLine.size())
-                length = mLine.size() - start;
-            if (part == LinePart::Line && length > 0)
-                return mLine.substr(start, length);
-            if (part == LinePart::Colorized && length > 0)
-                return mColorizedLine.substr(start, length);
-            if (part == LinePart::Flags && length > 0)
-                return mFlags.substr(start, length);
+            if (start + length >= mChars.size())
+                length = mChars.size() - start;
+            if (part == LinePart::Chars && length > 0)
+                return mChars.substr(start, length);
+            if (part == LinePart::Colors && length > 0)
+                return mColors.substr(start, length);
             return "";
         }
 
-        template<LinePart part=LinePart::Line>
+        template<LinePart part=LinePart::Chars>
         char operator[](size_t index) const {
-            if (part == LinePart::Line)
-                return mLine[index];
-            if (part == LinePart::Colorized)
-                return mColorizedLine[index];
+            if (part == LinePart::Chars)
+                return mChars[index];
+            if (part == LinePart::Colors)
+                return mColors[index];
             return mFlags[index];
         }
 
-        template<LinePart part=LinePart::Line>
+        template<LinePart part=LinePart::Chars>
         const char &operator[](size_t index) {
-            if (part == LinePart::Line)
-                return mLine[index];
-            if (part == LinePart::Colorized)
-                return mColorizedLine[index];
+            if (part == LinePart::Chars)
+                return mChars[index];
+            if (part == LinePart::Colors)
+                return mColors[index];
             return mFlags[index];
         }
 
@@ -394,7 +387,7 @@ public:
         }
 
         void append(const std::string &text) {
-            mLine.append(text);
+            mChars.append(text);
             mColorized = false;
         }
 
@@ -403,12 +396,10 @@ public:
         }
 
         void append(LineIterator begin, LineIterator end) {
-            if (begin.mLineIter < end.mLineIter)
-                mLine.append(begin.mLineIter, end.mLineIter);
-            if (begin.mColorizedIter < end.mColorizedIter)
-                mColorizedLine.append(begin.mColorizedIter, end.mColorizedIter);
-            if (begin.mFlagsIter < end.mFlagsIter)
-                mFlags.append(begin.mFlagsIter, end.mFlagsIter);
+            if (begin.mCharsIter < end.mCharsIter)
+                mChars.append(begin.mCharsIter, end.mCharsIter);
+            if (begin.mColorsIter < end.mColorsIter)
+                mColors.append(begin.mColorsIter, end.mColorsIter);
             mColorized = false;
         }
 
@@ -430,7 +421,7 @@ public:
             if (iter == end())
                 append(std::string(beginString, endString));
             else {
-                mLine.insert(iter.mLineIter, beginString, endString);
+                mChars.insert(iter.mCharsIter, beginString, endString);
                 mColorized = false;
             }
         }
@@ -446,32 +437,31 @@ public:
             if (iter == end())
                 append(beginLine, endLine);
             else {
-                mLine.insert(iter.mLineIter, beginLine.mLineIter, endLine.mLineIter);
+                mChars.insert(iter.mCharsIter, beginLine.mCharsIter, endLine.mCharsIter);
                 mColorized = false;
             }
         }
 
         void erase(LineIterator begin) {
-            mLine.erase(begin.mLineIter);
+            mChars.erase(begin.mCharsIter);
             mColorized = false;
         }
 
         void erase(LineIterator begin, size_t count) {
             if (count == (size_t) -1)
-                count = mLine.size() - (begin.mLineIter - mLine.begin());
-            mLine.erase(begin.mLineIter, begin.mLineIter + count);
+                count = mChars.size() - (begin.mCharsIter - mChars.begin());
+            mChars.erase(begin.mCharsIter, begin.mCharsIter + count);
             mColorized = false;
         }
 
         void SetLine(const std::string &text) {
-            mLine = text;
+            mChars = text;
             mColorized = false;
         }
 
         void SetLine(const Line &text) {
-            mLine = text.mLine;
-            mColorizedLine = text.mColorizedLine;
-            mFlags = text.mFlags;
+            mChars = text.mChars;
+            mColors = text.mColors;
             mColorized = text.mColorized;
         }
 
@@ -588,17 +578,17 @@ public:
 
     void SetColorizedLineSize(size_t line) {
         if (line < mLines.size()) {
-            const auto &size = mLines[line].mLine.size();
-            if (mLines[line].mColorizedLine.size() != size) {
-                mLines[line].mColorizedLine.resize(size);
-                std::fill(mLines[line].mColorizedLine.begin(), mLines[line].mColorizedLine.end(), 0x00);
+            const auto &size = mLines[line].mChars.size();
+            if (mLines[line].mColors.size() != size) {
+                mLines[line].mColors.resize(size);
+                std::fill(mLines[line].mColors.begin(), mLines[line].mColors.end(), 0x00);
             }
         }
     }
 
     void SetColorizedLine(size_t line, const std::string &tokens) {
         if (line < mLines.size()) {
-            auto &lineTokens = mLines[line].mColorizedLine;
+            auto &lineTokens = mLines[line].mColors;
             if (lineTokens.size() != tokens.size()) {
                 lineTokens.resize(tokens.size());
                 std::fill(lineTokens.begin(), lineTokens.end(), 0x00);
@@ -715,6 +705,7 @@ public:
 
 	void InsertText(const std::string& aValue);
 	void InsertText(const char* aValue);
+    void AppendLine(const std::string &aValue);
 
 	void MoveUp(int aAmount = 1, bool aSelect = false);
 	void MoveDown(int aAmount = 1, bool aSelect = false);
