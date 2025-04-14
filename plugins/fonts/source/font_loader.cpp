@@ -91,6 +91,8 @@ namespace hex::fonts {
                     if (fontName.find("codicon") != std::string::npos)
                         offset.x -= 1.0f;
                     ImS32 advance = (float) slot->advance.x / 64.0f;
+                    if (offset.x+width > advance && advance >= (int) width)
+                        offset.x =  advance - width;
 
                     ImS32 rect_id = io.Fonts->AddCustomRectFontGlyph(io.Fonts->Fonts[0], charCode, width, height, advance, offset);
                     rect_ids.push_back(rect_id);
