@@ -9,6 +9,13 @@
 #include <pl/pattern_language.hpp>
 #include <toasts/toast_notification.hpp>
 
+#if defined(_MSC_VER) || defined(OS_MACOS)
+#include <stack.h>
+#else
+using  std::stack;
+#endif
+
+
 namespace hex::plugin::builtin {
 
     bool isEscapeChar(char c) {
@@ -179,7 +186,7 @@ namespace hex::plugin::builtin {
                                                            bool fullName, VariableScopes *blocks) {
 
         bool addArgumentBlock = !fullName;
-        std::stack<i32> tokenStack;
+        stack<i32> tokenStack;
         if (getTokenId(m_curr->location) < 1)
             return false;
         std::string name;
