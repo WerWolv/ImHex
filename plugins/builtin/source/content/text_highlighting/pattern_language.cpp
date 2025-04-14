@@ -9,11 +9,6 @@
 #include <pl/pattern_language.hpp>
 #include <toasts/toast_notification.hpp>
 
-#if defined(_MSC_VER) || defined(OS_MACOS)
-#include <stack>
-#else
-using  std::stack;
-#endif
 
 
 namespace hex::plugin::builtin {
@@ -186,7 +181,7 @@ namespace hex::plugin::builtin {
                                                            bool fullName, VariableScopes *blocks) {
 
         bool addArgumentBlock = !fullName;
-        stack<i32> tokenStack;
+        std::vector<i32> tokenStack;
         if (getTokenId(m_curr->location) < 1)
             return false;
         std::string name;
@@ -235,15 +230,15 @@ namespace hex::plugin::builtin {
 
             if (sequence(tkn::Separator::LeftBrace)) {
                 auto tokenId = getTokenId(m_curr[-1].location);
-                tokenStack.push(tokenId);
+                tokenStack.push_back(tokenId);
                 nestedLevel++;
             } else if (sequence(tkn::Separator::RightBrace)) {
                 nestedLevel--;
 
                 if (tokenStack.empty())
                     return false;
-                Interval range(tokenStack.top(), getTokenId(m_curr[-1].location));
-                tokenStack.pop();
+                Interval range(tokenStack.back(), getTokenId(m_curr[-1].location));
+                tokenStack.pop_back();
 
                 if (nestedLevel == 0) {
                     range.end -= 1;
