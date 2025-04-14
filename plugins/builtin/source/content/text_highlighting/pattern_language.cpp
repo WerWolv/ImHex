@@ -1231,7 +1231,7 @@ namespace hex::plugin::builtin {
                     setColor();
             }
         } catch (const std::out_of_range &e) {
-            log::error("TextHighlighter::getAllTokenRanges: Out of range error: {}", e.what());
+            log::error("TextHighlighter::setInitialColors: Out of range error: {}", e.what());
             return;
         }
     }
@@ -1297,7 +1297,7 @@ namespace hex::plugin::builtin {
                 }
             }
         } catch (const std::out_of_range &e) {
-            log::error("TextHighlighter::getAllTokenRanges: Out of range error: {}", e.what());
+            log::error("TextHighlighter::loadInstances: Out of range error: {}", e.what());
             return;
         }
         m_instances = std::move(instances);
@@ -1789,7 +1789,7 @@ namespace hex::plugin::builtin {
         try {
             source = location.source;
         } catch  (const std::out_of_range &e) {
-            log::error("TextHighlighter::getAllTokenRanges: Out of range error: {}", e.what());
+            log::error("TextHighlighter::IsLocationValids: Out of range error: {}", e.what());
             return false;
         }
         if (!source->mainSource)
