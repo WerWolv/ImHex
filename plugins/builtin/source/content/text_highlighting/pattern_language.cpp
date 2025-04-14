@@ -10,7 +10,7 @@
 #include <toasts/toast_notification.hpp>
 
 #if defined(_MSC_VER) || defined(OS_MACOS)
-#include <stack.h>
+#include <stack>
 #else
 using  std::stack;
 #endif
@@ -1312,10 +1312,9 @@ namespace hex::plugin::builtin {
 
 // Get the location of a given token index
     pl::core::Location TextHighlighter::getLocation(i32 tokenId) {
-        pl::core::Location location;
 
         if (tokenId >= (i32) m_tokens.size())
-            return location;
+            return Location::Empty();
         return m_tokens[tokenId].location;
     }
 
