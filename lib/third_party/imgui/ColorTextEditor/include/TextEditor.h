@@ -595,8 +595,8 @@ public:
             }
             size_t i = 0;
             while (i < tokens.size()) {
-                if (tokens[i] < 0) {
-                    auto bytes = -tokens[i];
+                if ((int8_t) tokens[i] < 0) {
+                    int8_t bytes = -tokens[i];
                     int tokenLength=0;
                     for (int j = 0; j < bytes; j++)
                         tokenLength += tokens[i + j + 2] << (j * 8);
