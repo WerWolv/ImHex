@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             constexpr static std::array keywords = {
-                    "struct", "union","using",  "enum", "bitfield",  "unsigned", "signed","be", "le", "if", "else", "this", "parent","while","match",  "for", "fn", "return", "namespace", "in", "out", "break", "continue", "ref", "null", "const", "try", "catch", "import", "as",  "from","false", "true",  "addressof", "sizeof", "typenameof"
+                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch", "import", "as", "from"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
@@ -611,7 +611,6 @@ namespace hex::plugin::builtin {
                             m_triggerAutoEvaluate = true;
                     });
                     m_hasUnevaluatedChanges = false;
-                    //m_textEditor.SetTextChanged();
                 }
             }
 
@@ -656,9 +655,9 @@ namespace hex::plugin::builtin {
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
         if (ImGui::BeginPopup("##text_editor_view_find_replace_popup", popupFlags)) {
             static std::string findWord;
+            static bool requestFocus = false;
             static u64 position = 0;
             static u64 count = 0;
-            static bool requestFocus = false;
             static bool updateCount = false;
             static bool canReplace = true;
             TextEditor::FindReplaceHandler *findReplaceHandler = textEditor->GetFindReplaceHandler();
@@ -1074,29 +1073,17 @@ namespace hex::plugin::builtin {
         }
         if (m_consoleNeedsUpdate) {
             std::scoped_lock lock(m_logMutex);
-           // bool skipNewLine = false;
             auto lineCount = m_consoleEditor.GetTextLines().size();
             if (m_console->size() < lineCount || (lineCount == 1 && m_consoleEditor.GetLineText(0).empty())) {
                 m_consoleEditor.SetText("");
                 lineCount = 0;
-           //     skipNewLine = true;
             }
 
-            //m_consoleEditor.JumpToLine(lineCount+1);
             const auto linesToAdd = m_console->size() - lineCount;
 
-
-           // std::string content;
             for (size_t i = 0; i < linesToAdd; i += 1) {
-                //if (!skipNewLine)
                 m_consoleEditor.AppendLine(m_console->at(lineCount + i));
-                //skipNewLine = false;
-                //content += m_console->at(lineCount + i);
-                //if (i + 1 < linesToAdd)
-                //    content += '\n';
             }
-            //m_consoleEditor.InsertText(content);
-
             m_consoleNeedsUpdate = false;
         }
 
@@ -1156,7 +1143,7 @@ namespace hex::plugin::builtin {
                         using enum EnvVarType;
                         case Integer:
                             {
-                                i64 displayValue = i64(hex::get_or<i128>(value, 0ull));
+                                i64 displayValue = i64(hex::get_or<i128>(value, 0));
                                 ImGui::InputScalar("###value", ImGuiDataType_S64, &displayValue);
                                 value = i128(displayValue);
                                 break;
@@ -1188,7 +1175,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        envVars.insert(std::next(iter), { envVarCounter++, "", i128(0ll), EnvVarType::Integer });
+                        envVars.insert(std::next(iter), { envVarCounter++, "", i128(0), EnvVarType::Integer });
                     }
 
                     ImGui::SameLine();
@@ -1245,7 +1232,7 @@ namespace hex::plugin::builtin {
                                 m_hasUnevaluatedChanges = true;
                             variable.value = i128(value);
                         } else if (pl::core::Token::isUnsigned(variable.type)) {
-                            u64 value = u64(hex::get_or<u128>(variable.value, 0ull));
+                            u64 value = u64(hex::get_or<u128>(variable.value, 0));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
                                 m_hasUnevaluatedChanges = true;
                             variable.value = u128(value);
@@ -1863,7 +1850,6 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
         const auto &ast = m_editorRuntime->parseString(code, pl::api::Source::DefaultSource);
-        m_textEditor.SetLongestLineLength(m_editorRuntime->getInternals().preprocessor.get()->getLongestLineLength());
 
         auto &patternVariables = m_patternVariables.get(provider);
         auto oldPatternVariables = std::move(patternVariables);
@@ -2056,7 +2042,7 @@ namespace hex::plugin::builtin {
 
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
             m_shouldAnalyze.get(provider) = true;
-            m_envVarEntries.get(provider).emplace_back(0, "", i128(0ll), EnvVarType::Integer);
+            m_envVarEntries.get(provider).emplace_back(0, "", i128(0), EnvVarType::Integer);
 
             m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
             m_cursorPosition.get(provider) =  TextEditor::Coordinates(0, 0);
