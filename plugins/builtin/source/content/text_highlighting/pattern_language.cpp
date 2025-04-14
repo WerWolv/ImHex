@@ -329,7 +329,8 @@ namespace hex::plugin::builtin {
             }
             m_curr = curr;
         }
-        } catch (std::exception &e) {
+        } catch (const std::out_of_range &e) {
+            log::error("TextHighlighter::getAllTokenRanges: Out of range error: {}", e.what());
             return;
         }
     }
@@ -1229,7 +1230,8 @@ namespace hex::plugin::builtin {
                 } else
                     setColor();
             }
-        } catch (const std::exception &e) {
+        } catch (const std::out_of_range &e) {
+            log::error("TextHighlighter::getAllTokenRanges: Out of range error: {}", e.what());
             return;
         }
     }
@@ -1294,7 +1296,8 @@ namespace hex::plugin::builtin {
                         instances[name].push_back(id);
                 }
             }
-        } catch (const std::exception &e) {
+        } catch (const std::out_of_range &e) {
+            log::error("TextHighlighter::getAllTokenRanges: Out of range error: {}", e.what());
             return;
         }
         m_instances = std::move(instances);
@@ -1530,7 +1533,8 @@ namespace hex::plugin::builtin {
                     }
                 }
             }
-        } catch (const std::exception &e) {
+        } catch (const std::out_of_range &e) {
+            log::error("TextHighlighter::getAllTokenRanges: Out of range error: {}", e.what());
             return;
         }
     }
@@ -1570,7 +1574,8 @@ namespace hex::plugin::builtin {
                     excludedLineIndex++;
                 }
             }
-        } catch (const std::exception &e) {
+        }catch (const std::out_of_range &e) {
+            log::error("TextHighlighter::getAllTokenRanges: Out of range error: {}", e.what());
             return;
         }
         colorRemainingIdentifierTokens();
@@ -1783,8 +1788,8 @@ namespace hex::plugin::builtin {
         const pl::api::Source *source;
         try {
             source = location.source;
-        }
-        catch (const std::exception &e) {
+        } catch  (const std::out_of_range &e) {
+            log::error("TextHighlighter::getAllTokenRanges: Out of range error: {}", e.what());
             return false;
         }
         if (!source->mainSource)

@@ -379,7 +379,10 @@ namespace hex::plugin::builtin {
             try {
                 token = m_curr[0];
             }
-            catch (const std::exception &e) {
+            catch (const std::out_of_range &e) {
+                auto t = e.what();
+                if (t == nullptr)
+                    return false;
                 return false;
             }
             if (!isLocationValid(token.location))
