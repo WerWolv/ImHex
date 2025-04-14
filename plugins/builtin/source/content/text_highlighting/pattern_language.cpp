@@ -1711,7 +1711,7 @@ namespace hex::plugin::builtin {
                 auto definitions = m_UDTVariables[inheritance];
                 for (auto [variableName, variableDefinitions]: definitions) {
                     auto tokenRange = m_UDTTokenRange[name];
-                    u32 tokenIndex;
+                    u32 tokenIndex = tokenRange.start;
                     for (auto token = tokenRange.start; token < tokenRange.end; token++) {
 
                         if (auto operatorTkn = std::get_if<Operator>(&m_tokens.at(token).value);
