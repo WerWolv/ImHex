@@ -41,23 +41,23 @@ namespace hex {
         std::ranges::transform(fileName, fileName.begin(), tolower);
         fileName += ".hexlyt";
 
-        std::fs::path layoutPath;
         for (const auto &path : paths::Layouts.write()) {
             size_t outSize = 0;
             const char* iniData = ImGui::SaveIniSettingsToMemory(&outSize);
 
-            layoutPath = path / fileName;
+            std::fs::path layoutPath = path / fileName;
             wolv::io::File file = wolv::io::File(layoutPath, wolv::io::File::Mode::Write);
             if (!file.isValid()) {
-                log::warn("Failed to save layout '{}'. Could not open file '{}', continuing with next path", name, layoutPath.c_str());
+                log::warn("Failed to save layout '{}'. Could not open file '{}', continuing with next path", name, wolv::util::toUTF8String(layoutPath));
                 continue;
             }
-            size_t written = file.writeBuffer((const u8*) iniData, outSize);
+
+            const size_t written = file.writeBuffer(reinterpret_cast<const u8*>(iniData), outSize);
             if (written != outSize) {
-                log::warn("Failed to save layout '{}'. Could not write file '{}', continuing with next path", name, layoutPath.c_str());
+                log::warn("Failed to save layout '{}'. Could not write file '{}', continuing with next path", name, wolv::util::toUTF8String(layoutPath));
                 continue;
             }
-            log::info("Layout '{}' saved to '{}'", name, layoutPath.c_str());
+            log::info("Layout '{}' saved to '{}'", name, wolv::util::toUTF8String(layoutPath));
             LayoutManager::reload();
             return;
         }
