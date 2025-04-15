@@ -4,6 +4,7 @@
 
     #include <string>
     #include <future>
+    #include <mutex>
 
     #include <hex/helpers/logger.hpp>
     #include <hex/helpers/fmt.hpp>
