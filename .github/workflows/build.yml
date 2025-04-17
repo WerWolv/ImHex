@@ -352,7 +352,7 @@ jobs:
       run: |
         brew reinstall python --quiet || true
         brew link --overwrite --quiet python 2>/dev/null || true
-        brew bundle --no-lock --quiet --file dist/macOS/Brewfile || true
+        brew bundle --quiet --file dist/macOS/Brewfile || true
         rm -rf /usr/local/Cellar/capstone
 
     - name: ⬇️ Install classic glfw

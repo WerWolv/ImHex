@@ -57,12 +57,12 @@ set(LIBIMHEX_SOURCES
 )
 
 if (APPLE)
-    set(OSX_11_0_SDK_PATH  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk)
+    set(OSX_SDK_PATH  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.sdk)
     if (NOT CMAKE_OSX_SYSROOT)
-        if (IS_DIRECTORY ${OSX_11_0_SDK_PATH})
-            set(CMAKE_OSX_SYSROOT ${OSX_11_0_SDK_PATH})
+        if (IS_DIRECTORY ${OSX_SDK_PATH})
+            set(CMAKE_OSX_SYSROOT ${OSX_SDK_PATH})
         else ()
-            message(WARNING "CMAKE_OSX_SYSROOT not set and macOS 10.9 SDK not found! Using default one.")
+            message(WARNING "CMAKE_OSX_SYSROOT not set and macOS SDK not found! Using default one.")
         endif ()
     endif ()
 
