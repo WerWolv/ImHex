@@ -10,6 +10,7 @@
 #include <map>
 #include <regex>
 #include <chrono>
+#include <iostream>
 #include "imgui.h"
 #include "imgui_internal.h"
 using strConstIter = std::string::const_iterator;
@@ -207,27 +208,18 @@ public:
 
     // A line of text in the pattern editor consists of three strings; the character encoding, the color encoding and the flags.
     // The char encoding is utf-8, the color encoding are indices to the color palette and the flags are used to override the colors 
-    // depending on priorities; e.g. comments, strings, etc. The color encoding is compressed for speed. The token size is stored with
-    // color index. Because tokens may be bigger than 256 characters, the number of bytes needed to store the token length is stored first
-    // as a negative number to indicate that the color is in compressed form, then the token length and after that the index of the color in
-    // the palette. To help with word boundary searches the string index that corresponds to the last character of the token is also given
-    // the color index. For single char tokens only the color index is stored as a single byte. For two byte tokens then it simply
-    // stores the color twice. The flags can be accessed via a union that can be used to access each bit or the entire char. Here are come examples
-    //  of the encodings using fictitious values.
-    //  character encodings:   "// this is a comment"
-    //  color encodings:       {2, 2, 0, -1, 4, 5, 0, 8, 8, 0, 8, 0, -1, 7, 8}"
-    //  flags:                {4,4,4,4,4,4,4,4,4,4,4,4,4,4,4}
+    // depending on priorities; e.g. comments, strings, etc.
     
     class Line {
     public:
         struct FlagBits {
-		bool mComment : 1;
-		bool mBlockComment : 1;
-		bool mPreprocessor : 1;
-		bool mDocComment : 1;
-        bool mGlobalDocComment : 1;
-		bool mDeactivated : 1;
-        bool mBlockDocComment : 1;
+		    bool mComment : 1;
+		    bool mBlockComment : 1;
+		    bool mDocComment : 1;
+            bool mBlockDocComment : 1;
+            bool mGlobalDocComment : 1;
+            bool mDeactivated : 1;
+            bool mPreprocessor : 1;
         };
         union Flags {
             Flags(char value) : mValue(value) {}
@@ -235,11 +227,14 @@ public:
             FlagBits mBits;
             char mValue;
         };
+        constexpr static char InComment = 31;
 
         class LineIterator {
         public:
             strConstIter mCharsIter;
             strConstIter mColorsIter;
+
+            LineIterator(const LineIterator &other) : mCharsIter(other.mCharsIter), mColorsIter(other.mColorsIter) {}
 
             LineIterator() = default;
 
@@ -252,6 +247,12 @@ public:
                 ++iter.mCharsIter;
                 ++iter.mColorsIter;
                 return iter;
+            }
+
+            LineIterator operator=(const LineIterator &other) {
+                mCharsIter = other.mCharsIter;
+                mColorsIter = other.mColorsIter;
+                return *this;
             }
 
             bool operator!=(const LineIterator &other) const {
@@ -300,6 +301,20 @@ public:
 
         explicit Line(const std::string &line) : mChars(line), mColors(std::string(line.size(), 0x00)), mFlags(std::string(line.size(), 0x00)), mColorized(false) {}
         Line(const Line &line) : mChars(line.mChars), mColors(line.mColors), mFlags(line.mFlags),  mColorized(line.mColorized) {}
+
+        LineIterator begin() {
+            LineIterator iter;
+            iter.mCharsIter = mChars.begin();
+            iter.mColorsIter = mColors.begin();
+            return iter;
+        }
+
+        LineIterator end() {
+            LineIterator iter;
+            iter.mCharsIter = mChars.end();
+            iter.mColorsIter = mColors.end();
+            return iter;
+        }
 
         Line &operator=(const Line &line) {
             mChars = line.mChars;
@@ -375,7 +390,7 @@ public:
         }
 
         void SetNeedsUpdate(bool needsUpdate) {
-            mColorized = !needsUpdate;
+            mColorized = mColorized && !needsUpdate;
         }
 
         void append(const char *text) {
@@ -388,6 +403,7 @@ public:
 
         void append(const std::string &text) {
             mChars.append(text);
+            mColors.append(text.size(), 0x00);
             mColorized = false;
         }
 
@@ -421,7 +437,16 @@ public:
             if (iter == end())
                 append(std::string(beginString, endString));
             else {
+                std::string charsString(beginString, endString);
                 mChars.insert(iter.mCharsIter, beginString, endString);
+                std::string colorString(charsString.size(), 0x00);
+                try {
+                    mColors.insert(iter.mColorsIter, colorString.begin(), colorString.end());
+                } catch (const std::exception &e) {
+                    std::cerr << "Exception: " << e.what() << std::endl;
+                    mColorized = false;
+                    return;
+                }
                 mColorized = false;
             }
         }
@@ -438,12 +463,14 @@ public:
                 append(beginLine, endLine);
             else {
                 mChars.insert(iter.mCharsIter, beginLine.mCharsIter, endLine.mCharsIter);
+                mColors.insert(iter.mColorsIter, beginLine.mColorsIter, endLine.mColorsIter);
                 mColorized = false;
             }
         }
 
         void erase(LineIterator begin) {
             mChars.erase(begin.mCharsIter);
+            mColors.erase(begin.mColorsIter);
             mColorized = false;
         }
 
@@ -451,11 +478,13 @@ public:
             if (count == (size_t) -1)
                 count = mChars.size() - (begin.mCharsIter - mChars.begin());
             mChars.erase(begin.mCharsIter, begin.mCharsIter + count);
+            mColors.erase(begin.mColorsIter, begin.mColorsIter + count);
             mColorized = false;
         }
 
         void SetLine(const std::string &text) {
             mChars = text;
+            mColors = std::string(text.size(), 0x00);
             mColorized = false;
         }
 
@@ -494,10 +523,8 @@ public:
 
 		bool mCaseSensitive;
 
-		LanguageDefinition()
-			: mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
-		{
-		}
+		LanguageDefinition() : mName(""), mKeywords({}), mIdentifiers({}), mPreprocIdentifiers({}), mSingleLineComment(""),  mCommentEnd(""),
+                               mCommentStart(""), mGlobalDocComment(""), mDocComment(""), mBlockDocComment(""), mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mTokenRegexStrings({}), mCaseSensitive(true) {}
 
 		static const LanguageDefinition& CPlusPlus();
 		static const LanguageDefinition& HLSL();
@@ -593,28 +620,17 @@ public:
                 lineTokens.resize(tokens.size());
                 std::fill(lineTokens.begin(), lineTokens.end(), 0x00);
             }
-            size_t i = 0;
-            while (i < tokens.size()) {
-                if ((int8_t) tokens[i] < 0) {
-                    int8_t bytes = -tokens[i];
-                    int tokenLength=0;
-                    for (int j = 0; j < bytes; j++)
-                        tokenLength += tokens[i + j + 2] << (j * 8);
-                    for (int j = 0; j < tokenLength; j++)
-                        lineTokens[i + j] = tokens[i + j];
-                    i += tokenLength;
-                } else if (tokens[i] > 0) {
-                    lineTokens[i] = tokens[i];
-                    if (i < lineTokens.size() && tokens[i] == tokens[i+1]) {
-                        lineTokens[i + 1] = tokens[i + 1];
-                        i+=2;
-                    } else
-                        i++;
-                } else
-                    i++;
+            bool needsUpdate = false;
+            for (size_t i = 0; i < tokens.size(); ++i) {
+                if (tokens[i] != 0x00) {
+                    if (tokens[i] != lineTokens[i]) {
+                        lineTokens[i] = tokens[i];
+                        needsUpdate = true;
+                    }
+                }
             }
+            SetNeedsUpdate(line, needsUpdate);
         }
-        SetNeedsUpdate(line, false);
     }
 
     void SetScrollY();
@@ -655,7 +671,7 @@ public:
     void SetOverwrite(bool aValue) { mOverwrite = aValue; }
 
     std::string ReplaceStrings(std::string string, const std::string &search, const std::string &replace);
-    std::vector<std::string> SplitString(const std::string &string, const std::string &delimiter, bool removeEmpty);
+    static std::vector<std::string> SplitString(const std::string &string, const std::string &delimiter, bool removeEmpty);
     std::string ReplaceTabsWithSpaces(const std::string& string, uint32_t tabSize);
     std::string PreprocessText(const std::string &code);
 
@@ -681,6 +697,7 @@ public:
 
 	bool IsColorizerEnabled() const { return mColorizerEnabled; }
 	void SetColorizerEnable(bool aValue);
+    void Colorize();
 
 	Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
 	void SetCursorPosition(const Coordinates& aPosition);
@@ -860,8 +877,7 @@ private:
 	typedef std::vector<UndoRecord> UndoBuffer;
 
 	void ProcessInputs();
-	void Colorize(int aFromLine = 0, int aCount = -1);
-	void ColorizeRange(int aFromLine = 0, int aToLine = 0);
+	void ColorizeRange();
 	void ColorizeInternal();
 	float TextDistanceToLineStart(const Coordinates& aFrom) const;
 	void EnsureCursorVisible();

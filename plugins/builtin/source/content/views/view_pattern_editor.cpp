@@ -590,10 +590,12 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (m_textEditor.IsTextChanged() && !m_hasUnevaluatedChanges) {
+            if (m_textEditor.IsTextChanged()) {
                 m_textEditor.SetTextChanged(false);
-                m_hasUnevaluatedChanges = true;
-                m_changesWereParsed = false;
+                if (!m_hasUnevaluatedChanges) {
+                    m_hasUnevaluatedChanges = true;
+                    m_changesWereParsed = false;
+                }
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
             }

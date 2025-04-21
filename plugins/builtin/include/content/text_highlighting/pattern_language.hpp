@@ -78,13 +78,13 @@ namespace hex::plugin::builtin {
         Variables m_globalVariables;
 
         std::map<std::string,std::string> m_attributeFunctionArgumentType;
-
-        std::vector<std::string> m_typeDefs;
+        std::map<std::string,std::string> m_typeDefMap;
+        std::map<std::string,std::string> m_typeDefInvMap;
         std::vector<std::string> m_nameSpaces;
         std::vector<std::string> m_UDTs;
-        std::vector<i32> m_taggedIdentifiers;
-        std::vector<i32> m_memberChains;
-        std::vector<i32> m_scopeChains;
+        std::set<i32> m_taggedIdentifiers;
+        std::set<i32> m_memberChains;
+        std::set<i32> m_scopeChains;
 
         TokenIter m_curr;
         TokenIter m_startToken, m_originalPosition, m_partOriginalPosition;
@@ -237,6 +237,7 @@ namespace hex::plugin::builtin {
         bool resolveIdentifierType(Definition &result, std::string identifierName);
         /// like previous functions but returns the type of the variable that is a member of a UDT
         std::string findIdentifierTypeStr(const std::string &identifierName, std::string context="");
+        IdentifierType findIdentifierType(const std::string &identifierName, std::string context);
         /// If context is empty search for the variable, if it isnt use the variable map.
         bool findOrContains(std::string &context, UnorderedBlocks tokenRange, VariableMap variableMap);
         /// Search for instances inside some block
