@@ -14,6 +14,7 @@
 #include <hex/helpers/default_paths.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <wolv/math_eval/math_evaluator.hpp>
 
@@ -1261,6 +1262,54 @@ namespace hex::plugin::builtin {
                                                 this);
 
 
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "Previous differing byte" }, ICON_VS_DEBUG_STEP_INTO, 1600,
+                                                CTRLCMD + Keys::LeftBracket,
+                                                [this] {
+                                                    auto provider = ImHexApi::Provider::get();
+                                                    if (provider == nullptr)
+                                                        return;
+                                                    const auto selection  = ImHexApi::HexEditor::getSelection();
+                                                    if (!selection.has_value())
+                                                        return;
+                                                    if (selection->getSize() != 1)
+                                                        return;
+
+                                                    auto currentAddress = selection->getStartAddress();
+                                                    u8 valueToFind = 0;
+                                                    provider->read(currentAddress, &valueToFind, 1);
+
+                                                    u8 currentValue = 0;
+                                                    bool didFindNextValue = false;
+                                                    bool didReachBeginning = false;
+
+                                                    while (provider->getBaseAddress() < currentAddress--) {
+                                                        if (currentAddress == provider->getBaseAddress()) {
+                                                            didReachBeginning = true;
+                                                        }
+                                                        provider->read(currentAddress, &currentValue, 1);
+                                                        if (currentValue != valueToFind) {
+                                                            didFindNextValue = true;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    if (didFindNextValue) {
+                                                        ImHexApi::HexEditor::setSelection(currentAddress, 1, provider);
+                                                    }
+
+                                                    if (!didFindNextValue && didReachBeginning) {
+                                                        ui::ToastInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
+                                                    }
+                                                },
+                                                [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() == 1; });
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "Next differing byte" }, ICON_VS_DEBUG_STEP_INTO, 1600,
+                                                CTRLCMD + Keys::RightBracket,
+                                                [this] {
+                                                    // this->openPopup<PopupGoto>();
+                                                },
+                                                [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() == 1; });
+
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1100, this);
 
@@ -1472,7 +1521,7 @@ namespace hex::plugin::builtin {
                                                 },
                                                 this);
 
-        /* Jump to */
+        /* Jump to */ 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.jump_to" }, ICON_VS_DEBUG_STEP_OUT, 1850,
                                                 [] {
                                                     auto provider = ImHexApi::Provider::get();
