@@ -1,0 +1,21 @@
+{
+    "code": "fr-FR",
+    "language": "Français",
+    "country": "France",
+    "fallback": false,
+    "translations": {
+        "hex.fonts.setting.font": "Police",
+        "hex.fonts.setting.font.glyphs": "Glyphes",
+        "hex.fonts.setting.font.custom_font": "Police personnalisée",
+        "hex.fonts.setting.font.custom_font_info": "Les paramètres suivants ne sont disponibles que lorsqu'une police personnalisée est sélectionnée.",
+        "hex.fonts.setting.font.font_bold": "Gras",
+        "hex.fonts.setting.font.font_italic": "Italique",
+        "hex.fonts.setting.font.font_antialias": "Anticrénelage",
+        "hex.fonts.setting.font.font_path": "Police",
+        "hex.fonts.setting.font.font_size": "Taille de la police",
+        "hex.fonts.setting.font.load_all_unicode_chars": "Charger tous les glyphes Unicode",
+        "hex.fonts.font.default": "Police générale de l'interface utilisateur",
+        "hex.fonts.font.hex_editor": "Police de l'éditeur hexadécimal",
+        "hex.fonts.font.code_editor": "Police de l'éditeur de code"
+    }
+}

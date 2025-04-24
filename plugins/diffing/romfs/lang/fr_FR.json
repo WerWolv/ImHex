@@ -1,0 +1,23 @@
+{
+    "code": "fr-FR",
+    "country": "France",
+    "language": "Français",
+    "translations": {
+        "hex.diffing.algorithm.simple.name": "Algorithme simple octet par octet",
+        "hex.diffing.algorithm.simple.description": "Comparaison naïve O(N) octet par octet.\nNe peut identifier que les modifications d'octets et les insertions / suppressions à la fin des données",
+        "hex.diffing.algorithm.myers.name": "Algorithme de Myers avec vecteur de bits",
+        "hex.diffing.algorithm.myers.description": "Algorithme de comparaison intelligent O(N*M). Peut identifier les modifications, insertions et suppressions n'importe où dans les données",
+        "hex.diffing.algorithm.myers.settings.window_size": "Taille de la fenêtre",
+        "hex.diffing.view.diff.name": "Comparaison",
+        "hex.diffing.view.diff.added": "Ajouté",
+        "hex.diffing.view.diff.modified": "Modifié",
+        "hex.diffing.view.diff.provider_a": "Source A",
+        "hex.diffing.view.diff.provider_b": "Source B",
+        "hex.diffing.view.diff.changes": "Changements",
+        "hex.diffing.view.diff.removed": "Supprimé",
+        "hex.diffing.view.diff.algorithm": "Algorithme de comparaison",
+        "hex.diffing.view.diff.settings": "Aucun paramètre disponible",
+        "hex.diffing.view.diff.settings.no_settings": "Aucun paramètre disponible",
+        "hex.diffing.view.diff.task.diffing": "Comparaison des données en cours..."
+    }
+}
