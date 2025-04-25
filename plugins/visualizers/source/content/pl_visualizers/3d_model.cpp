@@ -607,7 +607,7 @@ namespace hex::plugin::visualizers {
                     s_shouldUpdateTexture = true;
             }
             if (s_errorMessage != "") {
-                ImGui::TextColored({1.0F, 0.0F, 0.0F, 1.0F}, s_errorMessage.c_str());
+                ImGui::TextColored(ImVec4(1.0F, 0.0F, 0.0F, 1.0F), s_errorMessage.c_str());
                 return;
             }
         }
