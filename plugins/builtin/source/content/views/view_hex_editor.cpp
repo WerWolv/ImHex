@@ -5,6 +5,8 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 
+#include <content/differing_byte_searcher.hpp>
+
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/events/requests_gui.hpp>
@@ -1268,33 +1270,28 @@ namespace hex::plugin::builtin {
                                                     auto provider = ImHexApi::Provider::get();
                                                     if (provider == nullptr)
                                                         return;
-                                                    const auto selection  = ImHexApi::HexEditor::getSelection();
-                                                    if (!selection.has_value())
-                                                        return;
-                                                    if (selection->getSize() != 1)
-                                                        return;
 
-                                                    auto currentAddress = selection->getStartAddress();
-                                                    u8 valueToFind = 0;
-                                                    provider->read(currentAddress, &valueToFind, 1);
-
-                                                    u8 currentValue = 0;
                                                     bool didFindNextValue = false;
                                                     bool didReachBeginning = false;
+                                                    u64 foundAddress;
 
-                                                    while (provider->getBaseAddress() < currentAddress--) {
-                                                        if (currentAddress == provider->getBaseAddress()) {
-                                                            didReachBeginning = true;
-                                                        }
-                                                        provider->read(currentAddress, &currentValue, 1);
-                                                        if (currentValue != valueToFind) {
-                                                            didFindNextValue = true;
-                                                            break;
-                                                        }
-                                                    }
+                                                    findNextDifferingByte(
+                                                        [] (prv::Provider* provider) -> u64 {
+                                                            return provider->getBaseAddress();
+                                                        },
+                                                        [] (u64 currentAddress, u64 endAddress) -> bool {
+                                                            return currentAddress > endAddress;
+                                                        },
+                                                        [] (u64* currentAddress) {
+                                                            (*currentAddress)--;
+                                                        },
+                                                        &didFindNextValue,
+                                                        &didReachBeginning,
+                                                        &foundAddress
+                                                    );
 
                                                     if (didFindNextValue) {
-                                                        ImHexApi::HexEditor::setSelection(currentAddress, 1, provider);
+                                                        ImHexApi::HexEditor::setSelection(foundAddress, 1, provider);
                                                     }
 
                                                     if (!didFindNextValue && didReachBeginning) {
