@@ -1824,11 +1824,47 @@ void TextEditor::MoveHome(bool aSelect) {
     ResetCursorBlinkTime();
     auto oldPos = mState.mCursorPosition;
     auto &line = mLines[oldPos.mLine];
+    auto prefix = line.substr(0, oldPos.mColumn);
+    auto postfix = line.substr(oldPos.mColumn);
+    if (prefix.empty() && postfix.empty())
+        return;
     auto home=0;
-    while (home < line.size() && isspace(line[home]))
-        home++;
-    if (home == oldPos.mColumn)
-        home = 0;
+    if (!prefix.empty()) {
+        auto idx = prefix.find_first_not_of(" ");
+        if (idx == std::string::npos) {
+            auto postIdx = postfix.find_first_of(" ");
+            if (postIdx == std::string::npos || postIdx == 0)
+                home=0;
+            else {
+                postIdx = postfix.find_first_not_of(" ");
+                if (postIdx == std::string::npos)
+                    home =  GetLineMaxColumn(oldPos.mLine);
+                else if (postIdx == 0)
+                    home = 0;
+                else
+                    home = oldPos.mColumn + postIdx;
+            }
+        } else
+            home = idx;
+    } else {
+        auto postIdx = postfix.find_first_of(" ");
+        if (postIdx == std::string::npos)
+            home = 0;
+        else {
+            postIdx = postfix.find_first_not_of(" ");
+            if (postIdx == std::string::npos)
+                home = GetLineMaxColumn(oldPos.mLine);
+            else
+                home = oldPos.mColumn + postIdx;
+        }
+    }
+
+
+
+    //while (home < line.size() && isspace(line[home]))
+    //    home++;
+    //if (home == oldPos.mColumn)
+    //    home = 0;
     SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, home));
     if (mState.mCursorPosition != oldPos) {
         if (aSelect) {
