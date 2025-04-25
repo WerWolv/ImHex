@@ -607,7 +607,10 @@ namespace hex::plugin::visualizers {
                     s_shouldUpdateTexture = true;
             }
             if (s_errorMessage != "") {
-                ImGui::TextColored(ImVec4(1.0F, 0.0F, 0.0F, 1.0F), s_errorMessage.c_str());
+                auto color = ImGui::GetColorU32(ImVec4(1.0F, 0.0F, 0.0F, 1.0F));
+                ImGui::PushStyleColor(ImGuiCol_Text,color);
+                ImGui::TextUnformatted(s_errorMessage.c_str());
+                ImGui::PopStyleColor();
                 return;
             }
         }
