@@ -21,7 +21,6 @@ RDEPEND="${DEPEND}
 		media-libs/glfw
 		sys-apps/file
 		net-libs/mbedtls
-		dev-cpp/nlohmann_json
 		sys-apps/dbus
 		sys-apps/xdg-desktop-portal
 		sys-libs/zlib
@@ -30,4 +29,6 @@ RDEPEND="${DEPEND}
 		app-arch/zstd
 		app-arch/lz4
 		"
-BDEPEND="${DEPEND}"
+BDEPEND="${DEPEND}
+		dev-cpp/nlohmann_json
+		"
