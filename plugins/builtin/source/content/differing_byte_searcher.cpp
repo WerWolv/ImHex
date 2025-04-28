@@ -46,4 +46,8 @@ namespace hex::plugin::builtin {
             }
         }
     }
+
+    bool canSearchForDifferingByte() {
+        return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() == 1;
+    }
 }
