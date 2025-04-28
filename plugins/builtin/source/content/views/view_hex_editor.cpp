@@ -1267,10 +1267,6 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "Previous differing byte" }, ICON_VS_DEBUG_STEP_INTO, 1600,
                                                 CTRLCMD + Keys::LeftBracket,
                                                 [this] {
-                                                    auto provider = ImHexApi::Provider::get();
-                                                    if (provider == nullptr)
-                                                        return;
-
                                                     bool didFindNextValue = false;
                                                     bool didReachBeginning = false;
                                                     u64 foundAddress;
@@ -1291,7 +1287,7 @@ namespace hex::plugin::builtin {
                                                     );
 
                                                     if (didFindNextValue) {
-                                                        ImHexApi::HexEditor::setSelection(foundAddress, 1, provider);
+                                                        ImHexApi::HexEditor::setSelection(foundAddress, 1);
                                                     }
 
                                                     if (!didFindNextValue && didReachBeginning) {
@@ -1303,7 +1299,32 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "Next differing byte" }, ICON_VS_DEBUG_STEP_INTO, 1600,
                                                 CTRLCMD + Keys::RightBracket,
                                                 [this] {
-                                                    // this->openPopup<PopupGoto>();
+                                                    bool didFindNextValue = false;
+                                                    bool didReachEnd = false;
+                                                    u64 foundAddress;
+
+                                                    findNextDifferingByte(
+                                                        [] (prv::Provider* provider) -> u64 {
+                                                            return provider->getBaseAddress() + provider->getActualSize() - 1;
+                                                        },
+                                                        [] (u64 currentAddress, u64 endAddress) -> bool {
+                                                            return currentAddress < endAddress;
+                                                        },
+                                                        [] (u64* currentAddress) {
+                                                            (*currentAddress)++;
+                                                        },
+                                                        &didFindNextValue,
+                                                        &didReachEnd,
+                                                        &foundAddress
+                                                    );
+
+                                                    if (didFindNextValue) {
+                                                        ImHexApi::HexEditor::setSelection(foundAddress, 1);
+                                                    }
+
+                                                    if (!didFindNextValue && didReachEnd) {
+                                                        ui::ToastInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
+                                                    }
                                                 },
                                                 [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() == 1; });
 
