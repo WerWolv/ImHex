@@ -14,4 +14,6 @@ namespace hex::plugin::builtin {
         bool *didReachEndAddress,
         u64* foundAddress
     );
+
+    bool canSearchForDifferingByte();
 }

@@ -1264,7 +1264,8 @@ namespace hex::plugin::builtin {
                                                         ui::ToastInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
                                                     }
                                                 },
-                                                [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() == 1; });
+                                                canSearchForDifferingByte);
+
 
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "Next differing byte" }, ICON_VS_DEBUG_STEP_INTO, 1600,
                                                 CTRLCMD + Keys::RightBracket,
@@ -1296,7 +1297,7 @@ namespace hex::plugin::builtin {
                                                         ui::ToastInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
                                                     }
                                                 },
-                                                [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() == 1; });
+                                                canSearchForDifferingByte);
 
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1100);
