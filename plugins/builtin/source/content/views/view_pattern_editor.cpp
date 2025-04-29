@@ -335,7 +335,11 @@ namespace hex::plugin::builtin {
             auto textEditorSize = availableSize;
             textEditorSize.y *= 3.5F / 5.0F;
             textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-            textEditorSize.y = std::clamp(textEditorSize.y + height, 200.0F, availableSize.y - 200.0F);
+            if (200.0F > availableSize.y - 200.0F) {
+                textEditorSize.y = 200.0F;
+            } else {
+                textEditorSize.y = std::clamp(textEditorSize.y + height, 200.0F, availableSize.y - 200.0F);
+            }
 
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
