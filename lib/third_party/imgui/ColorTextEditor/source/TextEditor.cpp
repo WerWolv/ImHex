@@ -1460,9 +1460,14 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
             SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex + spacesToInsert)));
         } else {
             auto spacesToRemove = (cindex % mTabSize);
-            if (spacesToRemove == 0) spacesToRemove = 4;
-
-            line.erase(line.begin() + (cindex - spacesToRemove), spacesToRemove);
+            if (spacesToRemove == 0) spacesToRemove = mTabSize;
+            spacesToRemove = std::min(spacesToRemove, (int32_t) line.size());
+            for (int j = 0; j < spacesToRemove; j++) {
+                if ((line.begin() + cindex - 1)->mChar == ' ') {
+                    line.erase(line.begin() + cindex - 1);
+                    cindex -= 1;
+                }
+            }
 
             SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, std::max(0, cindex))));
         }
@@ -1735,7 +1740,9 @@ void TextEditor::MoveLeft(int aAmount, bool aSelect, bool aWordMode) {
         }
     } else
         mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
+
     SetSelection(mInteractiveStart, mInteractiveEnd);
+
 
     EnsureCursorVisible();
 }
@@ -1787,7 +1794,9 @@ void TextEditor::MoveRight(int aAmount, bool aSelect, bool aWordMode) {
         }
     } else
         mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
+
     SetSelection(mInteractiveStart, mInteractiveEnd);
+
 
     EnsureCursorVisible();
 }
@@ -1823,6 +1832,7 @@ void TextEditor::TextEditor::MoveBottom(bool aSelect) {
 void TextEditor::MoveHome(bool aSelect) {
     ResetCursorBlinkTime();
     auto oldPos = mState.mCursorPosition;
+
     auto &line = mLines[oldPos.mLine];
     auto prefix = line.substr(0, oldPos.mColumn);
     auto postfix = line.substr(oldPos.mColumn);
