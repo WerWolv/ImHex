@@ -1883,11 +1883,16 @@ void TextEditor::MoveHome(bool aSelect) {
     ResetCursorBlinkTime();
     auto oldPos = mState.mCursorPosition;
     auto &line = mLines[mState.mCursorPosition.mLine];
+    if (line.size() == 0)
+        return;
+
+    auto limit = oldPos.mColumn != 0 ? oldPos.mColumn : line.size();
+
     auto home=0;
-    while (isspace(line[home].mChar))
+    while (home < limit && isspace(line[home].mChar))
         home++;
 
-    if (home >= oldPos.mColumn && oldPos.mColumn != 0) {
+    if (home == oldPos.mColumn) {
         home = 0;
     }
 
