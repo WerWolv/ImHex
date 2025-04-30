@@ -1479,8 +1479,8 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
             SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex + spacesToInsert)));
         } else {
             auto spacesToRemove = (cindex % mTabSize);
-            if (spacesToRemove == 0) spacesToRemove = 4;
-
+            if (spacesToRemove == 0) spacesToRemove = mTabSize;
+            spacesToRemove = std::min(spacesToRemove, (int32_t) line.size());
             for (int j = 0; j < spacesToRemove; j++) {
                 if ((line.begin() + cindex - 1)->mChar == ' ') {
                     line.erase(line.begin() + cindex - 1);
@@ -1790,7 +1790,7 @@ void TextEditor::MoveLeft(int aAmount, bool aSelect, bool aWordMode) {
         }
     } else
         mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-    SetSelection(mInteractiveStart, mInteractiveEnd, aSelect && aWordMode ? SelectionMode::Word : SelectionMode::Normal);
+    SetSelection(mInteractiveStart, mInteractiveEnd, SelectionMode::Normal);
 
     EnsureCursorVisible();
 }
@@ -1846,7 +1846,7 @@ void TextEditor::MoveRight(int aAmount, bool aSelect, bool aWordMode) {
         }
     } else
         mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-    SetSelection(mInteractiveStart, mInteractiveEnd, aSelect && aWordMode ? SelectionMode::Word : SelectionMode::Normal);
+    SetSelection(mInteractiveStart, mInteractiveEnd, SelectionMode::Normal);
 
     EnsureCursorVisible();
 }
@@ -1883,9 +1883,19 @@ void TextEditor::MoveHome(bool aSelect) {
     ResetCursorBlinkTime();
     auto oldPos = mState.mCursorPosition;
     auto &line = mLines[mState.mCursorPosition.mLine];
+    if (line.size() == 0)
+        return;
+
+    auto limit = oldPos.mColumn != 0 ? oldPos.mColumn : line.size();
+
     auto home=0;
-    while (isspace(line[home].mChar))
+    while (home < limit && isspace(line[home].mChar))
         home++;
+
+    if (home == oldPos.mColumn) {
+        home = 0;
+    }
+
     SetCursorPosition(Coordinates(mState.mCursorPosition.mLine, home));
     if (mState.mCursorPosition != oldPos) {
         if (aSelect) {
