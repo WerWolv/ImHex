@@ -336,7 +336,7 @@ namespace hex::plugin::builtin {
             textEditorSize.y *= 3.5F / 5.0F;
             textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
             if (200.0F > availableSize.y - 200.0F) {
-                textEditorSize.y = 200.0F;
+                textEditorSize.y = std::clamp(textEditorSize.y + height, availableSize.y - 200.0F, 200.0F);
             } else {
                 textEditorSize.y = std::clamp(textEditorSize.y + height, 200.0F, availableSize.y - 200.0F);
             }
