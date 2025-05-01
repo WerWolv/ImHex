@@ -780,9 +780,10 @@ void TextEditor::HandleMouseInputs() {
 
             if (tripleClick) {
                 if (!ctrl) {
-                    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-                    mSelectionMode                                               = SelectionMode::Line;
-                    SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                    mState.mCursorPosition = ScreenPosToCoordinates(ImGui::GetMousePos());
+                    auto line = mState.mCursorPosition.mLine;
+                    mState.mSelectionStart = Coordinates(line, 0);
+                    mState.mSelectionEnd = Coordinates(line, GetLineMaxColumn(line));
                 }
 
                 mLastClick = -1.0f;
@@ -795,12 +796,9 @@ void TextEditor::HandleMouseInputs() {
 
             else if (doubleClick) {
                 if (!ctrl) {
-                    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-                    if (mSelectionMode == SelectionMode::Line)
-                        mSelectionMode = SelectionMode::Normal;
-                    else
-                        mSelectionMode = SelectionMode::Word;
-                    SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                    mState.mCursorPosition = ScreenPosToCoordinates(ImGui::GetMousePos());
+                    mState.mSelectionStart = FindWordStart(mState.mCursorPosition);
+                    mState.mSelectionEnd = FindWordEnd(mState.mCursorPosition);
                 }
 
                 mLastClick = (float)ImGui::GetTime();
@@ -813,15 +811,15 @@ void TextEditor::HandleMouseInputs() {
             else if (click) {
                 if (ctrl) {
                     mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-                    mSelectionMode = SelectionMode::Word;
+                    SelectWordUnderCursor();
                 } else if (shift) {
-                    mSelectionMode = SelectionMode::Normal;
                     mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
+                    mState.mCursorPosition = mInteractiveEnd;
+                    SetSelection(mInteractiveStart, mInteractiveEnd);
                 } else {
                     mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-                    mSelectionMode = SelectionMode::Normal;
+                    SetSelection(mInteractiveStart, mInteractiveEnd);
                 }
-                SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
                 ResetCursorBlinkTime();
               
                 EnsureCursorVisible();
@@ -831,8 +829,7 @@ void TextEditor::HandleMouseInputs() {
 
                 if (!HasSelection() || mState.mSelectionStart > cursorPosition || cursorPosition > mState.mSelectionEnd) {
                     mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = cursorPosition;
-                    mSelectionMode = SelectionMode::Normal;
-                    SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                    SetSelection(mInteractiveStart, mInteractiveEnd);
                 }
                 ResetCursorBlinkTime();
                 mRaiseContextMenu = true;
@@ -841,7 +838,7 @@ void TextEditor::HandleMouseInputs() {
             else if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0)) {
                 io.WantCaptureMouse    = true;
                 mState.mCursorPosition = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-                SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                SetSelection(mInteractiveStart, mInteractiveEnd);
                 resetBlinking=true;
             }
             if (resetBlinking)
@@ -865,9 +862,7 @@ inline void TextUnformattedColoredAt(const ImVec2 &pos, const ImU32 &color, cons
 }
 
 void TextEditor::SetFocus() {
-    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = mFocusAtCoords;
-    mSelectionMode = SelectionMode::Normal;
-    SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+    mState.mCursorPosition = mFocusAtCoords;
     ResetCursorBlinkTime();
     EnsureCursorVisible();
     if (!this->mReadOnly) {
@@ -1566,7 +1561,7 @@ void TextEditor::SetSelectionEnd(const Coordinates &aPosition) {
         std::swap(mState.mSelectionStart, mState.mSelectionEnd);
 }
 
-void TextEditor::SetSelection(const Coordinates &aStart, const Coordinates &aEnd, SelectionMode aMode) {
+void TextEditor::SetSelection(const Coordinates &aStart, const Coordinates &aEnd) {
     auto oldSelStart = mState.mSelectionStart;
     auto oldSelEnd   = mState.mSelectionEnd;
 
@@ -1574,28 +1569,6 @@ void TextEditor::SetSelection(const Coordinates &aStart, const Coordinates &aEnd
     mState.mSelectionEnd   = SanitizeCoordinates(aEnd);
     if (mState.mSelectionStart > mState.mSelectionEnd)
         std::swap(mState.mSelectionStart, mState.mSelectionEnd);
-
-    switch (aMode) {
-        case TextEditor::SelectionMode::Normal:
-            break;
-        case TextEditor::SelectionMode::Word:
-            {
-                mState.mSelectionStart = FindWordStart(mState.mSelectionStart);
-                if (!IsOnWordBoundary(mState.mSelectionEnd))
-                    mState.mSelectionEnd = FindWordEnd(FindWordStart(mState.mSelectionEnd));
-                break;
-            }
-        case TextEditor::SelectionMode::Line:
-            {
-                const auto lineNo      = mState.mSelectionEnd.mLine;
-                const auto lineSize    = (size_t)lineNo < mLines.size() ? mLines[lineNo].size() : 0;
-                mState.mSelectionStart = Coordinates(mState.mSelectionStart.mLine, 0);
-                mState.mSelectionEnd   = Coordinates(lineNo, GetLineMaxColumn(lineNo));
-                break;
-            }
-        default:
-            break;
-    }
 
     if (mState.mSelectionStart != oldSelStart ||
         mState.mSelectionEnd != oldSelEnd)
@@ -1790,7 +1763,7 @@ void TextEditor::MoveLeft(int aAmount, bool aSelect, bool aWordMode) {
         }
     } else
         mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-    SetSelection(mInteractiveStart, mInteractiveEnd, SelectionMode::Normal);
+    SetSelection(mInteractiveStart, mInteractiveEnd);
 
     EnsureCursorVisible();
 }
@@ -1846,7 +1819,7 @@ void TextEditor::MoveRight(int aAmount, bool aSelect, bool aWordMode) {
         }
     } else
         mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-    SetSelection(mInteractiveStart, mInteractiveEnd, SelectionMode::Normal);
+    SetSelection(mInteractiveStart, mInteractiveEnd);
 
     EnsureCursorVisible();
 }
@@ -2065,8 +2038,8 @@ void TextEditor::Backspace() {
 }
 
 void TextEditor::SelectWordUnderCursor() {
-    auto c = GetCursorPosition();
-    SetSelection(FindWordStart(c), FindWordEnd(c));
+    auto wordStart = FindWordStart(GetCursorPosition());
+    SetSelection(wordStart,FindWordEnd(wordStart));
 }
 
 void TextEditor::SelectAll() {

@@ -44,12 +44,6 @@ public:
 		Max
 	};
 
-	enum class SelectionMode
-	{
-		Normal,
-		Word,
-		Line
-	};
 
 	struct Breakpoint
 	{
@@ -398,7 +392,7 @@ public:
 
 	void SetSelectionStart(const Coordinates& aPosition);
 	void SetSelectionEnd(const Coordinates& aPosition);
-	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd, SelectionMode aMode = SelectionMode::Normal);
+	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd);
     Selection GetSelection() const;
 	void SelectWordUnderCursor();
 	void SelectAll();
@@ -608,7 +602,6 @@ private:
 	bool mCursorPositionChanged = false;
     bool mBreakPointsChanged = false;
 	int mColorRangeMin = 0, mColorRangeMax = 0;
-	SelectionMode mSelectionMode = SelectionMode::Normal;
 	bool mHandleKeyboardInputs = true;
 	bool mHandleMouseInputs = true;
 	bool mIgnoreImGuiChild = false;
