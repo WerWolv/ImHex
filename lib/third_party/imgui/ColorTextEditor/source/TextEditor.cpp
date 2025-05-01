@@ -2038,8 +2038,8 @@ void TextEditor::Backspace() {
 }
 
 void TextEditor::SelectWordUnderCursor() {
-    auto c = GetCursorPosition();
-    SetSelection(FindWordStart(c), FindWordEnd(c));
+    auto wordStart = FindWordStart(GetCursorPosition());
+    SetSelection(wordStart,FindWordEnd(wordStart));
 }
 
 void TextEditor::SelectAll() {
