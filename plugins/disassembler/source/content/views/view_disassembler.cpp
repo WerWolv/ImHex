@@ -126,9 +126,9 @@ namespace hex::plugin::disasm {
                             continue;
 
                         if (instruction.operators.empty())
-                            file.writeString(hex::format("0x{0:X}   {}\n", instruction.address, instruction.mnemonic));
+                            file.writeString(hex::format("0x{:X}   {}\n", instruction.address, instruction.mnemonic));
                         else
-                            file.writeString(hex::format("0x{0:X}   {} {}\n", instruction.address, instruction.mnemonic, instruction.operators));                    }
+                            file.writeString(hex::format("0x{:X}   {} {}\n", instruction.address, instruction.mnemonic, instruction.operators));                    }
                 });
             });
         });
