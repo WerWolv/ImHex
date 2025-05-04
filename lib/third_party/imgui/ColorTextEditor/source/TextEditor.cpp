@@ -847,13 +847,6 @@ void TextEditor::HandleMouseInputs() {
     }
 }
 
-int TextEditor::GetLongestLineLength() const {
-    int result = 0;
-    for (int i = 0; i < (int)mLines.size(); i++)
-        result = std::max(result, GetLineCharacterCount(i));
-    return result;
-}
-
 inline void TextUnformattedColoredAt(const ImVec2 &pos, const ImU32 &color, const char *text) {
     ImGui::SetCursorScreenPos(pos);
     ImGui::PushStyleColor(ImGuiCol_Text,color);
@@ -913,7 +906,6 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
     float  globalLineMax    = mLines.size();
     auto lineMax       = std::clamp(lineNo + mNumberOfLinesDisplayed, 0.0F, globalLineMax-1.0F);
     int totalDigitCount = std::floor(std::log10(globalLineMax)) + 1;
-    mLongest = GetLongestLineLength() * mCharAdvance.x;
 
     // Deduce mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
     char buf[16];
@@ -1184,9 +1176,9 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
         ImGui::BeginChild(aTitle);
 
     if (mShowLineNumbers)
-        ImGui::Dummy(ImVec2(mLongest, (globalLineMax - lineMax - 2.0F) * mCharAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight()));
+        ImGui::Dummy(ImVec2(mLongestLineLength * mCharAdvance.x, (globalLineMax - lineMax - 2.0F) * mCharAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight()));
     else
-        ImGui::Dummy(ImVec2(mLongest, (globalLineMax - 1.0f - lineMax + GetPageSize() - 1.0f ) * mCharAdvance.y - 2 * ImGuiStyle().WindowPadding.y));
+        ImGui::Dummy(ImVec2(mLongestLineLength * mCharAdvance.x, (globalLineMax - 1.0f - lineMax + GetPageSize() - 1.0f ) * mCharAdvance.y - 2 * ImGuiStyle().WindowPadding.y));
 
     if (mScrollToCursor)
         EnsureCursorVisible();
@@ -1247,8 +1239,7 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
 
     ImVec2 textEditorSize = aSize;
     textEditorSize.x -=  mLineNumberFieldWidth;
-    mLongest        = GetLongestLineLength() * mCharAdvance.x;
-    bool scroll_x = mLongest > textEditorSize.x;
+    bool scroll_x = mLongestLineLength * mCharAdvance.x > textEditorSize.x;
     bool scroll_y = mLines.size() > 1;
     if (!aBorder && scroll_y)
         textEditorSize.x -= scrollBarSize;
