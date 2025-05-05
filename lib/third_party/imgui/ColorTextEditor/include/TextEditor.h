@@ -897,9 +897,9 @@ private:
 	int GetCharacterIndex(const Coordinates& aCoordinates) const;
 	int GetCharacterColumn(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
-    int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
-    static int Utf8CharsToBytes(std::string line, uint32_t start, uint32_t numChars);
-    unsigned long long GetLineByteCount(int aLine) const;
+   int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
+   static int Utf8CharsToBytes(std::string line, uint32_t start, uint32_t numChars);
+  unsigned long long GetLineByteCount(int aLine) const;
 	int GetStringCharacterCount(std::string str) const;
 	int GetLineMaxColumn(int aLine) const;
 	bool IsOnWordBoundary(const Coordinates& aAt) const;
