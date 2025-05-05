@@ -44,12 +44,6 @@ public:
 		Max
 	};
 
-	enum class SelectionMode
-	{
-		Normal,
-		Word,
-		Line
-	};
 
 	struct Breakpoint
 	{
@@ -301,6 +295,9 @@ public:
 	void SetText(const std::string& aText);
     void JumpToLine(int line=-1);
     void JumpToCoords(const Coordinates &coords);
+    void SetLongestLineLength(size_t line) {
+        mLongestLineLength = line;
+    }
 	std::string GetText() const;
     bool isEmpty() const {
         auto text = GetText();
@@ -398,7 +395,7 @@ public:
 
 	void SetSelectionStart(const Coordinates& aPosition);
 	void SetSelectionEnd(const Coordinates& aPosition);
-	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd, SelectionMode aMode = SelectionMode::Normal);
+	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd);
     Selection GetSelection() const;
 	void SelectWordUnderCursor();
 	void SelectAll();
@@ -561,7 +558,6 @@ private:
 	int GetCharacterColumn(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
     int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
-    int GetLongestLineLength() const;
     unsigned long long GetLineByteCount(int aLine) const;
 	int GetStringCharacterCount(std::string str) const;
 	int GetLineMaxColumn(int aLine) const;
@@ -600,7 +596,7 @@ private:
 	bool mTextChanged = false;
 	bool mColorizerEnabled = true;
     float mLineNumberFieldWidth = 0.0F;
-    float mLongest = 0.0F;
+    size_t mLongestLineLength = 0;
 	float mTextStart = 20.0F;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
 	float  mLeftMargin = 10.0;
     float mTopLine = 0.0F;
@@ -608,7 +604,6 @@ private:
 	bool mCursorPositionChanged = false;
     bool mBreakPointsChanged = false;
 	int mColorRangeMin = 0, mColorRangeMax = 0;
-	SelectionMode mSelectionMode = SelectionMode::Normal;
 	bool mHandleKeyboardInputs = true;
 	bool mHandleMouseInputs = true;
 	bool mIgnoreImGuiChild = false;
