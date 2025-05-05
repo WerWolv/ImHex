@@ -345,6 +345,9 @@ jobs:
         restore-keys: ${{ runner.os }}${{ matrix.suffix }}-ccache
         max-size: 1G
 
+    - name: Set Xcode version
+      run: sudo xcode-select -s /Library/Developer/CommandLineTools
+
     - name: ⬇️ Install dependencies
       env:
         # Make brew not display useless errors
