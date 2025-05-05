@@ -32,7 +32,6 @@ namespace hex::plugin::builtin {
 
         auto endAddress = lastValidAddressProvider(provider);
 
-        // while (endAddress < currentAddress--) {
         while (addressComparator(currentAddress, endAddress)) {
             addressStepper(&currentAddress);
             if (currentAddress == endAddress) {
