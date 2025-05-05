@@ -1221,13 +1221,14 @@ namespace hex::plugin::builtin {
                                                 },
                                                 ImHexApi::Provider::isValid);
 
+        /* Goto */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.goto" },
                                                        ICON_VS_DEBUG_STEP_INTO,
                                                        1600,
                                                        []{},
                                                        ImHexApi::Provider::isValid);
 
-        /* Goto */
+        /* Goto address */
         ContentRegistry::Interface::addMenuItem({
                                                     "hex.builtin.menu.file",
                                                     "hex.builtin.view.hex_editor.menu.file.goto",
@@ -1241,6 +1242,7 @@ namespace hex::plugin::builtin {
                                                 },
                                                 ImHexApi::Provider::isValid);
 
+        /* Goto previous differing byte */
         ContentRegistry::Interface::addMenuItem({
                                                     "hex.builtin.menu.file",
                                                     "hex.builtin.view.hex_editor.menu.file.goto",
@@ -1279,7 +1281,7 @@ namespace hex::plugin::builtin {
                                                 },
                                                 canSearchForDifferingByte);
 
-
+        /* Goto next differing byte */
         ContentRegistry::Interface::addMenuItem({
                                                     "hex.builtin.menu.file",
                                                     "hex.builtin.view.hex_editor.menu.file.goto",
@@ -1520,7 +1522,7 @@ namespace hex::plugin::builtin {
                                                     return m_hexEditor.getMode() == ui::HexEditor::Mode::Insert;
                                                 });
 
-        /* Jump to */ 
+        /* Jump to */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.jump_to" }, ICON_VS_DEBUG_STEP_OUT, 1850,
                                                 [] {
                                                     auto provider = ImHexApi::Provider::get();
