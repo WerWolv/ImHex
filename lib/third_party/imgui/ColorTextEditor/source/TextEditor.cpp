@@ -1238,7 +1238,9 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
 
     ImVec2 textEditorSize = aSize;
     textEditorSize.x -=  mLineNumberFieldWidth;
+
     bool scroll_x = mLongestLineLength * mCharAdvance.x >= textEditorSize.x;
+
     bool scroll_y = mLines.size() > 1;
     if (!aBorder)
         textEditorSize.x -= scrollBarSize;
@@ -1743,7 +1745,6 @@ void TextEditor::MoveLeft(int aAmount, bool aSelect, bool aWordMode) {
 
     SetSelection(mInteractiveStart, mInteractiveEnd);
 
-
     EnsureCursorVisible();
 }
 
@@ -1796,7 +1797,6 @@ void TextEditor::MoveRight(int aAmount, bool aSelect, bool aWordMode) {
         mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
 
     SetSelection(mInteractiveStart, mInteractiveEnd);
-
 
     EnsureCursorVisible();
 }
@@ -2042,8 +2042,8 @@ void TextEditor::Backspace() {
 }
 
 void TextEditor::SelectWordUnderCursor() {
-    auto c = GetCursorPosition();
-    SetSelection(FindWordStart(c), FindWordEnd(c));
+    auto wordStart = FindWordStart(GetCursorPosition());
+    SetSelection(wordStart,FindWordEnd(wordStart));
 }
 
 void TextEditor::SelectAll() {
