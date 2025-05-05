@@ -1463,8 +1463,8 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
             if (spacesToRemove == 0) spacesToRemove = mTabSize;
             spacesToRemove = std::min(spacesToRemove, (int32_t) line.size());
             for (int j = 0; j < spacesToRemove; j++) {
-                if ((line.begin() + cindex - 1)->mChar == ' ') {
-                    line.erase(line.begin() + cindex - 1);
+                if (*(line.begin() + (cindex - 1)) == ' ') {
+                    line.erase(line.begin() + (cindex - 1));
                     cindex -= 1;
                 }
             }
