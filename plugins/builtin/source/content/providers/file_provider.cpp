@@ -135,13 +135,13 @@ namespace hex::plugin::builtin {
         if (m_fileStats.has_value()) {
             std::string creationTime, accessTime, modificationTime;
 
-            try { creationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(m_fileStats->st_ctime)); }
+            try { creationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", std::localtime(m_fileStats->st_ctime)); }
             catch (const std::exception&) { creationTime = "???"; }
 
-            try { accessTime = hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(m_fileStats->st_atime)); }
+            try { accessTime = hex::format("{:%Y-%m-%d %H:%M:%S}", std::localtime(m_fileStats->st_atime)); }
             catch (const std::exception&) { accessTime = "???"; }
 
-            try { modificationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(m_fileStats->st_mtime)); }
+            try { modificationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", std::localtime(m_fileStats->st_mtime)); }
             catch (const std::exception&) { modificationTime = "???"; }
 
             result.emplace_back("hex.builtin.provider.file.creation"_lang,      creationTime);

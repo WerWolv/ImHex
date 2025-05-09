@@ -625,7 +625,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", std::localtime(endianAdjustedTime));
             } catch (fmt::format_error &) {
                 value = "Invalid";
             }
@@ -640,7 +640,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", std::localtime(endianAdjustedTime));
             } catch (fmt::format_error &) {
                 value = "Invalid";
             }
@@ -657,7 +657,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", std::localtime(endianAdjustedTime));
             } catch (fmt::format_error &e) {
                 value = "Invalid";
             }
