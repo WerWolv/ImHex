@@ -621,11 +621,11 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(u32), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
-            auto endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u32 *>(buffer.data()), endian);
+            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u32 *>(buffer.data()), endian);
 
             std::string value;
             try {
-                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *std::localtime(&endianAdjustedTime));
             } catch (fmt::format_error &) {
                 value = "Invalid";
             }
@@ -636,11 +636,11 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(u64), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
-            auto endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u64 *>(buffer.data()), endian);
+            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u64 *>(buffer.data()), endian);
 
             std::string value;
             try {
-                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *std::localtime(&endianAdjustedTime));
             } catch (fmt::format_error &) {
                 value = "Invalid";
             }
@@ -653,11 +653,11 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time", sizeof(time_t), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
-            auto endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
+            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
 
             std::string value;
             try {
-                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *std::localtime(&endianAdjustedTime));
             } catch (fmt::format_error &e) {
                 value = "Invalid";
             }
