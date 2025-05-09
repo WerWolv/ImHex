@@ -111,7 +111,7 @@ namespace hex::init {
                 const auto now = std::chrono::system_clock::now();
                 const auto time = std::chrono::system_clock::to_time_t(now);
 
-                return std::localtime(time);
+                return *std::localtime(&time);
             }();
 
             for (const auto &colorConfig : highlightConfig) {
