@@ -8,17 +8,30 @@
 
 #pragma once
 
+#include <cstddef> // size_t
+#include <string> // string, to_string
+
 #include <nlohmann/detail/abi_macros.hpp>
 
 NLOHMANN_JSON_NAMESPACE_BEGIN
 namespace detail
 {
 
-template<typename ...Ts> struct make_void
+template<typename StringType>
+void int_to_string(StringType& target, std::size_t value)
 {
-    using type = void;
-};
-template<typename ...Ts> using void_t = typename make_void<Ts...>::type;
+    // For ADL
+    using std::to_string;
+    target = to_string(value);
+}
+
+template<typename StringType>
+StringType to_string(std::size_t value)
+{
+    StringType result;
+    int_to_string(result, value);
+    return result;
+}
 
 }  // namespace detail
 NLOHMANN_JSON_NAMESPACE_END
