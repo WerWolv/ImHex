@@ -8,8 +8,7 @@
 #include <hex/api/events/requests_interaction.hpp>
 
 #include <pl/patterns/pattern.hpp>
-#include <pl/core/preprocessor.hpp>
-#include <pl/core/parser.hpp>
+#include <pl/core/lexer.hpp>
 #include <pl/core/ast/ast_node_variable_decl.hpp>
 #include <pl/core/ast/ast_node_builtin_type.hpp>
 
@@ -47,7 +46,7 @@ namespace hex::plugin::builtin {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             constexpr static std::array keywords = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch", "import", "as", "from"
+                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch", "import", "as", "from"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
@@ -60,8 +59,15 @@ namespace hex::plugin::builtin {
                 id.mDeclaration = "";
                 langDef.mIdentifiers.insert(std::make_pair(std::string(name), id));
             }
-
-            langDef.mTokenize = [](const char *inBegin, const char *inEnd, const char *&outBegin, const char *&outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
+            constexpr static std::array directives = {
+                    "include", "define", "ifdef", "ifndef", "endif", "undef", "pragma", "error"
+            };
+            for (const auto name : directives) {
+                TextEditor::Identifier id;
+                id.mDeclaration = "";
+                langDef.mPreprocIdentifiers.insert(std::make_pair(std::string(name), id));
+            }
+            langDef.mTokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
                 paletteIndex = TextEditor::PaletteIndex::Max;
 
                 while (inBegin < inEnd && isascii(*inBegin) && std::isblank(*inBegin))
@@ -74,13 +80,16 @@ namespace hex::plugin::builtin {
                 } else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::Identifier;
                 } else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = TextEditor::PaletteIndex::Number;
+                    paletteIndex = TextEditor::PaletteIndex::NumericLiteral;
                 } else if (TokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::CharLiteral;
                 } else if (TokenizeCStyleString(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = TextEditor::PaletteIndex::String;
+                    paletteIndex = TextEditor::PaletteIndex::StringLiteral;
+                } else if (TokenizeCStyleSeparator(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = TextEditor::PaletteIndex::Separator;
+                } else if (TokenizeCStyleOperator(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = TextEditor::PaletteIndex::Operator;
                 }
-
                 return paletteIndex != TextEditor::PaletteIndex::Max;
             };
 
@@ -92,8 +101,9 @@ namespace hex::plugin::builtin {
             langDef.mAutoIndentation = true;
             langDef.mPreprocChar     = '#';
 
-            langDef.mGlobalDocComment = "/*!";
-            langDef.mDocComment      = "/**";
+            langDef.mGlobalDocComment    = "/*!";
+            langDef.mBlockDocComment     = "/**";
+            langDef.mDocComment          = "///";
 
             langDef.mName = "Pattern Language";
 
@@ -107,15 +117,16 @@ namespace hex::plugin::builtin {
         static bool initialized = false;
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
-            langDef.mTokenize = [](const char *inBegin, const char *inEnd, const char *&outBegin, const char *&outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
-                if (std::string_view(inBegin).starts_with("D: "))
-                    paletteIndex = TextEditor::PaletteIndex::Comment;
-                else if (std::string_view(inBegin).starts_with("I: "))
-                    paletteIndex = TextEditor::PaletteIndex::Default;
-                else if (std::string_view(inBegin).starts_with("W: "))
-                    paletteIndex = TextEditor::PaletteIndex::Preprocessor;
-                else if (std::string_view(inBegin).starts_with("E: "))
-                    paletteIndex = TextEditor::PaletteIndex::ErrorMarker;
+            langDef.mTokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
+                std::string_view inView(inBegin, inEnd);
+                if (inView.starts_with("D: "))
+                    paletteIndex = TextEditor::PaletteIndex::DefaultText;
+                else if (inView.starts_with("I: "))
+                    paletteIndex = TextEditor::PaletteIndex::DebugText;
+                else if (inView.starts_with("W: "))
+                    paletteIndex = TextEditor::PaletteIndex::WarningText;
+                else if (inView.starts_with("E: "))
+                    paletteIndex = TextEditor::PaletteIndex::ErrorText;
                 else
                     paletteIndex = TextEditor::PaletteIndex::Max;
 
@@ -593,14 +604,18 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (m_textEditor.IsTextChanged() && !m_hasUnevaluatedChanges) {
-                m_hasUnevaluatedChanges = true;
+            if (m_textEditor.IsTextChanged()) {
+                m_textEditor.SetTextChanged(false);
+                if (!m_hasUnevaluatedChanges) {
+                    m_hasUnevaluatedChanges = true;
+                    m_changesWereParsed = false;
+                }
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
             }
 
-            if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0) {
-                if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1LL)) {
+            if (m_hasUnevaluatedChanges && !m_textHighlighter.m_needsToUpdateColors && m_runningEvaluators == 0 && m_runningParsers == 0 && m_textHighlighter.getRunningColorizers() == 0) {
+                if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
 
                     auto code = m_textEditor.GetText();
                     EventPatternEditorChanged::post(code);
@@ -612,13 +627,13 @@ namespace hex::plugin::builtin {
                             m_triggerAutoEvaluate = true;
                     });
                     m_hasUnevaluatedChanges = false;
-                    m_textEditor.SetTextChanged();
                 }
             }
 
             if (m_triggerAutoEvaluate.exchange(false)) {
                 this->evaluatePattern(m_textEditor.GetText(), provider);
             }
+            m_textHighlighter.highlightSourceCode();
         }
 
         if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
@@ -1074,27 +1089,17 @@ namespace hex::plugin::builtin {
         }
         if (m_consoleNeedsUpdate) {
             std::scoped_lock lock(m_logMutex);
-            bool skipNewLine = false;
             auto lineCount = m_consoleEditor.GetTextLines().size();
             if (m_console->size() < lineCount || (lineCount == 1 && m_consoleEditor.GetLineText(0).empty())) {
                 m_consoleEditor.SetText("");
                 lineCount = 0;
-                skipNewLine = true;
             }
 
-            m_consoleEditor.JumpToLine(lineCount);
             const auto linesToAdd = m_console->size() - lineCount;
 
-
-            std::string content;
             for (size_t i = 0; i < linesToAdd; i += 1) {
-                if (!skipNewLine)
-                    content += '\n';
-                skipNewLine = false;
-                content += m_console->at(lineCount + i);
+                m_consoleEditor.AppendLine(m_console->at(lineCount + i));
             }
-            m_consoleEditor.InsertText(content);
-
             m_consoleNeedsUpdate = false;
         }
 
@@ -1238,7 +1243,7 @@ namespace hex::plugin::builtin {
                         const std::string label { "##" + name };
 
                         if (pl::core::Token::isSigned(variable.type)) {
-                            i64 value = i64(hex::get_or<i128>(variable.value, 0));
+                            i64 value = i64(hex::get_or<i128>(variable.value, 0ll));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
                                 m_hasUnevaluatedChanges = true;
                             variable.value = i128(value);
@@ -1708,7 +1713,7 @@ namespace hex::plugin::builtin {
             const bool shiftHeld = ImGui::GetIO().KeyShift;
             ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()), ImGuiColorEditFlags_AlphaOpaque);
             ImGui::SameLine(0, 10);
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{} ", pattern->getFormattedName());
+            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], "{} ", pattern->getFormattedName());
             ImGui::SameLine(0, 5);
             ImGuiExt::TextFormatted("{}", pattern->getDisplayName());
             ImGui::SameLine();
@@ -1851,6 +1856,7 @@ namespace hex::plugin::builtin {
             m_textEditor.SetText(code);
             m_sourceCode.set(provider, code);
 
+            m_textHighlighter.m_needsToUpdateColors = false;
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
@@ -1892,6 +1898,8 @@ namespace hex::plugin::builtin {
             patternVariables = std::move(oldPatternVariables);
         }
 
+        m_textHighlighter.m_needsToUpdateColors = true;
+        m_changesWereParsed = true;
         m_runningParsers -= 1;
     }
 
@@ -2039,6 +2047,7 @@ namespace hex::plugin::builtin {
             m_textEditor.SetText(code);
             m_sourceCode.set(ImHexApi::Provider::get(), code);
             m_hasUnevaluatedChanges = true;
+            m_textHighlighter.m_needsToUpdateColors = false;
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", [this](const ContentRegistry::Settings::SettingsValue &value) {
@@ -2080,6 +2089,8 @@ namespace hex::plugin::builtin {
                 m_textEditor.SetText("");
                 m_consoleEditor.SetText("");
             }
+            m_hasUnevaluatedChanges = true;
+            m_textHighlighter.m_needsToUpdateColors = false;
         });
 
         RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
@@ -2303,7 +2314,7 @@ namespace hex::plugin::builtin {
                     m_textEditor.SetText(sourceCode);
 
                 m_hasUnevaluatedChanges = true;
-
+                m_textHighlighter.m_needsToUpdateColors = false;
                 return true;
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
