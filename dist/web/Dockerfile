@@ -87,7 +87,6 @@ COPY --from=build [             \
     "/build/imhex.wasm",        \
     "/build/imhex.wasm.size",   \
     "/build/imhex.js",          \
-    "/build/imhex.worker.js",   \
                                 \
     # Static files              \
     "/build/index.html",        \
