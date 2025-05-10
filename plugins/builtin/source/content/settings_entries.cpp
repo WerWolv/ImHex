@@ -21,6 +21,10 @@
 #include <utility>
 #include <romfs/romfs.hpp>
 
+#if defined(OS_WEB)
+    #include <emscripten.h>
+#endif
+
 namespace hex::plugin::builtin {
 
     using namespace wolv::literals;
