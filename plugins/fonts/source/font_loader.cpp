@@ -57,7 +57,7 @@ namespace hex::fonts {
                 if (fontName.find("icon") != std::string::npos)
                     actualFontSize = ImHexApi::Fonts::pointsToPixels(fontSize);
                 else
-                    actualFontSize  = fontSize;
+                    actualFontSize = fontSize;
 
                 if (FT_Set_Pixel_Sizes(face, actualFontSize, actualFontSize) != 0) {
                     log::fatal("Failed to set pixel size");
@@ -187,7 +187,7 @@ namespace hex::fonts {
         // If there's no custom font set, or it failed to load, fall back to the default font
         if (!defaultFont.has_value()) {
             if (pixelPerfectFont) {
-                fontSize = std::max(1.0F, std::floor(ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor() * 13.0F));
+                realFontSize = fontSize = std::max(1.0F, std::floor(ImHexApi::System::getBackingScaleFactor() * 13.0F));
                 defaultFont = fontAtlas->addDefaultFont();
                 std::string defaultFontName = "Proggy Clean";
                 memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
