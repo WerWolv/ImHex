@@ -27,10 +27,10 @@ namespace hex {
             return { h, s, v };
         }
 
-        ImColor getRGB(float h, float s, float v) {
+        ImColor getRGB(float h, float s, float v, float a) {
             float r, g, b;
             ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b);
-            return ImColor(r, g, b);
+            return ImColor(r, g, b, a);
         }
     }
 
@@ -195,7 +195,7 @@ namespace hex {
                         colorS = std::max(colorS - baseS, 0.0F) + accentS;
                         colorV = std::max(colorV - baseV, 0.0F) + accentV;
 
-                        color = getRGB(colorH, colorS, colorV);
+                        color = getRGB(colorH, colorS, colorV, color->Value.w);
                     }
 
                     (*s_themeHandlers)[type].setFunction((*s_themeHandlers)[type].colorMap.at(key), color.value());
