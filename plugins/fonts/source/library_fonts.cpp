@@ -14,7 +14,7 @@ namespace hex::fonts {
 
     void registerFonts();
 
-    bool buildFontAtlas(FontAtlas *fontAtlas, std::fs::path fontPath, bool pixelPerfectFont, float fontSize, bool loadUnicodeCharacters, bool bold, bool italic, bool antialias);
+    bool buildFontAtlas(FontAtlas *fontAtlas, std::fs::path fontPath, bool pixelPerfectFont, float fontSize, bool loadUnicodeCharacters, bool bold, bool italic,const std::string &antialias);
 
     static AutoReset<std::map<UnlocalizedString, std::unique_ptr<FontAtlas>>> s_fontAtlases;
 
@@ -31,7 +31,7 @@ namespace hex::fonts {
             true,
             settings.isBold(),
             settings.isItalic(),
-            settings.isAntiAliased()
+            settings.antiAliasingType()
         );
 
         if (!atlasBuilt) {
@@ -43,7 +43,7 @@ namespace hex::fonts {
                 false,
                 settings.isBold(),
                 settings.isItalic(),
-                settings.isAntiAliased()
+                settings.antiAliasingType()
             );
 
             log::error("Failed to load font {}! Reverting back to default font!", name.get());
@@ -78,7 +78,6 @@ namespace hex::fonts {
 
         return true;
     }
-
 }
 
 IMHEX_LIBRARY_SETUP("Fonts") {
