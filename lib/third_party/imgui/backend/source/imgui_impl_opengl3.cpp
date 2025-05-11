@@ -492,7 +492,7 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
     if (useFontShaders)
         Gamma = 1.0f;
     else
-        Gamma = -1.0f;
+        Gamma = 0.0f;
 // IMHEX PATCH END
     const float ortho_projection[4][4] =
     {
@@ -936,7 +936,7 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
         "{\n"
         // IMHEX PATCH BEGIN
         "    float Gamma = Frag_mat[0][2];\n"
-        "    if (Gamma <= 0.0)\n"
+        "    if (Gamma <= 0.0001)\n"
         // IMHEX PATCH END
         "       Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
         // IMHEX PATCH BEGIN
