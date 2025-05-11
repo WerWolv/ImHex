@@ -154,7 +154,7 @@ namespace hex::fonts {
         io.Fonts = fontAtlas->getAtlas();
         // Check if Unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
         // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
-        bool shouldLoadUnicode = ContentRegistry::Settings::read<bool>("hex.fonts.setting.font", "hex.builtin.fonts.font.load_all_unicode_chars", false) && ImHexApi::System::getGPUVendor() != "VMware, Inc.";
+        bool shouldLoadUnicode = ContentRegistry::Settings::read<bool>("hex.fonts.setting.font", "hex.fonts.setting.font.load_all_unicode_chars", false) && ImHexApi::System::getGPUVendor() != "VMware, Inc.";
 
         if (!loadUnicodeCharacters)
             shouldLoadUnicode = false;
