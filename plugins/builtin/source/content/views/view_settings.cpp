@@ -102,8 +102,9 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::BeginSubWindow(Lang(subCategory.unlocalizedName))) {
                             for (auto &setting : subCategory.entries) {
                                 ImGui::BeginDisabled(!setting.widget->isEnabled());
-                                ImGui::PushItemWidth(-200_scaled);
-                                bool settingChanged = setting.widget->draw(Lang(setting.unlocalizedName));
+                                auto title = Lang(setting.unlocalizedName);
+                                ImGui::PushItemWidth(std::min(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(title.get()).x - 20_scaled, 500_scaled));
+                                bool settingChanged = setting.widget->draw(title);
                                 ImGui::PopItemWidth();
                                 ImGui::EndDisabled();
 
