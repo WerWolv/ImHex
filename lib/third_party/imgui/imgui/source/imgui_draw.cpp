@@ -3330,10 +3330,13 @@ void    ImFontAtlas::GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_wid
             const unsigned char* src = pixels;
             unsigned int* dst = TexPixelsRGBA32;
             // IMHEX PATCH BEGIN
-            //for (int n = TexWidth * TexHeight; n > 0; n--)
-            //    *dst++ = IM_COL32(255, 255, 255, (unsigned int)(*src++));
-            for (int n = TexWidth * TexHeight; n > 0; n--,src++)
-                *dst++ = IM_COL32(*src, *src, *src, *src);
+            if (FontBuilderFlags & ImGuiFreeTypeBuilderFlags_SubPixel) {
+                for (int n = TexWidth * TexHeight; n > 0; n--,src++)
+                    *dst++ = IM_COL32(*src, *src, *src, *src);
+            } else {
+                for (int n = TexWidth * TexHeight; n > 0; n--)
+                    *dst++ = IM_COL32(255, 255, 255, (unsigned int)(*src++));
+            }
             // IMHEX PATCH END
         }
     }
