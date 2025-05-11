@@ -3,6 +3,7 @@
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/semantic_version.hpp>
+#include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 
 #include <functional>
@@ -13,6 +14,7 @@
 #include <map>
 #include <set>
 #include <memory>
+#include "imgui_internal.h"
 
 #if !defined(HEX_MODULE_EXPORT)
     using ImGuiID = unsigned int;
@@ -752,6 +754,7 @@ EXPORT_MODULE namespace hex {
                 std::vector<GlyphRange> glyphRanges;
                 Offset offset;
                 u32 flags;
+                std::optional<bool> scalable;
                 std::optional<u32> defaultSize;
             };
 
@@ -768,13 +771,17 @@ EXPORT_MODULE namespace hex {
             GlyphRange range(const char *glyphBegin, const char *glyphEnd);
             GlyphRange range(u32 codepointBegin, u32 codepointEnd);
 
-            void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<u32> defaultSize = std::nullopt);
-            void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<u32> defaultSize = std::nullopt);
+            void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<bool> scalable = std::nullopt, std::optional<u32> defaultSize = std::nullopt);
+            void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<bool> scalable = std::nullopt, std::optional<u32> defaultSize = std::nullopt);
 
             constexpr float DefaultFontSize = 13.0;
 
             void registerFont(const UnlocalizedString &fontName);
             ImFont* getFont(const UnlocalizedString &fontName);
+
+            float getDpi();
+            float pixelsToPoints(float pixels);
+            float pointsToPixels(float points);
 
         }
 
