@@ -329,6 +329,11 @@ namespace hex {
             // Unlock frame rate if there's more than one viewport since these don't call the glfw callbacks registered here
             if (ImGui::GetPlatformIO().Viewports.size() > 1)
                 this->unlockFrameRate();
+
+            // Unlock frame rate if there's any task running that shows a loading animation
+            if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBlockingTaskCount() > 0) {
+                this->unlockFrameRate();
+            }
         }
 
         // Hide the window as soon as the render loop exits to make the window

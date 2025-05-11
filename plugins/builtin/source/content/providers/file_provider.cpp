@@ -135,14 +135,14 @@ namespace hex::plugin::builtin {
         if (m_fileStats.has_value()) {
             std::string creationTime, accessTime, modificationTime;
 
-            try { creationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(m_fileStats->st_ctime)); }
-            catch (const std::exception&) { creationTime = "???"; }
+            try { creationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", *std::localtime(&m_fileStats->st_ctime)); }
+            catch (const fmt::format_error&) { creationTime = "???"; }
 
-            try { accessTime = hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(m_fileStats->st_atime)); }
-            catch (const std::exception&) { accessTime = "???"; }
+            try { accessTime = hex::format("{:%Y-%m-%d %H:%M:%S}", *std::localtime(&m_fileStats->st_atime)); }
+            catch (const fmt::format_error&) { accessTime = "???"; }
 
-            try { modificationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(m_fileStats->st_mtime)); }
-            catch (const std::exception&) { modificationTime = "???"; }
+            try { modificationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", *std::localtime(&m_fileStats->st_mtime)); }
+            catch (const fmt::format_error&) { modificationTime = "???"; }
 
             result.emplace_back("hex.builtin.provider.file.creation"_lang,      creationTime);
             result.emplace_back("hex.builtin.provider.file.access"_lang,        accessTime);

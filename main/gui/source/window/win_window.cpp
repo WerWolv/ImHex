@@ -518,6 +518,9 @@ namespace hex {
                     EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
                 }
             });
+            EventFileDropped::subscribe([this] {
+                this->unlockFrameRate();
+            });
         }
 
         bool borderlessWindowMode = ImHexApi::System::isBorderlessWindowModeEnabled();
