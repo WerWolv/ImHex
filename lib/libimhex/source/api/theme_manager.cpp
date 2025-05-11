@@ -16,9 +16,22 @@ namespace hex {
         AutoReset<std::map<std::string, ThemeManager::StyleHandler>> s_styleHandlers;
         AutoReset<std::string> s_imageTheme;
         AutoReset<std::string> s_currTheme;
-        AutoReset<std::optional<float>> s_accentColor;
+        AutoReset<std::optional<ImColor>> s_accentColor;
+        ImColor s_accentBaseColor;
 
         std::recursive_mutex s_themeMutex;
+
+        std::tuple<float, float, float> getHSV(const ImColor &color) {
+            float h, s, v;
+            ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, h, s, v);
+            return { h, s, v };
+        }
+
+        ImColor getRGB(float h, float s, float v, float a) {
+            float r, g, b;
+            ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b);
+            return ImColor(r, g, b, a);
+        }
     }
 
 
@@ -142,6 +155,10 @@ namespace hex {
             }
         }
 
+        if (theme.contains("base_color")) {
+            s_accentBaseColor = parseColorString(theme["base_color"].get<std::string>()).value_or(ImColor(1.0F, 1.0F, 1.0F));
+        }
+
         if (theme.contains("colors") && !s_themeHandlers->empty()) {
             for (const auto&[type, content] : theme["colors"].items()) {
                 if (!s_themeHandlers->contains(type)) {
@@ -170,12 +187,15 @@ namespace hex {
                     }
 
                     if (accentableColor && s_accentColor->has_value()) {
-                        float h, s, v;
-                        ImGui::ColorConvertRGBtoHSV(color->Value.x, color->Value.y, color->Value.z, h, s, v);
+                        const auto [baseH, baseS, baseV] = getHSV(s_accentBaseColor);
+                        const auto [accentH, accentS, accentV] = getHSV(s_accentColor->value());
+                        auto [colorH, colorS, colorV] = getHSV(color.value());
 
-                        h = s_accentColor->value();
+                        colorH = std::max(colorH - baseH, 0.0F) + accentH;
+                        colorS = std::max(colorS - baseS, 0.0F) + accentS;
+                        colorV = std::max(colorV - baseV, 0.0F) + accentV;
 
-                        ImGui::ColorConvertHSVtoRGB(h, s, v, color->Value.x, color->Value.y, color->Value.z);
+                        color = getRGB(colorH, colorS, colorV, color->Value.w);
                     }
 
                     (*s_themeHandlers)[type].setFunction((*s_themeHandlers)[type].colorMap.at(key), color.value());
@@ -254,10 +274,7 @@ namespace hex {
     }
 
     void ThemeManager::setAccentColor(const ImColor &color) {
-        float h, s, v;
-        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, h, s, v);
-
-        s_accentColor = h;
+        s_accentColor = color;
         reapplyCurrentTheme();
     }
 

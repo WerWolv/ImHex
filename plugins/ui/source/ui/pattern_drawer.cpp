@@ -378,7 +378,7 @@ namespace hex::ui {
 
             ImGui::SameLine();
 
-            if (ImGui::BeginPopup("Visualizer")) {
+            if (ImGui::BeginPopupEx(ImGui::GetCurrentWindowRead()->GetID("Visualizer"), ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings)) {
                 if (m_currVisualizedPattern == &pattern) {
                     m_visualizerDrawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, pattern, !m_visualizedPatterns.contains(&pattern) || shouldReset);
                     m_visualizedPatterns.insert(&pattern);

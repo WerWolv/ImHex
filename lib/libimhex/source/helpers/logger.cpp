@@ -83,7 +83,8 @@ namespace hex::log {
 
             for (const auto &path : paths::Logs.all()) {
                 wolv::io::fs::createDirectories(path);
-                s_loggerFile = wolv::io::File(path / hex::format("{0:%Y%m%d_%H%M%S}.log", fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))), wolv::io::File::Mode::Create);
+                time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+                s_loggerFile = wolv::io::File(path / hex::format("{0:%Y%m%d_%H%M%S}.log", *std::localtime(&time)), wolv::io::File::Mode::Create);
                 s_loggerFile.disableBuffering();
 
                 if (s_loggerFile.isValid()) {
@@ -120,7 +121,8 @@ namespace hex::log {
 
 
         void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level, const char *projectName) {
-            const auto now = fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+            const auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            const auto now = *std::localtime(&time);
 
             fmt::print(dest, "[{0:%H:%M:%S}] ", now);
 
