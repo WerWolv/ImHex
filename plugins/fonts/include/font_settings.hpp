@@ -7,9 +7,15 @@ namespace hex::fonts {
     class AntialiasPicker : public ContentRegistry::Settings::Widgets::DropDown {
     public:
         AntialiasPicker() : DropDown(
+                #if defined(OS_WEB)
+                    std::vector<UnlocalizedString>({"hex.fonts.setting.font.antialias_none", "hex.fonts.setting.font.antialias_grayscale"}),
+                    std::vector<nlohmann::json>({"none", "grayscale"}),
+                    nlohmann::json("grayscale")
+                #else
                 std::vector<UnlocalizedString>({"hex.fonts.setting.font.antialias_none", "hex.fonts.setting.font.antialias_grayscale", "hex.fonts.setting.font.antialias_subpixel"}),
-                std::vector<nlohmann::json>({"none" , "grayscale" , "subpixel"}),
-                nlohmann::json("subpixel")
+                    std::vector<nlohmann::json>({"none", "grayscale" , "subpixel"}),
+                    nlohmann::json("subpixel")
+                #endif
                 ){}
     };
 
