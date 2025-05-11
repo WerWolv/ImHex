@@ -1125,11 +1125,11 @@ namespace hex {
         }
 
         float pixelsToPoints(float pixels) {
-            return pixels * (72.0_scaled / getDpi());
+            return pixels * (72.0 / getDpi());
         }
 
         float pointsToPixels(float points) {
-            return points / (72.0_scaled / getDpi());
+            return points / (72.0 / getDpi());
         }
 
     }
