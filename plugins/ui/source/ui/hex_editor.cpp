@@ -229,6 +229,50 @@ namespace hex::ui {
             m_scrollPosition = numRows - 1;
     }
 
+    // add horizontal scroll bar
+    void HexEditor::drawHorizontalScrollbar(ImVec2 characterSize) {
+        (void)characterSize;
+
+        if (m_provider == nullptr)
+            return;
+
+        if (m_autoFitColumns) {
+            return;
+        }
+
+        auto window = ImGui::GetCurrentWindowRead();
+        const auto outerRect = window->Rect();
+        const auto innerRect = window->InnerRect;
+        const auto borderSize = window->WindowBorderSize;
+        const auto scrollbarSize = ImGui::GetStyle().ScrollbarSize;
+        
+        const auto bb = ImRect(
+            innerRect.Min.x,
+            ImMax(outerRect.Min.y, outerRect.Max.y - borderSize - scrollbarSize),
+            !m_showMiniMap ? innerRect.Max.x - borderSize - scrollbarSize
+                           : ImMax(outerRect.Min.x,
+                                   outerRect.Max.x - borderSize - scrollbarSize) -
+                                 scrollbarSize * (1 + m_miniMapWidth),
+            outerRect.Max.y);
+
+        constexpr auto roundingCorners =
+            ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight;
+        constexpr auto axis = ImGuiAxis_X;
+
+        const u32 bytesPerCell = m_currDataVisualizer->getBytesPerCell();
+        const u32 columnCount = m_bytesPerRow / bytesPerCell;
+
+        ImGui::PushID("HorizontalScrollBar");
+        ImGui::ScrollbarEx(
+            bb, ImGui::GetWindowScrollbarID(window, axis), axis, &m_horizontalScrollPosition.get(), static_cast<ImS64>(std::ceil(innerRect.Max.x - innerRect.Min.x) / static_cast<float>(columnCount)), static_cast<ImS64>(columnCount + std::ceil(innerRect.Max.x - innerRect.Min.x) / static_cast<float>(columnCount)), roundingCorners);
+        ImGui::PopID();
+
+        if (m_horizontalScrollPosition < 0)
+            m_horizontalScrollPosition = 0;
+        if (m_horizontalScrollPosition > (columnCount - 1))
+            m_horizontalScrollPosition = columnCount - 1;
+    }
+
     void HexEditor::drawMinimap(ImVec2 characterSize) {
         if (m_provider == nullptr)
             return;
@@ -527,8 +571,14 @@ namespace hex::ui {
         }
 
         const auto bytesPerCell    = m_currDataVisualizer->getBytesPerCell();
-        const u64 columnCount      = m_bytesPerRow / bytesPerCell;
+
+        const u16 rowOffsetCount = m_horizontalScrollPosition.get();
+        const u32 rowOffsetBytes = rowOffsetCount * bytesPerCell;
+
+        const u64 columnCount      = m_bytesPerRow / bytesPerCell - rowOffsetCount;
         auto byteColumnCount       = 2 + columnCount + getByteColumnSeparatorCount(columnCount) + 2 + 2;
+
+
 
         if (byteColumnCount >= IMGUI_TABLE_MAX_COLUMNS) {
             m_bytesPerRow = 64;
@@ -550,6 +600,7 @@ namespace hex::ui {
         ON_SCOPE_EXIT { ImGui::PopID(); };
         if (ImGui::BeginChild("Hex View", size, ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             this->drawScrollbar(CharacterSize);
+            this->drawHorizontalScrollbar(CharacterSize);
 
             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
             if (ImGui::BeginTable("##hex", byteColumnCount, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, size)) {
@@ -567,8 +618,9 @@ namespace hex::ui {
                 for (u64 i = 0; i < columnCount; i++) {
                     if (isColumnSeparatorColumn(i, columnCount))
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
-
-                    ImGui::TableSetupColumn(formatAddress(i * bytesPerCell, m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * m_currDataVisualizer->getMaxCharsPerCell() + std::ceil((6 + m_byteCellPadding) * 1_scaled));
+                    
+                    const auto address = i * bytesPerCell + rowOffsetBytes;
+                    ImGui::TableSetupColumn(formatAddress(address, m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * m_currDataVisualizer->getMaxCharsPerCell() + std::ceil((6 + m_byteCellPadding) * 1_scaled));
                 }
 
                 // ASCII column
@@ -632,7 +684,7 @@ namespace hex::ui {
 
                         double addressWidth = ImGui::GetCursorPosX();
                         {
-                            const auto rowAddress = y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                            auto rowAddress = y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                             if (m_separatorStride > 0 && rowAddress % m_separatorStride < m_bytesPerRow && !ImGui::GetIO().KeyShift)
                                 ImGuiExt::TextFormattedColored(ImGui::GetStyleColorVec4(ImGuiCol_SeparatorActive), "{} {}", "hex.ui.common.segment"_lang, rowAddress / m_separatorStride);
@@ -692,7 +744,7 @@ namespace hex::ui {
                         byteCellSize = ImVec2(std::ceil(byteCellSize.x), std::ceil(byteCellSize.y));
 
                         for (u64 x = 0; x < columnCount; x++) {
-                            const u64 byteAddress = y * m_bytesPerRow + x * bytesPerCell + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                            const u64 byteAddress = y * m_bytesPerRow + x * bytesPerCell + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress() + rowOffsetBytes;
 
                             ImGui::TableNextColumn();
                             if (y != 0) drawSeparatorLine(byteAddress, x != 0);
@@ -701,9 +753,9 @@ namespace hex::ui {
                                 if (y != 0) drawSeparatorLine(byteAddress, false);
                             }
 
-                            if (x < std::ceil(float(validBytes) / bytesPerCell)) {
+                            if ((validBytes >= rowOffsetBytes) && (x < std::ceil(float(validBytes) / bytesPerCell))) {
                                 auto cellStartPos = getCellPosition();
-                                auto [foregroundColor, backgroundColor] = cellColors[x];
+                                auto [foregroundColor, backgroundColor] = cellColors[x + rowOffsetCount];
 
                                 auto adjustedCellSize = byteCellSize;
                                 if (isColumnSeparatorColumn(x + 1, columnCount) && cellColors.size() > x + 1) {
@@ -741,7 +793,7 @@ namespace hex::ui {
                                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                 ImGui::PushItemWidth((CharacterSize * maxCharsPerCell).x);
                                 if (isCurrRegionValid(byteAddress))
-                                    this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered, CellType::Hex);
+                                    this->drawCell(byteAddress, &bytes[x * bytesPerCell + rowOffsetBytes], bytesPerCell, cellHovered, CellType::Hex);
                                 else
                                     ImGuiExt::TextFormatted("{:?>{}}", "", maxCharsPerCell);
 
@@ -759,6 +811,7 @@ namespace hex::ui {
                         ImGui::PopStyleVar();
 
                         ImGui::TableNextColumn();
+                        // TODO: plus rowOffsetBytes
                         if (y != 0) drawSeparatorLine(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), false);
                         ImGui::TableNextColumn();
 
@@ -955,6 +1008,16 @@ namespace hex::ui {
                                     this->jumpToSelection(0.0F);
                                 if ((newSelection.getEndAddress()) > u64((m_scrollPosition + m_visibleRowCount) * m_bytesPerRow))
                                     this->jumpToSelection(1.0F);
+
+                                const auto targetColumnNumber = (newSelection.address % m_bytesPerRow) / bytesPerCell;
+                                const u64 currentWindowsCapcityColumn = std::floor((size.x - addressWidth) / (byteCellSize.x + m_characterCellPadding * 1_scaled)) * 0.95;
+
+                                if (targetColumnNumber < static_cast<u64>(m_horizontalScrollPosition)) {
+                                    m_horizontalScrollPosition = targetColumnNumber;
+                                }
+                                if (targetColumnNumber >= static_cast<u64>(m_horizontalScrollPosition) && (targetColumnNumber > currentWindowsCapcityColumn)) {
+                                    m_horizontalScrollPosition = targetColumnNumber - currentWindowsCapcityColumn + 1;
+                                }
                             }
                         }
                     }
