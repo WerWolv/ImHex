@@ -1,5 +1,6 @@
 #pragma once
 
+#include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
 
 namespace hex::fonts {
@@ -8,7 +9,7 @@ namespace hex::fonts {
         AntialiasPicker() : DropDown(
                 std::vector<UnlocalizedString>({"hex.fonts.setting.font.antialias_none", "hex.fonts.setting.font.antialias_grayscale", "hex.fonts.setting.font.antialias_subpixel"}),
                 std::vector<nlohmann::json>({"none" , "grayscale" , "subpixel"}),
-                nlohmann::json({"subpixel"})
+                nlohmann::json("subpixel")
                 ){}
     };
 
@@ -39,7 +40,7 @@ namespace hex::fonts {
 
     class FontSelector : public ContentRegistry::Settings::Widgets::Widget {
     public:
-        FontSelector() : m_fontSize(16, 2, 100), m_antiAliased(), m_bold(false), m_italic(false) { }
+        FontSelector() : m_fontSize(ImHexApi::Fonts::pointsToPixels(10), 2, 100), m_antiAliased(), m_bold(false), m_italic(false) { }
 
         bool draw(const std::string &name) override;
 
