@@ -1,6 +1,5 @@
 {
     "base": "Light",
-    "base_color": "#4296F966",
     "colors": {
         "imgui": {
             "border": "#0000004C",
