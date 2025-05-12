@@ -9,8 +9,9 @@ fetch("imhex.wasm.size").then(async (resp) => {
 // inspired from: https://github.com/WordPress/wordpress-playground/pull/46 (but had to be modified)
 function monkeyPatch(progressFun) {
     const _instantiateStreaming = WebAssembly.instantiateStreaming;
-    WebAssembly.instantiateStreaming = (response, ...args) => {
+    WebAssembly.instantiateStreaming = async (responsePromise, ...args) => {
         // Do not collect wasm content length here see above
+        let response = await responsePromise
         const file = response.url.substring(
             new URL(response.url).origin.length + 1
         );
@@ -235,12 +236,11 @@ var Module = {
     totalDependencies: 0,
     monitorRunDependencies: function(left) {
     },
-    instantiateWasm: function(imports, successCallback) {
+    instantiateWasm: async function(imports, successCallback) {
         imports.env.glfwSetCursor = glfwSetCursorCustom
         imports.env.glfwCreateStandardCursor = glfwCreateStandardCursorCustom
-        instantiateAsync(wasmBinary, wasmBinaryFile, imports, (result) => {
-            successCallback(result.instance, result.module)
-        });
+        let result = await instantiateAsync(null, findWasmBinary(), imports);
+        successCallback(result.instance, result.module)
     },
     arguments: []
 };

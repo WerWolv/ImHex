@@ -160,3 +160,4 @@ namespace ImGui
 #define IMGUI_ENABLE_FREETYPE
 #define ImDrawIdx unsigned int
 #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX
+#define IMGUI_USE_WCHAR32

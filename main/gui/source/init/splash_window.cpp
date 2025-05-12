@@ -111,7 +111,7 @@ namespace hex::init {
                 const auto now = std::chrono::system_clock::now();
                 const auto time = std::chrono::system_clock::to_time_t(now);
 
-                return fmt::localtime(time);
+                return *std::localtime(&time);
             }();
 
             for (const auto &colorConfig : highlightConfig) {
@@ -438,8 +438,8 @@ namespace hex::init {
             glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
             glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
         #else
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
         #endif
 
 	#if defined(OS_LINUX)
@@ -520,7 +520,7 @@ namespace hex::init {
             ImGui_ImplOpenGL3_Init();
             ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, "#canvas");
         #else
-            ImGui_ImplOpenGL3_Init("#version 130");
+            ImGui_ImplOpenGL3_Init("#version 410");
         #endif
 
         auto &io = ImGui::GetIO();

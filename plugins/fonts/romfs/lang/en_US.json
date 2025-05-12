@@ -16,6 +16,9 @@
         "hex.fonts.setting.font.load_all_unicode_chars": "Load all unicode glyphs",
         "hex.fonts.font.default": "General UI Font",
         "hex.fonts.font.hex_editor": "Hex Editor Font",
-        "hex.fonts.font.code_editor": "Code Editor Font"
+        "hex.fonts.font.code_editor": "Code Editor Font",
+        "hex.fonts.setting.font.antialias_none":  "None",
+        "hex.fonts.setting.font.antialias_grayscale":  "Grayscale",
+        "hex.fonts.setting.font.antialias_subpixel": "Subpixel"
     }
 }

@@ -1695,7 +1695,10 @@ void ImDrawList::AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const Im
     PathBezierQuadraticCurveTo(p2, p3, num_segments);
     PathStroke(col, 0, thickness);
 }
-
+// IMHEX PATCH BEGIN
+extern ImDrawCallback ImGui_ImplOpenGL3_TurnFontShadersOn;
+extern ImDrawCallback ImGui_ImplOpenGL3_TurnFontShadersOff;
+// IMHEX PATCH END
 void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)
 {
     if ((col & IM_COL32_A_MASK) == 0)
@@ -1713,7 +1716,16 @@ void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32
         font_size = _Data->FontSize;
 
     IM_ASSERT(font->ContainerAtlas->TexID == _CmdHeader.TextureId);  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
-
+    // IMHEX PATCH BEGIN
+    int flags;
+    bool is_subpixel = false;
+    if (font != nullptr && font->ContainerAtlas != nullptr) {
+        flags = font->ContainerAtlas->FontBuilderFlags;
+        is_subpixel = (flags & ImGuiFreeTypeBuilderFlags_SubPixel) != 0;
+    }
+    if (is_subpixel)
+        AddCallback(ImGui_ImplOpenGL3_TurnFontShadersOn, NULL);
+    // IMHEX PATCH END
     ImVec4 clip_rect = _CmdHeader.ClipRect;
     if (cpu_fine_clip_rect)
     {
@@ -1723,6 +1735,10 @@ void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32
         clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect->w);
     }
     font->RenderText(this, font_size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != NULL);
+    // IMHEX PATCH BEGIN
+    if (is_subpixel)
+        AddCallback(ImGui_ImplOpenGL3_TurnFontShadersOff, NULL);
+    // IMHEX PATCH END
 }
 
 void ImDrawList::AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end)
@@ -3313,8 +3329,15 @@ void    ImFontAtlas::GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_wid
             TexPixelsRGBA32 = (unsigned int*)IM_ALLOC((size_t)TexWidth * (size_t)TexHeight * 4);
             const unsigned char* src = pixels;
             unsigned int* dst = TexPixelsRGBA32;
-            for (int n = TexWidth * TexHeight; n > 0; n--)
-                *dst++ = IM_COL32(255, 255, 255, (unsigned int)(*src++));
+            // IMHEX PATCH BEGIN
+            if (FontBuilderFlags & ImGuiFreeTypeBuilderFlags_SubPixel) {
+                for (int n = TexWidth * TexHeight; n > 0; n--,src++)
+                    *dst++ = IM_COL32(*src, *src, *src, *src);
+            } else {
+                for (int n = TexWidth * TexHeight; n > 0; n--)
+                    *dst++ = IM_COL32(255, 255, 255, (unsigned int)(*src++));
+            }
+            // IMHEX PATCH END
         }
     }
 

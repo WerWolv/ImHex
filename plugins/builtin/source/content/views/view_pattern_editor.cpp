@@ -326,17 +326,30 @@ namespace hex::plugin::builtin {
 
         if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
             static float height = 0;
-            static bool dragging = false;
             const ImGuiContext& g = *ImGui::GetCurrentContext();
             if (g.CurrentWindow->Appearing)
                 return;
-            const auto availableSize = g.CurrentWindow->Size;
+            const auto availableSize = ImVec2(g.CurrentWindow->Size.x, g.CurrentWindow->Size.y - 2 * ImGui::GetFrameHeightWithSpacing());
             const auto windowPosition = ImGui::GetCursorScreenPos();
-            auto textEditorSize = availableSize;
-            textEditorSize.y *= 3.5F / 5.0F;
-            textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-            textEditorSize.y = std::clamp(textEditorSize.y + height, 200.0F, availableSize.y - 200.0F);
+            static ImVec2 oldTextEditorSize = ImVec2(0, 0);
+            ImVec2 textEditorSize = ImVec2(availableSize.x, oldTextEditorSize.x == 0 ? availableSize.y * 3.0F / 5.0F : oldTextEditorSize.y);
+            static ImVec2 oldAvailableSize = ImVec2(0, 0);
+            if (availableSize.y != oldAvailableSize.y && oldAvailableSize.y != 0) {
+                float factor = availableSize.y / oldAvailableSize.y;
+                height *= factor;
+            }
 
+            static float oldHeight = 0;
+            auto heightIncrement = height - oldHeight;
+            if (heightIncrement != 0) {
+                float smallestTexEditorHeight = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ScrollbarSize;
+                float largestTextEditorHeight = availableSize.y - ImGui::GetTextLineHeightWithSpacing() - 2 * ImGui::GetFrameHeightWithSpacing() - ImGui::GetStyle().ScrollbarSize;
+                textEditorSize.y = std::clamp(textEditorSize.y + heightIncrement, smallestTexEditorHeight, largestTextEditorHeight);
+            }
+
+            oldAvailableSize = availableSize;
+            oldTextEditorSize = textEditorSize;
+            oldHeight = height;
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
                 if (name.contains(textEditorView) || name.contains(consoleView))
@@ -428,6 +441,7 @@ namespace hex::plugin::builtin {
                 setupGotoLine(editor);
             }
 
+            static bool dragging = false;
             ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 4_scaled));
             if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
                 if (ImGui::IsItemHovered())
