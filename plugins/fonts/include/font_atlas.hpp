@@ -208,9 +208,15 @@ namespace hex::fonts {
             }
 
             if (enabled) {
-                constexpr static std::array<ImWchar, 3> fullRange = { 0x0180, 0xFFEF, 0 };
+                constexpr static ImWchar fullUnicodeRanges[] = {
+                    0x0080, 0x00FF,  // Latin-1 Supplement
+                    0x0100, 0xFFEF,  // Remaining BMP (excluding specials)
+                    0x10000, 0x1FFFF, // Plane 1
+                    0x20000, 0x2FFFF, // Plane 2
+                    0 // null-terminated
+                };
 
-                glyphRangesBuilder.AddRanges(fullRange.data());
+                glyphRangesBuilder.AddRanges(fullUnicodeRanges);
             } else {
                 glyphRangesBuilder.AddRanges(m_fontAtlas->GetGlyphRangesJapanese());
                 glyphRangesBuilder.AddRanges(m_fontAtlas->GetGlyphRangesChineseFull());
