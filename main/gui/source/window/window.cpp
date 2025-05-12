@@ -985,7 +985,7 @@ namespace hex {
             glfwWindowHint(GLFW_MAXIMIZED, initialWindowProperties->maximized);
         }
 
-        int monitorX, monitorY;
+        int monitorX = 0, monitorY = 0;
         int monitorWidth = std::numeric_limits<int>::max(), monitorHeight = std::numeric_limits<int>::max();
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
         if (monitor != nullptr) {
