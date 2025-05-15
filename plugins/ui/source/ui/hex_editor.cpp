@@ -450,7 +450,9 @@ namespace hex::ui {
             const auto drawList = ImGui::GetWindowDrawList();
 
             const auto lineColor = ImGui::GetColorU32(ImGuiCol_SeparatorActive);
-            drawList->AddLine(rect.Min, ImVec2(rect.Max.x, rect.Min.y), lineColor);
+            u64 y = (address - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) / m_bytesPerRow;
+            if (y != 0)
+                drawList->AddLine(rect.Min, ImVec2(rect.Max.x, rect.Min.y), lineColor);
             if (regionProgress == 0 && drawVerticalConnector) {
                 drawList->AddLine(ImFloor(rect.Min), ImFloor(ImVec2(rect.Min.x, rect.Max.y)), lineColor);
             }
@@ -459,8 +461,11 @@ namespace hex::ui {
 
     void HexEditor::drawBackgroundHighlight(const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &backgroundColor) const {
         auto drawList = ImGui::GetWindowDrawList();
+        auto window = ImGui::GetCurrentWindowRead();
+        drawList->PushClipRect(window->Rect().Min, window->Rect().Max, false);
 
         drawList->AddRectFilled(cellPos, cellPos + cellSize, backgroundColor);
+        drawList->PopClipRect();
     }
 
     void HexEditor::drawSelection(u32 x, u32 y, Region region, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &frameColor) const {
@@ -472,6 +477,8 @@ namespace hex::ui {
 
     void HexEditor::drawFrame(u32 x, u32 y, Region region, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &frameColor) const {
         auto drawList = ImGui::GetWindowDrawList();
+        auto window = ImGui::GetCurrentWindowRead();
+        drawList->PushClipRect(window->Rect().Min, window->Rect().Max, false);
 
         if (!this->isSelectionValid()) return;
 
@@ -493,6 +500,7 @@ namespace hex::ui {
         // Draw horizontal line at the bottom of the bytes
         if ((byteAddress + m_bytesPerRow) > region.getEndAddress())
             drawList->AddLine(ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImTrunc(cellPos + cellSize + scaled({ 1, 0 })), frameColor, 1_scaled);
+        drawList->PopClipRect();
     }
 
     void HexEditor::drawInsertCursor(Region region, u64 byteAddress, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &frameColor) const {
@@ -695,10 +703,10 @@ namespace hex::ui {
                             const u64 byteAddress = y * m_bytesPerRow + x * bytesPerCell + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                             ImGui::TableNextColumn();
-                            if (y != 0) drawSeparatorLine(byteAddress, x != 0);
+                            drawSeparatorLine(byteAddress, x != 0);
                             if (isColumnSeparatorColumn(x, columnCount)) {
                                 ImGui::TableNextColumn();
-                                if (y != 0) drawSeparatorLine(byteAddress, false);
+                                drawSeparatorLine(byteAddress, false);
                             }
 
                             if (x < std::ceil(float(validBytes) / bytesPerCell)) {
@@ -759,7 +767,6 @@ namespace hex::ui {
                         ImGui::PopStyleVar();
 
                         ImGui::TableNextColumn();
-                        if (y != 0) drawSeparatorLine(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), false);
                         ImGui::TableNextColumn();
 
                         // Draw ASCII column
@@ -777,7 +784,7 @@ namespace hex::ui {
                                     const u64 byteAddress = y * m_bytesPerRow + x + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                                     ImGui::TableNextColumn();
-                                    if (y != 0) drawSeparatorLine(byteAddress, true);
+                                    drawSeparatorLine(byteAddress, true);
 
                                     const auto cellStartPos = getCellPosition();
 
