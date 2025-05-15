@@ -923,7 +923,13 @@ namespace hex::plugin::visualizers {
 
         auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
         if (iterable != nullptr && iterable->getEntryCount() > 0) {
-            const auto &content = iterable->getEntry(0);
+            auto content = iterable->getEntry(0);
+            while (content->getSize() == 0) {
+                auto children = content->getChildren();
+                if (children.size() == 0)
+                    throw std::runtime_error("hex.visualizers.pl_visualizer.3d.error_message_invalid_index_pattern"_lang.get());
+                content = static_cast<const std::shared_ptr<pl::ptrn::Pattern>>(children.begin()->second);
+            }
             if (content->getSize() == 1) {
                 s_indexType = IndexType::U8;
                 processRendering<u8>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uvPattern);
