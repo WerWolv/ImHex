@@ -15,6 +15,7 @@
         "hex.visualizers.pl_visualizer.3d.error_message_colors": "Colors",
         "hex.visualizers.pl_visualizer.3d.error_message_normals": "Normals",
         "hex.visualizers.pl_visualizer.3d.error_message_uv_coords": "Texture Coordinates",
+        "hex.visualizers.pl_visualizer.3d.error_message_invalid_index_pattern": "Error: Cannot determine index type size",
         "hex.visualizers.pl_visualizer.3d.error_message_index_count": "Error: Index count must be a multiple of 3",
         "hex.visualizers.pl_visualizer.3d.error_message_invalid_indices": "Error: Indices must be between 0 and the number of vertices minus one. Invalid indices: ",
         "hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count": " for {} vertices",
