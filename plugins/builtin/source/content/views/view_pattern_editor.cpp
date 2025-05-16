@@ -2080,6 +2080,8 @@ namespace hex::plugin::builtin {
                 m_textEditor.SetText("");
                 m_consoleEditor.SetText("");
             }
+
+            m_textEditor.SetTextChanged(false);
         });
 
         RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
