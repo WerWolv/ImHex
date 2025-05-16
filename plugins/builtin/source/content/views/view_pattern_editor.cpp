@@ -2091,6 +2091,8 @@ namespace hex::plugin::builtin {
             }
             m_hasUnevaluatedChanges = true;
             m_textHighlighter.m_needsToUpdateColors = false;
+
+            m_textEditor.SetTextChanged(false);
         });
 
         RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {

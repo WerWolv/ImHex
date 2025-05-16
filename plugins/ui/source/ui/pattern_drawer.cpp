@@ -445,9 +445,11 @@ namespace hex::ui {
         ImGui::TableNextColumn();
 
         if (pattern.isSealed() || leaf) {
-            ImGui::Indent();
-            highlightWhenSelected(pattern, [&]{ ImGui::TextUnformatted(this->getDisplayName(pattern).c_str()); });
-            ImGui::Unindent();
+            ImGui::Indent(ImGui::GetCurrentContext()->FontSize + ImGui::GetStyle().FramePadding.x * 2);
+            highlightWhenSelected(pattern, [&] {
+                ImGui::TextUnformatted(this->getDisplayName(pattern).c_str());
+            });
+            ImGui::Unindent(ImGui::GetCurrentContext()->FontSize + ImGui::GetStyle().FramePadding.x * 2);
             return false;
         }
 
