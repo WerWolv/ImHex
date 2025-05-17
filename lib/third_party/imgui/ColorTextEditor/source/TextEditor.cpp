@@ -893,10 +893,9 @@ void TextEditor::SetFocus() {
     mState.mCursorPosition = mFocusAtCoords;
     ResetCursorBlinkTime();
     EnsureCursorVisible();
-    if (!this->mReadOnly) {
+    if (!this->mReadOnly)
         ImGui::SetKeyboardFocusHere(0);
-        mUpdateFocus = false;
-    }
+    mUpdateFocus = false;
 }
 
 void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPos, const ImVec2 &textEditorSize) {
@@ -1156,6 +1155,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                 }
                 i += tokenLength;
                 i += SkipSpaces(Coordinates(lineNo, i));
+
             }
 
             lineNo = std::floor(lineNo + 1.0F);
@@ -1284,12 +1284,14 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
     ImGui::Dummy({});
 }
 
-void TextEditor::SetText(const std::string &aText) {
+void TextEditor::SetText(const std::string &aText, bool aUndo) {
     UndoRecord u;
-    u.mBefore = mState;
-    u.mRemoved = GetText();
-    u.mRemovedStart = Coordinates(0, 0);
-    u.mRemovedEnd = Coordinates((int)mLines.size()-1, GetLineMaxColumn((int)mLines.size()-1));
+    if (!mReadOnly && aUndo) {
+        u.mBefore = mState;
+        u.mRemoved = GetText();
+        u.mRemovedStart = Coordinates(0, 0);
+        u.mRemovedEnd = Coordinates((int) mLines.size() - 1, GetLineMaxColumn((int) mLines.size() - 1));
+    }
     mLines.resize(1);
     mLines[0] = Line();
     std::string text = PreprocessText(aText);
@@ -1299,14 +1301,18 @@ void TextEditor::SetText(const std::string &aText) {
         else
             mLines.back().push_back(Glyph(chr));
     }
-    u.mAdded = text;
-    u.mAddedStart = Coordinates(0, 0);
-    u.mAddedEnd = Coordinates((int)mLines.size()-1, GetLineMaxColumn((int)mLines.size()-1));
+    if (!mReadOnly && aUndo) {
+        u.mAdded = text;
+        u.mAddedStart = Coordinates(0, 0);
+        u.mAddedEnd = Coordinates((int) mLines.size() - 1, GetLineMaxColumn((int) mLines.size() - 1));
+    }
     mTextChanged = true;
     mScrollToTop = true;
-    u.mAfter = mState;
-    if (!mReadOnly)
+    if (!mReadOnly && aUndo) {
+        u.mAfter = mState;
+
         AddUndo(u);
+    }
 
     Colorize();
 }
@@ -1623,7 +1629,7 @@ void TextEditor::JumpToCoords(const Coordinates &aNewPos) {
     SetCursorPosition(aNewPos);
     EnsureCursorVisible();
 
-    setFocusAtCoords(aNewPos);
+    SetFocusAtCoords(aNewPos);
 }
 
 void TextEditor::MoveUp(int aAmount, bool aSelect) {
@@ -3121,7 +3127,6 @@ void TextEditor::EnsureCursorVisible() {
         mScrollToCursorX = false;
     if (!mScrollToCursorX && !mScrollToCursorY && mOldTopMargin == mTopMargin) {
         mScrollToCursor = false;
-        mOldTopMargin = mTopMargin;
         return;
     }
 

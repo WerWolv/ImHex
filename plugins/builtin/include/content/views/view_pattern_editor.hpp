@@ -35,18 +35,18 @@ namespace hex::plugin::builtin {
 
     class PatternSourceCode {
     public:
-        const std::string& get(prv::Provider *provider) {
+        const std::string& get(prv::Provider *provider) const {
             if (m_synced)
                 return m_sharedSource;
 
             return m_perProviderSource.get(provider);
         }
 
-        void set(prv::Provider *provider, std::string source) {
-            source = wolv::util::trim(source);
+        std::string& get(prv::Provider *provider) {
+            if (m_synced)
+                return m_sharedSource;
 
-            m_perProviderSource.set(source, provider);
-            m_sharedSource = std::move(source);
+            return m_perProviderSource.get(provider);
         }
 
         bool isSynced() const {
@@ -262,7 +262,7 @@ namespace hex::plugin::builtin {
         bool m_hasUnevaluatedChanges = false;
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
 
-        TextEditor m_textEditor, m_consoleEditor;
+        PerProvider<TextEditor> m_textEditor, m_consoleEditor;
         std::atomic<bool> m_consoleNeedsUpdate = false;
 
         std::atomic<bool> m_dangerousFunctionCalled = false;
@@ -285,6 +285,8 @@ namespace hex::plugin::builtin {
         PerProvider<TextEditor::Coordinates>  m_cursorPosition;
 
         PerProvider<TextEditor::Coordinates> m_consoleCursorPosition;
+        PerProvider<bool> m_cursorNeedsUpdate;
+        PerProvider<bool> m_consoleCursorNeedsUpdate;
         PerProvider<TextEditor::Selection> m_selection;
         PerProvider<TextEditor::Selection> m_consoleSelection;
         PerProvider<size_t> m_consoleLongestLineLength;
@@ -406,11 +408,12 @@ namespace hex::plugin::builtin {
         };
 
         std::function<void()> m_exportPatternFile = [this] {
+            auto provider = ImHexApi::Provider::get();
             fs::openFileBrowser(
                     fs::DialogMode::Save, { {"Pattern", "hexpat"} },
-                    [this](const auto &path) {
+                    [this, provider](const auto &path) {
                         wolv::io::File file(path, wolv::io::File::Mode::Create);
-                        file.writeString(wolv::util::trim(m_textEditor.GetText()));
+                        file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
                     }
             );
         };
