@@ -242,10 +242,21 @@ void TextEditor::DeleteRange(const Coordinates &aStart, const Coordinates &aEnd)
     mTextChanged = true;
 }
 
-int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const char *aValue) {
+void TextEditor::AppendLine(const std::string &aValue) {
+    if (mLines.size() != 1 || !mLines[0].empty())
+        mLines.push_back(Line());
+    Coordinates lastLine = {( int )mLines.size() - 1, 0};
+    InsertTextAt(lastLine, aValue);
+    SetCursorPosition({( int )mLines.size() - 1, 0});
+    EnsureCursorVisible();
+    mTextChanged = true;
+}
+
+int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const std::string &aValueString) {
     int cindex     = GetCharacterIndex(aWhere);
     int totalLines = 0;
-    while (*aValue != '\0') {
+    auto aValue = aValueString.begin();
+    while (aValue != aValueString.end()) {
         if (mLines.empty()) {
             mLines.push_back(Line());
             mTextChanged = true;
@@ -279,10 +290,15 @@ int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const char *aValu
             cindex         = 0;
             ++totalLines;
             ++aValue;
+        } else if (*aValue == 0) {
+            auto &line = mLines[aWhere.mLine];
+            line.insert(line.begin() + cindex++, Glyph('.', PaletteIndex::Default));
+            ++aWhere.mColumn;
+            ++aValue;
         } else {
             auto &line = mLines[aWhere.mLine];
             auto d     = UTF8CharLength(*aValue);
-            while (d-- > 0 && *aValue != '\0')
+            while (d-- > 0 && aValue != aValueString.end())
                 line.insert(line.begin() + cindex++, Glyph(*aValue++, PaletteIndex::Default));
             ++aWhere.mColumn;
         }
@@ -1587,7 +1603,7 @@ void TextEditor::InsertText(const char *aValue) {
     int totalLines = pos.mLine - start.mLine;
     auto text = PreprocessText(aValue);
 
-    totalLines += InsertTextAt(pos, text.c_str());
+    totalLines += InsertTextAt(pos, text);
 
     SetSelection(pos, pos);
     SetCursorPosition(pos);
@@ -3119,7 +3135,7 @@ void TextEditor::UndoRecord::Undo(TextEditor *aEditor) {
 
     if (!mRemoved.empty()) {
         auto start = mRemovedStart;
-        aEditor->InsertTextAt(start, mRemoved.c_str());
+        aEditor->InsertTextAt(start, mRemoved);
         aEditor->Colorize(mRemovedStart.mLine - 1, mRemovedEnd.mLine - mRemovedStart.mLine + 2);
     }
 
@@ -3135,7 +3151,7 @@ void TextEditor::UndoRecord::Redo(TextEditor *aEditor) {
 
     if (!mAdded.empty()) {
         auto start = mAddedStart;
-        aEditor->InsertTextAt(start, mAdded.c_str());
+        aEditor->InsertTextAt(start, mAdded);
         aEditor->Colorize(mAddedStart.mLine - 1, mAddedEnd.mLine - mAddedStart.mLine + 1);
     }
 
