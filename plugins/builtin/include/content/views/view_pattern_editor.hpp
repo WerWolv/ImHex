@@ -233,10 +233,10 @@ namespace hex::plugin::builtin {
         std::atomic<u32> m_runningEvaluators = 0;
         std::atomic<u32> m_runningParsers    = 0;
 
-        bool m_hasUnevaluatedChanges = false;
+        PerProvider<bool> m_hasUnevaluatedChanges;
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
 
-        TextEditor m_textEditor, m_consoleEditor;
+        PerProvider<TextEditor> m_textEditor, m_consoleEditor;
         std::atomic<bool> m_consoleNeedsUpdate = false;
 
         std::atomic<bool> m_dangerousFunctionCalled = false;
@@ -259,6 +259,8 @@ namespace hex::plugin::builtin {
         PerProvider<TextEditor::Coordinates>  m_cursorPosition;
 
         PerProvider<TextEditor::Coordinates> m_consoleCursorPosition;
+        PerProvider<bool> m_cursorNeedsUpdate;
+        PerProvider<bool> m_consoleCursorNeedsUpdate;
         PerProvider<TextEditor::Selection> m_selection;
         PerProvider<TextEditor::Selection> m_consoleSelection;
         PerProvider<size_t> m_consoleLongestLineLength;
@@ -379,11 +381,12 @@ namespace hex::plugin::builtin {
         };
 
         std::function<void()> m_exportPatternFile = [this] {
+            auto provider = ImHexApi::Provider::get();
             fs::openFileBrowser(
                     fs::DialogMode::Save, { {"Pattern", "hexpat"} },
-                    [this](const auto &path) {
+                    [this, provider](const auto &path) {
                         wolv::io::File file(path, wolv::io::File::Mode::Create);
-                        file.writeString(wolv::util::trim(m_textEditor.GetText()));
+                        file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
                     }
             );
         };
