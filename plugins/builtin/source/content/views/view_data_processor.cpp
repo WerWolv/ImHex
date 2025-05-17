@@ -382,8 +382,11 @@ namespace hex::plugin::builtin {
             m_workspaceStack.get(provider).push_back(&m_mainWorkspace.get(provider));
         });
 
-        EventProviderChanged::subscribe(this, [this](const auto *, const auto *) {
-            for (auto *workspace : *m_workspaceStack) {
+        EventProviderChanged::subscribe(this, [this](const auto *, const auto *newProvider) {
+            if (newProvider == nullptr)
+                return;
+
+            for (auto *workspace : m_workspaceStack.get(newProvider)) {
                 for (auto &node : workspace->nodes) {
                     node->setCurrentOverlay(nullptr);
                 }
@@ -415,7 +418,7 @@ namespace hex::plugin::builtin {
                                         file.writeString(ViewDataProcessor::saveNodes(*m_mainWorkspace).dump(4));
                                 });
         }, [this]{
-            return !m_workspaceStack->empty() && !m_workspaceStack->back()->nodes.empty() && ImHexApi::Provider::isValid();
+            return ImHexApi::Provider::isValid() && !m_workspaceStack->empty() && !m_workspaceStack->back()->nodes.empty();
         });
 
         ContentRegistry::FileHandler::add({ ".hexnode" }, [this](const auto &path) {
