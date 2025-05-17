@@ -14,17 +14,37 @@
 
 #include <wolv/types/type_name.hpp>
 
-#define EVENT_DEF_IMPL(event_name, event_name_string, should_log, ...)                                                                                      \
-    struct event_name final : public hex::impl::Event<__VA_ARGS__> {                                                                                        \
-        constexpr static auto Id = [] { return hex::impl::EventId(event_name_string); }();                                                                  \
-        constexpr static auto ShouldLog = (should_log);                                                                                                     \
-        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }                                                                            \
-                                                                                                                                                            \
-        static EventManager::EventList::iterator subscribe(Event::Callback function) { return EventManager::subscribe<event_name>(std::move(function)); }   \
-        static void subscribe(void *token, Event::Callback function) { EventManager::subscribe<event_name>(token, std::move(function)); }                   \
-        static void unsubscribe(const EventManager::EventList::iterator &token) noexcept { EventManager::unsubscribe(token); }                              \
-        static void unsubscribe(void *token) noexcept { EventManager::unsubscribe<event_name>(token); }                                                     \
-        static void post(auto &&...args) { EventManager::post<event_name>(std::forward<decltype(args)>(args)...); }                                         \
+#define EVENT_DEF_IMPL(event_name, event_name_string, should_log, ...)                                                          \
+    struct event_name final : public hex::impl::Event<__VA_ARGS__> {                                                            \
+        constexpr static auto Id = [] { return hex::impl::EventId(event_name_string); }();                                      \
+        constexpr static auto ShouldLog = (should_log);                                                                         \
+        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }                                                \
+                                                                                                                                \
+        static EventManager::EventList::iterator subscribe(Event::Callback function) {                                          \
+            return EventManager::subscribe<event_name>(std::move(function));                                                    \
+        }                                                                                                                       \
+        template<typename = void>                                                                                               \
+        static EventManager::EventList::iterator subscribe(Event::BaseCallback function)                                        \
+        requires (!std::same_as<Event::Callback, Event::BaseCallback>) {                                                        \
+            return EventManager::subscribe<event_name>([function = std::move(function)](auto && ...) { function(); });          \
+        }                                                                                                                       \
+        static void subscribe(void *token, Event::Callback function) {                                                          \
+            EventManager::subscribe<event_name>(token, std::move(function));                                                    \
+        }                                                                                                                       \
+        template<typename = void>                                                                                               \
+        static void subscribe(void *token, Event::BaseCallback function)                                                        \
+        requires (!std::same_as<Event::Callback, Event::BaseCallback>) {                                                        \
+            return EventManager::subscribe<event_name>(token, [function = std::move(function)](auto && ...) { function(); });   \
+        }                                                                                                                       \
+        static void unsubscribe(const EventManager::EventList::iterator &token) noexcept {                                      \
+            EventManager::unsubscribe(token);                                                                                   \
+        }                                                                                                                       \
+        static void unsubscribe(void *token) noexcept {                                                                         \
+            EventManager::unsubscribe<event_name>(token);                                                                       \
+        }                                                                                                                       \
+        static void post(auto &&...args) {                                                                                      \
+            EventManager::post<event_name>(std::forward<decltype(args)>(args)...);                                              \
+        }                                                                                                                       \
     }
 
 #define EVENT_DEF(event_name, ...)          EVENT_DEF_IMPL(event_name, #event_name, true, __VA_ARGS__)
@@ -65,6 +85,7 @@ EXPORT_MODULE namespace hex {
         template<typename... Params>
         struct Event : EventBase {
             using Callback = std::function<void(Params...)>;
+            using BaseCallback = std::function<void()>;
 
             explicit Event(Callback func) noexcept : m_func(std::move(func)) { }
 

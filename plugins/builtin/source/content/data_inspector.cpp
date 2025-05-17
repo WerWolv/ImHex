@@ -14,7 +14,10 @@
 
 #include <imgui_internal.h>
 #include <fonts/vscode_icons.hpp>
+#include <hex/helpers/default_paths.hpp>
+#include <hex/helpers/encoding_file.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <popups/popup_file_chooser.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -448,7 +451,7 @@ namespace hex::plugin::builtin {
                 u32 codepoint           = 0;
 
                 std::memcpy(utf8Buffer, reinterpret_cast<char8_t *>(buffer.data()), 4);
-                u8 codepointSize = ImTextCharFromUtf8(&codepoint, utf8Buffer, utf8Buffer + 4);
+                u8 codepointSize = ImTextCharFromUtf8(&codepoint, utf8Buffer, nullptr);
 
                 std::memcpy(codepointString, utf8Buffer, std::min(codepointSize, u8(4)));
                 auto value = hex::format("'{0}' (U+0x{1:04X})",
@@ -616,16 +619,78 @@ namespace hex::plugin::builtin {
             }
         );
 
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.custom_encoding", 1, [encodingFile = EncodingFile()](const std::vector<u8> &, std::endian, Style) mutable {
+            std::string value, copyValue;
+
+            if (encodingFile.valid()) {
+                auto currSelection = ImHexApi::HexEditor::getSelection();
+
+                if (currSelection.has_value()) {
+                    std::vector<u8> stringBuffer(std::min<size_t>(currSelection->size, 0x1000), 0x00);
+                    ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
+
+                    u64 offset = 0;
+                    while (offset < stringBuffer.size()) {
+                        const auto [character, size] = encodingFile.getEncodingFor(std::span(stringBuffer).subspan(offset));
+                        value += character;
+                        offset += size;
+                    }
+                    copyValue = value;
+
+
+                    if (value.size() > MaxStringLength) {
+                        value.resize(MaxStringLength);
+                        value += "...";
+                    }
+                } else {
+                    value = "";
+                    copyValue = "";
+                }
+            } else {
+                value = "Invalid";
+            }
+            return [&, value, copyValue]() mutable -> std::string {
+                ContentRegistry::DataInspector::drawMenuItems([&] {
+                    if (ImGui::MenuItemEx("hex.builtin.inspector.custom_encoding.change"_lang, "あ")) {
+                        const auto basePaths = paths::Encodings.read();
+                        std::vector<std::fs::path> paths;
+                        for (const auto &basePath : basePaths) {
+                            for (const auto &entry : std::filesystem::directory_iterator(basePath)) {
+                                paths.push_back(entry.path());
+                            }
+                        }
+
+                        ui::PopupFileChooser::open(basePaths, paths, std::vector<fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false, [&](const auto &path) {
+                            encodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
+                        });
+                    }
+                });
+
+                if (encodingFile.valid() && !value.empty()) {
+                    ImGuiExt::TextFormatted("({})\"{}\"", encodingFile.getName(), value);
+                } else {
+                    ImGuiExt::TextFormatted("hex.builtin.inspector.custom_encoding.no_encoding"_lang);
+                }
+
+                return copyValue;
+            };
+        });
+
 #if defined(OS_WINDOWS)
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(u32), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
-            auto endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u32 *>(buffer.data()), endian);
+            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u32 *>(buffer.data()), endian);
 
             std::string value;
             try {
-                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                auto time = std::localtime(&endianAdjustedTime);
+                if (time == nullptr) {
+                    value = "Invalid";
+                } else {
+                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
+                }
             } catch (fmt::format_error &) {
                 value = "Invalid";
             }
@@ -636,11 +701,16 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(u64), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
-            auto endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u64 *>(buffer.data()), endian);
+            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u64 *>(buffer.data()), endian);
 
             std::string value;
             try {
-                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                auto time = std::localtime(&endianAdjustedTime);
+                if (time == nullptr) {
+                    value = "Invalid";
+                } else {
+                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
+                }
             } catch (fmt::format_error &) {
                 value = "Invalid";
             }
@@ -653,11 +723,16 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time", sizeof(time_t), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
-            auto endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
+            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
 
             std::string value;
             try {
-                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                auto time = std::localtime(&endianAdjustedTime);
+                if (time == nullptr) {
+                    value = "Invalid";
+                } else {
+                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
+                }
             } catch (fmt::format_error &e) {
                 value = "Invalid";
             }

@@ -1,4 +1,4 @@
-FROM emscripten/emsdk:3.1.51 AS build
+FROM emscripten/emsdk:4.0.8 AS build
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493
@@ -87,7 +87,6 @@ COPY --from=build [             \
     "/build/imhex.wasm",        \
     "/build/imhex.wasm.size",   \
     "/build/imhex.js",          \
-    "/build/imhex.worker.js",   \
                                 \
     # Static files              \
     "/build/index.html",        \

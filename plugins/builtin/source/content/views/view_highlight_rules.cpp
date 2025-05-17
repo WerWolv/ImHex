@@ -168,7 +168,6 @@ namespace hex::plugin::builtin {
         });
 
         // Initialize the selected rule iterators to point to the end of the rules lists
-        m_selectedRule = m_rules->end();
         EventProviderOpened::subscribe([this](prv::Provider *provider) {
             m_selectedRule.get(provider) = m_rules.get(provider).end();
         });

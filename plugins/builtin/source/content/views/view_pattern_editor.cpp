@@ -211,21 +211,6 @@ namespace hex::plugin::builtin {
         m_editorRuntime = std::make_unique<pl::PatternLanguage>();
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
 
-        m_textEditor.SetLanguageDefinition(PatternLanguage());
-        m_textEditor.SetShowWhitespaces(false);
-
-        m_consoleEditor.SetLanguageDefinition(ConsoleLog());
-        m_consoleEditor.SetShowWhitespaces(false);
-        m_consoleEditor.SetReadOnly(true);
-        m_consoleEditor.SetShowCursor(false);
-        m_consoleEditor.SetShowLineNumbers(false);
-        m_consoleEditor.SetSourceCodeEditor(&m_textEditor);
-        std::string sourcecode = pl::api::Source::DefaultSource;
-        std::string error = "E: ";
-        std::string end = ":";
-        std::string arrow = "  -->   in ";
-        m_consoleEditor.AddClickableText(error + sourcecode + end);
-        m_consoleEditor.AddClickableText(error + arrow + sourcecode + end);
 
         this->registerEvents();
         this->registerMenuItems();
@@ -326,17 +311,30 @@ namespace hex::plugin::builtin {
 
         if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
             static float height = 0;
-            static bool dragging = false;
             const ImGuiContext& g = *ImGui::GetCurrentContext();
             if (g.CurrentWindow->Appearing)
                 return;
-            const auto availableSize = g.CurrentWindow->Size;
+            const auto availableSize = ImVec2(g.CurrentWindow->Size.x, g.CurrentWindow->Size.y - 2 * ImGui::GetFrameHeightWithSpacing());
             const auto windowPosition = ImGui::GetCursorScreenPos();
-            auto textEditorSize = availableSize;
-            textEditorSize.y *= 3.5F / 5.0F;
-            textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-            textEditorSize.y = std::clamp(textEditorSize.y + height, 200.0F, availableSize.y - 200.0F);
+            static ImVec2 oldTextEditorSize = ImVec2(0, 0);
+            ImVec2 textEditorSize = ImVec2(availableSize.x, oldTextEditorSize.x == 0 ? availableSize.y * 3.0F / 5.0F : oldTextEditorSize.y);
+            static ImVec2 oldAvailableSize = ImVec2(0, 0);
+            if (availableSize.y != oldAvailableSize.y && oldAvailableSize.y != 0) {
+                float factor = availableSize.y / oldAvailableSize.y;
+                height *= factor;
+            }
 
+            static float oldHeight = 0;
+            auto heightIncrement = height - oldHeight;
+            if (heightIncrement != 0) {
+                float smallestTexEditorHeight = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ScrollbarSize;
+                float largestTextEditorHeight = availableSize.y - ImGui::GetTextLineHeightWithSpacing() - 2 * ImGui::GetFrameHeightWithSpacing() - ImGui::GetStyle().ScrollbarSize;
+                textEditorSize.y = std::clamp(textEditorSize.y + heightIncrement, smallestTexEditorHeight, largestTextEditorHeight);
+            }
+
+            oldAvailableSize = availableSize;
+            oldTextEditorSize = textEditorSize;
+            oldHeight = height;
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
                 if (name.contains(textEditorView) || name.contains(consoleView))
@@ -344,15 +342,20 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::PushFont(fonts::CodeEditor());
-            m_textEditor.Render("##pattern_editor", textEditorSize, false);
+            m_textEditor.get(provider).Render("##pattern_editor", textEditorSize, false);
             ImGui::PopFont();
 
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
-            TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
-            if (m_textEditor.RaiseContextMenu())  {
+            TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.get(provider).GetFindReplaceHandler();
+            if (m_textEditor.get(provider).RaiseContextMenu())  {
                 ImGui::OpenPopup("##text_editor_context_menu");
-                m_textEditor.ClearRaiseContextMenu();
+                m_textEditor.get(provider).ClearRaiseContextMenu();
+            }
+
+            if (m_cursorNeedsUpdate.get(provider)) {
+                m_textEditor.get(provider).SetFocusAtCoords(m_cursorPosition.get(provider));
+                m_cursorNeedsUpdate.get(provider) = false;
             }
 
             if (ImGui::BeginPopup("##text_editor_context_menu")) {
@@ -364,26 +367,26 @@ namespace hex::plugin::builtin {
 
                 ImGui::Separator();
 
-                if (!m_textEditor.HasSelection())
-                    m_textEditor.SelectWordUnderCursor();
-                const bool hasSelection = m_textEditor.HasSelection();
+                if (!m_textEditor.get(provider).HasSelection())
+                    m_textEditor.get(provider).SelectWordUnderCursor();
+                const bool hasSelection = m_textEditor.get(provider).HasSelection();
                 if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.cut"_lang, ICON_VS_COMBINE, Shortcut(CTRLCMD + Keys::X).toString().c_str(), false, hasSelection)) {
-                    m_textEditor.Cut();
+                    m_textEditor.get(provider).Cut();
                 }
                 if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.copy"_lang, ICON_VS_COPY, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
-                    m_textEditor.Copy();
+                    m_textEditor.get(provider).Copy();
                 }
                 if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.paste"_lang, ICON_VS_OUTPUT, Shortcut(CTRLCMD + Keys::V).toString().c_str())) {
-                    m_textEditor.Paste();
+                    m_textEditor.get(provider).Paste();
                 }
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItemEx("hex.builtin.menu.edit.undo"_lang, ICON_VS_DISCARD, Shortcut(CTRLCMD + Keys::Z).toString().c_str(), false, m_textEditor.CanUndo())) {
-                    m_textEditor.Undo();
+                if (ImGui::MenuItemEx("hex.builtin.menu.edit.undo"_lang, ICON_VS_DISCARD, Shortcut(CTRLCMD + Keys::Z).toString().c_str(), false, m_textEditor.get(provider).CanUndo())) {
+                    m_textEditor.get(provider).Undo();
                 }
-                if (ImGui::MenuItemEx("hex.builtin.menu.edit.redo"_lang, ICON_VS_REDO, Shortcut(CTRLCMD + Keys::Y).toString().c_str(), false, m_textEditor.CanRedo())) {
-                    m_textEditor.Redo();
+                if (ImGui::MenuItemEx("hex.builtin.menu.edit.redo"_lang, ICON_VS_REDO, Shortcut(CTRLCMD + Keys::Y).toString().c_str(), false, m_textEditor.get(provider).CanRedo())) {
+                    m_textEditor.get(provider).Redo();
                 }
 
                 ImGui::Separator();
@@ -395,10 +398,10 @@ namespace hex::plugin::builtin {
 
 
                 if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_next"_lang, Shortcut(Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
-                    findReplaceHandler->FindMatch(&m_textEditor,true);
+                    findReplaceHandler->FindMatch(&m_textEditor.get(provider),true);
 
                 if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_previous"_lang, Shortcut(SHIFT + Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
-                    findReplaceHandler->FindMatch(&m_textEditor,false);
+                    findReplaceHandler->FindMatch(&m_textEditor.get(provider),false);
 
                 if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.replace"_lang, ICON_VS_REPLACE, Shortcut(CTRLCMD +  Keys::H).toString().c_str())) {
                     m_replaceMode = true;
@@ -406,13 +409,13 @@ namespace hex::plugin::builtin {
                 }
 
                 if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_next"_lang,"",false,!findReplaceHandler->GetReplaceWord().empty()))
-                    findReplaceHandler->Replace(&m_textEditor,true);
+                    findReplaceHandler->Replace(&m_textEditor.get(provider),true);
 
                 if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_previous"_lang, "",false,!findReplaceHandler->GetReplaceWord().empty()))
-                    findReplaceHandler->Replace(&m_textEditor,false);
+                    findReplaceHandler->Replace(&m_textEditor.get(provider),false);
 
                 if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.replace_all"_lang, ICON_VS_REPLACE_ALL, "",false,!findReplaceHandler->GetReplaceWord().empty()))
-                    findReplaceHandler->ReplaceAll(&m_textEditor);
+                    findReplaceHandler->ReplaceAll(&m_textEditor.get(provider));
 
                 if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.goto_line"_lang, ICON_VS_DEBUG_STEP_INTO, Shortcut(ALT + Keys::G).toString().c_str()))
                     m_openGotoLinePopUp = true;
@@ -428,6 +431,7 @@ namespace hex::plugin::builtin {
                 setupGotoLine(editor);
             }
 
+            static bool dragging = false;
             ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 4_scaled));
             if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
                 if (ImGui::IsItemHovered())
@@ -496,7 +500,7 @@ namespace hex::plugin::builtin {
                 } else {
                     if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || m_triggerEvaluation) {
                         m_triggerEvaluation = false;
-                        this->evaluatePattern(m_textEditor.GetText(), provider);
+                        this->evaluatePattern(m_textEditor.get(provider).GetText(), provider);
                     }
                 }
 
@@ -552,7 +556,7 @@ namespace hex::plugin::builtin {
                 } else {
                     if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &m_runAutomatically)) {
                         if (m_runAutomatically)
-                            m_hasUnevaluatedChanges = true;
+                            m_hasUnevaluatedChanges.get(provider) = true;
                     }
 
                     ImGui::SameLine();
@@ -569,9 +573,9 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (m_textEditor.IsBreakpointsChanged()) {
-                m_breakpoints = m_textEditor.GetBreakpoints();
-                m_textEditor.ClearBreakpointsChanged();
+            if (m_textEditor.get(provider).IsBreakpointsChanged()) {
+                m_breakpoints = m_textEditor.get(provider).GetBreakpoints();
+                m_textEditor.get(provider).ClearBreakpointsChanged();
                 const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
                 auto &evaluator = runtime.getInternals().evaluator;
                 if (evaluator) {
@@ -579,16 +583,16 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (m_textEditor.IsTextChanged() && !m_hasUnevaluatedChanges) {
-                m_hasUnevaluatedChanges = true;
+            if (m_textEditor.get(provider).IsTextChanged() && !m_hasUnevaluatedChanges.get(provider)) {
+                m_hasUnevaluatedChanges.get(provider) = true;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
             }
 
-            if (m_hasUnevaluatedChanges && m_runningEvaluators == 0 && m_runningParsers == 0) {
+            if (m_hasUnevaluatedChanges.get(provider) && m_runningEvaluators == 0 && m_runningParsers == 0) {
                 if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1LL)) {
 
-                    auto code = m_textEditor.GetText();
+                    auto code = m_textEditor.get(provider).GetText();
                     EventPatternEditorChanged::post(code);
 
                     TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code = std::move(code), provider](auto &){
@@ -597,13 +601,13 @@ namespace hex::plugin::builtin {
                         if (m_runAutomatically)
                             m_triggerAutoEvaluate = true;
                     });
-                    m_hasUnevaluatedChanges = false;
-                    m_textEditor.SetTextChanged();
+                    m_hasUnevaluatedChanges.get(provider) = false;
+                    m_textEditor.get(provider).SetTextChanged();
                 }
             }
 
             if (m_triggerAutoEvaluate.exchange(false)) {
-                this->evaluatePattern(m_textEditor.GetText(), provider);
+                this->evaluatePattern(m_textEditor.get(provider).GetText(), provider);
             }
         }
 
@@ -639,6 +643,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawTextEditorFindReplacePopup(TextEditor *textEditor) {
+        auto provider = ImHexApi::Provider::get();
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
         if (ImGui::BeginPopup("##text_editor_view_find_replace_popup", popupFlags)) {
             static std::string findWord;
@@ -937,7 +942,7 @@ namespace hex::plugin::builtin {
             // Escape key to close the popup
             if (ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
                 m_popupWindowHeight = 0;
-                m_textEditor.SetTopMarginChanged(0);
+                m_textEditor.get(provider).SetTopMarginChanged(0);
                 ImGui::CloseCurrentPopup();
             }
 
@@ -948,7 +953,7 @@ namespace hex::plugin::builtin {
                     auto heightChange = height - m_popupWindowHeight;
                     auto heightChangeChange = heightChange - m_popupWindowHeightChange;
                     if (std::fabs(heightChange) < 0.5 && std::fabs(heightChangeChange) > 1.0) {
-                        m_textEditor.SetTopMarginChanged(height);
+                        m_textEditor.get(provider).SetTopMarginChanged(height);
                     }
                     m_popupWindowHeightChange = heightChange;
                     m_popupWindowHeight = height;
@@ -959,11 +964,12 @@ namespace hex::plugin::builtin {
         } else if (!m_frPopupIsClosed) {
             m_frPopupIsClosed = true;
             m_popupWindowHeight = 0;
-            m_textEditor.SetTopMarginChanged(0);
+            m_textEditor.get(provider).SetTopMarginChanged(0);
         }
     }
 
     void ViewPatternEditor::drawTextEditorGotoLinePopup(TextEditor *textEditor) {
+        auto provider = ImHexApi::Provider::get();
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
         if (ImGui::BeginPopup("##text_editor_view_goto_line_popup", popupFlags)) {
             std::string childName;
@@ -996,7 +1002,7 @@ namespace hex::plugin::builtin {
             }
             if (ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
                 m_popupWindowHeight = 0;
-                m_textEditor.SetTopMarginChanged(0);
+                m_textEditor.get(provider).SetTopMarginChanged(0);
                 ImGui::CloseCurrentPopup();
             }
 
@@ -1007,7 +1013,7 @@ namespace hex::plugin::builtin {
                     auto heightChange = height - m_popupWindowHeight;
                     auto heightChangeChange = heightChange - m_popupWindowHeightChange;
                     if (std::fabs(heightChange) < 0.5 && std::fabs(heightChangeChange) > 1.0) {
-                        m_textEditor.SetTopMarginChanged(height);
+                        m_textEditor.get(provider).SetTopMarginChanged(height);
                     }
                     m_popupWindowHeightChange = heightChange;
                     m_popupWindowHeight = height;
@@ -1018,24 +1024,25 @@ namespace hex::plugin::builtin {
         } else if (!m_gotoPopupIsClosed) {
             m_gotoPopupIsClosed = true;
             m_popupWindowHeight = 0;
-            m_textEditor.SetTopMarginChanged(0);
+            m_textEditor.get(provider).SetTopMarginChanged(0);
         }
     }
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
-        auto findReplaceHandler = m_consoleEditor.GetFindReplaceHandler();
-        if (m_consoleEditor.RaiseContextMenu()) {
+        auto provider = ImHexApi::Provider::get();
+        auto findReplaceHandler = m_consoleEditor.get(provider).GetFindReplaceHandler();
+        if (m_consoleEditor.get(provider).RaiseContextMenu()) {
             ImGui::OpenPopup("##console_context_menu");
-            m_consoleEditor.ClearRaiseContextMenu();
+            m_consoleEditor.get(provider).ClearRaiseContextMenu();
         }
 
-        const bool hasSelection = m_consoleEditor.HasSelection();
+        const bool hasSelection = m_consoleEditor.get(provider).HasSelection();
         if (ImGui::BeginPopup("##console_context_menu")) {
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.copy"_lang, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
-                m_consoleEditor.Copy();
+                m_consoleEditor.get(provider).Copy();
             }
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.select_all"_lang, Shortcut(CTRLCMD + Keys::A).toString().c_str())) {
-                m_consoleEditor.SelectAll();
+                m_consoleEditor.get(provider).SelectAll();
             }
             ImGui::Separator();
             // Search and replace entries
@@ -1045,10 +1052,10 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_next"_lang, Shortcut(Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
-                findReplaceHandler->FindMatch(&m_consoleEditor,true);
+                findReplaceHandler->FindMatch(&m_consoleEditor.get(provider),true);
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_previous"_lang, Shortcut(SHIFT + Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
-                findReplaceHandler->FindMatch(&m_consoleEditor,false);
+                findReplaceHandler->FindMatch(&m_consoleEditor.get(provider),false);
 
             ImGui::Separator();
 
@@ -1058,34 +1065,30 @@ namespace hex::plugin::builtin {
 
             ImGui::EndPopup();
         }
+
+        if (m_consoleCursorNeedsUpdate.get(provider)) {
+            m_consoleEditor.get(provider).SetFocusAtCoords(m_consoleCursorPosition.get(provider));
+            m_consoleCursorNeedsUpdate.get(provider) = false;
+        }
+
         if (m_consoleNeedsUpdate) {
             std::scoped_lock lock(m_logMutex);
-            bool skipNewLine = false;
-            auto lineCount = m_consoleEditor.GetTextLines().size();
-            if (m_console->size() < lineCount || (lineCount == 1 && m_consoleEditor.GetLineText(0).empty())) {
-                m_consoleEditor.SetText("");
+            auto lineCount = m_consoleEditor.get(provider).GetTextLines().size();
+            if (m_console->size() < lineCount || (lineCount == 1 && m_consoleEditor.get(provider).GetLineText(0).empty())) {
+                m_consoleEditor.get(provider).SetText("");
                 lineCount = 0;
-                skipNewLine = true;
             }
 
-            m_consoleEditor.JumpToLine(lineCount);
             const auto linesToAdd = m_console->size() - lineCount;
 
-
-            std::string content;
             for (size_t i = 0; i < linesToAdd; i += 1) {
-                if (!skipNewLine)
-                    content += '\n';
-                skipNewLine = false;
-                content += m_console->at(lineCount + i);
+                m_consoleEditor.get(provider).AppendLine(m_console->at(lineCount + i));
             }
-            m_consoleEditor.InsertText(content);
-
             m_consoleNeedsUpdate = false;
         }
 
         ImGui::PushFont(fonts::CodeEditor());
-        m_consoleEditor.Render("##console", size, true);
+        m_consoleEditor.get(provider).Render("##console", size, true);
         ImGui::PopFont();
 
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
@@ -1200,6 +1203,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables) {
+        auto provider = ImHexApi::Provider::get();
         if (ImGui::BeginChild("##settings", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
             if (patternVariables.empty()) {
                 ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_in_out_vars"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
@@ -1226,32 +1230,32 @@ namespace hex::plugin::builtin {
                         if (pl::core::Token::isSigned(variable.type)) {
                             i64 value = i64(hex::get_or<i128>(variable.value, 0));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
-                                m_hasUnevaluatedChanges = true;
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = i128(value);
                         } else if (pl::core::Token::isUnsigned(variable.type)) {
                             u64 value = u64(hex::get_or<u128>(variable.value, 0));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
-                                m_hasUnevaluatedChanges = true;
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = u128(value);
                         } else if (pl::core::Token::isFloatingPoint(variable.type)) {
                             auto value = hex::get_or<double>(variable.value, 0.0);
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value))
-                                m_hasUnevaluatedChanges = true;
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = value;
                         } else if (variable.type == pl::core::Token::ValueType::Boolean) {
                             auto value = hex::get_or<bool>(variable.value, false);
                             if (ImGui::Checkbox(label.c_str(), &value))
-                                m_hasUnevaluatedChanges = true;
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = value;
                         } else if (variable.type == pl::core::Token::ValueType::Character) {
                             std::array<char, 2> buffer = { hex::get_or<char>(variable.value, '\x00') };
                             if (ImGui::InputText(label.c_str(), buffer.data(), buffer.size()))
-                                m_hasUnevaluatedChanges = true;
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = buffer[0];
                         } else if (variable.type == pl::core::Token::ValueType::String) {
                             std::string buffer = hex::get_or<std::string>(variable.value, "");
                             if (ImGui::InputText(label.c_str(), buffer))
-                                m_hasUnevaluatedChanges = true;
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = buffer;
                         }
                     }
@@ -1387,13 +1391,14 @@ namespace hex::plugin::builtin {
 
 
     void ViewPatternEditor::drawDebugger(ImVec2 size) {
+        auto provider = ImHexApi::Provider::get();
         const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
         if (ImGui::BeginChild("##debugger", size, true)) {
             auto &evaluator = runtime.getInternals().evaluator;
-            m_breakpoints = m_textEditor.GetBreakpoints();
+            m_breakpoints = m_textEditor.get(provider).GetBreakpoints();
             evaluator->setBreakpoints(m_breakpoints);
-            const auto line = m_textEditor.GetCursorPosition().mLine + 1;
+            const auto line = m_textEditor.get(provider).GetCursorPosition().mLine + 1;
 
             if (!m_breakpoints->contains(line)) {
                 if (ImGuiExt::IconButton(ICON_VS_DEBUG_BREAKPOINT, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
@@ -1407,7 +1412,7 @@ namespace hex::plugin::builtin {
                 ImGuiExt::InfoTooltip("hex.builtin.view.pattern_editor.debugger.remove_tooltip"_lang);
             }
             m_breakpoints = evaluator->getBreakpoints();
-            m_textEditor.SetBreakpoints(m_breakpoints);
+            m_textEditor.get(provider).SetBreakpoints(m_breakpoints);
             ImGui::SameLine();
 
             if (*m_breakpointHit) {
@@ -1445,7 +1450,7 @@ namespace hex::plugin::builtin {
                     m_resetDebuggerVariables = false;
 
                     if (pauseLine.has_value())
-                        m_textEditor.JumpToLine(pauseLine.value() - 1);
+                        m_textEditor.get(provider).JumpToLine(pauseLine.value() - 1);
                 }
 
                 const auto &currScope = evaluator->getScope(-m_debuggerScopeIndex);
@@ -1457,6 +1462,8 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawAlwaysVisibleContent() {
         auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return;
 
         auto open = m_sectionWindowDrawer.contains(provider);
         if (open) {
@@ -1517,7 +1524,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                m_textEditor.SetErrorMarkers(errorMarkers);
+                m_textEditor.get(provider).SetErrorMarkers(errorMarkers);
             } else {
                 for (auto &[name, variable] : *m_patternVariables) {
                     if (variable.outVariable && m_lastEvaluationOutVars->contains(name))
@@ -1834,8 +1841,8 @@ namespace hex::plugin::builtin {
             auto code = file.readString();
 
             this->evaluatePattern(code, provider);
-            m_textEditor.SetText(code);
-            m_sourceCode.set(provider, code);
+            m_textEditor.get(provider).SetText(code, true);
+            m_sourceCode.get(provider) = code;
 
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
@@ -1846,6 +1853,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
         const auto &ast = m_editorRuntime->parseString(code, pl::api::Source::DefaultSource);
+        m_textEditor.get(provider).SetLongestLineLength(m_editorRuntime->getInternals().preprocessor.get()->getLongestLineLength());
 
         auto &patternVariables = m_patternVariables.get(provider);
         auto oldPatternVariables = std::move(patternVariables);
@@ -1888,14 +1896,15 @@ namespace hex::plugin::builtin {
         m_runningEvaluators += 1;
         m_executionDone.get(provider) = false;
 
-        m_textEditor.ClearActionables();
+        m_textEditor.get(provider).ClearActionables();
 
-        m_consoleEditor.ClearActionables();
+        m_consoleEditor.get(provider).ClearActionables();
         m_console.get(provider).clear();
+        m_consoleLongestLineLength.get(provider) = 0;
         m_consoleNeedsUpdate = true;
 
         m_sectionWindowDrawer.clear();
-        m_consoleEditor.SetText("");
+        m_consoleEditor.get(provider).SetText("");
         m_virtualFiles->clear();
 
         m_accessHistory = {};
@@ -1909,13 +1918,13 @@ namespace hex::plugin::builtin {
 
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
-            runtime.getInternals().evaluator->setBreakpointHitCallback([this, &runtime] {
+            runtime.getInternals().evaluator->setBreakpointHitCallback([this, &runtime, provider] {
                 m_debuggerScopeIndex = 0;
                 *m_breakpointHit = true;
                 m_resetDebuggerVariables = true;
                 auto optPauseLine = runtime.getInternals().evaluator->getPauseLine();
                 if (optPauseLine.has_value())
-                    m_textEditor.JumpToLine(optPauseLine.value() - 1);
+                    m_textEditor.get(provider).JumpToLine(optPauseLine.value() - 1);
                 while (*m_breakpointHit) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(100LL));
                 }
@@ -1962,7 +1971,10 @@ namespace hex::plugin::builtin {
                             default: break;
                         }
                     }
-
+                    if (m_consoleLongestLineLength.get(provider) < line.size()) {
+                       m_consoleLongestLineLength.get(provider) = line.size();
+                        m_consoleEditor.get(provider).SetLongestLineLength(line.size());
+                    }
                     m_console.get(provider).emplace_back(line);
                     m_consoleNeedsUpdate = true;
                 }
@@ -2000,11 +2012,12 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::registerEvents() {
         RequestPatternEditorSelectionChange::subscribe(this, [this](u32 line, u32 column) {
+            auto provider = ImHexApi::Provider::get();
             if (line == 0)
                 return;
 
             const TextEditor::Coordinates coords = { int(line) - 1, int(column) };
-            m_textEditor.SetCursorPosition(coords);
+            m_textEditor.get(provider).SetCursorPosition(coords);
         });
 
         RequestLoadPatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
@@ -2016,14 +2029,16 @@ namespace hex::plugin::builtin {
         });
 
         RequestSavePatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
+            auto provider = ImHexApi::Provider::get();
             wolv::io::File file(path, wolv::io::File::Mode::Create);
-            file.writeString(wolv::util::trim(m_textEditor.GetText()));
+            file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
         });
 
         RequestSetPatternLanguageCode::subscribe(this, [this](const std::string &code) {
-            m_textEditor.SetText(code);
-            m_sourceCode.set(ImHexApi::Provider::get(), code);
-            m_hasUnevaluatedChanges = true;
+            auto provider = ImHexApi::Provider::get();
+            m_textEditor.get(provider).SetText(code);
+            m_sourceCode.get(provider) = code;
+            m_hasUnevaluatedChanges.get(provider) = true;
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", [this](const ContentRegistry::Settings::SettingsValue &value) {
@@ -2034,6 +2049,21 @@ namespace hex::plugin::builtin {
         });
 
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
+            m_textEditor.get(provider).SetLanguageDefinition(PatternLanguage());
+            m_textEditor.get(provider).SetShowWhitespaces(false);
+
+            m_consoleEditor.get(provider).SetLanguageDefinition(ConsoleLog());
+            m_consoleEditor.get(provider).SetShowWhitespaces(false);
+            m_consoleEditor.get(provider).SetReadOnly(true);
+            m_consoleEditor.get(provider).SetShowCursor(false);
+            m_consoleEditor.get(provider).SetShowLineNumbers(false);
+            m_consoleEditor.get(provider).SetSourceCodeEditor(&m_textEditor.get(provider));
+            std::string sourcecode = pl::api::Source::DefaultSource;
+            std::string error = "E: ";
+            std::string end = ":";
+            std::string arrow = "  -->   in ";
+            m_consoleEditor.get(provider).AddClickableText(error + sourcecode + end);
+            m_consoleEditor.get(provider).AddClickableText(error + arrow + sourcecode + end);
             m_shouldAnalyze.get(provider) = true;
             m_envVarEntries.get(provider).emplace_back(0, "", i128(0), EnvVarType::Integer);
 
@@ -2043,28 +2073,33 @@ namespace hex::plugin::builtin {
 
         EventProviderChanged::subscribe(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
             if (oldProvider != nullptr) {
-                m_sourceCode.set(oldProvider, m_textEditor.GetText());
-                m_cursorPosition.set(m_textEditor.GetCursorPosition(),oldProvider);
-                m_selection.set(m_textEditor.GetSelection(),oldProvider);
-                m_consoleCursorPosition.set(m_consoleEditor.GetCursorPosition(),oldProvider);
-                m_consoleSelection.set(m_consoleEditor.GetSelection(),oldProvider);
-                m_breakpoints.set(m_textEditor.GetBreakpoints(),oldProvider);
+                m_sourceCode.get(oldProvider) = m_textEditor.get(oldProvider).GetText();
+                m_cursorPosition.get(oldProvider) = m_textEditor.get(oldProvider).GetCursorPosition();
+                m_selection.get(oldProvider) =m_textEditor.get(oldProvider).GetSelection();
+                m_consoleCursorPosition.get(oldProvider) = m_consoleEditor.get(oldProvider).GetCursorPosition();
+                m_consoleSelection.get(oldProvider) = m_consoleEditor.get(oldProvider).GetSelection();
+                m_consoleLongestLineLength.get(oldProvider) = m_consoleEditor.get(oldProvider).GetLongestLineLength();
+                m_breakpoints.get(oldProvider) = m_textEditor.get(oldProvider).GetBreakpoints();
+                m_cursorNeedsUpdate.get(oldProvider) = false;
+                m_consoleCursorNeedsUpdate.get(oldProvider) = false;
             }
 
             if (newProvider != nullptr) {
-                m_textEditor.SetText(m_sourceCode.get(newProvider));
-                m_textEditor.SetCursorPosition(m_cursorPosition.get(newProvider));
+                m_textEditor.get(newProvider).SetText(m_sourceCode.get(newProvider));
+                m_textEditor.get(newProvider).SetCursorPosition(m_cursorPosition.get(newProvider));
                 TextEditor::Selection selection = m_selection.get(newProvider);
-                m_textEditor.SetSelection(selection.mStart, selection.mEnd);
-                m_textEditor.SetBreakpoints(m_breakpoints.get(newProvider));
-                m_consoleEditor.SetText(hex::combineStrings(m_console.get(newProvider), "\n"));
-                m_consoleEditor.SetCursorPosition(m_consoleCursorPosition.get(newProvider));
+                m_textEditor.get(newProvider).SetSelection(selection.mStart, selection.mEnd);
+                m_textEditor.get(newProvider).SetBreakpoints(m_breakpoints.get(newProvider));
+                m_consoleEditor.get(newProvider).SetText(hex::combineStrings(m_console.get(newProvider), "\n"));
+                m_consoleEditor.get(newProvider).SetCursorPosition(m_consoleCursorPosition.get(newProvider));
+                m_consoleEditor.get(newProvider).SetLongestLineLength(m_consoleLongestLineLength.get(newProvider));
                 selection = m_consoleSelection.get(newProvider);
-                m_consoleEditor.SetSelection(selection.mStart, selection.mEnd);
-            } else {
-                m_textEditor.SetText("");
-                m_consoleEditor.SetText("");
+                m_consoleEditor.get(newProvider).SetSelection(selection.mStart, selection.mEnd);
+                m_cursorNeedsUpdate.get(newProvider) = true;
+                m_consoleCursorNeedsUpdate.get(newProvider) = true;
+                m_textEditor.get(newProvider).SetTextChanged(false);
             }
+
         });
 
         RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
@@ -2088,8 +2123,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::appendEditorText(const std::string &text) {
-        m_textEditor.JumpToLine(m_textEditor.GetTotalLines());
-        m_textEditor.InsertText(hex::format("\n{0}", text));
+        auto provider = ImHexApi::Provider::get();
+        m_textEditor.get(provider).AppendLine(text);
         m_triggerEvaluation = true;
     }
 
@@ -2107,12 +2142,16 @@ namespace hex::plugin::builtin {
     }
 
     TextEditor *ViewPatternEditor::getEditorFromFocusedWindow() {
-        if (m_focusedSubWindowName.contains(consoleView)) {
-            return &m_consoleEditor;
+        auto provider = ImHexApi::Provider::get();
+        if (provider != nullptr) {
+            if (m_focusedSubWindowName.contains(consoleView)) {
+                return &m_consoleEditor.get(provider);
+            }
+            if (m_focusedSubWindowName.contains(textEditorView)) {
+                return &m_textEditor.get(provider);
+            }
         }
-        if (m_focusedSubWindowName.contains(textEditorView)) {
-            return &m_textEditor;
-        }
+
         return nullptr;
     }
 
@@ -2124,7 +2163,7 @@ namespace hex::plugin::builtin {
         /* Export Pattern */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, Shortcut::None,
                                                 m_exportPatternFile, [this] {
-                                                    return !wolv::util::trim(m_textEditor.GetText()).empty() && ImHexApi::Provider::isValid();
+                                                    return ImHexApi::Provider::isValid() && !wolv::util::trim(m_textEditor.get(ImHexApi::Provider::get()).GetText()).empty();
                                                 }
         );
 
@@ -2282,18 +2321,18 @@ namespace hex::plugin::builtin {
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 const auto sourceCode = tar.readString(basePath);
 
-                m_sourceCode.set(provider, sourceCode);
+                m_sourceCode.get(provider) = sourceCode;
 
                 if (provider == ImHexApi::Provider::get())
-                    m_textEditor.SetText(sourceCode);
+                    m_textEditor.get(provider).SetText(sourceCode);
 
-                m_hasUnevaluatedChanges = true;
+                m_hasUnevaluatedChanges.get(provider) = true;
 
                 return true;
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 if (provider == ImHexApi::Provider::get())
-                    m_sourceCode.set(provider, m_textEditor.GetText());
+                    m_sourceCode.get(provider) = m_textEditor.get(provider).GetText();
 
                 const auto &sourceCode = m_sourceCode.get(provider);
 
@@ -2381,12 +2420,12 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::V + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.paste", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
-                m_textEditor.Paste();
+                m_textEditor.get(ImHexApi::Provider::get()).Paste();
         });
 
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::X + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.cut", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
-                m_textEditor.Cut();
+                m_textEditor.get(ImHexApi::Provider::get()).Cut();
         });
 
       //  ShortcutManager::addShortcut(this, SHIFT + Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.cut", [this] {
@@ -2395,7 +2434,7 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::Z + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.undo", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
-                m_textEditor.Undo();
+                m_textEditor.get(ImHexApi::Provider::get()).Undo();
         });
 
       //  ShortcutManager::addShortcut(this, ALT + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.undo", [this] {
@@ -2404,12 +2443,12 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
-                m_textEditor.Delete();
+                m_textEditor.get(ImHexApi::Provider::get()).Delete();
         });
 
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::Y + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.redo", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
-                m_textEditor.Redo();
+                m_textEditor.get(ImHexApi::Provider::get()).Redo();
         });
 
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::A + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_all", [this] {
@@ -2479,22 +2518,22 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_right", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
-                m_textEditor.DeleteWordRight();
+                m_textEditor.get(ImHexApi::Provider::get()).DeleteWordRight();
         });
 
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_left", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
-                m_textEditor.DeleteWordLeft();
+                m_textEditor.get(ImHexApi::Provider::get()).DeleteWordLeft();
         });
 
         ShortcutManager::addShortcut(this, Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.backspace", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
-                m_textEditor.Backspace();
+                m_textEditor.get(ImHexApi::Provider::get()).Backspace();
         });
 
         ShortcutManager::addShortcut(this, Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.toggle_insert", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
-                m_textEditor.SetOverwrite(!m_textEditor.IsOverwrite());
+                m_textEditor.get(ImHexApi::Provider::get()).SetOverwrite(!m_textEditor.get(ImHexApi::Provider::get()).IsOverwrite());
         });
 
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_right", [this] {
@@ -2568,11 +2607,11 @@ namespace hex::plugin::builtin {
         });
 
         ShortcutManager::addShortcut(this, Keys::F8 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.add_breakpoint", [this] {
-            const auto line = m_textEditor.GetCursorPosition().mLine + 1;
+            const auto line = m_textEditor.get(ImHexApi::Provider::get()).GetCursorPosition().mLine + 1;
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             auto &evaluator = runtime.getInternals().evaluator;
-            m_breakpoints = m_textEditor.GetBreakpoints();
+            m_breakpoints = m_textEditor.get(ImHexApi::Provider::get()).GetBreakpoints();
             evaluator->setBreakpoints(m_breakpoints);
 
             if (m_breakpoints->contains(line)) {
@@ -2581,7 +2620,7 @@ namespace hex::plugin::builtin {
                 evaluator->addBreakpoint(line);
             }
             m_breakpoints = evaluator->getBreakpoints();
-            m_textEditor.SetBreakpoints(m_breakpoints);
+            m_textEditor.get(ImHexApi::Provider::get()).SetBreakpoints(m_breakpoints);
         });
 
         /* Trigger evaluation */

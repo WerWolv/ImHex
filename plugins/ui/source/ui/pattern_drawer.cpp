@@ -378,7 +378,7 @@ namespace hex::ui {
 
             ImGui::SameLine();
 
-            if (ImGui::BeginPopup("Visualizer")) {
+            if (ImGui::BeginPopupEx(ImGui::GetCurrentWindowRead()->GetID("Visualizer"), ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings)) {
                 if (m_currVisualizedPattern == &pattern) {
                     m_visualizerDrawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, pattern, !m_visualizedPatterns.contains(&pattern) || shouldReset);
                     m_visualizedPatterns.insert(&pattern);
@@ -445,9 +445,12 @@ namespace hex::ui {
         ImGui::TableNextColumn();
 
         if (pattern.isSealed() || leaf) {
-            ImGui::Indent();
-            highlightWhenSelected(pattern, [&]{ ImGui::TextUnformatted(this->getDisplayName(pattern).c_str()); });
-            ImGui::Unindent();
+            const float indent = ImGui::GetCurrentContext()->FontSize + ImGui::GetStyle().FramePadding.x * 2;
+            ImGui::Indent(indent);
+            highlightWhenSelected(pattern, [&] {
+                ImGui::TextUnformatted(this->getDisplayName(pattern).c_str());
+            });
+            ImGui::Unindent(indent);
             return false;
         }
 
@@ -1318,6 +1321,7 @@ namespace hex::ui {
         if (beginPatternTable(patterns, m_sortedPatterns, height)) {
             ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.4F));
             ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImGui::GetColorU32(ImGuiCol_HeaderActive, 0.4F));
+            ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::CalcTextSize(" ").x * 2);
             ImGui::TableHeadersRow();
 
             m_showFavoriteStars = false;
@@ -1388,6 +1392,7 @@ namespace hex::ui {
                 }
             }
 
+            ImGui::PopStyleVar();
             ImGui::PopStyleColor(2);
 
             ImGui::EndTable();

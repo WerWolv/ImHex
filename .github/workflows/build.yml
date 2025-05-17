@@ -345,6 +345,9 @@ jobs:
         restore-keys: ${{ runner.os }}${{ matrix.suffix }}-ccache
         max-size: 1G
 
+    - name: Set Xcode version
+      run: sudo xcode-select -s /Library/Developer/CommandLineTools
+
     - name: ⬇️ Install dependencies
       env:
         # Make brew not display useless errors
@@ -352,7 +355,7 @@ jobs:
       run: |
         brew reinstall python --quiet || true
         brew link --overwrite --quiet python 2>/dev/null || true
-        brew bundle --no-lock --quiet --file dist/macOS/Brewfile || true
+        brew bundle --quiet --file dist/macOS/Brewfile || true
         rm -rf /usr/local/Cellar/capstone
 
     - name: ⬇️ Install classic glfw
@@ -875,13 +878,13 @@ jobs:
             release_num: rawhide
             mock_config: fedora-rawhide
           - name: Fedora
+            mock_release: f42
+            release_num: 42
+            mock_config: fedora-42
+          - name: Fedora
             mock_release: f41
             release_num: 41
             mock_config: fedora-41
-          - name: Fedora
-            mock_release: f40
-            release_num: 40
-            mock_config: fedora-40
           - name: RHEL-AlmaLinux
             mock_release: epel9
             release_num: 9

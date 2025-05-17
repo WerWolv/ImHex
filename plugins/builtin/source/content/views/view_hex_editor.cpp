@@ -1090,8 +1090,12 @@ namespace hex::plugin::builtin {
         });
 
         EventHighlightingChanged::subscribe(this, [this]{
-           m_foregroundHighlights->clear();
-           m_backgroundHighlights->clear();
+            auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return;
+
+            m_foregroundHighlights.get(provider).clear();
+            m_backgroundHighlights.get(provider).clear();
         });
 
         ProjectFile::registerPerProviderHandler({

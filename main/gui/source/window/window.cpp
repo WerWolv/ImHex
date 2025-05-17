@@ -329,6 +329,11 @@ namespace hex {
             // Unlock frame rate if there's more than one viewport since these don't call the glfw callbacks registered here
             if (ImGui::GetPlatformIO().Viewports.size() > 1)
                 this->unlockFrameRate();
+
+            // Unlock frame rate if there's any task running that shows a loading animation
+            if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBlockingTaskCount() > 0) {
+                this->unlockFrameRate();
+            }
         }
 
         // Hide the window as soon as the render loop exits to make the window
@@ -980,9 +985,22 @@ namespace hex {
             glfwWindowHint(GLFW_MAXIMIZED, initialWindowProperties->maximized);
         }
 
+        int monitorX = 0, monitorY = 0;
+        int monitorWidth = std::numeric_limits<int>::max(), monitorHeight = std::numeric_limits<int>::max();
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        if (monitor != nullptr) {
+            const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+            if (mode != nullptr) {
+                glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+
+                monitorWidth = mode->width;
+                monitorHeight = mode->height;
+            }
+        }
+
         // Create window
         m_windowTitle = "ImHex";
-        m_window      = glfwCreateWindow(1280_scaled, 720_scaled, m_windowTitle.c_str(), nullptr, nullptr);
+        m_window      = glfwCreateWindow(std::min(1280_scaled, monitorWidth - 50_scaled), std::min(720_scaled, monitorHeight - 50_scaled), m_windowTitle.c_str(), nullptr, nullptr);
 
         ImHexApi::System::impl::setMainWindowHandle(m_window);
 
@@ -1002,18 +1020,11 @@ namespace hex {
         glfwSwapInterval(0);
 
         // Center window
-        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-        if (monitor != nullptr) {
-            const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-            if (mode != nullptr) {
-                int monitorX, monitorY;
-                glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+        if (monitorWidth != std::numeric_limits<int>::max() && monitorHeight != std::numeric_limits<int>::max()) {
+            int windowWidth, windowHeight;
+            glfwGetWindowSize(m_window, &windowWidth, &windowHeight);
 
-                int windowWidth, windowHeight;
-                glfwGetWindowSize(m_window, &windowWidth, &windowHeight);
-
-                glfwSetWindowPos(m_window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
-            }
+            glfwSetWindowPos(m_window, monitorX + (monitorWidth - windowWidth) / 2, monitorY + (monitorHeight - windowHeight) / 2);
         }
 
         // Set up initial window position
@@ -1034,6 +1045,9 @@ namespace hex {
         {
             int width = 0, height = 0;
             glfwGetWindowSize(m_window, &width, &height);
+
+            width  = std::min(width,  monitorWidth  - int(50_scaled));
+            height = std::min(height, monitorHeight - int(100_scaled));
 
             if (initialWindowProperties.has_value()) {
                 width  = initialWindowProperties->width;
@@ -1330,7 +1344,7 @@ namespace hex {
             ImGui_ImplOpenGL3_Init();
             ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, "#canvas");
         #else
-            ImGui_ImplOpenGL3_Init("#version 130");
+            ImGui_ImplOpenGL3_Init("#version 410");
         #endif
 
         ImGui_ImplGlfw_SetCallbacksChainForAllWindows(true);
