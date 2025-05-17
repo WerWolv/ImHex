@@ -154,9 +154,7 @@ static int UTF8CharLength(TextEditor::Glyph c) {
         return 3;
     if ((c & 0xE0) == 0xC0)
         return 2;
-    if ((c & 0x80) == 0x00)
-        return 1;
-    return 0;
+    return 1;
 }
 
 // "Borrowed" from ImGui source
@@ -248,18 +246,20 @@ void TextEditor::DeleteRange(const Coordinates &aStart, const Coordinates &aEnd)
 }
 
 void TextEditor::AppendLine(const std::string &aValue) {
+    auto text = PreprocessText(aValue);
     if (isEmpty()) {
-        mLines[0].mChars = aValue;
-        mLines[0].mColors = std::string(aValue.size(),0);
+        mLines[0].mChars = text;
+        mLines[0].mColors = std::string(text.size(),0);
+        mLines[0].mFlags = std::string(text.size(),0);
     } else
-        mLines.push_back(Line(aValue));
+        mLines.push_back(Line(text));
     SetCursorPosition(Coordinates((int)mLines.size() - 1, 0));
     EnsureCursorVisible();
     mTextChanged = true;
 }
 
 
-int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const char *aValue) {
+int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const std::string &aValue) {
     auto text = PreprocessText(aValue);
     if (text.empty())
         return 0;
@@ -2094,16 +2094,27 @@ void TextEditor::Cut() {
 }
 
 std::string TextEditor::ReplaceStrings(std::string string, const std::string &search, const std::string &replace) {
-    if (search.empty())
+    std::string result;
+    if (string.empty())
         return string;
-
-    std::size_t pos = 0;
-    while ((pos = string.find(search, pos)) != std::string::npos) {
-        string.replace(pos, search.size(), replace);
-        pos += replace.size();
+    if (search.empty()) {
+        for (auto c: string) {
+            if (c == '\0') {
+                result.append(replace);
+            } else {
+                result.push_back(c);
+            }
+        }
+    } else {
+        result = string;
+        std::size_t pos = 0;
+        while ((pos = result.find(search, pos)) != std::string::npos) {
+            result.replace(pos, search.size(), replace);
+            pos += replace.size();
+        }
     }
 
-    return string;
+    return result;
 }
 
 std::vector<std::string> TextEditor::SplitString(const std::string &string, const std::string &delimiter, bool removeEmpty) {
