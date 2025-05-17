@@ -298,6 +298,9 @@ public:
     void SetLongestLineLength(size_t line) {
         mLongestLineLength = line;
     }
+    size_t GetLongestLineLength() const {
+        return mLongestLineLength;
+    }
 	std::string GetText() const;
     bool isEmpty() const {
         auto text = GetText();
@@ -383,6 +386,7 @@ public:
 
 	void InsertText(const std::string& aValue);
 	void InsertText(const char* aValue);
+    void AppendLine(const std::string &aValue);
 
 	void MoveUp(int aAmount = 1, bool aSelect = false);
 	void MoveDown(int aAmount = 1, bool aSelect = false);
@@ -547,7 +551,7 @@ private:
 	Coordinates SanitizeCoordinates(const Coordinates& aValue) const;
 	void Advance(Coordinates& aCoordinates) const;
 	void DeleteRange(const Coordinates& aStart, const Coordinates& aEnd);
-	int InsertTextAt(Coordinates& aWhere, const char* aValue);
+	int InsertTextAt(Coordinates& aWhere, const std::string &aValue);
 	void AddUndo(UndoRecord& aValue);
 	Coordinates ScreenPosToCoordinates(const ImVec2& aPosition) const;
 	Coordinates FindWordStart(const Coordinates& aFrom) const;

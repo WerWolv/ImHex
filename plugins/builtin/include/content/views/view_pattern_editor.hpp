@@ -261,6 +261,7 @@ namespace hex::plugin::builtin {
         PerProvider<TextEditor::Coordinates> m_consoleCursorPosition;
         PerProvider<TextEditor::Selection> m_selection;
         PerProvider<TextEditor::Selection> m_consoleSelection;
+        PerProvider<size_t> m_consoleLongestLineLength;
         PerProvider<TextEditor::Breakpoints> m_breakpoints;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
