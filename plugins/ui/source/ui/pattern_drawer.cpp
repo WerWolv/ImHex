@@ -1142,7 +1142,7 @@ namespace hex::ui {
     }
 
     bool PatternDrawer::sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) const {
-        auto result = std::strong_ordering::less;
+        auto result = std::strong_ordering::equal;
 
         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
             result = this->getDisplayName(*left) <=> this->getDisplayName(*right);
