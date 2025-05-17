@@ -292,7 +292,7 @@ public:
     ImVec2 Underwaves( ImVec2 pos, uint32_t nChars, ImColor color= ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg= ImVec2(0, 0));
 
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
-	void SetText(const std::string& aText);
+	void SetText(const std::string& aText, bool aUndo = false);
     void JumpToLine(int line=-1);
     void JumpToCoords(const Coordinates &coords);
     void SetLongestLineLength(size_t line) {
@@ -338,7 +338,7 @@ public:
         mNewTopMargin = newMargin;
         mTopMarginChanged = true;
     }
-    void setFocusAtCoords(const Coordinates &coords) {
+    void SetFocusAtCoords(const Coordinates &coords) {
         mFocusAtCoords = coords;
         mUpdateFocus = true;
     }
