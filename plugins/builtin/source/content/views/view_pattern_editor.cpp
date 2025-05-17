@@ -1462,6 +1462,8 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawAlwaysVisibleContent() {
         auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return;
 
         auto open = m_sectionWindowDrawer.contains(provider);
         if (open) {
