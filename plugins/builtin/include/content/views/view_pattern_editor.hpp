@@ -34,18 +34,18 @@ namespace hex::plugin::builtin {
 
     class PatternSourceCode {
     public:
-        const std::string& get(prv::Provider *provider) {
+        const std::string& get(prv::Provider *provider) const {
             if (m_synced)
                 return m_sharedSource;
 
             return m_perProviderSource.get(provider);
         }
 
-        void set(prv::Provider *provider, std::string source) {
-            source = wolv::util::trim(source);
+        std::string& get(prv::Provider *provider) {
+            if (m_synced)
+                return m_sharedSource;
 
-            m_perProviderSource.set(source, provider);
-            m_sharedSource = std::move(source);
+            return m_perProviderSource.get(provider);
         }
 
         bool isSynced() const {

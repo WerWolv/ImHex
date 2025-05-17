@@ -355,7 +355,7 @@ namespace hex::plugin::builtin {
 
             if (m_cursorNeedsUpdate.get(provider)) {
                 m_textEditor.get(provider).SetFocusAtCoords(m_cursorPosition.get(provider));
-                m_cursorNeedsUpdate.set(false, provider);
+                m_cursorNeedsUpdate.get(provider) = false;
             }
 
             if (ImGui::BeginPopup("##text_editor_context_menu")) {
@@ -556,7 +556,7 @@ namespace hex::plugin::builtin {
                 } else {
                     if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &m_runAutomatically)) {
                         if (m_runAutomatically)
-                            m_hasUnevaluatedChanges.set(true,provider);
+                            m_hasUnevaluatedChanges.get(provider) = true;
                     }
 
                     ImGui::SameLine();
@@ -584,7 +584,7 @@ namespace hex::plugin::builtin {
             }
 
             if (m_textEditor.get(provider).IsTextChanged() && !m_hasUnevaluatedChanges.get(provider)) {
-                m_hasUnevaluatedChanges.set(true, provider);
+                m_hasUnevaluatedChanges.get(provider) = true;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
             }
@@ -601,7 +601,7 @@ namespace hex::plugin::builtin {
                         if (m_runAutomatically)
                             m_triggerAutoEvaluate = true;
                     });
-                    m_hasUnevaluatedChanges.set(false, provider);
+                    m_hasUnevaluatedChanges.get(provider) = false;
                     m_textEditor.get(provider).SetTextChanged();
                 }
             }
@@ -1230,32 +1230,32 @@ namespace hex::plugin::builtin {
                         if (pl::core::Token::isSigned(variable.type)) {
                             i64 value = i64(hex::get_or<i128>(variable.value, 0));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
-                                m_hasUnevaluatedChanges.set(true, provider);
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = i128(value);
                         } else if (pl::core::Token::isUnsigned(variable.type)) {
                             u64 value = u64(hex::get_or<u128>(variable.value, 0));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
-                                m_hasUnevaluatedChanges.set(true, provider);
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = u128(value);
                         } else if (pl::core::Token::isFloatingPoint(variable.type)) {
                             auto value = hex::get_or<double>(variable.value, 0.0);
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value))
-                                m_hasUnevaluatedChanges.set(true, provider);
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = value;
                         } else if (variable.type == pl::core::Token::ValueType::Boolean) {
                             auto value = hex::get_or<bool>(variable.value, false);
                             if (ImGui::Checkbox(label.c_str(), &value))
-                                m_hasUnevaluatedChanges.set(true, provider);
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = value;
                         } else if (variable.type == pl::core::Token::ValueType::Character) {
                             std::array<char, 2> buffer = { hex::get_or<char>(variable.value, '\x00') };
                             if (ImGui::InputText(label.c_str(), buffer.data(), buffer.size()))
-                                m_hasUnevaluatedChanges.set(true, provider);
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = buffer[0];
                         } else if (variable.type == pl::core::Token::ValueType::String) {
                             std::string buffer = hex::get_or<std::string>(variable.value, "");
                             if (ImGui::InputText(label.c_str(), buffer))
-                                m_hasUnevaluatedChanges.set(true, provider);
+                                m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = buffer;
                         }
                     }
@@ -1840,7 +1840,7 @@ namespace hex::plugin::builtin {
 
             this->evaluatePattern(code, provider);
             m_textEditor.get(provider).SetText(code, true);
-            m_sourceCode.set(provider, code);
+            m_sourceCode.get(provider) = code;
 
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
@@ -2009,8 +2009,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::registerEvents() {
-        auto provider = ImHexApi::Provider::get();
-        RequestPatternEditorSelectionChange::subscribe(this, [this, provider](u32 line, u32 column) {
+        RequestPatternEditorSelectionChange::subscribe(this, [this](u32 line, u32 column) {
+            auto provider = ImHexApi::Provider::get();
             if (line == 0)
                 return;
 
@@ -2026,15 +2026,17 @@ namespace hex::plugin::builtin {
             m_triggerAutoEvaluate = true;
         });
 
-        RequestSavePatternLanguageFile::subscribe(this, [this, provider](const std::fs::path &path) {
+        RequestSavePatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
+            auto provider = ImHexApi::Provider::get();
             wolv::io::File file(path, wolv::io::File::Mode::Create);
             file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
         });
 
-        RequestSetPatternLanguageCode::subscribe(this, [this, provider](const std::string &code) {
+        RequestSetPatternLanguageCode::subscribe(this, [this](const std::string &code) {
+            auto provider = ImHexApi::Provider::get();
             m_textEditor.get(provider).SetText(code);
-            m_sourceCode.set(provider, code);
-            m_hasUnevaluatedChanges.set(true, provider);
+            m_sourceCode.get(provider) = code;
+            m_hasUnevaluatedChanges.get(provider) = true;
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", [this](const ContentRegistry::Settings::SettingsValue &value) {
@@ -2069,15 +2071,15 @@ namespace hex::plugin::builtin {
 
         EventProviderChanged::subscribe(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
             if (oldProvider != nullptr) {
-                m_sourceCode.set(oldProvider, m_textEditor.get(oldProvider).GetText());
-                m_cursorPosition.set(m_textEditor.get(oldProvider).GetCursorPosition(),oldProvider);
-                m_selection.set(m_textEditor.get(oldProvider).GetSelection(),oldProvider);
-                m_consoleCursorPosition.set(m_consoleEditor.get(oldProvider).GetCursorPosition(),oldProvider);
-                m_consoleSelection.set(m_consoleEditor.get(oldProvider).GetSelection(),oldProvider);
-                m_consoleLongestLineLength.set(m_consoleEditor.get(oldProvider).GetLongestLineLength(),oldProvider);
-                m_breakpoints.set(m_textEditor.get(oldProvider).GetBreakpoints(),oldProvider);
-                m_cursorNeedsUpdate.set(false, oldProvider);
-                m_consoleCursorNeedsUpdate.set(false, oldProvider);
+                m_sourceCode.get(oldProvider) = m_textEditor.get(oldProvider).GetText();
+                m_cursorPosition.get(oldProvider) = m_textEditor.get(oldProvider).GetCursorPosition();
+                m_selection.get(oldProvider) =m_textEditor.get(oldProvider).GetSelection();
+                m_consoleCursorPosition.get(oldProvider) = m_consoleEditor.get(oldProvider).GetCursorPosition();
+                m_consoleSelection.get(oldProvider) = m_consoleEditor.get(oldProvider).GetSelection();
+                m_consoleLongestLineLength.get(oldProvider) = m_consoleEditor.get(oldProvider).GetLongestLineLength();
+                m_breakpoints.get(oldProvider) = m_textEditor.get(oldProvider).GetBreakpoints();
+                m_cursorNeedsUpdate.get(oldProvider) = false;
+                m_consoleCursorNeedsUpdate.get(oldProvider) = false;
             }
 
             if (newProvider != nullptr) {
@@ -2091,8 +2093,8 @@ namespace hex::plugin::builtin {
                 m_consoleEditor.get(newProvider).SetLongestLineLength(m_consoleLongestLineLength.get(newProvider));
                 selection = m_consoleSelection.get(newProvider);
                 m_consoleEditor.get(newProvider).SetSelection(selection.mStart, selection.mEnd);
-                m_cursorNeedsUpdate.set(true, newProvider);
-                m_consoleCursorNeedsUpdate.set(true, newProvider);
+                m_cursorNeedsUpdate.get(newProvider) = true;
+                m_consoleCursorNeedsUpdate.get(newProvider) = true;
             } else {
                 m_textEditor.get(newProvider).SetText("");
                 m_consoleEditor.get(newProvider).SetText("");
@@ -2318,18 +2320,18 @@ namespace hex::plugin::builtin {
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 const auto sourceCode = tar.readString(basePath);
 
-                m_sourceCode.set(provider, sourceCode);
+                m_sourceCode.get(provider) = sourceCode;
 
                 if (provider == ImHexApi::Provider::get())
                     m_textEditor.get(provider).SetText(sourceCode);
 
-                m_hasUnevaluatedChanges.set(true, provider);
+                m_hasUnevaluatedChanges.get(provider) = true;
 
                 return true;
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 if (provider == ImHexApi::Provider::get())
-                    m_sourceCode.set(provider, m_textEditor.get(provider).GetText());
+                    m_sourceCode.get(provider) = m_textEditor.get(provider).GetText();
 
                 const auto &sourceCode = m_sourceCode.get(provider);
 
