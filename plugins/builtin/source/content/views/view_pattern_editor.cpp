@@ -1915,6 +1915,7 @@ namespace hex::plugin::builtin {
 
         m_consoleEditor.ClearActionables();
         m_console.get(provider).clear();
+        m_consoleLongestLineLength.get(provider) = 0;
         m_consoleNeedsUpdate = true;
 
         m_sectionWindowDrawer.clear();
@@ -1985,7 +1986,10 @@ namespace hex::plugin::builtin {
                             default: break;
                         }
                     }
-
+                    if (m_consoleLongestLineLength.get(provider) < line.size()) {
+                       m_consoleLongestLineLength.get(provider) = line.size();
+                        m_consoleEditor.SetLongestLineLength(line.size());
+                    }
                     m_console.get(provider).emplace_back(line);
                     m_consoleNeedsUpdate = true;
                 }
@@ -2072,6 +2076,7 @@ namespace hex::plugin::builtin {
                 m_selection.set(m_textEditor.GetSelection(),oldProvider);
                 m_consoleCursorPosition.set(m_consoleEditor.GetCursorPosition(),oldProvider);
                 m_consoleSelection.set(m_consoleEditor.GetSelection(),oldProvider);
+                m_consoleLongestLineLength.set(m_consoleEditor.GetLongestLineLength(),oldProvider);
                 m_breakpoints.set(m_textEditor.GetBreakpoints(),oldProvider);
             }
 
@@ -2083,11 +2088,13 @@ namespace hex::plugin::builtin {
                 m_textEditor.SetBreakpoints(m_breakpoints.get(newProvider));
                 m_consoleEditor.SetText(hex::combineStrings(m_console.get(newProvider), "\n"));
                 m_consoleEditor.SetCursorPosition(m_consoleCursorPosition.get(newProvider));
+                m_consoleEditor.SetLongestLineLength(m_consoleLongestLineLength.get(newProvider));
                 selection = m_consoleSelection.get(newProvider);
                 m_consoleEditor.SetSelection(selection.mStart, selection.mEnd);
             } else {
                 m_textEditor.SetText("");
                 m_consoleEditor.SetText("");
+                m_consoleEditor.SetLongestLineLength(0);
             }
             m_hasUnevaluatedChanges = true;
             m_textHighlighter.m_needsToUpdateColors = false;
@@ -2116,8 +2123,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::appendEditorText(const std::string &text) {
-        m_textEditor.JumpToLine(m_textEditor.GetTotalLines());
-        m_textEditor.InsertText(hex::format("\n{0}", text));
+        m_textEditor.AppendLine(text);
         m_triggerEvaluation = true;
     }
 

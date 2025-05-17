@@ -258,6 +258,7 @@ void TextEditor::AppendLine(const std::string &aValue) {
     mTextChanged = true;
 }
 
+
 int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const char *aValue) {
     auto text = PreprocessText(aValue);
     if (text.empty())
@@ -1578,7 +1579,7 @@ void TextEditor::InsertText(const char *aValue) {
     int totalLines = pos.mLine - start.mLine;
     auto text = PreprocessText(aValue);
 
-    totalLines += InsertTextAt(pos, text.c_str());
+    totalLines += InsertTextAt(pos, text);
 
     SetSelection(pos, pos);
     SetCursorPosition(pos);
