@@ -102,7 +102,8 @@ namespace hex::fonts {
                 FT_Done_Face(face);
             }
             fontAtlas->getAtlas()->FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_SubPixel;
-            fontAtlas->build();
+            if (!fontAtlas->build())
+                return false;
             ImU8 *tex_pixels_ch = nullptr;
             ImS32 tex_width;
 
@@ -133,6 +134,7 @@ namespace hex::fonts {
                 ft = nullptr;
             }
         }
+
         return true;
     }
 
