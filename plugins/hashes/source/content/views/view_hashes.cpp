@@ -59,8 +59,9 @@ namespace hex::plugin::hashes {
 
     ViewHashes::ViewHashes() : View::Window("hex.hashes.view.hashes.name", ICON_VS_KEY) {
         EventRegionSelected::subscribe(this, [this](const auto &providerRegion) {
-            for (auto &function : m_hashFunctions.get(providerRegion.getProvider()))
-                function.reset();
+            if (providerRegion.getProvider() != nullptr)
+                for (auto &function : m_hashFunctions.get(providerRegion.getProvider()))
+                    function.reset();
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
