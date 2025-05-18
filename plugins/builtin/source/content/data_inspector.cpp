@@ -45,10 +45,10 @@ namespace hex::plugin::builtin {
         u16 offset = 0;
         if (high >= 0xA1 && high <= 0xA9) {
             // 一级汉字区
-            offset = ((high - 0xA1) * 94 + (low - 0xA1)) * 2;
+            offset = ((high - 0xA1) * 94 + (low - 0xA1)) + 0x4E00;
         } else if (high >= 0xB0 && high <= 0xF7) {
             // 二级汉字区
-            offset = ((high - 0xB0) * 94 + (low - 0xA1)) * 2 + 0x4E00;
+            offset = ((high - 0xB0) * 94 + (low - 0xA1)) + 0x4E00;
         } else {
             return "?";
         }
@@ -904,7 +904,7 @@ namespace hex::plugin::builtin {
             }
 
             return [value, copyValue] { 
-                ImGuiExt::TextFormatted("GBK: \"{0}\"", value.c_str()); 
+                ImGuiExt::TextFormatted("\"{0}\"", value.c_str()); 
                 return copyValue; 
             };
         });
