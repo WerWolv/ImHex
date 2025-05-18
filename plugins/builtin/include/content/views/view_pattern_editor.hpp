@@ -259,7 +259,7 @@ namespace hex::plugin::builtin {
         std::atomic<u32> m_runningParsers    = 0;
 
         bool m_changesWereParsed = false;
-        bool m_hasUnevaluatedChanges = false;
+        PerProvider<bool> m_hasUnevaluatedChanges;
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
 
         PerProvider<TextEditor> m_textEditor, m_consoleEditor;

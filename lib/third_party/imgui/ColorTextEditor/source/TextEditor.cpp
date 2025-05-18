@@ -1111,7 +1111,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
             while (i < colorsSize) {
                 char color = colors[i];
                 uint32_t tokenLength = colors.find_first_not_of(color, i) - i;
-                if (mUpdateFocus && mFocusAtCoords == Coordinates(lineNo, 0))
+                if (mUpdateFocus)
                     SetFocus();
                 color = std::clamp(color, (char)PaletteIndex::Default, (char)((uint8_t)PaletteIndex::Max-1));
                 tokenLength = std::clamp(tokenLength, 1u, colorsSize - i);
@@ -1149,10 +1149,6 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                 }
 
 
-
-                if (mUpdateFocus && mFocusAtCoords == Coordinates(lineNo, i)) {
-                    SetFocus();
-                }
                 i += tokenLength;
                 i += SkipSpaces(Coordinates(lineNo, i));
 
@@ -2176,6 +2172,7 @@ std::string TextEditor::ReplaceTabsWithSpaces(const std::string& string, uint32_
 std::string TextEditor::PreprocessText(const std::string &code) {
     std::string result = ReplaceStrings(code, "\r\n", "\n");
     result = ReplaceStrings(result, "\r", "\n");
+    result = ReplaceStrings(result, "\000", ".");
     result = ReplaceTabsWithSpaces(result, 4);
 
     return result;

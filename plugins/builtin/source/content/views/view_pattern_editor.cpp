@@ -594,17 +594,17 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (m_textEditor.IsTextChanged()) {
-                m_textEditor.SetTextChanged(false);
-                if (!m_hasUnevaluatedChanges) {
-                    m_hasUnevaluatedChanges = true;
+            if (m_textEditor.get(provider).IsTextChanged()) {
+                m_textEditor.get(provider).SetTextChanged(false);
+                if (!m_hasUnevaluatedChanges.get(provider) ) {
+                    m_hasUnevaluatedChanges.get(provider) = true;
                     m_changesWereParsed = false;
                 }
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
             }
 
-            if (m_hasUnevaluatedChanges && !m_textHighlighter.m_needsToUpdateColors && m_runningEvaluators == 0 && m_runningParsers == 0 && m_textHighlighter.getRunningColorizers() == 0) {
+            if (m_hasUnevaluatedChanges.get(provider) && !m_textHighlighter.m_needsToUpdateColors && m_runningEvaluators == 0 && m_runningParsers == 0 && m_textHighlighter.getRunningColorizers() == 0) {
                 if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
 
 
@@ -617,7 +617,7 @@ namespace hex::plugin::builtin {
                         if (m_runAutomatically)
                             m_triggerAutoEvaluate = true;
                     });
-                    m_hasUnevaluatedChanges = false;
+                    m_hasUnevaluatedChanges.get(provider) = false;
                 }
             }
 
@@ -2054,9 +2054,10 @@ namespace hex::plugin::builtin {
         });
 
         RequestSetPatternLanguageCode::subscribe(this, [this](const std::string &code) {
-            m_textEditor.SetText(code);
-            m_sourceCode.set(ImHexApi::Provider::get(), code);
-            m_hasUnevaluatedChanges = true;
+            auto provider = ImHexApi::Provider::get();
+            m_textEditor.get(provider).SetText(code);
+            m_sourceCode.get(provider) = code;
+            m_hasUnevaluatedChanges.get(provider) = true;
             m_textHighlighter.m_needsToUpdateColors = false;
         });
 
@@ -2117,8 +2118,8 @@ namespace hex::plugin::builtin {
                 m_cursorNeedsUpdate.get(newProvider) = true;
                 m_consoleCursorNeedsUpdate.get(newProvider) = true;
                 m_textEditor.get(newProvider).SetTextChanged(false);
+                m_hasUnevaluatedChanges.get(newProvider) = true;
             }
-            m_hasUnevaluatedChanges = true;
             m_textHighlighter.m_needsToUpdateColors = false;
 
         });
@@ -2347,7 +2348,7 @@ namespace hex::plugin::builtin {
                 if (provider == ImHexApi::Provider::get())
                     m_textEditor.get(provider).SetText(sourceCode);
 
-                m_hasUnevaluatedChanges = true;
+                m_hasUnevaluatedChanges.get(provider) = true;
                 m_textHighlighter.m_needsToUpdateColors = false;
                 return true;
             },
