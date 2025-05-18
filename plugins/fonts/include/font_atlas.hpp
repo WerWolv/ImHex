@@ -29,7 +29,6 @@ namespace hex::fonts {
         }
 
         float calculateFontDescend(FT_Library ft, float fontSize) const {
-
             if (ft == nullptr) {
                 log::fatal("FreeType not initialized");
                 return 0.0f;
@@ -46,14 +45,17 @@ namespace hex::fonts {
             if (m_font->FontSize > 0.0F)
                 size = m_font->FontSize * std::max(1.0F, std::floor(ImHexApi::System::getGlobalScale()));
             else
-                size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
+                size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize * std::floor(ImHexApi::System::getGlobalScale());
 
-            if (FT_Set_Pixel_Sizes(face, size, size) != 0) {
-                log::fatal("Failed to set pixel size");
-                return 0.0f;
-            }
+            FT_Size_RequestRec req;
+            req.type = FT_SIZE_REQUEST_TYPE_REAL_DIM;
+            req.width = 0;
+            req.height = (uint32_t)(IM_ROUND(size) * 64.0F);
+            req.horiResolution = 0;
+            req.vertResolution = 0;
+            FT_Request_Size(face, &req);
 
-            return face->size->metrics.descender / 64.0F;
+            return face->size->metrics.ascender / 64.0F;
         }
 
         ImFont* getFont() { return m_font; }
@@ -249,18 +251,13 @@ namespace hex::fonts {
                 log::fatal("Failed to load face");
                 return 0.0f;
             }
-
-            // Calculate the expected font size
-            auto size = fontSize;
-            if (font.defaultSize.has_value())
-                size = font.defaultSize.value() * std::max(1.0F, std::floor(ImHexApi::System::getGlobalScale()));
-            else
-                size = std::max(1.0F, std::floor(size / ImHexApi::Fonts::DefaultFontSize)) * ImHexApi::Fonts::DefaultFontSize;
-
-            if (FT_Set_Pixel_Sizes(face, size, size) != 0) {
-                log::fatal("Failed to set pixel size");
-                return false;
-            }
+            FT_Size_RequestRec req;
+            req.type = FT_SIZE_REQUEST_TYPE_REAL_DIM;
+            req.width = 0;
+            req.height = (uint32_t)(IM_ROUND(fontSize) * 64.0F);
+            req.horiResolution = 0;
+            req.vertResolution = 0;
+            FT_Request_Size(face, &req);
 
             return face->size->metrics.descender / 64.0F;
         }
