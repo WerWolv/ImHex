@@ -826,6 +826,87 @@ namespace hex::plugin::builtin {
                 return copyValue;
             };
         });
+
+        // GBK编码转换函数
+        static std::string gbkToUtf8(u16 gbkCode) {
+            // GBK编码范围检查
+            if (gbkCode < 0x8140 || gbkCode > 0xFEFE) {
+                return "?";
+            }
+
+            // 计算区位码
+            u8 high = (gbkCode >> 8) & 0xFF;
+            u8 low = gbkCode & 0xFF;
+
+            // 计算区位码偏移
+            u16 offset = 0;
+            if (high >= 0xA1 && high <= 0xA9) {
+                // 一级汉字区
+                offset = ((high - 0xA1) * 94 + (low - 0xA1)) * 2;
+            } else if (high >= 0xB0 && high <= 0xF7) {
+                // 二级汉字区
+                offset = ((high - 0xB0) * 94 + (low - 0xA1)) * 2 + 0x4E00;
+            } else {
+                return "?";
+            }
+
+            // 转换为UTF-8编码
+            if (offset < 0x4E00 || offset > 0x9FA5) {
+                return "?";
+            }
+
+            // 将Unicode编码转换为UTF-8
+            std::string utf8;
+            if (offset <= 0x7F) {
+                utf8 += char(offset);
+            } else if (offset <= 0x7FF) {
+                utf8 += char(0xC0 | (offset >> 6));
+                utf8 += char(0x80 | (offset & 0x3F));
+            } else {
+                utf8 += char(0xE0 | (offset >> 12));
+                utf8 += char(0x80 | ((offset >> 6) & 0x3F));
+                utf8 += char(0x80 | (offset & 0x3F));
+            }
+
+            return utf8;
+        }
+
+        // 添加GBK编码检查器
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.gbk", 2, [](auto buffer, auto endian, auto style) {
+            std::ignore = style;
+            std::ignore = endian;
+
+            auto currSelection = ImHexApi::HexEditor::getSelection();
+            std::string value, copyValue;
+
+            if (currSelection.has_value()) {
+                std::vector<u8> stringBuffer(std::min<size_t>(currSelection->size, 0x1000), 0x00);
+                ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
+
+                // 将字节转换为GBK编码的字符串
+                std::string gbkString;
+                for (size_t i = 0; i < stringBuffer.size(); i += 2) {
+                    if (i + 1 >= stringBuffer.size()) break;
+                    
+                    u16 gbkCode = (stringBuffer[i] << 8) | stringBuffer[i + 1];
+                    gbkString += gbkToUtf8(gbkCode);
+                }
+
+                value = copyValue = gbkString;
+                if (value.size() > MaxStringLength) {
+                    value.resize(MaxStringLength);
+                    value += "...";
+                }
+            } else {
+                value = "";
+                copyValue = "";
+            }
+
+            return [value, copyValue] { 
+                ImGuiExt::TextFormatted("GBK: \"{0}\"", value.c_str()); 
+                return copyValue; 
+            };
+        });
     }
     // clang-format on
 
