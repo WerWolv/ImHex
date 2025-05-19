@@ -50,12 +50,12 @@ namespace hex::fonts {
             FT_Size_RequestRec req;
             req.type = FT_SIZE_REQUEST_TYPE_REAL_DIM;
             req.width = 0;
-            req.height = (uint32_t)(IM_ROUND(size) * 64.0F);
+            req.height = (uint32_t)IM_ROUND(ImHexApi::Fonts::pixelsToPoints(size) * 64.0F);
             req.horiResolution = 0;
             req.vertResolution = 0;
             FT_Request_Size(face, &req);
 
-            return face->size->metrics.ascender / 64.0F;
+            return face->size->metrics.descender / 64.0F;
         }
 
         ImFont* getFont() { return m_font; }
@@ -254,7 +254,7 @@ namespace hex::fonts {
             FT_Size_RequestRec req;
             req.type = FT_SIZE_REQUEST_TYPE_REAL_DIM;
             req.width = 0;
-            req.height = (uint32_t)(IM_ROUND(fontSize) * 64.0F);
+            req.height = (uint32_t)IM_ROUND(ImHexApi::Fonts::pixelsToPoints(fontSize) * 64.0F);
             req.horiResolution = 0;
             req.vertResolution = 0;
             FT_Request_Size(face, &req);
