@@ -18,7 +18,7 @@ static inline void SkipLine(const char*& p)
 }
 
 // Skips comments.
-// Also skips '/' (start of a comment) even if its not a complete comment.
+// Also skips '/' (start of a comment) even if it's not a complete comment.
 // We don't care. We're only interested in pragmas, and pragmas don't start
 // with a '/'.
 // NOT safe to call if *p=0!
@@ -147,4 +147,4 @@ std::optional<std::string> get_description(std::string buffer)
     return std::nullopt;
 }
 
-}
+} // namespace hex::plugin::builtin
