@@ -18,6 +18,8 @@ static inline bool IsLineEndChar(char p)
 // Safe to call if *p==0.
 static inline void SkipLine(const char*& p)
 {
+    if (!*p)
+        return;
     for (++p; *p && !IsLineEndChar(*p); ++p) {}
     if (*p)
         for (++p; *p && IsLineEndChar(*p); ++p) {}
