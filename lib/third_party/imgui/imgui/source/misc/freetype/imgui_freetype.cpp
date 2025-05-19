@@ -230,6 +230,16 @@ namespace
 
         return true;
     }
+// IMHEX PATCH BEGIN
+    float getDpi() {
+        auto dpi = ImGui::GetCurrentContext()->CurrentDpiScale * 96.0F;
+        return dpi ? dpi : 96.0F;
+    }
+
+    float pixelsToPoints(float pixels) {
+        return pixels * (72.0 / getDpi());
+    }
+// IMHEX PATCH END
 
     void FreeTypeFont::CloseFont()
     {
@@ -248,14 +258,18 @@ namespace
         FT_Size_RequestRec req;
         req.type = (UserFlags & ImGuiFreeTypeBuilderFlags_Bitmap) ? FT_SIZE_REQUEST_TYPE_NOMINAL : FT_SIZE_REQUEST_TYPE_REAL_DIM;
         req.width = 0;
-        req.height = (uint32_t)(pixel_height * 64 * RasterizationDensity);
+// IMHEX PATCH BEGIN
+        req.height = (uint32_t)IM_ROUND(pixelsToPoints((float)pixel_height) * 64.0 * RasterizationDensity);
+// IMHEX PATCH END
         req.horiResolution = 0;
         req.vertResolution = 0;
         FT_Request_Size(Face, &req);
 
         // Update font info
         FT_Size_Metrics metrics = Face->size->metrics;
-        Info.PixelHeight = (uint32_t)(pixel_height * InvRasterizationDensity);
+// IMHEX PATCH BEGIN
+        Info.PixelHeight = (uint32_t)IM_ROUND(pixelsToPoints((float)(pixel_height * InvRasterizationDensity)));
+// IMHEX PATCH END
         Info.Ascender = (float)FT_CEIL(metrics.ascender) * InvRasterizationDensity;
         Info.Descender = (float)FT_CEIL(metrics.descender) * InvRasterizationDensity;
         Info.LineSpacing = (float)FT_CEIL(metrics.height) * InvRasterizationDensity;
