@@ -353,7 +353,7 @@ namespace hex::plugin::builtin {
 
             ui::PopupNamedFileChooser::open(
                 basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
-                [this, provider](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
+                [this](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
                     auto it = m_patternNames.find(path);
                     if (it != m_patternNames.end()) {
                         return it->second;
