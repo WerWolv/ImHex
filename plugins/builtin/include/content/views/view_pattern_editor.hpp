@@ -18,6 +18,7 @@
 
 #include <TextEditor.h>
 #include <popups/popup_file_chooser.hpp>
+#include <content/helpers/pattern_description_parser.hpp>
 
 namespace pl::ptrn { class Pattern; }
 
@@ -361,15 +362,10 @@ namespace hex::plugin::builtin {
                     const auto fileName = wolv::util::toUTF8String(adjustedPath.filename());
                     m_patternNames[path] = fileName;
 
-                    pl::PatternLanguage runtime;
-                    ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
-                    runtime.addPragma("description", [&](pl::PatternLanguage &, const std::string &value) -> bool {
-                        m_patternNames[path] = hex::format("{} ({})", value, fileName);
-                        return true;
-                    });
-
                     wolv::io::File file(path, wolv::io::File::Mode::Read);
-                    std::ignore = runtime.preprocessString(file.readString(), pl::api::Source::DefaultSource);
+                    auto desc = get_description(file.readString(1024));
+                    if (desc.has_value())
+                        m_patternNames[path] = hex::format("{} ({})", desc.value(), fileName);
 
                     return m_patternNames[path];
                 },
