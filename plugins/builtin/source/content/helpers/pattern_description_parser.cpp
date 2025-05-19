@@ -113,6 +113,8 @@ static const char* FindEndOfPragmaArgument(const char* p)
     return pLastNonWS;
 }
 
+namespace hex::plugin::builtin {
+
 std::optional<std::string> get_description(std::string buffer)
 {
     const char *p = buffer.c_str();
@@ -143,4 +145,6 @@ std::optional<std::string> get_description(std::string buffer)
     }
 
     return std::nullopt;
+}
+
 }
