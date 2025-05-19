@@ -1716,6 +1716,15 @@ void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32
         font_size = _Data->FontSize;
 
     IM_ASSERT(font->ContainerAtlas->TexID == _CmdHeader.TextureId);  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
+    ImVec4 clip_rect = _CmdHeader.ClipRect;
+    if (cpu_fine_clip_rect)
+    {
+        clip_rect.x = ImMax(clip_rect.x, cpu_fine_clip_rect->x);
+        clip_rect.y = ImMax(clip_rect.y, cpu_fine_clip_rect->y);
+        clip_rect.z = ImMin(clip_rect.z, cpu_fine_clip_rect->z);
+        clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect->w);
+    }
+
     // IMHEX PATCH BEGIN
     int flags;
     bool is_subpixel = false;
@@ -1726,15 +1735,9 @@ void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32
     if (is_subpixel)
         AddCallback(ImGui_ImplOpenGL3_TurnFontShadersOn, NULL);
     // IMHEX PATCH END
-    ImVec4 clip_rect = _CmdHeader.ClipRect;
-    if (cpu_fine_clip_rect)
-    {
-        clip_rect.x = ImMax(clip_rect.x, cpu_fine_clip_rect->x);
-        clip_rect.y = ImMax(clip_rect.y, cpu_fine_clip_rect->y);
-        clip_rect.z = ImMin(clip_rect.z, cpu_fine_clip_rect->z);
-        clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect->w);
-    }
+
     font->RenderText(this, font_size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != NULL);
+
     // IMHEX PATCH BEGIN
     if (is_subpixel)
         AddCallback(ImGui_ImplOpenGL3_TurnFontShadersOff, NULL);
@@ -3329,15 +3332,8 @@ void    ImFontAtlas::GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_wid
             TexPixelsRGBA32 = (unsigned int*)IM_ALLOC((size_t)TexWidth * (size_t)TexHeight * 4);
             const unsigned char* src = pixels;
             unsigned int* dst = TexPixelsRGBA32;
-            // IMHEX PATCH BEGIN
-            if (FontBuilderFlags & ImGuiFreeTypeBuilderFlags_SubPixel) {
-                for (int n = TexWidth * TexHeight; n > 0; n--,src++)
-                    *dst++ = IM_COL32(*src, *src, *src, *src);
-            } else {
-                for (int n = TexWidth * TexHeight; n > 0; n--)
-                    *dst++ = IM_COL32(255, 255, 255, (unsigned int)(*src++));
-            }
-            // IMHEX PATCH END
+            for (int n = TexWidth * TexHeight; n > 0; n--)
+                *dst++ = IM_COL32(255, 255, 255, (unsigned int)(*src++));
         }
     }
 

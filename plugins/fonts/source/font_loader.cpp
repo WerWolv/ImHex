@@ -22,7 +22,7 @@
 
 namespace hex::fonts {
 
-    bool BuildSubPixelAtlas(FontAtlas *fontAtlas, float fontSize) {
+    bool BuildSubPixelAtlas(FontAtlas *fontAtlas) {
         FT_Library ft = nullptr;
         if (FT_Init_FreeType(&ft) != 0) {
             log::fatal("Failed to initialize FreeType");
@@ -41,10 +41,10 @@ namespace hex::fonts {
             std::map<ImS32, ft::Bitmap> bitmapLCD;
             ImU32 fontCount = io.Fonts->ConfigData.Size;
             for (ImU32 i = 0; i < fontCount; i++) {
-                std::string fontName = io.Fonts->ConfigData[i].Name;
+                const auto config = io.Fonts->ConfigData[i];
+                const auto &fontName = config.Name;
 
-                std::ranges::transform(fontName.begin(), fontName.end(), fontName.begin(), [](unsigned char c) { return std::tolower(c); });
-                if (fontName == "nonscalable") {
+                if (hex::equalsIgnoreCase(fontName, "nonscalable")) {
                     continue;
                 }
 
@@ -53,25 +53,20 @@ namespace hex::fonts {
                     return false;
                 }
 
-                float actualFontSize;
-                if (fontName.find("icon") != std::string::npos)
-                    actualFontSize = ImHexApi::Fonts::pointsToPixels(fontSize);
-                else
-                    actualFontSize = fontSize;
-
-                if (FT_Set_Pixel_Sizes(face, actualFontSize, actualFontSize) != 0) {
-                    log::fatal("Failed to set pixel size");
-                    return false;
-                }
+                FT_Size_RequestRec req;
+                req.type = FT_SIZE_REQUEST_TYPE_REAL_DIM;
+                req.width = 0;
+                req.height = (uint32_t)IM_ROUND(ImHexApi::Fonts::pixelsToPoints(config.SizePixels) * 64.0F);
+                req.horiResolution = 0;
+                req.vertResolution = 0;
+                FT_Request_Size(face, &req);
 
                 FT_UInt gIndex;
                 FT_ULong charCode = FT_Get_First_Char(face, &gIndex);
 
                 while (gIndex != 0) {
-
-
                     FT_UInt glyph_index = FT_Get_Char_Index(face, charCode);
-                    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_TARGET_LCD | FT_LOAD_TARGET_LIGHT  | FT_LOAD_RENDER) != 0) {
+                    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_TARGET_LCD | FT_LOAD_TARGET_LIGHT | FT_LOAD_RENDER) != 0) {
                         IM_ASSERT(true && "Failed to load glyph");
                         return false;
                     }
@@ -82,17 +77,15 @@ namespace hex::fonts {
                         continue;
                     }
 
-                    auto width = bitmap_lcd.getWidth() / 3;
+                    auto width = bitmap_lcd.getWidth() / 3.0F;
                     auto height = bitmap_lcd.getHeight();
                     FT_GlyphSlot slot = face->glyph;
                     FT_Size size = face->size;
 
-                    ImVec2 offset = ImVec2((slot->metrics.horiBearingX / 64.0f), (size->metrics.ascender - slot->metrics.horiBearingY) / 64.0f);
-                    if (fontName.find("codicon") != std::string::npos)
-                        offset.x -= 1.0f;
-                    ImS32 advance = (float) slot->advance.x / 64.0f;
-                    if (offset.x+width > advance && advance >= (int) width)
-                        offset.x =  advance - width;
+                    ImVec2 offset = ImVec2(face->glyph->bitmap_left, -face->glyph->bitmap_top);
+                    offset.x += config.GlyphOffset.x;
+                    offset.y += size->metrics.ascender / 64.0F;
+                    ImS32 advance = (float) slot->advance.x / 64.0F;
 
                     ImS32 rect_id = io.Fonts->AddCustomRectFontGlyph(io.Fonts->Fonts[0], charCode, width, height, advance, offset);
                     rect_ids.push_back(rect_id);
@@ -102,7 +95,8 @@ namespace hex::fonts {
                 FT_Done_Face(face);
             }
             fontAtlas->getAtlas()->FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_SubPixel;
-            fontAtlas->build();
+            if (!fontAtlas->build())
+                return false;
             ImU8 *tex_pixels_ch = nullptr;
             ImS32 tex_width;
 
@@ -133,6 +127,7 @@ namespace hex::fonts {
                 ft = nullptr;
             }
         }
+
         return true;
     }
 
@@ -152,6 +147,7 @@ namespace hex::fonts {
         u32 fontIndex = 0;
         auto io = ImGui::GetIO();
         io.Fonts = fontAtlas->getAtlas();
+
         // Check if Unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
         // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
         bool shouldLoadUnicode = ContentRegistry::Settings::read<bool>("hex.fonts.setting.font", "hex.fonts.setting.font.load_all_unicode_chars", false) && ImHexApi::System::getGPUVendor() != "VMware, Inc.";
@@ -219,13 +215,16 @@ namespace hex::fonts {
                 glyphRanges.push_back(glyphRange);
 
                 // Calculate the glyph offset for the font
-                const ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->calculateFontDescend(ft, realFontSize) - fontAtlas->calculateFontDescend(ft, font, realFontSize)) };
 
                 // Load the font
                 float size = realFontSize;
                 if (font.defaultSize.has_value())
                     size = font.defaultSize.value() * ImHexApi::System::getBackingScaleFactor();
+
+                const ImVec2 offset = { font.offset.x, font.offset.y + ImCeil(4_scaled) };
+
                 fontAtlas->addFontFromMemory(font.fontData, size, !font.defaultSize.has_value(), offset, glyphRanges.back());
+
                 if (!font.scalable.value_or(true)) {
                     std::string fontName = "NonScalable";
                     auto nameSize = fontName.size();
@@ -250,6 +249,6 @@ namespace hex::fonts {
             }
             return true;
         } else
-           return BuildSubPixelAtlas(fontAtlas,fontSize);
+           return BuildSubPixelAtlas(fontAtlas);
     }
 }
