@@ -50,6 +50,7 @@ add_imhex_plugin(
         source/content/data_information_sections.cpp
 
         source/content/helpers/demangle.cpp
+        source/content/helpers/pattern_description_parser.cpp
 
         source/content/data_processor_nodes/basic_nodes.cpp
         source/content/data_processor_nodes/control_nodes.cpp
