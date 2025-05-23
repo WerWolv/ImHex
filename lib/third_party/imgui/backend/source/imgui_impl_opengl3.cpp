@@ -423,10 +423,10 @@ void    ImGui_ImplOpenGL3_NewFrame()
 bool useFontShaders = false;
 
 void FontShadersOn(const ImDrawList *parent_list, const ImDrawCmd *cmd) {
-    useFontShaders = !useFontShaders;
+    useFontShaders = true;
 }
 void FontShadersOff(const ImDrawList *parent_list, const ImDrawCmd *cmd) {
-    useFontShaders = !useFontShaders;
+    useFontShaders = false;
 }
 ImDrawCallback ImGui_ImplOpenGL3_TurnFontShadersOn = &FontShadersOn;
 ImDrawCallback ImGui_ImplOpenGL3_TurnFontShadersOff = &FontShadersOff;

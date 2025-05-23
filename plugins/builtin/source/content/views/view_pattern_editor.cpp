@@ -2097,13 +2097,9 @@ namespace hex::plugin::builtin {
                 m_consoleEditor.get(newProvider).SetSelection(selection.mStart, selection.mEnd);
                 m_cursorNeedsUpdate.get(newProvider) = true;
                 m_consoleCursorNeedsUpdate.get(newProvider) = true;
-            } else {
-                m_textEditor.get(newProvider).SetText("");
-                m_consoleEditor.get(newProvider).SetText("");
-                m_consoleEditor.get(newProvider).SetLongestLineLength(0);
+                m_textEditor.get(newProvider).SetTextChanged(false);
             }
 
-            m_textEditor.get(newProvider).SetTextChanged(false);
         });
 
         RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
@@ -2147,12 +2143,15 @@ namespace hex::plugin::builtin {
 
     TextEditor *ViewPatternEditor::getEditorFromFocusedWindow() {
         auto provider = ImHexApi::Provider::get();
-        if (m_focusedSubWindowName.contains(consoleView)) {
-            return &m_consoleEditor.get(provider);
+        if (provider != nullptr) {
+            if (m_focusedSubWindowName.contains(consoleView)) {
+                return &m_consoleEditor.get(provider);
+            }
+            if (m_focusedSubWindowName.contains(textEditorView)) {
+                return &m_textEditor.get(provider);
+            }
         }
-        if (m_focusedSubWindowName.contains(textEditorView)) {
-            return &m_textEditor.get(provider);
-        }
+
         return nullptr;
     }
 
@@ -2164,7 +2163,7 @@ namespace hex::plugin::builtin {
         /* Export Pattern */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, Shortcut::None,
                                                 m_exportPatternFile, [this] {
-                                                    return !wolv::util::trim(m_textEditor.get(ImHexApi::Provider::get()).GetText()).empty() && ImHexApi::Provider::isValid();
+                                                    return ImHexApi::Provider::isValid() && !wolv::util::trim(m_textEditor.get(ImHexApi::Provider::get()).GetText()).empty();
                                                 }
         );
 
