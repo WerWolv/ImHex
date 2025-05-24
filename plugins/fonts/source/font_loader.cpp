@@ -97,6 +97,7 @@ namespace hex::fonts {
             fontAtlas->getAtlas()->FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_SubPixel;
             if (!fontAtlas->build())
                 return false;
+
             ImU8 *tex_pixels_ch = nullptr;
             ImS32 tex_width;
 
@@ -122,6 +123,13 @@ namespace hex::fonts {
                     }
                 }
             }
+
+            for (i64 i = 0; i < tex_width * tex_height; i++) {
+                if (tex_pixels[i] == 0x00FFFFFF) {
+                    tex_pixels[i] = 0x00000000;
+                }
+            }
+
             if (ft != nullptr) {
                 FT_Done_FreeType(ft);
                 ft = nullptr;
