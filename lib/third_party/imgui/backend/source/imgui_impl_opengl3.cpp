@@ -420,17 +420,13 @@ void    ImGui_ImplOpenGL3_NewFrame()
 }
 
 // IMHEX PATCH BEGIN
-bool useFontShaders = false;
-
-void FontShadersOn(const ImDrawList *parent_list, const ImDrawCmd *cmd) {
+static bool useFontShaders = false;
+void ImGui_ImplOpenGL3_TurnFontShadersOn(const ImDrawList *parent_list, const ImDrawCmd *cmd) {
     useFontShaders = true;
 }
-void FontShadersOff(const ImDrawList *parent_list, const ImDrawCmd *cmd) {
+void ImGui_ImplOpenGL3_TurnFontShadersOff(const ImDrawList *parent_list, const ImDrawCmd *cmd) {
     useFontShaders = false;
 }
-ImDrawCallback ImGui_ImplOpenGL3_TurnFontShadersOn = &FontShadersOn;
-ImDrawCallback ImGui_ImplOpenGL3_TurnFontShadersOff = &FontShadersOff;
-
 // IMHEX PATCH END
 
 static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_width, int fb_height, GLuint vertex_array_object)
@@ -496,10 +492,9 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
 // IMHEX PATCH END
     const float ortho_projection[4][4] =
     {
-            // IMHEX PATCH BEGIN
+        // IMHEX PATCH BEGIN
         { 2.0f/(R-L),   0.0f,        Gamma,   0.0f },
-     // { 2.0f/(R-L),   0.0f,         0.0f,   0.0f },
-            // IMHEX PATCH END
+        // IMHEX PATCH END
         { 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
         { 0.0f,         0.0f,        -1.0f,   0.0f },
         { (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
@@ -639,14 +634,6 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
                 // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
                 if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
                     ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
-                // IMHEX PATCH BEGIN
-                else if (pcmd->UserCallback == ImGui_ImplOpenGL3_TurnFontShadersOn) {
-                    ImGui_ImplOpenGL3_TurnFontShadersOn(cmd_list, pcmd);
-                    ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
-                } else if (pcmd->UserCallback == ImGui_ImplOpenGL3_TurnFontShadersOff) {
-                    ImGui_ImplOpenGL3_TurnFontShadersOff(cmd_list, pcmd);
-                    ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
-                } // IMHEX PATCH END
                 else
                     pcmd->UserCallback(cmd_list, pcmd);
             }
