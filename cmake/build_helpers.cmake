@@ -661,6 +661,7 @@ macro(setupCompilerFlags target)
 
         addCXXFlag("-fexceptions" ${target})
         addCXXFlag("-frtti" ${target})
+        addCommonFlag("-fno-omit-frame-pointer" ${target})
 
         # Disable some warnings
         addCCXXFlag("-Wno-array-bounds" ${target})
