@@ -1695,10 +1695,7 @@ void ImDrawList::AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const Im
     PathBezierQuadraticCurveTo(p2, p3, num_segments);
     PathStroke(col, 0, thickness);
 }
-// IMHEX PATCH BEGIN
-extern ImDrawCallback ImGui_ImplOpenGL3_TurnFontShadersOn;
-extern ImDrawCallback ImGui_ImplOpenGL3_TurnFontShadersOff;
-// IMHEX PATCH END
+
 void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)
 {
     if ((col & IM_COL32_A_MASK) == 0)
@@ -1732,15 +1729,21 @@ void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32
         flags = font->ContainerAtlas->FontBuilderFlags;
         is_subpixel = (flags & ImGuiFreeTypeBuilderFlags_SubPixel) != 0;
     }
-    if (is_subpixel)
+
+    void ImGui_ImplOpenGL3_TurnFontShadersOn(const ImDrawList *parent_list, const ImDrawCmd *cmd);
+    void ImGui_ImplOpenGL3_TurnFontShadersOff(const ImDrawList *parent_list, const ImDrawCmd *cmd);
+
+    if (is_subpixel) {
         AddCallback(ImGui_ImplOpenGL3_TurnFontShadersOn, NULL);
-    // IMHEX PATCH END
+        AddCallback(ImDrawCallback_ResetRenderState, NULL);
+    }
 
     font->RenderText(this, font_size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != NULL);
 
-    // IMHEX PATCH BEGIN
-    if (is_subpixel)
+    if (is_subpixel) {
         AddCallback(ImGui_ImplOpenGL3_TurnFontShadersOff, NULL);
+        AddCallback(ImDrawCallback_ResetRenderState, NULL);
+    }
     // IMHEX PATCH END
 }
 

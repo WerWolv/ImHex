@@ -1138,7 +1138,7 @@ struct ImGui_ImplGlfw_ViewportData
     WNDPROC     PrevWndProc;
 #endif
 
-    ImGui_ImplGlfw_ViewportData()  { memset(this, 0, sizeof(*this)); IgnoreWindowSizeEventFrame = IgnoreWindowPosEventFrame = -1; }
+    ImGui_ImplGlfw_ViewportData()  { memset((void*)this, 0, sizeof(*this)); IgnoreWindowSizeEventFrame = IgnoreWindowPosEventFrame = -1; }
     ~ImGui_ImplGlfw_ViewportData() { IM_ASSERT(Window == nullptr); }
 };
 

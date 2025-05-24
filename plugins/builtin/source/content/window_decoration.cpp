@@ -410,37 +410,7 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginMainMenuBar()) {
                 drawTitleBarBackDrop();
                 ImGui::Dummy({});
-
-                ImGui::PopStyleVar(2);
-
-                drawTitleBar();
-
-                #if defined(OS_MACOS)
-                    if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
-                        const auto windowSize = ImHexApi::System::getMainWindowSize();
-                        const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight);
-                        
-                        ImGui::SetCursorPos(ImVec2());
-
-                        // Prevent window from being moved unless title bar is hovered
-
-                        if (!ImGui::IsAnyItemHovered()) {
-                            const auto cursorPos = ImGui::GetCursorScreenPos();
-                            if (ImGui::IsMouseHoveringRect(cursorPos, cursorPos + menuUnderlaySize) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-                                macosHandleTitlebarDoubleClickGesture(window);
-                            }
-
-                            macosSetWindowMovable(window, true);
-                        } else {
-                            macosSetWindowMovable(window, false);
-
-                        }
-                    }
-                #endif
-                
                 ImGui::EndMainMenuBar();
-            } else {
-                ImGui::PopStyleVar(2);
             }
 
             auto window = ImHexApi::System::getMainWindowHandle();
@@ -483,6 +453,41 @@ namespace hex::plugin::builtin {
                 menu::endMainMenuBar();
             }
             menu::enableNativeMenuBar(false);
+
+            if (ImGui::BeginMainMenuBar()) {
+                ImGui::Dummy({});
+
+                ImGui::PopStyleVar(2);
+
+                drawTitleBar();
+
+                #if defined(OS_MACOS)
+                    if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+                        const auto windowSize = ImHexApi::System::getMainWindowSize();
+                        const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight);
+                        
+                        ImGui::SetCursorPos(ImVec2());
+
+                        // Prevent window from being moved unless title bar is hovered
+
+                        if (!ImGui::IsAnyItemHovered()) {
+                            const auto cursorPos = ImGui::GetCursorScreenPos();
+                            if (ImGui::IsMouseHoveringRect(cursorPos, cursorPos + menuUnderlaySize) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                                macosHandleTitlebarDoubleClickGesture(window);
+                            }
+
+                            macosSetWindowMovable(window, true);
+                        } else {
+                            macosSetWindowMovable(window, false);
+
+                        }
+                    }
+                #endif
+                
+                ImGui::EndMainMenuBar();
+            } else {
+                ImGui::PopStyleVar(2);
+            }
         }
 
         void drawToolbar() {
