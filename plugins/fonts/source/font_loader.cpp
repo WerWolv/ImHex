@@ -97,6 +97,7 @@ namespace hex::fonts {
             fontAtlas->getAtlas()->FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_SubPixel;
             if (!fontAtlas->build())
                 return false;
+
             ImU8 *tex_pixels_ch = nullptr;
             ImS32 tex_width;
 
@@ -122,6 +123,13 @@ namespace hex::fonts {
                     }
                 }
             }
+
+            for (i64 i = 0; i < tex_width * tex_height; i++) {
+                if (tex_pixels[i] == 0x00FFFFFF) {
+                    tex_pixels[i] = 0x00000000;
+                }
+            }
+
             if (ft != nullptr) {
                 FT_Done_FreeType(ft);
                 ft = nullptr;
@@ -218,11 +226,16 @@ namespace hex::fonts {
                 if (font.defaultSize.has_value())
                     fontSize = font.defaultSize.value() * ImHexApi::System::getBackingScaleFactor();
 
-                const ImVec2 offset = { font.offset.x, font.offset.y + ImCeil(4_scaled) };
+                ImVec2 offset = { font.offset.x, font.offset.y };
+
+                bool scalable = font.scalable.value_or(true);
+                if (scalable) {
+                    offset.y += ImCeil(3_scaled);
+                }
 
                 fontAtlas->addFontFromMemory(font.fontData, fontSize, !font.defaultSize.has_value(), offset, glyphRanges.back());
 
-                if (!font.scalable.value_or(true)) {
+                if (!scalable) {
                     std::string fontName = "NonScalable";
                     auto nameSize = fontName.size();
                     memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, fontName.c_str(), nameSize);
