@@ -225,8 +225,6 @@ namespace hex::plugin::builtin {
             m_diskSize = diskSize;
             blkdev_get_sector_size(m_diskHandle, reinterpret_cast<int *>(&m_sectorSize));
 
-            m_sectorBuffer.resize(m_sectorSize);
-
         #endif
 
         return true;

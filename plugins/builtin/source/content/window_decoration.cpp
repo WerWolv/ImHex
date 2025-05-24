@@ -402,6 +402,8 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
             ImGui::SetNextWindowScroll(ImVec2(0, 0));
 
+            auto window = ImHexApi::System::getMainWindowHandle();
+
             #if defined(OS_MACOS)
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetStyle().FramePadding.x, 8_scaled));
                 ON_SCOPE_EXIT { ImGui::PopStyleVar(); };
@@ -443,7 +445,6 @@ namespace hex::plugin::builtin {
                 ImGui::PopStyleVar(2);
             }
 
-            auto window = ImHexApi::System::getMainWindowHandle();
             menu::enableNativeMenuBar(s_useNativeMenuBar);
             if (menu::beginMainMenuBar()) {
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
@@ -531,7 +532,7 @@ namespace hex::plugin::builtin {
     void addWindowDecoration() {
         EventFrameBegin::subscribe([]{
             AT_FIRST_TIME {
-                s_logoTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/icon.png").span(), ImGuiExt::Texture::Filter::Nearest);
+                s_logoTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/icon.png").span(), ImGuiExt::Texture::Filter::Linear);
             };
 
             constexpr static ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;

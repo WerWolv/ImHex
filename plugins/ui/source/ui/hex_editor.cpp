@@ -499,7 +499,7 @@ namespace hex::ui {
 
         // Draw horizontal line at the bottom of the bytes
         if ((byteAddress + m_bytesPerRow) > region.getEndAddress())
-            drawList->AddLine(ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImTrunc(cellPos + cellSize + scaled({ 1, 0 })), frameColor, 1_scaled);
+            drawList->AddLine(ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImTrunc(cellPos + cellSize), frameColor, 1_scaled);
         drawList->PopClipRect();
     }
 

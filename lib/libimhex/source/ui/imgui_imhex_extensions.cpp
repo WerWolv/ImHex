@@ -298,6 +298,28 @@ namespace ImGuiExt {
         }
     }
 
+    std::vector<u8> Texture::toBytes() const noexcept {
+        std::vector<u8> result(m_width * m_height * 4);
+
+        #if defined(OS_WEB)
+            GLuint fbo;
+            glGenFramebuffers(1, &fbo);
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textureId, 0);
+
+            glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, result.data());
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glDeleteFramebuffers(1, &fbo);
+        #else
+            glBindTexture(GL_TEXTURE_2D, m_textureId);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, result.data());
+            glBindTexture(GL_TEXTURE_2D, 0);
+        #endif
+
+        return result;
+    }
+
     float GetTextWrapPos() {
         return GImGui->CurrentWindow->DC.TextWrapPos;
     }

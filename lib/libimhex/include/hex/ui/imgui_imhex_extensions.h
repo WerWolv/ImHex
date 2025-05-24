@@ -113,6 +113,8 @@ namespace ImGuiExt {
             return float(m_width) / float(m_height);
         }
 
+        [[nodiscard]] std::vector<u8> toBytes() const noexcept;
+
         void reset();
 
     private:

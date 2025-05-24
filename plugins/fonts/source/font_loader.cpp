@@ -37,91 +37,98 @@ namespace hex::fonts {
             log::fatal("No font data found");
             return false;
         } else {
-            ImVector<ImS32> rect_ids;
-            std::map<ImS32, ft::Bitmap> bitmapLCD;
-            ImU32 fontCount = io.Fonts->ConfigData.Size;
-            for (ImU32 i = 0; i < fontCount; i++) {
-                const auto config = io.Fonts->ConfigData[i];
+            ImVector<ImS32> customRectIds;
+            std::map<ImS32, ft::Bitmap> customRectBitmaps;
+            for (const auto &config : io.Fonts->ConfigData) {
                 const auto &fontName = config.Name;
 
                 if (hex::equalsIgnoreCase(fontName, "nonscalable")) {
                     continue;
                 }
 
-                if (FT_New_Memory_Face(ft, reinterpret_cast<const FT_Byte *>(io.Fonts->ConfigData[i].FontData), io.Fonts->ConfigData[i].FontDataSize, 0, &face) != 0) {
+                if (FT_New_Memory_Face(ft, static_cast<const FT_Byte *>(config.FontData), config.FontDataSize, 0, &face) != 0) {
                     log::fatal("Failed to load face");
                     return false;
                 }
 
-                FT_Size_RequestRec req;
-                req.type = FT_SIZE_REQUEST_TYPE_REAL_DIM;
-                req.width = 0;
-                req.height = (uint32_t)(IM_ROUND(config.SizePixels) * 64.0F);
-                req.horiResolution = 0;
-                req.vertResolution = 0;
-                FT_Request_Size(face, &req);
+                FT_Size_RequestRec request;
+                request.type = FT_SIZE_REQUEST_TYPE_REAL_DIM;
+                request.width = 0;
+                request.height = (uint32_t)(IM_ROUND(config.SizePixels) * 64.0F);
+                request.horiResolution = 0;
+                request.vertResolution = 0;
+                FT_Request_Size(face, &request);
 
-                FT_UInt gIndex;
-                FT_ULong charCode = FT_Get_First_Char(face, &gIndex);
+                FT_UInt glyphIndex;
+                FT_ULong charCode = FT_Get_First_Char(face, &glyphIndex);
 
-                while (gIndex != 0) {
-                    FT_UInt glyph_index = FT_Get_Char_Index(face, charCode);
-                    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_TARGET_LCD | FT_LOAD_TARGET_LIGHT | FT_LOAD_RENDER) != 0) {
+                while (glyphIndex != 0) {
+                    if (FT_Load_Glyph(face, glyphIndex, FT_LOAD_TARGET_LCD | FT_LOAD_TARGET_LIGHT | FT_LOAD_RENDER) != 0) {
                         IM_ASSERT(true && "Failed to load glyph");
                         return false;
                     }
 
-                    ft::Bitmap bitmap_lcd = ft::Bitmap(face->glyph->bitmap.width, face->glyph->bitmap.rows, face->glyph->bitmap.pitch, face->glyph->bitmap.buffer);
+                    const ft::Bitmap bitmap = ft::Bitmap(face->glyph->bitmap.width, face->glyph->bitmap.rows, face->glyph->bitmap.pitch, face->glyph->bitmap.buffer);
                     if (face->glyph->bitmap.width * face->glyph->bitmap.rows == 0) {
-                        charCode = FT_Get_Next_Char(face, charCode, &gIndex);
+                        charCode = FT_Get_Next_Char(face, charCode, &glyphIndex);
                         continue;
                     }
 
-                    auto width = bitmap_lcd.getWidth() / 3.0F;
-                    auto height = bitmap_lcd.getHeight();
-                    FT_GlyphSlot slot = face->glyph;
-                    FT_Size size = face->size;
+                    const auto width = bitmap.getWidth() / 3.0F;
+                    const auto height = bitmap.getHeight();
+                    const auto slot = face->glyph;
+                    const auto size = face->size;
 
-                    ImVec2 offset = ImVec2(face->glyph->bitmap_left, -face->glyph->bitmap_top);
+                    auto offset = ImVec2(face->glyph->bitmap_left, -face->glyph->bitmap_top);
                     offset.x += config.GlyphOffset.x;
                     offset.y += size->metrics.ascender / 64.0F;
-                    ImS32 advance = (float) slot->advance.x / 64.0F;
 
-                    ImS32 rect_id = io.Fonts->AddCustomRectFontGlyph(io.Fonts->Fonts[0], charCode, width, height, advance, offset);
-                    rect_ids.push_back(rect_id);
-                    bitmapLCD.insert(std::make_pair(rect_id, bitmap_lcd));
-                    charCode = FT_Get_Next_Char(face, charCode, &gIndex);
+                    const ImS32 advance = slot->advance.x / 64.0F;
+
+                    ImS32 rectId = io.Fonts->AddCustomRectFontGlyph(io.Fonts->Fonts[0], charCode, width, height, advance, offset);
+                    customRectIds.push_back(rectId);
+                    customRectBitmaps.insert(std::make_pair(rectId, bitmap));
+
+                    charCode = FT_Get_Next_Char(face, charCode, &glyphIndex);
                 }
                 FT_Done_Face(face);
             }
+
             fontAtlas->getAtlas()->FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_SubPixel;
             if (!fontAtlas->build())
                 return false;
-            ImU8 *tex_pixels_ch = nullptr;
-            ImS32 tex_width;
 
-            ImS32 tex_height;
-            fontAtlas->getAtlas()->GetTexDataAsRGBA32(&tex_pixels_ch, &tex_width, &tex_height);
-            ImU32 *tex_pixels = reinterpret_cast<ImU32 *>(tex_pixels_ch);
-            for (auto rect_id: rect_ids) {
+            ImU8 *textureColors = nullptr;
+            ImS32 textureWidth, textureHeight;
+
+            fontAtlas->getAtlas()->GetTexDataAsRGBA32(&textureColors, &textureWidth, &textureHeight);
+            auto *texturePixels = reinterpret_cast<ImU32 *>(textureColors);
+            for (auto rect_id: customRectIds) {
                 if (const ImFontAtlasCustomRect *rect = io.Fonts->GetCustomRectByIndex(rect_id)) {
-                    if (rect->X == 0xFFFF || rect->Y == 0xFFFF || !bitmapLCD.contains(rect_id))
+                    if (rect->X == 0xFFFF || rect->Y == 0xFFFF || !customRectBitmaps.contains(rect_id))
                         continue;
 
-                    ft::Bitmap bitmapLCDSaved = bitmapLCD.at(rect_id);
-                    ImU32 imageWidth = bitmapLCDSaved.getWidth() / 3;
-                    ImU32 imageHeight = bitmapLCDSaved.getHeight();
-                    const ImU8 *bitmapBuffer = bitmapLCDSaved.getData();
+                    const auto &bitmap = customRectBitmaps.at(rect_id);
+                    ImU32 imageWidth = bitmap.getWidth() / 3;
+                    ImU32 imageHeight = bitmap.getHeight();
+                    const auto &bitmapBuffer = bitmap.getData();
 
                     for (ImU32 y = 0; y < imageHeight; y++) {
-                        ImU32 *p = tex_pixels + (rect->Y + y) * tex_width + (rect->X);
+                        ImU32 *pixel = texturePixels + (rect->Y + y) * textureWidth + (rect->X);
                         for (ImU32 x = 0; x < imageWidth; x++) {
-                            const ImU8 *bitmapPtrLCD = &bitmapBuffer[y * bitmapLCDSaved.getPitch() + 3 * x];
-                             *p++ = ft::RGBA::addAlpha(*bitmapPtrLCD, *(bitmapPtrLCD + 1), *(bitmapPtrLCD + 2));
+                            const ImU8 *bitmapPixel = &bitmapBuffer[y * bitmap.getPitch() + 3 * x];
+                             *pixel++ = ft::RGBA::addAlpha(*bitmapPixel, *(bitmapPixel + 1), *(bitmapPixel + 2));
                         }
                     }
                 }
             }
+
+            for (i64 i = 0; i < textureWidth * textureHeight; i++) {
+                if (texturePixels[i] == 0x00FFFFFF) {
+                    texturePixels[i] = 0x00000000;
+                }
+            }
+
             if (ft != nullptr) {
                 FT_Done_FreeType(ft);
                 ft = nullptr;
@@ -218,11 +225,16 @@ namespace hex::fonts {
                 if (font.defaultSize.has_value())
                     fontSize = font.defaultSize.value() * ImHexApi::System::getBackingScaleFactor();
 
-                const ImVec2 offset = { font.offset.x, font.offset.y + ImCeil(4_scaled) };
+                ImVec2 offset = { font.offset.x, font.offset.y };
+
+                bool scalable = font.scalable.value_or(true);
+                if (scalable) {
+                    offset.y += ImCeil(3_scaled);
+                }
 
                 fontAtlas->addFontFromMemory(font.fontData, fontSize, !font.defaultSize.has_value(), offset, glyphRanges.back());
 
-                if (!font.scalable.value_or(true)) {
+                if (!scalable) {
                     std::string fontName = "NonScalable";
                     auto nameSize = fontName.size();
                     memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, fontName.c_str(), nameSize);
