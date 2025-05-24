@@ -16,6 +16,7 @@
 #include <filesystem>
 
 #include <imgui.h>
+#include <mutex>
 #include <fonts/vscode_icons.hpp>
 
 #include <nlohmann/json.hpp>
@@ -188,7 +189,6 @@ namespace hex::plugin::builtin {
                         nullptr)) {
                     m_diskSize   = diskGeometry.DiskSize.QuadPart;
                     m_sectorSize = diskGeometry.Geometry.BytesPerSector;
-                    m_sectorBuffer.resize(m_sectorSize);
                 }
             }
 
@@ -250,6 +250,7 @@ namespace hex::plugin::builtin {
         #endif
     }
 
+    static std::mutex s_mutex;
     void DiskProvider::readRaw(u64 offset, void *buffer, size_t size) {
         #if defined(OS_WINDOWS)
 
@@ -257,18 +258,19 @@ namespace hex::plugin::builtin {
 
             u64 startOffset = offset;
 
+            std::vector<char> sectorBuffer(m_sectorSize);
             while (size > 0) {
                 LARGE_INTEGER seekPosition;
                 seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % m_sectorSize);
                 seekPosition.HighPart = LONG(offset >> 32);
 
-                if (m_sectorBufferAddress != static_cast<u64>(seekPosition.QuadPart)) {
+                {
+                    std::scoped_lock lock(s_mutex);
                     ::SetFilePointer(m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
-                    ::ReadFile(m_diskHandle, m_sectorBuffer.data(), m_sectorBuffer.size(), &bytesRead, nullptr);
-                    m_sectorBufferAddress = seekPosition.QuadPart;
+                    ::ReadFile(m_diskHandle, sectorBuffer.data(), sectorBuffer.size(), &bytesRead, nullptr);
                 }
 
-                std::memcpy(static_cast<u8 *>(buffer) + (offset - startOffset), m_sectorBuffer.data() + (offset & (m_sectorSize - 1)), std::min<u64>(m_sectorSize, size));
+                std::memcpy(static_cast<u8 *>(buffer) + (offset - startOffset), sectorBuffer.data() + (offset & (m_sectorSize - 1)), std::min<u64>(m_sectorSize, size));
 
                 size = std::max<i64>(static_cast<i64>(size) - m_sectorSize, 0);
                 offset += m_sectorSize;
@@ -278,19 +280,19 @@ namespace hex::plugin::builtin {
 
             u64 startOffset    = offset;
 
+            std::vector<char> sectorBuffer(m_sectorSize);
             while (size > 0) {
                 u64 seekPosition = offset - (offset % m_sectorSize);
 
-                if (m_sectorBufferAddress != seekPosition || m_sectorBufferAddress == 0) {
+                {
+                    std::scoped_lock lock(s_mutex);
                     ::lseek(m_diskHandle, seekPosition, SEEK_SET);
-                    if (::read(m_diskHandle, m_sectorBuffer.data(), m_sectorBuffer.size()) == -1)
+                    if (::read(m_diskHandle, sectorBuffer.data(), sectorBuffer.size()) == -1)
                         break;
-
-                    m_sectorBufferAddress = seekPosition;
                 }
 
                 std::memcpy(reinterpret_cast<u8 *>(buffer) + (offset - startOffset),
-                            m_sectorBuffer.data() + (offset & (m_sectorSize - 1)),
+                            sectorBuffer.data() + (offset & (m_sectorSize - 1)),
                             std::min<u64>(m_sectorSize, size));
 
                 size = std::max<ssize_t>(static_cast<ssize_t>(size) - m_sectorSize, 0);
@@ -321,11 +323,11 @@ namespace hex::plugin::builtin {
                 seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % m_sectorSize);
                 seekPosition.HighPart = offset >> 32;
 
-                ::SetFilePointer(m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
-                ::WriteFile(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size(), &bytesWritten, nullptr);
-
-                //Print last error
-                log::error("{}", hex::formatSystemError(::GetLastError()));
+                {
+                    std::scoped_lock lock(s_mutex);
+                    ::SetFilePointer(m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
+                    ::WriteFile(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size(), &bytesWritten, nullptr);
+                }
 
                 offset += currSize;
                 size -= currSize;
@@ -345,9 +347,12 @@ namespace hex::plugin::builtin {
                 this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
                 std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
 
-                ::lseek(m_diskHandle, sectorBase, SEEK_SET);
-                if (::write(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size()) < 0)
-                    break;
+                {
+                    std::scoped_lock lock(s_mutex);
+                    ::lseek(m_diskHandle, sectorBase, SEEK_SET);
+                    if (::write(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size()) < 0)
+                        break;
+                }
 
                 offset += currSize;
                 size -= currSize;

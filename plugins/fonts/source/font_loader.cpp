@@ -135,7 +135,6 @@ namespace hex::fonts {
         if (fontAtlas == nullptr) {
             return false;
         }
-        auto realFontSize = ImHexApi::Fonts::pointsToPixels(fontSize);
         bool antialias = antiAliasType == "grayscale";
         bool monochrome = antiAliasType == "none";
         FT_Library ft = nullptr;
@@ -170,7 +169,7 @@ namespace hex::fonts {
         // Try to load the custom font if one was set
         std::optional<Font> defaultFont;
         if (!fontPath.empty()) {
-            defaultFont = fontAtlas->addFontFromFile(fontPath, realFontSize, true, ImVec2());
+            defaultFont = fontAtlas->addFontFromFile(fontPath, fontSize, true, ImVec2());
             std::string defaultFontName = defaultFont.has_value() ? fontPath.filename().string() : "Custom Font";
             memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
             fontIndex += 1;
@@ -183,13 +182,12 @@ namespace hex::fonts {
         // If there's no custom font set, or it failed to load, fall back to the default font
         if (!defaultFont.has_value()) {
             if (pixelPerfectFont) {
-                realFontSize = fontSize = std::max(1.0F, std::floor(ImHexApi::System::getBackingScaleFactor() * 13.0F));
                 defaultFont = fontAtlas->addDefaultFont();
                 std::string defaultFontName = "Proggy Clean";
                 memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
                 fontIndex += 1;
             } else {
-                defaultFont = fontAtlas->addFontFromRomFs("fonts/JetBrainsMono.ttf", realFontSize, true, ImVec2());
+                defaultFont = fontAtlas->addFontFromRomFs("fonts/JetBrainsMono.ttf", fontSize, true, ImVec2());
                 std::string defaultFontName = "JetBrains Mono";
                 memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
                 fontIndex += 1;
@@ -217,13 +215,12 @@ namespace hex::fonts {
                 // Calculate the glyph offset for the font
 
                 // Load the font
-                float size = realFontSize;
                 if (font.defaultSize.has_value())
-                    size = font.defaultSize.value() * ImHexApi::System::getBackingScaleFactor();
+                    fontSize = font.defaultSize.value() * ImHexApi::System::getBackingScaleFactor();
 
                 const ImVec2 offset = { font.offset.x, font.offset.y + ImCeil(4_scaled) };
 
-                fontAtlas->addFontFromMemory(font.fontData, size, !font.defaultSize.has_value(), offset, glyphRanges.back());
+                fontAtlas->addFontFromMemory(font.fontData, fontSize, !font.defaultSize.has_value(), offset, glyphRanges.back());
 
                 if (!font.scalable.value_or(true)) {
                     std::string fontName = "NonScalable";
