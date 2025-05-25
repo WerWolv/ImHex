@@ -1059,14 +1059,14 @@ jobs:
 
       - name: 🔨 Copy necessary files
         run: |
-          cp dist/web/serve.py out/start_imhex_web.py
+          cp dist/web/serve.py out/nightly/start_imhex_web.py
 
       - name: ⬆️ Upload package
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: ImHex Web
-          path: out/*
+          path: out/nightly/*
 
         # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
       - name: 🗑️ Delete old cache
