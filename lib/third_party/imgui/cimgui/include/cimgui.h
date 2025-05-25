@@ -85,7 +85,7 @@ typedef struct ImDrawDataBuilder ImDrawDataBuilder;
 typedef struct ImGuiBoxSelectState ImGuiBoxSelectState;
 typedef struct ImGuiColorMod ImGuiColorMod;
 typedef struct ImGuiContextHook ImGuiContextHook;
-typedef struct ImGuiDataVarInfo ImGuiDataVarInfo;
+typedef struct ImGuiStyleVarInfo ImGuiStyleVarInfo;
 typedef struct ImGuiDataTypeInfo ImGuiDataTypeInfo;
 typedef struct ImGuiDockContext ImGuiDockContext;
 typedef struct ImGuiDockRequest ImGuiDockRequest;
@@ -1582,7 +1582,7 @@ struct ImGuiBoxSelectState;
 struct ImGuiColorMod;
 struct ImGuiContext;
 struct ImGuiContextHook;
-struct ImGuiDataVarInfo;
+struct ImGuiStyleVarInfo;
 struct ImGuiDataTypeInfo;
 struct ImGuiDockContext;
 struct ImGuiDockRequest;
@@ -1732,11 +1732,11 @@ struct ImDrawDataBuilder
     ImVector_ImDrawListPtr* Layers[2];
     ImVector_ImDrawListPtr LayerData1;
 };
-struct ImGuiDataVarInfo
+struct ImGuiStyleVarInfo
 {
-    ImGuiDataType Type;
-    ImU32 Count;
-    ImU32 Offset;
+    ImU32           Count : 8;
+    ImGuiDataType   DataType : 8;
+    ImU32           Offset : 16;
 };
 typedef struct ImGuiDataTypeStorage ImGuiDataTypeStorage;
 struct ImGuiDataTypeStorage
@@ -3708,7 +3708,7 @@ CIMGUI_API void igProgressBar(float fraction,const ImVec2 size_arg,const char* o
 CIMGUI_API void igBullet(void);
 CIMGUI_API bool igTextLink(const char* label);
 CIMGUI_API void igTextLinkOpenURL(const char* label,const char* url);
-CIMGUI_API void igImage(ImTextureID user_texture_id,const ImVec2 image_size,const ImVec2 uv0,const ImVec2 uv1,const ImVec4 tint_col,const ImVec4 border_col);
+CIMGUI_API void igImage(ImTextureID user_texture_id,const ImVec2 image_size,const ImVec2 uv0,const ImVec2 uv1);
 CIMGUI_API bool igImageButton(const char* str_id,ImTextureID user_texture_id,const ImVec2 image_size,const ImVec2 uv0,const ImVec2 uv1,const ImVec4 bg_col,const ImVec4 tint_col);
 CIMGUI_API bool igBeginCombo(const char* label,const char* preview_value,ImGuiComboFlags flags);
 CIMGUI_API void igEndCombo(void);
@@ -4383,7 +4383,7 @@ CIMGUI_API void ImDrawListSharedData_destroy(ImDrawListSharedData* self);
 CIMGUI_API void ImDrawListSharedData_SetCircleTessellationMaxError(ImDrawListSharedData* self,float max_error);
 CIMGUI_API ImDrawDataBuilder* ImDrawDataBuilder_ImDrawDataBuilder(void);
 CIMGUI_API void ImDrawDataBuilder_destroy(ImDrawDataBuilder* self);
-CIMGUI_API void* ImGuiDataVarInfo_GetVarPtr(ImGuiDataVarInfo* self,void* parent);
+CIMGUI_API void* ImGuiStyleVarInfo_GetVarPtr(ImGuiStyleVarInfo* self,void* parent);
 CIMGUI_API ImGuiStyleMod* ImGuiStyleMod_ImGuiStyleMod_Int(ImGuiStyleVar idx,int v);
 CIMGUI_API void ImGuiStyleMod_destroy(ImGuiStyleMod* self);
 CIMGUI_API ImGuiStyleMod* ImGuiStyleMod_ImGuiStyleMod_Float(ImGuiStyleVar idx,float v);
@@ -4624,7 +4624,7 @@ CIMGUI_API void igCalcItemSize(ImVec2 *pOut,ImVec2 size,float default_w,float de
 CIMGUI_API float igCalcWrapWidthForPos(const ImVec2 pos,float wrap_pos_x);
 CIMGUI_API void igPushMultiItemsWidths(int components,float width_full);
 CIMGUI_API void igShrinkWidths(ImGuiShrinkWidthItem* items,int count,float width_excess);
-CIMGUI_API const ImGuiDataVarInfo* igGetStyleVarInfo(ImGuiStyleVar idx);
+CIMGUI_API const ImGuiStyleVarInfo* igGetStyleVarInfo(ImGuiStyleVar idx);
 CIMGUI_API void igBeginDisabledOverrideReenable(void);
 CIMGUI_API void igEndDisabledOverrideReenable(void);
 CIMGUI_API void igLogBegin(ImGuiLogFlags flags,int auto_open_depth);

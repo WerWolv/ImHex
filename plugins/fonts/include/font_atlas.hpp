@@ -35,7 +35,7 @@ namespace hex::fonts {
             }
 
             FT_Face face;
-            if (FT_New_Memory_Face(ft, reinterpret_cast<const FT_Byte *>(m_font->ConfigData->FontData), m_font->ConfigData->FontDataSize, 0, &face) != 0) {
+            if (FT_New_Memory_Face(ft, reinterpret_cast<const FT_Byte *>(m_font->Sources->FontData), m_font->Sources->FontDataSize, 0, &face) != 0) {
                 log::fatal("Failed to load face");
                 return 0.0f;
             }
@@ -272,9 +272,9 @@ namespace hex::fonts {
         }
 
         void updateFontScaling(float newScaling) {
-            for (int i = 0; i < m_fontAtlas->ConfigData.size(); i += 1) {
+            for (int i = 0; i < m_fontAtlas->Sources.size(); i += 1) {
                 const auto &[scalable, fontSize] = m_fontSizes[i];
-                auto &configData = m_fontAtlas->ConfigData[i];
+                auto &configData = m_fontAtlas->Sources[i];
 
                 if (!scalable) {
                     configData.SizePixels = fontSize * std::floor(newScaling);
