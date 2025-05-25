@@ -662,9 +662,9 @@ CIMGUI_API void igTextLinkOpenURL(const char* label,const char* url)
 {
     return ImGui::TextLinkOpenURL(label,url);
 }
-CIMGUI_API void igImage(ImTextureID user_texture_id,const ImVec2 image_size,const ImVec2 uv0,const ImVec2 uv1,const ImVec4 tint_col,const ImVec4 border_col)
+CIMGUI_API void igImage(ImTextureID user_texture_id,const ImVec2 image_size,const ImVec2 uv0,const ImVec2 uv1)
 {
-    return ImGui::Image(user_texture_id,image_size,uv0,uv1,tint_col,border_col);
+    return ImGui::Image(user_texture_id,image_size,uv0,uv1);
 }
 CIMGUI_API bool igImageButton(const char* str_id,ImTextureID user_texture_id,const ImVec2 image_size,const ImVec2 uv0,const ImVec2 uv1,const ImVec4 bg_col,const ImVec4 tint_col)
 {
@@ -2673,7 +2673,7 @@ CIMGUI_API void ImFontAtlas_CalcCustomRectUV(ImFontAtlas* self,const ImFontAtlas
 }
 CIMGUI_API bool ImFontAtlas_GetMouseCursorTexData(ImFontAtlas* self,ImGuiMouseCursor cursor,ImVec2* out_offset,ImVec2* out_size,ImVec2 out_uv_border[2],ImVec2 out_uv_fill[2])
 {
-    return self->GetMouseCursorTexData(cursor,out_offset,out_size,out_uv_border,out_uv_fill);
+    return ImFontAtlasGetMouseCursorTexData(self, cursor,out_offset,out_size,out_uv_border,out_uv_fill);
 }
 CIMGUI_API ImFont* ImFont_ImFont(void)
 {
@@ -2738,10 +2738,6 @@ CIMGUI_API void ImFont_AddGlyph(ImFont* self,const ImFontConfig* src_cfg,ImWchar
 CIMGUI_API void ImFont_AddRemapChar(ImFont* self,ImWchar dst,ImWchar src,bool overwrite_dst)
 {
     return self->AddRemapChar(dst,src,overwrite_dst);
-}
-CIMGUI_API void ImFont_SetGlyphVisible(ImFont* self,ImWchar c,bool visible)
-{
-    return self->SetGlyphVisible(c,visible);
 }
 CIMGUI_API bool ImFont_IsGlyphRangeUnused(ImFont* self,unsigned int c_begin,unsigned int c_last)
 {
@@ -3390,7 +3386,7 @@ CIMGUI_API void ImDrawDataBuilder_destroy(ImDrawDataBuilder* self)
 {
     IM_DELETE(self);
 }
-CIMGUI_API void* ImGuiDataVarInfo_GetVarPtr(ImGuiDataVarInfo* self,void* parent)
+CIMGUI_API void* ImGuiStyleVarInfo_GetVarPtr(ImGuiStyleVarInfo* self,void* parent)
 {
     return self->GetVarPtr(parent);
 }
@@ -4353,7 +4349,7 @@ CIMGUI_API void igShrinkWidths(ImGuiShrinkWidthItem* items,int count,float width
 {
     return ImGui::ShrinkWidths(items,count,width_excess);
 }
-CIMGUI_API const ImGuiDataVarInfo* igGetStyleVarInfo(ImGuiStyleVar idx)
+CIMGUI_API const ImGuiStyleVarInfo* igGetStyleVarInfo(ImGuiStyleVar idx)
 {
     return ImGui::GetStyleVarInfo(idx);
 }
@@ -5660,10 +5656,6 @@ CIMGUI_API void igDebugRenderKeyboardPreview(ImDrawList* draw_list)
 CIMGUI_API void igDebugRenderViewportThumbnail(ImDrawList* draw_list,ImGuiViewportP* viewport,const ImRect bb)
 {
     return ImGui::DebugRenderViewportThumbnail(draw_list,viewport,bb);
-}
-CIMGUI_API void igImFontAtlasUpdateConfigDataPointers(ImFontAtlas* atlas)
-{
-    return ImFontAtlasUpdateConfigDataPointers(atlas);
 }
 CIMGUI_API void igImFontAtlasBuildInit(ImFontAtlas* atlas)
 {

@@ -33,13 +33,13 @@ namespace hex::fonts {
         auto io = ImGui::GetIO();
         io.Fonts = fontAtlas->getAtlas();
 
-        if (io.Fonts->ConfigData.Size <= 0) {
+        if (io.Fonts->Sources.Size <= 0) {
             log::fatal("No font data found");
             return false;
         } else {
             ImVector<ImS32> customRectIds;
             std::map<ImS32, ft::Bitmap> customRectBitmaps;
-            for (const auto &config : io.Fonts->ConfigData) {
+            for (const auto &config : io.Fonts->Sources) {
                 const auto &fontName = config.Name;
 
                 if (hex::equalsIgnoreCase(fontName, "nonscalable")) {
@@ -178,7 +178,7 @@ namespace hex::fonts {
         if (!fontPath.empty()) {
             defaultFont = fontAtlas->addFontFromFile(fontPath, fontSize, true, ImVec2());
             std::string defaultFontName = defaultFont.has_value() ? fontPath.filename().string() : "Custom Font";
-            memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
+            memcpy(fontAtlas->getAtlas()->Sources[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
             fontIndex += 1;
             if ((antialias || monochrome) && !fontAtlas->build()) {
                 log::error("Failed to load custom font '{}'! Falling back to default font", wolv::util::toUTF8String(fontPath));
@@ -191,12 +191,12 @@ namespace hex::fonts {
             if (pixelPerfectFont) {
                 defaultFont = fontAtlas->addDefaultFont();
                 std::string defaultFontName = "Proggy Clean";
-                memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
+                memcpy(fontAtlas->getAtlas()->Sources[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
                 fontIndex += 1;
             } else {
                 defaultFont = fontAtlas->addFontFromRomFs("fonts/JetBrainsMono.ttf", fontSize, true, ImVec2());
                 std::string defaultFontName = "JetBrains Mono";
-                memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
+                memcpy(fontAtlas->getAtlas()->Sources[fontIndex].Name, defaultFontName.c_str(), defaultFontName.size());
                 fontIndex += 1;
             }
         }
@@ -237,10 +237,10 @@ namespace hex::fonts {
                 if (!scalable) {
                     std::string fontName = "NonScalable";
                     auto nameSize = fontName.size();
-                    memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, fontName.c_str(), nameSize);
+                    memcpy(fontAtlas->getAtlas()->Sources[fontIndex].Name, fontName.c_str(), nameSize);
                 } else {
                     auto nameSize = font.name.size();
-                    memcpy(fontAtlas->getAtlas()->ConfigData[fontIndex].Name, font.name.c_str(), nameSize);
+                    memcpy(fontAtlas->getAtlas()->Sources[fontIndex].Name, font.name.c_str(), nameSize);
                 }
                 fontIndex += 1;
             }

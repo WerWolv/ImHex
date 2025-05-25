@@ -7,8 +7,6 @@
 #include <romfs/romfs.hpp>
 #include <font_atlas.hpp>
 #include <font_settings.hpp>
-#include <imgui_impl_opengl3.h>
-#include <fonts/fonts.hpp>
 
 namespace hex::fonts {
 
@@ -20,7 +18,6 @@ namespace hex::fonts {
 
     void loadFont(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImFont **font, float scale) {
         const auto &settings = static_cast<const FontSelector&>(widget);
-
         auto atlas = std::make_unique<FontAtlas>();
 
         const bool atlasBuilt = buildFontAtlas(
@@ -89,6 +86,5 @@ IMHEX_LIBRARY_SETUP("Fonts") {
     hex::ImHexApi::Fonts::registerFont("hex.fonts.font.hex_editor");
     hex::ImHexApi::Fonts::registerFont("hex.fonts.font.code_editor");
 
-    hex::ImHexApi::System::addStartupTask("Loading fonts", true, hex::fonts::setupFonts);
     hex::fonts::registerFonts();
 }

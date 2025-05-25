@@ -601,6 +601,7 @@ jobs:
         include:
           - release_num: "24.04"
           - release_num: "24.10"
+          - release_num: "25.04"
 
     name: 🐧 Ubuntu ${{ matrix.release_num }}
     runs-on: ubuntu-24.04
@@ -1038,10 +1039,18 @@ jobs:
 
       - name: 🛠️ Build using docker
         run: |
-          docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out --target raw
+          mkdir -p out/nightly
+          docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out/nightly --target raw
+
+      - name: ⬇️ Download Release
+        uses: robinraju/release-downloader@v1
+        with:
+          latest: true
+          fileName: 'imhex-*-Web.zip'
 
       - name: 🔨 Fix permissions
         run: |
+          unzip imhex-*-Web.zip -d out
           chmod -c -R +rX "out/"
 
       - name: ⬆️ Upload artifacts
@@ -1051,14 +1060,14 @@ jobs:
 
       - name: 🔨 Copy necessary files
         run: |
-          cp dist/web/serve.py out/start_imhex_web.py
+          cp dist/web/serve.py out/nightly/start_imhex_web.py
 
       - name: ⬆️ Upload package
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: ImHex Web
-          path: out/*
+          path: out/nightly/*
 
         # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
       - name: 🗑️ Delete old cache
