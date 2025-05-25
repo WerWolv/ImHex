@@ -350,14 +350,10 @@ namespace hex::ui {
     void PatternDrawer::drawValueColumn(pl::ptrn::Pattern& pattern) {
         ImGui::TableNextColumn();
 
-        std::string value;
-        try {
-            value = pattern.getFormattedValue();
-        } catch (const std::exception &e) {
-            value = e.what();
-        }
-
+        const auto value = pattern.getFormattedValue();
+        const bool valueValid = pattern.hasValidFormattedValue();
         const auto width = ImGui::GetColumnWidth();
+
         if (const auto &visualizeArgs = pattern.getAttributeArguments("hex::visualize"); !visualizeArgs.empty()) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5F));
@@ -389,7 +385,9 @@ namespace hex::ui {
         } else if (const auto &inlineVisualizeArgs = pattern.getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
             m_visualizerDrawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, pattern, true);
         } else {
+            if (!valueValid) ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError));
             ImGuiExt::TextFormatted("{}", value);
+            if (!valueValid) ImGui::PopStyleColor();
         }
 
         if (ImGui::CalcTextSize(value.c_str()).x > width) {
