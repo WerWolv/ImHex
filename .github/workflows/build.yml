@@ -601,6 +601,7 @@ jobs:
         include:
           - release_num: "24.04"
           - release_num: "24.10"
+          - release_num: "25.04"
 
     name: 🐧 Ubuntu ${{ matrix.release_num }}
     runs-on: ubuntu-24.04
