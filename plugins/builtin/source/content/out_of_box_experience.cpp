@@ -83,6 +83,7 @@ namespace hex::plugin::builtin {
                     *s_imhexBanner,
                     bannerSize,
                     { 0, 0 }, { 1, 1 },
+                    { 0, 0, 0, 0 },
                     { 1, 1, 1, (bannerFadeIn - 0.5F) * 2.0F }
                 );
 
