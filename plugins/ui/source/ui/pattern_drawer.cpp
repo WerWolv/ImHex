@@ -1418,7 +1418,7 @@ namespace hex::ui {
                             if (!arguments.empty()) {
                                 const auto &groupName = arguments.front().toString();
                                 if (!m_groups.contains(groupName))
-                                    m_groups.insert({ groupName, std::vector<std::unique_ptr<pl::ptrn::Pattern>>() });
+                                    m_groups.insert({ groupName, { } });
 
                                 m_groups[groupName].push_back(pattern->clone());
                             }

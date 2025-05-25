@@ -125,8 +125,8 @@ namespace hex::ui {
         std::vector<pl::ptrn::Pattern*> m_filteredPatterns;
 
         std::vector<std::string> m_currPatternPath;
-        std::map<std::vector<std::string>, std::unique_ptr<pl::ptrn::Pattern>> m_favorites;
-        std::map<std::string, std::vector<std::unique_ptr<pl::ptrn::Pattern>>> m_groups;
+        std::map<std::vector<std::string>, std::shared_ptr<pl::ptrn::Pattern>> m_favorites;
+        std::map<std::string, std::vector<std::shared_ptr<pl::ptrn::Pattern>>> m_groups;
         bool m_showFavoriteStars = false;
         bool m_filtersUpdated = false;
         bool m_showSpecName = false;
