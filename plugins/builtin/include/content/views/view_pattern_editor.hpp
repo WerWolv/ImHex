@@ -351,7 +351,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            auto createRuntime = [this, provider] {
+            auto createRuntime = [provider] {
                 auto runtime = std::make_shared<pl::PatternLanguage>();
                 ContentRegistry::PatternLanguage::configureRuntime(*runtime, provider);
 
@@ -360,7 +360,7 @@ namespace hex::plugin::builtin {
 
             ui::PopupNamedFileChooser::open(
                 basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
-                [this, provider, runtime = createRuntime()](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
+                [this, runtime = createRuntime()](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
                     if (auto it = m_patternNames.find(path); it != m_patternNames.end()) {
                         return it->second;
                     }
