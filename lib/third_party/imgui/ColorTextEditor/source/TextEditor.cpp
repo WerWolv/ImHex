@@ -1263,12 +1263,14 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
     window->ScrollbarSizes = ImVec2(scrollBarSize * scroll_x, scrollBarSize * scroll_y);
     ImGui::GetCurrentWindowRead()->ScrollbarSizes = ImVec2(scrollBarSize * scroll_y, scrollBarSize * scroll_x);
     if (scroll_y) {
-        ImGui::GetCurrentWindow()->ScrollbarY= true;
+        ImGui::GetCurrentWindow()->ScrollbarY = true;
         ImGui::Scrollbar(ImGuiAxis_Y);
+        ImGui::GetCurrentWindow()->ScrollbarY = false;
     }
     if (scroll_x) {
-        ImGui::GetCurrentWindow()->ScrollbarX= true;
+        ImGui::GetCurrentWindow()->ScrollbarX = true;
         ImGui::Scrollbar(ImGuiAxis_X);
+        ImGui::GetCurrentWindow()->ScrollbarX = false;
     }
 
     if (mHandleKeyboardInputs) {
