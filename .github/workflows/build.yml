@@ -1038,10 +1038,18 @@ jobs:
 
       - name: 🛠️ Build using docker
         run: |
-          docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out --target raw
+          mkdir -p out/nightly
+          docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out/nightly --target raw
+
+      - name: ⬇️ Download Release
+        uses: robinraju/release-downloader@v1
+        with:
+          latest: true
+          fileName: 'imhex-*-Web.zip'
 
       - name: 🔨 Fix permissions
         run: |
+          unzip imhex-*-Web.zip -d out
           chmod -c -R +rX "out/"
 
       - name: ⬆️ Upload artifacts

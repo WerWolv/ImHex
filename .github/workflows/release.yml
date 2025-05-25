@@ -117,7 +117,8 @@ jobs:
         run: |
           mv "Windows Portable x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-x86_64.zip
           mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip
-          mv "ImHex Web.zip" imhex-${{ env.IMHEX_VERSION }}-web.zip
+          mv "ImHex Web.zip" imhex-${{ env.IMHEX_VERSION }}-Web.zip
+          rm artifact.tar
 
       - name: ⬆️ Upload everything to release
         uses: softprops/action-gh-release@4634c16e79c963813287e889244c50009e7f0981
