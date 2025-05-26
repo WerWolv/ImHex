@@ -456,16 +456,30 @@ namespace hex::ui {
             if (shouldOpen)
                 ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
+            bool retVal = false;
             switch (m_treeStyle) {
                 using enum TreeStyle;
                 default:
                 case Default:
-                    return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                    retVal = ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                    break;
                 case AutoExpanded:
-                    return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen);
+                    retVal = ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
+                    break;
                 case Flattened:
-                    return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                    retVal = ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                    break;
             }
+
+            if (!ImGui::IsItemToggledOpen() && ImGui::IsItemClicked())
+            {
+
+                m_selectionCallback(&pattern);
+                if (m_editingPattern != nullptr && m_editingPattern != &pattern)
+                    this->resetEditing();
+            }
+
+            return retVal;
         });
     }
 
