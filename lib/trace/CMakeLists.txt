@@ -9,19 +9,34 @@ add_library(tracing OBJECT
 target_include_directories(tracing PUBLIC include)
 
 if (NOT IMHEX_DISABLE_STACKTRACE)
-    include(CheckSourceRuns)
-    set(CMAKE_REQUIRED_LINK_OPTIONS "-lstdc++exp")
-    check_source_runs(CXX "
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        include(CheckSourceRuns)
+        set(CMAKE_REQUIRED_LINK_OPTIONS "-lstdc++exp")
+        check_source_runs(CXX "
             #include <stacktrace>
             int main() {
                 auto stacktrace = std::stacktrace::current();
             }
-    " HAVE_STDCPPEXP)
-    if (HAVE_STDCPPEXP)
-        target_link_libraries(tracing PUBLIC stdc++exp)
+        " HAVE_STDCPPEXP)
+        set(CMAKE_REQUIRED_LINK_OPTIONS "-lstdc++_libbacktrace")
+        check_source_runs(CXX "
+            #include <stacktrace>
+            int main() {
+                auto stacktrace = std::stacktrace::current();
+            }
+        " HAVE_STDCPP_LIBBACKTRACE)
+
+        if (HAVE_STDCPPEXP)
+            message(STATUS "<stacktrace> enabled!")
+            target_link_libraries(tracing PUBLIC stdc++exp)
+            if (HAVE_STDCPP_LIBBACKTRACE)
+                target_link_libraries(tracing PUBLIC stdc++_libbacktrace)
+            endif()
+            target_compile_definitions(tracing PRIVATE HEX_HAS_STD_STACKTRACE)
+        endif()
     endif()
 
-    if (WIN32)
+    if (WIN32 AND NOT HAVE_STDCPPEXP)
         message(STATUS "StackWalk enabled!")
         target_link_libraries(tracing PRIVATE DbgHelp.lib)
     else ()
