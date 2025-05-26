@@ -102,6 +102,9 @@ namespace hex {
 
             static PerProvider<std::optional<Region>> s_hoveredRegion;
             void setHoveredRegion(const prv::Provider *provider, const Region &region) {
+                if (provider == nullptr)
+                    return;
+                
                 if (region == Region::Invalid())
                     s_hoveredRegion.get(provider).reset();
                 else
