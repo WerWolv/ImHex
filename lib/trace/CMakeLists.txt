@@ -18,7 +18,7 @@ if (NOT IMHEX_DISABLE_STACKTRACE)
             }
     " HAVE_STDCPPEXP)
     if (HAVE_STDCPPEXP)
-        target_link_libraries(tracing PRIVATE stdc++exp)
+        target_link_libraries(tracing PUBLIC stdc++exp)
     endif()
 
     if (WIN32)
@@ -49,6 +49,7 @@ endif()
 if (IMHEX_TRACE_EXCEPTIONS)
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         target_link_options(tracing PUBLIC "-Wl,--wrap=__cxa_throw")
+        target_compile_definitions(tracing PRIVATE HEX_WRAP_CXA_THROW)
     elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         # Not supported currently
     endif()

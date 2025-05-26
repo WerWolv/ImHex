@@ -15,13 +15,16 @@ namespace hex::trace {
 
 }
 
-extern "C" {
+#if defined(HEX_WRAP_CXA_THROW)
 
-    [[noreturn]] void __real___cxa_throw(void* thrownException, void* type, void (*destructor)(void*));
-    [[noreturn]] void __wrap___cxa_throw(void* thrownException, void* type, void (*destructor)(void*)) {
-        hex::trace::s_lastExceptionStackTrace = hex::trace::getStackTrace();
-        __real___cxa_throw(thrownException, type, destructor);
+    extern "C" {
+
+        [[noreturn]] void __real___cxa_throw(void* thrownException, void* type, void (*destructor)(void*));
+        [[noreturn]] void __wrap___cxa_throw(void* thrownException, void* type, void (*destructor)(void*)) {
+            hex::trace::s_lastExceptionStackTrace = hex::trace::getStackTrace();
+            __real___cxa_throw(thrownException, type, destructor);
+        }
+
     }
 
-}
-
+#endif
