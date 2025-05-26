@@ -3,7 +3,6 @@ project(main)
 add_executable(main ${APPLICATION_TYPE}
     source/main.cpp
     source/crash_handlers.cpp
-    source/stacktrace.cpp
 
     source/window/window.cpp
     source/window/win_window.cpp
@@ -38,7 +37,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../lib/external/libromfs ${CMAKE
 add_dependencies(imhex_all main)
 
 if (EMSCRIPTEN)
-    target_link_options(main PRIVATE -sUSE_GLFW=3 -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1)
+    target_link_options(main PRIVATE -sUSE_GLFW=3 -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1 -Wno-pthreads-mem-growth)
     target_link_options(main PRIVATE -sTOTAL_MEMORY=134217728)
     target_link_options(main PRIVATE -sMAX_WEBGL_VERSION=2)
     target_link_options(main PRIVATE -sEXPORTED_RUNTIME_METHODS=ccall)
