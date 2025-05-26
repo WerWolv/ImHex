@@ -89,7 +89,7 @@ namespace hex::plugin::builtin {
                 Lang("hex.builtin.menu.help")
             })
             .addHighlight({
-                "##Menu_00",
+                "###Menu_00",
                 Lang("hex.builtin.view.tutorials.name")
             })
             .onAppear([&step] {

@@ -79,10 +79,11 @@ namespace hex::plugin::builtin {
                 // Draw banner
                 ImGui::SetCursorPos(scaled({ 25 * bannerSlideIn, 25 }));
                 const auto bannerSize = s_imhexBanner->getSize() / (3.0F * (1.0F / ImHexApi::System::getGlobalScale()));
-                ImGui::Image(
+                ImGui::ImageWithBg(
                     *s_imhexBanner,
                     bannerSize,
                     { 0, 0 }, { 1, 1 },
+                    { 0, 0, 0, 0 },
                     { 1, 1, 1, (bannerFadeIn - 0.5F) * 2.0F }
                 );
 
