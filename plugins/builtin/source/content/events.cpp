@@ -12,6 +12,8 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
+#include <hex/trace/exceptions.hpp>
+
 #include <hex/providers/provider.hpp>
 #include <hex/ui/view.hpp>
 
@@ -66,6 +68,13 @@ namespace hex::plugin::builtin {
         static bool imhexClosing = false;
         EventCrashRecovered::subscribe([](const std::exception &e) {
             PopupCrashRecovered::open(e);
+
+            auto stackTrace = hex::trace::getLastExceptionStackTrace();
+            if (stackTrace.has_value()) {
+                for (const auto &entry : stackTrace->stackFrames) {
+                    hex::log::fatal("  {} at {}:{}", entry.function, entry.file, entry.line);
+                }
+            }
         });
 
         EventWindowClosing::subscribe([](GLFWwindow *window) {

@@ -8,6 +8,7 @@ local/
 venv/
 .cache/
 install/
+out/
 
 *.mgc
 *.kdev4
