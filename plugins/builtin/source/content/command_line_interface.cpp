@@ -398,7 +398,8 @@ namespace hex::plugin::builtin {
         log::print("> ");
         if (std::fgets(input.data(), input.size() - 1, stdin) == nullptr)
             std::exit(EXIT_FAILURE);
-        
+
+        input = input.c_str();
         input = wolv::util::trim(input);
 
         if (input == ConfirmationString) {
