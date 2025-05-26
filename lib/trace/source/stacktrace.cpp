@@ -18,7 +18,7 @@ namespace {
 }
 
 
-#if __has_include(<stacktrace>)
+#if defined(HEX_HAS_STD_STACKTRACE) && __has_include(<stacktrace>)
 
     #include <stacktrace>
 
