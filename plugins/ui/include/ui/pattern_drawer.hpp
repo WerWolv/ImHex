@@ -72,6 +72,8 @@ namespace hex::ui {
         constexpr static auto ChunkSize = 512;
         constexpr static auto DisplayEndStep = 64;
 
+        void callSelectionCallbackAndResetEditing(const pl::ptrn::Pattern &pattern);
+
         void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iterable, bool isInlined);
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
         void makeSelectable(const pl::ptrn::Pattern &pattern);
