@@ -471,8 +471,7 @@ namespace hex::ui {
                     break;
             }
 
-            if (!ImGui::IsItemToggledOpen() && ImGui::IsItemClicked())
-            {
+            if (!ImGui::IsItemToggledOpen() && ImGui::IsItemClicked()) {
                 m_selectionCallback(&pattern);
                 if (m_editingPattern != nullptr && m_editingPattern != &pattern)
                     this->resetEditing();
