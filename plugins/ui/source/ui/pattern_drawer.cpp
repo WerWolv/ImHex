@@ -417,8 +417,8 @@ namespace hex::ui {
 
     void PatternDrawer::callSelectionCallbackAndResetEditing(const pl::ptrn::Pattern &pattern) {
         m_selectionCallback(&pattern);
-            if (m_editingPattern != nullptr && m_editingPattern != &pattern)
-                this->resetEditing();
+        if (m_editingPattern != nullptr && m_editingPattern != &pattern)
+            this->resetEditing();
     }
 
     bool PatternDrawer::createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf) {
