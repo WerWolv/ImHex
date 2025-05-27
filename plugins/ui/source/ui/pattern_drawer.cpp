@@ -415,6 +415,12 @@ namespace hex::ui {
         return result;
     }
 
+    void PatternDrawer::callSelectionCallbackAndResetEditing(const pl::ptrn::Pattern &pattern) {
+        m_selectionCallback(&pattern);
+            if (m_editingPattern != nullptr && m_editingPattern != &pattern)
+                this->resetEditing();
+    }
+
     bool PatternDrawer::createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf) {
         ImGui::TableNextRow();
 
@@ -471,27 +477,20 @@ namespace hex::ui {
                     break;
             }
 
-            if (!ImGui::IsItemToggledOpen() && ImGui::IsItemClicked()) {
-                m_selectionCallback(&pattern);
-                if (m_editingPattern != nullptr && m_editingPattern != &pattern)
-                    this->resetEditing();
-            }
+            if (!ImGui::IsItemToggledOpen() && ImGui::IsItemClicked())
+                callSelectionCallbackAndResetEditing(pattern);
 
             return retVal;
         });
     }
 
+    
     void PatternDrawer::makeSelectable(const pl::ptrn::Pattern &pattern) {
         ImGui::PushID(static_cast<int>(pattern.getOffset()));
         ImGui::PushID(pattern.getVariableName().c_str());
 
-        if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
-            m_selectionCallback(&pattern);
-
-            if (m_editingPattern != nullptr && m_editingPattern != &pattern) {
-                this->resetEditing();
-            }
-        }
+        if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap))
+            callSelectionCallbackAndResetEditing(pattern);
 
         if (ImGui::IsItemHovered()) {
             m_hoverCallback(&pattern);
