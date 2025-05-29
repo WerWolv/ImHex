@@ -4,6 +4,7 @@ option(IMHEX_TRACE_EXCEPTIONS "Hook thrown exceptions to display a stack trace w
 
 if (IMHEX_EXTERNAL_PLUGIN_BUILD)
     add_library(tracing IMPORTED SHARED GLOBAL)
+
     set(LIBIMHEX_LIBRARY_TYPE_PUBLIC INTERFACE)
     set(LIBIMHEX_LIBRARY_TYPE_PRIVATE INTERFACE)
 else()
@@ -11,6 +12,8 @@ else()
             source/stacktrace.cpp
             source/exceptions.cpp
     )
+    target_link_libraries(tracing PRIVATE LLVMDemangle)
+
     set(LIBIMHEX_LIBRARY_TYPE_PUBLIC PUBLIC)
     set(LIBIMHEX_LIBRARY_TYPE_PRIVATE PRIVATE)
 endif()
@@ -66,8 +69,6 @@ if (NOT IMHEX_DISABLE_STACKTRACE)
             endif()
         endif()
     endif()
-
-    target_link_libraries(tracing ${LIBIMHEX_LIBRARY_TYPE_PRIVATE} LLVMDemangle)
 endif()
 
 if (IMHEX_TRACE_EXCEPTIONS)
