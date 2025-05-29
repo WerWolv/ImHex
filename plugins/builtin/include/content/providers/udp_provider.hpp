@@ -40,7 +40,7 @@ namespace hex::plugin::builtin {
             return "hex.builtin.provider.udp";
         }
 
-        std::string getName() const override { return hex::format("hex.builtin.provider.udp.name"_lang, m_udpServer.getPort()); }
+        std::string getName() const override { return hex::format("hex.builtin.provider.udp.name"_lang, m_port); }
 
     protected:
         void receive(std::span<const u8> data);
