@@ -34,7 +34,7 @@ namespace hex {
             #if defined(OS_WINDOWS)
                 ::closesocket(m_socketFd);
             #else
-                ::close(sockfd_);
+                ::close(m_socketFd);
             #endif
         }
     }
