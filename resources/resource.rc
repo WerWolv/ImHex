@@ -23,7 +23,7 @@ IDI_ICON1 ICON dist/windows/icon.ico
             BEGIN
                 VALUE "CompanyName",        "WerWolv"
                 VALUE "FileDescription",    "ImHex"
-                VALUE "LegalCopyright",     "WerWolv 2020-2023"
+                VALUE "LegalCopyright",     "WerWolv 2020-2025"
                 VALUE "OriginalFilename",   "imhex.exe"
                 VALUE "ProductName",        "ImHex"
             END
