@@ -2,7 +2,7 @@ project(tracing)
 
 option(IMHEX_TRACE_EXCEPTIONS "Hook thrown exceptions to display a stack trace when possible" ON)
 
-add_library(tracing OBJECT
+add_library(tracing STATIC
         source/stacktrace.cpp
         source/exceptions.cpp
 )
