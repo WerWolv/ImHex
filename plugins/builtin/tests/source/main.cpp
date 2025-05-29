@@ -1,7 +1,6 @@
 #include <iostream>
 #include <hex/test/tests.hpp>
 #include <hex/api/plugin_manager.hpp>
-#include <content/providers/memory_file_provider.hpp>
 #include <content/views/view_patches.hpp>
 #include <hex/api/task_manager.hpp>
 

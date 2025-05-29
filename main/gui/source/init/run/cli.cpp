@@ -1,3 +1,5 @@
+#include <hex/api/event_manager.hpp>
+
 #include "messaging.hpp"
 
 #include <hex/subcommands/subcommands.hpp>
@@ -73,6 +75,7 @@ namespace hex::init {
         hex::subcommands::processArguments(args);
 
         // Unload plugins again
+        EventManager::clear();
         PluginManager::unload();
     }
 

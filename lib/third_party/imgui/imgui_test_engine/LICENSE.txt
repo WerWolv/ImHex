@@ -1,0 +1,57 @@
+Dear ImGui Test Engine License (v1.04)
+Copyright (c) 2018-2025 Omar Cornut
+
+This document is a legal agreement ("License") between you ("Licensee") and
+DISCO HELLO ("Licensor") that governs your use of Dear ImGui Test Engine ("Software").
+
+1. LICENSE MODELS
+
+1.1. Free license
+
+The Licensor grants you a free license ("Free License") if you meet ANY of the following
+criterion:
+
+- You are a natural person;
+- You are not a legal entity, or you are a not-for-profit legal entity;
+- You are using this Software for educational purposes;
+- You are using this Software to create Derivative Software released publicly and under
+  an Open Source license, as defined by the Open Source Initiative;
+- You are a legal entity with a turnover inferior to 2 million USD (or equivalent) during
+  your last fiscal year.
+
+1.2. Paid license
+
+If you do not meet any criterion of Article 1.1, Licensor grants you a trial period of a
+maximum of 45 days, at no charge. Following this trial period, you must subscribe to a paid
+license ("Paid License") with the Licensor to continue using the Software.
+Paid Licenses are exclusively sold by DISCO HELLO. Paid Licenses and the associated
+information are available at the following URL: http://www.dearimgui.com/licenses
+
+2. GRANT OF LICENSE
+
+2.1. License scope
+
+A limited and non-exclusive worldwide license is hereby granted, to the Licensee,
+to reproduce, execute, publicly perform, and display, use, copy, modify, merge,
+distribute, or create derivative works based on and/or derived from the Software
+("Derivative Software").
+
+2.2. Right of distribution
+
+License holders may also publish and/or distribute the Software or any Derivative
+Software. The above copyright notice and this license shall be included in all copies
+or substantial portions of the Software and/or Derivative Software.
+
+License holders may add their own attribution notices within the Derivative Software
+that they distribute. Such attribution notices must not directly or indirectly imply a
+modification of the License. License holders may provide to their modifications their
+own copyright and/or additional or different terms and conditions, providing such
+conditions complies with this License.
+
+3. DISCLAIMER
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
