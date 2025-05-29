@@ -47,3 +47,6 @@
 [submodule "lib/external/disassembler"]
 	path = lib/external/disassembler
 	url = https://github.com/WerWolv/Disassembler
+[submodule "lib/third_party/clip"]
+	path = lib/third_party/clip
+	url = https://github.com/dacap/clip

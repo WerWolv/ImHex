@@ -761,6 +761,15 @@ macro(addBundledLibraries)
 
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/microtar EXCLUDE_FROM_ALL)
 
+    set(CLIP_ENABLE_IMAGE OFF CACHE BOOL "")
+    set(CLIP_EXAMPLES OFF CACHE BOOL "")
+    set(CLIP_TESTS OFF CACHE BOOL "")
+    set(CLIP_INSTALL OFF CACHE BOOL "")
+    set(CLIP_X11_WITH_PNG OFF CACHE BOOL "")
+    set(CLIP_SUPPORT_WINXP OFF CACHE BOOL "")
+    add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/clip EXCLUDE_FROM_ALL)
+    target_include_directories(clip INTERFACE $<BUILD_INTERFACE:${THIRD_PARTY_LIBS_FOLDER}/clip>)
+
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/libwolv EXCLUDE_FROM_ALL)
 
     set(XDGPP_INCLUDE_DIRS "${THIRD_PARTY_LIBS_FOLDER}/xdgpp")

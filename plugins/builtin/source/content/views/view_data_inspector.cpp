@@ -17,6 +17,7 @@
 #include <wolv/utils/string.hpp>
 
 #include <ranges>
+#include <hex/helpers/clipboard.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -279,7 +280,7 @@ namespace hex::plugin::builtin {
             const auto providerSize = m_selectedProvider->getActualSize();
             const auto providerEndAddress = baseAddress + providerSize;
 
-            ImGui::BeginDisabled(providerSize < requiredSize || selection->getStartAddress() < baseAddress + requiredSize);
+            ImGui::BeginDisabled(providerSize < requiredSize || (selection.has_value() && selection->getStartAddress() < baseAddress + requiredSize));
             if (ImGuiExt::DimmedIconButton(ICON_VS_ARROW_LEFT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() - requiredSize, requiredSize });
             }
@@ -287,7 +288,7 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            ImGui::BeginDisabled(providerSize < requiredSize || selection->getEndAddress() > providerEndAddress - requiredSize);
+            ImGui::BeginDisabled(providerSize < requiredSize || (selection.has_value() && selection->getEndAddress() > providerEndAddress - requiredSize));
             if (ImGuiExt::DimmedIconButton(ICON_VS_ARROW_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() + requiredSize, requiredSize });
             }
@@ -436,7 +437,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginPopup("##DataInspectorRowContextMenu")) {
                 if (ImGui::MenuItemEx("hex.builtin.view.data_inspector.menu.copy"_lang, ICON_VS_COPY)) {
-                    ImGui::SetClipboardText(copyValue.c_str());
+                    clipboard::setTextData(copyValue);
                 }
                 if (ImGui::MenuItemEx("hex.builtin.view.data_inspector.menu.edit"_lang, ICON_VS_EDIT, nullptr, false, editable)) {
                     entry.editing = true;

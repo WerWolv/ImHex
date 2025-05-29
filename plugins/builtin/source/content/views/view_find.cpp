@@ -15,6 +15,7 @@
 
 #include <content/helpers/demangle.hpp>
 #include <boost/regex.hpp>
+#include <hex/helpers/clipboard.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -648,9 +649,9 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginPopup("FindContextMenu")) {
             if (ImGui::MenuItemEx("hex.builtin.view.find.context.copy"_lang, ICON_VS_COPY))
-                ImGui::SetClipboardText(value.c_str());
+                clipboard::setTextData(value);
             if (ImGui::MenuItemEx("hex.builtin.view.find.context.copy_demangle"_lang, ICON_VS_FILES))
-                ImGui::SetClipboardText(hex::plugin::builtin::demangle(value).c_str());
+                clipboard::setTextData(hex::plugin::builtin::demangle(value));
             if (ImGui::BeginMenuEx("hex.builtin.view.find.context.replace"_lang, ICON_VS_REPLACE)) {
                 if (ImGui::BeginTabBar("##replace_tabs")) {
                     if (ImGui::BeginTabItem("hex.builtin.view.find.context.replace.hex"_lang)) {

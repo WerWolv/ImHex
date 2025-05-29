@@ -10,6 +10,7 @@
 #include <popups/popup_file_chooser.hpp>
 
 #include <filesystem>
+#include <hex/helpers/clipboard.hpp>
 
 #include <wolv/io/fs.hpp>
 #include <wolv/literals.hpp>
@@ -231,7 +232,7 @@ namespace hex::plugin::yara {
                     const auto &message = m_consoleMessages->at(i);
 
                     if (ImGui::Selectable(message.c_str()))
-                        ImGui::SetClipboardText(message.c_str());
+                        clipboard::setTextData(message);
                 }
             }
         }

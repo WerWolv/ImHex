@@ -42,6 +42,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/keys.cpp
         source/helpers/freetype.cpp
         source/helpers/udp_server.cpp
+        source/helpers/clipboard.cpp
 
         source/test/tests.cpp
 
@@ -160,8 +161,7 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     endif()
 
     if (NOT EMSCRIPTEN)
-        # curl is only used in non-emscripten builds
-        target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} CURL::libcurl)
+        target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} CURL::libcurl clip)
     endif()
 
     target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_INCLUDE_DIR} ${LIBBACKTRACE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS})

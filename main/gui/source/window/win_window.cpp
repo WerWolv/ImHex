@@ -35,8 +35,9 @@
     #include <timeapi.h>
     #include <VersionHelpers.h>
     #include <cstdio>
+#include <hex/helpers/clipboard.hpp>
 
-    #if !defined(STDIN_FILENO)
+#if !defined(STDIN_FILENO)
         #define STDIN_FILENO 0
     #endif
 
@@ -422,6 +423,8 @@ namespace hex {
         }
 
         enumerateFonts();
+
+        clipboard::init();
     }
 
     class DropManager : public IDropTarget {

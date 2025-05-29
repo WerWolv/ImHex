@@ -24,6 +24,7 @@
 #include <popups/popup_file_chooser.hpp>
 #include <content/popups/popup_blocking_task.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
+#include <hex/helpers/clipboard.hpp>
 #include <pl/patterns/pattern.hpp>
 #include <hex/helpers/menu_items.hpp>
 #include <wolv/literals.hpp>
@@ -744,7 +745,7 @@ namespace hex::plugin::builtin {
     }
 
     static void copyBytes(const Region &selection) {
-        constexpr static auto Format = "{0:02X} ";
+        //constexpr static auto Format = "{0:02X} ";
 
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
@@ -754,33 +755,16 @@ namespace hex::plugin::builtin {
         reader.seek(selection.getStartAddress());
         reader.setEndAddress(selection.getEndAddress());
 
-        std::string result;
-        result.reserve(fmt::format(Format, 0x00).size() * selection.getSize());
-
-        for (const auto &byte : reader)
-            result += fmt::format(Format, byte);
-        result.pop_back();
-
-        ImGui::SetClipboardText(result.c_str());
+        auto bytes = std::vector(reader.begin(), reader.end());
+        clipboard::setBinaryData(bytes);
     }
 
-    static void pasteBytes(const Region &selection, bool selectionCheck, bool asPlainText) {
+    static void pasteBytes(const Region &selection, bool selectionCheck, bool) {
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
             return;
 
-        auto clipboard = ImGui::GetClipboardText();
-        if (clipboard == nullptr)
-            return;
-
-        std::vector<u8> buffer;
-        if (asPlainText) {
-            // Directly reinterpret clipboard as an array of bytes
-            std::string cp = clipboard;
-            buffer = std::vector<u8>(cp.begin(), cp.end());
-        }
-        else
-            buffer = parseHexString(clipboard);
+        auto buffer = clipboard::getBinaryData();
 
         if (!selectionCheck) {
             if (selection.getStartAddress() + buffer.size() >= provider->getActualSize())
@@ -831,7 +815,7 @@ namespace hex::plugin::builtin {
         buffer.reserve(selection.size);
         provider->read(selection.getStartAddress(), buffer.data(), selection.size);
 
-        ImGui::SetClipboardText(buffer.c_str());
+        clipboard::setTextData(buffer);
     }
 
     static void copyCustomEncoding(const EncodingFile &customEncoding, const Region &selection) {
@@ -851,7 +835,7 @@ namespace hex::plugin::builtin {
             offset += size;
         }
 
-        ImGui::SetClipboardText(string.c_str());
+        clipboard::setTextData(string);
     }
 
     void ViewHexEditor::registerShortcuts() {
@@ -1264,7 +1248,7 @@ namespace hex::plugin::builtin {
                                                 [] {
                                                     auto selection = ImHexApi::HexEditor::getSelection();
                                                     if (selection.has_value() && selection != Region::Invalid())
-                                                        ImGui::SetClipboardText(hex::format("0x{:08X}", selection->getStartAddress()).c_str());
+                                                        clipboard::setTextData(hex::format("0x{:08X}", selection->getStartAddress()));
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid);
 
@@ -1291,7 +1275,7 @@ namespace hex::plugin::builtin {
             bool enabled = ImHexApi::HexEditor::isSelectionValid();
             for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::impl::getExportMenuEntries()) {
                 if (menu::menuItem(Lang(unlocalizedName), Shortcut::None, false, enabled)) {
-                    ImGui::SetClipboardText(
+                    clipboard::setTextData(
                             callback(
                                     provider,
                                     selection->getStartAddress(),
