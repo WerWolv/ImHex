@@ -5,6 +5,7 @@
 #include <functional>
 #include <thread>
 #include <atomic>
+#include <span>
 
 namespace hex {
 
