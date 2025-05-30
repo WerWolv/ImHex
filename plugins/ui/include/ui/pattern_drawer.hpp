@@ -82,6 +82,9 @@ namespace hex::ui {
         void drawColorColumn(const pl::ptrn::Pattern& pattern);
         void drawCommentColumn(const pl::ptrn::Pattern& pattern);
 
+        void callSelectionCallbackAndResetEditing(const pl::ptrn::Pattern &pattern);
+        bool createExpandableSelectableTreeNode(const char *label, const pl::ptrn::Pattern& pattern, int flags);
+
         bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) const;
         bool createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf = false);
         void createDefaultEntry(const pl::ptrn::Pattern &pattern);
