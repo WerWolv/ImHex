@@ -427,7 +427,7 @@ namespace hex::ui {
         // rescue, and it does… Kind of. But two issues present:
         //   1.	The hover highlighting does not distinguish between the name and the
         //      "expander arrow"
-        //   2.	How do distinguish between the two actions
+        //   2.	How to distinguish between the two actions
         //
         // It took some arm-twisting to get Dear ImGui to do what we're after.
 
