@@ -454,7 +454,7 @@ namespace hex::ui {
         else if (mouse_in_rect(label_tl, label_br))
             draw_list->AddRectFilled(label_tl, label_br, hoverColor);
 
-        // Create the widget suppressing the hover highlight by setting it a transparent colour
+        // Create the widget suppressing the hover highlight by setting it to a transparent colour
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0,0,0,0));
         bool retVal = ImGui::TreeNodeEx(label, flags|ImGuiTreeNodeFlags_OpenOnArrow);
         ImGui::PopStyleColor();
