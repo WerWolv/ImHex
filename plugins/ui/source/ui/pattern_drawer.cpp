@@ -427,7 +427,11 @@ namespace hex::ui {
         // rescue, and it does… Kind of. But two issues present:
         //   1.	The hover highlighting does not distinguish between the name and the
         //      "expander arrow"
+<<<<<<< HEAD
         //   2.	How to distinguish between the two actions
+=======
+        //   2.	How do distinguish between the two actions
+>>>>>>> easier_pattern_drawer_node_expansion-dev
         //
         // It took some arm-twisting to get Dear ImGui to do what we're after.
 
@@ -454,7 +458,11 @@ namespace hex::ui {
         else if (mouse_in_rect(label_tl, label_br))
             draw_list->AddRectFilled(label_tl, label_br, hoverColor);
 
+<<<<<<< HEAD
         // Create the widget suppressing the hover highlight by setting it to a transparent colour
+=======
+        // Create the widget suppressing the hover highlight by setting it a transparent colour
+>>>>>>> easier_pattern_drawer_node_expansion-dev
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0,0,0,0));
         bool retVal = ImGui::TreeNodeEx(label, flags|ImGuiTreeNodeFlags_OpenOnArrow);
         ImGui::PopStyleColor();
@@ -507,16 +515,38 @@ namespace hex::ui {
             if (shouldOpen)
                 ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
+<<<<<<< HEAD
+=======
+            ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0.0F);
+            bool retVal = false;
+>>>>>>> easier_pattern_drawer_node_expansion-dev
             switch (m_treeStyle) {
                 using enum TreeStyle;
                 default:
                 case Default:
+<<<<<<< HEAD
                     return this->createExpandableSelectableTreeNode(this->getDisplayName(pattern).c_str(), pattern, ImGuiTreeNodeFlags_SpanFullWidth);
                 case AutoExpanded:
                     return this->createExpandableSelectableTreeNode(this->getDisplayName(pattern).c_str(), pattern, ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen);
                 case Flattened:
                     return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
             }
+=======
+                    retVal =  this->createExpandableSelectableTreeNode("##TreeNode", pattern, ImGuiTreeNodeFlags_SpanLabelWidth);
+                    break;
+                case AutoExpanded:
+                    return this->createExpandableSelectableTreeNode("##TreeNode", pattern, ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_DefaultOpen);
+                case Flattened:
+                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                    break;
+            }
+            ImGui::PopStyleVar();
+
+            ImGui::SameLine();
+            ImGui::TextUnformatted(this->getDisplayName(pattern).c_str());
+
+            return retVal;
+>>>>>>> easier_pattern_drawer_node_expansion-dev
         });
     }
 
