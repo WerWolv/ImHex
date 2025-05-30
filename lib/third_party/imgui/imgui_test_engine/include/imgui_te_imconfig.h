@@ -57,6 +57,10 @@
 #endif
 #endif // #ifndef IMGUI_DEBUG_BREAK
 
+#ifndef IMGUI_API
+#define IMGUI_API
+#endif
+
 // [Options] We provide custom assert macro used by our our test suite, which you may use:
 // - Calling IM_DEBUG_BREAK() instead of an actual assert, so we can easily recover and step over (compared to many assert implementations).
 // - If a test is running, test name will be included in the log.
