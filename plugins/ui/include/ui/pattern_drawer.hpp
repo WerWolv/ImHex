@@ -72,8 +72,6 @@ namespace hex::ui {
         constexpr static auto ChunkSize = 512;
         constexpr static auto DisplayEndStep = 64;
 
-        void callSelectionCallbackAndResetEditing(const pl::ptrn::Pattern &pattern);
-
         void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iterable, bool isInlined);
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
         void makeSelectable(const pl::ptrn::Pattern &pattern);
@@ -83,6 +81,9 @@ namespace hex::ui {
         bool drawNameColumn(const pl::ptrn::Pattern &pattern, bool leaf = false);
         void drawColorColumn(const pl::ptrn::Pattern& pattern);
         void drawCommentColumn(const pl::ptrn::Pattern& pattern);
+
+        void callSelectionCallbackAndResetEditing(const pl::ptrn::Pattern &pattern);
+        bool createExpandableSelectableTreeNode(const char *label, const pl::ptrn::Pattern& pattern, int flags);
 
         bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) const;
         bool createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf = false);

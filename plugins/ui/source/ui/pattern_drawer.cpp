@@ -421,6 +421,51 @@ namespace hex::ui {
             this->resetEditing();
     }
 
+    bool PatternDrawer::createExpandableSelectableTreeNode(const char *label, const pl::ptrn::Pattern& pattern, int flags) {
+        // We want to be able to expand/contract a tree node and select it independently.
+        // At first glance the ImGuiTreeNodeFlags_OpenOnArrow flag seems to come to the
+        // rescue, and it does… Kind of. But two issues present:
+        //   1.	The hover highlighting does not distinguish between the name and the
+        //      "expander arrow"
+        //   2.	How do distinguish between the two actions
+        //
+        // It took some arm-twisting to get Dear ImGui to do what we're after.
+
+        auto mouse_in_rect = [](const ImVec2& tl, const ImVec2& br) -> bool {
+            if (!ImGui::IsMousePosValid())
+                return false;
+            ImVec2 mpos = ImGui::GetIO().MousePos;
+            return mpos.x>=tl.x && mpos.x<br.x
+                && mpos.y>=tl.y && mpos.y<br.y;
+        };
+
+        // Find the locations of the regions of interest
+        ImVec2 cursor = ImGui::GetCursorScreenPos();
+        float row_height = ImGui::GetFontSize();
+        ImVec2 arrow_br(cursor+ImVec2(ImGui::GetTreeNodeToLabelSpacing(), row_height));
+        ImVec2 label_tl = ImVec2(ImGui::GetColumnOffset(), cursor.y);
+        ImVec2 label_br = cursor+ImVec2(ImGui::GetColumnWidth(), row_height);
+
+        // If the mouse is in one of the regions of interest pre-draw the highlight
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ImU32 hoverColor = ImGui::GetColorU32(ImGuiCol_HeaderHovered);
+        if (mouse_in_rect(cursor, arrow_br))
+            draw_list->AddRectFilled(cursor, arrow_br, hoverColor);
+        else if (mouse_in_rect(label_tl, label_br))
+            draw_list->AddRectFilled(label_tl, label_br, hoverColor);
+
+        // Create the widget suppressing the hover highlight by setting it a transparent colour
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0,0,0,0));
+        bool retVal = ImGui::TreeNodeEx(label, flags|ImGuiTreeNodeFlags_OpenOnArrow);
+        ImGui::PopStyleColor();
+
+        // Detect selection but not expansion
+        if (!ImGui::IsItemToggledOpen() && ImGui::IsItemClicked())
+            callSelectionCallbackAndResetEditing(pattern);
+
+        return retVal;
+    }
+
     bool PatternDrawer::createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf) {
         ImGui::TableNextRow();
 
@@ -462,29 +507,19 @@ namespace hex::ui {
             if (shouldOpen)
                 ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
-            bool retVal = false;
             switch (m_treeStyle) {
                 using enum TreeStyle;
                 default:
                 case Default:
-                    retVal = ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
-                    break;
+                    return this->createExpandableSelectableTreeNode(this->getDisplayName(pattern).c_str(), pattern, ImGuiTreeNodeFlags_SpanFullWidth);
                 case AutoExpanded:
-                    retVal = ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
-                    break;
+                    return this->createExpandableSelectableTreeNode(this->getDisplayName(pattern).c_str(), pattern, ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen);
                 case Flattened:
-                    retVal = ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
-                    break;
+                    return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
             }
-
-            if (!ImGui::IsItemToggledOpen() && ImGui::IsItemClicked())
-                callSelectionCallbackAndResetEditing(pattern);
-
-            return retVal;
         });
     }
 
-    
     void PatternDrawer::makeSelectable(const pl::ptrn::Pattern &pattern) {
         ImGui::PushID(static_cast<int>(pattern.getOffset()));
         ImGui::PushID(pattern.getVariableName().c_str());
@@ -1085,8 +1120,12 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
 
-                chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{
-                    return ImGui::TreeNodeEx(hex::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&, this]{
+                    return this->createExpandableSelectableTreeNode(
+                            hex::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str(),
+                            pattern,
+                            ImGuiTreeNodeFlags_SpanFullWidth
+                    );
                 });
 
                 ImGui::TableNextColumn();
@@ -1123,7 +1162,7 @@ namespace hex::ui {
             if (!chunkOpen) {
                 continue;
             }
-            
+
             int id = 1;
             iterable.forEachEntry(i, endIndex, [&](u64, auto *entry){
                 ImGui::PushID(id);
@@ -1178,7 +1217,7 @@ namespace hex::ui {
         if (!ImGui::BeginTable("##Patterntable", 9, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
             return false;
         }
-    
+
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.favorites"_lang, ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_IndentDisable | (m_favorites.empty() ? ImGuiTableColumnFlags_None : ImGuiTableColumnFlags_NoHide), ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.var_name"_lang,  ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
