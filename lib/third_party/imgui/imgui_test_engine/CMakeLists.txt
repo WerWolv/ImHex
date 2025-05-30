@@ -21,6 +21,11 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     )
     target_link_libraries(imgui_test_engine PRIVATE imgui_includes imgui_implot)
     target_compile_definitions(imgui_test_engine PUBLIC IMGUI_TEST_ENGINE=1)
+    target_compile_definitions(imgui_test_engine PRIVATE EXPORT_SYMBOLS=1)
+
+    if (MSVC)
+        target_compile_options(imgui_test_engine PUBLIC /wd4251)
+    endif()
 endif()
 
 add_library(imgui_test_engine_includes INTERFACE)

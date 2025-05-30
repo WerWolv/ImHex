@@ -14,10 +14,6 @@
 
 #pragma once
 
-#if defined(IMGUI_TEST_ENGINE)
-    #include "imgui_te_imconfig.h"
-#endif
-
 #include <assert.h>
 
 //---- Define assertion handler. Defaults to calling assert().
@@ -166,3 +162,7 @@ namespace ImGui
 #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX
 #define IMGUI_USE_WCHAR32
 #define IMGUI_USE_LEGACY_CRC32_ADLER 1
+
+#if defined(IMGUI_TEST_ENGINE)
+    #include "imgui_te_imconfig.h"
+#endif

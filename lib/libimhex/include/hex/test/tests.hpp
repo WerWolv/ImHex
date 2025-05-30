@@ -59,20 +59,9 @@ namespace hex::test {
 
     class Tests {
     public:
-        static auto addTest(const std::string &name, Function func, bool shouldFail) noexcept {
-            s_tests.insert({
-                name, {func, shouldFail}
-            });
+        static int addTest(const std::string &name, Function func, bool shouldFail) noexcept;
 
-            return 0;
-        }
-
-        static auto &get() noexcept {
-            return s_tests;
-        }
-
-    private:
-        static std::map<std::string, Test> s_tests;
+        static std::map<std::string, Test> &get() noexcept;
     };
 
     template<class F>

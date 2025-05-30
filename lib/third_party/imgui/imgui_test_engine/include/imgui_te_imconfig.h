@@ -62,6 +62,6 @@
 // - If a test is running, test name will be included in the log.
 // - Macro is calling IM_DEBUG_BREAK() inline to get debugger to break in the calling function (instead of a deeper callstack level).
 // - Macro is using comma operator instead of an if() to avoid "conditional expression is constant" warnings.
-extern void ImGuiTestEngine_AssertLog(const char* expr, const char* file, const char* func, int line);
+IMGUI_API extern void ImGuiTestEngine_AssertLog(const char* expr, const char* file, const char* func, int line);
 #define IM_TEST_ENGINE_ASSERT(_EXPR)    do { if ((void)0, !(_EXPR)) { ImGuiTestEngine_AssertLog(#_EXPR, __FILE__, __func__, __LINE__); IM_DEBUG_BREAK(); } } while (0)
 // V_ASSERT_CONTRACT, assertMacro:IM_ASSERT

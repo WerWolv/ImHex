@@ -88,7 +88,6 @@ namespace hex {
         std::atomic<bool> m_wakeupFlag;
         std::condition_variable m_wakeupCondVar;
 
-
         gl::Shader m_postProcessingShader;
     };
 
