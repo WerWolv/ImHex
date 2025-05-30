@@ -41,6 +41,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/semantic_version.cpp
         source/helpers/keys.cpp
         source/helpers/freetype.cpp
+        source/helpers/udp_server.cpp
 
         source/test/tests.cpp
 
@@ -153,6 +154,10 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
 
     target_link_libraries(libimhex PRIVATE libpl microtar ${NFD_LIBRARIES} magic)
     target_link_libraries(libimhex PUBLIC libwolv libpl_includes libpl-gen ${IMGUI_LIBRARIES} ${JTHREAD_LIBRARIES})
+
+    if (IMHEX_ENABLE_IMGUI_TEST_ENGINE)
+        target_link_libraries(libimhex PUBLIC imgui_test_engine)
+    endif()
 
     if (NOT WIN32)
         target_link_libraries(libimhex PRIVATE dl)

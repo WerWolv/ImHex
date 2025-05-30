@@ -13,6 +13,7 @@
 #include <jthread.hpp>
 #include <hex/helpers/opengl.hpp>
 
+struct ImGuiTestEngine;
 struct GLFWwindow;
 struct ImGuiSettingsHandler;
 
@@ -60,6 +61,7 @@ namespace hex {
         void forceNewFrame();
 
         GLFWwindow *m_window = nullptr;
+        ImGuiTestEngine *m_testEngine = nullptr;
 
         std::string m_windowTitle, m_windowTitleFull;
 
@@ -85,7 +87,6 @@ namespace hex {
         std::mutex m_wakeupMutex;
         std::atomic<bool> m_wakeupFlag;
         std::condition_variable m_wakeupCondVar;
-
 
         gl::Shader m_postProcessingShader;
     };

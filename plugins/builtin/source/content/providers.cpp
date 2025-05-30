@@ -10,6 +10,7 @@
 #include "content/providers/view_provider.hpp"
 #include <content/providers/process_memory_provider.hpp>
 #include <content/providers/base64_provider.hpp>
+#include <content/providers/udp_provider.hpp>
 #include <popups/popup_notification.hpp>
 
 #include <hex/api/project_file_manager.hpp>
@@ -29,6 +30,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<NullProvider>(false);
         #if !defined(OS_WEB)
             ContentRegistry::Provider::add<DiskProvider>();
+            ContentRegistry::Provider::add<UDPProvider>();
         #endif
         ContentRegistry::Provider::add<GDBProvider>();
         ContentRegistry::Provider::add<IntelHexProvider>();

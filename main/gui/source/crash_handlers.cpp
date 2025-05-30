@@ -23,6 +23,10 @@
 #include <exception>
 #include <typeinfo>
 
+#if defined(IMGUI_TEST_ENGINE)
+    #include <imgui_te_engine.h>
+#endif
+
 #if defined (OS_WINDOWS)
     #include <windows.h>
 #elif defined (OS_MACOS)
@@ -123,6 +127,10 @@ namespace hex::crash {
         // Flush all streams
         fflush(stdout);
         fflush(stderr);
+
+        #if defined(IMGUI_TEST_ENGINE)
+            ImGuiTestEngine_CrashHandler();
+        #endif
     }
 
     // Custom signal handler to print various information and a stacktrace when the application crashes

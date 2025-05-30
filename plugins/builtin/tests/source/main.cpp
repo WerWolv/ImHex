@@ -1,7 +1,6 @@
 #include <iostream>
 #include <hex/test/tests.hpp>
 #include <hex/api/plugin_manager.hpp>
-#include <content/providers/memory_file_provider.hpp>
 #include <content/views/view_patches.hpp>
 #include <hex/api/task_manager.hpp>
 
@@ -40,4 +39,9 @@ TEST_SEQUENCE("Providers/InvalidResize") {
     
     TEST_ASSERT(!pr.resize(-1));
     TEST_SUCCESS();
+};
+
+IMGUI_TEST_SEQUENCE("Category", "Name", ctx) {
+    ctx->ItemClick("//Find###hex.builtin.view.find.name/Search");
+    ctx->Yield();                // Takes one frame
 };

@@ -130,7 +130,7 @@ struct diyfp // f * 2^e
         // p_lo = p0_lo + (Q << 32)
         //
         // But in this particular case here, the full p_lo is not required.
-        // Effectively we only need to add the highest bit in p_lo to p_hi (and
+        // Effectively, we only need to add the highest bit in p_lo to p_hi (and
         // Q_hi + 1 does not overflow).
 
         Q += std::uint64_t{1} << (64u - 32u - 1u); // round, ties up
@@ -220,7 +220,7 @@ boundaries compute_boundaries(FloatType value)
     // Compute the boundaries m- and m+ of the floating-point value
     // v = f * 2^e.
     //
-    // Determine v- and v+, the floating-point predecessor and successor if v,
+    // Determine v- and v+, the floating-point predecessor and successor of v,
     // respectively.
     //
     //      v- = v - 2^e        if f != 2^(p-1) or e == e_min                (A)
@@ -375,7 +375,7 @@ inline cached_power get_cached_power_for_binary_exponent(int e)
     // (A smaller distance gamma-alpha would require a larger table.)
 
     // NB:
-    // Actually this function returns c, such that -60 <= e_c + e + 64 <= -34.
+    // Actually, this function returns c, such that -60 <= e_c + e + 64 <= -34.
 
     constexpr int kCachedPowersMinDecExp = -300;
     constexpr int kCachedPowersDecStep = 8;
@@ -687,8 +687,8 @@ inline void grisu2_digit_gen(char* buffer, int& length, int& decimal_exponent,
 
             decimal_exponent += n;
 
-            // We may now just stop. But instead look if the buffer could be
-            // decremented to bring V closer to w.
+            // We may now just stop. But instead, it looks as if the buffer
+            // could be decremented to bring V closer to w.
             //
             // pow10 = 10^n is now 1 ulp in the decimal representation V.
             // The rounding procedure works with diyfp's with an implicit
@@ -1095,7 +1095,7 @@ char* to_chars(char* first, const char* last, FloatType value)
     // Compute v = buffer * 10^decimal_exponent.
     // The decimal digits are stored in the buffer, which needs to be interpreted
     // as an unsigned decimal integer.
-    // len is the length of the buffer, i.e. the number of decimal digits.
+    // len is the length of the buffer, i.e., the number of decimal digits.
     int len = 0;
     int decimal_exponent = 0;
     dtoa_impl::grisu2(first, len, decimal_exponent, value);
