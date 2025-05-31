@@ -68,9 +68,9 @@ namespace hex::plugin::disasm {
                 u64 instructionDataAddress = region.getStartAddress();
 
                 bool hadError = false;
-                while (instructionDataAddress < region.getEndAddress()) {
+                while (instructionDataAddress <= region.getEndAddress()) {
                     // Read a chunk of data
-                    size_t bufferSize = std::min<u64>(buffer.size(), (region.getEndAddress() - instructionDataAddress));
+                    size_t bufferSize = std::min<u64>(buffer.size(), (region.getEndAddress()-instructionDataAddress)+1);
                     provider->read(instructionDataAddress, buffer.data(), bufferSize);
 
                     auto code = std::span(buffer.data(), bufferSize);
