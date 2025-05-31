@@ -1735,7 +1735,7 @@ namespace hex::plugin::builtin {
                         const pl::ptrn::Pattern *entry = pattern;
                         while (entry != nullptr) {
                             pathSegments.push_back(entry->getVariableName());
-                            entry = entry->getParent();
+                            entry = entry->getParent().get();
                         }
 
                         for (const auto &segment : pathSegments | std::views::reverse) {
@@ -2270,7 +2270,7 @@ namespace hex::plugin::builtin {
             const auto hoveredRegion = Region { address, size };
             for (const auto &pattern : runtime.getPatternsAtAddress(hoveredRegion.getStartAddress())) {
                 const pl::ptrn::Pattern * checkPattern = pattern;
-                if (auto parent = checkPattern->getParent(); parent != nullptr)
+                if (auto parent = checkPattern->getParent().get(); parent != nullptr)
                     checkPattern = parent;
 
                 result.emplace(checkPattern->getOffset(), checkPattern->getSize());
