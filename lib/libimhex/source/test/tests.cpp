@@ -1,7 +1,19 @@
 #include <hex/test/tests.hpp>
 
 namespace hex::test {
-    std::map<std::string, Test> Tests::s_tests;
+
+    static std::map<std::string, Test> s_tests;
+    int Tests::addTest(const std::string &name, Function func, bool shouldFail) noexcept {
+        s_tests.insert({
+            name, {func, shouldFail}
+        });
+
+        return 0;
+    }
+
+    std::map<std::string, Test> &Tests::get() noexcept {
+        return s_tests;
+    }
 
     bool initPluginImpl(std::string name) {
         if (name != "Built-in") {

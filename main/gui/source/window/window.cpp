@@ -39,6 +39,10 @@
 #include <implot3d_internal.h>
 #include <imnodes.h>
 #include <imnodes_internal.h>
+#if defined(IMGUI_TEST_ENGINE)
+    #include <imgui_te_engine.h>
+    #include <imgui_te_ui.h>
+#endif
 
 #include <wolv/utils/string.hpp>
 
@@ -359,7 +363,14 @@ namespace hex {
 
                 currentFont = font->ContainerAtlas;
                 ImGui_ImplOpenGL3_CreateFontsTexture();
-                currentFont->ClearInputData();
+
+                for (ImFontConfig& fontCfg : font->ContainerAtlas->Sources) {
+                    if (fontCfg.FontData && fontCfg.FontDataOwnedByAtlas) {
+                        IM_FREE(fontCfg.FontData);
+                        fontCfg.FontData = NULL;
+                    }
+                }
+
                 currentFont->ClearTexData();
             }
 
@@ -375,7 +386,14 @@ namespace hex {
                     cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
                     font = io.Fonts->AddFontDefault(&cfg);
                     ImGui_ImplOpenGL3_CreateFontsTexture();
-                    io.Fonts->ClearInputData();
+
+                    for (ImFontConfig& fontCfg : font->ContainerAtlas->Sources) {
+                        if (fontCfg.FontData && fontCfg.FontDataOwnedByAtlas) {
+                            IM_FREE(fontCfg.FontData);
+                            fontCfg.FontData = NULL;
+                        }
+                    }
+
                     io.Fonts->ClearTexData();
                 } else {
                     currentFont = font->ContainerAtlas;
@@ -388,6 +406,10 @@ namespace hex {
         // Start new ImGui Frame
 
         ImGui::NewFrame();
+
+        #if defined(IMGUI_TEST_ENGINE)
+            ImGuiTestEngine_ShowTestEngineWindows(m_testEngine, nullptr);
+        #endif
 
         TutorialManager::drawTutorial();
 
@@ -843,6 +865,10 @@ namespace hex {
             glfwSwapBuffers(m_window);
         }
 
+        #if defined(IMGUI_TEST_ENGINE)
+            ImGuiTestEngine_PostSwap(m_testEngine);
+        #endif
+
         // Process layout load requests
         // NOTE: This needs to be done before a new frame is started, otherwise ImGui won't handle docking correctly
         LayoutManager::process();
@@ -1267,6 +1293,17 @@ namespace hex {
         GImPlot             = ImPlot::CreateContext();
         ImPlot3D::GImPlot3D = ImPlot3D::CreateContext();
         GImNodes            = ImNodes::CreateContext();
+
+        #if defined(IMGUI_TEST_ENGINE)
+            m_testEngine = ImGuiTestEngine_CreateContext();
+            auto testEngineIo = ImGuiTestEngine_GetIO(m_testEngine);
+            testEngineIo.ConfigVerboseLevel = ImGuiTestVerboseLevel_Info;
+            testEngineIo.ConfigVerboseLevelOnError = ImGuiTestVerboseLevel_Debug;
+
+            EventRegisterImGuiTests::post(m_testEngine);
+
+            ImGuiTestEngine_Start(m_testEngine, ImGui::GetCurrentContext());
+        #endif
 
         ImGuiIO &io       = ImGui::GetIO();
         ImGuiStyle &style = ImGui::GetStyle();

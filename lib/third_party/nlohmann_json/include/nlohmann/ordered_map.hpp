@@ -226,7 +226,7 @@ template <class Key, class T, class IgnoredLess = std::less<Key>,
 
         // Since we cannot move const Keys, we re-construct them in place.
         // We start at first and re-construct (viz. copy) the elements from
-        // the back of the vector. Example for first iteration:
+        // the back of the vector. Example for the first iteration:
 
         //               ,--------.
         //               v        |   destroy e and re-construct with h

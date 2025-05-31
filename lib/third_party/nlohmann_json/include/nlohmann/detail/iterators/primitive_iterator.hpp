@@ -21,9 +21,9 @@ namespace detail
 @brief an iterator for primitive JSON types
 
 This class models an iterator for primitive JSON types (boolean, number,
-string). It's only purpose is to allow the iterator/const_iterator classes
+string). Its only purpose is to allow the iterator/const_iterator classes
 to "iterate" over primitive values. Internally, the iterator is modeled by
-a `difference_type` variable. Value begin_value (`0`) models the begin,
+a `difference_type` variable. Value begin_value (`0`) models the begin and
 end_value (`1`) models past the end.
 */
 class primitive_iterator_t
