@@ -116,7 +116,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::array: {
-                        auto object = std::make_shared<pl::ptrn::PatternArrayDynamic>(evaluator, 0, 0, 0);
+                        auto object = pl::ptrn::PatternArrayDynamic::create(evaluator, 0, 0, 0);
                         object->setTypeName("Array");
                         object->setSection(pl::ptrn::Pattern::PatternLocalSectionId);
                         object->addAttribute("export");
