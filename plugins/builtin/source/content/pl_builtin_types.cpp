@@ -151,7 +151,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::number_float: {
-                        auto object = std::make_shared<pl::ptrn::PatternFloat>(evaluator, 0, sizeof(double), 0);
+                        auto object = pl::ptrn::PatternFloat::create(evaluator, 0, sizeof(double), 0);
                         object->setTypeName("double");
 
                         auto data = allocateSpace(evaluator, object);
