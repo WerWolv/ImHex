@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::boolean: {
-                        auto object = std::make_shared<pl::ptrn::PatternBoolean>(evaluator, 0, 0);
+                        auto object = pl::ptrn::PatternBoolean::create(evaluator, 0, 0);
 
                         auto data = allocateSpace(evaluator, object);
                         auto value = it->get<bool>();
