@@ -140,7 +140,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::number_integer: {
-                        auto object = std::make_shared<pl::ptrn::PatternSigned>(evaluator, 0, sizeof(i64), 0);
+                        auto object = pl::ptrn::PatternSigned::create(evaluator, 0, sizeof(i64), 0);
                         object->setTypeName("s64");
 
                         auto data = allocateSpace(evaluator, object);
