@@ -203,10 +203,17 @@ namespace hex::init {
         auto keepNewest = [&](u32 count, const paths::impl::DefaultPath &pathType) {
             for (const auto &path : pathType.write()) {
                 try {
+                    const auto canonicalPath = std::filesystem::canonical(path);        // path without simlinks and ".."
                     std::vector<std::filesystem::directory_entry> files;
 
-                    for (const auto& file : std::filesystem::directory_iterator(path))
-                        files.push_back(file);
+                    for (const auto& file : std::filesystem::directory_iterator(canonicalPath)){
+                        if(!file.is_regular_file()) continue;   // skip symlinks and directories
+
+                        if(std::filesystem::canonical(file.path()).native().starts_with(canonicalPath.native()))
+                            files.push_back(file);
+                        else
+                            log::warn("Skip file outside directory {}", file.path().string());
+                    }
 
                     if (files.size() <= count)
                         return;
@@ -215,10 +222,11 @@ namespace hex::init {
                         return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
                     });
 
-                    for (auto it = files.begin() + count; it != files.end(); it += 1)
-                        std::filesystem::remove(it->path());
+                    for (auto it = files.begin() + count; it != files.end(); ++it){
+                        if(it->is_regular_file()) std::filesystem::remove(it->path());
+                    }
                 } catch (std::filesystem::filesystem_error &e) {
-                    log::error("Failed to clear old file! {}", e.what());
+                    log::error("Failed to clear old file in directory '{}'! {}", path.string(), e.what());
                     result = false;
                 }
             }
