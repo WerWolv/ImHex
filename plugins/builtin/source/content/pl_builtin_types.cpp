@@ -174,7 +174,7 @@ namespace hex::plugin::builtin {
                     case ValueType::string: {
                         auto value = it->get<std::string>();
 
-                        auto object = std::make_shared<pl::ptrn::PatternString>(evaluator, 0, value.size(), 0);
+                        auto object = pl::ptrn::PatternString::create(evaluator, 0, value.size(), 0);
 
                         auto data = allocateSpace(evaluator, object);
                         std::memcpy(data.data(), value.data(), value.size());
