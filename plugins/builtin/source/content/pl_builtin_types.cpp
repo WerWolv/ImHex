@@ -104,7 +104,7 @@ namespace hex::plugin::builtin {
                 using ValueType = nlohmann::json::value_t;
                 switch (it->type()) {
                     case ValueType::object: {
-                        auto object = std::make_shared<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
+                        auto object = construct_shared_object<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
                         object->setTypeName("Object");
                         object->setSection(pl::ptrn::Pattern::PatternLocalSectionId);
                         object->addAttribute("export");
@@ -116,7 +116,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::array: {
-                        auto object = pl::ptrn::PatternArrayDynamic::create(evaluator, 0, 0, 0);
+                        auto object = construct_shared_object<pl::ptrn::PatternArrayDynamic>(evaluator, 0, 0, 0);
                         object->setTypeName("Array");
                         object->setSection(pl::ptrn::Pattern::PatternLocalSectionId);
                         object->addAttribute("export");
@@ -129,7 +129,7 @@ namespace hex::plugin::builtin {
                     }
                     case ValueType::binary:
                     case ValueType::number_unsigned: {
-                        auto object = std::make_shared<pl::ptrn::PatternUnsigned>(evaluator, 0, sizeof(u64), 0);
+                        auto object = construct_shared_object<pl::ptrn::PatternUnsigned>(evaluator, 0, sizeof(u64), 0);
                         object->setTypeName("u64");
 
                         auto data = allocateSpace(evaluator, object);
@@ -140,7 +140,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::number_integer: {
-                        auto object = pl::ptrn::PatternSigned::create(evaluator, 0, sizeof(i64), 0);
+                        auto object = construct_shared_object<pl::ptrn::PatternSigned>(evaluator, 0, sizeof(i64), 0);
                         object->setTypeName("s64");
 
                         auto data = allocateSpace(evaluator, object);
@@ -151,7 +151,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::number_float: {
-                        auto object = pl::ptrn::PatternFloat::create(evaluator, 0, sizeof(double), 0);
+                        auto object = construct_shared_object<pl::ptrn::PatternFloat>(evaluator, 0, sizeof(double), 0);
                         object->setTypeName("double");
 
                         auto data = allocateSpace(evaluator, object);
@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::boolean: {
-                        auto object = pl::ptrn::PatternBoolean::create(evaluator, 0, 0);
+                        auto object = construct_shared_object<pl::ptrn::PatternBoolean>(evaluator, 0, 0);
 
                         auto data = allocateSpace(evaluator, object);
                         auto value = it->get<bool>();
@@ -174,7 +174,7 @@ namespace hex::plugin::builtin {
                     case ValueType::string: {
                         auto value = it->get<std::string>();
 
-                        auto object = pl::ptrn::PatternString::create(evaluator, 0, value.size(), 0);
+                        auto object = construct_shared_object<pl::ptrn::PatternString>(evaluator, 0, value.size(), 0);
 
                         auto data = allocateSpace(evaluator, object);
                         std::memcpy(data.data(), value.data(), value.size());
@@ -197,8 +197,9 @@ namespace hex::plugin::builtin {
         }
 
 
-        std::unique_ptr<pl::ptrn::Pattern> jsonToPattern(pl::core::Evaluator *evaluator, auto function) {
-            auto object = std::make_unique<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
+        // Was unique_ptr
+        std::shared_ptr<pl::ptrn::Pattern> jsonToPattern(pl::core::Evaluator *evaluator, auto function) {
+            auto object = construct_shared_object<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
             std::vector<std::shared_ptr<pl::ptrn::Pattern>> patterns;
 
             try {
@@ -221,7 +222,7 @@ namespace hex::plugin::builtin {
             const pl::api::Namespace nsHexDec = { "builtin", "hex", "dec" };
 
             /* Json<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Json", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Json", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::parse(data); });
@@ -230,7 +231,7 @@ namespace hex::plugin::builtin {
             });
 
             /* Bson<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Bson", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Bson", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_bson(data); });
@@ -239,7 +240,7 @@ namespace hex::plugin::builtin {
             });
 
             /* Cbor<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Cbor", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Cbor", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_cbor(data); });
@@ -248,7 +249,7 @@ namespace hex::plugin::builtin {
             });
 
             /* Bjdata<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Bjdata", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Bjdata", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_bjdata(data); });
@@ -257,7 +258,7 @@ namespace hex::plugin::builtin {
             });
 
             /* Msgpack<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Msgpack", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Msgpack", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_msgpack(data); });
@@ -266,7 +267,7 @@ namespace hex::plugin::builtin {
             });
 
             /* Ubjson<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Ubjson", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Ubjson", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_ubjson(data); });
@@ -276,7 +277,7 @@ namespace hex::plugin::builtin {
 
 
             /* EncodedString<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "EncodedString", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "EncodedString", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto bytes = params[0].toBytes();
                 auto encodingDefinition = params[1].toString();
 
