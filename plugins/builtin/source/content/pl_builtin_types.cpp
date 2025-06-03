@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
             : Pattern(evaluator, offset, size, line) { }
 
         [[nodiscard]] std::shared_ptr<Pattern> clone() const override {
-            return std::shared_ptr<Pattern>(new PatternEncodedString(*this));
+            return construct_shared_object<PatternEncodedString>(*this);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
