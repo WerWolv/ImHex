@@ -284,7 +284,7 @@ namespace hex::plugin::builtin {
                 std::string value;
                 EncodingFile encodingFile(EncodingFile::Type::Thingy, encodingDefinition);
 
-                auto pattern = std::make_unique<PatternEncodedString>(evaluator, evaluator->getReadOffset(), bytes.size(), 0);
+                auto pattern = construct_shared_object<PatternEncodedString>(evaluator, evaluator->getReadOffset(), bytes.size(), 0);
                 pattern->setEncodedString(encodingFile, bytes);
 
                 return pattern;
