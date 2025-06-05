@@ -355,12 +355,61 @@ Retrieves basic information about a specific offset.
   }
   ```
 
-## How to Use
+---
 
-1.  Ensure the "MCP Integration" plugin is enabled in ImHex.
-2.  (Currently) If you are developing another ImHex plugin or have access to its C++ internals, you can call:
+## MCP TCP Server
+
+The MCP Integration plugin can run a TCP server to allow network clients to connect and send MCP commands.
+
+### Enabling and Configuring the Server
+
+The MCP server is managed via the "MCP Server Control" view provided by the "MCP Integration" plugin. To access this view:
+1. Ensure the "MCP Integration" plugin is enabled in ImHex.
+2. Open the "MCP Server Control" view (usually found under a "Tools" or "Views" menu in ImHex).
+
+Within this view, you can:
+- **Configure Port:** Set the TCP port number the server should listen on. The default port is **61100**. Changes to the port number currently apply only for the current session unless saved by a future persistence mechanism.
+- **Start Server:** If the server is stopped, click this button to start it on the configured port.
+- **Stop Server:** If the server is running, click this button to stop it.
+- **Restart Server:** Stops and then starts the server. This is useful if you change the port number while the server is running (it will stop, then start on the new port).
+- **View Status:** The view displays the current server status (e.g., "Stopped", "Running on port 61100", "Error").
+
+By default, the server attempts to start when the "MCP Integration" plugin is loaded. You can use the control view to manage it thereafter.
+
+### Network Protocol Details
+
+- **Transport:** TCP/IP
+- **Message Format:** JSON-RPC 2.0 (as described in the "Command Protocol" section).
+- **Message Delimiter:** Each complete JSON-RPC request sent by the client to the server **MUST** be followed by a newline character (`\n`). Similarly, each JSON-RPC response sent by the server to the client will be followed by a newline character (`\n`). Clients should read data from the TCP stream until a newline is encountered to obtain a complete JSON message.
+
+### Connecting as a Client
+
+To connect to the MCP server:
+1. Ensure the server is running in ImHex on the desired host and port.
+2. Establish a TCP connection to the host (e.g., `127.0.0.1` if running on the same machine) and port the ImHex MCP server is listening on.
+3. Send your JSON-RPC request string, ensuring it is terminated with a single newline character (`\n`).
+4. Read the response from the server. The response will also be a JSON-RPC string terminated by a single newline character (`\n`).
+5. Parse the JSON response.
+
+Example client pseudo-code for sending a command:
+```
+tcp_socket = connect("127.0.0.1", 61100)
+json_request = '{ "jsonrpc": "2.0", "method": "get_selection", "id": 1 }\n'
+tcp_socket.send(json_request)
+response_with_newline = tcp_socket.receive_until_newline()
+json_response = parse_json(response_with_newline)
+// Process json_response
+```
+
+## How to Interact with MCP
+
+There are two primary ways to interact with the MCP system:
+
+1.  **Via TCP Server (Recommended for External Clients):**
+    Connect to the MCP TCP server as described in the "MCP TCP Server" section. This allows external applications, scripts, or tools (like ClaudeMCP) to control ImHex programmatically over the network.
+
+2.  **Via Direct C++ Call (Internal/Plugin Development):**
+    If you are developing another ImHex plugin or have access to its C++ internals, you can still call the direct processing function:
     `std::string response = hex::plugins::mcp::process_mcp_command("your_json_command_string");`
-3.  Parse the JSON `response` string to get the result or error.
-
-Future enhancements aim to provide more direct external access (e.g., via a local network socket).
+    Parse the JSON `response` string to get the result or error. This method bypasses the network stack and directly invokes the command processor.
 ```
