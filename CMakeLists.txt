@@ -28,6 +28,7 @@ verifyCompiler()
 set(PLUGINS
     builtin
     windows
+    mcp_integration
 )
 
 # Add various defines
