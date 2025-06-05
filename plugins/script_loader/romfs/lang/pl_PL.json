@@ -1,0 +1,13 @@
+{
+    "code": "pl-PL",
+    "country": "Polska",
+    "language": "Polski",
+    "fallback": false,
+    "translations": {
+        "hex.script_loader.menu.loading": "Ładowanie...",
+        "hex.script_loader.menu.no_scripts": "Nie znaleziono skryptów",
+        "hex.script_loader.menu.run_script": "Uruchom skrypt...",
+        "hex.script_loader.task.running": "Uruchamianie skryptu...",
+        "hex.script_loader.task.updating": "Aktualizowanie skryptów..."
+    }
+}

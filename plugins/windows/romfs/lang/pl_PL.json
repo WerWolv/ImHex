@@ -1,0 +1,30 @@
+{
+    "code": "pl-PL",
+    "country": "Polska",
+    "language": "Polski",
+    "fallback": false,
+    "translations": {
+        "hex.builtin.setting.general.context_menu_entry": "Pozycja w menu kontekstowym Windows",
+        "hex.builtin.setting.interface.show_resource_usage": "Pokaż użycie zasobów w stopce",
+        "hex.windows.view.tty_console.auto_scroll": "Automatyczne przewijanie",
+        "hex.windows.view.tty_console.baud": "Szybkość transmisji",
+        "hex.windows.view.tty_console.clear": "Wyczyść",
+        "hex.windows.view.tty_console.config": "Konfiguracja",
+        "hex.windows.view.tty_console.connect": "Połącz",
+        "hex.windows.view.tty_console.connect_error": "Nie udało się połączyć z portem COM!",
+        "hex.windows.view.tty_console.console": "Konsola",
+        "hex.windows.view.tty_console.cts": "Użyj kontroli przepływu CTS",
+        "hex.windows.view.tty_console.disconnect": "Rozłącz",
+        "hex.windows.view.tty_console.name": "Konsola TTY",
+        "hex.windows.view.tty_console.no_available_port": "Nie wybrano żadnego portu COM lub żaden nie jest dostępny!",
+        "hex.windows.view.tty_console.num_bits": "Bity danych",
+        "hex.windows.view.tty_console.parity_bits": "Bit parzystości",
+        "hex.windows.view.tty_console.port": "Port",
+        "hex.windows.view.tty_console.reload": "Załaduj ponownie",
+        "hex.windows.view.tty_console.send_eot": "Wyślij EOT",
+        "hex.windows.view.tty_console.send_etx": "Wyślij ETX",
+        "hex.windows.view.tty_console.send_sub": "Wyślij SUB",
+        "hex.windows.view.tty_console.stop_bits": "Bity stopu",
+        "hex.windows.view.tty_console.task.transmitting": "Przesyłanie danych…"
+    }
+}
