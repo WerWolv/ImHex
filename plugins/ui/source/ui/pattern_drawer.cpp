@@ -407,7 +407,7 @@ namespace hex::ui {
 
         while (pattern != nullptr) {
             result.emplace_back(pattern->getVariableName());
-            pattern = pattern->getParent();
+            pattern = pattern->getParent().get();
         }
 
         std::reverse(result.begin(), result.end());
@@ -427,7 +427,7 @@ namespace hex::ui {
                 m_jumpToPattern = nullptr;
             }
             else {
-                auto parent = m_jumpToPattern->getParent();
+                pl::ptrn::Pattern *parent = m_jumpToPattern->getParent().get();
                 while (parent != nullptr) {
                     if (&pattern == parent) {
                         ImGui::SetScrollHereY();
@@ -435,7 +435,7 @@ namespace hex::ui {
                         break;
                     }
 
-                    parent = parent->getParent();
+                    parent = parent->getParent().get();
                 }
             }
         }
