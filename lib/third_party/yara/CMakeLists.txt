@@ -103,6 +103,7 @@ set(LIBYARA_MODULES
 )
 
 find_package(MbedTLS 3.6.0 REQUIRED)
+find_package(Threads)
 
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
 
@@ -127,11 +128,7 @@ target_include_directories(
         PRIVATE ${LIBYARA_SOURCE_PATH}
 )
 
-if (UNIX)
-    target_link_libraries(libyara PRIVATE magic MbedTLS::mbedtls MbedTLS::mbedcrypto MbedTLS::mbedx509 pthread)
-else ()
-    target_link_libraries(libyara PRIVATE magic MbedTLS::mbedtls MbedTLS::mbedcrypto MbedTLS::mbedx509)
-endif ()
+target_link_libraries(libyara PRIVATE magic MbedTLS::mbedtls MbedTLS::mbedcrypto MbedTLS::mbedx509 ${CMAKE_THREAD_LIBS_INIT})
 
 include(GNUInstallDirs)
 
