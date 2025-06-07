@@ -117,8 +117,8 @@ namespace hex::plugin::builtin {
             i32 end;
             Interval() : start(0), end(0) {}
             Interval(i32 start, i32 end) : start(start), end(end) {
-                if (start >= end)
-                    throw std::invalid_argument("Interval start must be less than end");
+                if (start > end)
+                    throw std::invalid_argument("Interval start must be less than or equal to end");
             }
             bool operator<(const Interval &other) const {
                 return other.end > end;

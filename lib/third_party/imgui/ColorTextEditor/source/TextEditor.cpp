@@ -1157,21 +1157,24 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
             lineNo = std::floor(lineNo + 1.0F);
         }
     }
+    ImVec2 lineStartScreenPos = ImVec2(cursorScreenPos.x + mLeftMargin, mTopMargin + cursorScreenPos.y + std::floor(lineNo) * mCharAdvance.y);
     if (!mIgnoreImGuiChild)
         ImGui::EndChild();
 
     if (mShowLineNumbers && !mIgnoreImGuiChild) {
             ImGui::BeginChild("##lineNumbers");
+            ImGui::SetCursorScreenPos(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y));
         ImGui::Dummy(ImVec2(mLineNumberFieldWidth, (globalLineMax - lineMax - 1) * mCharAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight() - mCharAdvance.y));
         ImGui::EndChild();
     }
     if (!mIgnoreImGuiChild)
         ImGui::BeginChild(aTitle);
 
+    ImGui::SetCursorScreenPos(lineStartScreenPos);
     if (mShowLineNumbers)
         ImGui::Dummy(ImVec2(mLongestLineLength * mCharAdvance.x + mCharAdvance.x, (globalLineMax - lineMax - 2.0F) * mCharAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight()));
     else
-        ImGui::Dummy(ImVec2(mLongestLineLength * mCharAdvance.x + mCharAdvance.x, (globalLineMax - 1.0f - lineMax + GetPageSize() - 1.0f ) * mCharAdvance.y - 2 * ImGuiStyle().WindowPadding.y));
+        ImGui::Dummy(ImVec2(mLongestLineLength * mCharAdvance.x + mCharAdvance.x, (globalLineMax - lineMax - 3.0F) * mCharAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight() - 1.0f));
 
     if (mScrollToCursor)
         EnsureCursorVisible();

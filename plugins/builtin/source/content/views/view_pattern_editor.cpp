@@ -600,6 +600,8 @@ namespace hex::plugin::builtin {
                     m_hasUnevaluatedChanges.get(provider) = true;
                     m_changesWereParsed = false;
                 }
+                if (m_textHighlighter.m_needsToUpdateColors)
+                    m_textHighlighter.m_needsToUpdateColors = false;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
             }

@@ -569,6 +569,10 @@ namespace hex::plugin::builtin {
             blocks.insert(tokenRange);
             blocksIterBegin = blocks.begin();
             blocksIterEnd = blocks.end();
+        } else if (name == "hex::type::Json" || name == "Object") {
+            result.idType = IdentifierType::LocalVariable;
+            result.typeStr = "Object";
+            return true;
         }
 
         if (isFunction) {
