@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
             : Pattern(evaluator, offset, size, line) { }
 
         [[nodiscard]] std::shared_ptr<Pattern> clone() const override {
-            return construct_shared_object<PatternEncodedString>(*this);
+            return create_shared_object<PatternEncodedString>(*this);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -104,7 +104,7 @@ namespace hex::plugin::builtin {
                 using ValueType = nlohmann::json::value_t;
                 switch (it->type()) {
                     case ValueType::object: {
-                        auto object = construct_shared_object<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
+                        auto object = create_shared_object<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
                         object->setTypeName("Object");
                         object->setSection(pl::ptrn::Pattern::PatternLocalSectionId);
                         object->addAttribute("export");
@@ -116,7 +116,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::array: {
-                        auto object = construct_shared_object<pl::ptrn::PatternArrayDynamic>(evaluator, 0, 0, 0);
+                        auto object = create_shared_object<pl::ptrn::PatternArrayDynamic>(evaluator, 0, 0, 0);
                         object->setTypeName("Array");
                         object->setSection(pl::ptrn::Pattern::PatternLocalSectionId);
                         object->addAttribute("export");
@@ -129,7 +129,7 @@ namespace hex::plugin::builtin {
                     }
                     case ValueType::binary:
                     case ValueType::number_unsigned: {
-                        auto object = construct_shared_object<pl::ptrn::PatternUnsigned>(evaluator, 0, sizeof(u64), 0);
+                        auto object = create_shared_object<pl::ptrn::PatternUnsigned>(evaluator, 0, sizeof(u64), 0);
                         object->setTypeName("u64");
 
                         auto data = allocateSpace(evaluator, object);
@@ -140,7 +140,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::number_integer: {
-                        auto object = construct_shared_object<pl::ptrn::PatternSigned>(evaluator, 0, sizeof(i64), 0);
+                        auto object = create_shared_object<pl::ptrn::PatternSigned>(evaluator, 0, sizeof(i64), 0);
                         object->setTypeName("s64");
 
                         auto data = allocateSpace(evaluator, object);
@@ -151,7 +151,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::number_float: {
-                        auto object = construct_shared_object<pl::ptrn::PatternFloat>(evaluator, 0, sizeof(double), 0);
+                        auto object = create_shared_object<pl::ptrn::PatternFloat>(evaluator, 0, sizeof(double), 0);
                         object->setTypeName("double");
 
                         auto data = allocateSpace(evaluator, object);
@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
                         break;
                     }
                     case ValueType::boolean: {
-                        auto object = construct_shared_object<pl::ptrn::PatternBoolean>(evaluator, 0, 0);
+                        auto object = create_shared_object<pl::ptrn::PatternBoolean>(evaluator, 0, 0);
 
                         auto data = allocateSpace(evaluator, object);
                         auto value = it->get<bool>();
@@ -174,7 +174,7 @@ namespace hex::plugin::builtin {
                     case ValueType::string: {
                         auto value = it->get<std::string>();
 
-                        auto object = construct_shared_object<pl::ptrn::PatternString>(evaluator, 0, value.size(), 0);
+                        auto object = create_shared_object<pl::ptrn::PatternString>(evaluator, 0, value.size(), 0);
 
                         auto data = allocateSpace(evaluator, object);
                         std::memcpy(data.data(), value.data(), value.size());
@@ -199,7 +199,7 @@ namespace hex::plugin::builtin {
 
         // Was unique_ptr
         std::shared_ptr<pl::ptrn::Pattern> jsonToPattern(pl::core::Evaluator *evaluator, auto function) {
-            auto object = construct_shared_object<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
+            auto object = create_shared_object<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
             std::vector<std::shared_ptr<pl::ptrn::Pattern>> patterns;
 
             try {
@@ -284,7 +284,7 @@ namespace hex::plugin::builtin {
                 std::string value;
                 EncodingFile encodingFile(EncodingFile::Type::Thingy, encodingDefinition);
 
-                auto pattern = construct_shared_object<PatternEncodedString>(evaluator, evaluator->getReadOffset(), bytes.size(), 0);
+                auto pattern = create_shared_object<PatternEncodedString>(evaluator, evaluator->getReadOffset(), bytes.size(), 0);
                 pattern->setEncodedString(encodingFile, bytes);
 
                 return pattern;

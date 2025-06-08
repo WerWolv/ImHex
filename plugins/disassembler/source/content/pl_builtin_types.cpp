@@ -21,7 +21,7 @@ namespace hex::plugin::disasm {
             : Pattern(evaluator, offset, size, line) { }
 
         [[nodiscard]] std::shared_ptr<Pattern> clone() const override {
-            return construct_shared_object<PatternInstruction>(*this);
+            return create_shared_object<PatternInstruction>(*this);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
