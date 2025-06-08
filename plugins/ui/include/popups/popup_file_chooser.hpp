@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <algorithm>
 
 namespace hex::ui {
 
@@ -56,8 +57,14 @@ namespace hex::ui {
             ImGui::PushItemWidth(-1);
             ImGuiExt::InputTextIcon("##search", ICON_VS_FILTER, m_filter);
             ImGui::PopItemWidth();
+            ImGuiID filterID = ImGui::GetItemID();
+            (void)filterID;
 
+            bool filterActive = false;
             if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
+                filterActive = ImGui::IsItemActive();
+                (void)filterActive;
+
                 for (auto fileIt = m_files.begin(); fileIt != m_files.end(); ++fileIt) {
                     const auto &path = *fileIt;
 
@@ -65,22 +72,28 @@ namespace hex::ui {
                     if (!m_filter.empty() && !pathNameString.contains(m_filter))
                         continue;
 
+                    auto io = ImGui::GetIO();
+                    (void)io;
+
                     ImGui::PushID(&*fileIt);
 
-                    bool selected = m_selectedFiles.contains(fileIt);
+                    bool selected = std::ranges::contains(m_selectedFiles, fileIt);
                     if (ImGui::Selectable(pathNameString.c_str(), selected, ImGuiSelectableFlags_NoAutoClosePopups)) {
                         if (!m_multiple) {
                             m_selectedFiles.clear();
-                            m_selectedFiles.insert(fileIt);
+                            m_selectedFiles.push_back(fileIt);
                         } else {
-                            if (selected) {
-                                m_selectedFiles.erase(fileIt);
+                            if (selected) { // TODO: Is this logic backwards? "!selected"?
+                                auto it = std::ranges::find(m_selectedFiles, C);
+                                if (it!=m_selectedFiles.end())
+                                    m_selectedFiles.erase(it);
                             } else {
-                                m_selectedFiles.insert(fileIt);
+                                m_selectedFiles.push_back(fileIt);
                             }
                         }
                     }
-
+                    // 'fileIt' may be invalidated!
+ 
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
                         doubleClicked = true;
 
@@ -132,9 +145,10 @@ namespace hex::ui {
 
     private:
         std::string m_filter;
-        std::vector<std::fs::path> m_files;
+        typedef std::vector<std::fs::path> Files;
+        Files m_files;
         std::map<std::fs::path, std::fs::path> m_adjustedPaths;
-        std::set<std::vector<std::fs::path>::const_iterator> m_selectedFiles;
+        std::vector<Files::const_iterator> m_selectedFiles;
         std::function<void(std::fs::path)> m_openCallback;
         std::vector<hex::fs::ItemFilter> m_validExtensions;
         bool m_multiple = false;
