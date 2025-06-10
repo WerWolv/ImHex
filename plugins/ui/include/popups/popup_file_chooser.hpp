@@ -23,6 +23,7 @@ namespace hex::ui {
         PopupNamedFileChooserBase(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
                 : hex::Popup<T>("hex.ui.common.choose_file"),
                   m_files(files),
+                  m_singleSelectedIndex(0),
                   m_multiSelectedFiles({ }),
                   m_openCallback(callback),
                   m_validExtensions(validExtensions),
@@ -56,31 +57,10 @@ namespace hex::ui {
                 m_justOpened = false;
             }
 
-            auto next_saturated = [this]() {
-                if (m_singleSelectedFile != m_files.end()) {
-                    auto next = std::next(m_singleSelectedFile);
-                    return (next!=m_files.end()) ? next : m_singleSelectedFile;
-                } else
-                    return std::prev(m_singleSelectedFile); // Try to rein it back in
-            };
-
-            auto prev_saturated = [this]() {
-                if (m_singleSelectedFile != m_files.begin()) {
-                    return std::prev(m_singleSelectedFile);
-                } else
-                    return m_singleSelectedFile;
-            };
-
             bool filterFocused = false;
             ImGui::PushItemWidth(-1);
             ImGuiExt::InputTextIcon("##search", ICON_VS_FILTER, m_filter);
             filterFocused = ImGui::IsItemFocused();
-            if (!m_multiple && filterFocused) {
-                if (ImGui::IsKeyPressed(ImGuiKey_UpArrow))
-                    m_singleSelectedFile = prev_saturated();
-                else if (ImGui::IsKeyPressed(ImGuiKey_DownArrow))
-                    m_singleSelectedFile = next_saturated();
-            }
             if (ImGui::IsItemFocused())
                 ImGui::Text("I'm focused!");
             else
@@ -89,7 +69,9 @@ namespace hex::ui {
             ImGuiID filterID = ImGui::GetItemID();
             (void)filterID;
 
+
             if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
+                int filtered_index = 0;
                 for (auto fileIt = m_files.begin(); fileIt != m_files.end(); ++fileIt) {
                     const auto &path = *fileIt;
 
@@ -101,12 +83,14 @@ namespace hex::ui {
 
                     bool selected = false;
                     if (!m_multiple)
-                        selected = (fileIt==m_singleSelectedFile);
+                        selected = (filtered_index==m_singleSelectedIndex);
                     else
                         selected = std::ranges::contains(m_multiSelectedFiles, fileIt);
                     if (ImGui::Selectable(pathNameString.c_str(), selected, ImGuiSelectableFlags_NoAutoClosePopups)) {
                         if (!m_multiple) {
                             m_singleSelectedFile = fileIt;
+                            m_singleSelectedIndex = filtered_index;
+
                         } else {
                             if (selected) { // TODO: Is this logic backwards? "!selected"?
                                 auto it = std::ranges::find(m_multiSelectedFiles, fileIt);
@@ -126,9 +110,19 @@ namespace hex::ui {
                     ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
                     ImGui::PopID();
+
+                    ++filtered_index;
                 }
 
                 ImGui::EndListBox();
+
+                if (!m_multiple && filterFocused) {
+                    if (ImGui::IsKeyPressed(ImGuiKey_UpArrow))
+                        --m_singleSelectedIndex;
+                    else if (ImGui::IsKeyPressed(ImGuiKey_DownArrow))
+                        ++m_singleSelectedIndex;
+                }
+                m_singleSelectedIndex = std::clamp(m_singleSelectedIndex, 0, filtered_index-1);
             }
 
             if (ImGui::Button("hex.ui.common.open"_lang) || doubleClicked) {
@@ -178,6 +172,7 @@ namespace hex::ui {
         Files m_files;
         std::map<std::fs::path, std::fs::path> m_adjustedPaths;
         Files::const_iterator m_singleSelectedFile;
+        int m_singleSelectedIndex;
         std::vector<Files::const_iterator> m_multiSelectedFiles;
         std::function<void(std::fs::path)> m_openCallback;
         std::vector<hex::fs::ItemFilter> m_validExtensions;
