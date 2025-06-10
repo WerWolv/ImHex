@@ -170,7 +170,7 @@ namespace hex::ui {
         Files m_files;
         std::map<std::fs::path, std::fs::path> m_adjustedPaths;
         int m_singleSelectedIndex;
-        std::set<std::vector<std::fs::path>::const_iterator> m_multiSelectedFiles;
+        std::set<Files::const_iterator> m_multiSelectedFiles;
         std::function<void(std::fs::path)> m_openCallback;
         std::vector<hex::fs::ItemFilter> m_validExtensions;
         bool m_multiple = false;
