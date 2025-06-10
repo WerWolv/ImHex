@@ -12,8 +12,6 @@
 #include <vector>
 #include <set>
 #include <algorithm>
-#include <iterator>
-#include <ranges>
 
 namespace hex::ui {
 
@@ -84,25 +82,21 @@ namespace hex::ui {
                         if (selected)
                             singleSelectedIt = fileIt;
                     } else
-                        selected = std::ranges::contains(m_multiSelectedFiles, fileIt);
+                        selected = m_multiSelectedFiles.contains(fileIt);
                     if (ImGui::Selectable(pathNameString.c_str(), selected, ImGuiSelectableFlags_NoAutoClosePopups)) {
-                        if (!m_multiple) {
-                            m_singleSelectedFile = fileIt;
+                        if (!m_multiple)
                             m_singleSelectedIndex = filtered_index;
-
-                        } else {
+                        else {
                             if (selected) { // TODO: Is this logic backwards? "!selected"?
-                                auto it = std::ranges::find(m_multiSelectedFiles, fileIt);
-                                if (it!=m_multiSelectedFiles.end())
-                                    m_multiSelectedFiles.erase(it);
+                                m_multiSelectedFiles.erase(fileIt);
                             } else {
-                                m_multiSelectedFiles.push_back(fileIt);
+                                m_multiSelectedFiles.insert(fileIt);
                             }
                         }
                     }
                     if (selected)
                         ImGui::SetScrollHereY(0.5f);
- 
+
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
                         doubleClickedOrEnter = true;
 
@@ -125,7 +119,7 @@ namespace hex::ui {
 
                     m_singleSelectedIndex = std::clamp(m_singleSelectedIndex, 0, filtered_index-1);
                 }
-                
+
             }
 
             if (ImGui::Button("hex.ui.common.open"_lang) || doubleClickedOrEnter) {
@@ -133,9 +127,9 @@ namespace hex::ui {
                     m_openCallback(*singleSelectedIt);
                 else {
                     for (const auto &it : m_multiSelectedFiles)
-                        m_openCallback(*it);  
+                        m_openCallback(*it);
                 }
-                    
+
                 Popup<T>::close();
             }
 
@@ -176,9 +170,8 @@ namespace hex::ui {
         using Files = std::vector<std::fs::path>;
         Files m_files;
         std::map<std::fs::path, std::fs::path> m_adjustedPaths;
-        Files::const_iterator m_singleSelectedFile;
         int m_singleSelectedIndex;
-        std::vector<Files::const_iterator> m_multiSelectedFiles;
+        std::set<std::vector<std::fs::path>::const_iterator> m_multiSelectedFiles;
         std::function<void(std::fs::path)> m_openCallback;
         std::vector<hex::fs::ItemFilter> m_validExtensions;
         bool m_multiple = false;
