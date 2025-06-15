@@ -1495,7 +1495,7 @@ namespace hex::plugin::builtin {
                 };
 
                 TextEditor::ErrorMarkers errorMarkers;
-                if (*m_callStack != nullptr && !(*m_callStack)->empty()) {
+                if (!(*m_callStack)->empty()) {
                     for (const auto &frame : **m_callStack | std::views::reverse) {
                         auto location = frame.node->getLocation();
                         std::string message;
@@ -1735,7 +1735,7 @@ namespace hex::plugin::builtin {
                         const pl::ptrn::Pattern *entry = pattern;
                         while (entry != nullptr) {
                             pathSegments.push_back(entry->getVariableName());
-                            entry = entry->getParent().get();
+                            entry = entry->getParent();
                         }
 
                         for (const auto &segment : pathSegments | std::views::reverse) {
@@ -2270,7 +2270,7 @@ namespace hex::plugin::builtin {
             const auto hoveredRegion = Region { address, size };
             for (const auto &pattern : runtime.getPatternsAtAddress(hoveredRegion.getStartAddress())) {
                 const pl::ptrn::Pattern * checkPattern = pattern;
-                if (auto parent = checkPattern->getParent().get(); parent != nullptr)
+                if (auto parent = checkPattern->getParent(); parent != nullptr)
                     checkPattern = parent;
 
                 result.emplace(checkPattern->getOffset(), checkPattern->getSize());

@@ -27,8 +27,7 @@ namespace hex::plugin::builtin {
             : Pattern(evaluator, offset, size, line) { }
 
         [[nodiscard]] std::shared_ptr<Pattern> clone() const override {
-            return std::make_shared<PatternEncodedString>(*this);
-           // return std::unique_ptr<Pattern>(new PatternEncodedString(*this));
+            return std::unique_ptr<Pattern>(new PatternEncodedString(*this));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -284,7 +283,7 @@ namespace hex::plugin::builtin {
                 std::string value;
                 EncodingFile encodingFile(EncodingFile::Type::Thingy, encodingDefinition);
 
-                auto pattern = std::make_unique<PatternEncodedString>(evaluator, evaluator->getReadOffset(), bytes.size(), 0);
+                auto pattern = std::make_shared<PatternEncodedString>(evaluator, evaluator->getReadOffset(), bytes.size(), 0);
                 pattern->setEncodedString(encodingFile, bytes);
 
                 return pattern;
