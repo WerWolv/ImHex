@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 #include <set>
-#include <algorithm>
 
 namespace hex::ui {
 
