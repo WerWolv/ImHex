@@ -1541,7 +1541,8 @@ namespace hex::plugin::builtin {
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
-            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider](const Task &task) {
+            // DEBGUGGING
+            /*m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider](const Task &task) {
                 if (!m_autoLoadPatterns)
                     return;
 
@@ -1690,7 +1691,7 @@ namespace hex::plugin::builtin {
                         runtime.reset();
                     }
                 }
-            });
+            });*/
         }
     }
 
