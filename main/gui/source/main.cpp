@@ -12,6 +12,11 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
 
+namespace pl {
+
+    void pl_init();
+}
+
 namespace hex::init {
 
     int runImHex();
@@ -37,6 +42,8 @@ int main(int argc, char **argv) {
 
     // Run platform-specific initialization code
     Window::initNative();
+
+    pl::pl_init();
 
     // Setup messaging system to allow sending commands to the main ImHex instance
     hex::messaging::setupMessaging();
