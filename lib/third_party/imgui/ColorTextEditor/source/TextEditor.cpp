@@ -2829,16 +2829,11 @@ void TextEditor::ColorizeInternal() {
         auto commentStartLine        = endLine;
         auto commentStartIndex       = 0;
         auto withinGlobalDocComment  = false;
-        auto withinDocComment        = false;
         auto withinBlockDocComment   = false;
-        auto withinComment           = false;
         auto withinString            = false;
         auto withinBlockComment      = false;
-        auto withinPreproc           = false;
         auto withinNotDef            = false;
-        auto firstChar               = true;     // there is no other non-whitespace characters in the line before
         auto currentLine             = 0;
-        auto currentIndex            = 0;
         auto commentLength           = 0;
 
         std::vector<bool> ifDefs;
@@ -2852,10 +2847,10 @@ void TextEditor::ColorizeInternal() {
                 std::fill_n(line.mFlags.begin(), line.mFlags.size(), 0);
                 line.mColorized = false;
             }
-            withinComment           = false;
-            withinDocComment        = false;
-            withinPreproc           = false;
-            firstChar               = true;
+            auto withinComment           = false;
+            auto withinDocComment        = false;
+            auto withinPreproc           = false;
+            auto firstChar               = true;   // there is no other non-whitespace characters in the line before
 
             auto setGlyphFlags = [&](int index) {
                 Line::Flags flags(0);
@@ -2871,7 +2866,7 @@ void TextEditor::ColorizeInternal() {
                 }
             };
 
-            currentIndex = 0;
+            auto currentIndex = 0;
             if (line.empty())
                 continue;
             while (currentIndex < lineLength) {
@@ -2903,82 +2898,52 @@ void TextEditor::ColorizeInternal() {
                             start++;
                         }
 
-                        if (start < (int) line.size()) {
+                        while (start < (int) line.size() && isspace(line[start]))
+                            start++;
 
-                            if (isspace(line[start])) {
-                                start += 1;
-                                 if (directive == "define") {
-                                     while (start < (int) line.size() && isspace(line[start]))
-                                         start++;
-                                     std::string identifier;
-                                     while (start < (int) line.size() && !isspace(line[start])) {
-                                         identifier += line[start];
-                                         start++;
-                                     }
-                                     if (identifier.size() > 0 && !withinNotDef && std::find(mDefines.begin(),mDefines.end(),identifier) == mDefines.end())
-                                         mDefines.push_back(identifier);
-                                    } else if (directive == "undef") {
-                                         while (start < (int) line.size() && isspace(line[start]))
-                                             start++;
-                                         std::string identifier;
-                                         while (start < (int) line.size() && !isspace(line[start])) {
-                                             identifier += line[start];
-                                             start++;
-                                         }
-                                         if (identifier.size() > 0  && !withinNotDef)
-                                             mDefines.erase(std::remove(mDefines.begin(), mDefines.end(), identifier), mDefines.end());
-                                } else if (directive == "ifdef") {
-                                    while (start < (int) line.size() && isspace(line[start]))
-                                        start++;
-                                    std::string identifier;
-                                    while (start < (int) line.size() && !isspace(line[start])) {
-                                        identifier += line[start];
-                                        start++;
-                                    }
-                                    if (!withinNotDef) {
-                                        bool isConditionMet = std::find(mDefines.begin(),mDefines.end(),identifier) != mDefines.end();
-                                        ifDefs.push_back(isConditionMet);
-                                    } else
-                                        ifDefs.push_back(false);
-                                } else if (directive == "ifndef") {
-                                    while (start < (int) line.size() && isspace(line[start]))
-                                        start++;
-                                    std::string identifier;
-                                    while (start < (int) line.size() && !isspace(line[start])) {
-                                        identifier += line[start];
-                                        start++;
-                                    }
-                                    if (!withinNotDef) {
-                                        bool isConditionMet =  std::find(mDefines.begin(),mDefines.end(),identifier) == mDefines.end();
-                                        ifDefs.push_back(isConditionMet);
-                                    } else
-                                        ifDefs.push_back(false);
-                                }
-                            }
+                        if (directive == "endif" && !ifDefs.empty()) {
+                            ifDefs.pop_back();
+                            withinNotDef = !ifDefs.back();
                         } else {
-                            if (directive == "endif") {
-                                if (ifDefs.size() > 1) {
-                                    ifDefs.pop_back();
-                                    withinNotDef = !ifDefs.back();
-                                }
+                            std::string identifier;
+                            while (start < (int) line.size() && !isspace(line[start])) {
+                                identifier += line[start];
+                                start++;
+                            }
+                            if (directive == "define") {
+                                if (identifier.size() > 0 && !withinNotDef && std::find(mDefines.begin(), mDefines.end(), identifier) == mDefines.end())
+                                    mDefines.push_back(identifier);
+                            } else if (directive == "undef") {
+                                if (identifier.size() > 0 && !withinNotDef)
+                                    mDefines.erase(std::remove(mDefines.begin(), mDefines.end(), identifier), mDefines.end());
+                            } else if (directive == "ifdef") {
+                                if (!withinNotDef) {
+                                    bool isConditionMet = std::find(mDefines.begin(), mDefines.end(), identifier) != mDefines.end();
+                                    ifDefs.push_back(isConditionMet);
+                                } else
+                                    ifDefs.push_back(false);
+                            } else if (directive == "ifndef") {
+                                if (!withinNotDef) {
+                                    bool isConditionMet = std::find(mDefines.begin(), mDefines.end(), identifier) == mDefines.end();
+                                    ifDefs.push_back(isConditionMet);
+                                } else
+                                    ifDefs.push_back(false);
                             }
                         }
                     }
 
                     if (c == '\"' && !withinPreproc && !inComment && !withinComment && !withinDocComment) {
-                        withinString                         = true;
+                        withinString = true;
                         setGlyphFlags(currentIndex);
                     } else {
-                        auto pred            = [](const char &a, const char &b) { return a == b; };
+                        auto pred         = [](const char &a, const char &b) { return a == b; };
 
-                        auto compareForth    = [&](const std::string &a, const std::string &b) {
-                            return !a.empty() && (currentIndex + a.size() <= b.size()) && equals(a.begin(), a.end(),
-                                    b.begin() + currentIndex, b.begin() + (currentIndex + a.size()), pred);
+                        auto compareForth = [&](const std::string &a, const std::string &b) {
+                            return !a.empty() && (currentIndex + a.size() <= b.size()) && equals(a.begin(), a.end(), b.begin() + currentIndex, b.begin() + (currentIndex + a.size()), pred);
                         };
 
-                        auto compareBack     = [&](const std::string &a, const std::string &b) {
-                            return !a.empty() && currentIndex + 1 >= (int)a.size() && equals(a.begin(), a.end(),
-                                    b.begin() + (currentIndex + 1 - a.size()), b.begin() + (currentIndex + 1), pred);
+                        auto compareBack  = [&](const std::string &a, const std::string &b) {
+                            return !a.empty() && currentIndex + 1 >= (int)a.size() && equals(a.begin(), a.end(), b.begin() + (currentIndex + 1 - a.size()), b.begin() + (currentIndex + 1), pred);
                         };
 
                         if (!inComment && !withinComment && !withinDocComment && !withinPreproc && !withinString) {
