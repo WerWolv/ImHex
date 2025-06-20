@@ -362,6 +362,12 @@ namespace ImGuiExt {
         else static_assert(hex::always_false<T>::value, "Invalid data type!");
     }
 
+    struct ImGuiTestEngine {
+        ImGuiTestEngine() = delete;
+
+        static void setEnabled(bool enabled);
+        [[nodiscard]] static bool isEnabled();
+    };
 }
 
 // these functions are exception because they just allow conversion from string to char*, they do not really add anything
