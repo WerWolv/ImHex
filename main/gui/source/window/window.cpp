@@ -407,9 +407,9 @@ namespace hex {
 
         ImGui::NewFrame();
 
-        #if defined(IMGUI_TEST_ENGINE)
+        if (ImGuiExt::ImGuiTestEngine::isEnabled())
             ImGuiTestEngine_ShowTestEngineWindows(m_testEngine, nullptr);
-        #endif
+
 
         TutorialManager::drawTutorial();
 
