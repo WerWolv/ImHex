@@ -1443,6 +1443,16 @@ namespace ImGuiExt {
         // Return the button press state
         ImGui::PopClipRect();
     }
+
+    static bool s_imguiTestEngineEnabled = false;
+
+    void ImGuiTestEngine::setEnabled(bool enabled) {
+        s_imguiTestEngineEnabled = enabled;
+    }
+
+    bool ImGuiTestEngine::isEnabled() {
+        return s_imguiTestEngineEnabled;
+    }
 }
 
 namespace ImGui {
