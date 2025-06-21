@@ -465,6 +465,17 @@ namespace hex::plugin::builtin {
         return results;
     }
 
+    template<typename T> T convert_signed_integer( T value, size_t size ) {
+
+        switch (size) {
+            case 1: return static_cast<T>(static_cast<i8>(value));
+            case 2: return static_cast<T>(static_cast<i16>(value));
+            case 4: return static_cast<T>(static_cast<i32>(value));
+            case 8: return static_cast<T>(static_cast<i64>(value));
+            default: return value;
+        }
+    }
+
     std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings) {
         std::vector<Occurrence> results;
 
@@ -500,6 +511,8 @@ namespace hex::plugin::builtin {
                 DecayedType value = 0;
                 reader.read(address, reinterpret_cast<u8*>(&value), size);
                 value = hex::changeEndianness(value, size, settings.endian);
+                if constexpr (std::signed_integral<DecayedType>)
+                    value = convert_signed_integer<DecayedType>(value, size);
 
                 return value >= minValue && value <= maxValue;
             }, min);
