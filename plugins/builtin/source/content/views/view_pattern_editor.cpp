@@ -1345,7 +1345,7 @@ namespace hex::plugin::builtin {
 
                         m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider, hexEditor, patternDrawer = std::make_shared<ui::PatternDrawer>(), &runtime]() mutable {
                             hexEditor.setProvider(dataProvider.get());
-                            hexEditor.draw(480_scaled);
+                            hexEditor.draw(ImGui::GetContentRegionAvail().y * 0.7);
                             patternDrawer->setSelectionCallback([&](const pl::ptrn::Pattern *pattern) {
                                 hexEditor.setSelection(Region { pattern->getOffset(), pattern->getSize() });
                             });
@@ -1360,7 +1360,7 @@ namespace hex::plugin::builtin {
                             }();
 
                             if (*m_executionDone)
-                                patternDrawer->draw(patterns, &runtime, 150_scaled);
+                                patternDrawer->draw(patterns, &runtime, ImGui::GetContentRegionAvail().y);
                         };
                     }
                     ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.sections.view"_lang.get());
@@ -1486,7 +1486,7 @@ namespace hex::plugin::builtin {
         auto open = m_sectionWindowDrawer.contains(provider);
         if (open) {
             ImGui::SetNextWindowSize(scaled(ImVec2(600, 700)), ImGuiCond_Appearing);
-            if (ImGui::Begin("hex.builtin.view.pattern_editor.section_popup"_lang, &open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+            if (ImGui::Begin("hex.builtin.view.pattern_editor.section_popup"_lang, &open, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                 m_sectionWindowDrawer[provider]();
             }
             ImGui::End();

@@ -88,6 +88,7 @@ namespace hex::plugin::builtin {
         static bool showImGuiDemo = false;
         static bool showImPlotDemo = false;
         static bool showImPlot3DDemo = false;
+        static bool showTestEngine = false;
 
         ImGui::SetNextWindowSize(scaled({ 300, 150 }), ImGuiCond_Always);
         if (ImGui::BeginPopup("DebugMenu")) {
@@ -109,6 +110,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::BeginChild("Scrolling", ImGui::GetContentRegionAvail())) {
                         auto ctx = ImGui::GetCurrentContext();
                         ImGui::Checkbox("Show ImGui Demo", &showImGuiDemo);
+                        ImGui::Checkbox("Show ImGui Test Engine",&showTestEngine);
                         ImGui::Checkbox("Show ImPlot Demo", &showImPlotDemo);
                         ImGui::Checkbox("Show ImPlot3D Demo", &showImPlot3DDemo);
 
@@ -158,6 +160,7 @@ namespace hex::plugin::builtin {
 
         if (showImGuiDemo)
             ImGui::ShowDemoWindow(&showImGuiDemo);
+        ImGuiExt::ImGuiTestEngine::setEnabled(showTestEngine);
         if (showImPlotDemo)
             ImPlot::ShowDemoWindow(&showImPlotDemo);
         if (showImPlot3DDemo)
