@@ -1167,6 +1167,10 @@
         "hex.builtin.welcome.update.desc": "ImHex {0} 已发布！",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "新的更新可用！",
-        "hex.builtin.welcome.quick_settings.simplified": "简化"
+        "hex.builtin.welcome.quick_settings.simplified": "简化",
+        "hex.builtin.provider.udp": "UDP服务器",
+        "hex.builtin.provider.udp.name": "​​端口{}上的UDP服务器",
+        "hex.builtin.provider.udp.port": "服务器端口",
+        "hex.builtin.provider.udp.timestamp": "时间戳"
     }
 }
