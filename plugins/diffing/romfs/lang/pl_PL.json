@@ -9,7 +9,7 @@
         "hex.diffing.algorithm.myers.name": "Algorytm bit-wektorowy Myersa",
         "hex.diffing.algorithm.myers.description": "Inteligentny algorytm różnicowania O(N*M). Może identyfikować modyfikacje, wstawienia i usunięcia w dowolnym miejscu danych",
         "hex.diffing.algorithm.myers.settings.window_size": "Rozmiar okna",
-        "hex.diffing.view.diff.name": "Różnicowanie",
+        "hex.diffing.view.diff.name": "Różnice",
         "hex.diffing.view.diff.added": "Dodane",
         "hex.diffing.view.diff.modified": "Zmodyfikowane",
         "hex.diffing.view.diff.provider_a": "Dostawca A",
