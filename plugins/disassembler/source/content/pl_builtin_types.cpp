@@ -52,6 +52,10 @@ namespace hex::plugin::disasm {
             return m_instructionString;
         }
 
+       [[nodiscard]] std::string toString() override {
+             return m_instructionString;
+        }
+
     private:
         std::string m_instructionString;
     };
