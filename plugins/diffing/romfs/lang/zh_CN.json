@@ -18,6 +18,7 @@
         "hex.diffing.view.diff.removed": "移除",
         "hex.diffing.view.diff.settings": "无可用设置",
         "hex.diffing.view.diff.settings.no_settings": "无可用设置",
-        "hex.diffing.view.diff.task.diffing": "对比数据……"
+        "hex.diffing.view.diff.task.diffing": "对比数据……",
+        "hex.diffing.view.diff.changes": "变化"
     }
 }
