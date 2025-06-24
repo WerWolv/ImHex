@@ -118,6 +118,14 @@
         "hex.ui.pattern_drawer.value": "值",
         "hex.ui.pattern_drawer.var_name": "名称",
         "hex.ui.pattern_drawer.visualizer.invalid_parameter_count": "无效的参数个数",
-        "hex.ui.pattern_drawer.visualizer.unknown": "未知可视化器"
+        "hex.ui.pattern_drawer.visualizer.unknown": "未知可视化器",
+        "hex.ui.common.apply": "应用",
+        "hex.ui.common.segment": "段",
+        "hex.ui.diagram.entropy_analysis.entropy_drop": "大幅熵降​",
+        "hex.ui.diagram.entropy_analysis.entropy_spike": "​​大幅熵增",
+        "hex.ui.hex_editor.columns": "​​列数​",
+        "hex.ui.hex_editor.fit_columns": "自适应列宽​",
+        "hex.ui.hex_editor.no_separator": "无分段分隔符​​",
+        "hex.ui.hex_editor.separator_stride": "分段大小：0x{0:02X}"
     }
 }
