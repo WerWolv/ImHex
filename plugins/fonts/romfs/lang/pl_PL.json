@@ -1,0 +1,24 @@
+{
+    "code": "pl-PL",
+    "country": "Polska",
+    "language": "Polski",
+    "fallback": false,
+    "translations": {
+        "hex.fonts.font.code_editor": "Czcionka edytora kodu",
+        "hex.fonts.font.default": "Ogólna czcionka interfejsu",
+        "hex.fonts.font.hex_editor": "Czcionka edytora HEX ",
+        "hex.fonts.setting.font": "Czcionka",
+        "hex.fonts.setting.font.antialias_grayscale": "Skala szarości",
+        "hex.fonts.setting.font.antialias_none": "Brak",
+        "hex.fonts.setting.font.antialias_subpixel": "Subpiksel",
+        "hex.fonts.setting.font.custom_font": "Czcionka",
+        "hex.fonts.setting.font.custom_font_info": "=> Poniższe ustawienia są dostępne tylko po wybraniu czcionki niestandardowej.",
+        "hex.fonts.setting.font.font_antialias": "Wygładzanie krawędzi",
+        "hex.fonts.setting.font.font_bold": "Pogrubienie",
+        "hex.fonts.setting.font.font_italic": "Kursywa",
+        "hex.fonts.setting.font.font_path": "Czcionka",
+        "hex.fonts.setting.font.font_size": "Rozmiar czcionki",
+        "hex.fonts.setting.font.glyphs": "Glify",
+        "hex.fonts.setting.font.load_all_unicode_chars": "Załaduj wszystkie glify Unicode"
+    }
+}
