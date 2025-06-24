@@ -127,7 +127,7 @@ class lexer : public lexer_base<BasicJsonType>
         , decimal_point_char(static_cast<char_int_type>(get_decimal_point()))
     {}
 
-    // delete because of pointer members
+    // deleted because of pointer members
     lexer(const lexer&) = delete;
     lexer(lexer&&) = default; // NOLINT(hicpp-noexcept-move,performance-noexcept-move-constructor)
     lexer& operator=(lexer&) = delete;
@@ -262,10 +262,10 @@ class lexer : public lexer_base<BasicJsonType>
 
         while (true)
         {
-            // get next character
+            // get the next character
             switch (get())
             {
-                // end of file while parsing string
+                // end of file while parsing the string
                 case char_traits<char_type>::eof():
                 {
                     error_message = "invalid string: missing closing quote";
@@ -351,7 +351,7 @@ class lexer : public lexer_base<BasicJsonType>
                                                         (static_cast<unsigned int>(codepoint1) << 10u)
                                                         // low surrogate occupies the least significant 15 bits
                                                         + static_cast<unsigned int>(codepoint2)
-                                                        // there is still the 0xD800, 0xDC00 and 0x10000 noise
+                                                        // there is still the 0xD800, 0xDC00, and 0x10000 noise
                                                         // in the result, so we have to subtract with:
                                                         // (0xD800 << 10) + DC00 - 0x10000 = 0x35FDC00
                                                         - 0x35FDC00u);
@@ -377,7 +377,7 @@ class lexer : public lexer_base<BasicJsonType>
                                 }
                             }
 
-                            // result of the above calculation yields a proper codepoint
+                            // the result of the above calculation yields a proper codepoint
                             JSON_ASSERT(0x00 <= codepoint && codepoint <= 0x10FFFF);
 
                             // translate codepoint into bytes
@@ -828,7 +828,7 @@ class lexer : public lexer_base<BasicJsonType>
                     break;
                 }
 
-                // remaining bytes (80..C1 and F5..FF) are ill-formed
+                // the remaining bytes (80..C1 and F5..FF) are ill-formed
                 default:
                 {
                     error_message = "invalid string: ill-formed UTF-8 byte";
@@ -973,7 +973,7 @@ class lexer : public lexer_base<BasicJsonType>
         reset();
 
         // the type of the parsed number; initially set to unsigned; will be
-        // changed if minus sign, decimal point or exponent is read
+        // changed if minus sign, decimal point, or exponent is read
         token_type number_type = token_type::value_unsigned;
 
         // state (init): we just found out we need to scan a number
@@ -1345,7 +1345,7 @@ scan_number_done:
 
         if (next_unget)
         {
-            // just reset the next_unget variable and work with current
+            // only reset the next_unget variable and work with current
             next_unget = false;
         }
         else
@@ -1524,7 +1524,7 @@ scan_number_done:
             return token_type::parse_error;
         }
 
-        // read next character and ignore whitespace
+        // read the next character and ignore whitespace
         skip_whitespace();
 
         // ignore comments

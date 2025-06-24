@@ -11,14 +11,21 @@
 
 #include <window.hpp>
 #include <init/tasks.hpp>
-#include <stacktrace.hpp>
+#include <hex/trace/stacktrace.hpp>
 
 #include <llvm/Demangle/Demangle.h>
 #include <nlohmann/json.hpp>
 
+#include <hex/trace/stacktrace.hpp>
+#include <llvm/Demangle/Demangle.h>
+
 #include <csignal>
 #include <exception>
 #include <typeinfo>
+
+#if defined(IMGUI_TEST_ENGINE)
+    #include <imgui_te_engine.h>
+#endif
 
 #if defined (OS_WINDOWS)
     #include <windows.h>
@@ -65,7 +72,7 @@ namespace hex::crash {
     }
 
     static void printStackTrace() {
-        auto stackTraceResult = stacktrace::getStackTrace();
+        auto stackTraceResult = trace::getStackTrace();
         log::fatal("Printing stacktrace using implementation '{}'", stackTraceResult.implementationName);
         for (const auto &stackFrame : stackTraceResult.stackFrames) {
             if (stackFrame.line == 0)
@@ -120,6 +127,10 @@ namespace hex::crash {
         // Flush all streams
         fflush(stdout);
         fflush(stderr);
+
+        #if defined(IMGUI_TEST_ENGINE)
+            ImGuiTestEngine_CrashHandler();
+        #endif
     }
 
     // Custom signal handler to print various information and a stacktrace when the application crashes
@@ -153,7 +164,7 @@ namespace hex::crash {
         try {
             std::rethrow_exception(std::current_exception());
         } catch (std::exception &ex) {
-            std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::demangle(typeid(ex).name()), ex.what());
+            std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::demangle(std::string("_Z") + typeid(ex).name()), ex.what());
 
             handleCrash(exceptionStr);
             log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
@@ -164,7 +175,7 @@ namespace hex::crash {
 
     // Setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
     void setupCrashHandlers() {
-        stacktrace::initialize();
+        trace::initialize();
 
         // Register signal handlers
         {

@@ -1,7 +1,6 @@
-#include <stacktrace.hpp>
-#include <hex/helpers/fmt.hpp>
+#include <iostream>
+#include <hex/trace/stacktrace.hpp>
 
-#include <array>
 #include <llvm/Demangle/Demangle.h>
 
 namespace {
@@ -18,12 +17,41 @@ namespace {
 
 }
 
-#if defined(OS_WINDOWS)
+
+#if defined(HEX_HAS_STD_STACKTRACE) && __has_include(<stacktrace>)
+
+    #include <stacktrace>
+
+    namespace hex::trace {
+
+        void initialize() {
+
+        }
+
+        StackTraceResult getStackTrace() {
+            StackTrace result;
+
+            auto stackTrace = std::stacktrace::current();
+
+            for (const auto &entry : stackTrace) {
+                if (entry.source_line() == 0 && entry.source_file().empty())
+                    result.emplace_back("", "??", 0);
+                else
+                    result.emplace_back(entry.source_file(), entry.description(), entry.source_line());
+            }
+
+            return { result, "std::stacktrace" };
+        }
+
+    }
+
+#elif defined(OS_WINDOWS)
 
     #include <windows.h>
     #include <dbghelp.h>
+    #include <array>
 
-    namespace hex::stacktrace {
+    namespace hex::trace {
 
         void initialize() {
 
@@ -93,7 +121,7 @@ namespace {
 
                 DWORD displacementLine = 0;
 
-                u32 lineNumber = 0;
+                std::uint32_t lineNumber = 0;
                 const char *fileName;
                 if (SymGetLineFromAddr64(process, stackFrame.AddrPC.Offset, &displacementLine, &line) == TRUE) {
                     lineNumber = line.LineNumber;
@@ -119,10 +147,11 @@ namespace {
     #if __has_include(BACKTRACE_HEADER)
 
         #include BACKTRACE_HEADER
-        #include <hex/helpers/utils.hpp>
+        #include <filesystem>
         #include <dlfcn.h>
+        #include <array>
 
-        namespace hex::stacktrace {
+        namespace hex::trace {
 
             void initialize() {
 
@@ -138,7 +167,7 @@ namespace {
                 for (size_t i = 0; i < count; i += 1) {
                     dladdr(addresses[i], &info);
 
-                    auto fileName = info.dli_fname != nullptr ? std::fs::path(info.dli_fname).filename().string() : "??";
+                    auto fileName = info.dli_fname != nullptr ? std::filesystem::path(info.dli_fname).filename().string() : "??";
                     auto demangledName = info.dli_sname != nullptr ? tryDemangle(info.dli_sname) : "??";
 
                     result.push_back(StackFrame { std::move(fileName), std::move(demangledName), 0 });
@@ -156,10 +185,10 @@ namespace {
     #if __has_include(BACKTRACE_HEADER)
 
         #include BACKTRACE_HEADER
-        #include <hex/helpers/logger.hpp>
-        #include <hex/helpers/utils.hpp>
 
-        namespace hex::stacktrace {
+        #include <wolv/io/fs.hpp>
+
+        namespace hex::trace {
 
             static struct backtrace_state *s_backtraceState;
 
@@ -167,14 +196,13 @@ namespace {
             void initialize() {
                 if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value()) {
                     static std::string path = executablePath->string();
-                    s_backtraceState = backtrace_create_state(path.c_str(), 1, [](void *, const char *msg, int) { log::error("{}", msg); }, nullptr);
+                    s_backtraceState = backtrace_create_state(path.c_str(), 1, [](void *, const char *, int) { }, nullptr);
                 }
             }
 
             StackTraceResult getStackTrace() {
                 static std::vector<StackFrame> result;
 
-                result.clear();
                 if (s_backtraceState != nullptr) {
                     backtrace_full(s_backtraceState, 0, [](void *, uintptr_t, const char *fileName, int lineNumber, const char *function) -> int {
                         if (fileName == nullptr)
@@ -182,7 +210,7 @@ namespace {
                         if (function == nullptr)
                             function = "??";
 
-                        result.push_back(StackFrame { std::fs::path(fileName).filename().string(), tryDemangle(function), u32(lineNumber) });
+                        result.push_back(StackFrame { std::filesystem::path(fileName).filename().string(), tryDemangle(function), std::uint32_t(lineNumber) });
 
                         return 0;
                     }, nullptr, nullptr);
@@ -198,7 +226,7 @@ namespace {
 
 #else
 
-    namespace hex::stacktrace {
+    namespace hex::trace {
 
         void initialize() { }
         StackTraceResult getStackTrace() {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include <condition_variable>
 #include <filesystem>
 #include <memory>
@@ -11,6 +13,7 @@
 #include <jthread.hpp>
 #include <hex/helpers/opengl.hpp>
 
+struct ImGuiTestEngine;
 struct GLFWwindow;
 struct ImGuiSettingsHandler;
 
@@ -37,6 +40,7 @@ namespace hex {
         void beginNativeWindowFrame();
         void endNativeWindowFrame();
         void drawTitleBar();
+        void drawView(const std::string &name, const std::unique_ptr<View> &view);
 
         void frameBegin();
         void frame();
@@ -57,6 +61,7 @@ namespace hex {
         void forceNewFrame();
 
         GLFWwindow *m_window = nullptr;
+        ImGuiTestEngine *m_testEngine = nullptr;
 
         std::string m_windowTitle, m_windowTitleFull;
 
@@ -82,7 +87,6 @@ namespace hex {
         std::mutex m_wakeupMutex;
         std::atomic<bool> m_wakeupFlag;
         std::condition_variable m_wakeupCondVar;
-
 
         gl::Shader m_postProcessingShader;
     };

@@ -15,7 +15,8 @@
 
 #include <algorithm> // copy
 #include <iterator> // begin, end
-#include <string> // string
+#include <memory> // allocator_traits
+#include <string> //  basic_string, char_traits
 #include <tuple> // tuple, get
 #include <type_traits> // is_same, is_constructible, is_floating_point, is_enum, underlying_type
 #include <utility> // move, forward, declval, pair
@@ -267,7 +268,7 @@ struct external_constructor<value_t::object>
 #ifdef JSON_HAS_CPP_17
 template<typename BasicJsonType, typename T,
          enable_if_t<std::is_constructible<BasicJsonType, T>::value, int> = 0>
-void to_json(BasicJsonType& j, const std::optional<T>& opt)
+void to_json(BasicJsonType& j, const std::optional<T>& opt) noexcept
 {
     if (opt.has_value())
     {
@@ -440,15 +441,21 @@ inline void to_json(BasicJsonType& j, const T& t)
 }
 
 #if JSON_HAS_FILESYSTEM || JSON_HAS_EXPERIMENTAL_FILESYSTEM
+#if defined(__cpp_lib_char8_t)
+template<typename BasicJsonType, typename Tr, typename Allocator>
+inline void to_json(BasicJsonType& j, const std::basic_string<char8_t, Tr, Allocator>& s)
+{
+    using OtherAllocator = typename std::allocator_traits<Allocator>::template rebind_alloc<char>;
+    j = std::basic_string<char, std::char_traits<char>, OtherAllocator>(s.begin(), s.end(), s.get_allocator());
+}
+#endif
+
 template<typename BasicJsonType>
 inline void to_json(BasicJsonType& j, const std_fs::path& p)
 {
-#ifdef JSON_HAS_CPP_20
-    const std::u8string s = p.u8string();
-    j = std::string(s.begin(), s.end());
-#else
-    j = p.u8string(); // returns std::string in C++17
-#endif
+    // Returns either a std::string or a std::u8string depending whether library
+    // support for char8_t is enabled.
+    j = p.u8string();
 }
 #endif
 

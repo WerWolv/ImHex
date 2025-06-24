@@ -973,9 +973,9 @@ class binary_writer
         if (JSON_HEDLEY_UNLIKELY(it != BasicJsonType::string_t::npos))
         {
             JSON_THROW(out_of_range::create(409, concat("BSON key cannot contain code point U+0000 (at byte ", std::to_string(it), ")"), &j));
-            static_cast<void>(j);
         }
 
+        static_cast<void>(j);
         return /*id*/ 1ul + name.size() + /*zero-terminator*/1u;
     }
 
@@ -1552,7 +1552,7 @@ class binary_writer
                 {
                     return 'L';
                 }
-                // anything else is treated as high-precision number
+                // anything else is treated as a high-precision number
                 return 'H'; // LCOV_EXCL_LINE
             }
 
@@ -1590,7 +1590,7 @@ class binary_writer
                 {
                     return 'M';
                 }
-                // anything else is treated as high-precision number
+                // anything else is treated as a high-precision number
                 return 'H'; // LCOV_EXCL_LINE
             }
 
@@ -1756,11 +1756,11 @@ class binary_writer
     template<typename NumberType>
     void write_number(const NumberType n, const bool OutputIsLittleEndian = false)
     {
-        // step 1: write number to array of length NumberType
+        // step 1: write the number to an array of length NumberType
         std::array<CharType, sizeof(NumberType)> vec{};
         std::memcpy(vec.data(), &n, sizeof(NumberType));
 
-        // step 2: write array to output (with possible reordering)
+        // step 2: write the array to output (with possible reordering)
         if (is_little_endian != OutputIsLittleEndian)
         {
             // reverse byte order prior to conversion if necessary
@@ -1813,8 +1813,21 @@ class binary_writer
                enable_if_t < std::is_signed<C>::value && std::is_unsigned<char>::value > * = nullptr >
     static CharType to_char_type(std::uint8_t x) noexcept
     {
+        // The std::is_trivial trait is deprecated in C++26. The replacement is to use
+        // std::is_trivially_copyable and std::is_trivially_default_constructible.
+        // However, some older library implementations support std::is_trivial
+        // but not all the std::is_trivially_* traits.
+        // Since detecting full support across all libraries is difficult,
+        // we use std::is_trivial unless we are using a standard where it has been deprecated.
+        // For more details, see: https://github.com/nlohmann/json/pull/4775#issuecomment-2884361627
+#ifdef JSON_HAS_CPP_26
+        static_assert(std::is_trivially_copyable<CharType>::value, "CharType must be trivially copyable");
+        static_assert(std::is_trivially_default_constructible<CharType>::value, "CharType must be trivially default constructible");
+#else
+        static_assert(std::is_trivial<CharType>::value, "CharType must be trivial");
+#endif
+
         static_assert(sizeof(std::uint8_t) == sizeof(CharType), "size of CharType must be equal to std::uint8_t");
-        static_assert(std::is_trivially_default_constructible<CharType>::value && std::is_trivially_copyable<CharType>::value, "CharType must be trivial");
         CharType result;
         std::memcpy(&result, &x, sizeof(x));
         return result;

@@ -39,19 +39,29 @@ set(LIBPL_ENABLE_CLI OFF CACHE BOOL "" FORCE)
 add_subdirectory(lib/external/pattern_language EXCLUDE_FROM_ALL)
 
 add_subdirectory(lib/libimhex)
+add_subdirectory(lib/trace)
 
 if (WIN32)
     set_target_properties(libimhex PROPERTIES
             IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../libimhex.dll"
             IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/lib/liblibimhex.dll.a"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex/include")
+    set_target_properties(tracing PROPERTIES
+            IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/lib/libtracing.a"
+            INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/trace/include")
 elseif (APPLE)
     file(GLOB LIBIMHEX_DYLIB "${CMAKE_CURRENT_SOURCE_DIR}/../../Frameworks/libimhex.*.dylib")
     set_target_properties(libimhex PROPERTIES
             IMPORTED_LOCATION "${LIBIMHEX_DYLIB}"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex/include")
+    set_target_properties(tracing PROPERTIES
+            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../libtracing.a"
+            INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/trace/include")
 else()
     set_target_properties(libimhex PROPERTIES
             IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../libimhex.so"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex/include")
+    set_target_properties(tracing PROPERTIES
+            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../libtracing.a"
+            INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/trace/include")
 endif()

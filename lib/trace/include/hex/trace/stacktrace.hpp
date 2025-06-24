@@ -1,17 +1,18 @@
 #pragma once
 
-#include <hex.hpp>
-
+#include <cstdint>
 #include <string>
 #include <vector>
 
-namespace hex::stacktrace {
+namespace hex::trace {
 
     struct StackFrame {
         std::string file;
         std::string function;
-        u32 line;
+        std::uint32_t line;
     };
+
+    using StackTrace = std::vector<StackFrame>;
 
     void initialize();
 

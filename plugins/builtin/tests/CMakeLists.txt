@@ -6,7 +6,7 @@ set(AVAILABLE_TESTS
     Providers/InvalidResize
 )
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME} OBJECT
     source/main.cpp
 )
 

@@ -260,7 +260,7 @@ class json_sax_dom_parser
         JSON_ASSERT(!ref_stack.empty());
         JSON_ASSERT(ref_stack.back()->is_object());
 
-        // add null at given key and store the reference for later
+        // add null at the given key and store the reference for later
         object_element = &(ref_stack.back()->m_data.m_value.object->operator[](val));
         return true;
     }
@@ -576,11 +576,11 @@ class json_sax_dom_callback_parser
     {
         BasicJsonType k = BasicJsonType(val);
 
-        // check callback for key
+        // check callback for the key
         const bool keep = callback(static_cast<int>(ref_stack.size()), parse_event_t::key, k);
         key_keep_stack.push_back(keep);
 
-        // add discarded value at given key and store the reference for later
+        // add discarded value at the given key and store the reference for later
         if (keep && ref_stack.back())
         {
             object_element = &(ref_stack.back()->m_data.m_value.object->operator[](val) = discarded);

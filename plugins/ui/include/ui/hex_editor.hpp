@@ -34,14 +34,14 @@ namespace hex::ui {
         }
 
         ImS64& get() {
-            if (m_synced)
+            if (m_synced || m_provider == nullptr)
                 return m_syncedPosition;
             else
                 return m_unsyncedPosition.get(m_provider);
         }
 
         [[nodiscard]] const ImS64& get() const {
-            if (m_synced)
+            if (m_synced || m_provider == nullptr)
                 return m_syncedPosition;
             else
                 return m_unsyncedPosition.get(m_provider);

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+<Type Name="Str">
+  <DisplayString>{ Data, na }</DisplayString>
+  <Expand>
+    <Item Name="Data">Data, na</Item>
+    <Item Name="Size">strlen(Data)</Item>
+    <Item Name="Capacity">Capacity</Item>
+  </Expand>
+</Type>
+
+</AutoVisualizer>

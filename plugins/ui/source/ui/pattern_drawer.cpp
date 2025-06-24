@@ -456,16 +456,27 @@ namespace hex::ui {
             if (shouldOpen)
                 ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
+            ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0.0F);
+            bool retVal = false;
             switch (m_treeStyle) {
                 using enum TreeStyle;
                 default:
                 case Default:
-                    return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                    break;
                 case AutoExpanded:
-                    return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen);
+                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
+                    break;
                 case Flattened:
-                    return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                    break;
             }
+            ImGui::PopStyleVar();
+
+            ImGui::SameLine();
+            ImGui::TextUnformatted(this->getDisplayName(pattern).c_str());
+
+            return retVal;
         });
     }
 
@@ -1112,7 +1123,7 @@ namespace hex::ui {
             if (!chunkOpen) {
                 continue;
             }
-            
+
             int id = 1;
             iterable.forEachEntry(i, endIndex, [&](u64, auto *entry){
                 ImGui::PushID(id);
@@ -1167,7 +1178,7 @@ namespace hex::ui {
         if (!ImGui::BeginTable("##Patterntable", 9, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
             return false;
         }
-    
+
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.favorites"_lang, ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_IndentDisable | (m_favorites.empty() ? ImGuiTableColumnFlags_None : ImGuiTableColumnFlags_NoHide), ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.var_name"_lang,  ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));

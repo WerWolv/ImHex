@@ -30,7 +30,7 @@
 // emitted in every translation unit. This issue cannot be fixed with a
 // header-only library as there is no implementation file to move these
 // functions to. As a result, we suppress this warning here to avoid client
-// code to stumble over this. See https://github.com/nlohmann/json/issues/4087
+// code stumbling over this. See https://github.com/nlohmann/json/issues/4087
 // for a discussion.
 #if defined(__clang__)
     #pragma clang diagnostic push

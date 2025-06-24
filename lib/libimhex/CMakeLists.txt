@@ -41,6 +41,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/semantic_version.cpp
         source/helpers/keys.cpp
         source/helpers/freetype.cpp
+        source/helpers/udp_server.cpp
 
         source/test/tests.cpp
 
@@ -154,6 +155,10 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     target_link_libraries(libimhex PRIVATE libpl microtar ${NFD_LIBRARIES} magic)
     target_link_libraries(libimhex PUBLIC libwolv libpl_includes libpl-gen ${IMGUI_LIBRARIES} ${JTHREAD_LIBRARIES})
 
+    if (IMHEX_ENABLE_IMGUI_TEST_ENGINE)
+        target_link_libraries(libimhex PUBLIC imgui_test_engine)
+    endif()
+
     if (NOT WIN32)
         target_link_libraries(libimhex PRIVATE dl)
     endif()
@@ -170,7 +175,7 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
 
-target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${FMT_LIBRARIES} ${LUNASVG_LIBRARIES} ${BOOST_LIBRARIES})
+target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${FMT_LIBRARIES} ${LUNASVG_LIBRARIES} ${BOOST_LIBRARIES} tracing)
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 
