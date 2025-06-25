@@ -99,14 +99,13 @@ namespace hex::plugin::disasm {
         static std::pair<cs_arch, cs_mode> stringToSettings(std::string_view string) {
             const auto vectorString = wolv::util::splitString(std::string(string), ";");
 
-            std::string_view archName;
-            std::string_view options;
-            if (vectorString.size() == 1) {
-                archName = wolv::util::trim(vectorString[0]);
-                options = "";
-            } else {
-                archName = wolv::util::trim(vectorString[0]);
+            std::string archName;
+            std::string options;
+            archName = wolv::util::trim(vectorString[0]);
+            if (vectorString.size() != 1) {
                 options = wolv::util::trim(vectorString[1]);
+            } else {
+                options = "";
             }
 
             u32 arch = {};
@@ -114,10 +113,11 @@ namespace hex::plugin::disasm {
 
             if (archName.ends_with("be") || archName.ends_with("eb")) {
                 mode |= CS_MODE_BIG_ENDIAN;
-                archName.remove_suffix(2);
+                archName.pop_back();
+                archName.pop_back();
             } else if (archName.ends_with("le") || archName.ends_with("el")) {
-                mode |= CS_MODE_LITTLE_ENDIAN;
-                archName.remove_suffix(2);
+                archName.pop_back();
+                archName.pop_back();
             }
 
             if (equalsIgnoreCase(archName, "arm")) {
