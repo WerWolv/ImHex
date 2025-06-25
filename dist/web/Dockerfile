@@ -1,4 +1,4 @@
-FROM emscripten/emsdk:4.0.8 AS build
+FROM emscripten/emsdk:4.0.10 AS build
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493
@@ -16,6 +16,20 @@ git clone https://github.com/microsoft/vcpkg /vcpkg
 git -C /vcpkg pull
 /vcpkg/bootstrap-vcpkg.sh
 sed -i 's/vcpkg_install_make(${EXTRA_ARGS})/vcpkg_install_make(${EXTRA_ARGS} SUBPATH src)/g' /vcpkg/ports/libmagic/portfile.cmake
+echo '
+diff --git a/magic/Makefile.am b/magic/Makefile.am
+index c2f8029f..d392be68 100644
+--- a/magic/Makefile.am
++++ b/magic/Makefile.am
+@@ -389,5 +389,6 @@ ${MAGIC}: $(MAGIC_FRAGMENTS) $(FILE_COMPILE_DEP)
+                exit 1; \
+            fi; \
+          fi)
++       chmod +x $(FILE_COMPILE) || true
+        $(FILE_COMPILE) -C -m magic
+        @rm -fr magic
+' >> /vcpkg/ports/libmagic/0018-Fix-File-Executable-Flag.patch
+sed -i 's/PATCHES ${PATCHES}/PATCHES \"0018-Fix-File-Executable-Flag.patch\"/g' /vcpkg/ports/libmagic/portfile.cmake
 EOF
 
 # Patch vcpkg build instructions to add -pthread
@@ -35,6 +49,7 @@ set -xe
 
 mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 
+/vcpkg/vcpkg update
 /vcpkg/vcpkg install --triplet=wasm32-emscripten libmagic
 /vcpkg/vcpkg install --triplet=wasm32-emscripten freetype
 /vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
