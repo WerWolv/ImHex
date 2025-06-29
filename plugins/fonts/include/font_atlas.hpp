@@ -120,7 +120,9 @@ namespace hex::fonts {
         ~FontAtlas() {
             if (m_fontAtlas != nullptr) {
                 m_fontAtlas->Locked = false;
-                IM_DELETE(m_fontAtlas);
+                if (ImGui::GetIO().Fonts != m_fontAtlas) {
+                    IM_DELETE(m_fontAtlas);
+                }
                 m_fontAtlas = nullptr;
             }
         }

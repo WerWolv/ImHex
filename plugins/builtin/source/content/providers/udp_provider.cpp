@@ -3,6 +3,8 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#include <fmt/chrono.h>
+
 namespace hex::plugin::builtin {
 
     bool UDPProvider::open() {

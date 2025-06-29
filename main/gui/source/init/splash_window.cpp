@@ -425,11 +425,6 @@ namespace hex::init {
             log::error("GLFW Error [{}] : {}", errorCode, desc);
         });
 
-        if (!glfwInit()) {
-            log::fatal("Failed to initialize GLFW!");
-            std::exit(EXIT_FAILURE);
-        }
-
         // Configure used OpenGL version
         #if defined(OS_MACOS)
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -585,7 +580,6 @@ namespace hex::init {
 
     void WindowSplash::exitGLFW() const {
         glfwDestroyWindow(m_window);
-        glfwTerminate();
     }
 
     void WindowSplash::exitImGui() const {

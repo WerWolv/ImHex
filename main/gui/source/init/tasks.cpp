@@ -76,7 +76,6 @@ namespace hex::init {
         if (ImGui::GetCurrentContext() != nullptr) {
             if (ImGui::GetIO().Fonts != nullptr) {
                 ImGui::GetIO().Fonts->Locked = false;
-                ImGui::GetIO().Fonts = nullptr;
             }
         }
 

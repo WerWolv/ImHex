@@ -11,6 +11,12 @@
     namespace hex::init {
 
         int runImHex() {
+            // Initialize GLFW
+            if (!glfwInit()) {
+                log::fatal("Failed to initialize GLFW!");
+                std::abort();
+            }
+            ON_SCOPE_EXIT { glfwTerminate(); };
 
             bool shouldRestart = false;
             do {
@@ -20,6 +26,7 @@
                     shouldRestart = true;
                 });
 
+                // Splash window
                 {
                     auto splashWindow = initializeImHex();
                     // Draw the splash window while tasks are running
@@ -29,19 +36,10 @@
                     handleFileOpenRequest();
                 }
 
+                // Main window
                 {
-                    // Initialize GLFW
-                    if (!glfwInit()) {
-                        log::fatal("Failed to initialize GLFW!");
-                        std::abort();
-                    }
-                    ON_SCOPE_EXIT { glfwTerminate(); };
-
-                    // Main window
-                    {
-                        Window window;
-                        window.loop();
-                    }
+                    Window window;
+                    window.loop();
 
                     deinitializeImHex();
                 }
