@@ -39,8 +39,6 @@ set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 
-add_compile_options("-fsanitize=address")
-
 # Setup project
 loadVersion(IMHEX_VERSION IMHEX_VERSION_PLAIN)
 setVariableInParent(IMHEX_VERSION ${IMHEX_VERSION})
