@@ -972,14 +972,14 @@ jobs:
           -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\'         \
           -e '/BuildRequires:  cmake/a BuildRequires:  git-core'                      \
           -e '/%files/a %{_datadir}/%{name}/'                                         \
-          $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+          $GITHUB_WORKSPACE/dist/rpm/imhex.spec
 
       - name: 📜 Fix ccache on EL9
         if: matrix.mock_release == 'epel9'
-        run: sed -i '/\. \/opt\/rh\/gcc-toolset-14\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+        run: sed -i '/\. \/opt\/rh\/gcc-toolset-14\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/dist/rpm/imhex.spec
 
       - name: 🟩 Copy spec file to build root
-        run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
+        run: mv $GITHUB_WORKSPACE/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
 
       - name: 📜 Enable ccache for mock
         run: |
