@@ -922,7 +922,6 @@ jobs:
       - name: 🧰 Checkout
         uses: actions/checkout@v4
         with:
-          path: ImHex
           submodules: recursive
 
       - name: 📜 Setup DNF Cache
