@@ -922,7 +922,6 @@ jobs:
       - name: 🧰 Checkout
         uses: actions/checkout@v4
         with:
-          path: ImHex
           submodules: recursive
 
       - name: 📜 Setup DNF Cache
@@ -958,7 +957,7 @@ jobs:
           echo "IMHEX_VERSION=`cat ImHex/VERSION`" >> $GITHUB_ENV
 
       - name: 🗜️ Create tarball from sources with dependencies
-        run: tar --exclude-vcs -czf $GITHUB_WORKSPACE/ImHex/imhex-$IMHEX_VERSION.tar.gz ImHex
+        run: tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz .
 
       - name: ✒️ Modify spec file
         run: |
@@ -975,7 +974,7 @@ jobs:
         run: sed -i '/\. \/opt\/rh\/gcc-toolset-14\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
 
       - name: 🟩 Copy spec file to build root
-        run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/ImHex/imhex.spec
+        run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
 
       - name: 📜 Enable ccache for mock
         run: |
@@ -990,7 +989,7 @@ jobs:
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          fedpkg --path $GITHUB_WORKSPACE/ImHex --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
+          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
 
       - name: 🟩 Move and rename finished RPM
         run: |
