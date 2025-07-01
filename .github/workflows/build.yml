@@ -962,14 +962,6 @@ jobs:
           tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz ImHex
           mv $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz /__w/ImHex/ImHex/ImHex/imhex-$IMHEX_VERSION.tar.gz
 
-      - name: 📦 Build source RPM
-        run: |
-          cd $GITHUB_WORKSPACE/ImHex
-          rpmbuild -bs imhex.spec \
-          --define "_sourcedir $PWD" \
-          --define "_srcrpmdir $PWD" \
-          --define "IMHEX_VERSION $IMHEX_VERSION"
-
       - name: ✒️ Modify spec file
         run: |
           sed -i \
@@ -986,6 +978,14 @@ jobs:
 
       - name: 🟩 Copy spec file to build root
         run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/ImHex/imhex.spec
+
+      - name: 📦 Build source RPM
+        run: |
+          cd $GITHUB_WORKSPACE/ImHex
+          rpmbuild -bs imhex.spec \
+          --define "_sourcedir $PWD" \
+          --define "_srcrpmdir $PWD" \
+          --define "IMHEX_VERSION $IMHEX_VERSION"
 
       - name: 📜 Enable ccache for mock
         run: |
