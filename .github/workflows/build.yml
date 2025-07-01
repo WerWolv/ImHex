@@ -958,7 +958,9 @@ jobs:
           echo "IMHEX_VERSION=`cat ImHex/VERSION`" >> $GITHUB_ENV
 
       - name: 🗜️ Create tarball from sources with dependencies
-        run: tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz ImHex
+        run: |
+          tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz ImHex
+          mv $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz /__w/ImHex/ImHex/ImHex/imhex-$IMHEX_VERSION.tar.gz
 
       - name: ✒️ Modify spec file
         run: |
