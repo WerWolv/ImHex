@@ -958,11 +958,14 @@ jobs:
 
       - name: 🗜️ Create tarball from sources with dependencies
         run: |
+          pwd
           cd ..
+          pwd
           mkdir temp
           cd $GITHUB_WORKSPACE
-          tar --exclude-vcs -czf ../temp/mhex-$IMHEX_VERSION.tar.gz .
-          mv ../temp/mhex-$IMHEX_VERSION.tar.gz .
+          pwd
+          tar --exclude-vcs -czf ../temp/imhex-$IMHEX_VERSION.tar.gz .
+          mv ../temp/imhex-$IMHEX_VERSION.tar.gz /__w/ImHex/ImHex/imhex-$IMHEX_VERSION.tar.gz
 
       - name: ✒️ Modify spec file
         run: |
