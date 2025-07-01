@@ -984,7 +984,7 @@ jobs:
           cd $GITHUB_WORKSPACE/ImHex
           rpmbuild -bs imhex.spec \
           --define "_sourcedir $PWD" \
-          --define "_srcrpmdir $PWD" \
+          --define "_srcrpmdir /__w/ImHex/ImHex/ImHex/" \
           --define "IMHEX_VERSION $IMHEX_VERSION"
 
       - name: 📜 Enable ccache for mock
