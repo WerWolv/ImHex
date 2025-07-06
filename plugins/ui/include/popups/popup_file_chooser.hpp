@@ -20,7 +20,8 @@ namespace hex::ui {
         PopupNamedFileChooserBase(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
                 : hex::Popup<T>("hex.ui.common.choose_file"),
                   m_files(files),
-                  m_selectedFiles({ }),
+                  m_singleSelectedIndex(0),
+                  m_multiSelectedFiles({ }),
                   m_openCallback(callback),
                   m_validExtensions(validExtensions),
                   m_multiple(multiple) {
@@ -46,7 +47,7 @@ namespace hex::ui {
         }
 
         void drawContent() override {
-            bool doubleClicked = false;
+            bool doubleClickedOrEnter = false;
 
             if (m_justOpened) {
                 ImGui::SetKeyboardFocusHere();
@@ -55,9 +56,15 @@ namespace hex::ui {
 
             ImGui::PushItemWidth(-1);
             ImGuiExt::InputTextIcon("##search", ICON_VS_FILTER, m_filter);
+            bool filterOrListFocused = ImGui::IsItemFocused();
             ImGui::PopItemWidth();
 
+            Files::const_iterator singleSelectedIt;
             if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
+                bool lf = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+                filterOrListFocused |= lf;
+
+                int filtered_index = 0;
                 for (auto fileIt = m_files.begin(); fileIt != m_files.end(); ++fileIt) {
                     const auto &path = *fileIt;
 
@@ -67,34 +74,60 @@ namespace hex::ui {
 
                     ImGui::PushID(&*fileIt);
 
-                    bool selected = m_selectedFiles.contains(fileIt);
+                    bool selected = false;
+                    if (!m_multiple) {
+                        selected = (filtered_index==m_singleSelectedIndex);
+                        if (selected)
+                            singleSelectedIt = fileIt;
+                    } else
+                        selected = m_multiSelectedFiles.contains(fileIt);
                     if (ImGui::Selectable(pathNameString.c_str(), selected, ImGuiSelectableFlags_NoAutoClosePopups)) {
-                        if (!m_multiple) {
-                            m_selectedFiles.clear();
-                            m_selectedFiles.insert(fileIt);
-                        } else {
-                            if (selected) {
-                                m_selectedFiles.erase(fileIt);
+                        if (!m_multiple)
+                            m_singleSelectedIndex = filtered_index;
+                        else {
+                            if (selected) { // TODO: Is this logic backwards? "!selected"?
+                                m_multiSelectedFiles.erase(fileIt);
                             } else {
-                                m_selectedFiles.insert(fileIt);
+                                m_multiSelectedFiles.insert(fileIt);
                             }
                         }
                     }
+                    if (selected)
+                        ImGui::SetScrollHereY(0.5f);
 
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-                        doubleClicked = true;
+                        doubleClickedOrEnter = true;
 
                     ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
                     ImGui::PopID();
+
+                    ++filtered_index;
                 }
 
                 ImGui::EndListBox();
+
+                if (!m_multiple && filterOrListFocused) {
+                    if (ImGui::IsKeyPressed(ImGuiKey_UpArrow))
+                        --m_singleSelectedIndex;
+                    else if (ImGui::IsKeyPressed(ImGuiKey_DownArrow))
+                        ++m_singleSelectedIndex;
+                    else
+                        doubleClickedOrEnter |= ImGui::IsKeyPressed(ImGuiKey_Enter);
+
+                    m_singleSelectedIndex = std::clamp(m_singleSelectedIndex, 0, filtered_index-1);
+                }
+
             }
 
-            if (ImGui::Button("hex.ui.common.open"_lang) || doubleClicked) {
-                for (const auto &it : m_selectedFiles)
-                    m_openCallback(*it);
+            if (ImGui::Button("hex.ui.common.open"_lang) || doubleClickedOrEnter) {
+                if (!m_multiple)
+                    m_openCallback(*singleSelectedIt);
+                else {
+                    for (const auto &it : m_multiSelectedFiles)
+                        m_openCallback(*it);
+                }
+
                 Popup<T>::close();
             }
 
@@ -132,9 +165,11 @@ namespace hex::ui {
 
     private:
         std::string m_filter;
-        std::vector<std::fs::path> m_files;
+        using Files = std::vector<std::fs::path>;
+        Files m_files;
         std::map<std::fs::path, std::fs::path> m_adjustedPaths;
-        std::set<std::vector<std::fs::path>::const_iterator> m_selectedFiles;
+        int m_singleSelectedIndex;
+        std::set<Files::const_iterator> m_multiSelectedFiles;
         std::function<void(std::fs::path)> m_openCallback;
         std::vector<hex::fs::ItemFilter> m_validExtensions;
         bool m_multiple = false;
