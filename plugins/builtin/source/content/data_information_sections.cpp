@@ -281,28 +281,49 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("{}", "hex.builtin.information_section.info_analysis.highest_entropy"_lang);
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormattedSelectable("{:.5f} @", m_highestBlockEntropy);
-                ImGui::SameLine();
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                if (ImGui::Button(hex::format("0x{:06X}", m_highestBlockEntropyAddress).c_str())) {
-                    ImHexApi::HexEditor::setSelection(m_highestBlockEntropyAddress, m_inputChunkSize);
+                {
+                    ImGui::PushID("##HighestBlockEntropyValue");
+                    ImGuiExt::TextFormattedSelectable("{:.5f} @", m_highestBlockEntropy);
+                    ImGui::PopID();
                 }
-                ImGui::PopStyleColor();
-                ImGui::PopStyleVar();
+
+                ImGui::SameLine();
+
+                {
+                    ImGui::PushID("##HighestBlockEntropyAddress");
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                    if (ImGui::Button(hex::format("0x{:06X}", m_highestBlockEntropyAddress).c_str())) {
+                        ImHexApi::HexEditor::setSelection(m_highestBlockEntropyAddress, m_inputChunkSize);
+                    }
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleVar();
+                    ImGui::PopID();
+                }
 
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("{}", "hex.builtin.information_section.info_analysis.lowest_entropy"_lang);
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormattedSelectable("{:.5f} @", m_lowestBlockEntropy);
-                ImGui::SameLine();
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                if (ImGui::Button(hex::format("0x{:06X}", m_lowestBlockEntropyAddress).c_str())) {
-                    ImHexApi::HexEditor::setSelection(m_lowestBlockEntropyAddress, m_inputChunkSize);
+
+                {
+                    ImGui::PushID("##LowestBlockEntropyValue");
+                    ImGuiExt::TextFormattedSelectable("{:.5f} @", m_lowestBlockEntropy);
+                    ImGui::PopID();
                 }
-                ImGui::PopStyleColor();
-                ImGui::PopStyleVar();
+
+                ImGui::SameLine();
+
+                {
+                    ImGui::PushID("##LowestBlockEntropyAddress");
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                    if (ImGui::Button(hex::format("0x{:06X}", m_lowestBlockEntropyAddress).c_str())) {
+                        ImHexApi::HexEditor::setSelection(m_lowestBlockEntropyAddress, m_inputChunkSize);
+                    }
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleVar();
+                    ImGui::PopID();
+                }
 
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("{}", "hex.builtin.information_section.info_analysis.plain_text_percentage"_lang);
