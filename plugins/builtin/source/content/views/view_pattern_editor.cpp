@@ -38,6 +38,9 @@
 #include <fonts/fonts.hpp>
 #include <hex/helpers/menu_items.hpp>
 
+// Debugging
+#include <iostream>
+
 namespace hex::plugin::builtin {
 
     using namespace hex::literals;
@@ -1835,16 +1838,19 @@ namespace hex::plugin::builtin {
         ImGui::PopID();
     }
 
-
     void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider) {
         wolv::io::File file(path, wolv::io::File::Mode::Read);
         if (file.isValid()) {
             auto code = file.readString();
+            // Debugging
+            std::cout << code << std::endl;
 
-            this->evaluatePattern(code, provider);
+            // TODO: lextwice: we lex twice here! 1st lex.
+            this->evaluatePattern(code, provider); // TODO: This seems to be highlighting.
             m_textEditor.get(provider).SetText(code, true);
             m_sourceCode.get(provider) = code;
 
+            // TODO: lextwice: we lex twice here! 2nd lex.
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
