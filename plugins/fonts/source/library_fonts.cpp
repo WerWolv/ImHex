@@ -113,6 +113,6 @@ IMHEX_LIBRARY_SETUP("Fonts") {
 
     hex::EventImHexStartupFinished::subscribe([] {
         hex::fonts::setupFonts();
-        hex::ImHexApi::Fonts::setDefaultFont(hex::fonts::Default);
+        hex::ImHexApi::Fonts::setDefaultFont(hex::fonts::Default());
     });
 }

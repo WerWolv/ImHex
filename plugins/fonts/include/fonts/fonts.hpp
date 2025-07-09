@@ -4,8 +4,8 @@
 
 namespace hex::fonts {
 
-    extern ImHexApi::Fonts::Font Default;
-    extern ImHexApi::Fonts::Font HexEditor;
-    extern ImHexApi::Fonts::Font CodeEditor;
+    [[nodiscard]] const ImHexApi::Fonts::Font& Default();
+    [[nodiscard]] const ImHexApi::Fonts::Font& HexEditor();
+    [[nodiscard]] const ImHexApi::Fonts::Font& CodeEditor();
 
 }

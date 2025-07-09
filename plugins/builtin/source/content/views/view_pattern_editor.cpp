@@ -341,9 +341,9 @@ namespace hex::plugin::builtin {
                     m_focusedSubWindowName = name;
             }
 
-            fonts::CodeEditor.push();
+            fonts::CodeEditor().push();
             m_textEditor.get(provider).Render("##pattern_editor", textEditorSize, false);
-            fonts::CodeEditor.pop();
+            fonts::CodeEditor().pop();
 
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
@@ -1087,9 +1087,9 @@ namespace hex::plugin::builtin {
             m_consoleNeedsUpdate = false;
         }
 
-        fonts::CodeEditor.push();
+        fonts::CodeEditor().push();
         m_consoleEditor.get(provider).Render("##console", size, true);
-        fonts::CodeEditor.pop();
+        fonts::CodeEditor().pop();
 
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }

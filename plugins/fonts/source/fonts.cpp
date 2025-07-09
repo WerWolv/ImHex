@@ -11,9 +11,12 @@
 
 namespace hex::fonts {
 
-    ImHexApi::Fonts::Font Default("hex.fonts.font.default");
-    ImHexApi::Fonts::Font HexEditor("hex.fonts.font.hex_editor");
-    ImHexApi::Fonts::Font CodeEditor("hex.fonts.font.code_editor");
+    static auto s_defaultFont = ImHexApi::Fonts::Font("hex.fonts.font.default");
+    const ImHexApi::Fonts::Font& Default()    { return s_defaultFont; }
+    static auto s_hexEditorFont = ImHexApi::Fonts::Font("hex.fonts.font.hex_editor");
+    const ImHexApi::Fonts::Font& HexEditor()  { return s_hexEditorFont; }
+    static auto s_codeEditorFont = ImHexApi::Fonts::Font("hex.fonts.font.code_editor");
+    const ImHexApi::Fonts::Font& CodeEditor() { return s_codeEditorFont; }
 
     void registerFonts() {
         using namespace ImHexApi::Fonts;
