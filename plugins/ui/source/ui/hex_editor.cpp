@@ -1291,9 +1291,9 @@ namespace hex::ui {
         if (tableSize.y <= 0)
             tableSize.y = height;
 
-        ImGui::PushFont(fonts::HexEditor());
+        fonts::HexEditor.push();
         this->drawEditor(tableSize);
-        ImGui::PopFont();
+        fonts::HexEditor.pop();
 
         if (tableSize.y > 0)
             this->drawFooter(footerSize);

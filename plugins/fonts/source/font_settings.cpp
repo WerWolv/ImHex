@@ -198,10 +198,20 @@ namespace hex::fonts {
         return m_italic.isChecked();
     }
 
-    [[nodiscard]] const std::string FontSelector::antiAliasingType() const {
+    [[nodiscard]] AntialiasingType FontSelector::getAntialiasingType() const {
         if (isPixelPerfectFont())
-            return "none";
-        return m_antiAliased.getValue();
+            return AntialiasingType::None;
+
+        auto value = m_antiAliased.getValue();
+        if (value == "none")
+            return AntialiasingType::None;
+        else if (value == "grayscale")
+            return AntialiasingType::Grayscale;
+        else if (value == "subpixel")
+            return AntialiasingType::Lcd;
+        else
+            return AntialiasingType::Grayscale;
+
     }
 
 

@@ -1,5 +1,7 @@
 #include <hex/api/imhex_api.hpp>
 
+#include <fonts/fonts.hpp>
+
 #include <romfs/romfs.hpp>
 
 #include <hex/helpers/utils.hpp>
@@ -8,6 +10,10 @@
 #include <fonts/blender_icons.hpp>
 
 namespace hex::fonts {
+
+    ImHexApi::Fonts::Font Default("hex.fonts.font.default");
+    ImHexApi::Fonts::Font HexEditor("hex.fonts.font.hex_editor");
+    ImHexApi::Fonts::Font CodeEditor("hex.fonts.font.code_editor");
 
     void registerFonts() {
         using namespace ImHexApi::Fonts;
@@ -24,7 +30,7 @@ namespace hex::fonts {
             {
                 { ICON_MIN_VS, ICON_MAX_VS }
             },
-            { -1_scaled, -1_scaled });
+            { -1, -2 });
 
         ImHexApi::Fonts::loadFont("Unifont", romfs::get("fonts/unifont.otf").span<u8>(), { }, {}, 0, false, 16);
     }
