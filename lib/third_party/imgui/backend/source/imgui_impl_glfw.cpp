@@ -132,6 +132,10 @@
 // IMHEX PATCH END
 #ifndef _WIN32
 #include <unistd.h>             // for usleep()
+// IMHEX PATCH BEGIN
+#include <string_view>          // for std::string_view
+#include <cstdlib>              // for std::getenv()
+// IMHEX PATCH END
 #endif
 #include <stdio.h>              // for snprintf()
 
