@@ -1,0 +1,37 @@
+libimhex.dll!pl::core::save_compile_results(std::string fn, pl::hlp::CompileResult & res) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\core\new_lexer.cpp:631)
+libimhex.dll!pl::core::New_Lexer::lex(pl::core::New_Lexer * const this, const pl::api::Source * source) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\core\new_lexer.cpp:624)
+libimhex.dll!pl::core::Preprocessor::preprocess(pl::core::Preprocessor * const this, pl::PatternLanguage * runtime, pl::api::Source * source, bool initialRun) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\core\preprocessor.cpp:597)
+libimhex.dll!pl::PatternLanguage::preprocessString(pl::PatternLanguage * const this, const std::string & code, const std::string & source) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\pattern_language.cpp:152)
+libimhex.dll!pl::PatternLanguage::parseString(pl::PatternLanguage * const this, const std::string & code, const std::string & source) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\pattern_language.cpp:161)
+//
+builtin.hexplug!hex::plugin::builtin::ViewPatternEditor::parsePattern(hex::plugin::builtin::ViewPatternEditor * const this, const std::string & code, hex::prv::Provider * provider) (c:\projects\SteveImHex\plugins\builtin\source\content\views\view_pattern_editor.cpp:1856)
+builtin.hexplug!operator()<hex::Task>(const struct {...} * const __closure) (c:\projects\SteveImHex\plugins\builtin\source\content\views\view_pattern_editor.cpp:1848)
+builtin.hexplug!std::__invoke_impl<void, hex::plugin::builtin::ViewPatternEditor::loadPatternFile(const std::filesystem::__cxx11::path&, hex::prv::Provider*)::<lambda(auto:278&)>&, hex::Task&>(std::__invoke_other, struct {...} &)(struct {...} & __f) (c:\msys64\mingw64\include\c++\14.2.0\bits\invoke.h:61)
+builtin.hexplug!std::__invoke_r<void, hex::plugin::builtin::ViewPatternEditor::loadPatternFile(const std::filesystem::__cxx11::path&, hex::prv::Provider*)::<lambda(auto:278&)>&, hex::Task&>(struct {...} &)(struct {...} & __fn) (c:\msys64\mingw64\include\c++\14.2.0\bits\invoke.h:111)
+builtin.hexplug!std::_Function_handler<void(hex::Task&), hex::plugin::builtin::ViewPatternEditor::loadPatternFile(const std::filesystem::__cxx11::path&, hex::prv::Provider*)::<lambda(auto:278&)> >::_M_invoke(const std::_Any_data &, hex::Task &)(const std::_Any_data & __functor, hex::Task & __args#0) (c:\msys64\mingw64\include\c++\14.2.0\bits\std_function.h:290)
+//
+libimhex.dll!std::function<void(hex::Task&)>::operator()(const std::function<void(hex::Task&)> * const this, hex::Task & __args#0) (c:\msys64\mingw64\include\c++\14.2.0\bits\std_function.h:591)
+libimhex.dll!operator()(const struct {...} * const __closure, const std::stop_token & stopToken) (c:\projects\SteveImHex\lib\libimhex\source\api\task_manager.cpp:289)
+libimhex.dll!std::__invoke_impl<void, hex::TaskManager::init()::<lambda(const std::stop_token&)>, std::stop_token>(std::__invoke_other, struct {...} &&)(struct {...} && __f) (c:\msys64\mingw64\include\c++\14.2.0\bits\invoke.h:61)
+libimhex.dll!std::__invoke<hex::TaskManager::init()::<lambda(const std::stop_token&)>, std::stop_token>(struct {...} &&)(struct {...} && __fn) (c:\msys64\mingw64\include\c++\14.2.0\bits\invoke.h:96)
+
+***************************************
+
+libimhex.dll!pl::core::save_compile_results(std::string fn, pl::hlp::CompileResult & res) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\core\new_lexer.cpp:631)
+libimhex.dll!pl::core::New_Lexer::lex(pl::core::New_Lexer * const this, const pl::api::Source * source) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\core\new_lexer.cpp:624)
+libimhex.dll!pl::core::Preprocessor::preprocess(pl::core::Preprocessor * const this, pl::PatternLanguage * runtime, pl::api::Source * source, bool initialRun) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\core\preprocessor.cpp:597)
+libimhex.dll!pl::PatternLanguage::preprocessString(pl::PatternLanguage * const this, const std::string & code, const std::string & source) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\pattern_language.cpp:152)
+libimhex.dll!pl::PatternLanguage::parseString(pl::PatternLanguage * const this, const std::string & code, const std::string & source) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\pattern_language.cpp:161)
+//
+libimhex.dll!pl::PatternLanguage::executeString(pl::PatternLanguage * const this, std::string code, const std::string & source, const std::map<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, pl::core::Token::Literal, std::less<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::allocator<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, pl::core::Token::Literal> > > & envVars, const std::map<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, pl::core::Token::Literal, std::less<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::allocator<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, pl::core::Token::Literal> > > & inVariables, bool checkResult) (c:\projects\SteveImHex\lib\external\pattern_language\lib\source\pl\pattern_language.cpp:236)
+builtin.hexplug!operator()<hex::Task>(const struct {...} * const __closure, hex::Task & task) (c:\projects\SteveImHex\plugins\builtin\source\content\views\view_pattern_editor.cpp:2001)
+builtin.hexplug!std::__invoke_impl<void, hex::plugin::builtin::ViewPatternEditor::evaluatePattern(const std::string&, hex::prv::Provider*)::<lambda(auto:279&)>&, hex::Task&>(std::__invoke_other, struct {...} &)(struct {...} & __f) (c:\msys64\mingw64\include\c++\14.2.0\bits\invoke.h:61)
+builtin.hexplug!std::__invoke_r<void, hex::plugin::builtin::ViewPatternEditor::evaluatePattern(const std::string&, hex::prv::Provider*)::<lambda(auto:279&)>&, hex::Task&>(struct {...} &)(struct {...} & __fn) (c:\msys64\mingw64\include\c++\14.2.0\bits\invoke.h:111)
+builtin.hexplug!std::_Function_handler<void(hex::Task&), hex::plugin::builtin::ViewPatternEditor::evaluatePattern(const std::string&, hex::prv::Provider*)::<lambda(auto:279&)> >::_M_invoke(const std::_Any_data &, hex::Task &)(const std::_Any_data & __functor, hex::Task & __args#0) (c:\msys64\mingw64\include\c++\14.2.0\bits\std_function.h:290)
+//
+libimhex.dll!std::function<void(hex::Task&)>::operator()(const std::function<void(hex::Task&)> * const this, hex::Task & __args#0) (c:\msys64\mingw64\include\c++\14.2.0\bits\std_function.h:591)
+libimhex.dll!operator()(const struct {...} * const __closure, const std::stop_token & stopToken) (c:\projects\SteveImHex\lib\libimhex\source\api\task_manager.cpp:289)
+libimhex.dll!std::__invoke_impl<void, hex::TaskManager::init()::<lambda(const std::stop_token&)>, std::stop_token>(std::__invoke_other, struct {...} &&)(struct {...} && __f) (c:\msys64\mingw64\include\c++\14.2.0\bits\invoke.h:61)
+libimhex.dll!std::__invoke<hex::TaskManager::init()::<lambda(const std::stop_token&)>, std::stop_token>(struct {...} &&)(struct {...} && __fn) (c:\msys64\mingw64\include\c++\14.2.0\bits\invoke.h:96)
+
+

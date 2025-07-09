@@ -1,0 +1,32 @@
+Example file:
+------------
+
+#pragma author WerWolv
+#pragma description Microsoft PE Portable Executable (exe/dll)
+
+#pragma MIME application/x-dosexec
+#pragma MIME application/x-msdownload
+#pragma MIME application/vnd.microsoft.portable-executable
+
+import std.core;
+import std.string;
+import type.guid;
+import type.time;
+//3456789
+;;**destruct DOSHeader {
+
+Note:
+-----
+ "**" is a single tab char (hard coded to four spaces in ImHex)
+
+Error:
+------
+E: error: Type destruct has not been declared yet.
+E:   -->   in <Source Code>:13:7
+E: 13 | ;;    destruct DOSHeader {
+E:            ^^^^^^^^
+
+Link to org fix:
+----------------
+https://github.com/WerWolv/PatternLanguage/commit/f29a7fda0e6c4651f1e1667fd0d82c791afc6c1a#diff-715e5fce329a964b5f0cae4fa2d45a4273ba388614701f95a33a0e7750b1e9f9
+
