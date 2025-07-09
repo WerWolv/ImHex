@@ -1,4 +1,4 @@
-// dear imgui, v1.92.0
+// dear imgui, v1.92.1
 // (widgets code)
 
 /*
@@ -573,7 +573,8 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
     bool pressed = false;
     bool hovered = ItemHoverable(bb, id, item_flags);
 
-    // Special mode for Drag and Drop where holding button pressed for a long time while dragging another item triggers the button
+    // Special mode for Drag and Drop used by openables (tree nodes, tabs etc.)
+    // where holding the button pressed for a long time while drag a payload item triggers the button.
     if (g.DragDropActive && (flags & ImGuiButtonFlags_PressedOnDragDropHold) && !(g.DragDropSourceFlags & ImGuiDragDropFlags_SourceNoHoldToOpenOthers))
         if (IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
         {
@@ -8930,9 +8931,8 @@ bool ImGui::BeginViewportSideBar(const char* name, ImGuiViewport* viewport_p, Im
     }
 
     window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
-    SetNextWindowViewport(viewport->ID); // Enforce viewport so we don't create our own viewport when ImGuiConfigFlags_ViewportsNoMerge is set.
-
     // Create window
+    SetNextWindowViewport(viewport->ID); // Enforce viewport so we don't create our own viewport when ImGuiConfigFlags_ViewportsNoMerge is set.
     PushStyleColor(ImGuiCol_WindowShadow, ImVec4(0, 0, 0, 0));
     PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0, 0)); // Lift normal size constraint
