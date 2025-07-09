@@ -32,6 +32,7 @@ static bool s_constructingMenu = false;
 static bool s_resetNeeded = true;
 
 void macosMenuBarInit(void) {
+    s_menuStackSize = 0;
     s_menuStack[0] = NSApp.mainMenu;
     s_menuStackSize += 1;
 
