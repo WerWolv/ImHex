@@ -1272,7 +1272,7 @@ namespace hex::plugin::builtin {
                                                     }
 
                                                     if (!didFindNextValue && didReachBeginning) {
-                                                        ui::ToastInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
+                                                        ui::ToastInfo::open("hex.builtin.view.hex_editor.menu.file.skip_until.beginning_reached"_lang);
                                                     }
                                                 },
                                                 canSearchForDifferingByte);
@@ -1311,7 +1311,7 @@ namespace hex::plugin::builtin {
                                                     }
 
                                                     if (!didFindNextValue && didReachEnd) {
-                                                        ui::ToastInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
+                                                        ui::ToastInfo::open("hex.builtin.view.hex_editor.menu.file.skip_until.end_reached"_lang);
                                                     }
                                                 },
                                                 canSearchForDifferingByte);
