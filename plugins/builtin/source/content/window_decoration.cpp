@@ -426,7 +426,7 @@ namespace hex::plugin::builtin {
                             ImGui::OpenPopup("WindowingMenu");
                     #elif defined(OS_MACOS)
                         if (!isMacosFullScreenModeEnabled(window))
-                            ImGui::SetCursorPosX(68_scaled);
+                            ImGui::SetCursorPosX(75_scaled);
                     #endif
                 }
 

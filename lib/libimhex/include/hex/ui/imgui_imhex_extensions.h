@@ -99,6 +99,10 @@ namespace ImGuiExt {
             return m_textureId != 0;
         }
 
+        [[nodiscard]] operator ImTextureRef() const noexcept {
+            return m_textureId;
+        }
+
         [[nodiscard]] operator ImTextureID() const noexcept {
             return m_textureId;
         }

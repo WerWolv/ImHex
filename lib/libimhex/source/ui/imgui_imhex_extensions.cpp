@@ -1019,7 +1019,7 @@ namespace ImGuiExt {
         std::string drawString;
         auto textEnd = text + strlen(text);
         for (auto wrapPos = text; wrapPos != textEnd;) {
-            wrapPos = ImGui::GetFont()->CalcWordWrapPositionA(1, wrapPos, textEnd, availableSpace.x * 0.8F);
+            wrapPos = ImGui::GetFont()->CalcWordWrapPosition(1, wrapPos, textEnd, availableSpace.x * 0.8F);
             drawString += std::string(text, wrapPos) + "\n";
             text = wrapPos;
         }

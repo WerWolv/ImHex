@@ -2750,15 +2750,19 @@ void PlotDigitalG(const char* label_id, ImPlotGetter getter_func, void* data, in
 // [SECTION] PlotImage
 //-----------------------------------------------------------------------------
 
-void PlotImage(const char* label_id, ImTextureID user_texture_id, const ImPlotPoint& bmin, const ImPlotPoint& bmax, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, ImPlotImageFlags) {
-    if (BeginItemEx(label_id, FitterRect(bmin,bmax))) {
+#ifdef IMGUI_HAS_TEXTURES
+    void PlotImage(const char* label_id, ImTextureRef tex_ref, const ImPlotPoint& bmin, const ImPlotPoint& bmax, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, ImPlotImageFlags) {
+#else
+    void PlotImage(const char* label_id, ImTextureID tex_ref, const ImPlotPoint& bmin, const ImPlotPoint& bmax, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, ImPlotImageFlags) {
+#endif
+        if (BeginItemEx(label_id, FitterRect(bmin,bmax))) {
         ImU32 tint_col32 = ImGui::ColorConvertFloat4ToU32(tint_col);
         GetCurrentItem()->Color = tint_col32;
         ImDrawList& draw_list = *GetPlotDrawList();
         ImVec2 p1 = PlotToPixels(bmin.x, bmax.y,IMPLOT_AUTO,IMPLOT_AUTO);
         ImVec2 p2 = PlotToPixels(bmax.x, bmin.y,IMPLOT_AUTO,IMPLOT_AUTO);
         PushPlotClipRect();
-        draw_list.AddImage(user_texture_id, p1, p2, uv0, uv1, tint_col32);
+        draw_list.AddImage(tex_ref, p1, p2, uv0, uv1, tint_col32);
         PopPlotClipRect();
         EndItem();
     }

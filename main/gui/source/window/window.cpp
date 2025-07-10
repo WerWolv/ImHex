@@ -39,6 +39,7 @@
 #include <implot3d_internal.h>
 #include <imnodes.h>
 #include <imnodes_internal.h>
+
 #if defined(IMGUI_TEST_ENGINE)
     #include <imgui_te_engine.h>
     #include <imgui_te_ui.h>
@@ -352,60 +353,11 @@ namespace hex {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
 
-        // Create font textures if necessary
-        {
-            const auto &fontDefinitions = ImHexApi::Fonts::impl::getFontDefinitions();
-            auto &currentFont = ImGui::GetIO().Fonts;
-            for (const auto &[name, font] : fontDefinitions) {
-                // If the texture for this atlas has been built already, don't do it again
-                if (font == nullptr || font->ContainerAtlas == nullptr || font->ContainerAtlas->TexID != 0)
-                    continue;
-
-                currentFont = font->ContainerAtlas;
-                ImGui_ImplOpenGL3_CreateFontsTexture();
-
-                for (ImFontConfig& fontCfg : font->ContainerAtlas->Sources) {
-                    if (fontCfg.FontData && fontCfg.FontDataOwnedByAtlas) {
-                        IM_FREE(fontCfg.FontData);
-                        fontCfg.FontData = NULL;
-                    }
-                }
-
-                currentFont->ClearTexData();
-            }
-
-            {
-                auto font = ImHexApi::Fonts::getFont("hex.fonts.font.default");
-
-                if (font == nullptr) {
-                    const auto &io = ImGui::GetIO();
-                    io.Fonts->Clear();
-
-                    ImFontConfig cfg;
-                    cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-                    cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
-                    font = io.Fonts->AddFontDefault(&cfg);
-                    ImGui_ImplOpenGL3_CreateFontsTexture();
-
-                    for (ImFontConfig& fontCfg : font->ContainerAtlas->Sources) {
-                        if (fontCfg.FontData && fontCfg.FontDataOwnedByAtlas) {
-                            IM_FREE(fontCfg.FontData);
-                            fontCfg.FontData = NULL;
-                        }
-                    }
-
-                    io.Fonts->ClearTexData();
-                } else {
-                    currentFont = font->ContainerAtlas;
-                }
-
-                ImGui::SetCurrentFont(font);
-            }
-        }
-
         // Start new ImGui Frame
 
         ImGui::NewFrame();
+
+        ImHexApi::Fonts::getDefaultFont().push();
 
         #if defined(IMGUI_TEST_ENGINE)
             if (ImGuiExt::ImGuiTestEngine::isEnabled())
@@ -802,6 +754,8 @@ namespace hex {
 
         this->endNativeWindowFrame();
 
+        ImHexApi::Fonts::getDefaultFont().pop();
+
         // Finalize ImGui frame
         ImGui::Render();
 
@@ -968,7 +922,7 @@ namespace hex {
     void Window::unlockFrameRate() {
         {
             std::scoped_lock lock(m_wakeupMutex);
-            m_remainingUnlockedTime = std::chrono::seconds(2);
+            m_remainingUnlockedTime = std::chrono::seconds(2LL);
         }
 
         this->forceNewFrame();
@@ -1255,7 +1209,7 @@ namespace hex {
                 {
                     std::scoped_lock lock(m_sleepMutex);
 
-                    if (m_remainingUnlockedTime > std::chrono::nanoseconds(0)) {
+                    if (m_remainingUnlockedTime > std::chrono::nanoseconds(0LL)) {
                         m_remainingUnlockedTime -= iterationTime;
                     } else {
                         targetFps = 5;
@@ -1314,9 +1268,6 @@ namespace hex {
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
-        io.FontGlobalScale = 1.0F;
-
-        ImGui::GetCurrentContext()->FontAtlasOwnedByContext = false;
 
         if (glfwGetPrimaryMonitor() != nullptr) {
             if (ImHexApi::System::isMutliWindowModeEnabled())
