@@ -97,6 +97,8 @@ else()
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
 
+addCppCheck(libimhex)
+
 
 if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_BRANCH)
     set(GIT_COMMIT_HASH_LONG "${IMHEX_COMMIT_HASH_LONG}")
