@@ -1226,31 +1226,23 @@ namespace hex::plugin::builtin {
                                                 ImHexApi::Provider::isValid);
 
         /* Goto */
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.goto" },
-                                                       ICON_VS_DEBUG_STEP_INTO,
-                                                       1600,
-                                                       []{},
-                                                       ImHexApi::Provider::isValid);
-
-        /* Goto address */
-        ContentRegistry::Interface::addMenuItem({
-                                                    "hex.builtin.menu.file",
-                                                    "hex.builtin.view.hex_editor.menu.file.goto",
-                                                    "hex.builtin.view.hex_editor.menu.file.goto.address"
-                                                },
-                                                ICON_VS_DEBUG_STEP_INTO,
-                                                1610,
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.goto" }, ICON_VS_DEBUG_STEP_INTO, 1600,
                                                 CTRLCMD + Keys::G,
                                                 [this] {
                                                     this->openPopup<PopupGoto>();
                                                 },
                                                 ImHexApi::Provider::isValid);
 
-        /* Goto previous differing byte */
+        /* Skip until */
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.skip_until" }, ICON_VS_DEBUG_STEP_OVER, 1610,
+                                                []{},
+                                                canSearchForDifferingByte);
+
+        /* Skip until previous differing byte */
         ContentRegistry::Interface::addMenuItem({
                                                     "hex.builtin.menu.file",
-                                                    "hex.builtin.view.hex_editor.menu.file.goto",
-                                                    "hex.builtin.view.hex_editor.menu.file.goto.previous_differing_byte"
+                                                    "hex.builtin.view.hex_editor.menu.file.skip_until",
+                                                    "hex.builtin.view.hex_editor.menu.file.skip_until.previous_differing_byte"
                                                 },
                                                 ICON_VS_DEBUG_STEP_BACK,
                                                 1620,
@@ -1285,11 +1277,11 @@ namespace hex::plugin::builtin {
                                                 },
                                                 canSearchForDifferingByte);
 
-        /* Goto next differing byte */
+        /* Skip until next differing byte */
         ContentRegistry::Interface::addMenuItem({
                                                     "hex.builtin.menu.file",
-                                                    "hex.builtin.view.hex_editor.menu.file.goto",
-                                                    "hex.builtin.view.hex_editor.menu.file.goto.next_differing_byte"
+                                                    "hex.builtin.view.hex_editor.menu.file.skip_until",
+                                                    "hex.builtin.view.hex_editor.menu.file.skip_until.next_differing_byte"
                                                 },
                                                 ICON_VS_DEBUG_STEP_OVER,
                                                 1630,
