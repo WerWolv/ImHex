@@ -347,9 +347,6 @@ namespace hex {
     }
 
     void Window::frameBegin() {
-        // Run all deferred calls
-        TaskManager::runDeferredCalls();
-
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
 
@@ -364,6 +361,8 @@ namespace hex {
                 ImGuiTestEngine_ShowTestEngineWindows(m_testEngine, nullptr);
         #endif
 
+        // Run all deferred calls
+        TaskManager::runDeferredCalls();
 
         TutorialManager::drawTutorial();
 
