@@ -863,6 +863,8 @@
         "hex.builtin.view.hex_editor.menu.file.skip_until": "Skip Until",
         "hex.builtin.view.hex_editor.menu.file.skip_until.previous_differing_byte": "Previous Differing Byte",
         "hex.builtin.view.hex_editor.menu.file.skip_until.next_differing_byte": "Next Differing Byte",
+        "hex.builtin.view.hex_editor.menu.file.skip_until.beginning_reached": "No more differing bytes till the beginning of the file",
+        "hex.builtin.view.hex_editor.menu.file.skip_until.end_reached": "No more differing bytes till the end of the file",
         "hex.builtin.view.hex_editor.menu.file.load_encoding_file": "Load custom encoding...",
         "hex.builtin.view.hex_editor.menu.file.save": "Save",
         "hex.builtin.view.hex_editor.menu.file.save_as": "Save As...",
