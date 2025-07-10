@@ -642,7 +642,12 @@ namespace hex::plugin::builtin {
         };
 
         RequestChangeTheme::subscribe([]() { updateTextures(ImHexApi::System::getGlobalScale()); });
-        EventDPIChanged::subscribe([](float, float newScale) { updateTextures(newScale); } );
+        EventDPIChanged::subscribe([](float oldScale, float newScale) {
+            if (oldScale == newScale)
+                return;
+
+            updateTextures(newScale);
+        });
 
         // Clear project context if we go back to the welcome screen
         EventProviderChanged::subscribe([](const hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {
