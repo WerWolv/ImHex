@@ -74,7 +74,7 @@ namespace hex {
 
         [[nodiscard]] T get()        const { return pointer; }
         [[nodiscard]] T operator->() const { return pointer; }
-        [[nodiscard]] T operator*()  const { return *pointer; }
+        [[nodiscard]] std::remove_pointer_t<T> operator*()  const { return *pointer; }
         [[nodiscard]] operator T()   const { return pointer; }
 
         T pointer;

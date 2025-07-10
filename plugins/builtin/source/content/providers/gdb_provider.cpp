@@ -99,6 +99,7 @@ namespace hex::plugin::builtin {
             socket.writeString(packet);
 
             auto receivedPacket = socket.readString(6);
+            std::ignore = receivedPacket;
         }
 
         bool enableNoAckMode(const wolv::net::SocketClient &socket) {
@@ -157,7 +158,7 @@ namespace hex::plugin::builtin {
         if (size <= CacheLineSize) {
             std::scoped_lock lock(m_cacheLock);
 
-            const auto &cacheLine = std::find_if(m_cache.begin(), m_cache.end(), [&](auto &line) {
+            const auto &cacheLine = std::ranges::find_if(m_cache, [&](const auto &line) {
                 return line.address == alignedOffset;
             });
 

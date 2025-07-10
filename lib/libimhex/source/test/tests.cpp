@@ -20,7 +20,7 @@ namespace hex::test {
             if(!initPluginImpl("Built-in")) return false;
         }
 
-        hex::Plugin *plugin = hex::PluginManager::getPlugin(name);
+        const auto *plugin = hex::PluginManager::getPlugin(name);
         if (plugin == nullptr) {
             hex::log::fatal("Plugin '{}' was not found !", name);
             return false;

@@ -57,21 +57,21 @@ namespace hex::plugin::builtin {
                 return value;
             };
 
-            enum class RecordType {
-                Header          = 0x00,
-                Data16          = 0x01,
-                Data24          = 0x02,
-                Data32          = 0x03,
-                Reserved        = 0x04,
-                Count16         = 0x05,
-                Count24         = 0x06,
-                StartAddress32  = 0x07,
-                StartAddress24  = 0x08,
-                StartAddress16  = 0x09,
-            } recordType;
-
-            bool endOfFile = false;
             try {
+                enum class RecordType {
+                    Header          = 0x00,
+                    Data16          = 0x01,
+                    Data24          = 0x02,
+                    Data32          = 0x03,
+                    Reserved        = 0x04,
+                    Count16         = 0x05,
+                    Count24         = 0x06,
+                    StartAddress32  = 0x07,
+                    StartAddress24  = 0x08,
+                    StartAddress16  = 0x09,
+                } recordType;
+                bool endOfFile = false;
+
                 while (offset < string.length()) {
                     // Parse record start
                     if (c() != 'S')
@@ -159,7 +159,7 @@ namespace hex::plugin::builtin {
                             break;
                     }
 
-                    while (std::isspace(string[offset]) && offset < string.length())
+                    while (offset < string.length() && std::isspace(string[offset]))
                         offset++;
                 }
             } catch (const std::runtime_error &e) {

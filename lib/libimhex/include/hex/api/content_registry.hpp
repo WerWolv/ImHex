@@ -731,7 +731,7 @@ EXPORT_MODULE namespace hex {
                 add(impl::Entry {
                     unlocalizedCategory,
                     unlocalizedName,
-                    [=, ...args = std::forward<Args>(args)]() mutable {
+                    [unlocalizedName, ...args = std::forward<Args>(args)]() mutable {
                         auto node = std::make_unique<T>(std::forward<Args>(args)...);
                         node->setUnlocalizedName(unlocalizedName);
                         return node;
@@ -1072,7 +1072,7 @@ EXPORT_MODULE namespace hex {
              * @param unlocalizedName The unlocalized name of the formatter
              * @param callback The function to call to format the data
              */
-            void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string fileExtension, const impl::FindExporterCallback &callback);
+            void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string &fileExtension, const impl::FindExporterCallback &callback);
 
         }
 

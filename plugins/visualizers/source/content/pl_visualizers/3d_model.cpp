@@ -941,7 +941,7 @@ namespace hex::plugin::visualizers {
             s_shouldReset = true;
         processInputEvents(s_rotation, s_translation, s_scaling, s_nearLimit, s_farLimit);
 
-        auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
+        const auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
         if (iterable != nullptr && iterable->getEntryCount() > 0) {
             auto content = iterable->getEntry(0);
             while (content->getSize() == 0) {

@@ -1105,7 +1105,7 @@ namespace hex {
             impl::s_exportMenuEntries->push_back({ unlocalizedName, callback });
         }
 
-        void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string fileExtension, const impl::FindExporterCallback &callback) {
+        void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string &fileExtension, const impl::FindExporterCallback &callback) {
             log::debug("Registered new export formatter: {}", unlocalizedName.get());
 
             impl::s_findExportEntries->push_back({ unlocalizedName, fileExtension, callback });

@@ -79,7 +79,7 @@ namespace hex::gl {
             return *this;
         }
 
-        auto operator-=(Vector other) {
+        auto operator-=(const Vector &other) {
             for (size_t i = 0; i < Size; i++)
                 m_data[i] -= other.m_data[i];
 
@@ -156,7 +156,7 @@ namespace hex::gl {
         }
 
     private:
-        std::array<T, Size> m_data;
+        std::array<T, Size> m_data = { };
     };
 
     template<typename T, size_t Rows, size_t Columns>

@@ -40,7 +40,6 @@ set(LIBIMHEX_SOURCES
         source/helpers/imgui_hooks.cpp
         source/helpers/semantic_version.cpp
         source/helpers/keys.cpp
-        source/helpers/freetype.cpp
         source/helpers/udp_server.cpp
 
         source/test/tests.cpp

@@ -404,7 +404,7 @@ namespace hex {
 
         if (s_tasks.empty()) {
             std::scoped_lock lock(s_deferredCallsMutex);
-            for (auto &call : s_tasksFinishedCallbacks)
+            for (const auto &call : s_tasksFinishedCallbacks)
                 call();
             s_tasksFinishedCallbacks.clear();
         }

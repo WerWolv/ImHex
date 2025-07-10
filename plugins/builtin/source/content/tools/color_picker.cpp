@@ -13,7 +13,6 @@ namespace hex::plugin::builtin {
 
     void drawColorPicker() {
         static std::array<float, 4> pickedColor = { 0 };
-        static std::string rgba8;
 
         struct BitValue {
             int         bits;

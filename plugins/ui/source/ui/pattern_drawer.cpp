@@ -360,7 +360,7 @@ namespace hex::ui {
 
             bool shouldReset = false;
             if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
-                auto previousPattern = m_currVisualizedPattern;
+                const auto *previousPattern = m_currVisualizedPattern;
                 m_currVisualizedPattern = &pattern;
                 auto lastVisualizerError = m_visualizerDrawer.getLastVisualizerError();
                 if (!lastVisualizerError.empty() || m_currVisualizedPattern != previousPattern)
@@ -575,7 +575,7 @@ namespace hex::ui {
             auto value = pattern.getValue();
             auto valueString = pattern.toString();
 
-            if (auto enumPattern = dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern); enumPattern != nullptr) {
+            if (const auto *enumPattern = dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern); enumPattern != nullptr) {
                 if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
                     auto currValue = pattern.getValue().toUnsigned();
                     for (auto &[name, enumValue] : enumPattern->getEnumValues()) {
