@@ -627,7 +627,7 @@ namespace hex::plugin::builtin {
             ImHexApi::System::setTargetFPS(static_cast<float>(value.get<int>(14)));
         });
 
-        RequestChangeTheme::subscribe([](const std::string &theme) {
+        static auto updateTextures = [](float scale) {
             auto changeTexture = [&](const std::string &path) {
                 return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Nearest);
             };
@@ -636,15 +636,13 @@ namespace hex::plugin::builtin {
                 return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), width, 0, ImGuiExt::Texture::Filter::Linear);
             };
 
-            ThemeManager::changeTheme(theme);
-            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300_scaled);
-            s_nightlyTexture = changeTextureSvg(hex::format("assets/{}/nightly.svg", "common"), 35_scaled);
+            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300 * scale);
+            s_nightlyTexture = changeTextureSvg(hex::format("assets/{}/nightly.svg", "common"), 35 * scale);
             s_backdropTexture = changeTexture(hex::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
+        };
 
-            if (!s_bannerTexture->isValid()) {
-                log::error("Failed to load banner texture!");
-            }
-        });
+        RequestChangeTheme::subscribe([]() { updateTextures(ImHexApi::System::getGlobalScale()); });
+        EventDPIChanged::subscribe([](float, float newScale) { updateTextures(newScale); } );
 
         // Clear project context if we go back to the welcome screen
         EventProviderChanged::subscribe([](const hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {

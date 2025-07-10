@@ -115,4 +115,8 @@ IMHEX_LIBRARY_SETUP("Fonts") {
         hex::fonts::setupFonts();
         hex::ImHexApi::Fonts::setDefaultFont(hex::fonts::Default());
     });
+
+    hex::EventDPIChanged::subscribe([](float, float newScale) {
+        ImGui::GetIO().ConfigDpiScaleFonts = newScale;
+    });
 }
