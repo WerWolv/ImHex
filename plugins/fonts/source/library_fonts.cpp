@@ -36,19 +36,23 @@ namespace hex::fonts {
 
         std::memcpy(config.Name, name.get().c_str(), std::min(name.get().size(), sizeof(config.Name) - 1));
 
-        if (settings.isBold())
-            config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Bold;
-        if (settings.isItalic())
-            config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Oblique;
-        switch (settings.getAntialiasingType()) {
-            case AntialiasingType::None:
-                config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Monochrome | ImGuiFreeTypeLoaderFlags_MonoHinting;
-                break;
-            case AntialiasingType::Grayscale:
-                break;
-            case AntialiasingType::Lcd:
-                config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_SubPixel;
-                break;
+        if (!settings.isPixelPerfectFont()) {
+            if (settings.isBold())
+                config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Bold;
+            if (settings.isItalic())
+                config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Oblique;
+            switch (settings.getAntialiasingType()) {
+                case AntialiasingType::None:
+                    config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Monochrome | ImGuiFreeTypeLoaderFlags_MonoHinting;
+                    break;
+                case AntialiasingType::Grayscale:
+                    break;
+                case AntialiasingType::Lcd:
+                    config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_SubPixel;
+                    break;
+            }
+        } else {
+            config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_NoHinting;
         }
 
         {
@@ -57,9 +61,11 @@ namespace hex::fonts {
                 *imguiFont = atlas->AddFontFromFileTTF(fontPath.string().c_str(), 0.0F, &config);
 
             if (*imguiFont == nullptr) {
-                if (settings.isPixelPerfectFont())
-                    *imguiFont = atlas->AddFontDefault();
-                else {
+                if (settings.isPixelPerfectFont()) {
+                    auto defaultConfig = config;
+                    defaultConfig.SizePixels = ImHexApi::Fonts::DefaultFontSize;
+                    *imguiFont = atlas->AddFontDefault(&defaultConfig);
+                } else {
                     static auto jetbrainsFont = romfs::get("fonts/JetBrainsMono.ttf");
                     *imguiFont = atlas->AddFontFromMemoryTTF(const_cast<u8 *>(jetbrainsFont.data<u8>()), jetbrainsFont.size(), 0.0F, &config);
 
