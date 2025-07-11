@@ -273,13 +273,13 @@ namespace hex {
     void Window::loop() {
         glfwShowWindow(m_window);
 
-        double returnToIdleTime = 0;
+        double returnToIdleTime = 5.0;
 
         constexpr static auto IdleFPS = 5.0;
         constexpr static auto FrameRateUnlockDuration = 1;
 
         double idleFrameTime = 1.0 / IdleFPS;
-        double targetFrameTime = idleFrameTime;
+        double targetFrameTime = -1.0;
         double longestExceededFrameTime = 0.0;
         while (!glfwWindowShouldClose(m_window)) {
             const auto maxFPS = ImHexApi::System::getTargetFPS();
@@ -305,6 +305,10 @@ namespace hex {
                     return 1.0 / maxFPS;
                 }
             }();
+
+            if (targetFrameTime < 0) {
+                targetFrameTime = maxFrameTime;
+            }
 
             auto frameTimeStart = glfwGetTime();
 
@@ -387,6 +391,11 @@ namespace hex {
             if (!m_waitEventsBlocked)
                 longestExceededFrameTime = std::max(exceedTime, longestExceededFrameTime);
             m_waitEventsBlocked = false;
+
+            if (std::fmod(longestExceededFrameTime, 5.0) < 0.01) {
+                // Reset the longest exceeded frame time every 5 seconds
+                longestExceededFrameTime = 0.0;
+            }
 
             while (frameTime < maxFrameTime) {
                 frameTime = glfwGetTime() - frameTimeStart;
