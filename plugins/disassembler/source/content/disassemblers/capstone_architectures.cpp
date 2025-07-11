@@ -111,10 +111,6 @@ namespace hex::plugin::disasm {
     class ArchitectureARM64 : public CapstoneArchitecture {
     public:
         ArchitectureARM64(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::ARM64, mode) {}
-
-        void drawSettings() override {
-            CapstoneArchitecture::drawSettings();
-        }
     };
 
     class ArchitectureMIPS : public CapstoneArchitecture {
@@ -213,19 +209,11 @@ namespace hex::plugin::disasm {
     class ArchitectureSystemZ : public CapstoneArchitecture {
     public:
         ArchitectureSystemZ(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::SYSZ, mode) {}
-
-        void drawSettings() override {
-            CapstoneArchitecture::drawSettings();
-        }
     };
 
     class ArchitectureXCore : public CapstoneArchitecture {
     public:
         ArchitectureXCore(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::XCORE, mode) {}
-
-        void drawSettings() override {
-            CapstoneArchitecture::drawSettings();
-        }
     };
 
     class ArchitectureM68K : public CapstoneArchitecture {
@@ -262,10 +250,6 @@ namespace hex::plugin::disasm {
     class ArchitectureTMS320C64X : public CapstoneArchitecture {
     public:
         ArchitectureTMS320C64X(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::TMS320C64X, mode) {}
-
-        void drawSettings() override {
-            CapstoneArchitecture::drawSettings();
-        }
     };
     class ArchitectureM680X : public CapstoneArchitecture {
     public:
@@ -305,10 +289,6 @@ namespace hex::plugin::disasm {
     class ArchitectureEVM : public CapstoneArchitecture {
     public:
         ArchitectureEVM(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::EVM, mode) {}
-
-        void drawSettings() override {
-            CapstoneArchitecture::drawSettings();
-        }
     };
 
 #if CS_API_MAJOR >= 5
@@ -316,10 +296,6 @@ namespace hex::plugin::disasm {
     class ArchitectureWASM : public CapstoneArchitecture {
     public:
         ArchitectureWASM(cs_mode mode = cs_mode(0)) : CapstoneArchitecture(BuiltinArchitecture::WASM, mode) {}
-
-        void drawSettings() override {
-            CapstoneArchitecture::drawSettings();
-        }
     };
 
     class ArchitectureRISCV : public CapstoneArchitecture {

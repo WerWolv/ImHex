@@ -102,7 +102,7 @@ namespace hex::plugin::builtin {
                     if (!data.empty() && checksum != 0x00)
                         throw std::runtime_error("Checksum mismatch");
 
-                    while (std::isspace(string[offset]) && offset < string.length())
+                    while (offset < string.length() && std::isspace(string[offset]))
                         offset++;
 
                     // Construct region
@@ -145,7 +145,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    while (std::isspace(string[offset]) && offset < string.length())
+                    while (offset < string.length() && std::isspace(string[offset]))
                         offset++;
                 }
 

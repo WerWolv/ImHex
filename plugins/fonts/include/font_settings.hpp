@@ -4,6 +4,13 @@
 #include <hex/api/content_registry.hpp>
 
 namespace hex::fonts {
+
+    enum class AntialiasingType {
+        None,
+        Grayscale,
+        Lcd
+    };
+
     class AntialiasPicker : public ContentRegistry::Settings::Widgets::DropDown {
     public:
         AntialiasPicker() : DropDown(
@@ -59,7 +66,7 @@ namespace hex::fonts {
         [[nodiscard]] float getFontSize() const;
         [[nodiscard]] bool isBold() const;
         [[nodiscard]] bool isItalic() const;
-        [[nodiscard]] const std::string antiAliasingType() const;
+        [[nodiscard]] AntialiasingType getAntialiasingType() const;
 
     private:
         bool drawPopup();

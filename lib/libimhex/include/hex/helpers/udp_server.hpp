@@ -49,11 +49,11 @@ namespace hex {
     private:
         void run();
 
-        u16 m_port;
+        u16 m_port = 0;
         Callback m_callback;
         std::thread m_thread;
         std::atomic<bool> m_running;
-        int m_socketFd;
+        int m_socketFd = -1;
     };
 
 }

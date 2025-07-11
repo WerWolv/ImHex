@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
                         m_unit = Unit::Unitless;
                     } else {
                         std::tie(m_unit, m_multiplier) = parseUnit(value.substr(index));
-                        value = value.substr(0, index);
+                        value.resize(index);
                     }
                 } else {
                     m_unit = Unit::Unitless;

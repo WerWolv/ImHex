@@ -25,6 +25,7 @@ option(IMHEX_ENABLE_IMGUI_TEST_ENGINE   "Enable the ImGui Test Engine"          
 option(IMHEX_ENABLE_PRECOMPILED_HEADERS "Enable precompiled headers"                                                            OFF)
 option(IMHEX_COMPRESS_DEBUG_INFO        "Compress debug information"                                                            ON )
 option(IMHEX_ENABLE_CXX_MODULES         "Enable C++20 Module compilation. Testing only!"                                        OFF)
+option(IMHEX_ENABLE_CPPCHECK            "Enable cppcheck static analysis"                                                       OFF)
 
 set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")

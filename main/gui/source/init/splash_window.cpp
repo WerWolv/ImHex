@@ -530,7 +530,6 @@ namespace hex::init {
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
             cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
             io.Fonts->AddFontDefault(&cfg);
-            ImGui_ImplOpenGL3_CreateFontsTexture();
         }
 
         // Don't save window settings for the splash screen

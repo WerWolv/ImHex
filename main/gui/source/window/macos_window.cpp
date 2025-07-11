@@ -32,6 +32,7 @@ namespace hex {
         glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+        glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     }
 
     void Window::initNative() {

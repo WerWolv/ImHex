@@ -9,8 +9,6 @@
 namespace hex::plugin::builtin {
 
     void drawEuclidianAlgorithm() {
-        static u64 a, b;
-
         static i64 gcdResult = 0;
         static i64 lcmResult = 0;
         static i64 p = 0, q = 0;
@@ -37,6 +35,8 @@ namespace hex::plugin::builtin {
         ImGui::NewLine();
 
         if (ImGuiExt::BeginBox()) {
+            static u64 a = 0, b = 0;
+
             bool hasChanged = false;
             hasChanged = ImGui::InputScalar("A", ImGuiDataType_U64, &a) || hasChanged;
             hasChanged = ImGui::InputScalar("B", ImGuiDataType_U64, &b) || hasChanged;

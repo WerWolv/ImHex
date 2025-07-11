@@ -105,9 +105,8 @@ namespace hex::plugin::builtin {
         if (buffer.size() < Size)
             return { };
 
-        auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? hex::format("0x{{0:0{}X}}", Size * 2) : hex::format("0o{{0:0{}o}}", Size * 3));
-
-        return hex::format(format, bufferToInteger<T, Size>(buffer, endian));
+        const auto formatString = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? hex::format("0x{{0:0{}X}}", Size * 2) : hex::format("0o{{0:0{}o}}", Size * 3));
+        return hex::format(formatString, bufferToInteger<T, Size>(buffer, endian));
     }
 
     template<std::integral T, size_t Size = sizeof(T)>
@@ -371,7 +370,7 @@ namespace hex::plugin::builtin {
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 std::vector<u8> bytes;
-                auto wideString = wolv::util::utf8ToWstring(value.c_str());
+                auto wideString = wolv::util::utf8ToWstring(value);
 				if (!wideString.has_value())
 				    return bytes;
 
@@ -733,7 +732,7 @@ namespace hex::plugin::builtin {
                 } else {
                     value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
                 }
-            } catch (fmt::format_error &e) {
+            } catch (const fmt::format_error &e) {
                 value = "Invalid";
             }
 

@@ -360,7 +360,7 @@ namespace hex::ui {
 
             bool shouldReset = false;
             if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
-                auto previousPattern = m_currVisualizedPattern;
+                const auto *previousPattern = m_currVisualizedPattern;
                 m_currVisualizedPattern = &pattern;
                 auto lastVisualizerError = m_visualizerDrawer.getLastVisualizerError();
                 if (!lastVisualizerError.empty() || m_currVisualizedPattern != previousPattern)
@@ -462,13 +462,13 @@ namespace hex::ui {
                 using enum TreeStyle;
                 default:
                 case Default:
-                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_OpenOnArrow);
                     break;
                 case AutoExpanded:
-                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
+                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
                     break;
                 case Flattened:
-                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
                     break;
             }
             ImGui::PopStyleVar();
@@ -575,7 +575,7 @@ namespace hex::ui {
             auto value = pattern.getValue();
             auto valueString = pattern.toString();
 
-            if (auto enumPattern = dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern); enumPattern != nullptr) {
+            if (const auto *enumPattern = dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern); enumPattern != nullptr) {
                 if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
                     auto currValue = pattern.getValue().toUnsigned();
                     for (auto &[name, enumValue] : enumPattern->getEnumValues()) {
@@ -1086,7 +1086,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
 
                 chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{
-                    return ImGui::TreeNodeEx(hex::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                    return ImGui::TreeNodeEx(hex::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth);
                 });
 
                 ImGui::TableNextColumn();
@@ -1342,7 +1342,7 @@ namespace hex::ui {
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::PushID(id);
-                    if (ImGui::TreeNodeEx("hex.ui.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_SpanFullWidth)) {
+                    if (ImGui::TreeNodeEx("hex.ui.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth)) {
                         for (auto &[path, pattern] : m_favorites) {
                             if (pattern == nullptr)
                                 continue;
@@ -1369,7 +1369,7 @@ namespace hex::ui {
                         ImGui::TableNextColumn();
                         ImGui::TableNextColumn();
                         ImGui::PushID(id);
-                        if (ImGui::TreeNodeEx(groupName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth)) {
+                        if (ImGui::TreeNodeEx(groupName.c_str(), ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth)) {
                             for (auto &groupPattern: groupPatterns) {
                                 if (groupPattern == nullptr)
                                     continue;

@@ -40,7 +40,6 @@ set(LIBIMHEX_SOURCES
         source/helpers/imgui_hooks.cpp
         source/helpers/semantic_version.cpp
         source/helpers/keys.cpp
-        source/helpers/freetype.cpp
         source/helpers/udp_server.cpp
 
         source/test/tests.cpp
@@ -96,6 +95,8 @@ else()
     set(LIBIMHEX_LIBRARY_TYPE PUBLIC)
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
+
+addCppCheck(libimhex)
 
 
 if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_BRANCH)

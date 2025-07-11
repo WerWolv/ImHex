@@ -7,6 +7,7 @@ skip -rfu ^ImGui::
 
 # Trigger breakpoint when execution reaches triggerSafeShutdown()
 break triggerSafeShutdown
+break __glibcxx_assert_fail
 
 # Print backtrace after execution jumped to an invalid address
 define fixbt

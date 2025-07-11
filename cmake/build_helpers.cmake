@@ -66,6 +66,32 @@ function(addCommonFlag)
     addObjCFlag(${ARGV0} ${ARGV1})
 endfunction()
 
+function(addCppCheck target)
+    if (NOT IMHEX_ENABLE_CPPCHECK)
+        return()
+    endif()
+
+    find_program(cppcheck_exe NAMES cppcheck REQUIRED)
+    if (NOT cppcheck_exe)
+        return()
+    endif()
+
+    set(target_build_dir $<TARGET_FILE_DIR:${target}>)
+    set(cppcheck_opts
+            --enable=all
+            --inline-suppr
+            --quiet
+            --std=c++23
+            --check-level=exhaustive
+            --error-exitcode=10
+            --suppressions-list=${CMAKE_SOURCE_DIR}/dist/cppcheck.supp
+            --checkers-report=${target_build_dir}/cppcheck-report.txt
+    )
+    set_target_properties(${target} PROPERTIES
+        CXX_CPPCHECK "${cppcheck_exe};${cppcheck_opts}"
+    )
+endfunction()
+
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
 
 include(FetchContent)
