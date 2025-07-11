@@ -1030,11 +1030,16 @@ namespace hex {
         void Font::push(float size) const {
             auto font = getFont(m_fontName);
 
-            if (size <= 0.0F) {
-                size = font->LegacySize;
-            }
+            if (font != nullptr) {
+                if (size <= 0.0F) {
+                    size = font->LegacySize;
+                }
 
-            size *= System::getGlobalScale();
+                if (font->Sources[0]->PixelSnapH)
+                    size *= System::getGlobalScale();
+                else
+                    size *= std::floor(System::getGlobalScale());
+            }
 
             ImGui::PushFont(font, size);
         }
@@ -1116,7 +1121,12 @@ namespace hex {
         }
 
         ImFont* getFont(const UnlocalizedString &fontName) {
-            return (*impl::s_fontDefinitions)[fontName];
+            auto it = impl::s_fontDefinitions->find(fontName);
+            
+            if (it == impl::s_fontDefinitions->end())
+                return ImGui::GetDefaultFont();
+            else
+                return it->second;
         }
 
         void setDefaultFont(const Font& font) {
@@ -1124,6 +1134,10 @@ namespace hex {
         }
 
         const Font& getDefaultFont() {
+            if (*impl::s_defaultFont == nullptr) {
+                static Font emptyFont("");
+                return emptyFont;
+            }
             return **impl::s_defaultFont;
         }
 

@@ -2,6 +2,8 @@
 
 #include <hex.hpp>
 
+#include <windows.h>
+
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
@@ -105,9 +107,6 @@ namespace hex {
     }
 
     Window::~Window() {
-        m_frameRateThread.request_stop();
-        m_frameRateThread.join();
-
         EventProviderDeleted::unsubscribe(this);
         RequestCloseImHex::unsubscribe(this);
         RequestUpdateWindowTitle::unsubscribe(this);
@@ -227,6 +226,12 @@ namespace hex {
         log::error("{}", message);
     }
 
+    void Window::unlockFrameRate()  {
+        glfwPostEmptyEvent();
+        m_shouldUnlockFrameRate = true;
+    }
+
+
     void Window::fullFrame() {
         [[maybe_unused]] static u32 crashWatchdog = 0;
 
@@ -267,8 +272,47 @@ namespace hex {
 
     void Window::loop() {
         glfwShowWindow(m_window);
+
+        double returnToIdleTime = 5.0;
+
+        constexpr static auto IdleFPS = 5.0;
+        constexpr static auto FrameRateUnlockDuration = 1;
+
+        double idleFrameTime = 1.0 / IdleFPS;
+        double targetFrameTime = -1.0;
+        double longestExceededFrameTime = 0.0;
         while (!glfwWindowShouldClose(m_window)) {
-            m_lastStartFrameTime = glfwGetTime();
+            const auto maxFPS = ImHexApi::System::getTargetFPS();
+
+            auto maxFrameTime = [&]() {
+                if (maxFPS < 15) {
+                    // Use the monitor's refresh rate
+                    auto monitor = glfwGetPrimaryMonitor();
+                    if (monitor != nullptr) {
+                        auto videoMode = glfwGetVideoMode(monitor);
+                        if (videoMode != nullptr) {
+                            return 1.0 / videoMode->refreshRate;
+                        }
+                    }
+
+                    // Fallback to 60 FPS if real monitor refresh rate cannot be determined
+                    return 1.0 / 60.0;
+                } else if (maxFPS > 200) {
+                    // Don't limit the frame rate at all
+                    return 0.0;
+                } else {
+                    // Do regular frame rate limiting
+                    return 1.0 / maxFPS;
+                }
+            }();
+
+            if (targetFrameTime < 0) {
+                targetFrameTime = maxFrameTime;
+            }
+
+            auto frameTimeStart = glfwGetTime();
+
+            glfwPollEvents();
 
             {
                 int x = 0, y = 0;
@@ -285,8 +329,6 @@ namespace hex {
                 glfwWaitEvents();
             }
 
-            m_lastStartFrameTime = glfwGetTime();
-
             static ImVec2 lastWindowSize = ImHexApi::System::getMainWindowSize();
             if (ImHexApi::System::impl::isWindowResizable()) {
                 glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
@@ -297,29 +339,9 @@ namespace hex {
 
             this->fullFrame();
 
-            ImHexApi::System::impl::setLastFrameTime(glfwGetTime() - m_lastStartFrameTime);
-
-            {
-                while (true) {
-                    glfwPollEvents();
-
-                    if (ImHexApi::System::getTargetFPS() >= 200)
-                        break;
-
-                    {
-                        std::unique_lock lock(m_sleepMutex);
-                        m_sleepCondVar.wait(lock);
-                        if (m_sleepFlag.exchange(false))
-                            break;
-                    }
-                }
-            }
-
-            m_lastFrameTime = glfwGetTime() - m_lastStartFrameTime;
-
             // Unlock frame rate if any mouse button is being held down to allow drag scrolling to be smooth
             if (ImGui::IsAnyMouseDown())
-                this->unlockFrameRate();
+                unlockFrameRate();
 
             // Unlock frame rate if any modifier key is held down since they don't generate key repeat events
             if (
@@ -328,17 +350,58 @@ namespace hex {
                 ImGui::IsKeyPressed(ImGuiKey_LeftSuper) || ImGui::IsKeyPressed(ImGuiKey_RightSuper) ||
                 ImGui::IsKeyPressed(ImGuiKey_LeftAlt) || ImGui::IsKeyPressed(ImGuiKey_RightAlt)
             ) {
-                this->unlockFrameRate();
+                unlockFrameRate();
             }
 
             // Unlock frame rate if there's more than one viewport since these don't call the glfw callbacks registered here
             if (ImGui::GetPlatformIO().Viewports.size() > 1)
-                this->unlockFrameRate();
+                unlockFrameRate();
 
             // Unlock frame rate if there's any task running that shows a loading animation
             if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBlockingTaskCount() > 0) {
-                this->unlockFrameRate();
+                glfwPostEmptyEvent();
+                unlockFrameRate();
             }
+
+            auto frameTime = glfwGetTime() - frameTimeStart;
+
+            if (glfwGetTime() > returnToIdleTime) {
+                targetFrameTime = idleFrameTime;
+            }
+
+            while (frameTime < targetFrameTime - longestExceededFrameTime) {
+                auto remainingFrameTime = targetFrameTime - frameTime;
+                glfwWaitEventsTimeout(remainingFrameTime);
+
+                auto newFrameTime = glfwGetTime() - frameTimeStart;
+
+                auto elapsedWaitTime = newFrameTime - frameTime;
+
+                // Returned early; did not time out.
+                if (elapsedWaitTime < remainingFrameTime && glfwGetTime() > returnToIdleTime && m_shouldUnlockFrameRate) {
+                    returnToIdleTime = glfwGetTime() + FrameRateUnlockDuration;
+                    targetFrameTime = maxFrameTime;
+                }
+                m_shouldUnlockFrameRate = false;
+
+                frameTime = newFrameTime;
+            }
+
+            auto exceedTime = frameTime - targetFrameTime;
+            if (!m_waitEventsBlocked)
+                longestExceededFrameTime = std::max(exceedTime, longestExceededFrameTime);
+            m_waitEventsBlocked = false;
+
+            if (std::fmod(longestExceededFrameTime, 5.0) < 0.01) {
+                // Reset the longest exceeded frame time every 5 seconds
+                longestExceededFrameTime = 0.0;
+            }
+
+            while (frameTime < maxFrameTime) {
+                frameTime = glfwGetTime() - frameTimeStart;
+            }
+
+            ImHexApi::System::impl::setLastFrameTime(glfwGetTime() - frameTimeStart);
         }
 
         // Hide the window as soon as the render loop exits to make the window
@@ -347,9 +410,6 @@ namespace hex {
     }
 
     void Window::frameBegin() {
-        // Run all deferred calls
-        TaskManager::runDeferredCalls();
-
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
 
@@ -364,6 +424,8 @@ namespace hex {
                 ImGuiTestEngine_ShowTestEngineWindows(m_testEngine, nullptr);
         #endif
 
+        // Run all deferred calls
+        TaskManager::runDeferredCalls();
 
         TutorialManager::drawTutorial();
 
@@ -919,23 +981,6 @@ namespace hex {
         #endif
     }
 
-    void Window::unlockFrameRate() {
-        {
-            std::scoped_lock lock(m_wakeupMutex);
-            m_remainingUnlockedTime = std::chrono::seconds(2LL);
-        }
-
-        this->forceNewFrame();
-    }
-
-    void Window::forceNewFrame() {
-        std::scoped_lock lock(m_wakeupMutex);
-        m_wakeupFlag = true;
-        m_wakeupCondVar.notify_all();
-    }
-
-
-
     void Window::initGLFW() {
         auto initialWindowProperties = ImHexApi::System::getInitialWindowProperties();
         glfwSetErrorCallback([](int error, const char *desc) {
@@ -1048,6 +1093,14 @@ namespace hex {
             win->unlockFrameRate();
         };
 
+        static const auto markWaitEventsBlocked = [](GLFWwindow *, auto ...) {
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
+            if (win == nullptr)
+                return;
+
+            win->m_waitEventsBlocked = true;
+        };
+
         static const auto isMainWindow = [](GLFWwindow *window) {
             return window == ImHexApi::System::getMainWindowHandle();
         };
@@ -1055,6 +1108,7 @@ namespace hex {
         // Register window move callback
         glfwSetWindowPosCallback(m_window, [](GLFWwindow *window, int x, int y) {
             unlockFrameRate(window);
+            markWaitEventsBlocked(window);
 
             if (!isMainWindow(window)) return;
 
@@ -1064,11 +1118,13 @@ namespace hex {
             glfwGetWindowSize(window, &width, &height);
             ImHexApi::System::impl::setMainWindowPosition(x, y);
             ImHexApi::System::impl::setMainWindowSize(width, height);
+
         });
 
         // Register window resize callback
         glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, [[maybe_unused]] int width, [[maybe_unused]] int height) {
             unlockFrameRate(window);
+            markWaitEventsBlocked(window);
 
             if (!isMainWindow(window)) return;
 
@@ -1175,66 +1231,6 @@ namespace hex {
         });
 
         glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
-
-        m_frameRateThread = std::jthread([this](const std::stop_token &stopToken) {
-            using Duration = std::chrono::duration<double, std::nano>;
-            Duration passedTime = {};
-
-            std::chrono::steady_clock::time_point startTime = {}, endTime = {};
-            Duration requestedFrameTime = {};
-            float targetFps = 0;
-
-            const auto nativeFps = []() -> float {
-                if (const auto monitor = glfwGetPrimaryMonitor(); monitor != nullptr) {
-                    if (const auto videoMode = glfwGetVideoMode(monitor); videoMode != nullptr) {
-                        return videoMode->refreshRate;
-                    }
-                }
-
-                return 60;
-            }();
-
-            while (!stopToken.stop_requested()) {
-                const auto iterationTime = endTime - startTime;
-                startTime = std::chrono::steady_clock::now();
-
-                targetFps = ImHexApi::System::getTargetFPS();
-
-                // If the target frame rate is below 15, use the current monitor's refresh rate
-                if (targetFps < 15) {
-                    targetFps = nativeFps;
-                }
-
-                passedTime += iterationTime;
-                {
-                    std::scoped_lock lock(m_sleepMutex);
-
-                    if (m_remainingUnlockedTime > std::chrono::nanoseconds(0LL)) {
-                        m_remainingUnlockedTime -= iterationTime;
-                    } else {
-                        targetFps = 5;
-                    }
-
-                    requestedFrameTime = (Duration(1.0E9) / targetFps) / 1.3;
-                    if (passedTime >= requestedFrameTime) {
-                        m_sleepFlag = true;
-                        m_sleepCondVar.notify_all();
-
-                        passedTime = {};
-                    }
-                }
-
-                {
-                    std::unique_lock lock(m_wakeupMutex);
-                    m_wakeupCondVar.wait_for(lock, requestedFrameTime, [&] {
-                        return m_wakeupFlag || stopToken.stop_requested();
-                    });
-                    m_wakeupFlag = false;
-                }
-
-                endTime = std::chrono::steady_clock::now();
-            }
-        });
     }
 
     void Window::resize(i32 width, i32 height) {
@@ -1287,8 +1283,8 @@ namespace hex {
 
         io.UserData = &m_imguiCustomData;
 
-        auto scale = ImHexApi::System::getGlobalScale();
-        style.ScaleAllSizes(scale);
+        style.ScaleAllSizes(ImHexApi::System::getGlobalScale());
+        auto scale = ImHexApi::System::getNativeScale();
         io.DisplayFramebufferScale = ImVec2(scale, scale);
 
         style.WindowMenuButtonPosition = ImGuiDir_None;

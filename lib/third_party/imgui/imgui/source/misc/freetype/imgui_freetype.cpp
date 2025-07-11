@@ -208,7 +208,7 @@ bool ImGui_ImplFreeType_FontSrcData::InitFont(FT_Library ft_library, ImFontConfi
         LoadFlags |= FT_LOAD_COLOR;
     // IMHEX PATCH BEGIN
     if (UserFlags & ImGuiFreeTypeLoaderFlags_SubPixel)
-        LoadFlags |= FT_LOAD_TARGET_LCD | FT_LOAD_RENDER;
+        LoadFlags |= FT_LOAD_TARGET_LCD;
     // IMHEX PATCH END
 
     return true;
@@ -530,7 +530,16 @@ bool ImGui_ImplFreeType_FontBakedLoadGlyph(ImFontAtlas* atlas, ImFontConfig* src
     }
 
     // Render glyph into a bitmap (currently held by FreeType)
-    FT_Render_Mode render_mode = (bd_font_data->UserFlags & ImGuiFreeTypeLoaderFlags_Monochrome) ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_NORMAL;
+    // IMHEX PATCH BEGIN
+    FT_Render_Mode render_mode;
+    if (bd_font_data->UserFlags & ImGuiFreeTypeLoaderFlags_Monochrome)
+        render_mode = FT_RENDER_MODE_MONO;
+    else if (bd_font_data->UserFlags & ImGuiFreeTypeLoaderFlags_SubPixel)
+        render_mode = FT_RENDER_MODE_LCD;
+    else
+        render_mode = FT_RENDER_MODE_NORMAL;
+    // IMHEX PATCH END
+
     FT_Error error = FT_Render_Glyph(slot, render_mode);
     const FT_Bitmap* ft_bitmap = &slot->bitmap;
     if (error != 0 || ft_bitmap == nullptr)
