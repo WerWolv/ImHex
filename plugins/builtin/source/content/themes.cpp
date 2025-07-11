@@ -211,14 +211,11 @@ namespace hex::plugin::builtin {
                    }
                 );
             }
-
             {
                 const static ThemeManager::ColorMap TextEditorColorMap = {
                     { "attribute",                  u32(TextEditor::PaletteIndex::Attribute)                },
                     { "background",                 u32(TextEditor::PaletteIndex::Background)               },
-                    { "block-comment",              u32(TextEditor::PaletteIndex::BlockComment)             },
                     { "breakpoint",                 u32(TextEditor::PaletteIndex::Breakpoint)               },
-                    { "builtin-type",               u32(TextEditor::PaletteIndex::BuiltInType)              },
                     { "calculated-pointer",         u32(TextEditor::PaletteIndex::CalculatedPointer)        },
                     { "char-literal",               u32(TextEditor::PaletteIndex::CharLiteral)              },
                     { "comment",                    u32(TextEditor::PaletteIndex::Comment)                  },
@@ -229,7 +226,6 @@ namespace hex::plugin::builtin {
                     { "debug-text",                 u32(TextEditor::PaletteIndex::DebugText)                },
                     { "default",                    u32(TextEditor::PaletteIndex::Default)                  },
                     { "default-text",               u32(TextEditor::PaletteIndex::DefaultText)              },
-                    { "directive",                  u32(TextEditor::PaletteIndex::Directive)                },
                     { "doc-block-comment",          u32(TextEditor::PaletteIndex::DocBlockComment)          },
                     { "doc-comment",                u32(TextEditor::PaletteIndex::DocComment)               },
                     { "doc-global-comment",         u32(TextEditor::PaletteIndex::GlobalDocComment)         },
@@ -241,15 +237,18 @@ namespace hex::plugin::builtin {
                     { "global-variable",            u32(TextEditor::PaletteIndex::GlobalVariable)           },
                     { "identifier" ,                u32(TextEditor::PaletteIndex::Identifier)               },
                     { "keyword",                    u32(TextEditor::PaletteIndex::Keyword)                  },
+                    { "known-identifier",           u32(TextEditor::PaletteIndex::BuiltInType)              },
                     { "line-number",                u32(TextEditor::PaletteIndex::LineNumber)               },
                     { "local-variable",             u32(TextEditor::PaletteIndex::LocalVariable)            },
+                    { "multi-line-comment",         u32(TextEditor::PaletteIndex::BlockComment)             },
                     { "namespace",                  u32(TextEditor::PaletteIndex::NameSpace)                },
                     { "number",                     u32(TextEditor::PaletteIndex::NumericLiteral)           },
-                    { "operator",                   u32(TextEditor::PaletteIndex::Operator)                 },
                     { "pattern-variable",           u32(TextEditor::PaletteIndex::PatternVariable)          },
                     { "placed-variable",            u32(TextEditor::PaletteIndex::PlacedVariable)           },
+                    { "preprocessor",               u32(TextEditor::PaletteIndex::Directive)                },
                     { "preprocessor-deactivated",   u32(TextEditor::PaletteIndex::PreprocessorDeactivated)  },
-                    { "preprocessor-identifier",    u32(TextEditor::PaletteIndex::PreprocIdentifier)        },
+                    { "preproc-identifier",         u32(TextEditor::PaletteIndex::PreprocIdentifier)        },
+                    { "punctuation",                u32(TextEditor::PaletteIndex::Operator)                 },
                     { "selection",                  u32(TextEditor::PaletteIndex::Selection)                },
                     { "separator",                  u32(TextEditor::PaletteIndex::Separator)                },
                     { "string",                     u32(TextEditor::PaletteIndex::StringLiteral)            },

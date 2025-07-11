@@ -600,15 +600,12 @@ namespace hex::plugin::builtin {
                     m_hasUnevaluatedChanges.get(provider) = true;
                     m_changesWereParsed = false;
                 }
-                if (m_textHighlighter.m_needsToUpdateColors)
-                    m_textHighlighter.m_needsToUpdateColors = false;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
             }
 
-            if (m_hasUnevaluatedChanges.get(provider) && !m_textHighlighter.m_needsToUpdateColors && m_runningEvaluators == 0 && m_runningParsers == 0 && m_textHighlighter.getRunningColorizers() == 0) {
-                if ((std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
-
+            if (m_hasUnevaluatedChanges.get(provider) && m_runningEvaluators == 0 && m_runningParsers == 0 &&
+                (std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
 
                     auto code = m_textEditor.get(provider).GetText();
                     EventPatternEditorChanged::post(code);
@@ -620,13 +617,21 @@ namespace hex::plugin::builtin {
                             m_triggerAutoEvaluate = true;
                     });
                     m_hasUnevaluatedChanges.get(provider) = false;
-                }
             }
 
             if (m_triggerAutoEvaluate.exchange(false)) {
                 this->evaluatePattern(m_textEditor.get(provider).GetText(), provider);
             }
-            m_textHighlighter.highlightSourceCode();
+            if (m_textHighlighter.m_needsToUpdateColors && m_changesWereParsed && (m_runningParsers + m_runningEvaluators == 0)) {
+                TaskHolder taskHolder;
+                if (m_textHighlighter.getRunningColorizers() == 0) {
+                    m_textHighlighter.m_needsToUpdateColors = false;
+                    m_changesWereParsed = false;
+                    taskHolder = TaskManager::createBackgroundTask("HighlightSourceCode", [this](auto &) { m_textHighlighter.highlightSourceCode(); });
+                } else {
+                    taskHolder.interrupt();
+                }
+            }
         }
 
         if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {

@@ -14,6 +14,21 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 using strConstIter = std::string::const_iterator;
+// https://en.wikipedia.org/wiki/UTF-8
+// We assume that the char is a standalone character (<128) or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
+static int UTF8CharLength(uint8_t c) {
+    if ((c & 0xFE) == 0xFC)
+        return 6;
+    if ((c & 0xFC) == 0xF8)
+        return 5;
+    if ((c & 0xF8) == 0xF0)
+        return 4;
+    if ((c & 0xF0) == 0xE0)
+        return 3;
+    if ((c & 0xE0) == 0xC0)
+        return 2;
+    return 1;
+}
 class TextEditor
 {
 public:
@@ -233,8 +248,9 @@ public:
         public:
             strConstIter mCharsIter;
             strConstIter mColorsIter;
+            strConstIter mFlagsIter;
 
-            LineIterator(const LineIterator &other) : mCharsIter(other.mCharsIter), mColorsIter(other.mColorsIter) {}
+            LineIterator(const LineIterator &other) : mCharsIter(other.mCharsIter), mColorsIter(other.mColorsIter), mFlagsIter(other.mFlagsIter) {}
 
             LineIterator() = default;
 
@@ -246,27 +262,30 @@ public:
                 LineIterator iter = *this;
                 ++iter.mCharsIter;
                 ++iter.mColorsIter;
+                ++iter.mFlagsIter;
                 return iter;
             }
 
             LineIterator operator=(const LineIterator &other) {
                 mCharsIter = other.mCharsIter;
                 mColorsIter = other.mColorsIter;
+                mFlagsIter = other.mFlagsIter;
                 return *this;
             }
 
             bool operator!=(const LineIterator &other) const {
-                return mCharsIter != other.mCharsIter || mColorsIter != other.mColorsIter;
+                return mCharsIter != other.mCharsIter || mColorsIter != other.mColorsIter || mFlagsIter != other.mFlagsIter;
             }
 
             bool operator==(const LineIterator &other) const {
-                return mCharsIter == other.mCharsIter && mColorsIter == other.mColorsIter;
+                return mCharsIter == other.mCharsIter && mColorsIter == other.mColorsIter && mFlagsIter == other.mFlagsIter;
             }
 
             LineIterator operator+(int n) {
                 LineIterator iter = *this;
                 iter.mCharsIter += n;
                 iter.mColorsIter += n;
+                iter.mFlagsIter += n;
                 return iter;
             }
 
@@ -279,6 +298,7 @@ public:
             LineIterator iter;
             iter.mCharsIter = mChars.begin();
             iter.mColorsIter = mColors.begin();
+            iter.mFlagsIter = mFlags.begin();
             return iter;
         }
 
@@ -286,6 +306,7 @@ public:
             LineIterator iter;
             iter.mCharsIter = mChars.end();
             iter.mColorsIter = mColors.end();
+            iter.mFlagsIter = mFlags.end();
             return iter;
         }
 
@@ -306,6 +327,7 @@ public:
             LineIterator iter;
             iter.mCharsIter = mChars.begin();
             iter.mColorsIter = mColors.begin();
+            iter.mFlagsIter = mFlags.begin();
             return iter;
         }
 
@@ -313,12 +335,14 @@ public:
             LineIterator iter;
             iter.mCharsIter = mChars.end();
             iter.mColorsIter = mColors.end();
+            iter.mFlagsIter = mFlags.end();
             return iter;
         }
 
         Line &operator=(const Line &line) {
             mChars = line.mChars;
             mColors = line.mColors;
+            mFlags = line.mFlags;
             mColorized = line.mColorized;
             return *this;
         }
@@ -326,6 +350,7 @@ public:
         Line &operator=(Line &&line) noexcept {
             mChars = std::move(line.mChars);
             mColors = std::move(line.mColors);
+            mFlags = std::move(line.mFlags);
             mColorized = line.mColorized;
             return *this;
         }
@@ -335,7 +360,8 @@ public:
         }
         enum class LinePart {
             Chars,
-            Colors
+            Colors,
+            Flags
         };
 
         char front(LinePart part = LinePart::Chars) const {
@@ -343,12 +369,15 @@ public:
                 return mChars.front();
             if (part == LinePart::Colors && !mColors.empty())
                 return mColors.front();
+            if (part == LinePart::Flags && !mFlags.empty())
+                return mFlags.front();
             return 0x00;
         }
 
         void push_back(char c) {
             mChars.push_back(c);
             mColors.push_back(0x00);
+            mFlags.push_back(0x00);
             mColorized = false;
         }
 
@@ -356,6 +385,30 @@ public:
             return mChars.empty();
         }
 
+        std::string substrUtf8(size_t start, size_t length = (size_t)-1, LinePart part = LinePart::Chars ) const {
+            if (start >= mChars.size())
+                return "";
+            if (length == (size_t)-1 || length >= mChars.size() - start)
+                length = mChars.size() - start;
+            size_t utf8Start= 0;
+            while (utf8Start<start) {
+                auto d = UTF8CharLength(mChars[utf8Start]);
+                utf8Start+= d;
+            }
+            size_t utf8Length = 0;
+            while (utf8Length < length && utf8Start + utf8Length < mChars.size()) {
+                auto d = UTF8CharLength(mChars[utf8Start + utf8Length]);
+                utf8Length += d;
+            }
+
+            if (part == LinePart::Chars)
+                return mChars.substr(utf8Start, utf8Length);
+            if (part == LinePart::Colors)
+                return mColors.substr(utf8Start, utf8Length);
+            if (part == LinePart::Flags)
+                return mFlags.substr(utf8Start, utf8Length);
+            return "";
+        }
 
         std::string substr(size_t start, size_t length = (size_t)-1, LinePart part = LinePart::Chars ) const {
             if (length == (size_t)-1)
@@ -368,6 +421,8 @@ public:
                 return mChars.substr(start, length);
             if (part == LinePart::Colors && length > 0)
                 return mColors.substr(start, length);
+            if (part == LinePart::Flags && length > 0)
+                return mFlags.substr(start, length);
             return "";
         }
 
@@ -377,7 +432,9 @@ public:
                 return mChars[index];
             if (part == LinePart::Colors)
                 return mColors[index];
-            return mFlags[index];
+            if (part == LinePart::Flags)
+                return mFlags[index];
+            return mChars[index];
         }
 
         template<LinePart part=LinePart::Chars>
@@ -386,7 +443,9 @@ public:
                 return mChars[index];
             if (part == LinePart::Colors)
                 return mColors[index];
-            return mFlags[index];
+            if (part == LinePart::Flags)
+                return mFlags[index];
+            return mChars[index];
         }
 
         void SetNeedsUpdate(bool needsUpdate) {
@@ -404,6 +463,7 @@ public:
         void append(const std::string &text) {
             mChars.append(text);
             mColors.append(text.size(), 0x00);
+            mFlags.append(text.size(), 0x00);
             mColorized = false;
         }
 
@@ -416,6 +476,8 @@ public:
                 mChars.append(begin.mCharsIter, end.mCharsIter);
             if (begin.mColorsIter < end.mColorsIter)
                 mColors.append(begin.mColorsIter, end.mColorsIter);
+            if (begin.mFlagsIter < end.mFlagsIter)
+                mFlags.append(begin.mFlagsIter, end.mFlagsIter);
             mColorized = false;
         }
 
@@ -447,6 +509,14 @@ public:
                     mColorized = false;
                     return;
                 }
+                std::string flagsString(charsString.size(), 0x00);
+                try {
+                    mFlags.insert(iter.mFlagsIter, flagsString.begin(), flagsString.end());
+                } catch (const std::exception &e) {
+                    std::cerr << "Exception: " << e.what() << std::endl;
+                    mColorized = false;
+                    return;
+                }
                 mColorized = false;
             }
         }
@@ -464,6 +534,7 @@ public:
             else {
                 mChars.insert(iter.mCharsIter, beginLine.mCharsIter, endLine.mCharsIter);
                 mColors.insert(iter.mColorsIter, beginLine.mColorsIter, endLine.mColorsIter);
+                mFlags.insert(iter.mFlagsIter, beginLine.mFlagsIter, endLine.mFlagsIter);
                 mColorized = false;
             }
         }
@@ -471,6 +542,7 @@ public:
         void erase(LineIterator begin) {
             mChars.erase(begin.mCharsIter);
             mColors.erase(begin.mColorsIter);
+            mFlags.erase(begin.mFlagsIter);
             mColorized = false;
         }
 
@@ -479,18 +551,28 @@ public:
                 count = mChars.size() - (begin.mCharsIter - mChars.begin());
             mChars.erase(begin.mCharsIter, begin.mCharsIter + count);
             mColors.erase(begin.mColorsIter, begin.mColorsIter + count);
+            mFlags.erase(begin.mFlagsIter, begin.mFlagsIter + count);
+            mColorized = false;
+        }
+
+        void clear() {
+            mChars.clear();
+            mColors.clear();
+            mFlags.clear();
             mColorized = false;
         }
 
         void SetLine(const std::string &text) {
             mChars = text;
             mColors = std::string(text.size(), 0x00);
+            mFlags = std::string(text.size(), 0x00);
             mColorized = false;
         }
 
         void SetLine(const Line &text) {
             mChars = text.mChars;
             mColors = text.mColors;
+            mFlags = text.mFlags;
             mColorized = text.mColorized;
         }
 
@@ -916,7 +998,7 @@ private:
 	std::string GetWordAt(const Coordinates& aCoords) const;
     TextEditor::PaletteIndex GetColorIndexFromFlags(Line::Flags flags);
     void ResetCursorBlinkTime();
-    uint32_t SkipSpaces(const Coordinates &aFrom) const;
+    uint32_t SkipSpaces(const Coordinates &aFrom);
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
 	void RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPos, const ImVec2 &textEditorSize);
@@ -959,7 +1041,7 @@ private:
 	Palette mPalette = {};
 	LanguageDefinition mLanguageDefinition = {};
 	RegexList mRegexList;
-    bool mCheckComments = true;
+    bool mUpdateFlags = true;
 	Breakpoints mBreakpoints = {};
 	ErrorMarkers mErrorMarkers = {};
     ErrorHoverBoxes mErrorHoverBoxes = {};

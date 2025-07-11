@@ -141,22 +141,6 @@ TextEditor::Coordinates TextEditor::SanitizeCoordinates(const Coordinates &aValu
     return result;
 }
 
-// https://en.wikipedia.org/wiki/UTF-8
-// We assume that the char is a standalone character (<128) or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
-static int UTF8CharLength(TextEditor::Glyph c) {
-    if ((c & 0xFE) == 0xFC)
-        return 6;
-    if ((c & 0xFC) == 0xF8)
-        return 5;
-    if ((c & 0xF8) == 0xF0)
-        return 4;
-    if ((c & 0xF0) == 0xE0)
-        return 3;
-    if ((c & 0xE0) == 0xC0)
-        return 2;
-    return 1;
-}
-
 // "Borrowed" from ImGui source
 static inline void ImTextCharToUtf8(std::string &buffer, unsigned int c) {
     if (c < 0x80) {
@@ -228,6 +212,7 @@ void TextEditor::DeleteRange(const Coordinates &aStart, const Coordinates &aEnd)
             line.erase(line.begin() + startIndex, -1);
         else
             line.erase(line.begin() + startIndex, endIndex-startIndex);
+        line.mColorized = false;
     } else {
         auto &firstLine = mLines[start.mLine];
         auto &lastLine  = mLines[end.mLine];
@@ -235,11 +220,11 @@ void TextEditor::DeleteRange(const Coordinates &aStart, const Coordinates &aEnd)
         firstLine.erase(firstLine.begin() + startIndex, -1);
         lastLine.erase(lastLine.begin(), endIndex);
 
-        if (aStart.mLine < aEnd.mLine)
+        if (aStart.mLine < aEnd.mLine) {
             firstLine.insert(firstLine.end(), lastLine.begin(), lastLine.end());
-
-        if (aStart.mLine < aEnd.mLine)
+            firstLine.mColorized = false;
             RemoveLine(aStart.mLine + 1, aEnd.mLine);
+        }
     }
 
     mTextChanged = true;
@@ -247,6 +232,8 @@ void TextEditor::DeleteRange(const Coordinates &aStart, const Coordinates &aEnd)
 
 void TextEditor::AppendLine(const std::string &aValue) {
     auto text = PreprocessText(aValue);
+    if (text.empty())
+        return;
     if (isEmpty()) {
         mLines[0].mChars = text;
         mLines[0].mColors = std::string(text.size(),0);
@@ -254,6 +241,7 @@ void TextEditor::AppendLine(const std::string &aValue) {
     } else
         mLines.push_back(Line(text));
     SetCursorPosition(Coordinates((int)mLines.size() - 1, 0));
+    mLines.back().mColorized = false;
     EnsureCursorVisible();
     mTextChanged = true;
 }
@@ -274,8 +262,11 @@ int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const std::string
         line.erase(line.begin() + GetCharacterIndex(start),-1);
 
     line.append(stringVector[0]);
-    for (int i = 1; i < lineCount; i++)
+    line.mColorized = false;
+    for (int i = 1; i < lineCount; i++) {
         InsertLine(start.mLine + i, stringVector[i]);
+        mLines[start.mLine + i].mColorized = false;
+    }
     mTextChanged = true;
     return lineCount;
 }
@@ -295,52 +286,19 @@ void TextEditor::AddUndo(UndoRecord &aValue) {
 }
 
 TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2 &aPosition) const {
-    ImVec2 origin = ImGui::GetCursorScreenPos();
-    ImVec2 local(aPosition.x - origin.x, aPosition.y - origin.y);
+    ImVec2 local = aPosition - ImGui::GetCursorScreenPos();
 
     int lineNo = std::max(0, (int)floor(local.y / mCharAdvance.y));
-    if (local.x < mLeftMargin)
-        return Coordinates(lineNo, 0);
-    local.x -= mLeftMargin;
+    if (local.x < (mLeftMargin - 2) || lineNo >= (int)mLines.size() || mLines[lineNo].empty())
+        return Coordinates(std::min(lineNo,(int)mLines.size()-1), 0);
 
-    int columnCoord = 0;
+    local.x -= (mLeftMargin - 2);
+    auto column = (int)floor(local.x / mCharAdvance.x);
+    auto rem = static_cast<uint32_t>(local.x) % static_cast<uint32_t>(mCharAdvance.x);
+    if (rem > mCharAdvance.x - 2)
+        column++;
 
-    if (lineNo >= 0 && lineNo < (int)mLines.size()) {
-        auto &line = mLines.at(lineNo);
-
-        int columnIndex = 0;
-        float columnX   = 0.0f;
-
-        while ((size_t)columnIndex < line.size()) {
-            float columnWidth = 0.0f;
-
-            if (line[columnIndex] == '\t') {
-                float spaceSize  = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, " ").x;
-                float oldX       = columnX;
-                float newColumnX = (1.0f + std::floor((1.0f + columnX) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
-                columnWidth      = newColumnX - oldX;
-                if (columnX + columnWidth > local.x)
-                    break;
-                columnX     = newColumnX;
-                columnCoord = (columnCoord / mTabSize) * mTabSize + mTabSize;
-                columnIndex++;
-            } else {
-                char buf[7];
-                auto d = UTF8CharLength(line[columnIndex]);
-                int i  = 0;
-                while (i < 6 && d-- > 0)
-                    buf[i++] = line[columnIndex++];
-                buf[i]      = '\0';
-                columnWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf).x;
-                if (columnX + columnWidth > local.x)
-                    break;
-                columnX += columnWidth;
-                columnCoord++;
-            }
-        }
-    }
-
-    return SanitizeCoordinates(Coordinates(lineNo, columnCoord));
+    return SanitizeCoordinates(Coordinates(lineNo, column));
 }
 
 void TextEditor::DeleteWordLeft()  {
@@ -370,13 +328,13 @@ TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates &aFrom) cons
     auto &line  = mLines[at.mLine];
     auto cindex = GetCharacterIndex(at);
 
-    if (isWordChar(line.mChars[cindex-1])) {
+    if (isWordChar(line.mChars[cindex])) {
         while (cindex > 0 && isWordChar(line.mChars[cindex-1]))
             --cindex;
-    } else if (ispunct(line.mChars[cindex-1])) {
+    } else if (ispunct(line.mChars[cindex])) {
         while (cindex > 0 && ispunct(line.mChars[cindex-1]))
             --cindex;
-    } else if (isspace(line.mChars[cindex-1])) {
+    } else if (isspace(line.mChars[cindex])) {
         while (cindex > 0 && isspace(line.mChars[cindex-1]))
             --cindex;
     }
@@ -596,8 +554,6 @@ bool TextEditor::IsOnWordBoundary(const Coordinates &aAt) const {
 }
 
 void TextEditor::RemoveLine(int aStart, int aEnd) {
-    IM_ASSERT(!mReadOnly);
-    IM_ASSERT(aEnd >= aStart);
 
     ErrorMarkers etmp;
     for (auto &i : mErrorMarkers) {
@@ -623,39 +579,16 @@ void TextEditor::RemoveLine(int aStart, int aEnd) {
     // use clamp to ensure valid results instead of assert.
     auto start = std::clamp(aStart, 0, (int)mLines.size()-1);
     auto end   = std::clamp(aEnd, 0, (int)mLines.size());
+    if (start > end)
+        std::swap(start, end);
+
     mLines.erase(mLines.begin() + aStart, mLines.begin() + aEnd + 1);
 
     mTextChanged = true;
 }
 
 void TextEditor::RemoveLine(int aIndex) {
-    IM_ASSERT(!mReadOnly);
-    IM_ASSERT(mLines.size() > 1);
-
-    ErrorMarkers etmp;
-    for (auto &i : mErrorMarkers) {
-        ErrorMarkers::value_type e(i.first.mLine > aIndex ? Coordinates(i.first.mLine - 1 ,i.first.mColumn) : i.first, i.second);
-        if (e.first.mLine - 1 == aIndex)
-            continue;
-        etmp.insert(e);
-    }
-    mErrorMarkers = std::move(etmp);
-
-    Breakpoints btmp;
-    for (auto breakpoint : mBreakpoints) {
-        if (breakpoint > aIndex) {
-            btmp.insert(breakpoint - 1);
-            mBreakPointsChanged = true;
-        }else
-            btmp.insert(breakpoint);
-    }
-    if (mBreakPointsChanged)
-        mBreakpoints = std::move(btmp);
-
-    mLines.erase(mLines.begin() + aIndex);
-    IM_ASSERT(!mLines.empty());
-
-    mTextChanged = true;
+    RemoveLine(aIndex, aIndex);
 }
 
 void TextEditor::InsertLine(int aIndex, const std::string &aText) {
@@ -663,6 +596,7 @@ void TextEditor::InsertLine(int aIndex, const std::string &aText) {
         return;
     auto &line = InsertLine(aIndex);
     line.append(aText);
+    line.mColorized = false;
     mTextChanged = true;
 }
 
@@ -677,6 +611,7 @@ TextEditor::Line &TextEditor::InsertLine(int aIndex) {
     auto newLine = Line();
 
     TextEditor::Line &result = *mLines.insert(mLines.begin() + aIndex, newLine);
+    result.mColorized = false;
 
     ErrorMarkers etmp;
     for (auto &i : mErrorMarkers)
@@ -874,7 +809,7 @@ inline void TextUnformattedColoredAt(const ImVec2 &pos, const ImU32 &color, cons
     ImGui::TextUnformatted(text);
     ImGui::PopStyleColor();
 }
-uint32_t TextEditor::SkipSpaces(const Coordinates &aFrom) const {
+uint32_t TextEditor::SkipSpaces(const Coordinates &aFrom) {
     auto line = aFrom.mLine;
     if (line >= mLines.size())
         return 0;
@@ -886,6 +821,8 @@ uint32_t TextEditor::SkipSpaces(const Coordinates &aFrom) const {
         ++s;
         ++cindex;
     }
+    if (mUpdateFocus)
+        SetFocus();
     return s;
 }
 
@@ -998,28 +935,31 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                     else
                         mBreakpoints.insert(lineNo + 1);
                     mBreakPointsChanged = true;
+                    mState.mCursorPosition = Coordinates(lineNo, 0);
                     JumpToCoords(mState.mCursorPosition);
                 }
-                TextUnformattedColoredAt(ImVec2(mLeftMargin + lineNoStartScreenPos.x, lineStartScreenPos.y), mPalette[(int) PaletteIndex::LineNumber], lineNoStr.c_str());
-            }
 
-            // Draw breakpoints
-            if (mBreakpoints.count(lineNo + 1) != 0) {
-                auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + mLineNumberFieldWidth, lineStartScreenPos.y + mCharAdvance.y);
-                drawList->AddRectFilled(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)PaletteIndex::Breakpoint]);
-
-                drawList->AddCircleFilled(start + ImVec2(0, mCharAdvance.y) / 2, mCharAdvance.y / 3, mPalette[(int)PaletteIndex::Breakpoint]);
-                drawList->AddCircle(start + ImVec2(0, mCharAdvance.y) / 2, mCharAdvance.y / 3, mPalette[(int)PaletteIndex::Default]);
-            }
-
-            if (mState.mCursorPosition.mLine == lineNo && mShowCursor) {
-
-                // Highlight the current line (where the cursor is)
-                if (!HasSelection()) {
+                // Draw breakpoints
+                if (mBreakpoints.count(lineNo + 1) != 0) {
                     auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + mLineNumberFieldWidth, lineStartScreenPos.y + mCharAdvance.y);
-                    drawList->AddRectFilled(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)(focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
-                    drawList->AddRect(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)PaletteIndex::CurrentLineEdge], 1.0f);
+                    drawList->AddRectFilled(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)PaletteIndex::Breakpoint]);
+
+                    drawList->AddCircleFilled(start + ImVec2(0, mCharAdvance.y) / 2, mCharAdvance.y / 3, mPalette[(int)PaletteIndex::Breakpoint]);
+                    drawList->AddCircle(start + ImVec2(0, mCharAdvance.y) / 2, mCharAdvance.y / 3, mPalette[(int)PaletteIndex::Default]);
+                    drawList->AddText(ImVec2(lineNoStartScreenPos.x + mLeftMargin, lineStartScreenPos.y),mPalette[(int) PaletteIndex::LineNumber], lineNoStr.c_str());
                 }
+
+                if (mState.mCursorPosition.mLine == lineNo && mShowCursor) {
+
+                    // Highlight the current line (where the cursor is)
+                    if (!HasSelection()) {
+                        auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + mLineNumberFieldWidth, lineStartScreenPos.y + mCharAdvance.y);
+                        drawList->AddRectFilled(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)(focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
+                        drawList->AddRect(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y), end, mPalette[(int)PaletteIndex::CurrentLineEdge], 1.0f);
+                    }
+                }
+
+                TextUnformattedColoredAt(ImVec2(mLeftMargin + lineNoStartScreenPos.x, lineStartScreenPos.y), mPalette[(int) PaletteIndex::LineNumber], lineNoStr.c_str());
             }
             if (mShowLineNumbers && !mIgnoreImGuiChild)
                 ImGui::EndChild();
@@ -1103,6 +1043,8 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
             if (line.empty()) {
                 ImGui::Dummy(mCharAdvance);
                 lineNo = std::floor(lineNo + 1.0F);
+                if (mUpdateFocus)
+                    SetFocus();
                 continue;
             }
             int i = 0;
@@ -1123,7 +1065,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                 }
 
                 mLineBuffer = line.substr(i, tokenLength);
-                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::ColorConvertU32ToFloat4(mPalette.at((uint64_t) color)));
+                ImGui::PushStyleColor(ImGuiCol_Text, mPalette[(uint64_t) color]);
                 auto charsBefore = ImGui::CalcTextSize(line.mChars.substr(0, i).c_str()).x;
                 const ImVec2 textScreenPosition(lineStartScreenPos.x + charsBefore, lineStartScreenPos.y);
                 ImGui::SetCursorScreenPos(textScreenPosition);
@@ -1295,11 +1237,13 @@ void TextEditor::SetText(const std::string &aText, bool aUndo) {
     }
     mLines.resize(1);
     mLines[0] = Line();
+    mLines[0].mColorized = false;
     std::string text = PreprocessText(aText);
     for (auto chr : text) {
-        if (chr == '\n')
+        if (chr == '\n') {
             mLines.push_back(Line());
-        else
+            mLines.back().mColorized = false;
+        } else
             mLines.back().push_back(Glyph(chr));
     }
     if (!mReadOnly && aUndo) {
@@ -1321,13 +1265,16 @@ void TextEditor::SetText(const std::string &aText, bool aUndo) {
 void TextEditor::SetTextLines(const std::vector<std::string> &aLines) {
     mLines.clear();
 
-    if (aLines.empty())
+    if (aLines.empty()) {
         mLines.emplace_back(Line());
-     else {
+        mLines[0].mColorized = false;
+    } else {
          auto lineCount = aLines.size();
          mLines.resize(lineCount);
-         for (size_t i = 0; i < lineCount; i++)
+         for (size_t i = 0; i < lineCount; i++) {
              mLines[i].SetLine(PreprocessText(aLines[i]));
+             mLines[i].mColorized = false;
+         }
     }
 
     mTextChanged = true;
@@ -1388,6 +1335,7 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
                     auto spacesToInsert = mTabSize - (start.mColumn % mTabSize);
                     std::string spaces(spacesToInsert, ' ');
                     line.insert(line.begin(), spaces.begin(), spaces.end());
+                    line.mColorized = false;
                     modified = true;
                 }
             }
@@ -1457,6 +1405,7 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
         }
         newLine.insert(newLine.end(), line.begin() + cstart, line.end());
         line.erase(line.begin() + cstart,-1);
+        line.mColorized = false;
         SetCursorPosition(Coordinates(coord.mLine + 1, GetCharacterColumn(coord.mLine + 1, cpos)));
         u.mAdded = (char)aChar;
     } else if (aChar == '\t') {
@@ -1467,6 +1416,7 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
             auto spacesToInsert = mTabSize - (cindex % mTabSize);
             std::string spaces(spacesToInsert, ' ');
             line.insert(line.begin() + cindex, spaces.begin(), spaces.end());
+            line.mColorized = false;
             SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex + spacesToInsert)));
         } else {
             auto spacesToRemove = (cindex % mTabSize);
@@ -1478,7 +1428,7 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
                     cindex -= 1;
                 }
             }
-
+            line.mColorized = false;
             SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, std::max(0, cindex))));
         }
 
@@ -1496,8 +1446,10 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
                                                                                                                                                         u.mRemovedEnd   = Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex + d));
                 u.mRemoved      = std::string(line.mChars.begin() + cindex, line.mChars.begin() + cindex + d);
                 line.erase(line.begin() + cindex, d);
+                line.mColorized = false;
             }
             line.insert(line.begin() + cindex, buf.begin(), buf.end());
+            line.mColorized = false;
             u.mAdded = buf;
             auto charCount = GetStringCharacterCount(buf);
             SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex + charCount)));
@@ -1505,10 +1457,10 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
             return;
     }
 
-    mTextChanged = true;
-
     u.mAddedEnd = GetActualCursorCoordinates();
     u.mAfter    = mState;
+
+    mTextChanged = true;
 
     AddUndo(u);
 
@@ -1583,10 +1535,10 @@ void TextEditor::InsertText(const char *aValue) {
 
     auto pos       = GetActualCursorCoordinates();
     auto start     = std::min(pos, mState.mSelectionStart);
-    int totalLines = pos.mLine - start.mLine;
     auto text = PreprocessText(aValue);
 
-    totalLines += InsertTextAt(pos, text);
+    InsertTextAt(pos, text);
+    mLines[pos.mLine].mColorized = false;
 
     SetSelection(pos, pos);
     SetCursorPosition(pos);
@@ -1951,6 +1903,7 @@ void TextEditor::Delete() {
 
             auto &nextLine = mLines[pos.mLine + 1];
             line.insert(line.end(), nextLine.begin(), nextLine.end());
+            line.mColorized = false;
             RemoveLine(pos.mLine + 1);
 
         } else {
@@ -1961,6 +1914,7 @@ void TextEditor::Delete() {
 
             auto d = UTF8CharLength(line[cindex]);
             line.erase(line.begin() + cindex, d);
+            line.mColorized = false;
         }
 
         mTextChanged = true;
@@ -2009,6 +1963,7 @@ void TextEditor::Backspace() {
                 prevLine = line;
             else
                 prevLine.insert(prevLine.end(), line.begin(), line.end());
+            prevLine.mColorized = false;
 
 
             ErrorMarkers etmp;
@@ -2032,6 +1987,7 @@ void TextEditor::Backspace() {
                 line.erase(line.begin() + cindex, cend-cindex);
             else
                 line.erase(line.begin() + cindex, -1);
+            line.mColorized = false;
         }
 
         mTextChanged = true;
@@ -2079,19 +2035,23 @@ void TextEditor::Cut() {
     if (IsReadOnly()) {
         Copy();
     } else {
-        if (HasSelection()) {
-            UndoRecord u;
-            u.mBefore       = mState;
-            u.mRemoved      = GetSelectedText();
-            u.mRemovedStart = mState.mSelectionStart;
-            u.mRemovedEnd   = mState.mSelectionEnd;
-
-            Copy();
-            DeleteSelection();
-
-            u.mAfter = mState;
-            AddUndo(u);
+        if (!HasSelection()) {
+            auto lineIndex = GetActualCursorCoordinates().mLine;
+            if (lineIndex < 0 || lineIndex >= (int)mLines.size())
+                return;
+            SetSelection(Coordinates(lineIndex, 0), Coordinates(lineIndex+1, 0));
         }
+        UndoRecord u;
+        u.mBefore = mState;
+        u.mRemoved = GetSelectedText();
+        u.mRemovedStart = mState.mSelectionStart;
+        u.mRemovedEnd = mState.mSelectionEnd;
+
+        Copy();
+        DeleteSelection();
+
+        u.mAfter = mState;
+        AddUndo(u);
     }
     std::string findWord = mFindReplaceHandler.GetFindWord();
     if (!findWord.empty()) {
@@ -2380,8 +2340,7 @@ std::string make_wholeWord(const std::string &s) {
 bool TextEditor::FindReplaceHandler::FindNext(TextEditor *editor) {
     Coordinates curPos;
     curPos.mLine = mMatches.empty() ? editor->mState.mCursorPosition.mLine : mMatches.back().mCursorPosition.mLine;
-    curPos.mColumn = mMatches.empty() ? editor->mState.mCursorPosition.mColumn : editor->Utf8CharsToBytes(
-            mMatches.back().mCursorPosition);
+    curPos.mColumn = mMatches.empty() ? editor->mState.mCursorPosition.mColumn : editor->Utf8CharsToBytes(mMatches.back().mCursorPosition);
 
     unsigned long matchLength = editor->GetStringCharacterCount(mFindWord);
     size_t byteIndex = 0;
@@ -2699,10 +2658,11 @@ void TextEditor::ProcessInputs() {
 }
 
 void TextEditor::Colorize() {
-    mCheckComments = true;
+    mUpdateFlags = true;
 }
 
 void TextEditor::ColorizeRange() {
+
     if (isEmpty())
         return;
 
@@ -2712,14 +2672,19 @@ void TextEditor::ColorizeRange() {
         mLanguageDefinition.mTokenize = []( strConstIter, strConstIter, strConstIter &, strConstIter &, PaletteIndex &) { return false; };
     auto linesSize = mLines.size();
     for (int i = 0; i < linesSize; ++i) {
-        if (mLines[i].mColorized || mLines[i].empty())
+        auto &line = mLines[i];
+        auto size = line.size();
+
+        if (line.mColors.size() != size) {
+            line.mColors.resize(size, 0);
+            line.mColorized = false;
+        }
+
+        if (line.mColorized || line.empty())
             continue;
 
-        auto &line = mLines[i];
         auto last = line.end();
-        auto  size = line.size();
-        if (line.mFlags.size() != size)
-            line.mFlags.resize(size);
+
         auto first = line.begin();
         for (auto current = first;(current-first) < size;) {
             strConstIter token_begin;
@@ -2806,6 +2771,11 @@ void TextEditor::ColorizeRange() {
                 }
 
                 if (token_color != PaletteIndex::Identifier || *current.mColorsIter == static_cast<char>(PaletteIndex::Identifier)) {
+                    if (token_offset + token_length >= (int)line.mColors.size()) {
+                       auto colors = line.mColors;
+                       line.mColors.resize(token_offset + token_length, static_cast<char>(PaletteIndex::Default));
+                       std::copy(colors.begin(), colors.end(), line.mColors.begin());
+                    }
                     try {
                         line.mColors.replace(token_offset, token_length, token_length, static_cast<char>(token_color));
                     } catch (const std::exception &e) {
@@ -2824,194 +2794,196 @@ void TextEditor::ColorizeInternal() {
     if (isEmpty() || !mColorizerEnabled)
         return;
 
-    if (mCheckComments) {
-        auto endLine                 = mLines.size();
-        auto commentStartLine        = endLine;
-        auto commentStartIndex       = 0;
-        auto withinGlobalDocComment  = false;
-        auto withinBlockDocComment   = false;
-        auto withinString            = false;
-        auto withinBlockComment      = false;
-        auto withinNotDef            = false;
-        auto currentLine             = 0;
-        auto commentLength           = 0;
+    if (mUpdateFlags) {
+        auto endLine = mLines.size();
+        auto commentStartLine = endLine;
+        auto commentStartIndex = 0;
+        auto withinGlobalDocComment = false;
+        auto withinBlockDocComment = false;
+        auto withinString = false;
+        auto withinBlockComment = false;
+        auto withinNotDef = false;
+        auto currentLine = 0;
+        auto commentLength = 0;
 
         std::vector<bool> ifDefs;
         ifDefs.push_back(true);
+        mDefines.push_back("__IMHEX__");
         for (currentLine = 0; currentLine < endLine; currentLine++) {
             auto &line = mLines[currentLine];
             auto lineLength = line.size();
 
             if (line.mFlags.size() != lineLength) {
-                line.mFlags.resize(lineLength);
-                std::fill_n(line.mFlags.begin(), line.mFlags.size(), 0);
+                line.mFlags.resize(lineLength, 0);
                 line.mColorized = false;
             }
-            auto withinComment           = false;
-            auto withinDocComment        = false;
-            auto withinPreproc           = false;
-            auto firstChar               = true;   // there is no other non-whitespace characters in the line before
+            //if (!line.mColorized) {
 
-            auto setGlyphFlags = [&](int index) {
-                Line::Flags flags(0);
-                flags.mBits.mComment = withinComment;
-                flags.mBits.mBlockComment = withinBlockComment;
-                flags.mBits.mDocComment = withinDocComment;
-                flags.mBits.mGlobalDocComment = withinGlobalDocComment;
-                flags.mBits.mBlockDocComment = withinBlockDocComment;
-                flags.mBits.mDeactivated = withinNotDef;
-                if (mLines[currentLine].mFlags[index] != flags.mValue) {
-                    mLines[currentLine].mColorized = false;
-                    mLines[currentLine].mFlags[index] = flags.mValue;
-                }
-            };
+                auto withinComment = false;
+                auto withinDocComment = false;
+                auto withinPreproc = false;
+                auto firstChar = true;   // there is no other non-whitespace characters in the line before
 
-            auto currentIndex = 0;
-            if (line.empty())
-                continue;
-            while (currentIndex < lineLength) {
+                auto setGlyphFlags = [&](int index) {
+                    Line::Flags flags(0);
+                    flags.mBits.mComment = withinComment;
+                    flags.mBits.mBlockComment = withinBlockComment;
+                    flags.mBits.mDocComment = withinDocComment;
+                    flags.mBits.mGlobalDocComment = withinGlobalDocComment;
+                    flags.mBits.mBlockDocComment = withinBlockDocComment;
+                    flags.mBits.mDeactivated = withinNotDef;
+                    if (mLines[currentLine].mFlags[index] != flags.mValue) {
+                        mLines[currentLine].mColorized = false;
+                        mLines[currentLine].mFlags[index] = flags.mValue;
+                    }
+                };
 
+                auto currentIndex = 0;
+                if (line.empty())
+                    continue;
+                while (currentIndex < lineLength) {
 
+                    auto &g = line[currentIndex];
+                    auto c = g;
 
-                auto &g = line[currentIndex];
-                auto c  = g;
+                    if (c != mLanguageDefinition.mPreprocChar && !isspace(c))
+                        firstChar = false;
 
-                if (c != mLanguageDefinition.mPreprocChar && !isspace(c))
-                    firstChar = false;
+                    bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
 
-                bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
-
-                if (withinString) {
-                   setGlyphFlags(currentIndex);
-                    if (c == '\\') {
-                        currentIndex++;
+                    if (withinString) {
                         setGlyphFlags(currentIndex);
-                    } else if (c == '\"')
-                        withinString = false;
-                } else {
-                    if (firstChar && c == mLanguageDefinition.mPreprocChar &&  !inComment && !withinComment && !withinDocComment && ! withinString) {
-                        withinPreproc = true;
-                        std::string directive;
-                        auto start = currentIndex + 1;
-                        while (start < (int) line.size() && !isspace(line[start])) {
-                            directive += line[start];
-                            start++;
-                        }
-
-                        while (start < (int) line.size() && isspace(line[start]))
-                            start++;
-
-                        if (directive == "endif" && !ifDefs.empty()) {
-                            ifDefs.pop_back();
-                            withinNotDef = !ifDefs.back();
-                        } else {
-                            std::string identifier;
+                        if (c == '\\') {
+                            currentIndex++;
+                            setGlyphFlags(currentIndex);
+                        } else if (c == '\"')
+                            withinString = false;
+                    } else {
+                        if (firstChar && c == mLanguageDefinition.mPreprocChar && !inComment && !withinComment && !withinDocComment && !withinString) {
+                            withinPreproc = true;
+                            std::string directive;
+                            auto start = currentIndex + 1;
                             while (start < (int) line.size() && !isspace(line[start])) {
-                                identifier += line[start];
+                                directive += line[start];
                                 start++;
                             }
-                            if (directive == "define") {
-                                if (identifier.size() > 0 && !withinNotDef && std::find(mDefines.begin(), mDefines.end(), identifier) == mDefines.end())
-                                    mDefines.push_back(identifier);
-                            } else if (directive == "undef") {
-                                if (identifier.size() > 0 && !withinNotDef)
-                                    mDefines.erase(std::remove(mDefines.begin(), mDefines.end(), identifier), mDefines.end());
-                            } else if (directive == "ifdef") {
-                                if (!withinNotDef) {
-                                    bool isConditionMet = std::find(mDefines.begin(), mDefines.end(), identifier) != mDefines.end();
-                                    ifDefs.push_back(isConditionMet);
-                                } else
-                                    ifDefs.push_back(false);
-                            } else if (directive == "ifndef") {
-                                if (!withinNotDef) {
-                                    bool isConditionMet = std::find(mDefines.begin(), mDefines.end(), identifier) == mDefines.end();
-                                    ifDefs.push_back(isConditionMet);
-                                } else
-                                    ifDefs.push_back(false);
-                            }
-                        }
-                    }
 
-                    if (c == '\"' && !withinPreproc && !inComment && !withinComment && !withinDocComment) {
-                        withinString = true;
-                        setGlyphFlags(currentIndex);
-                    } else {
-                        auto pred         = [](const char &a, const char &b) { return a == b; };
+                            while (start < (int) line.size() && isspace(line[start]))
+                                start++;
 
-                        auto compareForth = [&](const std::string &a, const std::string &b) {
-                            return !a.empty() && (currentIndex + a.size() <= b.size()) && equals(a.begin(), a.end(), b.begin() + currentIndex, b.begin() + (currentIndex + a.size()), pred);
-                        };
-
-                        auto compareBack  = [&](const std::string &a, const std::string &b) {
-                            return !a.empty() && currentIndex + 1 >= (int)a.size() && equals(a.begin(), a.end(), b.begin() + (currentIndex + 1 - a.size()), b.begin() + (currentIndex + 1), pred);
-                        };
-
-                        if (!inComment && !withinComment && !withinDocComment && !withinPreproc && !withinString) {
-                            if (compareForth(mLanguageDefinition.mDocComment, line.mChars)) {
-                                withinDocComment = !inComment;
-                                commentLength = 3;
-                            } else  if (compareForth(mLanguageDefinition.mSingleLineComment, line.mChars)) {
-                                withinComment = !inComment;
-                                commentLength = 2;
+                            if (directive == "endif" && !ifDefs.empty()) {
+                                ifDefs.pop_back();
+                                withinNotDef = !ifDefs.back();
                             } else {
-                                bool isGlobalDocComment = compareForth(mLanguageDefinition.mGlobalDocComment, line.mChars);
-                                bool isBlockDocComment = compareForth(mLanguageDefinition.mBlockDocComment, line.mChars);
-                                bool isBlockComment = compareForth(mLanguageDefinition.mCommentStart, line.mChars);
-                                if (isGlobalDocComment || isBlockDocComment || isBlockComment) {
-                                    commentStartLine = currentLine;
-                                    commentStartIndex = currentIndex;
-                                    if (currentIndex < line.size() - 4 && isBlockComment && line.mChars[currentIndex + 2] == '*' && line.mChars[currentIndex + 3] == '/') {
-                                        withinBlockComment = true;
-                                        commentLength = 2;
-                                    } else if (isGlobalDocComment) {
-                                        withinGlobalDocComment = true;
-                                        commentLength = 3;
-                                    } else if (isBlockDocComment) {
-                                        withinBlockDocComment = true;
-                                        commentLength = 3;
-                                    } else {
-                                        withinBlockComment = true;
-                                        commentLength = 2;
-                                    }
+                                std::string identifier;
+                                while (start < (int) line.size() && !isspace(line[start])) {
+                                    identifier += line[start];
+                                    start++;
+                                }
+                                if (directive == "define") {
+                                    if (identifier.size() > 0 && !withinNotDef && std::find(mDefines.begin(), mDefines.end(), identifier) == mDefines.end())
+                                        mDefines.push_back(identifier);
+                                } else if (directive == "undef") {
+                                    if (identifier.size() > 0 && !withinNotDef)
+                                        mDefines.erase(std::remove(mDefines.begin(), mDefines.end(), identifier), mDefines.end());
+                                } else if (directive == "ifdef") {
+                                    if (!withinNotDef) {
+                                        bool isConditionMet = std::find(mDefines.begin(), mDefines.end(), identifier) != mDefines.end();
+                                        ifDefs.push_back(isConditionMet);
+                                    } else
+                                        ifDefs.push_back(false);
+                                } else if (directive == "ifndef") {
+                                    if (!withinNotDef) {
+                                        bool isConditionMet = std::find(mDefines.begin(), mDefines.end(), identifier) == mDefines.end();
+                                        ifDefs.push_back(isConditionMet);
+                                    } else
+                                        ifDefs.push_back(false);
                                 }
                             }
-                            inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
                         }
-                        setGlyphFlags(currentIndex);
 
-                        if (compareBack(mLanguageDefinition.mCommentEnd, line.mChars) && ((commentStartLine != currentLine) || (commentStartIndex + commentLength < currentIndex))) {
-                            withinBlockComment      = false;
-                            withinBlockDocComment   = false;
-                            withinGlobalDocComment  = false;
-                            commentStartLine        = endLine;
-                            commentStartIndex       = 0;
-                            commentLength           = 0;
+                        if (c == '\"' && !withinPreproc && !inComment && !withinComment && !withinDocComment) {
+                            withinString = true;
+                            setGlyphFlags(currentIndex);
+                        } else {
+                            auto pred = [](const char &a, const char &b) { return a == b; };
+
+                            auto compareForth = [&](const std::string &a, const std::string &b) {
+                                return !a.empty() && (currentIndex + a.size() <= b.size()) && equals(a.begin(), a.end(), b.begin() + currentIndex, b.begin() + (currentIndex + a.size()), pred);
+                            };
+
+                            auto compareBack = [&](const std::string &a, const std::string &b) {
+                                return !a.empty() && currentIndex + 1 >= (int) a.size() && equals(a.begin(), a.end(), b.begin() + (currentIndex + 1 - a.size()), b.begin() + (currentIndex + 1), pred);
+                            };
+
+                            if (!inComment && !withinComment && !withinDocComment && !withinPreproc && !withinString) {
+                                if (compareForth(mLanguageDefinition.mDocComment, line.mChars)) {
+                                    withinDocComment = !inComment;
+                                    commentLength = 3;
+                                } else if (compareForth(mLanguageDefinition.mSingleLineComment, line.mChars)) {
+                                    withinComment = !inComment;
+                                    commentLength = 2;
+                                } else {
+                                    bool isGlobalDocComment = compareForth(mLanguageDefinition.mGlobalDocComment, line.mChars);
+                                    bool isBlockDocComment = compareForth(mLanguageDefinition.mBlockDocComment, line.mChars);
+                                    bool isBlockComment = compareForth(mLanguageDefinition.mCommentStart, line.mChars);
+                                    if (isGlobalDocComment || isBlockDocComment || isBlockComment) {
+                                        commentStartLine = currentLine;
+                                        commentStartIndex = currentIndex;
+                                        if (currentIndex < line.size() - 4 && isBlockComment &&
+                                            line.mChars[currentIndex + 2] == '*' &&
+                                            line.mChars[currentIndex + 3] == '/') {
+                                            withinBlockComment = true;
+                                            commentLength = 2;
+                                        } else if (isGlobalDocComment) {
+                                            withinGlobalDocComment = true;
+                                            commentLength = 3;
+                                        } else if (isBlockDocComment) {
+                                            withinBlockDocComment = true;
+                                            commentLength = 3;
+                                        } else {
+                                            withinBlockComment = true;
+                                            commentLength = 2;
+                                        }
+                                    }
+                                }
+                                inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
+                            }
+                            setGlyphFlags(currentIndex);
+
+                            if (compareBack(mLanguageDefinition.mCommentEnd, line.mChars) && ((commentStartLine != currentLine) || (commentStartIndex + commentLength < currentIndex))) {
+                                withinBlockComment = false;
+                                withinBlockDocComment = false;
+                                withinGlobalDocComment = false;
+                                commentStartLine = endLine;
+                                commentStartIndex = 0;
+                                commentLength = 0;
+                            }
                         }
                     }
-                }
-                if (currentIndex < line.size()) {
-                    Line::Flags flags(0);
-                    flags.mValue = mLines[currentLine].mFlags[currentIndex];
-                    flags.mBits.mPreprocessor = withinPreproc;
-                    mLines[currentLine].mFlags[currentIndex] = flags.mValue;
-                }
-                auto utf8CharLength = UTF8CharLength(c);
-                if (utf8CharLength > 1) {
-                    Line::Flags flags(0);
-                    flags.mValue = mLines[currentLine].mFlags[currentIndex];
-                    for (int j = 1; j < utf8CharLength; j++) {
-                        currentIndex++;
+                    if (currentIndex < line.size()) {
+                        Line::Flags flags(0);
+                        flags.mValue = mLines[currentLine].mFlags[currentIndex];
+                        flags.mBits.mPreprocessor = withinPreproc;
                         mLines[currentLine].mFlags[currentIndex] = flags.mValue;
                     }
+                    auto utf8CharLength = UTF8CharLength(c);
+                    if (utf8CharLength > 1) {
+                        Line::Flags flags(0);
+                        flags.mValue = mLines[currentLine].mFlags[currentIndex];
+                        for (int j = 1; j < utf8CharLength; j++) {
+                            currentIndex++;
+                            mLines[currentLine].mFlags[currentIndex] = flags.mValue;
+                        }
+                    }
+                    currentIndex++;
                 }
-                currentIndex++;
-            }
-            withinNotDef = !ifDefs.back();
+                withinNotDef = !ifDefs.back();
+           // }
+            // mUpdateFlags = false;
         }
         mDefines.clear();
-        mCheckComments = false;
     }
-
     ColorizeRange();
 }
 
@@ -3154,13 +3126,13 @@ void TextEditor::UndoRecord::Undo(TextEditor *aEditor) {
 void TextEditor::UndoRecord::Redo(TextEditor *aEditor) {
     if (!mRemoved.empty()) {
         aEditor->DeleteRange(mRemovedStart, mRemovedEnd);
-        aEditor->Colorize();
+       aEditor->Colorize();
     }
 
     if (!mAdded.empty()) {
         auto start = mAddedStart;
         aEditor->InsertTextAt(start, mAdded.c_str());
-        aEditor->Colorize();
+       aEditor->Colorize();
     }
 
     aEditor->mState = mAfter;
@@ -3312,8 +3284,8 @@ bool TokenizeCStyleNumber(strConstIter in_begin, strConstIter in_end, strConstIt
                 return false;
         }
 
-        // single precision floating point type
-        if (p < in_end && *p == 'f')
+        // single and double precision floating point type
+        if (p < in_end && (*p == 'f' || *p == 'F' || *p == 'd' || *p == 'D'))
             p++;
     }
 

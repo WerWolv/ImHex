@@ -149,6 +149,7 @@ namespace hex::plugin::builtin {
             }
         };
         std::atomic<bool>  m_needsToUpdateColors = true;
+        std::atomic<bool>  m_wasInterrupted = false;
 
         TextHighlighter(ViewPatternEditor *viewPatternEditor, std::unique_ptr<pl::PatternLanguage> *patternLanguage ) :
                 m_viewPatternEditor(viewPatternEditor), patternLanguage(patternLanguage), m_needsToUpdateColors(true) {}
@@ -156,10 +157,7 @@ namespace hex::plugin::builtin {
          * @brief Entry point to syntax highlighting
          */
         void highlightSourceCode();
-        /**
-        * @brief Task for syntax highlighting
-        */
-        void colorizePatternEditor();
+
         /**
         * @brief Syntax highlighting from parser
         */
@@ -167,7 +165,6 @@ namespace hex::plugin::builtin {
         /**
         * @brief Create data to pass to text editor
         */
-        void setAllColors();
         void setRequestedIdentifierColors();
         /**
         * @brief Set the color of a token
@@ -177,7 +174,6 @@ namespace hex::plugin::builtin {
         /**
         * @brief Only identifiers not in chains should remain
         */
-        void colorRemainingTokens();
         void colorRemainingIdentifierTokens();
         /**
          * @brief Renders compile errors in real time
@@ -215,12 +211,8 @@ namespace hex::plugin::builtin {
         /// Returns the next/previous valid source code line
         u32 nextLine(u32 line);
         u32 previousLine(u32 line);
-        /// Returns the number of escape characters in a string in order to colorize the right number of characters
-        i32 escapeCharCount(const std::string &str);
         /// Loads the source code and calculates the first token index of each line
         void loadText();
-        /// Sets the color of the source code
-        void setColorizedLines();
         /// Used to obtain the color to be applied.
         TextEditor::PaletteIndex getPaletteIndex(Token::Literal *literal);
         /// The complement of a set is also known as its inverse
@@ -260,8 +252,6 @@ namespace hex::plugin::builtin {
         bool isLocationValid(Location location);
         /// Returns the name of the context where the current or given token is located
         bool findScope(std::string &name, const UnorderedBlocks &map, i32 optionalTokenId=-1);
-        /// Returns true if the current or given token index is in the global scope
-        bool isInGlobalScope(i32 optionalTokenId=-1);
         /// Returns the name of the namespace where the current or given token is located
         bool findNamespace(std::string &nameSpace, i32 optionalTokenId=-1);
         /// Calculate the source code, line and column numbers of a token index
@@ -274,8 +264,6 @@ namespace hex::plugin::builtin {
         void getTokenIdForArgument(i32 start, i32 argNumber, Token delimiter);
         ///Creates a map from function name to argument type
         void linkAttribute();
-        /// Sets the sizes of each line of code to a vector of colors
-        //void SetColorsSize( TextEditor::ColorizedLines &linesOfColors);
         /// Comment and strings usethese function to determine their coordinates
         template<typename T> TextEditor::Coordinates commentCoordinates(Token *token);
         TextEditor::Coordinates stringCoordinates();
@@ -284,9 +272,36 @@ namespace hex::plugin::builtin {
             return m_runningColorizers;
         }
 
+        enum class HighlightStage {
+            Starting,
+            NamespaceTokenRanges,
+            UDTTokenRanges,
+            FunctionTokenRanges,
+            GlobalTokenRanges,
+            FixGlobalVariables,
+            SetInitialColors,
+            LoadInstances,
+            AttributeTokenRanges,
+            Definitions,
+            FixAutos,
+            FixChains,
+            ExcludedLocations,
+            ColorRemainingTokens,
+            SetRequestedIdentifierColors,
+            Stage1,
+            Stage2,
+            Stage3,
+            Stage4,
+            Stage5,
+            Stage6,
+            Stage7,
+            Stage8,
+            Stage9,
+            Stage10,
+            Stage11,
+        };
 
-        void readAllLinesInOneToken(u32 tokenIndex);
-        void readAllTokensInOneLine(u32 lineIndex);
+        HighlightStage m_highlightStage = HighlightStage::Starting;
 
         /// The following functions were copied from the parser and some were modified
 
