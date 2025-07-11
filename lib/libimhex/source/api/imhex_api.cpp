@@ -1030,11 +1030,16 @@ namespace hex {
         void Font::push(float size) const {
             auto font = getFont(m_fontName);
 
-            if (size <= 0.0F && font != nullptr) {
-                size = font->LegacySize;
-            }
+            if (font != nullptr) {
+                if (size <= 0.0F) {
+                    size = font->LegacySize;
+                }
 
-            size *= System::getGlobalScale();
+                if (!font->Sources[0]->PixelSnapH)
+                    size *= System::getGlobalScale();
+                else
+                    size *= std::floor(System::getGlobalScale());
+            }
 
             ImGui::PushFont(font, size);
         }

@@ -1283,8 +1283,8 @@ namespace hex {
 
         io.UserData = &m_imguiCustomData;
 
-        auto scale = ImHexApi::System::getGlobalScale();
-        style.ScaleAllSizes(scale);
+        style.ScaleAllSizes(ImHexApi::System::getGlobalScale());
+        auto scale = ImHexApi::System::getNativeScale();
         io.DisplayFramebufferScale = ImVec2(scale, scale);
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
