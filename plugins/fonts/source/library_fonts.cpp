@@ -51,6 +51,8 @@ namespace hex::fonts {
                     config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_SubPixel;
                     break;
             }
+        } else {
+            config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_NoHinting;
         }
 
         {

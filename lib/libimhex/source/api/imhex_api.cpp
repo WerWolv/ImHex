@@ -1035,7 +1035,7 @@ namespace hex {
                     size = font->LegacySize;
                 }
 
-                if (!font->Sources[0]->PixelSnapH)
+                if (font->Sources[0]->PixelSnapH)
                     size *= System::getGlobalScale();
                 else
                     size *= std::floor(System::getGlobalScale());
