@@ -19,6 +19,7 @@
 
 #include <TextEditor.h>
 #include <popups/popup_file_chooser.hpp>
+#include <content/text_highlighting/pattern_language.hpp>
 
 namespace pl::ptrn { class Pattern; }
 
@@ -69,6 +70,30 @@ namespace hex::plugin::builtin {
         ~ViewPatternEditor() override;
 
         void drawAlwaysVisibleContent() override;
+        std::unique_ptr<pl::PatternLanguage> *getPatternLanguage() {
+            return &m_editorRuntime;
+        }
+
+        TextEditor &getTextEditor() {
+            return m_textEditor;
+        }
+
+        bool getChangesWereParsed() const {
+            return m_changesWereParsed;
+        }
+
+        u32  getRunningParsers () const {
+            return m_runningParsers;
+        }
+
+        u32  getRunningEvaluators () const {
+            return m_runningEvaluators;
+        }
+
+        void setChangesWereParsed(bool changesWereParsed) {
+            m_changesWereParsed = changesWereParsed;
+        }
+
         void drawContent() override;
         [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
             return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
@@ -234,6 +259,7 @@ namespace hex::plugin::builtin {
         std::atomic<u32> m_runningEvaluators = 0;
         std::atomic<u32> m_runningParsers    = 0;
 
+        bool m_changesWereParsed = false;
         PerProvider<bool> m_hasUnevaluatedChanges;
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
 
@@ -308,6 +334,7 @@ namespace hex::plugin::builtin {
         static inline u32 m_replaceHistorySize = 0;
         static inline u32 m_replaceHistoryIndex = 0;
 
+        TextHighlighter m_textHighlighter = TextHighlighter(this,&this->m_editorRuntime);
     private:
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);

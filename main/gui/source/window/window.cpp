@@ -2,8 +2,6 @@
 
 #include <hex.hpp>
 
-#include <windows.h>
-
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
