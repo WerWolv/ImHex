@@ -472,6 +472,8 @@ int TextEditor::GetCharacterIndex(const Coordinates &aCoordinates) const {
 int TextEditor::GetCharacterColumn(int aLine, int aIndex) const {
     if (aLine >= mLines.size())
         return 0;
+    if (aLine < 0)
+        return 0;
     auto &line = mLines[aLine];
     int col    = 0;
     int i      = 0;
@@ -498,6 +500,8 @@ int TextEditor::GetStringCharacterCount(std::string str) const {
 int TextEditor::GetLineCharacterCount(int aLine) const {
     if (aLine >= mLines.size())
         return 0;
+    if (aLine < 0)
+        return 0;
     auto &line = mLines[aLine];
     int c      = 0;
     for (unsigned i = 0; i < line.size(); c++)
@@ -508,12 +512,16 @@ int TextEditor::GetLineCharacterCount(int aLine) const {
 unsigned long long TextEditor::GetLineByteCount(int aLine) const {
     if (aLine >= mLines.size())
         return 0;
+    if (aLine < 0)
+        return 0;
     auto &line = mLines[aLine];
     return line.size();
 }
 
 int TextEditor::GetLineMaxColumn(int aLine) const {
     if (aLine >= mLines.size())
+        return 0;
+    if (aLine < 0)
         return 0;
     auto &line = mLines[aLine];
     int col    = 0;
@@ -2011,7 +2019,10 @@ void TextEditor::SelectWordUnderCursor() {
 }
 
 void TextEditor::SelectAll() {
-    SetSelection(Coordinates(0, 0), Coordinates((int)mLines.size(), 0));
+    if (isEmpty())
+        return;
+
+    SetSelection(Coordinates(0, 0), Coordinates((int)mLines.size(), mLines.empty() ? 0 : GetLineMaxColumn((int)mLines.size() - 1)));
 }
 
 bool TextEditor::HasSelection() const {
