@@ -475,10 +475,6 @@ namespace hex::plugin::builtin {
                     this->drawVariableSettings(settingsSize, *m_patternVariables);
                     ImGui::EndTabItem();
                 }
-                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.sections"_lang)) {
-                    this->drawSectionSelector(settingsSize, *m_sections);
-                    ImGui::EndTabItem();
-                }
                 if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.virtual_files"_lang)) {
                     this->drawVirtualFiles(settingsSize, *m_virtualFiles);
                     ImGui::EndTabItem();
@@ -1291,108 +1287,6 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
     }
 
-    void ViewPatternEditor::drawSectionSelector(ImVec2 size, const std::map<u64, pl::api::Section> &sections) {
-        auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-
-        if (ImGui::BeginTable("##sections_table", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
-            if (sections.empty()) {
-                ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_sections"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
-            }
-
-            ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.ui.common.name"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
-            ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
-            ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 50_scaled);
-
-            ImGui::TableHeadersRow();
-
-            if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                for (auto &[id, section] : sections) {
-                    if (section.name.empty())
-                        continue;
-
-                    ImGui::PushID(id);
-
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-
-                    ImGui::TextUnformatted(section.name.c_str());
-                    ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
-                    ImGui::TableNextColumn();
-                    if (ImGuiExt::DimmedIconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        auto dataProvider = std::make_shared<prv::MemoryProvider>(section.data);
-                        auto hexEditor = ui::HexEditor(m_sectionHexEditor);
-
-                        hexEditor.setBackgroundHighlightCallback([this, id, &runtime](u64 address, const u8 *, size_t) -> std::optional<color_t> {
-                            if (m_runningEvaluators != 0)
-                                return std::nullopt;
-                            if (!ImHexApi::Provider::isValid())
-                                return std::nullopt;
-
-                            std::optional<ImColor> color;
-                            for (const auto &pattern : runtime.getPatternsAtAddress(address, id)) {
-                                auto visibility = pattern->getVisibility();
-                                if (visibility == pl::ptrn::Visibility::Hidden || visibility == pl::ptrn::Visibility::HighlightHidden)
-                                    continue;
-
-                                if (color.has_value())
-                                    color = ImAlphaBlendColors(*color, pattern->getColor());
-                                else
-                                    color = pattern->getColor();
-                            }
-
-                            return color;
-                        });
-
-                        auto patternProvider = ImHexApi::Provider::get();
-
-
-                        m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider, hexEditor, patternDrawer = std::make_shared<ui::PatternDrawer>(), &runtime]() mutable {
-                            hexEditor.setProvider(dataProvider.get());
-                            hexEditor.draw(ImGui::GetContentRegionAvail().y * 0.7);
-                            patternDrawer->setSelectionCallback([&](const pl::ptrn::Pattern *pattern) {
-                                hexEditor.setSelection(Region { pattern->getOffset(), pattern->getSize() });
-                            });
-
-                            const auto &patterns = [&, this]() -> const auto& {
-                                if (patternProvider->isReadable() && *m_executionDone) {
-                                    return runtime.getPatterns(id);
-                                } else {
-                                    static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
-                                    return empty;
-                                }
-                            }();
-
-                            if (*m_executionDone)
-                                patternDrawer->draw(patterns, &runtime, ImGui::GetContentRegionAvail().y);
-                        };
-                    }
-                    ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.sections.view"_lang.get());
-
-                    ImGui::SameLine();
-
-                    if (ImGuiExt::DimmedIconButton(ICON_VS_SAVE_AS, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        fs::openFileBrowser(fs::DialogMode::Save, {}, [id, &runtime](const auto &path) {
-                            wolv::io::File file(path, wolv::io::File::Mode::Create);
-                            if (!file.isValid()) {
-                                ui::ToastError::open("hex.builtin.popup.error.create"_lang);
-                                return;
-                            }
-
-                            file.writeVector(runtime.getSection(id));
-                        });
-                    }
-                    ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.sections.export"_lang.get());
-
-                    ImGui::PopID();
-                }
-            }
-
-            ImGui::EndTable();
-        }
-    }
-
     void ViewPatternEditor::drawVirtualFiles(ImVec2 size, const std::vector<VirtualFile> &virtualFiles) const {
         std::vector<const VirtualFile*> virtualFilePointers;
 
@@ -1487,20 +1381,6 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
             return;
-
-        auto open = m_sectionWindowDrawer.contains(provider);
-        if (open) {
-            ImGui::SetNextWindowSize(scaled(ImVec2(600, 700)), ImGuiCond_Appearing);
-            if (ImGui::Begin("hex.builtin.view.pattern_editor.section_popup"_lang, &open, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                m_sectionWindowDrawer[provider]();
-            }
-            ImGui::End();
-        }
-
-        if (!open && m_sectionWindowDrawer.contains(provider)) {
-            ImHexApi::HexEditor::setSelection(Region::Invalid());
-            m_sectionWindowDrawer.erase(provider);
-        }
 
         if (!m_lastEvaluationProcessed) {
             if (!m_lastEvaluationResult) {
@@ -1929,7 +1809,6 @@ namespace hex::plugin::builtin {
         m_consoleLongestLineLength.get(provider) = 0;
         m_consoleNeedsUpdate = true;
 
-        m_sectionWindowDrawer.clear();
         m_consoleEditor.get(provider).SetText("");
         m_virtualFiles->clear();
 
@@ -2009,7 +1888,6 @@ namespace hex::plugin::builtin {
             ON_SCOPE_EXIT {
                 runtime.getInternals().evaluator->setDebugMode(false);
                 *m_lastEvaluationOutVars = runtime.getOutVariables();
-                *m_sections              = runtime.getSections();
 
                 m_runningEvaluators -= 1;
 

@@ -30,7 +30,6 @@ namespace hex::plugin::builtin {
     constexpr static auto consoleView       = "/##console_";
     constexpr static auto variablesView     = "/##env_vars_";
     constexpr static auto settingsView      = "/##settings_";
-    constexpr static auto sectionsView      = "/##sections_table_";
     constexpr static auto virtualFilesView  = "/##Virtual_File_Tree_";
     constexpr static auto debuggerView      = "/##debugger_";
 
@@ -271,9 +270,6 @@ namespace hex::plugin::builtin {
 
         bool m_autoLoadPatterns = true;
 
-        std::map<prv::Provider*, std::function<void()>> m_sectionWindowDrawer;
-
-        ui::HexEditor m_sectionHexEditor;
         PerProvider<ui::VisualizerDrawer> m_visualizerDrawer;
         bool m_tooltipJustOpened = false;
 
@@ -297,7 +293,6 @@ namespace hex::plugin::builtin {
         PerProvider<const std::vector<pl::core::Evaluator::StackTrace>*> m_callStack;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
-        PerProvider<std::map<u64, pl::api::Section>> m_sections;
 
         PerProvider<std::vector<VirtualFile>> m_virtualFiles;
 
@@ -339,7 +334,6 @@ namespace hex::plugin::builtin {
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
         void drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables);
-        void drawSectionSelector(ImVec2 size, const std::map<u64, pl::api::Section> &sections);
         void drawVirtualFiles(ImVec2 size, const std::vector<VirtualFile> &virtualFiles) const;
         void drawDebugger(ImVec2 size);
 
