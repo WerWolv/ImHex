@@ -208,20 +208,20 @@ namespace hex::plugin::builtin {
                     if (!provider->open()) {
                         ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                         TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    } else {
+                        TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
                     }
                 });
-
-                EventProviderOpened::post(provider);
             }
             else if (!provider->hasLoadInterface()) {
                 TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
                     if (!provider->open() || !provider->isAvailable()) {
                         ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                         TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    } else {
+                        TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
                     }
                 });
-
-                EventProviderOpened::post(provider);
             }
         });
 
