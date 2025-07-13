@@ -1453,7 +1453,7 @@ namespace hex::plugin::builtin {
 
                 bool foundCorrectType = false;
 
-                auto mimeType = magic::getMIMEType(provider, 0, 100_KiB, true);
+                auto mimeType = magic::getMIMEType(provider, 0, 4_KiB, true);
                 runtime.addPragma("MIME", [&mimeType, &foundCorrectType](const pl::PatternLanguage &runtime, const std::string &value) {
                     std::ignore = runtime;
 

@@ -230,10 +230,6 @@ namespace hex::prv {
         return page;
     }
 
-    std::vector<Provider::Description> Provider::getDataDescription() const {
-        return { };
-    }
-
     void Provider::undo() {
         m_undoRedoStack.undo();
     }
@@ -248,29 +244,6 @@ namespace hex::prv {
 
     bool Provider::canRedo() const {
         return m_undoRedoStack.canRedo();
-    }
-
-    bool Provider::hasFilePicker() const {
-        return false;
-    }
-
-    bool Provider::handleFilePicker() {
-        return false;
-    }
-
-    bool Provider::hasLoadInterface() const {
-        return false;
-    }
-
-    bool Provider::hasInterface() const {
-        return false;
-    }
-
-    bool Provider::drawLoadInterface() {
-        return true;
-    }
-
-    void Provider::drawInterface() {
     }
 
     nlohmann::json Provider::storeSettings(nlohmann::json settings) const {

@@ -282,7 +282,7 @@ namespace hex::plugin::builtin {
         return m_selectedProcess != nullptr;
     }
 
-    void ProcessMemoryProvider::drawInterface() {
+    void ProcessMemoryProvider::drawSidebarInterface() {
         ImGuiExt::Header("hex.builtin.provider.process_memory.memory_regions"_lang, true);
 
         auto availableX = ImGui::GetContentRegionAvail().x;

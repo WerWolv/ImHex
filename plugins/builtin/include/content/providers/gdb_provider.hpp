@@ -12,7 +12,9 @@
 
 namespace hex::plugin::builtin {
 
-    class GDBProvider : public hex::prv::CachedProvider {
+    class GDBProvider : public prv::CachedProvider,
+                        public prv::IProviderDataDescription,
+                        public prv::IProviderLoadInterface {
     public:
         GDBProvider();
         ~GDBProvider() override = default;
@@ -37,7 +39,6 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] bool isConnected() const;
 
-        [[nodiscard]] bool hasLoadInterface() const override { return true; }
         bool drawLoadInterface() override;
 
         void loadSettings(const nlohmann::json &settings) override;

@@ -5,7 +5,8 @@
 
 namespace hex::plugin::remote {
 
-    class SSHProvider : public hex::prv::CachedProvider {
+    class SSHProvider : public prv::CachedProvider,
+                        public prv::IProviderLoadInterface {
     public:
         bool isAvailable() const override { return m_remoteFile.isOpen(); }
         bool isReadable() const override  { return isAvailable(); }
@@ -25,7 +26,6 @@ namespace hex::plugin::remote {
         std::string getName() const override;
 
         bool drawLoadInterface() override;
-        bool hasLoadInterface() const override { return true; }
 
         void loadSettings(const nlohmann::json &settings) override;
         nlohmann::json storeSettings(nlohmann::json settings) const override;

@@ -23,7 +23,10 @@
 
 namespace hex::plugin::builtin {
 
-    class ProcessMemoryProvider : public hex::prv::Provider {
+    class ProcessMemoryProvider : public prv::Provider,
+                                  public prv::IProviderDataDescription,
+                                  public prv::IProviderLoadInterface,
+                                  public prv::IProviderSidebarInterface {
     public:
         ProcessMemoryProvider() = default;
         ~ProcessMemoryProvider() override = default;
@@ -58,10 +61,8 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool open() override;
         void close() override;
 
-        [[nodiscard]] bool hasLoadInterface() const override { return true; }
-        [[nodiscard]] bool hasInterface() const override { return true; }
         bool drawLoadInterface() override;
-        void drawInterface() override;
+        void drawSidebarInterface() override;
 
         void loadSettings(const nlohmann::json &) override {}
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json) const override { return { }; }

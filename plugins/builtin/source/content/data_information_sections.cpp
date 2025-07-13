@@ -40,13 +40,15 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextRow();
 
-                for (auto &[name, value] : m_provider->getDataDescription()) {
-                    ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{}", name);
-                    ImGui::TableNextColumn();
-                    ImGui::PushID(name.c_str());
-                    ImGuiExt::TextFormattedWrappedSelectable("{}", value);
-                    ImGui::PopID();
+                if (auto *dataDescriptionProvider = dynamic_cast<prv::IProviderDataDescription*>(m_provider); dataDescriptionProvider != nullptr) {
+                    for (auto &[name, value] : dataDescriptionProvider->getDataDescription()) {
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("{}", name);
+                        ImGui::TableNextColumn();
+                        ImGui::PushID(name.c_str());
+                        ImGuiExt::TextFormattedWrappedSelectable("{}", value);
+                        ImGui::PopID();
+                    }
                 }
 
                 ImGui::TableNextColumn();
