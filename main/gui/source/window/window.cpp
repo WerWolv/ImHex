@@ -1001,10 +1001,12 @@ namespace hex {
             }
         });
 
-        configureGLFW();
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+        glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+        configureGLFW();
 
         if (initialWindowProperties.has_value()) {
             glfwWindowHint(GLFW_MAXIMIZED, initialWindowProperties->maximized);
