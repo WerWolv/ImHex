@@ -639,7 +639,7 @@ namespace hex::plugin::builtin {
                     if (provider->isDirty())
                         postfix += " (*)";
 
-                    if (!provider->isWritable() && provider->getActualSize() != 0)
+                    if (!provider->isWritable())
                         postfix += " (Read Only)";
                 }
             }

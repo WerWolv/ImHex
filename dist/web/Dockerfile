@@ -60,7 +60,7 @@ cmake /imhex                                                                    
     -G "Ninja"                                                                                          \
     -DIMHEX_OFFLINE_BUILD=ON                                                                            \
     -DIMHEX_STATIC_LINK_PLUGINS=ON                                                                      \
-    -DIMHEX_EXCLUDE_PLUGINS="script_loader"                                                             \
+    -DIMHEX_EXCLUDE_PLUGINS="script_loader;remote"                                                      \
     -DIMHEX_COMPRESS_DEBUG_INFO=OFF                                                                     \
     -DNATIVE_CMAKE_C_COMPILER=gcc                                                                       \
     -DNATIVE_CMAKE_CXX_COMPILER=g++                                                                     \
