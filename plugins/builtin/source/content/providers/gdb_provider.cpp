@@ -147,52 +147,13 @@ namespace hex::plugin::builtin {
         return false;
     }
 
-    void GDBProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
-            return;
-
-        offset -= this->getBaseAddress();
-
-        u64 alignedOffset = offset - (offset % CacheLineSize);
-
-        if (size <= CacheLineSize) {
-            std::scoped_lock lock(m_cacheLock);
-
-            const auto &cacheLine = std::ranges::find_if(m_cache, [&](const auto &line) {
-                return line.address == alignedOffset;
-            });
-
-            if (cacheLine != m_cache.end()) {
-                // Cache hit
-
-            } else {
-                // Cache miss
-
-                m_cache.push_back({ alignedOffset, { 0 } });
-            }
-
-            if (cacheLine != m_cache.end())
-                std::memcpy(buffer, &cacheLine->data[0] + (offset % CacheLineSize), std::min<u64>(size, cacheLine->data.size()));
-        } else {
-            while (size > 0) {
-                size_t readSize = std::min<u64>(size, CacheLineSize);
-
-                auto data = gdb::readMemory(m_socket, offset, size);
-                if (!data.empty())
-                    std::memcpy(buffer, &data[0], data.size());
-
-                size -= readSize;
-                offset += readSize;
-            }
-        }
+    void GDBProvider::readFromSource(u64 offset, void *buffer, size_t size) {
+        auto data = gdb::readMemory(m_socket, offset, size);
+        if (!data.empty())
+            std::memcpy(buffer, &data[0], data.size());
     }
 
-    void GDBProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
-        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
-            return;
-
-        offset -= this->getBaseAddress();
-
+    void GDBProvider::writeToSource(u64 offset, const void *buffer, size_t size) {
         gdb::writeMemory(m_socket, offset, buffer, size);
     }
 
@@ -200,7 +161,7 @@ namespace hex::plugin::builtin {
         Provider::save();
     }
 
-    u64 GDBProvider::getActualSize() const {
+    u64 GDBProvider::getSourceSize() const {
         return m_size;
     }
 
@@ -223,7 +184,7 @@ namespace hex::plugin::builtin {
     }
 
     bool GDBProvider::open() {
-        m_socket = wolv::net::SocketClient(wolv::net::SocketClient::Type::TCP);
+        m_socket = wolv::net::SocketClient(wolv::net::SocketClient::Type::TCP, true);
         m_socket.connect(m_ipAddress, m_port);
         if (!gdb::enableNoAckMode(m_socket)) {
             m_socket.disconnect();
@@ -232,39 +193,6 @@ namespace hex::plugin::builtin {
 
         if (m_socket.isConnected()) {
             gdb::continueExecution(m_socket);
-
-            m_cacheUpdateThread = std::thread([this] {
-                auto cacheLine = m_cache.begin();
-                while (this->isConnected()) {
-                    {
-                        std::scoped_lock lock(m_cacheLock);
-
-                        if (m_resetCache) {
-                            m_cache.clear();
-                            m_resetCache = false;
-                            cacheLine = m_cache.begin();
-                        }
-
-                        if (cacheLine != m_cache.end()) {
-                            std::vector<u8> data = gdb::readMemory(m_socket, cacheLine->address, CacheLineSize);
-
-                            while (std::count_if(m_cache.begin(), m_cache.end(), [&](auto &line) { return !line.data.empty(); }) > 100) {
-                                m_cache.pop_front();
-                                cacheLine = m_cache.begin();
-                            }
-
-                            std::memcpy(cacheLine->data.data(), data.data(), data.size());
-                        }
-
-                        if (cacheLine == m_cache.end())
-                            cacheLine = m_cache.begin();
-                        else
-                            ++cacheLine;
-                    }
-                    std::this_thread::sleep_for(10ms);
-                }
-            });
-
             return true;
         } else {
             return false;
@@ -273,10 +201,6 @@ namespace hex::plugin::builtin {
 
     void GDBProvider::close() {
         m_socket.disconnect();
-
-        if (m_cacheUpdateThread.joinable()) {
-            m_cacheUpdateThread.join();
-        }
     }
 
     bool GDBProvider::isConnected() const {

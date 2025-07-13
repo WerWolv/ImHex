@@ -8,10 +8,11 @@
 #include <mutex>
 #include <string_view>
 #include <thread>
+#include <hex/providers/cached_provider.hpp>
 
 namespace hex::plugin::builtin {
 
-    class GDBProvider : public hex::prv::Provider {
+    class GDBProvider : public hex::prv::CachedProvider {
     public:
         GDBProvider();
         ~GDBProvider() override = default;
@@ -22,9 +23,9 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isResizable() const override;
         [[nodiscard]] bool isSavable() const override;
 
-        void readRaw(u64 offset, void *buffer, size_t size) override;
-        void writeRaw(u64 offset, const void *buffer, size_t size) override;
-        [[nodiscard]] u64 getActualSize() const override;
+        void readFromSource(u64 offset, void *buffer, size_t size) override;
+        void writeToSource(u64 offset, const void *buffer, size_t size) override;
+        [[nodiscard]] u64 getSourceSize() const override;
 
         void save() override;
 
@@ -56,20 +57,6 @@ namespace hex::plugin::builtin {
         int m_port = 0;
 
         u64 m_size = 0;
-
-        constexpr static size_t CacheLineSize = 0x10;
-
-        struct CacheLine {
-            u64 address;
-
-            std::array<u8, CacheLineSize> data;
-        };
-
-        std::list<CacheLine> m_cache;
-        std::atomic<bool> m_resetCache = false;
-
-        std::thread m_cacheUpdateThread;
-        std::mutex m_cacheLock;
     };
 
 }
