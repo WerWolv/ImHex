@@ -269,7 +269,7 @@ namespace hex::plugin::remote {
         if (offset > size || buffer.empty())
             return 0;
 
-        ssize_t n = libssh2_sftp_read(m_handle, reinterpret_cast<char*>(buffer.data()), std::min(buffer.size_bytes(), size - offset));
+        ssize_t n = libssh2_sftp_read(m_handle, reinterpret_cast<char*>(buffer.data()), std::min<u64>(buffer.size_bytes(), size - offset));
         if (n < 0)
             return 0;
         if (n == 0)
