@@ -3,6 +3,8 @@
 #include <hex/helpers/logger.hpp>
 #include <wolv/utils/string.hpp>
 
+#include <array>
+
 #if defined(OS_WINDOWS)
     #include <ws2tcpip.h>
 #endif

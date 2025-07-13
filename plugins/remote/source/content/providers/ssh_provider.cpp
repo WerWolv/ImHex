@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <fonts/vscode_icons.hpp>
+#include <hex/helpers/logger.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/helpers/utils.hpp>
 
@@ -20,6 +21,7 @@ namespace hex::plugin::remote {
                     m_sftpClient = std::move(client);
                 }
             } catch (const std::exception& e) {
+                setErrorMessage(e.what());
                 return false;
             }
         }
@@ -101,6 +103,7 @@ namespace hex::plugin::remote {
                         m_sftpClient = std::move(client);
                     }
                 } catch (const std::exception& e) {
+                    log::error("Failed to connect to SSH server: {}", e.what());
                     return false;
                 }
             }
