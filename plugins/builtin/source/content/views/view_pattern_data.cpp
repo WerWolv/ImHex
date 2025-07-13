@@ -10,6 +10,8 @@
 #include <pl/patterns/pattern.hpp>
 #include <wolv/utils/lock.hpp>
 
+#include <ranges>
+
 namespace hex::plugin::builtin {
 
     ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name", ICON_VS_DATABASE) {
@@ -47,11 +49,7 @@ namespace hex::plugin::builtin {
                 for (auto &[id, drawer] : drawers)
                     drawer->reset();
 
-            const auto &sections = ContentRegistry::PatternLanguage::getRuntime().getSections();
-            auto ids = sections | std::views::keys | std::ranges::to<std::vector<u64>>();
-            ids.push_back(0);
-
-            for (const auto &id : ids) {
+            const auto createDefaultDrawer = [this]() {
                 auto drawer = std::make_unique<ui::PatternDrawer>();
 
                 drawer->setSelectionCallback([](const pl::ptrn::Pattern *pattern) {
@@ -69,7 +67,14 @@ namespace hex::plugin::builtin {
                 drawer->setTreeStyle(m_treeStyle);
                 drawer->enableRowColoring(m_rowColoring);
 
-                (*m_patternDrawer)[id] = std::move(drawer);
+                return drawer;
+            };
+
+            const auto &sections = ContentRegistry::PatternLanguage::getRuntime().getSections();
+
+            (*m_patternDrawer)[0] = createDefaultDrawer();
+            for (const auto &id : sections | std::views::keys) {
+                (*m_patternDrawer)[id] = createDefaultDrawer();
             }
         });
 
