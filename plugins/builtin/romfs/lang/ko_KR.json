@@ -898,8 +898,6 @@
         "hex.builtin.view.pattern_editor.open_pattern": "패턴 열기",
         "hex.builtin.view.pattern_editor.replace_hint": "",
         "hex.builtin.view.pattern_editor.replace_hint_history": "",
-        "hex.builtin.view.pattern_editor.section_popup": "섹션",
-        "hex.builtin.view.pattern_editor.sections": "섹션",
         "hex.builtin.view.pattern_editor.settings": "설정",
         "hex.builtin.view.pattern_editor.shortcut.add_breakpoint": "중단점 추가",
         "hex.builtin.view.pattern_editor.shortcut.continue_debugger": "컨티뉴 디버거",

@@ -903,8 +903,6 @@
         "hex.builtin.view.pattern_editor.open_pattern": "Pattern öffnen",
         "hex.builtin.view.pattern_editor.replace_hint": "Ersetzen",
         "hex.builtin.view.pattern_editor.replace_hint_history": " für Historie)",
-        "hex.builtin.view.pattern_editor.section_popup": "Sektion",
-        "hex.builtin.view.pattern_editor.sections": "Sektionen",
         "hex.builtin.view.pattern_editor.settings": "Einstellungen",
         "hex.builtin.view.pattern_editor.shortcut.add_breakpoint": "Breakpoint hinzufügen",
         "hex.builtin.view.pattern_editor.shortcut.continue_debugger": "Debugger fortsetzen",

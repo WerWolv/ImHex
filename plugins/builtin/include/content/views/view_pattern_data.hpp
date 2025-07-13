@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
         u32 m_maxFilterItems = 128;
         ui::PatternDrawer::TreeStyle m_treeStyle = ui::PatternDrawer::TreeStyle::Default;
 
-        PerProvider<std::unique_ptr<ui::PatternDrawer>> m_patternDrawer;
+        PerProvider<std::map<u64, std::unique_ptr<ui::PatternDrawer>>> m_patternDrawer;
         Region m_hoveredPatternRegion = Region::Invalid();
     };
 
