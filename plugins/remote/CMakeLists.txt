@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 
 include(ImHexPlugin)
 
+if (NOT WIN32)
+    find_package(OpenSSL REQUIRED)
+endif()
 find_package(libssh2 REQUIRED)
 
 add_imhex_plugin(
@@ -15,9 +18,11 @@ add_imhex_plugin(
     INCLUDES
         include
         ${LIBSSH2_INCLUDE_DIR}
+        ${OPENSSL_INCLUDE_DIR}
 
     LIBRARIES
         ui
         fonts
         ${LIBSSH2_LIBRARY}
+        ${OPENSSL_LIBRARY}
 )
