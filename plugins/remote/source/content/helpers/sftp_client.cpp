@@ -251,7 +251,8 @@ namespace hex::plugin::remote {
         }
     }
 
-    SFTPClient::RemoteFile::RemoteFile(RemoteFile &&other) noexcept : m_handle(other.m_handle), m_atEOF(other.m_atEOF) {
+    SFTPClient::RemoteFile::RemoteFile(RemoteFile &&other) noexcept
+        : m_handle(other.m_handle), m_atEOF(other.m_atEOF), m_mode(other.m_mode) {
         other.m_handle = nullptr;
     }
     SFTPClient::RemoteFile& SFTPClient::RemoteFile::operator=(RemoteFile &&other) noexcept {
@@ -259,19 +260,20 @@ namespace hex::plugin::remote {
             if (m_handle) libssh2_sftp_close(m_handle);
             m_handle = other.m_handle;
             m_atEOF = other.m_atEOF;
+            m_mode = other.m_mode;
             other.m_handle = nullptr;
         }
         return *this;
     }
 
     size_t SFTPClient::RemoteFile::read(std::span<u8> buffer) {
-        auto size = this->size();
+        auto dataSize = this->size();
         auto offset = this->tell();
 
-        if (offset > size || buffer.empty())
+        if (offset > dataSize || buffer.empty())
             return 0;
 
-        ssize_t n = libssh2_sftp_read(m_handle, reinterpret_cast<char*>(buffer.data()), std::min<u64>(buffer.size_bytes(), size - offset));
+        ssize_t n = libssh2_sftp_read(m_handle, reinterpret_cast<char*>(buffer.data()), std::min<u64>(buffer.size_bytes(), dataSize - offset));
         if (n < 0)
             return 0;
         if (n == 0)
