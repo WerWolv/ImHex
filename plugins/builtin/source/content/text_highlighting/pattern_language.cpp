@@ -1161,8 +1161,8 @@ namespace hex::plugin::builtin {
                 next(-1);
                 skipArray(200, false);
                 next(-1);
-                return false;
             }
+
             return false;
         } else
             return false;
