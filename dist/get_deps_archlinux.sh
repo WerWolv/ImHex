@@ -20,4 +20,5 @@ pacman -S $@ --needed \
   bzip2         \
   xz            \
   zstd          \
-  lz4
+  lz4           \
+  libssh2
