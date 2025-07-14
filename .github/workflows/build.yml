@@ -94,7 +94,7 @@ jobs:
           -DIMHEX_GENERATE_PDBS=ON                                                \
           -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                                       \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                \
-          -DCPACK_WIX_VERSION=6                                                   \
+          -DCPACK_WIX_VERSION="4"                                                 \
           -DCPACK_WIX_ROOT="$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools"   \
           ..
 
@@ -277,7 +277,7 @@ jobs:
             -DIMHEX_COMMIT_HASH_LONG="$env:GITHUB_SHA"                                `
             -DIMHEX_COMMIT_BRANCH="$($env:GITHUB_REF -replace '.*/', '')"             `
             -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                  `
-            -DCPACK_WIX_VERSION=6                                                     `
+            -DCPACK_WIX_VERSION="4"                                                   `
             -DCPACK_WIX_ROOT="$env:USERPROFILE/.dotnet/tools"                         `
             .
 
