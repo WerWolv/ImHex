@@ -186,7 +186,7 @@ jobs:
           - architecture_name: "x86_64"
             vs_arch: "amd64"
             runner_os: "windows-2025"
-          - architecture_name: "ARM64"
+          - architecture_name: "arm64"
             vs_arch: "amd64_arm64"
             runner_os: "windows-11-arm"
 
@@ -251,6 +251,8 @@ jobs:
             -DCMAKE_CXX_COMPILER="$($(Get-Command cl.exe).Path)"                      `
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                                        `
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                      `
+            -DCMAKE_INSTALL_PREFIX="$(Join-Path $PWD 'install')"                      `
+            -DIMHEX_GENERATE_PACKAGE=ON                                               `
             -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE"                                      `
             -DIMHEX_PATTERNS_PULL_MASTER=ON                                           `
             -DIMHEX_COMMIT_HASH_LONG="$env:GITHUB_SHA"                                `
@@ -261,7 +263,28 @@ jobs:
       - name: 🛠️ Build
         run: |
           cd build
-          ninja
+          ninja install
+
+      - name: 📦 Bundle MSI
+        run: |
+          cd build
+          cpack
+          mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-MSVC-${{ matrix.architecture_name }}.msi
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            imhex-*.msi
+
+      - name: ⬆️ Upload Windows Installer
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: Windows Installer MSVC ${{ matrix.architecture_name }}
+          path: |
+            imhex-*.msi
 
   win-plugin-template-test:
     runs-on: windows-2022
