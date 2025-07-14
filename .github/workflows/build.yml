@@ -94,7 +94,7 @@ jobs:
           -DIMHEX_GENERATE_PDBS=ON                                                \
           -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                                       \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                \
-          -DCPACK_WIX_VERSION=4                                                   \
+          -DCPACK_WIX_VERSION=6                                                   \
           -DCPACK_WIX_ROOT="$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools"   \
           ..
 
@@ -105,7 +105,7 @@ jobs:
 
     - name: 🕯️ Install WiX Toolkit
       run: |
-        "C:/Program Files/dotnet/dotnet.exe" tool install --global wix --version 4.0.0
+        "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
 
     - name: 🪲 Create PDBs for MSI
       run: |
