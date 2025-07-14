@@ -180,7 +180,17 @@ jobs:
 
   win_msvc:
     runs-on: windows-2022
-    name: 🪟 Windows MSVC
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture_name: "x86_64"
+            vs_arch: "amd64"
+          - architecture_name: "ARM64"
+            vs_arch: "arm64"
+
+    name: 🪟 Windows MSVC ${{ matrix.architecture }}
 
     env:
       CCACHE_DIR:      "${{ github.workspace }}/.ccache"
@@ -198,14 +208,14 @@ jobs:
       - name: 🫧 Setup Visual Studio Dev Environment
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          arch: amd64
+          arch: ${{ matrix.vs_arch }}
 
       - name: 📜 Setup ccache
         uses:  hendrikmuhs/ccache-action@v1
         id:    cache-ccache
         with:
-          key: ${{ runner.os }}-msvc-ccache-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-msvc-ccache
+          key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache
           max-size: 1G
 
       - name: 📦 Install vcpkg
