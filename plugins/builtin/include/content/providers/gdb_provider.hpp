@@ -56,6 +56,7 @@ namespace hex::plugin::builtin {
 
         std::string m_ipAddress;
         int m_port = 0;
+        std::mutex m_mutex;
 
         u64 m_size = 0;
     };
