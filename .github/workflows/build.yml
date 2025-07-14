@@ -267,6 +267,7 @@ jobs:
 
       - name: 📦 Bundle MSI
         run: |
+          dotnet tool install --global wix --version 4.0.0
           cd build
           cpack
           mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-MSVC-${{ matrix.architecture_name }}.msi
