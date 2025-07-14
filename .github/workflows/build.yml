@@ -188,7 +188,7 @@ jobs:
           - architecture_name: "x86_64"
             vs_arch: "amd64"
           - architecture_name: "ARM64"
-            vs_arch: "arm64"
+            vs_arch: "amd64_arm64"
 
     name: 🪟 Windows MSVC ${{ matrix.architecture_name }}
 
