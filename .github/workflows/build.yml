@@ -82,20 +82,20 @@ jobs:
         mkdir -p build
         cd build
 
-        cmake -G "Ninja"                                            \
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
-          -DCMAKE_INSTALL_PREFIX="$PWD/install"                     \
-          -DIMHEX_GENERATE_PACKAGE=ON                               \
-          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
-          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
-          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
-          -DUSE_SYSTEM_CAPSTONE=ON                                  \
-          -DIMHEX_GENERATE_PDBS=ON                                  \
-          -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                         \
-          -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
-          -DCPACK_WIX_VERSION=4                                     \
-          -DCPACK_WIX_ROOT="$USERPROFILE/.dotnet/tools"             \
+        cmake -G "Ninja"                                                          \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"                                   \
+          -DIMHEX_GENERATE_PACKAGE=ON                                             \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                                   \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON                                         \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                               \
+          -DUSE_SYSTEM_CAPSTONE=ON                                                \
+          -DIMHEX_GENERATE_PDBS=ON                                                \
+          -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                                       \
+          -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                \
+          -DCPACK_WIX_VERSION=4                                                   \
+          -DCPACK_WIX_ROOT="$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools"   \
           ..
 
     - name: 🛠️ Build
@@ -277,7 +277,7 @@ jobs:
             -DIMHEX_COMMIT_HASH_LONG="$env:GITHUB_SHA"                                `
             -DIMHEX_COMMIT_BRANCH="$($env:GITHUB_REF -replace '.*/', '')"             `
             -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                  `
-            -DCPACK_WIX_VERSION=4                                                     `
+            -DCPACK_WIX_VERSION=6                                                     `
             -DCPACK_WIX_ROOT="$env:USERPROFILE/.dotnet/tools"                         `
             .
 
@@ -288,7 +288,7 @@ jobs:
 
       - name: 🕯️ Install WiX Toolkit
         run: |
-          "C:/Program Files/dotnet/dotnet.exe" tool install --global wix --version 4.0.0
+          & "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
 
       - name: 📦 Bundle MSI
         run: |
