@@ -103,7 +103,7 @@ jobs:
 
     - name: 🕯️ Install WiX Toolkit
       run: |
-        dotnet tool install --global wix --version 4.0.0
+        "C:/Program Files/dotnet/dotnet.exe" tool install --global wix --version 4.0.0
 
     - name: 🪲 Create PDBs for MSI
       run: |
@@ -284,7 +284,7 @@ jobs:
 
       - name: 🕯️ Install WiX Toolkit
         run: |
-          dotnet tool install --global wix --version 4.0.0
+          "C:/Program Files/dotnet/dotnet.exe" tool install --global wix --version 4.0.0
 
       - name: 📦 Bundle MSI
         run: |
