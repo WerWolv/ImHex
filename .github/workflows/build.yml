@@ -128,7 +128,7 @@ jobs:
     - name: 📦 Bundle MSI
       run: |
         cd build
-        cpack
+        cpack -DCPACK_WIX_VERSION=4 -DCPACK_WIX_ROOT="$env:USERPROFILE/.dotnet/tools/wix"
         mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-${{ matrix.architecture_name }}.msi
 
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
@@ -289,7 +289,7 @@ jobs:
       - name: 📦 Bundle MSI
         run: |
           cd build
-          cpack
+          cpack -DCPACK_WIX_VERSION=4 -DCPACK_WIX_ROOT="$env:USERPROFILE/.dotnet/tools/wix"
           mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-MSVC-${{ matrix.architecture_name }}.msi
 
       - name: 🗝️ Generate build provenance attestations
