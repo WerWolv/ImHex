@@ -18,11 +18,13 @@ add_imhex_plugin(
     INCLUDES
         include
         ${LIBSSH2_INCLUDE_DIR}
-        ${OPENSSL_INCLUDE_DIR}
 
     LIBRARIES
         ui
         fonts
         ${LIBSSH2_LIBRARY}
-        ${OPENSSL_LIBRARY}
 )
+
+if (NOT WIN32)
+    target_link_libraries(remote PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+endif()
