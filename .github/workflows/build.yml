@@ -94,6 +94,8 @@ jobs:
           -DIMHEX_GENERATE_PDBS=ON                                  \
           -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                         \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
+          -DCPACK_WIX_VERSION=4                                     \
+          -DCPACK_WIX_ROOT="$USERPROFILE/.dotnet/tools"             \
           ..
 
     - name: 🛠️ Build
@@ -128,7 +130,7 @@ jobs:
     - name: 📦 Bundle MSI
       run: |
         cd build
-        cpack -DCPACK_WIX_VERSION=4 -DCPACK_WIX_ROOT="$env:USERPROFILE\.dotnet\tools"
+        cpack
         mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-${{ matrix.architecture_name }}.msi
 
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
@@ -275,6 +277,8 @@ jobs:
             -DIMHEX_COMMIT_HASH_LONG="$env:GITHUB_SHA"                                `
             -DIMHEX_COMMIT_BRANCH="$($env:GITHUB_REF -replace '.*/', '')"             `
             -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                  `
+            -DCPACK_WIX_VERSION=4                                                     `
+            -DCPACK_WIX_ROOT="$env:USERPROFILE/.dotnet/tools"                         `
             .
 
       - name: 🛠️ Build
@@ -289,7 +293,7 @@ jobs:
       - name: 📦 Bundle MSI
         run: |
           cd build
-          cpack -DCPACK_WIX_VERSION=4 -DCPACK_WIX_ROOT="$env:USERPROFILE\.dotnet\tools"
+          cpack
           mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-MSVC-${{ matrix.architecture_name }}.msi
 
       - name: 🗝️ Generate build provenance attestations
