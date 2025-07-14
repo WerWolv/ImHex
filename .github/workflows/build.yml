@@ -17,8 +17,19 @@ jobs:
 
   # Windows MINGW build
   win_mingw:
-    runs-on: windows-2022
-    name: 🪟 Windows MINGW64
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture_name: "x86_64"
+            msystem: "mingw64"
+            runner_os: "windows-2025"
+          - architecture_name: "arm64"
+            msystem: "clangarm64"
+            runner_os: "windows-11-arm"
+
+    runs-on: ${{ matrix.runner_os }}
+    name: 🪟 Windows MSYS2 ${{ matrix.architecture_name }}
 
     defaults:
       run:
@@ -48,7 +59,7 @@ jobs:
     - name: 🟦 Install msys2
       uses: msys2/setup-msys2@v2
       with:
-        msystem: mingw64
+        msystem: ${{ matrix.msystem }}
 
     - name: ⬇️ Install dependencies
       run: |
@@ -90,6 +101,10 @@ jobs:
         cd build
         ninja install
 
+    - name: 🕯️ Install WiX Toolkit
+      run: |
+        dotnet tool install --global wix --version 4.0.0
+
     - name: 🪲 Create PDBs for MSI
       run: |
         cd build
@@ -114,7 +129,7 @@ jobs:
       run: |
         cd build
         cpack
-        mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-x86_64.msi
+        mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-${{ matrix.architecture_name }}.msi
 
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
@@ -149,7 +164,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: Windows Installer x86_64
+        name: Windows Installer ${{ matrix.architecture_name }}
         path: |
           imhex-*.msi
 
@@ -157,11 +172,12 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: Windows Portable x86_64
+        name: Windows Portable ${{ matrix.architecture_name }}
         path: |
           build/install/*
 
     - name: ⬇️ Download Mesa3D for NoGPU version
+      if: ${{ matrix.architecture_name == 'x86_64' }}
       shell: bash
       run: |
         set -x
@@ -171,10 +187,11 @@ jobs:
         mv opengl32.dll build/install
 
     - name: ⬆️ Upload NoGPU Portable ZIP
+      if: ${{ matrix.architecture_name == 'x86_64' }}
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: Windows Portable NoGPU x86_64
+        name: Windows Portable NoGPU ${{ matrix.architecture_name }}
         path: |
           build/install/*
 
@@ -265,9 +282,12 @@ jobs:
           cd build
           ninja install
 
-      - name: 📦 Bundle MSI
+      - name: 🕯️ Install WiX Toolkit
         run: |
           dotnet tool install --global wix --version 4.0.0
+
+      - name: 📦 Bundle MSI
+        run: |
           cd build
           cpack
           mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-MSVC-${{ matrix.architecture_name }}.msi
