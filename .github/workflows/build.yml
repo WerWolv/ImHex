@@ -190,7 +190,7 @@ jobs:
           - architecture_name: "ARM64"
             vs_arch: "arm64"
 
-    name: 🪟 Windows MSVC ${{ matrix.architecture }}
+    name: 🪟 Windows MSVC ${{ matrix.architecture_name }}
 
     env:
       CCACHE_DIR:      "${{ github.workspace }}/.ccache"
