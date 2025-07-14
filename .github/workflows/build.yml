@@ -179,17 +179,18 @@ jobs:
           build/install/*
 
   win_msvc:
-    runs-on: windows-2022
-
     strategy:
       fail-fast: false
       matrix:
         include:
           - architecture_name: "x86_64"
             vs_arch: "amd64"
+            runner_os: "windows-2025"
           - architecture_name: "ARM64"
             vs_arch: "amd64_arm64"
+            runner_os: "windows-11-arm"
 
+    runs-on: ${{ matrix.runner_os }}
     name: 🪟 Windows MSVC ${{ matrix.architecture_name }}
 
     env:
@@ -246,8 +247,8 @@ jobs:
           cmake -G "Ninja" -B build                                                   `
             --preset vs2022                                                           `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
-            -DCMAKE_C_COMPILER="$($(Get-Command cl.exe).Path)"                         `
-            -DCMAKE_CXX_COMPILER="$($(Get-Command cl.exe).Path)"                       `
+            -DCMAKE_C_COMPILER="$($(Get-Command cl.exe).Path)"                        `
+            -DCMAKE_CXX_COMPILER="$($(Get-Command cl.exe).Path)"                      `
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                                        `
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                      `
             -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE"                                      `
