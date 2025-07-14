@@ -212,7 +212,7 @@ jobs:
           arch: ${{ matrix.vs_arch }}
 
       - name: 📜 Setup ccache
-        uses:  hendrikmuhs/ccache-action@v1
+        uses:  hendrikmuhs/ccache-action@main
         id:    cache-ccache
         with:
           key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache-${{ github.run_id }}
@@ -221,7 +221,7 @@ jobs:
 
       - name: 📦 Install vcpkg
         uses: friendlyanon/setup-vcpkg@v1
-        with: { committish: 7e21420f775f72ae938bdeb5e6068f722088f06a }
+        with: { committish: ef7dbf94b9198bc58f45951adcf1f041fcbc5ea0 }
 
       - name: ⬇️ Install dependencies
         run: |
