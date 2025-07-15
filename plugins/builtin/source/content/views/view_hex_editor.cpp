@@ -1477,7 +1477,8 @@ namespace hex::plugin::builtin {
                                                     }
                                                 },
                                                 [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() <= sizeof(u64); });
-
+        
+        
         /* Set Page Size */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.set_page_size" }, ICON_VS_BROWSER, 1860, Shortcut::None,
                                                 [this] {
@@ -1485,6 +1486,12 @@ namespace hex::plugin::builtin {
                                                     this->openPopup<PopupPageSize>(provider->getPageSize());
                                                 },
                                                 [] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isReadable(); });
+
+         /* Debug */
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.debug" }, ICON_VS_DEBUG_STEP_OUT, 1860,
+                                                [this] {
+                                                },
+                                                [] { return true; });
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1900);
 
