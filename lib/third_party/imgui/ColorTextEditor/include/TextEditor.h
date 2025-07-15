@@ -235,6 +235,7 @@ public:
             bool mGlobalDocComment : 1;
             bool mDeactivated : 1;
             bool mPreprocessor : 1;
+            bool mMatchedBracket : 1;
         };
         union Flags {
             Flags(char value) : mValue(value) {}
@@ -243,6 +244,8 @@ public:
             char mValue;
         };
         constexpr static char InComment = 31;
+
+        int GetCharacterColumn(int aIndex) const;
 
         class LineIterator {
         public:
@@ -817,6 +820,7 @@ public:
 	void MoveBottom(bool aSelect = false);
 	void MoveHome(bool aSelect = false);
 	void MoveEnd(bool aSelect = false);
+    void MoveToMatchedBracket(bool aSelect = false);
 
 	void SetSelectionStart(const Coordinates& aPosition);
 	void SetSelectionEnd(const Coordinates& aPosition);
@@ -961,6 +965,25 @@ private:
 
 	typedef std::vector<UndoRecord> UndoBuffer;
 
+    struct MatchedBracket {
+        bool mActive=false;
+        bool mChanged=false;
+        Coordinates mNearCursor = {};
+        Coordinates mMatched = {};
+        static constexpr std::string mSeparators = "()[]{}";
+        static constexpr std::string mOperators = "<>";
+        MatchedBracket(const MatchedBracket &other) : mActive(other.mActive), mChanged(other.mChanged), mNearCursor(other.mNearCursor), mMatched(other.mMatched) {}
+        MatchedBracket() : mActive(false), mChanged(false), mNearCursor(0,0), mMatched(0,0) {}
+        MatchedBracket(bool active, bool changed, const Coordinates &nearCursor, const Coordinates &matched) : mActive(active), mChanged(changed), mNearCursor(nearCursor), mMatched(matched) {}
+        bool CheckPosition(TextEditor *editor, const Coordinates &aFrom);
+        bool IsNearABracket(TextEditor *editor, const Coordinates &aFrom);
+        int DetectDirection(TextEditor *editor, const Coordinates &aFrom);
+
+        void FindMatchingBracket(TextEditor *editor);
+        bool IsActive() const { return mActive; }
+        bool hasChanged() const { return mChanged; }
+    };
+
 	void ProcessInputs();
 	void ColorizeRange();
 	void ColorizeInternal();
@@ -980,11 +1003,11 @@ private:
 	Coordinates FindNextWord(const Coordinates& aFrom) const;
     Coordinates StringIndexToCoordinates(int aIndex, const std::string &str) const;
 	int GetCharacterIndex(const Coordinates& aCoordinates) const;
-	int GetCharacterColumn(int aLine, int aIndex) const;
+	Coordinates GetCharacterCoordinates(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
-   int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
-   static int Utf8CharsToBytes(std::string line, uint32_t start, uint32_t numChars);
-  unsigned long long GetLineByteCount(int aLine) const;
+    int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
+    static int Utf8CharsToBytes(std::string line, uint32_t start, uint32_t numChars);
+    unsigned long long GetLineByteCount(int aLine) const;
 	int GetStringCharacterCount(std::string str) const;
 	int GetLineMaxColumn(int aLine) const;
 	bool IsOnWordBoundary(const Coordinates& aAt) const;
@@ -1038,6 +1061,7 @@ private:
 	bool mIgnoreImGuiChild = false;
 	bool mShowWhitespaces = true;
 
+    MatchedBracket mMatchedBracket={};
 	Palette mPalette = {};
 	LanguageDefinition mLanguageDefinition = {};
 	RegexList mRegexList;

@@ -2513,6 +2513,11 @@ namespace hex::plugin::builtin {
                 editor->MoveEnd(false);
         });
 
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::M + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_matched_bracket", [this] {
+            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
+                editor->MoveToMatchedBracket(false);
+        });
+
         ShortcutManager::addShortcut(this, Keys::F8 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.add_breakpoint", [this] {
             const auto line = m_textEditor.get(ImHexApi::Provider::get()).GetCursorPosition().mLine + 1;
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
