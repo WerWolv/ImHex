@@ -279,7 +279,7 @@ jobs:
             -DIMHEX_COMMIT_BRANCH="$($env:GITHUB_REF -replace '.*/', '')"             `
             -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                  `
             -DCPACK_WIX_VERSION="4"                                                   `
-            -DCPACK_WIX_ROOT="$env:USERPROFILE/.dotnet/tools"                         `
+            -DCPACK_WIX_ROOT="$($env:USERPROFILE -replace '\\','/')/.dotnet/tools"    `
             .
 
       - name: 🛠️ Build
@@ -290,7 +290,7 @@ jobs:
       - name: 🕯️ Install WiX Toolkit
         run: |
           & "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
-          & "$env:USERPROFILE/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
+          & "$($env:USERPROFILE -replace '\\','/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
 
       - name: 📦 Bundle MSI
         run: |
