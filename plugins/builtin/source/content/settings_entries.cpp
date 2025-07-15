@@ -621,6 +621,9 @@ namespace hex::plugin::builtin {
                 if (data.is_null())
                     return;
 
+                if (data.is_array() && data.empty())
+                    return;
+
                 for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable())
                     menuItem.toolbarIndex = -1;
 
