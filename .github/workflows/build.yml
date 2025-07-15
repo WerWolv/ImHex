@@ -383,12 +383,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - suffix: "-NoGPU"
+          - file_suffix: "-NoGPU"
+            name_suffix: "NoGPU"
             custom_glfw: true
-          - suffix: ""
+          - file_suffix: ""
+            name_suffix: ""
             custom_glfw: false
 
-    name: 🍎 macOS 13${{ matrix.suffix }}
+    name: 🍎 macOS 13 x86_64 ${{ matrix.name_suffix }}
 
     steps:
     - name: 🧰 Checkout
@@ -403,8 +405,8 @@ jobs:
     - name: 📜 Setup ccache
       uses: hendrikmuhs/ccache-action@v1
       with:
-        key: ${{ runner.os }}${{ matrix.suffix }}-ccache-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}${{ matrix.suffix }}-ccache
+        key: ${{ runner.os }}${{ matrix.file_suffix }}-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}${{ matrix.file_suffix }}-ccache
         max-size: 1G
 
     - name: Set Xcode version
@@ -519,7 +521,7 @@ jobs:
             break;
           fi
         done
-        mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-x86_64.dmg
+        mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-x86_64.dmg
 
     - name: 🗝️ Generate build provenance attestations
       uses: actions/attest-build-provenance@v2
@@ -532,7 +534,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: macOS DMG${{ matrix.suffix }} x86_64
+        name: macOS DMG ${{ matrix.name_suffix }} x86_64
         path: ./*.dmg
 
   macos-arm64:
@@ -639,7 +641,7 @@ jobs:
               break;
             fi
           done
-          mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-arm64.dmg
+          mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-arm64.dmg
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
