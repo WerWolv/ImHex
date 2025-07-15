@@ -970,8 +970,8 @@ private:
         bool mChanged=false;
         Coordinates mNearCursor = {};
         Coordinates mMatched = {};
-        static constexpr std::string mSeparators = "()[]{}";
-        static constexpr std::string mOperators = "<>";
+        static const std::string mSeparators;
+        static const std::string mOperators;
         MatchedBracket(const MatchedBracket &other) : mActive(other.mActive), mChanged(other.mChanged), mNearCursor(other.mNearCursor), mMatched(other.mMatched) {}
         MatchedBracket() : mActive(false), mChanged(false), mNearCursor(0,0), mMatched(0,0) {}
         MatchedBracket(bool active, bool changed, const Coordinates &nearCursor, const Coordinates &matched) : mActive(active), mChanged(changed), mNearCursor(nearCursor), mMatched(matched) {}

@@ -29,6 +29,9 @@ const int TextEditor::sCursorBlinkOnTime = 800;
 TextEditor::Palette sPaletteBase = TextEditor::GetDarkPalette();
 
 TextEditor::FindReplaceHandler::FindReplaceHandler() : mWholeWord(false),mFindRegEx(false),mMatchCase(false)  {}
+const std::string TextEditor::MatchedBracket::mSeparators = "()[]{}";
+const std::string TextEditor::MatchedBracket::mOperators = "<>";
+
 
 TextEditor::TextEditor() {
     mStartTime = ImGui::GetTime() * 1000;
@@ -857,7 +860,7 @@ bool TextEditor::MatchedBracket::CheckPosition(TextEditor *editor, const Coordin
     if (mSeparators.find(character) != std::string::npos && (static_cast<PaletteIndex>(color) == PaletteIndex::Separator || static_cast<PaletteIndex>(color) == PaletteIndex::WarningText) ||
         mOperators.find(character) != std::string::npos && (static_cast<PaletteIndex>(color) == PaletteIndex::Operator || static_cast<PaletteIndex>(color) == PaletteIndex::WarningText)) {
         if (mNearCursor != editor->GetCharacterCoordinates(lineIndex, result)) {
-            mNearCursor = editor->GetCharacterCoordinates(lineIndex, result);//Coordinates(lineIndex, editor->GetCharacterColumn(lineIndex, result));
+            mNearCursor = editor->GetCharacterCoordinates(lineIndex, result);
             mChanged = true;
         }
         mActive = true;
@@ -991,7 +994,7 @@ void TextEditor::MatchedBracket::FindMatchingBracket(TextEditor *editor) {
                 --depth;
                 if (depth == 0) {
                     if (mMatched != editor->GetCharacterCoordinates(lineIndex, idx)) {
-                        mMatched = editor->GetCharacterCoordinates(lineIndex, idx);//Coordinates(lineIndex, editor->GetCharacterColumn(lineIndex, idx));
+                        mMatched = editor->GetCharacterCoordinates(lineIndex, idx);
                         mChanged = true;
                     }
                     mActive = true;
@@ -2315,7 +2318,7 @@ std::string TextEditor::ReplaceStrings(std::string string, const std::string &se
 }
 
 std::vector<std::string> TextEditor::SplitString(const std::string &string, const std::string &delimiter, bool removeEmpty) {
-    if (delimiter.empty()) {
+    if (delimiter.empty() || string.empty()) {
         return { string };
     }
 
@@ -2332,7 +2335,8 @@ std::vector<std::string> TextEditor::SplitString(const std::string &string, cons
         result.emplace_back(std::move(token));
     }
 
-    result.emplace_back(string.substr(start));
+    if (start < string.length())
+        result.emplace_back(string.substr(start));
 
     if (removeEmpty)
         std::erase_if(result, [](const auto &string) { return string.empty(); });
@@ -3043,7 +3047,7 @@ void TextEditor::ColorizeInternal() {
         auto currentLine = 0;
         auto commentLength = 0;
         auto matchedBracket          = false;
-        std::string brackets = "()[]{}<>";
+        std::string brackets = "()[]{}";
 
         std::vector<bool> ifDefs;
         ifDefs.push_back(true);
