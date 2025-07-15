@@ -307,6 +307,7 @@ jobs:
 
       - name: ⬆️ Upload Windows Installer
         uses: actions/upload-artifact@v4
+        if: false # The MSVC builds should not really be used, they're still packaged for testing’s sake though
         with:
           if-no-files-found: error
           name: Windows Installer MSVC ${{ matrix.architecture_name }}
