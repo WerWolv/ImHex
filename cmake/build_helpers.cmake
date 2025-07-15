@@ -287,6 +287,20 @@ macro(createPackage)
             list(APPEND PLUGIN_TARGET_FILES "$<TARGET_FILE:${plugin}>")
         endforeach ()
 
+        if (DEFINED VCPKG_TARGET_TRIPLET)
+            set(VCPKG_DEPS_FOLDER "")
+            if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+                set(VCPKG_DEPS_FOLDER "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/debug/bin/")
+            else()
+                set(VCPKG_DEPS_FOLDER "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin/")
+            endif()
+
+            install(DIRECTORY "${VCPKG_DEPS_FOLDER}"
+                    DESTINATION "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}"
+                    FILES_MATCHING PATTERN "*.dll"
+            )
+        endif()
+
         # Grab all dynamically linked dependencies.
         install(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
         install(CODE "set(PLUGIN_TARGET_FILES \"${PLUGIN_TARGET_FILES}\")")
@@ -300,7 +314,7 @@ macro(createPackage)
             POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
         )
 
-        if(_c_deps_FILENAMES)
+        if(_c_deps_FILENAMES AND NOT _c_deps STREQUAL "")
             message(WARNING "Conflicting dependencies for library: \"${_c_deps}\"!")
         endif()
 
