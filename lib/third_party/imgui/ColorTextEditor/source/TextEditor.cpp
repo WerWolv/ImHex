@@ -3047,7 +3047,7 @@ void TextEditor::ColorizeInternal() {
         auto currentLine = 0;
         auto commentLength = 0;
         auto matchedBracket          = false;
-        std::string brackets = "()[]{}";
+        std::string brackets = "()[]{}<>";
 
         std::vector<bool> ifDefs;
         ifDefs.push_back(true);
@@ -3060,179 +3060,184 @@ void TextEditor::ColorizeInternal() {
                 line.mFlags.resize(lineLength, 0);
                 line.mColorized = false;
             }
-            //if (!line.mColorized) {
 
-                auto withinComment = false;
-                auto withinDocComment = false;
-                auto withinPreproc = false;
-                auto firstChar = true;   // there is no other non-whitespace characters in the line before
 
-                auto setGlyphFlags = [&](int index) {
-                    Line::Flags flags(0);
-                    flags.mBits.mComment = withinComment;
-                    flags.mBits.mBlockComment = withinBlockComment;
-                    flags.mBits.mDocComment = withinDocComment;
-                    flags.mBits.mGlobalDocComment = withinGlobalDocComment;
-                    flags.mBits.mBlockDocComment = withinBlockDocComment;
-                    flags.mBits.mDeactivated = withinNotDef;
-                    flags.mBits.mMatchedBracket = matchedBracket;
-                    if (mLines[currentLine].mFlags[index] != flags.mValue) {
-                        mLines[currentLine].mColorized = false;
-                        mLines[currentLine].mFlags[index] = flags.mValue;
-                    }
-                };
+            auto withinComment = false;
+            auto withinDocComment = false;
+            auto withinPreproc = false;
+            auto firstChar = true;   // there is no other non-whitespace characters in the line before
 
-                auto currentIndex = 0;
-                if (line.empty())
-                    continue;
-                while (currentIndex < lineLength) {
+            auto setGlyphFlags = [&](int index) {
+                Line::Flags flags(0);
+                flags.mBits.mComment = withinComment;
+                flags.mBits.mBlockComment = withinBlockComment;
+                flags.mBits.mDocComment = withinDocComment;
+                flags.mBits.mGlobalDocComment = withinGlobalDocComment;
+                flags.mBits.mBlockDocComment = withinBlockDocComment;
+                flags.mBits.mDeactivated = withinNotDef;
+                flags.mBits.mMatchedBracket = matchedBracket;
+                if (mLines[currentLine].mFlags[index] != flags.mValue) {
+                    mLines[currentLine].mColorized = false;
+                    mLines[currentLine].mFlags[index] = flags.mValue;
+                }
+            };
 
-                    auto &g = line[currentIndex];
-                    auto c = g;
+            auto currentIndex = 0;
+            if (line.empty())
+                continue;
+            while (currentIndex < lineLength) {
 
-                if (brackets.contains(c) && mMatchedBracket.IsActive()) {
+                auto &g = line[currentIndex];
+                auto c = g;
+
+                matchedBracket = false;
+                if (MatchedBracket::mSeparators.contains(c) && mMatchedBracket.IsActive()) {
                     if (mMatchedBracket.mNearCursor == Coordinates(currentLine, currentIndex) || mMatchedBracket.mMatched == Coordinates(currentLine, currentIndex))
                         matchedBracket = true;
-                    else
-                        matchedBracket = false;
-                } else
-                    matchedBracket = false;
+                } else if (MatchedBracket::mOperators.contains(c) && mMatchedBracket.IsActive()) {
+                    if (mMatchedBracket.mNearCursor == Coordinates(currentLine, currentIndex) || mMatchedBracket.mMatched == Coordinates(currentLine, currentIndex)) {
+                        if ((c == '<' && line.mColors[currentIndex - 1] == static_cast<char>(PaletteIndex::UserDefinedType)) ||
+                            (c == '>' && (mMatchedBracket.mMatched.mColumn    > 0 && line.mColors[mMatchedBracket.mMatched.mColumn    - 1] == static_cast<char>(PaletteIndex::UserDefinedType)) ||
+                                         (mMatchedBracket.mNearCursor.mColumn > 0 && line.mColors[mMatchedBracket.mNearCursor.mColumn - 1] == static_cast<char>(PaletteIndex::UserDefinedType)))) {
+                            matchedBracket = true;
+                        }
+                    }
+                }
+
 
                 if (c != mLanguageDefinition.mPreprocChar && !isspace(c))
                     firstChar = false;
 
-                    bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
+                bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
 
-                    if (withinString) {
+                if (withinString) {
+                    setGlyphFlags(currentIndex);
+                    if (c == '\\') {
+                        currentIndex++;
                         setGlyphFlags(currentIndex);
-                        if (c == '\\') {
-                            currentIndex++;
-                            setGlyphFlags(currentIndex);
-                        } else if (c == '\"')
-                            withinString = false;
-                    } else {
-                        if (firstChar && c == mLanguageDefinition.mPreprocChar && !inComment && !withinComment && !withinDocComment && !withinString) {
-                            withinPreproc = true;
-                            std::string directive;
-                            auto start = currentIndex + 1;
-                            while (start < (int) line.size() && !isspace(line[start])) {
-                                directive += line[start];
-                                start++;
-                            }
-
-                            while (start < (int) line.size() && isspace(line[start]))
-                                start++;
-
-                            if (directive == "endif" && !ifDefs.empty()) {
-                                ifDefs.pop_back();
-                                withinNotDef = !ifDefs.back();
-                            } else {
-                                std::string identifier;
-                                while (start < (int) line.size() && !isspace(line[start])) {
-                                    identifier += line[start];
-                                    start++;
-                                }
-                                if (directive == "define") {
-                                    if (identifier.size() > 0 && !withinNotDef && std::find(mDefines.begin(), mDefines.end(), identifier) == mDefines.end())
-                                        mDefines.push_back(identifier);
-                                } else if (directive == "undef") {
-                                    if (identifier.size() > 0 && !withinNotDef)
-                                        mDefines.erase(std::remove(mDefines.begin(), mDefines.end(), identifier), mDefines.end());
-                                } else if (directive == "ifdef") {
-                                    if (!withinNotDef) {
-                                        bool isConditionMet = std::find(mDefines.begin(), mDefines.end(), identifier) != mDefines.end();
-                                        ifDefs.push_back(isConditionMet);
-                                    } else
-                                        ifDefs.push_back(false);
-                                } else if (directive == "ifndef") {
-                                    if (!withinNotDef) {
-                                        bool isConditionMet = std::find(mDefines.begin(), mDefines.end(), identifier) == mDefines.end();
-                                        ifDefs.push_back(isConditionMet);
-                                    } else
-                                        ifDefs.push_back(false);
-                                }
-                            }
+                    } else if (c == '\"')
+                        withinString = false;
+                } else {
+                    if (firstChar && c == mLanguageDefinition.mPreprocChar && !inComment && !withinComment && !withinDocComment && !withinString) {
+                        withinPreproc = true;
+                        std::string directive;
+                        auto start = currentIndex + 1;
+                        while (start < (int) line.size() && !isspace(line[start])) {
+                            directive += line[start];
+                            start++;
                         }
 
-                        if (c == '\"' && !withinPreproc && !inComment && !withinComment && !withinDocComment) {
-                            withinString = true;
-                            setGlyphFlags(currentIndex);
+                        while (start < (int) line.size() && isspace(line[start]))
+                            start++;
+
+                        if (directive == "endif" && !ifDefs.empty()) {
+                            ifDefs.pop_back();
+                            withinNotDef = !ifDefs.back();
                         } else {
-                            auto pred = [](const char &a, const char &b) { return a == b; };
+                            std::string identifier;
+                            while (start < (int) line.size() && !isspace(line[start])) {
+                                identifier += line[start];
+                                start++;
+                            }
+                            if (directive == "define") {
+                                if (identifier.size() > 0 && !withinNotDef && std::find(mDefines.begin(), mDefines.end(), identifier) == mDefines.end())
+                                    mDefines.push_back(identifier);
+                            } else if (directive == "undef") {
+                                if (identifier.size() > 0 && !withinNotDef)
+                                    mDefines.erase(std::remove(mDefines.begin(), mDefines.end(), identifier), mDefines.end());
+                            } else if (directive == "ifdef") {
+                                if (!withinNotDef) {
+                                    bool isConditionMet = std::find(mDefines.begin(), mDefines.end(), identifier) != mDefines.end();
+                                    ifDefs.push_back(isConditionMet);
+                                } else
+                                    ifDefs.push_back(false);
+                            } else if (directive == "ifndef") {
+                                if (!withinNotDef) {
+                                    bool isConditionMet = std::find(mDefines.begin(), mDefines.end(), identifier) == mDefines.end();
+                                    ifDefs.push_back(isConditionMet);
+                                } else
+                                    ifDefs.push_back(false);
+                            }
+                        }
+                    }
 
-                            auto compareForth = [&](const std::string &a, const std::string &b) {
-                                return !a.empty() && (currentIndex + a.size() <= b.size()) && equals(a.begin(), a.end(), b.begin() + currentIndex, b.begin() + (currentIndex + a.size()), pred);
-                            };
+                    if (c == '\"' && !withinPreproc && !inComment && !withinComment && !withinDocComment) {
+                        withinString = true;
+                        setGlyphFlags(currentIndex);
+                    } else {
+                        auto pred = [](const char &a, const char &b) { return a == b; };
 
-                            auto compareBack = [&](const std::string &a, const std::string &b) {
-                                return !a.empty() && currentIndex + 1 >= (int) a.size() && equals(a.begin(), a.end(), b.begin() + (currentIndex + 1 - a.size()), b.begin() + (currentIndex + 1), pred);
-                            };
+                        auto compareForth = [&](const std::string &a, const std::string &b) {
+                            return !a.empty() && (currentIndex + a.size() <= b.size()) && equals(a.begin(), a.end(), b.begin() + currentIndex, b.begin() + (currentIndex + a.size()), pred);
+                        };
 
-                            if (!inComment && !withinComment && !withinDocComment && !withinPreproc && !withinString) {
-                                if (compareForth(mLanguageDefinition.mDocComment, line.mChars)) {
-                                    withinDocComment = !inComment;
-                                    commentLength = 3;
-                                } else if (compareForth(mLanguageDefinition.mSingleLineComment, line.mChars)) {
-                                    withinComment = !inComment;
-                                    commentLength = 2;
-                                } else {
-                                    bool isGlobalDocComment = compareForth(mLanguageDefinition.mGlobalDocComment, line.mChars);
-                                    bool isBlockDocComment = compareForth(mLanguageDefinition.mBlockDocComment, line.mChars);
-                                    bool isBlockComment = compareForth(mLanguageDefinition.mCommentStart, line.mChars);
-                                    if (isGlobalDocComment || isBlockDocComment || isBlockComment) {
-                                        commentStartLine = currentLine;
-                                        commentStartIndex = currentIndex;
-                                        if (currentIndex < line.size() - 4 && isBlockComment &&
-                                            line.mChars[currentIndex + 2] == '*' &&
-                                            line.mChars[currentIndex + 3] == '/') {
-                                            withinBlockComment = true;
-                                            commentLength = 2;
-                                        } else if (isGlobalDocComment) {
-                                            withinGlobalDocComment = true;
-                                            commentLength = 3;
-                                        } else if (isBlockDocComment) {
-                                            withinBlockDocComment = true;
-                                            commentLength = 3;
-                                        } else {
-                                            withinBlockComment = true;
-                                            commentLength = 2;
-                                        }
+                        auto compareBack = [&](const std::string &a, const std::string &b) {
+                            return !a.empty() && currentIndex + 1 >= (int) a.size() && equals(a.begin(), a.end(), b.begin() + (currentIndex + 1 - a.size()), b.begin() + (currentIndex + 1), pred);
+                        };
+
+                        if (!inComment && !withinComment && !withinDocComment && !withinPreproc && !withinString) {
+                            if (compareForth(mLanguageDefinition.mDocComment, line.mChars)) {
+                                withinDocComment = !inComment;
+                                commentLength = 3;
+                            } else if (compareForth(mLanguageDefinition.mSingleLineComment, line.mChars)) {
+                                withinComment = !inComment;
+                                commentLength = 2;
+                            } else {
+                                bool isGlobalDocComment = compareForth(mLanguageDefinition.mGlobalDocComment, line.mChars);
+                                bool isBlockDocComment = compareForth(mLanguageDefinition.mBlockDocComment, line.mChars);
+                                bool isBlockComment = compareForth(mLanguageDefinition.mCommentStart, line.mChars);
+                                if (isGlobalDocComment || isBlockDocComment || isBlockComment) {
+                                    commentStartLine = currentLine;
+                                    commentStartIndex = currentIndex;
+                                    if (currentIndex < line.size() - 4 && isBlockComment &&
+                                    line.mChars[currentIndex + 2] == '*' &&
+                                    line.mChars[currentIndex + 3] == '/') {
+                                        withinBlockComment = true;
+                                        commentLength = 2;
+                                    } else if (isGlobalDocComment) {
+                                        withinGlobalDocComment = true;
+                                        commentLength = 3;
+                                    } else if (isBlockDocComment) {
+                                        withinBlockDocComment = true;
+                                        commentLength = 3;
+                                    } else {
+                                        withinBlockComment = true;
+                                        commentLength = 2;
                                     }
                                 }
-                                inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
                             }
-                            setGlyphFlags(currentIndex);
+                            inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
+                        }
+                        setGlyphFlags(currentIndex);
 
-                            if (compareBack(mLanguageDefinition.mCommentEnd, line.mChars) && ((commentStartLine != currentLine) || (commentStartIndex + commentLength < currentIndex))) {
-                                withinBlockComment = false;
-                                withinBlockDocComment = false;
-                                withinGlobalDocComment = false;
-                                commentStartLine = endLine;
-                                commentStartIndex = 0;
-                                commentLength = 0;
-                            }
+                        if (compareBack(mLanguageDefinition.mCommentEnd, line.mChars) && ((commentStartLine != currentLine) || (commentStartIndex + commentLength < currentIndex))) {
+                            withinBlockComment = false;
+                            withinBlockDocComment = false;
+                            withinGlobalDocComment = false;
+                            commentStartLine = endLine;
+                            commentStartIndex = 0;
+                            commentLength = 0;
                         }
                     }
-                    if (currentIndex < line.size()) {
-                        Line::Flags flags(0);
-                        flags.mValue = mLines[currentLine].mFlags[currentIndex];
-                        flags.mBits.mPreprocessor = withinPreproc;
+                }
+                if (currentIndex < line.size()) {
+                    Line::Flags flags(0);
+                    flags.mValue = mLines[currentLine].mFlags[currentIndex];
+                    flags.mBits.mPreprocessor = withinPreproc;
+                    mLines[currentLine].mFlags[currentIndex] = flags.mValue;
+                }
+                auto utf8CharLength = UTF8CharLength(c);
+                if (utf8CharLength > 1) {
+                    Line::Flags flags(0);
+                    flags.mValue = mLines[currentLine].mFlags[currentIndex];
+                    for (int j = 1; j < utf8CharLength; j++) {
+                        currentIndex++;
                         mLines[currentLine].mFlags[currentIndex] = flags.mValue;
                     }
-                    auto utf8CharLength = UTF8CharLength(c);
-                    if (utf8CharLength > 1) {
-                        Line::Flags flags(0);
-                        flags.mValue = mLines[currentLine].mFlags[currentIndex];
-                        for (int j = 1; j < utf8CharLength; j++) {
-                            currentIndex++;
-                            mLines[currentLine].mFlags[currentIndex] = flags.mValue;
-                        }
-                    }
-                    currentIndex++;
                 }
-                withinNotDef = !ifDefs.back();
-           // }
-            // mUpdateFlags = false;
+                currentIndex++;
+            }
+            withinNotDef = !ifDefs.back();
         }
         mDefines.clear();
     }
