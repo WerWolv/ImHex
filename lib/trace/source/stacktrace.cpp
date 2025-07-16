@@ -74,21 +74,33 @@ namespace {
             STACKFRAME64 stackFrame;
             ZeroMemory(&stackFrame, sizeof(STACKFRAME64));
 
-            image = IMAGE_FILE_MACHINE_AMD64;
             #if defined(_X86_)
+                image = IMAGE_FILE_MACHINE_I386;
                 stackFrame.AddrPC.Offset = context.Eip;
                 stackFrame.AddrPC.Mode = AddrModeFlat;
                 stackFrame.AddrFrame.Offset = context.Esp;
                 stackFrame.AddrFrame.Mode = AddrModeFlat;
                 stackFrame.AddrStack.Offset = context.Esp;
                 stackFrame.AddrStack.Mode = AddrModeFlat;
-            #else
+            #elif defined(_ARM64_)
+                image = IMAGE_FILE_MACHINE_ARM64;
+                stackFrame.AddrPC.Offset = context.Pc;
+                stackFrame.AddrPC.Mode = AddrModeFlat;
+                stackFrame.AddrFrame.Offset = context.Sp;
+                stackFrame.AddrFrame.Mode = AddrModeFlat;
+                stackFrame.AddrStack.Offset = context.Sp;
+                stackFrame.AddrStack.Mode = AddrModeFlat;
+            #elif defined(_AMD64_)
+                image = IMAGE_FILE_MACHINE_AMD64;
                 stackFrame.AddrPC.Offset = context.Rip;
                 stackFrame.AddrPC.Mode = AddrModeFlat;
                 stackFrame.AddrFrame.Offset = context.Rsp;
                 stackFrame.AddrFrame.Mode = AddrModeFlat;
                 stackFrame.AddrStack.Offset = context.Rsp;
                 stackFrame.AddrStack.Mode = AddrModeFlat;
+            #else
+                #warning "Unsupported architecture! Add support for your architecture here."
+                return {};
             #endif
 
             while (true) {

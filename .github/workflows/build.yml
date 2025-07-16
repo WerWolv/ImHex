@@ -17,8 +17,19 @@ jobs:
 
   # Windows MINGW build
   win_mingw:
-    runs-on: windows-2022
-    name: 🪟 Windows MINGW64
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture_name: "x86_64"
+            msystem: "mingw64"
+            runner_os: "windows-2025"
+          - architecture_name: "arm64"
+            msystem: "clangarm64"
+            runner_os: "windows-11-arm"
+
+    runs-on: ${{ matrix.runner_os }}
+    name: 🪟 Windows MSYS2 ${{ matrix.architecture_name }}
 
     defaults:
       run:
@@ -38,7 +49,7 @@ jobs:
         submodules: recursive
 
     - name: 📜 Setup ccache
-      uses:  hendrikmuhs/ccache-action@v1
+      uses:  hendrikmuhs/ccache-action@main
       id:    cache-ccache
       with:
         key: ${{ runner.os }}-mingw-ccache-${{ github.run_id }}
@@ -48,7 +59,7 @@ jobs:
     - name: 🟦 Install msys2
       uses: msys2/setup-msys2@v2
       with:
-        msystem: mingw64
+        msystem: ${{ matrix.msystem }}
 
     - name: ⬇️ Install dependencies
       run: |
@@ -71,24 +82,31 @@ jobs:
         mkdir -p build
         cd build
 
-        cmake -G "Ninja"                                            \
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
-          -DCMAKE_INSTALL_PREFIX="$PWD/install"                     \
-          -DIMHEX_GENERATE_PACKAGE=ON                               \
-          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
-          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
-          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
-          -DUSE_SYSTEM_CAPSTONE=ON                                  \
-          -DIMHEX_GENERATE_PDBS=ON                                  \
-          -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                         \
-          -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
+        cmake -G "Ninja"                                                          \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"                                   \
+          -DIMHEX_GENERATE_PACKAGE=ON                                             \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                                   \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON                                         \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                               \
+          -DUSE_SYSTEM_CAPSTONE=ON                                                \
+          -DIMHEX_GENERATE_PDBS=ON                                                \
+          -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                                       \
+          -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                \
+          -DCPACK_WIX_VERSION="4"                                                 \
+          -DCPACK_WIX_ROOT="$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools"   \
           ..
 
     - name: 🛠️ Build
       run: |
         cd build
         ninja install
+
+    - name: 🕯️ Install WiX Toolkit
+      run: |
+        "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
+        "$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
 
     - name: 🪲 Create PDBs for MSI
       run: |
@@ -114,7 +132,7 @@ jobs:
       run: |
         cd build
         cpack
-        mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-x86_64.msi
+        mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-${{ matrix.architecture_name }}.msi
 
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
@@ -149,7 +167,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: Windows Installer x86_64
+        name: Windows Installer ${{ matrix.architecture_name }}
         path: |
           imhex-*.msi
 
@@ -157,11 +175,12 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: Windows Portable x86_64
+        name: Windows Portable ${{ matrix.architecture_name }}
         path: |
           build/install/*
 
     - name: ⬇️ Download Mesa3D for NoGPU version
+      if: ${{ matrix.architecture_name == 'x86_64' }}
       shell: bash
       run: |
         set -x
@@ -171,16 +190,28 @@ jobs:
         mv opengl32.dll build/install
 
     - name: ⬆️ Upload NoGPU Portable ZIP
+      if: ${{ matrix.architecture_name == 'x86_64' }}
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: Windows Portable NoGPU x86_64
+        name: Windows Portable NoGPU ${{ matrix.architecture_name }}
         path: |
           build/install/*
 
   win_msvc:
-    runs-on: windows-2022
-    name: 🪟 Windows MSVC
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture_name: "x86_64"
+            vs_arch: "amd64"
+            runner_os: "windows-2025"
+          - architecture_name: "arm64"
+            vs_arch: "amd64_arm64"
+            runner_os: "windows-11-arm"
+
+    runs-on: ${{ matrix.runner_os }}
+    name: 🪟 Windows MSVC ${{ matrix.architecture_name }}
 
     env:
       CCACHE_DIR:      "${{ github.workspace }}/.ccache"
@@ -198,19 +229,19 @@ jobs:
       - name: 🫧 Setup Visual Studio Dev Environment
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          arch: amd64
+          arch: ${{ matrix.vs_arch }}
 
       - name: 📜 Setup ccache
-        uses:  hendrikmuhs/ccache-action@v1
+        uses:  hendrikmuhs/ccache-action@main
         id:    cache-ccache
         with:
-          key: ${{ runner.os }}-msvc-ccache-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-msvc-ccache
+          key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache
           max-size: 1G
 
       - name: 📦 Install vcpkg
         uses: friendlyanon/setup-vcpkg@v1
-        with: { committish: 7e21420f775f72ae938bdeb5e6068f722088f06a }
+        with: { committish: ef7dbf94b9198bc58f45951adcf1f041fcbc5ea0 }
 
       - name: ⬇️ Install dependencies
         run: |
@@ -236,21 +267,52 @@ jobs:
           cmake -G "Ninja" -B build                                                   `
             --preset vs2022                                                           `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
-            -DCMAKE_C_COMPILER="$($(Get-Command cl.exe).Path)"                         `
-            -DCMAKE_CXX_COMPILER="$($(Get-Command cl.exe).Path)"                       `
+            -DCMAKE_C_COMPILER="$($(Get-Command cl.exe).Path)"                        `
+            -DCMAKE_CXX_COMPILER="$($(Get-Command cl.exe).Path)"                      `
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                                        `
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                      `
+            -DCMAKE_INSTALL_PREFIX="$(Join-Path $PWD 'install')"                      `
+            -DIMHEX_GENERATE_PACKAGE=ON                                               `
             -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE"                                      `
             -DIMHEX_PATTERNS_PULL_MASTER=ON                                           `
             -DIMHEX_COMMIT_HASH_LONG="$env:GITHUB_SHA"                                `
             -DIMHEX_COMMIT_BRANCH="$($env:GITHUB_REF -replace '.*/', '')"             `
             -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                  `
+            -DCPACK_WIX_VERSION="4"                                                   `
+            -DCPACK_WIX_ROOT="$($env:USERPROFILE -replace '\\','/')/.dotnet/tools"    `
             .
 
       - name: 🛠️ Build
         run: |
           cd build
-          ninja
+          ninja install
+
+      - name: 🕯️ Install WiX Toolkit
+        run: |
+          & "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
+          & "$($env:USERPROFILE -replace '\\','/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
+
+      - name: 📦 Bundle MSI
+        run: |
+          cd build
+          cpack
+          mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-MSVC-${{ matrix.architecture_name }}.msi
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            imhex-*.msi
+
+      - name: ⬆️ Upload Windows Installer
+        uses: actions/upload-artifact@v4
+        if: false # The MSVC builds should not really be used, they're still packaged for testing’s sake though
+        with:
+          if-no-files-found: error
+          name: Windows Installer MSVC ${{ matrix.architecture_name }}
+          path: |
+            imhex-*.msi
 
   win-plugin-template-test:
     runs-on: windows-2022
@@ -321,12 +383,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - suffix: "-NoGPU"
+          - file_suffix: "-NoGPU"
+            name_suffix: "NoGPU"
             custom_glfw: true
-          - suffix: ""
+          - file_suffix: ""
+            name_suffix: ""
             custom_glfw: false
 
-    name: 🍎 macOS 13${{ matrix.suffix }}
+    name: 🍎 macOS 13 x86_64 ${{ matrix.name_suffix }}
 
     steps:
     - name: 🧰 Checkout
@@ -341,8 +405,8 @@ jobs:
     - name: 📜 Setup ccache
       uses: hendrikmuhs/ccache-action@v1
       with:
-        key: ${{ runner.os }}${{ matrix.suffix }}-ccache-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}${{ matrix.suffix }}-ccache
+        key: ${{ runner.os }}${{ matrix.file_suffix }}-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}${{ matrix.file_suffix }}-ccache
         max-size: 1G
 
     - name: Set Xcode version
@@ -457,7 +521,7 @@ jobs:
             break;
           fi
         done
-        mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-x86_64.dmg
+        mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-x86_64.dmg
 
     - name: 🗝️ Generate build provenance attestations
       uses: actions/attest-build-provenance@v2
@@ -470,7 +534,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: macOS DMG${{ matrix.suffix }} x86_64
+        name: macOS DMG ${{ matrix.name_suffix }} x86_64
         path: ./*.dmg
 
   macos-arm64:
@@ -577,7 +641,7 @@ jobs:
               break;
             fi
           done
-          mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.suffix }}-arm64.dmg
+          mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-arm64.dmg
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
