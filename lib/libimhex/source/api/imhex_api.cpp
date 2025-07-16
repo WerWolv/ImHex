@@ -204,6 +204,7 @@ namespace hex {
         }
 
         static u32 s_tooltipId = 0;
+        // \/ --- TODO:seems never used.
         u32 addTooltip(Region region, std::string value, color_t color) {
             s_tooltipId++;
             impl::s_tooltips->insert({ s_tooltipId, { region, std::move(value), color } });

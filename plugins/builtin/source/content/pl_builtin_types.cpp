@@ -189,7 +189,8 @@ namespace hex::plugin::builtin {
 
                 auto &lastEntry = entries.back();
                 if (json.is_object()) {
-                    lastEntry->setVariableName(it.key());
+                    // TODO: dogy?
+                    lastEntry->setVariableName(it.key(), lastEntry->getVariableLocation());
                 } else {
                     lastEntry->setArrayIndex(index);
                 }

@@ -133,6 +133,7 @@ EXPORT_MODULE namespace hex {
              * @return Unique ID used to remove the tooltip again later
              */
             u32 addTooltip(Region region, std::string value, color_t color);
+            // TODO:seems never used.
 
             /**
              * @brief Removes a hover tooltip from the Hex Editor
