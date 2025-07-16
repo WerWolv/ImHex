@@ -353,9 +353,11 @@ namespace hex::plugin::builtin {
     }
 
     static void drawProviderContextMenu(prv::Provider *provider) {
-        for (const auto &menuEntry : provider->getMenuEntries()) {
-            if (ImGui::MenuItemEx(menuEntry.name.c_str(), menuEntry.icon)) {
-                menuEntry.callback();
+        if (auto *menuItemProvider = dynamic_cast<prv::IProviderMenuItems*>(provider); menuItemProvider != nullptr) {
+            for (const auto &menuEntry : menuItemProvider->getMenuEntries()) {
+                if (ImGui::MenuItemEx(menuEntry.name.c_str(), menuEntry.icon)) {
+                    menuEntry.callback();
+                }
             }
         }
     }
@@ -366,28 +368,30 @@ namespace hex::plugin::builtin {
 
             ImGuiExt::TextFormatted("{}", provider->getName().c_str());
 
-            const auto &description = provider->getDataDescription();
-            if (!description.empty()) {
-                ImGui::Separator();
-                if (ImGui::GetIO().KeyShift && !description.empty()) {
+            if (auto *dataDescriptionProvider = dynamic_cast<const prv::IProviderDataDescription*>(provider); dataDescriptionProvider != nullptr) {
+                const auto &description = dataDescriptionProvider->getDataDescription();
+                if (!description.empty()) {
+                    ImGui::Separator();
+                    if (ImGui::GetIO().KeyShift && !description.empty()) {
 
-                    if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible, ImVec2(400_scaled, 0))) {
-                        ImGui::TableSetupColumn("type");
-                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+                        if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible, ImVec2(400_scaled, 0))) {
+                            ImGui::TableSetupColumn("type");
+                            ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
 
-                        ImGui::TableNextRow();
+                            ImGui::TableNextRow();
 
-                        for (auto &[name, value] : description) {
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{}", name);
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormattedWrapped("{}", value);
+                            for (auto &[name, value] : description) {
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormatted("{}", name);
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormattedWrapped("{}", value);
+                            }
+
+                            ImGui::EndTable();
                         }
-
-                        ImGui::EndTable();
+                    } else {
+                        ImGuiExt::TextFormattedDisabled("hex.builtin.provider.tooltip.show_more"_lang);
                     }
-                } else {
-                    ImGuiExt::TextFormattedDisabled("hex.builtin.provider.tooltip.show_more"_lang);
                 }
             }
 
@@ -423,10 +427,14 @@ namespace hex::plugin::builtin {
         });
 
         EventFrameBegin::subscribe([] {
-            if (rightClickedProvider != nullptr && !rightClickedProvider->getMenuEntries().empty()) {
-                if (ImGui::BeginPopup("ProviderMenu")) {
-                    drawProviderContextMenu(rightClickedProvider);
-                    ImGui::EndPopup();
+            if (rightClickedProvider != nullptr) {
+                if (auto *menuItemProvider = dynamic_cast<prv::IProviderMenuItems*>(rightClickedProvider); menuItemProvider != nullptr) {
+                    if (!menuItemProvider->getMenuEntries().empty()) {
+                        if (ImGui::BeginPopup("ProviderMenu")) {
+                            drawProviderContextMenu(rightClickedProvider);
+                            ImGui::EndPopup();
+                        }
+                    }
                 }
             }
         });

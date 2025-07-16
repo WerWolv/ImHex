@@ -277,6 +277,10 @@ namespace hex::gl {
     Texture& Texture::operator=(Texture &&other) noexcept {
         m_texture = other.m_texture;
         other.m_texture = 0;
+
+        m_width = other.m_width;
+        m_height = other.m_height;
+
         return *this;
     }
 

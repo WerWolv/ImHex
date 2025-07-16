@@ -199,9 +199,9 @@ namespace hex::plugin::builtin {
 
         std::shared_ptr<pl::ptrn::Pattern> jsonToPattern(pl::core::Evaluator *evaluator, auto function) {
             auto object = std::make_shared<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
-            std::vector<std::shared_ptr<pl::ptrn::Pattern>> patterns;
 
             try {
+                std::vector<std::shared_ptr<pl::ptrn::Pattern>> patterns;
                 jsonToPattern(evaluator, function(), patterns);
                 object->setEntries(patterns);
 
@@ -280,7 +280,6 @@ namespace hex::plugin::builtin {
                 auto bytes = params[0].toBytes();
                 auto encodingDefinition = params[1].toString();
 
-                std::string value;
                 EncodingFile encodingFile(EncodingFile::Type::Thingy, encodingDefinition);
 
                 auto pattern = std::make_shared<PatternEncodedString>(evaluator, evaluator->getReadOffset(), bytes.size(), 0);

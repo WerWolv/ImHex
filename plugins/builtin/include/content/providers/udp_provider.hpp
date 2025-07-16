@@ -8,7 +8,9 @@
 
 namespace hex::plugin::builtin {
 
-    class UDPProvider : public hex::prv::Provider {
+    class UDPProvider : public hex::prv::Provider,
+                        public hex::prv::IProviderSidebarInterface,
+                        public hex::prv::IProviderLoadInterface {
     public:
         UDPProvider() = default;
         ~UDPProvider() override = default;
@@ -24,11 +26,8 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] u64 getActualSize() const override;
 
-
-        [[nodiscard]] bool hasLoadInterface() const override { return true; }
         [[nodiscard]] bool drawLoadInterface() override;
-        bool hasInterface() const override { return true; }
-        void drawInterface() override;
+        void drawSidebarInterface() override;
 
         [[nodiscard]] bool open() override;
         void close() override;

@@ -28,6 +28,7 @@ add_executable(main ${APPLICATION_TYPE}
 )
 
 target_include_directories(main PUBLIC include)
+addCppCheck(main)
 setupCompilerFlags(main)
 setupCompilerFlags(libimhex)
 

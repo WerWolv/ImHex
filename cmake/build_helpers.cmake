@@ -66,6 +66,32 @@ function(addCommonFlag)
     addObjCFlag(${ARGV0} ${ARGV1})
 endfunction()
 
+function(addCppCheck target)
+    if (NOT IMHEX_ENABLE_CPPCHECK)
+        return()
+    endif()
+
+    find_program(cppcheck_exe NAMES cppcheck REQUIRED)
+    if (NOT cppcheck_exe)
+        return()
+    endif()
+
+    set(target_build_dir $<TARGET_FILE_DIR:${target}>)
+    set(cppcheck_opts
+            --enable=all
+            --inline-suppr
+            --quiet
+            --std=c++23
+            --check-level=exhaustive
+            --error-exitcode=10
+            --suppressions-list=${CMAKE_SOURCE_DIR}/dist/cppcheck.supp
+            --checkers-report=${target_build_dir}/cppcheck-report.txt
+    )
+    set_target_properties(${target} PROPERTIES
+        CXX_CPPCHECK "${cppcheck_exe};${cppcheck_opts}"
+    )
+endfunction()
+
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
 
 include(FetchContent)
@@ -261,6 +287,17 @@ macro(createPackage)
             list(APPEND PLUGIN_TARGET_FILES "$<TARGET_FILE:${plugin}>")
         endforeach ()
 
+        if (DEFINED VCPKG_TARGET_TRIPLET)
+            set(VCPKG_DEPS_FOLDER "")
+            if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+                set(VCPKG_DEPS_FOLDER "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/debug/bin")
+            else()
+                set(VCPKG_DEPS_FOLDER "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin")
+            endif()
+
+            install(CODE "set(VCPKG_DEPS_FOLDER \"${VCPKG_DEPS_FOLDER}\")")
+        endif()
+
         # Grab all dynamically linked dependencies.
         install(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
         install(CODE "set(PLUGIN_TARGET_FILES \"${PLUGIN_TARGET_FILES}\")")
@@ -274,8 +311,13 @@ macro(createPackage)
             POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
         )
 
-        if(_c_deps_FILENAMES)
+        if(_c_deps_FILENAMES AND NOT _c_deps STREQUAL "")
             message(WARNING "Conflicting dependencies for library: \"${_c_deps}\"!")
+        endif()
+
+        if (DEFINED VCPKG_DEPS_FOLDER)
+            file(GLOB VCPKG_DEPS "${VCPKG_DEPS_FOLDER}/*.dll")
+            list(APPEND _r_deps ${VCPKG_DEPS})
         endif()
 
         foreach(_file ${_r_deps})

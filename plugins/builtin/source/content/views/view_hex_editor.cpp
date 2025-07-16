@@ -38,26 +38,31 @@ namespace hex::plugin::builtin {
     class PopupGoto : public ViewHexEditor::Popup {
     public:
         void draw(ViewHexEditor *editor) override {
+            bool updateAddress = false;
             if (ImGui::BeginTabBar("goto_tabs")) {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.absolute"_lang)) {
                     m_mode = Mode::Absolute;
+                    updateAddress = true;
                     ImGui::EndTabItem();
                 }
 
                 ImGui::BeginDisabled(!editor->isSelectionValid());
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.relative"_lang)) {
                     m_mode = Mode::Relative;
+                    updateAddress = true;
                     ImGui::EndTabItem();
                 }
                 ImGui::EndDisabled();
 
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.begin"_lang)) {
                     m_mode = Mode::Begin;
+                    updateAddress = true;
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.end"_lang)) {
                     m_mode = Mode::End;
+                    updateAddress = true;
                     ImGui::EndTabItem();
                 }
 
@@ -65,7 +70,12 @@ namespace hex::plugin::builtin {
                     ImGui::SetKeyboardFocusHere();
                     m_requestFocus = false;
                 }
+
                 if (ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, m_input)) {
+                    updateAddress = true;
+                }
+
+                if (updateAddress) {
                     if (auto result = m_evaluator.evaluate(m_input); result.has_value()) {
                         const auto inputResult = u64(result.value());
                         auto provider = ImHexApi::Provider::get();

@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
         /* Not supported */
     }
 
-    void UDPProvider::drawInterface() {
+    void UDPProvider::drawSidebarInterface() {
         std::scoped_lock lock(m_mutex);
 
         if (ImGui::BeginTable("##Messages", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImGui::GetContentRegionAvail())) {

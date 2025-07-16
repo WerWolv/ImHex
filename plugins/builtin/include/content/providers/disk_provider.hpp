@@ -9,7 +9,9 @@
 
 namespace hex::plugin::builtin {
 
-    class DiskProvider : public hex::prv::Provider {
+    class DiskProvider : public prv::Provider,
+                         public prv::IProviderDataDescription,
+                         public prv::IProviderLoadInterface {
     public:
         DiskProvider() = default;
         ~DiskProvider() override = default;
@@ -32,7 +34,6 @@ namespace hex::plugin::builtin {
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<Description> getDataDescription() const override;
 
-        [[nodiscard]] bool hasLoadInterface() const override { return true; }
         bool drawLoadInterface() override;
 
         void loadSettings(const nlohmann::json &settings) override;

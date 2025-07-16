@@ -888,6 +888,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataProcessor::drawContent() {
+        if (m_workspaceStack->empty()) return;
+
         auto &workspace = *m_workspaceStack->back();
 
         ImGui::BeginDisabled(m_evaluationTask.isRunning());

@@ -56,6 +56,7 @@ macro(add_imhex_plugin)
     # Enable required compiler flags
     enableUnityBuild(${IMHEX_PLUGIN_NAME})
     setupCompilerFlags(${IMHEX_PLUGIN_NAME})
+    addCppCheck(${IMHEX_PLUGIN_NAME})
 
     # Configure build properties
     set_target_properties(${IMHEX_PLUGIN_NAME}

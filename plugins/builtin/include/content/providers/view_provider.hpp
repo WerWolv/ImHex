@@ -4,7 +4,9 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewProvider : public hex::prv::Provider {
+    class ViewProvider : public prv::Provider,
+                         public prv::IProviderDataDescription,
+                         public prv::IProviderMenuItems {
     public:
         ViewProvider() = default;
         ~ViewProvider() override = default;
@@ -48,7 +50,7 @@ namespace hex::plugin::builtin {
         void setBaseAddress(u64 address) override { std::ignore = address; }
 
 
-        void setProvider(u64 startAddress, size_t size, hex::prv::Provider *provider);
+        void setProvider(u64 startAddress, size_t size, Provider *provider);
         void setName(const std::string &name);
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;

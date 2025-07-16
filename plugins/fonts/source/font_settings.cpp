@@ -5,6 +5,8 @@
 #include <hex/helpers/utils.hpp>
 
 #include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
+
 #include "hex/api/imhex_api.hpp"
 
 namespace hex::fonts {
@@ -118,16 +120,25 @@ namespace hex::fonts {
         ImGui::PushID(name.c_str());
         ON_SCOPE_EXIT { ImGui::PopID(); };
 
-        if (ImGui::Button(m_fontFilePicker.getSelectedFontName().c_str(), ImVec2(300_scaled, 0))) {
-            ImGui::OpenPopup("Fonts");
+        bool changed = false;
+        if (ImGui::CollapsingHeader(name.c_str())) {
+            if (ImGuiExt::BeginBox()) {
+                if (m_fontFilePicker.draw("hex.fonts.setting.font.custom_font"_lang)) changed = true;
+
+                ImGui::BeginDisabled(m_fontFilePicker.isPixelPerfectFontSelected());
+                {
+                    if (m_fontSize.draw("hex.fonts.setting.font.font_size"_lang)) changed = true;
+                    if (m_bold.draw("hex.fonts.setting.font.font_bold"_lang)) changed = true;
+                    if (m_italic.draw("hex.fonts.setting.font.font_italic"_lang)) changed = true;
+                    if (m_antiAliased.draw("hex.fonts.setting.font.font_antialias"_lang)) changed = true;
+                }
+                ImGui::EndDisabled();
+
+                ImGuiExt::EndBox();
+            }
         }
 
-        ImGui::SameLine();
-
-        ImGui::TextUnformatted(name.c_str());
-
-        ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos());
-        return drawPopup();
+        return changed;
     }
 
     nlohmann::json FontSelector::store() {
@@ -198,10 +209,20 @@ namespace hex::fonts {
         return m_italic.isChecked();
     }
 
-    [[nodiscard]] const std::string FontSelector::antiAliasingType() const {
+    [[nodiscard]] AntialiasingType FontSelector::getAntialiasingType() const {
         if (isPixelPerfectFont())
-            return "none";
-        return m_antiAliased.getValue();
+            return AntialiasingType::None;
+
+        auto value = m_antiAliased.getValue();
+        if (value == "none")
+            return AntialiasingType::None;
+        else if (value == "grayscale")
+            return AntialiasingType::Grayscale;
+        else if (value == "subpixel")
+            return AntialiasingType::Lcd;
+        else
+            return AntialiasingType::Grayscale;
+
     }
 
 

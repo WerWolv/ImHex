@@ -5,55 +5,87 @@
 #include <hex/helpers/logger.hpp>
 
 #include <romfs/romfs.hpp>
-#include <font_atlas.hpp>
 #include <font_settings.hpp>
+#include <imgui_freetype.h>
+#include <fonts/fonts.hpp>
+#include <hex/api/task_manager.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
 
 namespace hex::fonts {
 
     void registerFonts();
-
-    bool buildFontAtlas(FontAtlas *fontAtlas, std::fs::path fontPath, bool pixelPerfectFont, float fontSize, bool loadUnicodeCharacters, bool bold, bool italic,const std::string &antialias);
-
-    static AutoReset<std::map<UnlocalizedString, std::unique_ptr<FontAtlas>>> s_fontAtlases;
-
-    void loadFont(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImFont **font, float scale) {
+    void loadFont(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImFont **imguiFont) {
         const auto &settings = static_cast<const FontSelector&>(widget);
-        auto atlas = std::make_unique<FontAtlas>();
 
-        const bool atlasBuilt = buildFontAtlas(
-            atlas.get(),
-            settings.getFontPath(),
-            settings.isPixelPerfectFont(),
-            settings.getFontSize() * scale,
-            true,
-            settings.isBold(),
-            settings.isItalic(),
-            settings.antiAliasingType()
-        );
+        auto atlas = ImGui::GetIO().Fonts;
 
-        if (!atlasBuilt) {
-            buildFontAtlas(
-                atlas.get(),
-                "",
-                false,
-                settings.getFontSize() * scale,
-                false,
-                settings.isBold(),
-                settings.isItalic(),
-                settings.antiAliasingType()
-            );
+        {
+            auto &font = *imguiFont;
 
-            log::error("Failed to load font {}! Reverting back to default font!", name.get());
+            if (font != nullptr) {
+                atlas->RemoveFont(font);
+
+                font = nullptr;
+            }
         }
 
-        *font = atlas->getAtlas()->Fonts[0];
+        ImFontConfig config;
+        config.MergeMode = false;
+        config.FontDataOwnedByAtlas = false;
+        config.SizePixels = settings.getFontSize();
 
-        (*s_fontAtlases)[name] = std::move(atlas);
+        std::memcpy(config.Name, name.get().c_str(), std::min(name.get().size(), sizeof(config.Name) - 1));
+
+        if (!settings.isPixelPerfectFont()) {
+            if (settings.isBold())
+                config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Bold;
+            if (settings.isItalic())
+                config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Oblique;
+            switch (settings.getAntialiasingType()) {
+                case AntialiasingType::None:
+                    config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Monochrome | ImGuiFreeTypeLoaderFlags_MonoHinting;
+                    break;
+                case AntialiasingType::Grayscale:
+                    break;
+                case AntialiasingType::Lcd:
+                    config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_SubPixel;
+                    break;
+            }
+        } else {
+            config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_NoHinting;
+        }
+
+        {
+            const auto fontPath = settings.getFontPath();
+            if (!fontPath.empty())
+                *imguiFont = atlas->AddFontFromFileTTF(fontPath.string().c_str(), 0.0F, &config);
+
+            if (*imguiFont == nullptr) {
+                if (settings.isPixelPerfectFont()) {
+                    auto defaultConfig = config;
+                    defaultConfig.SizePixels = ImHexApi::Fonts::DefaultFontSize;
+                    *imguiFont = atlas->AddFontDefault(&defaultConfig);
+                } else {
+                    static auto jetbrainsFont = romfs::get("fonts/JetBrainsMono.ttf");
+                    *imguiFont = atlas->AddFontFromMemoryTTF(const_cast<u8 *>(jetbrainsFont.data<u8>()), jetbrainsFont.size(), 0.0F, &config);
+
+                    if (*imguiFont == nullptr) {
+                        log::error("Failed to load font '{}', using default font instead", name.get());
+                        *imguiFont = atlas->AddFontDefault();
+                    }
+                }
+            }
+        }
+
+        config.MergeMode = true;
+        for (auto &extraFont : ImHexApi::Fonts::impl::getMergeFonts()) {
+            config.GlyphOffset = { extraFont.offset.x, -extraFont.offset.y };
+            config.GlyphOffset *= ImHexApi::System::getGlobalScale();
+            atlas->AddFontFromMemoryTTF(const_cast<u8 *>(extraFont.fontData.data()), extraFont.fontData.size(), 0.0F, &config);
+        }
     }
 
     bool setupFonts() {
-        ContentRegistry::Settings::add<ContentRegistry::Settings::Widgets::Checkbox>("hex.fonts.setting.font", "hex.fonts.setting.font.glyphs", "hex.fonts.setting.font.load_all_unicode_chars", false).requiresRestart();
-
         for (auto &[name, font] : ImHexApi::Fonts::impl::getFontDefinitions()) {
             auto &widget = addFontSettingsWidget(name)
                 .setChangedCallback([name, &font, firstLoad = true](auto &widget) mutable {
@@ -62,15 +94,12 @@ namespace hex::fonts {
                         return;
                     }
 
-                    TaskManager::doLater([&name, &font, &widget] {
-                        loadFont(widget, name, &font, ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor());
+                    TaskManager::doLater([name, &font, &widget] {
+                        loadFont(widget, name, &font);
                     });
                 });
 
-            loadFont(widget.getWidget(), name, &font, ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor());
-            EventDPIChanged::subscribe(font, [&widget, name, &font](float, float newScaling) {
-                loadFont(widget.getWidget(), name, &font, ImHexApi::System::getGlobalScale() * newScaling);
-            });
+            loadFont(widget.getWidget(), name, &font);
         }
 
         return true;
@@ -87,4 +116,13 @@ IMHEX_LIBRARY_SETUP("Fonts") {
     hex::ImHexApi::Fonts::registerFont("hex.fonts.font.code_editor");
 
     hex::fonts::registerFonts();
+
+    hex::EventImHexStartupFinished::subscribe([] {
+        hex::fonts::setupFonts();
+        hex::ImHexApi::Fonts::setDefaultFont(hex::fonts::Default());
+    });
+
+    hex::EventDPIChanged::subscribe([](float, float newScale) {
+        ImGui::GetIO().ConfigDpiScaleFonts = newScale;
+    });
 }

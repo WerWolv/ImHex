@@ -426,7 +426,7 @@ namespace hex::plugin::builtin {
                             ImGui::OpenPopup("WindowingMenu");
                     #elif defined(OS_MACOS)
                         if (!isMacosFullScreenModeEnabled(window))
-                            ImGui::SetCursorPosX(68_scaled);
+                            ImGui::SetCursorPosX(75_scaled);
                     #endif
                 }
 
@@ -639,7 +639,7 @@ namespace hex::plugin::builtin {
                     if (provider->isDirty())
                         postfix += " (*)";
 
-                    if (!provider->isWritable() && provider->getActualSize() != 0)
+                    if (!provider->isWritable())
                         postfix += " (Read Only)";
                 }
             }

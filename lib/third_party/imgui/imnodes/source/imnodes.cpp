@@ -354,7 +354,7 @@ void ImDrawListGrowChannels(ImDrawList* draw_list, const int num_channels)
         {
             ImDrawCmd draw_cmd;
             draw_cmd.ClipRect = draw_list->_ClipRectStack.back();
-            draw_cmd.TextureId = draw_list->_TextureIdStack.back();
+            draw_cmd.TexRef = draw_list->_TextureStack.back();
             channel._CmdBuffer.push_back(draw_cmd);
         }
     }

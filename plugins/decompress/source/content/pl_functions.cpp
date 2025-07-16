@@ -238,15 +238,15 @@ namespace hex::plugin::decompress {
 
                 if (blockSize == ZSTD_CONTENTSIZE_UNKNOWN) {
                     // Data uses stream compression
-                    ZSTD_inBuffer dataIn = { (void*)source, sourceSize, 0 };
+                    ZSTD_inBuffer dataIn = { static_cast<const void*>(source), sourceSize, 0 };
 
                     size_t outSize = ZSTD_DStreamOutSize();
                     std::vector<u8> outVec(outSize);
-                    const u8* out = outVec.data();
+                    u8* out = outVec.data();
 
                     size_t lastRet = 0;
                     while (dataIn.pos < dataIn.size) {
-                        ZSTD_outBuffer dataOut = { (void*)out, outSize, 0 };
+                        ZSTD_outBuffer dataOut = { reinterpret_cast<void*>(out), outSize, 0 };
 
                         size_t ret = ZSTD_decompressStream(dctx, &dataOut, &dataIn);
                         if (ZSTD_isError(ret)) {

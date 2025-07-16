@@ -34,6 +34,7 @@ BuildRequires:  libzstd-devel
 BuildRequires:  zlib-devel
 BuildRequires:  bzip2-devel
 BuildRequires:  xz-devel
+BuildRequires:  libssh2-devel
 %if 0%{?rhel}
 BuildRequires:  gcc-toolset-14
 %endif

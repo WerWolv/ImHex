@@ -1006,26 +1006,9 @@ namespace hex {
 
         namespace impl {
 
-            static AutoReset<std::vector<Font>> s_fonts;
-            const std::vector<Font>& getFonts() {
+            static AutoReset<std::vector<MergeFont>> s_fonts;
+            const std::vector<MergeFont>& getMergeFonts() {
                 return *s_fonts;
-            }
-
-            static float s_fontSize = DefaultFontSize;
-            void setFontSize(float size) {
-                s_fontSize = size;
-            }
-
-            static AutoReset<ImFontAtlas*> s_fontAtlas;
-            void setFontAtlas(ImFontAtlas* fontAtlas) {
-                s_fontAtlas = fontAtlas;
-            }
-
-            static ImFont *s_boldFont = nullptr;
-            static ImFont *s_italicFont = nullptr;
-            void setFonts(ImFont *bold, ImFont *italic) {
-                s_boldFont   = bold;
-                s_italicFont = italic;
             }
 
             static AutoReset<std::map<UnlocalizedString, ImFont*>> s_fontDefinitions;
@@ -1033,7 +1016,42 @@ namespace hex {
                 return *s_fontDefinitions;
             }
 
+            static AutoReset<const Font*> s_defaultFont;
+
         }
+
+        Font::Font(UnlocalizedString fontName) : m_fontName(std::move(fontName)) {
+            Fonts::registerFont(m_fontName);
+
+            if (impl::s_defaultFont == nullptr)
+                impl::s_defaultFont = this;
+        }
+
+        void Font::push(float size) const {
+            auto font = getFont(m_fontName);
+
+            if (font != nullptr) {
+                if (size <= 0.0F) {
+                    size = font->LegacySize;
+                }
+
+                if (font->Sources[0]->PixelSnapH)
+                    size *= System::getGlobalScale();
+                else
+                    size *= std::floor(System::getGlobalScale());
+            }
+
+            ImGui::PushFont(font, size);
+        }
+
+        void Font::pop() const {
+            ImGui::PopFont();
+        }
+
+        Font::operator ImFont*() const {
+            return getFont(m_fontName);
+        }
+
 
         GlyphRange glyph(const char *glyph) {
             u32 codepoint;
@@ -1075,7 +1093,7 @@ namespace hex {
                 return;
             }
 
-            impl::s_fonts->emplace_back(Font {
+            impl::s_fonts->emplace_back(MergeFont {
                 wolv::util::toUTF8String(path.filename()),
                 fontFile.readVector(),
                 glyphRanges,
@@ -1087,7 +1105,7 @@ namespace hex {
         }
 
         void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags, std::optional<bool> scalable, std::optional<u32> defaultSize) {
-            impl::s_fonts->emplace_back(Font {
+            impl::s_fonts->emplace_back(MergeFont {
                 name,
                 { data.begin(), data.end() },
                 glyphRanges,
@@ -1098,28 +1116,29 @@ namespace hex {
             });
         }
 
-        float getFontSize() {
-            return impl::s_fontSize;
-        }
-
-        ImFontAtlas* getFontAtlas() {
-            return impl::s_fontAtlas;
-        }
-
         void registerFont(const UnlocalizedString &fontName) {
             (*impl::s_fontDefinitions)[fontName] = nullptr;
         }
 
         ImFont* getFont(const UnlocalizedString &fontName) {
-            return (*impl::s_fontDefinitions)[fontName];
+            auto it = impl::s_fontDefinitions->find(fontName);
+            
+            if (it == impl::s_fontDefinitions->end())
+                return ImGui::GetDefaultFont();
+            else
+                return it->second;
         }
 
-        ImFont* Bold() {
-            return impl::s_boldFont;
+        void setDefaultFont(const Font& font) {
+            impl::s_defaultFont = &font;
         }
 
-        ImFont* Italic() {
-            return impl::s_italicFont;
+        const Font& getDefaultFont() {
+            if (*impl::s_defaultFont == nullptr) {
+                static Font emptyFont("");
+                return emptyFont;
+            }
+            return **impl::s_defaultFont;
         }
 
         float getDpi() {

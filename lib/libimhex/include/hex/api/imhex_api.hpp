@@ -748,7 +748,7 @@ EXPORT_MODULE namespace hex {
             struct GlyphRange { u16 begin, end; };
             struct Offset { float x, y; };
 
-            struct Font {
+            struct MergeFont {
                 std::string name;
                 std::vector<u8> fontData;
                 std::vector<GlyphRange> glyphRanges;
@@ -758,10 +758,21 @@ EXPORT_MODULE namespace hex {
                 std::optional<u32> defaultSize;
             };
 
+            class Font {
+            public:
+                explicit Font(UnlocalizedString fontName);
+
+                void push(float size = 0.0F) const;
+                void pop() const;
+
+                [[nodiscard]] operator ImFont*() const;
+            private:
+                UnlocalizedString m_fontName;
+            };
+
             namespace impl {
 
-                const std::vector<Font>& getFonts();
-
+                const std::vector<MergeFont>& getMergeFonts();
                 std::map<UnlocalizedString, ImFont*>& getFontDefinitions();
 
             }
@@ -778,6 +789,9 @@ EXPORT_MODULE namespace hex {
 
             void registerFont(const UnlocalizedString &fontName);
             ImFont* getFont(const UnlocalizedString &fontName);
+
+            void setDefaultFont(const Font& font);
+            const Font& getDefaultFont();
 
             float getDpi();
             float pixelsToPoints(float pixels);
