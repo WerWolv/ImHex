@@ -183,7 +183,10 @@ namespace hex::ui {
     }
 
     void HexEditor::drawScrollbar(ImVec2 characterSize) {
-        ImS64 numRows = m_provider == nullptr ? 0LLU : (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0LLU : 1LLU);
+        const auto bytesPerCell = m_currDataVisualizer->getBytesPerCell();
+        const auto bytesPerRow  =  m_bytesPerRow / bytesPerCell * bytesPerCell;
+
+        ImS64 numRows = m_provider == nullptr ? 0LLU : (m_provider->getSize() / bytesPerRow) + ((m_provider->getSize() % bytesPerRow) == 0 ? 0LLU : 1LLU);
 
         auto window = ImGui::GetCurrentWindowRead();
         const auto outerRect = window->Rect();
@@ -233,7 +236,10 @@ namespace hex::ui {
         if (m_provider == nullptr)
             return;
 
-        ImS64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+        const auto bytesPerCell    = m_currDataVisualizer->getBytesPerCell();
+        const auto bytesPerRow     = m_bytesPerRow / bytesPerCell * bytesPerCell;
+
+        ImS64 numRows = (m_provider->getSize() / bytesPerRow) + ((m_provider->getSize() % bytesPerRow) == 0 ? 0 : 1);
 
         auto window = ImGui::GetCurrentWindowRead();
         const auto outerRect = window->Rect();
@@ -276,15 +282,15 @@ namespace hex::ui {
         }
         drawList->ChannelsSetCurrent(0);
 
-        std::vector<u8> rowData(m_bytesPerRow);
+        std::vector<u8> rowData(bytesPerRow);
         std::vector<ImColor> rowColors;
         const auto drawStart = std::max<ImS64>(0, scrollPos - grabPos);
-        for (ImS64 y = drawStart; y < std::min<ImS64>(drawStart + rowCount, m_provider->getSize() / m_bytesPerRow); y += 1) {
+        for (ImS64 y = drawStart; y < std::min<ImS64>(drawStart + rowCount, m_provider->getSize() / bytesPerRow); y += 1) {
             const auto rowStart = bb.Min + ImVec2(0, (y - drawStart) * rowHeight);
             const auto rowEnd = rowStart + ImVec2(bb.GetSize().x, rowHeight);
             const auto rowSize = rowEnd - rowStart;
 
-            const auto address = y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+            const auto address = y * bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
             m_provider->read(address, rowData.data(), rowData.size());
 
             m_miniMapVisualizer->callback(address, rowData, rowColors);
@@ -441,8 +447,10 @@ namespace hex::ui {
     void HexEditor::drawSeparatorLine(u64 address, bool drawVerticalConnector) {
         if (m_separatorStride == 0) return;
 
+        const auto bytesPerCell = m_currDataVisualizer->getBytesPerCell();
         const u64 regionProgress = address % m_separatorStride;
-        const u64 cellsPerRow = m_bytesPerRow / m_currDataVisualizer->getBytesPerCell();
+        const u64 cellsPerRow = m_bytesPerRow / bytesPerCell;
+        const auto bytesPerRow = cellsPerRow * bytesPerCell;
         const auto table = ImGui::GetCurrentTable();
         if (regionProgress < cellsPerRow) {
             const auto rect = ImGui::TableGetCellBgRect(table, table->CurrentColumn);
@@ -450,7 +458,7 @@ namespace hex::ui {
             const auto drawList = ImGui::GetWindowDrawList();
 
             const auto lineColor = ImGui::GetColorU32(ImGuiCol_SeparatorActive);
-            u64 y = (address - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) / m_bytesPerRow;
+            u64 y = (address - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) / bytesPerRow;
             if (y != 0)
                 drawList->AddLine(rect.Min, ImVec2(rect.Max.x, rect.Min.y), lineColor);
             if (regionProgress == 0 && drawVerticalConnector) {
@@ -494,11 +502,12 @@ namespace hex::ui {
             drawList->AddLine(ImTrunc(cellPos + ImVec2(cellSize.x, 0)), ImTrunc(cellPos + cellSize), frameColor, 1_scaled);
 
         // Draw horizontal line at the top of the bytes
-        if (y == 0 || (byteAddress - m_bytesPerRow) < region.getStartAddress())
+        const auto bytesPerRow  = m_bytesPerRow / bytesPerCell * bytesPerCell;
+        if (y == 0 || (byteAddress - bytesPerRow) < region.getStartAddress())
             drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(cellSize.x, 0)), frameColor, 1_scaled);
 
         // Draw horizontal line at the bottom of the bytes
-        if ((byteAddress + m_bytesPerRow) > region.getEndAddress())
+        if ((byteAddress + bytesPerRow) > region.getEndAddress())
             drawList->AddLine(ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImTrunc(cellPos + cellSize), frameColor, 1_scaled);
         drawList->PopClipRect();
     }
