@@ -536,6 +536,8 @@ namespace hex::ui {
 
         const auto bytesPerCell    = m_currDataVisualizer->getBytesPerCell();
         const u64 columnCount      = m_bytesPerRow / bytesPerCell;
+        const auto bytesPerRow     = columnCount * bytesPerCell;
+
         auto byteColumnCount       = 2 + columnCount + getByteColumnSeparatorCount(columnCount) + 2 + 2;
 
         if (byteColumnCount >= IMGUI_TABLE_MAX_COLUMNS) {
@@ -554,7 +556,7 @@ namespace hex::ui {
             m_mode = Mode::Overwrite;
 
         Region hoveredCell = Region::Invalid();
-        ImGui::PushID(m_bytesPerRow);
+        ImGui::PushID(bytesPerRow);
         ON_SCOPE_EXIT { ImGui::PopID(); };
         if (ImGui::BeginChild("Hex View", size, ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             this->drawScrollbar(CharacterSize);
@@ -567,7 +569,7 @@ namespace hex::ui {
                 // Row address column
                 ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_WidthFixed,
                     m_provider == nullptr ? 0 :
-                    CharacterSize.x * fmt::formatted_size("{:08X}: ", ((m_scrollPosition + m_visibleRowCount) * m_bytesPerRow) + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress())
+                    CharacterSize.x * fmt::formatted_size("{:08X}: ", ((m_scrollPosition + m_visibleRowCount) * bytesPerRow) + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress())
                 );
                 ImGui::TableSetupColumn("");
 
@@ -583,7 +585,7 @@ namespace hex::ui {
                 ImGui::TableSetupColumn("");
 
                 if (m_showAscii) {
-                    ImGui::TableSetupColumn("hex.ui.common.encoding.ascii"_lang, ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + m_characterCellPadding * 1_scaled) * m_bytesPerRow);
+                    ImGui::TableSetupColumn("hex.ui.common.encoding.ascii"_lang, ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + m_characterCellPadding * 1_scaled) * bytesPerRow);
                 } else {
                     ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 0);
                 }
@@ -618,7 +620,7 @@ namespace hex::ui {
                         return currRegionValid;
                     };
 
-                    ImS64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+                    ImS64 numRows = (m_provider->getSize() / bytesPerRow) + ((m_provider->getSize() % bytesPerRow) == 0 ? 0 : 1);
 
                     if (numRows == 0) {
                         ImGui::TableNextRow();
@@ -631,8 +633,8 @@ namespace hex::ui {
                     m_visibleRowCount = std::max<i64>(m_visibleRowCount, 1);
 
                     // Loop over rows
-                    std::vector<u8> bytes(m_bytesPerRow, 0x00);
-                    std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors(m_bytesPerRow / bytesPerCell);
+                    std::vector<u8> bytes(bytesPerRow, 0x00);
+                    std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors(bytesPerRow / bytesPerCell);
                     for (ImS64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows && numRows != 0; y++) {
                         // Draw address column
                         ImGui::TableNextRow();
@@ -640,9 +642,9 @@ namespace hex::ui {
 
                         double addressWidth = ImGui::GetCursorPosX();
                         {
-                            const auto rowAddress = y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                            const auto rowAddress = y * bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
-                            if (m_separatorStride > 0 && rowAddress % m_separatorStride < m_bytesPerRow && !ImGui::GetIO().KeyShift)
+                            if (m_separatorStride > 0 && rowAddress % m_separatorStride < bytesPerRow && !ImGui::GetIO().KeyShift)
                                 ImGuiExt::TextFormattedColored(ImGui::GetStyleColorVec4(ImGuiCol_SeparatorActive), "{} {}", "hex.ui.common.segment"_lang, rowAddress / m_separatorStride);
                             else
                                 ImGuiExt::TextFormattedSelectable("{0}: ", formatAddress(rowAddress, 8));
@@ -651,13 +653,13 @@ namespace hex::ui {
                         ImGui::TableNextColumn();
                         addressWidth = ImGui::GetCursorPosX() - addressWidth;
 
-                        const u8 validBytes = std::min<u64>(m_bytesPerRow, m_provider->getSize() - y * m_bytesPerRow);
+                        const u8 validBytes = std::min<u64>(bytesPerRow, m_provider->getSize() - y * bytesPerRow);
 
-                        m_provider->read(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), bytes.data(), validBytes);
+                        m_provider->read(y * bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), bytes.data(), validBytes);
 
                         {
                             for (u64 x = 0; x < std::ceil(float(validBytes) / bytesPerCell); x++) {
-                                const u64 byteAddress = y * m_bytesPerRow + x * bytesPerCell + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                                const u64 byteAddress = y * bytesPerRow + x * bytesPerCell + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                                 const auto cellBytes = std::min<u64>(validBytes, bytesPerCell);
 
@@ -700,7 +702,7 @@ namespace hex::ui {
                         byteCellSize = ImVec2(std::ceil(byteCellSize.x), std::ceil(byteCellSize.y));
 
                         for (u64 x = 0; x < columnCount; x++) {
-                            const u64 byteAddress = y * m_bytesPerRow + x * bytesPerCell + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                            const u64 byteAddress = y * bytesPerRow + x * bytesPerCell + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                             ImGui::TableNextColumn();
                             drawSeparatorLine(byteAddress, x != 0);
@@ -772,16 +774,16 @@ namespace hex::ui {
                         // Draw ASCII column
                         if (m_showAscii) {
                             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
-                            if (ImGui::BeginTable("##ascii_column", m_bytesPerRow)) {
-                                for (u64 x = 0; x < m_bytesPerRow; x++)
+                            if (ImGui::BeginTable("##ascii_column", bytesPerRow)) {
+                                for (u64 x = 0; x < bytesPerRow; x++)
                                     ImGui::TableSetupColumn(hex::format("##ascii_cell{}", x).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x + (m_characterCellPadding * 1_scaled));
 
                                 ImGui::TableNextRow();
 
                                 const auto asciiCellSize = CharacterSize + scaled(ImVec2(m_characterCellPadding, 0));
 
-                                for (u64 x = 0; x < m_bytesPerRow; x++) {
-                                    const u64 byteAddress = y * m_bytesPerRow + x + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                                for (u64 x = 0; x < bytesPerRow; x++) {
+                                    const u64 byteAddress = y * bytesPerRow + x + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                                     ImGui::TableNextColumn();
                                     drawSeparatorLine(byteAddress, true);
@@ -854,29 +856,29 @@ namespace hex::ui {
                                 if (singleByteEncoding) {
                                     u64 offset = 0;
                                     do {
-                                        const u64 address = y * m_bytesPerRow + offset + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                                        const u64 address = y * bytesPerRow + offset + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                                         auto result = queryCustomEncodingData(m_provider, *m_currCustomEncoding, address);
 
                                         offset += result.advance;
                                         encodingData.emplace_back(address, result);
-                                    } while (offset < m_bytesPerRow);
+                                    } while (offset < bytesPerRow);
                                 } else {
-                                    if (m_encodingLineStartAddresses[y] >= m_bytesPerRow) {
-                                        encodingData.emplace_back(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
+                                    if (m_encodingLineStartAddresses[y] >= bytesPerRow) {
+                                        encodingData.emplace_back(y * bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
                                         m_encodingLineStartAddresses.push_back(0);
                                     } else {
                                         u64 offset = m_encodingLineStartAddresses[y];
                                         do {
-                                            const u64 address = y * m_bytesPerRow + offset + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                                            const u64 address = y * bytesPerRow + offset + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
                                             auto result = queryCustomEncodingData(m_provider, *m_currCustomEncoding, address);
 
                                             offset += result.advance;
                                             encodingData.emplace_back(address, result);
-                                        } while (offset < m_bytesPerRow);
+                                        } while (offset < bytesPerRow);
 
-                                        m_encodingLineStartAddresses.push_back(offset - m_bytesPerRow);
+                                        m_encodingLineStartAddresses.push_back(offset - bytesPerRow);
                                     }
                                 }
 
@@ -893,7 +895,7 @@ namespace hex::ui {
                                         const auto cellSize = ImGui::CalcTextSize(data.displayValue.c_str()) * ImVec2(1, 0) + ImVec2(m_characterCellPadding * 1_scaled, CharacterSize.y);
                                         const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true) && ImGui::IsWindowHovered();
 
-                                        const auto x = address % m_bytesPerRow;
+                                        const auto x = address % bytesPerRow;
                                         if (x < validBytes && isCurrRegionValid(address)) {
                                             auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
 
@@ -912,7 +914,7 @@ namespace hex::ui {
                                             ImGui::SameLine(0, 0);
                                             ImGui::Dummy({ 0, 0 });
 
-                                            this->handleSelection(address, data.advance, &bytes[address % m_bytesPerRow], cellHovered);
+                                            this->handleSelection(address, data.advance, &bytes[address % bytesPerRow], cellHovered);
 
                                             if (cellHovered) {
                                                 Region newHoveredCell = { address, data.advance };
@@ -937,13 +939,13 @@ namespace hex::ui {
                         if (m_shouldScrollToSelection && isSelectionValid()) {
                             // Make sure simply clicking on a byte at the edge of the screen won't cause scrolling
                             if ((ImGui::IsMouseDragging(ImGuiMouseButton_Left))) {
-                                if ((*m_selectionStart >= (*m_selectionEnd + m_bytesPerRow)) && y == (m_scrollPosition + 1)) {
-                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) <= (ImS64(m_scrollPosition + 1) * m_bytesPerRow)) {
+                                if ((*m_selectionStart >= (*m_selectionEnd + bytesPerRow)) && y == (m_scrollPosition + 1)) {
+                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) <= (ImS64(m_scrollPosition + 1) * bytesPerRow)) {
                                         m_shouldScrollToSelection = false;
                                         m_scrollPosition -= 3;
                                     }
-                                } else if ((*m_selectionStart <= (*m_selectionEnd - m_bytesPerRow)) && y == ((m_scrollPosition + m_visibleRowCount) - 1)) {
-                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) >= (ImS64((m_scrollPosition + m_visibleRowCount) - 2) * m_bytesPerRow)) {
+                                } else if ((*m_selectionStart <= (*m_selectionEnd - bytesPerRow)) && y == ((m_scrollPosition + m_visibleRowCount) - 1)) {
+                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) >= (ImS64((m_scrollPosition + m_visibleRowCount) - 2) * bytesPerRow)) {
                                         m_shouldScrollToSelection = false;
                                         m_scrollPosition += 3;
                                     }
@@ -958,9 +960,9 @@ namespace hex::ui {
                                 auto newSelection = getSelection();
                                 newSelection.address -= pageAddress;
 
-                                if ((newSelection.getStartAddress()) < u64(m_scrollPosition * m_bytesPerRow))
+                                if ((newSelection.getStartAddress()) < u64(m_scrollPosition * bytesPerRow))
                                     this->jumpToSelection(0.0F);
-                                if ((newSelection.getEndAddress()) > u64((m_scrollPosition + m_visibleRowCount) * m_bytesPerRow))
+                                if ((newSelection.getEndAddress()) > u64((m_scrollPosition + m_visibleRowCount) * bytesPerRow))
                                     this->jumpToSelection(1.0F);
                             }
                         }
@@ -973,7 +975,7 @@ namespace hex::ui {
                         m_provider->setCurrentPage(m_provider->getPageOfAddress(jumpAddress).value_or(0));
 
                         const auto pageAddress = m_provider->getCurrentPageAddress() + m_provider->getBaseAddress();
-                        const auto targetRowNumber = (jumpAddress - pageAddress) / m_bytesPerRow;
+                        const auto targetRowNumber = (jumpAddress - pageAddress) / bytesPerRow;
 
                         // Calculate the current top and bottom row numbers of the viewport
                         ImS64 currentTopRow = m_scrollPosition;
