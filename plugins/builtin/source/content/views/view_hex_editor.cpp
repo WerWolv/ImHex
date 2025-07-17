@@ -28,6 +28,10 @@
 #include <hex/helpers/menu_items.hpp>
 #include <wolv/literals.hpp>
 
+// DEBUGGING
+#include <iostream>
+//
+
 using namespace std::literals::string_literals;
 using namespace wolv::literals;
 
@@ -1472,8 +1476,11 @@ namespace hex::plugin::builtin {
                                                     if (menu::menuItem("hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern"_lang, Shortcut::None, false, selection.has_value() && ContentRegistry::PatternLanguage::getRuntime().getCreatedPatternCount() > 0)) {
                                                         auto patterns = ContentRegistry::PatternLanguage::getRuntime().getPatternsAtAddress(selection->getStartAddress());
 
-                                                        if (!patterns.empty())
+                                                        if (!patterns.empty()) {
+                                                            const auto &pl = patterns.front()->getVariableLocation();
+                                                            std::cout << "*** " << pl.line << ":" << pl.column << " " << pl.length << std::endl;
                                                             RequestJumpToPattern::post(patterns.front());
+                                                        }
                                                     }
                                                 },
                                                 [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() <= sizeof(u64); });
