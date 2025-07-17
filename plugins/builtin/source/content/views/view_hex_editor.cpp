@@ -1479,7 +1479,10 @@ namespace hex::plugin::builtin {
                                                         if (!patterns.empty()) {
                                                             const auto &pl = patterns.front()->getVariableLocation();
                                                             std::cout << "*** " << pl.line << ":" << pl.column << " " << pl.length << std::endl;
-                                                            RequestJumpToPattern::post(patterns.front());
+                                                            // Debugging: put me back!
+                                                            // RequestJumpToPattern::post(patterns.front());
+
+                                                            RequestPatternEditorSetSelection::post(pl.line, pl.column, pl.line, pl.column+pl.length);
                                                         }
                                                     }
                                                 },
