@@ -487,6 +487,8 @@ namespace hex::plugin::builtin {
                 ImGui::EndTabBar();
             }
 
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
+
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
             {
@@ -1109,8 +1111,6 @@ namespace hex::plugin::builtin {
         fonts::CodeEditor().push();
         m_consoleEditor.get(provider).Render("##console", size, true);
         fonts::CodeEditor().pop();
-
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
 
     void ViewPatternEditor::drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars) {
