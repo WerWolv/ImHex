@@ -855,6 +855,9 @@ bool TextEditor::MatchedBracket::CheckPosition(TextEditor *editor, const Coordin
     if (!line.empty() && colors.empty())
         return false;
     auto result = aFrom.mColumn;
+    if (result < 0 || result >= (int)line.size() || result >= (int)colors.size())
+        return false;
+
     auto character = line[result];
     auto color = colors[result];
     if (mSeparators.find(character) != std::string::npos && (static_cast<PaletteIndex>(color) == PaletteIndex::Separator || static_cast<PaletteIndex>(color) == PaletteIndex::WarningText) ||
