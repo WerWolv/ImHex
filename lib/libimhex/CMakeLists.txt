@@ -170,9 +170,9 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} CURL::libcurl)
     endif()
 
-    target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_INCLUDE_DIR} ${LIBBACKTRACE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS})
-    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARIES})
-    target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR} ${MAGIC_LIBRARY_DIRS})
+    target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${LIBBACKTRACE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS})
+    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} MbedTLS::mbedtls MbedTLS::mbedcrypto MbedTLS::mbedx509)
+    target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MAGIC_LIBRARY_DIRS})
 
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
