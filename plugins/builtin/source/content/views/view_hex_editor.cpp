@@ -28,10 +28,6 @@
 #include <hex/helpers/menu_items.hpp>
 #include <wolv/literals.hpp>
 
-// DEBUGGING
-#include <iostream>
-//
-
 using namespace std::literals::string_literals;
 using namespace wolv::literals;
 
@@ -1477,12 +1473,7 @@ namespace hex::plugin::builtin {
                                                         auto patterns = ContentRegistry::PatternLanguage::getRuntime().getPatternsAtAddress(selection->getStartAddress());
 
                                                         if (!patterns.empty()) {
-                                                            const auto &pl = patterns.front()->getVariableLocation();
-                                                            std::cout << "*** " << pl.line << ":" << pl.column << " " << pl.length << std::endl;
-                                                            // Debugging: put me back!
-                                                            // RequestJumpToPattern::post(patterns.front());
-
-                                                            RequestPatternEditorSetSelection::post(pl.line, pl.column, pl.line, pl.column+pl.length);
+                                                            RequestJumpToPattern::post(patterns.front());
                                                         }
                                                     }
                                                 },
@@ -1497,13 +1488,18 @@ namespace hex::plugin::builtin {
                                                 },
                                                 [] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isReadable(); });
 
-         /* Debug */
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.debug" }, ICON_VS_DEBUG_STEP_OUT, 1860,
-                                                [this] {
-                                                    (void)this;
+        /* Goto in pattern editor */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.goto_pattern_editor" }, ICON_VS_GO_TO_FILE, 1870, Shortcut::None,
+                                                [] {
+                                                    const auto selection  = ImHexApi::HexEditor::getSelection();
+                                                    auto patterns = ContentRegistry::PatternLanguage::getRuntime().getPatternsAtAddress(selection->getStartAddress());
+                                                    if (!patterns.empty()) {
+                                                        const auto &pl = patterns.front()->getVariableLocation();
+                                                        RequestPatternEditorSetSelection::post(pl.line, pl.column, pl.line, pl.column+pl.length);
+                                                    }
                                                 },
-                                                [] { return true; });
-
+                                                [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() <= sizeof(u64); } );
+        
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1900);
 
         /* Open in new provider */
