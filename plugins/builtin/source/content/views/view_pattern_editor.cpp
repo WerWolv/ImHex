@@ -2025,8 +2025,8 @@ namespace hex::plugin::builtin {
             if (startLine == 0 || endLine == 0)
                 return;
 
-            const TextEditor::Coordinates start = { int(startLine) - 1, int(startcolumn)-1 };
-            const TextEditor::Coordinates end =   { int(endLine) - 1, int(endcolumn)-1 };
+            const TextEditor::Coordinates start = { int(startLine)- 1, int(startcolumn)-1 };
+            const TextEditor::Coordinates end =   { int(endLine)- 1, int(endcolumn)-1 };
             m_textEditor.get(provider).SetSelection(start, end);
             m_textEditor.get(provider).SetCursorPosition(end);
         });
