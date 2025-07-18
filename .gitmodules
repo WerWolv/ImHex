@@ -36,7 +36,7 @@
 	url = https://github.com/WerWolv/libromfs
 [submodule "lib/external/pattern_language"]
 	path = lib/external/pattern_language
-	url = https://github.com/WerWolv/PatternLanguage
+	url = https://github.com/shewitt-au/PL_Hexcluded
 [submodule "lib/external/libwolv"]
 	path = lib/external/libwolv
 	url = https://github.com/WerWolv/libwolv
