@@ -1500,6 +1500,7 @@ namespace hex::plugin::builtin {
          /* Debug */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.debug" }, ICON_VS_DEBUG_STEP_OUT, 1860,
                                                 [this] {
+                                                    (void)this;
                                                 },
                                                 [] { return true; });
 
