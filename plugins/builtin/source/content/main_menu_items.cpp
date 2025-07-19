@@ -390,7 +390,7 @@ namespace hex::plugin::builtin {
         }, noRunningTasks);
 
         /* Reload Provider */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.reload_provider"}, ICON_VS_ARROW_SWAP, 1250, CTRLCMD + Keys::R, [] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.reload_provider"}, ICON_VS_REFRESH, 1250, CTRLCMD + Keys::R, [] {
             auto provider = ImHexApi::Provider::get();
 
             provider->close();
