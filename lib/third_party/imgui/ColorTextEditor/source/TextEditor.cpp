@@ -237,7 +237,7 @@ void TextEditor::DeleteRange(const Coordinates &aStart, const Coordinates &aEnd)
 }
 
 void TextEditor::AppendLine(const std::string &aValue) {
-    auto text = PreprocessText(aValue);
+    auto text = ReplaceStrings(aValue, "\000", ".");
     if (text.empty())
         return;
     if (isEmpty()) {
@@ -254,15 +254,14 @@ void TextEditor::AppendLine(const std::string &aValue) {
 
 
 int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const std::string &aValue) {
-    auto text = PreprocessText(aValue);
-    if (text.empty())
+    if (aValue.empty())
         return 0;
     auto start = SanitizeCoordinates(aWhere);
     auto &line = mLines[start.mLine];
-    auto stringVector = SplitString(text, "\n", false);
+    auto stringVector = SplitString(aValue, "\n", false);
     auto lineCount = (int)stringVector.size();
     aWhere.mLine += lineCount - 1;
-    aWhere.mColumn += stringVector[lineCount-1].size();
+    aWhere.mColumn += GetStringCharacterCount(stringVector[lineCount-1]);
     stringVector[lineCount - 1].append(line.substr(GetCharacterIndex(start)));
     if (GetCharacterIndex(start) < (int)line.size())
         line.erase(line.begin() + GetCharacterIndex(start),-1);
@@ -1448,8 +1447,7 @@ void TextEditor::SetText(const std::string &aText, bool aUndo) {
     mLines.resize(1);
     mLines[0] = Line();
     mLines[0].mColorized = false;
-    std::string text = PreprocessText(aText);
-    for (auto chr : text) {
+    for (auto chr : aText) {
         if (chr == '\n') {
             mLines.push_back(Line());
             mLines.back().mColorized = false;
@@ -1457,7 +1455,7 @@ void TextEditor::SetText(const std::string &aText, bool aUndo) {
             mLines.back().push_back(Glyph(chr));
     }
     if (!mReadOnly && aUndo) {
-        u.mAdded = text;
+        u.mAdded = aText;
         u.mAddedStart = Coordinates(0, 0);
         u.mAddedEnd = Coordinates((int) mLines.size() - 1, GetLineMaxColumn((int) mLines.size() - 1));
     }
@@ -1482,7 +1480,7 @@ void TextEditor::SetTextLines(const std::vector<std::string> &aLines) {
          auto lineCount = aLines.size();
          mLines.resize(lineCount);
          for (size_t i = 0; i < lineCount; i++) {
-             mLines[i].SetLine(PreprocessText(aLines[i]));
+             mLines[i].SetLine(aLines[i]);
              mLines[i].mColorized = false;
          }
     }
@@ -1745,9 +1743,8 @@ void TextEditor::InsertText(const char *aValue) {
 
     auto pos       = GetActualCursorCoordinates();
     auto start     = std::min(pos, mState.mSelectionStart);
-    auto text = PreprocessText(aValue);
 
-    InsertTextAt(pos, text);
+    InsertTextAt(pos, aValue);
     mLines[pos.mLine].mColorized = false;
 
     SetSelection(pos, pos);
@@ -2374,7 +2371,6 @@ std::string TextEditor::ReplaceTabsWithSpaces(const std::string& string, uint32_
 std::string TextEditor::PreprocessText(const std::string &code) {
     std::string result = ReplaceStrings(code, "\r\n", "\n");
     result = ReplaceStrings(result, "\r", "\n");
-    result = ReplaceStrings(result, "\000", ".");
     result = ReplaceTabsWithSpaces(result, 4);
 
     return result;
