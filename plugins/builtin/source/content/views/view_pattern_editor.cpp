@@ -1924,6 +1924,17 @@ namespace hex::plugin::builtin {
             m_textEditor.get(provider).SetCursorPosition(coords);
         });
 
+         RequestPatternEditorSetSelection::subscribe(this, [this](u32 startLine, u32 startcolumn, u32 endLine, u32 endcolumn) {
+            auto provider = ImHexApi::Provider::get();
+            if (startLine == 0 || endLine == 0)
+                return;
+
+            const TextEditor::Coordinates start = { int(startLine)- 1, int(startcolumn)-1 };
+            const TextEditor::Coordinates end =   { int(endLine)- 1, int(endcolumn)-1 };
+            m_textEditor.get(provider).SetSelection(start, end);
+            m_textEditor.get(provider).SetCursorPosition(end);
+        });
+
         RequestLoadPatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
             this->loadPatternFile(path, ImHexApi::Provider::get());
         });

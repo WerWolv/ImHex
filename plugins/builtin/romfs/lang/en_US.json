@@ -836,6 +836,7 @@
         "hex.builtin.view.hex_editor.menu.edit.insert": "Insert...",
         "hex.builtin.view.hex_editor.menu.edit.insert_mode": "Insert Mode",
         "hex.builtin.view.hex_editor.menu.edit.jump_to": "Follow selection",
+        "hex.builtin.view.hex_editor.menu.edit.goto_pattern_editor": "Goto in pattern editor",
         "hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern": "Current Pattern",
         "hex.builtin.view.hex_editor.menu.edit.open_in_new_provider": "Open Selection View",
         "hex.builtin.view.hex_editor.menu.edit.paste": "Paste",
