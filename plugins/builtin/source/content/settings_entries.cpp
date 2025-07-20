@@ -402,16 +402,13 @@ namespace hex::plugin::builtin {
         };
 
         class ToolbarIconsWidget : public ContentRegistry::Settings::Widgets::Widget {
-        private:
-            struct MenuItemSorter {
-                bool operator()(const auto *a, const auto *b) const {
-                    return a->toolbarIndex < b->toolbarIndex;
-                }
-            };
-
         public:
             bool draw(const std::string &) override {
                 bool changed = false;
+
+                const auto currIndex = std::ranges::count_if(ContentRegistry::Interface::impl::getMenuItems(), [](const auto &entry) {
+                    return entry.second.toolbarIndex != -1;
+                });
 
                 // Top level layout table
                 if (ImGui::BeginTable("##top_level", 2, ImGuiTableFlags_None, ImGui::GetContentRegionAvail())) {
@@ -448,9 +445,10 @@ namespace hex::plugin::builtin {
                             // Draw the menu item
                             ImGui::Selectable(hex::format("{} {}", menuItem.icon.glyph, Lang(unlocalizedName)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
 
-                            // Handle draggin the menu item to the toolbar box
+                            // Handle dragging the menu item to the toolbar box
                             if (ImGui::BeginDragDropSource()) {
-                                auto ptr = &menuItem;
+                                static const void* ptr;
+                                ptr = &menuItem;
                                 ImGui::SetDragDropPayload("MENU_ITEM_PAYLOAD", &ptr, sizeof(void*));
 
                                 ImGuiExt::TextFormatted("{} {}", menuItem.icon.glyph, Lang(unlocalizedName));
@@ -482,13 +480,16 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextRow();
 
                             // Find all menu items that are in the toolbar and sort them by their toolbar index
-                            std::set<ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> toolbarItems;
+                            std::vector<ContentRegistry::Interface::impl::MenuItem*> toolbarItems;
                             for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable()) {
                                 if (menuItem.toolbarIndex == -1)
                                     continue;
 
-                                toolbarItems.emplace(&menuItem);
+                                toolbarItems.emplace_back(&menuItem);
                             }
+                            std::ranges::sort(toolbarItems, [](auto *a, auto *b) {
+                                return a->toolbarIndex < b->toolbarIndex;
+                            });
 
                             // Loop over all toolbar items
                             for (auto &menuItem : toolbarItems) {
@@ -523,7 +524,27 @@ namespace hex::plugin::builtin {
                                     if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_ITEM_PAYLOAD"); payload != nullptr) {
                                         auto &otherMenuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
 
-                                        std::swap(menuItem->toolbarIndex, otherMenuItem->toolbarIndex);
+                                        // Get all toolbar items sorted by toolbarIndex
+                                        std::vector<ContentRegistry::Interface::impl::MenuItem*> newToolbarItems = toolbarItems;
+
+                                        // Remove otherMenuItem from its current position
+                                        auto it = std::ranges::find(newToolbarItems, otherMenuItem);
+                                        if (it != newToolbarItems.end())
+                                            newToolbarItems.erase(it);
+
+                                        // Find current menuItem position
+                                        auto insertPos = std::ranges::find(newToolbarItems, menuItem);
+
+                                        if (menuItem->toolbarIndex > otherMenuItem->toolbarIndex)
+                                            ++insertPos;
+
+                                        // Insert otherMenuItem before menuItem
+                                        newToolbarItems.insert(insertPos, otherMenuItem);
+
+                                        // Update toolbarIndex for all items
+                                        for (size_t i = 0; i < newToolbarItems.size(); ++i)
+                                            newToolbarItems[i]->toolbarIndex = static_cast<int>(i);
+
                                         changed = true;
                                     }
 
@@ -593,8 +614,7 @@ namespace hex::plugin::builtin {
                         if (auto payload = ImGui::AcceptDragDropPayload("MENU_ITEM_PAYLOAD"); payload != nullptr) {
                             auto &menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
 
-                            menuItem->toolbarIndex = m_currIndex;
-                            m_currIndex += 1;
+                            menuItem->toolbarIndex = currIndex;
                             changed = true;
                         }
 
@@ -647,13 +667,8 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                m_currIndex = toolbarItems.size();
-
                 ContentRegistry::Interface::updateToolbarItems();
             }
-
-        private:
-            i32 m_currIndex = 0;
         };
 
         bool getDefaultBorderlessWindowMode() {
