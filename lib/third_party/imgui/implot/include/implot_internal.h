@@ -33,6 +33,7 @@
 
 #include <time.h>
 #include "imgui_internal.h"
+#include <cmath>
 
 #ifndef IMPLOT_VERSION
 #error Must include implot.h before implot_internal.h
