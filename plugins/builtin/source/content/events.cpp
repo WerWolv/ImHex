@@ -198,8 +198,8 @@ namespace hex::plugin::builtin {
             if (provider->shouldSkipLoadInterface())
                 return;
 
-            if (provider->hasFilePicker()) {
-                if (!provider->handleFilePicker()) {
+            if (auto *filePickerProvider = dynamic_cast<prv::IProviderFilePicker*>(provider); filePickerProvider != nullptr) {
+                if (!filePickerProvider->handleFilePicker()) {
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     return;
                 }
@@ -213,7 +213,7 @@ namespace hex::plugin::builtin {
                     }
                 });
             }
-            else if (!provider->hasLoadInterface()) {
+            else if (dynamic_cast<prv::IProviderLoadInterface*>(provider) == nullptr) {
                 TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
                     if (!provider->open() || !provider->isAvailable()) {
                         ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));

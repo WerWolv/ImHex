@@ -565,16 +565,21 @@ namespace hex::plugin::builtin {
                                 auto max = ImGui::GetItemRectMax();
                                 auto iconSize = ImGui::CalcTextSize(menuItem->icon.glyph.c_str());
 
-                                std::string text = Lang(unlocalizedName);
-                                if (text.ends_with("..."))
-                                    text = text.substr(0, text.size() - 3);
-
-                                auto textSize = ImGui::CalcTextSize(text.c_str());
-
                                 // Draw icon and text of the toolbar item
                                 auto drawList = ImGui::GetWindowDrawList();
                                 drawList->AddText((min + ((max - min) - iconSize) / 2) - ImVec2(0, 10_scaled), ImGuiExt::GetCustomColorU32(ImGuiCustomCol(menuItem->icon.color)), menuItem->icon.glyph.c_str());
-                                drawList->AddText((min + ((max - min)) / 2) + ImVec2(-textSize.x / 2, 5_scaled), ImGui::GetColorU32(ImGuiCol_Text), text.c_str());
+
+                                ImGui::PushFont(nullptr, ImGui::GetStyle().FontSizeBase * 0.65F);
+                                {
+                                    std::string text = Lang(unlocalizedName);
+                                    if (text.ends_with("..."))
+                                        text = text.substr(0, text.size() - 3);
+
+                                    auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, max.x - min.x);
+
+                                    drawList->AddText(nullptr, 0.0F, (min + ((max - min)) / 2) + ImVec2(-textSize.x / 2, 5_scaled), ImGui::GetColorU32(ImGuiCol_Text), text.c_str(), nullptr, max.x - min.x);
+                                }
+                                ImGui::PopFont();
                             }
 
                             ImGui::EndTable();
@@ -619,6 +624,9 @@ namespace hex::plugin::builtin {
 
             void load(const nlohmann::json &data) override {
                 if (data.is_null())
+                    return;
+
+                if (data.is_array() && data.empty())
                     return;
 
                 for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable())

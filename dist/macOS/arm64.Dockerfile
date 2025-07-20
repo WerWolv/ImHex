@@ -1,5 +1,5 @@
 # This base image is also known as "crosscompile". See arm64.crosscompile.Dockerfile
-FROM ghcr.io/itrooz/macos-crosscompile:clang19-nosdk as build
+FROM ghcr.io/werwolv/macos-crosscompile:clang20-nosdk as build
 
 ENV MACOSX_DEPLOYMENT_TARGET 13.0
 
@@ -67,6 +67,8 @@ vcpkg install --triplet=arm-osx-mytriplet zlib
 vcpkg install --triplet=arm-osx-mytriplet bzip2
 vcpkg install --triplet=arm-osx-mytriplet liblzma
 vcpkg install --triplet=arm-osx-mytriplet zstd
+vcpkg install --triplet=arm-osx-mytriplet openssl
+vcpkg install --triplet=arm-osx-mytriplet libssh2
 EOF
 
 ## Install glfw3 dep

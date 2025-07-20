@@ -192,7 +192,7 @@ namespace hex::plugin::builtin {
                                                 for (auto &pixel : pixels)
                                                     pixel = (pixel & 0xFF00FF00) | ((pixel & 0xFF) << 16) | ((pixel & 0xFF0000) >> 16);
 
-                                                texture = ImGuiExt::Texture::fromBitmap(reinterpret_cast<const u8*>(pixels.data()), pixels.size(), bitmap.bmWidth, bitmap.bmHeight, ImGuiExt::Texture::Filter::Nearest);
+                                                texture = ImGuiExt::Texture::fromBitmap(reinterpret_cast<const u8*>(pixels.data()), pixels.size(), bitmap.bmWidth, bitmap.bmHeight, ImGuiExt::Texture::Filter::Linear);
                                             }
                                         }
                                     }
@@ -262,13 +262,15 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::Image(process->icon, process->icon.getSize());
+
+                    auto height = ImGui::GetTextLineHeight();
+                    ImGui::Image(process->icon, { height, height });
 
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{}", process->id);
 
                     ImGui::TableNextColumn();
-                    if (ImGui::Selectable(process->name.c_str(), m_selectedProcess != nullptr && process->id == m_selectedProcess->id, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, process->icon.getSize().y)))
+                    if (ImGui::Selectable(process->name.c_str(), m_selectedProcess != nullptr && process->id == m_selectedProcess->id, ImGuiSelectableFlags_SpanAllColumns))
                         m_selectedProcess = process;
 
                     ImGui::PopID();
@@ -282,7 +284,7 @@ namespace hex::plugin::builtin {
         return m_selectedProcess != nullptr;
     }
 
-    void ProcessMemoryProvider::drawInterface() {
+    void ProcessMemoryProvider::drawSidebarInterface() {
         ImGuiExt::Header("hex.builtin.provider.process_memory.memory_regions"_lang, true);
 
         auto availableX = ImGui::GetContentRegionAvail().x;

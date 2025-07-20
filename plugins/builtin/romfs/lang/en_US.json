@@ -1037,6 +1037,7 @@
         "hex.builtin.view.pattern_editor.shortcut.move_home": "Move Cursor to the Start of the Line",
         "hex.builtin.view.pattern_editor.shortcut.move_end": "Move Cursor to the End of the Line",
         "hex.builtin.view.pattern_editor.shortcut.move_top": "Move Cursor to the Start of the File",
+        "hex.builtin.view.pattern_editor.shortcut.move_matched_bracket": "Move Cursor to the Matching Bracket",
         "hex.builtin.view.pattern_editor.shortcut.move_bottom": "Move Cursor to the End of the File",
         "hex.builtin.view.pattern_editor.shortcut.delete_word_left": "Delete One Word to the Left of the Cursor",
         "hex.builtin.view.pattern_editor.shortcut.delete_word_right": "Delete One Word to the Right of the Cursor",

@@ -487,6 +487,8 @@ namespace hex::plugin::builtin {
                 ImGui::EndTabBar();
             }
 
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
+
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
             {
@@ -1109,8 +1111,6 @@ namespace hex::plugin::builtin {
         fonts::CodeEditor().push();
         m_consoleEditor.get(provider).Render("##console", size, true);
         fonts::CodeEditor().pop();
-
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
 
     void ViewPatternEditor::drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars) {
@@ -1453,7 +1453,7 @@ namespace hex::plugin::builtin {
 
                 bool foundCorrectType = false;
 
-                auto mimeType = magic::getMIMEType(provider, 0, 100_KiB, true);
+                auto mimeType = magic::getMIMEType(provider, 0, 4_KiB, true);
                 runtime.addPragma("MIME", [&mimeType, &foundCorrectType](const pl::PatternLanguage &runtime, const std::string &value) {
                     std::ignore = runtime;
 
@@ -2511,6 +2511,11 @@ namespace hex::plugin::builtin {
         ShortcutManager::addShortcut(this, Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_end", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->MoveEnd(false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::M + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_matched_bracket", [this] {
+            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
+                editor->MoveToMatchedBracket(false);
         });
 
         ShortcutManager::addShortcut(this, Keys::F8 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.add_breakpoint", [this] {

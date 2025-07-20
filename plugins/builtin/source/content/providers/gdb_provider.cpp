@@ -10,6 +10,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -20,13 +21,10 @@ namespace hex::plugin::builtin {
     namespace gdb {
 
         namespace {
-
             u8 calculateChecksum(const std::string &data) {
                 u64 checksum = 0;
-
                 for (const auto &c : data)
                     checksum += c;
-
                 return checksum & 0xFF;
             }
 
@@ -35,91 +33,156 @@ namespace hex::plugin::builtin {
             }
 
             std::optional<std::string> parsePacket(const std::string &packet) {
-                if (packet.length() < 4)
+                if (packet.length() < 4 || packet[0] != '$')
                     return std::nullopt;
 
-                if (!packet.starts_with('$'))
+                size_t hashPos = packet.find('#');
+                if (hashPos == std::string::npos || hashPos + 2 >= packet.size())
                     return std::nullopt;
 
-                if (packet[packet.length() - 3] != '#')
-                    return std::nullopt;
+                std::string data = packet.substr(1, hashPos - 1);
+                std::string checksumStr = packet.substr(hashPos + 1, 2);
 
-                std::string data     = packet.substr(1, packet.length() - 4);
-                std::string checksum = packet.substr(packet.length() - 2, 2);
-
-                auto decodedChecksum = crypt::decode16(checksum);
-                if (checksum.length() != 2 || decodedChecksum.empty() || decodedChecksum[0] != calculateChecksum(data))
+                auto decodedChecksum = crypt::decode16(checksumStr);
+                if (decodedChecksum.empty() || decodedChecksum[0] != calculateChecksum(data))
                     return std::nullopt;
 
                 return data;
             }
 
-        }
+            void sendAck(const wolv::net::SocketClient &socket) {
+                socket.writeString("+");
+            }
 
-        void sendAck(const wolv::net::SocketClient &socket) {
-            socket.writeString("+");
-        }
+            char readCharacter(const wolv::net::SocketClient &socket) {
+                auto data = socket.readBytes(1);
+                return data.empty() ? '\0' : static_cast<char>(data[0]);
+            }
 
-        void continueExecution(const wolv::net::SocketClient &socket) {
-            socket.writeString(createPacket("vCont;c"));
+            std::string sendReceivePackage(const wolv::net::SocketClient &socket, const std::string &packet) {
+                socket.writeString(packet);
+
+                i32 retries = 20;
+
+                std::string buffer;
+                while (true) {
+                    char c = readCharacter(socket);
+                    if (c == '+') {
+                        // ACK response, continue reading
+                        continue;
+                    } else if (c == '$') {
+                        // Start of response packet
+                        buffer += c;
+
+                        // Read until the end of the packet
+                        while (true) {
+                            c = readCharacter(socket);
+                            buffer += c;
+                            if (c == '#')
+                                break;
+                        }
+
+                        // Read the checksum
+                        buffer += readCharacter(socket);
+                        buffer += readCharacter(socket);
+                        break;
+                    } else if (c == '-') {
+                        // NAK response, retry sending the packet
+                        socket.writeString(packet);
+                        retries -= 1;
+                    } else if (c == 0x00) {
+                        // No response, wait a bit and retry receiving data
+                        std::this_thread::sleep_for(10ms);
+                        retries -= 1;
+                    }
+
+                    if (retries <= 0) {
+                        log::error("No response from GDB server after multiple retries");
+                        return {};
+                    }
+                }
+
+                if (!buffer.empty())
+                    sendAck(socket);
+
+                return buffer;
+            }
+
+            std::vector<u8> decodeMemoryResponse(const std::string &response) {
+                std::string expanded;
+                size_t i = 0;
+
+                while (i < response.size()) {
+                    char c = response[i];
+
+                    if (i + 2 < response.size() && response[i + 1] == '*') {
+                        char repeatChar = response[i + 2];
+                        int repeatCount = static_cast<unsigned char>(repeatChar) - 29;
+
+                        if (repeatCount <= 0)
+                            return {};
+
+                        expanded.append(repeatCount, c);
+                        i += 3;
+                    } else {
+                        expanded.push_back(c);
+                        i++;
+                    }
+                }
+
+                if (expanded.size() % 2 != 0)
+                    return {};
+
+                std::vector<u8> decoded;
+                for (size_t j = 0; j < expanded.size(); j += 2) {
+                    std::string byteStr = expanded.substr(j, 2);
+                    try {
+                        u8 byte = static_cast<u8>(std::stoul(byteStr, nullptr, 16));
+                        decoded.push_back(byte);
+                    } catch (...) {
+                        return { };
+                    }
+                }
+
+                return decoded;
+            }
+
+
         }
 
         std::vector<u8> readMemory(const wolv::net::SocketClient &socket, u64 address, size_t size) {
             std::string packet = createPacket(hex::format("m{:X},{:X}", address, size));
 
-            socket.writeString(packet);
-
-            auto receivedPacket = socket.readString(size * 2 + 4);
-
-            if (receivedPacket.empty())
-                return {};
+            std::string receivedPacket = sendReceivePackage(socket, packet);
 
             auto receivedData = parsePacket(receivedPacket);
             if (!receivedData.has_value())
                 return {};
 
+            sendAck(socket);
+
             if (receivedData->size() == 3 && receivedData->starts_with("E"))
                 return {};
 
-            auto data = crypt::decode16(receivedData.value());
-
+            auto data = decodeMemoryResponse(*receivedData);
             data.resize(size);
-
             return data;
         }
 
-        void writeMemory(const wolv::net::SocketClient &socket, u64 address, const void *buffer, size_t size) {
+        bool writeMemory(const wolv::net::SocketClient &socket, u64 address, const void *buffer, size_t size) {
             std::vector<u8> bytes(size);
             std::memcpy(bytes.data(), buffer, size);
-
             std::string byteString = crypt::encode16(bytes);
 
             std::string packet = createPacket(hex::format("M{:X},{:X}:{}", address, size, byteString));
 
-            socket.writeString(packet);
-
-            auto receivedPacket = socket.readString(6);
-            std::ignore = receivedPacket;
-        }
-
-        bool enableNoAckMode(const wolv::net::SocketClient &socket) {
-            socket.writeString(createPacket("QStartNoAckMode"));
-
-            auto ack = socket.readString(1);
-
-            if (ack.empty() || ack[0] != '+')
-                return false;
-
-            auto receivedPacket = socket.readString(6);
-
+            std::string receivedPacket = sendReceivePackage(socket, packet);
             auto receivedData = parsePacket(receivedPacket);
-
-            if (receivedData && *receivedData == "OK") {
-                sendAck(socket);
-                return true;
-            } else {
+            if (!receivedData.has_value() || *receivedData != "OK")
                 return false;
-            }
+
+            sendAck(socket);
+            return true;
         }
 
     }
@@ -147,51 +210,20 @@ namespace hex::plugin::builtin {
         return false;
     }
 
-    void GDBProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
+    void GDBProvider::readFromSource(u64 offset, void *buffer, size_t size) {
+        std::scoped_lock lock(m_mutex);
+        if (!m_socket.isConnected())
             return;
 
-        offset -= this->getBaseAddress();
-
-        u64 alignedOffset = offset - (offset % CacheLineSize);
-
-        if (size <= CacheLineSize) {
-            std::scoped_lock lock(m_cacheLock);
-
-            const auto &cacheLine = std::ranges::find_if(m_cache, [&](const auto &line) {
-                return line.address == alignedOffset;
-            });
-
-            if (cacheLine != m_cache.end()) {
-                // Cache hit
-
-            } else {
-                // Cache miss
-
-                m_cache.push_back({ alignedOffset, { 0 } });
-            }
-
-            if (cacheLine != m_cache.end())
-                std::memcpy(buffer, &cacheLine->data[0] + (offset % CacheLineSize), std::min<u64>(size, cacheLine->data.size()));
-        } else {
-            while (size > 0) {
-                size_t readSize = std::min<u64>(size, CacheLineSize);
-
-                auto data = gdb::readMemory(m_socket, offset, size);
-                if (!data.empty())
-                    std::memcpy(buffer, &data[0], data.size());
-
-                size -= readSize;
-                offset += readSize;
-            }
-        }
+        auto data = gdb::readMemory(m_socket, offset, size);
+        if (!data.empty())
+            std::memcpy(buffer, &data[0], data.size());
     }
 
-    void GDBProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
-        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
+    void GDBProvider::writeToSource(u64 offset, const void *buffer, size_t size) {
+        std::scoped_lock lock(m_mutex);
+        if (!m_socket.isConnected())
             return;
-
-        offset -= this->getBaseAddress();
 
         gdb::writeMemory(m_socket, offset, buffer, size);
     }
@@ -200,7 +232,7 @@ namespace hex::plugin::builtin {
         Provider::save();
     }
 
-    u64 GDBProvider::getActualSize() const {
+    u64 GDBProvider::getSourceSize() const {
         return m_size;
     }
 
@@ -223,48 +255,16 @@ namespace hex::plugin::builtin {
     }
 
     bool GDBProvider::open() {
-        m_socket = wolv::net::SocketClient(wolv::net::SocketClient::Type::TCP);
+        std::scoped_lock lock(m_mutex);
+
+        CachedProvider::open();
+        m_socket = wolv::net::SocketClient(wolv::net::SocketClient::Type::TCP, false);
         m_socket.connect(m_ipAddress, m_port);
-        if (!gdb::enableNoAckMode(m_socket)) {
-            m_socket.disconnect();
-            return false;
-        }
+
+        gdb::sendReceivePackage(m_socket, gdb::createPacket("!"));
+        gdb::sendReceivePackage(m_socket, gdb::createPacket("Hg0"));
 
         if (m_socket.isConnected()) {
-            gdb::continueExecution(m_socket);
-
-            m_cacheUpdateThread = std::thread([this] {
-                auto cacheLine = m_cache.begin();
-                while (this->isConnected()) {
-                    {
-                        std::scoped_lock lock(m_cacheLock);
-
-                        if (m_resetCache) {
-                            m_cache.clear();
-                            m_resetCache = false;
-                            cacheLine = m_cache.begin();
-                        }
-
-                        if (cacheLine != m_cache.end()) {
-                            std::vector<u8> data = gdb::readMemory(m_socket, cacheLine->address, CacheLineSize);
-
-                            while (std::count_if(m_cache.begin(), m_cache.end(), [&](auto &line) { return !line.data.empty(); }) > 100) {
-                                m_cache.pop_front();
-                                cacheLine = m_cache.begin();
-                            }
-
-                            std::memcpy(cacheLine->data.data(), data.data(), data.size());
-                        }
-
-                        if (cacheLine == m_cache.end())
-                            cacheLine = m_cache.begin();
-                        else
-                            ++cacheLine;
-                    }
-                    std::this_thread::sleep_for(10ms);
-                }
-            });
-
             return true;
         } else {
             return false;
@@ -272,11 +272,10 @@ namespace hex::plugin::builtin {
     }
 
     void GDBProvider::close() {
-        m_socket.disconnect();
+        std::scoped_lock lock(m_mutex);
 
-        if (m_cacheUpdateThread.joinable()) {
-            m_cacheUpdateThread.join();
-        }
+        CachedProvider::close();
+        m_socket.disconnect();
     }
 
     bool GDBProvider::isConnected() const {
