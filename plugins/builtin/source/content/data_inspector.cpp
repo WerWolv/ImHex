@@ -237,7 +237,7 @@ namespace hex::plugin::builtin {
 
                 const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
 
-                auto value = hex::format(formatString, float16ToFloat32(hex::changeEndianness(result, endian)));
+                auto value = hex::format(formatString, customFloatToFloat32<5, 10>(hex::changeEndianness(result, endian)));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             }
@@ -280,6 +280,32 @@ namespace hex::plugin::builtin {
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
             stringToFloat<long double>
+        );
+
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.bfloat16", sizeof(u16),
+            [](auto buffer, auto endian, auto style) {
+                u16 result = 0;
+                std::memcpy(&result, buffer.data(), sizeof(u16));
+
+                const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
+
+                auto value = hex::format(formatString, customFloatToFloat32<8, 7>(hex::changeEndianness(result, endian)));
+
+                return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+            }
+        );
+
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.fp24", 3,
+            [](auto buffer, auto endian, auto style) {
+                u32 result = 0;
+                std::memcpy(&result, buffer.data(), 3);
+
+                const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
+
+                auto value = hex::format(formatString, customFloatToFloat32<7, 16>(hex::changeEndianness(result, endian)));
+
+                return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+            }
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.sleb128", 1, (16 * 8 / 7) + 1,
