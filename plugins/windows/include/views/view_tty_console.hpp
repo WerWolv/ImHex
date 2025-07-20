@@ -69,7 +69,6 @@ namespace hex::plugin::windows {
         bool m_hasCTSFlowControl = false;
 
         bool m_shouldAutoScroll = true;
-        i64 m_scrollPosition = 0;
 
         std::mutex m_receiveBufferMutex;
         std::vector<std::string> m_receiveLines;

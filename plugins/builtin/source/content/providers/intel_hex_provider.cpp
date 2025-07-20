@@ -207,7 +207,7 @@ namespace hex::plugin::builtin {
             return false;
         }
 
-        u64 maxAddress = 0x00;
+        std::optional<u64> maxAddress;
         for (auto &[address, bytes] : data.value()) {
             auto endAddress = (address + bytes.size()) - 1;
             m_data.emplace({ address, endAddress }, std::move(bytes));
@@ -216,7 +216,11 @@ namespace hex::plugin::builtin {
                 maxAddress = endAddress;
         }
 
-        m_dataSize = maxAddress + 1;
+        if (maxAddress.has_value())
+            m_dataSize = *maxAddress + 1;
+        else
+            m_dataSize = 0x00;
+
         m_dataValid = true;
 
         return true;
