@@ -176,9 +176,9 @@ namespace hex::plugin::builtin {
             for (const auto &page : DonationPages) {
                 ImGui::TableNextColumn();
 
-                const auto size = page.texture->getSize() / 1.5F;
+                const auto size = (page.texture->getSize() * 1_scaled) / 1.5F;
                 const auto startPos = ImGui::GetCursorScreenPos();
-                ImGui::Image(*page.texture, page.texture->getSize() / 1.5F);
+                ImGui::Image(*page.texture, size);
 
                 if (ImGui::IsItemHovered()) {
                     ImGui::GetForegroundDrawList()->AddShadowCircle(startPos + size / 2, size.x / 2, ImGui::GetColorU32(ImGuiCol_Button), 100.0F, ImVec2(), ImDrawFlags_ShadowCutOutShapeBackground);
@@ -203,9 +203,9 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
             {
                 // Draw basic information about ImHex and its version
-                ImGuiExt::TextFormatted("ImHex Hex Editor v{} by WerWolv", ImHexApi::System::getImHexVersion().get());
+                ImGuiExt::TextFormattedSelectable("ImHex Hex Editor v{} by WerWolv", ImHexApi::System::getImHexVersion().get());
                 ImGui::Indent(25_scaled);
-                ImGuiExt::TextFormatted("Powered by Dear ImGui v{}", ImGui::GetVersion());
+                ImGuiExt::TextFormattedSelectable("Powered by Dear ImGui v{}", ImGui::GetVersion());
                 ImGui::Unindent(25_scaled);
             }
 
@@ -223,7 +223,7 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
             {
                 // Draw the build date and time
-                ImGuiExt::TextFormatted("Compiled on {} at {}", __DATE__, __TIME__);
+                ImGuiExt::TextFormattedSelectable("Compiled on {} at {}", __DATE__, __TIME__);
             }
 
             ImGui::TableNextColumn();
