@@ -25,11 +25,11 @@ apps:
     command: usr/local/bin/imhex
     desktop: usr/local/share/applications/imhex.desktop
     environment:
-      LD_LIBRARY_PATH: 'usr/local/lib:usr/local/lib/imhex:$LD_LIBRARY_PATH'
-      XDG_DATA_DIRS: 'usr/local/share:$XDG_DATA_DIRS'
-      XDG_CONFIG_DIRS: 'usr/local/share:$XDG_CONFIG_DIRS'
-      XDG_RUNTIME_DIR: '$SNAP_USER_COMMON/run/imhex'
-
+      LD_LIBRARY_PATH: '$SNAP/usr/local/lib:$SNAP/usr/local/lib/imhex:$LD_LIBRARY_PATH'
+      XDG_DATA_DIRS: '$SNAP/usr/local/share:$XDG_DATA_DIRS'
+      XDG_CONFIG_DIRS: '$SNAP/usr/local/share:$XDG_CONFIG_DIRS'
+      XDG_DATA_HOME: '$SNAP_DATA'
+      XDG_RUNTIME_DIR: '$SNAP_DATA'
 parts:
   imhex:
     plugin: cmake
@@ -38,7 +38,7 @@ parts:
       - CC: /usr/bin/gcc-14
       - CXX: /usr/bin/g++-14
     cmake-parameters:
-      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DCMAKE_BUILD_TYPE=Release
     cmake-generator: Ninja
     build-packages:
       - cmake
