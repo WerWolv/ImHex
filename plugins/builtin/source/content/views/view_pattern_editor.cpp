@@ -1924,6 +1924,17 @@ namespace hex::plugin::builtin {
             m_textEditor.get(provider).SetCursorPosition(coords);
         });
 
+        RequestPatternEditorSetSelection::subscribe(this, [this](u32 startLine, u32 startcolumn, u32 endLine, u32 endcolumn) {
+            auto provider = ImHexApi::Provider::get();
+            if (startLine == 0 || endLine == 0)
+                return;
+
+            const TextEditor::Coordinates start = { int(startLine)-1, int(startcolumn)-1 };
+            const TextEditor::Coordinates end =   { int(endLine)-1, int(endcolumn)-1 };
+            m_textEditor.get(provider).SetSelection(start, end);
+            m_textEditor.get(provider).SetCursorPosition(end);
+        });
+
         RequestLoadPatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
             this->loadPatternFile(path, ImHexApi::Provider::get());
         });
@@ -2193,31 +2204,38 @@ namespace hex::plugin::builtin {
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
                 const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
-                auto patterns = runtime.getPatternsAtAddress(address);
-                if (!patterns.empty() && !std::ranges::all_of(patterns, [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden || pattern->getVisibility() == pl::ptrn::Visibility::HighlightHidden; })) {
-                    ImGui::BeginTooltip();
+                std::set<pl::ptrn::Pattern*> drawnPatterns;
+                for (u64 offset = 0; offset < size; offset += 1) {
+                    auto patterns = runtime.getPatternsAtAddress(address + offset);
+                    if (!patterns.empty() && !std::ranges::all_of(patterns, [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden || pattern->getVisibility() == pl::ptrn::Visibility::HighlightHidden; })) {
+                        ImGui::BeginTooltip();
 
-                    for (const auto &pattern : patterns) {
-                        auto visibility = pattern->getVisibility();
-                        if (visibility == pl::ptrn::Visibility::Hidden || visibility == pl::ptrn::Visibility::HighlightHidden)
-                            continue;
+                        for (const auto &pattern : patterns) {
+                            // Avoid drawing the same pattern multiple times
+                            if (!drawnPatterns.insert(pattern).second)
+                                continue;
 
-                        const auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
-                        ImGui::PushID(pattern);
-                        if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-                            ImGui::TableNextRow();
-                            ImGui::TableNextColumn();
+                            auto visibility = pattern->getVisibility();
+                            if (visibility == pl::ptrn::Visibility::Hidden || visibility == pl::ptrn::Visibility::HighlightHidden)
+                                continue;
 
-                            this->drawPatternTooltip(pattern);
+                            const auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
+                            ImGui::PushID(pattern);
+                            if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
 
-                            ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
-                            ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
-                            ImGui::EndTable();
-                            ImGui::PopStyleColor(2);
+                                this->drawPatternTooltip(pattern);
+
+                                ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
+                                ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
+                                ImGui::EndTable();
+                                ImGui::PopStyleColor(2);
+                            }
+                            ImGui::PopID();
                         }
-                        ImGui::PopID();
+                        ImGui::EndTooltip();
                     }
-                    ImGui::EndTooltip();
                 }
             }
         });
