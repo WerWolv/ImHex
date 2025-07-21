@@ -1094,11 +1094,13 @@ jobs:
         with:
           submodules: recursive
 
+      - name: 📜 Move snap directory to root
+        run: |
+          cp ./dist/snap ./snap
+
       - name: 🛠️ Build
         uses: snapcore/action-build@v1
         id: snapcraft
-        with:
-          path: dist/snap
 
       - name: 📜 Set version variable
         run: |
