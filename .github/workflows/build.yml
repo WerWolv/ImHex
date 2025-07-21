@@ -1096,7 +1096,7 @@ jobs:
 
       - name: 📜 Move snap directory to root
         run: |
-          cp ./dist/snap ./snap
+          cp -r ./dist/snap ./snap
 
       - name: 🛠️ Build
         uses: snapcore/action-build@v1
