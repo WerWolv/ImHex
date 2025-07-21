@@ -1076,6 +1076,47 @@ jobs:
           path: |
             imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
 
+  snap-build:
+    name: 🐧 Snap
+    runs-on: ubuntu-24.04
+
+    permissions:
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: ⬇️ Install setup dependencies
+        run: apt update && apt install -y git curl snapcraft
+
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 🛠️ Build
+        uses: snapcore/action-build@v1
+        id: snapcraft
+        with:
+          path: dist/snap
+
+      - name: 📜 Set version variable
+        run: |
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            ${{ steps.snapcraft.outputs.snap }}
+
+      - name: ⬆️ Upload Snap
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: Snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+
   webassembly-build:
     runs-on: ubuntu-24.04
     name: 🌍 Web
