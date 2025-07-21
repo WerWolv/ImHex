@@ -33,7 +33,6 @@ parts:
       - CXX: /usr/bin/g++-14
     cmake-parameters:
       - -DCMAKE_BUILD_TYPE=RelWithDebInfo
-      - -DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_C99_MATH=1"
     cmake-generator: Ninja
     build-packages:
       - cmake
