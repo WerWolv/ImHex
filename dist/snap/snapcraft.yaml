@@ -22,8 +22,13 @@ platforms:
 
 apps:
   imhex:
-    command: bin/imhex
+    command: usr/local/bin/imhex
     desktop: usr/local/share/applications/imhex.desktop
+    environment:
+      LD_LIBRARY_PATH: usr/local/lib:usr/local/lib/imhex:$LD_LIBRARY_PATH
+      XDG_DATA_DIRS: usr/local/share:$XDG_DATA_DIRS
+      XDG_CONFIG_DIRS: usr/local/share:$XDG_CONFIG_DIRS
+      XDG_RUNTIME_DIR: $SNAP_USER_COMMON/run/imhex
 
 parts:
   imhex:
