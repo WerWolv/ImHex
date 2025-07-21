@@ -29,6 +29,15 @@ static int UTF8CharLength(uint8_t c) {
         return 2;
     return 1;
 }
+
+static int GetStringCharacterCount(const std::string& str) {
+    if (str.empty())
+        return 0;
+    int c = 0;
+    for (unsigned i = 0; i < str.size(); c++)
+        i += UTF8CharLength(str[i]);
+    return c;
+}
 class TextEditor
 {
 public:
@@ -135,6 +144,7 @@ public:
 			return mColumn >= o.mColumn;
 		}
 	};
+    inline static const Coordinates Invalid = Coordinates(0x80000000,0x80000000);
 
 	struct Identifier
 	{
@@ -363,6 +373,7 @@ public:
         }
         enum class LinePart {
             Chars,
+            Utf8,
             Colors,
             Flags
         };
@@ -377,6 +388,16 @@ public:
             return 0x00;
         }
 
+        std::string frontUtf8(LinePart part = LinePart::Chars) const {
+            if (part == LinePart::Chars && !mChars.empty())
+                return mChars.substr(0, UTF8CharLength(mChars[0]));
+            if (part == LinePart::Colors && !mColors.empty())
+                return mColors.substr(0, UTF8CharLength(mChars[0]));
+            if (part == LinePart::Flags && !mFlags.empty())
+                return mFlags.substr(0, UTF8CharLength(mChars[0]));
+            return "";
+        }
+
         void push_back(char c) {
             mChars.push_back(c);
             mColors.push_back(0x00);
@@ -388,68 +409,54 @@ public:
             return mChars.empty();
         }
 
-        std::string substrUtf8(size_t start, size_t length = (size_t)-1, LinePart part = LinePart::Chars ) const {
-            if (start >= mChars.size())
-                return "";
-            if (length == (size_t)-1 || length >= mChars.size() - start)
-                length = mChars.size() - start;
-            size_t utf8Start= 0;
-            while (utf8Start<start) {
-                auto d = UTF8CharLength(mChars[utf8Start]);
-                utf8Start+= d;
-            }
-            size_t utf8Length = 0;
-            while (utf8Length < length && utf8Start + utf8Length < mChars.size()) {
-                auto d = UTF8CharLength(mChars[utf8Start + utf8Length]);
-                utf8Length += d;
-            }
-
-            if (part == LinePart::Chars)
-                return mChars.substr(utf8Start, utf8Length);
-            if (part == LinePart::Colors)
-                return mColors.substr(utf8Start, utf8Length);
-            if (part == LinePart::Flags)
-                return mFlags.substr(utf8Start, utf8Length);
-            return "";
-        }
-
         std::string substr(size_t start, size_t length = (size_t)-1, LinePart part = LinePart::Chars ) const {
-            if (length == (size_t)-1)
-                length = mChars.size() - start;
-            if (start >= mChars.size())
+            if (start >= mChars.size() || mColors.size() != mChars.size() || mFlags.size() != mChars.size())
                 return "";
-            if (start + length >= mChars.size())
+            if (length == (size_t)-1 || start + length >= mChars.size())
                 length = mChars.size() - start;
-            if (part == LinePart::Chars && length > 0)
+            if (length == 0)
+                return "";
+
+            if (part == LinePart::Chars)
                 return mChars.substr(start, length);
-            if (part == LinePart::Colors && length > 0)
+            if (part == LinePart::Colors)
                 return mColors.substr(start, length);
-            if (part == LinePart::Flags && length > 0)
+            if (part == LinePart::Flags)
                 return mFlags.substr(start, length);
+            if (part == LinePart::Utf8) {
+                size_t utf8Start= 0;
+                for (size_t utf8Index = 0; utf8Index < start; ++utf8Index) {
+                    utf8Start += UTF8CharLength(mChars[utf8Start]);
+                }
+                size_t utf8Length = 0;
+                for (size_t utf8Index = 0; utf8Index < length; ++utf8Index) {
+                    utf8Length += UTF8CharLength(mChars[utf8Start + utf8Length]);
+                }
+                return mChars.substr(utf8Start, utf8Length);
+            }
             return "";
         }
 
-        template<LinePart part=LinePart::Chars>
         char operator[](size_t index) const {
-            if (part == LinePart::Chars)
-                return mChars[index];
-            if (part == LinePart::Colors)
-                return mColors[index];
-            if (part == LinePart::Flags)
-                return mFlags[index];
+            index = std::clamp(index, 0ull, mChars.size() - 1ull);
             return mChars[index];
         }
-
-        template<LinePart part=LinePart::Chars>
-        const char &operator[](size_t index) {
-            if (part == LinePart::Chars)
-                return mChars[index];
-            if (part == LinePart::Colors)
-                return mColors[index];
-            if (part == LinePart::Flags)
-                return mFlags[index];
-            return mChars[index];
-        }
+        // C++ can't overload functions based on return type, so use any type other
+        // than size_t to avoid ambiguity.
+       template<class T>
+       std::string operator[](T column) const {
+           size_t utf8Length = GetStringCharacterCount(mChars);
+           size_t index = static_cast<size_t>(column);
+           index = std::clamp(index,0ull,utf8Length-1ull);
+           size_t utf8Start = 0;
+           for (size_t utf8Index = 0; utf8Index < index; ++utf8Index) {
+               utf8Start += UTF8CharLength(mChars[utf8Start]);
+           }
+           size_t utf8CharLength = UTF8CharLength(mChars[utf8Start]);
+           if (utf8Start + utf8CharLength > mChars.size())
+                utf8CharLength = mChars.size() - utf8Start;
+           return mChars.substr(utf8Start, utf8CharLength);
+       }
 
         void SetNeedsUpdate(bool needsUpdate) {
             mColorized = mColorized && !needsUpdate;
@@ -464,10 +471,8 @@ public:
         }
 
         void append(const std::string &text) {
-            mChars.append(text);
-            mColors.append(text.size(), 0x00);
-            mFlags.append(text.size(), 0x00);
-            mColorized = false;
+            Line line(text);
+            append(line);
         }
 
         void append(const Line &line) {
@@ -485,50 +490,20 @@ public:
         }
 
         void insert(LineIterator iter, const std::string &text) {
-            if (iter == end())
-                append(text);
-            else
-                insert(iter, text.begin(), text.end());
+            insert(iter, text.begin(), text.end());
         }
 
         void insert(LineIterator iter, const char text) {
-            if (iter == end())
-                append(text);
-            else
-                insert(iter,std::string(1, text));
+            insert(iter,std::string(1, text));
         }
 
         void insert(LineIterator iter, strConstIter beginString, strConstIter endString) {
-            if (iter == end())
-                append(std::string(beginString, endString));
-            else {
-                std::string charsString(beginString, endString);
-                mChars.insert(iter.mCharsIter, beginString, endString);
-                std::string colorString(charsString.size(), 0x00);
-                try {
-                    mColors.insert(iter.mColorsIter, colorString.begin(), colorString.end());
-                } catch (const std::exception &e) {
-                    std::cerr << "Exception: " << e.what() << std::endl;
-                    mColorized = false;
-                    return;
-                }
-                std::string flagsString(charsString.size(), 0x00);
-                try {
-                    mFlags.insert(iter.mFlagsIter, flagsString.begin(), flagsString.end());
-                } catch (const std::exception &e) {
-                    std::cerr << "Exception: " << e.what() << std::endl;
-                    mColorized = false;
-                    return;
-                }
-                mColorized = false;
-            }
+            Line line(std::string(beginString, endString));
+            insert(iter, line);
         }
 
         void insert(LineIterator iter,const Line &line) {
-            if (iter == end())
-                append(line.begin(), line.end());
-            else
-                insert(iter, line.begin(), line.end());
+            insert(iter, line.begin(), line.end());
         }
 
         void insert(LineIterator iter,LineIterator beginLine, LineIterator endLine) {
@@ -623,14 +598,9 @@ public:
         mErrorMarkers.clear();
         mErrorHoverBoxes.clear();
     }
+    void ClearGotoBoxes() { mErrorGotoBoxes.clear(); }
+    void ClearCursorBoxes() { mCursorBoxes.clear(); }
 
-    void ClearGotoBoxes() {
-        mErrorGotoBoxes.clear();
-    }
-
-    void ClearCursorBoxes() {
-        mCursorBoxes.clear();
-    }
     void ClearActionables() {
         ClearErrorMarkers();
         ClearGotoBoxes();
@@ -660,12 +630,8 @@ public:
 	void SetText(const std::string& aText, bool aUndo = false);
     void JumpToLine(int line=-1);
     void JumpToCoords(const Coordinates &coords);
-    void SetLongestLineLength(size_t line) {
-        mLongestLineLength = line;
-    }
-    size_t GetLongestLineLength() const {
-        return mLongestLineLength;
-    }
+    void SetLongestLineLength(size_t line) { mLongestLineLength = line; }
+    size_t GetLongestLineLength() const { return mLongestLineLength; }
 	std::string GetText() const;
     bool isEmpty() const {
         if (mLines.empty())
@@ -680,25 +646,9 @@ public:
     }
 
     void SetTopLine();
-    uint32_t GetTopLine() const {
-        return static_cast<uint32_t>(std::floor(mTopLine));
-    }
-    uint32_t GetBottomLine() const {
-        return static_cast<uint32_t>(std::ceil(mTopLine+mNumberOfLinesDisplayed));
-    }
     void SetNeedsUpdate (uint32_t line, bool needsUpdate) {
         if (line < mLines.size())
             mLines[line].SetNeedsUpdate(needsUpdate);
-    }
-
-    void SetColorizedLineSize(size_t line) {
-        if (line < mLines.size()) {
-            const auto &size = mLines[line].mChars.size();
-            if (mLines[line].mColors.size() != size) {
-                mLines[line].mColors.resize(size);
-                std::fill(mLines[line].mColors.begin(), mLines[line].mColors.end(), 0x00);
-            }
-        }
     }
 
     void SetColorizedLine(size_t line, const std::string &tokens) {
@@ -722,11 +672,9 @@ public:
     }
 
     void SetScrollY();
-	void SetTextLines(const std::vector<std::string>& aLines);
 	std::vector<std::string> GetTextLines() const;
 
 	std::string GetSelectedText() const;
-	std::string GetCurrentLineText()const;
 
     std::string GetLineText(int line)const;
     void SetSourceCodeEditor(TextEditor *editor) { mSourceCodeEditor = editor; }
@@ -741,9 +689,6 @@ public:
 public:
     void AddClickableText(std::string text) {
         mClickableText.push_back(text);
-    }
-    void ClearClickableText() {
-        mClickableText.clear();
     }
     FindReplaceHandler *GetFindReplaceHandler() { return &mFindReplaceHandler; }
 	int GetTotalLines() const { return (int)mLines.size(); }
@@ -769,14 +714,6 @@ public:
 	bool IsReadOnly() const { return mReadOnly; }
 	bool IsTextChanged() const { return mTextChanged; }
     void SetTextChanged(bool aValue) { mTextChanged = aValue; }
-    void SetTimeStamp(int code) {
-        auto now = std::chrono::high_resolution_clock::now();
-        if (code == 0)
-            mLinesTimestamp = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
-        else
-            mColorizedLinesTimestamp = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
-    }
-	bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
     bool IsBreakpointsChanged() const { return mBreakPointsChanged; }
     void ClearBreakpointsChanged() { mBreakPointsChanged = false; }
 
@@ -787,7 +724,7 @@ public:
 	void SetColorizerEnable(bool aValue);
     void Colorize();
 
-	Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
+	Coordinates GetCursorPosition() const { return SetCoordinates(mState.mCursorPosition); }
 	void SetCursorPosition(const Coordinates& aPosition);
 
     bool RaiseContextMenu() { return mRaiseContextMenu; }
@@ -822,8 +759,6 @@ public:
 	void MoveEnd(bool aSelect = false);
     void MoveToMatchedBracket(bool aSelect = false);
 
-	void SetSelectionStart(const Coordinates& aPosition);
-	void SetSelectionEnd(const Coordinates& aPosition);
 	void SetSelection(const Coordinates& aStart, const Coordinates& aEnd);
     Selection GetSelection() const;
 	void SelectWordUnderCursor();
@@ -913,10 +848,6 @@ public:
             mFindWord = "";
         }
 
-        void SetFindWindowPos(const ImVec2 &pos) { mFindWindowPos = pos; }
-        void SetFindWindowSize(const ImVec2 &size) { mFindWindowSize = size; }
-        ImVec2 GetFindWindowPos() const { return mFindWindowPos; }
-        ImVec2 GetFindWindowSize() const { return mFindWindowSize; }
     private:
         std::string mFindWord;
         std::string mReplaceWord;
@@ -925,8 +856,6 @@ public:
         bool mFindRegEx;
         bool mOptionsChanged;
         Matches mMatches;
-        ImVec2 mFindWindowPos;
-        ImVec2 mFindWindowSize;
     };
     FindReplaceHandler mFindReplaceHandler;
 private:
@@ -981,17 +910,16 @@ private:
 
         void FindMatchingBracket(TextEditor *editor);
         bool IsActive() const { return mActive; }
-        bool hasChanged() const { return mChanged; }
+        bool HasChanged() const { return mChanged; }
     };
 
-	void ProcessInputs();
 	void ColorizeRange();
 	void ColorizeInternal();
 	float TextDistanceToLineStart(const Coordinates& aFrom) const;
 	void EnsureCursorVisible();
 	std::string GetText(const Coordinates& aStart, const Coordinates& aEnd) const;
-	Coordinates GetActualCursorCoordinates() const;
-	Coordinates SanitizeCoordinates(const Coordinates& aValue) const;
+	Coordinates SetCoordinates(const Coordinates& aValue) const;
+    Coordinates SetCoordinates( int aLine, int aColumn ) const;
 	void Advance(Coordinates& aCoordinates) const;
 	void DeleteRange(const Coordinates& aStart, const Coordinates& aEnd);
 	int InsertTextAt(Coordinates& aWhere, const std::string &aValue);
@@ -1001,24 +929,17 @@ private:
 	Coordinates FindWordEnd(const Coordinates& aFrom) const;
     Coordinates FindPreviousWord(const Coordinates& aFrom) const;
 	Coordinates FindNextWord(const Coordinates& aFrom) const;
-    Coordinates StringIndexToCoordinates(int aIndex, const std::string &str) const;
-	int GetCharacterIndex(const Coordinates& aCoordinates) const;
+    int LineCoordinateToIndex(const Coordinates& aCoordinates) const;
 	Coordinates GetCharacterCoordinates(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
-    int Utf8CharsToBytes(const Coordinates &aCoordinates) const;
-    static int Utf8CharsToBytes(std::string line, uint32_t start, uint32_t numChars);
     unsigned long long GetLineByteCount(int aLine) const;
-	int GetStringCharacterCount(std::string str) const;
 	int GetLineMaxColumn(int aLine) const;
-	bool IsOnWordBoundary(const Coordinates& aAt) const;
 	void RemoveLine(int aStart, int aEnd);
 	void RemoveLine(int aIndex);
 	Line& InsertLine(int aIndex);
     void InsertLine(int aIndex, const std::string &aText);
     void EnterCharacter(ImWchar aChar, bool aShift);
 	void DeleteSelection();
-	std::string GetWordUnderCursor() const;
-	std::string GetWordAt(const Coordinates& aCoords) const;
     TextEditor::PaletteIndex GetColorIndexFromFlags(Line::Flags flags);
     void ResetCursorBlinkTime();
     uint32_t SkipSpaces(const Coordinates &aFrom);
@@ -1028,8 +949,6 @@ private:
     void SetFocus();
 	float mLineSpacing = 1.0F;
 	Lines mLines;
-    uint64_t mLinesTimestamp = 0;
-    uint64_t mColorizedLinesTimestamp = 0;
 	EditorState mState = {};
 	UndoBuffer mUndoBuffer;
 	int mUndoIndex = 0;
@@ -1049,13 +968,10 @@ private:
 	bool mColorizerEnabled = true;
     float mLineNumberFieldWidth = 0.0F;
     size_t mLongestLineLength = 0;
-	float mTextStart = 20.0F;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
 	float  mLeftMargin = 10.0;
     float mTopLine = 0.0F;
     bool mSetTopLine = false;
-	bool mCursorPositionChanged = false;
     bool mBreakPointsChanged = false;
-	int mColorRangeMin = 0, mColorRangeMax = 0;
 	bool mHandleKeyboardInputs = true;
 	bool mHandleMouseInputs = true;
 	bool mIgnoreImGuiChild = false;
@@ -1078,7 +994,6 @@ private:
 	std::vector<std::string> mDefines;
     TextEditor *mSourceCodeEditor = nullptr;
     float mShiftedScrollY = 0;
-    float mScrollY = 0;
     float mScrollYIncrement = 0.0F;
     bool mSetScrollY = false;
     float mNumberOfLinesDisplayed = 0;

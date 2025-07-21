@@ -314,6 +314,17 @@ namespace hex::plugin::builtin {
         bool m_patternEvaluating = false;
         std::map<std::fs::path, std::string> m_patternNames;
 
+        // External pattern file tracking
+        struct ExternalPatternFile {
+            std::fs::path path;
+            std::filesystem::file_time_type lastModified;
+            size_t contentHash;
+            std::string originalContent;
+        };
+        PerProvider<std::optional<ExternalPatternFile>> m_externalPatternFile;
+        bool m_checkingExternalFile = false;
+        bool m_enableExternalFileTracking;
+
         ImRect m_textEditorHoverBox;
         ImRect m_consoleHoverBox;
         std::string m_focusedSubWindowName;
@@ -356,6 +367,14 @@ namespace hex::plugin::builtin {
         void registerEvents();
         void registerMenuItems();
         void registerHandlers();
+
+        // External pattern file management
+        void trackExternalFile(const std::fs::path &path, prv::Provider *provider);
+        void checkExternalFileChanges();
+        bool hasExternalFileChanged(const ExternalPatternFile &fileInfo) const;
+        size_t calculateContentHash(const std::string &content) const;
+        void writeChangesToExternalFile();
+        void showFileConflictPopup(const std::fs::path &path, prv::Provider *provider);
 
         std::function<void()> m_importPatternFile = [this] {
             auto provider = ImHexApi::Provider::get();
@@ -434,6 +453,8 @@ namespace hex::plugin::builtin {
                     [this, provider](const auto &path) {
                         wolv::io::File file(path, wolv::io::File::Mode::Create);
                         file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
+
+                        this->trackExternalFile(path, provider);
                     }
             );
         };
