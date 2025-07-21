@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Ensure SNAP and SNAP_DATA are set (fallback if not set by snapd)
+SNAP="${SNAP:-/snap/imhex/current}"
+SNAP_DATA="${SNAP_DATA:-$HOME/snap/imhex/current}"
+
+# Set environment variables to prioritize shipped libraries and data
+export LD_LIBRARY_PATH="$SNAP/usr/local/lib:$SNAP/usr/local/lib/imhex:$LD_LIBRARY_PATH"
+export XDG_DATA_DIRS="$SNAP/usr/local/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+export XDG_CONFIG_DIRS="$SNAP/usr/local/share:${XDG_CONFIG_DIRS:-/etc/xdg}"
+export XDG_DATA_HOME="$SNAP_DATA"
+export XDG_RUNTIME_DIR="$SNAP_DATA"
+
+# Launch the actual binary
+exec "$SNAP/usr/local/bin/imhex" "$@"

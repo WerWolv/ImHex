@@ -1,14 +1,15 @@
-.vscode/
-.idea/
-.kdev4/
+/.vscode/
+/.idea/
+/.kdev4/
+/.vs/
 
-cmake-build-*/
-build*/
-local/
-venv/
-.cache/
-install/
-out/
+/cmake-build-*/
+/build*/
+/local/
+/venv/
+/.cache/
+/install/
+/out/
 
 *.mgc
 *.kdev4
@@ -17,5 +18,4 @@ imgui.ini
 CMakeUserPresets.json
 Brewfile.lock.json
 
-.vs/
 vcpkg.json
