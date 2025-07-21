@@ -1741,7 +1741,7 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider) {
         wolv::io::File file(path, wolv::io::File::Mode::Read);
         if (file.isValid()) {
-            auto code = file.readString();
+            auto code = wolv::util::preprocessText(file.readString());
 
             this->evaluatePattern(code, provider);
             m_textEditor.get(provider).SetText(code, true);
@@ -1951,7 +1951,7 @@ namespace hex::plugin::builtin {
 
         RequestSetPatternLanguageCode::subscribe(this, [this](const std::string &code) {
             auto provider = ImHexApi::Provider::get();
-            m_textEditor.get(provider).SetText(code);
+            m_textEditor.get(provider).SetText(wolv::util::preprocessText(code));
             m_sourceCode.get(provider) = code;
             m_hasUnevaluatedChanges.get(provider) = true;
             m_textHighlighter.m_needsToUpdateColors = false;
@@ -2001,7 +2001,7 @@ namespace hex::plugin::builtin {
             }
 
             if (newProvider != nullptr) {
-                m_textEditor.get(newProvider).SetText(m_sourceCode.get(newProvider));
+                m_textEditor.get(newProvider).SetText(wolv::util::preprocessText(m_sourceCode.get(newProvider)));
                 m_textEditor.get(newProvider).SetCursorPosition(m_cursorPosition.get(newProvider));
                 TextEditor::Selection selection = m_selection.get(newProvider);
                 m_textEditor.get(newProvider).SetSelection(selection.mStart, selection.mEnd);
@@ -2147,7 +2147,7 @@ namespace hex::plugin::builtin {
             wolv::io::File file(path, wolv::io::File::Mode::Read);
 
             if (file.isValid()) {
-                RequestSetPatternLanguageCode::post(file.readString());
+                RequestSetPatternLanguageCode::post(wolv::util::preprocessText(file.readString()));
                 return true;
             } else {
                 return false;
@@ -2237,7 +2237,7 @@ namespace hex::plugin::builtin {
             .basePath = "pattern_source_code.hexpat",
             .required = false,
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                const auto sourceCode = tar.readString(basePath);
+                const auto sourceCode = wolv::util::preprocessText(tar.readString(basePath));
 
                 m_sourceCode.get(provider) = sourceCode;
 
