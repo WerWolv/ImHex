@@ -1080,6 +1080,10 @@ jobs:
     name: 🐧 Snap
     runs-on: ubuntu-24.04
 
+    container:
+      image: "ubuntu:24.04"
+      options: --privileged
+
     permissions:
       id-token: write
       attestations: write
