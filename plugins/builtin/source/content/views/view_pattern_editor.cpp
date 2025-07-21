@@ -2193,12 +2193,17 @@ namespace hex::plugin::builtin {
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
                 const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
+                std::set<pl::ptrn::Pattern*> drawnPatterns;
                 for (u64 offset = 0; offset < size; offset += 1) {
                     auto patterns = runtime.getPatternsAtAddress(address + offset);
                     if (!patterns.empty() && !std::ranges::all_of(patterns, [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden || pattern->getVisibility() == pl::ptrn::Visibility::HighlightHidden; })) {
                         ImGui::BeginTooltip();
 
                         for (const auto &pattern : patterns) {
+                            // Avoid drawing the same pattern multiple times
+                            if (!drawnPatterns.insert(pattern).second)
+                                continue;
+
                             auto visibility = pattern->getVisibility();
                             if (visibility == pl::ptrn::Visibility::Hidden || visibility == pl::ptrn::Visibility::HighlightHidden)
                                 continue;
