@@ -1,0 +1,81 @@
+name: imhex
+base: core24
+version: ${IMHEX_VERSION}
+summary: Hex editor for reverse engineering
+description: |
+  ImHex is a hex editor for reverse engineering, reverse engineering, and
+  analyzing binary files. It provides a powerful and flexible interface for
+  working with binary data, including features like pattern matching, scripting,
+  and a customizable user interface.
+grade: stable
+confinement: classic
+contact: https://github.com/WerWolv/ImHex/discussions
+issues: https://github.com/WerWolv/ImHex/issues
+website: https://imhex.werwolv.net
+license: GPL-2.0-only
+icon: resources/icon.svg
+adopt-info: imhex
+
+platforms:
+  amd64:
+  arm64:
+
+apps:
+  imhex:
+    command: usr/local/bin/imhex-launcher
+    desktop: usr/local/share/applications/imhex.desktop
+parts:
+  launcher:
+    plugin: dump
+    source: snap/local
+    source-type: local
+    organize:
+      imhex-launcher: usr/local/bin/imhex-launcher
+    override-build: |
+      snapcraftctl build
+      chmod +x $SNAPCRAFT_PART_INSTALL/usr/local/bin/imhex-launcher
+  imhex:
+    plugin: cmake
+    source: .
+    build-environment:
+      - CC: /usr/bin/gcc-14
+      - CXX: /usr/bin/g++-14
+    cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
+    cmake-generator: Ninja
+    build-packages:
+      - cmake
+      - ninja-build
+      - gcc-14
+      - g++-14
+      - git
+      - pkg-config
+      - libglfw3-dev
+      - libmagic-dev
+      - libmbedtls-dev
+      - libfontconfig-dev
+      - libfreetype-dev
+      - libdbus-1-dev
+      - libcurl4-gnutls-dev
+      - libgtk-3-dev
+      - zlib1g-dev
+      - libbz2-dev
+      - liblzma-dev
+      - libzstd-dev
+      - liblz4-dev
+      - libssh2-1-dev
+    stage-packages:
+      - libglfw3-dev
+      - libmagic-dev
+      - libmbedtls-dev
+      - libfontconfig-dev
+      - libfreetype-dev
+      - libdbus-1-dev
+      - libcurl4-gnutls-dev
+      - libgtk-3-dev
+      - zlib1g-dev
+      - libbz2-dev
+      - liblzma-dev
+      - libzstd-dev
+      - liblz4-dev
+      - libssh2-1-dev

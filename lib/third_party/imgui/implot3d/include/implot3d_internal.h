@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <cmath>
+
 #ifndef IMPLOT3D_VERSION
 #include "implot3d.h"
 #endif
@@ -58,7 +60,7 @@ template <typename TSet, typename TFlag> static inline bool ImHasFlag(TSet set, 
 template <typename TSet, typename TFlag> static inline void ImFlipFlag(TSet& set, TFlag flag) { ImHasFlag(set, flag) ? set &= ~flag : set |= flag; }
 template <typename T> static inline T ImRemap01(T x, T x0, T x1) { return (x1 - x0) ? ((x - x0) / (x1 - x0)) : 0; }
 // Returns true if val is NAN
-static inline bool ImNan(float val) { return isnan(val); }
+static inline bool ImNan(float val) { return std::isnan(val); }
 // Returns true if val is NAN or INFINITY
 static inline bool ImNanOrInf(float val) { return !(val >= -FLT_MAX && val <= FLT_MAX) || ImNan(val); }
 // Turns NANs to 0s
