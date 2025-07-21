@@ -1482,14 +1482,12 @@ namespace hex::plugin::builtin {
                                                     if (menu::menuItem("hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern"_lang, Shortcut::None, false, selection.has_value() && ContentRegistry::PatternLanguage::getRuntime().getCreatedPatternCount() > 0)) {
                                                         auto patterns = ContentRegistry::PatternLanguage::getRuntime().getPatternsAtAddress(selection->getStartAddress());
 
-                                                        if (!patterns.empty()) {
+                                                        if (!patterns.empty())
                                                             RequestJumpToPattern::post(patterns.front());
-                                                        }
                                                     }
                                                 },
                                                 [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() <= sizeof(u64); });
-        
-        
+
         /* Set Page Size */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.set_page_size" }, ICON_VS_BROWSER, 1860, Shortcut::None,
                                                 [this] {
