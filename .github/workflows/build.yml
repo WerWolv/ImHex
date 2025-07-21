@@ -1090,7 +1090,9 @@ jobs:
 
     steps:
       - name: ⬇️ Install setup dependencies
-        run: apt update && apt install -y git curl snapcraft
+        run: |
+          apt update && apt install -y git curl
+          snap install snapcraft --classic
 
       - name: 🧰 Checkout
         uses: actions/checkout@v4
