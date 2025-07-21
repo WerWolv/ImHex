@@ -70,12 +70,12 @@ RUN <<EOF
 set -xe
 
 mkdir -p /cache/bin
-wget -nc https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /cache/bin/appimagetool || true
+wget -nc https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O /cache/bin/appimagetool || true
 chmod +x /cache/bin/appimagetool
 
 python3 -m venv venv
 . venv/bin/activate
-pip3 install git+https://github.com/AppImageCrafters/appimage-builder@f38699e
+pip3 install git+https://github.com/AppImageCrafters/appimage-builder@bf6123e
 
 # Package ImHex as AppImage
 export VERSION=$(cat /imhex/VERSION)
