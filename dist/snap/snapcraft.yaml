@@ -23,7 +23,7 @@ platforms:
 apps:
   imhex:
     command: bin/imhex
-    desktop: share/applications/imhex.desktop
+    desktop: usr/local/share/applications/imhex.desktop
 
 parts:
   imhex:
