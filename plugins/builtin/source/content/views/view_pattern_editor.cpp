@@ -1934,7 +1934,6 @@ namespace hex::plugin::builtin {
             m_textEditor.get(provider).SetSelection(start, end);
             m_textEditor.get(provider).SetCursorPosition(end);
         });
-        
 
         RequestLoadPatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
             this->loadPatternFile(path, ImHexApi::Provider::get());
