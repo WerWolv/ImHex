@@ -1094,17 +1094,18 @@ jobs:
         with:
           submodules: recursive
 
+      - name: 📜 Set version variable
+        run: |
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+
       - name: 📜 Move snap directory to root
         run: |
-          cp -r ./dist/snap ./snap
+          mkdir -p ./snap
+          envsubst < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
 
       - name: 🛠️ Build
         uses: snapcore/action-build@v1
         id: snapcraft
-
-      - name: 📜 Set version variable
-        run: |
-          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2

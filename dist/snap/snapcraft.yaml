@@ -1,5 +1,6 @@
 name: imhex
 base: core24
+version: ${IMHEX_VERSION}
 summary: Hex editor for reverse engineering
 description: |
   ImHex is a hex editor for reverse engineering, reverse engineering, and
@@ -12,7 +13,7 @@ contact: https://github.com/WerWolv/ImHex/discussions
 issues: https://github.com/WerWolv/ImHex/issues
 website: https://imhex.werwolv.net
 license: GPL-2.0-only
-icon: resoureces/icon.svg
+icon: resources/icon.svg
 adopt-info: imhex
 
 platforms:
