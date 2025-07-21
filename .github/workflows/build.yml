@@ -1091,7 +1091,7 @@ jobs:
     steps:
       - name: ⬇️ Install setup dependencies
         run: |
-          apt update && apt install -y git curl
+          apt update && apt install -y git curl snap snapd
           snap install snapcraft --classic
 
       - name: 🧰 Checkout
