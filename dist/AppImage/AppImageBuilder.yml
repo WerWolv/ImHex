@@ -125,5 +125,6 @@ AppDir:
     - usr/share/doc/*/TODO.*
 AppImage:
   arch: "{{ARCHITECTURE_APPIMAGE_BUILDER}}"
+  comp: zstd
   update-information: gh-releases-zsync|WerWolv|ImHex|latest|imhex-*-{{ARCHITECTURE_FILE_NAME}}.AppImage.zsync
   file_name: imhex-{{VERSION}}-{{ARCHITECTURE_FILE_NAME}}.AppImage
