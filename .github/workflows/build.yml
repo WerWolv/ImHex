@@ -1080,10 +1080,6 @@ jobs:
     name: 🐧 Snap
     runs-on: ubuntu-24.04
 
-    container:
-      image: "ubuntu:24.04"
-      options: --privileged
-
     permissions:
       id-token: write
       attestations: write
@@ -1091,9 +1087,7 @@ jobs:
     steps:
       - name: ⬇️ Install setup dependencies
         run: |
-          apt update && apt install -y git curl snap snapd
-          systemctl start snapd
-          snap install snapcraft --classic
+          sudo apt update && sudo apt install -y git curl
 
       - name: 🧰 Checkout
         uses: actions/checkout@v4
