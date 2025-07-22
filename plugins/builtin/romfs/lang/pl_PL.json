@@ -935,7 +935,7 @@
         "hex.builtin.view.highlight_rules.config": "Konfiguracja",
         "hex.builtin.view.highlight_rules.expression": "Wyrażenie",
         "hex.builtin.view.highlight_rules.help_text": "Wprowadź wyrażenie matematyczne które zostanie ocenione dla każdego bajtu w pliku.\n\nWyrażenie może używać zmiennych 'value' i 'offset'.\nJeśli wyrażenie oceniane jest jako prawdziwe (wynik jest większy niż 0), bajt zostanie podświetlony określonym kolorem.",
-        "hex.builtin.view.highlight_rules.menu.file.rules": "Reguły podświetlania",
+        "hex.builtin.view.highlight_rules.menu.edit.rules": "Reguły podświetlania...",
         "hex.builtin.view.highlight_rules.name": "Reguły podświetlania",
         "hex.builtin.view.highlight_rules.new_rule": "Nowa reguła",
         "hex.builtin.view.highlight_rules.no_rule": "Utwórz regułę aby ją edytować",

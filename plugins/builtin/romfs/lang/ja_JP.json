@@ -816,7 +816,7 @@
         "hex.builtin.view.highlight_rules.config": "",
         "hex.builtin.view.highlight_rules.expression": "",
         "hex.builtin.view.highlight_rules.help_text": "",
-        "hex.builtin.view.highlight_rules.menu.file.rules": "",
+        "hex.builtin.view.highlight_rules.menu.edit.rules": "",
         "hex.builtin.view.highlight_rules.name": "",
         "hex.builtin.view.highlight_rules.new_rule": "",
         "hex.builtin.view.highlight_rules.no_rule": "",

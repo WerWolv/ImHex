@@ -36,6 +36,7 @@
 
 #include <content/global_actions.hpp>
 #include <fonts/fonts.hpp>
+#include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/menu_items.hpp>
 
 namespace hex::plugin::builtin {
@@ -359,83 +360,18 @@ namespace hex::plugin::builtin {
 
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
-            TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.get(provider).GetFindReplaceHandler();
+
             if (m_textEditor.get(provider).RaiseContextMenu())  {
-                ImGui::OpenPopup("##text_editor_context_menu");
+                RequestOpenPopup::post("hex.builtin.menu.edit");
                 m_textEditor.get(provider).ClearRaiseContextMenu();
+
+                if (!m_textEditor.get(provider).HasSelection())
+                    m_textEditor.get(provider).SelectWordUnderCursor();
             }
 
             if (m_cursorNeedsUpdate.get(provider)) {
                 m_textEditor.get(provider).SetFocusAtCoords(m_cursorPosition.get(provider));
                 m_cursorNeedsUpdate.get(provider) = false;
-            }
-
-            if (ImGui::BeginPopup("##text_editor_context_menu")) {
-                // no shortcut for this
-                if (ImGui::MenuItemEx("hex.builtin.menu.file.import.pattern_file"_lang, ICON_VS_SIGN_IN, nullptr, false))
-                    m_importPatternFile();
-                if (ImGui::MenuItemEx("hex.builtin.menu.file.export.pattern_file"_lang, ICON_VS_SIGN_OUT, nullptr, false))
-                    m_exportPatternFile();
-
-                ImGui::Separator();
-
-                if (!m_textEditor.get(provider).HasSelection())
-                    m_textEditor.get(provider).SelectWordUnderCursor();
-                const bool hasSelection = m_textEditor.get(provider).HasSelection();
-                if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.cut"_lang, ICON_VS_COMBINE, Shortcut(CTRLCMD + Keys::X).toString().c_str(), false, hasSelection)) {
-                    m_textEditor.get(provider).Cut();
-                }
-                if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.copy"_lang, ICON_VS_COPY, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
-                    m_textEditor.get(provider).Copy();
-                }
-                if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.paste"_lang, ICON_VS_OUTPUT, Shortcut(CTRLCMD + Keys::V).toString().c_str())) {
-                    m_textEditor.get(provider).Paste();
-                }
-
-                ImGui::Separator();
-
-                if (ImGui::MenuItemEx("hex.builtin.menu.edit.undo"_lang, ICON_VS_DISCARD, Shortcut(CTRLCMD + Keys::Z).toString().c_str(), false, m_textEditor.get(provider).CanUndo())) {
-                    m_textEditor.get(provider).Undo();
-                }
-                if (ImGui::MenuItemEx("hex.builtin.menu.edit.redo"_lang, ICON_VS_REDO, Shortcut(CTRLCMD + Keys::Y).toString().c_str(), false, m_textEditor.get(provider).CanRedo())) {
-                    m_textEditor.get(provider).Redo();
-                }
-
-                ImGui::Separator();
-                // Search and replace entries
-                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.find"_lang, ICON_VS_SEARCH, Shortcut(CTRLCMD + Keys::F).toString().c_str())){
-                    m_replaceMode = false;
-                    m_openFindReplacePopUp = true;
-                }
-
-
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_next"_lang, Shortcut(Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
-                    findReplaceHandler->FindMatch(&m_textEditor.get(provider),true);
-
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_previous"_lang, Shortcut(SHIFT + Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
-                    findReplaceHandler->FindMatch(&m_textEditor.get(provider),false);
-
-                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.replace"_lang, ICON_VS_REPLACE, Shortcut(CTRLCMD +  Keys::H).toString().c_str())) {
-                    m_replaceMode = true;
-                    m_openFindReplacePopUp = true;
-                }
-
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_next"_lang,"",false,!findReplaceHandler->GetReplaceWord().empty()))
-                    findReplaceHandler->Replace(&m_textEditor.get(provider),true);
-
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_previous"_lang, "",false,!findReplaceHandler->GetReplaceWord().empty()))
-                    findReplaceHandler->Replace(&m_textEditor.get(provider),false);
-
-                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.replace_all"_lang, ICON_VS_REPLACE_ALL, "",false,!findReplaceHandler->GetReplaceWord().empty()))
-                    findReplaceHandler->ReplaceAll(&m_textEditor.get(provider));
-
-                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.goto_line"_lang, ICON_VS_DEBUG_STEP_INTO, Shortcut(ALT + Keys::G).toString().c_str()))
-                    m_openGotoLinePopUp = true;
-
-                if (ImGui::IsKeyPressed(ImGuiKey_Escape, false))
-                    ImGui::CloseCurrentPopup();
-
-                ImGui::EndPopup();
             }
 
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
@@ -2076,6 +2012,101 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::registerMenuItems() {
+        /*if (ImGui::MenuItemEx("hex.builtin.menu.file.import.pattern_file"_lang, ICON_VS_SIGN_IN, nullptr, false))
+            m_importPatternFile();
+        if (ImGui::MenuItemEx("hex.builtin.menu.file.export.pattern_file"_lang, ICON_VS_SIGN_OUT, nullptr, false))
+            m_exportPatternFile();
+
+        ImGui::Separator();*/
+
+        /* Undo */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.undo" }, ICON_VS_DISCARD, 1000, CTRLCMD + Keys::Z, [this] {
+            m_textEditor->Undo();
+        }, [this] { return ImHexApi::Provider::isValid() && m_textEditor->CanUndo(); },
+        this);
+
+        /* Redo */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.redo" }, ICON_VS_REDO, 1100, CTRLCMD + Keys::Y, [this] {
+            m_textEditor->Redo();
+        }, [this] { return ImHexApi::Provider::isValid() &&m_textEditor->CanRedo(); },
+        this);
+
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1200, this);
+
+
+        /* Cut */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.cut" }, ICON_VS_COMBINE, 1300, CTRLCMD + Keys::X, [this] {
+            m_textEditor->Cut();
+        }, [this] { return ImHexApi::Provider::isValid() &&m_textEditor->HasSelection(); },
+        this);
+
+        /* Copy */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy" }, ICON_VS_COPY, 1400, CTRLCMD + Keys::C, [this] {
+            m_textEditor->Copy();
+        }, [this] { return ImHexApi::Provider::isValid() &&m_textEditor->HasSelection(); },
+        this);
+
+        /* Paste */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste" }, ICON_VS_OUTPUT, 1500, CTRLCMD + Keys::V, [this] {
+            m_textEditor->Paste();
+        }, [] { return true; },
+        this);
+
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1600, this);
+
+        /* Find */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.find" }, ICON_VS_SEARCH, 1700, CTRLCMD + Keys::F, [this] {
+            m_replaceMode = false;
+            m_openFindReplacePopUp = true;
+        }, [] { return true; },
+        this);
+
+        /* Find Next */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.find_next" }, 1800, Keys::F3, [this] {
+            m_consoleEditor->GetFindReplaceHandler()->FindMatch(&*m_textEditor, true);
+        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetFindWord().empty(); },
+        []{ return false; },
+        this);
+
+        /* Find Previous */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.find_previous" }, 1900, Keys::F3, [this] {
+            m_consoleEditor->GetFindReplaceHandler()->FindMatch(&*m_textEditor, true);
+        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetFindWord().empty(); },
+        []{ return false; },
+        this);
+
+        /* Replace */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.replace" }, ICON_VS_REPLACE, 2000, CTRLCMD + Keys::H, [this] {
+            m_replaceMode = true;
+            m_openFindReplacePopUp = true;
+        }, [] { return true; },
+        this);
+
+        /* Replace Next */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.replace_next" }, 2100, Shortcut::None, [this] {
+            m_consoleEditor->GetFindReplaceHandler()->Replace(&*m_textEditor, true);
+        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
+        []{ return false; },
+        this);
+
+        /* Replace Previous */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.replace_previous" }, 2200, Shortcut::None, [this] {
+            m_consoleEditor->GetFindReplaceHandler()->Replace(&*m_textEditor, false);
+        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
+        []{ return false; },
+        this);
+
+        /* Replace All */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.replace_all" }, ICON_VS_REPLACE_ALL, 2300, Shortcut::None, [this] {
+            m_consoleEditor->GetFindReplaceHandler()->ReplaceAll(&*m_textEditor);
+        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
+        this);
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.goto_line" }, ICON_VS_DEBUG_STEP_INTO, 2400, CTRLCMD + Keys::G, [this] {
+            m_openGotoLinePopUp = true;
+        }, [] { return true; },
+        this);
+
         /* Import Pattern */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, ICON_VS_FILE_CODE, 4050, Shortcut::None,
                                                 m_importPatternFile, ImHexApi::Provider::isValid);
@@ -2141,7 +2172,7 @@ namespace hex::plugin::builtin {
                 }
             }, [this] {
                 return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && m_runningParsers == 0;
-            });
+            }, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
     }
 
     void ViewPatternEditor::registerHandlers() {

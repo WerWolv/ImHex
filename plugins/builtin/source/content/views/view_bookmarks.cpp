@@ -602,7 +602,8 @@ namespace hex::plugin::builtin {
 
             auto selection = ImHexApi::HexEditor::getSelection();
             ImHexApi::Bookmarks::add(selection->getStartAddress(), selection->getSize(), {}, {});
-        }, []{ return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid(); });
+        }, []{ return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid(); },
+        ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
 
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, 3000);

@@ -820,7 +820,7 @@
         "hex.builtin.view.highlight_rules.config": "Konfiguration",
         "hex.builtin.view.highlight_rules.expression": "Ausdruck",
         "hex.builtin.view.highlight_rules.help_text": "Gib einen Mathematischen ausdruck ein, welcher für jedes Byte evaluiert wird. Wenn der Ausdruck wahr ist, wird das Byte markiert.",
-        "hex.builtin.view.highlight_rules.menu.file.rules": "Highlighting Regeln...",
+        "hex.builtin.view.highlight_rules.menu.edit.rules": "Highlighting Regeln...",
         "hex.builtin.view.highlight_rules.name": "Highlight Regeln",
         "hex.builtin.view.highlight_rules.new_rule": "Neue Regel",
         "hex.builtin.view.highlight_rules.no_rule": "Erstelle eine neue Regel um sie zu bearbeiten.",

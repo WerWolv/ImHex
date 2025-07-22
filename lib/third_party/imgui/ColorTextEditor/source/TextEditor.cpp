@@ -726,6 +726,7 @@ void TextEditor::HandleMouseInputs() {
                 }
                 ResetCursorBlinkTime();
                 mRaiseContextMenu = true;
+                ImGui::SetWindowFocus();
             }
             // Mouse left button dragging (=> update selection)
             else if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0)) {

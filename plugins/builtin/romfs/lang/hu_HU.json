@@ -820,7 +820,7 @@
         "hex.builtin.view.highlight_rules.expression": "Kifejezés",
         "hex.builtin.view.highlight_rules.help_text": "Adj meg egy matematikai kifejezést, ami a fájl minden egyes bájtjára kiértékelődik.\n\nA kifejezés használhatja a 'value' és 'offset' változókat. Ha a kifejezés igazra értékelődik (az eredmény nagyobb mint 0), a bájt a megadott színnel lesz kiemelve.",
         "hex.builtin.view.highlight_rules.no_rule": "Hozz létre egy szabályt a szerkesztéséhez",
-        "hex.builtin.view.highlight_rules.menu.file.rules": "Kiemelési szabályok módosítása...",
+        "hex.builtin.view.highlight_rules.menu.edit.rules": "Kiemelési szabályok módosítása...",
         "hex.builtin.view.information.analyze": "Lap elemzése",
         "hex.builtin.view.information.analyzing": "Elemzés...",
         "hex.builtin.information_section.magic.apple_type": "Apple Creator / Type Code",

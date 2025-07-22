@@ -500,19 +500,6 @@ namespace hex::plugin::builtin {
 
     static void createEditMenu() {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.edit", 2000);
-
-        /* Undo */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.undo" }, ICON_VS_DISCARD, 1000, CTRLCMD + Keys::Z, [] {
-            auto provider = ImHexApi::Provider::get();
-                provider->undo();
-        }, [&] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->canUndo(); });
-
-        /* Redo */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.redo" }, ICON_VS_REDO, 1050, CTRLCMD + Keys::Y, [] {
-            auto provider = ImHexApi::Provider::get();
-                provider->redo();
-        }, [&] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->canRedo(); });
-
     }
 
     static void createViewMenu() {

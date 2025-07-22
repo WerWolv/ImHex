@@ -79,6 +79,12 @@ namespace hex {
          */
         [[nodiscard]] virtual ImGuiWindowFlags getWindowFlags() const;
 
+        /**
+         * @brief Returns a view whose menu items should be additionally visible when this view is focused
+         * @return
+         */
+        [[nodiscard]] virtual View* getMenuItemInheritView() const { return nullptr; }
+
         [[nodiscard]] virtual bool shouldStoreWindowState() const { return true; }
 
         [[nodiscard]] const char *getIcon() const { return m_icon; }
@@ -104,7 +110,9 @@ namespace hex {
          * @brief Used for focus handling. Don't use this directly
          * @param focused Whether this view is focused
          */
-        void setFocused(bool focused) { m_focused = focused; }
+        void setFocused(bool focused);
+
+        [[nodiscard]] static const View* getLastFocusedView();
 
     public:
         class Window;

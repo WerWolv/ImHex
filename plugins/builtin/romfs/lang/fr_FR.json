@@ -891,7 +891,7 @@
         "hex.builtin.view.highlight_rules.expression": "Expression",
         "hex.builtin.view.highlight_rules.help_text": "Entrez une expression mathématique qui sera évaluée pour chaque octet du fichier.\n\nL'expression peut utiliser les variables 'value' et 'offset'.\nSi l'expression est vraie (résultat supérieur à 0), l'octet ssurligné avec la couleur spécifiée.",
         "hex.builtin.view.highlight_rules.no_rule": "Créez une règle pour l'éditer",
-        "hex.builtin.view.highlight_rules.menu.file.rules": "Règles de surbrillance",
+        "hex.builtin.view.highlight_rules.menu.edit.rules": "Règles de surbrillance",
         "hex.builtin.view.information.analyze": "Analyser la page",
         "hex.builtin.view.information.analyzing": "Analyse en cours...",
         "hex.builtin.information_section.magic.apple_type": "Code créateur/type Apple",

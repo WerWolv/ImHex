@@ -13,6 +13,10 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
 
+        View* getMenuItemInheritView() const override {
+            return ContentRegistry::Views::getViewByName("hex.builtin.view.pattern_editor.name");
+        }
+
     private:
         bool m_rowColoring = false;
         u32 m_maxFilterItems = 128;

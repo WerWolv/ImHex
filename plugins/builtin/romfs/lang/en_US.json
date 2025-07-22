@@ -901,7 +901,7 @@
         "hex.builtin.view.highlight_rules.expression": "Expression",
         "hex.builtin.view.highlight_rules.help_text": "Enter a mathematical expression that will be evaluated for each byte in the file.\n\nThe expression can use the variables 'value' and 'offset'.\nIf the expression evaluates to true (result is greater than 0), the byte will be highlighted with the specified color.",
         "hex.builtin.view.highlight_rules.no_rule": "Create a rule to edit it",
-        "hex.builtin.view.highlight_rules.menu.file.rules": "Highlighting Rules",
+        "hex.builtin.view.highlight_rules.menu.edit.rules": "Highlighting Rules...",
         "hex.builtin.view.information.analyze": "Analyze page",
         "hex.builtin.view.information.analyzing": "Analyzing...",
         "hex.builtin.information_section.magic.apple_type": "Apple Creator / Type Code",
