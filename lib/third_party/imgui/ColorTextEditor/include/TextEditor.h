@@ -14,30 +14,9 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 using strConstIter = std::string::const_iterator;
-// https://en.wikipedia.org/wiki/UTF-8
-// We assume that the char is a standalone character (<128) or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
-static int UTF8CharLength(uint8_t c) {
-    if ((c & 0xFE) == 0xFC)
-        return 6;
-    if ((c & 0xFC) == 0xF8)
-        return 5;
-    if ((c & 0xF8) == 0xF0)
-        return 4;
-    if ((c & 0xF0) == 0xE0)
-        return 3;
-    if ((c & 0xE0) == 0xC0)
-        return 2;
-    return 1;
-}
+int UTF8CharLength(uint8_t c);
+int GetStringCharacterCount(const std::string& str);
 
-static int GetStringCharacterCount(const std::string& str) {
-    if (str.empty())
-        return 0;
-    int c = 0;
-    for (unsigned i = 0; i < str.size(); c++)
-        i += UTF8CharLength(str[i]);
-    return c;
-}
 class TextEditor
 {
 public:
