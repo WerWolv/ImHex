@@ -30,6 +30,18 @@ namespace hex {
     EVENT_DEF(RequestPatternEditorSelectionChange, u32, u32);
 
     /**
+     * @brief Requests the Pattern set the selection
+     *
+     * Requests the Pattern editor select a region.
+     *
+     * @param startLine the line selection starts on
+     * @param startcolumn the column selection starts on
+     * @param endLine the line selection ends on
+     * @param endcolumn the column selection ends on
+     */
+    EVENT_DEF(RequestPatternEditorSetSelection, u32, u32, u32, u32);
+
+    /**
      * @brief Requests a jump to a given pattern
      *
      * This request is fired by the Hex editor when the user asks to jump to the pattern.

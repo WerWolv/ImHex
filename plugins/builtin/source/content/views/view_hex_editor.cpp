@@ -1496,6 +1496,18 @@ namespace hex::plugin::builtin {
                                                 },
                                                 [] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isReadable(); });
 
+        /* Goto in pattern editor */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.goto_pattern_editor" }, ICON_VS_GO_TO_FILE, 1870, Shortcut::None,
+                                                [] {
+                                                    const auto selection  = ImHexApi::HexEditor::getSelection();
+                                                    auto patterns = ContentRegistry::PatternLanguage::getRuntime().getPatternsAtAddress(selection->getStartAddress());
+                                                    if (!patterns.empty()) {
+                                                        const auto &pl = patterns.front()->getVariableLocation();
+                                                        RequestPatternEditorSetSelection::post(pl.line, pl.column, pl.line, pl.column+pl.length);
+                                                    }
+                                                },
+                                                [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() <= sizeof(u64); } );
+        
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1900);
 
         /* Open in new provider */
