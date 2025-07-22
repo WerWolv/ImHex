@@ -75,7 +75,7 @@ chmod +x /cache/bin/appimagetool
 
 python3 -m venv venv
 . venv/bin/activate
-pip3 install git+https://github.com/AppImageCrafters/appimage-builder@bf6123e
+pip3 install git+https://github.com/WerWolv/appimage-builder@e4dc770
 
 # Package ImHex as AppImage
 export VERSION=$(cat /imhex/VERSION)
