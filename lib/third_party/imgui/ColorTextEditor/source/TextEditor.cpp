@@ -1057,10 +1057,7 @@ void TextEditor::RenderText(const char *aTitle, const ImVec2 &lineNumbersStartPo
                     ImGui::BeginChild("##lineNumbers");
 
                 int padding = totalDigitCount - std::floor(std::log10(lineNo + 1)) - 1;
-                std::string space = " ";
-                while (padding-- > 0) {
-                    space += " ";
-                }
+                std::string space = std::string(padding,' ');
                 std::string lineNoStr = space + std::to_string((int)(lineNo + 1));
                 ImGui::SetCursorScreenPos(ImVec2(lineNumbersStartPos.x, lineStartScreenPos.y));
                 if (ImGui::InvisibleButton(lineNoStr.c_str(),ImVec2(mLineNumberFieldWidth,mCharAdvance.y))) {

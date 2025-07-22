@@ -438,7 +438,7 @@ public:
         }
 
         char operator[](size_t index) const {
-            index = std::clamp(index, 0ull, mChars.size() - 1ull);
+            index = std::clamp(index, (size_t)0, mChars.size() - 1);
             return mChars[index];
         }
         // C++ can't overload functions based on return type, so use any type other
@@ -447,7 +447,7 @@ public:
        std::string operator[](T column) const {
            size_t utf8Length = GetStringCharacterCount(mChars);
            size_t index = static_cast<size_t>(column);
-           index = std::clamp(index,0ull,utf8Length-1ull);
+           index = std::clamp(index,(size_t)0,utf8Length-1);
            size_t utf8Start = 0;
            for (size_t utf8Index = 0; utf8Index < index; ++utf8Index) {
                utf8Start += UTF8CharLength(mChars[utf8Start]);
