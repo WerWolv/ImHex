@@ -29,7 +29,6 @@ apps:
       XDG_DATA_DIRS: '$SNAP/usr/local/share:$XDG_DATA_DIRS'
       XDG_CONFIG_DIRS: '$SNAP/usr/local/share:$XDG_CONFIG_DIRS'
       XDG_DATA_HOME: '$SNAP_DATA'
-      XDG_RUNTIME_DIR: '$SNAP_DATA'
 
 parts:
   imhex:
