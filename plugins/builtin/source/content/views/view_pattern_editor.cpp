@@ -5,6 +5,7 @@
 #include <hex/api/project_file_manager.hpp>
 
 #include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 
 #include <pl/patterns/pattern.hpp>
@@ -487,8 +488,6 @@ namespace hex::plugin::builtin {
                 ImGui::EndTabBar();
             }
 
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
-
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
             {
@@ -593,6 +592,9 @@ namespace hex::plugin::builtin {
             }
 
             if (m_textEditor.get(provider).IsTextChanged()) {
+                if (m_enableExternalFileTracking) {
+                     writeChangesToExternalFile();
+                }
                 m_textEditor.get(provider).SetTextChanged(false);
                 if (!m_hasUnevaluatedChanges.get(provider) ) {
                     m_hasUnevaluatedChanges.get(provider) = true;
@@ -1111,6 +1113,8 @@ namespace hex::plugin::builtin {
         fonts::CodeEditor().push();
         m_consoleEditor.get(provider).Render("##console", size, true);
         fonts::CodeEditor().pop();
+
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
 
     void ViewPatternEditor::drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars) {
@@ -1949,6 +1953,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_sourceCode.enableSync(value.get<bool>(false));
         });
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_file", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_enableExternalFileTracking = value.get<bool>(false);
+        });
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_autoLoadPatterns = value.get<bool>(true);
         });
@@ -2011,6 +2018,12 @@ namespace hex::plugin::builtin {
 
         RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
             m_virtualFiles->emplace_back(path, data, region);
+        });
+
+        EventWindowFocused::subscribe(this, [this](bool focused) {
+            if (focused && m_enableExternalFileTracking) {
+                checkExternalFileChanges();
+            }
         });
     }
 
@@ -2586,4 +2599,145 @@ namespace hex::plugin::builtin {
         });
     }
 
+    void ViewPatternEditor::trackExternalFile(const std::fs::path &path, prv::Provider *provider) {
+
+        if (!std::filesystem::exists(path) || provider == nullptr) {
+            return;
+        }
+
+        try {
+            auto lastModified = std::filesystem::last_write_time(path);
+            auto content = m_textEditor.get(provider).GetText();
+            auto contentHash = calculateContentHash(content);
+
+            ExternalPatternFile fileInfo = {
+                    .path = path,
+                    .lastModified = lastModified,
+                    .contentHash = contentHash,
+                    .originalContent = content
+            };
+
+            m_externalPatternFile.get(provider) = fileInfo;
+        } catch (const std::filesystem::filesystem_error &) {
+
+            m_externalPatternFile.get(provider) = std::nullopt;
+        }
+    }
+
+    void ViewPatternEditor::checkExternalFileChanges() {
+
+        if (m_checkingExternalFile) {
+            return;
+        }
+        auto provider = ImHexApi::Provider::get();
+
+        if (provider == nullptr )
+            return;
+        auto &externalFile = m_externalPatternFile.get(provider);
+
+        if (!externalFile.has_value()) {
+            return;
+        }
+
+        if (hasExternalFileChanged(*externalFile)) {
+            m_checkingExternalFile = true;
+
+            try {
+                wolv::io::File file(externalFile->path, wolv::io::File::Mode::Read);
+                if (file.isValid()) {
+                    auto newContent = wolv::util::preprocessText(file.readString());
+                    auto currentContent = m_textEditor.get(provider).GetText();
+                    bool internalModified = (calculateContentHash(currentContent) != externalFile->contentHash);
+
+                    if (internalModified) {
+                        showFileConflictPopup(externalFile->path, provider);
+
+                    } else {
+                        m_textEditor.get(provider).SetText(newContent, true);
+                        m_sourceCode.get(provider) = newContent;
+                        trackExternalFile(externalFile->path, provider);
+                    }
+                }
+
+            } catch (const std::filesystem::filesystem_error &) {
+                m_externalPatternFile.get(provider) = std::nullopt;
+            }
+            m_checkingExternalFile = false;
+        }
+    }
+
+    void ViewPatternEditor::writeChangesToExternalFile() {
+        auto provider = ImHexApi::Provider::get();
+
+        if (provider == nullptr)
+            return;
+        auto &externalFile = m_externalPatternFile.get(provider);
+
+        if (!externalFile.has_value()) {
+            return;
+        }
+        const auto &path = externalFile->path;
+
+        try {
+            wolv::io::File file(path, wolv::io::File::Mode::Write);
+            auto code = m_textEditor.get(provider).GetText();
+
+            if (file.isValid())
+                file.writeString(code);
+            file.flush();
+            file.close();
+            auto lastModified = std::filesystem::last_write_time(path);
+            auto content = code;
+            auto contentHash = calculateContentHash(content);
+            externalFile->contentHash = contentHash;
+            externalFile->lastModified = lastModified;
+            externalFile->originalContent = content;
+
+        } catch (const std::filesystem::filesystem_error &) {
+            externalFile->contentHash = 0;
+            externalFile->lastModified = std::filesystem::file_time_type::min();
+            externalFile->originalContent.clear();
+        }
+    }
+
+    bool ViewPatternEditor::hasExternalFileChanged(const ExternalPatternFile &fileInfo) const {
+
+        try {
+            if (!std::filesystem::exists(fileInfo.path)) {
+                return false;
+            }
+            return std::filesystem::last_write_time(fileInfo.path) != fileInfo.lastModified;
+        } catch (const std::filesystem::filesystem_error &) {
+            return false;
+        }
+        return false;
+    }
+
+    size_t ViewPatternEditor::calculateContentHash(const std::string &content) const {
+        return std::hash<std::string>{}(content);
+    }
+
+    void ViewPatternEditor::showFileConflictPopup(const std::fs::path &path, prv::Provider *provider) {
+        ui::PopupQuestion::open(hex::format("hex.builtin.view.pattern_editor.conflict_resolution"_lang, wolv::util::toUTF8String(path.filename())), [this, path, provider] {
+            wolv::io::File file(path, wolv::io::File::Mode::Read);
+
+            if (file.isValid()) {
+                auto newContent = wolv::util::preprocessText(file.readString());
+                m_textEditor.get(provider).SetText(newContent, true);
+                m_sourceCode.get(provider) = newContent;
+
+                trackExternalFile(path, provider);
+            }
+        }, [this, path, provider] {
+            auto &externalFile = m_externalPatternFile.get(provider);
+
+            if (externalFile.has_value()) {
+                try {
+                    externalFile->lastModified = std::filesystem::last_write_time(path);
+                } catch (const std::filesystem::filesystem_error &) {
+                    externalFile->lastModified = std::filesystem::file_time_type::min();
+                }
+            }
+        });
+    }
 }

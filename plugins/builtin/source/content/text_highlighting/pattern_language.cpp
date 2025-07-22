@@ -2314,7 +2314,6 @@ namespace hex::plugin::builtin {
         colorRemainingIdentifierTokens();
         setRequestedIdentifierColors();
 
-        m_viewPatternEditor->getTextEditor().SetTimeStamp(1);
         m_viewPatternEditor->getTextEditor().ClearErrorMarkers();
         m_compileErrors = patternLanguage->get()->getCompileErrors();
 
