@@ -408,14 +408,12 @@ namespace hex {
     }
 
     void Window::frameBegin() {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+        ImHexApi::Fonts::getDefaultFont().push();
 
         // Start new ImGui Frame
-
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
-        ImHexApi::Fonts::getDefaultFont().push();
 
         #if defined(IMGUI_TEST_ENGINE)
             if (ImGuiExt::ImGuiTestEngine::isEnabled())
