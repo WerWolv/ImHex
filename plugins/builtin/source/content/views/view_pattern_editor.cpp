@@ -2737,11 +2737,11 @@ namespace hex::plugin::builtin {
             if (!std::filesystem::exists(fileInfo.path)) {
                 return false;
             }
+
             return std::filesystem::last_write_time(fileInfo.path) != fileInfo.lastModified;
         } catch (const std::filesystem::filesystem_error &) {
             return false;
         }
-        return false;
     }
 
     size_t ViewPatternEditor::calculateContentHash(const std::string &content) const {
