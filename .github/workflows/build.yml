@@ -554,10 +554,11 @@ jobs:
       uses: actions/cache@v4
       with:
         path: cache
-        key: build-macos-arm64-cache
+        key: macos-arm64-cache-${{ github.run_id }}
+        restore-keys: macos-arm64-cache
 
     - name: 🐳 Inject /cache into docker
-      uses: reproducible-containers/buildkit-cache-dance@v2
+      uses: reproducible-containers/buildkit-cache-dance@v3
       with:
         cache-source: cache
         cache-target: /cache
@@ -788,7 +789,7 @@ jobs:
           restore-keys: appimage-ccache-${{ matrix.architecture }}
 
       - name: 🐳 Inject /cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v2
+        uses: reproducible-containers/buildkit-cache-dance@v3
         with:
           cache-source: cache
           cache-target: /cache
@@ -993,9 +994,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /var/cache/dnf
-          key: ${{ matrix.mock_release }}-dnf-${{ github.run_id }}
-          restore-keys: |
-            ${{ matrix.mock_release }}-dnf
+          key: dnf-ccache-${{ matrix.mock_release }}-${{ github.run_id }}
+          restore-keys: dnf-ccache-${{ matrix.mock_release }}
 
       - name: ⬇️ Update all packages and install dependencies
         run: |
@@ -1169,7 +1169,7 @@ jobs:
         with:
           bundle: imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
           manifest-path: dist/flatpak/net.werwolv.ImHex.yaml
-          cache-key: flatpak-builder-${{ matrix.architecture }}-${{ github.sha }}
+          cache-key: flatpak-builder-${{ matrix.architecture }}
           arch: ${{ matrix.flatpak_arch }}
           upload-artifact: false
 
@@ -1207,10 +1207,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: cache
-          key: web-cache-${{ hashFiles('**/CMakeLists.txt') }}
+          key: webassembly-ccache-${{ github.run_id }}
+          restore-keys: webassembly-ccache
 
       - name: 🐳 Inject /cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v2
+        uses: reproducible-containers/buildkit-cache-dance@v3
         with:
           cache-source: cache
           cache-target: /cache
