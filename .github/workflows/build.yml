@@ -558,7 +558,7 @@ jobs:
         restore-keys: macos-arm64-cache
 
     - name: 🐳 Inject /cache into docker
-      uses: reproducible-containers/buildkit-cache-dance@v3
+      uses: reproducible-containers/buildkit-cache-dance@v2
       with:
         cache-source: cache
         cache-target: /cache
@@ -789,7 +789,7 @@ jobs:
           restore-keys: appimage-ccache-${{ matrix.architecture }}
 
       - name: 🐳 Inject /cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v3
+        uses: reproducible-containers/buildkit-cache-dance@v2
         with:
           cache-source: cache
           cache-target: /cache
@@ -1211,7 +1211,7 @@ jobs:
           restore-keys: webassembly-ccache
 
       - name: 🐳 Inject /cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v3
+        uses: reproducible-containers/buildkit-cache-dance@v2
         with:
           cache-source: cache
           cache-target: /cache
