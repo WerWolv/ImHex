@@ -1101,7 +1101,7 @@ jobs:
       - name: 📜 Move snap directory to root
         run: |
           mkdir -p ./snap
-          envsubst < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
+          envsubst '${IMHEX_VERSION}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
 
       - name: 🛠️ Build
         uses: snapcore/action-build@v1
