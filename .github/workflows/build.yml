@@ -1077,8 +1077,16 @@ jobs:
             imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
 
   snap-build:
-    name: 🐧 Snap
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: "x86_64"
+            image: ubuntu-24.04
+          - architecture: "arm64"
+            image: ubuntu-24.04-arm
+    name: 🐧 Snap ${{ matrix.architecture }}
+    runs-on: ${{ matrix.image }}
 
     permissions:
       id-token: write
@@ -1118,7 +1126,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: Snap
+          name: Snap ${{ matrix.architecture }}
           path: ${{ steps.snapcraft.outputs.snap }}
 
   webassembly-build:
