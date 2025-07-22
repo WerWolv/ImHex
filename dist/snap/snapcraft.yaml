@@ -22,18 +22,16 @@ platforms:
 
 apps:
   imhex:
-    command: usr/local/bin/imhex-launcher
+    command: usr/local/bin/imhex
     desktop: usr/local/share/applications/imhex.desktop
+    environment:
+      LD_LIBRARY_PATH: '$SNAP/usr/local/lib:$SNAP/usr/local/lib/imhex:$LD_LIBRARY_PATH'
+      XDG_DATA_DIRS: '$SNAP/usr/local/share:$XDG_DATA_DIRS'
+      XDG_CONFIG_DIRS: '$SNAP/usr/local/share:$XDG_CONFIG_DIRS'
+      XDG_DATA_HOME: '$SNAP_DATA'
+      XDG_RUNTIME_DIR: '$SNAP_DATA'
+
 parts:
-  launcher:
-    plugin: dump
-    source: snap/local
-    source-type: local
-    organize:
-      imhex-launcher: usr/local/bin/imhex-launcher
-    override-build: |
-      snapcraftctl build
-      chmod +x $SNAPCRAFT_PART_INSTALL/usr/local/bin/imhex-launcher
   imhex:
     plugin: cmake
     source: .
