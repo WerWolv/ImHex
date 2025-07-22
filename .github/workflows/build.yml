@@ -1151,7 +1151,9 @@ jobs:
       - name: ⬇️ Install setup dependencies
         run: |
           sudo apt update && sudo apt install -y git curl flatpak-builder
-          flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak remote-modify --enable flathub
+          sudo flatpak install --noninteractive --system flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08
 
       - name: 🧰 Checkout
         uses: actions/checkout@v4
