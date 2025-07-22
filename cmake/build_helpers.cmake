@@ -4,6 +4,7 @@
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
 set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0141 NEW)
 
 if (POLICY CMP0177)
     set(CMAKE_POLICY_DEFAULT_CMP0177 OLD)
@@ -428,6 +429,10 @@ macro(configureCMake)
     endif()
 
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code for all targets" FORCE)
+
+    if (MSVC)
+        set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+    endif()
 
     # Configure use of recommended build tools
     if (IMHEX_USE_DEFAULT_BUILD_SETTINGS)
