@@ -26,9 +26,9 @@ apps:
     desktop: usr/local/share/applications/imhex.desktop
     environment:
       LD_LIBRARY_PATH: '$SNAP/usr/local/lib:$SNAP/usr/local/lib/imhex:$SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH'
-      XDG_DATA_DIRS: '$SNAP/usr/local/share:$XDG_DATA_DIRS'
-      XDG_CONFIG_DIRS: '$SNAP/usr/local/share:$XDG_CONFIG_DIRS'
-      XDG_DATA_HOME: '$SNAP_DATA'
+      XDG_DATA_DIRS: '$XDG_DATA_DIRS:$SNAP/usr/local/share:$SNAP/usr/local/lib:$SNAP/usr/local/share'
+      XDG_CONFIG_DIRS: '$XDG_CONFIG_DIRS:$SNAP/usr/local/share'
+      XDG_DATA_HOME: '$XDG_DATA_HOME:$SNAP_DATA'
 
 parts:
   imhex:
