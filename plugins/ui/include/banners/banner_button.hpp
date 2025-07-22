@@ -38,13 +38,14 @@ namespace hex::ui {
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - buttonSize.x - 20_scaled);
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2_scaled);
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
+            ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 0.0F);
             ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_Tab));
-            if (ImGui::SmallButton(buttonText.c_str())) {
+            if (ImGuiExt::DimmedButton(buttonText.c_str())) {
                 m_buttonCallback();
                 this->close();
             }
             ImGui::PopStyleColor();
-            ImGui::PopStyleVar(2);
+            ImGui::PopStyleVar(3);
         }
 
     private:

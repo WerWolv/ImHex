@@ -5,6 +5,7 @@
 #include <hex/api/project_file_manager.hpp>
 
 #include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 
 #include <pl/patterns/pattern.hpp>
@@ -35,6 +36,7 @@
 
 #include <content/global_actions.hpp>
 #include <fonts/fonts.hpp>
+#include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/menu_items.hpp>
 
 namespace hex::plugin::builtin {
@@ -358,83 +360,18 @@ namespace hex::plugin::builtin {
 
             m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
             m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
-            TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.get(provider).GetFindReplaceHandler();
+
             if (m_textEditor.get(provider).RaiseContextMenu())  {
-                ImGui::OpenPopup("##text_editor_context_menu");
+                RequestOpenPopup::post("hex.builtin.menu.edit");
                 m_textEditor.get(provider).ClearRaiseContextMenu();
+
+                if (!m_textEditor.get(provider).HasSelection())
+                    m_textEditor.get(provider).SelectWordUnderCursor();
             }
 
             if (m_cursorNeedsUpdate.get(provider)) {
                 m_textEditor.get(provider).SetFocusAtCoords(m_cursorPosition.get(provider));
                 m_cursorNeedsUpdate.get(provider) = false;
-            }
-
-            if (ImGui::BeginPopup("##text_editor_context_menu")) {
-                // no shortcut for this
-                if (ImGui::MenuItemEx("hex.builtin.menu.file.import.pattern_file"_lang, ICON_VS_SIGN_IN, nullptr, false))
-                    m_importPatternFile();
-                if (ImGui::MenuItemEx("hex.builtin.menu.file.export.pattern_file"_lang, ICON_VS_SIGN_OUT, nullptr, false))
-                    m_exportPatternFile();
-
-                ImGui::Separator();
-
-                if (!m_textEditor.get(provider).HasSelection())
-                    m_textEditor.get(provider).SelectWordUnderCursor();
-                const bool hasSelection = m_textEditor.get(provider).HasSelection();
-                if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.cut"_lang, ICON_VS_COMBINE, Shortcut(CTRLCMD + Keys::X).toString().c_str(), false, hasSelection)) {
-                    m_textEditor.get(provider).Cut();
-                }
-                if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.copy"_lang, ICON_VS_COPY, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
-                    m_textEditor.get(provider).Copy();
-                }
-                if (ImGui::MenuItemEx("hex.builtin.view.hex_editor.menu.edit.paste"_lang, ICON_VS_OUTPUT, Shortcut(CTRLCMD + Keys::V).toString().c_str())) {
-                    m_textEditor.get(provider).Paste();
-                }
-
-                ImGui::Separator();
-
-                if (ImGui::MenuItemEx("hex.builtin.menu.edit.undo"_lang, ICON_VS_DISCARD, Shortcut(CTRLCMD + Keys::Z).toString().c_str(), false, m_textEditor.get(provider).CanUndo())) {
-                    m_textEditor.get(provider).Undo();
-                }
-                if (ImGui::MenuItemEx("hex.builtin.menu.edit.redo"_lang, ICON_VS_REDO, Shortcut(CTRLCMD + Keys::Y).toString().c_str(), false, m_textEditor.get(provider).CanRedo())) {
-                    m_textEditor.get(provider).Redo();
-                }
-
-                ImGui::Separator();
-                // Search and replace entries
-                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.find"_lang, ICON_VS_SEARCH, Shortcut(CTRLCMD + Keys::F).toString().c_str())){
-                    m_replaceMode = false;
-                    m_openFindReplacePopUp = true;
-                }
-
-
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_next"_lang, Shortcut(Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
-                    findReplaceHandler->FindMatch(&m_textEditor.get(provider),true);
-
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_previous"_lang, Shortcut(SHIFT + Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
-                    findReplaceHandler->FindMatch(&m_textEditor.get(provider),false);
-
-                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.replace"_lang, ICON_VS_REPLACE, Shortcut(CTRLCMD +  Keys::H).toString().c_str())) {
-                    m_replaceMode = true;
-                    m_openFindReplacePopUp = true;
-                }
-
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_next"_lang,"",false,!findReplaceHandler->GetReplaceWord().empty()))
-                    findReplaceHandler->Replace(&m_textEditor.get(provider),true);
-
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_previous"_lang, "",false,!findReplaceHandler->GetReplaceWord().empty()))
-                    findReplaceHandler->Replace(&m_textEditor.get(provider),false);
-
-                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.replace_all"_lang, ICON_VS_REPLACE_ALL, "",false,!findReplaceHandler->GetReplaceWord().empty()))
-                    findReplaceHandler->ReplaceAll(&m_textEditor.get(provider));
-
-                if (ImGui::MenuItemEx("hex.builtin.view.pattern_editor.menu.goto_line"_lang, ICON_VS_DEBUG_STEP_INTO, Shortcut(ALT + Keys::G).toString().c_str()))
-                    m_openGotoLinePopUp = true;
-
-                if (ImGui::IsKeyPressed(ImGuiKey_Escape, false))
-                    ImGui::CloseCurrentPopup();
-
-                ImGui::EndPopup();
             }
 
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
@@ -591,6 +528,9 @@ namespace hex::plugin::builtin {
             }
 
             if (m_textEditor.get(provider).IsTextChanged()) {
+                if (m_enableExternalFileTracking) {
+                     writeChangesToExternalFile();
+                }
                 m_textEditor.get(provider).SetTextChanged(false);
                 if (!m_hasUnevaluatedChanges.get(provider) ) {
                     m_hasUnevaluatedChanges.get(provider) = true;
@@ -1741,7 +1681,7 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider) {
         wolv::io::File file(path, wolv::io::File::Mode::Read);
         if (file.isValid()) {
-            auto code = file.readString();
+            auto code = wolv::util::preprocessText(file.readString());
 
             this->evaluatePattern(code, provider);
             m_textEditor.get(provider).SetText(code, true);
@@ -1940,7 +1880,7 @@ namespace hex::plugin::builtin {
 
         RequestSetPatternLanguageCode::subscribe(this, [this](const std::string &code) {
             auto provider = ImHexApi::Provider::get();
-            m_textEditor.get(provider).SetText(code);
+            m_textEditor.get(provider).SetText(wolv::util::preprocessText(code));
             m_sourceCode.get(provider) = code;
             m_hasUnevaluatedChanges.get(provider) = true;
             m_textHighlighter.m_needsToUpdateColors = false;
@@ -1948,6 +1888,9 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_sourceCode.enableSync(value.get<bool>(false));
+        });
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_file", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_enableExternalFileTracking = value.get<bool>(false);
         });
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_autoLoadPatterns = value.get<bool>(true);
@@ -1990,7 +1933,7 @@ namespace hex::plugin::builtin {
             }
 
             if (newProvider != nullptr) {
-                m_textEditor.get(newProvider).SetText(m_sourceCode.get(newProvider));
+                m_textEditor.get(newProvider).SetText(wolv::util::preprocessText(m_sourceCode.get(newProvider)));
                 m_textEditor.get(newProvider).SetCursorPosition(m_cursorPosition.get(newProvider));
                 TextEditor::Selection selection = m_selection.get(newProvider);
                 m_textEditor.get(newProvider).SetSelection(selection.mStart, selection.mEnd);
@@ -2011,6 +1954,12 @@ namespace hex::plugin::builtin {
 
         RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
             m_virtualFiles->emplace_back(path, data, region);
+        });
+
+        EventWindowFocused::subscribe(this, [this](bool focused) {
+            if (focused && m_enableExternalFileTracking) {
+                checkExternalFileChanges();
+            }
         });
     }
 
@@ -2063,6 +2012,101 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::registerMenuItems() {
+        /*if (ImGui::MenuItemEx("hex.builtin.menu.file.import.pattern_file"_lang, ICON_VS_SIGN_IN, nullptr, false))
+            m_importPatternFile();
+        if (ImGui::MenuItemEx("hex.builtin.menu.file.export.pattern_file"_lang, ICON_VS_SIGN_OUT, nullptr, false))
+            m_exportPatternFile();
+
+        ImGui::Separator();*/
+
+        /* Undo */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.undo" }, ICON_VS_DISCARD, 1000, CTRLCMD + Keys::Z, [this] {
+            m_textEditor->Undo();
+        }, [this] { return ImHexApi::Provider::isValid() && m_textEditor->CanUndo(); },
+        this);
+
+        /* Redo */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.redo" }, ICON_VS_REDO, 1100, CTRLCMD + Keys::Y, [this] {
+            m_textEditor->Redo();
+        }, [this] { return ImHexApi::Provider::isValid() &&m_textEditor->CanRedo(); },
+        this);
+
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1200, this);
+
+
+        /* Cut */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.cut" }, ICON_VS_COMBINE, 1300, CTRLCMD + Keys::X, [this] {
+            m_textEditor->Cut();
+        }, [this] { return ImHexApi::Provider::isValid() &&m_textEditor->HasSelection(); },
+        this);
+
+        /* Copy */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy" }, ICON_VS_COPY, 1400, CTRLCMD + Keys::C, [this] {
+            m_textEditor->Copy();
+        }, [this] { return ImHexApi::Provider::isValid() &&m_textEditor->HasSelection(); },
+        this);
+
+        /* Paste */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste" }, ICON_VS_OUTPUT, 1500, CTRLCMD + Keys::V, [this] {
+            m_textEditor->Paste();
+        }, [] { return true; },
+        this);
+
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1600, this);
+
+        /* Find */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.find" }, ICON_VS_SEARCH, 1700, CTRLCMD + Keys::F, [this] {
+            m_replaceMode = false;
+            m_openFindReplacePopUp = true;
+        }, [] { return true; },
+        this);
+
+        /* Find Next */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.find_next" }, 1800, Keys::F3, [this] {
+            m_consoleEditor->GetFindReplaceHandler()->FindMatch(&*m_textEditor, true);
+        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetFindWord().empty(); },
+        []{ return false; },
+        this);
+
+        /* Find Previous */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.find_previous" }, 1900, Keys::F3, [this] {
+            m_consoleEditor->GetFindReplaceHandler()->FindMatch(&*m_textEditor, true);
+        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetFindWord().empty(); },
+        []{ return false; },
+        this);
+
+        /* Replace */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.replace" }, ICON_VS_REPLACE, 2000, CTRLCMD + Keys::H, [this] {
+            m_replaceMode = true;
+            m_openFindReplacePopUp = true;
+        }, [] { return true; },
+        this);
+
+        /* Replace Next */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.replace_next" }, 2100, Shortcut::None, [this] {
+            m_consoleEditor->GetFindReplaceHandler()->Replace(&*m_textEditor, true);
+        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
+        []{ return false; },
+        this);
+
+        /* Replace Previous */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.replace_previous" }, 2200, Shortcut::None, [this] {
+            m_consoleEditor->GetFindReplaceHandler()->Replace(&*m_textEditor, false);
+        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
+        []{ return false; },
+        this);
+
+        /* Replace All */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.replace_all" }, ICON_VS_REPLACE_ALL, 2300, Shortcut::None, [this] {
+            m_consoleEditor->GetFindReplaceHandler()->ReplaceAll(&*m_textEditor);
+        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
+        this);
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.goto_line" }, ICON_VS_DEBUG_STEP_INTO, 2400, CTRLCMD + Keys::G, [this] {
+            m_openGotoLinePopUp = true;
+        }, [] { return true; },
+        this);
+
         /* Import Pattern */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, ICON_VS_FILE_CODE, 4050, Shortcut::None,
                                                 m_importPatternFile, ImHexApi::Provider::isValid);
@@ -2128,7 +2172,7 @@ namespace hex::plugin::builtin {
                 }
             }, [this] {
                 return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && m_runningParsers == 0;
-            });
+            }, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
     }
 
     void ViewPatternEditor::registerHandlers() {
@@ -2136,7 +2180,7 @@ namespace hex::plugin::builtin {
             wolv::io::File file(path, wolv::io::File::Mode::Read);
 
             if (file.isValid()) {
-                RequestSetPatternLanguageCode::post(file.readString());
+                RequestSetPatternLanguageCode::post(wolv::util::preprocessText(file.readString()));
                 return true;
             } else {
                 return false;
@@ -2193,31 +2237,38 @@ namespace hex::plugin::builtin {
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
                 const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
-                auto patterns = runtime.getPatternsAtAddress(address);
-                if (!patterns.empty() && !std::ranges::all_of(patterns, [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden || pattern->getVisibility() == pl::ptrn::Visibility::HighlightHidden; })) {
-                    ImGui::BeginTooltip();
+                std::set<pl::ptrn::Pattern*> drawnPatterns;
+                for (u64 offset = 0; offset < size; offset += 1) {
+                    auto patterns = runtime.getPatternsAtAddress(address + offset);
+                    if (!patterns.empty() && !std::ranges::all_of(patterns, [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden || pattern->getVisibility() == pl::ptrn::Visibility::HighlightHidden; })) {
+                        ImGui::BeginTooltip();
 
-                    for (const auto &pattern : patterns) {
-                        auto visibility = pattern->getVisibility();
-                        if (visibility == pl::ptrn::Visibility::Hidden || visibility == pl::ptrn::Visibility::HighlightHidden)
-                            continue;
+                        for (const auto &pattern : patterns) {
+                            // Avoid drawing the same pattern multiple times
+                            if (!drawnPatterns.insert(pattern).second)
+                                continue;
 
-                        const auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
-                        ImGui::PushID(pattern);
-                        if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-                            ImGui::TableNextRow();
-                            ImGui::TableNextColumn();
+                            auto visibility = pattern->getVisibility();
+                            if (visibility == pl::ptrn::Visibility::Hidden || visibility == pl::ptrn::Visibility::HighlightHidden)
+                                continue;
 
-                            this->drawPatternTooltip(pattern);
+                            const auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
+                            ImGui::PushID(pattern);
+                            if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
 
-                            ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
-                            ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
-                            ImGui::EndTable();
-                            ImGui::PopStyleColor(2);
+                                this->drawPatternTooltip(pattern);
+
+                                ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
+                                ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
+                                ImGui::EndTable();
+                                ImGui::PopStyleColor(2);
+                            }
+                            ImGui::PopID();
                         }
-                        ImGui::PopID();
+                        ImGui::EndTooltip();
                     }
-                    ImGui::EndTooltip();
                 }
             }
         });
@@ -2226,7 +2277,7 @@ namespace hex::plugin::builtin {
             .basePath = "pattern_source_code.hexpat",
             .required = false,
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                const auto sourceCode = tar.readString(basePath);
+                const auto sourceCode = wolv::util::preprocessText(tar.readString(basePath));
 
                 m_sourceCode.get(provider) = sourceCode;
 
@@ -2579,4 +2630,145 @@ namespace hex::plugin::builtin {
         });
     }
 
+    void ViewPatternEditor::trackExternalFile(const std::fs::path &path, prv::Provider *provider) {
+
+        if (!std::filesystem::exists(path) || provider == nullptr) {
+            return;
+        }
+
+        try {
+            auto lastModified = std::filesystem::last_write_time(path);
+            auto content = m_textEditor.get(provider).GetText();
+            auto contentHash = calculateContentHash(content);
+
+            ExternalPatternFile fileInfo = {
+                    .path = path,
+                    .lastModified = lastModified,
+                    .contentHash = contentHash,
+                    .originalContent = content
+            };
+
+            m_externalPatternFile.get(provider) = fileInfo;
+        } catch (const std::filesystem::filesystem_error &) {
+
+            m_externalPatternFile.get(provider) = std::nullopt;
+        }
+    }
+
+    void ViewPatternEditor::checkExternalFileChanges() {
+
+        if (m_checkingExternalFile) {
+            return;
+        }
+        auto provider = ImHexApi::Provider::get();
+
+        if (provider == nullptr )
+            return;
+        auto &externalFile = m_externalPatternFile.get(provider);
+
+        if (!externalFile.has_value()) {
+            return;
+        }
+
+        if (hasExternalFileChanged(*externalFile)) {
+            m_checkingExternalFile = true;
+
+            try {
+                wolv::io::File file(externalFile->path, wolv::io::File::Mode::Read);
+                if (file.isValid()) {
+                    auto newContent = wolv::util::preprocessText(file.readString());
+                    auto currentContent = m_textEditor.get(provider).GetText();
+                    bool internalModified = (calculateContentHash(currentContent) != externalFile->contentHash);
+
+                    if (internalModified) {
+                        showFileConflictPopup(externalFile->path, provider);
+
+                    } else {
+                        m_textEditor.get(provider).SetText(newContent, true);
+                        m_sourceCode.get(provider) = newContent;
+                        trackExternalFile(externalFile->path, provider);
+                    }
+                }
+
+            } catch (const std::filesystem::filesystem_error &) {
+                m_externalPatternFile.get(provider) = std::nullopt;
+            }
+            m_checkingExternalFile = false;
+        }
+    }
+
+    void ViewPatternEditor::writeChangesToExternalFile() {
+        auto provider = ImHexApi::Provider::get();
+
+        if (provider == nullptr)
+            return;
+        auto &externalFile = m_externalPatternFile.get(provider);
+
+        if (!externalFile.has_value()) {
+            return;
+        }
+        const auto &path = externalFile->path;
+
+        try {
+            wolv::io::File file(path, wolv::io::File::Mode::Write);
+            auto code = m_textEditor.get(provider).GetText();
+
+            if (file.isValid())
+                file.writeString(code);
+            file.flush();
+            file.close();
+            auto lastModified = std::filesystem::last_write_time(path);
+            auto content = code;
+            auto contentHash = calculateContentHash(content);
+            externalFile->contentHash = contentHash;
+            externalFile->lastModified = lastModified;
+            externalFile->originalContent = content;
+
+        } catch (const std::filesystem::filesystem_error &) {
+            externalFile->contentHash = 0;
+            externalFile->lastModified = std::filesystem::file_time_type::min();
+            externalFile->originalContent.clear();
+        }
+    }
+
+    bool ViewPatternEditor::hasExternalFileChanged(const ExternalPatternFile &fileInfo) const {
+
+        try {
+            if (!std::filesystem::exists(fileInfo.path)) {
+                return false;
+            }
+            return std::filesystem::last_write_time(fileInfo.path) != fileInfo.lastModified;
+        } catch (const std::filesystem::filesystem_error &) {
+            return false;
+        }
+        return false;
+    }
+
+    size_t ViewPatternEditor::calculateContentHash(const std::string &content) const {
+        return std::hash<std::string>{}(content);
+    }
+
+    void ViewPatternEditor::showFileConflictPopup(const std::fs::path &path, prv::Provider *provider) {
+        ui::PopupQuestion::open(hex::format("hex.builtin.view.pattern_editor.conflict_resolution"_lang, wolv::util::toUTF8String(path.filename())), [this, path, provider] {
+            wolv::io::File file(path, wolv::io::File::Mode::Read);
+
+            if (file.isValid()) {
+                auto newContent = wolv::util::preprocessText(file.readString());
+                m_textEditor.get(provider).SetText(newContent, true);
+                m_sourceCode.get(provider) = newContent;
+
+                trackExternalFile(path, provider);
+            }
+        }, [this, path, provider] {
+            auto &externalFile = m_externalPatternFile.get(provider);
+
+            if (externalFile.has_value()) {
+                try {
+                    externalFile->lastModified = std::filesystem::last_write_time(path);
+                } catch (const std::filesystem::filesystem_error &) {
+                    externalFile->lastModified = std::filesystem::file_time_type::min();
+                }
+            }
+        });
+    }
 }

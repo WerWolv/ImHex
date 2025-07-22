@@ -894,7 +894,7 @@
         "hex.builtin.view.highlight_rules.expression": "表达式",
         "hex.builtin.view.highlight_rules.help_text": "输入将针对文件中的每个字节求值的数学表达式。\n\n该表达式可以使用变量“value”和“offset”。\n如果表达式求值 为 true（结果大于 0），该字节将以指定的颜色突出显示。",
         "hex.builtin.view.highlight_rules.no_rule": "创建一个规则来编辑它",
-        "hex.builtin.view.highlight_rules.menu.file.rules": "修改突出显示规则……",
+        "hex.builtin.view.highlight_rules.menu.edit.rules": "修改突出显示规则……",
         "hex.builtin.view.information.analyze": "分析",
         "hex.builtin.view.information.analyzing": "分析中……",
         "hex.builtin.information_section.magic.apple_type": "Apple 创建者 / 类型代码",

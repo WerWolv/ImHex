@@ -30,7 +30,7 @@ namespace hex::plugin::disasm {
             this->disassemble();
         }, [this]{
             return ImHexApi::HexEditor::isSelectionValid() && !m_disassemblerTask.isRunning() && *m_currArchitecture != nullptr;
-        });
+        }, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
     }
 
     ViewDisassembler::~ViewDisassembler() {

@@ -1958,7 +1958,7 @@ namespace hex::plugin::builtin {
             m_lines.clear();
 
         if (m_text.empty())
-            m_text =  m_viewPatternEditor->getTextEditor().PreprocessText(m_viewPatternEditor->getTextEditor().GetText());
+            m_text =  m_viewPatternEditor->getTextEditor().GetText();
 
         m_lines = hex::splitString(m_text, "\n");
         m_lines.push_back("");
@@ -2252,7 +2252,7 @@ namespace hex::plugin::builtin {
         auto lastToken = m_tokens.back();
         m_tokens.push_back(lastToken);
 
-        m_text = m_viewPatternEditor->getTextEditor().PreprocessText( m_viewPatternEditor->getTextEditor().GetText());
+        m_text = m_viewPatternEditor->getTextEditor().GetText();
 
         if (m_text.empty() || m_text == "\n")
             return;
@@ -2314,7 +2314,6 @@ namespace hex::plugin::builtin {
         colorRemainingIdentifierTokens();
         setRequestedIdentifierColors();
 
-        m_viewPatternEditor->getTextEditor().SetTimeStamp(1);
         m_viewPatternEditor->getTextEditor().ClearErrorMarkers();
         m_compileErrors = patternLanguage->get()->getCompileErrors();
 

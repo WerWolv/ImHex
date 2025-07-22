@@ -6,6 +6,7 @@ on:
 
 jobs:
   close-issues:
+    if: false # Disabled for now until I actually have time to take care of all these issues
     runs-on: ubuntu-24.04
     permissions:
       issues: write

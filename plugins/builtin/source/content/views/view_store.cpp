@@ -355,6 +355,9 @@ namespace hex::plugin::builtin {
                         entry.hasUpdate = false;
                         entry.downloading = false;
 
+                        if (m_updateCount > 0)
+                            m_updateCount -= 1;
+
                         task.increment();
                     }
                 }

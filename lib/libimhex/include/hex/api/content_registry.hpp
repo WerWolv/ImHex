@@ -900,12 +900,14 @@ EXPORT_MODULE namespace hex {
              * @param priority The priority of the entry. Lower values are displayed first
              * @param function The function to call when the entry is clicked
              * @param enabledCallback The function to call to determine if the entry is enabled
+             * @param view The view to use for the entry. If nullptr, the item will always be visible
              */
             void addMenuItemSubMenu(
                 std::vector<UnlocalizedString> unlocalizedMainMenuNames,
                 u32 priority,
                 const impl::MenuCallback &function,
-                const impl::EnabledCallback& enabledCallback = []{ return true; }
+                const impl::EnabledCallback& enabledCallback = []{ return true; },
+                View *view = nullptr
             );
 
             /**
@@ -915,13 +917,15 @@ EXPORT_MODULE namespace hex {
              * @param priority The priority of the entry. Lower values are displayed first
              * @param function The function to call when the entry is clicked
              * @param enabledCallback The function to call to determine if the entry is enabled
+             * @param view The view to use for the entry. If nullptr, the item will always be visible
              */
             void addMenuItemSubMenu(
                 std::vector<UnlocalizedString> unlocalizedMainMenuNames,
                 const char *icon,
                 u32 priority,
                 const impl::MenuCallback &function,
-                const impl::EnabledCallback& enabledCallback = []{ return true; }
+                const impl::EnabledCallback& enabledCallback = []{ return true; },
+                View *view = nullptr
             );
 
 
@@ -929,8 +933,9 @@ EXPORT_MODULE namespace hex {
              * @brief Adds a new main menu separator
              * @param unlocalizedMainMenuNames The unlocalized names of the main menu entries
              * @param priority The priority of the entry. Lower values are displayed first
+             * @param view The view to use for the entry. If nullptr, the item will always be visible
              */
-            void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority);
+            void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, View *view = nullptr);
 
 
             /**

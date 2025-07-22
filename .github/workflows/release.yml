@@ -116,6 +116,7 @@ jobs:
       - name: 🟩 Rename artifacts when needed
         run: |
           mv "Windows Portable x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-x86_64.zip
+          mv "Windows Portable arm64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-arm64.zip
           mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip
           mv "ImHex Web.zip" imhex-${{ env.IMHEX_VERSION }}-Web.zip
           rm artifact.tar
@@ -173,3 +174,27 @@ jobs:
           if ($version -notmatch "-") {
             .\wingetcreate.exe submit .\manifests\w\WerWolv\ImHex\${version}\ --token $env:WINGET_GITHUB_TOKEN
           }
+
+  release-update-snapstore:
+    name: Release update snapstore package
+    needs: release-upload-artifacts
+    runs-on: ubuntu-20.04
+    steps:
+      - name: ⬇️ Download artifacts
+        run: |
+          tagname=${GITHUB_REF#refs/tags/}
+          version=${tagname#v}
+          wget https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex_${version}_amd64.snap
+          wget https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex_${version}_arm64.snap
+
+      - name: ⬆️ Publish x86_64 Snap package
+        uses: snapcore/action-publish@v1
+        with:
+          store_login: ${{ secrets.SNAP_STORE_LOGIN }}
+          snap: imhex_${{ env.IMHEX_VERSION }}_amd64.snap
+
+      - name: ⬆️ Publish arm64 Snap package
+        uses: snapcore/action-publish@v1
+        with:
+          store_login: ${{ secrets.SNAP_STORE_LOGIN }}
+          snap: imhex_${{ env.IMHEX_VERSION }}_arm64.snap

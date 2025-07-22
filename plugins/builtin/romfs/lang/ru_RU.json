@@ -868,7 +868,7 @@
         "hex.builtin.view.highlight_rules.expression": "Выражение",
         "hex.builtin.view.highlight_rules.help_text": "Введите математическое выражение, которое будет применено к каждому байту в файле.\n\nМожно испорльзовать переменные 'value' и 'offset'.\nЕсли выражение становится истинным (результат больше 0), байт будет выделен указанным цветом.",
         "hex.builtin.view.highlight_rules.no_rule": "Создайте правило прежде чем редактировать его",
-        "hex.builtin.view.highlight_rules.menu.file.rules": "Правила подсветки",
+        "hex.builtin.view.highlight_rules.menu.edit.rules": "Правила подсветки...",
         "hex.builtin.view.information.analyze": "Проанализировать",
         "hex.builtin.view.information.analyzing": "Анализ...",
         "hex.builtin.information_section.magic.apple_type": "Apple Creator / Код типа",
