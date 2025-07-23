@@ -1051,7 +1051,7 @@ jobs:
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          mock -r ${{ matrix.mock_config }}-x86_64 --enable-network -N -v --spec $GITHUB_WORKSPACE/imhex.spec --sources $GITHUB_WORKSPACE --resultdir $GITHUB_WORKSPACE/results
+          mock -r $GITHUB_WORKSPACE/mock.cfg --enable-network -N -v --spec $GITHUB_WORKSPACE/imhex.spec --sources $GITHUB_WORKSPACE --resultdir $GITHUB_WORKSPACE/results
 
       - name: 🟩 Move and rename finished RPM
         run: |
