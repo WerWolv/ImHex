@@ -1095,7 +1095,8 @@ jobs:
     steps:
       - name: ⬇️ Install setup dependencies
         run: |
-          sudo apt update && sudo apt install -y git curl ccache
+          sudo apt update && sudo apt install -y git curl snapd ccache
+          sudo snap install snapcraft --classic
 
       - name: 🧰 Checkout
         uses: actions/checkout@v4
@@ -1119,10 +1120,8 @@ jobs:
           max-size: 1G
 
       - name: 🛠️ Build
-        uses: snapcore/action-build@v1
-        id: snapcraft
-        with:
-          snapcraft-args: --destructive-mode
+        run: |
+          sudo snapcraft --destructive-mode
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
