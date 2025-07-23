@@ -991,6 +991,7 @@ jobs:
           submodules: recursive
 
       - name: 📜 Setup DNF Cache
+        if: false # Disabled for now since it fills up the cache very quickly
         uses: actions/cache@v4
         with:
           path: /var/cache/dnf
