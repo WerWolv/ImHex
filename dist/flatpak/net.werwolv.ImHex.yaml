@@ -121,7 +121,6 @@ modules:
           type: git
           tag-pattern: ^ImHex-v([\d.]+)$
     post-install:
-      - mv ${FLATPAK_DEST}/share/metainfo/net.werwolv.imhex.metainfo.xml ${FLATPAK_DEST}/share/metainfo/net.werwolv.ImHex.metainfo.xml
       - mkdir -p ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps
       - cp ${FLATPAK_DEST}/share/pixmaps/imhex.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
       - desktop-file-edit --set-key="Icon" --set-value="${FLATPAK_ID}" "${FLATPAK_DEST}/share/applications/imhex.desktop"

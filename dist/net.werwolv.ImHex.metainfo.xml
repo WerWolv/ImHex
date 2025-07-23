@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+    <id>net.werwolv.ImHex</id>
+    <name>ImHex</name>
+    <summary>Modern REing Hex Editor</summary>
+    <description>
+        <p>
+            ImHex is a modern Hex Editor for Reverse Engineers, Developers, Malware Analysists and Hackers who value
+            their retinas when working at 3 AM once again.
+        </p>
+        <p>
+            Features:
+        </p>
+        <ul>
+            <li>Featureful hex view</li>
+            <li>Custom C++-like pattern language for parsing and highlighting a file's content</li>
+            <li>Data importing and exporting</li>
+            <li>Data inspector allowing interpretation of data as many different types</li>
+            <li>Huge file support with fast and efficient loading</li>
+            <li>Strings search</li>
+            <li>File hashing support</li>
+            <li>Disassembler supporting many different architectures: ARM, x86, PowerPC, MIPS, and more</li>
+            <li>Bookmarks</li>
+            <li>Data analyzer</li>
+            <li>
+                Helpful tools such as an Itanium and MSVC demangler, ASCII table, Regex
+                replacer, mathematical expression evaluator (calculator), hexadecimal
+                color picker and many more
+            </li>
+            <li>Doesn't burn out your retinas when used in late-night sessions</li>
+        </ul>
+    </description>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>GPL-2.0-only</project_license>
+    <developer id="net.werwolv">
+        <name>WerWolv</name>
+    </developer>
+    <url type="homepage">https://imhex.werwolv.net</url>
+    <url type="bugtracker">https://github.com/WerWolv/ImHex/issues</url>
+    <url type="help">https://docs.werwolv.net/imhex</url>
+    <url type="donation">https://www.patreon.com/werwolv</url>
+    <url type="contact">https://imhex.werwolv.net/discord</url>
+    <url type="vcs-browser">https://github.com/WerWolv/ImHex</url>
+    <url type="contribute">https://github.com/WerWolv/ImHex/blob/master/CONTRIBUTING.md</url>
+    <launchable type="desktop-id">imhex.desktop</launchable>
+    <screenshots>
+        <screenshot type="default" width="1920" height="1017">
+            <image type="source">https://raw.githubusercontent.com/flathub/net.werwolv.ImHex/master/screenshots/screenshot1.png</image>
+            <caption>Using a pattern to parse and highlight different sections of an ELF executable file</caption>
+        </screenshot>
+        <screenshot type="default" width="1920" height="1017">
+            <image type="source">https://raw.githubusercontent.com/flathub/net.werwolv.ImHex/master/screenshots/screenshot2.png</image>
+            <caption>Managing bookmarks, diffing two files and decrypting a region of data using the data preprocessor</caption>
+        </screenshot>
+    </screenshots>
+    <content_rating type="oars-1.1"/>
+    <branding>
+        <color type="primary" scheme_preference="light">#babec9</color>
+        <color type="primary" scheme_preference="dark">#0f0f0f</color>
+    </branding>
+    <releases>
+        <release version="1.0.0" date="2025-01-01">
+            <description></description>
+        </release>
+    </releases>
+    <update_contact>hey@werwolv.net</update_contact>
+</component>
