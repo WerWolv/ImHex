@@ -1045,7 +1045,7 @@ jobs:
           config_opts['plugin_conf']['ccache_enable'] = True
           config_opts['plugin_conf']['ccache_opts']['max_cache_size'] = '1G'
           config_opts['plugin_conf']['ccache_opts']['compress'] = True
-          config_opts['plugin_conf']['ccache_opts']['dir'] = "$GITHUB_WORKSPACE/.ccache"
+          config_opts['plugin_conf']['ccache_opts']['dir'] = "${{ github.workspace }}/.ccache"
           EOT
 
       # Fedora cmake build (in imhex.spec)
@@ -1092,7 +1092,7 @@ jobs:
     steps:
       - name: ⬇️ Install setup dependencies
         run: |
-          sudo apt update && sudo apt install -y git curl
+          sudo apt update && sudo apt install -y git curl ccache
 
       - name: 🧰 Checkout
         uses: actions/checkout@v4
@@ -1108,9 +1108,18 @@ jobs:
           mkdir -p ./snap
           envsubst '${IMHEX_VERSION}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
 
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ${{ matrix.architecture }}-snap-${{ github.run_id }}
+          restore-keys: ${{ matrix.architecture }}-snap
+          max-size: 1G
+
       - name: 🛠️ Build
         uses: snapcore/action-build@v1
         id: snapcraft
+        with:
+          snapcraft-args: --mounts ccache="${{ github.workspace }}/.ccache"
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
