@@ -940,19 +940,15 @@ jobs:
       matrix:
         include:
           - name: Fedora
-            mock_release: rawhide
             release_num: rawhide
             mock_config: fedora-rawhide
           - name: Fedora
-            mock_release: f42
             release_num: 42
             mock_config: fedora-42
           - name: Fedora
-            mock_release: f41
             release_num: 41
             mock_config: fedora-41
           - name: RHEL-AlmaLinux
-            mock_release: epel9
             release_num: 9
             mock_config: "alma+epel-9"
 
@@ -960,7 +956,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     container:
-      image: "almalinux:9"
+      image: "almalinux:10"
       options: --privileged --pid=host --security-opt apparmor=unconfined
 
     permissions:
@@ -969,10 +965,10 @@ jobs:
 
     steps:
       # This, together with the `--pid=host --security-opt apparmor=unconfined` docker options is required to allow
-      # fedpkg to work inside a Docker container running on Ubuntu again.
+      # mock to work inside a Docker container running on Ubuntu again.
       # GitHub seems to have enabled AppArmor on their Ubuntu CI runners which limits Docker in ways that cause
       # programs inside it to fail.
-      # Without this, fedpkg will throw the unhelpful error message 'Insufficient Rights'
+      # Without this, mock will throw the unhelpful error message 'Insufficient Rights'
       # This step uses nsenter to execute commands on the host that disable AppArmor entirely.
       - name: 🛡️ Disable AppArmor on Host
         run: |
@@ -995,15 +991,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /var/cache/dnf
-          key: dnf-ccache-${{ matrix.mock_release }}-${{ github.run_id }}
-          restore-keys: dnf-ccache-${{ matrix.mock_release }}
+          key: dnf-ccache-${{ matrix.mock_config }}-${{ github.run_id }}
+          restore-keys: dnf-ccache-${{ matrix.mock_config }}
 
       - name: ⬇️ Update all packages and install dependencies
         run: |
           set -x
           dnf upgrade -y
           dnf install -y \
-          fedpkg         \
+          mock           \
           ccache
 
       - name: ⬇️ Install .NET
@@ -1014,8 +1010,8 @@ jobs:
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1
         with:
-          key: ${{ matrix.mock_release }}-rpm-${{ github.run_id }}
-          restore-keys: ${{ matrix.mock_release }}-rpm
+          key: ${{ matrix.mock_config }}-rpm-${{ github.run_id }}
+          restore-keys: ${{ matrix.mock_config }}-rpm
           max-size: 1G
 
       - name: 📜 Set version variable
@@ -1032,11 +1028,11 @@ jobs:
           -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'                     \
           -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\'         \
           -e '/BuildRequires:  cmake/a BuildRequires:  git-core'                      \
-          -e '/%files/a %{_datadir}/%{name}/'                                         \
+          -e '/%files/a %{_datadir}/imhex/'                                           \
           $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
 
       - name: 📜 Fix ccache on EL9
-        if: matrix.mock_release == 'epel9'
+        if: matrix.mock_config == 'alma+epel-9'
         run: sed -i '/\. \/opt\/rh\/gcc-toolset-14\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
 
       - name: 🟩 Copy spec file to build root
@@ -1055,11 +1051,11 @@ jobs:
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
+          mock -r ${{ matrix.mock_config }}-x86_64 --enable-network -N -v --spec $GITHUB_WORKSPACE/imhex.spec --sources $GITHUB_WORKSPACE --resultdir $GITHUB_WORKSPACE/results
 
       - name: 🟩 Move and rename finished RPM
         run: |
-          mv $GITHUB_WORKSPACE/results_imhex/${{ env.IMHEX_VERSION }}/*/imhex-${{ env.IMHEX_VERSION }}-0.*.x86_64.rpm \
+          mv $GITHUB_WORKSPACE/results/imhex-${{ env.IMHEX_VERSION }}-0.*.x86_64.rpm \
           $GITHUB_WORKSPACE/imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
 
       - name: 🗝️ Generate build provenance attestations

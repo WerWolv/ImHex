@@ -346,10 +346,6 @@ macro(createPackage)
 
         # install AppStream file
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/net.werwolv.ImHex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
-
-        # install symlink for the old standard name
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/net.werwolv.ImHex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo RENAME net.werwolv.imhex.appdata.xml)
-
     endif()
 
     if (APPLE)
