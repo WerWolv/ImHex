@@ -430,9 +430,7 @@ macro(configureCMake)
 
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code for all targets" FORCE)
 
-    if (MSVC)
-        set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
-    endif()
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
 
     # Configure use of recommended build tools
     if (IMHEX_USE_DEFAULT_BUILD_SETTINGS)
