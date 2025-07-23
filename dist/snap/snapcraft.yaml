@@ -37,7 +37,6 @@ parts:
     build-environment:
       - CC: /usr/bin/gcc-14
       - CXX: /usr/bin/g++-14
-      - CCACHE_DIR: "$CRAFT_PROJECT_DIR/../ccache"
     cmake-parameters:
       - -DCMAKE_BUILD_TYPE=Release
       - -DCMAKE_C_COMPILER_LAUNCHER=/usr/bin/ccache

@@ -1089,6 +1089,9 @@ jobs:
       id-token: write
       attestations: write
 
+    env:
+      CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+
     steps:
       - name: ⬇️ Install setup dependencies
         run: |
@@ -1119,7 +1122,7 @@ jobs:
         uses: snapcore/action-build@v1
         id: snapcraft
         with:
-          snapcraft-args: --mounts ccache="${{ github.workspace }}/.ccache"
+          snapcraft-args: --destructive-mode
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
