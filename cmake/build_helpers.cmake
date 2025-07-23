@@ -714,12 +714,14 @@ macro(setupCompilerFlags target)
         addCXXFlag("-Wno-include-angled-in-module-purview" ${target})
 
         # Enable hardening flags
-        if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-            addCommonFlag("-U_FORTIFY_SOURCE" ${target})
-            addCommonFlag("-D_FORTIFY_SOURCE=3" ${target})
+        if (IMHEX_BUILD_HARDENING)
+            if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+                addCommonFlag("-U_FORTIFY_SOURCE" ${target})
+                addCommonFlag("-D_FORTIFY_SOURCE=3" ${target})
 
-            if (NOT EMSCRIPTEN)
-                addCommonFlag("-fstack-protector-strong" ${target})
+                if (NOT EMSCRIPTEN)
+                    addCommonFlag("-fstack-protector-strong" ${target})
+                endif()
             endif()
         endif()
 
