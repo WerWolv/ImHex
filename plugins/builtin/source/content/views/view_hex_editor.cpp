@@ -1212,7 +1212,7 @@ namespace hex::plugin::builtin {
                                                 this);
 
         /* Load Encoding File */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.custom_encoding" }, "あ", 5050, Shortcut::None,
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.custom_encoding" }, "あ", 5700, Shortcut::None,
                                                 [this]{
                                                     const auto basePaths = paths::Encodings.read();
                                                     std::vector<std::fs::path> paths;

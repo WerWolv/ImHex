@@ -867,7 +867,7 @@ EXPORT_MODULE namespace hex {
                 const std::vector<UnlocalizedString> &unlocalizedMainMenuNames,
                 const Icon &icon,
                 u32 priority,
-                const Shortcut &shortcut,
+                Shortcut shortcut,
                 const impl::MenuCallback &function,
                 const impl::EnabledCallback& enabledCallback = []{ return true; },
                 const impl::SelectedCallback &selectedCallback = []{ return false; },

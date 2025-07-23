@@ -421,22 +421,22 @@ namespace hex::plugin::builtin {
 
         /* Import */
         {
-            ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, ICON_VS_SIGN_IN, 2140, []{}, noRunningTaskAndValidProvider);
+            ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, ICON_VS_SIGN_IN, 5140, []{}, noRunningTaskAndValidProvider);
 
             /* IPS */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips"}, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 2150,
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips"}, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 5150,
                                                     Shortcut::None,
                                                     importIPSPatch,
                                                     noRunningTaskAndWritableProvider);
 
             /* IPS32 */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips32"}, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 2200,
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips32"}, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 5200,
                                                     Shortcut::None,
                                                     importIPS32Patch,
                                                     noRunningTaskAndWritableProvider);
 
             /* Modified File */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.modified_file" }, ICON_VS_FILES, 2300,
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.modified_file" }, ICON_VS_FILES, 5300,
                                                     Shortcut::None,
                                                     importModifiedFile,
                                                     noRunningTaskAndWritableProvider);

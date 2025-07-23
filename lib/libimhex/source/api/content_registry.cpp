@@ -950,7 +950,7 @@ namespace hex {
             addMenuItem(unlocalizedMainMenuNames, "", priority, shortcut, function, enabledCallback, []{ return false; }, view);
         }
 
-        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, const Icon &icon, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, const impl::SelectedCallback &selectedCallback, View *view) {
+        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, const Icon &icon, u32 priority, Shortcut shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, const impl::SelectedCallback &selectedCallback, View *view) {
             log::debug("Added new menu item to menu {} with priority {}", unlocalizedMainMenuNames[0].get(), priority);
 
             Icon coloredIcon = icon;
@@ -962,6 +962,10 @@ namespace hex {
             });
 
             if (shortcut != Shortcut::None) {
+                if (view != nullptr && !shortcut.isLocal()) {
+                    shortcut += CurrentView;
+                }
+
                 if (shortcut.isLocal() && view != nullptr)
                     ShortcutManager::addShortcut(view, shortcut, unlocalizedMainMenuNames, function, enabledCallback);
                 else

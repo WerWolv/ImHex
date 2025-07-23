@@ -398,7 +398,7 @@ namespace hex::plugin::builtin {
         });
 
         /* Import Nodes */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, ICON_VS_CHIP, 4050, Shortcut::None, [this]{
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, ICON_VS_CHIP, 5600, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Read);
@@ -707,10 +707,11 @@ namespace hex::plugin::builtin {
 
             // Draw custom nodes submenu
             if (ImGui::BeginMenu("hex.builtin.nodes.custom"_lang)) {
-                ImGui::Separator();
+                if (!m_customNodes.empty())
+                    ImGui::Separator();
 
                 // Draw entries for each custom node
-                for (auto &customNode : m_customNodes) {
+                for (const auto &customNode : m_customNodes) {
                     if (ImGui::MenuItem(customNode.name.c_str())) {
                         node = loadNode(customNode.data);
                     }
