@@ -78,7 +78,7 @@
         "hex.builtin.drag_drop.text": "Drop files here to open them...",
         "hex.builtin.inspector.ascii": "ASCII Character",
         "hex.builtin.inspector.binary": "Binary (8 bit)",
-        "hex.builtin.inspector.bfloat": "bfloat16",
+        "hex.builtin.inspector.bfloat16": "bfloat16",
         "hex.builtin.inspector.bool": "bool",
         "hex.builtin.inspector.custom_encoding": "Custom Encoding",
         "hex.builtin.inspector.custom_encoding.change": "Select encoding",
