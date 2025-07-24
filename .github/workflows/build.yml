@@ -999,7 +999,8 @@ jobs:
           set -x
           dnf upgrade -y
           dnf install -y \
-          mock
+          mock \
+          ccache
 
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v4
@@ -1044,7 +1045,7 @@ jobs:
           config_opts['plugin_conf']['ccache_enable'] = True
           config_opts['plugin_conf']['ccache_opts']['max_cache_size'] = '1G'
           config_opts['plugin_conf']['ccache_opts']['compress'] = True
-          config_opts['plugin_conf']['ccache_opts']['dir'] = '${{ github.workspace }}/.ccache'
+          config_opts['plugin_conf']['ccache_opts']['dir'] = "${{ github.workspace }}/.ccache"
           config_opts['plugin_conf']['ccache_opts']['show_stats'] = True
           EOT
 
