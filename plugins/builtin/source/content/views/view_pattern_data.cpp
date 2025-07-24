@@ -155,11 +155,17 @@ namespace hex::plugin::builtin {
 
                 constexpr static auto SimplifiedEditorAttribute = "hex::editor_export";
                 if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock()) && patternsValid) {
-                    const auto &patterns = runtime.getPatternsWithAttribute(SimplifiedEditorAttribute);
+                    const auto &patternSet = runtime.getPatternsWithAttribute(SimplifiedEditorAttribute);
+                    std::vector<pl::ptrn::Pattern*> patterns = { patternSet.begin(), patternSet.end() };
+                    std::ranges::sort(patterns, [](const pl::ptrn::Pattern *a, const pl::ptrn::Pattern *b) {
+                        return a->getOffset() < b->getOffset() || a->getDisplayName() < b->getDisplayName();
+                    });
+
                     if (!patterns.empty()) {
-                        const auto tabName = "hex.builtin.view.pattern_data.simplified_editor"_lang;
-                        ImGui::TabItemSpacing("##spacing", 0, ImGui::GetContentRegionAvail().x - ImGui::TabItemCalcSize(tabName, false).x);
-                        if (ImGui::BeginTabItem(tabName, nullptr, ImGuiTabItemFlags_Trailing)) {
+                        constexpr auto TabName = "hex.builtin.view.pattern_data.simplified_editor"_lang;
+
+                        ImGui::TabItemSpacing("##spacing", 0, ImGui::GetContentRegionAvail().x - ImGui::TabItemCalcSize(TabName, false).x);
+                        if (ImGui::BeginTabItem(TabName, nullptr, ImGuiTabItemFlags_Trailing)) {
                             for (const auto &pattern : patterns) {
                                 try {
                                     const auto attribute = pattern->getAttributeArguments(SimplifiedEditorAttribute);

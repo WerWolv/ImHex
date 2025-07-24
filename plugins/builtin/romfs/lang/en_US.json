@@ -948,6 +948,7 @@
         "hex.builtin.view.pattern_data.name": "Pattern Data",
         "hex.builtin.view.pattern_data.section.main": "Main",
         "hex.builtin.view.pattern_data.section.view_raw": "View Raw Data",
+        "hex.builtin.view.pattern_data.simplified_editor": "Simplified",
         "hex.builtin.view.pattern_editor.accept_pattern": "Accept pattern",
         "hex.builtin.view.pattern_editor.accept_pattern.desc": "One or more Patterns compatible with this data type has been found",
         "hex.builtin.view.pattern_editor.accept_pattern.pattern_language": "Patterns",
