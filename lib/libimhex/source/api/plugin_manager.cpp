@@ -202,11 +202,16 @@ namespace hex {
         return m_path;
     }
 
-    bool Plugin::isValid() const {
-        return m_handle != 0 || m_functions.initializeLibraryFunction != nullptr || m_functions.initializePluginFunction != nullptr;
+    bool Plugin::isLoaded() const {
+        return m_handle != 0;
     }
 
-    bool Plugin::isLoaded() const {
+
+    bool Plugin::isValid() const {
+        return isLoaded() || m_functions.initializeLibraryFunction != nullptr || m_functions.initializePluginFunction != nullptr;
+    }
+
+    bool Plugin::isInitialized() const {
         return m_initialized;
     }
 
@@ -330,7 +335,7 @@ namespace hex {
 
     void PluginManager::initializeNewPlugins() {
         for (const auto &plugin : getPlugins()) {
-            if (!plugin.isLoaded())
+            if (!plugin.isInitialized())
                 std::ignore = plugin.initializePlugin();
         }
     }

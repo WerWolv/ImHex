@@ -415,7 +415,37 @@ namespace hex::plugin::builtin {
     }
 
     void handleDebugModeCommand(const std::vector<std::string> &) {
-        hex::dbg::setDebugModeEnabled(true);
+        dbg::setDebugModeEnabled(true);
+    }
+
+    void handleValidatePluginCommand(const std::vector<std::string> &args) {
+        if (args.size() != 1) {
+            log::println("usage: imhex --validate-plugin <plugin path>");
+            std::exit(EXIT_FAILURE);
+        }
+
+        log::resumeLogging();
+
+        const auto plugin = Plugin(args[0]);
+
+        if (!plugin.isLoaded()) {
+            log::println("Plugin couldn't be loaded. Make sure the plugin was built using the SDK of this ImHex version!");
+            std::exit(EXIT_FAILURE);
+        }
+
+        if (!plugin.isValid()) {
+            log::println("Plugin is missing required init function! Make sure your plugin has a IMHEX_PLUGIN_SETUP or IMHEX_LIBRARY_SETUP block!");
+            std::exit(EXIT_FAILURE);
+        }
+
+        if (!plugin.initializePlugin()) {
+            log::println("An error occurred while trying to initialize the plugin. Check the logs for more information.");
+            std::exit(EXIT_FAILURE);
+        }
+
+        log::println("Plugin is valid!");
+
+        std::exit(EXIT_SUCCESS);
     }
 
 

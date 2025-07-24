@@ -444,7 +444,7 @@ namespace hex::plugin::builtin {
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
         ImGui::TableNextColumn();
-        ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
+        ImGui::TextUnformatted(plugin.isInitialized() ? ICON_VS_CHECK : ICON_VS_CLOSE);
 
         if (open) {
             for (const auto &feature : plugin.getFeatures()) {

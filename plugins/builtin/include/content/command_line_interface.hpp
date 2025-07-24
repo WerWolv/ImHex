@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
     void handleDemangleCommand(const std::vector<std::string> &args);
     void handleSettingsResetCommand(const std::vector<std::string> &args);
     void handleDebugModeCommand(const std::vector<std::string> &args);
-
+    void handleValidatePluginCommand(const std::vector<std::string> &args);
 
     void registerCommandForwarders();
 
