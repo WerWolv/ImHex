@@ -5,7 +5,7 @@ FROM emscripten/emsdk:4.0.8 AS build
 ARG UNIQUEKEY 1
 
 RUN apt update
-RUN apt install -y git ccache autoconf automake libtool cmake pkg-config ninja-build
+RUN apt install -y git ccache autoconf automake libtool pkg-config ninja-build
 
 RUN <<EOF
 # Install vcpkg
@@ -56,7 +56,7 @@ RUN --mount=type=cache,target=/cache \
 set -xe
 ccache -zs
 
-cmake /imhex                                                                                            \
+/vcpkg/downloads/tools/cmake-*/cmake-*/bin/cmake /imhex                                                                                            \
     -G "Ninja"                                                                                          \
     -DIMHEX_OFFLINE_BUILD=ON                                                                            \
     -DIMHEX_STATIC_LINK_PLUGINS=ON                                                                      \
@@ -69,6 +69,7 @@ cmake /imhex                                                                    
     -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake                                      \
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     -DLIBROMFS_COMPRESS_RESOURCES=OFF                                                                   \
+    -DIMHEX_ENABLE_PLUGIN_TESTS=OFF                                                                     \
     -DCMAKE_BUILD_TYPE=Release
 
 ninja -j $JOBS

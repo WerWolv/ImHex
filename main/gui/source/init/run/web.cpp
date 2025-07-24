@@ -25,6 +25,12 @@
         }
 
         int runImHex() {
+            // Initialize GLFW
+            if (!glfwInit()) {
+                log::fatal("Failed to initialize GLFW!");
+                std::abort();
+            }
+
             static std::unique_ptr<init::WindowSplash> splashWindow;
             splashWindow = initializeImHex();
 

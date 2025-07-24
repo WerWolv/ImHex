@@ -1201,7 +1201,6 @@ jobs:
   webassembly-build:
     runs-on: ubuntu-24.04
     name: 🌍 Web
-    if: false
     permissions:
       pages: write
       id-token: write
