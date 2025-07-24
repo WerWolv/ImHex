@@ -371,6 +371,11 @@ jobs:
           
           ninja
 
+      - name: 🧪 Test if plugin can be loaded
+        run: |
+          ls ${{ github.workspace }}/template/build
+          ${{ github.workspace }}/out/imhex.exe --validate-plugin ${{ github.workspace }}/template/build/example_plugin.hexplug
+
   # MacOS build
   macos-x86:
     runs-on: macos-13
