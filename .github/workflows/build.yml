@@ -1045,7 +1045,6 @@ jobs:
           config_opts['plugin_conf']['ccache_enable'] = True
           config_opts['plugin_conf']['ccache_opts']['max_cache_size'] = '1G'
           config_opts['plugin_conf']['ccache_opts']['compress'] = True
-          config_opts['plugin_conf']['ccache_opts']['dir'] = "${{ github.workspace }}/.ccache"
           EOT
 
       # Fedora cmake build (in imhex.spec)
@@ -1088,10 +1087,6 @@ jobs:
     permissions:
       id-token: write
       attestations: write
-
-    env:
-      CCACHE_DIR:      "${{ github.workspace }}/.ccache"
-
     steps:
       - name: ⬇️ Install setup dependencies
         run: |
@@ -1110,7 +1105,8 @@ jobs:
       - name: 📜 Move snap directory to root
         run: |
           mkdir -p ./snap
-          envsubst '${IMHEX_VERSION}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
+          echo "CCACHE=ccache" >> $GITHUB_ENV
+          envsubst '${IMHEX_VERSION},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1

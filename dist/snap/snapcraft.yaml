@@ -39,13 +39,12 @@ parts:
       - CXX: /usr/bin/g++-14
     cmake-parameters:
       - -DCMAKE_BUILD_TYPE=Release
-      - -DCMAKE_C_COMPILER_LAUNCHER=/usr/bin/ccache
-      - -DCMAKE_CXX_COMPILER_LAUNCHER=/usr/bin/ccache
+      - -DCMAKE_C_COMPILER_LAUNCHER=${CCACHE}
+      - -DCMAKE_CXX_COMPILER_LAUNCHER=${CCACHE}
     cmake-generator: Ninja
     build-packages:
       - cmake
       - ninja-build
-      - ccache
       - gcc-14
       - g++-14
       - git
