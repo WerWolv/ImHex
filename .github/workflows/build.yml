@@ -374,7 +374,6 @@ jobs:
       - name: 🧪 Test if plugin can be loaded
         run: |
           export WORKSPACE=$(echo "${{ github.workspace }}" | tr '\\' '/')
-          ls ${WORKSPACE}/template/build
           ${WORKSPACE}/out/imhex.exe --validate-plugin ${WORKSPACE}/template/build/example_plugin.hexplug
 
   # MacOS build
