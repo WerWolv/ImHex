@@ -24,6 +24,7 @@ namespace hex::plugin::builtin {
 
         PerProvider<std::map<u64, std::unique_ptr<ui::PatternDrawer>>> m_patternDrawer;
         Region m_hoveredPatternRegion = Region::Invalid();
+        ui::PatternValueEditor m_patternValueEditor;
     };
 
 }

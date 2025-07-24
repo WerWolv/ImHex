@@ -572,50 +572,7 @@ namespace hex::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-            auto value = pattern.getValue();
-            auto valueString = pattern.toString();
-
-            if (const auto *enumPattern = dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern); enumPattern != nullptr) {
-                if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
-                    auto currValue = pattern.getValue().toUnsigned();
-                    for (auto &[name, enumValue] : enumPattern->getEnumValues()) {
-                        auto min = enumValue.min.toUnsigned();
-                        auto max = enumValue.max.toUnsigned();
-
-                        bool isSelected = min <= currValue && max >= currValue;
-                        if (ImGui::Selectable(fmt::format("{}::{}", pattern.getTypeName(), name, min, pattern.getSize() * 2).c_str(), isSelected)) {
-                            pattern.setValue(enumValue.min);
-                            this->resetEditing();
-                        }
-                        if (isSelected)
-                            ImGui::SetItemDefaultFocus();
-                    }
-                    ImGui::EndCombo();
-                }
-            } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldBoolean*>(&pattern) != nullptr) {
-                bool boolValue = value.toBoolean();
-                if (ImGui::Checkbox("##boolean", &boolValue)) {
-                    pattern.setValue(boolValue);
-                }
-            } else if (std::holds_alternative<i128>(value)) {
-                if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    wolv::math_eval::MathEvaluator<i128> mathEvaluator;
-
-                    if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
-                        pattern.setValue(result.value());
-
-                    this->resetEditing();
-                }
-            } else if (std::holds_alternative<u128>(value)) {
-                if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    wolv::math_eval::MathEvaluator<u128> mathEvaluator;
-
-                    if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
-                        pattern.setValue(result.value());
-
-                    this->resetEditing();
-                }
-            }
+            m_valueEditor.visit(pattern);
 
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -672,10 +629,7 @@ namespace hex::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-            bool value = pattern.getValue().toBoolean();
-            if (ImGui::Checkbox("##boolean", &value)) {
-                pattern.setValue(value);
-            }
+            m_valueEditor.visit(pattern);
 
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -695,16 +649,8 @@ namespace hex::ui {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::SetKeyboardFocusHere();
 
-            auto value = hex::encodeByteString(pattern.getBytes());
-            if (ImGui::InputText("##Character", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                if (!value.empty()) {
-                    auto result = hex::decodeByteString(value);
-                    if (!result.empty())
-                        pattern.setValue(char(result[0]));
+            m_valueEditor.visit(pattern);
 
-                    this->resetEditing();
-                }
-            }
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
         }
@@ -726,22 +672,7 @@ namespace hex::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-            if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
-                auto currValue = pattern.getValue().toUnsigned();
-                for (auto &[name, enumValue] : pattern.getEnumValues()) {
-                    auto min = enumValue.min.toUnsigned();
-                    auto max = enumValue.max.toUnsigned();
-
-                    bool isSelected = min <= currValue && max >= currValue;
-                    if (ImGui::Selectable(fmt::format("{}::{}", pattern.getTypeName(), name, min, pattern.getSize() * 2).c_str(), isSelected)) {
-                        pattern.setValue(enumValue.min);
-                        this->resetEditing();
-                    }
-                    if (isSelected)
-                        ImGui::SetItemDefaultFocus();
-                }
-                ImGui::EndCombo();
-            }
+            m_valueEditor.visit(pattern);
 
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -761,15 +692,7 @@ namespace hex::ui {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::SetKeyboardFocusHere();
 
-            auto value = pattern.toString();
-            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                wolv::math_eval::MathEvaluator<long double> mathEvaluator;
-
-                if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                    pattern.setValue(double(result.value()));
-
-                this->resetEditing();
-            }
+            m_valueEditor.visit(pattern);
 
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -815,15 +738,7 @@ namespace hex::ui {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::SetKeyboardFocusHere();
 
-            auto value = pattern.getFormattedValue();
-            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                wolv::math_eval::MathEvaluator<i128> mathEvaluator;
-
-                if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                    pattern.setValue(result.value());
-
-                this->resetEditing();
-            }
+            m_valueEditor.visit(pattern);
 
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -844,11 +759,7 @@ namespace hex::ui {
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                 ImGui::SetKeyboardFocusHere();
 
-                auto value = pattern.toString();
-                if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    pattern.setValue(value);
-                    this->resetEditing();
-                }
+                m_valueEditor.visit(pattern);
 
                 ImGui::PopItemWidth();
                 ImGui::PopStyleVar();
@@ -877,11 +788,8 @@ namespace hex::ui {
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                 ImGui::SetKeyboardFocusHere();
 
-                auto value = pattern.toString();
-                if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    pattern.setValue(value);
-                    this->resetEditing();
-                }
+                m_valueEditor.visit(pattern);
+
                 ImGui::PopItemWidth();
                 ImGui::PopStyleVar();
             } else {
@@ -925,11 +833,8 @@ namespace hex::ui {
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                 ImGui::SetKeyboardFocusHere();
 
-                auto value = pattern.toString();
-                if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    pattern.setValue(value);
-                    this->resetEditing();
-                }
+                m_valueEditor.visit(pattern);
+
                 ImGui::PopItemWidth();
                 ImGui::PopStyleVar();
             } else {
@@ -966,15 +871,8 @@ namespace hex::ui {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::SetKeyboardFocusHere();
 
-            auto value = pattern.toString();
-            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                wolv::math_eval::MathEvaluator<u128> mathEvaluator;
+            m_valueEditor.visit(pattern);
 
-                if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                    pattern.setValue(result.value());
-
-                this->resetEditing();
-            }
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
         }

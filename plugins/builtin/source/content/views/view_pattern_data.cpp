@@ -141,13 +141,64 @@ namespace hex::plugin::builtin {
 
                     if (ImGui::BeginPopup("##PatternDataContextMenu")) {
                         if (ImGui::MenuItemEx("hex.builtin.view.pattern_data.section.view_raw"_lang, ICON_VS_OPEN_PREVIEW)) {
-                            const auto &sections = runtime.getSections();
-                            if (auto it = sections.find(selectedSection); it != sections.end()) {
-                                const auto &[id, section] = *it;
-                                ImHexApi::Provider::add<prv::MemoryProvider>(section.data, section.name);
+                            if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                                const auto &sections = runtime.getSections();
+                                if (auto it = sections.find(selectedSection); it != sections.end()) {
+                                    const auto &[id, section] = *it;
+                                    ImHexApi::Provider::add<prv::MemoryProvider>(section.data, section.name);
+                                }
                             }
                         }
                         ImGui::EndPopup();
+                    }
+                }
+
+                constexpr static auto SimplifiedEditorAttribute = "hex::editor_export";
+                if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock()) && patternsValid) {
+                    const auto &patterns = runtime.getPatternsWithAttribute(SimplifiedEditorAttribute);
+                    if (!patterns.empty()) {
+                        const auto tabName = "hex.builtin.view.pattern_data.simplified_editor"_lang;
+                        ImGui::TabItemSpacing("##spacing", 0, ImGui::GetContentRegionAvail().x - ImGui::TabItemCalcSize(tabName, false).x);
+                        if (ImGui::BeginTabItem(tabName, nullptr, ImGuiTabItemFlags_Trailing)) {
+                            for (const auto &pattern : patterns) {
+                                try {
+                                    const auto attribute = pattern->getAttributeArguments(SimplifiedEditorAttribute);
+
+                                    const auto name = attribute.size() >= 1 ? attribute[0].toString() : pattern->getDisplayName();
+                                    const auto description = attribute.size() >= 2 ? attribute[1].toString() : pattern->getComment();
+
+                                    const auto widgetPos = 200_scaled;
+                                    ImGui::TextUnformatted(name.c_str());
+                                    ImGui::SameLine(0, 20_scaled);
+                                    if (ImGui::GetCursorPosX() < widgetPos)
+                                        ImGui::SetCursorPosX(widgetPos);
+
+                                    ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 0);
+                                    ImGui::PushItemWidth(-50_scaled);
+                                    pattern->accept(m_patternValueEditor);
+                                    ImGui::PopItemWidth();
+                                    ImGui::PopStyleVar();
+
+                                    if (!description.empty()) {
+                                        ImGui::PushFont(nullptr, ImGui::GetFontSize() * 0.8F);
+                                        ImGui::BeginDisabled();
+                                        ImGui::Indent();
+                                        ImGui::TextWrapped("%s", description.c_str());
+                                        ImGui::Unindent();
+                                        ImGui::EndDisabled();
+                                        ImGui::PopFont();
+                                    }
+
+                                    ImGui::Separator();
+
+                                } catch (const std::exception &e) {
+                                    ImGui::TextUnformatted(pattern->getDisplayName().c_str());
+                                    ImGui::TextUnformatted(e.what());
+                                }
+                            }
+
+                            ImGui::EndTabItem();
+                        }
                     }
                 }
 
