@@ -356,24 +356,34 @@ namespace hex::ui {
                     m_editingCellType = cellType;
                 }
             }
-        }
-        else {
+        } else {
+            std::vector<u8> buffer = m_editingBytes;
+            if (m_mode == Mode::Insert)
+                std::ranges::fill(buffer, 0x00);
+
             bool shouldExitEditingMode = true;
-            if (cellType == m_editingCellType && cellType == CellType::Hex) {
-                std::vector<u8> buffer = m_editingBytes;
+            if (cellType == m_editingCellType) {
+                switch (cellType) {
+                    case CellType::Hex: {
+                        if (m_dataVisualizerEndianness != std::endian::native)
+                            std::ranges::reverse(buffer);
 
-                if (m_dataVisualizerEndianness != std::endian::native)
-                    std::reverse(buffer.begin(), buffer.end());
+                        shouldExitEditingMode = m_currDataVisualizer->drawEditing(*m_editingAddress, buffer.data(), buffer.size(), m_upperCaseHex, m_enteredEditingMode);
 
-                shouldExitEditingMode = m_currDataVisualizer->drawEditing(*m_editingAddress, buffer.data(), buffer.size(), m_upperCaseHex, m_enteredEditingMode);
-
-                if (m_dataVisualizerEndianness != std::endian::native)
-                    std::reverse(buffer.begin(), buffer.end());
-
-                m_editingBytes = buffer;
-            } else if (cellType == m_editingCellType && cellType == CellType::ASCII) {
-                shouldExitEditingMode = asciiVisualizer.drawEditing(*m_editingAddress, m_editingBytes.data(), m_editingBytes.size(), m_upperCaseHex, m_enteredEditingMode);
+                        if (m_dataVisualizerEndianness != std::endian::native)
+                            std::ranges::reverse(buffer);
+                        break;
+                    }
+                    case CellType::ASCII: {
+                        shouldExitEditingMode = asciiVisualizer.drawEditing(*m_editingAddress, buffer.data(), buffer.size(), m_upperCaseHex, m_enteredEditingMode);
+                        break;
+                    }
+                    default:
+                        break;
+                }
             }
+
+            m_editingBytes = buffer;
 
             if (ImGui::IsWindowFocused()) {
                 ImGui::SetKeyboardFocusHere(-1);
@@ -412,8 +422,10 @@ namespace hex::ui {
 
                         if (m_mode == Mode::Insert) {
                             std::memset(m_editingBytes.data(), 0x00, size);
-                            m_provider->getUndoStack().groupOperations(2, "hex.builtin.undo_operation.insert");
                             m_provider->insert(nextEditingAddress, size);
+
+                            if (!shouldExitEditingMode)
+                                m_provider->getUndoStack().groupOperations(2, "hex.builtin.undo_operation.insert");
                         }
                     }
                 } else {
