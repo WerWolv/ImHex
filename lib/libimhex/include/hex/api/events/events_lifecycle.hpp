@@ -13,6 +13,13 @@ namespace hex {
     EVENT_DEF(EventImHexStartupFinished);
 
     /**
+     * @brief Called when the user presses the close button on the main window
+     *
+     * This is currently only used and implemented on macOS
+     */
+    EVENT_DEF(EventCloseButtonPressed);
+
+    /**
      * @brief Called when ImHex is closing, to trigger the last shutdown hooks
      *
      * This is the last event to fire before complete graceful shutdown.

@@ -95,8 +95,37 @@ namespace hex::plugin::builtin {
                 TaskManager::doLater([] {
                     for (auto &task : TaskManager::getRunningTasks())
                         task->interrupt();
-                    PopupTasksWaiting::open();
+                    PopupTasksWaiting::open([]() {
+                        ImHexApi::System::closeImHex();
+                    });
                 });
+            }
+        });
+
+        EventCloseButtonPressed::subscribe([]() {
+            if (ImHexApi::Provider::isValid()) {
+                if (ImHexApi::Provider::isDirty()) {
+                    ui::PopupQuestion::open("hex.builtin.popup.exit_application.desc"_lang,
+                        [] {
+                            for (const auto &provider : ImHexApi::Provider::getProviders())
+                                ImHexApi::Provider::remove(provider);
+                        },
+                        [] { }
+                    );
+                } else if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBackgroundTaskCount() > 0) {
+                    TaskManager::doLater([] {
+                        for (auto &task : TaskManager::getRunningTasks())
+                            task->interrupt();
+                        PopupTasksWaiting::open([]() {
+                            EventCloseButtonPressed::post();
+                        });
+                    });
+                } else {
+                    for (const auto &provider : ImHexApi::Provider::getProviders())
+                        ImHexApi::Provider::remove(provider);
+                }
+            } else {
+                ImHexApi::System::closeImHex();
             }
         });
 

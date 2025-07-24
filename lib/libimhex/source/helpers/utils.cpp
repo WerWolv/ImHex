@@ -822,10 +822,7 @@ namespace hex {
     }
 
     extern "C" void macOSCloseButtonPressed() {
-        auto windowHandle = ImHexApi::System::getMainWindowHandle();
-
-        glfwHideWindow(windowHandle);
-        glfwIconifyWindow(windowHandle);
+        EventCloseButtonPressed::post();
     }
 
     extern "C" void macosEventDataReceived(const u8 *data, size_t length) {

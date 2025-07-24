@@ -103,7 +103,8 @@ namespace hex {
     }
 
     void Window::beginNativeWindowFrame() {
-
+        if (!ImHexApi::Provider::isValid())
+            macosMarkContentEdited(m_window, false);
     }
 
     void Window::endNativeWindowFrame() {
