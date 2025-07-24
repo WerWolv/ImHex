@@ -1128,14 +1128,15 @@ jobs:
         if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
-            ${{ steps.snapcraft.outputs.snap }}
+            *.snap
 
       - name: ⬆️ Upload Snap
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: Snap ${{ matrix.architecture }}
-          path: ${{ steps.snapcraft.outputs.snap }}
+          path: |
+            *.snap
 
   flatpak-build:
     strategy:
