@@ -106,8 +106,6 @@ namespace hex::ui {
                         color = m_selectionColor;
                 }
             }
-        } else {
-            color = 0x00;
         }
 
         if (color.has_value())
@@ -487,6 +485,9 @@ namespace hex::ui {
         auto drawList = ImGui::GetWindowDrawList();
         auto window = ImGui::GetCurrentWindowRead();
         drawList->PushClipRect(window->Rect().Min, window->Rect().Max, false);
+        ON_SCOPE_EXIT {
+            drawList->PopClipRect();
+        };
 
         if (!this->isSelectionValid()) return;
 
@@ -509,7 +510,6 @@ namespace hex::ui {
         // Draw horizontal line at the bottom of the bytes
         if ((byteAddress + bytesPerRow) > region.getEndAddress())
             drawList->AddLine(ImTrunc(cellPos + ImVec2(0, cellSize.y)), ImTrunc(cellPos + cellSize), frameColor, 1_scaled);
-        drawList->PopClipRect();
     }
 
     void HexEditor::drawInsertCursor(Region region, u64 byteAddress, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &frameColor) const {
@@ -523,7 +523,12 @@ namespace hex::ui {
         bool cursorVisible = (!ImGui::GetIO().ConfigInputTextCursorBlink) || (m_cursorBlinkTimer <= 0.0F) || std::fmod(m_cursorBlinkTimer, 1.20F) <= 0.80F;
         if (cursorVisible && byteAddress == region.getStartAddress()) {
             // Draw vertical line at the left of first byte and the start of the line
+
+            auto window = ImGui::GetCurrentWindowRead();
+
+            drawList->PushClipRect(window->Rect().Min, window->Rect().Max, false);
             drawList->AddLine(ImTrunc(cellPos), ImTrunc(cellPos + ImVec2(0, cellSize.y)), frameColor, 1_scaled);
+            drawList->PopClipRect();
         }
     }
 
@@ -740,10 +745,10 @@ namespace hex::ui {
                                 // Draw highlights and selection
                                 if (backgroundColor.has_value()) {
                                     this->drawBackgroundHighlight(cellStartPos, adjustedCellSize, backgroundColor.value());
-
-                                    // Draw frame around mouse selection
-                                    this->drawSelection(x, y, selection, byteAddress, bytesPerCell, cellStartPos, adjustedCellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
                                 }
+
+                                // Draw frame around mouse selection
+                                this->drawSelection(x, y, selection, byteAddress, bytesPerCell, cellStartPos, adjustedCellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
 
                                 const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + adjustedCellSize, false) && ImGui::IsWindowHovered();
 
@@ -811,9 +816,9 @@ namespace hex::ui {
                                         // Draw highlights and selection
                                         if (backgroundColor.has_value()) {
                                             this->drawBackgroundHighlight(cellStartPos, asciiCellSize, backgroundColor.value());
-
-                                            this->drawSelection(x, y, selection, byteAddress, 1, cellStartPos, asciiCellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
                                         }
+
+                                        this->drawSelection(x, y, selection, byteAddress, 1, cellStartPos, asciiCellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
 
                                         // Set cell foreground color
                                         auto popForeground = SCOPE_GUARD { ImGui::PopStyleColor(); };
@@ -913,9 +918,9 @@ namespace hex::ui {
                                             // Draw highlights and selection
                                             if (backgroundColor.has_value()) {
                                                 this->drawBackgroundHighlight(cellStartPos, cellSize, backgroundColor.value());
-
-                                                this->drawSelection(x, y, selection, address, 1, cellStartPos, cellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
                                             }
+
+                                            this->drawSelection(x, y, selection, address, 1, cellStartPos, cellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
 
                                             auto startPos = ImGui::GetCursorPos();
                                             ImGuiExt::TextFormattedColored(data.color, "{}", data.displayValue);
