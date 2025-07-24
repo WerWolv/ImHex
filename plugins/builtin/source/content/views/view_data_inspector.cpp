@@ -279,7 +279,7 @@ namespace hex::plugin::builtin {
             const auto providerSize = m_selectedProvider->getActualSize();
             const auto providerEndAddress = baseAddress + providerSize;
 
-            ImGui::BeginDisabled(providerSize < requiredSize || selection->getStartAddress() < baseAddress + requiredSize);
+            ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getStartAddress() < baseAddress + requiredSize);
             if (ImGuiExt::DimmedIconButton(ICON_VS_ARROW_LEFT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() - requiredSize, requiredSize });
             }
@@ -287,7 +287,7 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            ImGui::BeginDisabled(providerSize < requiredSize || selection->getEndAddress() > providerEndAddress - requiredSize);
+            ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getEndAddress() > providerEndAddress - requiredSize);
             if (ImGuiExt::DimmedIconButton(ICON_VS_ARROW_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() + requiredSize, requiredSize });
             }
