@@ -999,8 +999,7 @@ jobs:
           set -x
           dnf upgrade -y
           dnf install -y \
-          mock           \
-          ccache
+          mock
 
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v4
