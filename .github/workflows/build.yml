@@ -1043,20 +1043,19 @@ jobs:
       - name: 🟩 Copy spec file to build root
         run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
 
-      - name: 📜 Enable ccache for mock
-        run: |
-          cat <<EOT > $GITHUB_WORKSPACE/mock.cfg
-          include('${{ matrix.mock_config }}-x86_64.cfg')
-          config_opts['plugin_conf']['ccache_enable'] = True
-          config_opts['plugin_conf']['ccache_opts']['max_cache_size'] = '1G'
-          config_opts['plugin_conf']['ccache_opts']['compress'] = True
-          config_opts['plugin_conf']['ccache_opts']['dir'] = "${{ github.workspace }}/.ccache"
-          EOT
-
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          mock -r $GITHUB_WORKSPACE/mock.cfg --enable-network -N -v --spec $GITHUB_WORKSPACE/imhex.spec --sources $GITHUB_WORKSPACE --resultdir $GITHUB_WORKSPACE/results
+          mock -r ${{ matrix.mock_config }}-x86_64               \
+            --define 'debug_package %{nil}'                      \
+            --enable-network -N -v                               \
+            --enable-plugin=ccache                               \
+            --plugin-option=ccache:compress=True                 \
+            --plugin-option=ccache:max_cache_size=1G             \
+            --plugin-option=ccache:dir=$GITHUB_WORKSPACE/.ccache \
+            --spec $GITHUB_WORKSPACE/imhex.spec                  \
+            --sources $GITHUB_WORKSPACE                          \
+            --resultdir $GITHUB_WORKSPACE/results
 
       - name: 🟩 Move and rename finished RPM
         run: |
