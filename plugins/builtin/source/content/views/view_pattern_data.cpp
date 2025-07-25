@@ -166,41 +166,48 @@ namespace hex::plugin::builtin {
 
                         ImGui::TabItemSpacing("##spacing", 0, ImGui::GetContentRegionAvail().x - ImGui::TabItemCalcSize(TabName, false).x);
                         if (ImGui::BeginTabItem(TabName, nullptr, ImGuiTabItemFlags_Trailing)) {
-                            for (const auto &pattern : patterns) {
-                                try {
-                                    const auto attribute = pattern->getAttributeArguments(SimplifiedEditorAttribute);
+                            if (ImGui::BeginChild("##editor")) {
+                                for (const auto &pattern : patterns) {
+                                    ImGui::PushID(pattern);
+                                    try {
+                                        const auto attribute = pattern->getAttributeArguments(SimplifiedEditorAttribute);
 
-                                    const auto name = attribute.size() >= 1 ? attribute[0].toString() : pattern->getDisplayName();
-                                    const auto description = attribute.size() >= 2 ? attribute[1].toString() : pattern->getComment();
+                                        const auto name = attribute.size() >= 1 ? attribute[0].toString() : pattern->getDisplayName();
+                                        const auto description = attribute.size() >= 2 ? attribute[1].toString() : pattern->getComment();
 
-                                    const auto widgetPos = 200_scaled;
-                                    ImGui::TextUnformatted(name.c_str());
-                                    ImGui::SameLine(0, 20_scaled);
-                                    if (ImGui::GetCursorPosX() < widgetPos)
-                                        ImGui::SetCursorPosX(widgetPos);
+                                        const auto widgetPos = 200_scaled;
+                                        ImGui::TextUnformatted(name.c_str());
+                                        ImGui::SameLine(0, 20_scaled);
+                                        if (ImGui::GetCursorPosX() < widgetPos)
+                                            ImGui::SetCursorPosX(widgetPos);
 
-                                    ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 0);
-                                    ImGui::PushItemWidth(-50_scaled);
-                                    pattern->accept(m_patternValueEditor);
-                                    ImGui::PopItemWidth();
-                                    ImGui::PopStyleVar();
+                                        ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 0);
+                                        ImGui::PushItemWidth(-50_scaled);
+                                        pattern->accept(m_patternValueEditor);
+                                        ImGui::PopItemWidth();
+                                        ImGui::PopStyleVar();
 
-                                    if (!description.empty()) {
-                                        ImGui::PushFont(nullptr, ImGui::GetFontSize() * 0.8F);
-                                        ImGui::BeginDisabled();
-                                        ImGui::Indent();
-                                        ImGui::TextWrapped("%s", description.c_str());
-                                        ImGui::Unindent();
-                                        ImGui::EndDisabled();
-                                        ImGui::PopFont();
+                                        if (!description.empty()) {
+                                            ImGui::PushFont(nullptr, ImGui::GetFontSize() * 0.8F);
+                                            ImGui::BeginDisabled();
+                                            ImGui::Indent();
+                                            ImGui::TextWrapped("%s", description.c_str());
+                                            ImGui::Unindent();
+                                            ImGui::EndDisabled();
+                                            ImGui::PopFont();
+                                        }
+
+                                        ImGui::Separator();
+
+                                    } catch (const std::exception &e) {
+                                        ImGui::TextUnformatted(pattern->getDisplayName().c_str());
+                                        ImGui::TextUnformatted(e.what());
                                     }
 
-                                    ImGui::Separator();
-
-                                } catch (const std::exception &e) {
-                                    ImGui::TextUnformatted(pattern->getDisplayName().c_str());
-                                    ImGui::TextUnformatted(e.what());
+                                    ImGui::PopID();
                                 }
+
+                                ImGui::EndChild();
                             }
 
                             ImGui::EndTabItem();
