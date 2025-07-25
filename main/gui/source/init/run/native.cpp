@@ -40,9 +40,9 @@
                 {
                     Window window;
                     window.loop();
-
-                    deinitializeImHex();
                 }
+
+                deinitializeImHex();
             } while (shouldRestart);
 
             return EXIT_SUCCESS;
