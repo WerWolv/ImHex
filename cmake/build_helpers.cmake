@@ -844,7 +844,6 @@ macro(addBundledLibraries)
         find_package(nlohmann_json 3.10.2 REQUIRED)
         set(NLOHMANN_JSON_LIBRARIES nlohmann_json::nlohmann_json)
     endif()
-    add_compile_definitions(JSON_NO_IO=1 JSON_DIAGNOSTICS=1)
 
     if (NOT USE_SYSTEM_LUNASVG)
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/lunasvg EXCLUDE_FROM_ALL)
