@@ -1052,41 +1052,7 @@ namespace hex {
             return getFont(m_fontName);
         }
 
-
-        GlyphRange glyph(const char *glyph) {
-            u32 codepoint;
-            ImTextCharFromUtf8(&codepoint, glyph, nullptr);
-
-            return {
-                .begin = u16(codepoint),
-                .end   = u16(codepoint)
-            };
-        }
-        GlyphRange glyph(u32 codepoint) {
-            return {
-                .begin = u16(codepoint),
-                .end   = u16(codepoint)
-            };
-        }
-        GlyphRange range(const char *glyphBegin, const char *glyphEnd) {
-            u32 codepointBegin, codepointEnd;
-            ImTextCharFromUtf8(&codepointBegin, glyphBegin, nullptr);
-            ImTextCharFromUtf8(&codepointEnd, glyphEnd, nullptr);
-
-            return {
-                .begin = u16(codepointBegin),
-                .end   = u16(codepointEnd)
-            };
-        }
-
-        GlyphRange range(u32 codepointBegin, u32 codepointEnd) {
-            return {
-                .begin = u16(codepointBegin),
-                .end   = u16(codepointEnd)
-            };
-        }
-
-        void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags, std::optional<bool> scalable, std::optional<u32> defaultSize) {
+        void loadFont(const std::fs::path &path, Offset offset, std::optional<u32> defaultSize) {
             wolv::io::File fontFile(path, wolv::io::File::Mode::Read);
             if (!fontFile.isValid()) {
                 log::error("Failed to load font from file '{}'", wolv::util::toUTF8String(path));
@@ -1096,22 +1062,16 @@ namespace hex {
             impl::s_fonts->emplace_back(MergeFont {
                 wolv::util::toUTF8String(path.filename()),
                 fontFile.readVector(),
-                glyphRanges,
                 offset,
-                flags,
-                scalable,
                 defaultSize
             });
         }
 
-        void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags, std::optional<bool> scalable, std::optional<u32> defaultSize) {
+        void loadFont(const std::string &name, const std::span<const u8> &data, Offset offset, std::optional<u32> defaultSize) {
             impl::s_fonts->emplace_back(MergeFont {
                 name,
                 { data.begin(), data.end() },
-                glyphRanges,
                 offset,
-                flags,
-                scalable,
                 defaultSize
             });
         }

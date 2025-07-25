@@ -528,7 +528,6 @@ namespace hex::init {
 
             ImFontConfig cfg;
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-            cfg.SizePixels = ImHexApi::Fonts::DefaultFontSize;
             io.Fonts->AddFontDefault(&cfg);
         }
 

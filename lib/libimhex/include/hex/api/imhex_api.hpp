@@ -745,16 +745,12 @@ EXPORT_MODULE namespace hex {
 
         namespace Fonts {
 
-            struct GlyphRange { u16 begin, end; };
             struct Offset { float x, y; };
 
             struct MergeFont {
                 std::string name;
                 std::vector<u8> fontData;
-                std::vector<GlyphRange> glyphRanges;
                 Offset offset;
-                u32 flags;
-                std::optional<bool> scalable;
                 std::optional<u32> defaultSize;
             };
 
@@ -777,15 +773,8 @@ EXPORT_MODULE namespace hex {
 
             }
 
-            GlyphRange glyph(const char *glyph);
-            GlyphRange glyph(u32 codepoint);
-            GlyphRange range(const char *glyphBegin, const char *glyphEnd);
-            GlyphRange range(u32 codepointBegin, u32 codepointEnd);
-
-            void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<bool> scalable = std::nullopt, std::optional<u32> defaultSize = std::nullopt);
-            void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<bool> scalable = std::nullopt, std::optional<u32> defaultSize = std::nullopt);
-
-            constexpr float DefaultFontSize = 13.0;
+            void loadFont(const std::fs::path &path, Offset offset = {}, std::optional<u32> defaultSize = std::nullopt);
+            void loadFont(const std::string &name, const std::span<const u8> &data, Offset offset = {}, std::optional<u32> defaultSize = std::nullopt);
 
             void registerFont(const UnlocalizedString &fontName);
             ImFont* getFont(const UnlocalizedString &fontName);

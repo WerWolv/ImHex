@@ -63,7 +63,7 @@ namespace hex::fonts {
             if (*imguiFont == nullptr) {
                 if (settings.isPixelPerfectFont()) {
                     auto defaultConfig = config;
-                    defaultConfig.SizePixels = ImHexApi::Fonts::DefaultFontSize;
+                    defaultConfig.SizePixels = 0;
                     *imguiFont = atlas->AddFontDefault(&defaultConfig);
                 } else {
                     static auto jetbrainsFont = romfs::get("fonts/JetBrainsMono.ttf");
@@ -81,7 +81,7 @@ namespace hex::fonts {
         for (auto &extraFont : ImHexApi::Fonts::impl::getMergeFonts()) {
             config.GlyphOffset = { extraFont.offset.x, -extraFont.offset.y };
             config.GlyphOffset *= ImHexApi::System::getGlobalScale();
-            atlas->AddFontFromMemoryTTF(const_cast<u8 *>(extraFont.fontData.data()), extraFont.fontData.size(), 0.0F, &config);
+            atlas->AddFontFromMemoryTTF(const_cast<u8 *>(extraFont.fontData.data()), extraFont.fontData.size(), extraFont.defaultSize.value_or(0), &config);
         }
     }
 
