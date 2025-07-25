@@ -257,10 +257,12 @@ void TextEditor::DeleteRange(const Coordinates &aStart, const Coordinates &aEnd)
         auto &firstLine = mLines[start.mLine];
         auto &lastLine  = mLines[end.mLine];
 
-        if (startIndex < (int)firstLine.size())
+        if (startIndex <= (int)firstLine.size())
             firstLine.erase(firstLine.begin() + startIndex, -1);
-        if (endIndex < (int)lastLine.size())
+        if (endIndex <= (int)lastLine.size())
             lastLine.erase(lastLine.begin(), endIndex);
+        else
+            lastLine.erase(lastLine.begin(), -1);
 
         if (!lastLine.empty()) {
             firstLine.insert(firstLine.end(), lastLine.begin(), lastLine.end());
