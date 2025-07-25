@@ -1231,12 +1231,14 @@ jobs:
           docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out/nightly --target raw
 
       - name: ⬇️ Download Release
+        if: ${{ github.event.repository.fork == false }}
         uses: robinraju/release-downloader@v1
         with:
           latest: true
           fileName: 'imhex-*-Web.zip'
 
       - name: 🔨 Fix permissions
+        if: ${{ github.event.repository.fork == false }}
         run: |
           unzip imhex-*-Web.zip -d out
           chmod -c -R +rX "out/"
