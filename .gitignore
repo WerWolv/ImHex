@@ -2,6 +2,7 @@
 /.idea/
 /.kdev4/
 /.vs/
+.venv/
 
 /cmake-build-*/
 /build*/
