@@ -200,10 +200,10 @@ namespace hex::plugin::builtin {
         next();
         if (sequence(tkn::Operator::Colon)) {
             while (peek(tkn::Literal::Identifier)) {
-                auto identifier = getValue<Identifier>(0);
-                if (identifier == nullptr)
+                std::vector<Identifier *> identifiers;
+                std::string identifierName;
+                if (!getFullName(identifierName, identifiers, false))
                     break;
-                auto identifierName = identifier->get();
                 if (std::ranges::find(m_inheritances[name], identifierName) == m_inheritances[name].end())
                     m_inheritances[name].push_back(identifierName);
                 skipTemplate(200);
@@ -212,6 +212,8 @@ namespace hex::plugin::builtin {
         }
 
         m_curr = saveCurr;
+        if (peek(tkn::ValueType::Auto))
+            next(-1);
         i32 index1 = getTokenId(m_curr->location);
         bool result = true;
         for (auto keyword: keywords)
@@ -270,14 +272,14 @@ namespace hex::plugin::builtin {
     }
 
 // Searches through tokens and loads all the ranges of one kind. First namespaces are searched.
-    void TextHighlighter::getAllTokenRanges(IdentifierType IdentifierTypeToSearch) {
+    void TextHighlighter::getAllTokenRanges(IdentifierType identifierTypeToSearch) {
 
         if (m_tokens.empty())
             return;
 
         Identifier *identifier;
         IdentifierType identifierType;
-        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_tokens.begin(), m_tokens.end());
+        m_startToken = TokenIter(m_tokens.begin(), m_tokens.end());
         auto endToken = TokenIter(m_tokens.end(), m_tokens.end());
         for (m_curr = m_startToken; endToken > m_curr; next()) {
             auto curr = m_curr;
@@ -287,7 +289,7 @@ namespace hex::plugin::builtin {
                     identifierType = identifier->getType();
                     std::string name = identifier->get();
 
-                    if (identifierType == IdentifierTypeToSearch) {
+                    if (identifierType == identifierTypeToSearch) {
                         switch (identifierType) {
                             case IdentifierType::Function:
                                 getTokenRange({tkn::Keyword::Function}, m_functionTokenRange, m_namespaceTokenRange, false, &m_functionBlocks);
@@ -989,53 +991,6 @@ namespace hex::plugin::builtin {
         std::vector<std::string> grandpaTypes;
         findParentTypes(parentTypes);
 
-        if (parentTypes.empty()) {
-            auto curr = m_curr;
-            //must be a template instance of a type template instance
-            // find the name of the structure that is two < before.
-            u32 index = getTokenId(m_curr->location);
-            u32 maxIndex;
-            if (m_curr->location.line < m_firstTokenIdOfLine.size())
-                maxIndex = m_firstTokenIdOfLine[m_curr->location.line];
-            else
-                maxIndex = m_tokens.size() - 1;
-            u32 found = 0;
-            auto i=0;
-            do {
-                if (index >= maxIndex || i >= 200) {
-                    m_curr = curr;
-                    return false;
-                }
-                next();
-                if (auto *operatortk = std::get_if<Operator>(&m_curr->value);operatortk != nullptr && *operatortk == Operator::BoolGreaterThan) {
-                    found++;
-                    if (found == 2)
-                        break;
-                }
-                index = getTokenId(m_curr->location);
-                i++;
-            } while (true);
-
-            next();
-            skipTemplate(200,false);
-            next(-1);
-            auto *identifier = std::get_if<Identifier>(&m_curr->value);
-            if (identifier != nullptr) {
-                auto identifierName = identifier->get();
-                if (std::ranges::find(m_UDTs, identifierName) != m_UDTs.end()) {
-                    if (std::ranges::find(parentTypes, identifierName) == parentTypes.end()) {
-                        parentTypes.push_back(identifierName);
-                        m_curr = curr;
-                        return true;
-                    }
-                } else if (std::ranges::find(m_nameSpaces, identifierName) ==
-                           m_nameSpaces.end()) {
-                    m_nameSpaces.push_back(identifierName);
-                    m_curr = curr;
-                    return true;
-                }
-            }
-        }
         if (parentTypes.empty())
             return false;
 
@@ -1640,6 +1595,8 @@ namespace hex::plugin::builtin {
             for (auto inheritance: m_inheritances[name]) {
                 recurseInheritances(inheritance);
                 auto definitions = m_UDTVariables[inheritance];
+                if (definitions.empty())
+                    definitions = m_ImportedUDTVariables[inheritance];
                 for (auto [variableName, variableDefinitions]: definitions) {
                     auto tokenRange = m_UDTTokenRange[name];
                     u32 tokenIndex = tokenRange.start;
@@ -1701,7 +1658,7 @@ namespace hex::plugin::builtin {
             log::error("TextHighlighter::IsLocationValid: Out of range error: {}", e.what());
             return false;
         }
-        if (source == nullptr || !source->mainSource)
+        if (source == nullptr)
             return false;
         i32 line = location.line - 1;
         i32 col = location.column - 1;
@@ -2220,6 +2177,57 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void TextHighlighter::clearVariables() {
+        if (!m_inheritances.empty())
+            m_inheritances.clear();
+
+        if (!m_globalTokenRange.empty())
+            m_globalTokenRange.clear();
+
+        if (!m_namespaceTokenRange.empty())
+            m_namespaceTokenRange.clear();
+
+        if (!m_UDTDefinitions.empty())
+            m_UDTDefinitions.clear();
+
+        if (!m_UDTBlocks.empty())
+            m_UDTBlocks.clear();
+
+        if (!m_UDTTokenRange.empty())
+            m_UDTTokenRange.clear();
+
+        if (!m_functionDefinitions.empty())
+            m_functionDefinitions.clear();
+
+        if (!m_functionBlocks.empty())
+            m_functionBlocks.clear();
+
+        if (!m_functionTokenRange.empty())
+            m_functionTokenRange.clear();
+
+        if (!m_functionVariables.empty())
+            m_functionVariables.clear();
+
+        if (!m_attributeFunctionArgumentType.empty())
+            m_attributeFunctionArgumentType.clear();
+
+        if (!m_memberChains.empty())
+            m_memberChains.clear();
+
+        if (!m_scopeChains.empty())
+            m_scopeChains.clear();
+    }
+    void TextHighlighter::processSource() {
+
+        getAllTokenRanges(IdentifierType::NameSpace);
+        getAllTokenRanges(IdentifierType::UDT);
+        getDefinitions();
+        m_ImportedUDTVariables.insert(m_UDTVariables.begin(), m_UDTVariables.end());
+
+        clearVariables();
+    }
+
+
 // Only update if needed. Must wait for the parser to finish first.
     void TextHighlighter::highlightSourceCode() {
         m_wasInterrupted = false;
@@ -2246,11 +2254,31 @@ namespace hex::plugin::builtin {
             m_UDTs.clear();
         for (auto &[name, type]: types)
             m_UDTs.push_back(name);
+
+        // Namespaces from included files.
+        m_nameSpaces.clear();
+        m_nameSpaces = preprocessor->getNamespaces();
+        clearVariables();
+
+        m_parsedImports = preprocessor->getParsedImports();
+        for (auto &[name, tokens]: m_parsedImports) {
+            m_tokens = tokens;
+            m_text = tokens[0].location.source->content;
+            if (m_text.empty() || m_text == "\n")
+                return;
+            loadText();
+            processSource();
+            if (!m_tokenColors.empty())
+                m_tokenColors.clear();
+        }
+
         m_tokens = preprocessor->getResult();
         if (m_tokens.empty())
             return;
-        auto lastToken = m_tokens.back();
-        m_tokens.push_back(lastToken);
+
+        if (!m_globalTokenRange.empty())
+            m_globalTokenRange.clear();
+        m_globalTokenRange.insert(Interval(0, m_tokens.size()-1));
 
         m_text = m_viewPatternEditor->getTextEditor().GetText();
 
@@ -2258,52 +2286,13 @@ namespace hex::plugin::builtin {
             return;
         loadText();
 
-        if (!m_globalTokenRange.empty())
-            m_globalTokenRange.clear();
-        m_globalTokenRange.insert(Interval(0, m_tokens.size()-1));
-
-        // Namespaces from included files.
-        m_nameSpaces.clear();
-        m_nameSpaces = preprocessor->getNamespaces();
-
-        if (!m_inheritances.empty())
-            m_inheritances.clear();
-
-        if (!m_namespaceTokenRange.empty())
-            m_namespaceTokenRange.clear();
         getAllTokenRanges(IdentifierType::NameSpace);
-
-        if (!m_UDTBlocks.empty())
-            m_UDTBlocks.clear();
-
-        if (!m_UDTTokenRange.empty())
-            m_UDTTokenRange.clear();
         getAllTokenRanges(IdentifierType::UDT);
-
-        if (!m_functionBlocks.empty())
-            m_functionBlocks.clear();
-
-        if (!m_functionTokenRange.empty())
-            m_functionTokenRange.clear();
         getAllTokenRanges(IdentifierType::Function);
-
-        if (!m_globalBlocks.empty())
-            m_globalBlocks.clear();
         getGlobalTokenRanges();
-
         fixGlobalVariables();
-        if (!m_scopeChains.empty())
-            m_scopeChains.clear();
-
-        if (!m_memberChains.empty())
-            m_memberChains.clear();
-
         setInitialColors();
         loadInstances();
-
-        if (!m_attributeFunctionArgumentType.empty())
-            m_attributeFunctionArgumentType.clear();
-
         getAllTokenRanges(IdentifierType::Attribute);
         getDefinitions();
         fixAutos();

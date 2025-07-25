@@ -74,9 +74,11 @@ namespace hex::plugin::builtin {
         Scopes m_globalTokenRange;
 
         VariableMap m_UDTVariables;
+        VariableMap m_ImportedUDTVariables;
         VariableMap m_functionVariables;
         Variables m_globalVariables;
 
+        std::map<std::string, std::vector<Token>> m_parsedImports;
         std::map<std::string,std::string> m_attributeFunctionArgumentType;
         std::map<std::string,std::string> m_typeDefMap;
         std::map<std::string,std::string> m_typeDefInvMap;
@@ -157,6 +159,8 @@ namespace hex::plugin::builtin {
          * @brief Entry point to syntax highlighting
          */
         void highlightSourceCode();
+        void processSource();
+        void clearVariables();
 
         /**
         * @brief Syntax highlighting from parser
