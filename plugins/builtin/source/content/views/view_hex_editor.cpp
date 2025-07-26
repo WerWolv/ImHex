@@ -5,6 +5,8 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 
+#include <content/differing_byte_searcher.hpp>
+
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/events/requests_gui.hpp>
@@ -14,6 +16,7 @@
 #include <hex/helpers/default_paths.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <wolv/math_eval/math_evaluator.hpp>
 
@@ -1260,6 +1263,88 @@ namespace hex::plugin::builtin {
                                                 ImHexApi::Provider::isValid,
                                                 this);
 
+        /* Skip until */
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.skip_until" }, ICON_VS_DEBUG_STEP_OVER, 1610,
+                                                []{},
+                                                canSearchForDifferingByte);
+
+        /* Skip until previous differing byte */
+        ContentRegistry::Interface::addMenuItem({
+                                                    "hex.builtin.menu.file",
+                                                    "hex.builtin.view.hex_editor.menu.file.skip_until",
+                                                    "hex.builtin.view.hex_editor.menu.file.skip_until.previous_differing_byte"
+                                                },
+                                                ICON_VS_DEBUG_STEP_BACK,
+                                                1620,
+                                                CTRLCMD + Keys::LeftBracket,
+                                                [this] {
+                                                    bool didFindNextValue = false;
+                                                    bool didReachBeginning = false;
+                                                    u64 foundAddress;
+
+                                                    findNextDifferingByte(
+                                                        [] (prv::Provider* provider) -> u64 {
+                                                            return provider->getBaseAddress();
+                                                        },
+                                                        [] (u64 currentAddress, u64 endAddress) -> bool {
+                                                            return currentAddress > endAddress;
+                                                        },
+                                                        [] (u64* currentAddress) {
+                                                            (*currentAddress)--;
+                                                        },
+                                                        &didFindNextValue,
+                                                        &didReachBeginning,
+                                                        &foundAddress
+                                                    );
+
+                                                    if (didFindNextValue) {
+                                                        ImHexApi::HexEditor::setSelection(foundAddress, 1);
+                                                    }
+
+                                                    if (!didFindNextValue && didReachBeginning) {
+                                                        ui::ToastInfo::open("hex.builtin.view.hex_editor.menu.file.skip_until.beginning_reached"_lang);
+                                                    }
+                                                },
+                                                canSearchForDifferingByte);
+
+        /* Skip until next differing byte */
+        ContentRegistry::Interface::addMenuItem({
+                                                    "hex.builtin.menu.file",
+                                                    "hex.builtin.view.hex_editor.menu.file.skip_until",
+                                                    "hex.builtin.view.hex_editor.menu.file.skip_until.next_differing_byte"
+                                                },
+                                                ICON_VS_DEBUG_STEP_OVER,
+                                                1630,
+                                                CTRLCMD + Keys::RightBracket,
+                                                [this] {
+                                                    bool didFindNextValue = false;
+                                                    bool didReachEnd = false;
+                                                    u64 foundAddress;
+
+                                                    findNextDifferingByte(
+                                                        [] (prv::Provider* provider) -> u64 {
+                                                            return provider->getBaseAddress() + provider->getActualSize() - 1;
+                                                        },
+                                                        [] (u64 currentAddress, u64 endAddress) -> bool {
+                                                            return currentAddress < endAddress;
+                                                        },
+                                                        [] (u64* currentAddress) {
+                                                            (*currentAddress)++;
+                                                        },
+                                                        &didFindNextValue,
+                                                        &didReachEnd,
+                                                        &foundAddress
+                                                    );
+
+                                                    if (didFindNextValue) {
+                                                        ImHexApi::HexEditor::setSelection(foundAddress, 1);
+                                                    }
+
+                                                    if (!didFindNextValue && didReachEnd) {
+                                                        ui::ToastInfo::open("hex.builtin.view.hex_editor.menu.file.skip_until.end_reached"_lang);
+                                                    }
+                                                },
+                                                canSearchForDifferingByte);
 
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1100, this);
