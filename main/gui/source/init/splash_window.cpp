@@ -63,6 +63,7 @@ namespace hex::init {
 
         RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
             m_tasks.push_back(Task{ name, function, async, false });
+            m_progress = float(m_completedTaskCount) / float(m_totalTaskCount);
         });
     }
 
@@ -362,11 +363,9 @@ namespace hex::init {
             drawList->AddRectFilled(progressStart, progressStart + progressSize, 0xD0FFFFFF);
 
             // Draw task names separated by | characters
-            if (!m_currTaskNames.empty()) {
-                drawList->PushClipRect(progressBackgroundStart, progressBackgroundStart + progressBackgroundSize, true);
-                drawList->AddText(progressStart + ImVec2(5, -20), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{}", fmt::join(m_currTaskNames, " | ")).c_str());
-                drawList->PopClipRect();
-            }
+            drawList->PushClipRect(progressBackgroundStart, progressBackgroundStart + progressBackgroundSize, true);
+            drawList->AddText(progressStart + ImVec2(5, -20), ImColor(0xFF, 0xFF, 0xFF, 0xFF), m_currTaskNames.empty() ? "Ready!" : hex::format("{}", fmt::join(m_currTaskNames, " | ")).c_str());
+            drawList->PopClipRect();
         }
 
         // Render the frame
