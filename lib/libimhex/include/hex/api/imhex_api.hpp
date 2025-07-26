@@ -759,17 +759,29 @@ EXPORT_MODULE namespace hex {
                 explicit Font(UnlocalizedString fontName);
 
                 void push(float size = 0.0F) const;
+                void pushBold(float size = 0.0F) const;
+                void pushItalic(float size = 0.0F) const;
+
                 void pop() const;
 
                 [[nodiscard]] operator ImFont*() const;
             private:
+                void push(float size, ImFont *font) const;
+
+            private:
                 UnlocalizedString m_fontName;
+            };
+
+            struct FontDefinition {
+                ImFont* regular;
+                ImFont* bold;
+                ImFont* italic;
             };
 
             namespace impl {
 
                 const std::vector<MergeFont>& getMergeFonts();
-                std::map<UnlocalizedString, ImFont*>& getFontDefinitions();
+                std::map<UnlocalizedString, FontDefinition>& getFontDefinitions();
 
             }
 
@@ -777,7 +789,7 @@ EXPORT_MODULE namespace hex {
             void loadFont(const std::string &name, const std::span<const u8> &data, Offset offset = {}, std::optional<u32> defaultSize = std::nullopt);
 
             void registerFont(const UnlocalizedString &fontName);
-            ImFont* getFont(const UnlocalizedString &fontName);
+            FontDefinition getFont(const UnlocalizedString &fontName);
 
             void setDefaultFont(const Font& font);
             const Font& getDefaultFont();

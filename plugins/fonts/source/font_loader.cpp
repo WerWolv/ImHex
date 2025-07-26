@@ -10,19 +10,15 @@
 
 namespace hex::fonts::loader {
 
-    void loadFont(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImFont **imguiFont) {
+    void loadFont(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImGuiFreeTypeLoaderFlags extraFlags, ImFont **imguiFont) {
         const auto &settings = static_cast<const FontSelector&>(widget);
 
-        auto atlas = ImGui::GetIO().Fonts;
+        const auto atlas = ImGui::GetIO().Fonts;
 
-        {
-            auto &font = *imguiFont;
+        if (auto &font = *imguiFont; font != nullptr) {
+            atlas->RemoveFont(font);
 
-            if (font != nullptr) {
-                atlas->RemoveFont(font);
-
-                font = nullptr;
-            }
+            font = nullptr;
         }
 
         ImFontConfig config;
@@ -47,13 +43,14 @@ namespace hex::fonts::loader {
                     config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_SubPixel;
                     break;
             }
+
+            config.FontLoaderFlags |= extraFlags;
         } else {
             config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_NoHinting;
         }
 
         {
-            const auto fontPath = settings.getFontPath();
-            if (!fontPath.empty())
+            if (const auto fontPath = settings.getFontPath(); !fontPath.empty())
                 *imguiFont = atlas->AddFontFromFileTTF(fontPath.string().c_str(), 0.0F, &config);
 
             if (*imguiFont == nullptr) {
@@ -81,21 +78,27 @@ namespace hex::fonts::loader {
         }
     }
 
+    void loadFontVariations(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImHexApi::Fonts::FontDefinition &fontDefinition) {
+        loadFont(widget, name, 0, &fontDefinition.regular);
+        loadFont(widget, name, ImGuiFreeTypeLoaderFlags_Bold, &fontDefinition.bold);
+        loadFont(widget, name, ImGuiFreeTypeLoaderFlags_Oblique, &fontDefinition.italic);
+    }
+
     bool loadFonts() {
-        for (auto &[name, font] : ImHexApi::Fonts::impl::getFontDefinitions()) {
+        for (auto &[name, fontDefinition] : ImHexApi::Fonts::impl::getFontDefinitions()) {
             auto &widget = addFontSettingsWidget(name)
-                .setChangedCallback([name, &font, firstLoad = true](auto &widget) mutable {
+                .setChangedCallback([name, &fontDefinition, firstLoad = true](auto &widget) mutable {
                     if (firstLoad) {
                         firstLoad = false;
                         return;
                     }
 
-                    TaskManager::doLater([name, &font, &widget] {
-                        loadFont(widget, name, &font);
+                    TaskManager::doLater([name, &fontDefinition, &widget] {
+                        loadFontVariations(widget, name, fontDefinition);
                     });
                 });
 
-            loadFont(widget.getWidget(), name, &font);
+            loadFontVariations(widget.getWidget(), name, fontDefinition);
         }
 
         return true;

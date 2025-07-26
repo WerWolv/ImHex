@@ -1011,8 +1011,8 @@ namespace hex {
                 return *s_fonts;
             }
 
-            static AutoReset<std::map<UnlocalizedString, ImFont*>> s_fontDefinitions;
-            std::map<UnlocalizedString, ImFont*>& getFontDefinitions() {
+            static AutoReset<std::map<UnlocalizedString, FontDefinition>> s_fontDefinitions;
+            std::map<UnlocalizedString, FontDefinition>& getFontDefinitions() {
                 return *s_fontDefinitions;
             }
 
@@ -1028,8 +1028,18 @@ namespace hex {
         }
 
         void Font::push(float size) const {
-            auto font = getFont(m_fontName);
+            push(size, getFont(m_fontName).regular);
+        }
 
+        void Font::pushBold(float size) const {
+            push(size, getFont(m_fontName).bold);
+        }
+
+        void Font::pushItalic(float size) const {
+            push(size, getFont(m_fontName).italic);
+        }
+
+        void Font::push(float size, ImFont* font) const {
             if (font != nullptr) {
                 if (size <= 0.0F) {
                     size = font->LegacySize;
@@ -1044,12 +1054,13 @@ namespace hex {
             ImGui::PushFont(font, size);
         }
 
+
         void Font::pop() const {
             ImGui::PopFont();
         }
 
         Font::operator ImFont*() const {
-            return getFont(m_fontName);
+            return getFont(m_fontName).regular;
         }
 
         void loadFont(const std::fs::path &path, Offset offset, std::optional<u32> defaultSize) {
@@ -1077,15 +1088,16 @@ namespace hex {
         }
 
         void registerFont(const UnlocalizedString &fontName) {
-            (*impl::s_fontDefinitions)[fontName] = nullptr;
+            (*impl::s_fontDefinitions)[fontName] = {};
         }
 
-        ImFont* getFont(const UnlocalizedString &fontName) {
+        FontDefinition getFont(const UnlocalizedString &fontName) {
             auto it = impl::s_fontDefinitions->find(fontName);
             
-            if (it == impl::s_fontDefinitions->end())
-                return ImGui::GetDefaultFont();
-            else
+            if (it == impl::s_fontDefinitions->end()) {
+                const auto defaultFont = ImGui::GetDefaultFont();
+                return { defaultFont, defaultFont, defaultFont };
+            } else
                 return it->second;
         }
 
