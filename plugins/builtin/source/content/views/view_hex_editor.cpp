@@ -1172,14 +1172,14 @@ namespace hex::plugin::builtin {
 
     void ViewHexEditor::registerMenuItems() {
         /* Undo */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.undo" }, ICON_VS_DISCARD, 1000, CTRLCMD + Keys::Z, [] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.undo" }, ICON_VS_DISCARD, 1000, CTRLCMD + Keys::Z, [] {
             auto provider = ImHexApi::Provider::get();
                 provider->undo();
         }, [&] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->canUndo(); },
         this);
 
         /* Redo */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.redo" }, ICON_VS_REDO, 1050, CTRLCMD + Keys::Y, [] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.redo" }, ICON_VS_REDO, 1050, CTRLCMD + Keys::Y, [] {
             auto provider = ImHexApi::Provider::get();
                 provider->redo();
         }, [&] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->canRedo(); },

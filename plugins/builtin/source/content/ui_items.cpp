@@ -546,8 +546,8 @@ namespace hex::plugin::builtin {
         });
 
         EventImHexStartupFinished::subscribe([] {
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.undo", ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.redo", ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.edit.undo", ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.edit.redo", ImGuiCustomCol_ToolbarBlue);
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.file.create_file", ImGuiCustomCol_ToolbarGray);
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.file.open_file", ImGuiCustomCol_ToolbarBrown);
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save", ImGuiCustomCol_ToolbarBlue);
