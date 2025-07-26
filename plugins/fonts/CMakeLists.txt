@@ -9,6 +9,7 @@ add_imhex_plugin(
         source/library_fonts.cpp
         source/fonts.cpp
         source/font_settings.cpp
+        source/font_loader.cpp
     INCLUDES
         include
     LIBRARY_PLUGIN
