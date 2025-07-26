@@ -15,8 +15,6 @@ set(AVAILABLE_TESTS
         FileAccess
 
     # Utils
-        SplitStringAtChar
-        SplitStringAtString
         ExtractBits
 )
 
