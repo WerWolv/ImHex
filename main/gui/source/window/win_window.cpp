@@ -379,6 +379,11 @@ namespace hex {
                     if (fontPath.is_relative())
                         fontPath = std::fs::path("C:\\Windows\\Fonts") / fontPath;
 
+                    // Windows appends (TrueType) to all font names for some reason. Remove it
+                    if (fontName.ends_with(" (TrueType)")) {
+                        fontName = fontName.substr(0, fontName.size() - 12);
+                    }
+
                     registerFont(fontName.c_str(), wolv::util::toUTF8String(fontPath).c_str());
                 }
 
