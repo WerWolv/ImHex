@@ -797,9 +797,7 @@ endmacro()
 macro(addBundledLibraries)
     set(EXTERNAL_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/external")
     set(THIRD_PARTY_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/third_party")
-
     set(BUILD_SHARED_LIBS OFF)
-    add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/imgui)
 
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/microtar EXCLUDE_FROM_ALL)
 
@@ -886,6 +884,8 @@ macro(addBundledLibraries)
 
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/disassembler EXCLUDE_FROM_ALL)
+
+    add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/imgui)
 
     if (LIBPL_SHARED_LIBRARY)
         install(
