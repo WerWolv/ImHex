@@ -45,6 +45,12 @@ namespace hex::fonts::loader {
             }
 
             config.FontLoaderFlags |= extraFlags;
+            if (extraFlags & ImGuiFreeTypeLoaderFlags_Bold)
+                std::strncat(config.Name, " Bold", sizeof(config.Name) - 1);
+            else if (extraFlags & ImGuiFreeTypeLoaderFlags_Oblique)
+                std::strncat(config.Name, " Italic", sizeof(config.Name) - 1);
+            else
+                std::strncat(config.Name, " Regular", sizeof(config.Name) - 1);
         } else {
             config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_NoHinting;
         }
