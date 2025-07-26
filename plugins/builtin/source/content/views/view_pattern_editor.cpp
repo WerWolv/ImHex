@@ -2302,37 +2302,6 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::G + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.goto_line", [this] {
-            m_openGotoLinePopUp = true;
-        });
-
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::F + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find", [this] {
-            m_openFindReplacePopUp = true;
-            m_replaceMode = false;
-        });
-
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::H + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.replace", [this] {
-            if (m_focusedSubWindowName.contains(textEditorView)) {
-                m_openFindReplacePopUp = true;
-                m_replaceMode = true;
-            }
-        });
-
-        ShortcutManager::addShortcut(this, Keys::F3 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find_next", [this] {
-
-                if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
-                    TextEditor::FindReplaceHandler *findReplaceHandler = editor->GetFindReplaceHandler();
-                    findReplaceHandler->FindMatch(editor, true);
-                }
-        });
-
-        ShortcutManager::addShortcut(this, SHIFT + Keys::F3 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.find_previous", [this] {
-            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
-                TextEditor::FindReplaceHandler *findReplaceHandler = editor->GetFindReplaceHandler();
-                findReplaceHandler->FindMatch(editor, false);
-            }
-        });
-
         ShortcutManager::addShortcut(this, ALT + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.match_case_toggle", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 TextEditor::FindReplaceHandler *findReplaceHandler = editor->GetFindReplaceHandler();
