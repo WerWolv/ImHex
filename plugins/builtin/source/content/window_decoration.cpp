@@ -443,7 +443,7 @@ namespace hex::plugin::builtin {
             ImGui::SetNextWindowScroll(ImVec2(0, 0));
 
             #if defined(OS_MACOS)
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetStyle().FramePadding.x, 8_scaled));
+                ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 8_scaled);
                 ON_SCOPE_EXIT { ImGui::PopStyleVar(); };
             #endif
 
@@ -466,7 +466,7 @@ namespace hex::plugin::builtin {
                             ImGui::OpenPopup("WindowingMenu");
                     #elif defined(OS_MACOS)
                         if (!isMacosFullScreenModeEnabled(window))
-                            ImGui::SetCursorPosX(75_scaled);
+                            ImGui::SetCursorPosX(80_scaled);
                     #endif
                 }
 
