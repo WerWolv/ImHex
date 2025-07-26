@@ -44,8 +44,8 @@
             emscripten_set_main_loop_arg([](void *arg) {
                 auto &splashWindow = *reinterpret_cast<std::unique_ptr<init::WindowSplash>*>(arg);
 
-                FrameResult frameResult = splashWindow->fullFrame();
-                if (frameResult == FrameResult::Success) {
+                const auto result = splashWindow->loop();
+                if (result == true) {
                     handleFileOpenRequest();
 
                     // Clean up everything after the main window is closed
@@ -88,6 +88,9 @@
                     emscripten_set_main_loop([]() {
                         window->fullFrame();
                     }, 60, 0);
+                } else {
+                    log::fatal("Failed to initialize ImHex!");
+                    std::abort();
                 }
             }, &splashWindow, 60, 0);
 

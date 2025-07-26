@@ -42,6 +42,17 @@ namespace hex::init {
     GlfwError lastGlfwError;
 
     WindowSplash::WindowSplash() : m_window(nullptr) {
+        RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
+            m_tasks.push_back(Task{ name, function, async, false });
+            m_progress = float(m_completedTaskCount) / float(m_totalTaskCount);
+        });
+
+        if (const auto env = hex::getEnvironmentVariable("IMHEX_SKIP_SPLASH_SCREEN"); env.has_value() && !env.value().empty() && env.value() != "0") {
+            // Create a dummy ImGui context so plugins can initialize properly
+            ImGui::CreateContext();
+            return;
+        }
+
         this->initGLFW();
         this->initImGui();
         this->loadAssets();
@@ -60,14 +71,13 @@ namespace hex::init {
             ImHexApi::System::impl::setGPUVendor(glVendor);
             ImHexApi::System::impl::setGLRenderer(glRenderer);
         }
-
-        RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
-            m_tasks.push_back(Task{ name, function, async, false });
-            m_progress = float(m_completedTaskCount) / float(m_totalTaskCount);
-        });
     }
 
     WindowSplash::~WindowSplash() {
+        if (m_window == nullptr) {
+            ImGui::DestroyContext();
+            return;
+        }
         // Clear textures before deinitializing glfw
         m_splashBackgroundTexture.reset();
         m_splashTextTexture.reset();
@@ -78,6 +88,13 @@ namespace hex::init {
 
 
     static void centerWindow(GLFWwindow *window) {
+        // Wayland does not allow applications to set the position of their windows
+        // so we skip centering the splash screen to avoid error message spamming
+        #if (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 + GLFW_VERSION_REVISION) >= 3400
+            if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND)
+                return;
+        #endif
+
         // Get the primary monitor
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
         if (!monitor)
@@ -227,7 +244,7 @@ namespace hex::init {
 
             auto startTime = std::chrono::high_resolution_clock::now();
 
-            // Check every 100ms if all tasks have run
+            // Check every 10ms if all tasks have run
             while (true) {
                 // Loop over all registered init tasks
                 for (auto it = m_tasks.begin(); it != m_tasks.end(); ++it) {
@@ -244,7 +261,7 @@ namespace hex::init {
                         break;
                 }
 
-                std::this_thread::sleep_for(100ms);
+                std::this_thread::sleep_for(10ms);
             }
 
             auto endTime = std::chrono::high_resolution_clock::now();
@@ -253,14 +270,17 @@ namespace hex::init {
             log::info("ImHex fully started in {}ms", milliseconds);
 
             // Small extra delay so the last progress step is visible
-            std::this_thread::sleep_for(100ms);
+            std::this_thread::sleep_for(50ms);
 
             return m_taskStatus.load();
         });
     }
 
 
-    FrameResult WindowSplash::fullFrame() {
+    void WindowSplash::fullFrame() {
+        if (m_window == nullptr)
+            return;
+
         glfwSetWindowSize(m_window, WindowSize.x, WindowSize.y);
         centerWindow(m_window);
 
@@ -378,31 +398,24 @@ namespace hex::init {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(m_window);
+    }
+
+    std::optional<bool> WindowSplash::loop() {
+        // Splash window rendering loop
+        this->fullFrame();
 
         // Check if all background tasks have finished so the splash screen can be closed
         if (this->m_tasksSucceeded.wait_for(0s) == std::future_status::ready) {
             if (this->m_tasksSucceeded.get()) {
                 log::debug("All tasks finished successfully!");
-                return FrameResult::Success;
+                return true;
             } else {
                 log::warn("All tasks finished, but some failed");
-                return FrameResult::Failure;
+                return false;
             }
         }
 
-        return FrameResult::Running;
-    }
-
-    bool WindowSplash::loop() {
-        // Splash window rendering loop
-        while (true) {
-            auto frameResult = this->fullFrame();
-
-            if (frameResult == FrameResult::Success)
-                return true;
-            else if (frameResult == FrameResult::Failure)
-                return false;
-        }
+        return std::nullopt;
     }
 
     void WindowSplash::initGLFW() {
@@ -570,7 +583,13 @@ namespace hex::init {
         }
     }
 
-    void WindowSplash::startStartupTasks() {
+    void WindowSplash::addStartupTask(const std::string &taskName, const TaskFunction &function, bool async) {
+        std::scoped_lock lock(m_tasksMutex);
+
+        m_tasks.emplace_back(taskName, function, async);
+    }
+
+    void WindowSplash::startStartupTaskExecution() {
         // Launch init tasks in the background
         this->m_tasksSucceeded = processTasksAsync();
     }

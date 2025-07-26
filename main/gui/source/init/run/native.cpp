@@ -30,8 +30,17 @@
                 {
                     auto splashWindow = initializeImHex();
                     // Draw the splash window while tasks are running
-                    if (!splashWindow->loop())
-                        ImHexApi::System::impl::addInitArgument("tasks-failed");
+
+                    while (true) {
+                        const auto result = splashWindow->loop();
+                        if (result.has_value()) {
+                            if (result.value() == false) {
+                                ImHexApi::System::impl::addInitArgument("tasks-failed");
+                            }
+
+                            break;
+                        }
+                    }
 
                     handleFileOpenRequest();
                 }

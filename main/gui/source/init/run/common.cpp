@@ -30,7 +30,7 @@ namespace hex::init {
         for (const auto &[name, task, async, running] : init::getInitTasks())
             splashWindow->addStartupTask(name, task, async);
 
-        splashWindow->startStartupTasks();
+        splashWindow->startStartupTaskExecution();
 
         return splashWindow;
     }
