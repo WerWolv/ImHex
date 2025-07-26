@@ -2062,14 +2062,14 @@ namespace hex::plugin::builtin {
         /* Find Next */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.find_next" }, 1800, AllowWhileTyping + Keys::F3, [this] {
             m_consoleEditor->GetFindReplaceHandler()->FindMatch(&*m_textEditor, true);
-        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetFindWord().empty(); },
+        }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor->GetFindReplaceHandler()->GetFindWord().empty(); },
         []{ return false; },
         this);
 
         /* Find Previous */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.find_previous" }, 1900, AllowWhileTyping + SHIFT + Keys::F3, [this] {
             m_consoleEditor->GetFindReplaceHandler()->FindMatch(&*m_textEditor, true);
-        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetFindWord().empty(); },
+        }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor->GetFindReplaceHandler()->GetFindWord().empty(); },
         []{ return false; },
         this);
 
@@ -2083,21 +2083,21 @@ namespace hex::plugin::builtin {
         /* Replace Next */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_next" }, 2100, Shortcut::None, [this] {
             m_consoleEditor->GetFindReplaceHandler()->Replace(&*m_textEditor, true);
-        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
+        }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
         []{ return false; },
         this);
 
         /* Replace Previous */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_previous" }, 2200, Shortcut::None, [this] {
             m_consoleEditor->GetFindReplaceHandler()->Replace(&*m_textEditor, false);
-        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
+        }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
         []{ return false; },
         this);
 
         /* Replace All */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_all" }, ICON_VS_REPLACE_ALL, 2300, Shortcut::None, [this] {
             m_consoleEditor->GetFindReplaceHandler()->ReplaceAll(&*m_textEditor);
-        }, [this] { return ImHexApi::Provider::isValid() && !m_consoleEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
+        }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor->GetFindReplaceHandler()->GetReplaceWord().empty(); },
         this);
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 2400, this);
@@ -2117,7 +2117,7 @@ namespace hex::plugin::builtin {
         /* Export Pattern */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, Shortcut::None,
                                                 m_exportPatternFile, [this] {
-                                                    return ImHexApi::Provider::isValid() && !wolv::util::trim(m_textEditor.get(ImHexApi::Provider::get()).GetText()).empty();
+                                                    return ImHexApi::Provider::isValid() && !wolv::util::trim(m_textEditor->GetText()).empty();
                                                 }
         );
 
