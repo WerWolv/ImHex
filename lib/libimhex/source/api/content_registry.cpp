@@ -1183,10 +1183,10 @@ namespace hex {
             };
 
             UserData userData = {
-                    .data = &data,
-                    .maxChars = this->getMaxCharsPerCell(),
+                .data = &data,
+                .maxChars = this->getMaxCharsPerCell(),
 
-                    .editingDone = false
+                .editingDone = false
             };
 
             ImGui::PushID(reinterpret_cast<void*>(address));
@@ -1197,6 +1197,8 @@ namespace hex {
 
                 if (data->BufTextLen >= userData.maxChars)
                     userData.editingDone = true;
+
+                data->Buf[userData.maxChars] = 0x00;
 
                 return 0;
             }, &userData);

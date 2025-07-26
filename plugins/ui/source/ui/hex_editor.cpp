@@ -381,6 +381,8 @@ namespace hex::ui {
                     default:
                         break;
                 }
+
+                m_enteredEditingMode = false;
             }
 
             m_editingBytes = buffer;
@@ -419,6 +421,7 @@ namespace hex::ui {
                         m_editingAddress = std::nullopt;
                     else {
                         m_editingAddress = nextEditingAddress;
+                        m_enteredEditingMode = true;
 
                         if (m_mode == Mode::Insert) {
                             std::memset(m_editingBytes.data(), 0x00, size);
@@ -449,8 +452,6 @@ namespace hex::ui {
 
             if (!m_editingAddress.has_value())
                 m_editingCellType = CellType::None;
-
-            m_enteredEditingMode = false;
         }
     }
 
