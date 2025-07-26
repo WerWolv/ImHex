@@ -5,6 +5,7 @@
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/layout_manager.hpp>
+#include <hex/ui/view.hpp>
 
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
@@ -412,8 +413,8 @@ namespace hex::plugin::builtin {
 
                 // Top level layout table
                 if (ImGui::BeginTable("##top_level", 2, ImGuiTableFlags_None, ImGui::GetContentRegionAvail())) {
-                    ImGui::TableSetupColumn("##left", ImGuiTableColumnFlags_WidthStretch, 0.3F);
-                    ImGui::TableSetupColumn("##right", ImGuiTableColumnFlags_WidthStretch, 0.7F);
+                    ImGui::TableSetupColumn("##left", ImGuiTableColumnFlags_WidthStretch, 0.4F);
+                    ImGui::TableSetupColumn("##right", ImGuiTableColumnFlags_WidthStretch, 0.6F);
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
@@ -424,6 +425,9 @@ namespace hex::plugin::builtin {
 
                         // Loop over all available menu items
                         for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                            ImGui::PushID(&menuItem);
+                            ON_SCOPE_EXIT { ImGui::PopID(); };
+
                             // Filter out items without icon, separators, submenus and items that are already in the toolbar
 
                             if (menuItem.icon.glyph.empty())
@@ -442,8 +446,14 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
 
+                            std::string name = Lang(unlocalizedName);
+                            if (menuItem.view != nullptr) {
+                                name += hex::format(" ({})", Lang(menuItem.view->getUnlocalizedName()));
+                            }
+
                             // Draw the menu item
-                            ImGui::Selectable(hex::format("{} {}", menuItem.icon.glyph, Lang(unlocalizedName)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+                            ImGui::Selectable(hex::format("{} {}", menuItem.icon.glyph, name).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+                            ImGui::SetItemTooltip("%s", name.c_str());
 
                             // Handle dragging the menu item to the toolbar box
                             if (ImGui::BeginDragDropSource()) {
@@ -451,7 +461,7 @@ namespace hex::plugin::builtin {
                                 ptr = &menuItem;
                                 ImGui::SetDragDropPayload("MENU_ITEM_PAYLOAD", &ptr, sizeof(void*));
 
-                                ImGuiExt::TextFormatted("{} {}", menuItem.icon.glyph, Lang(unlocalizedName));
+                                ImGuiExt::TextFormatted("{} {}", menuItem.icon.glyph, name);
 
                                 ImGui::EndDragDropSource();
                             }
@@ -476,7 +486,9 @@ namespace hex::plugin::builtin {
 
                     // Draw toolbar icon box
                     if (ImGuiExt::BeginSubWindow("hex.builtin.setting.toolbar.icons"_lang, nullptr, ImGui::GetContentRegionAvail())) {
-                        if (ImGui::BeginTable("##icons", 6, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
+                        const auto itemWidth = 60_scaled;
+                        const auto columnCount = int(ImGui::GetContentRegionAvail().x / itemWidth);
+                        if (ImGui::BeginTable("##icons", columnCount, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
                             ImGui::TableNextRow();
 
                             // Find all menu items that are in the toolbar and sort them by their toolbar index
@@ -493,6 +505,9 @@ namespace hex::plugin::builtin {
 
                             // Loop over all toolbar items
                             for (auto &menuItem : toolbarItems) {
+                                ImGui::PushID(menuItem);
+                                ON_SCOPE_EXIT { ImGui::PopID(); };
+
                                 // Filter out items without icon, separators, submenus and items that are not in the toolbar
                                 if (menuItem->icon.glyph.empty())
                                     continue;
@@ -508,7 +523,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
 
                                 // Draw the toolbar item
-                                ImGui::InvisibleButton(unlocalizedName.get().c_str(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x));
+                                ImGui::InvisibleButton(unlocalizedName.get().c_str(), ImVec2(itemWidth, itemWidth));
 
                                 // Handle dragging the toolbar item around
                                 if (ImGui::BeginDragDropSource()) {
@@ -592,13 +607,17 @@ namespace hex::plugin::builtin {
 
                                 ImGui::PushFont(nullptr, ImGui::GetStyle().FontSizeBase * 0.65F);
                                 {
-                                    std::string text = Lang(unlocalizedName);
-                                    if (text.ends_with("..."))
-                                        text = text.substr(0, text.size() - 3);
+                                    std::string name = Lang(unlocalizedName);
+                                    if (name.ends_with("..."))
+                                        name = name.substr(0, name.size() - 3);
 
-                                    auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, max.x - min.x);
+                                    if (menuItem->view != nullptr) {
+                                        name += hex::format(" ({})", Lang(menuItem->view->getUnlocalizedName()));
+                                    }
 
-                                    drawList->AddText(nullptr, 0.0F, (min + ((max - min)) / 2) + ImVec2(-textSize.x / 2, 5_scaled), ImGui::GetColorU32(ImGuiCol_Text), text.c_str(), nullptr, max.x - min.x);
+                                    auto textSize = ImGui::CalcTextSize(name.c_str(), nullptr, false, max.x - min.x);
+
+                                    drawList->AddText(nullptr, 0.0F, (min + ((max - min)) / 2) + ImVec2(-textSize.x / 2, 5_scaled), ImGui::GetColorU32(ImGuiCol_Text), name.c_str(), nullptr, max.x - min.x);
                                 }
                                 ImGui::PopFont();
                             }
