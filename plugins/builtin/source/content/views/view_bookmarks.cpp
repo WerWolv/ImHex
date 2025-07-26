@@ -184,7 +184,7 @@ namespace hex::plugin::builtin {
             for (const auto &[bookmark, highlightVisible] : bookmarks) {
                 result += hex::format("### <span style=\"background-color: #{:06X}80\">{} [0x{:04X} - 0x{:04X}]</span>\n\n", hex::changeEndianness(bookmark.color, std::endian::big) >> 8, bookmark.name, bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
-                for (const auto &line : hex::splitString(bookmark.comment, "\n"))
+                for (const auto &line : wolv::util::splitString(bookmark.comment, "\n"))
                     result += hex::format("> {}\n", line);
                 result += "\n";
 

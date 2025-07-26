@@ -252,10 +252,6 @@ namespace hex {
         return result;
     }
 
-    [[nodiscard]] std::vector<std::string> splitString(const std::string &string, const std::string &delimiter);
-    [[nodiscard]] std::string combineStrings(const std::vector<std::string> &strings, const std::string &delimiter = "");
-    [[nodiscard]] std::string replaceStrings(std::string string, const std::string &search, const std::string &replace);
-
     [[nodiscard]] std::string toEngineeringString(double value);
 
     [[nodiscard]] inline std::vector<u8> parseByteString(const std::string &string) {

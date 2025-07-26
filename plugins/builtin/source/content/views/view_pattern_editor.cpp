@@ -1938,7 +1938,7 @@ namespace hex::plugin::builtin {
                 TextEditor::Selection selection = m_selection.get(newProvider);
                 m_textEditor.get(newProvider).SetSelection(selection.mStart, selection.mEnd);
                 m_textEditor.get(newProvider).SetBreakpoints(m_breakpoints.get(newProvider));
-                m_consoleEditor.get(newProvider).SetText(hex::combineStrings(m_console.get(newProvider), "\n"));
+                m_consoleEditor.get(newProvider).SetText(wolv::util::combineStrings(m_console.get(newProvider), "\n"));
                 m_consoleEditor.get(newProvider).SetCursorPosition(m_consoleCursorPosition.get(newProvider));
                 m_consoleEditor.get(newProvider).SetLongestLineLength(m_consoleLongestLineLength.get(newProvider));
                 selection = m_consoleSelection.get(newProvider);
@@ -2161,9 +2161,9 @@ namespace hex::plugin::builtin {
                         if (type->isTemplateType())
                             continue;
 
-                        createNestedMenu(hex::splitString(typeName, "::"), [&, this] {
+                        createNestedMenu(wolv::util::splitString(typeName, "::"), [&, this] {
                             std::string variableName;
-                            for (const char c : hex::replaceStrings(typeName, "::", "_"))
+                            for (const char c : wolv::util::replaceStrings(typeName, "::", "_"))
                                 variableName += static_cast<char>(std::tolower(c));
                             variableName += hex::format("_at_0x{:02X}", selection->getStartAddress());
 

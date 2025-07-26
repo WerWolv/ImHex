@@ -117,11 +117,11 @@ namespace hex::plugin::builtin {
             return true;
         std::vector<std::string> vectorString;
         if (identifierName.contains("::")) {
-            vectorString = hex::splitString(identifierName, "::");
+            vectorString = wolv::util::splitString(identifierName, "::");
             if (vectorString.size() > 1) {
                 shortName = vectorString.back();
                 vectorString.pop_back();
-                identifierName = hex::combineStrings(vectorString, "::");
+                identifierName = wolv::util::combineStrings(vectorString, "::");
             }
         }
         bool found = true;
@@ -415,7 +415,7 @@ namespace hex::plugin::builtin {
             separator = "::";
         else
             separator = ".";
-        auto vectorString = hex::splitString(identifierName, separator);
+        auto vectorString = wolv::util::splitString(identifierName, separator);
 
         std::string nameSpace;
         u32 index = 0;
@@ -623,7 +623,7 @@ namespace hex::plugin::builtin {
         if (!getQualifiedName(variableName, identifiers, true))
             return false;
 
-        auto vectorString = hex::splitString(variableName, ".");
+        auto vectorString = wolv::util::splitString(variableName, ".");
         u32 index = 0;
 
 
@@ -742,7 +742,7 @@ namespace hex::plugin::builtin {
         if (!getQualifiedName(identifierName, identifiers, true))
             return false;
         auto tokenCount = m_tokens.size();
-        auto vectorString = hex::splitString(identifierName, "::");
+        auto vectorString = wolv::util::splitString(identifierName, "::");
         auto vectorStringCount = vectorString.size();
         if (identifiers.size() != vectorStringCount)
             return false;
@@ -917,7 +917,7 @@ namespace hex::plugin::builtin {
                     functionName = namespaceName + "::" + functionName;
             } else {
 
-                auto vectorString = hex::splitString(functionName, "::");
+                auto vectorString = wolv::util::splitString(functionName, "::");
                 vectorString.pop_back();
                 for (auto nameSpace: vectorString) {
 
@@ -987,7 +987,7 @@ namespace hex::plugin::builtin {
         if (optionalFullName.empty())
             forwardIdentifierName(fullName, identifiers);
 
-        auto nameParts = hex::splitString(fullName, ".");
+        auto nameParts = wolv::util::splitString(fullName, ".");
         std::vector<std::string> grandpaTypes;
         findParentTypes(parentTypes);
 
@@ -1013,7 +1013,7 @@ namespace hex::plugin::builtin {
 
         nameParts.insert(nameParts.begin(), currentName);
         identifiers.insert(identifiers.begin(), identifier);
-        optionalFullName = hex::combineStrings(nameParts, ".");
+        optionalFullName = wolv::util::combineStrings(nameParts, ".");
         return true;
     }
 
@@ -1080,7 +1080,7 @@ namespace hex::plugin::builtin {
                                                            std::optional<Definition> &result,
                                                            std::vector<Identifier *> &identifiers) {
 
-        auto vectorString = hex::splitString(variableName, ".");
+        auto vectorString = wolv::util::splitString(variableName, ".");
         auto count = vectorString.size();
         auto UDTName = parentType;
         auto currentName = vectorString[0];
@@ -1097,7 +1097,7 @@ namespace hex::plugin::builtin {
                 }
 
                 vectorString.erase(vectorString.begin());
-                variableName = hex::combineStrings(vectorString, ".");
+                variableName = wolv::util::combineStrings(vectorString, ".");
                 Identifier *identifier = identifiers[0];
                 identifiers.erase(identifiers.begin());
                 skipArray(200, true);
@@ -1135,10 +1135,10 @@ namespace hex::plugin::builtin {
         forwardIdentifierName(fullName, identifiers);
 
         std::vector<std::string> parentTypes;
-        auto vectorString = hex::splitString(fullName, ".");
+        auto vectorString = wolv::util::splitString(fullName, ".");
         if (vectorString[0] == "Parent") {
             vectorString.erase(vectorString.begin());
-            fullName = hex::combineStrings(vectorString, ".");
+            fullName = wolv::util::combineStrings(vectorString, ".");
             identifiers.erase(identifiers.begin());
             if (!findAllParentTypes(parentTypes, identifiers, fullName)) {
                 m_curr = curr;
@@ -1223,7 +1223,7 @@ namespace hex::plugin::builtin {
 // Render the compilation errors using squiggly lines
     void TextHighlighter::renderErrors() {
         const auto processMessage = [](const auto &message) {
-            auto lines = hex::splitString(message, "\n");
+            auto lines = wolv::util::splitString(message, "\n");
 
             std::ranges::transform(lines, lines.begin(), [](auto line) {
 
@@ -1233,7 +1233,7 @@ namespace hex::plugin::builtin {
                 return hex::limitStringLength(line, 128);
             });
 
-            return hex::combineStrings(lines, "\n");
+            return wolv::util::combineStrings(lines, "\n");
         };
         TextEditor::ErrorMarkers errorMarkers;
 
@@ -1721,7 +1721,7 @@ namespace hex::plugin::builtin {
             }
             std::vector<std::string> candidates;
             for (auto name: m_UDTs) {
-                auto vectorString = hex::splitString(name, "::");
+                auto vectorString = wolv::util::splitString(name, "::");
 
                 if (typeStr == vectorString.back())
                     candidates.push_back(name);
@@ -1737,7 +1737,7 @@ namespace hex::plugin::builtin {
     }
 
 // Definitions of global variables and placed variables.
-    void TextHighlighter::loadGlobalDefinitions( Scopes tokenRangeSet, std::vector<IdentifierType> identifierTypes, Variables &variables) {
+    void TextHighlighter::loadGlobalDefinitions(Scopes tokenRangeSet, std::vector<IdentifierType> identifierTypes, Variables &variables) {
         m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_tokens.begin(), m_tokens.end());
 
         for (auto range: tokenRangeSet) {
@@ -1917,7 +1917,7 @@ namespace hex::plugin::builtin {
         if (m_text.empty())
             m_text =  m_viewPatternEditor->getTextEditor().GetText();
 
-        m_lines = hex::splitString(m_text, "\n");
+        m_lines = wolv::util::splitString(m_text, "\n");
         m_lines.push_back("");
         m_firstTokenIdOfLine.clear();
         m_firstTokenIdOfLine.resize(m_lines.size(), -1);
