@@ -439,7 +439,7 @@ namespace hex::plugin::builtin {
             }
 
             for (const auto &line : wolv::util::splitString(data, "\n")) {
-                const auto &split = splitString(line, " ");
+                const auto &split = wolv::util::splitString(line, " ");
                 if (split.size() < 5)
                     continue;
 
