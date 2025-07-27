@@ -765,6 +765,7 @@ EXPORT_MODULE namespace hex {
             public:
                 explicit Font(UnlocalizedString fontName);
 
+                void push(float size, ImFont *font) const;
                 void push(float size = 0.0F) const;
                 void pushBold(float size = 0.0F) const;
                 void pushItalic(float size = 0.0F) const;
@@ -773,7 +774,6 @@ EXPORT_MODULE namespace hex {
 
                 [[nodiscard]] operator ImFont*() const;
             private:
-                void push(float size, ImFont *font) const;
 
             private:
                 UnlocalizedString m_fontName;
