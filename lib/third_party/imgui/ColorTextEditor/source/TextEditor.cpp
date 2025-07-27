@@ -150,12 +150,8 @@ std::string TextEditor::GetText(const Coordinates &aStart, const Coordinates &aE
 }
 
 TextEditor::Coordinates TextEditor::SetCoordinates(int aLine, int aColumn) const {
-    if (isEmpty()) {
-        if ((aLine == 0 || aLine == -1) && (aColumn == 0 || aColumn == -1))
-            return Coordinates(0, 0);
-        else
-            return Invalid;
-    }
+    if (isEmpty())
+        return Coordinates(0, 0);
 
     Coordinates result = Coordinates(0, 0);
     auto lineCount = (int)mLines.size();
