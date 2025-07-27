@@ -1051,6 +1051,13 @@ namespace hex {
                     size *= std::floor(System::getGlobalScale());
             }
 
+            // If no font has been loaded, revert back to the default font to
+            // prevent an assertion failure in ImGui
+            const auto *ctx = ImGui::GetCurrentContext();
+            if (font == nullptr && ctx->Font == nullptr) [[unlikely]] {
+                font = ImGui::GetDefaultFont();
+            }
+
             ImGui::PushFont(font, size);
         }
 
