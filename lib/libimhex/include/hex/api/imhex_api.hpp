@@ -454,6 +454,9 @@ EXPORT_MODULE namespace hex {
 
                 void cleanup();
 
+                bool frameRateUnlockRequested();
+                void resetFrameRateUnlockRequested();
+
             }
 
             /**
@@ -720,6 +723,10 @@ EXPORT_MODULE namespace hex {
              */
             void addMigrationRoutine(SemanticVersion migrationVersion, std::function<void()> function);
 
+            /**
+             * @brief Unlocks the frame rate temporarily, allowing animations to run smoothly
+             */
+            void unlockFrameRate();
         }
 
         /**

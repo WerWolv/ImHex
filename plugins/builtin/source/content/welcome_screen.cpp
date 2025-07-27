@@ -186,6 +186,8 @@ namespace hex::plugin::builtin {
             if (over)
                 return;
 
+            ImHexApi::System::unlockFrameRate();
+
             const auto drawTile = [&](u32 x, u32 y) {
                 drawList->AddRectFilled(
                     {

@@ -15,6 +15,8 @@ namespace hex::plugin::builtin {
               m_onFinish(std::move(onFinish)){ }
 
         void drawContent() override {
+            ImHexApi::System::unlockFrameRate();
+
             ImGui::TextUnformatted("hex.builtin.popup.waiting_for_tasks.desc"_lang);
             ImGui::Separator();
 

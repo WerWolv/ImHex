@@ -283,6 +283,8 @@ namespace hex::plugin::builtin {
                 if (frontTask == nullptr)
                     return;
 
+                ImHexApi::System::unlockFrameRate();
+
                 const auto progress = frontTask->getMaxValue() == 0 ? -1 : float(frontTask->getValue()) / float(frontTask->getMaxValue());
 
                 ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, u32(progress * 100));

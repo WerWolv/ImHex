@@ -355,8 +355,10 @@ namespace hex {
             if (ImGui::GetPlatformIO().Viewports.size() > 1)
                 unlockFrameRate();
 
-            // Unlock frame rate if there's any task running that shows a loading animation
-            if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBlockingTaskCount() > 0) {
+            // Unlock frame rate if the frame rate was requested to be unlocked
+            if (ImHexApi::System::impl::frameRateUnlockRequested()) {
+                ImHexApi::System::impl::resetFrameRateUnlockRequested();
+
                 glfwPostEmptyEvent();
                 unlockFrameRate();
             }

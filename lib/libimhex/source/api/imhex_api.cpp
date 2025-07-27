@@ -597,6 +597,14 @@ namespace hex {
                     object->reset();
             }
 
+            static bool s_frameRateUnlockRequested = false;
+            bool frameRateUnlockRequested() {
+                return s_frameRateUnlockRequested;
+            }
+
+            void resetFrameRateUnlockRequested() {
+                s_frameRateUnlockRequested = false;
+            }
 
         }
 
@@ -967,6 +975,9 @@ namespace hex {
             impl::s_windowResizable = resizable;
         }
 
+        void unlockFrameRate() {
+            impl::s_frameRateUnlockRequested = true;
+        }
 
 
     }
