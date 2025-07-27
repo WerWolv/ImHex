@@ -11,12 +11,16 @@ AppDir:
     exec_args: $@
   apt:
     arch:
+    - all
     - "{{ARCHITECTURE_PACKAGE}}"
     allow_unauthenticated: true
     sources:
     - sourceline: 'deb [arch=amd64] http://us.archive.ubuntu.com/ubuntu/ oracular main restricted universe multiverse'
     - sourceline: 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ oracular main restricted universe multiverse'
     include:
+    - libgdk-pixbuf2.0-0
+    - libgdk-pixbuf2.0-common
+    - shared-mime-info
     - librsvg2-common
     - libbz2-1.0
     - libcap2
@@ -123,6 +127,15 @@ AppDir:
     - usr/share/doc/*/changelog.*
     - usr/share/doc/*/NEWS.*
     - usr/share/doc/*/TODO.*
+
+  runtime:
+    env:
+      APPDIR_LIBRARY_PATH: '$APPDIR/usr/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu:$APPDIR/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu:$APPDIR/usr/lib:$APPDIR/usr/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders'
+      GTK_EXE_PREFIX: $APPDIR/usr
+      GTK_DATA_PREFIX: $APPDIR
+      XDG_DATA_DIRS: '/usr/local/share:/usr/share:$APPDIR/usr/share:$XDG_DATA_DIRS:$APPDIR/usr/local/share:$APPDIR/usr/local/lib:$APPDIR/usr/local/share'
+      XDG_CONFIG_DIRS: '$XDG_CONFIG_DIRS:$APPDIR/usr/local/share'
+
 AppImage:
   arch: "{{ARCHITECTURE_APPIMAGE_BUILDER}}"
   comp: zstd
