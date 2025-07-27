@@ -349,7 +349,13 @@ namespace hex::plugin::builtin {
         }
 
         void defineMenu(const UnlocalizedString &menuName) {
-            if (menu::beginMenu(Lang(menuName))) {
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.75F));
+            ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 2_scaled);
+            const auto menuOpen = menu::beginMenu(Lang(menuName));
+            ImGui::PopStyleVar();
+            ImGui::PopStyleColor();
+
+            if (menuOpen) {
                 populateMenu(menuName);
                 menu::endMenu();
             } else {
