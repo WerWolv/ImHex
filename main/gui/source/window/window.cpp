@@ -399,6 +399,7 @@ namespace hex {
 
             while (frameTime < maxFrameTime) {
                 frameTime = glfwGetTime() - frameTimeStart;
+                std::this_thread::sleep_for(100us);
             }
 
             ImHexApi::System::impl::setLastFrameTime(glfwGetTime() - frameTimeStart);
