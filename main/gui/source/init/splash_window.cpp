@@ -43,7 +43,10 @@ namespace hex::init {
 
     WindowSplash::WindowSplash() : m_window(nullptr) {
         RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
+            std::lock_guard guard(m_progressMutex);
+
             m_tasks.push_back(Task{ name, function, async, false });
+            m_totalTaskCount += 1;
             m_progress = float(m_completedTaskCount) / float(m_totalTaskCount);
         });
 
@@ -191,6 +194,7 @@ namespace hex::init {
 
                 // When the task finished, increment the progress bar
                 ON_SCOPE_EXIT {
+                    std::lock_guard guard(m_progressMutex);
                     m_completedTaskCount += 1;
                     m_progress = float(m_completedTaskCount) / float(m_totalTaskCount);
                 };
@@ -223,8 +227,6 @@ namespace hex::init {
                 m_taskStatus = false;
             }
         };
-
-        m_totalTaskCount += 1;
 
         // If the task can be run asynchronously, run it in a separate thread
         // otherwise run it in this thread and wait for it to finish
@@ -270,7 +272,8 @@ namespace hex::init {
             log::info("ImHex fully started in {}ms", milliseconds);
 
             // Small extra delay so the last progress step is visible
-            std::this_thread::sleep_for(50ms);
+            m_progressLerp = 1.0F;
+            std::this_thread::sleep_for(100ms);
 
             return m_taskStatus.load();
         });
@@ -296,7 +299,7 @@ namespace hex::init {
         {
 
             // Draw the splash screen background
-            drawList->AddImage(this->m_splashBackgroundTexture, ImVec2(0, 0), WindowSize);
+            drawList->AddImage(m_splashBackgroundTexture, ImVec2(0, 0), WindowSize);
 
             {
 
@@ -346,14 +349,14 @@ namespace hex::init {
                 };
 
                 // Draw all highlights, slowly fading them in as the init tasks progress
-                for (const auto &highlight : this->m_highlights)
-                    highlightBytes(highlight.start, highlight.count, highlight.color, this->m_progressLerp);
+                for (const auto &highlight : m_highlights)
+                    highlightBytes(highlight.start, highlight.count, highlight.color, m_progressLerp);
             }
 
-            this->m_progressLerp += (m_progress - this->m_progressLerp) * 0.1F;
+            m_progressLerp += (m_progress - m_progressLerp) * 0.2F;
 
             // Draw the splash screen foreground
-            drawList->AddImage(this->m_splashTextTexture, ImVec2(0, 0), WindowSize);
+            drawList->AddImage(m_splashTextTexture, ImVec2(0, 0), WindowSize);
 
             // Draw the "copyright" notice
             drawList->AddText(ImVec2(35, 85), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv\n2020 - {0}", &__DATE__[7]).c_str());
@@ -377,7 +380,7 @@ namespace hex::init {
             const auto progressBackgroundSize = ImVec2(442, 30);
 
             const auto progressStart = progressBackgroundStart + ImVec2(0, 20);
-            const auto progressSize = ImVec2(progressBackgroundSize.x * m_progress, 10);
+            const auto progressSize = ImVec2(progressBackgroundSize.x * m_progressLerp, 10);
 
             // Draw progress bar
             drawList->AddRectFilled(progressStart, progressStart + progressSize, 0xD0FFFFFF);
@@ -405,8 +408,8 @@ namespace hex::init {
         this->fullFrame();
 
         // Check if all background tasks have finished so the splash screen can be closed
-        if (this->m_tasksSucceeded.wait_for(0s) == std::future_status::ready) {
-            if (this->m_tasksSucceeded.get()) {
+        if (m_tasksSucceeded.wait_for(0s) == std::future_status::ready) {
+            if (m_tasksSucceeded.get()) {
                 log::debug("All tasks finished successfully!");
                 return true;
             } else {
@@ -554,12 +557,12 @@ namespace hex::init {
 
         // Load splash screen image from romfs
         const auto backingScale = ImHexApi::System::getNativeScale();
-        this->m_splashBackgroundTexture = ImGuiExt::Texture::fromSVG(romfs::get("splash_background.svg").span(), WindowSize.x * backingScale, WindowSize.y * backingScale, ImGuiExt::Texture::Filter::Linear);
-        this->m_splashTextTexture = ImGuiExt::Texture::fromSVG(romfs::get("splash_text.svg").span(), WindowSize.x * backingScale, WindowSize.y * backingScale, ImGuiExt::Texture::Filter::Linear);
+        m_splashBackgroundTexture = ImGuiExt::Texture::fromSVG(romfs::get("splash_background.svg").span(), WindowSize.x * backingScale, WindowSize.y * backingScale, ImGuiExt::Texture::Filter::Linear);
+        m_splashTextTexture = ImGuiExt::Texture::fromSVG(romfs::get("splash_text.svg").span(), WindowSize.x * backingScale, WindowSize.y * backingScale, ImGuiExt::Texture::Filter::Linear);
 
         // If the image couldn't be loaded correctly, something went wrong during the build process
         // Close the application since this would lead to errors later on anyway.
-        if (!this->m_splashBackgroundTexture.isValid() || !this->m_splashTextTexture.isValid()) {
+        if (!m_splashBackgroundTexture.isValid() || !m_splashTextTexture.isValid()) {
             log::error("Could not load splash screen image!");
         }
 
@@ -568,7 +571,7 @@ namespace hex::init {
         u32 lastPos = 0;
         u32 lastCount = 0;
         u32 index = 0;
-        for (auto &highlight : this->m_highlights) {
+        for (auto &highlight : m_highlights) {
             u32 newPos = lastPos + lastCount + (rng() % 35);
             u32 newCount = (rng() % 7) + 3;
             highlight.start.x = float(newPos % 13);
@@ -587,11 +590,12 @@ namespace hex::init {
         std::scoped_lock lock(m_tasksMutex);
 
         m_tasks.emplace_back(taskName, function, async);
+        m_totalTaskCount += 1;
     }
 
     void WindowSplash::startStartupTaskExecution() {
         // Launch init tasks in the background
-        this->m_tasksSucceeded = processTasksAsync();
+        m_tasksSucceeded = processTasksAsync();
     }
 
     void WindowSplash::exitGLFW() const {
