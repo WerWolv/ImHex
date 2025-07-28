@@ -12,7 +12,8 @@
 
 namespace hex::fonts {
 
-    void registerFonts();
+    void registerUIFonts();
+    void registerMergeFonts();
 
     namespace loader {
         bool loadFonts();
@@ -26,11 +27,8 @@ IMHEX_LIBRARY_SETUP("Fonts") {
     for (auto &path : romfs::list("lang"))
         hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 
-    hex::ImHexApi::Fonts::registerFont("hex.fonts.font.default");
-    hex::ImHexApi::Fonts::registerFont("hex.fonts.font.hex_editor");
-    hex::ImHexApi::Fonts::registerFont("hex.fonts.font.code_editor");
-
-    hex::fonts::registerFonts();
+    hex::fonts::registerUIFonts();
+    hex::fonts::registerMergeFonts();
 
     hex::EventImHexStartupFinished::subscribe([] {
         hex::fonts::loader::loadFonts();

@@ -1032,8 +1032,6 @@ namespace hex {
         }
 
         Font::Font(UnlocalizedString fontName) : m_fontName(std::move(fontName)) {
-            Fonts::registerFont(m_fontName);
-
             if (impl::s_defaultFont == nullptr)
                 impl::s_defaultFont = this;
         }
@@ -1081,7 +1079,7 @@ namespace hex {
             return getFont(m_fontName).regular;
         }
 
-        void loadFont(const std::fs::path &path, Offset offset, std::optional<u32> defaultSize) {
+        void registerMergeFont(const std::fs::path &path, Offset offset, std::optional<u32> defaultSize) {
             wolv::io::File fontFile(path, wolv::io::File::Mode::Read);
             if (!fontFile.isValid()) {
                 log::error("Failed to load font from file '{}'", wolv::util::toUTF8String(path));
@@ -1096,7 +1094,7 @@ namespace hex {
             });
         }
 
-        void loadFont(const std::string &name, const std::span<const u8> &data, Offset offset, std::optional<u32> defaultSize) {
+        void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset, std::optional<u32> defaultSize) {
             impl::s_fonts->emplace_back(MergeFont {
                 name,
                 { data.begin(), data.end() },
@@ -1105,8 +1103,8 @@ namespace hex {
             });
         }
 
-        void registerFont(const UnlocalizedString &fontName) {
-            (*impl::s_fontDefinitions)[fontName] = {};
+        void registerFont(const Font& font) {
+            (*impl::s_fontDefinitions)[font.getUnlocalizedName()] = {};
         }
 
         FontDefinition getFont(const UnlocalizedString &fontName) {

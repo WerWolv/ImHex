@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
                                     auto newValue = widget->store();
 
                                     // Write new value to settings
-                                    ContentRegistry::Settings::write<nlohmann::json>(category.unlocalizedName, setting.unlocalizedName, newValue);
+                                    ContentRegistry::Settings::impl::getSetting(category.unlocalizedName, setting.unlocalizedName, newValue) = newValue;
 
                                     // Print a debug message
                                     log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName.get(), setting.unlocalizedName.get(), nlohmann::to_string(newValue));
@@ -131,6 +131,8 @@ namespace hex::plugin::builtin {
                                         m_restartRequested = true;
                                         m_triggerPopup = true;
                                     }
+
+                                    ContentRegistry::Settings::impl::store();
                                 }
                             }
 

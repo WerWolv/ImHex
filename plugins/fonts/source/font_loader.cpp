@@ -93,12 +93,7 @@ namespace hex::fonts::loader {
     bool loadFonts() {
         for (auto &[name, fontDefinition] : ImHexApi::Fonts::impl::getFontDefinitions()) {
             auto &widget = addFontSettingsWidget(name)
-                .setChangedCallback([name, &fontDefinition, firstLoad = true](auto &widget) mutable {
-                    if (firstLoad) {
-                        firstLoad = false;
-                        return;
-                    }
-
+                .setChangedCallback([name, &fontDefinition](auto &widget) mutable {
                     TaskManager::doLater([name, &fontDefinition, &widget] {
                         loadFontVariations(widget, name, fontDefinition);
                     });

@@ -399,6 +399,7 @@ namespace hex {
 
             while (frameTime < maxFrameTime) {
                 frameTime = glfwGetTime() - frameTimeStart;
+                std::this_thread::sleep_for(100us);
             }
 
             ImHexApi::System::impl::setLastFrameTime(glfwGetTime() - frameTimeStart);
@@ -411,6 +412,7 @@ namespace hex {
 
     void Window::frameBegin() {
         ImHexApi::Fonts::getDefaultFont().push();
+        ImGui::GetIO().FontDefault = ImHexApi::Fonts::getDefaultFont();
 
         // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
