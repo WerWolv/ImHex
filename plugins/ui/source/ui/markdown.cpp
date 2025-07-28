@@ -7,6 +7,10 @@
 #include <romfs/romfs.hpp>
 #include <ui/markdown.hpp>
 
+#include <chrono>
+#include <hex/helpers/crypto.hpp>
+#include <hex/helpers/http_requests.hpp>
+
 namespace hex::ui {
 
     Markdown::Markdown(const std::string &text) : m_text(text) {
@@ -149,14 +153,62 @@ namespace hex::ui {
                     self.m_currentLink = std::string(link->href.text, link->href.size);
                     break;
                 }
-                case MD_SPAN_IMG:
+                case MD_SPAN_IMG: {
                     ImGui::NewLine();
-                    if (ImGui::BeginChild(self.getElementId().c_str(), { 100, 100 }, ImGuiChildFlags_Borders)) {
+                    u32 id = self.m_elementId;
+                    if (auto futureImageIt = self.m_futureImages.find(id); futureImageIt != self.m_futureImages.end()) {
+                        auto &[_, future] = *futureImageIt;
+                        if (future.valid() && future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                            self.m_images[id] = std::move(future.get().get());
+                            self.m_futureImages.erase(futureImageIt);
+                        } else {
+                            ImGui::TextUnformatted("Loading image...");
+                        }
+                    } else if (auto imageIt = self.m_images.find(id); imageIt != self.m_images.end()) {
+                        const auto &[_, image] = *imageIt;
+                        if (image.isValid()) {
+                            ImGui::Image(image, image.getSize());
+                        } else {
+                            if (ImGui::BeginChild(self.getElementId().c_str(), { 100, 100 }, ImGuiChildFlags_Borders)) {
+                                ImGui::TextUnformatted("???");
+                            }
+                            ImGui::EndChild();
+                        }
+                    } else {
+                        const auto *img = static_cast<MD_SPAN_IMG_DETAIL*>(detail);
+                        std::string path = { img->src.text, img->src.size };
+                        self.m_futureImages.emplace(id, std::async(std::launch::async, [path = std::move(path)]() -> wolv::container::Lazy<ImGuiExt::Texture> {
+                            std::vector<u8> data;
+                            if (path.starts_with("data:image/")) {
+                                auto pos = path.find(';');
+                                if (pos != std::string::npos) {
+                                    auto base64 = path.substr(pos + 1);
+                                    if (base64.starts_with("base64,")) {
+                                        base64 = base64.substr(7);
+                                    }
+                                    data = hex::crypt::decode64({ base64.begin(), base64.end() });
+                                }
+                            } else if (path.starts_with("http://") || path.starts_with("https://")) {
+                                HttpRequest request("GET", path);
+                                const auto result = request.execute<std::vector<u8>>().get();
+                                if (result.isSuccess()) {
+                                    data = result.getData();
+                                }
+                            }
 
+                            return wolv::container::Lazy<ImGuiExt::Texture>([data = std::move(data)]() -> ImGuiExt::Texture {
+                                if (data.empty())
+                                    return ImGuiExt::Texture();
+
+                                return ImGuiExt::Texture::fromImage(data.data(), data.size(), ImGuiExt::Texture::Filter::Linear);
+                            });
+                        }));
                     }
-                    ImGui::EndChild();
                     self.m_drawingImageAltText = true;
+                    self.m_elementId += 1;
+
                     break;
+                }
                 default:
                     break;
             }
