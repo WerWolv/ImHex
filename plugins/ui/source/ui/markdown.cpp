@@ -8,6 +8,7 @@
 #include <ui/markdown.hpp>
 
 #include <chrono>
+#include <fonts/vscode_icons.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/http_requests.hpp>
 
@@ -63,7 +64,10 @@ namespace hex::ui {
                         ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
                     break;
                 case MD_BLOCK_QUOTE:
-                    ImGui::Indent();
+                    if (!self.m_quoteStarts.empty())
+                        ImGui::NewLine();
+                    self.m_quoteStarts.emplace_back(ImGui::GetCursorScreenPos());
+                    self.m_quoteStart = true;
                     break;
                 case MD_BLOCK_UL: {
                     if (self.m_listIndent > 0) {
@@ -117,7 +121,23 @@ namespace hex::ui {
                     }
                     break;
                 case MD_BLOCK_QUOTE:
-                    ImGui::Unindent();
+                    if (!self.m_quoteNeedsChildEnd.empty()) {
+                        if (self.m_quoteNeedsChildEnd.back()) {
+                            ImGuiExt::EndSubWindow();
+                            ImGui::PopStyleColor();
+                        } else {
+                            ImGui::Unindent();
+                            ImGui::GetWindowDrawList()->AddLine(
+                                self.m_quoteStarts.back(),
+                                ImGui::GetCursorScreenPos() + ImVec2(0, ImGui::GetTextLineHeight()),
+                                ImGui::GetColorU32(ImGuiCol_Separator),
+                                3_scaled
+                            );
+                            self.m_quoteStarts.pop_back();
+                        }
+                        self.m_quoteNeedsChildEnd.pop_back();
+                    }
+
                     break;
                 case MD_BLOCK_UL:
                     if (self.m_listIndent > 0) {
@@ -230,9 +250,40 @@ namespace hex::ui {
         m_mdRenderer.text = [](MD_TEXTTYPE type, const MD_CHAR *text, MD_SIZE size, void *userdata) -> int {
             auto &self = *static_cast<Markdown*>(userdata);
 
-            std::ignore = type;
             std::ignore = userdata;
             std::string_view sv(text, size);
+
+            if (self.m_quoteStart) {
+                self.m_quoteStart = false;
+                if (sv.starts_with("[!") && sv.ends_with("]")) {
+                    self.m_quoteNeedsChildEnd.push_back(true);
+                    const auto quoteType = sv.substr(2, sv.size() - 3);
+                    const char *icon = nullptr;
+                    ImColor color;
+                    if (quoteType == "IMPORTANT") {
+                        icon = ICON_VS_REPORT;
+                        color = ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed);
+                    } else if (quoteType == "NOTE") {
+                        icon = ICON_VS_INFO;
+                        color = ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue);
+                    } else if (quoteType == "TIP") {
+                        icon = ICON_VS_LIGHTBULB;
+                        color = ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen);
+                    } else if (quoteType == "WARNING") {
+                        icon = ICON_VS_WARNING;
+                        color = ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow);
+                    } else {
+                        icon = ICON_VS_QUESTION;
+                        color = ImGui::GetColorU32(ImGuiCol_Separator);
+                    }
+                    ImGui::PushStyleColor(ImGuiCol_MenuBarBg, color.Value);
+                    ImGuiExt::BeginSubWindow(icon);
+                    return 0;
+                } else {
+                    ImGui::Indent();
+                    self.m_quoteNeedsChildEnd.push_back(false);
+                }
+            }
 
             if (sv.size() == 1 && sv[0] == '\n') {
                 ImGui::NewLine();

@@ -27,9 +27,14 @@ namespace hex::ui {
         bool m_drawingImageAltText = false;
         u32 m_listIndent = 0;
         std::vector<u8> m_tableVisibleStack;
+
         std::map<u32, std::future<wolv::container::Lazy<ImGuiExt::Texture>>> m_futureImages;
         std::map<u32, ImGuiExt::Texture> m_images;
         std::function<std::vector<u8>(const std::string &)> m_romfsFileReader;
+
+        std::vector<ImVec2> m_quoteStarts;
+        std::vector<u8> m_quoteNeedsChildEnd;
+        bool m_quoteStart = false;
     };
 
 }
