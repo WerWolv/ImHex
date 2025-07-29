@@ -1,10 +1,18 @@
 #pragma once
 
 #include <hex.hpp>
+
+#include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
+
 #include <string>
 #include <future>
+#include <map>
+
 #include <md4c.h>
+
 #include <wolv/container/lazy.hpp>
+#include <romfs/romfs.hpp>
 
 namespace hex::ui {
 
@@ -14,6 +22,10 @@ namespace hex::ui {
         Markdown(const std::string &text);
 
         void draw();
+
+        void setRomfsTextureLookupFunction(std::function<wolv::container::Lazy<ImGuiExt::Texture>(const std::string &)> romfsFileReader) {
+            m_romfsFileReader = std::move(romfsFileReader);
+        }
 
     private:
         bool inTable() const;
@@ -30,7 +42,7 @@ namespace hex::ui {
 
         std::map<u32, std::future<wolv::container::Lazy<ImGuiExt::Texture>>> m_futureImages;
         std::map<u32, ImGuiExt::Texture> m_images;
-        std::function<std::vector<u8>(const std::string &)> m_romfsFileReader;
+        std::function<wolv::container::Lazy<ImGuiExt::Texture>(const std::string &)> m_romfsFileReader;
 
         std::vector<ImVec2> m_quoteStarts;
         std::vector<u8> m_quoteNeedsChildEnd;
