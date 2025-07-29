@@ -1,3 +1,5 @@
+#include <ui/markdown.hpp>
+
 #include <imgui.h>
 #include <fonts/fonts.hpp>
 #include <hex/api/task_manager.hpp>
@@ -5,7 +7,6 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <romfs/romfs.hpp>
-#include <ui/markdown.hpp>
 
 #include <chrono>
 #include <fonts/vscode_icons.hpp>
@@ -197,7 +198,8 @@ namespace hex::ui {
                     } else {
                         const auto *img = static_cast<MD_SPAN_IMG_DETAIL*>(detail);
                         std::string path = { img->src.text, img->src.size };
-                        self.m_futureImages.emplace(id, std::async(std::launch::async, [path = std::move(path)]() -> wolv::container::Lazy<ImGuiExt::Texture> {
+
+                        self.m_futureImages.emplace(id, std::async(std::launch::async, [path = std::move(path), romfsLookup = self.m_romfsFileReader]() -> wolv::container::Lazy<ImGuiExt::Texture> {
                             std::vector<u8> data;
                             if (path.starts_with("data:image/")) {
                                 auto pos = path.find(';');
@@ -206,13 +208,17 @@ namespace hex::ui {
                                     if (base64.starts_with("base64,")) {
                                         base64 = base64.substr(7);
                                     }
-                                    data = hex::crypt::decode64({ base64.begin(), base64.end() });
+                                    data = crypt::decode64({ base64.begin(), base64.end() });
                                 }
                             } else if (path.starts_with("http://") || path.starts_with("https://")) {
                                 HttpRequest request("GET", path);
                                 const auto result = request.execute<std::vector<u8>>().get();
                                 if (result.isSuccess()) {
                                     data = result.getData();
+                                }
+                            } else if (path.starts_with("romfs://")) {
+                                if (romfsLookup) {
+                                    return romfsLookup(path.substr(7));
                                 }
                             }
 
