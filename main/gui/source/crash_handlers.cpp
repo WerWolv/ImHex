@@ -13,11 +13,9 @@
 #include <init/tasks.hpp>
 #include <hex/trace/stacktrace.hpp>
 
-#include <llvm/Demangle/Demangle.h>
 #include <nlohmann/json.hpp>
 
 #include <hex/trace/stacktrace.hpp>
-#include <llvm/Demangle/Demangle.h>
 
 #include <csignal>
 #include <exception>
@@ -164,7 +162,7 @@ namespace hex::crash {
         try {
             std::rethrow_exception(std::current_exception());
         } catch (std::exception &ex) {
-            std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::demangle(std::string("_Z") + typeid(ex).name()), ex.what());
+            std::string exceptionStr = hex::format("{}()::what() -> {}", trace::demangle(typeid(ex).name()), ex.what());
 
             handleCrash(exceptionStr);
             log::fatal("Program terminated with uncaught exception: {}", exceptionStr);

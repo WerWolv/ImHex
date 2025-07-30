@@ -3,6 +3,7 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/events/events_interaction.hpp>
+#include <hex/trace/stacktrace.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
 
@@ -13,7 +14,6 @@
 #include <string>
 #include <utility>
 
-#include <content/helpers/demangle.hpp>
 #include <boost/regex.hpp>
 
 namespace hex::plugin::builtin {
@@ -71,7 +71,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
                                 ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", region.getStartAddress(), region.getEndAddress());
 
-                                auto demangledValue = hex::plugin::builtin::demangle(value);
+                                auto demangledValue = trace::demangle(value);
 
                                 if (value != demangledValue) {
                                     ImGui::TableNextRow();
@@ -663,7 +663,7 @@ namespace hex::plugin::builtin {
             if (ImGui::MenuItemEx("hex.builtin.view.find.context.copy"_lang, ICON_VS_COPY))
                 ImGui::SetClipboardText(value.c_str());
             if (ImGui::MenuItemEx("hex.builtin.view.find.context.copy_demangle"_lang, ICON_VS_FILES))
-                ImGui::SetClipboardText(hex::plugin::builtin::demangle(value).c_str());
+                ImGui::SetClipboardText(trace::demangle(value).c_str());
             if (ImGui::BeginMenuEx("hex.builtin.view.find.context.replace"_lang, ICON_VS_REPLACE)) {
                 if (ImGui::BeginTabBar("##replace_tabs")) {
                     if (ImGui::BeginTabItem("hex.builtin.view.find.context.replace.hex"_lang)) {

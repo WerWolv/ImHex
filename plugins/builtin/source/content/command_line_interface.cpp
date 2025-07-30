@@ -1,6 +1,5 @@
 #include <content/command_line_interface.hpp>
 #include <content/providers/file_provider.hpp>
-#include <content/helpers/demangle.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
@@ -18,13 +17,13 @@
 #include <hex/helpers/debugging.hpp>
 
 #include <hex/subcommands/subcommands.hpp>
+#include <hex/trace/stacktrace.hpp>
 
 #include <romfs/romfs.hpp>
 #include <wolv/utils/string.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
 
 #include <pl/cli/cli.hpp>
-#include <llvm/Demangle/Demangle.h>
 
 namespace hex::plugin::builtin {
     using namespace hex::literals;
@@ -383,7 +382,7 @@ namespace hex::plugin::builtin {
             std::exit(EXIT_FAILURE);
         }
 
-        log::println("{}", hex::plugin::builtin::demangle(args[0]));
+        log::println("{}", trace::demangle(args[0]));
         std::exit(EXIT_SUCCESS);
     }
 
