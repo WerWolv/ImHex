@@ -1130,7 +1130,7 @@ namespace hex {
         }
 
         float getDpi() {
-            auto dpi = ImGui::GetCurrentContext()->CurrentDpiScale * 96.0F;
+            auto dpi = ImHexApi::System::getNativeScale() * ImHexApi::System::getBackingScaleFactor() * 96.0F;
             return dpi ? dpi : 96.0F;
         }
 
