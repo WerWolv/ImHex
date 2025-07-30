@@ -381,7 +381,7 @@ namespace hex {
 
                     // Windows appends (TrueType) to all font names for some reason. Remove it
                     if (fontName.ends_with(" (TrueType)")) {
-                        fontName = fontName.substr(0, fontName.size() - 12);
+                        fontName = fontName.substr(0, fontName.size() - 11);
                     }
 
                     registerFont(fontName.c_str(), wolv::util::toUTF8String(fontPath).c_str());
