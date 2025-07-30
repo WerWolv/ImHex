@@ -279,6 +279,34 @@ namespace hex::plugin::builtin {
             });
 
         ContentRegistry::CommandPaletteCommands::add(
+            ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+            "@",
+            "hex.builtin.command.goto.desc",
+            [](auto input) {
+                wolv::math_eval::MathEvaluator<long double> evaluator;
+                evaluator.registerStandardVariables();
+                evaluator.registerStandardFunctions();
+
+                std::optional<long double> result = evaluator.evaluate(input);
+                if (result.has_value())
+                    return hex::format("hex.builtin.command.goto.result"_lang, result.value());
+                else if (evaluator.hasError())
+                    return hex::format("Error: {}", *evaluator.getLastError());
+                else
+                    return std::string("???");
+            }, [](auto input) -> std::optional<std::string> {
+                wolv::math_eval::MathEvaluator<long double> evaluator;
+                evaluator.registerStandardVariables();
+                evaluator.registerStandardFunctions();
+
+                std::optional<long double> result = evaluator.evaluate(input);
+                if (result.has_value()) {
+                    ImHexApi::HexEditor::setSelection(result.value(), 1);
+                }
+                return std::nullopt;
+            });
+
+        ContentRegistry::CommandPaletteCommands::add(
             ContentRegistry::CommandPaletteCommands::Type::KeywordCommand,
             "/web",
             "hex.builtin.command.web.desc",
