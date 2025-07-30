@@ -119,6 +119,7 @@ namespace hex {
         class Special;
         class Floating;
         class Modal;
+        class FullScreen;
 
     private:
         UnlocalizedString m_unlocalizedViewName;
@@ -142,7 +143,8 @@ namespace hex {
         void draw() final {
             if (this->shouldDraw()) {
                 ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-                if (ImGui::Begin(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
+                const auto title = hex::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
+                if (ImGui::Begin(title.c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
                     this->drawContent();
                 }
                 ImGui::End();
@@ -204,6 +206,16 @@ namespace hex {
 
         [[nodiscard]] virtual bool hasCloseButton() const { return true; }
         [[nodiscard]] bool shouldStoreWindowState() const override { return false; }
+    };
+
+    class View::FullScreen : public View {
+    public:
+        explicit FullScreen() : View("FullScreen", "") {}
+
+        void draw() final {
+            this->drawContent();
+            this->drawAlwaysVisibleContent();
+        }
     };
 
 }

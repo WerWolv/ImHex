@@ -720,10 +720,19 @@ namespace hex {
             }
 
             void add(std::unique_ptr<View> &&view) {
-            log::debug("Registered new view: {}", view->getUnlocalizedName().get());
+                log::debug("Registered new view: {}", view->getUnlocalizedName().get());
 
-            s_views->emplace(view->getUnlocalizedName(), std::move(view));
-        }
+                s_views->emplace(view->getUnlocalizedName(), std::move(view));
+            }
+
+            static AutoReset<std::unique_ptr<View>> s_fullscreenView;
+            const std::unique_ptr<View>& getFullScreenView() {
+                return *s_fullscreenView;
+            }
+
+            void setFullScreenView(std::unique_ptr<View> &&view) {
+                s_fullscreenView = std::move(view);
+            }
 
         }
 

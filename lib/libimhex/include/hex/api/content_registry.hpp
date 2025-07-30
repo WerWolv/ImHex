@@ -580,7 +580,10 @@ EXPORT_MODULE namespace hex {
             namespace impl {
 
                 void add(std::unique_ptr<View> &&view);
+                void setFullScreenView(std::unique_ptr<View> &&view);
+
                 const std::map<UnlocalizedString, std::unique_ptr<View>>& getEntries();
+                const std::unique_ptr<View>& getFullScreenView();
 
             }
 
@@ -593,6 +596,17 @@ EXPORT_MODULE namespace hex {
             template<std::derived_from<View> T, typename... Args>
             void add(Args &&...args) {
                 return impl::add(std::make_unique<T>(std::forward<Args>(args)...));
+            }
+
+            /**
+             * @brief Sets a view as a full-screen view. This will cause the view to take up the entire ImHex window
+             * @tparam T The custom view class that extends View
+             * @tparam Args Arguments types
+             * @param args Arguments passed to the constructor of the view
+             */
+            template<std::derived_from<View> T, typename... Args>
+            void setFullScreenView(Args &&...args) {
+                return impl::setFullScreenView(std::make_unique<T>(std::forward<Args>(args)...));
             }
 
             /**

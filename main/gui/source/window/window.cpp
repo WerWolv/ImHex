@@ -740,65 +740,69 @@ namespace hex {
 
         ShortcutManager::resetLastActivatedMenu();
 
-        // Loop through all views and draw them
-        for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
-            ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
+        if (const auto &fullScreenView = ContentRegistry::Views::impl::getFullScreenView(); fullScreenView == nullptr) {
 
-            // Draw always visible views
-            view->drawAlwaysVisibleContent();
+            // Loop through all views and draw them
+            for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
+                ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 
-            // Skip views that shouldn't be processed currently
-            if (!view->shouldProcess())
-                continue;
+                // Draw always visible views
+                view->drawAlwaysVisibleContent();
 
-            const auto openViewCount = std::ranges::count_if(ContentRegistry::Views::impl::getEntries(), [](const auto &entry) {
-                const auto &[unlocalizedName, openView] = entry;
+                // Skip views that shouldn't be processed currently
+                if (!view->shouldProcess())
+                    continue;
 
-                return openView->hasViewMenuItemEntry() && openView->shouldProcess();
-            });
+                const auto openViewCount = std::ranges::count_if(ContentRegistry::Views::impl::getEntries(), [](const auto &entry) {
+                    const auto &[unlocalizedName, openView] = entry;
 
-            ImGuiWindowClass windowClass = {};
+                    return openView->hasViewMenuItemEntry() && openView->shouldProcess();
+                });
 
-            windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoCloseButton;
+                ImGuiWindowClass windowClass = {};
 
-            if (openViewCount <= 1 || LayoutManager::isLayoutLocked())
-                windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoTabBar;
+                windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoCloseButton;
 
-            ImGui::SetNextWindowClass(&windowClass);
+                if (openViewCount <= 1 || LayoutManager::isLayoutLocked())
+                    windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoTabBar;
 
-            auto window    = ImGui::FindWindowByName(view->getName().c_str());
-            if (window != nullptr && window->DockNode == nullptr)
-                ImGui::SetNextWindowBgAlpha(1.0F);
+                ImGui::SetNextWindowClass(&windowClass);
 
-            // Draw view
-            view->draw();
-            view->trackViewOpenState();
+                auto window    = ImGui::FindWindowByName(view->getName().c_str());
+                if (window != nullptr && window->DockNode == nullptr)
+                    ImGui::SetNextWindowBgAlpha(1.0F);
 
-            if (view->getWindowOpenState()) {
-                // Get the currently focused view
-                if (window != nullptr && (window->Flags & ImGuiWindowFlags_Popup) != ImGuiWindowFlags_Popup) {
-                    auto windowName = View::toWindowName(name);
-                    ImGui::Begin(windowName.c_str());
+                // Draw view
+                view->draw();
+                view->trackViewOpenState();
 
-                    // Detect if the window is focused
-                    const bool focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
-                    view->setFocused(focused);
+                if (view->getWindowOpenState()) {
+                    // Get the currently focused view
+                    if (window != nullptr && (window->Flags & ImGuiWindowFlags_Popup) != ImGuiWindowFlags_Popup) {
+                        auto windowName = View::toWindowName(name);
+                        ImGui::Begin(windowName.c_str());
 
-                    // Dock the window if it's not already docked
-                    if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
-                        ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
-                        EventViewOpened::post(view.get());
+                        // Detect if the window is focused
+                        const bool focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
+                        view->setFocused(focused);
+
+                        // Dock the window if it's not already docked
+                        if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
+                            ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
+                            EventViewOpened::post(view.get());
+                        }
+
+                        // Pass on currently pressed keys to the shortcut handler
+                        for (const auto &key : m_pressedKeys) {
+                            ShortcutManager::process(view.get(), io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl, io.KeyAlt, io.KeyShift, io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper, focused, key);
+                        }
+
+                        ImGui::End();
                     }
-
-                    // Pass on currently pressed keys to the shortcut handler
-                    for (const auto &key : m_pressedKeys) {
-                        ShortcutManager::process(view.get(), io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl, io.KeyAlt, io.KeyShift, io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper, focused, key);
-                    }
-
-                    ImGui::End();
                 }
             }
         }
+
 
         // Handle global shortcuts
         for (const auto &key : m_pressedKeys) {

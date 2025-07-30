@@ -495,7 +495,12 @@ namespace hex::plugin::builtin {
 
                     ImGui::EndPopup();
                 }
-                drawMenu();
+
+                {
+                    ImGui::BeginDisabled(ContentRegistry::Views::impl::getFullScreenView() != nullptr);
+                    drawMenu();
+                    ImGui::EndDisabled();
+                }
                 menu::endMainMenuBar();
             }
             menu::enableNativeMenuBar(false);
@@ -541,18 +546,23 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
             if (ImGui::BeginMenuBar()) {
                 drawTitleBarBackDrop();
-                for (const auto &callback : ContentRegistry::Interface::impl::getToolbarItems()) {
-                    callback();
-                    ImGui::SameLine();
-                }
 
-                if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
-                    ImGui::BeginDisabled(TaskManager::getRunningTaskCount() > 0);
-                    if (ImGui::CloseButton(ImGui::GetID("ProviderCloseButton"), ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetContentRegionAvail().x - 17_scaled, 3_scaled))) {
-                        ImHexApi::Provider::remove(provider);
+                ImGui::BeginDisabled(ContentRegistry::Views::impl::getFullScreenView() != nullptr);
+                {
+                    for (const auto &callback : ContentRegistry::Interface::impl::getToolbarItems()) {
+                        callback();
+                        ImGui::SameLine();
                     }
-                    ImGui::EndDisabled();
+
+                    if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
+                        ImGui::BeginDisabled(TaskManager::getRunningTaskCount() > 0);
+                        if (ImGui::CloseButton(ImGui::GetID("ProviderCloseButton"), ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetContentRegionAvail().x - 17_scaled, 3_scaled))) {
+                            ImHexApi::Provider::remove(provider);
+                        }
+                        ImGui::EndDisabled();
+                    }
                 }
+                ImGui::EndDisabled();
 
                 ImGui::EndMenuBar();
             }
