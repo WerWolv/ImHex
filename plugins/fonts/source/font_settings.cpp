@@ -18,9 +18,11 @@ namespace hex::fonts {
     constexpr static auto CustomFontName = "Custom Font";
 
     static std::map<std::fs::path, ImFont*> s_previewFonts, s_usedFonts;
-    static void pushPreviewFont(const std::fs::path &fontPath) {
+    static std::map<std::fs::path, std::string> s_filteredFonts;
+    static bool pushPreviewFont(const std::fs::path &fontPath) {
         if (fontPath.empty()) {
-            return pushPreviewFont(SmoothFontName);
+            pushPreviewFont(SmoothFontName);
+            return true;
         }
 
         auto atlas = ImGui::GetIO().Fonts;
@@ -44,12 +46,18 @@ namespace hex::fonts {
         }
 
         const auto &[path, font] = *it;
-        if (font == nullptr)
-            return pushPreviewFont(SmoothFontName);
-        else {
-            ImGui::PushFont(font, 0.0F);
-            s_usedFonts.emplace(path, font);
+        if (font == nullptr) {
+            return false;
         }
+        if (!font->IsGlyphInFont(L'A')) {
+            // If the font doesn't contain any of the ASCII characters, it's
+            // probably not of much use to us
+            return false;
+        }
+
+        ImGui::PushFont(font, 0.0F);
+        s_usedFonts.emplace(path, font);
+        return true;
     }
 
     static void cleanUnusedPreviewFonts() {
@@ -90,7 +98,7 @@ namespace hex::fonts {
             }
             ImGui::PopFont();
 
-            pushPreviewFont(m_path);
+            pushPreviewFont(customFont ? m_path : SmoothFontName);
             if (ImGui::Selectable(CustomFontName, customFont)) {
                 changed = fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } }, [this](const std::fs::path &path) {
                     m_path = path;
@@ -99,29 +107,40 @@ namespace hex::fonts {
             }
             ImGui::PopFont();
 
+            if (s_filteredFonts.empty()) {
+                for (const auto &[path, fontName] : hex::getFonts()) {
+                    if (!pushPreviewFont(path))
+                        continue;
+                    ImGui::PopFont();
+                    s_filteredFonts.emplace(path, fontName);
+                }
+            }
+
             {
                 u32 index = 0;
                 ImGuiListClipper clipper;
 
-                const auto fonts = hex::getFonts();
-                clipper.Begin(fonts.size());
+                clipper.Begin(s_filteredFonts.size(), ImGui::GetTextLineHeightWithSpacing());
 
                 while (clipper.Step())
-                    for (const auto &[path, fontName] : fonts | std::views::drop(clipper.DisplayStart) | std::views::take(clipper.DisplayEnd - clipper.DisplayStart)) {
-                        ImGui::PushID(index);
+                    for (const auto &[path, fontName] : s_filteredFonts | std::views::drop(clipper.DisplayStart) | std::views::take(clipper.DisplayEnd - clipper.DisplayStart)) {
+                        if (!pushPreviewFont(path))
+                            continue;
 
-                        pushPreviewFont(path);
+                        ImGui::PushID(index);
                         if (ImGui::Selectable(limitStringLength(fontName, 50).c_str(), m_path == path)) {
                             m_path = path;
                             m_pixelPerfectFont = false;
                             changed = true;
                         }
-                        ImGui::SetItemTooltip("%s", fontName.c_str());
                         ImGui::PopFont();
+                        ImGui::SetItemTooltip("%s", fontName.c_str());
                         ImGui::PopID();
 
                         index += 1;
                     }
+
+                clipper.SeekCursorForItem(index);
             }
 
             ImGui::EndCombo();
