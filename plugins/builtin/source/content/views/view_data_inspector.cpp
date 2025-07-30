@@ -274,12 +274,17 @@ namespace hex::plugin::builtin {
 
         ImGui::BeginDisabled(!selection.has_value() || !m_selectedEntryName.has_value());
         {
-            const auto buttonSize = ImVec2((ImGui::GetContentRegionAvail().x / 2) - ImGui::GetStyle().FramePadding.x, 0);
+            const auto buttonSizeSmall = ImVec2(ImGui::GetTextLineHeightWithSpacing() * 1.5F, 0);
+            const auto buttonSize = ImVec2((ImGui::GetContentRegionAvail().x / 2) - buttonSizeSmall.x - ImGui::GetStyle().FramePadding.x * 3, 0);
             const auto baseAddress = m_selectedProvider->getBaseAddress();
             const auto providerSize = m_selectedProvider->getActualSize();
             const auto providerEndAddress = baseAddress + providerSize;
 
             ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getStartAddress() < baseAddress + requiredSize);
+            if (ImGuiExt::DimmedIconButton(ICON_VS_CHEVRON_LEFT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSizeSmall)) {
+                ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() % requiredSize, requiredSize });
+            }
+            ImGui::SameLine();
             if (ImGuiExt::DimmedIconButton(ICON_VS_ARROW_LEFT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() - requiredSize, requiredSize });
             }
@@ -287,9 +292,13 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getEndAddress() > providerEndAddress - requiredSize);
+            ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getEndAddress() >= providerEndAddress - requiredSize);
             if (ImGuiExt::DimmedIconButton(ICON_VS_ARROW_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() + requiredSize, requiredSize });
+            }
+            ImGui::SameLine();
+            if (ImGuiExt::DimmedIconButton(ICON_VS_CHEVRON_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSizeSmall)) {
+                ImHexApi::HexEditor::setSelection(Region { providerEndAddress - selection->getStartAddress() % requiredSize - requiredSize, requiredSize });
             }
             ImGui::EndDisabled();
         }
