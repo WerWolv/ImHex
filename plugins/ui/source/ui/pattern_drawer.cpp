@@ -310,12 +310,12 @@ namespace hex::ui {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
         if (m_favorites.contains(m_currPatternPath)) {
-            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_DELETE, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram), {}, { 1_scaled, 0 })) {
+            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_FULL, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram), {}, { 1_scaled, 0 })) {
                 m_favorites.erase(m_currPatternPath);
             }
         }
         else {
-            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_ADD, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), {}, { 1_scaled, 0 })) {
+            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_EMPTY, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), {}, { 1_scaled, 0 })) {
                 m_favorites.insert({ m_currPatternPath, pattern.clone() });
             }
         }
@@ -359,7 +359,7 @@ namespace hex::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5F));
 
             bool shouldReset = false;
-            if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
+            if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
                 const auto *previousPattern = m_currVisualizedPattern;
                 m_currVisualizedPattern = &pattern;
                 auto lastVisualizerError = m_visualizerDrawer.getLastVisualizerError();

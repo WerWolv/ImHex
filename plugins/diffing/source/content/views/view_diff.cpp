@@ -13,7 +13,7 @@ namespace hex::plugin::diffing {
 
     using DifferenceType = ContentRegistry::Diffing::DifferenceType;
 
-    ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name", ICON_VS_DIFF_SIDEBYSIDE) {
+    ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name", ICON_VS_DIFF) {
         // Clear the selected diff providers when a provider is closed
         EventProviderClosed::subscribe(this, [this](prv::Provider *) {
             this->reset();

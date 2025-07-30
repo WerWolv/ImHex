@@ -134,7 +134,7 @@ namespace hex::plugin::builtin {
                 }
                 ImGuiExt::InfoTooltip("hex.builtin.setting.folders.add_folder"_lang);
 
-                if (ImGuiExt::IconButton(ICON_VS_REMOVE_CLOSE, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
+                if (ImGuiExt::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
                     if (!m_paths.empty()) {
                         m_paths.erase(std::next(m_paths.begin(), m_itemIndex));
                         ImHexApi::System::setAdditionalFolderPaths(m_paths);

@@ -240,7 +240,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 // Draw a clickable link to the GitHub repository
-                if (ImGuiExt::Hyperlink(ICON_VS_LOGO_GITHUB " " "WerWolv/ImHex"))
+                if (ImGuiExt::Hyperlink(ICON_VS_GITHUB " " "WerWolv/ImHex"))
                     hex::openWebpage("https://github.com/WerWolv/ImHex");
             }
 

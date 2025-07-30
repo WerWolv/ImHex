@@ -530,7 +530,7 @@ namespace hex::plugin::visualizers {
             // Draw grid toggle
             {
                 ImGui::PushID(2);
-                if (ImGuiExt::DimmedIconToggle(s_isPerspective ? ICON_BI_GRID : ICON_VS_SYMBOL_NUMBER, &s_drawGrid))
+                if (ImGuiExt::DimmedIconToggle(s_isPerspective ? ICON_BI_GRID : ICON_VS_SYMBOL_NUMERIC, &s_drawGrid))
                     s_shouldReset = true;
                 ImGui::PopID();
             }
