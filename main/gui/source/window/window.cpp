@@ -412,6 +412,7 @@ namespace hex {
 
     void Window::frameBegin() {
         ImHexApi::Fonts::getDefaultFont().push();
+        ImGui::GetIO().FontDefault = ImHexApi::Fonts::getDefaultFont();
 
         // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();

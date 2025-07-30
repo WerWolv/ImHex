@@ -772,6 +772,8 @@ EXPORT_MODULE namespace hex {
                 void pop() const;
 
                 [[nodiscard]] operator ImFont*() const;
+                [[nodiscard]] UnlocalizedString getUnlocalizedName() const { return m_fontName; }
+                
             private:
                 void push(float size, ImFont *font) const;
 
@@ -792,10 +794,10 @@ EXPORT_MODULE namespace hex {
 
             }
 
-            void loadFont(const std::fs::path &path, Offset offset = {}, std::optional<u32> defaultSize = std::nullopt);
-            void loadFont(const std::string &name, const std::span<const u8> &data, Offset offset = {}, std::optional<u32> defaultSize = std::nullopt);
+            void registerMergeFont(const std::fs::path &path, Offset offset = {}, std::optional<u32> defaultSize = std::nullopt);
+            void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset = {}, std::optional<u32> defaultSize = std::nullopt);
 
-            void registerFont(const UnlocalizedString &fontName);
+            void registerFont(const Font& font);
             FontDefinition getFont(const UnlocalizedString &fontName);
 
             void setDefaultFont(const Font& font);
