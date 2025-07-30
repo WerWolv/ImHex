@@ -44,14 +44,16 @@ namespace hex::fs {
     }
 
     // With help from https://github.com/owncloud/client/blob/cba22aa34b3677406e0499aadd126ce1d94637a2/src/gui/openfilemanager.cpp
-    void openFileExternal(const std::fs::path &filePath) {
+    void openFileExternal(std::fs::path filePath) {
+        filePath.make_preferred();
+
         // Make sure the file exists before trying to open it
         if (!wolv::io::fs::exists(filePath)) {
             return;
         }
 
         #if defined(OS_WINDOWS)
-        std::ignore = ShellExecuteW(nullptr, L"open", filePath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+            std::ignore = ShellExecuteW(nullptr, L"open", filePath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
             std::ignore = system(
                 hex::format("open {}", wolv::util::toUTF8String(filePath)).c_str()
@@ -61,7 +63,9 @@ namespace hex::fs {
         #endif
     }
 
-    void openFolderExternal(const std::fs::path &dirPath) {
+    void openFolderExternal(std::fs::path dirPath) {
+        dirPath.make_preferred();
+
         // Make sure the folder exists before trying to open it
         if (!wolv::io::fs::exists(dirPath)) {
             return;
@@ -79,7 +83,9 @@ namespace hex::fs {
         #endif
     }
 
-    void openFolderWithSelectionExternal(const std::fs::path &selectedFilePath) {
+    void openFolderWithSelectionExternal(std::fs::path selectedFilePath) {
+        selectedFilePath.make_preferred();
+
         // Make sure the file exists before trying to open it
         if (!wolv::io::fs::exists(selectedFilePath)) {
             return;
