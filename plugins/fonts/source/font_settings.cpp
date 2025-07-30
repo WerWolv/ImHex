@@ -5,14 +5,67 @@
 #include <hex/helpers/utils.hpp>
 
 #include <imgui.h>
+#include <fonts/fonts.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <romfs/romfs.hpp>
 
 #include "hex/api/imhex_api.hpp"
 
 namespace hex::fonts {
-    constexpr static auto PixelPerfectName = "Pixel-Perfect Default Font (Proggy Clean)";
-    constexpr static auto SmoothName = "Smooth Default Font (JetbrainsMono)";
-    constexpr static auto CustomName = "Custom Font";
+    constexpr static auto PixelPerfectFontName = "Pixel-Perfect Default Font (Proggy Clean)";
+    constexpr static auto SmoothFontName = "Smooth Default Font (JetBrains Mono)";
+    constexpr static auto CustomFontName = "Custom Font";
+
+    static std::map<std::fs::path, ImFont*> s_previewFonts, s_usedFonts;
+    static void pushPreviewFont(const std::fs::path &fontPath) {
+        if (fontPath.empty()) {
+            return pushPreviewFont(SmoothFontName);
+        }
+
+        auto atlas = ImGui::GetIO().Fonts;
+
+        auto it = s_previewFonts.find(fontPath);
+        if (it == s_previewFonts.end()) {
+            ImFont *font = nullptr;
+            if (fontPath == PixelPerfectFontName) {
+                font = atlas->AddFontDefault();
+            } else if (fontPath == SmoothFontName || fontPath.empty()) {
+                static auto jetbrainsFont = romfs::get("fonts/JetBrainsMono.ttf");
+                ImFontConfig config = {};
+                config.FontDataOwnedByAtlas = false;
+
+                font = atlas->AddFontFromMemoryTTF(const_cast<u8 *>(jetbrainsFont.data<u8>()), jetbrainsFont.size(), 0.0F, &config);
+            } else {
+                font = atlas->AddFontFromFileTTF(wolv::util::toUTF8String(fontPath).c_str());
+            }
+
+            it = s_previewFonts.emplace(fontPath, font).first;
+        }
+
+        const auto &[path, font] = *it;
+        if (font == nullptr)
+            return pushPreviewFont(SmoothFontName);
+        else {
+            ImGui::PushFont(font, 0.0F);
+            s_usedFonts.emplace(path, font);
+        }
+    }
+
+    static void cleanUnusedPreviewFonts() {
+        auto atlas = ImGui::GetIO().Fonts;
+        for (const auto &[path, font] : s_previewFonts) {
+            if (font == nullptr)
+                continue;
+
+            if (!s_usedFonts.contains(path)) {
+                atlas->RemoveFont(font);
+            }
+        }
+
+        s_previewFonts = std::move(s_usedFonts);
+        s_usedFonts = {};
+    }
 
     bool FontFilePicker::draw(const std::string &name) {
         bool changed = false;
@@ -21,41 +74,62 @@ namespace hex::fonts {
         bool customFont = updateSelectedFontName();
 
         if (ImGui::BeginCombo(name.c_str(), m_selectedFontName.c_str())) {
-            if (ImGui::Selectable(PixelPerfectName, m_path.empty() && pixelPerfectFont)) {
+            pushPreviewFont(PixelPerfectFontName);
+            if (ImGui::Selectable(PixelPerfectFontName, m_path.empty() && pixelPerfectFont)) {
                 m_path.clear();
                 m_pixelPerfectFont = true;
                 changed = true;
             }
+            ImGui::PopFont();
 
-            if (ImGui::Selectable(SmoothName, m_path.empty() && !pixelPerfectFont)) {
+            pushPreviewFont(SmoothFontName);
+            if (ImGui::Selectable(SmoothFontName, m_path.empty() && !pixelPerfectFont)) {
                 m_path.clear();
                 m_pixelPerfectFont = false;
                 changed = true;
             }
+            ImGui::PopFont();
 
-            if (ImGui::Selectable(CustomName, customFont)) {
+            pushPreviewFont(m_path);
+            if (ImGui::Selectable(CustomFontName, customFont)) {
                 changed = fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } }, [this](const std::fs::path &path) {
                     m_path = path;
                     m_pixelPerfectFont = false;
                 });
             }
+            ImGui::PopFont();
 
-            u32 index = 0;
-            for (const auto &[path, fontName] : hex::getFonts()) {
-                ImGui::PushID(index);
-                if (ImGui::Selectable(limitStringLength(fontName, 50).c_str(), m_path == path)) {
-                    m_path = path;
-                    m_pixelPerfectFont = false;
-                    changed = true;
-                }
-                ImGui::SetItemTooltip("%s", fontName.c_str());
-                ImGui::PopID();
+            {
+                u32 index = 0;
+                ImGuiListClipper clipper;
 
-                index += 1;
+                const auto fonts = hex::getFonts();
+                clipper.Begin(fonts.size());
+
+                while (clipper.Step())
+                    for (const auto &[path, fontName] : fonts | std::views::drop(clipper.DisplayStart) | std::views::take(clipper.DisplayEnd - clipper.DisplayStart)) {
+                        ImGui::PushID(index);
+
+                        pushPreviewFont(path);
+                        if (ImGui::Selectable(limitStringLength(fontName, 50).c_str(), m_path == path)) {
+                            m_path = path;
+                            m_pixelPerfectFont = false;
+                            changed = true;
+                        }
+                        ImGui::SetItemTooltip("%s", fontName.c_str());
+                        ImGui::PopFont();
+                        ImGui::PopID();
+
+                        index += 1;
+                    }
             }
 
             ImGui::EndCombo();
         }
+
+        TaskManager::doLaterOnce([] {
+            cleanUnusedPreviewFonts();
+        });
 
         return changed;
     }
@@ -89,9 +163,9 @@ namespace hex::fonts {
         const bool pixelPerfectFont = isPixelPerfectFontSelected();
 
         if (m_path.empty() && pixelPerfectFont) {
-            m_selectedFontName = PixelPerfectName;
+            m_selectedFontName = PixelPerfectFontName;
         } else if (m_path.empty() && !pixelPerfectFont) {
-            m_selectedFontName = SmoothName;
+            m_selectedFontName = SmoothFontName;
         } else if (fonts.contains(m_path)) {
             m_selectedFontName = fonts.at(m_path);
         } else {
