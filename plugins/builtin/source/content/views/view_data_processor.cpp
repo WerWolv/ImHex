@@ -916,7 +916,7 @@ namespace hex::plugin::builtin {
         }
 
         // Draw the main node editor workspace window
-        if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.3F))) {
+        if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.25F))) {
             ImNodes::BeginNodeEditor();
 
             if (m_evaluationTask.isRunning())
@@ -984,6 +984,8 @@ namespace hex::plugin::builtin {
 
         ImGui::EndDisabled();
 
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
+
         // Draw the control bar at the bottom
         {
             if (!m_evaluationTask.isRunning()) {
@@ -998,7 +1000,9 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            ImGui::Checkbox("Continuous evaluation", &m_continuousEvaluation);
+            ImGuiExt::DimmedIconToggle(ICON_VS_DEBUG_RERUN, &m_continuousEvaluation);
+            ImGui::SetItemTooltip("%s", "hex.builtin.view.data_processor.continuous_evaluation"_lang.get());
+
         }
 
 

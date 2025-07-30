@@ -400,6 +400,8 @@ namespace hex::plugin::builtin {
             settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5F;
 
             if (ImGui::BeginTabBar("##settings")) {
+                const auto startY = ImGui::GetCursorPosY();
+
                 if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
                     this->drawConsole(settingsSize);
                     ImGui::EndTabItem();
@@ -420,6 +422,8 @@ namespace hex::plugin::builtin {
                     this->drawDebugger(settingsSize);
                     ImGui::EndTabItem();
                 }
+
+                ImGui::SetCursorPosY(startY + settingsSize.y + ImGui::GetStyle().ItemSpacing.y * 2);
 
                 ImGui::EndTabBar();
             }
@@ -498,10 +502,20 @@ namespace hex::plugin::builtin {
                     ImGui::PopStyleVar(2);
 
                 } else {
-                    if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &m_runAutomatically)) {
+                    ImGui::SameLine(0, 10_scaled);
+                    if (ImGuiExt::DimmedIconToggle(ICON_VS_EDIT_SPARKLE, &m_runAutomatically)) {
                         if (m_runAutomatically)
                             m_hasUnevaluatedChanges.get(provider) = true;
                     }
+                    ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.auto"_lang.get());
+
+                    ImGui::SameLine();
+
+                    bool synced = m_sourceCode.isSynced();
+                    if (ImGuiExt::DimmedIconToggle(ICON_VS_REPO_PINNED, &synced)) {
+                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", synced);
+                    }
+                    ImGui::SetItemTooltip("%s", "hex.builtin.setting.general.sync_pattern_source"_lang.get());
 
                     ImGui::SameLine();
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -1230,12 +1244,12 @@ namespace hex::plugin::builtin {
             const auto line = m_textEditor.get(provider).GetCursorPosition().mLine + 1;
 
             if (!m_breakpoints->contains(line)) {
-                if (ImGuiExt::IconButton(ICON_VS_DEBUG_BREAKPOINT, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                if (ImGuiExt::IconButton(ICON_VS_CIRCLE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                     evaluator->addBreakpoint(line);
                 }
                 ImGuiExt::InfoTooltip("hex.builtin.view.pattern_editor.debugger.add_tooltip"_lang);
             } else {
-                if (ImGuiExt::IconButton(ICON_VS_DEBUG_BREAKPOINT_UNVERIFIED, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                if (ImGuiExt::IconButton(ICON_VS_CIRCLE_FILLED, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                     evaluator->removeBreakpoint(line);
                 }
                 ImGuiExt::InfoTooltip("hex.builtin.view.pattern_editor.debugger.remove_tooltip"_lang);
