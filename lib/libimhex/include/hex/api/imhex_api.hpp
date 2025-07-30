@@ -772,7 +772,7 @@ EXPORT_MODULE namespace hex {
                 void pop() const;
 
                 [[nodiscard]] operator ImFont*() const;
-                [[nodiscard]] UnlocalizedString getUnlocalizedName() const { return m_fontName; }
+                [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const { return m_fontName; }
                 
             private:
                 void push(float size, ImFont *font) const;

@@ -58,7 +58,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            std::string formatAs(Value other) {
+            std::string formatAs(const Value &other) {
                 return std::visit([&, this]<typename T>(T value) -> std::string {
 
                     auto unit = other.getUnit();

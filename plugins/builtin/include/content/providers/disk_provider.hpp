@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <wolv/io/handle.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -63,12 +64,9 @@ namespace hex::plugin::builtin {
         std::string m_friendlyName;
         bool m_elevated = false;
 
-#if defined(OS_WINDOWS)
-        void *m_diskHandle = reinterpret_cast<void*>(-1);
-#else
-        std::string m_pathBuffer;
-        int m_diskHandle = -1;
-#endif
+        wolv::io::NativeHandle m_diskHandle;
+        [[maybe_unused]] std::string m_pathBuffer;
+
 
         size_t m_diskSize   = 0;
         size_t m_sectorSize = 0;

@@ -188,7 +188,7 @@ namespace hex::gl {
 
 
         T &getElement(int row,int col) {
-            return this->mat[row * Columns+col];
+            return this->mat[row * Columns + col];
         }
 
         Vector<T,Rows> getColumn(int col) {
@@ -205,12 +205,12 @@ namespace hex::gl {
             return result;
         }
 
-        void updateRow(int row, Vector<T,Columns> values) {
+        void updateRow(int row, const Vector<T, Columns> &values) {
             for (size_t i = 0; i < Columns; i++)
                 this->mat[row * Columns + i] = values[i];
         }
 
-        void updateColumn(int col, Vector<T,Rows> values) {
+        void updateColumn(int col, const Vector<T, Rows> &values) {
             for (size_t i = 0; i < Rows; i++)
                 this->mat[i * Columns + col] = values[i];
         }
