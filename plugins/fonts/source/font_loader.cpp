@@ -23,7 +23,6 @@ namespace hex::fonts::loader {
 
         ImFontConfig config;
         config.MergeMode = false;
-        config.FontDataOwnedByAtlas = false;
         config.SizePixels = settings.getFontSize();
 
         std::memcpy(config.Name, name.get().c_str(), std::min(name.get().size(), sizeof(config.Name) - 1));
@@ -56,8 +55,12 @@ namespace hex::fonts::loader {
         }
 
         {
-            if (const auto fontPath = settings.getFontPath(); !fontPath.empty())
+            if (const auto fontPath = settings.getFontPath(); !fontPath.empty()) {
+                config.FontDataOwnedByAtlas = true;
                 *imguiFont = atlas->AddFontFromFileTTF(fontPath.string().c_str(), 0.0F, &config);
+            }
+
+            config.FontDataOwnedByAtlas = false;
 
             if (*imguiFont == nullptr) {
                 if (settings.isPixelPerfectFont()) {
