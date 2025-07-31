@@ -101,7 +101,7 @@ namespace hex::plugin::builtin {
             bool draw(const std::string &) override {
                 bool result = false;
 
-                if (!ImGui::BeginListBox("##UserFolders", ImVec2(-40_scaled, 280_scaled))) {
+                if (!ImGui::BeginListBox("##UserFolders", ImVec2(-(ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.x * 2), 300_scaled))) {
                     return false;
                 } else {
                     for (size_t n = 0; n < m_paths.size(); n++) {
@@ -122,7 +122,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
                 ImGui::BeginGroup();
 
-                if (ImGuiExt::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
+                if (ImGuiExt::DimmedIconButton(ICON_VS_NEW_FOLDER, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     fs::openFileBrowser(fs::DialogMode::Folder, {}, [&](const std::fs::path &path) {
                         if (std::find(m_paths.begin(), m_paths.end(), path) == m_paths.end()) {
                             m_paths.emplace_back(path);
@@ -134,7 +134,7 @@ namespace hex::plugin::builtin {
                 }
                 ImGuiExt::InfoTooltip("hex.builtin.setting.folders.add_folder"_lang);
 
-                if (ImGuiExt::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
+                if (ImGuiExt::DimmedIconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     if (!m_paths.empty()) {
                         m_paths.erase(std::next(m_paths.begin(), m_itemIndex));
                         ImHexApi::System::setAdditionalFolderPaths(m_paths);
