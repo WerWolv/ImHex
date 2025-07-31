@@ -25,21 +25,24 @@ namespace hex::fonts {
             return true;
         }
 
+        ImFontConfig config = {};
+        config.FontDataOwnedByAtlas = true;
+        config.Flags |= ImFontFlags_NoLoadError;
+
         auto atlas = ImGui::GetIO().Fonts;
 
         auto it = s_previewFonts.find(fontPath);
         if (it == s_previewFonts.end()) {
             ImFont *font = nullptr;
             if (fontPath == PixelPerfectFontName) {
-                font = atlas->AddFontDefault();
+                font = atlas->AddFontDefault(&config);
             } else if (fontPath == SmoothFontName || fontPath.empty()) {
                 static auto jetbrainsFont = romfs::get("fonts/JetBrainsMono.ttf");
-                ImFontConfig config = {};
                 config.FontDataOwnedByAtlas = false;
 
                 font = atlas->AddFontFromMemoryTTF(const_cast<u8 *>(jetbrainsFont.data<u8>()), jetbrainsFont.size(), 0.0F, &config);
             } else {
-                font = atlas->AddFontFromFileTTF(wolv::util::toUTF8String(fontPath).c_str());
+                font = atlas->AddFontFromFileTTF(wolv::util::toUTF8String(fontPath).c_str(), 0.0F, &config);
             }
 
             it = s_previewFonts.emplace(fontPath, font).first;

@@ -24,6 +24,7 @@ namespace hex::fonts::loader {
         ImFontConfig config;
         config.MergeMode = false;
         config.SizePixels = settings.getFontSize();
+        config.Flags |= ImFontFlags_NoLoadError;
 
         std::memcpy(config.Name, name.get().c_str(), std::min(name.get().size(), sizeof(config.Name) - 1));
 
