@@ -25,9 +25,9 @@ namespace hex::fonts {
     }
 
     void registerMergeFonts() {
-        ImHexApi::Fonts::registerMergeFont("Blender Icons",  romfs::get("fonts/blendericons.ttf").span<u8>(), { -1, -1 }, 0.95);
-        ImHexApi::Fonts::registerMergeFont("VS Codicons",    romfs::get("fonts/codicons.ttf").span<u8>(),     {  0, -2 }, 0.95);
-        ImHexApi::Fonts::registerMergeFont("Unifont",        romfs::get("fonts/unifont.otf").span<u8>(),      {  0,  0 }, 0.75);
+        ImHexApi::Fonts::registerMergeFont("Blender Icons",  romfs::get("fonts/blendericons.ttf").span<u8>(), { -1.0F, -1.0F }, 0.95F);
+        ImHexApi::Fonts::registerMergeFont("VS Codicons",    romfs::get("fonts/codicons.ttf").span<u8>(),     { +0.0F, -2.5F }, 0.95F);
+        ImHexApi::Fonts::registerMergeFont("Unifont",        romfs::get("fonts/unifont.otf").span<u8>(),      { +0.0F, +0.0F }, 0.75F);
     }
 
 }
