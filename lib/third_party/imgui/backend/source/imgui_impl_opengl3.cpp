@@ -245,6 +245,9 @@ struct ImGui_ImplOpenGL3_Data
     GLint           MaxTextureSize;
     GLuint          ShaderHandle;
     GLint           AttribLocationTex;       // Uniforms location
+    // IMHEX PATCH BEGIN
+    GLint           AttribLocationGammaCorrected;
+    // IMHEX PATCH END
     GLint           AttribLocationProjMtx;
     GLuint          AttribLocationVtxPos;    // Vertex attributes location
     GLuint          AttribLocationVtxUV;
@@ -516,18 +519,9 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
 #if defined(GL_CLIP_ORIGIN)
     if (!clip_origin_lower_left) { float tmp = T; T = B; B = tmp; } // Swap top and bottom if origin is upper left
 #endif
-// IMHEX PATCH BEGIN
-    float Gamma;
-    if (useFontShaders)
-        Gamma = 1.0f;
-    else
-        Gamma = 0.0f;
-// IMHEX PATCH END
     const float ortho_projection[4][4] =
     {
-        // IMHEX PATCH BEGIN
-        { 2.0f/(R-L),   0.0f,        Gamma,   0.0f },
-        // IMHEX PATCH END
+        { 2.0f/(R-L),   0.0f,         0.0f,   0.0f },
         { 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
         { 0.0f,         0.0f,        -1.0f,   0.0f },
         { (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
@@ -535,6 +529,9 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
     glUseProgram(bd->ShaderHandle);
     glUniform1i(bd->AttribLocationTex, 0);
     glUniformMatrix4fv(bd->AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
+    // IMHEX PATCH BEGIN
+    glUniform1i(bd->AttribLocationGammaCorrected, useFontShaders);
+    // IMHEX PATCH END
 
 #ifdef IMGUI_IMPL_OPENGL_MAY_HAVE_BIND_SAMPLER
     if (bd->GlVersion >= 330 || bd->GlProfileIsES3)
@@ -934,21 +931,11 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
         "uniform mat4 ProjMtx;\n"
         "out vec2 Frag_UV;\n"
         "out vec4 Frag_Color;\n"
-        // IMHEX PATCH BEGIN
-        "out mat4 Frag_mat;\n"
-        // IMHEX PATCH END
         "void main()\n"
         "{\n"
         "    Frag_UV = UV;\n"
-        // IMHEX PATCH BEGIN
-        "    mat4 projMtx = ProjMtx;\n"
-        "    projMtx[0][2] = 0.0;\n"
-        "    Frag_mat = ProjMtx;\n"
         "    Frag_Color = Color;\n"
-        "    gl_Position = projMtx * vec4(Position.xy,0,1);\n"
-      //"    Frag_Color = Color;\n"
-     // "    gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
-        // IMHEX PATCH END
+        "    gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
         "}\n";
 
     const GLchar* fragment_shader_glsl_120 =
@@ -987,22 +974,17 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
     const GLchar* fragment_shader_glsl_410_core =
         "in vec2 Frag_UV;\n"
         "in vec4 Frag_Color;\n"
-        // IMHEX PATCH BEGIN
-        "in mat4 Frag_mat;\n"
-        // IMHEX PATCH END
         "uniform sampler2D Texture;\n"
         "layout (location = 0) out vec4 Out_Color;\n"
         // IMHEX PATCH BEGIN
         "layout (location = 0, index = 1) out vec4 SRC1_Color;\n"
+        "uniform bool GammaCorrected;\n"
         // IMHEX PATCH END
         "void main()\n"
         "{\n"
         // IMHEX PATCH BEGIN
-        "    float Gamma = Frag_mat[0][2];\n"
-        "    if (Gamma <= 0.0001)\n"
-        // IMHEX PATCH END
+        "    if (!GammaCorrected)\n"
         "       Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
-        // IMHEX PATCH BEGIN
         "    else {\n"
         "       Out_Color = Frag_Color;\n"
         "       SRC1_Color = vec4(texture(Texture, Frag_UV.st).rgb * Frag_Color.aaa,1.0);\n"
@@ -1064,6 +1046,9 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
     glDeleteShader(vert_handle);
     glDeleteShader(frag_handle);
 
+    // IMHEX PATCH BEGIN
+    bd->AttribLocationGammaCorrected = (GLuint)glGetUniformLocation(bd->ShaderHandle, "GammaCorrected");
+    // IMHEX PATCH END
     bd->AttribLocationTex = glGetUniformLocation(bd->ShaderHandle, "Texture");
     bd->AttribLocationProjMtx = glGetUniformLocation(bd->ShaderHandle, "ProjMtx");
     bd->AttribLocationVtxPos = (GLuint)glGetAttribLocation(bd->ShaderHandle, "Position");

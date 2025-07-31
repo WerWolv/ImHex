@@ -1754,10 +1754,9 @@ void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32
     }
 
     // IMHEX PATCH BEGIN
-    int flags;
     bool is_subpixel = false;
     if (font != nullptr && !font->Sources.empty()) {
-        flags = font->Sources[0]->FontLoaderFlags;
+        const int flags = font->Sources[0]->FontLoaderFlags;
         is_subpixel = (flags & ImGuiFreeTypeLoaderFlags_SubPixel) != 0;
     }
 
