@@ -34,12 +34,10 @@ namespace hex::init {
     
     constexpr static auto WindowSize = ImVec2(640, 400);
 
-    struct GlfwError {
+    static struct GlfwError {
         int errorCode = 0;
         std::string desc;
-    };
-
-    GlfwError lastGlfwError;
+    } s_lastGlfwError;
 
     WindowSplash::WindowSplash() : m_window(nullptr) {
         RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
@@ -312,12 +310,11 @@ namespace hex::init {
 
                     constexpr auto HexCount = ImVec2(13, 7);
 
-                    bool isStart = true;
-
                     color.Value.w *= opacity;
 
                     // Loop over all the bytes on the splash screen
                     for (u32 y = u32(start.y); y < u32(HexCount.y); y += 1) {
+                        bool isStart = true;
                         for (u32 x = u32(start.x); x < u32(HexCount.x); x += 1) {
                             if (count-- == 0)
                                 return;
@@ -339,7 +336,7 @@ namespace hex::init {
                             }
 
                             // Add some extra color on the right if this is the last byte
-                            if (count == 0) {
+                            if (count == 0 || x == u32(HexCount.x) - 1) {
                                 drawList->AddRectFilled(pos + ImVec2(hexSize.x, -hexSpacing.y / 2), pos + hexSize + hexSpacing / 2, color);
                             }
                         }
@@ -435,8 +432,8 @@ namespace hex::init {
                 return;
             }
 
-            lastGlfwError.errorCode = errorCode;
-            lastGlfwError.desc = std::string(desc);
+            s_lastGlfwError.errorCode = errorCode;
+            s_lastGlfwError.desc = std::string(desc);
             log::error("GLFW Error [{}] : {}", errorCode, desc);
         });
 
@@ -480,7 +477,7 @@ namespace hex::init {
                 "You may not have a renderer available.\n"
                 "The most common cause of this is using a virtual machine\n"
                 "You may want to try a release artifact ending with 'NoGPU'"
-                , lastGlfwError.errorCode, lastGlfwError.desc));
+                , s_lastGlfwError.errorCode, s_lastGlfwError.desc));
             std::exit(EXIT_FAILURE);
         }
 
