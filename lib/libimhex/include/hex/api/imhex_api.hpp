@@ -758,7 +758,7 @@ EXPORT_MODULE namespace hex {
                 std::string name;
                 std::vector<u8> fontData;
                 Offset offset;
-                std::optional<u32> defaultSize;
+                std::optional<float> fontSizeMultiplier;
             };
 
             class Font {
@@ -794,8 +794,8 @@ EXPORT_MODULE namespace hex {
 
             }
 
-            void registerMergeFont(const std::fs::path &path, Offset offset = {}, std::optional<u32> defaultSize = std::nullopt);
-            void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset = {}, std::optional<u32> defaultSize = std::nullopt);
+            void registerMergeFont(const std::fs::path &path, Offset offset = {}, std::optional<float> fontSizeMultiplier = std::nullopt);
+            void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset = {}, std::optional<float> fontSizeMultiplier = std::nullopt);
 
             void registerFont(const Font& font);
             FontDefinition getFont(const UnlocalizedString &fontName);

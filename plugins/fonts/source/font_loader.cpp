@@ -83,7 +83,8 @@ namespace hex::fonts::loader {
         for (auto &extraFont : ImHexApi::Fonts::impl::getMergeFonts()) {
             config.GlyphOffset = { extraFont.offset.x, -extraFont.offset.y };
             config.GlyphOffset *= ImHexApi::System::getGlobalScale();
-            atlas->AddFontFromMemoryTTF(const_cast<u8 *>(extraFont.fontData.data()), extraFont.fontData.size(), extraFont.defaultSize.value_or(0), &config);
+            config.SizePixels = settings.getFontSize() * extraFont.fontSizeMultiplier.value_or(1);
+            atlas->AddFontFromMemoryTTF(const_cast<u8 *>(extraFont.fontData.data()), extraFont.fontData.size(), 0.0F, &config);
         }
     }
 
