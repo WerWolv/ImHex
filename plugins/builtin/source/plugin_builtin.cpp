@@ -108,8 +108,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     addInitTasks();
     extractBundledFiles();
 
-    registerMainMenuEntries();
-
     addFooterItems();
     addTitleBarButtons();
     addToolbarItems();
@@ -132,6 +130,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerProviders();
     registerDataFormatters();
     registerViews();
+    registerMainMenuEntries();
     registerThemeHandlers();
     registerStyleHandlers();
     registerBackgroundServices();

@@ -313,17 +313,10 @@ namespace hex::plugin::builtin {
         bool m_openGotoLinePopUp = false;
         bool m_patternEvaluating = false;
         std::map<std::fs::path, std::string> m_patternNames;
-
-        // External pattern file tracking
-        struct ExternalPatternFile {
-            std::fs::path path;
-            std::filesystem::file_time_type lastModified;
-            size_t contentHash;
-            std::string originalContent;
-        };
-        PerProvider<std::optional<ExternalPatternFile>> m_externalPatternFile;
-        bool m_checkingExternalFile = false;
-        bool m_enableExternalFileTracking;
+        PerProvider<wolv::io::ChangeTracker> m_changeTracker;
+        PerProvider<bool> m_ignoreNextChangeEvent;
+        PerProvider<bool> m_changeEventAcknowledgementPending;
+        PerProvider<bool> m_patternFileDirty;
 
         ImRect m_textEditorHoverBox;
         ImRect m_consoleHoverBox;
@@ -356,6 +349,8 @@ namespace hex::plugin::builtin {
         void historyInsert(std::array<std::string, 256> &history, u32 &size, u32 &index, const std::string &value);
 
         void loadPatternFile(const std::fs::path &path, prv::Provider *provider);
+        bool isPatternDirty(prv::Provider *provider) { return m_patternFileDirty.get(provider); }
+        void markPatternFileDirty(prv::Provider *provider) { m_patternFileDirty.get(provider) = true; }
 
         void parsePattern(const std::string &code, prv::Provider *provider);
         void evaluatePattern(const std::string &code, prv::Provider *provider);
@@ -368,15 +363,9 @@ namespace hex::plugin::builtin {
         void registerMenuItems();
         void registerHandlers();
 
-        // External pattern file management
-        void trackExternalFile(const std::fs::path &path, prv::Provider *provider);
-        void checkExternalFileChanges();
-        bool hasExternalFileChanged(const ExternalPatternFile &fileInfo) const;
-        size_t calculateContentHash(const std::string &content) const;
-        void writeChangesToExternalFile();
-        void showFileConflictPopup(const std::fs::path &path, prv::Provider *provider);
+        void handleFileChange(prv::Provider *provider);
 
-        std::function<void()> m_importPatternFile = [this] {
+        std::function<void()> m_openPatternFile = [this] {
             auto provider = ImHexApi::Provider::get();
             const auto basePaths = paths::Patterns.read();
             std::vector<std::fs::path> paths;
@@ -446,15 +435,39 @@ namespace hex::plugin::builtin {
             );
         };
 
-        std::function<void()> m_exportPatternFile = [this] {
+        std::function<void()> m_savePatternFile = [this] {
             auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return;
+            auto path = m_changeTracker.get(provider).getPath();
+            wolv::io::File file(path, wolv::io::File::Mode::Write);
+            if (file.isValid()) {
+                if (isPatternDirty(provider)) {
+                    file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
+                    m_patternFileDirty = false;
+                }
+                return;
+            }
+            m_savePatternAsFile();
+        };
+
+        std::function<void()> m_savePatternAsFile = [this] {
+            auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return;
             fs::openFileBrowser(
                     fs::DialogMode::Save, { {"Pattern", "hexpat"} },
                     [this, provider](const auto &path) {
                         wolv::io::File file(path, wolv::io::File::Mode::Create);
                         file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
+                        auto loadedPath = m_changeTracker.get(provider).getPath();
+                        if (!loadedPath.empty() && loadedPath != path)
+                            m_changeTracker.get(provider).stopTracking();
 
-                        this->trackExternalFile(path, provider);
+
+                        m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
+                        m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
+                        m_ignoreNextChangeEvent.get(provider) = true;
                     }
             );
         };
