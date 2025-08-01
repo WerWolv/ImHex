@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/api/event_manager.hpp>
+#include <hex/helpers/semantic_version.hpp>
 
 struct ImGuiTestEngine;
 

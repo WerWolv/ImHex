@@ -873,16 +873,16 @@ namespace hex {
                     LocalizationManager::impl::setFallbackLanguage(code.get<std::string>());
             }
 
-            impl::s_languages->insert({ code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()) });
+            impl::s_languages->emplace(code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()));
 
             std::map<std::string, std::string> translationDefinitions;
             for (auto &[key, value] : translations.items()) {
-                if (!value.is_string()) {
+                if (!value.is_string()) [[unlikely]] {
                     log::error("Localization data has invalid fields!");
                     continue;
                 }
 
-                translationDefinitions[key] = value.get<std::string>();
+                translationDefinitions.emplace(key, value.get<std::string>());
             }
 
             (*impl::s_definitions)[code.get<std::string>()].emplace_back(std::move(translationDefinitions));
