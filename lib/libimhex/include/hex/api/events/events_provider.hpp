@@ -5,6 +5,11 @@
 
 /* Provider events definitions */
 namespace hex {
+
+    namespace prv {
+        class Provider;
+    }
+
     /**
      * @brief Called when the provider is created.
      * This event is responsible for (optionally) initializing the provider and calling EventProviderOpened

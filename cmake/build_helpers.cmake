@@ -474,6 +474,18 @@ macro(configureCMake)
             message(WARNING "ninja not found, using default generator!")
         endif ()
     endif()
+endmacro()
+
+function(configureProject)
+    # Enable C and C++ languages
+    enable_language(C CXX)
+
+    if (XCODE)
+        # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
+        set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>" PARENT_SCOPE)
+    else()
+        set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" PARENT_SCOPE)
+    endif()
 
     # Enable LTO if desired and supported
     if (IMHEX_ENABLE_LTO)
@@ -487,18 +499,6 @@ macro(configureCMake)
             message(WARNING "LTO is not supported: ${output_error}")
         endif ()
     endif ()
-endmacro()
-
-function(configureProject)
-    # Enable C and C++ languages
-    enable_language(C CXX)
-
-    if (XCODE)
-        # Support Xcode's multi configuration paradigm by placing built artifacts into separate directories
-        set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Configs/$<CONFIG>" PARENT_SCOPE)
-    else()
-        set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" PARENT_SCOPE)
-    endif()
 endfunction()
 
 macro(setDefaultBuiltTypeIfUnset)

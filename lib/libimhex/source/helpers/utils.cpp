@@ -658,7 +658,7 @@ namespace hex {
 
     static std::map<std::fs::path, std::string> s_fonts;
     extern "C" void registerFont(const char *fontName, const char *fontPath) {
-        s_fonts[fontPath] = fontName;
+        s_fonts.emplace(fontPath, fontName);
     }
 
     const std::map<std::fs::path, std::string>& getFonts() {

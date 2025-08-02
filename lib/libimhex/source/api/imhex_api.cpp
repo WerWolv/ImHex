@@ -1086,21 +1086,21 @@ namespace hex {
                 return;
             }
 
-            impl::s_fonts->emplace_back(MergeFont {
+            impl::s_fonts->emplace_back(
                 wolv::util::toUTF8String(path.filename()),
                 fontFile.readVector(),
                 offset,
                 fontSizeMultiplier
-            });
+            );
         }
 
         void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset, std::optional<float> fontSizeMultiplier) {
-            impl::s_fonts->emplace_back(MergeFont {
+            impl::s_fonts->emplace_back(
                 name,
-                { data.begin(), data.end() },
+                std::vector<u8> { data.begin(), data.end() },
                 offset,
                 fontSizeMultiplier
-            });
+            );
         }
 
         void registerFont(const Font& font) {
