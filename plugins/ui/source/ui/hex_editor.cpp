@@ -596,7 +596,10 @@ namespace hex::ui {
                 // Row address column
                 ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_WidthFixed,
                     m_provider == nullptr ? 0 :
-                    CharacterSize.x * fmt::formatted_size("{:08X}: ", ((m_scrollPosition + m_visibleRowCount) * bytesPerRow) + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress())
+                    CharacterSize.x * std::max(
+                        fmt::formatted_size("{:08X}: ", ((m_scrollPosition + m_visibleRowCount) * bytesPerRow) + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress()),
+                        m_separatorStride == 0 ? 0 : fmt::formatted_size("{} {}", "hex.ui.common.segment"_lang, m_scrollPosition + m_visibleRowCount * bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress() / m_separatorStride)
+                    )
                 );
                 ImGui::TableSetupColumn("");
 
