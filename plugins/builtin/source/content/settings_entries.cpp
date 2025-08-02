@@ -287,7 +287,7 @@ namespace hex::plugin::builtin {
                 bool settingChanged = false;
 
                 ImGui::BeginDisabled(m_drawShortcut.matches(m_defaultShortcut));
-                if (ImGui::Button("X", ImGui::GetStyle().FramePadding * 2 + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
+                if (ImGuiExt::DimmedButton(ICON_VS_DISCARD, ImGui::GetStyle().FramePadding * 2 + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
                     this->reset();
                     if (!m_hasDuplicate) {
                         m_shortcut = m_defaultShortcut;
