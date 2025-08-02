@@ -882,7 +882,7 @@ namespace hex {
                     continue;
                 }
 
-                translationDefinitions.emplace(key, value.get<std::string>());
+                translationDefinitions.emplace(std::move(key), value.get<std::string>());
             }
 
             (*impl::s_definitions)[code.get<std::string>()].emplace_back(std::move(translationDefinitions));
