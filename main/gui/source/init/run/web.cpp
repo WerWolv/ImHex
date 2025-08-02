@@ -45,7 +45,12 @@
                 auto &splashWindow = *reinterpret_cast<std::unique_ptr<init::WindowSplash>*>(arg);
 
                 const auto result = splashWindow->loop();
-                if (result == true) {
+
+                // If no result was returned yet, keep looping
+                if (!result.has_value())
+                    return;
+
+                if (*result) {
                     handleFileOpenRequest();
 
                     // Clean up everything after the main window is closed
