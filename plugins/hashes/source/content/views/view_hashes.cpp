@@ -258,7 +258,7 @@ namespace hex::plugin::hashes {
                     PopupTextHash::open(function);
                 }
                 ImGui::SameLine();
-                if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                if (ImGuiExt::IconButton(ICON_VS_CHROME_CLOSE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     indexToRemove = i;
                 }
 

@@ -15,12 +15,18 @@ namespace hex::plugin::builtin {
         ContentRegistry::Reports::addReportProvider([](const prv::Provider *provider) -> std::string {
             std::string result;
 
-            result += "## Data description\n\n";
-            result += "| Type | Value |\n";
-            result += "| ---- | ----- |\n";
+            if (auto *dataDescriptionProvider = dynamic_cast<const prv::IProviderDataDescription*>(provider); dataDescriptionProvider != nullptr) {
+                auto descriptions = dataDescriptionProvider->getDataDescription();
+                if (!descriptions.empty()) {
+                    result += "## Data description\n\n";
+                    result += "| Type | Value |\n";
+                    result += "| ---- | ----- |\n";
 
-            for (const auto &[type, value] : provider->getDataDescription())
-                result += hex::format("| {} | {} |\n", type, value);
+                    for (const auto &[type, value] : dataDescriptionProvider->getDataDescription())
+                        result += hex::format("| {} | {} |\n", type, value);
+                }
+            }
+
 
             return result;
         });

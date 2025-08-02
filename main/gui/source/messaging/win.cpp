@@ -69,11 +69,17 @@ namespace hex::messaging {
     }
 
     bool setupNative() {
-
         constexpr static auto UniqueMutexId = L"ImHex/a477ea68-e334-4d07-a439-4f159c683763";
 
         // Check if an ImHex instance is already running by opening a global mutex
-        HANDLE globalMutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, UniqueMutexId);
+        static HANDLE globalMutex;
+        AT_FINAL_CLEANUP {
+            if (globalMutex != nullptr) {
+                CloseHandle(globalMutex);
+            }
+        };
+
+        globalMutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, UniqueMutexId);
         if (globalMutex == nullptr) {
             // If no ImHex instance is running, create a new global mutex
             globalMutex = CreateMutexW(nullptr, FALSE, UniqueMutexId);

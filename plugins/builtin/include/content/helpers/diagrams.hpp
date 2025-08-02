@@ -379,7 +379,7 @@ namespace hex {
                 ImPlot::SetupAxes("hex.ui.common.address"_lang, "hex.builtin.information_section.info_analysis.entropy"_lang,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
-                ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, (void*)("0x%04llX"));
+                ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, const_cast<void*>(reinterpret_cast<const void*>("0x%04llX")));
                 ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
 
                 // Set the axis limit to [first block : last block]
@@ -754,7 +754,7 @@ namespace hex {
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
                 ImPlot::SetupAxesLimits(-1, 256, 1, double(*std::ranges::max_element(m_valueCounts)) * 1.1F, ImGuiCond_Always);
-                ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, (void*)("0x%02llX"));
+                ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, const_cast<void*>(reinterpret_cast<const void*>("0x%02llX")));
                 ImPlot::SetupAxisTicks(ImAxis_X1, 0, 255, 17);
                 ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
 
@@ -854,7 +854,7 @@ namespace hex {
                         100.1F,
                         ImGuiCond_Always);
                 ImPlot::SetupLegend(ImPlotLocation_South, ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
-                ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, (void*)("0x%04llX"));
+                ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, const_cast<void*>(reinterpret_cast<const void*>("0x%04llX")));
                 ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
 
                 constexpr static std::array Names = { "iscntrl", "isprint", "isspace", "isblank", 

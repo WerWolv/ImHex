@@ -18,4 +18,5 @@ dnf install -y      \
   zlib-devel        \
   bzip2-devel       \
   xz-devel          \
-  lz4-devel
+  lz4-devel         \
+  libssh2-devel

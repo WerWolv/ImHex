@@ -33,6 +33,7 @@
 #include <content/popups/popup_crash_recovered.hpp>
 
 #include <GLFW/glfw3.h>
+#include <hex/api/theme_manager.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -94,8 +95,37 @@ namespace hex::plugin::builtin {
                 TaskManager::doLater([] {
                     for (auto &task : TaskManager::getRunningTasks())
                         task->interrupt();
-                    PopupTasksWaiting::open();
+                    PopupTasksWaiting::open([]() {
+                        ImHexApi::System::closeImHex();
+                    });
                 });
+            }
+        });
+
+        EventCloseButtonPressed::subscribe([]() {
+            if (ImHexApi::Provider::isValid()) {
+                if (ImHexApi::Provider::isDirty()) {
+                    ui::PopupQuestion::open("hex.builtin.popup.exit_application.desc"_lang,
+                        [] {
+                            for (const auto &provider : ImHexApi::Provider::getProviders())
+                                ImHexApi::Provider::remove(provider);
+                        },
+                        [] { }
+                    );
+                } else if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBackgroundTaskCount() > 0) {
+                    TaskManager::doLater([] {
+                        for (auto &task : TaskManager::getRunningTasks())
+                            task->interrupt();
+                        PopupTasksWaiting::open([]() {
+                            EventCloseButtonPressed::post();
+                        });
+                    });
+                } else {
+                    for (const auto &provider : ImHexApi::Provider::getProviders())
+                        ImHexApi::Provider::remove(provider);
+                }
+            } else {
+                ImHexApi::System::closeImHex();
             }
         });
 
@@ -197,8 +227,8 @@ namespace hex::plugin::builtin {
             if (provider->shouldSkipLoadInterface())
                 return;
 
-            if (provider->hasFilePicker()) {
-                if (!provider->handleFilePicker()) {
+            if (auto *filePickerProvider = dynamic_cast<prv::IProviderFilePicker*>(provider); filePickerProvider != nullptr) {
+                if (!filePickerProvider->handleFilePicker()) {
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     return;
                 }
@@ -207,20 +237,20 @@ namespace hex::plugin::builtin {
                     if (!provider->open()) {
                         ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                         TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    } else {
+                        TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
                     }
                 });
-
-                EventProviderOpened::post(provider);
             }
-            else if (!provider->hasLoadInterface()) {
+            else if (dynamic_cast<prv::IProviderLoadInterface*>(provider) == nullptr) {
                 TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
                     if (!provider->open() || !provider->isAvailable()) {
                         ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                         TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    } else {
+                        TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
                     }
                 });
-
-                EventProviderOpened::post(provider);
             }
         });
 
@@ -320,6 +350,10 @@ namespace hex::plugin::builtin {
                 if (lastFocusedWindow != nullptr)
                     log::debug("Removing focus from window '{}'", lastFocusedWindow->Name ? lastFocusedWindow->Name : "Unknown Window");
             }
+        });
+
+        RequestChangeTheme::subscribe([](const std::string &theme) {
+            ThemeManager::changeTheme(theme);
         });
 
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){

@@ -902,7 +902,7 @@ namespace ImGuiExt {
                                                                                           : ImGuiCol_Button);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3F, 1) + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -1019,7 +1019,7 @@ namespace ImGuiExt {
         std::string drawString;
         auto textEnd = text + strlen(text);
         for (auto wrapPos = text; wrapPos != textEnd;) {
-            wrapPos = ImGui::GetFont()->CalcWordWrapPositionA(1, wrapPos, textEnd, availableSpace.x * 0.8F);
+            wrapPos = ImGui::GetFont()->CalcWordWrapPosition(1, wrapPos, textEnd, availableSpace.x * 0.8F);
             drawString += std::string(text, wrapPos) + "\n";
             text = wrapPos;
         }
@@ -1442,6 +1442,16 @@ namespace ImGuiExt {
 
         // Return the button press state
         ImGui::PopClipRect();
+    }
+
+    static bool s_imguiTestEngineEnabled = false;
+
+    void ImGuiTestEngine::setEnabled(bool enabled) {
+        s_imguiTestEngineEnabled = enabled;
+    }
+
+    bool ImGuiTestEngine::isEnabled() {
+        return s_imguiTestEngineEnabled;
     }
 }
 

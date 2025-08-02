@@ -9,7 +9,7 @@
 
 namespace hex::plugin::visualizers {
     std::vector<u32> getIndices(pl::ptrn::Pattern *colorTablePattern, u64 width, u64 height);
-    ImGuiExt::Texture getTexture(pl::ptrn::Pattern *colorTablePattern, std::vector<u32>& indices, u64 width, u64 height);
+    ImGuiExt::Texture getTexture(pl::ptrn::Pattern *colorTablePattern, const std::vector<u32> &indices, u64 width, u64 height);
 
 
     void drawImageVisualizer(pl::ptrn::Pattern &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
@@ -75,7 +75,7 @@ namespace hex::plugin::visualizers {
         }
     }
 
-    ImGuiExt::Texture getTexture(pl::ptrn::Pattern *colorTablePattern, std::vector<u32>& indices, u64 width, u64 height) {
+    ImGuiExt::Texture getTexture(pl::ptrn::Pattern *colorTablePattern, const std::vector<u32> &indices, u64 width, u64 height) {
         std::vector<u32> colorTable = patternToArray<u32>(colorTablePattern);
         auto colorCount = colorTable.size();
         auto indexCount = indices.size();
@@ -89,7 +89,7 @@ namespace hex::plugin::visualizers {
             image[i] = colorTable[index];
         }
         void *tmp = image.data();
-        ImU8 *data = static_cast<ImU8 *>(tmp);
+        auto *data = static_cast<const ImU8 *>(tmp);
         ImGuiExt::Texture texture = ImGuiExt::Texture::fromBitmap(data, indexCount*4, width, height, ImGuiExt::Texture::Filter::Nearest);
         return texture;
     }
@@ -97,9 +97,9 @@ namespace hex::plugin::visualizers {
     std::vector<u32> getIndices(pl::ptrn::Pattern *pattern, u64 width, u64 height) {
         auto indexCount = width * height / pattern->getSize();
         std::vector<u32> indices;
-        auto *iterable = dynamic_cast<pl::ptrn::IIterable *>(pattern);
+        const auto *iterable = dynamic_cast<pl::ptrn::IIterable *>(pattern);
 
-        if (iterable == nullptr || iterable->getEntryCount() <= 0)
+        if (iterable == nullptr || iterable->getEntryCount() == 0)
             return indices;
         auto content = iterable->getEntry(0);
         auto byteCount = content->getSize();

@@ -33,6 +33,7 @@
 
 #include <time.h>
 #include "imgui_internal.h"
+#include <cmath>
 
 #ifndef IMPLOT_VERSION
 #error Must include implot.h before implot_internal.h
@@ -120,7 +121,7 @@ static inline T ImRemap01(T x, T x0, T x1) { return (x - x0) / (x1 - x0); }
 // Returns always positive modulo (assumes r != 0)
 static inline int ImPosMod(int l, int r) { return (l % r + r) % r; }
 // Returns true if val is NAN
-static inline bool ImNan(double val) { return isnan(val); }
+static inline bool ImNan(double val) { return std::isnan(val); }
 // Returns true if val is NAN or INFINITY
 static inline bool ImNanOrInf(double val) { return !(val >= -DBL_MAX && val <= DBL_MAX) || ImNan(val); }
 // Turns NANs to 0s

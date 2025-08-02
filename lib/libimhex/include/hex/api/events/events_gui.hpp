@@ -4,6 +4,7 @@
 
 /* Forward declarations */
 struct GLFWwindow;
+using ImGuiID = unsigned int;
 namespace hex { class View; }
 
 /* GUI events definitions */

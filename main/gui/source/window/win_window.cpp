@@ -78,7 +78,6 @@ namespace hex {
                 ImHexApi::System::impl::setNativeScale(newScale);
 
                 ThemeManager::reapplyCurrentTheme();
-                ImGui::GetStyle().ScaleAllSizes(newScale);
 
                 return TRUE;
             }
@@ -153,6 +152,11 @@ namespace hex {
     // Custom window procedure for borderless window
     static LRESULT borderlessWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
+            case WM_MOVE: {
+                auto imhexWindow = static_cast<Window*>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
+                imhexWindow->fullFrame();
+                break;
+            }
             case WM_MOUSELAST:
                 break;
             case WM_NCACTIVATE:
@@ -310,6 +314,7 @@ namespace hex {
 
                         break;
                 }
+
                 break;
             }
             default:
@@ -373,6 +378,11 @@ namespace hex {
                     auto fontPath = std::fs::path(valueData);
                     if (fontPath.is_relative())
                         fontPath = std::fs::path("C:\\Windows\\Fonts") / fontPath;
+
+                    // Windows appends (TrueType) to all font names for some reason. Remove it
+                    if (fontName.ends_with(" (TrueType)")) {
+                        fontName = fontName.substr(0, fontName.size() - 11);
+                    }
 
                     registerFont(fontName.c_str(), wolv::util::toUTF8String(fontPath).c_str());
                 }

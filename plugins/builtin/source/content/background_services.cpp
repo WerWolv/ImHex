@@ -1,3 +1,4 @@
+#include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/events/events_provider.hpp>

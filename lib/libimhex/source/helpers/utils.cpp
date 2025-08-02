@@ -13,6 +13,8 @@
 #include <GLFW/glfw3.h>
 #include <hex/api/events/events_lifecycle.hpp>
 
+#include <wolv/utils/string.hpp>
+
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shellapi.h>
@@ -99,9 +101,9 @@ namespace hex {
             return { };
 
         // Remove common hex prefixes and commas
-        string = hex::replaceStrings(string, "0x", "");
-        string = hex::replaceStrings(string, "0X", "");
-        string = hex::replaceStrings(string, ",", "");
+        string = wolv::util::replaceStrings(string, "0x", "");
+        string = wolv::util::replaceStrings(string, "0X", "");
+        string = wolv::util::replaceStrings(string, ",", "");
 
         // Check for non-hex characters
         bool isValidHexString = std::find_if(string.begin(), string.end(), [](char c) {
@@ -277,45 +279,6 @@ namespace hex {
                 else
                     return std::string() + static_cast<char>(c);
         }
-    }
-
-    std::vector<std::string> splitString(const std::string &string, const std::string &delimiter) {
-        size_t start = 0, end = 0;
-        std::vector<std::string> res;
-
-        while ((end = string.find(delimiter, start)) != std::string::npos) {
-            size_t size = end - start;
-            if (start + size > string.length())
-                break;
-
-            std::string token = string.substr(start, end - start);
-            start = end + delimiter.length();
-            res.push_back(token);
-        }
-
-        res.emplace_back(string.substr(start));
-        return res;
-    }
-
-    std::string combineStrings(const std::vector<std::string> &strings, const std::string &delimiter) {
-        std::string result;
-        for (const auto &string : strings) {
-            result += string;
-            result += delimiter;
-        }
-
-        return result.substr(0, result.length() - delimiter.length());
-    }
-
-    std::string replaceStrings(std::string string, const std::string &search, const std::string &replace) {
-        if (search.empty())
-            return string;
-
-        std::size_t pos;
-        while ((pos = string.find(search)) != std::string::npos)
-            string.replace(pos, search.size(), replace);
-
-        return string;
     }
 
     std::string toEngineeringString(double value) {
@@ -612,43 +575,6 @@ namespace hex {
         return utf8;
     }
 
-    float float16ToFloat32(u16 float16) {
-        u32 sign     = float16 >> 15;
-        u32 exponent = (float16 >> 10) & 0x1F;
-        u32 mantissa = float16 & 0x3FF;
-
-        u32 result = 0x00;
-
-        if (exponent == 0) {
-            if (mantissa == 0) {
-                // +- Zero
-                result = sign << 31;
-            } else {
-                // Subnormal value
-                exponent = 0x7F - 14;
-
-                while ((mantissa & (1 << 10)) == 0) {
-                    exponent--;
-                    mantissa <<= 1;
-                }
-
-                mantissa &= 0x3FF;
-                result = (sign << 31) | (exponent << 23) | (mantissa << 13);
-            }
-        } else if (exponent == 0x1F) {
-            // +-Inf or +-NaN
-            result = (sign << 31) | (0xFF << 23) | (mantissa << 13);
-        } else {
-            // Normal value
-            result = (sign << 31) | ((exponent + (0x7F - 15)) << 23) | (mantissa << 13);
-        }
-
-        float floatResult = 0;
-        std::memcpy(&floatResult, &result, sizeof(float));
-
-        return floatResult;
-    }
-
     bool isProcessElevated() {
 #if defined(OS_WINDOWS)
         bool elevated = false;
@@ -732,7 +658,7 @@ namespace hex {
 
     static std::map<std::fs::path, std::string> s_fonts;
     extern "C" void registerFont(const char *fontName, const char *fontPath) {
-        s_fonts[fontPath] = fontName;
+        s_fonts.emplace(fontPath, fontName);
     }
 
     const std::map<std::fs::path, std::string>& getFonts() {
@@ -859,10 +785,7 @@ namespace hex {
     }
 
     extern "C" void macOSCloseButtonPressed() {
-        auto windowHandle = ImHexApi::System::getMainWindowHandle();
-
-        glfwHideWindow(windowHandle);
-        glfwIconifyWindow(windowHandle);
+        EventCloseButtonPressed::post();
     }
 
     extern "C" void macosEventDataReceived(const u8 *data, size_t length) {

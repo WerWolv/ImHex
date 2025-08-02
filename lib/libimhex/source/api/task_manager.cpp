@@ -209,7 +209,7 @@ namespace hex {
         if (!task)
             return false;
 
-        return !task->hadException();
+        return task->hadException();
     }
 
     bool TaskHolder::shouldInterrupt() const {
@@ -217,7 +217,7 @@ namespace hex {
         if (!task)
             return false;
 
-        return !task->shouldInterrupt();
+        return task->shouldInterrupt();
     }
 
     bool TaskHolder::wasInterrupted() const {
@@ -225,7 +225,7 @@ namespace hex {
         if (!task)
             return false;
 
-        return !task->wasInterrupted();
+        return task->wasInterrupted();
     }
 
     void TaskHolder::interrupt() const {
@@ -404,7 +404,7 @@ namespace hex {
 
         if (s_tasks.empty()) {
             std::scoped_lock lock(s_deferredCallsMutex);
-            for (auto &call : s_tasksFinishedCallbacks)
+            for (const auto &call : s_tasksFinishedCallbacks)
                 call();
             s_tasksFinishedCallbacks.clear();
         }

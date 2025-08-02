@@ -11,6 +11,7 @@
         "liblzma",
         "zstd",
         "glfw3",
-        "curl"
+        "curl",
+        "libssh2"
     ]
 }

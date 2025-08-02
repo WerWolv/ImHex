@@ -10,20 +10,20 @@ namespace hex::plugin::builtin {
 
     ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name") {
         EventProviderCreated::subscribe(this, [this](const hex::prv::Provider *provider) {
-            if (provider->hasLoadInterface() && !provider->shouldSkipLoadInterface())
+            if (dynamic_cast<const prv::IProviderLoadInterface*>(provider) != nullptr && !provider->shouldSkipLoadInterface())
                 this->getWindowOpenState() = true;
         });
 
         ContentRegistry::Interface::addSidebarItem(ICON_VS_SERVER_PROCESS, [] {
             auto provider = hex::ImHexApi::Provider::get();
 
-            if (provider != nullptr)
-                provider->drawInterface();
+            if (auto *sidebarInterfaceProvider = dynamic_cast<prv::IProviderSidebarInterface*>(provider); sidebarInterfaceProvider != nullptr)
+                sidebarInterfaceProvider->drawSidebarInterface();
         },
         [] {
             auto provider = hex::ImHexApi::Provider::get();
 
-            return provider != nullptr && provider->hasInterface() && provider->isAvailable();
+            return provider != nullptr && dynamic_cast<prv::IProviderSidebarInterface*>(provider) != nullptr && provider->isAvailable();
         });
     }
 
@@ -33,8 +33,8 @@ namespace hex::plugin::builtin {
 
     void ViewProviderSettings::drawContent() {
         auto provider = hex::ImHexApi::Provider::get();
-        if (provider != nullptr) {
-            bool settingsValid = provider->drawLoadInterface();
+            if (auto *loadInterfaceProvider = dynamic_cast<prv::IProviderLoadInterface*>(provider); loadInterfaceProvider != nullptr) {
+            bool settingsValid = loadInterfaceProvider->drawLoadInterface();
 
             ImGui::NewLine();
             ImGui::Separator();

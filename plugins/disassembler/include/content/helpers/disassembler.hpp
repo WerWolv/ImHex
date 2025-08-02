@@ -97,16 +97,15 @@ namespace hex::plugin::disasm {
         // string has to be in the form of `arch;option1,option2,option3,no-option4`
         // Not all results might make sense for capstone
         static std::pair<cs_arch, cs_mode> stringToSettings(std::string_view string) {
-            const auto archSeparator = string.find_first_of(';');
+            const auto vectorString = wolv::util::splitString(std::string(string), ";");
 
-            std::string_view archName;
-            std::string_view options;
-            if (archSeparator == std::string_view::npos) {
-                archName = wolv::util::trim(string);
-                options = "";
+            std::string archName;
+            std::string options;
+            archName = wolv::util::trim(vectorString[0]);
+            if (vectorString.size() != 1) {
+                options = wolv::util::trim(vectorString[1]);
             } else {
-                archName = wolv::util::trim(string.substr(0, archSeparator - 1));
-                options = wolv::util::trim(string.substr(archSeparator + 1));
+                options = "";
             }
 
             u32 arch = {};
@@ -114,10 +113,11 @@ namespace hex::plugin::disasm {
 
             if (archName.ends_with("be") || archName.ends_with("eb")) {
                 mode |= CS_MODE_BIG_ENDIAN;
-                archName.remove_suffix(2);
+                archName.pop_back();
+                archName.pop_back();
             } else if (archName.ends_with("le") || archName.ends_with("el")) {
-                mode |= CS_MODE_LITTLE_ENDIAN;
-                archName.remove_suffix(2);
+                archName.pop_back();
+                archName.pop_back();
             }
 
             if (equalsIgnoreCase(archName, "arm")) {
@@ -171,15 +171,8 @@ namespace hex::plugin::disasm {
             else
                 throw std::runtime_error("Invalid disassembler architecture");
 
-            while (!options.empty()) {
-                std::string_view option;
-                auto separatorPos = options.find_first_of(',');
-                if (separatorPos == std::string_view::npos)
-                    option = options;
-                else
-                    option = options.substr(0, separatorPos - 1);
-
-                options.remove_prefix(option.size() + 1);
+            auto optionsVector = wolv::util::splitString(std::string(options), ",");
+            for (std::string_view option : optionsVector) {
                 option = wolv::util::trim(option);
 
                 bool shouldAdd = true;

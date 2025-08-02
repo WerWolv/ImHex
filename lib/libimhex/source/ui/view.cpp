@@ -6,6 +6,8 @@
 
 namespace hex {
 
+    static View* s_lastFocusedView = nullptr;
+
     View::View(UnlocalizedString unlocalizedName, const char *icon) : m_unlocalizedViewName(std::move(unlocalizedName)), m_icon(icon) { }
 
     bool View::shouldDraw() const {
@@ -73,5 +75,20 @@ namespace hex {
     std::string View::toWindowName(const UnlocalizedString &unlocalizedName) {
         return fmt::format("{}###{}", Lang(unlocalizedName), unlocalizedName.get());
     }
+
+    void View::setFocused(bool focused) {
+        m_focused = focused;
+        if (focused)
+            s_lastFocusedView = this;
+    }
+
+
+    const View* View::getLastFocusedView() {
+        if (!ImHexApi::Provider::isValid())
+            return nullptr;
+
+        return s_lastFocusedView;
+    }
+
 
 }

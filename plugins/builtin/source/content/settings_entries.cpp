@@ -5,6 +5,7 @@
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/layout_manager.hpp>
+#include <hex/ui/view.hpp>
 
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
@@ -100,7 +101,7 @@ namespace hex::plugin::builtin {
             bool draw(const std::string &) override {
                 bool result = false;
 
-                if (!ImGui::BeginListBox("##UserFolders", ImVec2(-40_scaled, 280_scaled))) {
+                if (!ImGui::BeginListBox("##UserFolders", ImVec2(-(ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.x * 2), 300_scaled))) {
                     return false;
                 } else {
                     for (size_t n = 0; n < m_paths.size(); n++) {
@@ -121,7 +122,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
                 ImGui::BeginGroup();
 
-                if (ImGuiExt::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
+                if (ImGuiExt::DimmedIconButton(ICON_VS_NEW_FOLDER, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     fs::openFileBrowser(fs::DialogMode::Folder, {}, [&](const std::fs::path &path) {
                         if (std::find(m_paths.begin(), m_paths.end(), path) == m_paths.end()) {
                             m_paths.emplace_back(path);
@@ -133,7 +134,7 @@ namespace hex::plugin::builtin {
                 }
                 ImGuiExt::InfoTooltip("hex.builtin.setting.folders.add_folder"_lang);
 
-                if (ImGuiExt::IconButton(ICON_VS_REMOVE_CLOSE, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
+                if (ImGuiExt::DimmedIconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     if (!m_paths.empty()) {
                         m_paths.erase(std::next(m_paths.begin(), m_itemIndex));
                         ImHexApi::System::setAdditionalFolderPaths(m_paths);
@@ -402,21 +403,18 @@ namespace hex::plugin::builtin {
         };
 
         class ToolbarIconsWidget : public ContentRegistry::Settings::Widgets::Widget {
-        private:
-            struct MenuItemSorter {
-                bool operator()(const auto *a, const auto *b) const {
-                    return a->toolbarIndex < b->toolbarIndex;
-                }
-            };
-
         public:
             bool draw(const std::string &) override {
                 bool changed = false;
 
+                const auto currIndex = std::ranges::count_if(ContentRegistry::Interface::impl::getMenuItems(), [](const auto &entry) {
+                    return entry.second.toolbarIndex != -1;
+                });
+
                 // Top level layout table
                 if (ImGui::BeginTable("##top_level", 2, ImGuiTableFlags_None, ImGui::GetContentRegionAvail())) {
-                    ImGui::TableSetupColumn("##left", ImGuiTableColumnFlags_WidthStretch, 0.3F);
-                    ImGui::TableSetupColumn("##right", ImGuiTableColumnFlags_WidthStretch, 0.7F);
+                    ImGui::TableSetupColumn("##left", ImGuiTableColumnFlags_WidthStretch, 0.4F);
+                    ImGui::TableSetupColumn("##right", ImGuiTableColumnFlags_WidthStretch, 0.6F);
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
@@ -427,6 +425,9 @@ namespace hex::plugin::builtin {
 
                         // Loop over all available menu items
                         for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                            ImGui::PushID(&menuItem);
+                            ON_SCOPE_EXIT { ImGui::PopID(); };
+
                             // Filter out items without icon, separators, submenus and items that are already in the toolbar
 
                             if (menuItem.icon.glyph.empty())
@@ -445,15 +446,22 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
 
-                            // Draw the menu item
-                            ImGui::Selectable(hex::format("{} {}", menuItem.icon.glyph, Lang(unlocalizedName)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+                            std::string name = Lang(unlocalizedName);
+                            if (menuItem.view != nullptr) {
+                                name += hex::format(" ({})", Lang(menuItem.view->getUnlocalizedName()));
+                            }
 
-                            // Handle draggin the menu item to the toolbar box
+                            // Draw the menu item
+                            ImGui::Selectable(hex::format("{} {}", menuItem.icon.glyph, name).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+                            ImGui::SetItemTooltip("%s", name.c_str());
+
+                            // Handle dragging the menu item to the toolbar box
                             if (ImGui::BeginDragDropSource()) {
-                                auto ptr = &menuItem;
+                                static const void* ptr;
+                                ptr = &menuItem;
                                 ImGui::SetDragDropPayload("MENU_ITEM_PAYLOAD", &ptr, sizeof(void*));
 
-                                ImGuiExt::TextFormatted("{} {}", menuItem.icon.glyph, Lang(unlocalizedName));
+                                ImGuiExt::TextFormatted("{} {}", menuItem.icon.glyph, name);
 
                                 ImGui::EndDragDropSource();
                             }
@@ -478,20 +486,28 @@ namespace hex::plugin::builtin {
 
                     // Draw toolbar icon box
                     if (ImGuiExt::BeginSubWindow("hex.builtin.setting.toolbar.icons"_lang, nullptr, ImGui::GetContentRegionAvail())) {
-                        if (ImGui::BeginTable("##icons", 6, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
+                        const auto itemWidth = 60_scaled;
+                        const auto columnCount = int(ImGui::GetContentRegionAvail().x / itemWidth);
+                        if (ImGui::BeginTable("##icons", columnCount, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
                             ImGui::TableNextRow();
 
                             // Find all menu items that are in the toolbar and sort them by their toolbar index
-                            std::set<ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> toolbarItems;
+                            std::vector<ContentRegistry::Interface::impl::MenuItem*> toolbarItems;
                             for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable()) {
                                 if (menuItem.toolbarIndex == -1)
                                     continue;
 
-                                toolbarItems.emplace(&menuItem);
+                                toolbarItems.emplace_back(&menuItem);
                             }
+                            std::ranges::sort(toolbarItems, [](auto *a, auto *b) {
+                                return a->toolbarIndex < b->toolbarIndex;
+                            });
 
                             // Loop over all toolbar items
                             for (auto &menuItem : toolbarItems) {
+                                ImGui::PushID(menuItem);
+                                ON_SCOPE_EXIT { ImGui::PopID(); };
+
                                 // Filter out items without icon, separators, submenus and items that are not in the toolbar
                                 if (menuItem->icon.glyph.empty())
                                     continue;
@@ -507,7 +523,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
 
                                 // Draw the toolbar item
-                                ImGui::InvisibleButton(unlocalizedName.get().c_str(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x));
+                                ImGui::InvisibleButton(unlocalizedName.get().c_str(), ImVec2(itemWidth, itemWidth));
 
                                 // Handle dragging the toolbar item around
                                 if (ImGui::BeginDragDropSource()) {
@@ -523,7 +539,27 @@ namespace hex::plugin::builtin {
                                     if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_ITEM_PAYLOAD"); payload != nullptr) {
                                         auto &otherMenuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
 
-                                        std::swap(menuItem->toolbarIndex, otherMenuItem->toolbarIndex);
+                                        // Get all toolbar items sorted by toolbarIndex
+                                        std::vector<ContentRegistry::Interface::impl::MenuItem*> newToolbarItems = toolbarItems;
+
+                                        // Remove otherMenuItem from its current position
+                                        auto it = std::ranges::find(newToolbarItems, otherMenuItem);
+                                        if (it != newToolbarItems.end())
+                                            newToolbarItems.erase(it);
+
+                                        // Find current menuItem position
+                                        auto insertPos = std::ranges::find(newToolbarItems, menuItem);
+
+                                        if (menuItem->toolbarIndex > otherMenuItem->toolbarIndex)
+                                            ++insertPos;
+
+                                        // Insert otherMenuItem before menuItem
+                                        newToolbarItems.insert(insertPos, otherMenuItem);
+
+                                        // Update toolbarIndex for all items
+                                        for (size_t i = 0; i < newToolbarItems.size(); ++i)
+                                            newToolbarItems[i]->toolbarIndex = static_cast<int>(i);
+
                                         changed = true;
                                     }
 
@@ -565,16 +601,25 @@ namespace hex::plugin::builtin {
                                 auto max = ImGui::GetItemRectMax();
                                 auto iconSize = ImGui::CalcTextSize(menuItem->icon.glyph.c_str());
 
-                                std::string text = Lang(unlocalizedName);
-                                if (text.ends_with("..."))
-                                    text = text.substr(0, text.size() - 3);
-
-                                auto textSize = ImGui::CalcTextSize(text.c_str());
-
                                 // Draw icon and text of the toolbar item
                                 auto drawList = ImGui::GetWindowDrawList();
                                 drawList->AddText((min + ((max - min) - iconSize) / 2) - ImVec2(0, 10_scaled), ImGuiExt::GetCustomColorU32(ImGuiCustomCol(menuItem->icon.color)), menuItem->icon.glyph.c_str());
-                                drawList->AddText((min + ((max - min)) / 2) + ImVec2(-textSize.x / 2, 5_scaled), ImGui::GetColorU32(ImGuiCol_Text), text.c_str());
+
+                                ImGui::PushFont(nullptr, ImGui::GetStyle().FontSizeBase * 0.65F);
+                                {
+                                    std::string name = Lang(unlocalizedName);
+                                    if (name.ends_with("..."))
+                                        name = name.substr(0, name.size() - 3);
+
+                                    if (menuItem->view != nullptr) {
+                                        name += hex::format(" ({})", Lang(menuItem->view->getUnlocalizedName()));
+                                    }
+
+                                    auto textSize = ImGui::CalcTextSize(name.c_str(), nullptr, false, max.x - min.x);
+
+                                    drawList->AddText(nullptr, 0.0F, (min + ((max - min)) / 2) + ImVec2(-textSize.x / 2, 5_scaled), ImGui::GetColorU32(ImGuiCol_Text), name.c_str(), nullptr, max.x - min.x);
+                                }
+                                ImGui::PopFont();
                             }
 
                             ImGui::EndTable();
@@ -588,8 +633,7 @@ namespace hex::plugin::builtin {
                         if (auto payload = ImGui::AcceptDragDropPayload("MENU_ITEM_PAYLOAD"); payload != nullptr) {
                             auto &menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
 
-                            menuItem->toolbarIndex = m_currIndex;
-                            m_currIndex += 1;
+                            menuItem->toolbarIndex = currIndex;
                             changed = true;
                         }
 
@@ -621,6 +665,9 @@ namespace hex::plugin::builtin {
                 if (data.is_null())
                     return;
 
+                if (data.is_array() && data.empty())
+                    return;
+
                 for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable())
                     menuItem.toolbarIndex = -1;
 
@@ -639,13 +686,8 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                m_currIndex = toolbarItems.size();
-
                 ContentRegistry::Interface::updateToolbarItems();
             }
-
-        private:
-            i32 m_currIndex = 0;
         };
 
         bool getDefaultBorderlessWindowMode() {
@@ -712,6 +754,8 @@ namespace hex::plugin::builtin {
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_file", false);
+
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
 
             #if !defined(OS_WEB)

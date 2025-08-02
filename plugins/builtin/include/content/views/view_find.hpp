@@ -22,6 +22,10 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
 
+        View* getMenuItemInheritView() const override {
+            return ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name");
+        }
+
     private:
 
         using Occurrence = hex::ContentRegistry::DataFormatter::impl::FindOccurrence;

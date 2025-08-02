@@ -4,7 +4,8 @@
 
 namespace hex::plugin::builtin {
 
-    class MemoryFileProvider : public hex::prv::Provider {
+    class MemoryFileProvider : public hex::prv::Provider,
+                               public prv::IProviderMenuItems {
     public:
         explicit MemoryFileProvider() = default;
         ~MemoryFileProvider() override = default;
@@ -28,7 +29,6 @@ namespace hex::plugin::builtin {
         void save() override;
 
         [[nodiscard]] std::string getName() const override;
-        [[nodiscard]] std::vector<Description> getDataDescription() const override { return { }; }
 
         std::vector<MenuEntry> getMenuEntries() override;
 

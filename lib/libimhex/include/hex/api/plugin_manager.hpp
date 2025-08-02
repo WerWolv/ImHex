@@ -81,8 +81,9 @@ EXPORT_MODULE namespace hex {
 
         [[nodiscard]] const std::fs::path &getPath() const;
 
-        [[nodiscard]] bool isValid() const;
         [[nodiscard]] bool isLoaded() const;
+        [[nodiscard]] bool isValid() const;
+        [[nodiscard]] bool isInitialized() const;
 
         [[nodiscard]] std::span<SubCommand> getSubCommands() const;
         [[nodiscard]] std::span<Feature> getFeatures() const;

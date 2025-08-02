@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginListBox("##files", { -FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() })) {
                 u32 index = 0;
-                for (auto &file : files) {
+                for (const auto &file : files) {
                     if (ImGui::Selectable(wolv::util::toUTF8String(file).c_str(), index == selectedIndex))
                         selectedIndex = index;
                     index++;
@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
 
             ImGui::TableNextColumn();
 
-            ImGui::BeginDisabled(selectedIndex <= 0);
+            ImGui::BeginDisabled(selectedIndex == 0);
             {
                 if (ImGui::ArrowButton("move_up", ImGuiDir_Up)) {
                     std::iter_swap(files.begin() + selectedIndex, files.begin() + selectedIndex - 1);

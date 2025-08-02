@@ -19,6 +19,7 @@
 
 #include <TextEditor.h>
 #include <popups/popup_file_chooser.hpp>
+#include <content/text_highlighting/pattern_language.hpp>
 
 namespace pl::ptrn { class Pattern; }
 
@@ -29,7 +30,6 @@ namespace hex::plugin::builtin {
     constexpr static auto consoleView       = "/##console_";
     constexpr static auto variablesView     = "/##env_vars_";
     constexpr static auto settingsView      = "/##settings_";
-    constexpr static auto sectionsView      = "/##sections_table_";
     constexpr static auto virtualFilesView  = "/##Virtual_File_Tree_";
     constexpr static auto debuggerView      = "/##debugger_";
 
@@ -69,6 +69,30 @@ namespace hex::plugin::builtin {
         ~ViewPatternEditor() override;
 
         void drawAlwaysVisibleContent() override;
+        std::unique_ptr<pl::PatternLanguage> *getPatternLanguage() {
+            return &m_editorRuntime;
+        }
+
+        TextEditor &getTextEditor() {
+            return m_textEditor;
+        }
+
+        bool getChangesWereParsed() const {
+            return m_changesWereParsed;
+        }
+
+        u32  getRunningParsers () const {
+            return m_runningParsers;
+        }
+
+        u32  getRunningEvaluators () const {
+            return m_runningEvaluators;
+        }
+
+        void setChangesWereParsed(bool changesWereParsed) {
+            m_changesWereParsed = changesWereParsed;
+        }
+
         void drawContent() override;
         [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
             return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
@@ -234,6 +258,7 @@ namespace hex::plugin::builtin {
         std::atomic<u32> m_runningEvaluators = 0;
         std::atomic<u32> m_runningParsers    = 0;
 
+        bool m_changesWereParsed = false;
         PerProvider<bool> m_hasUnevaluatedChanges;
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
 
@@ -245,9 +270,6 @@ namespace hex::plugin::builtin {
 
         bool m_autoLoadPatterns = true;
 
-        std::map<prv::Provider*, std::function<void()>> m_sectionWindowDrawer;
-
-        ui::HexEditor m_sectionHexEditor;
         PerProvider<ui::VisualizerDrawer> m_visualizerDrawer;
         bool m_tooltipJustOpened = false;
 
@@ -271,7 +293,6 @@ namespace hex::plugin::builtin {
         PerProvider<const std::vector<pl::core::Evaluator::StackTrace>*> m_callStack;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
-        PerProvider<std::map<u64, pl::api::Section>> m_sections;
 
         PerProvider<std::vector<VirtualFile>> m_virtualFiles;
 
@@ -293,6 +314,17 @@ namespace hex::plugin::builtin {
         bool m_patternEvaluating = false;
         std::map<std::fs::path, std::string> m_patternNames;
 
+        // External pattern file tracking
+        struct ExternalPatternFile {
+            std::fs::path path;
+            std::filesystem::file_time_type lastModified;
+            size_t contentHash;
+            std::string originalContent;
+        };
+        PerProvider<std::optional<ExternalPatternFile>> m_externalPatternFile;
+        bool m_checkingExternalFile = false;
+        bool m_enableExternalFileTracking;
+
         ImRect m_textEditorHoverBox;
         ImRect m_consoleHoverBox;
         std::string m_focusedSubWindowName;
@@ -308,11 +340,11 @@ namespace hex::plugin::builtin {
         static inline u32 m_replaceHistorySize = 0;
         static inline u32 m_replaceHistoryIndex = 0;
 
+        TextHighlighter m_textHighlighter = TextHighlighter(this,&this->m_editorRuntime);
     private:
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
         void drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables);
-        void drawSectionSelector(ImVec2 size, const std::map<u64, pl::api::Section> &sections);
         void drawVirtualFiles(ImVec2 size, const std::vector<VirtualFile> &virtualFiles) const;
         void drawDebugger(ImVec2 size);
 
@@ -335,6 +367,14 @@ namespace hex::plugin::builtin {
         void registerEvents();
         void registerMenuItems();
         void registerHandlers();
+
+        // External pattern file management
+        void trackExternalFile(const std::fs::path &path, prv::Provider *provider);
+        void checkExternalFileChanges();
+        bool hasExternalFileChanged(const ExternalPatternFile &fileInfo) const;
+        size_t calculateContentHash(const std::string &content) const;
+        void writeChangesToExternalFile();
+        void showFileConflictPopup(const std::fs::path &path, prv::Provider *provider);
 
         std::function<void()> m_importPatternFile = [this] {
             auto provider = ImHexApi::Provider::get();
@@ -413,6 +453,8 @@ namespace hex::plugin::builtin {
                     [this, provider](const auto &path) {
                         wolv::io::File file(path, wolv::io::File::Mode::Create);
                         file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
+
+                        this->trackExternalFile(path, provider);
                     }
             );
         };

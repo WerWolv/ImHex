@@ -178,7 +178,7 @@ namespace hex::plugin::builtin {
     }
 
     std::vector<FileProvider::MenuEntry> FileProvider::getMenuEntries() {
-        FileProvider::MenuEntry loadMenuItem;
+        MenuEntry loadMenuItem;
 
         if (m_loadedIntoMemory)
             loadMenuItem = { "hex.builtin.provider.file.menu.direct_access"_lang, ICON_VS_ARROW_SWAP, [this] { this->convertToDirectAccess(); } };

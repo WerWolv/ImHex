@@ -72,6 +72,12 @@
         "hex.disassembler.view.disassembler.tricore.131": "131",
         "hex.disassembler.view.disassembler.tricore.160": "160",
         "hex.disassembler.view.disassembler.tricore.161": "161",
-        "hex.disassembler.view.disassembler.tricore.162": "162"
+        "hex.disassembler.view.disassembler.tricore.162": "162",
+        "hex.disassembler.view.disassembler.export": "​导出指令为...",
+        "hex.disassembler.view.disassembler.export.popup.error": "导出到ASM文件失败！​​",
+        "hex.disassembler.view.disassembler.image_base_address": "映像基地址",
+        "hex.disassembler.view.disassembler.image_base_address.hint": "​此为代码段在加载数据中的起始地址。例如.text段的起始位置。",
+        "hex.disassembler.view.disassembler.image_load_address": "映像加载地址​​",
+        "hex.disassembler.view.disassembler.image_load_address.hint": "​​​此为反汇编代码执行前被加载到内存中的地址。"
     }
 }

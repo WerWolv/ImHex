@@ -9,7 +9,10 @@
 
 namespace hex::plugin::builtin {
 
-    class FileProvider : public hex::prv::Provider {
+    class FileProvider : public prv::Provider,
+                         public prv::IProviderDataDescription,
+                         public prv::IProviderFilePicker,
+                         public prv::IProviderMenuItems {
     public:
         FileProvider() = default;
         ~FileProvider() override = default;
@@ -31,12 +34,10 @@ namespace hex::plugin::builtin {
         void saveAs(const std::fs::path &path) override;
 
         [[nodiscard]] std::string getName() const override;
-        [[nodiscard]] std::vector<Description> getDataDescription() const override;
         std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument) override;
 
-        [[nodiscard]] bool hasFilePicker() const override { return true; }
+        [[nodiscard]] std::vector<Description> getDataDescription() const override;
         [[nodiscard]] bool handleFilePicker() override;
-
         std::vector<MenuEntry> getMenuEntries() override;
 
         void setPath(const std::fs::path &path);

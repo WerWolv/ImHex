@@ -8,7 +8,13 @@ if (IMHEX_EXTERNAL_PLUGIN_BUILD)
     set(LIBIMHEX_LIBRARY_TYPE_PUBLIC INTERFACE)
     set(LIBIMHEX_LIBRARY_TYPE_PRIVATE INTERFACE)
 else()
-    add_library(tracing STATIC
+    if (IMHEX_STATIC_LINK_PLUGINS)
+        set(TRACING_LIBRARY_TYPE OBJECT)
+    else()
+        set(TRACING_LIBRARY_TYPE STATIC)
+    endif()
+
+    add_library(tracing ${TRACING_LIBRARY_TYPE}
             source/stacktrace.cpp
             source/exceptions.cpp
     )

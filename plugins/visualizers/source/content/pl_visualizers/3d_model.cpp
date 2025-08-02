@@ -530,7 +530,7 @@ namespace hex::plugin::visualizers {
             // Draw grid toggle
             {
                 ImGui::PushID(2);
-                if (ImGuiExt::DimmedIconToggle(s_isPerspective ? ICON_BI_GRID : ICON_VS_SYMBOL_NUMBER, &s_drawGrid))
+                if (ImGuiExt::DimmedIconToggle(s_isPerspective ? ICON_BI_GRID : ICON_VS_SYMBOL_NUMERIC, &s_drawGrid))
                     s_shouldReset = true;
                 ImGui::PopID();
             }
@@ -941,7 +941,7 @@ namespace hex::plugin::visualizers {
             s_shouldReset = true;
         processInputEvents(s_rotation, s_translation, s_scaling, s_nearLimit, s_farLimit);
 
-        auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
+        const auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
         if (iterable != nullptr && iterable->getEntryCount() > 0) {
             auto content = iterable->getEntry(0);
             while (content->getSize() == 0) {

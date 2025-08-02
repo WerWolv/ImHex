@@ -31,7 +31,7 @@ namespace hex::plugin::visualizers {
 
             bitfield->forEachEntry(0, bitfield->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
                 size_t bitSize;
-                if (auto bitfieldField = dynamic_cast<pl::ptrn::PatternBitfieldField*>(entry); bitfieldField != nullptr)
+                if (const auto *bitfieldField = dynamic_cast<pl::ptrn::PatternBitfieldField*>(entry); bitfieldField != nullptr)
                     bitSize = bitfieldField->getBitSize();
                 else
                     bitSize = entry->getSize() * 8;

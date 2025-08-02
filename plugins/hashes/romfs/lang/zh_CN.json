@@ -31,6 +31,8 @@
         "hex.hashes.view.hashes.remove": "移除哈希",
         "hex.hashes.view.hashes.table.name": "名称",
         "hex.hashes.view.hashes.table.result": "结果",
-        "hex.hashes.view.hashes.table.type": "类型"
+        "hex.hashes.view.hashes.table.type": "类型",
+        "hex.hashes.view.hashes.add": "添加哈希",
+        "hex.hashes.view.hashes.hash_name": "​​哈希名称​"
     }
 }

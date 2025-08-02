@@ -1,0 +1,24 @@
+{
+    "code": "pl-PL",
+    "country": "Polska",
+    "language": "Polski",
+    "fallback": false,
+    "translations": {
+        "hex.diffing.algorithm.simple.name": "Prosty algorytm bajt po bajcie",
+        "hex.diffing.algorithm.simple.description": "Naiwne porównanie O(N) bajt po bajcie.\nMoże zidentyfikować tylko modyfikacje bajtów oraz wstawienia / usunięcia na końcu danych",
+        "hex.diffing.algorithm.myers.name": "Algorytm bit-wektorowy Myersa",
+        "hex.diffing.algorithm.myers.description": "Inteligentny algorytm różnicowania O(N*M). Może identyfikować modyfikacje, wstawienia i usunięcia w dowolnym miejscu danych",
+        "hex.diffing.algorithm.myers.settings.window_size": "Rozmiar okna",
+        "hex.diffing.view.diff.name": "Różnice",
+        "hex.diffing.view.diff.added": "Dodane",
+        "hex.diffing.view.diff.modified": "Zmodyfikowane",
+        "hex.diffing.view.diff.provider_a": "Dostawca A",
+        "hex.diffing.view.diff.provider_b": "Dostawca B",
+        "hex.diffing.view.diff.changes": "Zmiany",
+        "hex.diffing.view.diff.removed": "Usunięte",
+        "hex.diffing.view.diff.algorithm": "Algorytm różnicowania",
+        "hex.diffing.view.diff.settings": "Brak dostępnych ustawień",
+        "hex.diffing.view.diff.settings.no_settings": "Brak dostępnych ustawień",
+        "hex.diffing.view.diff.task.diffing": "Różnicowanie danych..."
+    }
+}

@@ -18,7 +18,7 @@ namespace hex::messaging {
 
         fullEventData.insert(fullEventData.end(), args.begin(), args.end());
 
-        u8 *data = &fullEventData[0];
+        const u8 *data = &fullEventData[0];
         auto dataSize = fullEventData.size();
 
         macosSendMessageToMainInstance(data, dataSize);

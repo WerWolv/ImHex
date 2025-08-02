@@ -17,23 +17,67 @@
 #include <hex/providers/undo_redo/stack.hpp>
 
 namespace hex::prv {
+    /**
+     * @brief Interface for providers that need to draw a config interface when being created
+     */
+    class IProviderLoadInterface {
+    public:
+        virtual ~IProviderLoadInterface() = default;
+        virtual bool drawLoadInterface() = 0;
+    };
 
     /**
-     * @brief Represent the data source for a tab in the UI
+     * @brief Interface for providers that want to provide a custom sidebar interface
      */
-    class Provider {
+    class IProviderSidebarInterface {
     public:
-        struct Description {
-            std::string name;
-            std::string value;
-        };
+        virtual ~IProviderSidebarInterface() = default;
+        virtual void drawSidebarInterface() = 0;
+    };
 
+    /**
+     * @brief Interface for providers that need to show a file picker dialog when being created
+     */
+    class IProviderFilePicker {
+    public:
+        virtual ~IProviderFilePicker() = default;
+        virtual bool handleFilePicker() = 0;
+    };
+
+    /**
+     * @brief Interface for providers that want to display custom menu items in the provider context menu
+     */
+    class IProviderMenuItems {
+    public:
         struct MenuEntry {
             std::string name;
             const char *icon;
             std::function<void()> callback;
         };
 
+        virtual ~IProviderMenuItems() = default;
+        virtual std::vector<MenuEntry> getMenuEntries() = 0;
+    };
+
+    /**
+     * @brief Interface for providers that want to show some extra information in the information view
+     */
+    class IProviderDataDescription {
+    public:
+        struct Description {
+            std::string name;
+            std::string value;
+        };
+
+        virtual ~IProviderDataDescription() = default;
+        [[nodiscard]] virtual std::vector<Description> getDataDescription() const = 0;
+    };
+
+    /**
+     * @brief Represent the data source for a tab in the UI
+     */
+    class Provider {
+    public:
         constexpr static u64 MaxPageSize = 0xFFFF'FFFF'FFFF'FFFF;
 
         Provider();
@@ -191,7 +235,6 @@ namespace hex::prv {
         [[nodiscard]] virtual u64 getSize() const;
         [[nodiscard]] virtual std::optional<u32> getPageOfAddress(u64 address) const;
 
-        [[nodiscard]] virtual std::vector<Description> getDataDescription() const;
         [[nodiscard]] virtual std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument);
 
         virtual void undo();
@@ -199,16 +242,6 @@ namespace hex::prv {
 
         [[nodiscard]] virtual bool canUndo() const;
         [[nodiscard]] virtual bool canRedo() const;
-
-        [[nodiscard]] virtual bool hasFilePicker() const;
-        virtual bool handleFilePicker();
-
-        virtual std::vector<MenuEntry> getMenuEntries() { return { }; }
-
-        [[nodiscard]] virtual bool hasLoadInterface() const;
-        [[nodiscard]] virtual bool hasInterface() const;
-        virtual bool drawLoadInterface();
-        virtual void drawInterface();
 
         [[nodiscard]] u32 getID() const;
         void setID(u32 id);
@@ -250,12 +283,11 @@ namespace hex::prv {
         bool m_dirty = false;
 
         /**
-         * @brief Control whetever to skip provider initialization
-         * initialization may be asking the user for information related to the provider,
+         * @brief Control if provider initialization should be skipped.
+         * Initialization may be asking the user for information related to the provider,
          * e.g. a process ID for the process memory provider
          * this is used mainly when restoring a provider with already known initialization information
          * for example when loading a project or loading a provider from the "recent" lsit
-         * 
          */
         bool m_skipLoadInterface = false;
 

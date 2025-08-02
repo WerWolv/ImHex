@@ -186,6 +186,8 @@ namespace hex::plugin::builtin {
             if (over)
                 return;
 
+            ImHexApi::System::unlockFrameRate();
+
             const auto drawTile = [&](u32 x, u32 y) {
                 drawList->AddRectFilled(
                     {
@@ -500,33 +502,38 @@ namespace hex::plugin::builtin {
                         if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                             ImGui::BringWindowToDisplayBack(ImGui::GetCurrentWindowRead());
 
-                            drawWelcomeScreenBackground();
+                            if (const auto &fullScreenView = ContentRegistry::Views::impl::getFullScreenView(); fullScreenView != nullptr) {
+                                fullScreenView->draw();
+                            } else {
+                                drawWelcomeScreenBackground();
 
-                            if (s_simplifiedWelcomeScreen)
-                                drawWelcomeScreenContentSimplified();
-                            else
-                                drawWelcomeScreenContentFull();
+                                if (s_simplifiedWelcomeScreen)
+                                    drawWelcomeScreenContentSimplified();
+                                else
+                                    drawWelcomeScreenContentFull();
 
-                            static bool hovered = false;
-                            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
-                            {
-                                const ImVec2 windowSize = { 150_scaled, ImGui::GetTextLineHeightWithSpacing() * 3.5F };
-                                ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
-                                ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
-                                if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
-                                    if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen)) {
-                                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
-                                        WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
+                                static bool hovered = false;
+                                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
+                                {
+                                    const ImVec2 windowSize = { 150_scaled, ImGui::GetTextLineHeightWithSpacing() * 3.5F };
+                                    ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
+                                    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
+                                    if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
+                                        if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen)) {
+                                            ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
+                                            WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
+                                        }
+
                                     }
+                                    ImGuiExt::EndSubWindow();
+
+                                    ImGui::PopStyleColor();
+                                    hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 
                                 }
-                                ImGuiExt::EndSubWindow();
-
-                                ImGui::PopStyleColor();
-                                hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-
+                                ImGui::PopStyleVar();
                             }
-                            ImGui::PopStyleVar();
+
                         }
                         ImGui::End();
                         ImGui::PopStyleVar();
@@ -627,7 +634,7 @@ namespace hex::plugin::builtin {
             ImHexApi::System::setTargetFPS(static_cast<float>(value.get<int>(14)));
         });
 
-        RequestChangeTheme::subscribe([](const std::string &theme) {
+        static auto updateTextures = [](float scale) {
             auto changeTexture = [&](const std::string &path) {
                 return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Nearest);
             };
@@ -636,14 +643,17 @@ namespace hex::plugin::builtin {
                 return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), width, 0, ImGuiExt::Texture::Filter::Linear);
             };
 
-            ThemeManager::changeTheme(theme);
-            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300_scaled);
-            s_nightlyTexture = changeTextureSvg(hex::format("assets/{}/nightly.svg", "common"), 35_scaled);
+            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300 * scale);
+            s_nightlyTexture = changeTextureSvg(hex::format("assets/{}/nightly.svg", "common"), 35 * scale);
             s_backdropTexture = changeTexture(hex::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
+        };
 
-            if (!s_bannerTexture->isValid()) {
-                log::error("Failed to load banner texture!");
-            }
+        RequestChangeTheme::subscribe([]() { updateTextures(ImHexApi::System::getGlobalScale()); });
+        EventDPIChanged::subscribe([](float oldScale, float newScale) {
+            if (oldScale == newScale)
+                return;
+
+            updateTextures(newScale);
         });
 
         // Clear project context if we go back to the welcome screen

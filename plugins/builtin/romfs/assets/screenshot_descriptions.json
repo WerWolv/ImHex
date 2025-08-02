@@ -1,7 +1,7 @@
 {
     "3d_visualizer.png": {
         "title": "Advanced Data Visualizers",
-        "description": "After analyzing data using the pattern language, it's often useful to visualize parts of that data. ImHex provides a variety of visualizers that can be used to visualize different types of data right in the editor.\n\nAvailable visualizers include a 3D model viewer, RGBA and Image decoder, a audio player, line and scatter plots and many more!"
+        "description": "After analyzing data using the pattern language, it's often useful to visualize parts of that data. ImHex provides a variety of visualizers that can be used to visualize different types of data right in the editor.\n\nAvailable visualizers include a 3D model viewer, RGBA and Image decoder, an audio player, line and scatter plots and many more!"
     },
     "bookmarks.png": {
         "title": "Bookmarks",

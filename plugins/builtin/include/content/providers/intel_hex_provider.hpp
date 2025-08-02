@@ -6,7 +6,9 @@
 
 namespace hex::plugin::builtin {
 
-    class IntelHexProvider : public hex::prv::Provider {
+    class IntelHexProvider : public hex::prv::Provider,
+                             public hex::prv::IProviderDataDescription,
+                             public hex::prv::IProviderFilePicker {
     public:
         IntelHexProvider() = default;
         ~IntelHexProvider() override = default;
@@ -36,7 +38,6 @@ namespace hex::plugin::builtin {
             return "hex.builtin.provider.intel_hex";
         }
 
-        [[nodiscard]] bool hasFilePicker() const override { return true; }
         [[nodiscard]] bool handleFilePicker() override;
 
         std::pair<Region, bool> getRegionValidity(u64 address) const override;

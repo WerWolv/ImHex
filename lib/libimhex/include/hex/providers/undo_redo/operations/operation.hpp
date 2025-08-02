@@ -13,7 +13,7 @@ namespace hex::prv::undo {
 
     class Operation : public ICloneable<Operation> {
     public:
-        virtual ~Operation() = default;
+        ~Operation() override = default;
 
         virtual void undo(Provider *provider) = 0;
         virtual void redo(Provider *provider) = 0;

@@ -247,10 +247,10 @@ namespace hex::plugin::builtin::recent {
                 if (!provider->open() || !provider->isAvailable()) {
                     ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                } else {
+                    TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
                 }
             });
-
-            EventProviderOpened::post(provider);
 
             updateRecentEntries();
         }

@@ -20,7 +20,8 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-gcc"
              "${MINGW_PACKAGE_PREFIX}-zlib"
              "${MINGW_PACKAGE_PREFIX}-bzip2"
              "${MINGW_PACKAGE_PREFIX}-xz"
-             "${MINGW_PACKAGE_PREFIX}-zstd")
+             "${MINGW_PACKAGE_PREFIX}-zstd"
+             "${MINGW_PACKAGE_PREFIX}-libssh2-wincng")
 
 source=()
 sha256sums=()

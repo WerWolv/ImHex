@@ -74,9 +74,9 @@ namespace hex::plugin::builtin {
             i64 precision;
         } ieee754 = {};
 
-        std::string specialNumbers[] = {
-                "inf" , "Inf", "INF" , "nan" , "Nan" , "NAN",
-                "qnan","Qnan", "QNAN", "snan", "Snan", "SNAN"
+        constexpr static std::array SpecialNumbers = {
+            "inf" , "Inf", "INF" , "nan" , "Nan" , "NAN",
+            "qnan","Qnan", "QNAN", "snan", "Snan", "SNAN"
         };
 
 
@@ -345,7 +345,7 @@ namespace hex::plugin::builtin {
             }
         };
 
-        const static auto FloatToBits = [&specialNumbers](IEEE754 &ieee754, std::string decimalFloatingPointNumberString, int totalBitCount) {
+        const static auto FloatToBits = [](IEEE754 &ieee754, std::string decimalFloatingPointNumberString, int totalBitCount) {
 
             // Always obtain sign first.
             if (decimalFloatingPointNumberString[0] == '-') {
@@ -362,7 +362,7 @@ namespace hex::plugin::builtin {
 
             // Detect and use special numbers.
             for (u32 i = 0; i < 12; i++) {
-                if (decimalFloatingPointNumberString == specialNumbers[i]) {
+                if (decimalFloatingPointNumberString == SpecialNumbers[i]) {
                     inputType = InputType(i/3);
                     matchFound = true;
                     break;

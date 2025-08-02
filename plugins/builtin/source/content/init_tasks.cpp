@@ -145,6 +145,5 @@ namespace hex::plugin::builtin {
         ImHexApi::System::addStartupTask("Load Window Settings", false, loadWindowSettings);
         ImHexApi::System::addStartupTask("Configuring UI scale", false, configureUIScale);
         ImHexApi::System::addStartupTask("Checking for updates", true, checkForUpdates);
-        ImHexApi::System::addStartupTask("Loading fonts", true, fonts::setupFonts);
     }
 }

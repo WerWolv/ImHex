@@ -1,10 +1,9 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/api/localization_manager.hpp>
-
-#include <content/helpers/demangle.hpp>
+#include <hex/trace/stacktrace.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <imgui.h>
-#include <hex/ui/imgui_imhex_extensions.h>
 #include <TextEditor.h>
 
 
@@ -31,7 +30,7 @@ namespace hex::plugin::builtin {
         static float prevWindowWidth;
 
         if (ImGui::InputTextWithHint("hex.builtin.tools.demangler.mangled"_lang, "Itanium, MSVC, Dlang & Rust", mangledName)) {
-            demangledName = hex::plugin::builtin::demangle(mangledName);
+            demangledName = trace::demangle(mangledName);
 
             if (demangledName == mangledName) {
                 demangledName = "???";

@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
                         m_unit = Unit::Unitless;
                     } else {
                         std::tie(m_unit, m_multiplier) = parseUnit(value.substr(index));
-                        value = value.substr(0, index);
+                        value.resize(index);
                     }
                 } else {
                     m_unit = Unit::Unitless;
@@ -58,7 +58,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            std::string formatAs(Value other) {
+            std::string formatAs(const Value &other) {
                 return std::visit([&, this]<typename T>(T value) -> std::string {
 
                     auto unit = other.getUnit();
@@ -276,6 +276,34 @@ namespace hex::plugin::builtin {
                 } else {
                     return std::nullopt;
                 }
+            });
+
+        ContentRegistry::CommandPaletteCommands::add(
+            ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+            "@",
+            "hex.builtin.command.goto.desc",
+            [](auto input) {
+                wolv::math_eval::MathEvaluator<long double> evaluator;
+                evaluator.registerStandardVariables();
+                evaluator.registerStandardFunctions();
+
+                std::optional<long double> result = evaluator.evaluate(input);
+                if (result.has_value())
+                    return hex::format("hex.builtin.command.goto.result"_lang, result.value());
+                else if (evaluator.hasError())
+                    return hex::format("Error: {}", *evaluator.getLastError());
+                else
+                    return std::string("???");
+            }, [](auto input) -> std::optional<std::string> {
+                wolv::math_eval::MathEvaluator<long double> evaluator;
+                evaluator.registerStandardVariables();
+                evaluator.registerStandardFunctions();
+
+                std::optional<long double> result = evaluator.evaluate(input);
+                if (result.has_value()) {
+                    ImHexApi::HexEditor::setSelection(result.value(), 1);
+                }
+                return std::nullopt;
             });
 
         ContentRegistry::CommandPaletteCommands::add(

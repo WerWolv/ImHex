@@ -87,16 +87,20 @@ namespace hex {
             workspaceName = s_currentWorkspace->first;
         }
 
-
         wolv::io::File file(path, wolv::io::File::Mode::Create);
 
         if (!file.isValid()) {
             return false;
         }
 
+        const auto layoutString = LayoutManager::saveToString();
+        if (auto it = s_workspaces->find(workspaceName); it != s_workspaces->end()) {
+            it->second.layout = layoutString;
+        }
+
         nlohmann::json json;
         json["name"]    = workspaceName;
-        json["layout"]  = LayoutManager::saveToString();
+        json["layout"]  = layoutString;
         json["builtin"] = builtin;
 
         file.writeString(json.dump(4));

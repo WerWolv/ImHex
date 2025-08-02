@@ -580,7 +580,10 @@ EXPORT_MODULE namespace hex {
             namespace impl {
 
                 void add(std::unique_ptr<View> &&view);
+                void setFullScreenView(std::unique_ptr<View> &&view);
+
                 const std::map<UnlocalizedString, std::unique_ptr<View>>& getEntries();
+                const std::unique_ptr<View>& getFullScreenView();
 
             }
 
@@ -593,6 +596,17 @@ EXPORT_MODULE namespace hex {
             template<std::derived_from<View> T, typename... Args>
             void add(Args &&...args) {
                 return impl::add(std::make_unique<T>(std::forward<Args>(args)...));
+            }
+
+            /**
+             * @brief Sets a view as a full-screen view. This will cause the view to take up the entire ImHex window
+             * @tparam T The custom view class that extends View
+             * @tparam Args Arguments types
+             * @param args Arguments passed to the constructor of the view
+             */
+            template<std::derived_from<View> T, typename... Args>
+            void setFullScreenView(Args &&...args) {
+                return impl::setFullScreenView(std::make_unique<T>(std::forward<Args>(args)...));
             }
 
             /**
@@ -731,7 +745,7 @@ EXPORT_MODULE namespace hex {
                 add(impl::Entry {
                     unlocalizedCategory,
                     unlocalizedName,
-                    [=, ...args = std::forward<Args>(args)]() mutable {
+                    [unlocalizedName, ...args = std::forward<Args>(args)]() mutable {
                         auto node = std::make_unique<T>(std::forward<Args>(args)...);
                         node->setUnlocalizedName(unlocalizedName);
                         return node;
@@ -867,7 +881,7 @@ EXPORT_MODULE namespace hex {
                 const std::vector<UnlocalizedString> &unlocalizedMainMenuNames,
                 const Icon &icon,
                 u32 priority,
-                const Shortcut &shortcut,
+                Shortcut shortcut,
                 const impl::MenuCallback &function,
                 const impl::EnabledCallback& enabledCallback = []{ return true; },
                 const impl::SelectedCallback &selectedCallback = []{ return false; },
@@ -900,12 +914,14 @@ EXPORT_MODULE namespace hex {
              * @param priority The priority of the entry. Lower values are displayed first
              * @param function The function to call when the entry is clicked
              * @param enabledCallback The function to call to determine if the entry is enabled
+             * @param view The view to use for the entry. If nullptr, the item will always be visible
              */
             void addMenuItemSubMenu(
                 std::vector<UnlocalizedString> unlocalizedMainMenuNames,
                 u32 priority,
                 const impl::MenuCallback &function,
-                const impl::EnabledCallback& enabledCallback = []{ return true; }
+                const impl::EnabledCallback& enabledCallback = []{ return true; },
+                View *view = nullptr
             );
 
             /**
@@ -915,13 +931,15 @@ EXPORT_MODULE namespace hex {
              * @param priority The priority of the entry. Lower values are displayed first
              * @param function The function to call when the entry is clicked
              * @param enabledCallback The function to call to determine if the entry is enabled
+             * @param view The view to use for the entry. If nullptr, the item will always be visible
              */
             void addMenuItemSubMenu(
                 std::vector<UnlocalizedString> unlocalizedMainMenuNames,
                 const char *icon,
                 u32 priority,
                 const impl::MenuCallback &function,
-                const impl::EnabledCallback& enabledCallback = []{ return true; }
+                const impl::EnabledCallback& enabledCallback = []{ return true; },
+                View *view = nullptr
             );
 
 
@@ -929,8 +947,9 @@ EXPORT_MODULE namespace hex {
              * @brief Adds a new main menu separator
              * @param unlocalizedMainMenuNames The unlocalized names of the main menu entries
              * @param priority The priority of the entry. Lower values are displayed first
+             * @param view The view to use for the entry. If nullptr, the item will always be visible
              */
-            void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority);
+            void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, View *view = nullptr);
 
 
             /**
@@ -1072,7 +1091,7 @@ EXPORT_MODULE namespace hex {
              * @param unlocalizedName The unlocalized name of the formatter
              * @param callback The function to call to format the data
              */
-            void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string fileExtension, const impl::FindExporterCallback &callback);
+            void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string &fileExtension, const impl::FindExporterCallback &callback);
 
         }
 

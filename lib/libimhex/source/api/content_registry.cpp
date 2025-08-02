@@ -720,10 +720,19 @@ namespace hex {
             }
 
             void add(std::unique_ptr<View> &&view) {
-            log::debug("Registered new view: {}", view->getUnlocalizedName().get());
+                log::debug("Registered new view: {}", view->getUnlocalizedName().get());
 
-            s_views->emplace(view->getUnlocalizedName(), std::move(view));
-        }
+                s_views->emplace(view->getUnlocalizedName(), std::move(view));
+            }
+
+            static AutoReset<std::unique_ptr<View>> s_fullscreenView;
+            const std::unique_ptr<View>& getFullScreenView() {
+                return *s_fullscreenView;
+            }
+
+            void setFullScreenView(std::unique_ptr<View> &&view) {
+                s_fullscreenView = std::move(view);
+            }
 
         }
 
@@ -864,16 +873,16 @@ namespace hex {
                     LocalizationManager::impl::setFallbackLanguage(code.get<std::string>());
             }
 
-            impl::s_languages->insert({ code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()) });
+            impl::s_languages->emplace(code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()));
 
             std::map<std::string, std::string> translationDefinitions;
             for (auto &[key, value] : translations.items()) {
-                if (!value.is_string()) {
+                if (!value.is_string()) [[unlikely]] {
                     log::error("Localization data has invalid fields!");
                     continue;
                 }
 
-                translationDefinitions[key] = value.get<std::string>();
+                translationDefinitions.emplace(key, value.get<std::string>());
             }
 
             (*impl::s_definitions)[code.get<std::string>()].emplace_back(std::move(translationDefinitions));
@@ -950,7 +959,7 @@ namespace hex {
             addMenuItem(unlocalizedMainMenuNames, "", priority, shortcut, function, enabledCallback, []{ return false; }, view);
         }
 
-        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, const Icon &icon, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, const impl::SelectedCallback &selectedCallback, View *view) {
+        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, const Icon &icon, u32 priority, Shortcut shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, const impl::SelectedCallback &selectedCallback, View *view) {
             log::debug("Added new menu item to menu {} with priority {}", unlocalizedMainMenuNames[0].get(), priority);
 
             Icon coloredIcon = icon;
@@ -962,6 +971,10 @@ namespace hex {
             });
 
             if (shortcut != Shortcut::None) {
+                if (view != nullptr && !shortcut.isLocal()) {
+                    shortcut += CurrentView;
+                }
+
                 if (shortcut.isLocal() && view != nullptr)
                     ShortcutManager::addShortcut(view, shortcut, unlocalizedMainMenuNames, function, enabledCallback);
                 else
@@ -969,23 +982,23 @@ namespace hex {
             }
         }
 
-        void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
-            addMenuItemSubMenu(std::move(unlocalizedMainMenuNames), "", priority, function, enabledCallback);
+        void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
+            addMenuItemSubMenu(std::move(unlocalizedMainMenuNames), "", priority, function, enabledCallback, view);
         }
 
-        void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, const char *icon, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
+        void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, const char *icon, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
             log::debug("Added new menu item sub menu to menu {} with priority {}", unlocalizedMainMenuNames[0].get(), priority);
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, Shortcut::None, nullptr, function, enabledCallback, []{ return false; }, -1 }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, Shortcut::None, view, function, enabledCallback, []{ return false; }, -1 }
             });
         }
 
-        void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority) {
+        void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, View *view) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, "", Shortcut::None, nullptr, []{}, []{ return true; }, []{ return false; }, -1 }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, "", Shortcut::None, view, []{}, []{ return true; }, []{ return false; }, -1 }
             });
         }
 
@@ -1105,7 +1118,7 @@ namespace hex {
             impl::s_exportMenuEntries->push_back({ unlocalizedName, callback });
         }
 
-        void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string fileExtension, const impl::FindExporterCallback &callback) {
+        void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string &fileExtension, const impl::FindExporterCallback &callback) {
             log::debug("Registered new export formatter: {}", unlocalizedName.get());
 
             impl::s_findExportEntries->push_back({ unlocalizedName, fileExtension, callback });
@@ -1179,10 +1192,10 @@ namespace hex {
             };
 
             UserData userData = {
-                    .data = &data,
-                    .maxChars = this->getMaxCharsPerCell(),
+                .data = &data,
+                .maxChars = this->getMaxCharsPerCell(),
 
-                    .editingDone = false
+                .editingDone = false
             };
 
             ImGui::PushID(reinterpret_cast<void*>(address));
@@ -1193,6 +1206,8 @@ namespace hex {
 
                 if (data->BufTextLen >= userData.maxChars)
                     userData.editingDone = true;
+
+                data->Buf[userData.maxChars] = 0x00;
 
                 return 0;
             }, &userData);

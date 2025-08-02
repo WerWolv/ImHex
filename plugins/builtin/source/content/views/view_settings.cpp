@@ -123,14 +123,13 @@ namespace hex::plugin::builtin {
                                     // Print a debug message
                                     log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName.get(), setting.unlocalizedName.get(), nlohmann::to_string(newValue));
 
-                                    // Signal that the setting was changed
-                                    widget->onChanged();
-
                                     // Request a restart if the setting requires it
                                     if (widget->doesRequireRestart()) {
                                         m_restartRequested = true;
                                         m_triggerPopup = true;
                                     }
+
+                                    ContentRegistry::Settings::impl::store();
                                 }
                             }
 

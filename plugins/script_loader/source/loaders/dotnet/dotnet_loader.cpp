@@ -47,7 +47,7 @@ namespace hex::script::loader {
             if (library == "cimgui") {
                 return getExport<void*>(ImHexApi::System::getLibImHexModuleHandle(), symbolName);
             } else if (library == "ImHex") {
-                return getExport<void*>(hex::getContainingModule((void*)&pInvokeOverride), symbolName);
+                return getExport<void*>(hex::getContainingModule(reinterpret_cast<void*>(&pInvokeOverride)), symbolName);
             }
 
             return nullptr;
@@ -141,9 +141,9 @@ namespace hex::script::loader {
             }
 
             #if defined (OS_WINDOWS)
-                hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), utf8ToUtf16(hex::format("{}", (void*)pInvokeOverride)).c_str());
+                hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), utf8ToUtf16(hex::format("{}", reinterpret_cast<void*>(pInvokeOverride))).c_str());
             #else
-                hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), hex::format("{}", (void*)pInvokeOverride).c_str());
+                hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), hex::format("{}", reinterpret_cast<void*>(pInvokeOverride)).c_str());
             #endif
 
             hostfxr_set_error_writer([](const char_t *message) {

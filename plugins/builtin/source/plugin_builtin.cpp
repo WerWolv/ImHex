@@ -62,28 +62,29 @@ namespace hex::plugin::builtin {
 }
 
 IMHEX_PLUGIN_SUBCOMMANDS() {
-    { "help",           "h", "Print help about this command",                hex::plugin::builtin::handleHelpCommand             },
-    { "version",        "",  "Print ImHex version",                          hex::plugin::builtin::handleVersionCommand          },
-    { "version-short",  "",  "Print only the version info in plain text",    hex::plugin::builtin::handleVersionShortCommand     },
-    { "plugins",        "",  "Lists all plugins that have been installed",   hex::plugin::builtin::handlePluginsCommand          },
-    { "language",       "",  "Changes the language ImHex uses",              hex::plugin::builtin::handleLanguageCommand         },
-    { "verbose",        "v", "Enables verbose debug logging",                hex::plugin::builtin::handleVerboseCommand          },
+    { "help",            "h", "Print help about this command",                hex::plugin::builtin::handleHelpCommand             },
+    { "version",         "",  "Print ImHex version",                          hex::plugin::builtin::handleVersionCommand          },
+    { "version-short",   "",  "Print only the version info in plain text",    hex::plugin::builtin::handleVersionShortCommand     },
+    { "plugins",         "",  "Lists all plugins that have been installed",   hex::plugin::builtin::handlePluginsCommand          },
+    { "language",        "",  "Changes the language ImHex uses",              hex::plugin::builtin::handleLanguageCommand         },
+    { "verbose",         "v", "Enables verbose debug logging",                hex::plugin::builtin::handleVerboseCommand          },
 
-    { "open",           "o", "Open files passed as argument. [default]",     hex::plugin::builtin::handleOpenCommand             },
-    { "new",            "n", "Create a new empty file",                      hex::plugin::builtin::handleNewCommand              },
+    { "open",            "o", "Open files passed as argument. [default]",     hex::plugin::builtin::handleOpenCommand             },
+    { "new",             "n", "Create a new empty file",                      hex::plugin::builtin::handleNewCommand              },
 
-    { "select",         "",  "Select a range of bytes in the Hex Editor",    hex::plugin::builtin::handleSelectCommand           },
-    { "pattern",        "",  "Sets the loaded pattern",                      hex::plugin::builtin::handlePatternCommand          },
-    { "calc",           "",  "Evaluate a mathematical expression",           hex::plugin::builtin::handleCalcCommand             },
-    { "hash",           "",  "Calculate the hash of a file",                 hex::plugin::builtin::handleHashCommand             },
-    { "encode",         "",  "Encode a string",                              hex::plugin::builtin::handleEncodeCommand           },
-    { "decode",         "",  "Decode a string",                              hex::plugin::builtin::handleDecodeCommand           },
-    { "magic",          "",  "Identify file types",                          hex::plugin::builtin::handleMagicCommand            },
-    { "pl",             "",  "Interact with the pattern language",           hex::plugin::builtin::handlePatternLanguageCommand, SubCommand::Type::SubCommand },
-    { "hexdump",        "",  "Generate a hex dump of the provided file",     hex::plugin::builtin::handleHexdumpCommand          },
-    { "demangle",       "",  "Demangle a mangled symbol",                    hex::plugin::builtin::handleDemangleCommand         },
-    { "reset-settings", "",  "Resets all settings back to default",          hex::plugin::builtin::handleSettingsResetCommand    },
-    { "debug-mode",     "",  "Enables debugging features",                   hex::plugin::builtin::handleDebugModeCommand,       }
+    { "select",          "",  "Select a range of bytes in the Hex Editor",    hex::plugin::builtin::handleSelectCommand           },
+    { "pattern",         "",  "Sets the loaded pattern",                      hex::plugin::builtin::handlePatternCommand          },
+    { "calc",            "",  "Evaluate a mathematical expression",           hex::plugin::builtin::handleCalcCommand             },
+    { "hash",            "",  "Calculate the hash of a file",                 hex::plugin::builtin::handleHashCommand             },
+    { "encode",          "",  "Encode a string",                              hex::plugin::builtin::handleEncodeCommand           },
+    { "decode",          "",  "Decode a string",                              hex::plugin::builtin::handleDecodeCommand           },
+    { "magic",           "",  "Identify file types",                          hex::plugin::builtin::handleMagicCommand            },
+    { "pl",              "",  "Interact with the pattern language",           hex::plugin::builtin::handlePatternLanguageCommand, SubCommand::Type::SubCommand },
+    { "hexdump",         "",  "Generate a hex dump of the provided file",     hex::plugin::builtin::handleHexdumpCommand          },
+    { "demangle",        "",  "Demangle a mangled symbol",                    hex::plugin::builtin::handleDemangleCommand         },
+    { "reset-settings",  "",  "Resets all settings back to default",          hex::plugin::builtin::handleSettingsResetCommand    },
+    { "debug-mode",      "",  "Enables debugging features",                   hex::plugin::builtin::handleDebugModeCommand,       },
+    { "validate-plugin", "",  "Validates that a plugin can be loaded",        hex::plugin::builtin::handleValidatePluginCommand   }
 };
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {

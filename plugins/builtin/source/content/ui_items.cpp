@@ -88,6 +88,7 @@ namespace hex::plugin::builtin {
         static bool showImGuiDemo = false;
         static bool showImPlotDemo = false;
         static bool showImPlot3DDemo = false;
+        static bool showTestEngine = false;
 
         ImGui::SetNextWindowSize(scaled({ 300, 150 }), ImGuiCond_Always);
         if (ImGui::BeginPopup("DebugMenu")) {
@@ -109,6 +110,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::BeginChild("Scrolling", ImGui::GetContentRegionAvail())) {
                         auto ctx = ImGui::GetCurrentContext();
                         ImGui::Checkbox("Show ImGui Demo", &showImGuiDemo);
+                        ImGui::Checkbox("Show ImGui Test Engine",&showTestEngine);
                         ImGui::Checkbox("Show ImPlot Demo", &showImPlotDemo);
                         ImGui::Checkbox("Show ImPlot3D Demo", &showImPlot3DDemo);
 
@@ -158,6 +160,7 @@ namespace hex::plugin::builtin {
 
         if (showImGuiDemo)
             ImGui::ShowDemoWindow(&showImGuiDemo);
+        ImGuiExt::ImGuiTestEngine::setEnabled(showTestEngine);
         if (showImPlotDemo)
             ImPlot::ShowDemoWindow(&showImPlotDemo);
         if (showImPlot3DDemo)
@@ -280,6 +283,8 @@ namespace hex::plugin::builtin {
                 if (frontTask == nullptr)
                     return;
 
+                ImHexApi::System::unlockFrameRate();
+
                 const auto progress = frontTask->getMaxValue() == 0 ? -1 : float(frontTask->getValue()) / float(frontTask->getMaxValue());
 
                 ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, u32(progress * 100));
@@ -350,9 +355,11 @@ namespace hex::plugin::builtin {
     }
 
     static void drawProviderContextMenu(prv::Provider *provider) {
-        for (const auto &menuEntry : provider->getMenuEntries()) {
-            if (ImGui::MenuItemEx(menuEntry.name.c_str(), menuEntry.icon)) {
-                menuEntry.callback();
+        if (auto *menuItemProvider = dynamic_cast<prv::IProviderMenuItems*>(provider); menuItemProvider != nullptr) {
+            for (const auto &menuEntry : menuItemProvider->getMenuEntries()) {
+                if (ImGui::MenuItemEx(menuEntry.name.c_str(), menuEntry.icon)) {
+                    menuEntry.callback();
+                }
             }
         }
     }
@@ -363,28 +370,30 @@ namespace hex::plugin::builtin {
 
             ImGuiExt::TextFormatted("{}", provider->getName().c_str());
 
-            const auto &description = provider->getDataDescription();
-            if (!description.empty()) {
-                ImGui::Separator();
-                if (ImGui::GetIO().KeyShift && !description.empty()) {
+            if (auto *dataDescriptionProvider = dynamic_cast<const prv::IProviderDataDescription*>(provider); dataDescriptionProvider != nullptr) {
+                const auto &description = dataDescriptionProvider->getDataDescription();
+                if (!description.empty()) {
+                    ImGui::Separator();
+                    if (ImGui::GetIO().KeyShift && !description.empty()) {
 
-                    if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible, ImVec2(400_scaled, 0))) {
-                        ImGui::TableSetupColumn("type");
-                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+                        if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible, ImVec2(400_scaled, 0))) {
+                            ImGui::TableSetupColumn("type");
+                            ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
 
-                        ImGui::TableNextRow();
+                            ImGui::TableNextRow();
 
-                        for (auto &[name, value] : description) {
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{}", name);
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormattedWrapped("{}", value);
+                            for (auto &[name, value] : description) {
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormatted("{}", name);
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormattedWrapped("{}", value);
+                            }
+
+                            ImGui::EndTable();
                         }
-
-                        ImGui::EndTable();
+                    } else {
+                        ImGuiExt::TextFormattedDisabled("hex.builtin.provider.tooltip.show_more"_lang);
                     }
-                } else {
-                    ImGuiExt::TextFormattedDisabled("hex.builtin.provider.tooltip.show_more"_lang);
                 }
             }
 
@@ -420,10 +429,14 @@ namespace hex::plugin::builtin {
         });
 
         EventFrameBegin::subscribe([] {
-            if (rightClickedProvider != nullptr && !rightClickedProvider->getMenuEntries().empty()) {
-                if (ImGui::BeginPopup("ProviderMenu")) {
-                    drawProviderContextMenu(rightClickedProvider);
-                    ImGui::EndPopup();
+            if (rightClickedProvider != nullptr) {
+                if (auto *menuItemProvider = dynamic_cast<prv::IProviderMenuItems*>(rightClickedProvider); menuItemProvider != nullptr) {
+                    if (!menuItemProvider->getMenuEntries().empty()) {
+                        if (ImGui::BeginPopup("ProviderMenu")) {
+                            drawProviderContextMenu(rightClickedProvider);
+                            ImGui::EndPopup();
+                        }
+                    }
                 }
             }
         });
@@ -535,8 +548,8 @@ namespace hex::plugin::builtin {
         });
 
         EventImHexStartupFinished::subscribe([] {
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.undo", ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.redo", ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.edit.undo", ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.edit.redo", ImGuiCustomCol_ToolbarBlue);
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.file.create_file", ImGuiCustomCol_ToolbarGray);
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.file.open_file", ImGuiCustomCol_ToolbarBrown);
             ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save", ImGuiCustomCol_ToolbarBlue);

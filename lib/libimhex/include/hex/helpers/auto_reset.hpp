@@ -33,7 +33,7 @@ namespace hex {
             m_valid = true;
         }
 
-        ~AutoReset() {
+        ~AutoReset() override {
             ImHexApi::System::impl::removeAutoResetObject(this);
         }
 
@@ -85,8 +85,8 @@ namespace hex {
                 m_value.reset();
             } else if constexpr (requires { m_value.clear(); }) {
                 m_value.clear();
-            } else if constexpr (requires(T t) { t = nullptr; }) {
-                m_value = nullptr;
+            } else if constexpr (std::is_pointer_v<T>) {
+                m_value = nullptr; // cppcheck-suppress nullPointer
             } else {
                 m_value = { };
             }

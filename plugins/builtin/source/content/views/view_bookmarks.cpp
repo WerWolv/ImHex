@@ -184,7 +184,7 @@ namespace hex::plugin::builtin {
             for (const auto &[bookmark, highlightVisible] : bookmarks) {
                 result += hex::format("### <span style=\"background-color: #{:06X}80\">{} [0x{:04X} - 0x{:04X}]</span>\n\n", hex::changeEndianness(bookmark.color, std::endian::big) >> 8, bookmark.name, bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
-                for (const auto &line : hex::splitString(bookmark.comment, "\n"))
+                for (const auto &line : wolv::util::splitString(bookmark.comment, "\n"))
                     result += hex::format("> {}\n", line);
                 result += "\n";
 
@@ -602,13 +602,14 @@ namespace hex::plugin::builtin {
 
             auto selection = ImHexApi::HexEditor::getSelection();
             ImHexApi::Bookmarks::add(selection->getStartAddress(), selection->getSize(), {}, {});
-        }, []{ return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid(); });
+        }, []{ return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid(); },
+        ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
 
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, 3000);
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, 5400);
 
         /* Import bookmarks */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.bookmark" }, ICON_VS_BOOKMARK, 3050, Shortcut::None, [this]{
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.bookmark" }, ICON_VS_BOOKMARK, 5500, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&, this](const std::fs::path &path) {
                 try {
                     this->importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString()));
