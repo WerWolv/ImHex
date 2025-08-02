@@ -493,7 +493,7 @@ namespace hex::plugin::builtin {
         }, noRunningTaskAndValidProvider);
 
         /* Quit ImHex */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.quit"}, ICON_VS_CLOSE_ALL, 10100, CTRL + ALT + Keys::F4 + AllowWhileTyping, [] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.quit"}, ICON_VS_CLOSE_ALL, 10100, ALT + Keys::F4 + AllowWhileTyping, [] {
             ImHexApi::System::closeImHex();
         });
     }

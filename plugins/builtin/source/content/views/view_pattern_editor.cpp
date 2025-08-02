@@ -1663,7 +1663,7 @@ namespace hex::plugin::builtin {
     }
 
 
-    void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider) {
+    void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile) {
         wolv::io::File file(path, wolv::io::File::Mode::Read);
         if (file.isValid()) {
             auto code = wolv::util::preprocessText(file.readString());
@@ -1671,8 +1671,10 @@ namespace hex::plugin::builtin {
             this->evaluatePattern(code, provider);
             m_textEditor.get(provider).SetText(code, true);
             m_sourceCode.get(provider) = code;
-            m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
-            m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
+            if (trackFile) {
+                m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
+                m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
+            }
             m_textHighlighter.m_needsToUpdateColors = false;
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
@@ -1850,8 +1852,8 @@ namespace hex::plugin::builtin {
             m_textEditor.get(provider).SetCursorPosition(coords);
         });
 
-        RequestLoadPatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
-            this->loadPatternFile(path, ImHexApi::Provider::get());
+        RequestLoadPatternLanguageFile::subscribe(this, [this](const std::fs::path &path, bool trackFile) {
+            this->loadPatternFile(path, ImHexApi::Provider::get(), trackFile);
         });
 
         RequestRunPatternCode::subscribe(this, [this] {
@@ -1995,13 +1997,13 @@ namespace hex::plugin::builtin {
 
         /* Open File */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.file.open_pattern" }, ICON_VS_FOLDER_OPENED, 1100, AllowWhileTyping + CTRLCMD + Keys::O, [this] {
-            m_openPatternFile();
+            m_openPatternFile(true);
         }, [] { return ImHexApi::Provider::isValid(); },
         this);
 
         /* Save */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.file.save_pattern" }, ICON_VS_SAVE, 1350, AllowWhileTyping + CTRLCMD + Keys::S, [this] {
-            m_savePatternFile();
+            m_savePatternFile(true);
         },[this] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
@@ -2012,7 +2014,7 @@ namespace hex::plugin::builtin {
 
         /* Save As */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.file.save_pattern_as" }, ICON_VS_SAVE_AS, 1375, AllowWhileTyping + CTRLCMD + SHIFT + Keys::S, [this] {
-            m_savePatternAsFile();
+            m_savePatternAsFile(true);
         },[] {
             return ImHexApi::Provider::isValid();
         },
@@ -2098,15 +2100,16 @@ namespace hex::plugin::builtin {
         this);
 
         /* Import Pattern */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, ICON_VS_FILE_CODE, 5600, Shortcut::None,
-                                                m_openPatternFile, ImHexApi::Provider::isValid);
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, ICON_VS_FILE_CODE, 5600, Shortcut::None, [this] {
+            m_openPatternFile(false);
+        }, ImHexApi::Provider::isValid);
 
         /* Export Pattern */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, Shortcut::None,
-                                                m_savePatternFile, [this] {
-                                                    return ImHexApi::Provider::isValid() && !wolv::util::trim(m_textEditor->GetText()).empty();
-                                                }
-        );
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, Shortcut::None, [this] {
+            m_savePatternFile(false);
+        }, [this] {
+            return ImHexApi::Provider::isValid() && !wolv::util::trim(m_textEditor->GetText()).empty();
+        });
 
         /* Undo */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.undo" }, ICON_VS_DISCARD, 1250, AllowWhileTyping + CTRLCMD + Keys::Z, [this] {
@@ -2413,11 +2416,6 @@ namespace hex::plugin::builtin {
         ShortcutManager::addShortcut(this, Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).Delete();
-        });
-
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::A + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_all", [this] {
-            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
-                editor->SelectAll();
         });
 
         ShortcutManager::addShortcut(this, SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_right", [this] {

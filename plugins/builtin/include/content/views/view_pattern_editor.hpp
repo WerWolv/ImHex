@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
                         }
 
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-                            m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider);
+                            m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider, false);
 
                         ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
@@ -184,7 +184,7 @@ namespace hex::plugin::builtin {
 
                 ImGuiExt::ConfirmButtons("hex.ui.common.yes"_lang, "hex.ui.common.no"_lang,
                     [this, provider] {
-                        m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider);
+                        m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider, false);
                         this->close();
                     },
                     [this] {
@@ -348,7 +348,7 @@ namespace hex::plugin::builtin {
 
         void historyInsert(std::array<std::string, 256> &history, u32 &size, u32 &index, const std::string &value);
 
-        void loadPatternFile(const std::fs::path &path, prv::Provider *provider);
+        void loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile = false);
         bool isPatternDirty(prv::Provider *provider) { return m_patternFileDirty.get(provider); }
         void markPatternFileDirty(prv::Provider *provider) { m_patternFileDirty.get(provider) = true; }
 
@@ -365,8 +365,10 @@ namespace hex::plugin::builtin {
 
         void handleFileChange(prv::Provider *provider);
 
-        std::function<void()> m_openPatternFile = [this] {
+        std::function<void(bool)> m_openPatternFile = [this](bool trackFile) {
             auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return;
             const auto basePaths = paths::Patterns.read();
             std::vector<std::fs::path> paths;
 
@@ -428,46 +430,48 @@ namespace hex::plugin::builtin {
 
                     return m_patternNames[path];
                 },
-                [this, provider](const std::fs::path &path) {
-                    this->loadPatternFile(path, provider);
+                [this, provider, trackFile](const std::fs::path &path) {
+                    this->loadPatternFile(path, provider, trackFile);
                     AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
                 }
             );
         };
 
-        std::function<void()> m_savePatternFile = [this] {
+        std::function<void(bool)> m_savePatternFile = [this](bool trackFile) {
             auto provider = ImHexApi::Provider::get();
             if (provider == nullptr)
                 return;
             auto path = m_changeTracker.get(provider).getPath();
             wolv::io::File file(path, wolv::io::File::Mode::Write);
-            if (file.isValid()) {
+            if (file.isValid() && trackFile) {
                 if (isPatternDirty(provider)) {
                     file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
-                    m_patternFileDirty = false;
+                    m_patternFileDirty.get(provider) = false;
                 }
                 return;
             }
-            m_savePatternAsFile();
+            m_savePatternAsFile(trackFile);
         };
 
-        std::function<void()> m_savePatternAsFile = [this] {
+        std::function<void(bool)> m_savePatternAsFile = [this](bool trackFile) {
             auto provider = ImHexApi::Provider::get();
             if (provider == nullptr)
                 return;
             fs::openFileBrowser(
-                    fs::DialogMode::Save, { {"Pattern", "hexpat"} },
-                    [this, provider](const auto &path) {
+                    fs::DialogMode::Save, { {"Pattern File", "hexpat"}, {"Pattern Import File", "pat"} },
+                    [this, provider, trackFile](const auto &path) {
                         wolv::io::File file(path, wolv::io::File::Mode::Create);
                         file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
+                        m_patternFileDirty.get(provider) = false;
                         auto loadedPath = m_changeTracker.get(provider).getPath();
-                        if (!loadedPath.empty() && loadedPath != path)
+                        if ((loadedPath.empty() && loadedPath != path) || (!loadedPath.empty() && !trackFile))
                             m_changeTracker.get(provider).stopTracking();
 
-
-                        m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
-                        m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
-                        m_ignoreNextChangeEvent.get(provider) = true;
+                        if (trackFile) {
+                            m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
+                            m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
+                            m_ignoreNextChangeEvent.get(provider) = true;
+                        }
                     }
             );
         };
