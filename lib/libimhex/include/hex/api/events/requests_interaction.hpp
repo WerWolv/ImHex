@@ -85,8 +85,10 @@ namespace hex {
      *  This request should be scrapped.
      *
      * @param path the pattern file's path
+     * @param bool track changes to the file on disk
+     *
      */
-    EVENT_DEF(RequestLoadPatternLanguageFile, std::fs::path);
+    EVENT_DEF(RequestLoadPatternLanguageFile, std::fs::path, bool);
 
     /**
      * @brief Request to save a pattern language file
