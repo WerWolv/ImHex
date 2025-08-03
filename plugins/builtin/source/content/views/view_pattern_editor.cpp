@@ -1006,8 +1006,6 @@ namespace hex::plugin::builtin {
             RequestOpenPopup::post("hex.builtin.menu.edit");
             m_consoleEditor.get(provider).ClearRaiseContextMenu();
         }
-        if (!m_consoleEditor.get(provider).HasSelection())
-            m_consoleEditor.get(provider).SelectWordUnderCursor();
 
         if (m_consoleCursorNeedsUpdate.get(provider)) {
             m_consoleEditor.get(provider).SetFocusAtCoords(m_consoleCursorPosition.get(provider));
