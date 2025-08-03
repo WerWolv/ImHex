@@ -1,5 +1,4 @@
 #include <content/command_line_interface.hpp>
-#include <content/providers/file_provider.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
@@ -15,6 +14,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/default_paths.hpp>
 #include <hex/helpers/debugging.hpp>
+#include <hex/helpers/http_requests.hpp>
 
 #include <hex/subcommands/subcommands.hpp>
 #include <hex/trace/stacktrace.hpp>
@@ -24,6 +24,9 @@
 #include <wolv/math_eval/math_evaluator.hpp>
 
 #include <pl/cli/cli.hpp>
+
+#include <content/providers/file_provider.hpp>
+#include <content/views/fullscreen/view_fullscreen_save_editor.hpp>
 
 namespace hex::plugin::builtin {
     using namespace hex::literals;
@@ -445,6 +448,71 @@ namespace hex::plugin::builtin {
         log::println("Plugin is valid!");
 
         std::exit(EXIT_SUCCESS);
+    }
+
+    void handleSaveEditorCommand(const std::vector<std::string> &args) {
+        std::string type;
+        std::string argument;
+        if (args.size() == 1) {
+            type = "file";
+            argument = args[0];
+        } else if (args.size() == 2) {
+            type = args[0];
+            argument = args[1];
+        } else {
+            log::println("usage: imhex --save-editor [file|gist] <file path|gist id>");
+            std::exit(EXIT_FAILURE);
+        }
+
+        std::string saveEditorSourceCode;
+        if (type == "file") {
+            if (!wolv::io::fs::exists(argument)) {
+                log::println("Save Editor file '{}' does not exist!", argument);
+                std::exit(EXIT_FAILURE);
+            }
+
+            wolv::io::File file(argument, wolv::io::File::Mode::Read);
+            if (!file.isValid()) {
+                log::println("Failed to open Save Editor file '{}'", argument);
+                std::exit(EXIT_FAILURE);
+            }
+            saveEditorSourceCode = file.readString();
+        } else if (type == "gist") {
+            HttpRequest request("GET", "https://api.github.com/gists/" + argument);
+            const auto response = request.execute().get();
+            if (!response.isSuccess()) {
+                switch (response.getStatusCode()) {
+                    case 404:
+                        log::println("Gist with ID '{}' not found!", argument);
+                        break;
+                    case 403:
+                        log::println("Gist with ID '{}' is private or you have exceeded the rate limit!", argument);
+                        break;
+                    default:
+                        log::println("Failed to fetch Gist with ID '{}': {}", argument, response.getStatusCode());
+                        break;
+                }
+                std::exit(EXIT_FAILURE);
+            }
+
+            try {
+                const auto json = nlohmann::json::parse(response.getData());
+                if (!json.contains("files") || json["files"].size() != 1) {
+                    log::println("Gist with ID '{}' does not have exactly one file!", argument);
+                    std::exit(EXIT_FAILURE);
+                }
+
+                saveEditorSourceCode = (*json["files"].begin())["content"];
+            } catch (const nlohmann::json::parse_error &e) {
+                log::println("Failed to parse Gist response: {}", e.what());
+                std::exit(EXIT_FAILURE);
+            }
+        } else {
+            log::println("Unknown source type '{}'. Use 'file' or 'gist'.", type);
+            std::exit(EXIT_FAILURE);
+        }
+
+        ContentRegistry::Views::setFullScreenView<ViewFullScreenSaveEditor>(saveEditorSourceCode);
     }
 
 

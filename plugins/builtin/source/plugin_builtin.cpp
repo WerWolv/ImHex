@@ -84,7 +84,8 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "demangle",        "",  "Demangle a mangled symbol",                    hex::plugin::builtin::handleDemangleCommand         },
     { "reset-settings",  "",  "Resets all settings back to default",          hex::plugin::builtin::handleSettingsResetCommand    },
     { "debug-mode",      "",  "Enables debugging features",                   hex::plugin::builtin::handleDebugModeCommand,       },
-    { "validate-plugin", "",  "Validates that a plugin can be loaded",        hex::plugin::builtin::handleValidatePluginCommand   }
+    { "validate-plugin", "",  "Validates that a plugin can be loaded",        hex::plugin::builtin::handleValidatePluginCommand   },
+    { "save-editor",     "",  "Opens a pattern file for save file editing",   hex::plugin::builtin::handleSaveEditorCommand       },
 };
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {

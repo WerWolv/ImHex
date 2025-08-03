@@ -54,10 +54,10 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;
 
-    private:
         void convertToMemoryFile();
         void convertToDirectAccess();
 
+    private:
         void handleFileChange();
 
         bool open(bool memoryMapped);
