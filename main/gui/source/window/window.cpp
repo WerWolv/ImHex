@@ -790,8 +790,10 @@ namespace hex {
                         view->setFocused(focused);
 
                         // Dock the window if it's not already docked
-                        if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
-                            ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
+                        if (view->didWindowJustOpen()) {
+                            if (!ImGui::IsWindowDocked())
+                                ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
+
                             EventViewOpened::post(view.get());
                         }
 
