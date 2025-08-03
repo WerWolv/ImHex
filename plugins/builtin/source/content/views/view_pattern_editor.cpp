@@ -351,8 +351,7 @@ namespace hex::plugin::builtin {
             oldHeight = height;
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
-                if (name.contains(textEditorView) || name.contains(consoleView))
-                    m_focusedSubWindowName = name;
+                m_focusedSubWindowName = name;
             }
 
             fonts::CodeEditor().push();
