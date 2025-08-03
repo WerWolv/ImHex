@@ -9,6 +9,7 @@
 #include <pl/pattern_language.hpp>
 #include <pl/core/errors/error.hpp>
 #include <pl/core/lexer.hpp>
+#include <pl/core/new_lexer.hpp>
 
 #include <ui/hex_editor.hpp>
 #include <ui/pattern_drawer.hpp>
@@ -413,7 +414,11 @@ namespace hex::plugin::builtin {
 
                     // Only run the lexer on the source file and manually extract the #pragma description to make this
                     // process as fast as possible. Running the preprocessor directly takes too much time
-                    auto result = runtime->getInternals().lexer->lex(&source);
+
+                    //auto result = runtime->getInternals().lexer->lex(&source);
+                    auto result = runtime->getInternals().new_lexer->lex(&source);
+
+                    //auto result = runtime->getInternals().lexer->lex(&source);
                     if (result.isOk()) {
                         const auto tokens = result.unwrap();
                         for (auto it = tokens.begin(); it != tokens.end(); ++it) {

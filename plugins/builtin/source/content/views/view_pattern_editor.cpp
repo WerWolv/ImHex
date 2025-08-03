@@ -39,9 +39,6 @@
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/menu_items.hpp>
 
-// Debugging
-#include <iostream>
-
 namespace hex::plugin::builtin {
 
     using namespace hex::literals;
