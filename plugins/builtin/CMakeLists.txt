@@ -118,6 +118,8 @@ add_imhex_plugin(
         source/content/views/view_highlight_rules.cpp
         source/content/views/view_tutorials.cpp
 
+        source/content/views/fullscreen/view_fullscreen_save_editor.cpp
+
         source/content/text_highlighting/pattern_language.cpp
     INCLUDES
         include

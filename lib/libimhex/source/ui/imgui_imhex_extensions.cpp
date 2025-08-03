@@ -446,7 +446,7 @@ namespace ImGuiExt {
         ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(label);
-        const ImVec2 text_size  = CalcTextSize((std::string(label) + "\n  " + std::string(description)).c_str(), nullptr, true);
+        const ImVec2 text_size  = CalcTextSize(label, nullptr, true) + CalcTextSize(description, nullptr, true);
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         ImVec2 pos = window->DC.CursorPos;

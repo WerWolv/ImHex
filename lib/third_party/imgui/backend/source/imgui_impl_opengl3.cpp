@@ -120,9 +120,9 @@
 #endif
 
 // IMHEX PATCH BEGIN
-#if !defined(WINGDIAPI)
-#define WINGDIAPI extern "C"
-#define APIENTRY
+#if defined(WIN32)
+#include <Windows.h>
+#include <GL/gl.h>
 #endif
 // IMHEX PATCH END
 

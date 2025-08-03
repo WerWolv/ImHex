@@ -251,6 +251,10 @@ const urlParams = new URLSearchParams(queryString);
 if (urlParams.has("lang")) {
     Module["arguments"].push("--language");
     Module["arguments"].push(urlParams.get("lang"));
+} else if (urlParams.has("save-editor")) {
+    Module["arguments"].push("--save-editor");
+    Module["arguments"].push("gist");
+    Module["arguments"].push(urlParams.get("save-editor"));
 }
 
 window.addEventListener('resize', js_resizeCanvas, false);

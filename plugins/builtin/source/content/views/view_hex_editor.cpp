@@ -1279,7 +1279,7 @@ namespace hex::plugin::builtin {
 
         /* Copy As */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as", "hex.builtin.view.hex_editor.copy.ascii" }, ICON_VS_SYMBOL_KEY, 1200,
-                                                CurrentView + ALT + Keys::C,
+                                                CurrentView + CTRLCMD + ALT + Keys::C,
                                                 [] {
                                                     auto selection = ImHexApi::HexEditor::getSelection();
                                                     if (selection.has_value() && selection != Region::Invalid())

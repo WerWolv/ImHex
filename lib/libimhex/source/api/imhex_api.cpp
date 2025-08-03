@@ -359,8 +359,8 @@ namespace hex {
             const auto provider = get();
             if (!provider->isDirty()) {
                 provider->markDirty();
-                EventProviderDirtied::post(provider);
             }
+            EventProviderDirtied::post(provider);
         }
 
         void resetDirty() {

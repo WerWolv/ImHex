@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
             (r[0] << 2) | (w[0] << 1) | (x[0] << 0),
             (r[1] << 2) | (w[1] << 1) | (x[1] << 0),
             (r[2] << 2) | (w[2] << 1) | (x[2] << 0));
-        ImGui::InputText("##permissions_absolute", result.data(), result.size(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputText("##permissions_absolute", result, ImGuiInputTextFlags_ReadOnly);
 
         ImGui::NewLine();
 

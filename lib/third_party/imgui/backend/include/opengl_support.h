@@ -1,11 +1,8 @@
 #pragma once
 
-#if !defined(WINGDIAPI)
-#define WINGDIAPI extern "C"
-#endif
-
-#if !defined(APIENTRY)
-    #define APIENTRY
+#if defined(OS_WINDOWS)
+    #include <Windows.h>
+    #include <GL/GL.h>
 #endif
 
 #if defined(OS_WEB)

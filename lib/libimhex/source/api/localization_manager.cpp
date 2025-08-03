@@ -28,13 +28,10 @@ namespace hex {
         }
 
         LanguageDefinition::LanguageDefinition(std::map<std::string, std::string> &&entries) {
-            for (const auto &[key, value] : entries) {
-                if (value.empty())
-                    continue;
-
-                m_entries.insert({ key, value });
-            }
-
+            m_entries = std::move(entries);
+            std::erase_if(m_entries, [](const auto &entry) {
+                return entry.second.empty();
+            });
         }
 
         const std::map<std::string, std::string> &LanguageDefinition::getEntries() const {

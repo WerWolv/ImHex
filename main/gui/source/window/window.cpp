@@ -322,9 +322,12 @@ namespace hex {
                 ImHexApi::System::impl::setMainWindowSize(width, height);
             }
 
-            if (!glfwGetWindowAttrib(m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(m_window, GLFW_ICONIFIED)) {
+            while (!glfwGetWindowAttrib(m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(m_window, GLFW_ICONIFIED)) {
                 // If the application is minimized or not visible, don't render anything
+                // glfwWaitEvents() is supposed to block the thread, but it does pretty often spuriously wake up anyway
+                // so we need to keep looping here until the window is visible again, adding a short sleep to avoid busy-waiting
                 glfwWaitEvents();
+                std::this_thread::sleep_for(100ms);
             }
 
             static ImVec2 lastWindowSize = ImHexApi::System::getMainWindowSize();
@@ -787,8 +790,10 @@ namespace hex {
                         view->setFocused(focused);
 
                         // Dock the window if it's not already docked
-                        if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
-                            ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
+                        if (view->didWindowJustOpen()) {
+                            if (!ImGui::IsWindowDocked())
+                                ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
+
                             EventViewOpened::post(view.get());
                         }
 

@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
                 }
             }
             ImGui::EndDisabled();
-            ImGui::BeginDisabled(splitterTask.isRunning() || selectedItem != sizes.size() - 1);
+            ImGui::BeginDisabled(splitterTask.isRunning() || selectedItem != (i64(sizes.size()) - 1));
             {
                 ImGui::InputScalar("###custom_size", ImGuiDataType_U64, &splitSize);
                 ImGui::SameLine();
