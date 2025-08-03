@@ -464,7 +464,6 @@ namespace hex::plugin::builtin {
             std::exit(EXIT_FAILURE);
         }
 
-        std::string saveEditorSourceCode;
         if (type == "file") {
             if (!wolv::io::fs::exists(argument)) {
                 log::println("Save Editor file '{}' does not exist!", argument);
@@ -476,43 +475,48 @@ namespace hex::plugin::builtin {
                 log::println("Failed to open Save Editor file '{}'", argument);
                 std::exit(EXIT_FAILURE);
             }
-            saveEditorSourceCode = file.readString();
-        } else if (type == "gist") {
-            HttpRequest request("GET", "https://api.github.com/gists/" + argument);
-            const auto response = request.execute().get();
-            if (!response.isSuccess()) {
-                switch (response.getStatusCode()) {
-                    case 404:
-                        log::println("Gist with ID '{}' not found!", argument);
-                        break;
-                    case 403:
-                        log::println("Gist with ID '{}' is private or you have exceeded the rate limit!", argument);
-                        break;
-                    default:
-                        log::println("Failed to fetch Gist with ID '{}': {}", argument, response.getStatusCode());
-                        break;
-                }
-                std::exit(EXIT_FAILURE);
-            }
 
-            try {
-                const auto json = nlohmann::json::parse(response.getData());
-                if (!json.contains("files") || json["files"].size() != 1) {
-                    log::println("Gist with ID '{}' does not have exactly one file!", argument);
+            ContentRegistry::Views::setFullScreenView<ViewFullScreenSaveEditor>(file.readString());
+        } else if (type == "gist") {
+            std::thread([argument] {
+                HttpRequest request("GET", "https://api.github.com/gists/" + argument);
+                auto response = request.execute().get();
+
+                if (!response.isSuccess()) {
+                    switch (response.getStatusCode()) {
+                        case 404:
+                            log::println("Gist with ID '{}' not found!", argument);
+                            break;
+                        case 403:
+                            log::println("Gist with ID '{}' is private or you have exceeded the rate limit!", argument);
+                            break;
+                        default:
+                            log::println("Failed to fetch Gist with ID '{}': {}", argument, response.getStatusCode());
+                            break;
+                    }
                     std::exit(EXIT_FAILURE);
                 }
 
-                saveEditorSourceCode = (*json["files"].begin())["content"];
-            } catch (const nlohmann::json::parse_error &e) {
-                log::println("Failed to parse Gist response: {}", e.what());
-                std::exit(EXIT_FAILURE);
-            }
+                try {
+                    const auto json = nlohmann::json::parse(response.getData());
+                    if (!json.contains("files") || json["files"].size() != 1) {
+                        log::println("Gist with ID '{}' does not have exactly one file!", argument);
+                        std::exit(EXIT_FAILURE);
+                    }
+
+                    auto sourceCode = (*json["files"].begin())["content"];
+                    TaskManager::doLater([sourceCode] {
+                        ContentRegistry::Views::setFullScreenView<ViewFullScreenSaveEditor>(sourceCode);
+                    });
+                } catch (const nlohmann::json::parse_error &e) {
+                    log::println("Failed to parse Gist response: {}", e.what());
+                    std::exit(EXIT_FAILURE);
+                }
+            }).detach();
         } else {
             log::println("Unknown source type '{}'. Use 'file' or 'gist'.", type);
             std::exit(EXIT_FAILURE);
         }
-
-        ContentRegistry::Views::setFullScreenView<ViewFullScreenSaveEditor>(saveEditorSourceCode);
     }
 
 

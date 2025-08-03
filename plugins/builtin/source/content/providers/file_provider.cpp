@@ -291,6 +291,8 @@ namespace hex::plugin::builtin {
         m_data.clear();
         s_openedFiles.erase(this);
         m_changeTracker.stopTracking();
+        m_readable = false;
+        m_writable = false;
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
