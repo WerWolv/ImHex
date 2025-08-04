@@ -1445,7 +1445,9 @@ void TextEditor::SetText(const std::string &aText, bool aUndo) {
 }
 
 void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
-    IM_ASSERT(!mReadOnly);
+    if (mReadOnly)
+        return;
+
     UndoRecord u;
 
     u.mBefore = mState;
@@ -1453,14 +1455,12 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
     ResetCursorBlinkTime();
 
     if (HasSelection()) {
-        if (aChar == '\t' && mState.mSelectionStart.mLine != mState.mSelectionEnd.mLine) {
+        if (aChar == '\t') {
 
             auto start       = mState.mSelectionStart;
             auto end         = mState.mSelectionEnd;
             auto originalEnd = end;
 
-            if (start > end)
-                std::swap(start, end);
             start.mColumn = 0;
 
             if (end.mColumn == 0 && end.mLine > 0)
@@ -1479,15 +1479,15 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
                 auto &line = mLines[i];
                 if (aShift) {
                     if (!line.empty()) {
-                        if (line.front() == '\t') {
-                            line.erase(line.begin());
-                            modified = true;
-                        } else {
-                            for (int j = 0; j < mTabSize && !line.empty() && line.front() == ' '; j++) {
-                                line.erase(line.begin());
-                                modified = true;
-                            }
-                        }
+                        auto index = line.mChars.find_first_not_of(' ', 0);
+                        if (index == std::string::npos)
+                            index = line.size() - 1;
+                        if (index == 0) continue;
+                        auto spacesToRemove = (index % mTabSize) ? (index % mTabSize) : mTabSize;
+                        spacesToRemove = std::min(spacesToRemove, line.size());
+                        line.erase(line.begin(), spacesToRemove);
+                        line.mColorized = false;
+                        modified = true;
                     }
                 } else {
                     auto spacesToInsert = mTabSize - (start.mColumn % mTabSize);
@@ -1499,7 +1499,6 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
             }
 
             if (modified) {
-                start = GetCharacterCoordinates(start.mLine, 0);
                 Coordinates rangeEnd;
                 if (originalEnd.mColumn != 0) {
                     end      = SetCoordinates(end.mLine, -1);
@@ -1569,6 +1568,7 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
         line.mColorized = false;
         SetCursorPosition(GetCharacterCoordinates(coord.mLine + 1, charPosition));
         u.mAdded = (char)aChar;
+        u.mAddedEnd = SetCoordinates(mState.mCursorPosition);
     } else if (aChar == '\t') {
         auto &line  = mLines[coord.mLine];
         auto charIndex = LineCoordinateToIndex(coord);
@@ -1592,7 +1592,7 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
             line.mColorized = false;
             SetCursorPosition(GetCharacterCoordinates(coord.mLine, std::max(0, charIndex)));
         }
-
+        u.mAddedEnd = SetCoordinates(mState.mCursorPosition);
     } else {
         std::string buf = "";
         ImTextCharToUtf8(buf, aChar);
@@ -1604,25 +1604,51 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
                 std::string c = line[coord.mColumn];
                 auto charCount = GetStringCharacterCount(c);
                 auto d = c.size();
-                //auto d = UTF8CharLength(line[charIndex][0]);
 
                 u.mRemovedStart = mState.mCursorPosition;
                 u.mRemovedEnd   = GetCharacterCoordinates(coord.mLine, coord.mColumn + charCount);
-                //u.mRemovedEnd   = GetCharacterCoordinates(coord.mLine, charIndex + d);
                 u.mRemoved      = std::string(line.mChars.begin() + charIndex, line.mChars.begin() + charIndex + d);
                 line.erase(line.begin() + charIndex, d);
                 line.mColorized = false;
             }
+            auto charCount = GetStringCharacterCount(buf);
+            if (buf == "{")
+                buf += "}";
+            else if (buf == "[")
+                buf += "]";
+            else if (buf == "(")
+                buf += ")";
+            if ((buf == "}" || buf == "]" || buf == ")") && buf == line.substr(charIndex, charCount))
+                buf = "";
+
+            if (buf == "\"") {
+                if (buf == line.substr(charIndex, charCount)) {
+                    if (line.mColors[charIndex + 1] == (char) PaletteIndex::StringLiteral)
+                        buf += "\"";
+                    else
+                        buf = "";
+                } else
+                    buf += "\"";
+            }
+
+            if (buf == "'") {
+                if (buf == line.substr(charIndex, charCount)) {
+                    if (line.mColors[charIndex + 1] == (char) PaletteIndex::CharLiteral)
+                        buf += "'";
+                    else
+                        buf = "";
+                } else
+                    buf += "'";
+            }
+
             line.insert(line.begin() + charIndex, buf.begin(), buf.end());
             line.mColorized = false;
             u.mAdded = buf;
-            auto charCount = GetStringCharacterCount(buf);
+            u.mAddedEnd = GetCharacterCoordinates(coord.mLine, charIndex + buf.size());
             SetCursorPosition(GetCharacterCoordinates(coord.mLine, charIndex + charCount));
         } else
             return;
     }
-
-    u.mAddedEnd = SetCoordinates(mState.mCursorPosition);
     u.mAfter    = mState;
 
     mTextChanged = true;
@@ -2120,6 +2146,25 @@ void TextEditor::Backspace() {
         } else {
             pos.mColumn -= 1;
             std::string charToRemove = line[pos.mColumn];
+            if (pos.mColumn < (int)line.size() - 1) {
+                std::string charToRemoveNext = line[pos.mColumn + 1];
+                if (charToRemove == "{" && charToRemoveNext == "}") {
+                    charToRemove += "}";
+                    mState.mCursorPosition.mColumn += 1;
+                } else if (charToRemove == "[" && charToRemoveNext == "]") {
+                    charToRemove += "]";
+                    mState.mCursorPosition.mColumn += 1;
+                } else if (charToRemove == "(" && charToRemoveNext == ")") {
+                    charToRemove += ")";
+                    mState.mCursorPosition.mColumn += 1;
+                } else if (charToRemove == "\"" && charToRemoveNext == "\"") {
+                    charToRemove += "\"";
+                    mState.mCursorPosition.mColumn += 1;
+                } else if (charToRemove == "'" && charToRemoveNext == "'") {
+                    charToRemove += "'";
+                    mState.mCursorPosition.mColumn += 1;
+                }
+            }
             u.mRemovedStart = pos;
             u.mRemovedEnd = mState.mCursorPosition;
             u.mRemoved = charToRemove;
