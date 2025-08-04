@@ -25,6 +25,15 @@ namespace hex {
     EVENT_DEF(EventViewOpened, View*);
 
     /**
+     * @brief Signals a newly closed view
+     *
+     * This event is sent when the view has just been closed.
+     *
+     * @param view the closed view reference
+     */
+    EVENT_DEF(EventViewClosed, View*);
+
+    /**
      * @brief Signals a change in the DPI scale.
      *
      * This event is called once at startup to signal native scale definition (by passing the same value twice).
