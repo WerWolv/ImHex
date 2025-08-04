@@ -331,9 +331,11 @@ namespace hex::plugin::builtin {
         i32 skipCountLimit =
                 increment > 0 ? std::min(maxSkipCount, (i32) tokenCount - 1 - tokenId) : std::min(maxSkipCount, tokenId);
         next(increment);
+        skipCountLimit -= increment;
 
         if (peek(delimiter[0])) {
             next(increment);
+            skipCountLimit -= increment;
             while (skipCount < skipCountLimit) {
 
                 if (peek(delimiter[1])) {
