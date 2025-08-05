@@ -700,12 +700,14 @@ namespace hex {
                 startY += 2 * ImGui::GetStyle().FramePadding.y;
             #endif
 
-            for (const auto &banner : impl::BannerBase::getOpenBanners() | std::views::take(5)) {
+            for (const auto &banner : impl::BannerBase::getOpenBanners() | std::views::take(3)) {
                 auto &style = ImGui::GetStyle();
                 ImGui::SetNextWindowPos(ImVec2(windowPos.x + 1_scaled, startY));
                 ImGui::SetNextWindowSize(ImVec2(ImHexApi::System::getMainWindowSize().x - 2_scaled, height));
                 ImGui::SetNextWindowViewport(viewport->ID);
-                ImGui::PushStyleColor(ImGuiCol_WindowBg, banner->getColor().Value);
+                const auto backgroundColor = banner->getColor().Value;
+                ImGui::PushStyleColor(ImGuiCol_WindowBg, backgroundColor);
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::IsDarkBackground(backgroundColor) ? 0xFFFFFFFF : 0xFF000000);
                 auto prevShadowOffset = style.WindowShadowOffsetDist;
                 auto prevShadowAngle = style.WindowShadowOffsetAngle;
                 style.WindowShadowOffsetDist = 12_scaled;
@@ -727,7 +729,7 @@ namespace hex {
                     }
                 }
                 ImGui::End();
-                ImGui::PopStyleColor();
+                ImGui::PopStyleColor(2);
 
                 startY += height;
             }
