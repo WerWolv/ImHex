@@ -43,7 +43,7 @@ namespace hex::plugin::remote {
         int m_port = 22;
         std::string m_username;
         std::string m_password;
-        std::string m_privateKeyPath;
+        std::fs::path m_privateKeyPath;
         std::string m_keyPassphrase;
         AuthMethod m_authMethod = AuthMethod::Password;
 
