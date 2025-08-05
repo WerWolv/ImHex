@@ -1312,8 +1312,9 @@ namespace ImGuiExt {
 
         ImGui::PushID(label);
 
-        const auto buttonSize = ImGui::CalcTextSize("...") + ImGui::GetStyle().FramePadding * 2;
-        ImGui::PushItemWidth(ImGui::CalcItemWidth() - buttonSize.x - ImGui::GetStyle().FramePadding.x);
+        const auto framePadding = ImGui::GetStyle().FramePadding.x;
+        const auto buttonSize = ImVec2(ImGui::CalcTextSize("...").x + framePadding * 2, ImGui::GetFrameHeight());
+        ImGui::PushItemWidth(ImGui::CalcItemWidth() - buttonSize.x - framePadding);
         std::string string = wolv::util::toUTF8String(path);
         if (ImGui::InputText("##pathInput", string, ImGuiInputTextFlags_AutoSelectAll)) {
             path = std::u8string(string.begin(), string.end());
@@ -1321,7 +1322,7 @@ namespace ImGuiExt {
         }
         ImGui::PopItemWidth();
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, framePadding);
 
         if (ImGui::Button("...", buttonSize)) {
             hex::fs::openFileBrowser(hex::fs::DialogMode::Open, validExtensions, [&](const std::fs::path &pickedPath) {

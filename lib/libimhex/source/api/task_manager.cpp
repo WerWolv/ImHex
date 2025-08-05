@@ -59,6 +59,7 @@ namespace hex {
 
         thread_local std::array<char, 256> s_currentThreadName;
         thread_local Task* s_currentTask = nullptr;
+        std::thread::id s_mainThreadId;
 
     }
 
@@ -526,8 +527,19 @@ namespace hex {
         #endif
     }
 
-    std::string TaskManager::getCurrentThreadName() {
-        return s_currentThreadName.data();
+    std::string_view TaskManager::getCurrentThreadName() {
+        if (TaskManager::isMainThread())
+            return "Main";
+        else
+            return s_currentThreadName.data();
+    }
+
+    void TaskManager::setMainThreadId(std::thread::id threadId) {
+        s_mainThreadId = threadId;
+    }
+
+    bool TaskManager::isMainThread() {
+        return s_mainThreadId == std::this_thread::get_id();
     }
 
 

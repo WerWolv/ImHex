@@ -211,7 +211,19 @@ EXPORT_MODULE namespace hex {
          * @brief Gets the name of the current thread
          * @return Name of the thread
          */
-        static std::string getCurrentThreadName();
+        static std::string_view getCurrentThreadName();
+
+        /**
+         * @brief Sets the ID of the main thread
+         * @param threadId ID of the main thread
+         */
+        static void setMainThreadId(std::thread::id threadId);
+
+        /**
+         * @brief Checks if the current thread is the main thread
+         * @return True if the current thread is the main thread, false otherwise
+         */
+        static bool isMainThread();
 
         /**
          * @brief Cleans up finished tasks

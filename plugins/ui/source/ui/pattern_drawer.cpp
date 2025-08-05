@@ -984,7 +984,11 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
 
                 chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{
-                    return ImGui::TreeNodeEx(hex::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth);
+                    const auto open = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                    ImGui::SameLine();
+                    ImGui::TextUnformatted(hex::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str());
+
+                    return open;
                 });
 
                 ImGui::TableNextColumn();
@@ -1240,7 +1244,10 @@ namespace hex::ui {
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::PushID(id);
-                    if (ImGui::TreeNodeEx("hex.ui.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth)) {
+                    const auto open = ImGui::TreeNodeEx("##Favorites", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                    ImGui::SameLine();
+                    ImGui::TextUnformatted("hex.ui.pattern_drawer.favorites"_lang);
+                    if (open) {
                         for (auto &[path, pattern] : m_favorites) {
                             if (pattern == nullptr)
                                 continue;
