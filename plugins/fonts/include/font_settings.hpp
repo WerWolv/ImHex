@@ -74,8 +74,6 @@ namespace hex::fonts {
         AntialiasPicker m_antiAliased;
 
         bool m_bold, m_italic;
-
-        bool m_applyEnabled = false;
     };
 
     ContentRegistry::Settings::Widgets::Widget::Interface& addFontSettingsWidget(UnlocalizedString name);

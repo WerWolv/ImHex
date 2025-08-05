@@ -229,13 +229,13 @@ namespace hex::fonts {
 
                     if (ImGuiExt::DimmedIconToggle(ICON_VS_BOLD, &m_bold))
                         changed = true;
-                    ImGui::SetItemTooltip("hex.fonts.setting.font.font_bold"_lang);
+                    ImGui::SetItemTooltip("%s", "hex.fonts.setting.font.font_bold"_lang.get());
 
                     ImGui::SameLine();
 
                     if (ImGuiExt::DimmedIconToggle(ICON_VS_ITALIC, &m_italic))
                         changed = true;
-                    ImGui::SetItemTooltip("hex.fonts.setting.font.font_italic"_lang);
+                    ImGui::SetItemTooltip("%s", "hex.fonts.setting.font.font_italic"_lang.get());
 
                     if (m_antiAliased.draw("hex.fonts.setting.font.font_antialias"_lang))
                         changed = true;

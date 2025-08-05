@@ -3,13 +3,13 @@
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
 
-#include <cstdio>
 #include <functional>
 #include <mutex>
 #include <memory>
 #include <list>
 #include <condition_variable>
 #include <source_location>
+#include <thread>
 
 EXPORT_MODULE namespace hex {
 
