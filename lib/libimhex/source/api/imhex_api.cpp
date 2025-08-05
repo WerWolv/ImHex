@@ -1052,12 +1052,14 @@ namespace hex {
             if (font != nullptr) {
                 if (size <= 0.0F) {
                     size = font->LegacySize;
-                }
 
-                if (font->Sources[0]->PixelSnapH)
-                    size *= System::getGlobalScale();
-                else
-                    size *= std::floor(System::getGlobalScale());
+                    if (font->Sources[0]->PixelSnapH)
+                        size *= System::getGlobalScale();
+                    else
+                        size *= std::floor(System::getGlobalScale());
+                } else {
+                    size *= ImGui::GetCurrentContext()->FontSizeBase;
+                }
             }
 
             // If no font has been loaded, revert back to the default font to
