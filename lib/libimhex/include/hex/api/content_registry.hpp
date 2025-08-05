@@ -632,6 +632,7 @@ EXPORT_MODULE namespace hex {
 
                 struct Entry {
                     UnlocalizedString unlocalizedName;
+                    const char *icon;
                     Callback function;
                 };
 
@@ -644,7 +645,7 @@ EXPORT_MODULE namespace hex {
              * @param unlocalizedName The unlocalized name of the tool
              * @param function The function that will be called to draw the tool
              */
-            void add(const UnlocalizedString &unlocalizedName, const impl::Callback &function);
+            void add(const UnlocalizedString &unlocalizedName, const char *icon, const impl::Callback &function);
         }
 
         /* Data Inspector Registry. Allows adding of new types to the data inspector */

@@ -767,10 +767,10 @@ namespace hex {
 
         }
 
-        void add(const UnlocalizedString &unlocalizedName, const impl::Callback &function) {
+        void add(const UnlocalizedString &unlocalizedName, const char *icon, const impl::Callback &function) {
             log::debug("Registered new tool: {}", unlocalizedName.get());
 
-            impl::s_tools->emplace_back(impl::Entry { unlocalizedName, function });
+            impl::s_tools->emplace_back(impl::Entry { unlocalizedName, icon, function });
         }
 
     }
