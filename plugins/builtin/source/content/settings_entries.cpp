@@ -20,6 +20,7 @@
 #include <nlohmann/json.hpp>
 
 #include <utility>
+#include <hex/api/plugin_manager.hpp>
 #include <romfs/romfs.hpp>
 
 #if defined(OS_WEB)
@@ -972,6 +973,27 @@ namespace hex::plugin::builtin {
 
             ContentRegistry::Settings::impl::store();
         });
+
+
+        /* Plugins */
+        {
+            for (const auto &plugin : PluginManager::getPlugins()) {
+                if (plugin.isLibraryPlugin())
+                    continue;
+                if (plugin.isBuiltinPlugin())
+                    continue;
+
+                auto interface = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.plugins", "hex.builtin.setting.loaded_plugins", plugin.getPluginName(), true)
+                    .setTooltip(plugin.getPluginDescription())
+                    .setChangedCallback([&plugin](Widgets::Widget &widget) {
+                        auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
+                        PluginManager::setPluginEnabled(plugin, checkBox->isChecked());
+                    })
+                    .requiresRestart();
+
+                PluginManager::setPluginEnabled(plugin, static_cast<Widgets::Checkbox *>(&interface.getWidget())->isChecked());
+            }
+        }
     }
 
     static void loadLayoutSettings() {

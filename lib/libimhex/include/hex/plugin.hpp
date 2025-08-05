@@ -80,6 +80,10 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
 #define IMHEX_PLUGIN_SETUP(name, author, description) IMHEX_PLUGIN_SETUP_IMPL(name, author, description)
 #define IMHEX_LIBRARY_SETUP(name) IMHEX_LIBRARY_SETUP_IMPL(name)
 
+#define IMHEX_PLUGIN_SETUP_BUILTIN(name, author, description)               \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX bool isBuiltinPlugin() { return true; }  \
+    IMHEX_PLUGIN_SETUP_IMPL(name, author, description)
+
 #define IMHEX_LIBRARY_SETUP_IMPL(name)                                                                                          \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)();                             \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *WOLV_TOKEN_CONCAT(getLibraryName_, IMHEX_PLUGIN_NAME)() { return name; }         \
