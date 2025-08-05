@@ -86,6 +86,7 @@
         "hex.ui.common.value": "Value",
         "hex.ui.common.yes": "Yes",
         "hex.ui.hex_editor.ascii_view": "Display ASCII column",
+        "hex.ui.hex_editor.extended_ascii": "Display unprintable characters in ASCII column",
         "hex.ui.hex_editor.custom_encoding_view": "Display advanced decoding column",
         "hex.ui.hex_editor.columns": "Columns",
         "hex.ui.hex_editor.fit_columns": "Fit columns to width",

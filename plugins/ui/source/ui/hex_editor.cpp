@@ -27,13 +27,48 @@ namespace hex::ui {
             std::ignore = upperCase;
 
             if (size == 1) {
-                const auto c = static_cast<char>(data[0]);
+                const auto c = static_cast<unsigned char>(data[0]);
                 if (std::isprint(c) != 0) {
-                    const std::array<char, 2> string = { c, 0x00 };
+                    const std::array<char, 2> string = { char(c), 0x00 };
                     ImGui::TextUnformatted(string.data());
-                }
-                else
+                } else if (m_extendedAscii) {
+                    if (c <= 0x1F) {
+                        constexpr static std::array ControlCharacters = {
+                            "\u2400", "\u2401", "\u2402", "\u2403", "\u2404", "\u2405", "\u2406", "\u2407",
+                            "\u2408", "\u2409", "\u240A", "\u240B", "\u240C", "\u240D", "\u240E", "\u240F",
+                            "\u2410", "\u2411", "\u2412", "\u2413", "\u2414", "\u2415", "\u2416", "\u2417",
+                            "\u2418", "\u2419", "\u241A", "\u241B", "\u241C", "\u241D", "\u241E", "\u241F",
+                        };
+
+                        ImGui::TextUnformatted(ControlCharacters[c]);
+                    } else if (c >= 0x7F) {
+                        constexpr static std::array ExtendedAsciiCharacters = {
+                            "\u2421",
+                            "\u20AC", "\u0081", "\u201A", "\u0192", "\u201E", "\u2026", "\u2020", "\u2021",
+                            "\u02C6", "\u2030", "\u0160", "\u2039", "\u0152", "\u008D", "\u017D", "\u008F",
+                            "\u0090", "\u2018", "\u2019", "\u201C", "\u201D", "\u2022", "\u2013", "\u2014",
+                            "\u02DC", "\u2122", "\u0161", "\u203A", "\u0153", "\u009D", "\u017E", "\u0178",
+                            "\u00A0", "\u00A1", "\u00A2", "\u00A3", "\u00A4", "\u00A5", "\u00A6", "\u00A7",
+                            "\u00A8", "\u00A9", "\u00AA", "\u00AB", "\u00AC", "\u00AD", "\u00AE", "\u00AF",
+                            "\u00B0", "\u00B1", "\u00B2", "\u00B3", "\u00B4", "\u00B5", "\u00B6", "\u00B7",
+                            "\u00B8", "\u00B9", "\u00BA", "\u00BB", "\u00BC", "\u00BD", "\u00BE", "\u00BF",
+                            "\u00C0", "\u00C1", "\u00C2", "\u00C3", "\u00C4", "\u00C5", "\u00C6", "\u00C7",
+                            "\u00C8", "\u00C9", "\u00CA", "\u00CB", "\u00CC", "\u00CD", "\u00CE", "\u00CF",
+                            "\u00D0", "\u00D1", "\u00D2", "\u00D3", "\u00D4", "\u00D5", "\u00D6", "\u00D7",
+                            "\u00D8", "\u00D9", "\u00DA", "\u00DB", "\u00DC", "\u00DD", "\u00DE", "\u00DF",
+                            "\u00E0", "\u00E1", "\u00E2", "\u00E3", "\u00E4", "\u00E5", "\u00E6", "\u00E7",
+                            "\u00E8", "\u00E9", "\u00EA", "\u00EB", "\u00EC", "\u00ED", "\u00EE", "\u00EF",
+                            "\u00F0", "\u00F1", "\u00F2", "\u00F3", "\u00F4", "\u00F5", "\u00F6", "\u00F7",
+                            "\u00F8", "\u00F9", "\u00FA", "\u00FB", "\u00FC", "\u00FD", "\u00FE", "\u00FF",
+                        };
+
+                        ImGui::TextUnformatted(ExtendedAsciiCharacters[c - 0x7F]);
+                    } else {
+                        ImGuiExt::TextFormattedDisabled(".");
+                    }
+                } else {
                     ImGuiExt::TextFormattedDisabled(".");
+                }
             } else {
                 ImGuiExt::TextFormattedDisabled(".");
             }
@@ -53,10 +88,10 @@ namespace hex::ui {
                 };
 
                 UserData userData = {
-                        .data = data,
-                        .maxChars = this->getMaxCharsPerCell(),
+                    .data = data,
+                    .maxChars = this->getMaxCharsPerCell(),
 
-                        .editingDone = false
+                    .editingDone = false
                 };
 
                 ImGui::PushID(reinterpret_cast<void*>(address));
@@ -78,6 +113,13 @@ namespace hex::ui {
                 return false;
             }
         }
+
+        void enableExtendedAscii(bool enable) {
+            m_extendedAscii = enable;
+        }
+
+    private:
+        bool m_extendedAscii = false;
     };
 
     /* Hex Editor */
@@ -334,6 +376,7 @@ namespace hex::ui {
                 m_currDataVisualizer->draw(address, buffer.data(), size, m_upperCaseHex);
 
             } else {
+                asciiVisualizer.enableExtendedAscii(m_showExtendedAscii);
                 asciiVisualizer.draw(address, data, size, m_upperCaseHex);
             }
 
@@ -1085,9 +1128,17 @@ namespace hex::ui {
 
                         ImGui::SameLine(0, 1_scaled);
 
+                        // Extended ASCII
+                        ImGui::BeginDisabled(!m_showAscii);
+                        ImGuiExt::DimmedIconToggle(ICON_VS_WHITESPACE, &m_showExtendedAscii);
+                        ImGuiExt::InfoTooltip("hex.ui.hex_editor.extended_ascii"_lang);
+                        ImGui::EndDisabled();
+
+                        ImGui::SameLine(0, 1_scaled);
+
                         // Custom encoding view
                         ImGui::BeginDisabled(!m_currCustomEncoding.has_value());
-                        ImGuiExt::DimmedIconToggle(ICON_VS_WHITESPACE, &m_showCustomEncoding);
+                        ImGuiExt::DimmedIconToggle(ICON_VS_CODE_REVIEW, &m_showCustomEncoding);
                         ImGuiExt::InfoTooltip("hex.ui.hex_editor.custom_encoding_view"_lang);
                         ImGui::EndDisabled();
 
