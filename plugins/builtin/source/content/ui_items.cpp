@@ -47,7 +47,7 @@ namespace hex::plugin::builtin {
         // Task exception toast
         for (const auto &task : TaskManager::getRunningTasks()) {
             if (task->hadException()) {
-                ui::ToastError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
+                ui::ToastError::open(fmt::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
                 task->clearException();
                 break;
             }
@@ -291,7 +291,7 @@ namespace hex::plugin::builtin {
 
                 const auto widgetStart = ImGui::GetCursorPos();
                 {
-                    ImGuiExt::TextSpinner(hex::format("({})", taskCount).c_str());
+                    ImGuiExt::TextSpinner(fmt::format("({})", taskCount).c_str());
                     ImGui::SameLine();
                     ImGuiExt::ProgressBar(progress, scaled({ 100, 5 }), (ImGui::GetCurrentWindowRead()->MenuBarHeight - 10_scaled) / 2.0);
                     ImGui::SameLine();
@@ -306,9 +306,9 @@ namespace hex::plugin::builtin {
                 if (progress < 0)
                     progressString = "";
                 else
-                    progressString = hex::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), std::min(progress, 1.0F) * 100.0F);
+                    progressString = fmt::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), std::min(progress, 1.0F) * 100.0F);
 
-                ImGuiExt::InfoTooltip(hex::format("{}{}", progressString, Lang(frontTask->getUnlocalizedName())).c_str());
+                ImGuiExt::InfoTooltip(fmt::format("{}{}", progressString, Lang(frontTask->getUnlocalizedName())).c_str());
 
                 if (ImGui::BeginPopupContextItem("RestTasks", ImGuiPopupFlags_MouseButtonLeft)) {
                     for (const auto &task : tasks) {
@@ -562,7 +562,7 @@ namespace hex::plugin::builtin {
                     ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
                 });
 
-                ui::ToastInfo::open(hex::format("hex.builtin.welcome.update.desc"_lang, it->second));
+                ui::ToastInfo::open(fmt::format("hex.builtin.welcome.update.desc"_lang, it->second));
             }
         });
     }

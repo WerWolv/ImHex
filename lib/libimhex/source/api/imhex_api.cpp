@@ -817,7 +817,7 @@ namespace hex {
                 info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
                 ::GetVersionExA(&info);
 
-                return hex::format("{}.{}.{}", info.dwMajorVersion, info.dwMinorVersion, info.dwBuildNumber);
+                return fmt::format("{}.{}.{}", info.dwMajorVersion, info.dwMinorVersion, info.dwBuildNumber);
             #elif defined(OS_LINUX) || defined(OS_MACOS) || defined(OS_WEB)
                 struct utsname details = { };
 
@@ -950,7 +950,7 @@ namespace hex {
 
             EventImHexClosing::subscribe([executablePath, updateTypeString] {
                 hex::startProgram(
-                        hex::format("\"{}\" \"{}\"",
+                        fmt::format("\"{}\" \"{}\"",
                                     wolv::util::toUTF8String(executablePath),
                                     updateTypeString
                                     )

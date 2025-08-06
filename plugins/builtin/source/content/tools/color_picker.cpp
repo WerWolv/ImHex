@@ -30,9 +30,9 @@ namespace hex::plugin::builtin {
         };
 
         if (ImGui::BeginTable("##color_picker_table", 3, ImGuiTableFlags_BordersInnerV)) {
-            ImGui::TableSetupColumn(hex::format(" {}", "hex.builtin.tools.color"_lang).c_str(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 300_scaled);
-            ImGui::TableSetupColumn(hex::format(" {}", "hex.builtin.tools.color.components"_lang).c_str(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 105_scaled);
-            ImGui::TableSetupColumn(hex::format(" {}", "hex.builtin.tools.color.formats"_lang).c_str(), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_NoResize);
+            ImGui::TableSetupColumn(fmt::format(" {}", "hex.builtin.tools.color"_lang).c_str(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 300_scaled);
+            ImGui::TableSetupColumn(fmt::format(" {}", "hex.builtin.tools.color.components"_lang).c_str(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 105_scaled);
+            ImGui::TableSetupColumn(fmt::format(" {}", "hex.builtin.tools.color.formats"_lang).c_str(), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_NoResize);
 
             ImGui::TableHeadersRow();
 
@@ -49,7 +49,7 @@ namespace hex::plugin::builtin {
 
             ImGui::TableNextColumn();
 
-            const auto colorFormatName = hex::format("{}{}{}{}",
+            const auto colorFormatName = fmt::format("{}{}{}{}",
                 bitValues[0].bits > 0 ? bitValues[0].name : "",
                 bitValues[1].bits > 0 ? bitValues[1].name : "",
                 bitValues[2].bits > 0 ? bitValues[2].name : "",
@@ -69,7 +69,7 @@ namespace hex::plugin::builtin {
 
                     // Draw slider
                     ImGui::PushID(&bitValue->bits);
-                    auto format = hex::format("%d\n{}", bitValue->name);
+                    auto format = fmt::format("%d\n{}", bitValue->name);
                     ImGui::VSliderInt("##slider", ImVec2(18_scaled, 350_scaled), &bitValue->bits, 0, 16, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
                     ImGui::PopID();
 
@@ -165,19 +165,19 @@ namespace hex::plugin::builtin {
                             index += 1;
                         }
 
-                        return hex::format("#{0:0{1}X}", hexValue, bitCount / 4);
+                        return fmt::format("#{0:0{1}X}", hexValue, bitCount / 4);
                     });
 
                     drawValue(colorFormatName.c_str(), [&] {
-                        return hex::format("{}({}, {}, {}, {})", colorFormatName, intColor[0], intColor[1], intColor[2], intColor[3]);
+                        return fmt::format("{}({}, {}, {}, {})", colorFormatName, intColor[0], intColor[1], intColor[2], intColor[3]);
                     });
 
                     drawValue("hex.builtin.tools.color.formats.vec4"_lang, [&] {
-                        return hex::format("{{ {:.2}F, {:.2}F, {:.2}F, {:.2}F }}", floatColor[0], floatColor[1], floatColor[2], floatColor[3]);
+                        return fmt::format("{{ {:.2}F, {:.2}F, {:.2}F, {:.2}F }}", floatColor[0], floatColor[1], floatColor[2], floatColor[3]);
                     });
 
                     drawValue("hex.builtin.tools.color.formats.percent"_lang, [&] {
-                        return hex::format("{{ {}%, {}%, {}%, {}% }}", u32(floatColor[0] * 100), u32(floatColor[1] * 100), u32(floatColor[2] * 100), u32(floatColor[3] * 100));
+                        return fmt::format("{{ {}%, {}%, {}%, {}% }}", u32(floatColor[0] * 100), u32(floatColor[1] * 100), u32(floatColor[2] * 100), u32(floatColor[3] * 100));
                     });
 
                     drawValue("hex.builtin.tools.color.formats.color_name"_lang, [&]() -> std::string {

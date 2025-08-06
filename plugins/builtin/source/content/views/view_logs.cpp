@@ -53,17 +53,17 @@ namespace hex::plugin::builtin {
             ImGui::TableHeadersRow();
 
             const auto &logs = log::impl::getLogEntries();
-            for (const auto &log : logs | std::views::reverse) {
-                if (!shouldDisplay(log.level, m_logLevel)) {
+            for (const auto &[project, level, message] : logs | std::views::reverse) {
+                if (!shouldDisplay(level, m_logLevel)) {
                     continue;
                 }
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted(log.project.c_str());
+                ImGui::TextUnformatted(project.begin(), project.end());
                 ImGui::TableNextColumn();
-                ImGui::PushStyleColor(ImGuiCol_Text, getColor(log.level).Value);
-                ImGui::TextUnformatted(log.message.c_str());
+                ImGui::PushStyleColor(ImGuiCol_Text, getColor(level).Value);
+                ImGui::TextUnformatted(message.c_str());
                 ImGui::PopStyleColor();
             }
 

@@ -111,7 +111,7 @@ namespace hex::plugin::disasm {
                 fs::openFileBrowser(fs::DialogMode::Save, {}, [this, provider](const std::fs::path &path) {
                     auto p = path;
                     if (p.extension() != ".asm")
-                        p.replace_filename(hex::format("{}{}", p.filename().string(), ".asm"));
+                        p.replace_filename(fmt::format("{}{}", p.filename().string(), ".asm"));
                     auto file = wolv::io::File(p, wolv::io::File::Mode::Create);
 
                     if (!file.isValid()) {
@@ -126,9 +126,9 @@ namespace hex::plugin::disasm {
                             continue;
 
                         if (instruction.operators.empty())
-                            file.writeString(hex::format("{}\n", instruction.mnemonic));
+                            file.writeString(fmt::format("{}\n", instruction.mnemonic));
                         else
-                            file.writeString(hex::format("{} {}\n", instruction.mnemonic, instruction.operators));
+                            file.writeString(fmt::format("{} {}\n", instruction.mnemonic, instruction.operators));
                     }
                 });
             });

@@ -873,7 +873,7 @@ namespace hex {
                     LocalizationManager::impl::setFallbackLanguage(code.get<std::string>());
             }
 
-            impl::s_languages->emplace(code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()));
+            impl::s_languages->emplace(code.get<std::string>(), fmt::format("{} ({})", language.get<std::string>(), country.get<std::string>()));
 
             std::map<std::string, std::string> translationDefinitions;
             for (auto &[key, value] : translations.items()) {

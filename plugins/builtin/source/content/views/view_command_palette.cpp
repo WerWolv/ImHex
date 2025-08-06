@@ -186,7 +186,7 @@ namespace hex::plugin::builtin {
 
                 if (auto [match, value] = MatchCommand(input, command); match != MatchType::NoMatch) {
                     if (match != MatchType::PerfectMatch) {
-                        results.push_back({ hex::format("{} ({})", command, Lang(unlocalizedDescription)), "", AutoComplete });
+                        results.push_back({ fmt::format("{} ({})", command, Lang(unlocalizedDescription)), "", AutoComplete });
                     } else {
                         auto matchedCommand = wolv::util::trim(input.substr(command.length()));
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
@@ -198,7 +198,7 @@ namespace hex::plugin::builtin {
 
                 if (auto [match, value] = MatchCommand(input, command + " "); match != MatchType::NoMatch) {
                     if (match != MatchType::PerfectMatch) {
-                        results.push_back({ hex::format("{} ({})", command, Lang(unlocalizedDescription)), "", AutoComplete });
+                        results.push_back({ fmt::format("{} ({})", command, Lang(unlocalizedDescription)), "", AutoComplete });
                     } else {
                         auto matchedCommand = wolv::util::trim(input.substr(command.length() + 1));
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
@@ -218,11 +218,11 @@ namespace hex::plugin::builtin {
             for (const auto &[description, callback] : queryCallback(processedInput)) {
                 if (type == ContentRegistry::CommandPaletteCommands::Type::SymbolCommand) {
                     if (auto [match, value] = MatchCommand(input, command); match != MatchType::NoMatch) {
-                        results.push_back({ hex::format("{} ({})", command, description), "", [callback](auto ... args){ callback(args...); return std::nullopt; } });
+                        results.push_back({ fmt::format("{} ({})", command, description), "", [callback](auto ... args){ callback(args...); return std::nullopt; } });
                     }
                 } else if (type == ContentRegistry::CommandPaletteCommands::Type::KeywordCommand) {
                     if (auto [match, value] = MatchCommand(input, command + " "); match != MatchType::NoMatch) {
-                        results.push_back({ hex::format("{} ({})", command, description), "", [callback](auto ... args){ callback(args...); return std::nullopt; } });
+                        results.push_back({ fmt::format("{} ({})", command, description), "", [callback](auto ... args){ callback(args...); return std::nullopt; } });
                     }
                 }
             }

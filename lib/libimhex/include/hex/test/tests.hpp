@@ -30,7 +30,7 @@
         auto ret = (x);                                                \
         if (!ret) {                                                    \
             hex::log::error("Test assert '" #x "' failed {} at {}:{}", \
-                hex::format("" __VA_ARGS__),                           \
+                fmt::format("" __VA_ARGS__),                           \
                 __FILE__,                                              \
                 __LINE__);                                             \
             return EXIT_FAILURE;                                       \

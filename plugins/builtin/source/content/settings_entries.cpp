@@ -183,7 +183,7 @@ namespace hex::plugin::builtin {
             bool draw(const std::string &name) override {
                 auto format = [this]() -> std::string {
                     if (m_value == 0)
-                        return hex::format("{} (x{:.1f})", "hex.builtin.setting.interface.scaling.native"_lang, ImHexApi::System::getNativeScale());
+                        return fmt::format("{} (x{:.1f})", "hex.builtin.setting.interface.scaling.native"_lang, ImHexApi::System::getNativeScale());
                     else
                         return "x%.1f";
                 }();
@@ -223,9 +223,9 @@ namespace hex::plugin::builtin {
                     if (value == 0)
                         return "hex.ui.common.off"_lang;
                     else if (value < 60)
-                        return hex::format("hex.builtin.setting.general.auto_backup_time.format.simple"_lang, value);
+                        return fmt::format("hex.builtin.setting.general.auto_backup_time.format.simple"_lang, value);
                     else
-                        return hex::format("hex.builtin.setting.general.auto_backup_time.format.extended"_lang, value / 60, value % 60);
+                        return fmt::format("hex.builtin.setting.general.auto_backup_time.format.extended"_lang, value / 60, value % 60);
                 }();
 
                 if (ImGui::SliderInt(name.data(), &m_value, 0, (30 * 60) / 30, format.c_str(), ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput)) {
@@ -349,6 +349,10 @@ namespace hex::plugin::builtin {
             }
 
             nlohmann::json store() override {
+                // Don't store shortcuts that were not changed by the user
+                if (m_shortcut == m_defaultShortcut)
+                    return {};
+
                 std::vector<u32> keys;
 
                 for (const auto &key : m_shortcut.getKeys()) {
@@ -449,11 +453,11 @@ namespace hex::plugin::builtin {
 
                             std::string name = Lang(unlocalizedName);
                             if (menuItem.view != nullptr) {
-                                name += hex::format(" ({})", Lang(menuItem.view->getUnlocalizedName()));
+                                name += fmt::format(" ({})", Lang(menuItem.view->getUnlocalizedName()));
                             }
 
                             // Draw the menu item
-                            ImGui::Selectable(hex::format("{} {}", menuItem.icon.glyph, name).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+                            ImGui::Selectable(fmt::format("{} {}", menuItem.icon.glyph, name).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
                             ImGui::SetItemTooltip("%s", name.c_str());
 
                             // Handle dragging the menu item to the toolbar box
@@ -586,7 +590,7 @@ namespace hex::plugin::builtin {
                                     // Draw all the color buttons
                                     for (auto color : Colors) {
                                         ImGui::PushID(&color);
-                                        if (ImGui::ColorButton(hex::format("##color{}", u32(color)).c_str(), ImGuiExt::GetCustomColorVec4(color), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20))) {
+                                        if (ImGui::ColorButton(fmt::format("##color{}", u32(color)).c_str(), ImGuiExt::GetCustomColorVec4(color), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20))) {
                                             menuItem->icon.color = color;
                                             ImGui::CloseCurrentPopup();
                                             changed = true;
@@ -613,7 +617,7 @@ namespace hex::plugin::builtin {
                                         name = name.substr(0, name.size() - 3);
 
                                     if (menuItem->view != nullptr) {
-                                        name += hex::format(" ({})", Lang(menuItem->view->getUnlocalizedName()));
+                                        name += fmt::format(" ({})", Lang(menuItem->view->getUnlocalizedName()));
                                     }
 
                                     auto textSize = ImGui::CalcTextSize(name.c_str(), nullptr, false, max.x - min.x);

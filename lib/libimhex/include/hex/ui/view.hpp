@@ -143,7 +143,7 @@ namespace hex {
         void draw() final {
             if (this->shouldDraw()) {
                 ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-                const auto title = hex::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
+                const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
                 if (ImGui::Begin(title.c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
                     this->drawContent();
                 }

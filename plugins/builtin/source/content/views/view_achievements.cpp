@@ -188,7 +188,7 @@ namespace hex::plugin::builtin {
         const auto visibleCount = achievements.size() - invisibleCount;
 
         // Construct number of unlocked achievements text
-        auto unlockedText = hex::format("{}: {} / {}{}", "hex.builtin.view.achievements.unlocked_count"_lang, unlockedCount, visibleCount, invisibleCount > 0 ? "+" : " ");
+        auto unlockedText = fmt::format("{}: {} / {}{}", "hex.builtin.view.achievements.unlocked_count"_lang, unlockedCount, visibleCount, invisibleCount > 0 ? "+" : " ");
 
         // Calculate overlay size
         auto &style = ImGui::GetStyle();

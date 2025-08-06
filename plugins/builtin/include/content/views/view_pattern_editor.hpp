@@ -419,7 +419,7 @@ namespace hex::plugin::builtin {
                                             literal = std::get<pl::core::Token::Literal>(it->value);
                                             string = std::get_if<std::string>(&literal);
                                             if (string != nullptr) {
-                                                m_patternNames[path] = hex::format("{} ({})", *string, fileName);
+                                                m_patternNames[path] = fmt::format("{} ({})", *string, fileName);
                                             }
                                         }
                                     }

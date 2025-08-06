@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
             if (m_detachedTools[unlocalizedName]) continue;
 
             // Draw the tool
-            if (ImGui::CollapsingHeader(hex::format("{} {}", icon, Lang(unlocalizedName)).c_str())) {
+            if (ImGui::CollapsingHeader(fmt::format("{} {}", icon, Lang(unlocalizedName)).c_str())) {
                 function();
                 ImGui::NewLine();
             } else {
@@ -75,7 +75,7 @@ namespace hex::plugin::builtin {
             if (!m_detachedTools[unlocalizedName]) continue;
 
             // Load the window height that is dependent on the tool content
-            const auto windowName = hex::format("{} {}", icon, View::toWindowName(unlocalizedName));
+            const auto windowName = fmt::format("{} {}", icon, View::toWindowName(unlocalizedName));
             const auto height = m_windowHeights[ImGui::FindWindowByName(windowName.c_str())];
             if (height > 0)
                 ImGui::SetNextWindowSizeConstraints(ImVec2(400_scaled, height), ImVec2(FLT_MAX, height));

@@ -310,7 +310,7 @@ namespace hex::plugin::builtin {
                         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
 
                         ImGui::Image(*s_nightlyTexture, s_nightlyTexture->getSize());
-                        ImGuiExt::InfoTooltip(hex::format("{0}\n\nCommit: {1}@{2}", "hex.builtin.welcome.nightly_build"_lang, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(true)).c_str());
+                        ImGuiExt::InfoTooltip(fmt::format("{0}\n\nCommit: {1}@{2}", "hex.builtin.welcome.nightly_build"_lang, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(true)).c_str());
 
                         ImGui::SetCursorPos(cursor);
                     }
@@ -455,7 +455,7 @@ namespace hex::plugin::builtin {
                             hovered = ImGui::IsItemHovered();
 
                             if (ImGui::IsItemClicked()) {
-                                hex::openWebpage(ImHexApiURL + hex::format("/info/{}/link", hex::toLower(ImHexApi::System::getOSName())));
+                                hex::openWebpage(ImHexApiURL + fmt::format("/info/{}/link", hex::toLower(ImHexApi::System::getOSName())));
                             }
                         }
                         ImGuiExt::EndSubWindow();
@@ -643,9 +643,9 @@ namespace hex::plugin::builtin {
                 return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), width, 0, ImGuiExt::Texture::Filter::Linear);
             };
 
-            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300 * scale);
-            s_nightlyTexture = changeTextureSvg(hex::format("assets/{}/nightly.svg", "common"), 35 * scale);
-            s_backdropTexture = changeTexture(hex::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
+            s_bannerTexture = changeTextureSvg(fmt::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300 * scale);
+            s_nightlyTexture = changeTextureSvg(fmt::format("assets/{}/nightly.svg", "common"), 35 * scale);
+            s_backdropTexture = changeTexture(fmt::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
         };
 
         RequestChangeTheme::subscribe([]() { updateTextures(ImHexApi::System::getGlobalScale()); });
@@ -729,7 +729,7 @@ namespace hex::plugin::builtin {
                                 }
                                 RequestUpdateWindowTitle::post();
                             } else {
-                                ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(backupFilePath)));
+                                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(backupFilePath)));
                             }
                         } else {
                             if (hasProject) {
@@ -803,7 +803,7 @@ namespace hex::plugin::builtin {
             if (!s_infoBannerTexture->isValid() && allowNetworking) {
                 TaskManager::createBackgroundTask("hex.builtin.task.loading_banner", [](auto&) {
                     HttpRequest request("GET",
-                        ImHexApiURL + hex::format("/info/{}/image", hex::toLower(ImHexApi::System::getOSName())));
+                        ImHexApiURL + fmt::format("/info/{}/image", hex::toLower(ImHexApi::System::getOSName())));
 
                     auto response = request.downloadFile().get();
 

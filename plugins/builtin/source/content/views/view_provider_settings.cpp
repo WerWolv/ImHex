@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
                     if (errorMessage.empty()) {
                         ui::ToastError::open("hex.builtin.view.provider_settings.load_error"_lang);
                     } else {
-                        ui::ToastError::open(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
+                        ui::ToastError::open(fmt::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
                     }
                     TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
                 }

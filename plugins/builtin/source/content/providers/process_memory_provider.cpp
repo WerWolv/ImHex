@@ -342,7 +342,7 @@ namespace hex::plugin::builtin {
                             if (loadLibraryW != nullptr) {
                                 if (auto threadHandle = CreateRemoteThread(m_processHandle, nullptr, 0, loadLibraryW, pathAddress, 0, nullptr); threadHandle != nullptr) {
                                     WaitForSingleObject(threadHandle, INFINITE);
-                                    ui::ToastInfo::open(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
+                                    ui::ToastInfo::open(fmt::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
                                     this->reloadProcessModules();
                                     CloseHandle(threadHandle);
                                     return;
@@ -351,7 +351,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    ui::ToastError::open(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
+                    ui::ToastError::open(fmt::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
                 });
             }
         #endif
@@ -394,10 +394,10 @@ namespace hex::plugin::builtin {
                 std::string name;
                 if (memoryInfo.State & MEM_IMAGE)   continue;
                 if (memoryInfo.State & MEM_FREE)    continue;
-                if (memoryInfo.State & MEM_COMMIT)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.commit"_lang);
-                if (memoryInfo.State & MEM_RESERVE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.reserve"_lang);
-                if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
-                if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
+                if (memoryInfo.State & MEM_COMMIT)  name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.commit"_lang);
+                if (memoryInfo.State & MEM_RESERVE) name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.reserve"_lang);
+                if (memoryInfo.State & MEM_PRIVATE) name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
+                if (memoryInfo.State & MEM_MAPPED)  name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
 
                 m_memoryRegions.insert({ { reinterpret_cast<u64>(memoryInfo.BaseAddress), reinterpret_cast<u64>(memoryInfo.BaseAddress) + memoryInfo.RegionSize }, name });
             }

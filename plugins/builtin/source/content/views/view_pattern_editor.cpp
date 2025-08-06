@@ -786,12 +786,12 @@ namespace hex::plugin::builtin {
                         if (position > 1999)
                             counterString = "? ";
                         else
-                            counterString = hex::format("{} ", position);
+                            counterString = fmt::format("{} ", position);
                         counterString += "hex.builtin.view.pattern_editor.of"_lang.operator const char *();
                         if (count > 1999)
                             counterString += " 1999+";
                         else
-                            counterString += hex::format(" {}", count);
+                            counterString += fmt::format(" {}", count);
                     }
                 }
                 auto resultSize = ImGui::CalcTextSize(counterString.c_str());
@@ -1257,12 +1257,12 @@ namespace hex::plugin::builtin {
 
             if (*m_breakpointHit) {
                 auto displayValue = [&](const auto &parent, size_t index) {
-                    return hex::format("{0} {1} [{2}]",
+                    return fmt::format("{0} {1} [{2}]",
                                         "hex.builtin.view.pattern_editor.debugger.scope"_lang,
                                         evaluator->getScopeCount() - index - 1,
                                         parent == nullptr ?
                                         "hex.builtin.view.pattern_editor.debugger.scope.global"_lang :
-                                        hex::format("0x{0:08X}", parent->getOffset())
+                                        fmt::format("0x{0:08X}", parent->getOffset())
                     );
                 };
 
@@ -1795,10 +1795,10 @@ namespace hex::plugin::builtin {
                         switch (level) {
                             using enum pl::core::LogConsole::Level;
 
-                            case Debug:     line = hex::format("D: {}", line); break;
-                            case Info:      line = hex::format("I: {}", line); break;
-                            case Warning:   line = hex::format("W: {}", line); break;
-                            case Error:     line = hex::format("E: {}", line); break;
+                            case Debug:     line = fmt::format("D: {}", line); break;
+                            case Info:      line = fmt::format("I: {}", line); break;
+                            case Warning:   line = fmt::format("W: {}", line); break;
+                            case Error:     line = fmt::format("E: {}", line); break;
                             default: break;
                         }
                     }
@@ -1821,7 +1821,7 @@ namespace hex::plugin::builtin {
 
                 std::scoped_lock lock(m_logMutex);
                 m_console.get(provider).emplace_back(
-                   hex::format("I: Evaluation took {}", std::chrono::duration<double>(runtime.getLastRunningTime()))
+                   fmt::format("I: Evaluation took {}", std::chrono::duration<double>(runtime.getLastRunningTime()))
                 );
                 m_consoleNeedsUpdate = true;
             };
@@ -1966,14 +1966,14 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::appendVariable(const std::string &type) {
         const auto &selection = ImHexApi::HexEditor::getSelection();
 
-        appendEditorText(hex::format("{0} {0}_at_0x{1:02X} @ 0x{1:02X};", type, selection->getStartAddress()));
+        appendEditorText(fmt::format("{0} {0}_at_0x{1:02X} @ 0x{1:02X};", type, selection->getStartAddress()));
         AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.place_menu.name");
     }
 
     void ViewPatternEditor::appendArray(const std::string &type, size_t size) {
         const auto &selection = ImHexApi::HexEditor::getSelection();
 
-        appendEditorText(hex::format("{0} {0}_array_at_0x{1:02X}[0x{2:02X}] @ 0x{1:02X};", type, selection->getStartAddress(), (selection->getSize() + (size - 1)) / size));
+        appendEditorText(fmt::format("{0} {0}_array_at_0x{1:02X}[0x{2:02X}] @ 0x{1:02X};", type, selection->getStartAddress(), (selection->getSize() + (size - 1)) / size));
     }
 
     TextEditor *ViewPatternEditor::getEditorFromFocusedWindow() {
@@ -2253,9 +2253,9 @@ namespace hex::plugin::builtin {
                             std::string variableName;
                             for (const char c : wolv::util::replaceStrings(typeName, "::", "_"))
                                 variableName += static_cast<char>(std::tolower(c));
-                            variableName += hex::format("_at_0x{:02X}", selection->getStartAddress());
+                            variableName += fmt::format("_at_0x{:02X}", selection->getStartAddress());
 
-                            appendEditorText(hex::format("{0} {1} @ 0x{2:02X};", typeName, variableName, selection->getStartAddress()));
+                            appendEditorText(fmt::format("{0} {1} @ 0x{2:02X};", typeName, variableName, selection->getStartAddress()));
                         });
                     }
 

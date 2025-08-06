@@ -53,7 +53,7 @@ namespace hex::plugin::builtin {
                 if (!view->shouldStoreWindowState())
                     continue;
 
-                std::string format = hex::format("{}=%d", view->getUnlocalizedName().get());
+                std::string format = fmt::format("{}=%d", view->getUnlocalizedName().get());
                 sscanf(line.data(), format.c_str(), &view->getWindowOpenState());
             }
         });

@@ -78,10 +78,10 @@ namespace hex::plugin::builtin {
                     for (auto y = clipper.DisplayStart; y < clipper.DisplayEnd; y++) {
                         auto lineSize = ((size - y * 0x10) < 0x10) ? size % 0x10 : 0x10;
 
-                        std::string line = hex::format(" {:08X}:  ", y * 0x10);
+                        std::string line = fmt::format(" {:08X}:  ", y * 0x10);
                         for (u32 x = 0; x < 0x10; x++) {
                             if (x < lineSize)
-                                line += hex::format("{:02X} ", m_buffer[y * 0x10 + x]);
+                                line += fmt::format("{:02X} ", m_buffer[y * 0x10 + x]);
                             else
                                 line += "   ";
 

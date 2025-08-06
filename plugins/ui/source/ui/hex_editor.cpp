@@ -160,9 +160,9 @@ namespace hex::ui {
         switch (m_addressFormat) {
             using enum AddressFormat;
             default:
-            case Hexadecimal: return hex::format(m_upperCaseHex ? "{0}{1:0{2}X}" : "{0}{1:0{2}x}", prefix ? "0x" : "", address, width);
-            case Decimal:     return hex::format("{0: >{1}d}", address, width);
-            case Octal:       return hex::format("{0}{1:0{2}o}", prefix ? "0o" : "", address, width);
+            case Hexadecimal: return fmt::format(fmt::runtime(m_upperCaseHex ? "{0}{1:0{2}X}" : "{0}{1:0{2}x}"), prefix ? "0x" : "", address, width);
+            case Decimal:     return fmt::format("{0: >{1}d}", address, width);
+            case Octal:       return fmt::format("{0}{1:0{2}o}", prefix ? "0o" : "", address, width);
         }
     }
 
@@ -849,7 +849,7 @@ namespace hex::ui {
                             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
                             if (ImGui::BeginTable("##ascii_column", bytesPerRow)) {
                                 for (u64 x = 0; x < bytesPerRow; x++)
-                                    ImGui::TableSetupColumn(hex::format("##ascii_cell{}", x).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x + (m_characterCellPadding * 1_scaled));
+                                    ImGui::TableSetupColumn(fmt::format("##ascii_cell{}", x).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x + (m_characterCellPadding * 1_scaled));
 
                                 ImGui::TableNextRow();
 
@@ -1208,7 +1208,7 @@ namespace hex::ui {
                             ImGui::NewLine();
 
                             int byteColumnCount = m_autoFitColumns ? 0 : m_bytesPerRow / this->getBytesPerCell();
-                            if (ImGui::SliderInt("##byte_column_count", &byteColumnCount, 0, 128 / this->getBytesPerCell(), m_autoFitColumns ? "hex.ui.hex_editor.fit_columns"_lang : hex::format("{} {}", byteColumnCount * this->getBytesPerCell(), "hex.ui.hex_editor.columns"_lang).c_str())) {
+                            if (ImGui::SliderInt("##byte_column_count", &byteColumnCount, 0, 128 / this->getBytesPerCell(), m_autoFitColumns ? "hex.ui.hex_editor.fit_columns"_lang : fmt::format("{} {}", byteColumnCount * this->getBytesPerCell(), "hex.ui.hex_editor.columns"_lang).c_str())) {
                                 m_bytesPerRow = byteColumnCount * this->getBytesPerCell();
                                 m_encodingLineStartAddresses.clear();
                             }
@@ -1217,7 +1217,7 @@ namespace hex::ui {
                             {
                                 const u64 min = 0;
                                 const u64 max = m_provider->getActualSize();
-                                ImGui::SliderScalar("##separator_stride", ImGuiDataType_U64, &m_separatorStride, &min, &max, m_separatorStride == 0 ? "hex.ui.hex_editor.no_separator"_lang : hex::format("hex.ui.hex_editor.separator_stride"_lang, m_separatorStride).c_str());
+                                ImGui::SliderScalar("##separator_stride", ImGuiDataType_U64, &m_separatorStride, &min, &max, m_separatorStride == 0 ? "hex.ui.hex_editor.no_separator"_lang : fmt::format("hex.ui.hex_editor.separator_stride"_lang, m_separatorStride).c_str());
                             }
                             {
                                 int selection = [this] {
@@ -1233,9 +1233,9 @@ namespace hex::ui {
                                 }();
 
                                 std::array options = {
-                                    hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.hexadecimal"_lang),
-                                    hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.decimal"_lang),
-                                    hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.octal"_lang)
+                                    fmt::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.hexadecimal"_lang),
+                                    fmt::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.decimal"_lang),
+                                    fmt::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.octal"_lang)
                                 };
 
                                 if (ImGui::SliderInt("##format", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
@@ -1301,7 +1301,7 @@ namespace hex::ui {
                             {
                                 ImGui::PushItemWidth(-1);
                                 if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount,
-                                    hex::format("%llu / {0}  [{1} - {2}]",
+                                    fmt::format("%llu / {0}  [{1} - {2}]",
                                         pageCount,
                                         formatAddress(pageAddress, 4, true),
                                         formatAddress(pageSize == 0 ? 0 : (pageAddress + pageSize - 1), 4, true)
@@ -1321,7 +1321,7 @@ namespace hex::ui {
                                                            formatAddress(m_provider->getBaseAddress(), 8, true),
                                                            formatAddress(m_provider->getBaseAddress() + m_provider->getActualSize(), 1, true),
                                                            ImGui::GetIO().KeyCtrl
-                                                               ? hex::format("{}", m_provider->getActualSize())
+                                                               ? fmt::format("{}", m_provider->getActualSize())
                                                                : hex::toByteString(m_provider->getActualSize())
                             );
                             ImGui::SetItemTooltip("%s", "hex.ui.hex_editor.data_size"_lang.get());
