@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
         fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                             [](const auto &path) {
                                 if (!ProjectFile::load(path)) {
-                                    ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                                    ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                                 }
                             });
     }

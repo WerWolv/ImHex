@@ -327,7 +327,7 @@ namespace hex::plugin::diffing {
 
                         // Draw start address
                         ImGui::TableNextColumn();
-                        if (ImGui::Selectable(hex::format("0x{:04X} - 0x{:04X}", regionA.start, regionA.end).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                        if (ImGui::Selectable(fmt::format("0x{:04X} - 0x{:04X}", regionA.start, regionA.end).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                             const Region selectionA = { regionA.start, ((regionA.end - regionA.start) + 1) };
                             const Region selectionB = { regionB.start, ((regionB.end - regionB.start) + 1) };
 
@@ -347,7 +347,7 @@ namespace hex::plugin::diffing {
 
                         // Draw end address
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(hex::format("0x{:04X} - 0x{:04X}", regionB.start, regionB.end).c_str());
+                        ImGui::TextUnformatted(fmt::format("0x{:04X} - 0x{:04X}", regionB.start, regionB.end).c_str());
 
                         const auto &providers = ImHexApi::Provider::getProviders();
                         std::vector<u8> data;

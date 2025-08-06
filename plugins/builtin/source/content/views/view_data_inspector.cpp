@@ -505,8 +505,8 @@ namespace hex::plugin::builtin {
         }();
 
         std::array options = {
-            hex::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.little"_lang),
-            hex::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.big"_lang)
+            fmt::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.little"_lang),
+            fmt::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.big"_lang)
         };
 
         if (ImGui::SliderInt("##endian", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
@@ -538,9 +538,9 @@ namespace hex::plugin::builtin {
         }();
 
         std::array options = {
-            hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.decimal"_lang),
-            hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.hexadecimal"_lang),
-            hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.octal"_lang)
+            fmt::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.decimal"_lang),
+            fmt::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.hexadecimal"_lang),
+            fmt::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.octal"_lang)
         };
 
         if (ImGui::SliderInt("##format", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
@@ -565,8 +565,8 @@ namespace hex::plugin::builtin {
         int selection = m_invert ? 1 : 0;
 
         std::array options = {
-            hex::format("{}:  {}", "hex.builtin.view.data_inspector.invert"_lang, "hex.ui.common.no"_lang),
-            hex::format("{}:  {}", "hex.builtin.view.data_inspector.invert"_lang, "hex.ui.common.yes"_lang)
+            fmt::format("{}:  {}", "hex.builtin.view.data_inspector.invert"_lang, "hex.ui.common.no"_lang),
+            fmt::format("{}:  {}", "hex.builtin.view.data_inspector.invert"_lang, "hex.ui.common.yes"_lang)
         };
 
         if (ImGui::SliderInt("##invert", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
@@ -581,10 +581,10 @@ namespace hex::plugin::builtin {
         std::string errorMessage;
         if (const auto &compileErrors = m_runtime.getCompileErrors(); !compileErrors.empty()) {
             for (const auto &error : compileErrors) {
-                errorMessage += hex::format("{}\n", error.format());
+                errorMessage += fmt::format("{}\n", error.format());
             }
         } else if (const auto &evalError = m_runtime.getEvalError(); evalError.has_value()) {
-            errorMessage += hex::format("{}:{}  {}\n", evalError->line, evalError->column, evalError->message);
+            errorMessage += fmt::format("{}:{}  {}\n", evalError->line, evalError->column, evalError->message);
         }
 
         // Create a dummy display function that displays the error message

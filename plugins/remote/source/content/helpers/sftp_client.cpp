@@ -239,7 +239,7 @@ namespace hex::plugin::remote {
         int length = 0;
         libssh2_session_last_error(session, &errorString, &length, false);
 
-        return hex::format("{} ({})", std::string(errorString, static_cast<size_t>(length)), libssh2_session_last_errno(session));
+        return fmt::format("{} ({})", std::string(errorString, static_cast<size_t>(length)), libssh2_session_last_errno(session));
     }
 
     SFTPClient::RemoteFile::RemoteFile(LIBSSH2_SFTP_HANDLE* handle, OpenMode mode) : m_handle(handle), m_mode(mode) {}

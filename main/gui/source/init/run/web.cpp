@@ -70,7 +70,7 @@
                             return "";
                         } catch (const std::exception &e) {
                             static std::string message;
-                            message = hex::format("Failed to deinitialize ImHex!\nThis is just a message warning you of this, the application has already closed, you probably can't do anything about it.\n\nError: {}", e.what());
+                            message = fmt::format("Failed to deinitialize ImHex!\nThis is just a message warning you of this, the application has already closed, you probably can't do anything about it.\n\nError: {}", e.what());
                             return message.c_str();
                         }
                     });

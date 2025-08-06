@@ -71,14 +71,14 @@ namespace hex {
         const auto fileName = path.stem().string();
 
         m_functions.initializePluginFunction        = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
-        m_functions.initializeLibraryFunction       = getPluginFunction<PluginFunctions::InitializePluginFunc>(hex::format("initializeLibrary_{}", fileName));
+        m_functions.initializeLibraryFunction       = getPluginFunction<PluginFunctions::InitializePluginFunc>(fmt::format("initializeLibrary_{}", fileName));
         m_functions.getPluginNameFunction           = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
-        m_functions.getLibraryNameFunction          = getPluginFunction<PluginFunctions::GetLibraryNameFunc>(hex::format("getLibraryName_{}", fileName));
+        m_functions.getLibraryNameFunction          = getPluginFunction<PluginFunctions::GetLibraryNameFunc>(fmt::format("getLibraryName_{}", fileName));
         m_functions.getPluginAuthorFunction         = getPluginFunction<PluginFunctions::GetPluginAuthorFunc>("getPluginAuthor");
         m_functions.getPluginDescriptionFunction    = getPluginFunction<PluginFunctions::GetPluginDescriptionFunc>("getPluginDescription");
         m_functions.getCompatibleVersionFunction    = getPluginFunction<PluginFunctions::GetCompatibleVersionFunc>("getCompatibleVersion");
         m_functions.setImGuiContextFunction         = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
-        m_functions.setImGuiContextLibraryFunction  = getPluginFunction<PluginFunctions::SetImGuiContextFunc>(hex::format("setImGuiContext_{}", fileName));
+        m_functions.setImGuiContextLibraryFunction  = getPluginFunction<PluginFunctions::SetImGuiContextFunc>(fmt::format("setImGuiContext_{}", fileName));
         m_functions.getSubCommandsFunction          = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
         m_functions.getFeaturesFunction             = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getFeatures");
         m_functions.isBuiltinPluginFunction         = getPluginFunction<PluginFunctions::IsBuiltinPluginFunc>("isBuiltinPlugin");
@@ -176,7 +176,7 @@ namespace hex {
             if (this->isLibraryPlugin())
                 return m_functions.getLibraryNameFunction();
             else
-                return hex::format("Unknown Plugin @ 0x{0:016X}", m_handle);
+                return fmt::format("Unknown Plugin @ 0x{0:016X}", m_handle);
         }
     }
 

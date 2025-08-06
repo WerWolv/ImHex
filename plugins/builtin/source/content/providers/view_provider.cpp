@@ -122,7 +122,7 @@ namespace hex::plugin::builtin {
         if (m_provider == nullptr)
             return "View";
         else
-            return hex::format("{} View", m_provider->getName());
+            return fmt::format("{} View", m_provider->getName());
     }
 
     [[nodiscard]] std::vector<ViewProvider::Description> ViewProvider::getDataDescription() const {

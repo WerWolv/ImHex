@@ -964,13 +964,13 @@ namespace ImGuiExt {
         std::string format;
 
         if (*value < 1024) {
-            format = hex::format("{} Bytes", *value);
+            format = fmt::format("{} Bytes", *value);
         } else if (*value < 1024 * 1024) {
-            format = hex::format("{:.2f} KB", *value / 1024.0);
+            format = fmt::format("{:.2f} KB", *value / 1024.0);
         } else if (*value < 1024 * 1024 * 1024) {
-            format = hex::format("{:.2f} MB", *value / (1024.0 * 1024.0));
+            format = fmt::format("{:.2f} MB", *value / (1024.0 * 1024.0));
         } else {
-            format = hex::format("{:.2f} GB", *value / (1024.0 * 1024.0 * 1024.0));
+            format = fmt::format("{:.2f} GB", *value / (1024.0 * 1024.0 * 1024.0));
         }
 
         *value /= stepSize;
@@ -1266,7 +1266,7 @@ namespace ImGuiExt {
 
         bool result = false;
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
-        if (ImGui::BeginChild(hex::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+        if (ImGui::BeginChild(fmt::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
             result = true;
 
             if (hasMenuBar && ImGui::BeginMenuBar()) {

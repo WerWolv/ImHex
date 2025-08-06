@@ -26,7 +26,7 @@ namespace hex::plugin::builtin {
         // Handle bookmark add requests sent by the API
         RequestAddBookmark::subscribe(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
             if (name.empty()) {
-                name = hex::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
+                name = fmt::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
             }
 
             if (color == 0x00)
@@ -182,10 +182,10 @@ namespace hex::plugin::builtin {
             result += "## Bookmarks\n\n";
 
             for (const auto &[bookmark, highlightVisible] : bookmarks) {
-                result += hex::format("### <span style=\"background-color: #{:06X}80\">{} [0x{:04X} - 0x{:04X}]</span>\n\n", hex::changeEndianness(bookmark.color, std::endian::big) >> 8, bookmark.name, bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
+                result += fmt::format("### <span style=\"background-color: #{:06X}80\">{} [0x{:04X} - 0x{:04X}]</span>\n\n", hex::changeEndianness(bookmark.color, std::endian::big) >> 8, bookmark.name, bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
                 for (const auto &line : wolv::util::splitString(bookmark.comment, "\n"))
-                    result += hex::format("> {}\n", line);
+                    result += fmt::format("> {}\n", line);
                 result += "\n";
 
                 result += "```\n";
@@ -338,7 +338,7 @@ namespace hex::plugin::builtin {
                 bool notDeleted = true;
 
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2());
-                auto expanded = ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), &notDeleted);
+                auto expanded = ImGui::CollapsingHeader(fmt::format("{}###bookmark", name).c_str(), &notDeleted);
                 ImGui::PopStyleVar();
 
                 if (!expanded) {
@@ -385,7 +385,7 @@ namespace hex::plugin::builtin {
                             auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
                             if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
                                 viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
-                                viewProvider->setName(hex::format("'{}' View", name));
+                                viewProvider->setName(fmt::format("'{}' View", name));
 
                                 if (viewProvider->open()) {
                                     EventProviderOpened::post(viewProvider);

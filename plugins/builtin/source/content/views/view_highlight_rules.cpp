@@ -112,7 +112,7 @@ namespace hex::plugin::builtin {
     }
 
 
-    ViewHighlightRules::ViewHighlightRules() : View::Floating("hex.builtin.view.highlight_rules.name") {
+    ViewHighlightRules::ViewHighlightRules() : View::Floating("hex.builtin.view.highlight_rules.name", ICON_VS_TAG) {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.highlight_rules.menu.edit.rules" }, ICON_VS_TAG, 1950, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         }, ImHexApi::Provider::isValid,

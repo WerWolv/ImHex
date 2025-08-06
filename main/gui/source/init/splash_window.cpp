@@ -356,14 +356,14 @@ namespace hex::init {
             drawList->AddImage(m_splashTextTexture, ImVec2(0, 0), WindowSize);
 
             // Draw the "copyright" notice
-            drawList->AddText(ImVec2(35, 85), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv\n2020 - {0}", &__DATE__[7]).c_str());
+            drawList->AddText(ImVec2(35, 85), ImColor(0xFF, 0xFF, 0xFF, 0xFF), fmt::format("WerWolv\n2020 - {0}", &__DATE__[7]).c_str());
 
             // Draw version information
             // In debug builds, also display the current commit hash and branch
             #if defined(DEBUG)
-                const static auto VersionInfo = hex::format("{0} : {1}@{2}", ImHexApi::System::getImHexVersion().get(), ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
+                const static auto VersionInfo = fmt::format("{0} : {1}@{2}", ImHexApi::System::getImHexVersion().get(), ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
             #else
-                const static auto VersionInfo = hex::format("{0}", ImHexApi::System::getImHexVersion().get());
+                const static auto VersionInfo = fmt::format("{0}", ImHexApi::System::getImHexVersion().get());
             #endif
 
             drawList->AddText(ImVec2((WindowSize.x - ImGui::CalcTextSize(VersionInfo.c_str()).x) / 2, 105), ImColor(0xFF, 0xFF, 0xFF, 0xFF), VersionInfo.c_str());
@@ -384,7 +384,7 @@ namespace hex::init {
 
             // Draw task names separated by | characters
             drawList->PushClipRect(progressBackgroundStart, progressBackgroundStart + progressBackgroundSize, true);
-            drawList->AddText(progressStart + ImVec2(5, -20), ImColor(0xFF, 0xFF, 0xFF, 0xFF), m_currTaskNames.empty() ? "Ready!" : hex::format("{}", fmt::join(m_currTaskNames, " | ")).c_str());
+            drawList->AddText(progressStart + ImVec2(5, -20), ImColor(0xFF, 0xFF, 0xFF, 0xFF), m_currTaskNames.empty() ? "Ready!" : fmt::format("{}", fmt::join(m_currTaskNames, " | ")).c_str());
             drawList->PopClipRect();
         }
 
@@ -472,7 +472,7 @@ namespace hex::init {
         // Create the splash screen window
         m_window = glfwCreateWindow(1, 1, "Starting ImHex...", nullptr, nullptr);
         if (m_window == nullptr) {
-            hex::nativeErrorMessage(hex::format(
+            hex::nativeErrorMessage(fmt::format(
                 "Failed to create GLFW window: [{}] {}.\n"
                 "You may not have a renderer available.\n"
                 "The most common cause of this is using a virtual machine\n"

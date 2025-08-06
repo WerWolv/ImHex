@@ -250,7 +250,7 @@ namespace hex::plugin::builtin {
                 std::string data;
 
                 for (const auto &provider : ImHexApi::Provider::getProviders()) {
-                    data += hex::format("# {}", provider->getName());
+                    data += fmt::format("# {}", provider->getName());
                     data += "\n\n";
 
                     for (const auto &generator : ContentRegistry::Reports::impl::getGenerators()) {
@@ -383,8 +383,8 @@ namespace hex::plugin::builtin {
 
         /* Open Other */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_other"}, ICON_VS_TELESCOPE, 1150, [] {
-            for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
-                if (menu::menuItem(Lang(unlocalizedProviderName)))
+            for (const auto &[unlocalizedProviderName, icon] : ContentRegistry::Provider::impl::getEntries()) {
+                if (menu::menuItemEx(Lang(unlocalizedProviderName), icon))
                     ImHexApi::Provider::createProvider(unlocalizedProviderName);
             }
         }, noRunningTasks);
@@ -586,7 +586,7 @@ namespace hex::plugin::builtin {
 
             bool shiftPressed = ImGui::GetIO().KeyShift;
             for (auto &[name, path] : LayoutManager::getLayouts()) {
-                if (menu::menuItem(hex::format("{}{}", name, shiftPressed ? " " ICON_VS_CHROME_CLOSE : "").c_str(), Shortcut::None, false, ImHexApi::Provider::isValid())) {
+                if (menu::menuItem(fmt::format("{}{}", name, shiftPressed ? " " ICON_VS_CHROME_CLOSE : "").c_str(), Shortcut::None, false, ImHexApi::Provider::isValid())) {
                     if (shiftPressed) {
                         LayoutManager::removeLayout(name);
                         break;
@@ -619,7 +619,7 @@ namespace hex::plugin::builtin {
                 const auto &[name, workspace] = *it;
 
                 bool canRemove = shiftPressed && !workspace.builtin;
-                if (menu::menuItem(hex::format("{}{}", name, canRemove ? " " ICON_VS_CHROME_CLOSE : "").c_str(), Shortcut::None, it == WorkspaceManager::getCurrentWorkspace(), ImHexApi::Provider::isValid())) {
+                if (menu::menuItem(fmt::format("{}{}", name, canRemove ? " " ICON_VS_CHROME_CLOSE : "").c_str(), Shortcut::None, it == WorkspaceManager::getCurrentWorkspace(), ImHexApi::Provider::isValid())) {
                     if (canRemove) {
                         WorkspaceManager::removeWorkspace(name);
                         break;

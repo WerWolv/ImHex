@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::BeginDisabled(size_t(i) < undoneOperationsCount);
 
-                        if (ImGui::Selectable(hex::format("{} {}", index == undoneOperationsCount ? ICON_VS_ARROW_SMALL_RIGHT : " ", index).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                        if (ImGui::Selectable(fmt::format("{} {}", index == undoneOperationsCount ? ICON_VS_ARROW_SMALL_RIGHT : " ", index).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                             ImHexApi::HexEditor::setSelection(address, size);
                         }
                         if (ImGui::IsItemHovered()) {

@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
             }
 
             std::string createPacket(const std::string &data) {
-                return hex::format("${}#{:02x}", data, calculateChecksum(data));
+                return fmt::format("${}#{:02x}", data, calculateChecksum(data));
             }
 
             std::optional<std::string> parsePacket(const std::string &packet) {
@@ -151,7 +151,7 @@ namespace hex::plugin::builtin {
         }
 
         std::vector<u8> readMemory(const wolv::net::SocketClient &socket, u64 address, size_t size) {
-            std::string packet = createPacket(hex::format("m{:X},{:X}", address, size));
+            std::string packet = createPacket(fmt::format("m{:X},{:X}", address, size));
 
             std::string receivedPacket = sendReceivePackage(socket, packet);
 
@@ -174,7 +174,7 @@ namespace hex::plugin::builtin {
             std::memcpy(bytes.data(), buffer, size);
             std::string byteString = crypt::encode16(bytes);
 
-            std::string packet = createPacket(hex::format("M{:X},{:X}:{}", address, size, byteString));
+            std::string packet = createPacket(fmt::format("M{:X},{:X}:{}", address, size, byteString));
 
             std::string receivedPacket = sendReceivePackage(socket, packet);
             auto receivedData = parsePacket(receivedPacket);
@@ -245,12 +245,12 @@ namespace hex::plugin::builtin {
             port    = std::to_string(m_port);
         }
 
-        return hex::format("hex.builtin.provider.gdb.name"_lang, address, port);
+        return fmt::format("hex.builtin.provider.gdb.name"_lang, address, port);
     }
 
     std::vector<GDBProvider::Description> GDBProvider::getDataDescription() const {
         return {
-            {"hex.builtin.provider.gdb.server"_lang, hex::format("{}:{}", m_ipAddress, m_port)},
+            {"hex.builtin.provider.gdb.server"_lang, fmt::format("{}:{}", m_ipAddress, m_port)},
         };
     }
 

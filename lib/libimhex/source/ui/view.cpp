@@ -56,13 +56,23 @@ namespace hex {
         return std::exchange(m_windowJustOpened, false);
     }
 
-    void View::setWindowJustOpened(bool state) {
+    void View::setWindowJustOpened(const bool state) {
         m_windowJustOpened = state;
     }
 
-    void View::trackViewOpenState() {
+    bool View::didWindowJustClose() {
+        return std::exchange(m_windowJustClosed, false);
+    }
+
+    void View::setWindowJustClosed(const bool state) {
+        m_windowJustClosed = state;
+    }
+
+    void View::trackViewState() {
         if (m_windowOpen && !m_prevWindowOpen)
             this->setWindowJustOpened(true);
+        else if (!m_windowOpen && m_prevWindowOpen)
+            this->setWindowJustClosed(true);
         m_prevWindowOpen = m_windowOpen;
     }
 

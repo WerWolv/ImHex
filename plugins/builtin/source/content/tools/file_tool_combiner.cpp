@@ -125,7 +125,7 @@ namespace hex::plugin::builtin {
 
                             wolv::io::File input(file, wolv::io::File::Mode::Read);
                             if (!input.isValid()) {
-                                ui::ToastError::open(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, wolv::util::toUTF8String(file)));
+                                ui::ToastError::open(fmt::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, wolv::util::toUTF8String(file)));
                                 return;
                             }
 

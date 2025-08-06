@@ -151,9 +151,9 @@ namespace hex::ui {
             std::string text;
             if (bytes != 0) {
                 if (bytes == 1)
-                    text += hex::format("{0} byte", bytes);
+                    text += fmt::format("{0} byte", bytes);
                 else
-                    text += hex::format("{0} bytes", bytes);
+                    text += fmt::format("{0} bytes", bytes);
 
                 if (bits != 0)
                     text += ", ";
@@ -161,9 +161,9 @@ namespace hex::ui {
 
             if (bits != 0) {
                 if (bits == 1)
-                    text += hex::format("{0} bit", bits);
+                    text += fmt::format("{0} bit", bits);
                 else
-                    text += hex::format("{0} bits", bits);
+                    text += fmt::format("{0} bits", bits);
             }
 
             if (bytes == 0 && bits == 0) {
@@ -359,7 +359,7 @@ namespace hex::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5F));
 
             bool shouldReset = false;
-            if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
+            if (ImGui::Button(fmt::format(" {}  {}", ICON_VS_EYE, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
                 const auto *previousPattern = m_currVisualizedPattern;
                 m_currVisualizedPattern = &pattern;
                 auto lastVisualizerError = m_visualizerDrawer.getLastVisualizerError();
@@ -963,7 +963,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
 
-                ImGui::Selectable(hex::format("... ({})", "hex.ui.pattern_drawer.double_click"_lang).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+                ImGui::Selectable(fmt::format("... ({})", "hex.ui.pattern_drawer.double_click"_lang).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     displayEnd += DisplayEndStep;
                 break;
@@ -986,7 +986,7 @@ namespace hex::ui {
                 chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{
                     const auto open = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
                     ImGui::SameLine();
-                    ImGui::TextUnformatted(hex::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str());
+                    ImGui::TextUnformatted(fmt::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str());
 
                     return open;
                 });

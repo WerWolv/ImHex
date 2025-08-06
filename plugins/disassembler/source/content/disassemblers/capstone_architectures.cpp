@@ -67,7 +67,7 @@ namespace hex::plugin::disasm {
             disassembly.operators   = m_instruction->op_str;
 
             for (u16 j = 0; j < m_instruction->size; j++)
-                disassembly.bytes += hex::format("{0:02X} ", m_instruction->bytes[j]);
+                disassembly.bytes += fmt::format("{0:02X} ", m_instruction->bytes[j]);
             disassembly.bytes.pop_back();
 
             return disassembly;

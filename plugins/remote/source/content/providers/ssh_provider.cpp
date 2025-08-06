@@ -64,7 +64,7 @@ namespace hex::plugin::remote {
     }
 
     std::string SSHProvider::getName() const {
-        return hex::format("{} [{}@{}:{}]", m_remoteFilePath.filename().string(), m_username, m_host, m_port);
+        return fmt::format("{} [{}@{}:{}]", m_remoteFilePath.filename().string(), m_username, m_host, m_port);
     }
 
 
@@ -104,7 +104,7 @@ namespace hex::plugin::remote {
                         m_sftpClient = std::move(client);
                     }
                 } catch (const std::exception& e) {
-                    ui::ToastError::open(hex::format("Failed to connect to SSH server: {}", e.what()));
+                    ui::ToastError::open(fmt::format("Failed to connect to SSH server: {}", e.what()));
                     return false;
                 }
             }

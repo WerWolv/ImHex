@@ -56,7 +56,7 @@ namespace hex {
     static bool s_useLayeredWindow = true;
 
     void nativeErrorMessage(const std::string &message) {
-        log::fatal(message);
+        log::fatal("{}", message);
         MessageBoxA(nullptr, message.c_str(), "Error", MB_ICONERROR | MB_OK);
     }
 

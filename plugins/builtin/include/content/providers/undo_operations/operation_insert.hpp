@@ -21,7 +21,7 @@ namespace hex::plugin::builtin::undo {
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("hex.builtin.undo_operation.insert"_lang, hex::toByteString(m_size), m_offset);
+            return fmt::format("hex.builtin.undo_operation.insert"_lang, hex::toByteString(m_size), m_offset);
         }
 
         std::unique_ptr<Operation> clone() const override {

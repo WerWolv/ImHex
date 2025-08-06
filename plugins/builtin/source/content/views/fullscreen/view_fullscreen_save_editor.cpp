@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
 
             ImGui::NewLine();
 
-            if (ImGuiExt::DimmedButton(hex::format("{} {}", ICON_VS_OPEN_PREVIEW, "Select Save File").c_str(), ImVec2(-1, 0))) {
+            if (ImGuiExt::DimmedButton(fmt::format("{} {}", ICON_VS_OPEN_PREVIEW, "Select Save File").c_str(), ImVec2(-1, 0))) {
                 fs::openFileBrowser(fs::DialogMode::Open, {}, [this](const std::fs::path &path) {
                     this->m_provider.setPath(path);
                     if (!this->m_provider.open()) {

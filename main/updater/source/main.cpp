@@ -134,7 +134,7 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
             std::fs::rename(originalPath, updatePath);
 
             // Install the update using the correct command
-            const auto command = hex::format(handler.command, updatePath.string());
+            const auto command = fmt::format(fmt::runtime(handler.command), updatePath.string());
             hex::log::info("Starting update process with command: '{}'", command);
             hex::startProgram(command);
 

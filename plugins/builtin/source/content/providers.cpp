@@ -53,7 +53,7 @@ namespace hex::plugin::builtin {
                 bool success = true;
                 std::map<hex::prv::Provider*, std::string> providerWarnings;
                 for (const auto &id : providerIds) {
-                    auto providerSettings = nlohmann::json::parse(tar.readString(basePath / hex::format("{}.json", id)));
+                    auto providerSettings = nlohmann::json::parse(tar.readString(basePath / fmt::format("{}.json", id)));
 
                     auto providerType = providerSettings.at("type").get<std::string>();
                     auto newProvider = ImHexApi::Provider::createProvider(providerType, true, false);
@@ -73,8 +73,8 @@ namespace hex::plugin::builtin {
                         // If a provider is not created, it will be overwritten when saving the project,
                         // so we should prevent the project from loading at all
                         ui::ToastError::open(
-                            hex::format("hex.builtin.popup.error.project.load"_lang,
-                                hex::format("hex.builtin.popup.error.project.load.create_provider"_lang, providerType)
+                            fmt::format("hex.builtin.popup.error.project.load"_lang,
+                                fmt::format("hex.builtin.popup.error.project.load.create_provider"_lang, providerType)
                             )
                         );
                         success = false;
@@ -102,13 +102,13 @@ namespace hex::plugin::builtin {
                 for (const auto &warning : providerWarnings){
                     ImHexApi::Provider::remove(warning.first);
                     warningMessage.append(
-                        hex::format("\n - {} : {}", warning.first->getName(), warning.second));
+                        fmt::format("\n - {} : {}", warning.first->getName(), warning.second));
                 }
 
                 // If no providers were opened, display an error with
                 // the warnings that happened when opening them 
                 if (ImHexApi::Provider::getProviders().empty()) {
-                    ui::ToastError::open(hex::format("{}{}", "hex.builtin.popup.error.project.load"_lang, "hex.builtin.popup.error.project.load.no_providers"_lang, warningMessage));
+                    ui::ToastError::open(fmt::format("{}{}", "hex.builtin.popup.error.project.load"_lang, "hex.builtin.popup.error.project.load.no_providers"_lang, warningMessage));
 
                     return false;
                 } else {
@@ -116,7 +116,7 @@ namespace hex::plugin::builtin {
                     if (warningMessage.empty()) {
                         return true;
                     } else {
-                        ui::ToastWarning::open(hex::format("hex.builtin.popup.error.project.load.some_providers_failed"_lang, warningMessage));
+                        ui::ToastWarning::open(fmt::format("hex.builtin.popup.error.project.load.some_providers_failed"_lang, warningMessage));
                     }
 
                     return success;
@@ -132,7 +132,7 @@ namespace hex::plugin::builtin {
                     json["type"] = provider->getTypeName();
                     json["settings"] = provider->storeSettings({});
 
-                    tar.writeString(basePath / hex::format("{}.json", id), json.dump(4));
+                    tar.writeString(basePath / fmt::format("{}.json", id), json.dump(4));
                 }
 
                 tar.writeString(basePath / "providers.json",

@@ -98,7 +98,10 @@ namespace hex {
         [[nodiscard]] bool didWindowJustOpen();
         void setWindowJustOpened(bool state);
 
-        void trackViewOpenState();
+        [[nodiscard]] bool didWindowJustClose();
+        void setWindowJustClosed(bool state);
+
+        void trackViewState();
 
         static void discardNavigationRequests();
 
@@ -125,7 +128,7 @@ namespace hex {
         UnlocalizedString m_unlocalizedViewName;
         bool m_windowOpen = false, m_prevWindowOpen = false;
         std::map<Shortcut, ShortcutManager::ShortcutEntry> m_shortcuts;
-        bool m_windowJustOpened = false;
+        bool m_windowJustOpened = false, m_windowJustClosed = false;
         const char *m_icon;
         bool m_focused = false;
 
@@ -143,7 +146,7 @@ namespace hex {
         void draw() final {
             if (this->shouldDraw()) {
                 ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-                const auto title = hex::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
+                const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
                 if (ImGui::Begin(title.c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
                     this->drawContent();
                 }
@@ -173,7 +176,7 @@ namespace hex {
      */
     class View::Floating : public View::Window {
     public:
-        explicit Floating(UnlocalizedString unlocalizedName) : Window(std::move(unlocalizedName), "") {}
+        explicit Floating(UnlocalizedString unlocalizedName, const char *icon) : Window(std::move(unlocalizedName), icon) {}
 
         [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override { return ImGuiWindowFlags_NoDocking; }
         [[nodiscard]] bool shouldStoreWindowState() const override { return false; }
@@ -184,7 +187,7 @@ namespace hex {
      */
     class View::Modal : public View {
     public:
-        explicit Modal(UnlocalizedString unlocalizedName) : View(std::move(unlocalizedName), "") {}
+        explicit Modal(UnlocalizedString unlocalizedName, const char *icon) : View(std::move(unlocalizedName), icon) {}
 
         void draw() final {
             if (this->shouldDraw()) {
@@ -193,7 +196,8 @@ namespace hex {
 
                 ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
                 ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-                if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), this->hasCloseButton() ? &this->getWindowOpenState() : nullptr, ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
+                const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
+                if (ImGui::BeginPopupModal(title.c_str(), this->hasCloseButton() ? &this->getWindowOpenState() : nullptr, ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
                     this->drawContent();
 
                     ImGui::EndPopup();

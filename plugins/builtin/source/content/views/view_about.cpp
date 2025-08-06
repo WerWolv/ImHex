@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
         }
     };
 
-    ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name") {
+    ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name", ICON_VS_HEART) {
         // Add "About" menu item to the help menu
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, ICON_VS_INFO, 1000, Shortcut::None, [this] {
             this->getWindowOpenState() = true;
@@ -216,7 +216,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine(0, 0);
 
                 // Draw a clickable link to the current commit
-                if (ImGuiExt::Hyperlink(hex::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
+                if (ImGuiExt::Hyperlink(fmt::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
                     hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" + ImHexApi::System::getCommitHash(true));
             }
 
@@ -365,7 +365,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled({ 12, 3 }));
 
                     if (ImGui::BeginChild(library.link, ImVec2(), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
-                        if (ImGuiExt::Hyperlink(hex::format("{}/{}", library.author, library.name).c_str())) {
+                        if (ImGuiExt::Hyperlink(fmt::format("{}/{}", library.author, library.name).c_str())) {
                             hex::openWebpage(library.link);
                         }
                         ImGui::SetItemTooltip("%s", library.link);
@@ -612,7 +612,7 @@ namespace hex::plugin::builtin {
 
         // Draw the release title
         if (!notes.title.empty()) {
-            auto title = hex::format("{}: {}", notes.versionString, notes.title);
+            auto title = fmt::format("{}: {}", notes.versionString, notes.title);
             ImGuiExt::Header(title.c_str(), true);
             ImGui::Separator();
         }
@@ -683,7 +683,7 @@ namespace hex::plugin::builtin {
                 auto url = commit["html_url"].get<std::string>();
                 auto sha = commit["sha"].get<std::string>();
                 auto date = commit["commit"]["author"]["date"].get<std::string>();
-                auto author = hex::format("{} <{}>",
+                auto author = fmt::format("{} <{}>",
                                           commit["commit"]["author"]["name"].get<std::string>(),
                                           commit["commit"]["author"]["email"].get<std::string>()
                 );

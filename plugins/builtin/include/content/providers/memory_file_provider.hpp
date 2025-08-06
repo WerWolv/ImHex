@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fonts/vscode_icons.hpp>
 #include <hex/providers/provider.hpp>
 
 namespace hex::plugin::builtin {
@@ -34,6 +35,10 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.mem_file";
+        }
+
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_FILE_BINARY;
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;

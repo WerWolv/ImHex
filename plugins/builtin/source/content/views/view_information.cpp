@@ -83,7 +83,7 @@ namespace hex::plugin::builtin {
                         section->markValid();
                     } catch (const std::exception &e) {
                         // Show a toast with the error if the section failed to process
-                        ui::ToastError::open(hex::format("hex.builtin.view.information.error_processing_section"_lang, Lang(section->getUnlocalizedName()), e.what()));
+                        ui::ToastError::open(fmt::format("hex.builtin.view.information.error_processing_section"_lang, Lang(section->getUnlocalizedName()), e.what()));
                     }
                 }
 

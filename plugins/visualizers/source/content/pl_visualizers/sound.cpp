@@ -28,9 +28,9 @@ namespace hex::plugin::visualizers {
         static TaskHolder resetTask;
 
         if (sampleRate == 0)
-            throw std::logic_error(hex::format("Invalid sample rate: {}", sampleRate));
+            throw std::logic_error(fmt::format("Invalid sample rate: {}", sampleRate));
         else if (channels == 0)
-            throw std::logic_error(hex::format("Invalid channel count: {}", channels));
+            throw std::logic_error(fmt::format("Invalid channel count: {}", channels));
         u64 sampledIndex;
         if (shouldReset) {
             waveData.clear();

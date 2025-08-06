@@ -362,16 +362,25 @@ namespace hex {
                 m_flags = flags;
             }
 
+            static bool areColorsEquals(const std::array<float, 4> &a, const std::array<float, 4> &b) {
+                return std::abs(a[0] - b[0]) < 0.005f &&
+                       std::abs(a[1] - b[1]) < 0.005f &&
+                       std::abs(a[2] - b[2]) < 0.005f &&
+                       std::abs(a[3] - b[3]) < 0.005f;
+            }
+
             bool ColorPicker::draw(const std::string &name) {
                 ImGui::PushID(name.c_str());
                 auto result = ImGui::ColorEdit4("##color_picker", m_value.data(), ImGuiColorEditFlags_NoInputs | m_flags);
 
                 ImGui::SameLine();
 
-                if (ImGui::Button("X", ImGui::GetStyle().FramePadding * 2 + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
+                ImGui::BeginDisabled(areColorsEquals(m_value, m_defaultValue));
+                if (ImGuiExt::DimmedButton("\xee\xab\xa2", ImGui::GetStyle().FramePadding * 2 + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
                     m_value = m_defaultValue;
                     result = true;
                 }
+                ImGui::EndDisabled();
 
                 ImGui::SameLine();
 
@@ -873,7 +882,7 @@ namespace hex {
                     LocalizationManager::impl::setFallbackLanguage(code.get<std::string>());
             }
 
-            impl::s_languages->emplace(code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()));
+            impl::s_languages->emplace(code.get<std::string>(), fmt::format("{} ({})", language.get<std::string>(), country.get<std::string>()));
 
             std::map<std::string, std::string> translationDefinitions;
             for (auto &[key, value] : translations.items()) {
@@ -1080,15 +1089,15 @@ namespace hex {
                 });
             }
 
-            static AutoReset<std::vector<std::string>> s_providerNames;
-            const std::vector<std::string>& getEntries() {
+            static AutoReset<std::vector<Entry>> s_providerNames;
+            const std::vector<Entry>& getEntries() {
                 return *s_providerNames;
             }
 
-            void addProviderName(const UnlocalizedString &unlocalizedName) {
+            void addProviderName(const UnlocalizedString &unlocalizedName, const char *icon) {
                 log::debug("Registered new provider: {}", unlocalizedName.get());
 
-                s_providerNames->push_back(unlocalizedName);
+                s_providerNames->emplace_back(unlocalizedName, icon);
             }
 
         }

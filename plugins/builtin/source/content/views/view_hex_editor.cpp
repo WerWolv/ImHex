@@ -114,7 +114,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::BeginDisabled(!m_newAddress.has_value() || !isOffsetValid);
                 {
-                    const auto label = hex::format("{} {}", "hex.builtin.view.hex_editor.menu.file.goto"_lang, m_newAddress.has_value() ? hex::format("0x{:08X}", *m_newAddress) : "???");
+                    const auto label = fmt::format("{} {}", "hex.builtin.view.hex_editor.menu.file.goto"_lang, m_newAddress.has_value() ? fmt::format("0x{:08X}", *m_newAddress) : "???");
                     const auto buttonWidth = ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x * 2;
                     if (ImGuiExt::DimmedButton(label.c_str(), ImVec2(buttonWidth, 0))) {
                         executeGoto = true;
@@ -672,7 +672,7 @@ namespace hex::plugin::builtin {
         }
 
         if (m_currPopup != nullptr) {
-            if (ImGui::Begin(hex::format("##{}", m_currPopup->getTitle().get()).c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking)) {
+            if (ImGui::Begin(fmt::format("##{}", m_currPopup->getTitle().get()).c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking)) {
                 if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                     this->closePopup();
                 } else {
@@ -1294,7 +1294,7 @@ namespace hex::plugin::builtin {
                                                 [] {
                                                     auto selection = ImHexApi::HexEditor::getSelection();
                                                     if (selection.has_value() && selection != Region::Invalid())
-                                                        ImGui::SetClipboardText(hex::format("0x{:08X}", selection->getStartAddress()).c_str());
+                                                        ImGui::SetClipboardText(fmt::format("0x{:08X}", selection->getStartAddress()).c_str());
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid,
                                                 this);
@@ -1495,13 +1495,13 @@ namespace hex::plugin::builtin {
                                                     };
 
                                                     ImGui::PushID(1);
-                                                    if (menu::menuItem(hex::format("{} | 0x{:08X}", "hex.ui.common.little_endian"_lang, littleEndianValue).c_str(), Shortcut::None, false, canJumpTo(littleEndianValue))) {
+                                                    if (menu::menuItem(fmt::format("{} | 0x{:08X}", "hex.ui.common.little_endian"_lang, littleEndianValue).c_str(), Shortcut::None, false, canJumpTo(littleEndianValue))) {
                                                         ImHexApi::HexEditor::setSelection(littleEndianValue, 1);
                                                     }
                                                     ImGui::PopID();
 
                                                     ImGui::PushID(2);
-                                                    if (menu::menuItem(hex::format("{} | 0x{:08X}", "hex.ui.common.big_endian"_lang, bigEndianValue).c_str(), Shortcut::None, false, canJumpTo(bigEndianValue))) {
+                                                    if (menu::menuItem(fmt::format("{} | 0x{:08X}", "hex.ui.common.big_endian"_lang, bigEndianValue).c_str(), Shortcut::None, false, canJumpTo(bigEndianValue))) {
                                                         ImHexApi::HexEditor::setSelection(bigEndianValue, 1);
                                                     }
                                                     ImGui::PopID();

@@ -158,9 +158,9 @@ namespace hex {
         std::string result;
 
         if (unitIndex == 0)
-            result = hex::format("{0:}", value);
+            result = fmt::format("{0:}", value);
         else
-            result = hex::format("{0:.2f}", value);
+            result = fmt::format("{0:.2f}", value);
 
         switch (unitIndex) {
             case 0:
@@ -197,7 +197,7 @@ namespace hex {
             if (std::isprint(c))
                 result += c;
             else
-                result += hex::format("\\x{0:02X}", u8(c));
+                result += fmt::format("\\x{0:02X}", u8(c));
         }
 
         return result;
@@ -302,9 +302,9 @@ namespace hex {
     void startProgram(const std::string &command) {
 
 #if defined(OS_WINDOWS)
-        std::ignore = system(hex::format("start \"\" {0}", command).c_str());
+        std::ignore = system(fmt::format("start \"\" {0}", command).c_str());
 #elif defined(OS_MACOS)
-        std::ignore = system(hex::format("{0}", command).c_str());
+        std::ignore = system(fmt::format("{0}", command).c_str());
 #elif defined(OS_LINUX)
         executeCmd({"xdg-open", command});
 #elif defined(OS_WEB)
@@ -377,7 +377,7 @@ namespace hex {
                         result += "\\v";
                     break;
                     default:
-                        result += hex::format("\\x{:02X}", byte);
+                        result += fmt::format("\\x{:02X}", byte);
                     break;
                 }
             }
@@ -682,8 +682,8 @@ namespace hex {
                 u8 byte = *it;
 
                 if ((address % 0x10) == 0) {
-                    result += hex::format(" {}", asciiRow);
-                    result += hex::format("\n{0:08X}  ", address);
+                    result += fmt::format(" {}", asciiRow);
+                    result += fmt::format("\n{0:08X}  ", address);
 
                     asciiRow.clear();
 
@@ -700,7 +700,7 @@ namespace hex {
                     }
                 }
 
-                result += hex::format("{0:02X} ", byte);
+                result += fmt::format("{0:02X} ", byte);
                 asciiRow += std::isprint(byte) ? char(byte) : '.';
                 if ((address % 0x10) == 0x07)
                     result += " ";
@@ -712,7 +712,7 @@ namespace hex {
                 for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
                     result += "   ";
 
-            result += hex::format(" {}", asciiRow);
+            result += fmt::format(" {}", asciiRow);
 
             return result;
         }

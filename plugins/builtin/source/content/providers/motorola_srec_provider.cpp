@@ -174,7 +174,7 @@ namespace hex::plugin::builtin {
     bool MotorolaSRECProvider::open() {
         auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
+            this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
             return false;
         }
 
@@ -208,7 +208,7 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string MotorolaSRECProvider::getName() const {
-        return hex::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(m_sourceFilePath.filename()));
+        return fmt::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(m_sourceFilePath.filename()));
     }
 
 

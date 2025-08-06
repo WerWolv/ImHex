@@ -247,7 +247,7 @@ namespace hex::plugin::windows {
                 }  else if (byte == '\r') {
                     // Ignore carriage return
                 } else {
-                    m_receiveLines.back() += hex::format("<{:02X}>", static_cast<unsigned char>(byte));
+                    m_receiveLines.back() += fmt::format("<{:02X}>", static_cast<unsigned char>(byte));
                 }
 
             };

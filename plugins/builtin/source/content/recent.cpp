@@ -49,7 +49,7 @@ namespace hex::plugin::builtin::recent {
                             wolv::io::File backupFile(entry.path(), wolv::io::File::Mode::Read);
 
                             m_backups.emplace_back(
-                                hex::format("hex.builtin.welcome.start.recent.auto_backups.backup"_lang, fmt::gmtime(backupFile.getFileInfo()->st_ctime)),
+                                fmt::format("hex.builtin.welcome.start.recent.auto_backups.backup"_lang, fmt::gmtime(backupFile.getFileInfo()->st_ctime)),
                                 entry.path()
                             );
                         }
@@ -90,7 +90,7 @@ namespace hex::plugin::builtin::recent {
         // Save every opened provider as a "recent" shortcut
         (void)EventProviderOpened::subscribe([](const prv::Provider *provider) {
             if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
-                auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
+                auto fileName = fmt::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
                 // Do not save to recents if the provider is part of a project
                 if (ProjectFile::hasPath())
@@ -124,7 +124,7 @@ namespace hex::plugin::builtin::recent {
         // Save opened projects as a "recent" shortcut
         (void)EventProjectOpened::subscribe([] {
              if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
-                auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
+                auto fileName = fmt::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
                 auto projectFileName = ProjectFile::getPath().filename();
                 if (projectFileName == BackupFileName)
@@ -234,7 +234,7 @@ namespace hex::plugin::builtin::recent {
         if (recentEntry.type == "project") {
             std::fs::path projectPath = recentEntry.data["path"].get<std::string>();
             if (!ProjectFile::load(projectPath)) {
-                ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(projectPath)));
+                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(projectPath)));
             }
             return;
         }
@@ -245,7 +245,7 @@ namespace hex::plugin::builtin::recent {
 
             TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
                 if (!provider->open() || !provider->isAvailable()) {
-                    ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                    ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                 } else {
                     TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
@@ -318,7 +318,7 @@ namespace hex::plugin::builtin::recent {
                     }
 
                     // Detect right click on recent provider
-                    std::string popupID = hex::format("RecentEntryMenu.{}", recentEntry.getHash());
+                    std::string popupID = fmt::format("RecentEntryMenu.{}", recentEntry.getHash());
                     if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                         ImGui::OpenPopup(popupID.c_str());
                     }

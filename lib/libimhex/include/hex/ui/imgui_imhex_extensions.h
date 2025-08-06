@@ -200,13 +200,13 @@ namespace ImGuiExt {
         if constexpr (sizeof...(args) == 0) {
             ImGui::TextUnformatted(fmt.data(), fmt.data() + fmt.size());
         } else {
-            const auto string = hex::format(fmt, std::forward<decltype(args)>(args)...);
+            const auto string = fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...);
             ImGui::TextUnformatted(string.c_str(), string.c_str() + string.size());
         }
     }
 
     void TextFormattedSelectable(std::string_view fmt, auto &&...args) {
-        auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
+        auto text = fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...);
 
         ImGui::PushID(text.c_str());
 
@@ -254,7 +254,7 @@ namespace ImGuiExt {
     void TextFormattedWrappedSelectable(std::string_view fmt, auto &&...args) {
         // Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
         auto text = wolv::util::trim(wolv::util::wrapMonospacedString(
-                hex::format(fmt, std::forward<decltype(args)>(args)...),
+                fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...),
                 ImGui::CalcTextSize("M").x,
                 ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize
         ));
@@ -285,13 +285,13 @@ namespace ImGuiExt {
 
     void TextUnformattedCentered(const char *text);
     void TextFormattedCentered(std::string_view fmt, auto &&...args) {
-        auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
+        auto text = fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...);
         TextUnformattedCentered(text.c_str());
     }
 
 
     void TextFormattedCenteredHorizontal(std::string_view fmt, auto &&...args) {
-        auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
+        auto text = fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...);
         auto availableSpace = ImGui::GetContentRegionAvail();
         auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);
 

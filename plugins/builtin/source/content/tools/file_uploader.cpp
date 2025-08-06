@@ -85,7 +85,7 @@ namespace hex::plugin::builtin {
                 }
             } else if (response.getStatusCode() == 0) {
                 // Canceled by user, no action needed
-            } else ui::PopupError::open(hex::format("hex.builtin.tools.file_uploader.error"_lang, response.getStatusCode()));
+            } else ui::PopupError::open(fmt::format("hex.builtin.tools.file_uploader.error"_lang, response.getStatusCode()));
 
             uploadProcess = {};
             currFile.clear();

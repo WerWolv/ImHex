@@ -44,6 +44,10 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] std::string getName() const override { return "ImHex"; }
 
+        [[nodiscard]] const char* getIcon() const override {
+            return "";
+        }
+
         void loadSettings(const nlohmann::json &settings) override { std::ignore = settings; }
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }
 

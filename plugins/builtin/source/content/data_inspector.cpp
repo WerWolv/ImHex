@@ -105,8 +105,8 @@ namespace hex::plugin::builtin {
         if (buffer.size() < Size)
             return { };
 
-        const auto formatString = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? hex::format("0x{{0:0{}X}}", Size * 2) : hex::format("0o{{0:0{}o}}", Size * 3));
-        return hex::format(formatString, bufferToInteger<T, Size>(buffer, endian));
+        const auto formatString = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? fmt::format("0x{{0:0{}X}}", Size * 2) : fmt::format("0o{{0:0{}o}}", Size * 3));
+        return fmt::format(fmt::runtime(formatString), bufferToInteger<T, Size>(buffer, endian));
     }
 
     template<std::integral T, size_t Size = sizeof(T)>
@@ -146,7 +146,7 @@ namespace hex::plugin::builtin {
                 std::ignore = endian;
                 std::ignore = style;
 
-                std::string binary = hex::format("0b{:08b}", buffer[0]);
+                std::string binary = fmt::format("0b{:08b}", buffer[0]);
 
                 return [binary] {
                     ImGui::TextUnformatted(binary.c_str());
@@ -237,7 +237,7 @@ namespace hex::plugin::builtin {
 
                 const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
 
-                auto value = hex::format(formatString, customFloatToFloat32<5, 10>(hex::changeEndianness(result, endian)));
+                auto value = fmt::format(fmt::runtime(formatString), customFloatToFloat32<5, 10>(hex::changeEndianness(result, endian)));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             }
@@ -250,7 +250,7 @@ namespace hex::plugin::builtin {
 
                 const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
 
-                auto value = hex::format(formatString, hex::changeEndianness(result, endian));
+                auto value = fmt::format(fmt::runtime(formatString), hex::changeEndianness(result, endian));
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
             stringToFloat<float>
@@ -263,7 +263,7 @@ namespace hex::plugin::builtin {
 
                 const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
 
-                auto value = hex::format(formatString, hex::changeEndianness(result, endian));
+                auto value = fmt::format(fmt::runtime(formatString), hex::changeEndianness(result, endian));
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
             stringToFloat<double>
@@ -276,7 +276,7 @@ namespace hex::plugin::builtin {
 
                 const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
 
-                auto value = hex::format(formatString, hex::changeEndianness(result, endian));
+                auto value = fmt::format(fmt::runtime(formatString), hex::changeEndianness(result, endian));
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
             stringToFloat<long double>
@@ -289,7 +289,7 @@ namespace hex::plugin::builtin {
 
                 const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
 
-                auto value = hex::format(formatString, customFloatToFloat32<8, 7>(hex::changeEndianness(result, endian)));
+                auto value = fmt::format(fmt::runtime(formatString), customFloatToFloat32<8, 7>(hex::changeEndianness(result, endian)));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             }
@@ -302,7 +302,7 @@ namespace hex::plugin::builtin {
 
                 const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
 
-                auto value = hex::format(formatString, customFloatToFloat32<7, 16>(hex::changeEndianness(result, endian)));
+                auto value = fmt::format(fmt::runtime(formatString), customFloatToFloat32<7, 16>(hex::changeEndianness(result, endian)));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             }
@@ -312,12 +312,11 @@ namespace hex::plugin::builtin {
             [](auto buffer, auto endian, auto style) {
                 std::ignore = endian;
 
-                auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:X}" : "{0}0o{1:o}");
-
+                auto formatString = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:X}" : "{0}0o{1:o}");
 
                 auto number   = hex::crypt::decodeSleb128(buffer);
                 bool negative = number < 0;
-                auto value    = hex::format(format, negative ? "-" : "", negative ? -number : number);
+                auto value    = fmt::format(fmt::runtime(formatString), negative ? "-" : "", negative ? -number : number);
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
@@ -332,9 +331,9 @@ namespace hex::plugin::builtin {
             [](auto buffer, auto endian, auto style) {
                 std::ignore = endian;
 
-                auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? "0x{0:X}" : "0o{0:o}");
+                auto formatString = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? "0x{0:X}" : "0o{0:o}");
 
-                auto value = hex::format(format, hex::crypt::decodeUleb128(buffer));
+                auto value = fmt::format(fmt::runtime(formatString), hex::crypt::decodeUleb128(buffer));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
@@ -391,7 +390,7 @@ namespace hex::plugin::builtin {
 
                 auto c = hex::changeEndianness(wideChar, endian);
 
-                auto value = hex::format("{0}", c <= 255 ? makePrintable(c) : wolv::util::wstringToUtf8(std::wstring(&c, 1)).value_or("???"));
+                auto value = fmt::format("{0}", c <= 255 ? makePrintable(c) : wolv::util::wstringToUtf8(std::wstring(&c, 1)).value_or("???"));
                 return [value] { ImGuiExt::TextFormatted("'{0}'", value.c_str()); return value; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
@@ -419,7 +418,7 @@ namespace hex::plugin::builtin {
 
                 auto c = hex::changeEndianness(wideChar, endian);
 
-                auto value = hex::format("{0}", c <= 255 ? makePrintable(c) : wolv::util::utf16ToUtf8(std::u16string(&c, 1)).value_or("???"));
+                auto value = fmt::format("{0}", c <= 255 ? makePrintable(c) : wolv::util::utf16ToUtf8(std::u16string(&c, 1)).value_or("???"));
                 return [value] { ImGuiExt::TextFormatted("'{0}'", value.c_str()); return value; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
@@ -447,7 +446,7 @@ namespace hex::plugin::builtin {
 
                 auto c = hex::changeEndianness(wideChar, endian);
 
-                auto value = hex::format("{0}", c <= 255 ? makePrintable(c) : wolv::util::utf32ToUtf8(std::u32string(&c, 1)).value_or("???"));
+                auto value = fmt::format("{0}", c <= 255 ? makePrintable(c) : wolv::util::utf32ToUtf8(std::u32string(&c, 1)).value_or("???"));
                 return [value] { ImGuiExt::TextFormatted("'{0}'", value.c_str()); return value; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
@@ -479,7 +478,7 @@ namespace hex::plugin::builtin {
                 u8 codepointSize = ImTextCharFromUtf8(&codepoint, utf8Buffer, nullptr);
 
                 std::memcpy(codepointString, utf8Buffer, std::min(codepointSize, u8(4)));
-                auto value = hex::format("'{0}' (U+0x{1:04X})",
+                auto value = fmt::format("'{0}' (U+0x{1:04X})",
                     codepoint == 0xFFFD ? "Invalid" : (codepointSize == 1 ? makePrintable(codepointString[0]) : codepointString),
                     codepoint);
 
@@ -714,7 +713,7 @@ namespace hex::plugin::builtin {
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
-                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
+                    value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
                 }
             } catch (fmt::format_error &) {
                 value = "Invalid";
@@ -734,7 +733,7 @@ namespace hex::plugin::builtin {
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
-                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
+                    value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
                 }
             } catch (fmt::format_error &) {
                 value = "Invalid";
@@ -756,7 +755,7 @@ namespace hex::plugin::builtin {
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
-                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
+                    value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
                 }
             } catch (const fmt::format_error &e) {
                 value = "Invalid";
@@ -786,7 +785,7 @@ namespace hex::plugin::builtin {
             std::memcpy(&date, buffer.data(), sizeof(DOSDate));
             date = hex::changeEndianness(date, endian);
 
-            auto value = hex::format("{}/{}/{}", date.day, date.month, date.year + 1980);
+            auto value = fmt::format("{}/{}/{}", u8(date.day), u8(date.month), u8(date.year) + 1980);
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -798,7 +797,7 @@ namespace hex::plugin::builtin {
             std::memcpy(&time, buffer.data(), sizeof(DOSTime));
             time = hex::changeEndianness(time, endian);
 
-            auto value = hex::format("{:02}:{:02}:{:02}", time.hours, time.minutes, time.seconds * 2);
+            auto value = fmt::format("{:02}:{:02}:{:02}", u8(time.hours), u8(time.minutes), u8(time.seconds) * 2);
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -808,7 +807,7 @@ namespace hex::plugin::builtin {
 
             GUID guid = { };
             std::memcpy(&guid, buffer.data(), sizeof(GUID));
-            auto value = hex::format("{}{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}",
+            auto value = fmt::format("{}{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}",
                 (hex::changeEndianness(guid.data3, endian) >> 12) <= 5 && ((guid.data4[0] >> 4) >= 8 || (guid.data4[0] >> 4) == 0) ? "" : "Invalid ",
                 hex::changeEndianness(guid.data1, endian),
                 hex::changeEndianness(guid.data2, endian),
@@ -830,7 +829,7 @@ namespace hex::plugin::builtin {
 
             ImColor value(hex::changeEndianness(*reinterpret_cast<u32 *>(buffer.data()), endian));
 
-            auto copyValue = hex::format("#{:02X}{:02X}{:02X}{:02X}", u8(0xFF * (value.Value.x)), u8(0xFF * (value.Value.y)), u8(0xFF * (value.Value.z)), u8(0xFF * (value.Value.w)));
+            auto copyValue = fmt::format("#{:02X}{:02X}{:02X}{:02X}", u8(0xFF * (value.Value.x)), u8(0xFF * (value.Value.y)), u8(0xFF * (value.Value.z)), u8(0xFF * (value.Value.w)));
 
             return [value, copyValue] {
                 ImGui::ColorButton("##inspectorColor", value, ImGuiColorEditFlags_None, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
@@ -844,7 +843,7 @@ namespace hex::plugin::builtin {
             auto value = hex::changeEndianness(*reinterpret_cast<u16 *>(buffer.data()), endian);
             ImColor color((value & 0x1F) << 3, ((value >> 5) & 0x3F) << 2, ((value >> 11) & 0x1F) << 3, 0xFF);
 
-            auto copyValue = hex::format("#{:02X}{:02X}{:02X}", u8(0xFF * (color.Value.x)), u8(0xFF * (color.Value.y)), u8(0xFF * (color.Value.z)), 0xFF);
+            auto copyValue = fmt::format("#{:02X}{:02X}{:02X}", u8(0xFF * (color.Value.x)), u8(0xFF * (color.Value.y)), u8(0xFF * (color.Value.z)), 0xFF);
 
             return [color, copyValue] {
                 ImGui::ColorButton("##inspectorColor", color, ImGuiColorEditFlags_AlphaOpaque, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));

@@ -77,7 +77,7 @@ extern "C" void enterTouchMode() {
 namespace hex {
 
     void nativeErrorMessage(const std::string &message) {
-        log::fatal(message);
+        log::fatal("{}", message);
         EM_ASM({
             alert(UTF8ToString($0));
         }, message.c_str());

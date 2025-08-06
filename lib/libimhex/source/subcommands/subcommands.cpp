@@ -15,7 +15,7 @@ namespace hex::subcommands {
     std::optional<SubCommand> findSubCommand(const std::string &arg) {
         for (auto &plugin : PluginManager::getPlugins()) {
             for (auto &subCommand : plugin.getSubCommands()) {
-                if (hex::format("--{}", subCommand.commandLong) == arg || hex::format("-{}", subCommand.commandShort) == arg) {
+                if (fmt::format("--{}", subCommand.commandLong) == arg || fmt::format("-{}", subCommand.commandShort) == arg) {
                     return subCommand;
                 }
             }
@@ -106,13 +106,13 @@ namespace hex::subcommands {
             data.pop_back();
         }
 
-        SendMessageToMainInstance::post(hex::format("command/{}", cmdName), data);
+        SendMessageToMainInstance::post(fmt::format("command/{}", cmdName), data);
     }
 
     void registerSubCommand(const std::string &cmdName, const ForwardCommandHandler &handler) {
         log::debug("Registered new forward command handler: {}", cmdName);
 
-        ImHexApi::Messaging::registerHandler(hex::format("command/{}", cmdName), [handler](const std::vector<u8> &eventData){
+        ImHexApi::Messaging::registerHandler(fmt::format("command/{}", cmdName), [handler](const std::vector<u8> &eventData){
             std::string string(reinterpret_cast<const char *>(eventData.data()), eventData.size());
 
             std::vector<std::string> args;

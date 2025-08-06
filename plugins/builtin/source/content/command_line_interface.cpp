@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
     void handleVersionCommand(const std::vector<std::string> &args) {
         std::ignore = args;
 
-        hex::log::print(std::string(romfs::get("logo.ans").string()),
+        hex::log::print(fmt::runtime(romfs::get("logo.ans").string()),
                    ImHexApi::System::getImHexVersion().get(),
                    ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(),
                    __DATE__, __TIME__,
@@ -161,7 +161,7 @@ namespace hex::plugin::builtin {
 
         wolv::math_eval::MathEvaluator<long double> evaluator;
 
-        auto input = hex::format("{}", fmt::join(args, " "));
+        auto input = fmt::format("{}", fmt::join(args, " "));
         auto result = evaluator.evaluate(input);
 
         if (!result.has_value())
@@ -347,7 +347,7 @@ namespace hex::plugin::builtin {
             processedArgs.emplace_back("--help");
         } else {
             for (const auto &path : paths::PatternsInclude.read())
-                processedArgs.emplace_back(hex::format("--includes={}", wolv::util::toUTF8String(path)));
+                processedArgs.emplace_back(fmt::format("--includes={}", wolv::util::toUTF8String(path)));
         }
 
         std::exit(pl::cli::executeCommandLineInterface(processedArgs));

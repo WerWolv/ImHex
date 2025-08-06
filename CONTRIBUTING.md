@@ -10,9 +10,7 @@ This document is a guide for developers who want to contribute to ImHex in any w
 
 If you'd like to add new features, the best way to start is by joining our Discord and telling us about your idea. We can then discuss the best way to implement it and how it should be integrated into ImHex or if it should be done in a separate plugin.
 
-There are standalone plugin templates that use ImHex as a submodule. You can find them here:
-- https://github.com/WerWolv/ImHex-Cpp-Plugin-Template
-- https://github.com/WerWolv/ImHex-Rust-Plugin-Template
+There are standalone plugin templates that use ImHex as a submodule. You can find them located in the README's [Plugin Development](README.md#plugin-development) section.
 
 ### Adding a new language
 

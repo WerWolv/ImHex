@@ -26,7 +26,7 @@ namespace hex::plugin::builtin::undo {
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("Bookmark {} created", m_entry.name);
+            return fmt::format("Bookmark {} created", m_entry.name);
         }
 
         std::unique_ptr<Operation> clone() const override {

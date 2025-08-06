@@ -13,7 +13,7 @@ namespace hex::ui {
             : Banner(color), m_icon(icon), m_message(std::move(message)), m_buttonText(std::move(buttonText)), m_buttonCallback(std::move(buttonCallback)) { }
 
         void drawContent() override {
-            const std::string buttonText = hex::format(" {} ", Lang(m_buttonText).get());
+            const std::string buttonText = fmt::format(" {} ", Lang(m_buttonText).get());
             const auto buttonSize = ImGui::CalcTextSize(buttonText.c_str());
             const auto iconSize = ImGui::CalcTextSize(m_icon);
             const auto textHeight = std::max(ImGui::CalcTextSize(Lang(m_message)).y, iconSize.y);

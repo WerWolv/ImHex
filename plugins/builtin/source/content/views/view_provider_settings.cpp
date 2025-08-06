@@ -8,7 +8,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name") {
+    ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name", ICON_VS_SETTINGS) {
         EventProviderCreated::subscribe(this, [this](const hex::prv::Provider *provider) {
             if (dynamic_cast<const prv::IProviderLoadInterface*>(provider) != nullptr && !provider->shouldSkipLoadInterface())
                 this->getWindowOpenState() = true;
@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
                     if (errorMessage.empty()) {
                         ui::ToastError::open("hex.builtin.view.provider_settings.load_error"_lang);
                     } else {
-                        ui::ToastError::open(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
+                        ui::ToastError::open(fmt::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
                     }
                     TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
                 }

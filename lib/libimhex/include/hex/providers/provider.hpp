@@ -199,12 +199,18 @@ namespace hex::prv {
         [[nodiscard]] virtual UnlocalizedString getTypeName() const = 0;
 
         /**
-         * @brief Gets a human readable representation of the current provider
+         * @brief Gets a human-readable representation of the current provider
          * @note This is mainly used to display the provider in the UI. For example, the file provider
          * will return the file name here
          * @return The name of the current provider
          */
         [[nodiscard]] virtual std::string getName() const = 0;
+
+        /**
+         * @brief Gets the icon of this provider
+         * @return The icon string
+         */
+        [[nodiscard]] virtual const char* getIcon() const = 0;
 
         bool resize(u64 newSize);
         void insert(u64 offset, u64 size);

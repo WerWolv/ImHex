@@ -168,7 +168,7 @@ namespace hex::plugin::builtin {
         if (std::signed_integral<T>)
             value = T(hex::signExtend(bytes.size() * 8, value));
 
-        return hex::format("{}", value);
+        return fmt::format("{}", value);
     }
 
     std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchStrings(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Strings &settings) {
@@ -731,8 +731,8 @@ namespace hex::plugin::builtin {
                         "hex.ui.common.encoding.utf8"_lang,
                         "hex.ui.common.encoding.utf16le"_lang,
                         "hex.ui.common.encoding.utf16be"_lang,
-                        hex::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16le"_lang),
-                        hex::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16be"_lang)
+                        fmt::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16le"_lang),
+                        fmt::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16be"_lang)
                 };
 
                 auto &mode = m_searchSettings.mode;
@@ -760,13 +760,13 @@ namespace hex::plugin::builtin {
                         ImGui::Checkbox("hex.builtin.view.find.strings.null_term"_lang, &settings.nullTermination);
 
                         ImGuiExt::Header("hex.builtin.view.find.strings.chars"_lang);
-                        ImGui::Checkbox(hex::format("{} [a-z]", "hex.builtin.view.find.strings.lower_case"_lang.get()).c_str(), &settings.lowerCaseLetters);
-                        ImGui::Checkbox(hex::format("{} [A-Z]", "hex.builtin.view.find.strings.upper_case"_lang.get()).c_str(), &settings.upperCaseLetters);
-                        ImGui::Checkbox(hex::format("{} [0-9]", "hex.builtin.view.find.strings.numbers"_lang.get()).c_str(), &settings.numbers);
-                        ImGui::Checkbox(hex::format("{} [_]", "hex.builtin.view.find.strings.underscores"_lang.get()).c_str(), &settings.underscores);
-                        ImGui::Checkbox(hex::format("{} [!\"#$%...]", "hex.builtin.view.find.strings.symbols"_lang.get()).c_str(), &settings.symbols);
-                        ImGui::Checkbox(hex::format("{} [ \\f\\t\\v]", "hex.builtin.view.find.strings.spaces"_lang.get()).c_str(), &settings.spaces);
-                        ImGui::Checkbox(hex::format("{} [\\r\\n]", "hex.builtin.view.find.strings.line_feeds"_lang.get()).c_str(), &settings.lineFeeds);
+                        ImGui::Checkbox(fmt::format("{} [a-z]", "hex.builtin.view.find.strings.lower_case"_lang.get()).c_str(), &settings.lowerCaseLetters);
+                        ImGui::Checkbox(fmt::format("{} [A-Z]", "hex.builtin.view.find.strings.upper_case"_lang.get()).c_str(), &settings.upperCaseLetters);
+                        ImGui::Checkbox(fmt::format("{} [0-9]", "hex.builtin.view.find.strings.numbers"_lang.get()).c_str(), &settings.numbers);
+                        ImGui::Checkbox(fmt::format("{} [_]", "hex.builtin.view.find.strings.underscores"_lang.get()).c_str(), &settings.underscores);
+                        ImGui::Checkbox(fmt::format("{} [!\"#$%...]", "hex.builtin.view.find.strings.symbols"_lang.get()).c_str(), &settings.symbols);
+                        ImGui::Checkbox(fmt::format("{} [ \\f\\t\\v]", "hex.builtin.view.find.strings.spaces"_lang.get()).c_str(), &settings.spaces);
+                        ImGui::Checkbox(fmt::format("{} [\\r\\n]", "hex.builtin.view.find.strings.line_feeds"_lang.get()).c_str(), &settings.lineFeeds);
                     }
 
                     m_settingsValid = true;
