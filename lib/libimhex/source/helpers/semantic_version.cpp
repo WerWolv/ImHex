@@ -109,7 +109,7 @@ namespace hex {
         auto result = wolv::util::combineStrings(m_parts, ".");
 
         if (withBuildType && !m_buildType.empty())
-            result += hex::format("-{}", m_buildType);
+            result += fmt::format("-{}", m_buildType);
 
         return result;
     }

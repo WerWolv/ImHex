@@ -29,8 +29,8 @@ namespace hex::plugin::builtin {
     using namespace std::literals::string_literals;
     using namespace std::literals::chrono_literals;
 
-    ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name") {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, ICON_VS_GLOBE, 1000, Shortcut::None, [&, this] {
+    ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name", ICON_VS_EXTENSIONS) {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, ICON_VS_EXTENSIONS, 1000, Shortcut::None, [&, this] {
             if (m_requestStatus == RequestStatus::NotAttempted)
                 this->refresh();
 
@@ -211,7 +211,7 @@ namespace hex::plugin::builtin {
         if (ImGuiExt::IconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
             this->updateAll();
         }
-        ImGuiExt::InfoTooltip(hex::format("hex.builtin.view.store.update_count"_lang, m_updateCount.load()).c_str());
+        ImGuiExt::InfoTooltip(fmt::format("hex.builtin.view.store.update_count"_lang, m_updateCount.load()).c_str());
 
         ImGui::EndDisabled();
 

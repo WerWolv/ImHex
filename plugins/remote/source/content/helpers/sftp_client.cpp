@@ -28,7 +28,7 @@ namespace hex::plugin::remote {
             throw std::runtime_error("Failed to initialize SFTP session");
     }
 
-    SFTPClient::SFTPClient(const std::string &host, int port, const std::string &user, const std::string &publicKeyPath, const std::string &passphrase) {
+    SFTPClient::SFTPClient(const std::string &host, int port, const std::string &user, const std::fs::path &publicKeyPath, const std::string &passphrase) {
         connect(host, port);
         authenticatePublicKey(user, publicKeyPath, passphrase);
 
@@ -141,8 +141,8 @@ namespace hex::plugin::remote {
             throw std::runtime_error("Authentication failed: " + getErrorString(m_session));
     }
 
-    void SFTPClient::authenticatePublicKey(const std::string &user, const std::string &privateKeyPath, const std::string &) {
-        auto result = libssh2_userauth_publickey_fromfile(m_session, user.c_str(), nullptr, privateKeyPath.c_str(), nullptr);
+    void SFTPClient::authenticatePublicKey(const std::string &user, const std::fs::path &privateKeyPath, const std::string &) {
+        auto result = libssh2_userauth_publickey_fromfile(m_session, user.c_str(), nullptr, wolv::util::toUTF8String(privateKeyPath).c_str(), nullptr);
         if (result)
             throw std::runtime_error("Authentication failed: " + getErrorString(m_session));
     }
@@ -239,7 +239,7 @@ namespace hex::plugin::remote {
         int length = 0;
         libssh2_session_last_error(session, &errorString, &length, false);
 
-        return hex::format("{} ({})", std::string(errorString, static_cast<size_t>(length)), libssh2_session_last_errno(session));
+        return fmt::format("{} ({})", std::string(errorString, static_cast<size_t>(length)), libssh2_session_last_errno(session));
     }
 
     SFTPClient::RemoteFile::RemoteFile(LIBSSH2_SFTP_HANDLE* handle, OpenMode mode) : m_handle(handle), m_mode(mode) {}

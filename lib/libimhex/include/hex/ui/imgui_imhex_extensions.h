@@ -194,17 +194,19 @@ namespace ImGuiExt {
 
     void ProgressBar(float fraction, ImVec2 size_value = ImVec2(0, 0), float yOffset = 0.0F);
 
-    inline void TextFormatted(std::string_view fmt, auto &&...args) {
+    [[nodiscard]] bool IsDarkBackground(const ImColor& bgColor);
+
+    void TextFormatted(std::string_view fmt, auto &&...args) {
         if constexpr (sizeof...(args) == 0) {
             ImGui::TextUnformatted(fmt.data(), fmt.data() + fmt.size());
         } else {
-            const auto string = hex::format(fmt, std::forward<decltype(args)>(args)...);
+            const auto string = fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...);
             ImGui::TextUnformatted(string.c_str(), string.c_str() + string.size());
         }
     }
 
-    inline void TextFormattedSelectable(std::string_view fmt, auto &&...args) {
-        auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
+    void TextFormattedSelectable(std::string_view fmt, auto &&...args) {
+        auto text = fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...);
 
         ImGui::PushID(text.c_str());
 
@@ -222,19 +224,25 @@ namespace ImGuiExt {
         ImGui::PopID();
     }
 
-    inline void TextFormattedColored(ImColor color, std::string_view fmt, auto &&...args) {
+    void TextFormattedColored(ImColor color, std::string_view fmt, auto &&...args) {
         ImGui::PushStyleColor(ImGuiCol_Text, color.Value);
         ImGuiExt::TextFormatted(fmt, std::forward<decltype(args)>(args)...);
         ImGui::PopStyleColor();
     }
 
-    inline void TextFormattedDisabled(std::string_view fmt, auto &&...args) {
+    void TextFormattedReadableColor(ImColor backgroundColor, std::string_view fmt, auto &&...args) {
+        ImGui::PushStyleColor(ImGuiCol_Text, IsDarkBackground(backgroundColor) ? 0xFFFFFFFF : 0xFF000000);
+        ImGuiExt::TextFormatted(fmt, std::forward<decltype(args)>(args)...);
+        ImGui::PopStyleColor();
+    }
+
+    void TextFormattedDisabled(std::string_view fmt, auto &&...args) {
         ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
         ImGuiExt::TextFormatted(fmt, std::forward<decltype(args)>(args)...);
         ImGui::PopStyleColor();
     }
 
-    inline void TextFormattedWrapped(std::string_view fmt, auto &&...args) {
+    void TextFormattedWrapped(std::string_view fmt, auto &&...args) {
         const bool need_backup = ImGuiExt::GetTextWrapPos() < 0.0F;  // Keep existing wrap position if one is already set
         if (need_backup)
             ImGui::PushTextWrapPos(0.0F);
@@ -243,10 +251,10 @@ namespace ImGuiExt {
             ImGui::PopTextWrapPos();
     }
 
-    inline void TextFormattedWrappedSelectable(std::string_view fmt, auto &&...args) {
+    void TextFormattedWrappedSelectable(std::string_view fmt, auto &&...args) {
         // Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
         auto text = wolv::util::trim(wolv::util::wrapMonospacedString(
-                hex::format(fmt, std::forward<decltype(args)>(args)...),
+                fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...),
                 ImGui::CalcTextSize("M").x,
                 ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize
         ));
@@ -276,14 +284,14 @@ namespace ImGuiExt {
     }
 
     void TextUnformattedCentered(const char *text);
-    inline void TextFormattedCentered(std::string_view fmt, auto &&...args) {
-        auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
+    void TextFormattedCentered(std::string_view fmt, auto &&...args) {
+        auto text = fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...);
         TextUnformattedCentered(text.c_str());
     }
 
 
-    inline void TextFormattedCenteredHorizontal(std::string_view fmt, auto &&...args) {
-        auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
+    void TextFormattedCenteredHorizontal(std::string_view fmt, auto &&...args) {
+        auto text = fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...);
         auto availableSpace = ImGui::GetContentRegionAvail();
         auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);
 

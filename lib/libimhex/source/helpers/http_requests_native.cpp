@@ -178,7 +178,7 @@ namespace hex {
             ON_SCOPE_EXIT { curl_slist_free_all(headersList); };
 
             for (auto &[key, value] : headers) {
-                std::string header = hex::format("{}: {}", key, value);
+                std::string header = fmt::format("{}: {}", key, value);
                 headersList = curl_slist_append(headersList, header.c_str());
             }
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headersList);

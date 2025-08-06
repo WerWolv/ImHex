@@ -40,7 +40,7 @@ namespace hex::plugin::builtin {
     static void openFile(const std::fs::path &path) {
         if (path.extension() == ".hexproj") {
             if (!ProjectFile::load(path)) {
-                ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
             }
 
             return;
@@ -50,7 +50,7 @@ namespace hex::plugin::builtin {
         if (auto *fileProvider = dynamic_cast<FileProvider*>(provider); fileProvider != nullptr) {
             fileProvider->setPath(path);
             if (!provider->open() || !provider->isAvailable()) {
-                ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                 TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
             } else {
                 EventProviderOpened::post(fileProvider);
@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
                     if (path.extension() == ".hexproj") {
                         if (!ProjectFile::load(path)) {
-                            ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                            ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                         } else {
                             return;
                         }
@@ -212,7 +212,7 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                     [](const auto &path) {
                         if (!ProjectFile::load(path)) {
-                            ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                            ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                         }
                     });
             }
@@ -235,7 +235,7 @@ namespace hex::plugin::builtin {
 
                 TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
                     if (!provider->open()) {
-                        ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                        ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                         TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     } else {
                         TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
@@ -245,7 +245,7 @@ namespace hex::plugin::builtin {
             else if (dynamic_cast<prv::IProviderLoadInterface*>(provider) == nullptr) {
                 TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
                     if (!provider->open() || !provider->isAvailable()) {
-                        ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                        ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                         TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     } else {
                         TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
@@ -358,9 +358,9 @@ namespace hex::plugin::builtin {
 
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){
             #if defined(NFD_PORTAL)
-                ui::PopupError::open(hex::format("hex.builtin.popup.error.file_dialog.portal"_lang, errMsg));
+                ui::PopupError::open(fmt::format("hex.builtin.popup.error.file_dialog.portal"_lang, errMsg));
             #else
-                ui::PopupError::open(hex::format("hex.builtin.popup.error.file_dialog.common"_lang, errMsg));
+                ui::PopupError::open(fmt::format("hex.builtin.popup.error.file_dialog.common"_lang, errMsg));
             #endif
         });
 

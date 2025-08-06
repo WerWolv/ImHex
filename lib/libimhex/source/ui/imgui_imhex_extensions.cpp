@@ -964,13 +964,13 @@ namespace ImGuiExt {
         std::string format;
 
         if (*value < 1024) {
-            format = hex::format("{} Bytes", *value);
+            format = fmt::format("{} Bytes", *value);
         } else if (*value < 1024 * 1024) {
-            format = hex::format("{:.2f} KB", *value / 1024.0);
+            format = fmt::format("{:.2f} KB", *value / 1024.0);
         } else if (*value < 1024 * 1024 * 1024) {
-            format = hex::format("{:.2f} MB", *value / (1024.0 * 1024.0));
+            format = fmt::format("{:.2f} MB", *value / (1024.0 * 1024.0));
         } else {
-            format = hex::format("{:.2f} GB", *value / (1024.0 * 1024.0 * 1024.0));
+            format = fmt::format("{:.2f} GB", *value / (1024.0 * 1024.0 * 1024.0));
         }
 
         *value /= stepSize;
@@ -1266,7 +1266,7 @@ namespace ImGuiExt {
 
         bool result = false;
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
-        if (ImGui::BeginChild(hex::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+        if (ImGui::BeginChild(fmt::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
             result = true;
 
             if (hasMenuBar && ImGui::BeginMenuBar()) {
@@ -1312,8 +1312,9 @@ namespace ImGuiExt {
 
         ImGui::PushID(label);
 
-        const auto buttonSize = ImGui::CalcTextSize("...") + ImGui::GetStyle().FramePadding * 2;
-        ImGui::PushItemWidth(ImGui::CalcItemWidth() - buttonSize.x - ImGui::GetStyle().FramePadding.x);
+        const auto framePadding = ImGui::GetStyle().FramePadding.x;
+        const auto buttonSize = ImVec2(ImGui::CalcTextSize("...").x + framePadding * 2, ImGui::GetFrameHeight());
+        ImGui::PushItemWidth(ImGui::CalcItemWidth() - buttonSize.x - framePadding);
         std::string string = wolv::util::toUTF8String(path);
         if (ImGui::InputText("##pathInput", string, ImGuiInputTextFlags_AutoSelectAll)) {
             path = std::u8string(string.begin(), string.end());
@@ -1321,7 +1322,7 @@ namespace ImGuiExt {
         }
         ImGui::PopItemWidth();
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, framePadding);
 
         if (ImGui::Button("...", buttonSize)) {
             hex::fs::openFileBrowser(hex::fs::DialogMode::Open, validExtensions, [&](const std::fs::path &pickedPath) {
@@ -1443,6 +1444,21 @@ namespace ImGuiExt {
         // Return the button press state
         ImGui::PopClipRect();
     }
+
+    bool IsDarkBackground(const ImColor& bgColor) {
+        // Extract RGB components in 0–255 range
+        int r = static_cast<int>(bgColor.Value.x * 255.0f);
+        int g = static_cast<int>(bgColor.Value.y * 255.0f);
+        int b = static_cast<int>(bgColor.Value.z * 255.0f);
+
+        // Compute brightness using perceived luminance
+        int brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+        // If brightness is below threshold, use white text
+        return brightness < 128;
+    }
+
+
 
     static bool s_imguiTestEngineEnabled = false;
 

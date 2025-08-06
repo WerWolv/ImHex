@@ -9,7 +9,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewThemeManager::ViewThemeManager() : View::Floating("hex.builtin.view.theme_manager.name") {
+    ViewThemeManager::ViewThemeManager() : View::Floating("hex.builtin.view.theme_manager.name", ICON_VS_SYMBOL_COLOR) {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.theme_manager.name" }, ICON_VS_SYMBOL_COLOR, 2000, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });

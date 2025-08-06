@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fonts/vscode_icons.hpp>
 #include <hex/providers/provider.hpp>
 
 namespace hex::plugin::builtin {
@@ -35,6 +36,10 @@ namespace hex::plugin::builtin {
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<Description> getDataDescription() const override;
         [[nodiscard]] UnlocalizedString getTypeName() const override;
+
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_OPEN_PREVIEW;
+        }
 
         void loadSettings(const nlohmann::json &settings) override;
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;

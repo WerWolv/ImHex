@@ -656,7 +656,7 @@ namespace hex {
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5_scaled);
                 ImGui::SetNextWindowSize(ImVec2(350_scaled, toastHeight));
                 ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }) - scaled({ 0, (10 + toastHeight) * index }), ImGuiCond_Always, ImVec2(1, 1));
-                if (ImGui::Begin(hex::format("##Toast_{}", index).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
+                if (ImGui::Begin(fmt::format("##Toast_{}", index).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
                     auto drawList = ImGui::GetWindowDrawList();
 
                     const auto min = ImGui::GetWindowPos();
@@ -700,12 +700,14 @@ namespace hex {
                 startY += 2 * ImGui::GetStyle().FramePadding.y;
             #endif
 
-            for (const auto &banner : impl::BannerBase::getOpenBanners() | std::views::take(5)) {
+            for (const auto &banner : impl::BannerBase::getOpenBanners() | std::views::take(3)) {
                 auto &style = ImGui::GetStyle();
                 ImGui::SetNextWindowPos(ImVec2(windowPos.x + 1_scaled, startY));
                 ImGui::SetNextWindowSize(ImVec2(ImHexApi::System::getMainWindowSize().x - 2_scaled, height));
                 ImGui::SetNextWindowViewport(viewport->ID);
-                ImGui::PushStyleColor(ImGuiCol_WindowBg, banner->getColor().Value);
+                const auto backgroundColor = banner->getColor().Value;
+                ImGui::PushStyleColor(ImGuiCol_WindowBg, backgroundColor);
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::IsDarkBackground(backgroundColor) ? 0xFFFFFFFF : 0xFF000000);
                 auto prevShadowOffset = style.WindowShadowOffsetDist;
                 auto prevShadowAngle = style.WindowShadowOffsetAngle;
                 style.WindowShadowOffsetDist = 12_scaled;
@@ -727,7 +729,7 @@ namespace hex {
                     }
                 }
                 ImGui::End();
-                ImGui::PopStyleColor();
+                ImGui::PopStyleColor(2);
 
                 startY += height;
             }

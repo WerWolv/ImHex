@@ -69,15 +69,11 @@ namespace hex::fonts {
         [[nodiscard]] AntialiasingType getAntialiasingType() const;
 
     private:
-        bool drawPopup();
-
-    private:
         FontFilePicker m_fontFilePicker;
         SliderPoints m_fontSize;
         AntialiasPicker m_antiAliased;
-        ContentRegistry::Settings::Widgets::Checkbox m_bold, m_italic;
 
-        bool m_applyEnabled = false;
+        bool m_bold, m_italic;
     };
 
     ContentRegistry::Settings::Widgets::Widget::Interface& addFontSettingsWidget(UnlocalizedString name);

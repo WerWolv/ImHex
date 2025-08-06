@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
         });
 
         LayoutManager::registerStoreCallback([this](ImGuiTextBuffer *buffer) {
-            for (auto &[unlocalizedName, function] : ContentRegistry::Tools::impl::getEntries()) {
+            for (auto &[unlocalizedName, icon, function] : ContentRegistry::Tools::impl::getEntries()) {
                 auto detached = m_detachedTools[unlocalizedName];
                 buffer->appendf("%s=%d\n", unlocalizedName.get().c_str(), detached);
             }
@@ -32,13 +32,13 @@ namespace hex::plugin::builtin {
 
         // Draw all tools
         for (auto iter = tools.begin(); iter != tools.end(); ++iter) {
-            auto &[unlocalizedName, function] = *iter;
+            auto &[unlocalizedName, icon, function] = *iter;
 
             // If the tool has been detached from the main window, don't draw it here anymore
             if (m_detachedTools[unlocalizedName]) continue;
 
             // Draw the tool
-            if (ImGui::CollapsingHeader(Lang(unlocalizedName))) {
+            if (ImGui::CollapsingHeader(fmt::format("{} {}", icon, Lang(unlocalizedName)).c_str())) {
                 function();
                 ImGui::NewLine();
             } else {
@@ -69,13 +69,13 @@ namespace hex::plugin::builtin {
         auto &tools = ContentRegistry::Tools::impl::getEntries();
 
         for (auto iter = tools.begin(); iter != tools.end(); ++iter) {
-            auto &[unlocalizedName, function] = *iter;
+            auto &[unlocalizedName, icon, function] = *iter;
 
             // If the tool is still attached to the main window, don't draw it here
             if (!m_detachedTools[unlocalizedName]) continue;
 
             // Load the window height that is dependent on the tool content
-            const auto windowName = View::toWindowName(unlocalizedName);
+            const auto windowName = fmt::format("{} {}", icon, View::toWindowName(unlocalizedName));
             const auto height = m_windowHeights[ImGui::FindWindowByName(windowName.c_str())];
             if (height > 0)
                 ImGui::SetNextWindowSizeConstraints(ImVec2(400_scaled, height), ImVec2(FLT_MAX, height));

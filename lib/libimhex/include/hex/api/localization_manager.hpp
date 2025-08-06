@@ -155,3 +155,12 @@ struct std::hash<hex::UnlocalizedString> {
         return std::hash<std::string>{}(string.get());
     }
 };
+
+namespace fmt {
+
+    template<typename ... Args>
+    auto format(const hex::Lang &entry, Args &&... args) {
+        return fmt::format(fmt::runtime(entry.get()), std::forward<Args>(args)...);
+    }
+
+}

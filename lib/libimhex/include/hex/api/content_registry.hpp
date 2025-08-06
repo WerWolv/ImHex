@@ -632,6 +632,7 @@ EXPORT_MODULE namespace hex {
 
                 struct Entry {
                     UnlocalizedString unlocalizedName;
+                    const char *icon;
                     Callback function;
                 };
 
@@ -644,7 +645,7 @@ EXPORT_MODULE namespace hex {
              * @param unlocalizedName The unlocalized name of the tool
              * @param function The function that will be called to draw the tool
              */
-            void add(const UnlocalizedString &unlocalizedName, const impl::Callback &function);
+            void add(const UnlocalizedString &unlocalizedName, const char *icon, const impl::Callback &function);
         }
 
         /* Data Inspector Registry. Allows adding of new types to the data inspector */
@@ -1013,12 +1014,17 @@ EXPORT_MODULE namespace hex {
 
             namespace impl {
 
-                void addProviderName(const UnlocalizedString &unlocalizedName);
+                void addProviderName(const UnlocalizedString &unlocalizedName, const char *icon);
 
                 using ProviderCreationFunction = std::function<std::unique_ptr<prv::Provider>()>;
                 void add(const std::string &typeName, ProviderCreationFunction creationFunction);
 
-                const std::vector<std::string>& getEntries();
+                struct Entry {
+                    UnlocalizedString unlocalizedName;
+                    const char *icon;
+                };
+
+                const std::vector<Entry>& getEntries();
 
             }
 
@@ -1029,14 +1035,15 @@ EXPORT_MODULE namespace hex {
              */
             template<std::derived_from<prv::Provider> T>
             void add(bool addToList = true) {
-                auto typeName = T().getTypeName();
+                const T provider;
+                auto typeName = provider.getTypeName();
 
                 impl::add(typeName, []() -> std::unique_ptr<prv::Provider> {
                     return std::make_unique<T>();
                 });
 
                 if (addToList)
-                    impl::addProviderName(typeName);
+                    impl::addProviderName(typeName, provider.getIcon());
             }
 
         }

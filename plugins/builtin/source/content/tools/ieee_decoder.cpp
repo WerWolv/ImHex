@@ -646,7 +646,7 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
 
             const auto mask = u64(hex::bitmask(totalBitCount + 1));
-            std::string maskString = hex::format("0x{:X}  ", mask);
+            std::string maskString = fmt::format("0x{:X}  ", mask);
 
             auto style = ImGui::GetStyle();
             inputFieldWidth = std::fmax(inputFieldWidth,

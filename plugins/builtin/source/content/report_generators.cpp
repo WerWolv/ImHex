@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
                     result += "| ---- | ----- |\n";
 
                     for (const auto &[type, value] : dataDescriptionProvider->getDataDescription())
-                        result += hex::format("| {} | {} |\n", type, value);
+                        result += fmt::format("| {} | {} |\n", type, value);
                 }
             }
 
@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
             result += "## Overlays\n\n";
 
             for (const auto &overlay : overlays) {
-                result += hex::format("### Overlay 0x{:04X} - 0x{:04X}", overlay->getAddress(), overlay->getAddress() + overlay->getSize() - 1);
+                result += fmt::format("### Overlay 0x{:04X} - 0x{:04X}", overlay->getAddress(), overlay->getAddress() + overlay->getSize() - 1);
                 result += "\n\n";
 
                 result += "```\n";

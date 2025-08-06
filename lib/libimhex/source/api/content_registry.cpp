@@ -767,10 +767,10 @@ namespace hex {
 
         }
 
-        void add(const UnlocalizedString &unlocalizedName, const impl::Callback &function) {
+        void add(const UnlocalizedString &unlocalizedName, const char *icon, const impl::Callback &function) {
             log::debug("Registered new tool: {}", unlocalizedName.get());
 
-            impl::s_tools->emplace_back(impl::Entry { unlocalizedName, function });
+            impl::s_tools->emplace_back(impl::Entry { unlocalizedName, icon, function });
         }
 
     }
@@ -873,7 +873,7 @@ namespace hex {
                     LocalizationManager::impl::setFallbackLanguage(code.get<std::string>());
             }
 
-            impl::s_languages->emplace(code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()));
+            impl::s_languages->emplace(code.get<std::string>(), fmt::format("{} ({})", language.get<std::string>(), country.get<std::string>()));
 
             std::map<std::string, std::string> translationDefinitions;
             for (auto &[key, value] : translations.items()) {
@@ -1080,15 +1080,15 @@ namespace hex {
                 });
             }
 
-            static AutoReset<std::vector<std::string>> s_providerNames;
-            const std::vector<std::string>& getEntries() {
+            static AutoReset<std::vector<Entry>> s_providerNames;
+            const std::vector<Entry>& getEntries() {
                 return *s_providerNames;
             }
 
-            void addProviderName(const UnlocalizedString &unlocalizedName) {
+            void addProviderName(const UnlocalizedString &unlocalizedName, const char *icon) {
                 log::debug("Registered new provider: {}", unlocalizedName.get());
 
-                s_providerNames->push_back(unlocalizedName);
+                s_providerNames->emplace_back(unlocalizedName, icon);
             }
 
         }

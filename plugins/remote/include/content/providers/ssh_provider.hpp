@@ -1,6 +1,7 @@
 #pragma once
 
 #include <content/helpers/sftp_client.hpp>
+#include <fonts/vscode_icons.hpp>
 #include <hex/providers/cached_provider.hpp>
 
 namespace hex::plugin::remote {
@@ -25,6 +26,10 @@ namespace hex::plugin::remote {
         UnlocalizedString getTypeName() const override { return "hex.plugin.remote.ssh_provider"; }
         std::string getName() const override;
 
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_REMOTE;
+        }
+
         bool drawLoadInterface() override;
 
         void loadSettings(const nlohmann::json &settings) override;
@@ -43,7 +48,7 @@ namespace hex::plugin::remote {
         int m_port = 22;
         std::string m_username;
         std::string m_password;
-        std::string m_privateKeyPath;
+        std::fs::path m_privateKeyPath;
         std::string m_keyPassphrase;
         AuthMethod m_authMethod = AuthMethod::Password;
 

@@ -419,7 +419,7 @@ namespace hex::plugin::builtin {
                                             literal = std::get<pl::core::Token::Literal>(it->value);
                                             string = std::get_if<std::string>(&literal);
                                             if (string != nullptr) {
-                                                m_patternNames[path] = hex::format("{} ({})", *string, fileName);
+                                                m_patternNames[path] = fmt::format("{} ({})", *string, fileName);
                                             }
                                         }
                                     }
@@ -445,7 +445,7 @@ namespace hex::plugin::builtin {
             wolv::io::File file(path, wolv::io::File::Mode::Write);
             if (file.isValid() && trackFile) {
                 if (isPatternDirty(provider)) {
-                    file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
+                    file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
                     m_patternFileDirty.get(provider) = false;
                 }
                 return;
@@ -461,7 +461,7 @@ namespace hex::plugin::builtin {
                     fs::DialogMode::Save, { {"Pattern File", "hexpat"}, {"Pattern Import File", "pat"} },
                     [this, provider, trackFile](const auto &path) {
                         wolv::io::File file(path, wolv::io::File::Mode::Create);
-                        file.writeString(wolv::util::trim(m_textEditor.get(provider).GetText()));
+                        file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
                         m_patternFileDirty.get(provider) = false;
                         auto loadedPath = m_changeTracker.get(provider).getPath();
                         if ((loadedPath.empty() && loadedPath != path) || (!loadedPath.empty() && !trackFile))

@@ -208,9 +208,9 @@ namespace hex::plugin::yara {
                             ImGui::TableNextColumn();
                             ImGui::TextUnformatted(match.variable.c_str());
                             ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(hex::format("0x{0:08X}", match.region.getStartAddress()).c_str());
+                            ImGui::TextUnformatted(fmt::format("0x{0:08X}", match.region.getStartAddress()).c_str());
                             ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(hex::format("0x{0:08X}", match.region.getSize()).c_str());
+                            ImGui::TextUnformatted(fmt::format("0x{0:08X}", match.region.getSize()).c_str());
                         }
                         ImGui::TreePop();
                     }
@@ -283,12 +283,12 @@ namespace hex::plugin::yara {
 
                 for (YaraRule::Rule &rule : *m_matchedRules) {
                     for (auto &match : rule.matches) {
-                        auto tags = hex::format("{}", fmt::join(rule.tags, ", "));
+                        auto tags = fmt::format("{}", fmt::join(rule.tags, ", "));
                         m_highlights->insert(
                             { match.region.getStartAddress(), match.region.getEndAddress() },
-                            hex::format("rule {0}{1} {{ {2} }}",
+                            fmt::format("rule {0}{1} {{ {2} }}",
                                 rule.identifier,
-                                tags.empty() ? "" : hex::format(" : {}", tags),
+                                tags.empty() ? "" : fmt::format(" : {}", tags),
                                 match.variable
                             )
                         );

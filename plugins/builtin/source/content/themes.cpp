@@ -262,12 +262,12 @@ namespace hex::plugin::builtin {
 
                 ThemeManager::addThemeHandler("text-editor", TextEditorColorMap,
                     [](u32 colorId) -> ImColor {
-                        return TextEditor::GetPalette()[colorId];
+                        return TextEditor::getPalette()[colorId];
                     },
                    [](u32 colorId, ImColor color) {
-                        auto palette = TextEditor::GetPalette();
+                        auto palette = TextEditor::getPalette();
                         palette[colorId] = color;
-                        TextEditor::SetPalette(palette);
+                       TextEditor::setPalette(palette);
                     }
                 );
             }

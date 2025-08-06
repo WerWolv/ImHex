@@ -184,7 +184,7 @@ namespace hex::plugin::builtin {
                             const auto buttonSize = scaled({ 100, 50 });
                             ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - buttonSize - scaled({ 10, 10 }));
                             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, buttonFadeIn);
-                            if (ImGuiExt::DimmedButton(hex::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
+                            if (ImGuiExt::DimmedButton(fmt::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
                                 page += 1;
                             ImGui::PopStyleVar();
                         }
@@ -259,7 +259,7 @@ namespace hex::plugin::builtin {
                         // Continue button
                         const auto buttonSize = scaled({ 100, 50 });
                         ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - buttonSize - scaled({ 10, 10 }));
-                        if (ImGuiExt::DimmedButton(hex::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
+                        if (ImGuiExt::DimmedButton(fmt::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
                             page += 1;
 
                         break;
@@ -446,7 +446,7 @@ namespace hex::plugin::builtin {
             ImHexApi::System::setWindowResizable(false);
 
             const auto imageTheme = ThemeManager::getImageTheme();
-            s_imhexBanner    = ImGuiExt::Texture::fromSVG(romfs::get(hex::format("assets/{}/banner.svg", imageTheme)).span<std::byte>());
+            s_imhexBanner    = ImGuiExt::Texture::fromSVG(romfs::get(fmt::format("assets/{}/banner.svg", imageTheme)).span<std::byte>());
             s_compassTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/compass.png").span<std::byte>());
             s_globeTexture   = ImGuiExt::Texture::fromImage(romfs::get("assets/common/globe.png").span<std::byte>());
             s_screenshotDescriptions = nlohmann::json::parse(romfs::get("assets/screenshot_descriptions.json").string());

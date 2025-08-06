@@ -26,12 +26,12 @@ namespace hex::plugin::builtin::undo {
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("hex.builtin.undo_operation.write"_lang, hex::toByteString(m_newData.size()), m_offset);
+            return fmt::format("hex.builtin.undo_operation.write"_lang, hex::toByteString(m_newData.size()), m_offset);
         }
 
         std::vector<std::string> formatContent() const override {
             return {
-                hex::format("{} {} {}", hex::crypt::encode16(m_oldData), ICON_VS_ARROW_RIGHT, hex::crypt::encode16(m_newData)),
+                fmt::format("{} {} {}", hex::crypt::encode16(m_oldData), ICON_VS_ARROW_RIGHT, hex::crypt::encode16(m_newData)),
             };
         }
 

@@ -1283,7 +1283,7 @@ namespace hex::plugin::builtin {
 
             m_updateNodePositions = true;
         } catch (nlohmann::json::exception &e) {
-            ui::ToastError::open(hex::format("Failed to load nodes: {}", e.what()));
+            ui::ToastError::open(fmt::format("Failed to load nodes: {}", e.what()));
         }
     }
 

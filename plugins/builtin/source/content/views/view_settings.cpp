@@ -1,5 +1,6 @@
 #include "content/views/view_settings.hpp"
 
+#include <fonts/fonts.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/logger.hpp>
@@ -11,7 +12,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewSettings::ViewSettings() : View::Modal("hex.builtin.view.settings.name") {
+    ViewSettings::ViewSettings() : View::Modal("hex.builtin.view.settings.name", ICON_VS_SETTINGS_GEAR) {
         // Handle window open requests
         RequestOpenWindow::subscribe(this, [this](const std::string &name) {
             if (name == "Settings") {
@@ -108,8 +109,16 @@ namespace hex::plugin::builtin {
                                 ImGui::PopItemWidth();
                                 ImGui::EndDisabled();
 
-                                if (const auto &tooltip = setting.widget->getTooltip(); tooltip.has_value() && ImGui::IsItemHovered())
-                                    ImGuiExt::InfoTooltip(Lang(tooltip.value()));
+                                if (const auto &tooltip = setting.widget->getTooltip(); tooltip.has_value()) {
+                                    ImGui::BeginDisabled();
+                                    ImGui::Indent();
+                                    fonts::Default().push(0.8F);
+                                    ImGuiExt::TextFormattedWrapped(Lang(tooltip.value()));
+                                    ImGui::NewLine();
+                                    fonts::Default().pop();
+                                    ImGui::Unindent();
+                                    ImGui::EndDisabled();
+                                }
 
                                 auto &widget = setting.widget;
 

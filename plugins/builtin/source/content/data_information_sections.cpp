@@ -275,7 +275,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.1F);
                     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
                     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor::HSV(0.3F - (0.3F * entropy), 0.6F, 0.8F, 1.0F).Value);
-                    ImGui::ProgressBar(entropy, ImVec2(200_scaled, ImGui::GetTextLineHeight()), hex::format("{:.5f}", entropy).c_str());
+                    ImGui::ProgressBar(entropy, ImVec2(200_scaled, ImGui::GetTextLineHeight()), fmt::format("{:.5f}", entropy).c_str());
                     ImGui::PopStyleColor(2);
                     ImGui::PopStyleVar();
                 }
@@ -295,7 +295,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushID("##HighestBlockEntropyAddress");
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                    if (ImGui::Button(hex::format("0x{:06X}", m_highestBlockEntropyAddress).c_str())) {
+                    if (ImGui::Button(fmt::format("0x{:06X}", m_highestBlockEntropyAddress).c_str())) {
                         ImHexApi::HexEditor::setSelection(m_highestBlockEntropyAddress, m_inputChunkSize);
                     }
                     ImGui::PopStyleColor();
@@ -319,7 +319,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushID("##LowestBlockEntropyAddress");
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                    if (ImGui::Button(hex::format("0x{:06X}", m_lowestBlockEntropyAddress).c_str())) {
+                    if (ImGui::Button(fmt::format("0x{:06X}", m_lowestBlockEntropyAddress).c_str())) {
                         ImHexApi::HexEditor::setSelection(m_lowestBlockEntropyAddress, m_inputChunkSize);
                     }
                     ImGui::PopStyleColor();

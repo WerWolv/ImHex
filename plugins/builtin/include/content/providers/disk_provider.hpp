@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <fonts/vscode_icons.hpp>
 #include <wolv/io/handle.hpp>
 
 namespace hex::plugin::builtin {
@@ -42,6 +43,10 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.disk";
+        }
+
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_SAVE;
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;

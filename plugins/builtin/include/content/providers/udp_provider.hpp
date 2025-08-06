@@ -5,6 +5,7 @@
 #include <hex/helpers/udp_server.hpp>
 #include <nlohmann/json.hpp>
 #include <mutex>
+#include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -39,7 +40,11 @@ namespace hex::plugin::builtin {
             return "hex.builtin.provider.udp";
         }
 
-        std::string getName() const override { return hex::format("hex.builtin.provider.udp.name"_lang, m_port); }
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_RSS;
+        }
+
+        std::string getName() const override { return fmt::format("hex.builtin.provider.udp.name"_lang, m_port); }
 
     protected:
         void receive(std::span<const u8> data);

@@ -7,6 +7,7 @@
 #include <hex/helpers/utils.hpp>
 
 #include <nlohmann/json.hpp>
+#include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::remote {
 
@@ -63,7 +64,7 @@ namespace hex::plugin::remote {
     }
 
     std::string SSHProvider::getName() const {
-        return hex::format("{} [{}@{}:{}]", m_remoteFilePath.filename().string(), m_username, m_host, m_port);
+        return fmt::format("{} [{}@{}:{}]", m_remoteFilePath.filename().string(), m_username, m_host, m_port);
     }
 
 
@@ -84,7 +85,7 @@ namespace hex::plugin::remote {
                 }
                 if (ImGui::BeginTabItem("hex.plugin.remote.ssh_provider.key_file"_lang)) {
                     m_authMethod = AuthMethod::KeyFile;
-                    ImGui::InputText("hex.plugin.remote.ssh_provider.key_file"_lang, m_privateKeyPath);
+                    ImGuiExt::InputFilePicker("hex.plugin.remote.ssh_provider.key_file"_lang, m_privateKeyPath, {});
                     ImGui::InputText("hex.plugin.remote.ssh_provider.passphrase"_lang, m_keyPassphrase, ImGuiInputTextFlags_Password);
                     ImGui::EndTabItem();
                 }
@@ -103,7 +104,7 @@ namespace hex::plugin::remote {
                         m_sftpClient = std::move(client);
                     }
                 } catch (const std::exception& e) {
-                    log::error("Failed to connect to SSH server: {}", e.what());
+                    ui::ToastError::open(fmt::format("Failed to connect to SSH server: {}", e.what()));
                     return false;
                 }
             }
@@ -137,7 +138,7 @@ namespace hex::plugin::remote {
                     ImGui::TableNextColumn();
                     ImGui::Selectable(entry.name.c_str(), m_remoteFilePath.filename() == entry.name, ImGuiSelectableFlags_NoAutoClosePopups);
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-                        m_selectedFile = entry.isRegularFile();
+                        m_selectedFile = !entry.isDirectory();
                         m_remoteFilePath /= entry.name;
                     }
                 }
@@ -181,8 +182,5 @@ namespace hex::plugin::remote {
 
         m_remoteFilePath = settings.value("remoteFilePath", "");
     }
-
-
-
 
 }

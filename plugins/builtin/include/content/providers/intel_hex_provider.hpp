@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fonts/vscode_icons.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <wolv/container/interval_tree.hpp>
@@ -36,6 +37,10 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.intel_hex";
+        }
+
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_TABLE;
         }
 
         [[nodiscard]] bool handleFilePicker() override;
