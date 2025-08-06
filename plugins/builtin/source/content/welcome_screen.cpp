@@ -519,11 +519,19 @@ namespace hex::plugin::builtin {
                                     ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
                                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
                                     if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
-                                        if (ImGuiExt::DimmedIconToggle(ICON_VS_COMPASS_ACTIVE, ICON_VS_COMPASS, &s_simplifiedWelcomeScreen)) {
-                                            ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
-                                            WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
+                                        u32 id = 0;
+                                        for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles()) {
+                                            ImGui::PushID(id + 1);
+                                            if (ImGuiExt::DimmedIconToggle(onIcon.c_str(), offIcon.c_str(), &state)) {
+                                                toggleCallback(state);
+                                                ContentRegistry::Settings::write<bool>("hex.builtin.settings.quick_settings", unlocalizedTooltip, state);
+                                            }
+                                            if (id % 5 > 0)
+                                                ImGui::SameLine();
+                                            ImGui::SetItemTooltip("%s", Lang(unlocalizedTooltip).get());
+                                            ImGui::PopID();
+                                            id += 1;
                                         }
-                                        ImGui::SetItemTooltip("%s", "hex.builtin.welcome.quick_settings.simplified"_lang.get());
                                     }
                                     ImGuiExt::EndSubWindow();
 
@@ -632,6 +640,31 @@ namespace hex::plugin::builtin {
         });
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", [](const ContentRegistry::Settings::SettingsValue &value) {
             ImHexApi::System::setTargetFPS(static_cast<float>(value.get<int>(14)));
+        });
+
+
+        ContentRegistry::Interface::addWelcomeScreenQuickSettingsToggle(ICON_VS_COMPASS_ACTIVE, ICON_VS_COMPASS, "hex.builtin.welcome.quick_settings.simplified", false, [](bool state) {
+            s_simplifiedWelcomeScreen = state;
+            WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
+        });
+
+        EventImHexStartupFinished::subscribe([]() {
+            for (const auto &quickSetting : ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles()) {
+                auto &setting = quickSetting.unlocalizedTooltip;
+                ContentRegistry::Settings::onChange("hex.builtin.settings.quick_settings", setting, [setting](const ContentRegistry::Settings::SettingsValue &value) {
+                    for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles()) {
+                        if (unlocalizedTooltip == setting) {
+                            state = value.get<bool>(state);
+                            toggleCallback(state);
+                            break;
+                        }
+                    }
+                });
+
+                bool state = ContentRegistry::Settings::read<bool>("hex.builtin.settings.quick_settings", quickSetting.unlocalizedTooltip, quickSetting.state);
+                quickSetting.state = state;
+                quickSetting.callback(state);
+            }
         });
 
         static auto updateTextures = [](float scale) {

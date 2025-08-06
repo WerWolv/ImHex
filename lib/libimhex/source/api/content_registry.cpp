@@ -948,6 +948,11 @@ namespace hex {
                 return *s_titlebarButtons;
             }
 
+            static AutoReset<std::vector<WelcomeScreenQuickSettingsToggle>> s_welcomeScreenQuickSettingsToggles;
+            const std::vector<WelcomeScreenQuickSettingsToggle>& getWelcomeScreenQuickSettingsToggles() {
+                return *s_welcomeScreenQuickSettingsToggles;
+            }
+
         }
 
         void registerMainMenuItem(const UnlocalizedString &unlocalizedName, u32 priority) {
@@ -1068,6 +1073,15 @@ namespace hex {
 
         void addTitleBarButton(const std::string &icon, const UnlocalizedString &unlocalizedTooltip, const impl::ClickCallback &function) {
             impl::s_titlebarButtons->push_back({ icon, unlocalizedTooltip, function });
+        }
+
+        void addWelcomeScreenQuickSettingsToggle(const std::string &icon, const UnlocalizedString &unlocalizedTooltip, bool defaultState, const impl::ToggleCallback &function) {
+            impl::s_welcomeScreenQuickSettingsToggles->push_back({ icon, icon, unlocalizedTooltip, function, defaultState });
+        }
+
+        void addWelcomeScreenQuickSettingsToggle(const std::string &onIcon, const std::string &offIcon, const UnlocalizedString &unlocalizedTooltip, bool defaultState, const impl::ToggleCallback &function) {
+            impl::s_welcomeScreenQuickSettingsToggles->push_back({ onIcon, offIcon, unlocalizedTooltip, function, defaultState });
+
         }
 
     }

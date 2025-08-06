@@ -796,6 +796,7 @@ EXPORT_MODULE namespace hex {
                 using EnabledCallback   = std::function<bool()>;
                 using SelectedCallback  = std::function<bool()>;
                 using ClickCallback     = std::function<void()>;
+                using ToggleCallback    = std::function<void(bool)>;
 
                 struct MainMenuItem {
                     UnlocalizedString unlocalizedName;
@@ -824,6 +825,13 @@ EXPORT_MODULE namespace hex {
                     ClickCallback callback;
                 };
 
+                struct WelcomeScreenQuickSettingsToggle {
+                    std::string onIcon, offIcon;
+                    UnlocalizedString unlocalizedTooltip;
+                    ToggleCallback callback;
+                    mutable bool state;
+                };
+
                 constexpr static auto SeparatorValue = "$SEPARATOR$";
                 constexpr static auto SubMenuValue = "$SUBMENU$";
 
@@ -838,6 +846,7 @@ EXPORT_MODULE namespace hex {
                 const std::vector<DrawCallback>& getToolbarItems();
                 const std::vector<SidebarItem>& getSidebarItems();
                 const std::vector<TitleBarButton>& getTitlebarButtons();
+                const std::vector<WelcomeScreenQuickSettingsToggle>& getWelcomeScreenQuickSettingsToggles();
 
             }
 
@@ -1005,6 +1014,36 @@ EXPORT_MODULE namespace hex {
                 const std::string &icon,
                 const UnlocalizedString &unlocalizedTooltip,
                 const impl::ClickCallback &function
+            );
+
+            /**
+             * @brief Adds a new welcome screen quick settings toggle
+             * @param icon The icon to use for the button
+             * @param unlocalizedTooltip The unlocalized tooltip to use for the button
+             * @param defaultState The default state of the toggle
+             * @param function The function to call when the button is clicked
+             */
+            void addWelcomeScreenQuickSettingsToggle(
+                const std::string &icon,
+                const UnlocalizedString &unlocalizedTooltip,
+                bool defaultState,
+                const impl::ToggleCallback &function
+            );
+
+            /**
+             * @brief Adds a new welcome screen quick settings toggle
+             * @param onIcon The icon to use for the button when it's on
+             * @param offIcon The icon to use for the button when it's off
+             * @param unlocalizedTooltip The unlocalized tooltip to use for the button
+             * @param defaultState The default state of the toggle
+             * @param function The function to call when the button is clicked
+             */
+            void addWelcomeScreenQuickSettingsToggle(
+                const std::string &onIcon,
+                const std::string &offIcon,
+                const UnlocalizedString &unlocalizedTooltip,
+                bool defaultState,
+                const impl::ToggleCallback &function
             );
 
         }
