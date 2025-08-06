@@ -27,6 +27,10 @@ namespace hex::test {
             return "";
         }
 
+        [[nodiscard]] const char* getIcon() const override {
+            return "";
+        }
+
         void readRaw(u64 offset, void *buffer, size_t size) override {
             if (offset + size > m_data->size()) return;
 

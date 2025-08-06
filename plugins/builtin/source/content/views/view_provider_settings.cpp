@@ -8,7 +8,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name") {
+    ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name", ICON_VS_SETTINGS) {
         EventProviderCreated::subscribe(this, [this](const hex::prv::Provider *provider) {
             if (dynamic_cast<const prv::IProviderLoadInterface*>(provider) != nullptr && !provider->shouldSkipLoadInterface())
                 this->getWindowOpenState() = true;

@@ -77,6 +77,10 @@ namespace hex {
                 return "";
             }
 
+            [[nodiscard]] const char* getIcon() const override {
+                return "";
+            }
+
             [[nodiscard]] UnlocalizedString getTypeName() const override { return ""; }
 
             const std::map<u64, u8>& getPatches() const {

@@ -11,6 +11,7 @@
 
 #include <set>
 #include <thread>
+#include <fonts/vscode_icons.hpp>
 #include <hex/helpers/auto_reset.hpp>
 
 #include <nlohmann/json.hpp>
@@ -69,6 +70,10 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.process_memory";
+        }
+
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_SERVER_PROCESS;
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64) const override;

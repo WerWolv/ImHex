@@ -1080,15 +1080,15 @@ namespace hex {
                 });
             }
 
-            static AutoReset<std::vector<std::string>> s_providerNames;
-            const std::vector<std::string>& getEntries() {
+            static AutoReset<std::vector<Entry>> s_providerNames;
+            const std::vector<Entry>& getEntries() {
                 return *s_providerNames;
             }
 
-            void addProviderName(const UnlocalizedString &unlocalizedName) {
+            void addProviderName(const UnlocalizedString &unlocalizedName, const char *icon) {
                 log::debug("Registered new provider: {}", unlocalizedName.get());
 
-                s_providerNames->push_back(unlocalizedName);
+                s_providerNames->emplace_back(unlocalizedName, icon);
             }
 
         }

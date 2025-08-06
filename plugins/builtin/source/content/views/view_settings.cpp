@@ -12,7 +12,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewSettings::ViewSettings() : View::Modal("hex.builtin.view.settings.name") {
+    ViewSettings::ViewSettings() : View::Modal("hex.builtin.view.settings.name", ICON_VS_SETTINGS_GEAR) {
         // Handle window open requests
         RequestOpenWindow::subscribe(this, [this](const std::string &name) {
             if (name == "Settings") {

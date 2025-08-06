@@ -6,6 +6,7 @@
 
 #include <set>
 #include <string_view>
+#include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -50,6 +51,10 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.file";
+        }
+
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_FILE_BINARY;
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;

@@ -351,8 +351,8 @@ namespace hex::plugin::builtin {
                             ImGui::SameLine(0, 2_scaled);
 
                             if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, nullptr, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 5.8), ImGuiChildFlags_AutoResizeX)) {
-                                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
-                                    if (ImGuiExt::Hyperlink(Lang(unlocalizedProviderName))) {
+                                for (const auto &[unlocalizedProviderName, icon] : ContentRegistry::Provider::impl::getEntries()) {
+                                    if (ImGuiExt::Hyperlink(fmt::format("{} {}", icon, Lang(unlocalizedProviderName)).c_str())) {
                                         ImHexApi::Provider::createProvider(unlocalizedProviderName);
                                         otherProvidersVisible = false;
                                     }
@@ -519,11 +519,11 @@ namespace hex::plugin::builtin {
                                     ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
                                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
                                     if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
-                                        if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen)) {
+                                        if (ImGuiExt::DimmedIconToggle(ICON_VS_COMPASS_ACTIVE, ICON_VS_COMPASS, &s_simplifiedWelcomeScreen)) {
                                             ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
                                             WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
                                         }
-
+                                        ImGui::SetItemTooltip("hex.builtin.welcome.quick_settings.simplified"_lang);
                                     }
                                     ImGuiExt::EndSubWindow();
 

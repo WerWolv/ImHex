@@ -517,7 +517,7 @@ namespace hex::plugin::builtin {
                         static size_t lastSelectedProvider = 0;
 
                         bool isSelected = false;
-                        if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open, flags)) {
+                        if (ImGui::BeginTabItem(fmt::format("{} {}", tabProvider->getIcon(), tabProvider->getName()).c_str(), &open, flags)) {
                             isSelected = true;
                             ImGui::EndTabItem();
                         }

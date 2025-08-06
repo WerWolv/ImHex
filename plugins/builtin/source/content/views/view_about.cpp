@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
         }
     };
 
-    ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name") {
+    ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name", ICON_VS_HEART) {
         // Add "About" menu item to the help menu
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, ICON_VS_INFO, 1000, Shortcut::None, [this] {
             this->getWindowOpenState() = true;
