@@ -33,7 +33,7 @@ namespace hex::plugin::remote {
         SFTPClient(const std::string &host,
                    int port,
                    const std::string &user,
-                   const std::string &privateKeyPath,
+                   const std::fs::path &privateKeyPath,
                    const std::string &passphrase);
 
         ~SFTPClient();
@@ -109,7 +109,7 @@ namespace hex::plugin::remote {
     private:
         void connect(const std::string &host, int port);
         void authenticatePassword(const std::string &user, const std::string &password);
-        void authenticatePublicKey(const std::string &user, const std::string &privateKeyPath, const std::string &passphrase);
+        void authenticatePublicKey(const std::string &user, const std::fs::path &privateKeyPath, const std::string &passphrase);
 
         std::string getErrorString(LIBSSH2_SESSION* session) const;
 

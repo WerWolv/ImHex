@@ -292,7 +292,8 @@ namespace hex::plugin::builtin {
                     if (identifierType == identifierTypeToSearch) {
                         switch (identifierType) {
                             case IdentifierType::Function:
-                                getTokenRange({tkn::Keyword::Function}, m_functionTokenRange, m_namespaceTokenRange, false, &m_functionBlocks);
+                                if (!m_functionTokenRange.contains(name))
+                                    getTokenRange({tkn::Keyword::Function}, m_functionTokenRange, m_namespaceTokenRange, false, &m_functionBlocks);
                                 break;
                             case IdentifierType::NameSpace:
                                 if (std::ranges::find(m_nameSpaces, name) == m_nameSpaces.end())
@@ -300,7 +301,8 @@ namespace hex::plugin::builtin {
                                 getTokenRange({tkn::Keyword::Namespace}, m_functionTokenRange, m_namespaceTokenRange, true, nullptr);
                                 break;
                             case IdentifierType::UDT:
-                                getTokenRange({tkn::Keyword::Struct, tkn::Keyword::Union, tkn::Keyword::Enum, tkn::Keyword::Bitfield}, m_UDTTokenRange, m_namespaceTokenRange, false, &m_UDTBlocks);
+                                if (!m_UDTTokenRange.contains(name))
+                                    getTokenRange({tkn::Keyword::Struct, tkn::Keyword::Union, tkn::Keyword::Enum, tkn::Keyword::Bitfield}, m_UDTTokenRange, m_namespaceTokenRange, false, &m_UDTBlocks);
                                 break;
                             case IdentifierType::Attribute:
                                 linkAttribute();
@@ -1250,7 +1252,7 @@ namespace hex::plugin::builtin {
                 }
             }
         }
-        m_viewPatternEditor->getTextEditor().SetErrorMarkers(errorMarkers);
+        m_viewPatternEditor->getTextEditor().setErrorMarkers(errorMarkers);
     }
 
 // creates a map from variable names to a vector of token indices
@@ -1588,7 +1590,7 @@ namespace hex::plugin::builtin {
                         lineOfColors[tokenOffset + j] = color;
                 }
             }
-            m_viewPatternEditor->getTextEditor().SetColorizedLine(line, lineOfColors);
+            m_viewPatternEditor->getTextEditor().setColorizedLine(line, lineOfColors);
         }
     }
 
@@ -1917,7 +1919,7 @@ namespace hex::plugin::builtin {
             m_lines.clear();
 
         if (m_text.empty())
-            m_text =  m_viewPatternEditor->getTextEditor().GetText();
+            m_text = m_viewPatternEditor->getTextEditor().getText();
 
         m_lines = wolv::util::splitString(m_text, "\n");
         m_lines.push_back("");
@@ -2282,7 +2284,7 @@ namespace hex::plugin::builtin {
             m_globalTokenRange.clear();
         m_globalTokenRange.insert(Interval(0, m_tokens.size()-1));
 
-        m_text = m_viewPatternEditor->getTextEditor().GetText();
+        m_text = m_viewPatternEditor->getTextEditor().getText();
 
         if (m_text.empty() || m_text == "\n")
             return;
@@ -2305,13 +2307,13 @@ namespace hex::plugin::builtin {
         colorRemainingIdentifierTokens();
         setRequestedIdentifierColors();
 
-        m_viewPatternEditor->getTextEditor().ClearErrorMarkers();
+        m_viewPatternEditor->getTextEditor().clearErrorMarkers();
         m_compileErrors = patternLanguage->get()->getCompileErrors();
 
         if (!m_compileErrors.empty())
             renderErrors();
         else
-            m_viewPatternEditor->getTextEditor().ClearErrorMarkers();
+            m_viewPatternEditor->getTextEditor().clearErrorMarkers();
         } catch (const std::out_of_range &e) {
             log::debug("TextHighlighter::highlightSourceCode: Out of range error: {}", e.what());
             m_wasInterrupted = true;

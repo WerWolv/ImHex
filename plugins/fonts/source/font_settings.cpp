@@ -6,6 +6,7 @@
 
 #include <imgui.h>
 #include <fonts/fonts.hpp>
+#include <fonts/vscode_icons.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <romfs/romfs.hpp>
@@ -223,10 +224,21 @@ namespace hex::fonts {
 
                 ImGui::BeginDisabled(m_fontFilePicker.isPixelPerfectFontSelected());
                 {
-                    if (m_fontSize.draw("hex.fonts.setting.font.font_size"_lang)) changed = true;
-                    if (m_bold.draw("hex.fonts.setting.font.font_bold"_lang)) changed = true;
-                    if (m_italic.draw("hex.fonts.setting.font.font_italic"_lang)) changed = true;
-                    if (m_antiAliased.draw("hex.fonts.setting.font.font_antialias"_lang)) changed = true;
+                    if (m_fontSize.draw("hex.fonts.setting.font.font_size"_lang))
+                        changed = true;
+
+                    if (ImGuiExt::DimmedIconToggle(ICON_VS_BOLD, &m_bold))
+                        changed = true;
+                    ImGui::SetItemTooltip("%s", "hex.fonts.setting.font.font_bold"_lang.get());
+
+                    ImGui::SameLine();
+
+                    if (ImGuiExt::DimmedIconToggle(ICON_VS_ITALIC, &m_italic))
+                        changed = true;
+                    ImGui::SetItemTooltip("%s", "hex.fonts.setting.font.font_italic"_lang.get());
+
+                    if (m_antiAliased.draw("hex.fonts.setting.font.font_antialias"_lang))
+                        changed = true;
                 }
                 ImGui::EndDisabled();
 
@@ -242,8 +254,8 @@ namespace hex::fonts {
 
         json["font_file"] = m_fontFilePicker.store();
         json["font_size"] = m_fontSize.store();
-        json["bold"] = m_bold.store();
-        json["italic"] = m_italic.store();
+        json["bold"] = m_bold;
+        json["italic"] = m_italic;
         json["antialiased"] = m_antiAliased.store();
 
         return json;
@@ -251,38 +263,9 @@ namespace hex::fonts {
     void FontSelector::load(const nlohmann::json& data) {
         m_fontFilePicker.load(data["font_file"]);
         m_fontSize.load(data["font_size"]);
-        m_bold.load(data["bold"]);
-        m_italic.load(data["italic"]);
+        m_bold = data["bold"];
+        m_italic = data["italic"];
         m_antiAliased.load(data["antialiased"]);
-    }
-
-    bool FontSelector::drawPopup() {
-        bool changed = false;
-        if (ImGui::BeginPopup("Fonts")) {
-            if (m_fontFilePicker.draw("hex.fonts.setting.font.custom_font"_lang)) m_applyEnabled = true;
-
-            ImGui::BeginDisabled(m_fontFilePicker.isPixelPerfectFontSelected());
-            {
-                if (m_fontSize.draw("hex.fonts.setting.font.font_size"_lang)) m_applyEnabled = true;
-                if (m_bold.draw("hex.fonts.setting.font.font_bold"_lang)) m_applyEnabled = true;
-                if (m_italic.draw("hex.fonts.setting.font.font_italic"_lang)) m_applyEnabled = true;
-                if (m_antiAliased.draw("hex.fonts.setting.font.font_antialias"_lang)) m_applyEnabled = true;
-            }
-            ImGui::EndDisabled();
-
-            ImGui::NewLine();
-
-            ImGui::BeginDisabled(!m_applyEnabled);
-            if (ImGui::Button("hex.ui.common.apply"_lang)) {
-                changed = true;
-                m_applyEnabled = false;
-            }
-            ImGui::EndDisabled();
-
-            ImGui::EndPopup();
-        }
-
-        return changed;
     }
 
     [[nodiscard]] const std::fs::path& FontSelector::getFontPath() const {
@@ -298,11 +281,11 @@ namespace hex::fonts {
     }
 
     [[nodiscard]] bool FontSelector::isBold() const {
-        return m_bold.isChecked();
+        return m_bold;
     }
 
     [[nodiscard]] bool FontSelector::isItalic() const {
-        return m_italic.isChecked();
+        return m_italic;
     }
 
     [[nodiscard]] AntialiasingType FontSelector::getAntialiasingType() const {

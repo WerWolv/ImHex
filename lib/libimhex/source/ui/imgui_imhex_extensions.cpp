@@ -1445,6 +1445,21 @@ namespace ImGuiExt {
         ImGui::PopClipRect();
     }
 
+    bool IsDarkBackground(const ImColor& bgColor) {
+        // Extract RGB components in 0–255 range
+        int r = static_cast<int>(bgColor.Value.x * 255.0f);
+        int g = static_cast<int>(bgColor.Value.y * 255.0f);
+        int b = static_cast<int>(bgColor.Value.z * 255.0f);
+
+        // Compute brightness using perceived luminance
+        int brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+        // If brightness is below threshold, use white text
+        return brightness < 128;
+    }
+
+
+
     static bool s_imguiTestEngineEnabled = false;
 
     void ImGuiTestEngine::setEnabled(bool enabled) {

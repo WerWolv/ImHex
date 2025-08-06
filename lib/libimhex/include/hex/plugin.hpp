@@ -77,8 +77,14 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
  * This macro is used to define all the required entry points for a plugin.
  * Name, Author and Description will be displayed in the plugin list on the Welcome screen.
  */
-#define IMHEX_PLUGIN_SETUP(name, author, description) IMHEX_PLUGIN_SETUP_IMPL(name, author, description)
-#define IMHEX_LIBRARY_SETUP(name) IMHEX_LIBRARY_SETUP_IMPL(name)
+#define IMHEX_PLUGIN_SETUP(name, author, description) \
+    IMHEX_PLUGIN_SETUP_IMPL(name, author, description, nullptr)
+#define IMHEX_LIBRARY_SETUP(name) \
+    IMHEX_LIBRARY_SETUP_IMPL(name)
+
+#define IMHEX_PLUGIN_SETUP_BUILTIN(name, author, description)               \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX bool isBuiltinPlugin() { return true; }  \
+    IMHEX_PLUGIN_SETUP_IMPL(name, author, description, isBuiltinPlugin)
 
 #define IMHEX_LIBRARY_SETUP_IMPL(name)                                                                                          \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)();                             \
@@ -105,7 +111,7 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
     PLUGIN_ENTRY_POINT                                                                                                          \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)()
 
-#define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                                      \
+#define IMHEX_PLUGIN_SETUP_IMPL(name, author, description, builtinPluginFunc)                                                                      \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                                                 \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginAuthor() { return author; }                                             \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginDescription() { return description; }                                   \
@@ -134,7 +140,8 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
             setImGuiContext,                                                                                                    \
             nullptr,                                                                                                            \
             getSubCommands,                                                                                                     \
-            getFeatures                                                                                                         \
+            getFeatures,                                                                                                        \
+            builtinPluginFunc                                                                                                   \
         });                                                                                                                     \
     }                                                                                                                           \
     PLUGIN_ENTRY_POINT                                                                                                          \

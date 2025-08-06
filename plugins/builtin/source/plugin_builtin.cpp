@@ -88,7 +88,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "save-editor",     "",  "Opens a pattern file for save file editing",   hex::plugin::builtin::handleSaveEditorCommand       },
 };
 
-IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
+IMHEX_PLUGIN_SETUP_BUILTIN("Built-in", "WerWolv", "Default ImHex functionality") {
     using namespace hex::plugin::builtin;
 
     // Show a warning banner on debug builds

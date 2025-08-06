@@ -532,6 +532,8 @@
         "hex.builtin.setting.interface.pattern_data_row_bg": "Enable colored pattern background",
         "hex.builtin.setting.interface.wiki_explain_language": "Wikipedia Language",
         "hex.builtin.setting.interface.restore_window_pos": "Restore window position",
+        "hex.builtin.setting.plugins": "Plugins",
+        "hex.builtin.setting.loaded_plugins": "Plugins to be loaded",
         "hex.builtin.setting.proxy": "Proxy",
         "hex.builtin.setting.proxy.description": "Proxy will take effect on store, wikipedia or any other plugin immediately.",
         "hex.builtin.setting.proxy.enable": "Enable Proxy",

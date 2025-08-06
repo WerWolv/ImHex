@@ -18,6 +18,7 @@ namespace hex::ui {
             const auto iconSize = ImGui::CalcTextSize(m_icon);
             const auto textHeight = std::max(ImGui::CalcTextSize(Lang(m_message)).y, iconSize.y);
             const auto textOffset = (ImGui::GetWindowHeight() - textHeight) / 2;
+
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + textOffset);
             ImGui::TextUnformatted(m_icon);
             ImGui::SameLine(0, 10_scaled);
@@ -39,8 +40,8 @@ namespace hex::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2_scaled);
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
             ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 0.0F);
-            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_Tab));
-            if (ImGuiExt::DimmedButton(buttonText.c_str())) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_Button, 0.9F));
+            if (ImGui::Button(buttonText.c_str())) {
                 m_buttonCallback();
                 this->close();
             }
