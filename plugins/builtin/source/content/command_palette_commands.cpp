@@ -4,6 +4,8 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
 
+#include <hex/ui/view.hpp>
+
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/providers/provider.hpp>
@@ -357,6 +359,11 @@ namespace hex::plugin::builtin {
                     for (const auto &[priority, entry] : ContentRegistry::Interface::impl::getMenuItems()) {
                         if (!entry.enabledCallback())
                             continue;
+
+                        if (entry.view != nullptr) {
+                            if (View::getLastFocusedView() != entry.view)
+                                continue;
+                        }
 
                         std::vector<std::string> names;
                         std::transform(entry.unlocalizedNames.begin(), entry.unlocalizedNames.end(), std::back_inserter(names), [](auto &name) { return Lang(name); });

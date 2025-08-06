@@ -118,9 +118,15 @@ namespace hex::plugin::builtin {
 
             // Draw the results
             if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+                u32 id = 1;
                 for (const auto &[displayResult, matchedCommand, callback] : m_lastResults) {
+                    ImGui::PushID(id);
                     ImGui::PushItemFlag(ImGuiItemFlags_NoTabStop, false);
-                    ON_SCOPE_EXIT { ImGui::PopItemFlag(); };
+                    ON_SCOPE_EXIT {
+                        ImGui::PopItemFlag();
+                        ImGui::PopID();
+                        id += 1;
+                    };
 
                     // Allow executing a command by clicking on it or selecting it with the keyboard and pressing enter
                     if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_NoAutoClosePopups)) {
