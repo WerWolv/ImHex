@@ -21,7 +21,7 @@
 namespace hex {
 
     void nativeErrorMessage(const std::string &message) {
-        log::fatal(message);
+        log::fatal("{}", message);
         errorMessageMacos(message.c_str());
     }
 
