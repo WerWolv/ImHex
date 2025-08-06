@@ -523,7 +523,7 @@ namespace hex::plugin::builtin {
                                             ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
                                             WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
                                         }
-                                        ImGui::SetItemTooltip("hex.builtin.welcome.quick_settings.simplified"_lang);
+                                        ImGui::SetItemTooltip("%s", "hex.builtin.welcome.quick_settings.simplified"_lang.get());
                                     }
                                     ImGuiExt::EndSubWindow();
 
