@@ -133,7 +133,7 @@ std::string TextEditor::getText(const Selection &from) const {
     else {
         auto lines = selection.getSelectedLines();
         result = m_lines[lines.m_line].substr(columns.m_line,-1,Line::LinePart::Utf8) + '\n';
-        for (size_t i = lines.m_line+1; i < lines.m_column; i++) {
+        for (uint64_t i = lines.m_line+1; i < lines.m_column; i++) {
             result += m_lines[i].m_chars + '\n';
         }
         result += m_lines[lines.m_column].substr(0, columns.m_column, Line::LinePart::Utf8);
@@ -306,7 +306,7 @@ void TextEditor::addUndo(UndoRecord &value) {
     if (m_readOnly)
         return;
 
-    m_undoBuffer.resize((size_t)(m_undoIndex + 1));
+    m_undoBuffer.resize((uint64_t)(m_undoIndex + 1));
     m_undoBuffer.back() = value;
     ++m_undoIndex;
 }
@@ -319,7 +319,7 @@ TextEditor::Coordinates TextEditor::screenPosToCoordinates(const ImVec2 &positio
     std::string line = m_lines[lineNo].m_chars;
     local.x -= (m_leftMargin - 5);
     int32_t count = 0;
-    size_t length;
+    uint64_t length;
     int32_t increase;
     do {
         increase = utf8CharLength(line[count]);
@@ -1412,7 +1412,7 @@ void TextEditor::setText(const std::string &text, bool undo) {
         m_lines[0].clear();
     } else {
         m_lines.resize(lineCount);
-        size_t i = 0;
+        uint64_t i = 0;
         for (auto line : vectorString) {
             m_lines[i].setLine(line);
             m_lines[i].m_colorized = false;
@@ -1475,7 +1475,7 @@ void TextEditor::enterCharacter(ImWchar character, bool shift) {
                         if (index == std::string::npos)
                             index = line.size() - 1;
                         if (index == 0) continue;
-                        auto spacesToRemove = (index % m_tabSize) ? (index % m_tabSize) : m_tabSize;
+                        uint64_t spacesToRemove = (index % m_tabSize) ? (index % m_tabSize) : m_tabSize;
                         spacesToRemove = std::min(spacesToRemove, line.size());
                         line.erase(line.begin(), spacesToRemove);
                         line.m_colorized = false;
@@ -1538,10 +1538,10 @@ void TextEditor::enterCharacter(ImWchar character, bool shift) {
         auto &newLine = m_lines[coord.m_line + 1];
 
         if (m_languageDefinition.m_autoIndentation)
-            for (size_t it = 0; it < line.size() && isascii(line[it]) && isblank(line[it]); ++it)
+            for (uint64_t it = 0; it < line.size() && isascii(line[it]) && isblank(line[it]); ++it)
                 newLine.push_back(line[it]);
 
-        const size_t whitespaceSize = newLine.size();
+        const uint64_t whitespaceSize = newLine.size();
         int32_t charStart     = 0;
         int32_t charPosition  = 0;
         auto charIndex    = lineCoordinateToIndex(coord);
@@ -2232,7 +2232,7 @@ std::string TextEditor::replaceStrings(std::string string, const std::string &se
         }
     } else {
         result = string;
-        std::size_t pos = 0;
+        std::uint64_t pos = 0;
         while ((pos = result.find(search, pos)) != std::string::npos) {
             result.replace(pos, search.size(), replace);
             pos += replace.size();
@@ -2249,9 +2249,9 @@ std::vector<std::string> TextEditor::splitString(const std::string &string, cons
 
     std::vector<std::string> result;
 
-    size_t start = 0, end = 0;
+    uint64_t start = 0, end = 0;
     while ((end = string.find(delimiter, start)) != std::string::npos) {
-        size_t size = end - start;
+        uint64_t size = end - start;
         if (start + size > string.length())
             break;
 
@@ -2277,9 +2277,9 @@ std::string TextEditor::replaceTabsWithSpaces(const std::string& string, uint32_
     auto stringVector = splitString(string, "\n", false);
     auto size = stringVector.size();
     std::string result;
-    for (size_t i = 0; i < size; i++) {
+    for (uint64_t i = 0; i < size; i++) {
         auto &line = stringVector[i];
-        std::size_t pos = 0;
+        std::uint64_t pos = 0;
         while ((pos = line.find('\t', pos)) != std::string::npos) {
             auto spaces = tabSize - (pos % tabSize);
             line.replace(pos, 1, std::string(spaces, ' '));
@@ -2499,9 +2499,9 @@ bool TextEditor::FindReplaceHandler::findNext(TextEditor *editor) {
     curPos.m_column = m_matches.empty() ? editor->m_state.m_cursorPosition.m_column : editor->lineCoordinateToIndex(m_matches.back().m_cursorPosition);
 
     uint64_t matchLength = getStringCharacterCount(m_findWord);
-    size_t byteIndex = 0;
+    uint64_t byteIndex = 0;
 
-    for (size_t ln = 0; ln < curPos.m_line; ln++)
+    for (uint64_t ln = 0; ln < curPos.m_line; ln++)
         byteIndex += editor->getLineByteCount(ln) + 1;
     byteIndex += curPos.m_column;
 
@@ -2513,7 +2513,7 @@ bool TextEditor::FindReplaceHandler::findNext(TextEditor *editor) {
     if (!getMatchCase())
         std::transform(textSrc.begin(), textSrc.end(), textSrc.begin(), ::tolower);
 
-    size_t textLoc;
+    uint64_t textLoc;
     // TODO: use regexp find iterator in all cases
     //  to find all matches for FindAllMatches.
     //  That should make things faster (no need
@@ -2535,12 +2535,12 @@ bool TextEditor::FindReplaceHandler::findNext(TextEditor *editor) {
             }
         }
 
-        size_t pos=0;
+        uint64_t pos=0;
         std::sregex_iterator iter = std::sregex_iterator(textSrc.begin(), textSrc.end(), regularExpression);
         std::sregex_iterator end;
         if (!iter->ready())
             return false;
-        size_t firstLoc = iter->position();
+        uint64_t firstLoc = iter->position();
         uint64_t firstLength = iter->length();
 
         if(firstLoc > byteIndex) {
@@ -2871,7 +2871,7 @@ void TextEditor::colorizeRange() {
                 current=current + 1;
             else {
                 current = first + token_offset;
-                size_t token_length=0;
+                uint64_t token_length=0;
                 Line::Flags flags(0);
                 flags.m_value = line.m_flags[token_offset];
                 if (flags.m_value == 0) {
@@ -3002,7 +3002,7 @@ void TextEditor::colorizeInternal() {
                 }
             };
 
-            size_t currentIndex = 0;
+            uint64_t currentIndex = 0;
             if (line.empty())
                 continue;
             while (currentIndex < lineLength) {

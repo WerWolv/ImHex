@@ -424,7 +424,7 @@ public:
         }
 
         char operator[](uint64_t index) const {
-            index = std::clamp(index, (uint64_t)0, m_chars.size() - 1);
+            index = std::clamp(index, (uint64_t)0, (uint64_t)(m_chars.size() - 1));
             return m_chars[index];
         }
         // C++ can't overload functions based on return type, so use any type other
