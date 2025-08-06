@@ -98,7 +98,10 @@ namespace hex {
         [[nodiscard]] bool didWindowJustOpen();
         void setWindowJustOpened(bool state);
 
-        void trackViewOpenState();
+        [[nodiscard]] bool didWindowJustClose();
+        void setWindowJustClosed(bool state);
+
+        void trackViewState();
 
         static void discardNavigationRequests();
 
@@ -125,7 +128,7 @@ namespace hex {
         UnlocalizedString m_unlocalizedViewName;
         bool m_windowOpen = false, m_prevWindowOpen = false;
         std::map<Shortcut, ShortcutManager::ShortcutEntry> m_shortcuts;
-        bool m_windowJustOpened = false;
+        bool m_windowJustOpened = false, m_windowJustClosed = false;
         const char *m_icon;
         bool m_focused = false;
 

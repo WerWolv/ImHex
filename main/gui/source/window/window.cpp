@@ -773,38 +773,47 @@ namespace hex {
 
                 ImGui::SetNextWindowClass(&windowClass);
 
-                auto window    = ImGui::FindWindowByName(view->getName().c_str());
+                const auto window = ImGui::FindWindowByName(view->getName().c_str());
                 if (window != nullptr && window->DockNode == nullptr)
                     ImGui::SetNextWindowBgAlpha(1.0F);
 
                 // Draw view
                 view->draw();
-                view->trackViewOpenState();
+                view->trackViewState();
 
-                if (view->getWindowOpenState()) {
-                    // Get the currently focused view
-                    if (window != nullptr && (window->Flags & ImGuiWindowFlags_Popup) != ImGuiWindowFlags_Popup) {
+                if (window != nullptr) {
+                    if (view->getWindowOpenState()) {
+                        // Get the currently focused view
                         auto windowName = View::toWindowName(name);
-                        ImGui::Begin(windowName.c_str());
+                        bool focused = false;
 
-                        // Detect if the window is focused
-                        const bool focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
-                        view->setFocused(focused);
+                        const bool windowIsPopup = (window->Flags & ImGuiWindowFlags_Popup) == ImGuiWindowFlags_Popup;
+                        if (!windowIsPopup) {
+                            ImGui::Begin(windowName.c_str());
 
-                        // Dock the window if it's not already docked
+                            // Detect if the window is focused
+                            focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
+                            view->setFocused(focused);
+                        }
+
                         if (view->didWindowJustOpen()) {
-                            if (!ImGui::IsWindowDocked())
+                            // Dock the window if it's not already docked
+                            if (!windowIsPopup && !ImGui::IsWindowDocked())
                                 ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
 
                             EventViewOpened::post(view.get());
                         }
 
                         // Pass on currently pressed keys to the shortcut handler
-                        for (const auto &key : m_pressedKeys) {
-                            ShortcutManager::process(view.get(), io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl, io.KeyAlt, io.KeyShift, io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper, focused, key);
-                        }
+                        if (!windowIsPopup) {
+                            for (const auto &key : m_pressedKeys) {
+                                ShortcutManager::process(view.get(), io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl, io.KeyAlt, io.KeyShift, io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper, focused, key);
+                            }
 
-                        ImGui::End();
+                            ImGui::End();
+                        }
+                    } else if (view->didWindowJustClose()) {
+                        EventViewClosed::post(view.get());
                     }
                 }
             }
