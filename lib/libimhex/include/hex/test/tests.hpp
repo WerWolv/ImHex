@@ -93,8 +93,8 @@ namespace hex::test {
 
 
     template<typename F>
-    TestSequence<F> operator+(const TestSequenceExecutor &executor, F &&f) noexcept {
-        return TestSequence<F>(executor.getName(), std::forward<F>(f), executor.shouldFail());
+    TestSequence<F> operator+(const TestSequenceExecutor &executor, F f) noexcept {
+        return TestSequence<F>(executor.getName(), std::move(f), executor.shouldFail());
     }
 
 

@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted(project.begin(), project.end());
+                ImGui::TextUnformatted(project.data(), project.data() + project.size());
                 ImGui::TableNextColumn();
                 ImGui::PushStyleColor(ImGuiCol_Text, getColor(level).Value);
                 ImGui::TextUnformatted(message.c_str());
