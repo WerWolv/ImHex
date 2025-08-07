@@ -349,8 +349,7 @@ namespace ImGuiExt {
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
 
         const ImRect bb(pos, pos + size);
-        if (!ItemAdd(bb, id))
-            return false;
+        ItemAdd(bb, id);
 
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
@@ -1273,11 +1272,15 @@ namespace ImGuiExt {
                 if (collapsed == nullptr)
                     ImGui::TextUnformatted(label);
                 else {
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, ImGui::GetStyle().FramePadding.y));
-                    ImGui::PushStyleColor(ImGuiCol_Button, 0x00);
-                    if (ImGui::Button(label))
-                        *collapsed = !*collapsed;
-                    ImGui::PopStyleColor();
+                    const auto &style = ImGui::GetStyle();
+                    const auto framePadding = style.FramePadding.x;
+                    ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0);
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() - style.WindowPadding.x + framePadding);
+                    *collapsed = !ImGui::TreeNodeEx("##CollapseHeader", ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanLabelWidth);
+                    ImGui::SameLine(0, framePadding);
+                    ImGui::TextUnformatted(label);
+                    if (!*collapsed) ImGui::TreePop();
+
                     ImGui::PopStyleVar();
                 }
                 ImGui::EndMenuBar();
