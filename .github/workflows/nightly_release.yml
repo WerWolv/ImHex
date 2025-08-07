@@ -14,6 +14,12 @@ jobs:
     name: Update Nightly Release
 
     steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ImHex
+          submodules: recursive
+
       - name: ⬇️ Download artifacts from latest workflow
         uses: dawidd6/action-download-artifact@v6
         with:
@@ -50,6 +56,7 @@ jobs:
         id: release_notes
         continue-on-error: true
         run: |
+          cd ImHex
           echo "## Nightly Changelog" > changelog.md
           git log nightly..HEAD --oneline --no-merges --pretty=format:'* %s' >> changelog.md
 
@@ -61,5 +68,5 @@ jobs:
           tag_name: nightly
           name: 'Nightly Builds'
           prerelease: true
-          body_path: changelog.md
+          body_path: ImHex/changelog.md
           files: '*.!(txt)'
