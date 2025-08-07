@@ -1005,7 +1005,7 @@
         "hex.builtin.welcome.start.open_file": "Datei öffnen",
         "hex.builtin.welcome.start.open_other": "Andere Provider",
         "hex.builtin.welcome.start.open_project": "Projekt öffnen",
-        "hex.builtin.welcome.start.recent": "Zuletzt geöffnete Dateien",
+        "hex.builtin.welcome.start.recent": "Zuletzt geöffnete Datenquellen",
         "hex.builtin.welcome.start.recent.auto_backups": "Auto Backups",
         "hex.builtin.welcome.start.recent.auto_backups.backup": "Backup vom {:%Y-%m-%d %H:%M:%S}",
         "hex.builtin.welcome.tip_of_the_day": "Tipp des Tages",
