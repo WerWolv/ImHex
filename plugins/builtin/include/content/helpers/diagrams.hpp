@@ -748,23 +748,22 @@ namespace hex {
 
         void draw(ImVec2 size, ImPlotFlags flags) {
 
-            if (!m_processing && ImPlot::BeginPlot("##distribution", size, flags)) {
+            if (!m_processing && ImPlot::BeginPlot("##distribution", size, flags | ImPlotFlags_NoMouseText)) {
                 ImPlot::SetupAxes("hex.ui.common.value"_lang, "hex.ui.common.count"_lang,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
-                                  ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
-                ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
-                ImPlot::SetupAxesLimits(-1, 256, 1, double(*std::ranges::max_element(m_valueCounts)) * 1.1F, ImGuiCond_Always);
-                ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, const_cast<void*>(reinterpret_cast<const void*>("0x%02llX")));
-                ImPlot::SetupAxisTicks(ImAxis_X1, 0, 255, 17);
-                ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
+                                  ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch | ImPlotAxisFlags_Invert);
+                ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
+                ImPlot::SetupAxesLimits(1, double(*std::ranges::max_element(m_valueCounts)) * 1.1F, -1, 256, ImGuiCond_Always);
+                ImPlot::SetupAxisFormat(ImAxis_Y1, impl::IntegerAxisFormatter, const_cast<void*>(reinterpret_cast<const void*>("0x%02llX")));
+                ImPlot::SetupAxisTicks(ImAxis_Y1, 0, 255, 17);
 
-                constexpr static auto x = [] {
+                constexpr static auto Y = [] {
                     std::array<ImU64, 256> result { 0 };
                     std::iota(result.begin(), result.end(), 0);
                     return result;
                 }();
 
-                ImPlot::PlotBars<ImU64>("##bytes", x.data(), m_valueCounts.data(), x.size(), 1);
+                ImPlot::PlotBars<ImU64>("##bytes", m_valueCounts.data(), Y.data(), Y.size(), 1, ImPlotBarsFlags_Horizontal);
                 ImPlot::EndPlot();
             }
         }
