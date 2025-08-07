@@ -1,0 +1,65 @@
+permissions:
+  contents: write
+
+name: Nightly Release
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  nightly-release:
+    runs-on: ubuntu-24.04
+    name: Update Nightly Release
+
+    steps:
+      - name: ⬇️ Download artifacts from latest workflow
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: build.yml
+          branch: ${{ github.event.release.target_commitish }}
+          workflow_conclusion: success
+          skip_unpack: true
+
+      - name: 🗜️ Unzip files when needed
+        run: |
+          set -x
+          for zipfile in ./*.zip
+          do
+              if [ `zipinfo -1 "$zipfile" | wc -l` -eq 1 ];
+              then
+                echo "unzipping $zipfile"
+                unzip "$zipfile"
+                rm "$zipfile"
+              else
+                echo "keeping $zipfile zipped"
+              fi
+          done
+
+      - name: 🟩 Rename artifacts when needed
+        run: |
+          mv "Windows Portable x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-x86_64.zip
+          mv "Windows Portable arm64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-arm64.zip
+          mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip
+          mv "ImHex Web.zip" imhex-${{ env.IMHEX_VERSION }}-Web.zip
+          rm artifact.tar
+
+      - name: 📖 Generate Release Notes
+        id: release_notes
+        continue-on-error: true
+        run: |
+          echo "## Nightly Changelog" > changelog.md
+          git log nightly..HEAD --oneline --no-merges --pretty=format:'* %s' >> changelog.md
+
+      - name: ⬆️ Update Nightly Release
+        uses: andelf/nightly-release@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nightly
+          name: 'Nightly Builds'
+          prerelease: true
+          body_path: changelog.md
+          files: '*.!(txt)'
