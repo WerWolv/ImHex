@@ -69,4 +69,5 @@ jobs:
           name: 'Nightly Builds'
           prerelease: true
           body_path: ImHex/changelog.md
-          files: '*.!(txt)'
+          files: |
+            ./*.*
