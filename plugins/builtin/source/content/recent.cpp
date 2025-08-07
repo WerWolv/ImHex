@@ -284,6 +284,7 @@ namespace hex::plugin::builtin::recent {
                         loadRecentEntry(recentEntry);
                         break;
                     }
+                    ImGui::SetItemTooltip("%s", recentEntry.displayName.c_str());
 
                     if (ImGui::IsItemHovered() && ImGui::GetIO().KeyShift) {
                         if (ImGui::BeginTooltip()) {
