@@ -14,7 +14,7 @@
 
 namespace pl {
 
-    void pl_init();
+    void plInit();
 }
 
 namespace hex::init {
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     // Run platform-specific initialization code
     Window::initNative();
 
-    pl::pl_init();
+    pl::plInit();
 
     // Setup messaging system to allow sending commands to the main ImHex instance
     hex::messaging::setupMessaging();
