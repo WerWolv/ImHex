@@ -227,8 +227,10 @@ namespace hex::fonts {
                     if (m_fontSize.draw("hex.fonts.setting.font.font_size"_lang))
                         changed = true;
 
+                    fonts::Default().pushBold();
                     if (ImGuiExt::DimmedIconToggle(ICON_VS_BOLD, &m_bold))
                         changed = true;
+                    fonts::Default().pop();
                     ImGui::SetItemTooltip("%s", "hex.fonts.setting.font.font_bold"_lang.get());
 
                     ImGui::SameLine();
