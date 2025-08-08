@@ -63,7 +63,7 @@ jobs:
         run: |
           cd ImHex
           echo "## Nightly Changelog" > changelog.md
-          git log nightly..HEAD --oneline --no-merges --pretty=format:'* %s' >> changelog.md
+          git log tags/nightly..HEAD --oneline --no-merges --pretty=format:'* %s' >> changelog.md
 
       - name: ⬆️ Update Nightly Release
         uses: andelf/nightly-release@main
