@@ -259,7 +259,7 @@ namespace hex::plugin::builtin {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + height);
         }
 
-        ImGui::InvisibleButton("##DropTarget", ImVec2(ImGui::GetContentRegionAvail().x, height * 2.0F));
+        ImGui::InvisibleButton("##DropTarget", ImVec2(std::max(1.0F, ImGui::GetContentRegionAvail().x), height * 2.0F));
         const auto dropTarget = ImRect(ImGui::GetItemRectMin(), ImVec2(ImGui::GetItemRectMax().x, ImGui::GetItemRectMin().y + 2_scaled));
 
         if (it == m_bookmarks->begin()) {
@@ -298,7 +298,12 @@ namespace hex::plugin::builtin {
         ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, m_currFilter);
         ImGui::PopItemWidth();
 
-        if (ImGui::BeginChild("##bookmarks")) {
+        ImGui::NewLine();
+
+        ImGui::PushStyleVarY(ImGuiStyleVar_WindowPadding, -5_scaled);
+        bool open = ImGuiExt::BeginSubWindow("", nullptr, ImGui::GetContentRegionAvail());
+        ImGui::PopStyleVar();
+        if (open) {
             if (m_bookmarks->empty()) {
                 ImGuiExt::TextOverlay("hex.builtin.view.bookmarks.no_bookmarks"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
             }
@@ -306,7 +311,6 @@ namespace hex::plugin::builtin {
             auto bookmarkToRemove = m_bookmarks->end();
             const auto defaultItemSpacing = ImGui::GetStyle().ItemSpacing.y;
 
-            ImGui::Dummy({ ImGui::GetContentRegionAvail().x, 0 });
             drawDropTarget(m_bookmarks->begin(), defaultItemSpacing);
 
             // Draw all bookmarks
@@ -349,7 +353,7 @@ namespace hex::plugin::builtin {
                         ImGui::SetDragDropPayload("BOOKMARK_PAYLOAD", &bookmarkId, sizeof(bookmarkId));
 
                         // Draw drag and drop tooltip
-                        ImGui::ColorButton("##color", headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha);
+                        ImGui::ColorButton("##color", headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaOpaque);
                         ImGui::SameLine();
                         ImGuiExt::TextFormatted("{}", name);
 
@@ -535,7 +539,7 @@ namespace hex::plugin::builtin {
                 EventHighlightingChanged::post();
             }
         }
-        ImGui::EndChild();
+        ImGuiExt::EndSubWindow();
     }
 
     bool ViewBookmarks::importBookmarks(prv::Provider *provider, const nlohmann::json &json) {
