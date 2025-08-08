@@ -1286,7 +1286,7 @@ namespace hex::ui {
                 uint64_t i = skipSpaces(setCoordinates(lineNo, 0));
                 while (i < colorsSize) {
                     char color = std::clamp(colors[i], (char) PaletteIndex::Default, (char) ((uint8_t) PaletteIndex::Max - 1));
-                    uint32_t tokenLength = std::clamp(colors.find_first_not_of(color, i) - i, 1ull, colorsSize - i);
+                    uint32_t tokenLength = std::clamp((uint64_t) (colors.find_first_not_of(color, i) - i),(uint64_t) 1, colorsSize - i);
                     if (m_updateFocus)
                         setFocus();
                     auto lineStart = setCoordinates(lineNo, i);
