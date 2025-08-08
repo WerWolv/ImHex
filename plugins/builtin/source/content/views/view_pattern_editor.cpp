@@ -44,9 +44,9 @@ namespace hex::plugin::builtin {
 
     using namespace hex::literals;
 
-    static const TextEditor::LanguageDefinition &PatternLanguage() {
+    static const ui::TextEditor::LanguageDefinition &PatternLanguage() {
         static bool initialized = false;
-        static TextEditor::LanguageDefinition langDef;
+        static ui::TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             constexpr static std::array keywords = {
                 "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch", "import", "as", "from"
@@ -58,7 +58,7 @@ namespace hex::plugin::builtin {
                 "u8", "u16", "u24", "u32", "u48", "u64", "u96", "u128", "s8", "s16", "s24", "s32", "s48", "s64", "s96", "s128", "float", "double", "char", "char16", "bool", "padding", "str", "auto"
             };
             for (const auto name : builtInTypes) {
-                TextEditor::Identifier id;
+                ui::TextEditor::Identifier id;
                 id.m_declaration = "";
                 langDef.m_identifiers.insert(std::make_pair(std::string(name), id));
             }
@@ -66,12 +66,12 @@ namespace hex::plugin::builtin {
                     "include", "define", "ifdef", "ifndef", "endif", "undef", "pragma", "error"
             };
             for (const auto name : directives) {
-                TextEditor::Identifier id;
+                ui::TextEditor::Identifier id;
                 id.m_declaration = "";
                 langDef.m_preprocIdentifiers.insert(std::make_pair(std::string(name), id));
             }
-            langDef.m_tokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
-                paletteIndex = TextEditor::PaletteIndex::Max;
+            langDef.m_tokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, ui::TextEditor::PaletteIndex &paletteIndex) -> bool {
+                paletteIndex = ui::TextEditor::PaletteIndex::Max;
 
                 while (inBegin < inEnd && isascii(*inBegin) && std::isblank(*inBegin))
                     ++inBegin;
@@ -79,21 +79,21 @@ namespace hex::plugin::builtin {
                 if (inBegin == inEnd) {
                     outBegin     = inEnd;
                     outEnd       = inEnd;
-                    paletteIndex = TextEditor::PaletteIndex::Default;
-                } else if (tokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = TextEditor::PaletteIndex::Identifier;
-                } else if (tokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = TextEditor::PaletteIndex::NumericLiteral;
-                } else if (tokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = TextEditor::PaletteIndex::CharLiteral;
-                } else if (tokenizeCStyleString(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = TextEditor::PaletteIndex::StringLiteral;
-                } else if (tokenizeCStyleSeparator(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = TextEditor::PaletteIndex::Separator;
-                } else if (tokenizeCStyleOperator(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = TextEditor::PaletteIndex::Operator;
+                    paletteIndex = ui::TextEditor::PaletteIndex::Default;
+                } else if (ui::tokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::Identifier;
+                } else if (ui::tokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::NumericLiteral;
+                } else if (ui::tokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::CharLiteral;
+                } else if (ui::tokenizeCStyleString(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::StringLiteral;
+                } else if (ui::tokenizeCStyleSeparator(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::Separator;
+                } else if (ui::tokenizeCStyleOperator(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::Operator;
                 }
-                return paletteIndex != TextEditor::PaletteIndex::Max;
+                return paletteIndex != ui::TextEditor::PaletteIndex::Max;
             };
 
             langDef.m_commentStart      = "/*";
@@ -116,22 +116,22 @@ namespace hex::plugin::builtin {
         return langDef;
     }
 
-    static const TextEditor::LanguageDefinition &ConsoleLog() {
+    static const ui::TextEditor::LanguageDefinition &ConsoleLog() {
         static bool initialized = false;
-        static TextEditor::LanguageDefinition langDef;
+        static ui::TextEditor::LanguageDefinition langDef;
         if (!initialized) {
-            langDef.m_tokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
+            langDef.m_tokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, ui::TextEditor::PaletteIndex &paletteIndex) -> bool {
                 std::string_view inView(inBegin, inEnd);
                 if (inView.starts_with("D: "))
-                    paletteIndex = TextEditor::PaletteIndex::DefaultText;
+                    paletteIndex = ui::TextEditor::PaletteIndex::DefaultText;
                 else if (inView.starts_with("I: "))
-                    paletteIndex = TextEditor::PaletteIndex::DebugText;
+                    paletteIndex = ui::TextEditor::PaletteIndex::DebugText;
                 else if (inView.starts_with("W: "))
-                    paletteIndex = TextEditor::PaletteIndex::WarningText;
+                    paletteIndex = ui::TextEditor::PaletteIndex::WarningText;
                 else if (inView.starts_with("E: "))
-                    paletteIndex = TextEditor::PaletteIndex::ErrorText;
+                    paletteIndex = ui::TextEditor::PaletteIndex::ErrorText;
                 else
-                    paletteIndex = TextEditor::PaletteIndex::Max;
+                    paletteIndex = ui::TextEditor::PaletteIndex::Max;
 
                 outBegin = inBegin;
                 outEnd = inEnd;
@@ -241,7 +241,7 @@ namespace hex::plugin::builtin {
         RequestAddVirtualFile::unsubscribe(this);
     }
 
-    void ViewPatternEditor::setupFindReplace(TextEditor *editor) {
+    void ViewPatternEditor::setupFindReplace(ui::TextEditor *editor) {
         if (editor == nullptr)
             return;
         if (m_openFindReplacePopUp) {
@@ -280,7 +280,7 @@ namespace hex::plugin::builtin {
 
     }
 
-    void ViewPatternEditor::setupGotoLine(TextEditor *editor) {
+    void ViewPatternEditor::setupGotoLine(ui::TextEditor *editor) {
 
         // Context menu entries that open the goto line popup
         if (m_openGotoLinePopUp) {
@@ -614,7 +614,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewPatternEditor::drawTextEditorFindReplacePopup(TextEditor *textEditor) {
+    void ViewPatternEditor::drawTextEditorFindReplacePopup(ui::TextEditor *textEditor) {
         auto provider = ImHexApi::Provider::get();
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
         if (ImGui::BeginPopup("##text_editor_view_find_replace_popup", popupFlags)) {
@@ -624,7 +624,7 @@ namespace hex::plugin::builtin {
             static u64 count = 0;
             static bool updateCount = false;
             static bool canReplace = true;
-            TextEditor::FindReplaceHandler *findReplaceHandler = textEditor->getFindReplaceHandler();
+            ui::TextEditor::FindReplaceHandler *findReplaceHandler = textEditor->getFindReplaceHandler();
             if (ImGui::IsWindowAppearing()) {
                 findReplaceHandler->resetMatches();
 
@@ -940,7 +940,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewPatternEditor::drawTextEditorGotoLinePopup(TextEditor *textEditor) {
+    void ViewPatternEditor::drawTextEditorGotoLinePopup(ui::TextEditor *textEditor) {
         auto provider = ImHexApi::Provider::get();
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
         if (ImGui::BeginPopup("##text_editor_view_goto_line_popup", popupFlags)) {
@@ -1320,7 +1320,7 @@ namespace hex::plugin::builtin {
                     return wolv::util::combineStrings(lines, "\n");
                 };
 
-                TextEditor::ErrorMarkers errorMarkers;
+                ui::TextEditor::ErrorMarkers errorMarkers;
                 if (*m_callStack != nullptr && !(*m_callStack)->empty()) {
                     for (const auto &frame : **m_callStack | std::views::reverse) {
                         auto location = frame.node->getLocation();
@@ -1328,13 +1328,13 @@ namespace hex::plugin::builtin {
                             std::string message = "";
                             if (m_lastEvaluationError->has_value())
                                 message = processMessage((*m_lastEvaluationError)->message);
-                            auto key = TextEditor::Coordinates(location.line, location.column);
+                            auto key = ui::TextEditor::Coordinates(location.line, location.column);
                             errorMarkers[key] = std::make_pair(u32(location.length), message);
                         }
                     }
                 } else {
                     if (m_lastEvaluationError->has_value()) {
-                        auto key = TextEditor::Coordinates((*m_lastEvaluationError)->line, 0);
+                        auto key = ui::TextEditor::Coordinates((*m_lastEvaluationError)->line, 0);
                         errorMarkers[key] = std::make_pair(0,processMessage((*m_lastEvaluationError)->message));
                     }
                 }
@@ -1343,7 +1343,7 @@ namespace hex::plugin::builtin {
                     for (const auto &error : *m_lastCompileError) {
                        auto source = error.getLocation().source;
                         if (source != nullptr && source->mainSource) {
-                            auto key = TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
+                            auto key = ui::TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
                             if (!errorMarkers.contains(key) ||errorMarkers[key].first < error.getLocation().length)
                                     errorMarkers[key] = std::make_pair(u32(error.getLocation().length), processMessage(error.getMessage()));
                         }
@@ -1527,7 +1527,7 @@ namespace hex::plugin::builtin {
             const bool shiftHeld = ImGui::GetIO().KeyShift;
             ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()), ImGuiColorEditFlags_AlphaOpaque);
             ImGui::SameLine(0, 10);
-            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], "{} ", pattern->getFormattedName());
+            ImGuiExt::TextFormattedColored(ui::TextEditor::getPalette()[u32(ui::TextEditor::PaletteIndex::BuiltInType)], "{} ", pattern->getFormattedName());
             ImGui::SameLine(0, 5);
             ImGuiExt::TextFormatted("{}", pattern->getDisplayName());
             ImGui::SameLine();
@@ -1846,7 +1846,7 @@ namespace hex::plugin::builtin {
             if (line == 0)
                 return;
 
-            const TextEditor::Coordinates coords = { int(line) - 1, int(column) };
+            const ui::TextEditor::Coordinates coords = { int(line) - 1, int(column) };
             m_textEditor.get(provider).setCursorPosition(coords);
         });
 
@@ -1900,7 +1900,7 @@ namespace hex::plugin::builtin {
             m_envVarEntries.get(provider).emplace_back(0, "", i128(0), EnvVarType::Integer);
 
             m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
-            m_cursorPosition.get(provider) =  TextEditor::Coordinates(0, 0);
+            m_cursorPosition.get(provider) =  ui::TextEditor::Coordinates(0, 0);
         });
 
         EventProviderChanged::subscribe(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
@@ -1919,7 +1919,7 @@ namespace hex::plugin::builtin {
             if (newProvider != nullptr) {
                 m_textEditor.get(newProvider).setText(wolv::util::preprocessText(m_sourceCode.get(newProvider)));
                 m_textEditor.get(newProvider).setCursorPosition(m_cursorPosition.get(newProvider));
-                TextEditor::Selection selection = m_selection.get(newProvider);
+                ui::TextEditor::Selection selection = m_selection.get(newProvider);
                 m_textEditor.get(newProvider).setSelection(selection);
                 m_textEditor.get(newProvider).setBreakpoints(m_breakpoints.get(newProvider));
                 m_consoleEditor.get(newProvider).setText(wolv::util::combineStrings(m_console.get(newProvider), "\n"));
@@ -1976,7 +1976,7 @@ namespace hex::plugin::builtin {
         appendEditorText(fmt::format("{0} {0}_array_at_0x{1:02X}[0x{2:02X}] @ 0x{1:02X};", type, selection->getStartAddress(), (selection->getSize() + (size - 1)) / size));
     }
 
-    TextEditor *ViewPatternEditor::getEditorFromFocusedWindow() {
+    ui::TextEditor *ViewPatternEditor::getEditorFromFocusedWindow() {
         auto provider = ImHexApi::Provider::get();
         if (provider != nullptr) {
             if (m_focusedSubWindowName.contains(consoleView)) {
@@ -2030,7 +2030,7 @@ namespace hex::plugin::builtin {
         /* Find Next */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.find_next" }, 1520, AllowWhileTyping + Keys::F3, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
-                TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
+                ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
                 findReplaceHandler->findMatch(editor, true);
             } else {
                 m_textEditor->getFindReplaceHandler()->findMatch(&*m_textEditor, true);
@@ -2048,7 +2048,7 @@ namespace hex::plugin::builtin {
         /* Find Previous */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.find_previous" }, 1530, AllowWhileTyping + SHIFT + Keys::F3, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
-                TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
+                ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
                 findReplaceHandler->findMatch(editor, false);
             } else {
                 m_textEditor->getFindReplaceHandler()->findMatch(&*m_textEditor, false);
@@ -2392,21 +2392,21 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.match_case_toggle", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
-                TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
+                ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
                 findReplaceHandler->setMatchCase(editor, !findReplaceHandler->getMatchCase());
             }
         });
 
         ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::R + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.regex_toggle", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
-                TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
+                ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
                 findReplaceHandler->setFindRegEx(editor, !findReplaceHandler->getFindRegEx());
             }
         });
 
         ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::W + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.whole_word_toggle", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
-                TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
+                ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
                 findReplaceHandler->setWholeWord(editor, !findReplaceHandler->getWholeWord());
             }
         });

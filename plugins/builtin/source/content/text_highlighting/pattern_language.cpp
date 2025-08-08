@@ -1176,52 +1176,52 @@ namespace hex::plugin::builtin {
     }
 
     const TextHighlighter::TokenTypeColor TextHighlighter::m_tokenTypeColor = {
-            {Token::Type::Keyword,   TextEditor::PaletteIndex::Keyword},
-            {Token::Type::ValueType, TextEditor::PaletteIndex::BuiltInType},
-            {Token::Type::Operator,  TextEditor::PaletteIndex::Operator},
-            {Token::Type::Separator, TextEditor::PaletteIndex::Separator},
-            {Token::Type::String,    TextEditor::PaletteIndex::StringLiteral},
-            {Token::Type::Directive, TextEditor::PaletteIndex::Directive},
-            {Token::Type::Comment,   TextEditor::PaletteIndex::Comment},
-            {Token::Type::Integer,   TextEditor::PaletteIndex::NumericLiteral},
-            {Token::Type::Identifier, TextEditor::PaletteIndex::Identifier},
-            {Token::Type::DocComment,   TextEditor::PaletteIndex::DocComment}
+            {Token::Type::Keyword,      ui::TextEditor::PaletteIndex::Keyword},
+            {Token::Type::ValueType,    ui::TextEditor::PaletteIndex::BuiltInType},
+            {Token::Type::Operator,     ui::TextEditor::PaletteIndex::Operator},
+            {Token::Type::Separator,    ui::TextEditor::PaletteIndex::Separator},
+            {Token::Type::String,       ui::TextEditor::PaletteIndex::StringLiteral},
+            {Token::Type::Directive,    ui::TextEditor::PaletteIndex::Directive},
+            {Token::Type::Comment,      ui::TextEditor::PaletteIndex::Comment},
+            {Token::Type::Integer,      ui::TextEditor::PaletteIndex::NumericLiteral},
+            {Token::Type::Identifier,   ui::TextEditor::PaletteIndex::Identifier},
+            {Token::Type::DocComment,   ui::TextEditor::PaletteIndex::DocComment}
 
     };
 
     const TextHighlighter::IdentifierTypeColor TextHighlighter::m_identifierTypeColor = {
-            {Identifier::IdentifierType::Macro,                  TextEditor::PaletteIndex::PreprocIdentifier},
-            {Identifier::IdentifierType::UDT,                    TextEditor::PaletteIndex::UserDefinedType},
-            {Identifier::IdentifierType::Function,               TextEditor::PaletteIndex::Function},
-            {Identifier::IdentifierType::Attribute,              TextEditor::PaletteIndex::Attribute},
-            {Identifier::IdentifierType::NameSpace,              TextEditor::PaletteIndex::NameSpace},
-            {Identifier::IdentifierType::Typedef,                TextEditor::PaletteIndex::TypeDef},
-            {Identifier::IdentifierType::PatternVariable,        TextEditor::PaletteIndex::PatternVariable},
-            {Identifier::IdentifierType::LocalVariable,          TextEditor::PaletteIndex::LocalVariable},
-            {Identifier::IdentifierType::CalculatedPointer,      TextEditor::PaletteIndex::CalculatedPointer},
-            {Identifier::IdentifierType::TemplateArgument,       TextEditor::PaletteIndex::TemplateArgument},
-            {Identifier::IdentifierType::PlacedVariable,         TextEditor::PaletteIndex::PlacedVariable},
-            {Identifier::IdentifierType::View,                   TextEditor::PaletteIndex::View},
-            {Identifier::IdentifierType::FunctionVariable,       TextEditor::PaletteIndex::FunctionVariable},
-            {Identifier::IdentifierType::FunctionParameter,      TextEditor::PaletteIndex::FunctionParameter},
-            {Identifier::IdentifierType::Unknown,                TextEditor::PaletteIndex::UnkIdentifier},
-            {Identifier::IdentifierType::FunctionUnknown,        TextEditor::PaletteIndex::UnkIdentifier},
-            {Identifier::IdentifierType::MemberUnknown,          TextEditor::PaletteIndex::UnkIdentifier},
-            {Identifier::IdentifierType::ScopeResolutionUnknown, TextEditor::PaletteIndex::UnkIdentifier},
-            {Identifier::IdentifierType::GlobalVariable,         TextEditor::PaletteIndex::GlobalVariable},
+            {Identifier::IdentifierType::Macro,                  ui::TextEditor::PaletteIndex::PreprocIdentifier},
+            {Identifier::IdentifierType::UDT,                    ui::TextEditor::PaletteIndex::UserDefinedType},
+            {Identifier::IdentifierType::Function,               ui::TextEditor::PaletteIndex::Function},
+            {Identifier::IdentifierType::Attribute,              ui::TextEditor::PaletteIndex::Attribute},
+            {Identifier::IdentifierType::NameSpace,              ui::TextEditor::PaletteIndex::NameSpace},
+            {Identifier::IdentifierType::Typedef,                ui::TextEditor::PaletteIndex::TypeDef},
+            {Identifier::IdentifierType::PatternVariable,        ui::TextEditor::PaletteIndex::PatternVariable},
+            {Identifier::IdentifierType::LocalVariable,          ui::TextEditor::PaletteIndex::LocalVariable},
+            {Identifier::IdentifierType::CalculatedPointer,      ui::TextEditor::PaletteIndex::CalculatedPointer},
+            {Identifier::IdentifierType::TemplateArgument,       ui::TextEditor::PaletteIndex::TemplateArgument},
+            {Identifier::IdentifierType::PlacedVariable,         ui::TextEditor::PaletteIndex::PlacedVariable},
+            {Identifier::IdentifierType::View,                   ui::TextEditor::PaletteIndex::View},
+            {Identifier::IdentifierType::FunctionVariable,       ui::TextEditor::PaletteIndex::FunctionVariable},
+            {Identifier::IdentifierType::FunctionParameter,      ui::TextEditor::PaletteIndex::FunctionParameter},
+            {Identifier::IdentifierType::Unknown,                ui::TextEditor::PaletteIndex::UnkIdentifier},
+            {Identifier::IdentifierType::FunctionUnknown,        ui::TextEditor::PaletteIndex::UnkIdentifier},
+            {Identifier::IdentifierType::MemberUnknown,          ui::TextEditor::PaletteIndex::UnkIdentifier},
+            {Identifier::IdentifierType::ScopeResolutionUnknown, ui::TextEditor::PaletteIndex::UnkIdentifier},
+            {Identifier::IdentifierType::GlobalVariable,         ui::TextEditor::PaletteIndex::GlobalVariable},
     };
 
 // Second paletteIndex called from processLineTokens to process literals
-    TextEditor::PaletteIndex TextHighlighter::getPaletteIndex(Literal *literal) {
+    ui::TextEditor::PaletteIndex TextHighlighter::getPaletteIndex(Literal *literal) {
 
         if (literal->isFloatingPoint() || literal->isSigned() || literal->isUnsigned())
-            return TextEditor::PaletteIndex::NumericLiteral;
+            return ui::TextEditor::PaletteIndex::NumericLiteral;
 
-        else if (literal->isCharacter() || literal->isBoolean()) return TextEditor::PaletteIndex::CharLiteral;
+        else if (literal->isCharacter() || literal->isBoolean()) return ui::TextEditor::PaletteIndex::CharLiteral;
 
-        else if (literal->isString()) return TextEditor::PaletteIndex::StringLiteral;
+        else if (literal->isString()) return ui::TextEditor::PaletteIndex::StringLiteral;
 
-        else return TextEditor::PaletteIndex::Default;
+        else return ui::TextEditor::PaletteIndex::Default;
     }
 
 // Render the compilation errors using squiggly lines
@@ -1239,13 +1239,13 @@ namespace hex::plugin::builtin {
 
             return wolv::util::combineStrings(lines, "\n");
         };
-        TextEditor::ErrorMarkers errorMarkers;
+        ui::TextEditor::ErrorMarkers errorMarkers;
 
         if (!m_compileErrors.empty()) {
             for (const auto &error: m_compileErrors) {
 
                 if (isLocationValid(error.getLocation())) {
-                    auto key = TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
+                    auto key = ui::TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
 
                     if (!errorMarkers.contains(key) || errorMarkers[key].first < error.getLocation().length)
                         errorMarkers[key] = std::make_pair(error.getLocation().length, processMessage(error.getMessage()));
@@ -1399,7 +1399,7 @@ namespace hex::plugin::builtin {
         else
             token = const_cast<Token *>(&m_tokens[tokenId]);
 
-        if (token->type == Token::Type::Identifier && (!m_tokenColors.contains(token) || m_tokenColors.at(token) == TextEditor::PaletteIndex::Default || m_tokenColors.at(token) == TextEditor::PaletteIndex::UnkIdentifier))
+        if (token->type == Token::Type::Identifier && (!m_tokenColors.contains(token) || m_tokenColors.at(token) == ui::TextEditor::PaletteIndex::Default || m_tokenColors.at(token) == ui::TextEditor::PaletteIndex::UnkIdentifier))
             m_tokenColors[token]  = m_identifierTypeColor.at(type);
         else if (!m_tokenColors.contains(token))
             m_tokenColors[token] = m_tokenTypeColor.at(token->type);
@@ -1426,11 +1426,11 @@ namespace hex::plugin::builtin {
             if (docComment != nullptr && !m_tokenColors.contains(token)) {
 
                 if (docComment->singleLine)
-                    m_tokenColors[token] = TextEditor::PaletteIndex::DocComment;
+                    m_tokenColors[token] = ui::TextEditor::PaletteIndex::DocComment;
                 else if (docComment->global)
-                    m_tokenColors[token] = TextEditor::PaletteIndex::GlobalDocComment;
+                    m_tokenColors[token] = ui::TextEditor::PaletteIndex::GlobalDocComment;
                 else
-                    m_tokenColors[token] = TextEditor::PaletteIndex::DocBlockComment;
+                    m_tokenColors[token] = ui::TextEditor::PaletteIndex::DocBlockComment;
             }
         } else if (token->type == Token::Type::Comment) {
             auto comment = getValue<Token::Comment>(0);
@@ -1438,9 +1438,9 @@ namespace hex::plugin::builtin {
             if (comment != nullptr && !m_tokenColors.contains(token)) {
 
                 if (comment->singleLine)
-                    m_tokenColors[token] = TextEditor::PaletteIndex::Comment;
+                    m_tokenColors[token] = ui::TextEditor::PaletteIndex::Comment;
                 else
-                    m_tokenColors[token] = TextEditor::PaletteIndex::BlockComment;
+                    m_tokenColors[token] = ui::TextEditor::PaletteIndex::BlockComment;
             }
         } else
             setIdentifierColor(tokenId, type);
@@ -1499,7 +1499,7 @@ namespace hex::plugin::builtin {
                 identifierType = identifier->getType();
                 std::string variableName = identifier->get();
 
-                if (m_tokenColors.contains(token) && (m_tokenColors.at(token) != TextEditor::PaletteIndex::Default && identifierType != IdentifierType::Unknown)) {
+                if (m_tokenColors.contains(token) && (m_tokenColors.at(token) != ui::TextEditor::PaletteIndex::Default && identifierType != IdentifierType::Unknown)) {
                     next();
                     continue;
                 }

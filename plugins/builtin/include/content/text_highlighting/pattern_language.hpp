@@ -27,9 +27,9 @@ namespace hex::plugin::builtin {
         using TokenIter             = pl::hlp::SafeIterator<std::vector<Token>::const_iterator>;
         using VariableScopes        = std::map<std::string,Scopes>;
         using Inheritances          = std::map<std::string,std::vector<std::string>>;
-        using IdentifierTypeColor   = std::map<Identifier::IdentifierType,TextEditor::PaletteIndex>;
-        using TokenTypeColor        = std::map<Token::Type,TextEditor::PaletteIndex>;
-        using TokenColor            = std::map<Token *,TextEditor::PaletteIndex>;
+        using IdentifierTypeColor   = std::map<Identifier::IdentifierType,ui::TextEditor::PaletteIndex>;
+        using TokenTypeColor        = std::map<Token::Type,ui::TextEditor::PaletteIndex>;
+        using TokenColor            = std::map<Token *,ui::TextEditor::PaletteIndex>;
 
         struct ParentDefinition;
         struct Definition {
@@ -218,7 +218,7 @@ namespace hex::plugin::builtin {
         /// Loads the source code and calculates the first token index of each line
         void loadText();
         /// Used to obtain the color to be applied.
-        TextEditor::PaletteIndex getPaletteIndex(Token::Literal *literal);
+        ui::TextEditor::PaletteIndex getPaletteIndex(Token::Literal *literal);
         /// The complement of a set is also known as its inverse
         void invertGlobalTokenRange();
         /// Starting at the identifier, it tracks all the scope resolution and dot operators and returns the full chain without arrays, templates, pointers,...
@@ -269,8 +269,8 @@ namespace hex::plugin::builtin {
         ///Creates a map from function name to argument type
         void linkAttribute();
         /// Comment and strings usethese function to determine their coordinates
-        template<typename T> TextEditor::Coordinates commentCoordinates(Token *token);
-        TextEditor::Coordinates stringCoordinates();
+        template<typename T> ui::TextEditor::Coordinates commentCoordinates(Token *token);
+        ui::TextEditor::Coordinates stringCoordinates();
         /// Returns the number of tasks highlighting code. Shouldn't be > 1
         i32 getRunningColorizers() {
             return m_runningColorizers;

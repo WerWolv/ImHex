@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
             return &m_editorRuntime;
         }
 
-        TextEditor &getTextEditor() {
+        ui::TextEditor &getTextEditor() {
             return m_textEditor;
         }
 
@@ -262,7 +262,7 @@ namespace hex::plugin::builtin {
         PerProvider<bool> m_hasUnevaluatedChanges;
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
 
-        PerProvider<TextEditor> m_textEditor, m_consoleEditor;
+        PerProvider<ui::TextEditor> m_textEditor, m_consoleEditor;
         std::atomic<bool> m_consoleNeedsUpdate = false;
 
         std::atomic<bool> m_dangerousFunctionCalled = false;
@@ -279,15 +279,15 @@ namespace hex::plugin::builtin {
 
         std::mutex m_logMutex;
 
-        PerProvider<TextEditor::Coordinates>  m_cursorPosition;
+        PerProvider<ui::TextEditor::Coordinates>  m_cursorPosition;
 
-        PerProvider<TextEditor::Coordinates> m_consoleCursorPosition;
+        PerProvider<ui::TextEditor::Coordinates> m_consoleCursorPosition;
         PerProvider<bool> m_cursorNeedsUpdate;
         PerProvider<bool> m_consoleCursorNeedsUpdate;
-        PerProvider<TextEditor::Selection> m_selection;
-        PerProvider<TextEditor::Selection> m_consoleSelection;
+        PerProvider<ui::TextEditor::Selection> m_selection;
+        PerProvider<ui::TextEditor::Selection> m_consoleSelection;
         PerProvider<size_t> m_consoleLongestLineLength;
-        PerProvider<TextEditor::Breakpoints> m_breakpoints;
+        PerProvider<ui::TextEditor::Breakpoints> m_breakpoints;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
         PerProvider<const std::vector<pl::core::Evaluator::StackTrace>*> m_callStack;
@@ -343,8 +343,8 @@ namespace hex::plugin::builtin {
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 
-        void drawTextEditorFindReplacePopup(TextEditor *textEditor);
-        void drawTextEditorGotoLinePopup(TextEditor *textEditor);
+        void drawTextEditorFindReplacePopup(ui::TextEditor *textEditor);
+        void drawTextEditorGotoLinePopup(ui::TextEditor *textEditor);
 
         void historyInsert(std::array<std::string, 256> &history, u32 &size, u32 &index, const std::string &value);
 
@@ -355,9 +355,9 @@ namespace hex::plugin::builtin {
         void parsePattern(const std::string &code, prv::Provider *provider);
         void evaluatePattern(const std::string &code, prv::Provider *provider);
 
-        TextEditor *getEditorFromFocusedWindow();
-        void setupFindReplace(TextEditor *editor);
-        void setupGotoLine(TextEditor *editor);
+        ui::TextEditor *getEditorFromFocusedWindow();
+        void setupFindReplace(ui::TextEditor *editor);
+        void setupGotoLine(ui::TextEditor *editor);
 
         void registerEvents();
         void registerMenuItems();
