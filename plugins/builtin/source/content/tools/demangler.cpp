@@ -11,15 +11,15 @@ namespace hex::plugin::builtin {
 
     void drawDemangler() {
         static std::string mangledName, demangledName, wrappedDemangledName;
-        static TextEditor outputField = []{
-            TextEditor editor;
+        static ui::TextEditor outputField = []{
+            ui::TextEditor editor;
             editor.setReadOnly(true);
             editor.setShowLineNumbers(false);
             editor.setShowWhitespaces(false);
             editor.setShowCursor(false);
             editor.setImGuiChildIgnored(true);
 
-            auto languageDef = TextEditor::LanguageDefinition::CPlusPlus();
+            auto languageDef = ui::TextEditor::LanguageDefinition::CPlusPlus();
             for (auto &[name, identifier] : languageDef.m_identifiers)
                 identifier.m_declaration = "";
 
