@@ -386,5 +386,6 @@ namespace hex {
     [[nodiscard]] void* getContainingModule(void* symbol);
 
     [[nodiscard]] std::optional<ImColor> blendColors(const std::optional<ImColor> &a, const std::optional<ImColor> &b);
+    std::optional<std::chrono::system_clock::time_point> parseTime(std::string_view format, const std::string &timeString);
 
 }

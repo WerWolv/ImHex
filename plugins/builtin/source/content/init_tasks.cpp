@@ -28,69 +28,64 @@ namespace hex::plugin::builtin {
 
         bool checkForUpdatesSync() {
             int checkForUpdates = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
+            if (checkForUpdates != 1)
+                return true;
 
             // Check if we should check for updates
-            TaskManager::createBackgroundTask("Update Check", [checkForUpdates] {
+            TaskManager::createBackgroundTask("Update Check", [] {
                 std::string updateString;
-                if (checkForUpdates == 1) {
-                    if (ImHexApi::System::isNightlyBuild()) {
-                        HttpRequest request("GET", GitHubApiURL + "/releases/tags/nightly"s);
-                        request.setTimeout(10000);
+                if (ImHexApi::System::isNightlyBuild()) {
+                    HttpRequest request("GET", GitHubApiURL + "/releases/tags/nightly"s);
+                    request.setTimeout(10000);
 
-                        // Query the GitHub API for the latest release version
-                        auto response = request.execute().get();
-                        if (response.getStatusCode() != 200)
-                            return;
+                    // Query the GitHub API for the latest release version
+                    auto response = request.execute().get();
+                    if (response.getStatusCode() != 200)
+                        return;
 
-                        nlohmann::json releases;
-                        try {
-                            releases = nlohmann::json::parse(response.getData());
-                        } catch (const std::exception &) {
-                            return;
-                        }
-
-                        // Check if the response is valid
-                        if (!releases.contains("published_at") || !releases["published_at"].is_string())
-                            return;
-
-                        std::chrono::system_clock::time_point nightlyUpdateTime;
-                        {
-                            std::istringstream iss(releases["published_at"].get<std::string>());
-                            iss >> std::chrono::parse("%FT%TZ", nightlyUpdateTime);
-                        }
-
-                        if (nightlyUpdateTime > std::chrono::system_clock::now()) {
-                            updateString = "Nightly";
-                        }
-                    } else {
-                        HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
-
-                        // Query the GitHub API for the latest release version
-                        auto response = request.execute().get();
-                        if (response.getStatusCode() != 200)
-                            return;
-
-                        nlohmann::json releases;
-                        try {
-                            releases = nlohmann::json::parse(response.getData());
-                        } catch (const std::exception &) {
-                            return;
-                        }
-
-                        // Check if the response is valid
-                        if (!releases.contains("tag_name") || !releases["tag_name"].is_string())
-                            return;
-
-                        // Convert the current version string to a format that can be compared to the latest release
-                        auto currVersion   = "v" + ImHexApi::System::getImHexVersion().get(false);
-
-                        // Get the latest release version string
-                        auto latestVersion = releases["tag_name"].get<std::string_view>();
-
-                        // Check if the latest release is different from the current version
-                        if (latestVersion != currVersion)
-                            updateString = latestVersion;
+                    nlohmann::json releases;
+                    try {
+                        releases = nlohmann::json::parse(response.getData());
+                    } catch (const std::exception &) {
+                        return;
                     }
+
+                    // Check if the response is valid
+                    if (!releases.contains("published_at") || !releases["published_at"].is_string())
+                        return;
+
+                    const auto nightlyUpdateTime = hex::parseTime("%FT%TZ", releases["published_at"].get<std::string>());
+                    if (nightlyUpdateTime.has_value() && *nightlyUpdateTime > std::chrono::system_clock::now()) {
+                        updateString = "Nightly";
+                    }
+                } else {
+                    HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
+
+                    // Query the GitHub API for the latest release version
+                    auto response = request.execute().get();
+                    if (response.getStatusCode() != 200)
+                        return;
+
+                    nlohmann::json releases;
+                    try {
+                        releases = nlohmann::json::parse(response.getData());
+                    } catch (const std::exception &) {
+                        return;
+                    }
+
+                    // Check if the response is valid
+                    if (!releases.contains("tag_name") || !releases["tag_name"].is_string())
+                        return;
+
+                    // Convert the current version string to a format that can be compared to the latest release
+                    auto currVersion   = "v" + ImHexApi::System::getImHexVersion().get(false);
+
+                    // Get the latest release version string
+                    auto latestVersion = releases["tag_name"].get<std::string_view>();
+
+                    // Check if the latest release is different from the current version
+                    if (latestVersion != currVersion)
+                        updateString = latestVersion;
                 }
 
                 if (updateString.empty())
