@@ -20,6 +20,11 @@ jobs:
           path: ImHex
           submodules: recursive
 
+      - name: 📜 Set version variable
+        run: |
+          project_version=`cat ImHex/VERSION`          
+          echo "IMHEX_VERSION=$project_version" >> $GITHUB_ENV
+
       - name: ⬇️ Download artifacts from latest workflow
         uses: dawidd6/action-download-artifact@v6
         with:
