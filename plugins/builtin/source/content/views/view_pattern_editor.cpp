@@ -1364,6 +1364,9 @@ namespace hex::plugin::builtin {
             *m_executionDone = true;
         }
 
+        // DEBUBBING
+        //m_shouldAnalyze = false;
+        //
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
