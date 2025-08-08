@@ -256,8 +256,12 @@ namespace hex::plugin::builtin {
 
             {
                 ImGui::SetCursorPos(searchBoxPos);
-
+                
                 if (s_showSearchBar) {
+                    fonts::Default().pushBold(0.8);
+                    ImGui::GetWindowDrawList()->AddText(ImGui::GetCursorScreenPos() + ImGui::GetStyle().FramePadding, ImGui::GetColorU32(ImGuiCol_Text), ICON_VS_SEARCH);
+                    fonts::Default().pop();
+
                     const auto buttonColor = [](float alpha) {
                         return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg) * ImVec4(1, 1, 1, alpha)));
                     };
