@@ -8,6 +8,8 @@
 #include <hex/helpers/logger.hpp>
 
 #include <wolv/hash/uuid.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
+#include <toasts/toast_notification.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <nlohmann/json.hpp>

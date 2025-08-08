@@ -8,20 +8,22 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/menu_items.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <random>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <hex/helpers/menu_items.hpp>
 
+#include <fonts/fonts.hpp>
 #include <fonts/vscode_icons.hpp>
-#include <hex/api/tutorial_manager.hpp>
-#include <hex/helpers/auto_reset.hpp>
+
 #include <romfs/romfs.hpp>
 #include <wolv/utils/guards.hpp>
 
 #include <GLFW/glfw3.h>
+
+#include <random>
 
 namespace hex::plugin::builtin {
 

@@ -1,4 +1,5 @@
 #include <hex/ui/view.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <imgui.h>
 
