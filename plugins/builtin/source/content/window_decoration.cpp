@@ -232,18 +232,20 @@ namespace hex::plugin::builtin {
                 #endif
             }
 
-            auto &titleBarButtons = ContentRegistry::Interface::impl::getTitlebarButtons();
+            const auto &titleBarButtons = ContentRegistry::Interface::impl::getTitlebarButtons();
 
             // Draw custom title bar buttons
             if (!titleBarButtons.empty()) {
                 ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 7_scaled - (buttonSize.x + ImGui::GetStyle().ItemSpacing.x) * float((titleBarButtonsVisible ? 4 : 0) + titleBarButtons.size()));
 
                 if (ImGui::GetCursorPosX() > (searchBoxPos.x + searchBoxSize.x)) {
-                    for (const auto &[icon, tooltip, callback] : titleBarButtons) {
+                    for (const auto &[icon, color, tooltip, callback] : titleBarButtons) {
                         ImGui::SetCursorPosY(titleBarButtonPosY);
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorVec4(color));
                         if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
                             callback();
                         }
+                        ImGui::PopStyleColor();
                         ImGuiExt::InfoTooltip(Lang(tooltip));
                     }
                 }

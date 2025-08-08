@@ -821,6 +821,7 @@ EXPORT_MODULE namespace hex {
 
                 struct TitleBarButton {
                     std::string icon;
+                    ImGuiCustomCol color;
                     UnlocalizedString unlocalizedTooltip;
                     ClickCallback callback;
                 };
@@ -1007,11 +1008,13 @@ EXPORT_MODULE namespace hex {
             /**
              * @brief Adds a new title bar button
              * @param icon The icon to use for the button
+             * @param color The color of the icon
              * @param unlocalizedTooltip The unlocalized tooltip to use for the button
              * @param function The function to call when the button is clicked
              */
             void addTitleBarButton(
                 const std::string &icon,
+                ImGuiCustomCol color,
                 const UnlocalizedString &unlocalizedTooltip,
                 const impl::ClickCallback &function
             );

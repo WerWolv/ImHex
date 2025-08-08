@@ -941,7 +941,7 @@ namespace hex {
             std::string updateTypeString;
             switch (updateType) {
                 case UpdateType::Stable:
-                    updateTypeString = "latest";
+                    updateTypeString = "stable";
                     break;
                 case UpdateType::Nightly:
                     updateTypeString = "nightly";

@@ -1071,8 +1071,8 @@ namespace hex {
             impl::s_sidebarItems->push_back({ icon, function, enabledCallback });
         }
 
-        void addTitleBarButton(const std::string &icon, const UnlocalizedString &unlocalizedTooltip, const impl::ClickCallback &function) {
-            impl::s_titlebarButtons->push_back({ icon, unlocalizedTooltip, function });
+        void addTitleBarButton(const std::string &icon, ImGuiCustomCol color, const UnlocalizedString &unlocalizedTooltip, const impl::ClickCallback &function) {
+            impl::s_titlebarButtons->push_back({ icon, color, unlocalizedTooltip, function });
         }
 
         void addWelcomeScreenQuickSettingsToggle(const std::string &icon, const UnlocalizedString &unlocalizedTooltip, bool defaultState, const impl::ToggleCallback &function) {
