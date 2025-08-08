@@ -1,9 +1,17 @@
 #include <hex/api_urls.hpp>
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/default_paths.hpp>
+#include <hex/helpers/logger.hpp>
+#include <hex/helpers/fs.hpp>
+
+#include <nlohmann/json.hpp>
+#include <string>
+#include <string_view>
+#include <optional>
 
 using namespace std::literals::string_literals;
 

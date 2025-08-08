@@ -9,6 +9,13 @@
 
 #include <wolv/hash/uuid.hpp>
 
+#include <fonts/vscode_icons.hpp>
+#include <nlohmann/json.hpp>
+
+#include <chrono>
+#include <string>
+#include <sstream>
+
 namespace hex::fonts { bool setupFonts(); }
 
 namespace hex::plugin::builtin {
