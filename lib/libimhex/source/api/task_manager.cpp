@@ -194,6 +194,10 @@ namespace hex {
         // Store information about the caught exception
         m_exceptionMessage = message;
         m_hadException = true;
+
+        // Call the interrupt callback on the current thread if one is set
+        if (m_interruptCallback)
+            m_interruptCallback();
     }
 
 
