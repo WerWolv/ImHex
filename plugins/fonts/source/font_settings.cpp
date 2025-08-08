@@ -227,16 +227,20 @@ namespace hex::fonts {
                     if (m_fontSize.draw("hex.fonts.setting.font.font_size"_lang))
                         changed = true;
 
+                    const auto buttonHeight = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y;
+
                     fonts::Default().pushBold();
-                    if (ImGuiExt::DimmedIconToggle(ICON_VS_BOLD, &m_bold))
+                    if (ImGuiExt::DimmedButtonToggle("hex.fonts.setting.font.button.bold"_lang, &m_bold, ImVec2(buttonHeight, buttonHeight)))
                         changed = true;
                     fonts::Default().pop();
                     ImGui::SetItemTooltip("%s", "hex.fonts.setting.font.font_bold"_lang.get());
 
                     ImGui::SameLine();
 
-                    if (ImGuiExt::DimmedIconToggle(ICON_VS_ITALIC, &m_italic))
+                    fonts::Default().pushItalic();
+                    if (ImGuiExt::DimmedButtonToggle("hex.fonts.setting.font.button.italic"_lang, &m_italic, ImVec2(buttonHeight, buttonHeight)))
                         changed = true;
+                    fonts::Default().pop();
                     ImGui::SetItemTooltip("%s", "hex.fonts.setting.font.font_italic"_lang.get());
 
                     if (m_antiAliased.draw("hex.fonts.setting.font.font_antialias"_lang))
