@@ -1277,7 +1277,7 @@ namespace hex::plugin::builtin {
                                                 ICON_VS_DEBUG_STEP_BACK,
                                                 1620,
                                                 CTRLCMD + Keys::LeftBracket,
-                                                [this] {
+                                                [] {
                                                     bool didFindNextValue = false;
                                                     bool didReachBeginning = false;
                                                     u64 foundAddress;
