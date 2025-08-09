@@ -492,8 +492,8 @@ function(configureProject)
         include(CheckIPOSupported)
 
         check_ipo_supported(RESULT result OUTPUT output_error)
-        if (result)
-            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        if (result OR WIN32)
+            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:ON>)
             message(STATUS "LTO enabled!")
         else ()
             message(WARNING "LTO is not supported: ${output_error}")
@@ -976,8 +976,9 @@ function(precompileHeaders target includeFolder)
     endif()
 
     file(GLOB_RECURSE TARGET_INCLUDES "${includeFolder}/**/*.hpp")
+    file(GLOB_RECURSE LIBIMHEX_INCLUDES "${CMAKE_SOURCE_DIR}/lib/libimhex/include/**/*.hpp")
     set(SYSTEM_INCLUDES "<algorithm>;<array>;<atomic>;<chrono>;<cmath>;<cstddef>;<cstdint>;<cstdio>;<cstdlib>;<cstring>;<exception>;<filesystem>;<functional>;<iterator>;<limits>;<list>;<map>;<memory>;<optional>;<ranges>;<set>;<stdexcept>;<string>;<string_view>;<thread>;<tuple>;<type_traits>;<unordered_map>;<unordered_set>;<utility>;<variant>;<vector>")
-    set(INCLUDES "${SYSTEM_INCLUDES};${TARGET_INCLUDES}")
+    set(INCLUDES "${SYSTEM_INCLUDES};${TARGET_INCLUDES};${LIBIMHEX_INCLUDES}")
     string(REPLACE ">" "$<ANGLE-R>" INCLUDES "${INCLUDES}")
     target_precompile_headers(${target}
             PUBLIC

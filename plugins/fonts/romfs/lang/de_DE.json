@@ -8,6 +8,8 @@
         "hex.fonts.setting.font.custom_font": "Schriftart",
         "hex.fonts.setting.font.custom_font_info": "Die folgenden Einstellungen sind nur verfügbar wenn eine benutzerdefinierte Schriftart ausgewählt ist.",
         "hex.fonts.setting.font.font_antialias": "Schrift Anti-Aliasing",
+        "hex.fonts.setting.font.button.bold": "F",
+        "hex.fonts.setting.font.button.italic": "K",
         "hex.fonts.setting.font.font_bold": "Fett",
         "hex.fonts.setting.font.font_italic": "Kursiv",
         "hex.fonts.setting.font.font_path": "Schriftart",

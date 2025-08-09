@@ -7,6 +7,7 @@
 #include <capstone/capstone.h>
 #include <wolv/utils/string.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/fmt.hpp>
 
 namespace hex::plugin::disasm {
 

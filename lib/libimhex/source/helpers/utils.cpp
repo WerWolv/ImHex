@@ -15,6 +15,9 @@
 
 #include <wolv/utils/string.hpp>
 
+#include <clocale>
+#include <sstream>
+
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shellapi.h>
@@ -782,6 +785,19 @@ namespace hex {
             return b;
         else
             return ImAlphaBlendColors(a.value(), b.value());
+    }
+
+    std::optional<std::chrono::system_clock::time_point> parseTime(std::string_view format, const std::string &timeString) {
+        std::istringstream input(timeString);
+        input.imbue(std::locale(std::setlocale(LC_ALL, nullptr)));
+
+        tm time = {};
+        input >> std::get_time(&time, format.data());
+        if (input.fail()) {
+            return std::nullopt;
+        }
+
+        return std::chrono::system_clock::from_time_t(std::mktime(&time));
     }
 
     extern "C" void macOSCloseButtonPressed() {

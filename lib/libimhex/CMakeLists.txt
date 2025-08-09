@@ -133,6 +133,9 @@ endif ()
 
 addDefineToSource(source/api/imhex_api.cpp "IMHEX_VERSION=\"${IMHEX_VERSION_STRING}\"")
 
+string(TIMESTAMP IMHEX_BUILD_DATE UTC)
+addDefineToSource(source/api/imhex_api.cpp "IMHEX_BUILD_DATE=\"${IMHEX_BUILD_DATE}\"")
+
 enableUnityBuild(libimhex)
 setupCompilerFlags(libimhex)
 

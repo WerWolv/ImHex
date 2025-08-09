@@ -1,4 +1,5 @@
 #include <hex/ui/view.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <imgui.h>
 
@@ -81,6 +82,12 @@ namespace hex {
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
     }
+
+    void View::bringToFront() {
+        getWindowOpenState() = true;
+        TaskManager::doLater([this]{ ImGui::SetWindowFocus(toWindowName(getUnlocalizedName()).c_str()); });
+    }
+
 
     std::string View::toWindowName(const UnlocalizedString &unlocalizedName) {
         return fmt::format("{}###{}", Lang(unlocalizedName), unlocalizedName.get());

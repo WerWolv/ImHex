@@ -6,6 +6,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 
+#include <chrono>
 #include <functional>
 #include <optional>
 #include <span>
@@ -653,6 +654,12 @@ EXPORT_MODULE namespace hex {
              * @return Git commit branch
              */
             std::string getCommitBranch();
+
+            /**
+             * @brief Gets the time ImHex was built
+             * @return The time ImHex was built
+             */
+            std::optional<std::chrono::system_clock::time_point> getBuildTime();
 
             /**
              * @brief Checks if ImHex was built in debug mode

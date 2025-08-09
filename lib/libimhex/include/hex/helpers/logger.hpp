@@ -48,7 +48,7 @@ EXPORT_MODULE namespace hex::log {
                 printPrefix(dest, ts, level, IMHEX_PROJECT_NAME);
 
                 auto message = fmt::format(fmt, std::forward<Args>(args)...);
-                fmt::println(dest, "{}", message);
+                fmt::print(dest, "{}\n", message);
                 std::fflush(dest);
 
                 addLogEntry(IMHEX_PROJECT_NAME, level, std::move(message));
@@ -123,7 +123,8 @@ EXPORT_MODULE namespace hex::log {
 
         try {
             auto dest = impl::getDestination();
-            fmt::println(dest, fmt, std::forward<Args>(args)...);
+            fmt::print(dest, fmt, std::forward<Args>(args)...);
+            fmt::print("\n");
             std::fflush(dest);
         } catch (const std::exception&) {
             /* Ignore any exceptions, we can't do anything anyway */

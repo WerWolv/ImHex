@@ -8,20 +8,22 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/menu_items.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <random>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <hex/helpers/menu_items.hpp>
 
+#include <fonts/fonts.hpp>
 #include <fonts/vscode_icons.hpp>
-#include <hex/api/tutorial_manager.hpp>
-#include <hex/helpers/auto_reset.hpp>
+
 #include <romfs/romfs.hpp>
 #include <wolv/utils/guards.hpp>
 
 #include <GLFW/glfw3.h>
+
+#include <random>
 
 namespace hex::plugin::builtin {
 
@@ -232,18 +234,20 @@ namespace hex::plugin::builtin {
                 #endif
             }
 
-            auto &titleBarButtons = ContentRegistry::Interface::impl::getTitlebarButtons();
+            const auto &titleBarButtons = ContentRegistry::Interface::impl::getTitlebarButtons();
 
             // Draw custom title bar buttons
             if (!titleBarButtons.empty()) {
                 ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 7_scaled - (buttonSize.x + ImGui::GetStyle().ItemSpacing.x) * float((titleBarButtonsVisible ? 4 : 0) + titleBarButtons.size()));
 
                 if (ImGui::GetCursorPosX() > (searchBoxPos.x + searchBoxSize.x)) {
-                    for (const auto &[icon, tooltip, callback] : titleBarButtons) {
+                    for (const auto &[icon, color, tooltip, callback] : titleBarButtons) {
                         ImGui::SetCursorPosY(titleBarButtonPosY);
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorVec4(color));
                         if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
                             callback();
                         }
+                        ImGui::PopStyleColor();
                         ImGuiExt::InfoTooltip(Lang(tooltip));
                     }
                 }
@@ -254,8 +258,12 @@ namespace hex::plugin::builtin {
 
             {
                 ImGui::SetCursorPos(searchBoxPos);
-
+                
                 if (s_showSearchBar) {
+                    fonts::Default().pushBold(0.8);
+                    ImGui::GetWindowDrawList()->AddText(ImGui::GetCursorScreenPos() + ImGui::GetStyle().FramePadding, ImGui::GetColorU32(ImGuiCol_Text), ICON_VS_SEARCH);
+                    fonts::Default().pop();
+
                     const auto buttonColor = [](float alpha) {
                         return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg) * ImVec4(1, 1, 1, alpha)));
                     };

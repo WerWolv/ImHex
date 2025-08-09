@@ -352,12 +352,11 @@ namespace hex::plugin::builtin {
 
                             if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, nullptr, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 5.8), ImGuiChildFlags_AutoResizeX)) {
                                 for (const auto &[unlocalizedProviderName, icon] : ContentRegistry::Provider::impl::getEntries()) {
-                                    if (ImGuiExt::Hyperlink(fmt::format("{} {}", icon, Lang(unlocalizedProviderName)).c_str())) {
+                                    if (ImGuiExt::IconHyperlink(icon, Lang(unlocalizedProviderName))) {
                                         ImHexApi::Provider::createProvider(unlocalizedProviderName);
                                         otherProvidersVisible = false;
                                     }
                                 }
-
                             }
                             ImGuiExt::EndSubWindow();
                         }
@@ -515,28 +514,32 @@ namespace hex::plugin::builtin {
                                 static bool hovered = false;
                                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
                                 {
-                                    const ImVec2 windowSize = { 150_scaled, ImGui::GetTextLineHeightWithSpacing() * 3.5F };
-                                    ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
-                                    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
-                                    if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
-                                        u32 id = 0;
-                                        for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles()) {
-                                            ImGui::PushID(id + 1);
-                                            if (ImGuiExt::DimmedIconToggle(onIcon.c_str(), offIcon.c_str(), &state)) {
-                                                toggleCallback(state);
-                                                ContentRegistry::Settings::write<bool>("hex.builtin.settings.quick_settings", unlocalizedTooltip, state);
+                                    const auto &quickSettings = ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles();
+                                    if (!quickSettings.empty()) {
+                                        const auto padding = ImGui::GetStyle().FramePadding.y;
+                                        const ImVec2 windowSize = { 150_scaled, 2 * ImGui::GetTextLineHeightWithSpacing() + padding + std::ceil(quickSettings.size() / 5.0F) * (ImGui::GetTextLineHeightWithSpacing() + padding) };
+                                        ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
+                                        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
+                                        if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
+                                            u32 id = 0;
+                                            for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : quickSettings) {
+                                                ImGui::PushID(id + 1);
+                                                if (ImGuiExt::DimmedIconToggle(onIcon.c_str(), offIcon.c_str(), &state)) {
+                                                    toggleCallback(state);
+                                                    ContentRegistry::Settings::write<bool>("hex.builtin.settings.quick_settings", unlocalizedTooltip, state);
+                                                }
+                                                if (id % 5 > 0)
+                                                    ImGui::SameLine();
+                                                ImGui::SetItemTooltip("%s", Lang(unlocalizedTooltip).get());
+                                                ImGui::PopID();
+                                                id += 1;
                                             }
-                                            if (id % 5 > 0)
-                                                ImGui::SameLine();
-                                            ImGui::SetItemTooltip("%s", Lang(unlocalizedTooltip).get());
-                                            ImGui::PopID();
-                                            id += 1;
                                         }
-                                    }
-                                    ImGuiExt::EndSubWindow();
+                                        ImGuiExt::EndSubWindow();
 
-                                    ImGui::PopStyleColor();
-                                    hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+                                        ImGui::PopStyleColor();
+                                        hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+                                    }
 
                                 }
                                 ImGui::PopStyleVar();

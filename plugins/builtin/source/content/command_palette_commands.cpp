@@ -405,7 +405,7 @@ namespace hex::plugin::builtin {
             return result;
         },
         [](auto input) {
-            return fmt::format("Provider: {}", input.data());
+            return fmt::format("Data Source: {}", input.data());
         });
 
         ContentRegistry::CommandPaletteCommands::add(
@@ -413,6 +413,27 @@ namespace hex::plugin::builtin {
                     "%",
                     "hex.builtin.command.convert.desc",
                     handleConversionCommand);
+
+        ContentRegistry::CommandPaletteCommands::addHandler(
+                ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+                "+",
+                [](const auto &input) {
+                    std::vector<ContentRegistry::CommandPaletteCommands::impl::QueryResult> result;
+
+                    for (const auto &[unlocalizedName, view] : ContentRegistry::Views::impl::getEntries()) {
+                        const auto name = Lang(unlocalizedName);
+                        if (!hex::containsIgnoreCase(name, input))
+                            continue;
+                        result.emplace_back(fmt::format("Focus {} View", name), [&view](const auto &) {
+                            view->bringToFront();
+                        });
+                    }
+
+                    return result;
+                },
+                [](auto input) {
+                    return fmt::format("Focus {} View", input.data());
+                });
 
     }
 
