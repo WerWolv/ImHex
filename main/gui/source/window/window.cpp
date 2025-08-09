@@ -1285,10 +1285,17 @@ namespace hex {
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
+        io.ConfigDragClickToInputText = true;
 
         if (glfwGetPrimaryMonitor() != nullptr) {
-            if (ImHexApi::System::isMutliWindowModeEnabled())
+            if (ImHexApi::System::isMutliWindowModeEnabled()) {
                 io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+                // Enable viewport window OS decorations on Linux so that the window can be moved around on Wayland
+                #if defined (OS_LINUX)
+                    io.ConfigViewportsNoDecoration = false;
+                #endif
+            }
         }
 
         io.ConfigViewportsNoTaskBarIcon = false;
