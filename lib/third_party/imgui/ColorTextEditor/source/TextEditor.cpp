@@ -1559,16 +1559,23 @@ namespace hex::ui {
                 line.insert(line.begin() + charIndex, spaces.begin(), spaces.end());
                 line.m_colorized = false;
                 setCursorPosition(getCharacterCoordinates(coord.m_line, charIndex + spacesToInsert));
+                u.m_added = spaces;
+                u.m_addedSelection.m_end = setCoordinates(m_state.m_cursorPosition);
             } else {
                 auto spacesToRemove = (charIndex % m_tabSize);
                 if (spacesToRemove == 0) spacesToRemove = m_tabSize;
                 spacesToRemove = std::min(spacesToRemove, (int32_t) line.size());
+                auto spacesRemoved = 0;
                 for (int32_t j = 0; j < spacesToRemove; j++) {
                     if (*(line.begin() + (charIndex - 1)) == ' ') {
                         line.erase(line.begin() + (charIndex - 1));
                         charIndex -= 1;
+                        spacesRemoved++;
                     }
                 }
+                std::string spaces(spacesRemoved, ' ');
+                u.m_removed = spaces;
+                u.m_removedSelection = Selection(Coordinates(coord.m_line, charIndex), Coordinates(coord.m_line, charIndex + spacesRemoved));
                 line.m_colorized = false;
                 setCursorPosition(getCharacterCoordinates(coord.m_line, std::max(0, charIndex)));
             }
