@@ -1021,6 +1021,8 @@ namespace hex {
                         EM_ASM({ window.location.href = window.location.origin + "/nightly"; });
                         break;
                 }
+
+                return true;
             #else
                 // Get the path of the updater executable
                 std::fs::path executablePath;
