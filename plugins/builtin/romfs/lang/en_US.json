@@ -691,7 +691,7 @@
         "hex.builtin.tools.tcp_client_server.messages": "Messages",
         "hex.builtin.tools.tcp_client_server.settings": "Connection Settings",
         "hex.builtin.tools.tcp_client_server.tcp_message": "TCP Message {}",
-        "hex.builtin.tools.tcp_client_server.send_current_provider": "Send current provider",
+        "hex.builtin.tools.tcp_client_server.send_current_provider": "Send from open data source",
         "hex.builtin.tools.value": "Value",
         "hex.builtin.tools.wiki_explain": "Wikipedia term definitions",
         "hex.builtin.tools.wiki_explain.control": "Control",

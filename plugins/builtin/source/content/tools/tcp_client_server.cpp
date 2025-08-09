@@ -89,10 +89,10 @@ namespace hex::plugin::builtin {
                     }
                     if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
                         if (ImHexApi::Provider::isValid()) {
-                            ImGui::SetTooltip(fmt::format("{} ({})", "hex.builtin.tools.tcp_client_server.send_current_provider"_lang, ImHexApi::Provider::get()->getName()).c_str());
+                            ImGui::SetTooltip("%s", fmt::format("{} ({})", "hex.builtin.tools.tcp_client_server.send_current_provider"_lang, ImHexApi::Provider::get()->getName()).c_str());
                         }
                         else {
-                            ImGui::SetTooltip("hex.builtin.tools.tcp_client_server.send_current_provider"_lang);
+                            ImGui::SetTooltip("%s", "hex.builtin.tools.tcp_client_server.send_current_provider"_lang.get());
                         }
                     }
                 }
