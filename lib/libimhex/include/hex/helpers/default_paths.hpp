@@ -86,9 +86,10 @@ namespace hex::paths {
     const static inline impl::DataPath Workspaces("workspaces");
     const static inline impl::DataPath Disassemblers("disassemblers");
 
-    constexpr static inline std::array<const impl::DefaultPath*, 21> All = {
+    constexpr static inline std::array<const impl::DefaultPath*, 22> All = {
         &Config,
         &Recent,
+        &Updates,
 
         &Libraries,
         &Plugins,
