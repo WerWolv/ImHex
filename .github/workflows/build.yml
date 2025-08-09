@@ -1096,7 +1096,14 @@ jobs:
       - name: ⬇️ Install setup dependencies
         run: |
           sudo apt update && sudo apt install -y git curl snapd ccache
-          sudo snap install snapcraft --classic
+          
+          for i in $(seq 1 5); do
+            if sudo snap install snapcraft --classic; then
+              break;
+            fi
+            echo "Retrying snap install..."
+            sleep 10
+          done
 
       - name: 🧰 Checkout
         uses: actions/checkout@v4
