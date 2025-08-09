@@ -138,7 +138,8 @@ namespace hex {
         // Add plugin library folders to dll search path
         for (const auto &path : paths::Libraries.read())  {
             if (std::fs::exists(path))
-                setenv("LD_LIBRARY_PATH", fmt::format("{};{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
+
+            setenv("LD_LIBRARY_PATH", fmt::format("{}:{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
         }
 
         // Redirect stdout to log file if we're not running in a terminal
