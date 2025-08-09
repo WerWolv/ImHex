@@ -46,7 +46,7 @@ if (NOT IMHEX_DISABLE_STACKTRACE)
 
         if (HAVE_STDCPPEXP)
             message(STATUS "<stacktrace> enabled!")
-            target_link_libraries(tracing ${LIBIMHEX_LIBRARY_TYPE_PRIVATE} stdc++exp)
+            target_link_libraries(tracing ${LIBIMHEX_LIBRARY_TYPE_PRIVATE} stdc++exp dl)
             if (HAVE_STDCPP_LIBBACKTRACE)
                 target_link_libraries(tracing ${LIBIMHEX_LIBRARY_TYPE_PRIVATE} stdc++_libbacktrace)
             endif()
