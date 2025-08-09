@@ -63,16 +63,27 @@ jobs:
         run: |
           cd ImHex
           echo "## Nightly Changelog" > changelog.md
+          git fetch --tags
           git log tags/nightly..HEAD --oneline --no-merges --pretty=format:'* %s' >> changelog.md
 
-      - name: ⬆️ Update Nightly Release
-        uses: andelf/nightly-release@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: nightly
-          name: 'Nightly Builds'
-          prerelease: true
-          body_path: ImHex/changelog.md
-          files: |
-            ./*.*
+      - name: 📦 Update Pre-Release
+        run: |
+          set -e
+          
+          # Move nightly tag to latest commit
+          git tag -f nightly
+          git push origin nightly --force
+
+          # Auth for GitHub CLI
+          echo "${{ github.token }}" | gh auth login --with-token
+
+          # Delete existing assets
+          for asset in $(gh release view nightly --json assets --jq '.assets[].name'); do
+            gh release delete-asset nightly "$asset" --yes
+          done
+
+          # Update release notes
+          gh release edit nightly --notes-file changelog.md
+
+          # Upload new assets
+          gh release upload nightly *.* --clobber

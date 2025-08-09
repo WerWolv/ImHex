@@ -15,6 +15,9 @@
 
 #include <wolv/utils/string.hpp>
 
+#include <clocale>
+#include <sstream>
+
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shellapi.h>
