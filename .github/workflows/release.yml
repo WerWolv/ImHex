@@ -118,6 +118,8 @@ jobs:
           mv "Windows Portable x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-x86_64.zip
           mv "Windows Portable arm64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-arm64.zip
           mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip
+          mv ./*_amd64.snap $(echo ./*_amd64.snap | sed 's/_amd64\.snap$/-x86_64.snap/' | sed 's/_/-/1')
+          mv ./*_arm64.snap $(echo ./*_arm64.snap | sed 's/_arm64\.snap$/-arm64.snap/' | sed 's/_/-/1')
           mv "ImHex Web.zip" imhex-${{ env.IMHEX_VERSION }}-Web.zip
           rm artifact.tar || true
 
