@@ -1025,6 +1025,7 @@
         "hex.builtin.view.pattern_editor.shortcut.toggle_insert": "Toggle Write Over",
         "hex.builtin.view.pattern_editor.shortcut.delete": "Delete One Character at the Cursor Position",
         "hex.builtin.view.pattern_editor.shortcut.backspace": "Delete One Character to the Left of Cursor",
+        "hex.builtin.view.pattern_editor.shortcut.backspace_shifted": "Delete One Character to the Left of Cursor",
         "hex.builtin.view.pattern_editor.shortcut.select_all": "Select Entire File",
         "hex.builtin.view.pattern_editor.menu.edit.select_all": "Select All",
         "hex.builtin.view.pattern_editor.shortcut.select_left": "Extend Selection One Character to the Left of the Cursor",

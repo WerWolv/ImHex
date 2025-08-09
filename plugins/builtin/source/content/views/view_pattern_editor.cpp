@@ -2491,6 +2491,11 @@ namespace hex::plugin::builtin {
                 m_textEditor.get(ImHexApi::Provider::get()).backspace();
         });
 
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.backspace_shifted", [this] {
+            if (m_focusedSubWindowName.contains(textEditorView))
+                m_textEditor.get(ImHexApi::Provider::get()).backspace();
+        });
+
         ShortcutManager::addShortcut(this, Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.toggle_insert", [this] {
             if (m_focusedSubWindowName.contains(textEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).setOverwrite(!m_textEditor.get(ImHexApi::Provider::get()).isOverwrite());
