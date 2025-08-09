@@ -984,11 +984,12 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
 
                 chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{
-                    const auto open = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                    ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0.0F);
+                    const auto result = ImGui::TreeNodeEx(fmt::format("##TreeNode_{:X}", endOffset).c_str(), ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                    ImGui::PopStyleVar();
                     ImGui::SameLine();
                     ImGui::TextUnformatted(fmt::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str());
-
-                    return open;
+                    return result;
                 });
 
                 ImGui::TableNextColumn();
