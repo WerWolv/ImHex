@@ -324,9 +324,6 @@ namespace hex::plugin::builtin {
                         ShortcutManager::resumeShortcuts();
 
                         settingChanged = true;
-                        if (!m_hasDuplicate) {
-
-                        }
                     }
                 }
 
