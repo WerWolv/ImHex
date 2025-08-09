@@ -4,6 +4,10 @@
 
 namespace hex {
 
+    SemanticVersion::SemanticVersion(u32 major, u32 minor, u32 patch) : SemanticVersion(fmt::format("{}.{}.{}", major, minor, patch)) {
+
+    }
+
     SemanticVersion::SemanticVersion(const char *version) : SemanticVersion(std::string(version)) {
 
     }
@@ -109,7 +113,7 @@ namespace hex {
         auto result = wolv::util::combineStrings(m_parts, ".");
 
         if (withBuildType && !m_buildType.empty())
-            result += hex::format("-{}", m_buildType);
+            result += fmt::format("-{}", m_buildType);
 
         return result;
     }

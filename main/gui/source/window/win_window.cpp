@@ -56,7 +56,7 @@ namespace hex {
     static bool s_useLayeredWindow = true;
 
     void nativeErrorMessage(const std::string &message) {
-        log::fatal(message);
+        log::fatal("{}", message);
         MessageBoxA(nullptr, message.c_str(), "Error", MB_ICONERROR | MB_OK);
     }
 
@@ -78,7 +78,6 @@ namespace hex {
                 ImHexApi::System::impl::setNativeScale(newScale);
 
                 ThemeManager::reapplyCurrentTheme();
-                ImGui::GetStyle().ScaleAllSizes(newScale);
 
                 return TRUE;
             }
@@ -153,6 +152,11 @@ namespace hex {
     // Custom window procedure for borderless window
     static LRESULT borderlessWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
+            case WM_MOVE: {
+                auto imhexWindow = static_cast<Window*>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
+                imhexWindow->fullFrame();
+                break;
+            }
             case WM_MOUSELAST:
                 break;
             case WM_NCACTIVATE:
@@ -310,6 +314,7 @@ namespace hex {
 
                         break;
                 }
+
                 break;
             }
             default:
@@ -374,6 +379,11 @@ namespace hex {
                     if (fontPath.is_relative())
                         fontPath = std::fs::path("C:\\Windows\\Fonts") / fontPath;
 
+                    // Windows appends (TrueType) to all font names for some reason. Remove it
+                    if (fontName.ends_with(" (TrueType)")) {
+                        fontName = fontName.substr(0, fontName.size() - 11);
+                    }
+
                     registerFont(fontName.c_str(), wolv::util::toUTF8String(fontPath).c_str());
                 }
 
@@ -387,8 +397,13 @@ namespace hex {
     }
 
     void Window::configureGLFW() {
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        if (ImHexApi::System::getGLVersion() >= SemanticVersion(4,1,0)) {
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        } else {
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        }
         glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
 
         // Windows versions before Windows 10 have issues with transparent framebuffers

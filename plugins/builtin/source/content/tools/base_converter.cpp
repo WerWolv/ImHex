@@ -32,8 +32,8 @@ namespace hex::plugin::builtin {
             }
 
             buffers[0] = std::to_string(number);
-            buffers[1] = hex::format("0x{0:X}", number);
-            buffers[2]  = hex::format("{0:#o}", number);
+            buffers[1] = fmt::format("0x{0:X}", number);
+            buffers[2]  = fmt::format("{0:#o}", number);
             buffers[3]  = hex::toBinaryString(number);
         };
 

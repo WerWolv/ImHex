@@ -346,16 +346,16 @@ namespace hex::plugin::visualizers {
         bool validateVector(const std::vector<float> &vector, u32 vertexCount, u32 divisor, const std::string &name, std::string &errorMessage) {
             if (!vector.empty()) {
                 if (vector.size() % divisor != 0) {
-                    errorMessage = hex::format("hex.visualizers.pl_visualizer.3d.error_message_count"_lang, name , std::to_string(divisor));
+                    errorMessage = fmt::format("hex.visualizers.pl_visualizer.3d.error_message_count"_lang, name , std::to_string(divisor));
                     return false;
                 }
             } else {
-                errorMessage = hex::format("hex.visualizers.pl_visualizer.3d.error_message_not_empty"_lang, name);
+                errorMessage = fmt::format("hex.visualizers.pl_visualizer.3d.error_message_not_empty"_lang, name);
                 return false;
             }
             auto vectorCount = vector.size()/divisor;
             if (vectorCount != vertexCount) {
-                errorMessage =  hex::format("hex.visualizers.pl_visualizer.3d.error_message_expected"_lang, std::to_string(vertexCount), std::to_string(vectorCount));
+                errorMessage =  fmt::format("hex.visualizers.pl_visualizer.3d.error_message_expected"_lang, std::to_string(vertexCount), std::to_string(vectorCount));
                 return false;
             }
             return true;
@@ -502,7 +502,7 @@ namespace hex::plugin::visualizers {
                     drawList->AddText(
                         screenPos + scaled({ 5, 5 }),
                         ImGui::GetColorU32(ImGuiCol_Text),
-                        hex::format("X: {:.5}\nY: {:.5}", mousePos.x, mousePos.y).c_str());
+                        fmt::format("X: {:.5}\nY: {:.5}", mousePos.x, mousePos.y).c_str());
                 }
 
             }
@@ -530,7 +530,7 @@ namespace hex::plugin::visualizers {
             // Draw grid toggle
             {
                 ImGui::PushID(2);
-                if (ImGuiExt::DimmedIconToggle(s_isPerspective ? ICON_BI_GRID : ICON_VS_SYMBOL_NUMBER, &s_drawGrid))
+                if (ImGuiExt::DimmedIconToggle(s_isPerspective ? ICON_BI_GRID : ICON_VS_SYMBOL_NUMERIC, &s_drawGrid))
                     s_shouldReset = true;
                 ImGui::PopID();
             }
@@ -669,7 +669,7 @@ namespace hex::plugin::visualizers {
                             errorMessage += std::to_string(badIndex) + ", ";
                         errorMessage.pop_back();
                         errorMessage.pop_back();
-                        errorMessage += hex::format("hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count"_lang.get(), s_vertexCount);
+                        errorMessage += fmt::format("hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count"_lang, s_vertexCount);
                         throw std::runtime_error(errorMessage);
                     }
                 }
@@ -706,7 +706,7 @@ namespace hex::plugin::visualizers {
                             errorMessage += std::to_string(badIndex) + ", ";
                         errorMessage.pop_back();
                         errorMessage.pop_back();
-                        errorMessage += hex::format("hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count"_lang.get(), s_vertexCount);
+                        errorMessage += fmt::format("hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count"_lang, s_vertexCount);
                         throw std::runtime_error(errorMessage);
                     }
                 }
@@ -941,7 +941,7 @@ namespace hex::plugin::visualizers {
             s_shouldReset = true;
         processInputEvents(s_rotation, s_translation, s_scaling, s_nearLimit, s_farLimit);
 
-        auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
+        const auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
         if (iterable != nullptr && iterable->getEntryCount() > 0) {
             auto content = iterable->getEntry(0);
             while (content->getSize() == 0) {

@@ -10,9 +10,7 @@ This document is a guide for developers who want to contribute to ImHex in any w
 
 If you'd like to add new features, the best way to start is by joining our Discord and telling us about your idea. We can then discuss the best way to implement it and how it should be integrated into ImHex or if it should be done in a separate plugin.
 
-There are standalone plugin templates that use ImHex as a submodule. You can find them here:
-- https://github.com/WerWolv/ImHex-Cpp-Plugin-Template
-- https://github.com/WerWolv/ImHex-Rust-Plugin-Template
+There are standalone plugin templates that use ImHex as a submodule. You can find them located in the README's [Plugin Development](README.md#plugin-development) section.
 
 ### Adding a new language
 
@@ -32,18 +30,18 @@ ImHex is written in C++ and usually uses the latest compiler and standard librar
 ### Structure
 
 - `main`: Contains the main application code
-    - Important to understand here is that the main ImHex application is basically just an empty shell. 
+    - Important to understand here is that the main ImHex application is basically just an empty shell.
     - All it does is create a Window and a OpenGL context using GLFW, load all available plugins, properly configure ImGui and render it to the screen.
     - Everything else is done inside of plugins. ImHex comes with a few plugins by default, most notably the `builtin` plugin which contains the majority of the application code.
     - In most cases, this code doesn't need to be modified. Most features should be self-contained inside a plugin.
 - `lib`
     - `libimhex`: Contains all helper utilities as well as various APIs for plugins to interact with ImHex.
         - The library's main purpose is for Dependency Inversion. The ImHex main application as well as libimhex do not know about the existence of plugins at build time. Plugins and the main application instead link against libimhex and use it as a common API to interact with each other.
-        - Since libimhex is a doesn't know about the existence of plugins, it cannot depend on any of them. This includes localizations and things that get registered by plugins after launch.
+        - Since libimhex itself doesn't know about the existence of plugins, it cannot depend on any of them. This includes localizations and things that get registered by plugins after launch.
         - Even if the builtin plugin is technically always available, it is still a plugin and should be treated that way.
         - All important APIs can be found in the `hex/api` include directory and are documented in the respective header file.
     - `external`: All libraries that need custom patches or aren't typically available in package managers go into here.
-        - If you'd like to add new features to the Pattern language, please make a PR to https://github.com/WerWolv/PatternLanguage instead. ImHex usually depends on the latest commit of the master branch of this repo. 
+        - If you'd like to add new features to the Pattern language, please make a PR to https://github.com/WerWolv/PatternLanguage instead. ImHex usually depends on the latest commit of the master branch of this repo.
 - `plugins`
     - `builtin`: The builtin plugin. Contains the majority of the application code.
         - It's the heart of ImHex's functionality. It contains most of the default views, providers, etc. so if you want to add new functionality to ImHex, this is the place to start.

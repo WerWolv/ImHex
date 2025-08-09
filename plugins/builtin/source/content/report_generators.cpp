@@ -15,12 +15,18 @@ namespace hex::plugin::builtin {
         ContentRegistry::Reports::addReportProvider([](const prv::Provider *provider) -> std::string {
             std::string result;
 
-            result += "## Data description\n\n";
-            result += "| Type | Value |\n";
-            result += "| ---- | ----- |\n";
+            if (auto *dataDescriptionProvider = dynamic_cast<const prv::IProviderDataDescription*>(provider); dataDescriptionProvider != nullptr) {
+                auto descriptions = dataDescriptionProvider->getDataDescription();
+                if (!descriptions.empty()) {
+                    result += "## Data description\n\n";
+                    result += "| Type | Value |\n";
+                    result += "| ---- | ----- |\n";
 
-            for (const auto &[type, value] : provider->getDataDescription())
-                result += hex::format("| {} | {} |\n", type, value);
+                    for (const auto &[type, value] : dataDescriptionProvider->getDataDescription())
+                        result += fmt::format("| {} | {} |\n", type, value);
+                }
+            }
+
 
             return result;
         });
@@ -36,7 +42,7 @@ namespace hex::plugin::builtin {
             result += "## Overlays\n\n";
 
             for (const auto &overlay : overlays) {
-                result += hex::format("### Overlay 0x{:04X} - 0x{:04X}", overlay->getAddress(), overlay->getAddress() + overlay->getSize() - 1);
+                result += fmt::format("### Overlay 0x{:04X} - 0x{:04X}", overlay->getAddress(), overlay->getAddress() + overlay->getSize() - 1);
                 result += "\n\n";
 
                 result += "```\n";

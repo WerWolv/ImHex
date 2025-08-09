@@ -52,6 +52,10 @@ namespace hex::plugin::disasm {
             return m_instructionString;
         }
 
+       [[nodiscard]] std::string toString() override {
+             return m_instructionString;
+        }
+
     private:
         std::string m_instructionString;
     };
@@ -96,7 +100,7 @@ namespace hex::plugin::disasm {
                     else if (equalsIgnoreCase(syntaxString, "motorola"))
                         syntax = CS_OPT_SYNTAX_MOTOROLA;
                     else
-                        err::E0012.throwError(hex::format("Invalid disassembler syntax name '{}'", syntaxString));
+                        err::E0012.throwError(fmt::format("Invalid disassembler syntax name '{}'", syntaxString));
 
                     cs_option(capstone, CS_OPT_SYNTAX, syntax);
                     cs_option(capstone, CS_OPT_SKIPDATA, CS_OPT_ON);

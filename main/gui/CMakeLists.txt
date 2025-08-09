@@ -28,6 +28,7 @@ add_executable(main ${APPLICATION_TYPE}
 )
 
 target_include_directories(main PUBLIC include)
+addCppCheck(main)
 setupCompilerFlags(main)
 setupCompilerFlags(libimhex)
 
@@ -40,11 +41,11 @@ if (EMSCRIPTEN)
     target_link_options(main PRIVATE -sUSE_GLFW=3 -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1 -Wno-pthreads-mem-growth)
     target_link_options(main PRIVATE -sTOTAL_MEMORY=134217728)
     target_link_options(main PRIVATE -sMAX_WEBGL_VERSION=2)
+    target_link_options(main PRIVATE -sGL_UNSAFE_OPTS=0)
     target_link_options(main PRIVATE -sEXPORTED_RUNTIME_METHODS=ccall)
     target_link_options(main PRIVATE -sFETCH)
     target_link_options(main PRIVATE -sWASM_BIGINT)
     target_link_options(main PRIVATE -O2)
-    target_link_options(main PRIVATE -sLEGACY_GL_EMULATION)
     target_link_options(main PRIVATE -fsanitize=null)
     target_link_options(main PRIVATE -fsanitize-minimal-runtime)
     target_link_libraries(main PRIVATE idbfs.js)
@@ -57,7 +58,7 @@ set_target_properties(main PROPERTIES
 
 target_compile_definitions(main PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
-target_link_libraries(main PRIVATE libromfs-imhex libimhex libwolv ${LIBBACKTRACE_LIBRARIES} LLVMDemangle)
+target_link_libraries(main PRIVATE libromfs-imhex libimhex libwolv ${LIBBACKTRACE_LIBRARIES})
 if (WIN32)
     target_link_libraries(main PRIVATE usp10 wsock32 ws2_32 Dwmapi.lib Winmm.lib)
 

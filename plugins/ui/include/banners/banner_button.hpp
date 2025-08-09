@@ -13,11 +13,12 @@ namespace hex::ui {
             : Banner(color), m_icon(icon), m_message(std::move(message)), m_buttonText(std::move(buttonText)), m_buttonCallback(std::move(buttonCallback)) { }
 
         void drawContent() override {
-            const std::string buttonText = hex::format(" {} ", Lang(m_buttonText).get());
+            const std::string buttonText = fmt::format(" {} ", Lang(m_buttonText).get());
             const auto buttonSize = ImGui::CalcTextSize(buttonText.c_str());
             const auto iconSize = ImGui::CalcTextSize(m_icon);
             const auto textHeight = std::max(ImGui::CalcTextSize(Lang(m_message)).y, iconSize.y);
             const auto textOffset = (ImGui::GetWindowHeight() - textHeight) / 2;
+
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + textOffset);
             ImGui::TextUnformatted(m_icon);
             ImGui::SameLine(0, 10_scaled);
@@ -38,13 +39,14 @@ namespace hex::ui {
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - buttonSize.x - 20_scaled);
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2_scaled);
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
-            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_Tab));
-            if (ImGui::SmallButton(buttonText.c_str())) {
+            ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 0.0F);
+            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_Button, 0.9F));
+            if (ImGui::Button(buttonText.c_str())) {
                 m_buttonCallback();
                 this->close();
             }
             ImGui::PopStyleColor();
-            ImGui::PopStyleVar(2);
+            ImGui::PopStyleVar(3);
         }
 
     private:

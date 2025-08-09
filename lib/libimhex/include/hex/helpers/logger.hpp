@@ -12,9 +12,9 @@ EXPORT_MODULE namespace hex::log {
 
     namespace impl {
 
-        FILE *getDestination();
-        wolv::io::File& getFile();
-        bool isRedirected();
+        [[nodiscard]] FILE *getDestination();
+        [[nodiscard]] wolv::io::File& getFile();
+        [[nodiscard]] bool isRedirected();
         [[maybe_unused]] void redirectToFile();
         [[maybe_unused]] void enableColorPrinting();
 
@@ -25,17 +25,18 @@ EXPORT_MODULE namespace hex::log {
         void unlockLoggerMutex();
 
         struct LogEntry {
-            std::string project;
-            std::string level;
+            std::string_view project;
+            std::string_view level;
             std::string message;
         };
 
-        std::vector<LogEntry>& getLogEntries();
-        void addLogEntry(std::string_view project, std::string_view level, std::string_view message);
+        const std::vector<LogEntry>& getLogEntries();
+        void addLogEntry(std::string_view project, std::string_view level, std::string message);
 
-        [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level, const char *projectName);
+        [[maybe_unused]] void printPrefix(FILE *dest, fmt::text_style ts, std::string_view level, std::string_view projectName);
 
-        [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto && ... args) {
+        template<typename ... Args>
+        [[maybe_unused]] void print(fmt::text_style ts, std::string_view level, fmt::format_string<Args...> fmt, Args && ... args) {
             if (isLoggingSuspended()) [[unlikely]]
                 return;
 
@@ -46,12 +47,14 @@ EXPORT_MODULE namespace hex::log {
             try {
                 printPrefix(dest, ts, level, IMHEX_PROJECT_NAME);
 
-                auto message = fmt::format(fmt::runtime(fmt), args...);
+                auto message = fmt::format(fmt, std::forward<Args>(args)...);
                 fmt::print(dest, "{}\n", message);
-                fflush(dest);
+                std::fflush(dest);
 
                 addLogEntry(IMHEX_PROJECT_NAME, level, std::move(message));
-            } catch (const std::exception&) { }
+            } catch (const std::exception&) {
+                /* Ignore any exceptions, we can't do anything anyway */
+            }
         }
 
         namespace color {
@@ -70,52 +73,62 @@ EXPORT_MODULE namespace hex::log {
     void resumeLogging();
     void enableDebugLogging();
 
-    [[maybe_unused]] void debug(const std::string &fmt, auto && ... args) {
+    template<typename ... Args>
+    [[maybe_unused]] void debug(fmt::format_string<Args...> fmt, Args && ... args) {
         if (impl::isDebugLoggingEnabled()) [[unlikely]] {
-            hex::log::impl::print(fg(impl::color::debug()) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
+            impl::print(fg(impl::color::debug()) | fmt::emphasis::bold, "[DEBUG]", fmt, std::forward<Args>(args)...);
         } else {
-            impl::addLogEntry(IMHEX_PROJECT_NAME, "[DEBUG]", fmt::format(fmt::runtime(fmt), args...));
+            impl::addLogEntry(IMHEX_PROJECT_NAME, "[DEBUG]", fmt::format(fmt, std::forward<Args>(args)...));
         }
     }
 
-    [[maybe_unused]] void info(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(impl::color::info()) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
+    template<typename ... Args>
+    [[maybe_unused]] void info(fmt::format_string<Args...> fmt, Args && ... args) {
+        impl::print(fg(impl::color::info()) | fmt::emphasis::bold, "[INFO] ", fmt, std::forward<Args>(args)...);
     }
 
-    [[maybe_unused]] void warn(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(impl::color::warn()) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
+    template<typename ... Args>
+    [[maybe_unused]] void warn(fmt::format_string<Args...> fmt, Args && ... args) {
+        impl::print(fg(impl::color::warn()) | fmt::emphasis::bold, "[WARN] ", fmt, std::forward<Args>(args)...);
     }
 
-    [[maybe_unused]] void error(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(impl::color::error()) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
+    template<typename ... Args>
+    [[maybe_unused]] void error(fmt::format_string<Args...> fmt, Args && ... args) {
+        impl::print(fg(impl::color::error()) | fmt::emphasis::bold, "[ERROR]", fmt, std::forward<Args>(args)...);
     }
 
-    [[maybe_unused]] void fatal(const std::string &fmt, auto && ... args) {
-        hex::log::impl::print(fg(impl::color::fatal()) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
+    template<typename ... Args>
+    [[maybe_unused]] void fatal(fmt::format_string<Args...> fmt, Args && ... args) {
+        impl::print(fg(impl::color::fatal()) | fmt::emphasis::bold, "[FATAL]", fmt, std::forward<Args>(args)...);
     }
 
-    [[maybe_unused]] void print(const std::string &fmt, auto && ... args) {
+    template<typename ... Args>
+    [[maybe_unused]] void print(fmt::format_string<Args...> fmt, Args && ... args) {
         impl::lockLoggerMutex();
         ON_SCOPE_EXIT { impl::unlockLoggerMutex(); };
 
         try {
             auto dest = impl::getDestination();
-            auto message = fmt::format(fmt::runtime(fmt), args...);
-            fmt::print(dest, "{}", message);
-            fflush(dest);
-        } catch (const std::exception&) { }
+            fmt::print(dest, fmt, std::forward<Args>(args)...);
+            std::fflush(dest);
+        } catch (const std::exception&) {
+            /* Ignore any exceptions, we can't do anything anyway */
+        }
     }
 
-    [[maybe_unused]] void println(const std::string &fmt, auto && ... args) {
+    template<typename ... Args>
+    [[maybe_unused]] void println(fmt::format_string<Args...> fmt, Args && ... args) {
         impl::lockLoggerMutex();
         ON_SCOPE_EXIT { impl::unlockLoggerMutex(); };
 
         try {
             auto dest = impl::getDestination();
-            auto message = fmt::format(fmt::runtime(fmt), args...);
-            fmt::print(dest, "{}\n", message);
-            fflush(dest);
-        } catch (const std::exception&) { }
+            fmt::print(dest, fmt, std::forward<Args>(args)...);
+            fmt::print("\n");
+            std::fflush(dest);
+        } catch (const std::exception&) {
+            /* Ignore any exceptions, we can't do anything anyway */
+        }
     }
 
 }

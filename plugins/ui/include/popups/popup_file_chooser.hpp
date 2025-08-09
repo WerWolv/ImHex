@@ -74,6 +74,7 @@ namespace hex::ui {
                             m_selectedFiles.insert(fileIt);
                         } else {
                             if (selected) {
+                                // cppcheck-suppress eraseDereference
                                 m_selectedFiles.erase(fileIt);
                             } else {
                                 m_selectedFiles.insert(fileIt);

@@ -1,10 +1,13 @@
 #pragma once
 
+#include <fonts/vscode_icons.hpp>
 #include <hex/providers/provider.hpp>
 
 namespace hex::plugin::builtin {
 
-    class ViewProvider : public hex::prv::Provider {
+    class ViewProvider : public prv::Provider,
+                         public prv::IProviderDataDescription,
+                         public prv::IProviderMenuItems {
     public:
         ViewProvider() = default;
         ~ViewProvider() override = default;
@@ -34,6 +37,10 @@ namespace hex::plugin::builtin {
         [[nodiscard]] std::vector<Description> getDataDescription() const override;
         [[nodiscard]] UnlocalizedString getTypeName() const override;
 
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_OPEN_PREVIEW;
+        }
+
         void loadSettings(const nlohmann::json &settings) override;
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
 
@@ -48,7 +55,7 @@ namespace hex::plugin::builtin {
         void setBaseAddress(u64 address) override { std::ignore = address; }
 
 
-        void setProvider(u64 startAddress, size_t size, hex::prv::Provider *provider);
+        void setProvider(u64 startAddress, size_t size, Provider *provider);
         void setName(const std::string &name);
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;

@@ -59,6 +59,7 @@ namespace hex {
         m_url = std::move(other.m_url);
         m_headers = std::move(other.m_headers);
         m_body = std::move(other.m_body);
+        m_timeout = other.m_timeout;
 
         return *this;
     }
@@ -121,7 +122,7 @@ namespace hex {
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
         }
 
-        void setupFileUpload(CURL *curl, wolv::io::File &file, const std::string &fileName, const std::string &mimeName) {
+        void setupFileUpload(CURL *curl, const wolv::io::File &file, const std::string &fileName, const std::string &mimeName) {
             curl_mime *mime     = curl_mime_init(curl);
             curl_mimepart *part = curl_mime_addpart(mime);
 
@@ -177,7 +178,7 @@ namespace hex {
             ON_SCOPE_EXIT { curl_slist_free_all(headersList); };
 
             for (auto &[key, value] : headers) {
-                std::string header = hex::format("{}: {}", key, value);
+                std::string header = fmt::format("{}: {}", key, value);
                 headersList = curl_slist_append(headersList, header.c_str());
             }
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headersList);

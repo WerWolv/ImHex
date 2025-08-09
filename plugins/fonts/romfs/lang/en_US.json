@@ -6,6 +6,8 @@
     "translations": {
         "hex.fonts.setting.font": "Font",
         "hex.fonts.setting.font.glyphs": "Glyphs",
+        "hex.fonts.setting.font.button.bold": "B",
+        "hex.fonts.setting.font.button.italic": "I",
         "hex.fonts.setting.font.custom_font": "Font",
         "hex.fonts.setting.font.custom_font_info": "The following settings are only available when a custom font has been selected.",
         "hex.fonts.setting.font.font_bold": "Bold",

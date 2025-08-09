@@ -102,7 +102,7 @@ namespace hex::plugin::builtin {
                     if (!data.empty() && checksum != 0x00)
                         throw std::runtime_error("Checksum mismatch");
 
-                    while (std::isspace(string[offset]) && offset < string.length())
+                    while (offset < string.length() && std::isspace(string[offset]))
                         offset++;
 
                     // Construct region
@@ -145,7 +145,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    while (std::isspace(string[offset]) && offset < string.length())
+                    while (offset < string.length() && std::isspace(string[offset]))
                         offset++;
                 }
 
@@ -197,7 +197,7 @@ namespace hex::plugin::builtin {
     bool IntelHexProvider::open() {
         auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
+            this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
             return false;
         }
 
@@ -207,7 +207,7 @@ namespace hex::plugin::builtin {
             return false;
         }
 
-        u64 maxAddress = 0x00;
+        std::optional<u64> maxAddress;
         for (auto &[address, bytes] : data.value()) {
             auto endAddress = (address + bytes.size()) - 1;
             m_data.emplace({ address, endAddress }, std::move(bytes));
@@ -216,7 +216,11 @@ namespace hex::plugin::builtin {
                 maxAddress = endAddress;
         }
 
-        m_dataSize = maxAddress + 1;
+        if (maxAddress.has_value())
+            m_dataSize = *maxAddress + 1;
+        else
+            m_dataSize = 0x00;
+
         m_dataValid = true;
 
         return true;
@@ -227,7 +231,7 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string IntelHexProvider::getName() const {
-        return hex::format("hex.builtin.provider.intel_hex.name"_lang, wolv::util::toUTF8String(m_sourceFilePath.filename()));
+        return fmt::format("hex.builtin.provider.intel_hex.name"_lang, wolv::util::toUTF8String(m_sourceFilePath.filename()));
     }
 
     [[nodiscard]] std::vector<IntelHexProvider::Description> IntelHexProvider::getDataDescription() const {

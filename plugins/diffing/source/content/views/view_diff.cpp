@@ -13,13 +13,13 @@ namespace hex::plugin::diffing {
 
     using DifferenceType = ContentRegistry::Diffing::DifferenceType;
 
-    ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name", ICON_VS_DIFF_SIDEBYSIDE) {
+    ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name", ICON_VS_DIFF) {
         // Clear the selected diff providers when a provider is closed
         EventProviderClosed::subscribe(this, [this](prv::Provider *) {
             this->reset();
         });
         EventDataChanged::subscribe(this, [this](prv::Provider *) {
-            m_analyzed = false;
+            m_analysisInterrupted = m_analyzed = false;
         });
 
         // Set the background highlight callbacks for the two hex editor columns
@@ -94,7 +94,9 @@ namespace hex::plugin::diffing {
 
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
         auto commonSize = std::max(providerA->getActualSize(), providerB->getActualSize());
-        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing", commonSize, [this, providerA, providerB](Task &) {
+        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing", commonSize, [this, providerA, providerB](Task &task) {
+            task.setInterruptCallback([this]{ m_analysisInterrupted = true; });
+
             auto differences = m_algorithm->analyze(providerA, providerB);
 
             auto providers = ImHexApi::Provider::getProviders();
@@ -189,7 +191,7 @@ namespace hex::plugin::diffing {
         }
 
         // Analyze the providers if they are valid and the user selected a new provider
-        if (!m_analyzed && a.provider != -1 && b.provider != -1 && !m_diffTask.isRunning() && m_algorithm != nullptr) {
+        if (!m_analyzed && !m_analysisInterrupted && a.provider != -1 && b.provider != -1 && !m_diffTask.isRunning() && m_algorithm != nullptr) {
             const auto &providers = ImHexApi::Provider::getProviders();
             auto providerA = providers[a.provider];
             auto providerB = providers[b.provider];
@@ -229,11 +231,11 @@ namespace hex::plugin::diffing {
                 ImGui::SameLine();
 
                 // Draw first provider selector
-                if (drawProviderSelector(a)) m_analyzed = false;
+                if (drawProviderSelector(a)) m_analysisInterrupted = m_analyzed = false;
 
                 // Draw second provider selector
                 ImGui::TableNextColumn();
-                if (drawProviderSelector(b)) m_analyzed = false;
+                if (drawProviderSelector(b)) m_analysisInterrupted = m_analyzed = false;
             }
             ImGui::EndDisabled();
 
@@ -327,7 +329,7 @@ namespace hex::plugin::diffing {
 
                         // Draw start address
                         ImGui::TableNextColumn();
-                        if (ImGui::Selectable(hex::format("0x{:04X} - 0x{:04X}", regionA.start, regionA.end).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                        if (ImGui::Selectable(fmt::format("0x{:04X} - 0x{:04X}", regionA.start, regionA.end).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                             const Region selectionA = { regionA.start, ((regionA.end - regionA.start) + 1) };
                             const Region selectionB = { regionB.start, ((regionB.end - regionB.start) + 1) };
 
@@ -347,7 +349,7 @@ namespace hex::plugin::diffing {
 
                         // Draw end address
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(hex::format("0x{:04X} - 0x{:04X}", regionB.start, regionB.end).c_str());
+                        ImGui::TextUnformatted(fmt::format("0x{:04X} - 0x{:04X}", regionB.start, regionB.end).c_str());
 
                         const auto &providers = ImHexApi::Provider::getProviders();
                         std::vector<u8> data;
@@ -405,7 +407,7 @@ namespace hex::plugin::diffing {
                     ImGui::PushID(algorithm.get());
                     if (ImGui::Selectable(Lang(algorithm->getUnlocalizedName()))) {
                         m_algorithm = algorithm.get();
-                        m_analyzed  = false;
+                        m_analysisInterrupted = m_analyzed  = false;
                     }
                     ImGui::PopID();
                 }

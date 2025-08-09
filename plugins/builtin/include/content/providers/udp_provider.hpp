@@ -5,10 +5,13 @@
 #include <hex/helpers/udp_server.hpp>
 #include <nlohmann/json.hpp>
 #include <mutex>
+#include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::builtin {
 
-    class UDPProvider : public hex::prv::Provider {
+    class UDPProvider : public hex::prv::Provider,
+                        public hex::prv::IProviderSidebarInterface,
+                        public hex::prv::IProviderLoadInterface {
     public:
         UDPProvider() = default;
         ~UDPProvider() override = default;
@@ -24,11 +27,8 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] u64 getActualSize() const override;
 
-
-        [[nodiscard]] bool hasLoadInterface() const override { return true; }
         [[nodiscard]] bool drawLoadInterface() override;
-        bool hasInterface() const override { return true; }
-        void drawInterface() override;
+        void drawSidebarInterface() override;
 
         [[nodiscard]] bool open() override;
         void close() override;
@@ -40,7 +40,11 @@ namespace hex::plugin::builtin {
             return "hex.builtin.provider.udp";
         }
 
-        std::string getName() const override { return hex::format("hex.builtin.provider.udp.name"_lang, m_port); }
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_RSS;
+        }
+
+        std::string getName() const override { return fmt::format("hex.builtin.provider.udp.name"_lang, m_port); }
 
     protected:
         void receive(std::span<const u8> data);

@@ -118,7 +118,7 @@ namespace hex {
 
     void EncodingFile::parse(const std::string &content) {
         m_tableContent = content;
-        for (const auto &line : splitString(m_tableContent, "\n")) {
+        for (const auto &line : wolv::util::splitString(m_tableContent, "\n")) {
 
             std::string from, to;
             {

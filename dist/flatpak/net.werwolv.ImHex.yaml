@@ -1,0 +1,126 @@
+app-id: net.werwolv.ImHex
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: imhex
+rename-desktop-file: imhex.desktop
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --filesystem=host
+  - --device=dri
+
+modules:
+  - name: glfw
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+      - -DGLFW_BUILD_EXAMPLES=OFF
+      - -DGLFW_BUILD_TESTS=OFF
+      - -DGLFW_BUILD_DOCS=OFF
+    sources:
+      - type: archive
+        url: https://github.com/glfw/glfw/releases/download/3.4/glfw-3.4.zip
+        sha256: b5ec004b2712fd08e8861dc271428f048775200a2df719ccf575143ba749a3e9
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - /lib/pkgconfig
+      - /lib64/pkgconfig
+      - /lib/cmake
+      - /lib64/cmake
+
+  - name: mbedtls
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_C_FLAGS=-fPIC
+      - -DENABLE_TESTING=OFF
+      - -DENABLE_PROGRAMS=OFF
+    sources:
+      - type: archive
+        url: https://github.com/ARMmbed/mbedtls/archive/refs/tags/v3.4.0.tar.gz
+        sha256: 1b899f355022e8d02c4d313196a0a16af86c5a692456fa99d302915b8cf0320a
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - /lib64/pkgconfig
+      - /lib/cmake
+      - /lib64/cmake
+
+  - name: fmt
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+      - -DFMT_TEST=OFF
+    sources:
+      - type: archive
+        url: https://github.com/fmtlib/fmt/releases/download/10.0.0/fmt-10.0.0.zip
+        sha256: 4943cb165f3f587f26da834d3056ee8733c397e024145ca7d2a8a96bb71ac281
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - /lib64/pkgconfig
+      - /lib/cmake
+      - /lib64/cmake
+
+  - name: yara
+    buildsystem: autotools
+    sources:
+      - type: git
+        url: https://github.com/VirusTotal/yara.git
+        tag: v4.3.1
+        commit: a6f6ce1d6d74a03c396660db25765f2a794d9e30
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - /lib64/pkgconfig
+      - /lib/cmake
+      - /lib64/cmake
+
+  - name: libssh2
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+      - -DENABLE_ZLIB_COMPRESSION=OFF
+      - -DENABLE_MANUAL=OFF
+      - -DENABLE_EXAMPLES=OFF
+      - -DENABLE_TESTING=OFF
+    sources:
+      - type: git
+        url: https://github.com/libssh2/libssh2.git
+        tag: libssh2-1.11.1
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - /lib64/pkgconfig
+      - /lib/cmake
+      - /lib64/cmake
+
+  - name: imhex
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DUSE_SYSTEM_CURL=ON
+      - -DUSE_SYSTEM_FMT=ON
+      - -DUSE_SYSTEM_YARA=ON
+      - -DIMHEX_OFFLINE_BUILD=ON
+      - -DCMAKE_INSTALL_LIBDIR=lib
+      - -DCMAKE_INSTALL_RPATH='$ORIGIN/../lib:$ORIGIN/../lib64'
+    sources:
+      - type: dir
+        path: ../..
+      - type: git
+        url: https://github.com/WerWolv/ImHex-Patterns.git
+        tag: master
+        dest: ImHex-Patterns
+        x-checker-data:
+          type: git
+          tag-pattern: ^ImHex-v([\d.]+)$
+    post-install:
+      - mkdir -p ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps
+      - cp ${FLATPAK_DEST}/share/pixmaps/imhex.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
+      - desktop-file-edit --set-key="Icon" --set-value="${FLATPAK_ID}" "${FLATPAK_DEST}/share/applications/imhex.desktop"

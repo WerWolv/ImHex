@@ -4,6 +4,8 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
 
+#include <hex/ui/view.hpp>
+
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/providers/provider.hpp>
@@ -37,7 +39,7 @@ namespace hex::plugin::builtin {
                         m_unit = Unit::Unitless;
                     } else {
                         std::tie(m_unit, m_multiplier) = parseUnit(value.substr(index));
-                        value = value.substr(0, index);
+                        value.resize(index);
                     }
                 } else {
                     m_unit = Unit::Unitless;
@@ -58,7 +60,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            std::string formatAs(Value other) {
+            std::string formatAs(const Value &other) {
                 return std::visit([&, this]<typename T>(T value) -> std::string {
 
                     auto unit = other.getUnit();
@@ -77,17 +79,17 @@ namespace hex::plugin::builtin {
                                 case Unit::Unitless:
                                 case Unit::Decimal:
                                     if (isInteger)
-                                        return hex::format("{0}", i64(value / multipler));
+                                        return fmt::format("{0}", i64(value / multipler));
                                     else
-                                        return hex::format("{0:.3f}", double(value / multipler));
+                                        return fmt::format("{0:.3f}", double(value / multipler));
                                 case Unit::Hexadecimal:
-                                    return hex::format("0x{0:x}", u64(value / multipler));
+                                    return fmt::format("0x{0:x}", u64(value / multipler));
                                 case Unit::Binary:
-                                    return hex::format("0b{0:b}", u64(value / multipler));
+                                    return fmt::format("0b{0:b}", u64(value / multipler));
                                 case Unit::Octal:
-                                    return hex::format("0o{0:o}", u64(value / multipler));
+                                    return fmt::format("0o{0:o}", u64(value / multipler));
                                 case Unit::Bytes:
-                                    return hex::format("{0}", u64(value / multipler));
+                                    return fmt::format("{0}", u64(value / multipler));
                                 default:
                                     return "hex.builtin.command.convert.invalid_conversion"_lang;
                             }
@@ -100,17 +102,17 @@ namespace hex::plugin::builtin {
                                 case Unit::Bits:
                                 case Unit::Decimal:
                                     if (isInteger)
-                                        return hex::format("{0}", i64(value / multipler));
+                                        return fmt::format("{0}", i64(value / multipler));
                                     else
-                                        return hex::format("{0:.3f}", double(value / multipler));
+                                        return fmt::format("{0:.3f}", double(value / multipler));
                                 case Unit::Hexadecimal:
-                                    return hex::format("0x{0:x}", u64(value / multipler));
+                                    return fmt::format("0x{0:x}", u64(value / multipler));
                                 case Unit::Binary:
-                                    return hex::format("0b{0:b}", u64(value / multipler));
+                                    return fmt::format("0b{0:b}", u64(value / multipler));
                                 case Unit::Octal:
-                                    return hex::format("0o{0:o}", u64(value / multipler));
+                                    return fmt::format("0o{0:o}", u64(value / multipler));
                                 case Unit::Bytes:
-                                    return hex::format("{0}", u64((value / multipler) / 8));
+                                    return fmt::format("{0}", u64((value / multipler) / 8));
                                 default:
                                     return "hex.builtin.command.convert.invalid_conversion"_lang;
                             }
@@ -123,17 +125,17 @@ namespace hex::plugin::builtin {
                                 case Unit::Bytes:
                                 case Unit::Decimal:
                                     if (isInteger)
-                                        return hex::format("{0}", i64(value / multipler));
+                                        return fmt::format("{0}", i64(value / multipler));
                                     else
-                                        return hex::format("{0:.3f}", double(value / multipler));
+                                        return fmt::format("{0:.3f}", double(value / multipler));
                                 case Unit::Hexadecimal:
-                                    return hex::format("0x{0:x}", u64(value / multipler));
+                                    return fmt::format("0x{0:x}", u64(value / multipler));
                                 case Unit::Binary:
-                                    return hex::format("0b{0:b}", u64(value / multipler));
+                                    return fmt::format("0b{0:b}", u64(value / multipler));
                                 case Unit::Octal:
-                                    return hex::format("0o{0:o}", u64(value / multipler));
+                                    return fmt::format("0o{0:o}", u64(value / multipler));
                                 case Unit::Bits:
-                                    return hex::format("{0}", u64((value / multipler) * 8));
+                                    return fmt::format("{0}", u64((value / multipler) * 8));
                                 default:
                                     return "hex.builtin.command.convert.invalid_conversion"_lang;
                             }
@@ -260,9 +262,9 @@ namespace hex::plugin::builtin {
 
                 std::optional<long double> result = evaluator.evaluate(input);
                 if (result.has_value())
-                    return hex::format("{0} = {1}", input.data(), result.value());
+                    return fmt::format("{0} = {1}", input.data(), result.value());
                 else if (evaluator.hasError())
-                    return hex::format("Error: {}", *evaluator.getLastError());
+                    return fmt::format("Error: {}", *evaluator.getLastError());
                 else
                     return std::string("???");
             }, [](auto input) -> std::optional<std::string> {
@@ -272,10 +274,38 @@ namespace hex::plugin::builtin {
 
                 std::optional<long double> result = evaluator.evaluate(input);
                 if (result.has_value()) {
-                    return hex::format("= {}", result.value());
+                    return fmt::format("= {}", result.value());
                 } else {
                     return std::nullopt;
                 }
+            });
+
+        ContentRegistry::CommandPaletteCommands::add(
+            ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+            "@",
+            "hex.builtin.command.goto.desc",
+            [](auto input) {
+                wolv::math_eval::MathEvaluator<long double> evaluator;
+                evaluator.registerStandardVariables();
+                evaluator.registerStandardFunctions();
+
+                std::optional<long double> result = evaluator.evaluate(input);
+                if (result.has_value())
+                    return fmt::format("hex.builtin.command.goto.result"_lang, result.value());
+                else if (evaluator.hasError())
+                    return fmt::format("Error: {}", *evaluator.getLastError());
+                else
+                    return std::string("???");
+            }, [](auto input) -> std::optional<std::string> {
+                wolv::math_eval::MathEvaluator<long double> evaluator;
+                evaluator.registerStandardVariables();
+                evaluator.registerStandardFunctions();
+
+                std::optional<long double> result = evaluator.evaluate(input);
+                if (result.has_value()) {
+                    ImHexApi::HexEditor::setSelection(result.value(), 1);
+                }
+                return std::nullopt;
             });
 
         ContentRegistry::CommandPaletteCommands::add(
@@ -283,7 +313,7 @@ namespace hex::plugin::builtin {
             "/web",
             "hex.builtin.command.web.desc",
             [](auto input) {
-                return hex::format("hex.builtin.command.web.result"_lang, input.data());
+                return fmt::format("hex.builtin.command.web.result"_lang, input.data());
             },
             [](auto input) {
                 hex::openWebpage(input);
@@ -295,7 +325,7 @@ namespace hex::plugin::builtin {
             "$",
             "hex.builtin.command.cmd.desc",
             [](auto input) {
-                return hex::format("hex.builtin.command.cmd.result"_lang, input.data());
+                return fmt::format("hex.builtin.command.cmd.result"_lang, input.data());
             },
             [](auto input) {
                 if (input.starts_with("imhex ")) {
@@ -330,6 +360,11 @@ namespace hex::plugin::builtin {
                         if (!entry.enabledCallback())
                             continue;
 
+                        if (entry.view != nullptr) {
+                            if (View::getLastFocusedView() != entry.view)
+                                continue;
+                        }
+
                         std::vector<std::string> names;
                         std::transform(entry.unlocalizedNames.begin(), entry.unlocalizedNames.end(), std::back_inserter(names), [](auto &name) { return Lang(name); });
 
@@ -344,7 +379,7 @@ namespace hex::plugin::builtin {
                     return result;
                 },
                 [](auto input) {
-                    return hex::format("Menu Item: {}", input.data());
+                    return fmt::format("Menu Item: {}", input.data());
                 });
 
         ContentRegistry::CommandPaletteCommands::addHandler(
@@ -370,7 +405,7 @@ namespace hex::plugin::builtin {
             return result;
         },
         [](auto input) {
-            return hex::format("Provider: {}", input.data());
+            return fmt::format("Data Source: {}", input.data());
         });
 
         ContentRegistry::CommandPaletteCommands::add(
@@ -378,6 +413,27 @@ namespace hex::plugin::builtin {
                     "%",
                     "hex.builtin.command.convert.desc",
                     handleConversionCommand);
+
+        ContentRegistry::CommandPaletteCommands::addHandler(
+                ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+                "+",
+                [](const auto &input) {
+                    std::vector<ContentRegistry::CommandPaletteCommands::impl::QueryResult> result;
+
+                    for (const auto &[unlocalizedName, view] : ContentRegistry::Views::impl::getEntries()) {
+                        const auto name = Lang(unlocalizedName);
+                        if (!hex::containsIgnoreCase(name, input))
+                            continue;
+                        result.emplace_back(fmt::format("Focus {} View", name), [&view](const auto &) {
+                            view->bringToFront();
+                        });
+                    }
+
+                    return result;
+                },
+                [](auto input) {
+                    return fmt::format("Focus {} View", input.data());
+                });
 
     }
 

@@ -274,12 +274,17 @@ namespace hex::plugin::builtin {
 
         ImGui::BeginDisabled(!selection.has_value() || !m_selectedEntryName.has_value());
         {
-            const auto buttonSize = ImVec2((ImGui::GetContentRegionAvail().x / 2) - ImGui::GetStyle().FramePadding.x, 0);
+            const auto buttonSizeSmall = ImVec2(ImGui::GetTextLineHeightWithSpacing() * 1.5F, 0);
+            const auto buttonSize = ImVec2((ImGui::GetContentRegionAvail().x / 2) - buttonSizeSmall.x - ImGui::GetStyle().FramePadding.x * 3, 0);
             const auto baseAddress = m_selectedProvider->getBaseAddress();
             const auto providerSize = m_selectedProvider->getActualSize();
             const auto providerEndAddress = baseAddress + providerSize;
 
-            ImGui::BeginDisabled(providerSize < requiredSize || selection->getStartAddress() < baseAddress + requiredSize);
+            ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getStartAddress() < baseAddress + requiredSize);
+            if (ImGuiExt::DimmedIconButton(ICON_VS_CHEVRON_LEFT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSizeSmall)) {
+                ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() % requiredSize, requiredSize });
+            }
+            ImGui::SameLine();
             if (ImGuiExt::DimmedIconButton(ICON_VS_ARROW_LEFT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() - requiredSize, requiredSize });
             }
@@ -287,9 +292,13 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            ImGui::BeginDisabled(providerSize < requiredSize || selection->getEndAddress() > providerEndAddress - requiredSize);
+            ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getEndAddress() >= providerEndAddress - requiredSize);
             if (ImGuiExt::DimmedIconButton(ICON_VS_ARROW_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() + requiredSize, requiredSize });
+            }
+            ImGui::SameLine();
+            if (ImGuiExt::DimmedIconButton(ICON_VS_CHEVRON_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSizeSmall)) {
+                ImHexApi::HexEditor::setSelection(Region { providerEndAddress - selection->getStartAddress() % requiredSize - requiredSize, requiredSize });
             }
             ImGui::EndDisabled();
         }
@@ -496,8 +505,8 @@ namespace hex::plugin::builtin {
         }();
 
         std::array options = {
-            hex::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.little"_lang),
-            hex::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.big"_lang)
+            fmt::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.little"_lang),
+            fmt::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.big"_lang)
         };
 
         if (ImGui::SliderInt("##endian", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
@@ -529,9 +538,9 @@ namespace hex::plugin::builtin {
         }();
 
         std::array options = {
-            hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.decimal"_lang),
-            hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.hexadecimal"_lang),
-            hex::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.octal"_lang)
+            fmt::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.decimal"_lang),
+            fmt::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.hexadecimal"_lang),
+            fmt::format("{}:  {}", "hex.ui.common.number_format"_lang, "hex.ui.common.octal"_lang)
         };
 
         if (ImGui::SliderInt("##format", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
@@ -556,8 +565,8 @@ namespace hex::plugin::builtin {
         int selection = m_invert ? 1 : 0;
 
         std::array options = {
-            hex::format("{}:  {}", "hex.builtin.view.data_inspector.invert"_lang, "hex.ui.common.no"_lang),
-            hex::format("{}:  {}", "hex.builtin.view.data_inspector.invert"_lang, "hex.ui.common.yes"_lang)
+            fmt::format("{}:  {}", "hex.builtin.view.data_inspector.invert"_lang, "hex.ui.common.no"_lang),
+            fmt::format("{}:  {}", "hex.builtin.view.data_inspector.invert"_lang, "hex.ui.common.yes"_lang)
         };
 
         if (ImGui::SliderInt("##invert", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
@@ -572,10 +581,10 @@ namespace hex::plugin::builtin {
         std::string errorMessage;
         if (const auto &compileErrors = m_runtime.getCompileErrors(); !compileErrors.empty()) {
             for (const auto &error : compileErrors) {
-                errorMessage += hex::format("{}\n", error.format());
+                errorMessage += fmt::format("{}\n", error.format());
             }
         } else if (const auto &evalError = m_runtime.getEvalError(); evalError.has_value()) {
-            errorMessage += hex::format("{}:{}  {}\n", evalError->line, evalError->column, evalError->message);
+            errorMessage += fmt::format("{}:{}  {}\n", evalError->line, evalError->column, evalError->message);
         }
 
         // Create a dummy display function that displays the error message

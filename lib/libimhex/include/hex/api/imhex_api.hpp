@@ -6,6 +6,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 
+#include <chrono>
 #include <functional>
 #include <optional>
 #include <span>
@@ -442,6 +443,7 @@ EXPORT_MODULE namespace hex {
 
                 void setGPUVendor(const std::string &vendor);
                 void setGLRenderer(const std::string &renderer);
+                void setGLVersion(SemanticVersion version);
 
                 void addInitArgument(const std::string &key, const std::string &value = { });
 
@@ -453,6 +455,9 @@ EXPORT_MODULE namespace hex {
                 void removeAutoResetObject(hex::impl::AutoResetBase *object);
 
                 void cleanup();
+
+                bool frameRateUnlockRequested();
+                void resetFrameRateUnlockRequested();
 
             }
 
@@ -591,6 +596,12 @@ EXPORT_MODULE namespace hex {
             const std::string& getGLRenderer();
 
             /**
+             * @brief Gets the current OpenGL version
+             * @return The current OpenGL version
+             */
+            const SemanticVersion& getGLVersion();
+
+            /**
              * @brief Checks if ImHex is being run in a "Corporate Environment"
              * This function simply checks for common telltale signs such as if the machine is joined a
              * domain. It's not super accurate, but it's still useful for statistics
@@ -650,6 +661,12 @@ EXPORT_MODULE namespace hex {
              * @return Git commit branch
              */
             std::string getCommitBranch();
+
+            /**
+             * @brief Gets the time ImHex was built
+             * @return The time ImHex was built
+             */
+            std::optional<std::chrono::system_clock::time_point> getBuildTime();
 
             /**
              * @brief Checks if ImHex was built in debug mode
@@ -720,6 +737,10 @@ EXPORT_MODULE namespace hex {
              */
             void addMigrationRoutine(SemanticVersion migrationVersion, std::function<void()> function);
 
+            /**
+             * @brief Unlocks the frame rate temporarily, allowing animations to run smoothly
+             */
+            void unlockFrameRate();
         }
 
         /**
@@ -745,39 +766,56 @@ EXPORT_MODULE namespace hex {
 
         namespace Fonts {
 
-            struct GlyphRange { u16 begin, end; };
             struct Offset { float x, y; };
 
-            struct Font {
+            struct MergeFont {
                 std::string name;
                 std::vector<u8> fontData;
-                std::vector<GlyphRange> glyphRanges;
                 Offset offset;
-                u32 flags;
-                std::optional<bool> scalable;
-                std::optional<u32> defaultSize;
+                std::optional<float> fontSizeMultiplier;
+            };
+
+            class Font {
+            public:
+                explicit Font(UnlocalizedString fontName);
+
+                void push(float size = 0.0F) const;
+                void pushBold(float size = 0.0F) const;
+                void pushItalic(float size = 0.0F) const;
+
+                void pop() const;
+
+                [[nodiscard]] operator ImFont*() const;
+                [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const { return m_fontName; }
+                
+            private:
+                void push(float size, ImFont *font) const;
+
+            private:
+                UnlocalizedString m_fontName;
+            };
+
+            struct FontDefinition {
+                ImFont* regular;
+                ImFont* bold;
+                ImFont* italic;
             };
 
             namespace impl {
 
-                const std::vector<Font>& getFonts();
-
-                std::map<UnlocalizedString, ImFont*>& getFontDefinitions();
+                const std::vector<MergeFont>& getMergeFonts();
+                std::map<UnlocalizedString, FontDefinition>& getFontDefinitions();
 
             }
 
-            GlyphRange glyph(const char *glyph);
-            GlyphRange glyph(u32 codepoint);
-            GlyphRange range(const char *glyphBegin, const char *glyphEnd);
-            GlyphRange range(u32 codepointBegin, u32 codepointEnd);
+            void registerMergeFont(const std::fs::path &path, Offset offset = {}, std::optional<float> fontSizeMultiplier = std::nullopt);
+            void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset = {}, std::optional<float> fontSizeMultiplier = std::nullopt);
 
-            void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<bool> scalable = std::nullopt, std::optional<u32> defaultSize = std::nullopt);
-            void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0, std::optional<bool> scalable = std::nullopt, std::optional<u32> defaultSize = std::nullopt);
+            void registerFont(const Font& font);
+            FontDefinition getFont(const UnlocalizedString &fontName);
 
-            constexpr float DefaultFontSize = 13.0;
-
-            void registerFont(const UnlocalizedString &fontName);
-            ImFont* getFont(const UnlocalizedString &fontName);
+            void setDefaultFont(const Font& font);
+            const Font& getDefaultFont();
 
             float getDpi();
             float pixelsToPoints(float pixels);

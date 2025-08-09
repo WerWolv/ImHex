@@ -40,8 +40,3 @@ TEST_SEQUENCE("Providers/InvalidResize") {
     TEST_ASSERT(!pr.resize(-1));
     TEST_SUCCESS();
 };
-
-IMGUI_TEST_SEQUENCE("Category", "Name", ctx) {
-    ctx->ItemClick("//Find###hex.builtin.view.find.name/Search");
-    ctx->Yield();                // Takes one frame
-};

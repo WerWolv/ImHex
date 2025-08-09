@@ -1,10 +1,13 @@
 #include <hex/ui/view.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <imgui.h>
 
 #include <string>
 
 namespace hex {
+
+    static View* s_lastFocusedView = nullptr;
 
     View::View(UnlocalizedString unlocalizedName, const char *icon) : m_unlocalizedViewName(std::move(unlocalizedName)), m_icon(icon) { }
 
@@ -54,13 +57,23 @@ namespace hex {
         return std::exchange(m_windowJustOpened, false);
     }
 
-    void View::setWindowJustOpened(bool state) {
+    void View::setWindowJustOpened(const bool state) {
         m_windowJustOpened = state;
     }
 
-    void View::trackViewOpenState() {
+    bool View::didWindowJustClose() {
+        return std::exchange(m_windowJustClosed, false);
+    }
+
+    void View::setWindowJustClosed(const bool state) {
+        m_windowJustClosed = state;
+    }
+
+    void View::trackViewState() {
         if (m_windowOpen && !m_prevWindowOpen)
             this->setWindowJustOpened(true);
+        else if (!m_windowOpen && m_prevWindowOpen)
+            this->setWindowJustClosed(true);
         m_prevWindowOpen = m_windowOpen;
     }
 
@@ -70,8 +83,29 @@ namespace hex {
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
     }
 
+    void View::bringToFront() {
+        getWindowOpenState() = true;
+        TaskManager::doLater([this]{ ImGui::SetWindowFocus(toWindowName(getUnlocalizedName()).c_str()); });
+    }
+
+
     std::string View::toWindowName(const UnlocalizedString &unlocalizedName) {
         return fmt::format("{}###{}", Lang(unlocalizedName), unlocalizedName.get());
     }
+
+    void View::setFocused(bool focused) {
+        m_focused = focused;
+        if (focused)
+            s_lastFocusedView = this;
+    }
+
+
+    const View* View::getLastFocusedView() {
+        if (!ImHexApi::Provider::isValid())
+            return nullptr;
+
+        return s_lastFocusedView;
+    }
+
 
 }

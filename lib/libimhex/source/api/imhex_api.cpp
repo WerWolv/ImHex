@@ -359,8 +359,8 @@ namespace hex {
             const auto provider = get();
             if (!provider->isDirty()) {
                 provider->markDirty();
-                EventProviderDirtied::post(provider);
             }
+            EventProviderDirtied::post(provider);
         }
 
         void resetDirty() {
@@ -560,6 +560,11 @@ namespace hex {
                 s_glRenderer = renderer;
             }
 
+            static SemanticVersion s_openGLVersion;
+            void setGLVersion(SemanticVersion version) {
+                s_openGLVersion = version;
+            }
+
             static AutoReset<std::map<std::string, std::string>> s_initArguments;
             void addInitArgument(const std::string &key, const std::string &value) {
                 static std::mutex initArgumentsMutex;
@@ -597,6 +602,14 @@ namespace hex {
                     object->reset();
             }
 
+            static bool s_frameRateUnlockRequested = false;
+            bool frameRateUnlockRequested() {
+                return s_frameRateUnlockRequested;
+            }
+
+            void resetFrameRateUnlockRequested() {
+                s_frameRateUnlockRequested = false;
+            }
 
         }
 
@@ -747,6 +760,10 @@ namespace hex {
             return impl::s_glRenderer;
         }
 
+        const SemanticVersion& getGLVersion() {
+            return impl::s_openGLVersion;
+        }
+
         bool isCorporateEnvironment() {
             #if defined(OS_WINDOWS)
                 {
@@ -809,7 +826,7 @@ namespace hex {
                 info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
                 ::GetVersionExA(&info);
 
-                return hex::format("{}.{}.{}", info.dwMajorVersion, info.dwMinorVersion, info.dwBuildNumber);
+                return fmt::format("{}.{}.{}", info.dwMajorVersion, info.dwMinorVersion, info.dwBuildNumber);
             #elif defined(OS_LINUX) || defined(OS_MACOS) || defined(OS_WEB)
                 struct utsname details = { };
 
@@ -875,7 +892,7 @@ namespace hex {
         }
 
         SemanticVersion getImHexVersion() {
-            #if defined IMHEX_VERSION
+            #if defined(IMHEX_VERSION)
                 static auto version = SemanticVersion(IMHEX_VERSION);
                 return version;
             #else
@@ -884,7 +901,7 @@ namespace hex {
         }
 
         std::string getCommitHash(bool longHash) {
-            #if defined GIT_COMMIT_HASH_LONG
+            #if defined(GIT_COMMIT_HASH_LONG)
                 if (longHash) {
                     return GIT_COMMIT_HASH_LONG;
                 } else {
@@ -897,10 +914,18 @@ namespace hex {
         }
 
         std::string getCommitBranch() {
-            #if defined GIT_BRANCH
+            #if defined(GIT_BRANCH)
                 return GIT_BRANCH;
             #else
                 return "Unknown";
+            #endif
+        }
+
+        std::optional<std::chrono::system_clock::time_point> getBuildTime() {
+            #if defined(IMHEX_BUILD_DATE)
+                return hex::parseTime("%Y-%m-%dT%H:%M:%SZ", IMHEX_BUILD_DATE);
+            #else
+                return std::nullopt;
             #endif
         }
 
@@ -933,7 +958,7 @@ namespace hex {
             std::string updateTypeString;
             switch (updateType) {
                 case UpdateType::Stable:
-                    updateTypeString = "latest";
+                    updateTypeString = "stable";
                     break;
                 case UpdateType::Nightly:
                     updateTypeString = "nightly";
@@ -942,7 +967,7 @@ namespace hex {
 
             EventImHexClosing::subscribe([executablePath, updateTypeString] {
                 hex::startProgram(
-                        hex::format("\"{}\" \"{}\"",
+                        fmt::format("\"{}\" \"{}\"",
                                     wolv::util::toUTF8String(executablePath),
                                     updateTypeString
                                     )
@@ -967,6 +992,9 @@ namespace hex {
             impl::s_windowResizable = resizable;
         }
 
+        void unlockFrameRate() {
+            impl::s_frameRateUnlockRequested = true;
+        }
 
 
     }
@@ -1006,124 +1034,122 @@ namespace hex {
 
         namespace impl {
 
-            static AutoReset<std::vector<Font>> s_fonts;
-            const std::vector<Font>& getFonts() {
+            static AutoReset<std::vector<MergeFont>> s_fonts;
+            const std::vector<MergeFont>& getMergeFonts() {
                 return *s_fonts;
             }
 
-            static float s_fontSize = DefaultFontSize;
-            void setFontSize(float size) {
-                s_fontSize = size;
-            }
-
-            static AutoReset<ImFontAtlas*> s_fontAtlas;
-            void setFontAtlas(ImFontAtlas* fontAtlas) {
-                s_fontAtlas = fontAtlas;
-            }
-
-            static ImFont *s_boldFont = nullptr;
-            static ImFont *s_italicFont = nullptr;
-            void setFonts(ImFont *bold, ImFont *italic) {
-                s_boldFont   = bold;
-                s_italicFont = italic;
-            }
-
-            static AutoReset<std::map<UnlocalizedString, ImFont*>> s_fontDefinitions;
-            std::map<UnlocalizedString, ImFont*>& getFontDefinitions() {
+            static AutoReset<std::map<UnlocalizedString, FontDefinition>> s_fontDefinitions;
+            std::map<UnlocalizedString, FontDefinition>& getFontDefinitions() {
                 return *s_fontDefinitions;
             }
 
+            static AutoReset<const Font*> s_defaultFont;
+
         }
 
-        GlyphRange glyph(const char *glyph) {
-            u32 codepoint;
-            ImTextCharFromUtf8(&codepoint, glyph, nullptr);
-
-            return {
-                .begin = u16(codepoint),
-                .end   = u16(codepoint)
-            };
-        }
-        GlyphRange glyph(u32 codepoint) {
-            return {
-                .begin = u16(codepoint),
-                .end   = u16(codepoint)
-            };
-        }
-        GlyphRange range(const char *glyphBegin, const char *glyphEnd) {
-            u32 codepointBegin, codepointEnd;
-            ImTextCharFromUtf8(&codepointBegin, glyphBegin, nullptr);
-            ImTextCharFromUtf8(&codepointEnd, glyphEnd, nullptr);
-
-            return {
-                .begin = u16(codepointBegin),
-                .end   = u16(codepointEnd)
-            };
+        Font::Font(UnlocalizedString fontName) : m_fontName(std::move(fontName)) {
+            if (impl::s_defaultFont == nullptr)
+                impl::s_defaultFont = this;
         }
 
-        GlyphRange range(u32 codepointBegin, u32 codepointEnd) {
-            return {
-                .begin = u16(codepointBegin),
-                .end   = u16(codepointEnd)
-            };
+        void Font::push(float size) const {
+            push(size, getFont(m_fontName).regular);
         }
 
-        void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags, std::optional<bool> scalable, std::optional<u32> defaultSize) {
+        void Font::pushBold(float size) const {
+            push(size, getFont(m_fontName).bold);
+        }
+
+        void Font::pushItalic(float size) const {
+            push(size, getFont(m_fontName).italic);
+        }
+
+        void Font::push(float size, ImFont* font) const {
+            if (font != nullptr) {
+                if (size <= 0.0F) {
+                    size = font->LegacySize;
+
+                    if (font->Sources[0]->PixelSnapH)
+                        size *= System::getGlobalScale();
+                    else
+                        size *= std::floor(System::getGlobalScale());
+                } else {
+                    size *= ImGui::GetCurrentContext()->FontSizeBase;
+                }
+            }
+
+            // If no font has been loaded, revert back to the default font to
+            // prevent an assertion failure in ImGui
+            const auto *ctx = ImGui::GetCurrentContext();
+            if (font == nullptr && ctx->Font == nullptr) [[unlikely]] {
+                font = ImGui::GetDefaultFont();
+            }
+
+            ImGui::PushFont(font, size);
+        }
+
+
+        void Font::pop() const {
+            ImGui::PopFont();
+        }
+
+        Font::operator ImFont*() const {
+            return getFont(m_fontName).regular;
+        }
+
+        void registerMergeFont(const std::fs::path &path, Offset offset, std::optional<float> fontSizeMultiplier) {
             wolv::io::File fontFile(path, wolv::io::File::Mode::Read);
             if (!fontFile.isValid()) {
                 log::error("Failed to load font from file '{}'", wolv::util::toUTF8String(path));
                 return;
             }
 
-            impl::s_fonts->emplace_back(Font {
+            impl::s_fonts->emplace_back(
                 wolv::util::toUTF8String(path.filename()),
                 fontFile.readVector(),
-                glyphRanges,
                 offset,
-                flags,
-                scalable,
-                defaultSize
-            });
+                fontSizeMultiplier
+            );
         }
 
-        void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags, std::optional<bool> scalable, std::optional<u32> defaultSize) {
-            impl::s_fonts->emplace_back(Font {
+        void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset, std::optional<float> fontSizeMultiplier) {
+            impl::s_fonts->emplace_back(
                 name,
-                { data.begin(), data.end() },
-                glyphRanges,
+                std::vector<u8> { data.begin(), data.end() },
                 offset,
-                flags,
-                scalable,
-                defaultSize
-            });
+                fontSizeMultiplier
+            );
         }
 
-        float getFontSize() {
-            return impl::s_fontSize;
+        void registerFont(const Font& font) {
+            (*impl::s_fontDefinitions)[font.getUnlocalizedName()] = {};
         }
 
-        ImFontAtlas* getFontAtlas() {
-            return impl::s_fontAtlas;
+        FontDefinition getFont(const UnlocalizedString &fontName) {
+            auto it = impl::s_fontDefinitions->find(fontName);
+            
+            if (it == impl::s_fontDefinitions->end()) {
+                const auto defaultFont = ImGui::GetDefaultFont();
+                return { defaultFont, defaultFont, defaultFont };
+            } else
+                return it->second;
         }
 
-        void registerFont(const UnlocalizedString &fontName) {
-            (*impl::s_fontDefinitions)[fontName] = nullptr;
+        void setDefaultFont(const Font& font) {
+            impl::s_defaultFont = &font;
         }
 
-        ImFont* getFont(const UnlocalizedString &fontName) {
-            return (*impl::s_fontDefinitions)[fontName];
-        }
-
-        ImFont* Bold() {
-            return impl::s_boldFont;
-        }
-
-        ImFont* Italic() {
-            return impl::s_italicFont;
+        const Font& getDefaultFont() {
+            if (*impl::s_defaultFont == nullptr) {
+                static Font emptyFont("");
+                return emptyFont;
+            }
+            return **impl::s_defaultFont;
         }
 
         float getDpi() {
-            auto dpi = ImGui::GetCurrentContext()->CurrentDpiScale * 96.0F;
+            auto dpi = ImHexApi::System::getNativeScale() * ImHexApi::System::getBackingScaleFactor() * 96.0F;
             return dpi ? dpi : 96.0F;
         }
 

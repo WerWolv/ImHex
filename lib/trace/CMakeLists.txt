@@ -8,7 +8,13 @@ if (IMHEX_EXTERNAL_PLUGIN_BUILD)
     set(LIBIMHEX_LIBRARY_TYPE_PUBLIC INTERFACE)
     set(LIBIMHEX_LIBRARY_TYPE_PRIVATE INTERFACE)
 else()
-    add_library(tracing STATIC
+    if (IMHEX_STATIC_LINK_PLUGINS)
+        set(TRACING_LIBRARY_TYPE OBJECT)
+    else()
+        set(TRACING_LIBRARY_TYPE STATIC)
+    endif()
+
+    add_library(tracing ${TRACING_LIBRARY_TYPE}
             source/stacktrace.cpp
             source/exceptions.cpp
     )
@@ -40,7 +46,7 @@ if (NOT IMHEX_DISABLE_STACKTRACE)
 
         if (HAVE_STDCPPEXP)
             message(STATUS "<stacktrace> enabled!")
-            target_link_libraries(tracing ${LIBIMHEX_LIBRARY_TYPE_PRIVATE} stdc++exp)
+            target_link_libraries(tracing ${LIBIMHEX_LIBRARY_TYPE_PRIVATE} stdc++exp dl)
             if (HAVE_STDCPP_LIBBACKTRACE)
                 target_link_libraries(tracing ${LIBIMHEX_LIBRARY_TYPE_PRIVATE} stdc++_libbacktrace)
             endif()

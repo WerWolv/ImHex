@@ -71,24 +71,21 @@ namespace hex {
         const auto fileName = path.stem().string();
 
         m_functions.initializePluginFunction        = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
-        m_functions.initializeLibraryFunction       = getPluginFunction<PluginFunctions::InitializePluginFunc>(hex::format("initializeLibrary_{}", fileName));
+        m_functions.initializeLibraryFunction       = getPluginFunction<PluginFunctions::InitializePluginFunc>(fmt::format("initializeLibrary_{}", fileName));
         m_functions.getPluginNameFunction           = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
-        m_functions.getLibraryNameFunction          = getPluginFunction<PluginFunctions::GetLibraryNameFunc>(hex::format("getLibraryName_{}", fileName));
+        m_functions.getLibraryNameFunction          = getPluginFunction<PluginFunctions::GetLibraryNameFunc>(fmt::format("getLibraryName_{}", fileName));
         m_functions.getPluginAuthorFunction         = getPluginFunction<PluginFunctions::GetPluginAuthorFunc>("getPluginAuthor");
         m_functions.getPluginDescriptionFunction    = getPluginFunction<PluginFunctions::GetPluginDescriptionFunc>("getPluginDescription");
         m_functions.getCompatibleVersionFunction    = getPluginFunction<PluginFunctions::GetCompatibleVersionFunc>("getCompatibleVersion");
         m_functions.setImGuiContextFunction         = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
-        m_functions.setImGuiContextLibraryFunction  = getPluginFunction<PluginFunctions::SetImGuiContextFunc>(hex::format("setImGuiContext_{}", fileName));
+        m_functions.setImGuiContextLibraryFunction  = getPluginFunction<PluginFunctions::SetImGuiContextFunc>(fmt::format("setImGuiContext_{}", fileName));
         m_functions.getSubCommandsFunction          = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
         m_functions.getFeaturesFunction             = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getFeatures");
+        m_functions.isBuiltinPluginFunction         = getPluginFunction<PluginFunctions::IsBuiltinPluginFunc>("isBuiltinPlugin");
     }
 
-    Plugin::Plugin(const std::string &name, const hex::PluginFunctions &functions) {
-        m_handle        = 0;
-        m_functions     = functions;
-        m_path          = name;
-        m_addedManually = true;
-    }
+    Plugin::Plugin(const std::string &name, const hex::PluginFunctions &functions) :
+        m_handle(0), m_path(name), m_addedManually(true), m_functions(functions) { }
 
 
     Plugin::Plugin(Plugin &&other) noexcept {
@@ -100,6 +97,9 @@ namespace hex {
 
         m_functions = other.m_functions;
         other.m_functions = {};
+
+        m_enabled = other.m_enabled;
+        m_initialized = other.m_initialized;
     }
 
     Plugin& Plugin::operator=(Plugin &&other) noexcept {
@@ -111,6 +111,9 @@ namespace hex {
 
         m_functions = other.m_functions;
         other.m_functions = {};
+
+        m_enabled = other.m_enabled;
+        m_initialized = other.m_initialized;
 
         return *this;
     }
@@ -131,6 +134,8 @@ namespace hex {
             return true;
         }
 
+        if (!m_enabled)
+            return true;
 
         const auto requestedVersion = getCompatibleVersion();
         const auto imhexVersion = ImHexApi::System::getImHexVersion().get();
@@ -171,7 +176,7 @@ namespace hex {
             if (this->isLibraryPlugin())
                 return m_functions.getLibraryNameFunction();
             else
-                return hex::format("Unknown Plugin @ 0x{0:016X}", m_handle);
+                return fmt::format("Unknown Plugin @ 0x{0:016X}", m_handle);
         }
     }
 
@@ -206,13 +211,23 @@ namespace hex {
         return m_path;
     }
 
-    bool Plugin::isValid() const {
-        return m_handle != 0 || m_functions.initializeLibraryFunction != nullptr || m_functions.initializePluginFunction != nullptr;
+    bool Plugin::isLoaded() const {
+        return m_handle != 0;
     }
 
-    bool Plugin::isLoaded() const {
+
+    bool Plugin::isValid() const {
+        return isLoaded() || m_functions.initializeLibraryFunction != nullptr || m_functions.initializePluginFunction != nullptr;
+    }
+
+    bool Plugin::isInitialized() const {
         return m_initialized;
     }
+
+    bool Plugin::isBuiltinPlugin() const {
+        return m_functions.isBuiltinPluginFunction != nullptr && m_functions.isBuiltinPluginFunction();
+    }
+
 
     std::span<SubCommand> Plugin::getSubCommands() const {
         if (m_functions.getSubCommandsFunction != nullptr) {
@@ -247,13 +262,18 @@ namespace hex {
         return m_addedManually;
     }
 
-    void *Plugin::getPluginFunction(const std::string &symbol) const {
+    void* Plugin::getPluginFunction(const std::string &symbol) const {
         #if defined(OS_WINDOWS)
             return reinterpret_cast<void *>(GetProcAddress(HMODULE(m_handle), symbol.c_str()));
         #else
             return dlsym(reinterpret_cast<void*>(m_handle), symbol.c_str());
         #endif
     }
+
+    void Plugin::setEnabled(bool enabled) {
+        m_enabled = enabled;
+    }
+
 
 
     AutoReset<std::vector<std::fs::path>> PluginManager::s_pluginPaths, PluginManager::s_pluginLoadPaths;
@@ -287,7 +307,7 @@ namespace hex {
             }
         }
 
-        // Load regular plugins afterwards
+        // Load regular plugins afterward
         for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug") {
                 if (!isPluginLoaded(pluginPath.path())) {
@@ -298,6 +318,17 @@ namespace hex {
 
         std::erase_if(getPluginsMutable(), [](const Plugin &plugin) {
             return !plugin.isValid();
+        });
+
+        // Move the built-in plugins to the front of the list so they get initialized first
+        getPluginsMutable().sort([](const Plugin &a, const Plugin &b) {
+            if (a.isBuiltinPlugin() && !b.isBuiltinPlugin()) {
+                return true;
+            } else if (!a.isBuiltinPlugin() && b.isBuiltinPlugin()) {
+                return false;
+            } else {
+                return a.getPluginName() < b.getPluginName();
+            }
         });
 
         return true;
@@ -334,7 +365,7 @@ namespace hex {
 
     void PluginManager::initializeNewPlugins() {
         for (const auto &plugin : getPlugins()) {
-            if (!plugin.isLoaded())
+            if (!plugin.isInitialized())
                 std::ignore = plugin.initializePlugin();
         }
     }
@@ -396,5 +427,17 @@ namespace hex {
             return plugin.getPath().filename() == path.filename();
         });
     }
+
+    void PluginManager::setPluginEnabled(const Plugin &plugin, bool enabled) {
+        auto &plugins = getPluginsMutable();
+        auto it = std::ranges::find_if(plugins, [&plugin](const Plugin &p) {
+            return &plugin == &p;
+        });
+
+        if (it != plugins.end()) {
+            it->setEnabled(enabled);
+        }
+    }
+
 
 }

@@ -59,6 +59,7 @@ namespace hex {
 
         thread_local std::array<char, 256> s_currentThreadName;
         thread_local Task* s_currentTask = nullptr;
+        std::thread::id s_mainThreadId;
 
     }
 
@@ -193,6 +194,10 @@ namespace hex {
         // Store information about the caught exception
         m_exceptionMessage = message;
         m_hadException = true;
+
+        // Call the interrupt callback on the current thread if one is set
+        if (m_interruptCallback)
+            m_interruptCallback();
     }
 
 
@@ -209,7 +214,7 @@ namespace hex {
         if (!task)
             return false;
 
-        return !task->hadException();
+        return task->hadException();
     }
 
     bool TaskHolder::shouldInterrupt() const {
@@ -217,7 +222,7 @@ namespace hex {
         if (!task)
             return false;
 
-        return !task->shouldInterrupt();
+        return task->shouldInterrupt();
     }
 
     bool TaskHolder::wasInterrupted() const {
@@ -225,7 +230,7 @@ namespace hex {
         if (!task)
             return false;
 
-        return !task->wasInterrupted();
+        return task->wasInterrupted();
     }
 
     void TaskHolder::interrupt() const {
@@ -404,7 +409,7 @@ namespace hex {
 
         if (s_tasks.empty()) {
             std::scoped_lock lock(s_deferredCallsMutex);
-            for (auto &call : s_tasksFinishedCallbacks)
+            for (const auto &call : s_tasksFinishedCallbacks)
                 call();
             s_tasksFinishedCallbacks.clear();
         }
@@ -526,8 +531,19 @@ namespace hex {
         #endif
     }
 
-    std::string TaskManager::getCurrentThreadName() {
-        return s_currentThreadName.data();
+    std::string_view TaskManager::getCurrentThreadName() {
+        if (TaskManager::isMainThread())
+            return "Main";
+        else
+            return s_currentThreadName.data();
+    }
+
+    void TaskManager::setMainThreadId(std::thread::id threadId) {
+        s_mainThreadId = threadId;
+    }
+
+    bool TaskManager::isMainThread() {
+        return s_mainThreadId == std::this_thread::get_id();
     }
 
 
