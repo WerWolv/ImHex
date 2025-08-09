@@ -118,7 +118,13 @@ std::string_view getUpdateArtifactEnding() {
     #elif defined (OS_MACOS)
         return ARCH_DEPENDENT("macOS-x86_64.dmg", "macOS-arm64.dmg");
     #elif defined (OS_LINUX)
-        if (hex::executeCommand("grep 'ID=ubuntu' /etc/os-release") == 0) {
+        if (hex::getEnvironmentVariable("APPIMAGE").has_value()) {
+            return ARCH_DEPENDENT("x86_64.AppImage", "arm64.AppImage");
+        } else if (hex::getEnvironmentVariable("FLATPAK_BINARY").has_value()) {
+            return ARCH_DEPENDENT("x86_64.flatpak", "arm64.flatpak");
+        } else if (hex::getEnvironmentVariable("SNAP").has_value()) {
+            return ARCH_DEPENDENT("x86_64.snap", "arm64.snap");
+        } else if (hex::executeCommand("grep 'ID=ubuntu' /etc/os-release") == 0) {
             if (hex::executeCommand("grep 'VERSION_ID=\"24.04\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Ubuntu-24.04-x86_64.deb", "");
             else if (hex::executeCommand("grep 'VERSION_ID=\"24.10\"' /etc/os-release") == 0)
@@ -142,16 +148,19 @@ std::string_view getUpdateArtifactEnding() {
 
 bool installUpdate(const std::fs::path &updatePath) {
     struct UpdateHandler {
-        const char *ending;
-        const char *command;
+        std::string ending;
+        std::string command;
     };
 
-    constexpr static auto UpdateHandlers = {
-        UpdateHandler { ".msi",             "msiexec /i \"{}\" /qb"                                        },
-        UpdateHandler { ".dmg",             "hdiutil attach -autoopen \"{}\""                              },
-        UpdateHandler { ".deb",             "sudo apt update && sudo apt install -y --fix-broken \"{}\""   },
-        UpdateHandler { ".rpm",             "sudo rpm -i \"{}\""                                           },
-        UpdateHandler { ".pkg.tar.zst",     "sudo pacman -Syy && sudo pacman -U --noconfirm \"{}\""        }
+    const static auto UpdateHandlers = {
+        UpdateHandler { ".msi",             "msiexec /i \"{}\" /qb"                                                                       },
+        UpdateHandler { ".dmg",             "hdiutil attach -autoopen \"{}\""                                                             },
+        UpdateHandler { ".deb",             "sudo apt install -y --fix-broken \"{}\""                                                     },
+        UpdateHandler { ".rpm",             "sudo rpm -i \"{}\""                                                                          },
+        UpdateHandler { ".pkg.tar.zst",     "sudo pacman -Syy && sudo pacman -U --noconfirm \"{}\""                                       },
+        UpdateHandler { ".AppImage",        fmt::format("sudo cp \"{{}}\" \"{}\"", *hex::getEnvironmentVariable("APPIMAGE"))    },
+        UpdateHandler { ".flatpak",         "sudo flatpak install -y --reinstall \"{}\""                                                  },
+        UpdateHandler { ".snap",            "sudo snap install --dangerous \"{}\""                                                        },
     };
 
     const auto updateFileName = wolv::util::toUTF8String(updatePath.filename());

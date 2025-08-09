@@ -421,6 +421,11 @@ namespace hex::plugin::builtin {
                     std::vector<ContentRegistry::CommandPaletteCommands::impl::QueryResult> result;
 
                     for (const auto &[unlocalizedName, view] : ContentRegistry::Views::impl::getEntries()) {
+                        if (!view->shouldProcess())
+                            continue;
+                        if (!view->hasViewMenuItemEntry())
+                            continue;
+
                         const auto name = Lang(unlocalizedName);
                         if (!hex::containsIgnoreCase(name, input))
                             continue;

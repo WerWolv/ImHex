@@ -942,41 +942,52 @@ namespace hex {
         }
 
         bool updateImHex(UpdateType updateType) {
-            // Get the path of the updater executable
-            std::fs::path executablePath;
-
-            for (const auto &entry : std::fs::directory_iterator(wolv::io::fs::getExecutablePath()->parent_path())) {
-                if (entry.path().filename().string().starts_with("imhex-updater")) {
-                    executablePath = entry.path();
-                    break;
+            #if defined(OS_WEB)
+                switch (updateType) {
+                    case UpdateType::Stable:
+                        EM_ASM({ window.location.href = window.location.origin; });
+                        break;
+                    case UpdateType::Nightly:
+                        EM_ASM({ window.location.href = window.location.origin + "/nightly"; });
+                        break;
                 }
-            }
+            #else
+                // Get the path of the updater executable
+                std::fs::path executablePath;
 
-            if (executablePath.empty() || !wolv::io::fs::exists(executablePath))
-                return false;
+                for (const auto &entry : std::fs::directory_iterator(wolv::io::fs::getExecutablePath()->parent_path())) {
+                    if (entry.path().filename().string().starts_with("imhex-updater")) {
+                        executablePath = entry.path();
+                        break;
+                    }
+                }
 
-            std::string updateTypeString;
-            switch (updateType) {
-                case UpdateType::Stable:
-                    updateTypeString = "stable";
-                    break;
-                case UpdateType::Nightly:
-                    updateTypeString = "nightly";
-                    break;
-            }
+                if (executablePath.empty() || !wolv::io::fs::exists(executablePath))
+                    return false;
 
-            EventImHexClosing::subscribe([executablePath, updateTypeString] {
-                hex::startProgram(
-                        fmt::format("\"{}\" \"{}\"",
-                                    wolv::util::toUTF8String(executablePath),
-                                    updateTypeString
-                                    )
-                                );
-            });
+                std::string updateTypeString;
+                switch (updateType) {
+                    case UpdateType::Stable:
+                        updateTypeString = "stable";
+                        break;
+                    case UpdateType::Nightly:
+                        updateTypeString = "nightly";
+                        break;
+                }
 
-            ImHexApi::System::closeImHex();
+                EventImHexClosing::subscribe([executablePath, updateTypeString] {
+                    hex::startProgram(
+                            fmt::format("\"{}\" \"{}\"",
+                                        wolv::util::toUTF8String(executablePath),
+                                        updateTypeString
+                                        )
+                                    );
+                });
 
-            return true;
+                ImHexApi::System::closeImHex();
+
+                return true;
+            #endif
         }
 
         void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function) {

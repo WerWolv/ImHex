@@ -18,7 +18,7 @@ else()
             source/stacktrace.cpp
             source/exceptions.cpp
     )
-    target_link_libraries(tracing PRIVATE LLVMDemangle)
+    target_link_libraries(tracing PRIVATE LLVMDemangle ${FMT_LIBRARIES})
 
     set(LIBIMHEX_LIBRARY_TYPE_PUBLIC PUBLIC)
     set(LIBIMHEX_LIBRARY_TYPE_PRIVATE PRIVATE)
