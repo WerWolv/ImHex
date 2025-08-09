@@ -70,6 +70,8 @@ jobs:
         run: |
           set -e
           
+          cd ImHex
+          
           # Move nightly tag to latest commit
           git tag -f nightly
           git push origin nightly --force
@@ -86,4 +88,4 @@ jobs:
           gh release edit nightly --notes-file changelog.md
 
           # Upload new assets
-          gh release upload nightly *.* --clobber
+          gh release upload nightly ../*.* --clobber
