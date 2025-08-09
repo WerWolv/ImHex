@@ -38,18 +38,30 @@ namespace hex {
         }
 
         T& get(const prv::Provider *provider = ImHexApi::Provider::get()) {
+            if (provider == nullptr) [[unlikely]]
+                throw std::invalid_argument("PerProvider::get called with nullptr");
+
             return m_data[provider];
         }
 
         const T& get(const prv::Provider *provider = ImHexApi::Provider::get()) const {
+            if (provider == nullptr) [[unlikely]]
+                throw std::invalid_argument("PerProvider::get called with nullptr");
+
             return m_data.at(provider);
         }
 
         void set(const T &data, const prv::Provider *provider = ImHexApi::Provider::get()) {
+            if (provider == nullptr) [[unlikely]]
+                throw std::invalid_argument("PerProvider::set called with nullptr");
+
             m_data[provider] = data;
         }
 
         void set(T &&data, const prv::Provider *provider = ImHexApi::Provider::get()) {
+            if (provider == nullptr) [[unlikely]]
+                throw std::invalid_argument("PerProvider::set called with nullptr");
+
             m_data[provider] = std::move(data);
         }
 

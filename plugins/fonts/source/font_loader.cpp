@@ -1,113 +1,112 @@
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <list>
-
-#include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
-
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/fs.hpp>
-#include <hex/helpers/utils.hpp>
 
-#include <wolv/utils/string.hpp>
+#include <romfs/romfs.hpp>
+#include <font_settings.hpp>
+#include <fonts/fonts.hpp>
+#include <hex/api/task_manager.hpp>
 
-#include <font_atlas.hpp>
+#include <imgui_freetype.h>
 
-namespace hex::fonts {
+namespace hex::fonts::loader {
 
-    bool buildFontAtlas(FontAtlas *fontAtlas, std::fs::path fontPath, bool pixelPerfectFont, float fontSize, bool loadUnicodeCharacters, bool bold, bool italic, bool antialias) {
-        if (fontAtlas == nullptr) {
-            return false;
+    void loadFont(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImGuiFreeTypeLoaderFlags extraFlags, ImFont **imguiFont) {
+        const auto &settings = static_cast<const FontSelector&>(widget);
+
+        const auto atlas = ImGui::GetIO().Fonts;
+
+        if (auto &font = *imguiFont; font != nullptr) {
+            atlas->RemoveFont(font);
+
+            font = nullptr;
         }
 
-        fontAtlas->reset();
+        ImFontConfig config;
+        config.MergeMode = false;
+        config.SizePixels = settings.getFontSize();
+        config.Flags |= ImFontFlags_NoLoadError;
 
-        // Check if Unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
-        // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
-        bool shouldLoadUnicode =
-                ContentRegistry::Settings::read<bool>("hex.fonts.setting.font", "hex.builtin.fonts.font.load_all_unicode_chars", false) &&
-                ImHexApi::System::getGPUVendor() != "VMware, Inc.";
+        std::memcpy(config.Name, name.get().c_str(), std::min(name.get().size(), sizeof(config.Name) - 1));
 
-        if (!loadUnicodeCharacters)
-            shouldLoadUnicode = false;
+        if (!settings.isPixelPerfectFont()) {
+            if (settings.isBold())
+                config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Bold;
+            if (settings.isItalic())
+                config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Oblique;
+            switch (settings.getAntialiasingType()) {
+                case AntialiasingType::None:
+                    config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Monochrome | ImGuiFreeTypeLoaderFlags_MonoHinting;
+                    break;
+                case AntialiasingType::Grayscale:
+                    break;
+                case AntialiasingType::Lcd:
+                    config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_SubPixel;
+                    break;
+            }
 
-        fontAtlas->enableUnicodeCharacters(shouldLoadUnicode);
-
-        // If a custom font is set in the settings, load the rest of the settings as well
-        if (!pixelPerfectFont) {
-            fontAtlas->setBold(bold);
-            fontAtlas->setItalic(italic);
-            fontAtlas->setAntiAliasing(antialias);
+            config.FontLoaderFlags |= extraFlags;
+            if (extraFlags & ImGuiFreeTypeLoaderFlags_Bold)
+                std::strncat(config.Name, " Bold", sizeof(config.Name) - 1);
+            else if (extraFlags & ImGuiFreeTypeLoaderFlags_Oblique)
+                std::strncat(config.Name, " Italic", sizeof(config.Name) - 1);
+            else
+                std::strncat(config.Name, " Regular", sizeof(config.Name) - 1);
         } else {
-            fontPath.clear();
+            config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_NoHinting;
         }
 
-        // Try to load the custom font if one was set
-        std::optional<Font> defaultFont;
-        if (!fontPath.empty()) {
-            defaultFont = fontAtlas->addFontFromFile(fontPath, fontSize, true, ImVec2());
-            if (!fontAtlas->build()) {
-                log::error("Failed to load custom font '{}'! Falling back to default font", wolv::util::toUTF8String(fontPath));
-                defaultFont.reset();
-            }
-        }
-
-        // If there's no custom font set, or it failed to load, fall back to the default font
-        if (!defaultFont.has_value()) {
-            if (pixelPerfectFont) {
-                fontSize = std::max(1.0F, std::floor(ImHexApi::System::getGlobalScale() * ImHexApi::System::getBackingScaleFactor() * 13.0F));
-                defaultFont = fontAtlas->addDefaultFont();
-            } else
-                defaultFont = fontAtlas->addFontFromRomFs("fonts/JetBrainsMono.ttf", fontSize, true, ImVec2());
-
-            if (!fontAtlas->build()) {
-                log::fatal("Failed to load default font!");
-                return false;
-            }
-        }
-
-
-        // Add all the built-in fonts
         {
-            static std::list<ImVector<ImWchar>> glyphRanges;
-            glyphRanges.clear();
+            if (const auto fontPath = settings.getFontPath(); !fontPath.empty()) {
+                config.FontDataOwnedByAtlas = true;
+                *imguiFont = atlas->AddFontFromFileTTF(fontPath.string().c_str(), 0.0F, &config);
+            }
 
-            for (auto &font : ImHexApi::Fonts::impl::getFonts()) {
-                // Construct the glyph range for the font
-                ImVector<ImWchar> glyphRange;
-                if (!font.glyphRanges.empty()) {
-                    for (const auto &range : font.glyphRanges) {
-                        glyphRange.push_back(range.begin);
-                        glyphRange.push_back(range.end);
+            config.FontDataOwnedByAtlas = false;
+
+            if (*imguiFont == nullptr) {
+                if (settings.isPixelPerfectFont()) {
+                    auto defaultConfig = config;
+                    defaultConfig.SizePixels = 0;
+                    *imguiFont = atlas->AddFontDefault(&defaultConfig);
+                } else {
+                    static auto jetbrainsFont = romfs::get("fonts/JetBrainsMono.ttf");
+                    *imguiFont = atlas->AddFontFromMemoryTTF(const_cast<u8 *>(jetbrainsFont.data<u8>()), jetbrainsFont.size(), 0.0F, &config);
+
+                    if (*imguiFont == nullptr) {
+                        log::error("Failed to load font '{}', using default font instead", name.get());
+                        *imguiFont = atlas->AddFontDefault();
                     }
-                    glyphRange.push_back(0x00);
                 }
-                glyphRanges.push_back(glyphRange);
-
-                // Calculate the glyph offset for the font
-                const ImVec2 offset = { font.offset.x, font.offset.y - (defaultFont->getDescent() - fontAtlas->calculateFontDescend(font, fontSize)) };
-
-                // Load the font
-                float size = fontSize;
-                if (font.defaultSize.has_value())
-                    size = font.defaultSize.value() * ImHexApi::System::getBackingScaleFactor();
-                fontAtlas->addFontFromMemory(font.fontData, size, !font.defaultSize.has_value(), offset, glyphRanges.back());
             }
         }
 
-        // Build the font atlas
-        if (fontAtlas->build()) {
-            fontAtlas->reset();
-            return true;
-        }
-
-        // If the build wasn't successful and Unicode characters are enabled, try again without them
-        // If they were disabled already, something went wrong, and we can't recover from it
-        if (!shouldLoadUnicode) {
-            return false;
-        } else {
-            return buildFontAtlas(fontAtlas, fontPath, pixelPerfectFont, fontSize, false, bold, italic, antialias);
+        config.MergeMode = true;
+        for (auto &extraFont : ImHexApi::Fonts::impl::getMergeFonts()) {
+            config.GlyphOffset = { extraFont.offset.x, -extraFont.offset.y };
+            config.GlyphOffset *= ImHexApi::System::getGlobalScale();
+            config.SizePixels = settings.getFontSize() * extraFont.fontSizeMultiplier.value_or(1);
+            atlas->AddFontFromMemoryTTF(const_cast<u8 *>(extraFont.fontData.data()), extraFont.fontData.size(), 0.0F, &config);
         }
     }
 
+    void loadFontVariations(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImHexApi::Fonts::FontDefinition &fontDefinition) {
+        loadFont(widget, name, 0, &fontDefinition.regular);
+        loadFont(widget, name, ImGuiFreeTypeLoaderFlags_Bold, &fontDefinition.bold);
+        loadFont(widget, name, ImGuiFreeTypeLoaderFlags_Oblique, &fontDefinition.italic);
+    }
+
+    bool loadFonts() {
+        for (auto &[name, fontDefinition] : ImHexApi::Fonts::impl::getFontDefinitions()) {
+            auto &widget = addFontSettingsWidget(name)
+                .setChangedCallback([name, &fontDefinition](auto &widget) mutable {
+                    TaskManager::doLater([name, &fontDefinition, &widget] {
+                        loadFontVariations(widget, name, fontDefinition);
+                    });
+                });
+
+            loadFontVariations(widget.getWidget(), name, fontDefinition);
+        }
+
+        return true;
+    }
 }

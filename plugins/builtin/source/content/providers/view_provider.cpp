@@ -122,13 +122,18 @@ namespace hex::plugin::builtin {
         if (m_provider == nullptr)
             return "View";
         else
-            return hex::format("{} View", m_provider->getName());
+            return fmt::format("{} View", m_provider->getName());
     }
+
     [[nodiscard]] std::vector<ViewProvider::Description> ViewProvider::getDataDescription() const {
         if (m_provider == nullptr)
             return { };
 
-        return m_provider->getDataDescription();
+        if (auto *dataDescriptionProvider = dynamic_cast<const IProviderDataDescription*>(m_provider); dataDescriptionProvider != nullptr) {
+            return dataDescriptionProvider->getDataDescription();
+        }
+
+        return {};
     }
 
     void ViewProvider::loadSettings(const nlohmann::json &settings) {
@@ -181,7 +186,7 @@ namespace hex::plugin::builtin {
             return { Region::Invalid(), false };
     }
 
-    std::vector<prv::Provider::MenuEntry> ViewProvider::getMenuEntries() {
+    std::vector<prv::IProviderMenuItems::MenuEntry> ViewProvider::getMenuEntries() {
         return {
             MenuEntry { Lang("hex.builtin.provider.rename"), ICON_VS_TAG, [this] { this->renameFile(); } }
         };

@@ -34,14 +34,14 @@ namespace hex::ui {
         }
 
         ImS64& get() {
-            if (m_synced)
+            if (m_synced || m_provider == nullptr)
                 return m_syncedPosition;
             else
                 return m_unsyncedPosition.get(m_provider);
         }
 
         [[nodiscard]] const ImS64& get() const {
-            if (m_synced)
+            if (m_synced || m_provider == nullptr)
                 return m_syncedPosition;
             else
                 return m_unsyncedPosition.get(m_provider);
@@ -380,6 +380,7 @@ namespace hex::ui {
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;
+        bool m_showExtendedAscii = false;
         bool m_showCustomEncoding = true;
         bool m_showMiniMap = false;
         bool m_showSelectionInFooter = false;

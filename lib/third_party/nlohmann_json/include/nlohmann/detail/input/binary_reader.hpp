@@ -1,9 +1,9 @@
 //     __ _____ _____ _____
 //  __|  |   __|     |   | |  JSON for Modern C++
-// |  |  |__   |  |  | | | |  version 3.11.3
+// |  |  |__   |  |  | | | |  version 3.12.0
 // |_____|_____|_____|_|___|  https://github.com/nlohmann/json
 //
-// SPDX-FileCopyrightText: 2013-2023 Niels Lohmann <https://nlohmann.me>
+// SPDX-FileCopyrightText: 2013 - 2025 Niels Lohmann <https://nlohmann.me>
 // SPDX-License-Identifier: MIT
 
 #pragma once
@@ -20,6 +20,9 @@
 #include <string> // char_traits, string
 #include <utility> // make_pair, move
 #include <vector> // vector
+#ifdef __cpp_lib_byteswap
+    #include <bit>  //byteswap
+#endif
 
 #include <nlohmann/detail/exceptions.hpp>
 #include <nlohmann/detail/input/input_adapters.hpp>
@@ -50,7 +53,7 @@ enum class cbor_tag_handler_t
 
 @note from https://stackoverflow.com/a/1001328/266378
 */
-static inline bool little_endianness(int num = 1) noexcept
+inline bool little_endianness(int num = 1) noexcept
 {
     return *reinterpret_cast<char*>(&num) == 1;
 }
@@ -62,7 +65,7 @@ static inline bool little_endianness(int num = 1) noexcept
 /*!
 @brief deserialization of CBOR, MessagePack, and UBJSON values
 */
-template<typename BasicJsonType, typename InputAdapterType, typename SAX = json_sax_dom_parser<BasicJsonType>>
+template<typename BasicJsonType, typename InputAdapterType, typename SAX = json_sax_dom_parser<BasicJsonType, InputAdapterType>>
 class binary_reader
 {
     using number_integer_t = typename BasicJsonType::number_integer_t;
@@ -169,7 +172,7 @@ class binary_reader
         std::int32_t document_size{};
         get_number<std::int32_t, true>(input_format_t::bson, document_size);
 
-        if (JSON_HEDLEY_UNLIKELY(!sax->start_object(static_cast<std::size_t>(-1))))
+        if (JSON_HEDLEY_UNLIKELY(!sax->start_object(detail::unknown_size())))
         {
             return false;
         }
@@ -325,7 +328,13 @@ class binary_reader
                 return get_number<std::int64_t, true>(input_format_t::bson, value) && sax->number_integer(value);
             }
 
-            default: // anything else not supported (yet)
+            case 0x11: // uint64
+            {
+                std::uint64_t value{};
+                return get_number<std::uint64_t, true>(input_format_t::bson, value) && sax->number_unsigned(value);
+            }
+
+            default: // anything else is not supported (yet)
             {
                 std::array<char, 3> cr{{}};
                 static_cast<void>((std::snprintf)(cr.data(), cr.size(), "%.2hhX", static_cast<unsigned char>(element_type))); // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
@@ -391,7 +400,7 @@ class binary_reader
         std::int32_t document_size{};
         get_number<std::int32_t, true>(input_format_t::bson, document_size);
 
-        if (JSON_HEDLEY_UNLIKELY(!sax->start_array(static_cast<std::size_t>(-1))))
+        if (JSON_HEDLEY_UNLIKELY(!sax->start_array(detail::unknown_size())))
         {
             return false;
         }
@@ -651,7 +660,7 @@ class binary_reader
             }
 
             case 0x9F: // array (indefinite length)
-                return get_cbor_array(static_cast<std::size_t>(-1), tag_handler);
+                return get_cbor_array(detail::unknown_size(), tag_handler);
 
             // map (0x00..0x17 pairs of data items follow)
             case 0xA0:
@@ -705,7 +714,7 @@ class binary_reader
             }
 
             case 0xBF: // map (indefinite length)
-                return get_cbor_object(static_cast<std::size_t>(-1), tag_handler);
+                return get_cbor_object(detail::unknown_size(), tag_handler);
 
             case 0xC6: // tagged item
             case 0xC7:
@@ -722,7 +731,7 @@ class binary_reader
             case 0xD2:
             case 0xD3:
             case 0xD4:
-            case 0xD8: // tagged item (1 bytes follow)
+            case 0xD8: // tagged item (1 byte follows)
             case 0xD9: // tagged item (2 bytes follow)
             case 0xDA: // tagged item (4 bytes follow)
             case 0xDB: // tagged item (8 bytes follow)
@@ -774,7 +783,7 @@ class binary_reader
                     case cbor_tag_handler_t::store:
                     {
                         binary_t b;
-                        // use binary subtype and store in binary container
+                        // use binary subtype and store in a binary container
                         switch (current)
                         {
                             case 0xD8:
@@ -843,7 +852,7 @@ class binary_reader
                 const auto byte1 = static_cast<unsigned char>(byte1_raw);
                 const auto byte2 = static_cast<unsigned char>(byte2_raw);
 
-                // code from RFC 7049, Appendix D, Figure 3:
+                // Code from RFC 7049, Appendix D, Figure 3:
                 // As half-precision floating-point numbers were only added
                 // to IEEE 754 in 2008, today's programming platforms often
                 // still only have limited support for them. It is very
@@ -1093,7 +1102,7 @@ class binary_reader
     }
 
     /*!
-    @param[in] len  the length of the array or static_cast<std::size_t>(-1) for an
+    @param[in] len  the length of the array or detail::unknown_size() for an
                     array of indefinite size
     @param[in] tag_handler how CBOR tags should be treated
     @return whether array creation completed
@@ -1106,7 +1115,7 @@ class binary_reader
             return false;
         }
 
-        if (len != static_cast<std::size_t>(-1))
+        if (len != detail::unknown_size())
         {
             for (std::size_t i = 0; i < len; ++i)
             {
@@ -1131,7 +1140,7 @@ class binary_reader
     }
 
     /*!
-    @param[in] len  the length of the object or static_cast<std::size_t>(-1) for an
+    @param[in] len  the length of the object or detail::unknown_size() for an
                     object of indefinite size
     @param[in] tag_handler how CBOR tags should be treated
     @return whether object creation completed
@@ -1147,7 +1156,7 @@ class binary_reader
         if (len != 0)
         {
             string_t key;
-            if (len != static_cast<std::size_t>(-1))
+            if (len != detail::unknown_size())
             {
                 for (std::size_t i = 0; i < len; ++i)
                 {
@@ -2150,7 +2159,7 @@ class binary_reader
                 {
                     break;
                 }
-                if (is_ndarray) // ndarray dimensional vector can only contain integers, and can not embed another array
+                if (is_ndarray) // ndarray dimensional vector can only contain integers and cannot embed another array
                 {
                     return sax->parse_error(chars_read, get_token_string(), parse_error::create(113, chars_read, exception_message(input_format, "ndarray dimensional vector is not allowed", "size"), nullptr));
                 }
@@ -2183,8 +2192,16 @@ class binary_reader
                     result = 1;
                     for (auto i : dim)
                     {
+                        // Pre-multiplication overflow check: if i > 0 and result > SIZE_MAX/i, then result*i would overflow.
+                        // This check must happen before multiplication since overflow detection after the fact is unreliable
+                        // as modular arithmetic can produce any value, not just 0 or SIZE_MAX.
+                        if (JSON_HEDLEY_UNLIKELY(i > 0 && result > (std::numeric_limits<std::size_t>::max)() / i))
+                        {
+                            return sax->parse_error(chars_read, get_token_string(), out_of_range::create(408, exception_message(input_format, "excessive ndarray size caused overflow", "size"), nullptr));
+                        }
                         result *= i;
-                        if (result == 0 || result == npos) // because dim elements shall not have zeros, result = 0 means overflow happened; it also can't be npos as it is used to initialize size in get_ubjson_size_type()
+                        // Additional post-multiplication check to catch any edge cases the pre-check might miss
+                        if (result == 0 || result == npos)
                         {
                             return sax->parse_error(chars_read, get_token_string(), out_of_range::create(408, exception_message(input_format, "excessive ndarray size caused overflow", "size"), nullptr));
                         }
@@ -2310,6 +2327,16 @@ class binary_reader
             case 'Z':  // null
                 return sax->null();
 
+            case 'B':  // byte
+            {
+                if (input_format != input_format_t::bjdata)
+                {
+                    break;
+                }
+                std::uint8_t number{};
+                return get_number(input_format, number) && sax->number_unsigned(number);
+            }
+
             case 'U':
             {
                 std::uint8_t number{};
@@ -2390,7 +2417,7 @@ class binary_reader
                 const auto byte1 = static_cast<unsigned char>(byte1_raw);
                 const auto byte2 = static_cast<unsigned char>(byte2_raw);
 
-                // code from RFC 7049, Appendix D, Figure 3:
+                // Code from RFC 7049, Appendix D, Figure 3:
                 // As half-precision floating-point numbers were only added
                 // to IEEE 754 in 2008, today's programming platforms often
                 // still only have limited support for them. It is very
@@ -2510,7 +2537,7 @@ class binary_reader
                 return false;
             }
 
-            if (size_and_type.second == 'C')
+            if (size_and_type.second == 'C' || size_and_type.second == 'B')
             {
                 size_and_type.second = 'U';
             }
@@ -2530,6 +2557,13 @@ class binary_reader
             }
 
             return (sax->end_array() && sax->end_object());
+        }
+
+        // If BJData type marker is 'B' decode as binary
+        if (input_format == input_format_t::bjdata && size_and_type.first != npos && size_and_type.second == 'B')
+        {
+            binary_t result;
+            return get_binary(input_format, size_and_type.first, result) && sax->binary(result);
         }
 
         if (size_and_type.first != npos)
@@ -2565,7 +2599,7 @@ class binary_reader
         }
         else
         {
-            if (JSON_HEDLEY_UNLIKELY(!sax->start_array(static_cast<std::size_t>(-1))))
+            if (JSON_HEDLEY_UNLIKELY(!sax->start_array(detail::unknown_size())))
             {
                 return false;
             }
@@ -2643,7 +2677,7 @@ class binary_reader
         }
         else
         {
-            if (JSON_HEDLEY_UNLIKELY(!sax->start_object(static_cast<std::size_t>(-1))))
+            if (JSON_HEDLEY_UNLIKELY(!sax->start_object(detail::unknown_size())))
             {
                 return false;
             }
@@ -2671,7 +2705,7 @@ class binary_reader
 
     bool get_ubjson_high_precision_number()
     {
-        // get size of following number string
+        // get the size of the following number string
         std::size_t size{};
         bool no_ndarray = true;
         auto res = get_ubjson_size_value(size, no_ndarray);
@@ -2755,6 +2789,29 @@ class binary_reader
     }
 
     /*!
+    @brief get_to read into a primitive type
+
+    This function provides the interface to the used input adapter. It does
+    not throw in case the input reached EOF, but returns false instead
+
+    @return bool, whether the read was successful
+    */
+    template<class T>
+    bool get_to(T& dest, const input_format_t format, const char* context)
+    {
+        auto new_chars_read = ia.get_elements(&dest);
+        chars_read += new_chars_read;
+        if (JSON_HEDLEY_UNLIKELY(new_chars_read < sizeof(T)))
+        {
+            // in case of failure, advance position by 1 to report the failing location
+            ++chars_read;
+            sax->parse_error(chars_read, "<end of file>", parse_error::create(110, chars_read, exception_message(format, "unexpected end of input", context), nullptr));
+            return false;
+        }
+        return true;
+    }
+
+    /*!
     @return character read from the input after ignoring all 'N' entries
     */
     char_int_type get_ignore_noop()
@@ -2766,6 +2823,33 @@ class binary_reader
         while (current == 'N');
 
         return current;
+    }
+
+    template<class NumberType>
+    static void byte_swap(NumberType& number)
+    {
+        constexpr std::size_t sz = sizeof(number);
+#ifdef __cpp_lib_byteswap
+        if constexpr (sz == 1)
+        {
+            return;
+        }
+        else if constexpr(std::is_integral_v<NumberType>)
+        {
+            number = std::byteswap(number);
+            return;
+        }
+        else
+        {
+#endif
+            auto* ptr = reinterpret_cast<std::uint8_t*>(&number);
+            for (std::size_t i = 0; i < sz / 2; ++i)
+            {
+                std::swap(ptr[i], ptr[sz - i - 1]);
+            }
+#ifdef __cpp_lib_byteswap
+        }
+#endif
     }
 
     /*
@@ -2786,29 +2870,16 @@ class binary_reader
     template<typename NumberType, bool InputIsLittleEndian = false>
     bool get_number(const input_format_t format, NumberType& result)
     {
-        // step 1: read input into array with system's byte order
-        std::array<std::uint8_t, sizeof(NumberType)> vec{};
-        for (std::size_t i = 0; i < sizeof(NumberType); ++i)
+        // read in the original format
+
+        if (JSON_HEDLEY_UNLIKELY(!get_to(result, format, "number")))
         {
-            get();
-            if (JSON_HEDLEY_UNLIKELY(!unexpect_eof(format, "number")))
-            {
-                return false;
-            }
-
-            // reverse byte order prior to conversion if necessary
-            if (is_little_endian != (InputIsLittleEndian || format == input_format_t::bjdata))
-            {
-                vec[sizeof(NumberType) - i - 1] = static_cast<std::uint8_t>(current);
-            }
-            else
-            {
-                vec[i] = static_cast<std::uint8_t>(current); // LCOV_EXCL_LINE
-            }
+            return false;
         }
-
-        // step 2: convert array into number of type T and return
-        std::memcpy(&result, vec.data(), sizeof(NumberType));
+        if (is_little_endian != (InputIsLittleEndian || format == input_format_t::bjdata))
+        {
+            byte_swap(result);
+        }
         return true;
     }
 
@@ -2947,7 +3018,7 @@ class binary_reader
     }
 
   private:
-    static JSON_INLINE_VARIABLE constexpr std::size_t npos = static_cast<std::size_t>(-1);
+    static JSON_INLINE_VARIABLE constexpr std::size_t npos = detail::unknown_size();
 
     /// input adapter
     InputAdapterType ia;
@@ -2973,6 +3044,7 @@ class binary_reader
 
 #define JSON_BINARY_READER_MAKE_BJD_TYPES_MAP_ \
     make_array<bjd_type>(                      \
+    bjd_type{'B', "byte"},                     \
     bjd_type{'C', "char"},                     \
     bjd_type{'D', "double"},                   \
     bjd_type{'I', "int16"},                    \

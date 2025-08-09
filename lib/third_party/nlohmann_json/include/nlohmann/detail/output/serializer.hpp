@@ -1,10 +1,10 @@
 //     __ _____ _____ _____
 //  __|  |   __|     |   | |  JSON for Modern C++
-// |  |  |__   |  |  | | | |  version 3.11.3
+// |  |  |__   |  |  | | | |  version 3.12.0
 // |_____|_____|_____|_|___|  https://github.com/nlohmann/json
 //
-// SPDX-FileCopyrightText: 2008-2009 Björn Hoehrmann <bjoern@hoehrmann.de>
-// SPDX-FileCopyrightText: 2013-2023 Niels Lohmann <https://nlohmann.me>
+// SPDX-FileCopyrightText: 2008 - 2009 Björn Hoehrmann <bjoern@hoehrmann.de>
+// SPDX-FileCopyrightText: 2013 - 2025 Niels Lohmann <https://nlohmann.me>
 // SPDX-License-Identifier: MIT
 
 #pragma once
@@ -75,7 +75,7 @@ class serializer
         , error_handler(error_handler_)
     {}
 
-    // delete because of pointer members
+    // deleted because of pointer members
     serializer(const serializer&) = delete;
     serializer& operator=(const serializer&) = delete;
     serializer(serializer&&) = delete;
@@ -573,7 +573,7 @@ class serializer
                     break;
                 }
 
-                default:  // decode found yet incomplete multi-byte code point
+                default:  // decode found yet incomplete multibyte code point
                 {
                     if (!ensure_ascii)
                     {
@@ -643,7 +643,7 @@ class serializer
     @param[in] x  unsigned integer number to count its digits
     @return    number of decimal digits
     */
-    inline unsigned int count_digits(number_unsigned_t x) noexcept
+    unsigned int count_digits(number_unsigned_t x) noexcept
     {
         unsigned int n_digits = 1;
         for (;;)
@@ -762,7 +762,7 @@ class serializer
 
         // jump to the end to generate the string from backward,
         // so we later avoid reversing the result
-        buffer_ptr += n_chars;
+        buffer_ptr += static_cast<typename decltype(number_buffer)::difference_type>(n_chars);
 
         // Fast int2ascii implementation inspired by "Fastware" talk by Andrei Alexandrescu
         // See: https://www.youtube.com/watch?v=o4-CwDo2zpg
@@ -827,7 +827,7 @@ class serializer
 
     void dump_float(number_float_t x, std::false_type /*is_ieee_single_or_double*/)
     {
-        // get number of digits for a float -> text -> float round-trip
+        // get the number of digits for a float -> text -> float round-trip
         static constexpr auto d = std::numeric_limits<number_float_t>::max_digits10;
 
         // the actual conversion
@@ -836,10 +836,10 @@ class serializer
 
         // negative value indicates an error
         JSON_ASSERT(len > 0);
-        // check if buffer was large enough
+        // check if the buffer was large enough
         JSON_ASSERT(static_cast<std::size_t>(len) < number_buffer.size());
 
-        // erase thousands separator
+        // erase thousands separators
         if (thousands_sep != '\0')
         {
             // NOLINTNEXTLINE(readability-qualified-auto,llvm-qualified-auto): std::remove returns an iterator, see https://github.com/nlohmann/json/issues/3081
@@ -926,7 +926,7 @@ class serializer
                 ? (byte & 0x3fu) | (codep << 6u)
                 : (0xFFu >> type) & (byte);
 
-        const std::size_t index = 256u + static_cast<size_t>(state) * 16u + static_cast<size_t>(type);
+        const std::size_t index = 256u + (static_cast<size_t>(state) * 16u) + static_cast<size_t>(type);
         JSON_ASSERT(index < utf8d.size());
         state = utf8d[index];
         return state;
@@ -947,12 +947,12 @@ class serializer
      * Helper function for dump_integer
      *
      * This function takes a negative signed integer and returns its absolute
-     * value as unsigned integer. The plus/minus shuffling is necessary as we can
-     * not directly remove the sign of an arbitrary signed integer as the
+     * value as an unsigned integer. The plus/minus shuffling is necessary as we
+     * cannot directly remove the sign of an arbitrary signed integer as the
      * absolute values of INT_MIN and INT_MAX are usually not the same. See
      * #1708 for details.
      */
-    inline number_unsigned_t remove_sign(number_integer_t x) noexcept
+    number_unsigned_t remove_sign(number_integer_t x) noexcept
     {
         JSON_ASSERT(x < 0 && x < (std::numeric_limits<number_integer_t>::max)()); // NOLINT(misc-redundant-expression)
         return static_cast<number_unsigned_t>(-(x + 1)) + 1;

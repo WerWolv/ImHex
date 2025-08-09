@@ -1,6 +1,7 @@
 #pragma code_page(65001)
 
 GLFW_ICON ICON dist/windows/icon.ico
+IDI_ICON1 ICON dist/windows/icon.ico
 1 24 "dist/windows/imhex.manifest"
 
 1 VERSIONINFO
@@ -22,7 +23,7 @@ GLFW_ICON ICON dist/windows/icon.ico
             BEGIN
                 VALUE "CompanyName",        "WerWolv"
                 VALUE "FileDescription",    "ImHex"
-                VALUE "LegalCopyright",     "WerWolv 2020-2023"
+                VALUE "LegalCopyright",     "WerWolv 2020-2025"
                 VALUE "OriginalFilename",   "imhex.exe"
                 VALUE "ProductName",        "ImHex"
             END

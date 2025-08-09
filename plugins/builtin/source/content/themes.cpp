@@ -211,43 +211,63 @@ namespace hex::plugin::builtin {
                    }
                 );
             }
-
             {
                 const static ThemeManager::ColorMap TextEditorColorMap = {
-                    { "default",                    u32(TextEditor::PaletteIndex::Default)                 },
-                    { "keyword",                    u32(TextEditor::PaletteIndex::Keyword)                 },
-                    { "number",                     u32(TextEditor::PaletteIndex::Number)                  },
-                    { "string",                     u32(TextEditor::PaletteIndex::String)                  },
-                    { "char-literal",               u32(TextEditor::PaletteIndex::CharLiteral)             },
-                    { "punctuation",                u32(TextEditor::PaletteIndex::Punctuation)             },
-                    { "preprocessor",               u32(TextEditor::PaletteIndex::Preprocessor)            },
-                    { "identifier",                 u32(TextEditor::PaletteIndex::Identifier)              },
-                    { "known-identifier",           u32(TextEditor::PaletteIndex::KnownIdentifier)         },
-                    { "preproc-identifier",         u32(TextEditor::PaletteIndex::PreprocIdentifier)       },
-                    { "global-doc-comment",         u32(TextEditor::PaletteIndex::GlobalDocComment)        },
-                    { "doc-comment",                u32(TextEditor::PaletteIndex::DocComment)              },
-                    { "comment",                    u32(TextEditor::PaletteIndex::Comment)                 },
-                    { "multi-line-comment",         u32(TextEditor::PaletteIndex::MultiLineComment)        },
-                    { "preprocessor-deactivated",   u32(TextEditor::PaletteIndex::PreprocessorDeactivated) },
-                    { "background",                 u32(TextEditor::PaletteIndex::Background)              },
-                    { "cursor",                     u32(TextEditor::PaletteIndex::Cursor)                  },
-                    { "selection",                  u32(TextEditor::PaletteIndex::Selection)               },
-                    { "error-marker",               u32(TextEditor::PaletteIndex::ErrorMarker)             },
-                    { "breakpoint",                 u32(TextEditor::PaletteIndex::Breakpoint)              },
-                    { "line-number",                u32(TextEditor::PaletteIndex::LineNumber)              },
-                    { "current-line-fill",          u32(TextEditor::PaletteIndex::CurrentLineFill)         },
-                    { "current-line-fill-inactive", u32(TextEditor::PaletteIndex::CurrentLineFillInactive) },
-                    { "current-line-edge",          u32(TextEditor::PaletteIndex::CurrentLineEdge)         }
+                    { "attribute",                  u32(ui::TextEditor::PaletteIndex::Attribute)                },
+                    { "background",                 u32(ui::TextEditor::PaletteIndex::Background)               },
+                    { "breakpoint",                 u32(ui::TextEditor::PaletteIndex::Breakpoint)               },
+                    { "calculated-pointer",         u32(ui::TextEditor::PaletteIndex::CalculatedPointer)        },
+                    { "char-literal",               u32(ui::TextEditor::PaletteIndex::CharLiteral)              },
+                    { "comment",                    u32(ui::TextEditor::PaletteIndex::Comment)                  },
+                    { "current-line-edge",          u32(ui::TextEditor::PaletteIndex::CurrentLineEdge)          },
+                    { "current-line-fill",          u32(ui::TextEditor::PaletteIndex::CurrentLineFill)          },
+                    { "current-line-fill-inactive", u32(ui::TextEditor::PaletteIndex::CurrentLineFillInactive)  },
+                    { "cursor",                     u32(ui::TextEditor::PaletteIndex::Cursor)                   },
+                    { "debug-text",                 u32(ui::TextEditor::PaletteIndex::DebugText)                },
+                    { "default",                    u32(ui::TextEditor::PaletteIndex::Default)                  },
+                    { "default-text",               u32(ui::TextEditor::PaletteIndex::DefaultText)              },
+                    { "doc-block-comment",          u32(ui::TextEditor::PaletteIndex::DocBlockComment)          },
+                    { "doc-comment",                u32(ui::TextEditor::PaletteIndex::DocComment)               },
+                    { "doc-global-comment",         u32(ui::TextEditor::PaletteIndex::GlobalDocComment)         },
+                    { "error-marker",               u32(ui::TextEditor::PaletteIndex::ErrorMarker)              },
+                    { "error-text",                 u32(ui::TextEditor::PaletteIndex::ErrorText)                },
+                    { "function",                   u32(ui::TextEditor::PaletteIndex::Function)                 },
+                    { "function-parameter",         u32(ui::TextEditor::PaletteIndex::FunctionParameter)        },
+                    { "function-variable",          u32(ui::TextEditor::PaletteIndex::FunctionVariable)         },
+                    { "global-variable",            u32(ui::TextEditor::PaletteIndex::GlobalVariable)           },
+                    { "identifier" ,                u32(ui::TextEditor::PaletteIndex::Identifier)               },
+                    { "keyword",                    u32(ui::TextEditor::PaletteIndex::Keyword)                  },
+                    { "known-identifier",           u32(ui::TextEditor::PaletteIndex::BuiltInType)              },
+                    { "line-number",                u32(ui::TextEditor::PaletteIndex::LineNumber)               },
+                    { "local-variable",             u32(ui::TextEditor::PaletteIndex::LocalVariable)            },
+                    { "multi-line-comment",         u32(ui::TextEditor::PaletteIndex::BlockComment)             },
+                    { "namespace",                  u32(ui::TextEditor::PaletteIndex::NameSpace)                },
+                    { "number",                     u32(ui::TextEditor::PaletteIndex::NumericLiteral)           },
+                    { "pattern-variable",           u32(ui::TextEditor::PaletteIndex::PatternVariable)          },
+                    { "placed-variable",            u32(ui::TextEditor::PaletteIndex::PlacedVariable)           },
+                    { "preprocessor",               u32(ui::TextEditor::PaletteIndex::Directive)                },
+                    { "preprocessor-deactivated",   u32(ui::TextEditor::PaletteIndex::PreprocessorDeactivated)  },
+                    { "preproc-identifier",         u32(ui::TextEditor::PaletteIndex::PreprocIdentifier)        },
+                    { "punctuation",                u32(ui::TextEditor::PaletteIndex::Operator)                 },
+                    { "selection",                  u32(ui::TextEditor::PaletteIndex::Selection)                },
+                    { "separator",                  u32(ui::TextEditor::PaletteIndex::Separator)                },
+                    { "string",                     u32(ui::TextEditor::PaletteIndex::StringLiteral)            },
+                    { "template-variable",          u32(ui::TextEditor::PaletteIndex::TemplateArgument)         },
+                    { "typedef",                    u32(ui::TextEditor::PaletteIndex::TypeDef)                  },
+                    { "unknown-identifier",         u32(ui::TextEditor::PaletteIndex::UnkIdentifier)            },
+                    { "user-defined-type",          u32(ui::TextEditor::PaletteIndex::UserDefinedType)          },
+                    { "view",                       u32(ui::TextEditor::PaletteIndex::View)                     },
+                    { "warning-text",               u32(ui::TextEditor::PaletteIndex::WarningText)              }
                 };
 
                 ThemeManager::addThemeHandler("text-editor", TextEditorColorMap,
                     [](u32 colorId) -> ImColor {
-                        return TextEditor::GetPalette()[colorId];
+                        return ui::TextEditor::getPalette()[colorId];
                     },
                    [](u32 colorId, ImColor color) {
-                        auto palette = TextEditor::GetPalette();
+                        auto palette = ui::TextEditor::getPalette();
                         palette[colorId] = color;
-                        TextEditor::SetPalette(palette);
+                       ui::TextEditor::setPalette(palette);
                     }
                 );
             }

@@ -1,9 +1,9 @@
 //     __ _____ _____ _____
 //  __|  |   __|     |   | |  JSON for Modern C++
-// |  |  |__   |  |  | | | |  version 3.11.3
+// |  |  |__   |  |  | | | |  version 3.12.0
 // |_____|_____|_____|_|___|  https://github.com/nlohmann/json
 //
-// SPDX-FileCopyrightText: 2013-2023 Niels Lohmann <https://nlohmann.me>
+// SPDX-FileCopyrightText: 2013 - 2025 Niels Lohmann <https://nlohmann.me>
 // SPDX-License-Identifier: MIT
 
 #pragma once
@@ -32,10 +32,10 @@ inline void replace_substring(StringType& s, const StringType& f,
                               const StringType& t)
 {
     JSON_ASSERT(!f.empty());
-    for (auto pos = s.find(f);                // find first occurrence of f
+    for (auto pos = s.find(f);                // find the first occurrence of f
             pos != StringType::npos;          // make sure f was found
             s.replace(pos, f.size(), t),      // replace with t, and
-            pos = s.find(f, pos + t.size()))  // find next occurrence of f
+            pos = s.find(f, pos + t.size()))  // find the next occurrence of f
     {}
 }
 
@@ -62,7 +62,7 @@ inline StringType escape(StringType s)
  * Note the order of escaping "~1" to "/" and "~0" to "~" is important.
  */
 template<typename StringType>
-static void unescape(StringType& s)
+inline void unescape(StringType& s)
 {
     replace_substring(s, StringType{"~1"}, StringType{"/"});
     replace_substring(s, StringType{"~0"}, StringType{"~"});

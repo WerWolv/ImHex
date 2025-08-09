@@ -30,7 +30,7 @@ namespace hex::plugin::disasm {
             this->disassemble();
         }, [this]{
             return ImHexApi::HexEditor::isSelectionValid() && !m_disassemblerTask.isRunning() && *m_currArchitecture != nullptr;
-        });
+        }, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
     }
 
     ViewDisassembler::~ViewDisassembler() {
@@ -68,9 +68,9 @@ namespace hex::plugin::disasm {
                 u64 instructionDataAddress = region.getStartAddress();
 
                 bool hadError = false;
-                while (instructionDataAddress < region.getEndAddress()) {
+                while (instructionDataAddress <= region.getEndAddress()) {
                     // Read a chunk of data
-                    size_t bufferSize = std::min<u64>(buffer.size(), (region.getEndAddress() - instructionDataAddress));
+                    size_t bufferSize = std::min<u64>(buffer.size(), (region.getEndAddress()-instructionDataAddress)+1);
                     provider->read(instructionDataAddress, buffer.data(), bufferSize);
 
                     auto code = std::span(buffer.data(), bufferSize);
@@ -111,7 +111,7 @@ namespace hex::plugin::disasm {
                 fs::openFileBrowser(fs::DialogMode::Save, {}, [this, provider](const std::fs::path &path) {
                     auto p = path;
                     if (p.extension() != ".asm")
-                        p.replace_filename(hex::format("{}{}", p.filename().string(), ".asm"));
+                        p.replace_filename(fmt::format("{}{}", p.filename().string(), ".asm"));
                     auto file = wolv::io::File(p, wolv::io::File::Mode::Create);
 
                     if (!file.isValid()) {
@@ -126,9 +126,9 @@ namespace hex::plugin::disasm {
                             continue;
 
                         if (instruction.operators.empty())
-                            file.writeString(hex::format("{}\n", instruction.mnemonic));
+                            file.writeString(fmt::format("{}\n", instruction.mnemonic));
                         else
-                            file.writeString(hex::format("{} {}\n", instruction.mnemonic, instruction.operators));
+                            file.writeString(fmt::format("{} {}\n", instruction.mnemonic, instruction.operators));
                     }
                 });
             });

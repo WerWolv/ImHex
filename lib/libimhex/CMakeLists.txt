@@ -40,10 +40,12 @@ set(LIBIMHEX_SOURCES
         source/helpers/imgui_hooks.cpp
         source/helpers/semantic_version.cpp
         source/helpers/keys.cpp
+        source/helpers/udp_server.cpp
 
         source/test/tests.cpp
 
         source/providers/provider.cpp
+        source/providers/cached_provider.cpp
         source/providers/memory_provider.cpp
         source/providers/undo/stack.cpp
 
@@ -57,12 +59,12 @@ set(LIBIMHEX_SOURCES
 )
 
 if (APPLE)
-    set(OSX_11_0_SDK_PATH  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk)
+    set(OSX_SDK_PATH  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.sdk)
     if (NOT CMAKE_OSX_SYSROOT)
-        if (IS_DIRECTORY ${OSX_11_0_SDK_PATH})
-            set(CMAKE_OSX_SYSROOT ${OSX_11_0_SDK_PATH})
+        if (IS_DIRECTORY ${OSX_SDK_PATH})
+            set(CMAKE_OSX_SYSROOT ${OSX_SDK_PATH})
         else ()
-            message(WARNING "CMAKE_OSX_SYSROOT not set and macOS 10.9 SDK not found! Using default one.")
+            message(WARNING "CMAKE_OSX_SYSROOT not set and macOS SDK not found! Using default one.")
         endif ()
     endif ()
 
@@ -94,6 +96,8 @@ else()
     set(LIBIMHEX_LIBRARY_TYPE PUBLIC)
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
+
+addCppCheck(libimhex)
 
 
 if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_BRANCH)
@@ -129,6 +133,9 @@ endif ()
 
 addDefineToSource(source/api/imhex_api.cpp "IMHEX_VERSION=\"${IMHEX_VERSION_STRING}\"")
 
+string(TIMESTAMP IMHEX_BUILD_DATE UTC)
+addDefineToSource(source/api/imhex_api.cpp "IMHEX_BUILD_DATE=\"${IMHEX_BUILD_DATE}\"")
+
 enableUnityBuild(libimhex)
 setupCompilerFlags(libimhex)
 
@@ -153,6 +160,10 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     target_link_libraries(libimhex PRIVATE libpl microtar ${NFD_LIBRARIES} magic)
     target_link_libraries(libimhex PUBLIC libwolv libpl_includes libpl-gen ${IMGUI_LIBRARIES} ${JTHREAD_LIBRARIES})
 
+    if (IMHEX_ENABLE_IMGUI_TEST_ENGINE)
+        target_link_libraries(libimhex PUBLIC imgui_test_engine)
+    endif()
+
     if (NOT WIN32)
         target_link_libraries(libimhex PRIVATE dl)
     endif()
@@ -169,7 +180,7 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
 
-target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${FMT_LIBRARIES} ${LUNASVG_LIBRARIES} ${BOOST_LIBRARIES})
+target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${FMT_LIBRARIES} ${LUNASVG_LIBRARIES} ${BOOST_LIBRARIES} tracing)
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 

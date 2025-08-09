@@ -252,10 +252,6 @@ namespace hex {
         return result;
     }
 
-    [[nodiscard]] std::vector<std::string> splitString(const std::string &string, const std::string &delimiter);
-    [[nodiscard]] std::string combineStrings(const std::vector<std::string> &strings, const std::string &delimiter = "");
-    [[nodiscard]] std::string replaceStrings(std::string string, const std::string &search, const std::string &replace);
-
     [[nodiscard]] std::string toEngineeringString(double value);
 
     [[nodiscard]] inline std::vector<u8> parseByteString(const std::string &string) {
@@ -285,7 +281,54 @@ namespace hex {
         return result;
     }
 
-    [[nodiscard]] float float16ToFloat32(u16 float16);
+    template<u8 ExponentBits, u8 MantissaBits>
+    [[nodiscard]] constexpr float customFloatToFloat32(u32 value) {
+        static_assert(ExponentBits <= 8, "ExponentBits must be less than 8");
+        static_assert(ExponentBits + MantissaBits + 1 <= 32, "Format doesn't fit into a 32-bit float");
+
+        const u32 sign = value >> (ExponentBits + MantissaBits);
+        const u32 exponent = (value >> MantissaBits) & ((1u << ExponentBits) - 1);
+        u32 mantissa = value & ((1u << MantissaBits) - 1);
+
+        // Calculate the bias for the input format and IEEE-754 float32
+        i32 inputBias = (1 << (ExponentBits - 1)) - 1;
+        i32 float32Bias = 127;
+
+        u32 result = 0;
+
+        if (exponent == 0) {
+            if (mantissa == 0) {
+                // Zero
+                result = sign << 31;
+            } else {
+                // Subnormal
+                int shift = 0;
+                while ((mantissa & (1u << MantissaBits)) == 0) {
+                    mantissa <<= 1;
+                    shift++;
+                }
+                mantissa &= ((1u << MantissaBits) - 1); // clear implicit bit
+                int adjustedExp = float32Bias - inputBias - shift + 1;
+                result = (sign << 31) | (adjustedExp << 23) | (mantissa << (23 - MantissaBits));
+            }
+        } else if (exponent == ((1u << ExponentBits) - 1)) {
+            // Inf or NaN
+            result = (sign << 31) | (0xFF << 23) | (mantissa << (23 - MantissaBits));
+        } else {
+            // Normalized number
+            int adjustedExp = exponent - inputBias + float32Bias;
+            result = (sign << 31) | (adjustedExp << 23) | (mantissa << (23 - MantissaBits));
+        }
+
+        float floatResult;
+        std::memcpy(&floatResult, &result, sizeof(float));
+
+        return floatResult;
+    }
+
+    [[nodiscard]] constexpr float float16ToFloat32(u16 float16) {
+        return customFloatToFloat32<5, 10>(float16);
+    }
 
     [[nodiscard]] inline bool equalsIgnoreCase(std::string_view left, std::string_view right) {
         return std::equal(left.begin(), left.end(), right.begin(), right.end(), [](char a, char b) {
@@ -343,5 +386,6 @@ namespace hex {
     [[nodiscard]] void* getContainingModule(void* symbol);
 
     [[nodiscard]] std::optional<ImColor> blendColors(const std::optional<ImColor> &a, const std::optional<ImColor> &b);
+    std::optional<std::chrono::system_clock::time_point> parseTime(std::string_view format, const std::string &timeString);
 
 }

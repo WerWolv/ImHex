@@ -29,8 +29,8 @@ namespace hex::plugin::builtin {
     using namespace std::literals::string_literals;
     using namespace std::literals::chrono_literals;
 
-    ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name") {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, ICON_VS_GLOBE, 1000, Shortcut::None, [&, this] {
+    ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name", ICON_VS_EXTENSIONS) {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, ICON_VS_EXTENSIONS, 1000, Shortcut::None, [&, this] {
             if (m_requestStatus == RequestStatus::NotAttempted)
                 this->refresh();
 
@@ -124,14 +124,10 @@ namespace hex::plugin::builtin {
                     ImGuiExt::TextFormatted("{} ", wolv::util::combineStrings(entry.authors, ", "));
                     ImGui::TableNextColumn();
 
-                    const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
-
                     ImGui::PushID(id);
                     ImGui::BeginDisabled(m_updateAllTask.isRunning() || (m_download.valid() && m_download.wait_for(0s) != std::future_status::ready));
                     {
                         if (entry.downloading) {
-                            ImGui::ProgressBar(m_httpRequest.getProgress(), buttonSize, "");
-
                             if (m_download.valid() && m_download.wait_for(0s) == std::future_status::ready) {
                                 this->handleDownloadFinished(category, entry);
                             }
@@ -140,12 +136,13 @@ namespace hex::plugin::builtin {
                             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
                             if (entry.hasUpdate) {
-                                if (ImGui::Button("hex.builtin.view.store.update"_lang, buttonSize)) {
+                                if (ImGuiExt::DimmedIconButton(ICON_VS_DEBUG_RESTART, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                                     entry.downloading = this->download(category.path, entry.fileName, entry.link);
                                 }
+                                ImGui::SetItemTooltip("%s", "hex.builtin.view.store.update"_lang.get());
                             } else if (entry.system) {
                                 ImGui::BeginDisabled();
-                                ImGui::Button("hex.builtin.view.store.system"_lang, buttonSize);
+                                ImGuiExt::DimmedIconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text));
                                 ImGui::EndDisabled();
                                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
                                     ImGui::BeginTooltip();
@@ -153,16 +150,18 @@ namespace hex::plugin::builtin {
                                     ImGui::EndTooltip();
                                 }
                             } else if (!entry.installed) {
-                                if (ImGui::Button("hex.builtin.view.store.download"_lang, buttonSize)) {
+                                if (ImGuiExt::DimmedIconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                                     entry.downloading = this->download(category.path, entry.fileName, entry.link);
                                     AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.download_from_store.name");
                                 }
+                                ImGui::SetItemTooltip("%s", "hex.builtin.view.store.download"_lang.get());
                             } else {
-                                if (ImGui::Button("hex.builtin.view.store.remove"_lang, buttonSize)) {
+                                if (ImGuiExt::DimmedIconButton(ICON_VS_TRASH, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                                     entry.installed = !this->remove(category.path, entry.fileName);
                                     // remove() will not update the entry to mark it as a system entry, so we do it manually
                                     updateEntryMetadata(entry, category);
                                 }
+                                ImGui::SetItemTooltip("%s", "hex.builtin.view.store.remove"_lang.get());
                             }
                             ImGui::PopStyleVar();
                         }
@@ -211,7 +210,7 @@ namespace hex::plugin::builtin {
         if (ImGuiExt::IconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
             this->updateAll();
         }
-        ImGuiExt::InfoTooltip(hex::format("hex.builtin.view.store.update_count"_lang, m_updateCount.load()).c_str());
+        ImGuiExt::InfoTooltip(fmt::format("hex.builtin.view.store.update_count"_lang, m_updateCount.load()).c_str());
 
         ImGui::EndDisabled();
 
@@ -354,6 +353,9 @@ namespace hex::plugin::builtin {
 
                         entry.hasUpdate = false;
                         entry.downloading = false;
+
+                        if (m_updateCount > 0)
+                            m_updateCount -= 1;
 
                         task.increment();
                     }

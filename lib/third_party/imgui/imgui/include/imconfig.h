@@ -16,6 +16,11 @@
 
 #include <assert.h>
 
+// For alloc() on ARM64 Windows
+#if __has_include(<malloc.h>)
+    #include <malloc.h>
+#endif
+
 //---- Define assertion handler. Defaults to calling assert().
 // If your macro uses multiple statements, make sure is enclosed in a 'do { .. } while (0)' block so it can be used as a single statement.
 //#define IM_ASSERT(_EXPR)  MyAssert(_EXPR)
@@ -160,3 +165,9 @@ namespace ImGui
 #define IMGUI_ENABLE_FREETYPE
 #define ImDrawIdx unsigned int
 #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX
+#define IMGUI_USE_WCHAR32
+#define IMGUI_USE_LEGACY_CRC32_ADLER 1
+
+#if defined(IMGUI_TEST_ENGINE)
+    #include "imgui_te_imconfig.h"
+#endif

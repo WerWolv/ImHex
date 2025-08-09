@@ -26,7 +26,7 @@ namespace hex::plugin::builtin {
         PatternEncodedString(pl::core::Evaluator *evaluator, u64 offset, size_t size, u32 line)
             : Pattern(evaluator, offset, size, line) { }
 
-        [[nodiscard]] std::unique_ptr<Pattern> clone() const override {
+        [[nodiscard]] std::shared_ptr<Pattern> clone() const override {
             return std::unique_ptr<Pattern>(new PatternEncodedString(*this));
         }
 
@@ -197,11 +197,11 @@ namespace hex::plugin::builtin {
         }
 
 
-        std::unique_ptr<pl::ptrn::Pattern> jsonToPattern(pl::core::Evaluator *evaluator, auto function) {
-            auto object = std::make_unique<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
-            std::vector<std::shared_ptr<pl::ptrn::Pattern>> patterns;
+        std::shared_ptr<pl::ptrn::Pattern> jsonToPattern(pl::core::Evaluator *evaluator, auto function) {
+            auto object = std::make_shared<pl::ptrn::PatternStruct>(evaluator, 0, 0, 0);
 
             try {
+                std::vector<std::shared_ptr<pl::ptrn::Pattern>> patterns;
                 jsonToPattern(evaluator, function(), patterns);
                 object->setEntries(patterns);
 
@@ -221,7 +221,7 @@ namespace hex::plugin::builtin {
             const pl::api::Namespace nsHexDec = { "builtin", "hex", "dec" };
 
             /* Json<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Json", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Json", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::parse(data); });
@@ -230,7 +230,7 @@ namespace hex::plugin::builtin {
             });
 
             /* Bson<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Bson", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Bson", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_bson(data); });
@@ -239,7 +239,7 @@ namespace hex::plugin::builtin {
             });
 
             /* Cbor<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Cbor", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Cbor", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_cbor(data); });
@@ -248,7 +248,7 @@ namespace hex::plugin::builtin {
             });
 
             /* Bjdata<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Bjdata", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Bjdata", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_bjdata(data); });
@@ -257,7 +257,7 @@ namespace hex::plugin::builtin {
             });
 
             /* Msgpack<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Msgpack", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Msgpack", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_msgpack(data); });
@@ -266,7 +266,7 @@ namespace hex::plugin::builtin {
             });
 
             /* Ubjson<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "Ubjson", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "Ubjson", FunctionParameterCount::exactly(1), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto data = params[0].toBytes();
 
                 auto result = jsonToPattern(evaluator, [&] { return nlohmann::json::from_ubjson(data); });
@@ -276,14 +276,13 @@ namespace hex::plugin::builtin {
 
 
             /* EncodedString<data_pattern> */
-            ContentRegistry::PatternLanguage::addType(nsHexDec, "EncodedString", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::unique_ptr<pl::ptrn::Pattern> {
+            ContentRegistry::PatternLanguage::addType(nsHexDec, "EncodedString", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::shared_ptr<pl::ptrn::Pattern> {
                 auto bytes = params[0].toBytes();
                 auto encodingDefinition = params[1].toString();
 
-                std::string value;
                 EncodingFile encodingFile(EncodingFile::Type::Thingy, encodingDefinition);
 
-                auto pattern = std::make_unique<PatternEncodedString>(evaluator, evaluator->getReadOffset(), bytes.size(), 0);
+                auto pattern = std::make_shared<PatternEncodedString>(evaluator, evaluator->getReadOffset(), bytes.size(), 0);
                 pattern->setEncodedString(encodingFile, bytes);
 
                 return pattern;

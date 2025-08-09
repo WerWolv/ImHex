@@ -112,10 +112,11 @@ namespace hex::plugin::builtin {
     }
 
 
-    ViewHighlightRules::ViewHighlightRules() : View::Floating("hex.builtin.view.highlight_rules.name") {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.highlight_rules.menu.file.rules" }, ICON_VS_TAG, 1650, Shortcut::None, [&, this] {
+    ViewHighlightRules::ViewHighlightRules() : View::Floating("hex.builtin.view.highlight_rules.name", ICON_VS_TAG) {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.highlight_rules.menu.edit.rules" }, ICON_VS_TAG, 1950, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
-        }, ImHexApi::Provider::isValid);
+        }, ImHexApi::Provider::isValid,
+        ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
 
         ProjectFile::registerPerProviderHandler({
             .basePath = "highlight_rules.json",
@@ -168,7 +169,6 @@ namespace hex::plugin::builtin {
         });
 
         // Initialize the selected rule iterators to point to the end of the rules lists
-        m_selectedRule = m_rules->end();
         EventProviderOpened::subscribe([this](prv::Provider *provider) {
             m_selectedRule.get(provider) = m_rules.get(provider).end();
         });

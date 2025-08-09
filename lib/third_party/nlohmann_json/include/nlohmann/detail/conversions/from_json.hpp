@@ -1,9 +1,9 @@
 //     __ _____ _____ _____
 //  __|  |   __|     |   | |  JSON for Modern C++
-// |  |  |__   |  |  | | | |  version 3.11.3
+// |  |  |__   |  |  | | | |  version 3.12.0
 // |_____|_____|_____|_|___|  https://github.com/nlohmann/json
 //
-// SPDX-FileCopyrightText: 2013-2023 Niels Lohmann <https://nlohmann.me>
+// SPDX-FileCopyrightText: 2013 - 2025 Niels Lohmann <https://nlohmann.me>
 // SPDX-License-Identifier: MIT
 
 #pragma once
@@ -29,6 +29,15 @@
 #include <nlohmann/detail/string_concat.hpp>
 #include <nlohmann/detail/value_t.hpp>
 
+// include after macro_scope.hpp
+#ifdef JSON_HAS_CPP_17
+    #include <optional> // optional
+#endif
+
+#if JSON_HAS_FILESYSTEM || JSON_HAS_EXPERIMENTAL_FILESYSTEM
+    #include <string_view> // u8string_view
+#endif
+
 NLOHMANN_JSON_NAMESPACE_BEGIN
 namespace detail
 {
@@ -42,6 +51,21 @@ inline void from_json(const BasicJsonType& j, typename std::nullptr_t& n)
     }
     n = nullptr;
 }
+
+#ifdef JSON_HAS_CPP_17
+template<typename BasicJsonType, typename T>
+void from_json(const BasicJsonType& j, std::optional<T>& opt)
+{
+    if (j.is_null())
+    {
+        opt = std::nullopt;
+    }
+    else
+    {
+        opt.emplace(j.template get<T>());
+    }
+}
+#endif // JSON_HAS_CPP_17
 
 // overloads for basic_json template parameters
 template < typename BasicJsonType, typename ArithmeticType,
@@ -190,6 +214,54 @@ auto from_json(const BasicJsonType& j, T (&arr)[N])  // NOLINT(cppcoreguidelines
     }
 }
 
+template<typename BasicJsonType, typename T, std::size_t N1, std::size_t N2>
+auto from_json(const BasicJsonType& j, T (&arr)[N1][N2])  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+-> decltype(j.template get<T>(), void())
+{
+    for (std::size_t i1 = 0; i1 < N1; ++i1)
+    {
+        for (std::size_t i2 = 0; i2 < N2; ++i2)
+        {
+            arr[i1][i2] = j.at(i1).at(i2).template get<T>();
+        }
+    }
+}
+
+template<typename BasicJsonType, typename T, std::size_t N1, std::size_t N2, std::size_t N3>
+auto from_json(const BasicJsonType& j, T (&arr)[N1][N2][N3])  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+-> decltype(j.template get<T>(), void())
+{
+    for (std::size_t i1 = 0; i1 < N1; ++i1)
+    {
+        for (std::size_t i2 = 0; i2 < N2; ++i2)
+        {
+            for (std::size_t i3 = 0; i3 < N3; ++i3)
+            {
+                arr[i1][i2][i3] = j.at(i1).at(i2).at(i3).template get<T>();
+            }
+        }
+    }
+}
+
+template<typename BasicJsonType, typename T, std::size_t N1, std::size_t N2, std::size_t N3, std::size_t N4>
+auto from_json(const BasicJsonType& j, T (&arr)[N1][N2][N3][N4])  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+-> decltype(j.template get<T>(), void())
+{
+    for (std::size_t i1 = 0; i1 < N1; ++i1)
+    {
+        for (std::size_t i2 = 0; i2 < N2; ++i2)
+        {
+            for (std::size_t i3 = 0; i3 < N3; ++i3)
+            {
+                for (std::size_t i4 = 0; i4 < N4; ++i4)
+                {
+                    arr[i1][i2][i3][i4] = j.at(i1).at(i2).at(i3).at(i4).template get<T>();
+                }
+            }
+        }
+    }
+}
+
 template<typename BasicJsonType>
 inline void from_json_array_impl(const BasicJsonType& j, typename BasicJsonType::array_t& arr, priority_tag<3> /*unused*/)
 {
@@ -275,7 +347,7 @@ void())
 
 template < typename BasicJsonType, typename T, std::size_t... Idx >
 std::array<T, sizeof...(Idx)> from_json_inplace_array_impl(BasicJsonType&& j,
-        identity_tag<std::array<T, sizeof...(Idx)>> /*unused*/, index_sequence<Idx...> /*unused*/)
+                     identity_tag<std::array<T, sizeof...(Idx)>> /*unused*/, index_sequence<Idx...> /*unused*/)
 {
     return { { std::forward<BasicJsonType>(j).at(Idx).template get<T>()... } };
 }
@@ -326,7 +398,7 @@ inline void from_json(const BasicJsonType& j, ConstructibleObjectType& obj)
 }
 
 // overload for arithmetic types, not chosen for basic_json template arguments
-// (BooleanType, etc..); note: Is it really necessary to provide explicit
+// (BooleanType, etc.); note: Is it really necessary to provide explicit
 // overloads for boolean_t etc. in case of a custom BooleanType which is not
 // an arithmetic type?
 template < typename BasicJsonType, typename ArithmeticType,
@@ -377,6 +449,12 @@ template<typename BasicJsonType, typename... Args, std::size_t... Idx>
 std::tuple<Args...> from_json_tuple_impl_base(BasicJsonType&& j, index_sequence<Idx...> /*unused*/)
 {
     return std::make_tuple(std::forward<BasicJsonType>(j).at(Idx).template get<Args>()...);
+}
+
+template<typename BasicJsonType>
+std::tuple<> from_json_tuple_impl_base(BasicJsonType& /*unused*/, index_sequence<> /*unused*/)
+{
+    return {};
 }
 
 template < typename BasicJsonType, class A1, class A2 >
@@ -464,7 +542,15 @@ inline void from_json(const BasicJsonType& j, std_fs::path& p)
     {
         JSON_THROW(type_error::create(302, concat("type must be string, but is ", j.type_name()), &j));
     }
-    p = *j.template get_ptr<const typename BasicJsonType::string_t*>();
+    const auto& s = *j.template get_ptr<const typename BasicJsonType::string_t*>();
+    // Checking for C++20 standard or later can be insufficient in case the
+    // library support for char8_t is either incomplete or was disabled
+    // altogether. Use the __cpp_lib_char8_t feature test instead.
+#if defined(__cpp_lib_char8_t) && (__cpp_lib_char8_t >= 201907L)
+    p = std_fs::path(std::u8string_view(reinterpret_cast<const char8_t*>(s.data()), s.size()));
+#else
+    p = std_fs::u8path(s); // accepts UTF-8 encoded std::string in C++17, deprecated in C++20
+#endif
 }
 #endif
 

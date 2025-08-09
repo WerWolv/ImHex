@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
         constexpr static auto LineLength = 16;
 
         std::string result;
-        result.reserve(start.size() + hex::format(byteFormat, 0x00).size() * size + std::string(NewLineIndent).size() / LineLength + end.size());
+        result.reserve(start.size() + fmt::format(fmt::runtime(byteFormat), 0x00).size() * size + std::string(NewLineIndent).size() / LineLength + end.size());
 
         result += start;
 
@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
                     result += NewLineIndent;
             }
 
-            result += hex::format(byteFormat, byte);
+            result += fmt::format(fmt::runtime(byteFormat), byte);
 
             index++;
         }
@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
     void registerDataFormatters() {
 
         ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.c", [](prv::Provider *provider, u64 offset, size_t size, bool) {
-            return formatLanguageArray(provider, offset, size, hex::format("const uint8_t data[{0}] = {{", size), "0x{0:02X}, ", "};");
+            return formatLanguageArray(provider, offset, size, fmt::format("const uint8_t data[{0}] = {{", size), "0x{0:02X}, ", "};");
         });
 
         ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.cpp", [](prv::Provider *provider, u64 offset, size_t size, bool preview) {
@@ -63,7 +63,7 @@ namespace hex::plugin::builtin {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.copy_as.name");
             }
 
-            return formatLanguageArray(provider, offset, size, hex::format("constexpr std::array<uint8_t, {0}> data = {{", size), "0x{0:02X}, ", "};");
+            return formatLanguageArray(provider, offset, size, fmt::format("constexpr std::array<uint8_t, {0}> data = {{", size), "0x{0:02X}, ", "};");
         });
 
         ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.java", [](prv::Provider *provider, u64 offset, size_t size, bool) {
@@ -75,7 +75,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.rust", [](prv::Provider *provider, u64 offset, size_t size, bool) {
-            return formatLanguageArray(provider, offset, size, hex::format("let data: [u8; 0x{0:02X}] = [", size), "0x{0:02X}, ", "];");
+            return formatLanguageArray(provider, offset, size, fmt::format("let data: [u8; 0x{0:02X}] = [", size), "0x{0:02X}, ", "];");
         });
 
         ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.python", [](prv::Provider *provider, u64 offset, size_t size, bool) {
@@ -103,7 +103,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.pascal", [](prv::Provider *provider, u64 offset, size_t size, bool) {
-            return formatLanguageArray(provider, offset, size, hex::format("data: array[0..{0}] of Byte = (", size - 1), "${0:02X}, ", ")");
+            return formatLanguageArray(provider, offset, size, fmt::format("data: array[0..{0}] of Byte = (", size - 1), "${0:02X}, ", ")");
         });
 
         ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.base64", [](prv::Provider *provider, u64 offset, size_t size, bool) {
@@ -134,25 +134,39 @@ namespace hex::plugin::builtin {
                 "        .zerobyte { color:#808080 }\n"
                 "    </style>\n\n"
                 "    <code>\n"
-                "        <span class=\"offsetheader\">Hex View&nbsp&nbsp00 01 02 03 04 05 06 07&nbsp 08 09 0A 0B 0C 0D 0E 0F</span>";
+                "        <span class=\"offsetheader\">Hex View&nbsp;&nbsp;00 01 02 03 04 05 06 07&nbsp; 08 09 0A 0B 0C 0D 0E 0F</span>";
+
+            auto html_safe = [](u8 byte) -> std::string {
+                if (!std::isprint(byte))
+                    return ".";
+                char b(byte);
+                if (b==' ') return "&nbsp;";
+                else if (b=='"') return "&quot;";
+                else if (b=='\'') return "&apos;";
+                else if (b=='&') return "&amp;";
+                else if (b=='<') return "&lt;";
+                else if (b=='>') return "&gt;";
+                else return std::string{b};
+            };
 
             auto reader = prv::ProviderReader(provider);
             reader.seek(offset);
             reader.setEndAddress((offset + size) - 1);
 
             u64 address = offset & ~u64(0x0F);
+
             std::string asciiRow;
             for (u8 byte : reader) {
                 if ((address % 0x10) == 0) {
-                    result += hex::format("  {}", asciiRow);
-                    result +=  hex::format("<br>\n        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp&nbsp<span class=\"hexcolumn\">", address);
+                    result += fmt::format("  {}", asciiRow);
+                    result += fmt::format("<br>\n        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp;&nbsp;<span class=\"hexcolumn\">", address);
 
                     asciiRow.clear();
 
                     if (address == (offset & ~u64(0x0F))) {
                         for (u64 i = 0; i < (offset - address); i++) {
-                            result += "&nbsp&nbsp&nbsp";
-                            asciiRow += "&nbsp";
+                            result += "&nbsp;&nbsp;&nbsp;";
+                            asciiRow += "&nbsp;";
                         }
                         address = offset;
                     }
@@ -166,17 +180,17 @@ namespace hex::plugin::builtin {
                     tagEnd = "</span>";
                 }
 
-                result += hex::format("{0}{2:02X}{1} ", tagStart, tagEnd, byte);
-                asciiRow += std::isprint(byte) ? char(byte) : '.';
+                result += fmt::format("{0}{2:02X}{1} ", tagStart, tagEnd, byte);
+                asciiRow += html_safe(byte);
                 if ((address % 0x10) == 0x07)
-                    result += "&nbsp";
+                    result += "&nbsp;";
 
                 address++;
             }
 
             if (address % 0x10 != 0x00)
                 for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
-                    result += "&nbsp&nbsp&nbsp";
+                    result += "&nbsp;&nbsp;&nbsp;";
             result += asciiRow;
 
             result +=

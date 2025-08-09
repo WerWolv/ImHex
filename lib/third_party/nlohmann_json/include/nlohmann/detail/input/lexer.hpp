@@ -1,9 +1,9 @@
 //     __ _____ _____ _____
 //  __|  |   __|     |   | |  JSON for Modern C++
-// |  |  |__   |  |  | | | |  version 3.11.3
+// |  |  |__   |  |  | | | |  version 3.12.0
 // |_____|_____|_____|_|___|  https://github.com/nlohmann/json
 //
-// SPDX-FileCopyrightText: 2013-2023 Niels Lohmann <https://nlohmann.me>
+// SPDX-FileCopyrightText: 2013 - 2025 Niels Lohmann <https://nlohmann.me>
 // SPDX-License-Identifier: MIT
 
 #pragma once
@@ -127,7 +127,7 @@ class lexer : public lexer_base<BasicJsonType>
         , decimal_point_char(static_cast<char_int_type>(get_decimal_point()))
     {}
 
-    // delete because of pointer members
+    // deleted because of pointer members
     lexer(const lexer&) = delete;
     lexer(lexer&&) = default; // NOLINT(hicpp-noexcept-move,performance-noexcept-move-constructor)
     lexer& operator=(lexer&) = delete;
@@ -262,10 +262,10 @@ class lexer : public lexer_base<BasicJsonType>
 
         while (true)
         {
-            // get next character
+            // get the next character
             switch (get())
             {
-                // end of file while parsing string
+                // end of file while parsing the string
                 case char_traits<char_type>::eof():
                 {
                     error_message = "invalid string: missing closing quote";
@@ -351,7 +351,7 @@ class lexer : public lexer_base<BasicJsonType>
                                                         (static_cast<unsigned int>(codepoint1) << 10u)
                                                         // low surrogate occupies the least significant 15 bits
                                                         + static_cast<unsigned int>(codepoint2)
-                                                        // there is still the 0xD800, 0xDC00 and 0x10000 noise
+                                                        // there is still the 0xD800, 0xDC00, and 0x10000 noise
                                                         // in the result, so we have to subtract with:
                                                         // (0xD800 << 10) + DC00 - 0x10000 = 0x35FDC00
                                                         - 0x35FDC00u);
@@ -377,7 +377,7 @@ class lexer : public lexer_base<BasicJsonType>
                                 }
                             }
 
-                            // result of the above calculation yields a proper codepoint
+                            // the result of the above calculation yields a proper codepoint
                             JSON_ASSERT(0x00 <= codepoint && codepoint <= 0x10FFFF);
 
                             // translate codepoint into bytes
@@ -828,7 +828,7 @@ class lexer : public lexer_base<BasicJsonType>
                     break;
                 }
 
-                // remaining bytes (80..C1 and F5..FF) are ill-formed
+                // the remaining bytes (80..C1 and F5..FF) are ill-formed
                 default:
                 {
                     error_message = "invalid string: ill-formed UTF-8 byte";
@@ -967,13 +967,13 @@ class lexer : public lexer_base<BasicJsonType>
           locale's decimal point is used instead of `.` to work with the
           locale-dependent converters.
     */
-    token_type scan_number()  // lgtm [cpp/use-of-goto]
+    token_type scan_number()  // lgtm [cpp/use-of-goto] `goto` is used in this function to implement the number-parsing state machine described above. By design, any finite input will eventually reach the "done" state or return token_type::parse_error. In each intermediate state, 1 byte of the input is appended to the token_buffer vector, and only the already initialized variables token_buffer, number_type, and error_message are manipulated.
     {
         // reset token_buffer to store the number's bytes
         reset();
 
         // the type of the parsed number; initially set to unsigned; will be
-        // changed if minus sign, decimal point or exponent is read
+        // changed if minus sign, decimal point, or exponent is read
         token_type number_type = token_type::value_unsigned;
 
         // state (init): we just found out we need to scan a number
@@ -1049,6 +1049,7 @@ scan_number_zero:
             case '.':
             {
                 add(decimal_point_char);
+                decimal_point_position = token_buffer.size() - 1;
                 goto scan_number_decimal1;
             }
 
@@ -1085,6 +1086,7 @@ scan_number_any1:
             case '.':
             {
                 add(decimal_point_char);
+                decimal_point_position = token_buffer.size() - 1;
                 goto scan_number_decimal1;
             }
 
@@ -1245,7 +1247,7 @@ scan_number_done:
         // we are done scanning a number)
         unget();
 
-        char* endptr = nullptr; // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
+        char* endptr = nullptr; // NOLINT(misc-const-correctness,cppcoreguidelines-pro-type-vararg,hicpp-vararg)
         errno = 0;
 
         // try to parse integers first and fall back to floats
@@ -1256,7 +1258,7 @@ scan_number_done:
             // we checked the number format before
             JSON_ASSERT(endptr == token_buffer.data() + token_buffer.size());
 
-            if (errno == 0)
+            if (errno != ERANGE)
             {
                 value_unsigned = static_cast<number_unsigned_t>(x);
                 if (value_unsigned == x)
@@ -1272,7 +1274,7 @@ scan_number_done:
             // we checked the number format before
             JSON_ASSERT(endptr == token_buffer.data() + token_buffer.size());
 
-            if (errno == 0)
+            if (errno != ERANGE)
             {
                 value_integer = static_cast<number_integer_t>(x);
                 if (value_integer == x)
@@ -1322,6 +1324,7 @@ scan_number_done:
     {
         token_buffer.clear();
         token_string.clear();
+        decimal_point_position = std::string::npos;
         token_string.push_back(char_traits<char_type>::to_char_type(current));
     }
 
@@ -1342,7 +1345,7 @@ scan_number_done:
 
         if (next_unget)
         {
-            // just reset the next_unget variable and work with current
+            // only reset the next_unget variable and work with current
             next_unget = false;
         }
         else
@@ -1430,6 +1433,11 @@ scan_number_done:
     /// return current string value (implicitly resets the token; useful only once)
     string_t& get_string()
     {
+        // translate decimal points from locale back to '.' (#4084)
+        if (decimal_point_char != '.' && decimal_point_position != std::string::npos)
+        {
+            token_buffer[decimal_point_position] = '.';
+        }
         return token_buffer;
     }
 
@@ -1516,7 +1524,7 @@ scan_number_done:
             return token_type::parse_error;
         }
 
-        // read next character and ignore whitespace
+        // read the next character and ignore whitespace
         skip_whitespace();
 
         // ignore comments
@@ -1627,6 +1635,8 @@ scan_number_done:
 
     /// the decimal point
     const char_int_type decimal_point_char = '.';
+    /// the position of the decimal point in the input
+    std::size_t decimal_point_position = std::string::npos;
 };
 
 }  // namespace detail

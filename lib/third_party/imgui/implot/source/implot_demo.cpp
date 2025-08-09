@@ -867,7 +867,14 @@ void Demo_Images() {
     ImGui::SliderFloat2("UV1", &uv1.x, -2, 2, "%.1f");
     ImGui::ColorEdit4("Tint",&tint.x);
     if (ImPlot::BeginPlot("##image")) {
-        ImPlot::PlotImage("my image",ImGui::GetIO().Fonts->TexID, bmin, bmax, uv0, uv1, tint);
+#ifdef IMGUI_HAS_TEXTURES
+        // We use the font atlas ImTextureRef for this demo, but in your real code when you submit
+        // an image that you have loaded yourself, you would normally have a ImTextureID which works
+        // just as well (as ImTextureRef can be constructed from ImTextureID).
+        ImPlot::PlotImage("my image", ImGui::GetIO().Fonts->TexRef, bmin, bmax, uv0, uv1, tint);
+#else
+        ImPlot::PlotImage("my image", ImGui::GetIO().Fonts->TexID, bmin, bmax, uv0, uv1, tint);
+#endif
         ImPlot::EndPlot();
     }
 }

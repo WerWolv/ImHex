@@ -298,6 +298,28 @@ namespace ImGuiExt {
         }
     }
 
+    std::vector<u8> Texture::toBytes() const noexcept {
+        std::vector<u8> result(m_width * m_height * 4);
+
+        #if defined(OS_WEB)
+            GLuint fbo;
+            glGenFramebuffers(1, &fbo);
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textureId, 0);
+
+            glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, result.data());
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glDeleteFramebuffers(1, &fbo);
+        #else
+            glBindTexture(GL_TEXTURE_2D, m_textureId);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, result.data());
+            glBindTexture(GL_TEXTURE_2D, 0);
+        #endif
+
+        return result;
+    }
+
     float GetTextWrapPos() {
         return GImGui->CurrentWindow->DC.TextWrapPos;
     }
@@ -327,8 +349,7 @@ namespace ImGuiExt {
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
 
         const ImRect bb(pos, pos + size);
-        if (!ItemAdd(bb, id))
-            return false;
+        ItemAdd(bb, id);
 
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
@@ -424,7 +445,7 @@ namespace ImGuiExt {
         ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(label);
-        const ImVec2 text_size  = CalcTextSize((std::string(label) + "\n  " + std::string(description)).c_str(), nullptr, true);
+        const ImVec2 text_size  = CalcTextSize(label, nullptr, true) + CalcTextSize(description, nullptr, true);
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         ImVec2 pos = window->DC.CursorPos;
@@ -880,7 +901,7 @@ namespace ImGuiExt {
                                                                                           : ImGuiCol_Button);
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1.3F, 1) + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding + iconOffset, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -942,13 +963,13 @@ namespace ImGuiExt {
         std::string format;
 
         if (*value < 1024) {
-            format = hex::format("{} Bytes", *value);
+            format = fmt::format("{} Bytes", *value);
         } else if (*value < 1024 * 1024) {
-            format = hex::format("{:.2f} KB", *value / 1024.0);
+            format = fmt::format("{:.2f} KB", *value / 1024.0);
         } else if (*value < 1024 * 1024 * 1024) {
-            format = hex::format("{:.2f} MB", *value / (1024.0 * 1024.0));
+            format = fmt::format("{:.2f} MB", *value / (1024.0 * 1024.0));
         } else {
-            format = hex::format("{:.2f} GB", *value / (1024.0 * 1024.0 * 1024.0));
+            format = fmt::format("{:.2f} GB", *value / (1024.0 * 1024.0 * 1024.0));
         }
 
         *value /= stepSize;
@@ -997,7 +1018,7 @@ namespace ImGuiExt {
         std::string drawString;
         auto textEnd = text + strlen(text);
         for (auto wrapPos = text; wrapPos != textEnd;) {
-            wrapPos = ImGui::GetFont()->CalcWordWrapPositionA(1, wrapPos, textEnd, availableSpace.x * 0.8F);
+            wrapPos = ImGui::GetFont()->CalcWordWrapPosition(1, wrapPos, textEnd, availableSpace.x * 0.8F);
             drawString += std::string(text, wrapPos) + "\n";
             text = wrapPos;
         }
@@ -1244,18 +1265,22 @@ namespace ImGuiExt {
 
         bool result = false;
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
-        if (ImGui::BeginChild(hex::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+        if (ImGui::BeginChild(fmt::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
             result = true;
 
             if (hasMenuBar && ImGui::BeginMenuBar()) {
                 if (collapsed == nullptr)
                     ImGui::TextUnformatted(label);
                 else {
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, ImGui::GetStyle().FramePadding.y));
-                    ImGui::PushStyleColor(ImGuiCol_Button, 0x00);
-                    if (ImGui::Button(label))
-                        *collapsed = !*collapsed;
-                    ImGui::PopStyleColor();
+                    const auto &style = ImGui::GetStyle();
+                    const auto framePadding = style.FramePadding.x;
+                    ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0);
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() - style.WindowPadding.x + framePadding);
+                    *collapsed = !ImGui::TreeNodeEx("##CollapseHeader", ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanLabelWidth);
+                    ImGui::SameLine(0, framePadding);
+                    ImGui::TextUnformatted(label);
+                    if (!*collapsed) ImGui::TreePop();
+
                     ImGui::PopStyleVar();
                 }
                 ImGui::EndMenuBar();
@@ -1290,8 +1315,9 @@ namespace ImGuiExt {
 
         ImGui::PushID(label);
 
-        const auto buttonSize = ImGui::CalcTextSize("...") + ImGui::GetStyle().FramePadding * 2;
-        ImGui::PushItemWidth(ImGui::CalcItemWidth() - buttonSize.x - ImGui::GetStyle().FramePadding.x);
+        const auto framePadding = ImGui::GetStyle().FramePadding.x;
+        const auto buttonSize = ImVec2(ImGui::CalcTextSize("...").x + framePadding * 2, ImGui::GetFrameHeight());
+        ImGui::PushItemWidth(ImGui::CalcItemWidth() - buttonSize.x - framePadding);
         std::string string = wolv::util::toUTF8String(path);
         if (ImGui::InputText("##pathInput", string, ImGuiInputTextFlags_AutoSelectAll)) {
             path = std::u8string(string.begin(), string.end());
@@ -1299,7 +1325,7 @@ namespace ImGuiExt {
         }
         ImGui::PopItemWidth();
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, framePadding);
 
         if (ImGui::Button("...", buttonSize)) {
             hex::fs::openFileBrowser(hex::fs::DialogMode::Open, validExtensions, [&](const std::fs::path &pickedPath) {
@@ -1420,6 +1446,31 @@ namespace ImGuiExt {
 
         // Return the button press state
         ImGui::PopClipRect();
+    }
+
+    bool IsDarkBackground(const ImColor& bgColor) {
+        // Extract RGB components in 0–255 range
+        int r = static_cast<int>(bgColor.Value.x * 255.0f);
+        int g = static_cast<int>(bgColor.Value.y * 255.0f);
+        int b = static_cast<int>(bgColor.Value.z * 255.0f);
+
+        // Compute brightness using perceived luminance
+        int brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+        // If brightness is below threshold, use white text
+        return brightness < 128;
+    }
+
+
+
+    static bool s_imguiTestEngineEnabled = false;
+
+    void ImGuiTestEngine::setEnabled(bool enabled) {
+        s_imguiTestEngineEnabled = enabled;
+    }
+
+    bool ImGuiTestEngine::isEnabled() {
+        return s_imguiTestEngineEnabled;
     }
 }
 

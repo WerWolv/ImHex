@@ -5,11 +5,79 @@
 #include <hex/helpers/utils.hpp>
 
 #include <imgui.h>
+#include <fonts/fonts.hpp>
+#include <fonts/vscode_icons.hpp>
+#include <hex/api/task_manager.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
+#include <romfs/romfs.hpp>
+
+#include "hex/api/imhex_api.hpp"
 
 namespace hex::fonts {
-    constexpr static auto PixelPerfectName = "Pixel-Perfect Default Font (Proggy Clean)";
-    constexpr static auto SmoothName = "Smooth Default Font (JetbrainsMono)";
-    constexpr static auto CustomName = "Custom Font";
+    constexpr static auto PixelPerfectFontName = "Pixel-Perfect Default Font (Proggy Clean)";
+    constexpr static auto SmoothFontName = "Smooth Default Font (JetBrains Mono)";
+    constexpr static auto CustomFontName = "Custom Font";
+
+    static std::map<std::fs::path, ImFont*> s_previewFonts, s_usedFonts;
+    static std::map<std::fs::path, std::string> s_filteredFonts;
+    static bool pushPreviewFont(const std::fs::path &fontPath) {
+        if (fontPath.empty()) {
+            pushPreviewFont(SmoothFontName);
+            return true;
+        }
+
+        ImFontConfig config = {};
+        config.FontDataOwnedByAtlas = true;
+        config.Flags |= ImFontFlags_NoLoadError;
+
+        auto atlas = ImGui::GetIO().Fonts;
+
+        auto it = s_previewFonts.find(fontPath);
+        if (it == s_previewFonts.end()) {
+            ImFont *font = nullptr;
+            if (fontPath == PixelPerfectFontName) {
+                font = atlas->AddFontDefault(&config);
+            } else if (fontPath == SmoothFontName || fontPath.empty()) {
+                static auto jetbrainsFont = romfs::get("fonts/JetBrainsMono.ttf");
+                config.FontDataOwnedByAtlas = false;
+
+                font = atlas->AddFontFromMemoryTTF(const_cast<u8 *>(jetbrainsFont.data<u8>()), jetbrainsFont.size(), 0.0F, &config);
+            } else {
+                font = atlas->AddFontFromFileTTF(wolv::util::toUTF8String(fontPath).c_str(), 0.0F, &config);
+            }
+
+            it = s_previewFonts.emplace(fontPath, font).first;
+        }
+
+        const auto &[path, font] = *it;
+        if (font == nullptr) {
+            return false;
+        }
+        if (!font->IsGlyphInFont(L'A')) {
+            // If the font doesn't contain any of the ASCII characters, it's
+            // probably not of much use to us
+            return false;
+        }
+
+        ImGui::PushFont(font, 0.0F);
+        s_usedFonts.emplace(path, font);
+        return true;
+    }
+
+    static void cleanUnusedPreviewFonts() {
+        auto atlas = ImGui::GetIO().Fonts;
+        for (const auto &[path, font] : s_previewFonts) {
+            if (font == nullptr)
+                continue;
+
+            if (!s_usedFonts.contains(path)) {
+                atlas->RemoveFont(font);
+            }
+        }
+
+        s_previewFonts = std::move(s_usedFonts);
+        s_usedFonts = {};
+    }
 
     bool FontFilePicker::draw(const std::string &name) {
         bool changed = false;
@@ -18,41 +86,73 @@ namespace hex::fonts {
         bool customFont = updateSelectedFontName();
 
         if (ImGui::BeginCombo(name.c_str(), m_selectedFontName.c_str())) {
-            if (ImGui::Selectable(PixelPerfectName, m_path.empty() && pixelPerfectFont)) {
+            pushPreviewFont(PixelPerfectFontName);
+            if (ImGui::Selectable(PixelPerfectFontName, m_path.empty() && pixelPerfectFont)) {
                 m_path.clear();
                 m_pixelPerfectFont = true;
                 changed = true;
             }
+            ImGui::PopFont();
 
-            if (ImGui::Selectable(SmoothName, m_path.empty() && !pixelPerfectFont)) {
+            pushPreviewFont(SmoothFontName);
+            if (ImGui::Selectable(SmoothFontName, m_path.empty() && !pixelPerfectFont)) {
                 m_path.clear();
                 m_pixelPerfectFont = false;
                 changed = true;
             }
+            ImGui::PopFont();
 
-            if (ImGui::Selectable(CustomName, customFont)) {
+            pushPreviewFont(customFont ? m_path : SmoothFontName);
+            if (ImGui::Selectable(CustomFontName, customFont)) {
                 changed = fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } }, [this](const std::fs::path &path) {
                     m_path = path;
                     m_pixelPerfectFont = false;
                 });
             }
+            ImGui::PopFont();
 
-            u32 index = 0;
-            for (const auto &[path, fontName] : hex::getFonts()) {
-                ImGui::PushID(index);
-                if (ImGui::Selectable(limitStringLength(fontName, 50).c_str(), m_path == path)) {
-                    m_path = path;
-                    m_pixelPerfectFont = false;
-                    changed = true;
+            if (s_filteredFonts.empty()) {
+                for (const auto &[path, fontName] : hex::getFonts()) {
+                    if (!pushPreviewFont(path))
+                        continue;
+                    ImGui::PopFont();
+                    s_filteredFonts.emplace(path, fontName);
                 }
-                ImGui::SetItemTooltip("%s", fontName.c_str());
-                ImGui::PopID();
+            }
 
-                index += 1;
+            {
+                u32 index = 0;
+                ImGuiListClipper clipper;
+
+                clipper.Begin(s_filteredFonts.size(), ImGui::GetTextLineHeightWithSpacing());
+
+                while (clipper.Step())
+                    for (const auto &[path, fontName] : s_filteredFonts | std::views::drop(clipper.DisplayStart) | std::views::take(clipper.DisplayEnd - clipper.DisplayStart)) {
+                        if (!pushPreviewFont(path))
+                            continue;
+
+                        ImGui::PushID(index);
+                        if (ImGui::Selectable(limitStringLength(fontName, 50).c_str(), m_path == path)) {
+                            m_path = path;
+                            m_pixelPerfectFont = false;
+                            changed = true;
+                        }
+                        ImGui::PopFont();
+                        ImGui::SetItemTooltip("%s", fontName.c_str());
+                        ImGui::PopID();
+
+                        index += 1;
+                    }
+
+                clipper.SeekCursorForItem(index);
             }
 
             ImGui::EndCombo();
         }
+
+        TaskManager::doLaterOnce([] {
+            cleanUnusedPreviewFonts();
+        });
 
         return changed;
     }
@@ -86,9 +186,9 @@ namespace hex::fonts {
         const bool pixelPerfectFont = isPixelPerfectFontSelected();
 
         if (m_path.empty() && pixelPerfectFont) {
-            m_selectedFontName = PixelPerfectName;
+            m_selectedFontName = PixelPerfectFontName;
         } else if (m_path.empty() && !pixelPerfectFont) {
-            m_selectedFontName = SmoothName;
+            m_selectedFontName = SmoothFontName;
         } else if (fonts.contains(m_path)) {
             m_selectedFontName = fonts.at(m_path);
         } else {
@@ -99,22 +199,15 @@ namespace hex::fonts {
         return customFont;
     }
 
-    static float pixelsToPoints(float pixels) {
-        return pixels * (72_scaled / 96.0F);
-    }
-
-    static float pointsToPixels(float points) {
-        return points / (72_scaled / 96.0F);
-    }
-
     bool SliderPoints::draw(const std::string &name) {
-        float value = pixelsToPoints(m_value);
-        float min = pixelsToPoints(m_min);
-        float max = pixelsToPoints(m_max);
+        auto scaleFactor = ImHexApi::System::getBackingScaleFactor();
+        float value = ImHexApi::Fonts::pixelsToPoints(m_value) * scaleFactor;
+        float min = ImHexApi::Fonts::pixelsToPoints(m_min) * scaleFactor;
+        float max = ImHexApi::Fonts::pixelsToPoints(m_max) * scaleFactor;
 
         auto changed = ImGui::SliderFloat(name.c_str(), &value, min, max, "%.0f pt");
 
-        m_value = pointsToPixels(value);
+        m_value = ImHexApi::Fonts::pointsToPixels(value / scaleFactor);
 
         return changed;
     }
@@ -124,16 +217,42 @@ namespace hex::fonts {
         ImGui::PushID(name.c_str());
         ON_SCOPE_EXIT { ImGui::PopID(); };
 
-        if (ImGui::Button(m_fontFilePicker.getSelectedFontName().c_str(), ImVec2(300_scaled, 0))) {
-            ImGui::OpenPopup("Fonts");
+        bool changed = false;
+        if (ImGui::CollapsingHeader(name.c_str())) {
+            if (ImGuiExt::BeginBox()) {
+                if (m_fontFilePicker.draw("hex.fonts.setting.font.custom_font"_lang)) changed = true;
+
+                ImGui::BeginDisabled(m_fontFilePicker.isPixelPerfectFontSelected());
+                {
+                    if (m_fontSize.draw("hex.fonts.setting.font.font_size"_lang))
+                        changed = true;
+
+                    const auto buttonHeight = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y;
+
+                    fonts::Default().pushBold();
+                    if (ImGuiExt::DimmedButtonToggle("hex.fonts.setting.font.button.bold"_lang, &m_bold, ImVec2(buttonHeight, buttonHeight)))
+                        changed = true;
+                    fonts::Default().pop();
+                    ImGui::SetItemTooltip("%s", "hex.fonts.setting.font.font_bold"_lang.get());
+
+                    ImGui::SameLine();
+
+                    fonts::Default().pushItalic();
+                    if (ImGuiExt::DimmedButtonToggle("hex.fonts.setting.font.button.italic"_lang, &m_italic, ImVec2(buttonHeight, buttonHeight)))
+                        changed = true;
+                    fonts::Default().pop();
+                    ImGui::SetItemTooltip("%s", "hex.fonts.setting.font.font_italic"_lang.get());
+
+                    if (m_antiAliased.draw("hex.fonts.setting.font.font_antialias"_lang))
+                        changed = true;
+                }
+                ImGui::EndDisabled();
+
+                ImGuiExt::EndBox();
+            }
         }
 
-        ImGui::SameLine();
-
-        ImGui::TextUnformatted(name.c_str());
-
-        ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos());
-        return drawPopup();
+        return changed;
     }
 
     nlohmann::json FontSelector::store() {
@@ -141,8 +260,8 @@ namespace hex::fonts {
 
         json["font_file"] = m_fontFilePicker.store();
         json["font_size"] = m_fontSize.store();
-        json["bold"] = m_bold.store();
-        json["italic"] = m_italic.store();
+        json["bold"] = m_bold;
+        json["italic"] = m_italic;
         json["antialiased"] = m_antiAliased.store();
 
         return json;
@@ -150,38 +269,9 @@ namespace hex::fonts {
     void FontSelector::load(const nlohmann::json& data) {
         m_fontFilePicker.load(data["font_file"]);
         m_fontSize.load(data["font_size"]);
-        m_bold.load(data["bold"]);
-        m_italic.load(data["italic"]);
+        m_bold = data["bold"];
+        m_italic = data["italic"];
         m_antiAliased.load(data["antialiased"]);
-    }
-
-    bool FontSelector::drawPopup() {
-        bool changed = false;
-        if (ImGui::BeginPopup("Fonts")) {
-            if (m_fontFilePicker.draw("hex.fonts.setting.font.custom_font"_lang)) m_applyEnabled = true;
-
-            ImGui::BeginDisabled(m_fontFilePicker.isPixelPerfectFontSelected());
-            {
-                if (m_fontSize.draw("hex.fonts.setting.font.font_size"_lang)) m_applyEnabled = true;
-                if (m_bold.draw("hex.fonts.setting.font.font_bold"_lang)) m_applyEnabled = true;
-                if (m_italic.draw("hex.fonts.setting.font.font_italic"_lang)) m_applyEnabled = true;
-                if (m_antiAliased.draw("hex.fonts.setting.font.font_antialias"_lang)) m_applyEnabled = true;
-            }
-            ImGui::EndDisabled();
-
-            ImGui::NewLine();
-
-            ImGui::BeginDisabled(!m_applyEnabled);
-            if (ImGui::Button("hex.ui.common.apply"_lang)) {
-                changed = true;
-                m_applyEnabled = false;
-            }
-            ImGui::EndDisabled();
-
-            ImGui::EndPopup();
-        }
-
-        return changed;
     }
 
     [[nodiscard]] const std::fs::path& FontSelector::getFontPath() const {
@@ -197,15 +287,27 @@ namespace hex::fonts {
     }
 
     [[nodiscard]] bool FontSelector::isBold() const {
-        return m_bold.isChecked();
+        return m_bold;
     }
 
     [[nodiscard]] bool FontSelector::isItalic() const {
-        return m_italic.isChecked();
+        return m_italic;
     }
 
-    [[nodiscard]] bool FontSelector::isAntiAliased() const {
-        return m_antiAliased.isChecked();
+    [[nodiscard]] AntialiasingType FontSelector::getAntialiasingType() const {
+        if (isPixelPerfectFont())
+            return AntialiasingType::None;
+
+        auto value = m_antiAliased.getValue();
+        if (value == "none")
+            return AntialiasingType::None;
+        else if (value == "grayscale")
+            return AntialiasingType::Grayscale;
+        else if (value == "subpixel")
+            return AntialiasingType::Lcd;
+        else
+            return AntialiasingType::Grayscale;
+
     }
 
 

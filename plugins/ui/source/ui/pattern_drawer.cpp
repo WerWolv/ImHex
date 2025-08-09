@@ -96,7 +96,7 @@ namespace hex::ui {
 
         void drawTypeNameColumn(const pl::ptrn::Pattern& pattern, const std::string& structureTypeName) {
             ImGui::TableNextColumn();
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], structureTypeName);
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::Keyword)], structureTypeName);
             ImGui::SameLine();
             ImGui::TextUnformatted(pattern.getTypeName().c_str());
         }
@@ -151,9 +151,9 @@ namespace hex::ui {
             std::string text;
             if (bytes != 0) {
                 if (bytes == 1)
-                    text += hex::format("{0} byte", bytes);
+                    text += fmt::format("{0} byte", bytes);
                 else
-                    text += hex::format("{0} bytes", bytes);
+                    text += fmt::format("{0} bytes", bytes);
 
                 if (bits != 0)
                     text += ", ";
@@ -161,9 +161,9 @@ namespace hex::ui {
 
             if (bits != 0) {
                 if (bits == 1)
-                    text += hex::format("{0} bit", bits);
+                    text += fmt::format("{0} bit", bits);
                 else
-                    text += hex::format("{0} bits", bits);
+                    text += fmt::format("{0} bits", bits);
             }
 
             if (bytes == 0 && bits == 0) {
@@ -310,12 +310,12 @@ namespace hex::ui {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
         if (m_favorites.contains(m_currPatternPath)) {
-            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_DELETE, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram), {}, { 1_scaled, 0 })) {
+            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_FULL, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram), {}, { 1_scaled, 0 })) {
                 m_favorites.erase(m_currPatternPath);
             }
         }
         else {
-            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_ADD, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), {}, { 1_scaled, 0 })) {
+            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_EMPTY, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), {}, { 1_scaled, 0 })) {
                 m_favorites.insert({ m_currPatternPath, pattern.clone() });
             }
         }
@@ -350,21 +350,17 @@ namespace hex::ui {
     void PatternDrawer::drawValueColumn(pl::ptrn::Pattern& pattern) {
         ImGui::TableNextColumn();
 
-        std::string value;
-        try {
-            value = pattern.getFormattedValue();
-        } catch (const std::exception &e) {
-            value = e.what();
-        }
-
+        const auto value = pattern.getFormattedValue();
+        const bool valueValid = pattern.hasValidFormattedValue();
         const auto width = ImGui::GetColumnWidth();
+
         if (const auto &visualizeArgs = pattern.getAttributeArguments("hex::visualize"); !visualizeArgs.empty()) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5F));
 
             bool shouldReset = false;
-            if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
-                auto previousPattern = m_currVisualizedPattern;
+            if (ImGui::Button(fmt::format(" {}  {}", ICON_VS_EYE, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
+                const auto *previousPattern = m_currVisualizedPattern;
                 m_currVisualizedPattern = &pattern;
                 auto lastVisualizerError = m_visualizerDrawer.getLastVisualizerError();
                 if (!lastVisualizerError.empty() || m_currVisualizedPattern != previousPattern)
@@ -378,7 +374,7 @@ namespace hex::ui {
 
             ImGui::SameLine();
 
-            if (ImGui::BeginPopup("Visualizer")) {
+            if (ImGui::BeginPopupEx(ImGui::GetCurrentWindowRead()->GetID("Visualizer"), ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings)) {
                 if (m_currVisualizedPattern == &pattern) {
                     m_visualizerDrawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, pattern, !m_visualizedPatterns.contains(&pattern) || shouldReset);
                     m_visualizedPatterns.insert(&pattern);
@@ -389,7 +385,9 @@ namespace hex::ui {
         } else if (const auto &inlineVisualizeArgs = pattern.getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
             m_visualizerDrawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, pattern, true);
         } else {
+            if (!valueValid) ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError));
             ImGuiExt::TextFormatted("{}", value);
+            if (!valueValid) ImGui::PopStyleColor();
         }
 
         if (ImGui::CalcTextSize(value.c_str()).x > width) {
@@ -445,9 +443,12 @@ namespace hex::ui {
         ImGui::TableNextColumn();
 
         if (pattern.isSealed() || leaf) {
-            ImGui::Indent();
-            highlightWhenSelected(pattern, [&]{ ImGui::TextUnformatted(this->getDisplayName(pattern).c_str()); });
-            ImGui::Unindent();
+            const float indent = ImGui::GetCurrentContext()->FontSize + ImGui::GetStyle().FramePadding.x * 2;
+            ImGui::Indent(indent);
+            highlightWhenSelected(pattern, [&] {
+                ImGui::TextUnformatted(this->getDisplayName(pattern).c_str());
+            });
+            ImGui::Unindent(indent);
             return false;
         }
 
@@ -455,16 +456,27 @@ namespace hex::ui {
             if (shouldOpen)
                 ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 
+            ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0.0F);
+            bool retVal = false;
             switch (m_treeStyle) {
                 using enum TreeStyle;
                 default:
                 case Default:
-                    return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                    break;
                 case AutoExpanded:
-                    return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen);
+                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
+                    break;
                 case Flattened:
-                    return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                    retVal = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                    break;
             }
+            ImGui::PopStyleVar();
+
+            ImGui::SameLine();
+            ImGui::TextUnformatted(this->getDisplayName(pattern).c_str());
+
+            return retVal;
         });
     }
 
@@ -511,7 +523,7 @@ namespace hex::ui {
 
         // Draw type column
         ImGui::TableNextColumn();
-        ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
+        ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
     }
 
     void PatternDrawer::closeTreeNode(bool inlined) const {
@@ -536,21 +548,21 @@ namespace hex::ui {
         ImGui::TableNextColumn();
 
         if (dynamic_cast<pl::ptrn::PatternBitfieldFieldSigned*>(&pattern) != nullptr) {
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], "signed");
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::Keyword)], "signed");
             ImGui::SameLine();
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], pattern.getBitSize() == 1 ? "bit" : "bits");
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], pattern.getBitSize() == 1 ? "bit" : "bits");
         } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern) != nullptr) {
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], "enum");
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::Keyword)], "enum");
             ImGui::SameLine();
             ImGui::TextUnformatted(pattern.getTypeName().c_str());
         } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldBoolean*>(&pattern) != nullptr) {
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "bool");
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], "bool");
             ImGui::SameLine();
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "bit");
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], "bit");
         } else {
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Keyword)], "unsigned");
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::Keyword)], "unsigned");
             ImGui::SameLine();
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], pattern.getBitSize() == 1 ? "bit" : "bits");
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], pattern.getBitSize() == 1 ? "bit" : "bits");
         }
 
         if (!this->isEditingPattern(pattern)) {
@@ -560,50 +572,7 @@ namespace hex::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-            auto value = pattern.getValue();
-            auto valueString = pattern.toString();
-
-            if (auto enumPattern = dynamic_cast<pl::ptrn::PatternBitfieldFieldEnum*>(&pattern); enumPattern != nullptr) {
-                if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
-                    auto currValue = pattern.getValue().toUnsigned();
-                    for (auto &[name, enumValue] : enumPattern->getEnumValues()) {
-                        auto min = enumValue.min.toUnsigned();
-                        auto max = enumValue.max.toUnsigned();
-
-                        bool isSelected = min <= currValue && max >= currValue;
-                        if (ImGui::Selectable(fmt::format("{}::{}", pattern.getTypeName(), name, min, pattern.getSize() * 2).c_str(), isSelected)) {
-                            pattern.setValue(enumValue.min);
-                            this->resetEditing();
-                        }
-                        if (isSelected)
-                            ImGui::SetItemDefaultFocus();
-                    }
-                    ImGui::EndCombo();
-                }
-            } else if (dynamic_cast<pl::ptrn::PatternBitfieldFieldBoolean*>(&pattern) != nullptr) {
-                bool boolValue = value.toBoolean();
-                if (ImGui::Checkbox("##boolean", &boolValue)) {
-                    pattern.setValue(boolValue);
-                }
-            } else if (std::holds_alternative<i128>(value)) {
-                if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    wolv::math_eval::MathEvaluator<i128> mathEvaluator;
-
-                    if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
-                        pattern.setValue(result.value());
-
-                    this->resetEditing();
-                }
-            } else if (std::holds_alternative<u128>(value)) {
-                if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    wolv::math_eval::MathEvaluator<u128> mathEvaluator;
-
-                    if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
-                        pattern.setValue(result.value());
-
-                    this->resetEditing();
-                }
-            }
+            m_valueEditor.visit(pattern);
 
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -660,10 +629,7 @@ namespace hex::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-            bool value = pattern.getValue().toBoolean();
-            if (ImGui::Checkbox("##boolean", &value)) {
-                pattern.setValue(value);
-            }
+            m_valueEditor.visit(pattern);
 
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -683,16 +649,8 @@ namespace hex::ui {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::SetKeyboardFocusHere();
 
-            auto value = hex::encodeByteString(pattern.getBytes());
-            if (ImGui::InputText("##Character", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                if (!value.empty()) {
-                    auto result = hex::decodeByteString(value);
-                    if (!result.empty())
-                        pattern.setValue(char(result[0]));
+            m_valueEditor.visit(pattern);
 
-                    this->resetEditing();
-                }
-            }
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
         }
@@ -714,22 +672,7 @@ namespace hex::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-            if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
-                auto currValue = pattern.getValue().toUnsigned();
-                for (auto &[name, enumValue] : pattern.getEnumValues()) {
-                    auto min = enumValue.min.toUnsigned();
-                    auto max = enumValue.max.toUnsigned();
-
-                    bool isSelected = min <= currValue && max >= currValue;
-                    if (ImGui::Selectable(fmt::format("{}::{}", pattern.getTypeName(), name, min, pattern.getSize() * 2).c_str(), isSelected)) {
-                        pattern.setValue(enumValue.min);
-                        this->resetEditing();
-                    }
-                    if (isSelected)
-                        ImGui::SetItemDefaultFocus();
-                }
-                ImGui::EndCombo();
-            }
+            m_valueEditor.visit(pattern);
 
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -749,15 +692,7 @@ namespace hex::ui {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::SetKeyboardFocusHere();
 
-            auto value = pattern.toString();
-            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                wolv::math_eval::MathEvaluator<long double> mathEvaluator;
-
-                if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                    pattern.setValue(double(result.value()));
-
-                this->resetEditing();
-            }
+            m_valueEditor.visit(pattern);
 
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -780,7 +715,7 @@ namespace hex::ui {
             drawOffsetColumns(pattern);
             drawSizeColumn(pattern);
             ImGui::TableNextColumn();
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{}", pattern.getFormattedName());
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], "{}", pattern.getFormattedName());
             drawValueColumn(pattern);
             drawCommentColumn(pattern);
         }
@@ -803,15 +738,7 @@ namespace hex::ui {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::SetKeyboardFocusHere();
 
-            auto value = pattern.getFormattedValue();
-            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                wolv::math_eval::MathEvaluator<i128> mathEvaluator;
-
-                if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                    pattern.setValue(result.value());
-
-                this->resetEditing();
-            }
+            m_valueEditor.visit(pattern);
 
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -832,11 +759,7 @@ namespace hex::ui {
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                 ImGui::SetKeyboardFocusHere();
 
-                auto value = pattern.toString();
-                if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    pattern.setValue(value);
-                    this->resetEditing();
-                }
+                m_valueEditor.visit(pattern);
 
                 ImGui::PopItemWidth();
                 ImGui::PopStyleVar();
@@ -865,11 +788,8 @@ namespace hex::ui {
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                 ImGui::SetKeyboardFocusHere();
 
-                auto value = pattern.toString();
-                if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    pattern.setValue(value);
-                    this->resetEditing();
-                }
+                m_valueEditor.visit(pattern);
+
                 ImGui::PopItemWidth();
                 ImGui::PopStyleVar();
             } else {
@@ -913,11 +833,8 @@ namespace hex::ui {
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                 ImGui::SetKeyboardFocusHere();
 
-                auto value = pattern.toString();
-                if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    pattern.setValue(value);
-                    this->resetEditing();
-                }
+                m_valueEditor.visit(pattern);
+
                 ImGui::PopItemWidth();
                 ImGui::PopStyleVar();
             } else {
@@ -954,15 +871,8 @@ namespace hex::ui {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::SetKeyboardFocusHere();
 
-            auto value = pattern.toString();
-            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                wolv::math_eval::MathEvaluator<u128> mathEvaluator;
+            m_valueEditor.visit(pattern);
 
-                if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                    pattern.setValue(result.value());
-
-                this->resetEditing();
-            }
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
         }
@@ -1026,12 +936,12 @@ namespace hex::ui {
             drawSizeColumn(pattern);
 
             ImGui::TableNextColumn();
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{0}", pattern.getTypeName());
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], "{0}", pattern.getTypeName());
             ImGui::SameLine(0, 0);
 
             ImGui::TextUnformatted("[");
             ImGui::SameLine(0, 0);
-            ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Number)], "{0}", iterable.getEntryCount());
+            ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::NumericLiteral)], "{0}", iterable.getEntryCount());
             ImGui::SameLine(0, 0);
             ImGui::TextUnformatted("]");
 
@@ -1053,7 +963,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
 
-                ImGui::Selectable(hex::format("... ({})", "hex.ui.pattern_drawer.double_click"_lang).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+                ImGui::Selectable(fmt::format("... ({})", "hex.ui.pattern_drawer.double_click"_lang).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     displayEnd += DisplayEndStep;
                 break;
@@ -1074,7 +984,12 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
 
                 chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{
-                    return ImGui::TreeNodeEx(hex::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                    ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0.0F);
+                    const auto result = ImGui::TreeNodeEx(fmt::format("##TreeNode_{:X}", endOffset).c_str(), ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                    ImGui::PopStyleVar();
+                    ImGui::SameLine();
+                    ImGui::TextUnformatted(fmt::format("{0}[{1} ... {2}]", m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str());
+                    return result;
                 });
 
                 ImGui::TableNextColumn();
@@ -1094,12 +1009,12 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("{0} {1}", chunkSize, chunkSize == 1 ? "byte" : "bytes");
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::KnownIdentifier)], "{0}", pattern.getTypeName());
+                ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::BuiltInType)], "{0}", pattern.getTypeName());
                 ImGui::SameLine(0, 0);
 
                 ImGui::TextUnformatted("[");
                 ImGui::SameLine(0, 0);
-                ImGuiExt::TextFormattedColored(TextEditor::GetPalette()[u32(TextEditor::PaletteIndex::Number)], "{0}", endIndex - i);
+                ImGuiExt::TextFormattedColored(TextEditor::getPalette()[u32(TextEditor::PaletteIndex::NumericLiteral)], "{0}", endIndex - i);
                 ImGui::SameLine(0, 0);
                 ImGui::TextUnformatted("]");
 
@@ -1111,7 +1026,7 @@ namespace hex::ui {
             if (!chunkOpen) {
                 continue;
             }
-            
+
             int id = 1;
             iterable.forEachEntry(i, endIndex, [&](u64, auto *entry){
                 ImGui::PushID(id);
@@ -1139,7 +1054,7 @@ namespace hex::ui {
     }
 
     bool PatternDrawer::sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) const {
-        auto result = std::strong_ordering::less;
+        auto result = std::strong_ordering::equal;
 
         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
             result = this->getDisplayName(*left) <=> this->getDisplayName(*right);
@@ -1166,7 +1081,7 @@ namespace hex::ui {
         if (!ImGui::BeginTable("##Patterntable", 9, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
             return false;
         }
-    
+
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.favorites"_lang, ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_IndentDisable | (m_favorites.empty() ? ImGuiTableColumnFlags_None : ImGuiTableColumnFlags_NoHide), ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.var_name"_lang,  ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
@@ -1318,6 +1233,7 @@ namespace hex::ui {
         if (beginPatternTable(patterns, m_sortedPatterns, height)) {
             ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.4F));
             ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImGui::GetColorU32(ImGuiCol_HeaderActive, 0.4F));
+            ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::CalcTextSize(" ").x * 2);
             ImGui::TableHeadersRow();
 
             m_showFavoriteStars = false;
@@ -1329,7 +1245,10 @@ namespace hex::ui {
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::PushID(id);
-                    if (ImGui::TreeNodeEx("hex.ui.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_SpanFullWidth)) {
+                    const auto open = ImGui::TreeNodeEx("##Favorites", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                    ImGui::SameLine();
+                    ImGui::TextUnformatted("hex.ui.pattern_drawer.favorites"_lang);
+                    if (open) {
                         for (auto &[path, pattern] : m_favorites) {
                             if (pattern == nullptr)
                                 continue;
@@ -1356,7 +1275,7 @@ namespace hex::ui {
                         ImGui::TableNextColumn();
                         ImGui::TableNextColumn();
                         ImGui::PushID(id);
-                        if (ImGui::TreeNodeEx(groupName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth)) {
+                        if (ImGui::TreeNodeEx(groupName.c_str(), ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth)) {
                             for (auto &groupPattern: groupPatterns) {
                                 if (groupPattern == nullptr)
                                     continue;
@@ -1388,6 +1307,7 @@ namespace hex::ui {
                 }
             }
 
+            ImGui::PopStyleVar();
             ImGui::PopStyleColor(2);
 
             ImGui::EndTable();
@@ -1413,7 +1333,7 @@ namespace hex::ui {
                             if (!arguments.empty()) {
                                 const auto &groupName = arguments.front().toString();
                                 if (!m_groups.contains(groupName))
-                                    m_groups.insert({ groupName, std::vector<std::unique_ptr<pl::ptrn::Pattern>>() });
+                                    m_groups.insert({ groupName, { } });
 
                                 m_groups[groupName].push_back(pattern->clone());
                             }

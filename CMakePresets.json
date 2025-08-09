@@ -52,9 +52,22 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}/dist"
       }
-    }
+    },
+  {
+      "name": "vs2022-x86",
+      "displayName": "Visual Studio 2022 x86",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_GENERATOR_PLATFORM": "Win32",
+          "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+          "VCPKG_MANIFEST_DIR": "${sourceDir}/dist"
+      }
+  }
   ],
   "buildPresets": [
     {

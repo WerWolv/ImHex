@@ -107,6 +107,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Base64 files
   - IPS and IPS32 patches
   - Markdown reports
+  - Binary arrays for various programming languages
 </details>
 <details>
   <summary><strong>Data Inspector</strong></summary>
@@ -140,8 +141,13 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - GDB Server
     - Access the RAM of a running process or embedded devices through GDB
   - Intel Hex and Motorola SREC data
+  - Base64 encoded data
+  - UDP Packets
+    - Support for displaying raw data received over UDP
   - Process Memory
     - Inspect the entire address space of a running process
+  - Remote Files over SSH with SFTP
+    - Support for loading files from remote servers using SSH and SFTP
 </details>
 <details>
   <summary><strong>Data searching</strong></summary>
@@ -212,6 +218,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
     - WebAssembly
     - MOS65XX
     - Berkeley Packet Filter
+  - Support for writing custom disassemblers for your own architectures
 </details>
 <details>
   <summary><strong>Bookmarks</strong></summary>
@@ -261,6 +268,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Division by invariant multiplication calculator
   - TCP Client/Server
   - Euclidean algorithm calculator
+  - HTTP Requests
 </details>
 <details>
   <summary><strong>Built-in Content updater</strong></summary>
@@ -320,19 +328,19 @@ To use ImHex, the following minimal system requirements need to be met.
 - **OS**: 
   - **Windows**: Windows 7 or higher (Windows 10/11 recommended)
   - **macOS**: macOS 13 (Ventura) or higher, 
-    - Lower versions should still work too, but you'll need to compile ImHex yourself. The release binaries will NOT work.
+    - Lower versions should still work too, but you'll need to compile ImHex yourself. The release binaries will NOT work due to GitHub not having any macOS 12 or lower CI runners available.
     - The macOS build is not signed and will require you to manually allow them in the Security & Privacy settings.
-  - **Linux**: "Modern" Linux. The following distributions have official releases available. Other distros are supported through the AppImage and Flatpak releases.
+  - **Linux**: "Modern" Linux. The following distributions have official releases available. Other distros are supported through the AppImage, Flatpak and Snap releases.
     - Ubuntu and Debian
     - Fedora
     - RHEL/AlmaLinux
     - Arch Linux
     - Basically any other distro will work as well when compiling ImHex from sources.
-- **CPU**: Officially supported are x86_64 and ARM64, though any Little Endian 64 bit CPU should work.
+- **CPU**: Officially supported are x86, AMD64 and ARM64, though any Little Endian CPU should work.
 - **GPU**: OpenGL 3.0 or higher 
   - Integrated Intel HD iGPUs are supported, however certain drivers are known to cause various graphical artifacts, especially on Windows. Use at your own risk.
   - In case you don't have a GPU available, there are software rendered releases available for Windows and macOS
-- **RAM**: ~150MiB, more is required for more complex analysis
+- **RAM**: ~120MiB, more is required for more complex analysis
 - **Storage**: 150MiB
 
 ## Installing
@@ -366,9 +374,10 @@ To develop plugins for ImHex, use the following template project to get started.
 
 ### Contributors
 
+- [AxCut](https://github.com/paxcut) for a gigantic amount of contributions to the Pattern Text Editor and tons of other parts of ImHex
 - [iTrooz](https://github.com/iTrooz) for getting ImHex onto the Web as well as hundreds of contributions in every part of the project
 - [jumanji144](https://github.com/jumanji144) for huge contributions to the Pattern Language and ImHex's infrastructure
-- [Mary](https://github.com/marysaka) for her immense help porting ImHex to MacOS and help during development
+- [Mary](https://github.com/marysaka) for her immense help porting ImHex to macOS and help during development
 - [Roblabla](https://github.com/Roblabla) for adding MSI Installer support to ImHex
 - [Mailaender](https://github.com/Mailaender) for getting ImHex onto Flathub
 - Everybody else who has reported issues on Discord or GitHub that I had great conversations with :)

@@ -8,6 +8,7 @@
 
 #include <pl/pattern_language.hpp>
 #include <pl/core/errors/error.hpp>
+#include <pl/core/lexer.hpp>
 
 #include <ui/hex_editor.hpp>
 #include <ui/pattern_drawer.hpp>
@@ -18,6 +19,7 @@
 
 #include <TextEditor.h>
 #include <popups/popup_file_chooser.hpp>
+#include <content/text_highlighting/pattern_language.hpp>
 
 namespace pl::ptrn { class Pattern; }
 
@@ -28,24 +30,23 @@ namespace hex::plugin::builtin {
     constexpr static auto consoleView       = "/##console_";
     constexpr static auto variablesView     = "/##env_vars_";
     constexpr static auto settingsView      = "/##settings_";
-    constexpr static auto sectionsView      = "/##sections_table_";
     constexpr static auto virtualFilesView  = "/##Virtual_File_Tree_";
     constexpr static auto debuggerView      = "/##debugger_";
 
     class PatternSourceCode {
     public:
-        const std::string& get(prv::Provider *provider) {
+        const std::string& get(prv::Provider *provider) const {
             if (m_synced)
                 return m_sharedSource;
 
             return m_perProviderSource.get(provider);
         }
 
-        void set(prv::Provider *provider, std::string source) {
-            source = wolv::util::trim(source);
+        std::string& get(prv::Provider *provider) {
+            if (m_synced)
+                return m_sharedSource;
 
-            m_perProviderSource.set(source, provider);
-            m_sharedSource = std::move(source);
+            return m_perProviderSource.get(provider);
         }
 
         bool isSynced() const {
@@ -68,6 +69,30 @@ namespace hex::plugin::builtin {
         ~ViewPatternEditor() override;
 
         void drawAlwaysVisibleContent() override;
+        std::unique_ptr<pl::PatternLanguage> *getPatternLanguage() {
+            return &m_editorRuntime;
+        }
+
+        ui::TextEditor &getTextEditor() {
+            return m_textEditor;
+        }
+
+        bool getChangesWereParsed() const {
+            return m_changesWereParsed;
+        }
+
+        u32  getRunningParsers () const {
+            return m_runningParsers;
+        }
+
+        u32  getRunningEvaluators () const {
+            return m_runningEvaluators;
+        }
+
+        void setChangesWereParsed(bool changesWereParsed) {
+            m_changesWereParsed = changesWereParsed;
+        }
+
         void drawContent() override;
         [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
             return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
@@ -137,7 +162,7 @@ namespace hex::plugin::builtin {
                         }
 
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-                            m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider);
+                            m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider, false);
 
                         ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
@@ -159,7 +184,7 @@ namespace hex::plugin::builtin {
 
                 ImGuiExt::ConfirmButtons("hex.ui.common.yes"_lang, "hex.ui.common.no"_lang,
                     [this, provider] {
-                        m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider);
+                        m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider, false);
                         this->close();
                     },
                     [this] {
@@ -233,10 +258,11 @@ namespace hex::plugin::builtin {
         std::atomic<u32> m_runningEvaluators = 0;
         std::atomic<u32> m_runningParsers    = 0;
 
-        bool m_hasUnevaluatedChanges = false;
+        bool m_changesWereParsed = false;
+        PerProvider<bool> m_hasUnevaluatedChanges;
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
 
-        TextEditor m_textEditor, m_consoleEditor;
+        PerProvider<ui::TextEditor> m_textEditor, m_consoleEditor;
         std::atomic<bool> m_consoleNeedsUpdate = false;
 
         std::atomic<bool> m_dangerousFunctionCalled = false;
@@ -244,9 +270,6 @@ namespace hex::plugin::builtin {
 
         bool m_autoLoadPatterns = true;
 
-        std::map<prv::Provider*, std::function<void()>> m_sectionWindowDrawer;
-
-        ui::HexEditor m_sectionHexEditor;
         PerProvider<ui::VisualizerDrawer> m_visualizerDrawer;
         bool m_tooltipJustOpened = false;
 
@@ -256,18 +279,20 @@ namespace hex::plugin::builtin {
 
         std::mutex m_logMutex;
 
-        PerProvider<TextEditor::Coordinates>  m_cursorPosition;
+        PerProvider<ui::TextEditor::Coordinates>  m_cursorPosition;
 
-        PerProvider<TextEditor::Coordinates> m_consoleCursorPosition;
-        PerProvider<TextEditor::Selection> m_selection;
-        PerProvider<TextEditor::Selection> m_consoleSelection;
-        PerProvider<TextEditor::Breakpoints> m_breakpoints;
+        PerProvider<ui::TextEditor::Coordinates> m_consoleCursorPosition;
+        PerProvider<bool> m_cursorNeedsUpdate;
+        PerProvider<bool> m_consoleCursorNeedsUpdate;
+        PerProvider<ui::TextEditor::Selection> m_selection;
+        PerProvider<ui::TextEditor::Selection> m_consoleSelection;
+        PerProvider<size_t> m_consoleLongestLineLength;
+        PerProvider<ui::TextEditor::Breakpoints> m_breakpoints;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
         PerProvider<const std::vector<pl::core::Evaluator::StackTrace>*> m_callStack;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
-        PerProvider<std::map<u64, pl::api::Section>> m_sections;
 
         PerProvider<std::vector<VirtualFile>> m_virtualFiles;
 
@@ -288,6 +313,10 @@ namespace hex::plugin::builtin {
         bool m_openGotoLinePopUp = false;
         bool m_patternEvaluating = false;
         std::map<std::fs::path, std::string> m_patternNames;
+        PerProvider<wolv::io::ChangeTracker> m_changeTracker;
+        PerProvider<bool> m_ignoreNextChangeEvent;
+        PerProvider<bool> m_changeEventAcknowledgementPending;
+        PerProvider<bool> m_patternFileDirty;
 
         ImRect m_textEditorHoverBox;
         ImRect m_consoleHoverBox;
@@ -304,36 +333,42 @@ namespace hex::plugin::builtin {
         static inline u32 m_replaceHistorySize = 0;
         static inline u32 m_replaceHistoryIndex = 0;
 
+        TextHighlighter m_textHighlighter = TextHighlighter(this,&this->m_editorRuntime);
     private:
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
         void drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables);
-        void drawSectionSelector(ImVec2 size, const std::map<u64, pl::api::Section> &sections);
         void drawVirtualFiles(ImVec2 size, const std::vector<VirtualFile> &virtualFiles) const;
         void drawDebugger(ImVec2 size);
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 
-        void drawTextEditorFindReplacePopup(TextEditor *textEditor);
-        void drawTextEditorGotoLinePopup(TextEditor *textEditor);
+        void drawTextEditorFindReplacePopup(ui::TextEditor *textEditor);
+        void drawTextEditorGotoLinePopup(ui::TextEditor *textEditor);
 
         void historyInsert(std::array<std::string, 256> &history, u32 &size, u32 &index, const std::string &value);
 
-        void loadPatternFile(const std::fs::path &path, prv::Provider *provider);
+        void loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile = false);
+        bool isPatternDirty(prv::Provider *provider) { return m_patternFileDirty.get(provider); }
+        void markPatternFileDirty(prv::Provider *provider) { m_patternFileDirty.get(provider) = true; }
 
         void parsePattern(const std::string &code, prv::Provider *provider);
         void evaluatePattern(const std::string &code, prv::Provider *provider);
 
-        TextEditor *getEditorFromFocusedWindow();
-        void setupFindReplace(TextEditor *editor);
-        void setupGotoLine(TextEditor *editor);
+        ui::TextEditor *getEditorFromFocusedWindow();
+        void setupFindReplace(ui::TextEditor *editor);
+        void setupGotoLine(ui::TextEditor *editor);
 
         void registerEvents();
         void registerMenuItems();
         void registerHandlers();
 
-        std::function<void()> m_importPatternFile = [this] {
+        void handleFileChange(prv::Provider *provider);
+
+        std::function<void(bool)> m_openPatternFile = [this](bool trackFile) {
             auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return;
             const auto basePaths = paths::Patterns.read();
             std::vector<std::fs::path> paths;
 
@@ -347,42 +382,96 @@ namespace hex::plugin::builtin {
                 }
             }
 
+            auto createRuntime = [provider] {
+                auto runtime = std::make_shared<pl::PatternLanguage>();
+                ContentRegistry::PatternLanguage::configureRuntime(*runtime, provider);
+
+                return runtime;
+            };
+
             ui::PopupNamedFileChooser::open(
                 basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
-                [this, provider](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
-                    auto it = m_patternNames.find(path);
-                    if (it != m_patternNames.end()) {
+                [this, runtime = createRuntime()](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
+                    if (auto it = m_patternNames.find(path); it != m_patternNames.end()) {
                         return it->second;
                     }
 
                     const auto fileName = wolv::util::toUTF8String(adjustedPath.filename());
                     m_patternNames[path] = fileName;
 
-                    pl::PatternLanguage runtime;
-                    ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
-                    runtime.addPragma("description", [&](pl::PatternLanguage &, const std::string &value) -> bool {
-                        m_patternNames[path] = hex::format("{} ({})", value, fileName);
-                        return true;
-                    });
-
                     wolv::io::File file(path, wolv::io::File::Mode::Read);
-                    std::ignore = runtime.preprocessString(file.readString(), pl::api::Source::DefaultSource);
+                    pl::api::Source source(file.readString());
+
+                    // Only run the lexer on the source file and manually extract the #pragma description to make this
+                    // process as fast as possible. Running the preprocessor directly takes too much time
+                    auto result = runtime->getInternals().lexer->lex(&source);
+                    if (result.isOk()) {
+                        const auto tokens = result.unwrap();
+                        for (auto it = tokens.begin(); it != tokens.end(); ++it) {
+                            if (it->type == pl::core::Token::Type::Directive && std::get<pl::core::Token::Directive>(it->value) == pl::core::Token::Directive::Pragma) {
+                                ++it;
+                                if (it != tokens.end() && it->type == pl::core::Token::Type::String) {
+                                    auto literal = std::get<pl::core::Token::Literal>(it->value);
+                                    auto string = std::get_if<std::string>(&literal);
+                                    if (string != nullptr && *string == "description") {
+                                        ++it;
+                                        if (it != tokens.end() && it->type == pl::core::Token::Type::String) {
+                                            literal = std::get<pl::core::Token::Literal>(it->value);
+                                            string = std::get_if<std::string>(&literal);
+                                            if (string != nullptr) {
+                                                m_patternNames[path] = fmt::format("{} ({})", *string, fileName);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     return m_patternNames[path];
                 },
-                [this, provider](const std::fs::path &path) {
-                    this->loadPatternFile(path, provider);
+                [this, provider, trackFile](const std::fs::path &path) {
+                    this->loadPatternFile(path, provider, trackFile);
                     AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
                 }
             );
         };
 
-        std::function<void()> m_exportPatternFile = [this] {
+        std::function<void(bool)> m_savePatternFile = [this](bool trackFile) {
+            auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return;
+            auto path = m_changeTracker.get(provider).getPath();
+            wolv::io::File file(path, wolv::io::File::Mode::Write);
+            if (file.isValid() && trackFile) {
+                if (isPatternDirty(provider)) {
+                    file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
+                    m_patternFileDirty.get(provider) = false;
+                }
+                return;
+            }
+            m_savePatternAsFile(trackFile);
+        };
+
+        std::function<void(bool)> m_savePatternAsFile = [this](bool trackFile) {
+            auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return;
             fs::openFileBrowser(
-                    fs::DialogMode::Save, { {"Pattern", "hexpat"} },
-                    [this](const auto &path) {
+                    fs::DialogMode::Save, { {"Pattern File", "hexpat"}, {"Pattern Import File", "pat"} },
+                    [this, provider, trackFile](const auto &path) {
                         wolv::io::File file(path, wolv::io::File::Mode::Create);
-                        file.writeString(wolv::util::trim(m_textEditor.GetText()));
+                        file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
+                        m_patternFileDirty.get(provider) = false;
+                        auto loadedPath = m_changeTracker.get(provider).getPath();
+                        if ((loadedPath.empty() && loadedPath != path) || (!loadedPath.empty() && !trackFile))
+                            m_changeTracker.get(provider).stopTracking();
+
+                        if (trackFile) {
+                            m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
+                            m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
+                            m_ignoreNextChangeEvent.get(provider) = true;
+                        }
                     }
             );
         };

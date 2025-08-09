@@ -192,7 +192,7 @@ namespace hex::plugin::builtin {
                                                 for (auto &pixel : pixels)
                                                     pixel = (pixel & 0xFF00FF00) | ((pixel & 0xFF) << 16) | ((pixel & 0xFF0000) >> 16);
 
-                                                texture = ImGuiExt::Texture::fromBitmap(reinterpret_cast<const u8*>(pixels.data()), pixels.size(), bitmap.bmWidth, bitmap.bmHeight, ImGuiExt::Texture::Filter::Nearest);
+                                                texture = ImGuiExt::Texture::fromBitmap(reinterpret_cast<const u8*>(pixels.data()), pixels.size(), bitmap.bmWidth, bitmap.bmHeight, ImGuiExt::Texture::Filter::Linear);
                                             }
                                         }
                                     }
@@ -262,13 +262,15 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::Image(process->icon, process->icon.getSize());
+
+                    auto height = ImGui::GetTextLineHeight();
+                    ImGui::Image(process->icon, { height, height });
 
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{}", process->id);
 
                     ImGui::TableNextColumn();
-                    if (ImGui::Selectable(process->name.c_str(), m_selectedProcess != nullptr && process->id == m_selectedProcess->id, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, process->icon.getSize().y)))
+                    if (ImGui::Selectable(process->name.c_str(), m_selectedProcess != nullptr && process->id == m_selectedProcess->id, ImGuiSelectableFlags_SpanAllColumns))
                         m_selectedProcess = process;
 
                     ImGui::PopID();
@@ -282,7 +284,7 @@ namespace hex::plugin::builtin {
         return m_selectedProcess != nullptr;
     }
 
-    void ProcessMemoryProvider::drawInterface() {
+    void ProcessMemoryProvider::drawSidebarInterface() {
         ImGuiExt::Header("hex.builtin.provider.process_memory.memory_regions"_lang, true);
 
         auto availableX = ImGui::GetContentRegionAvail().x;
@@ -340,7 +342,7 @@ namespace hex::plugin::builtin {
                             if (loadLibraryW != nullptr) {
                                 if (auto threadHandle = CreateRemoteThread(m_processHandle, nullptr, 0, loadLibraryW, pathAddress, 0, nullptr); threadHandle != nullptr) {
                                     WaitForSingleObject(threadHandle, INFINITE);
-                                    ui::ToastInfo::open(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
+                                    ui::ToastInfo::open(fmt::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
                                     this->reloadProcessModules();
                                     CloseHandle(threadHandle);
                                     return;
@@ -349,7 +351,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    ui::ToastError::open(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
+                    ui::ToastError::open(fmt::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
                 });
             }
         #endif
@@ -392,10 +394,10 @@ namespace hex::plugin::builtin {
                 std::string name;
                 if (memoryInfo.State & MEM_IMAGE)   continue;
                 if (memoryInfo.State & MEM_FREE)    continue;
-                if (memoryInfo.State & MEM_COMMIT)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.commit"_lang);
-                if (memoryInfo.State & MEM_RESERVE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.reserve"_lang);
-                if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
-                if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
+                if (memoryInfo.State & MEM_COMMIT)  name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.commit"_lang);
+                if (memoryInfo.State & MEM_RESERVE) name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.reserve"_lang);
+                if (memoryInfo.State & MEM_PRIVATE) name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
+                if (memoryInfo.State & MEM_MAPPED)  name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
 
                 m_memoryRegions.insert({ { reinterpret_cast<u64>(memoryInfo.BaseAddress), reinterpret_cast<u64>(memoryInfo.BaseAddress) + memoryInfo.RegionSize }, name });
             }
@@ -437,7 +439,7 @@ namespace hex::plugin::builtin {
             }
 
             for (const auto &line : wolv::util::splitString(data, "\n")) {
-                const auto &split = splitString(line, " ");
+                const auto &split = wolv::util::splitString(line, " ");
                 if (split.size() < 5)
                     continue;
 
@@ -446,7 +448,7 @@ namespace hex::plugin::builtin {
 
                 std::string name;
                 if (split.size() > 5)
-                    name = wolv::util::trim(combineStrings(std::vector(split.begin() + 5, split.end()), " "));
+                    name = wolv::util::trim(wolv::util::combineStrings(std::vector(split.begin() + 5, split.end()), " "));
 
                 m_memoryRegions.insert({ { start, end - start }, name });
             }

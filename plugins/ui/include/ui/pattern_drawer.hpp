@@ -8,9 +8,11 @@
 #include <pl/pattern_visitor.hpp>
 
 #include <pl/formatters.hpp>
+#include <pl/patterns/pattern_error.hpp>
 
 #include <set>
-#include <pl/patterns/pattern_error.hpp>
+
+#include <ui/pattern_value_editor.hpp>
 
 struct ImGuiTableSortSpecs;
 
@@ -20,9 +22,12 @@ namespace hex::ui {
     public:
         PatternDrawer() {
             m_formatters = pl::gen::fmt::createFormatters();
+            m_valueEditor = PatternValueEditor([this]() {
+                this->resetEditing();
+            });
         }
 
-        virtual ~PatternDrawer() = default;
+        ~PatternDrawer() override = default;
 
         void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime = nullptr, float height = 0.0F);
 
@@ -111,6 +116,7 @@ namespace hex::ui {
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
         u64 m_editingPatternOffset = 0;
         hex::ui::VisualizerDrawer m_visualizerDrawer;
+        hex::ui::PatternValueEditor m_valueEditor;
 
         TreeStyle m_treeStyle = TreeStyle::Default;
         bool m_rowColoring = false;
@@ -125,8 +131,8 @@ namespace hex::ui {
         std::vector<pl::ptrn::Pattern*> m_filteredPatterns;
 
         std::vector<std::string> m_currPatternPath;
-        std::map<std::vector<std::string>, std::unique_ptr<pl::ptrn::Pattern>> m_favorites;
-        std::map<std::string, std::vector<std::unique_ptr<pl::ptrn::Pattern>>> m_groups;
+        std::map<std::vector<std::string>, std::shared_ptr<pl::ptrn::Pattern>> m_favorites;
+        std::map<std::string, std::vector<std::shared_ptr<pl::ptrn::Pattern>>> m_groups;
         bool m_showFavoriteStars = false;
         bool m_filtersUpdated = false;
         bool m_showSpecName = false;

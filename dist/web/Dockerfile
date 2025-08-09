@@ -1,11 +1,11 @@
-FROM emscripten/emsdk:3.1.51 AS build
+FROM emscripten/emsdk:4.0.8 AS build
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493
 ARG UNIQUEKEY 1
 
 RUN apt update
-RUN apt install -y git ccache autoconf automake libtool cmake pkg-config ninja-build
+RUN apt install -y git ccache autoconf automake libtool pkg-config ninja-build
 
 RUN <<EOF
 # Install vcpkg
@@ -56,11 +56,11 @@ RUN --mount=type=cache,target=/cache \
 set -xe
 ccache -zs
 
-cmake /imhex                                                                                            \
+/vcpkg/downloads/tools/cmake-*/cmake-*/bin/cmake /imhex                                                                                            \
     -G "Ninja"                                                                                          \
     -DIMHEX_OFFLINE_BUILD=ON                                                                            \
     -DIMHEX_STATIC_LINK_PLUGINS=ON                                                                      \
-    -DIMHEX_EXCLUDE_PLUGINS="script_loader"                                                             \
+    -DIMHEX_EXCLUDE_PLUGINS="script_loader;remote"                                                      \
     -DIMHEX_COMPRESS_DEBUG_INFO=OFF                                                                     \
     -DNATIVE_CMAKE_C_COMPILER=gcc                                                                       \
     -DNATIVE_CMAKE_CXX_COMPILER=g++                                                                     \
@@ -69,6 +69,7 @@ cmake /imhex                                                                    
     -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake                                      \
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     -DLIBROMFS_COMPRESS_RESOURCES=OFF                                                                   \
+    -DIMHEX_ENABLE_PLUGIN_TESTS=OFF                                                                     \
     -DCMAKE_BUILD_TYPE=Release
 
 ninja -j $JOBS
@@ -87,7 +88,6 @@ COPY --from=build [             \
     "/build/imhex.wasm",        \
     "/build/imhex.wasm.size",   \
     "/build/imhex.js",          \
-    "/build/imhex.worker.js",   \
                                 \
     # Static files              \
     "/build/index.html",        \

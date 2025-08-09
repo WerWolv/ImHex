@@ -13,6 +13,11 @@
 #include <GLFW/glfw3.h>
 #include <hex/api/events/events_lifecycle.hpp>
 
+#include <wolv/utils/string.hpp>
+
+#include <clocale>
+#include <sstream>
+
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shellapi.h>
@@ -99,9 +104,9 @@ namespace hex {
             return { };
 
         // Remove common hex prefixes and commas
-        string = hex::replaceStrings(string, "0x", "");
-        string = hex::replaceStrings(string, "0X", "");
-        string = hex::replaceStrings(string, ",", "");
+        string = wolv::util::replaceStrings(string, "0x", "");
+        string = wolv::util::replaceStrings(string, "0X", "");
+        string = wolv::util::replaceStrings(string, ",", "");
 
         // Check for non-hex characters
         bool isValidHexString = std::find_if(string.begin(), string.end(), [](char c) {
@@ -156,9 +161,9 @@ namespace hex {
         std::string result;
 
         if (unitIndex == 0)
-            result = hex::format("{0:}", value);
+            result = fmt::format("{0:}", value);
         else
-            result = hex::format("{0:.2f}", value);
+            result = fmt::format("{0:.2f}", value);
 
         switch (unitIndex) {
             case 0:
@@ -195,7 +200,7 @@ namespace hex {
             if (std::isprint(c))
                 result += c;
             else
-                result += hex::format("\\x{0:02X}", u8(c));
+                result += fmt::format("\\x{0:02X}", u8(c));
         }
 
         return result;
@@ -279,45 +284,6 @@ namespace hex {
         }
     }
 
-    std::vector<std::string> splitString(const std::string &string, const std::string &delimiter) {
-        size_t start = 0, end = 0;
-        std::vector<std::string> res;
-
-        while ((end = string.find(delimiter, start)) != std::string::npos) {
-            size_t size = end - start;
-            if (start + size > string.length())
-                break;
-
-            std::string token = string.substr(start, end - start);
-            start = end + delimiter.length();
-            res.push_back(token);
-        }
-
-        res.emplace_back(string.substr(start));
-        return res;
-    }
-
-    std::string combineStrings(const std::vector<std::string> &strings, const std::string &delimiter) {
-        std::string result;
-        for (const auto &string : strings) {
-            result += string;
-            result += delimiter;
-        }
-
-        return result.substr(0, result.length() - delimiter.length());
-    }
-
-    std::string replaceStrings(std::string string, const std::string &search, const std::string &replace) {
-        if (search.empty())
-            return string;
-
-        std::size_t pos;
-        while ((pos = string.find(search)) != std::string::npos)
-            string.replace(pos, search.size(), replace);
-
-        return string;
-    }
-
     std::string toEngineeringString(double value) {
         constexpr static std::array Suffixes = { "a", "f", "p", "n", "u", "m", "", "k", "M", "G", "T", "P", "E" };
 
@@ -339,9 +305,9 @@ namespace hex {
     void startProgram(const std::string &command) {
 
 #if defined(OS_WINDOWS)
-        std::ignore = system(hex::format("start \"\" {0}", command).c_str());
+        std::ignore = system(fmt::format("start \"\" {0}", command).c_str());
 #elif defined(OS_MACOS)
-        std::ignore = system(hex::format("{0}", command).c_str());
+        std::ignore = system(fmt::format("{0}", command).c_str());
 #elif defined(OS_LINUX)
         executeCmd({"xdg-open", command});
 #elif defined(OS_WEB)
@@ -414,7 +380,7 @@ namespace hex {
                         result += "\\v";
                     break;
                     default:
-                        result += hex::format("\\x{:02X}", byte);
+                        result += fmt::format("\\x{:02X}", byte);
                     break;
                 }
             }
@@ -612,43 +578,6 @@ namespace hex {
         return utf8;
     }
 
-    float float16ToFloat32(u16 float16) {
-        u32 sign     = float16 >> 15;
-        u32 exponent = (float16 >> 10) & 0x1F;
-        u32 mantissa = float16 & 0x3FF;
-
-        u32 result = 0x00;
-
-        if (exponent == 0) {
-            if (mantissa == 0) {
-                // +- Zero
-                result = sign << 31;
-            } else {
-                // Subnormal value
-                exponent = 0x7F - 14;
-
-                while ((mantissa & (1 << 10)) == 0) {
-                    exponent--;
-                    mantissa <<= 1;
-                }
-
-                mantissa &= 0x3FF;
-                result = (sign << 31) | (exponent << 23) | (mantissa << 13);
-            }
-        } else if (exponent == 0x1F) {
-            // +-Inf or +-NaN
-            result = (sign << 31) | (0xFF << 23) | (mantissa << 13);
-        } else {
-            // Normal value
-            result = (sign << 31) | ((exponent + (0x7F - 15)) << 23) | (mantissa << 13);
-        }
-
-        float floatResult = 0;
-        std::memcpy(&floatResult, &result, sizeof(float));
-
-        return floatResult;
-    }
-
     bool isProcessElevated() {
 #if defined(OS_WINDOWS)
         bool elevated = false;
@@ -732,7 +661,7 @@ namespace hex {
 
     static std::map<std::fs::path, std::string> s_fonts;
     extern "C" void registerFont(const char *fontName, const char *fontPath) {
-        s_fonts[fontPath] = fontName;
+        s_fonts.emplace(fontPath, fontName);
     }
 
     const std::map<std::fs::path, std::string>& getFonts() {
@@ -756,8 +685,8 @@ namespace hex {
                 u8 byte = *it;
 
                 if ((address % 0x10) == 0) {
-                    result += hex::format(" {}", asciiRow);
-                    result += hex::format("\n{0:08X}  ", address);
+                    result += fmt::format(" {}", asciiRow);
+                    result += fmt::format("\n{0:08X}  ", address);
 
                     asciiRow.clear();
 
@@ -774,7 +703,7 @@ namespace hex {
                     }
                 }
 
-                result += hex::format("{0:02X} ", byte);
+                result += fmt::format("{0:02X} ", byte);
                 asciiRow += std::isprint(byte) ? char(byte) : '.';
                 if ((address % 0x10) == 0x07)
                     result += " ";
@@ -786,7 +715,7 @@ namespace hex {
                 for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
                     result += "   ";
 
-            result += hex::format(" {}", asciiRow);
+            result += fmt::format(" {}", asciiRow);
 
             return result;
         }
@@ -858,11 +787,21 @@ namespace hex {
             return ImAlphaBlendColors(a.value(), b.value());
     }
 
-    extern "C" void macOSCloseButtonPressed() {
-        auto windowHandle = ImHexApi::System::getMainWindowHandle();
+    std::optional<std::chrono::system_clock::time_point> parseTime(std::string_view format, const std::string &timeString) {
+        std::istringstream input(timeString);
+        input.imbue(std::locale(std::setlocale(LC_ALL, nullptr)));
 
-        glfwHideWindow(windowHandle);
-        glfwIconifyWindow(windowHandle);
+        tm time = {};
+        input >> std::get_time(&time, format.data());
+        if (input.fail()) {
+            return std::nullopt;
+        }
+
+        return std::chrono::system_clock::from_time_t(std::mktime(&time));
+    }
+
+    extern "C" void macOSCloseButtonPressed() {
+        EventCloseButtonPressed::post();
     }
 
     extern "C" void macosEventDataReceived(const u8 *data, size_t length) {

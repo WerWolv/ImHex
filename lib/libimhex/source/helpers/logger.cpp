@@ -83,7 +83,8 @@ namespace hex::log {
 
             for (const auto &path : paths::Logs.all()) {
                 wolv::io::fs::createDirectories(path);
-                s_loggerFile = wolv::io::File(path / hex::format("{0:%Y%m%d_%H%M%S}.log", fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))), wolv::io::File::Mode::Create);
+                time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+                s_loggerFile = wolv::io::File(path / fmt::format("{0:%Y%m%d_%H%M%S}.log", *std::localtime(&time)), wolv::io::File::Mode::Create);
                 s_loggerFile.disableBuffering();
 
                 if (s_loggerFile.isValid()) {
@@ -108,39 +109,43 @@ namespace hex::log {
             #endif
         }
 
-
-        std::vector<LogEntry>& getLogEntries() {
-            static std::vector<LogEntry> logEntries;
-            return logEntries;
+        static std::vector<LogEntry> s_logEntries;
+        const std::vector<LogEntry>& getLogEntries() {
+            return s_logEntries;
         }
 
-        void addLogEntry(std::string_view project, std::string_view level, std::string_view message) {
-            getLogEntries().emplace_back(project.data(), level.data(), message.data());
+        void addLogEntry(std::string_view project, std::string_view level, std::string message) {
+            s_logEntries.emplace_back(
+                std::move(project),
+                std::move(level),
+                std::move(message)
+            );
         }
 
 
-        void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level, const char *projectName) {
-            const auto now = fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+        void printPrefix(FILE *dest, fmt::text_style ts, std::string_view level, std::string_view projectName) {
+            const auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            const auto now = *std::localtime(&time);
 
-            fmt::print(dest, "[{0:%H:%M:%S}] ", now);
-
-            if (s_colorOutputEnabled)
-                fmt::print(dest, ts, "{0} ", level);
-            else
-                fmt::print(dest, "{0} ", level);
-
-            std::string projectThreadTag = projectName;
-            if (auto threadName = TaskManager::getCurrentThreadName(); !threadName.empty())
-                projectThreadTag += fmt::format(" | {0}", threadName);
+            auto threadName = TaskManager::getCurrentThreadName();
+            if (threadName.empty()) [[unlikely]] {
+                threadName = "???";
+            }
 
             constexpr static auto MaxTagLength = 25;
-            if (projectThreadTag.length() > MaxTagLength)
-                projectThreadTag.resize(MaxTagLength);
+            const auto totalLength = std::min(static_cast<size_t>(MaxTagLength),
+                                              projectName.length() + (threadName.empty() ? 0 : 3 + threadName.length()));
 
-            fmt::print(dest, "[{0}] ", projectThreadTag);
+            const auto remainingSpace = MaxTagLength - projectName.length() - 3;
 
-            const auto projectNameLength = projectThreadTag.length();
-            fmt::print(dest, "{0}", std::string(projectNameLength > MaxTagLength ? 0 : MaxTagLength - projectNameLength, ' '));
+            fmt::print(dest, "[{0:%H:%M:%S}] {1} [{2} | {3}] {4: <{5}} ",
+                now,
+                s_colorOutputEnabled ? fmt::format(ts, "{}", level) : level,
+                projectName.substr(0, std::min(projectName.length(), static_cast<size_t>(MaxTagLength))),
+                threadName.substr(0, remainingSpace),
+                "",
+                MaxTagLength - totalLength
+            );
         }
 
         void assertionHandler(const char* exprString, const char* file, int line) {

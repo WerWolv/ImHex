@@ -97,6 +97,7 @@ namespace hex::plugin::visualizers {
 
         AutoReset<ImGuiExt::Texture> s_texture;
         std::fs::path s_texturePath;
+        std::string s_errorMessage="";
 
         u32 s_vertexCount;
 
@@ -345,16 +346,16 @@ namespace hex::plugin::visualizers {
         bool validateVector(const std::vector<float> &vector, u32 vertexCount, u32 divisor, const std::string &name, std::string &errorMessage) {
             if (!vector.empty()) {
                 if (vector.size() % divisor != 0) {
-                    errorMessage = hex::format("hex.visualizers.pl_visualizer.3d.error_message_count"_lang, name , std::to_string(divisor));
+                    errorMessage = fmt::format("hex.visualizers.pl_visualizer.3d.error_message_count"_lang, name , std::to_string(divisor));
                     return false;
                 }
             } else {
-                errorMessage = hex::format("hex.visualizers.pl_visualizer.3d.error_message_not_empty"_lang, name);
+                errorMessage = fmt::format("hex.visualizers.pl_visualizer.3d.error_message_not_empty"_lang, name);
                 return false;
             }
             auto vectorCount = vector.size()/divisor;
             if (vectorCount != vertexCount) {
-                errorMessage =  hex::format("hex.visualizers.pl_visualizer.3d.error_message_expected"_lang, std::to_string(vertexCount), std::to_string(vectorCount));
+                errorMessage =  fmt::format("hex.visualizers.pl_visualizer.3d.error_message_expected"_lang, std::to_string(vertexCount), std::to_string(vectorCount));
                 return false;
             }
             return true;
@@ -501,7 +502,7 @@ namespace hex::plugin::visualizers {
                     drawList->AddText(
                         screenPos + scaled({ 5, 5 }),
                         ImGui::GetColorU32(ImGuiCol_Text),
-                        hex::format("X: {:.5}\nY: {:.5}", mousePos.x, mousePos.y).c_str());
+                        fmt::format("X: {:.5}\nY: {:.5}", mousePos.x, mousePos.y).c_str());
                 }
 
             }
@@ -529,7 +530,7 @@ namespace hex::plugin::visualizers {
             // Draw grid toggle
             {
                 ImGui::PushID(2);
-                if (ImGuiExt::DimmedIconToggle(s_isPerspective ? ICON_BI_GRID : ICON_VS_SYMBOL_NUMBER, &s_drawGrid))
+                if (ImGuiExt::DimmedIconToggle(s_isPerspective ? ICON_BI_GRID : ICON_VS_SYMBOL_NUMERIC, &s_drawGrid))
                     s_shouldReset = true;
                 ImGui::PopID();
             }
@@ -602,8 +603,15 @@ namespace hex::plugin::visualizers {
 
             // Draw more settings
             if (ImGui::CollapsingHeader("hex.visualizers.pl_visualizer.3d.more_settings"_lang)) {
-                if (ImGuiExt::InputFilePicker("hex.visualizers.pl_visualizer.3d.texture_file"_lang, s_texturePath, {}))
+                if (ImGuiExt::InputFilePicker("hex.visualizers.pl_visualizer.3d.texture_file"_lang, s_texturePath, {}) ||  ImGui::IsItemDeactivatedAfterEdit())
                     s_shouldUpdateTexture = true;
+            }
+            if (s_errorMessage != "") {
+                auto color = ImGui::GetColorU32(ImVec4(1.0F, 0.0F, 0.0F, 1.0F));
+                ImGui::PushStyleColor(ImGuiCol_Text,color);
+                ImGui::TextUnformatted(s_errorMessage.c_str());
+                ImGui::PopStyleColor();
+                return;
             }
         }
 
@@ -661,7 +669,7 @@ namespace hex::plugin::visualizers {
                             errorMessage += std::to_string(badIndex) + ", ";
                         errorMessage.pop_back();
                         errorMessage.pop_back();
-                        errorMessage += hex::format("hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count"_lang.get(), s_vertexCount);
+                        errorMessage += fmt::format("hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count"_lang, s_vertexCount);
                         throw std::runtime_error(errorMessage);
                     }
                 }
@@ -698,7 +706,7 @@ namespace hex::plugin::visualizers {
                             errorMessage += std::to_string(badIndex) + ", ";
                         errorMessage.pop_back();
                         errorMessage.pop_back();
-                        errorMessage += hex::format("hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count"_lang.get(), s_vertexCount);
+                        errorMessage += fmt::format("hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count"_lang, s_vertexCount);
                         throw std::runtime_error(errorMessage);
                     }
                 }
@@ -798,13 +806,22 @@ namespace hex::plugin::visualizers {
                 shader.setUniform("lightColor",       s_lightColor);
 
                 vertexArray.bind();
-                if (s_shouldUpdateTexture) {
+                if (s_shouldUpdateTexture && !s_texturePath.empty()) {
                     s_shouldUpdateTexture = false;
-                    s_modelTexture = ImGuiExt::Texture::fromImage(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
-                    if (s_modelTexture.isValid()) {
-                        s_drawTexture = true;
-                    }
-                }
+                    AutoReset<ImGuiExt::Texture> tempTexture = ImGuiExt::Texture::fromImage(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
+                    if (tempTexture.isValid()) {
+                        const ImGuiExt::Texture &modelTexture = tempTexture.operator*();
+                        if (modelTexture.isValid()) {
+                            s_modelTexture = std::move(tempTexture.operator*());
+                            s_drawTexture = true;
+                            s_errorMessage = "";
+                        } else
+                            s_errorMessage = "hex.visualizers.pl_visualizer.3d.error_message_invalid_texture_file"_lang.get();
+                    } else
+                        s_errorMessage = "hex.visualizers.pl_visualizer.3d.error_message_invalid_texture_file"_lang.get();
+
+                } else if (s_texturePath.empty())
+                    s_errorMessage = "";
 
                 if (s_drawTexture)
                     glBindTexture(GL_TEXTURE_2D, *s_modelTexture);
@@ -914,16 +931,25 @@ namespace hex::plugin::visualizers {
                 }
             }
         }
-
-        s_texturePath = textureFile;
+        if (!textureFile.empty() && s_texturePath.empty()) {
+            s_texturePath = textureFile;
+            s_shouldUpdateTexture = true;
+        } else if (!s_texturePath.empty())
+            textureFile = s_texturePath.string();
         s_drawTexture = !textureFile.empty();
         if (shouldReset)
             s_shouldReset = true;
         processInputEvents(s_rotation, s_translation, s_scaling, s_nearLimit, s_farLimit);
 
-        auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
+        const auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
         if (iterable != nullptr && iterable->getEntryCount() > 0) {
-            const auto &content = iterable->getEntry(0);
+            auto content = iterable->getEntry(0);
+            while (content->getSize() == 0) {
+                auto children = content->getChildren();
+                if (children.size() == 0)
+                    throw std::runtime_error("hex.visualizers.pl_visualizer.3d.error_message_invalid_index_pattern"_lang.get());
+                content = static_cast<const std::shared_ptr<pl::ptrn::Pattern>>(children.begin()->second);
+            }
             if (content->getSize() == 1) {
                 s_indexType = IndexType::U8;
                 processRendering<u8>(verticesPattern, indicesPattern, normalsPattern, colorsPattern, uvPattern);

@@ -1,32 +1,34 @@
 #include <hex/api/imhex_api.hpp>
 
+#include <fonts/fonts.hpp>
 #include <romfs/romfs.hpp>
-
-#include <hex/helpers/utils.hpp>
-
-#include <fonts/vscode_icons.hpp>
-#include <fonts/blender_icons.hpp>
 
 namespace hex::fonts {
 
-    void registerFonts() {
-        using namespace ImHexApi::Fonts;
+    const ImHexApi::Fonts::Font& Default() {
+        static auto font = ImHexApi::Fonts::Font("hex.fonts.font.default");
+        return font;
+    }
+    const ImHexApi::Fonts::Font& HexEditor()  {
+        static auto font = ImHexApi::Fonts::Font("hex.fonts.font.hex_editor");
+        return font;
+    }
+    const ImHexApi::Fonts::Font& CodeEditor() {
+        static auto font = ImHexApi::Fonts::Font("hex.fonts.font.code_editor");
+        return font;
+    }
 
-        /**
-         *  !!IMPORTANT!!
-         *  Always load the font files in decreasing size of their glyphs. This will make the rasterize be more
-         *  efficient when packing the glyphs into the font atlas and therefor make the atlas much smaller.
-         */
+    void registerUIFonts() {
+        ImHexApi::Fonts::registerFont(Default());
+        ImHexApi::Fonts::registerFont(HexEditor());
+        ImHexApi::Fonts::registerFont(CodeEditor());
+    }
 
-        ImHexApi::Fonts::loadFont("Blender Icons",  romfs::get("fonts/blendericons.ttf").span<u8>(),{ { ICON_MIN_BI, ICON_MAX_BI } }, { -1_scaled, -1_scaled });
-
-        ImHexApi::Fonts::loadFont("VS Codicons", romfs::get("fonts/codicons.ttf").span<u8>(),
-            {
-                { ICON_MIN_VS, ICON_MAX_VS }
-            },
-            { -1_scaled, -1_scaled });
-
-        ImHexApi::Fonts::loadFont("Unifont", romfs::get("fonts/unifont.otf").span<u8>(), { }, {}, 0, 16);
+    void registerMergeFonts() {
+        ImHexApi::Fonts::registerMergeFont("Blender Icons",  romfs::get("fonts/blendericons.ttf").span<u8>(), { -1.0F, -1.0F }, 0.95F);
+        ImHexApi::Fonts::registerMergeFont("VS Codicons",    romfs::get("fonts/codicons.ttf").span<u8>(),     { +0.0F, -2.5F }, 0.95F);
+        ImHexApi::Fonts::registerMergeFont("Tabler Icons",    romfs::get("fonts/tablericons.ttf").span<u8>(), { +2.0F, -1.5F }, 1.00F);
+        ImHexApi::Fonts::registerMergeFont("Unifont",        romfs::get("fonts/unifont.otf").span<u8>(),      { +0.0F, +0.0F }, 0.75F);
     }
 
 }

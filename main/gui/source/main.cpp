@@ -29,8 +29,12 @@ int main(int argc, char **argv) {
 
     std::setlocale(LC_ALL, "en_US.utf8");
 
-    // Set the main thread's name to "Main"
-    TaskManager::setCurrentThreadName("Main");
+    // Tell the Task Manager that we are the main thread
+    TaskManager::setMainThreadId(std::this_thread::get_id());
+
+    // Set the main thread's name. This is the name that will be displayed
+    // in tools like btop
+    TaskManager::setCurrentThreadName("ImHex 🔍");
 
     // Setup crash handlers right away to catch crashes as early as possible
     crash::setupCrashHandlers();

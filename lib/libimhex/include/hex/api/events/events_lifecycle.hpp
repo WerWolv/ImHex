@@ -1,6 +1,9 @@
 #pragma once
 
 #include <hex/api/event_manager.hpp>
+#include <hex/helpers/semantic_version.hpp>
+
+struct ImGuiTestEngine;
 
 /* Lifecycle events definitions */
 namespace hex {
@@ -9,6 +12,13 @@ namespace hex {
      * @brief Called when Imhex finished startup, and will enter the main window rendering loop
      */
     EVENT_DEF(EventImHexStartupFinished);
+
+    /**
+     * @brief Called when the user presses the close button on the main window
+     *
+     * This is currently only used and implemented on macOS
+     */
+    EVENT_DEF(EventCloseButtonPressed);
 
     /**
      * @brief Called when ImHex is closing, to trigger the last shutdown hooks
@@ -74,5 +84,11 @@ namespace hex {
      * @param rawData Raw bytes received from other instance
      */
     EVENT_DEF(EventNativeMessageReceived, std::vector<u8>);
+
+    /**
+     * @brief Called when ImGui is initialized to register tests
+     * @param testEngine Pointer to the ImGui Test Engine Context
+     */
+    EVENT_DEF(EventRegisterImGuiTests, ImGuiTestEngine*);
 
 }

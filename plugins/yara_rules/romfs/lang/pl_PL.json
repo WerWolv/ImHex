@@ -1,0 +1,23 @@
+{
+    "code": "pl-PL",
+    "country": "Polska",
+    "language": "Polski",
+    "fallback": false,
+    "translations": {
+        "hex.yara.information_section.advanced_data_info": "Zaawansowane informacje o danych",
+        "hex.yara.information_section.advanced_data_info.no_information": "Nie znaleziono dalszych informacji",
+        "hex.yara_rules.view.yara.error": "Błąd kompilatora Yara: {0}",
+        "hex.yara_rules.view.yara.header.matches": "Dopasowania",
+        "hex.yara_rules.view.yara.header.rules": "Reguły",
+        "hex.yara_rules.view.yara.match": "Dopasowane reguły",
+        "hex.yara_rules.view.yara.matches.identifier": "Identyfikator",
+        "hex.yara_rules.view.yara.matches.variable": "Zmienna",
+        "hex.yara_rules.view.yara.matching": "Dopasowywanie...",
+        "hex.yara_rules.view.yara.name": "Reguły YARA",
+        "hex.yara_rules.view.yara.no_rules": "Nie znaleziono reguł YARA. Umieść je w folderze 'yara' aplikacji ImHex.",
+        "hex.yara_rules.view.yara.reload": "Przeładuj",
+        "hex.yara_rules.view.yara.reset": "Resetuj",
+        "hex.yara_rules.view.yara.rule_added": "Dodano regułę YARA!",
+        "hex.yara_rules.view.yara.whole_data": "Dopasowano cały plik!"
+    }
+}

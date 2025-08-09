@@ -47,7 +47,7 @@ namespace hex::script::loader {
             if (library == "cimgui") {
                 return getExport<void*>(ImHexApi::System::getLibImHexModuleHandle(), symbolName);
             } else if (library == "ImHex") {
-                return getExport<void*>(hex::getContainingModule((void*)&pInvokeOverride), symbolName);
+                return getExport<void*>(hex::getContainingModule(reinterpret_cast<void*>(&pInvokeOverride)), symbolName);
             }
 
             return nullptr;
@@ -88,7 +88,7 @@ namespace hex::script::loader {
 
             u32 result = get_hostfxr_path_ptr(buffer.data(), &bufferSize, nullptr);
             if (result != 0) {
-                log::error(hex::format("Could not get hostfxr path! 0x{:X}", result));
+                log::error("Could not get hostfxr path! 0x{:X}", result);
                 return false;
             }
 
@@ -137,13 +137,13 @@ namespace hex::script::loader {
                     log::warn("Please install version {} or later of the .NET runtime if you plan to use them. Otherwise this error can be safely ignored.", IMHEX_DOTNET_RUNTIME_VERSION);
                 }
 
-                throw std::runtime_error(hex::format("Command line init failed 0x{:X}", result));
+                throw std::runtime_error(fmt::format("Command line init failed 0x{:X}", result));
             }
 
             #if defined (OS_WINDOWS)
-                hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), utf8ToUtf16(hex::format("{}", (void*)pInvokeOverride)).c_str());
+                hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), utf8ToUtf16(fmt::format("{}", reinterpret_cast<void*>(pInvokeOverride))).c_str());
             #else
-                hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), hex::format("{}", (void*)pInvokeOverride).c_str());
+                hostfxr_set_runtime_property_value(ctx, STRING("PINVOKE_OVERRIDE"), fmt::format("{}", reinterpret_cast<void*>(pInvokeOverride)).c_str());
             #endif
 
             hostfxr_set_error_writer([](const char_t *message) {
@@ -161,7 +161,7 @@ namespace hex::script::loader {
             );
 
             if (result != 0 || loadAssemblyFunction == nullptr) {
-                throw std::runtime_error(hex::format("Failed to get load_assembly_and_get_function_pointer delegate 0x{:X}", result));
+                throw std::runtime_error(fmt::format("Failed to get load_assembly_and_get_function_pointer delegate 0x{:X}", result));
             }
 
             return loadAssemblyFunction;
@@ -204,7 +204,7 @@ namespace hex::script::loader {
             m_runMethod = [entryPoint](const std::string &methodName, bool keepLoaded, const std::fs::path &path) -> int {
                 auto pathString = wolv::util::toUTF8String(path);
 
-                auto string = hex::format("{}||{}||{}", keepLoaded ? "LOAD" : "EXEC", methodName, pathString);
+                auto string = fmt::format("{}||{}||{}", keepLoaded ? "LOAD" : "EXEC", methodName, pathString);
                 auto result = entryPoint(string.data(), string.size());
 
                 return result;
@@ -213,7 +213,7 @@ namespace hex::script::loader {
             m_methodExists = [entryPoint](const std::string &methodName, const std::fs::path &path) -> bool {
                 auto pathString = wolv::util::toUTF8String(path);
 
-                auto string = hex::format("CHECK||{}||{}", methodName, pathString);
+                auto string = fmt::format("CHECK||{}||{}", methodName, pathString);
                 auto result = entryPoint(string.data(), string.size());
 
                 return result == 0;
@@ -266,18 +266,18 @@ namespace hex::script::loader {
                 }
 
                 if (hasMain) {
-                    this->addScript(scriptName, scriptPath, false, [this, scriptPath] {
-                        auto result = m_runMethod("Main", false, scriptPath);
+                    this->addScript(scriptName, scriptPath, false, [this, scriptName, scriptPath] {
+                        const auto result = m_runMethod("Main", false, scriptPath);
                         if (result != 0) {
-                            ui::ToastError::open(hex::format("Script '{}' running failed with code {}", result));
+                            ui::ToastError::open(fmt::format("Script '{}' running failed with code {}", scriptName, result));
                         }
                     });
                 } else if (hasOnLoad) {
                     this->addScript(scriptName, scriptPath, true, [] {});
-                    auto result = m_runMethod("OnLoad", true, scriptPath);
+                    const auto result = m_runMethod("OnLoad", true, scriptPath);
                     if (result != 0) {
                         TaskManager::doLater([=] {
-                            ui::ToastError::open(hex::format("Script '{}' loading failed with code {}", scriptName, result));
+                            ui::ToastError::open(fmt::format("Script '{}' loading failed with code {}", scriptName, result));
                         });
                     }
                 }

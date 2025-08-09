@@ -1,9 +1,9 @@
 //     __ _____ _____ _____
 //  __|  |   __|     |   | |  JSON for Modern C++
-// |  |  |__   |  |  | | | |  version 3.11.3
+// |  |  |__   |  |  | | | |  version 3.12.0
 // |_____|_____|_____|_|___|  https://github.com/nlohmann/json
 //
-// SPDX-FileCopyrightText: 2013-2023 Niels Lohmann <https://nlohmann.me>
+// SPDX-FileCopyrightText: 2013 - 2025 Niels Lohmann <https://nlohmann.me>
 // SPDX-License-Identifier: MIT
 
 #pragma once
@@ -27,6 +27,13 @@
 NLOHMANN_JSON_NAMESPACE_BEGIN
 namespace detail
 {
+
+/// how to encode BJData
+enum class bjdata_version_t
+{
+    draft2,
+    draft3,
+};
 
 ///////////////////
 // binary writer //
@@ -612,7 +619,7 @@ class binary_writer
             case value_t::binary:
             {
                 // step 0: determine if the binary type has a set subtype to
-                // determine whether or not to use the ext or fixext types
+                // determine whether to use the ext or fixext types
                 const bool use_ext = j.m_data.m_value.binary->has_subtype();
 
                 // step 1: write control byte and the byte string length
@@ -735,11 +742,14 @@ class binary_writer
     @param[in] use_type    whether to use '$' prefixes (optimized format)
     @param[in] add_prefix  whether prefixes need to be used for this value
     @param[in] use_bjdata  whether write in BJData format, default is false
+    @param[in] bjdata_version  which BJData version to use, default is draft2
     */
     void write_ubjson(const BasicJsonType& j, const bool use_count,
                       const bool use_type, const bool add_prefix = true,
-                      const bool use_bjdata = false)
+                      const bool use_bjdata = false, const bjdata_version_t bjdata_version = bjdata_version_t::draft2)
     {
+        const bool bjdata_draft3 = use_bjdata && bjdata_version == bjdata_version_t::draft3;
+
         switch (j.type())
         {
             case value_t::null:
@@ -829,7 +839,7 @@ class binary_writer
 
                 for (const auto& el : *j.m_data.m_value.array)
                 {
-                    write_ubjson(el, use_count, use_type, prefix_required, use_bjdata);
+                    write_ubjson(el, use_count, use_type, prefix_required, use_bjdata, bjdata_version);
                 }
 
                 if (!use_count)
@@ -847,11 +857,11 @@ class binary_writer
                     oa->write_character(to_char_type('['));
                 }
 
-                if (use_type && !j.m_data.m_value.binary->empty())
+                if (use_type && (bjdata_draft3 || !j.m_data.m_value.binary->empty()))
                 {
                     JSON_ASSERT(use_count);
                     oa->write_character(to_char_type('$'));
-                    oa->write_character('U');
+                    oa->write_character(bjdata_draft3 ? 'B' : 'U');
                 }
 
                 if (use_count)
@@ -870,7 +880,7 @@ class binary_writer
                 {
                     for (size_t i = 0; i < j.m_data.m_value.binary->size(); ++i)
                     {
-                        oa->write_character(to_char_type('U'));
+                        oa->write_character(to_char_type(bjdata_draft3 ? 'B' : 'U'));
                         oa->write_character(j.m_data.m_value.binary->data()[i]);
                     }
                 }
@@ -887,7 +897,7 @@ class binary_writer
             {
                 if (use_bjdata && j.m_data.m_value.object->size() == 3 && j.m_data.m_value.object->find("_ArrayType_") != j.m_data.m_value.object->end() && j.m_data.m_value.object->find("_ArraySize_") != j.m_data.m_value.object->end() && j.m_data.m_value.object->find("_ArrayData_") != j.m_data.m_value.object->end())
                 {
-                    if (!write_bjdata_ndarray(*j.m_data.m_value.object, use_count, use_type))  // decode bjdata ndarray in the JData format (https://github.com/NeuroJSON/jdata)
+                    if (!write_bjdata_ndarray(*j.m_data.m_value.object, use_count, use_type, bjdata_version))  // decode bjdata ndarray in the JData format (https://github.com/NeuroJSON/jdata)
                     {
                         break;
                     }
@@ -931,7 +941,7 @@ class binary_writer
                     oa->write_characters(
                         reinterpret_cast<const CharType*>(el.first.c_str()),
                         el.first.size());
-                    write_ubjson(el.second, use_count, use_type, prefix_required, use_bjdata);
+                    write_ubjson(el.second, use_count, use_type, prefix_required, use_bjdata, bjdata_version);
                 }
 
                 if (!use_count)
@@ -963,9 +973,9 @@ class binary_writer
         if (JSON_HEDLEY_UNLIKELY(it != BasicJsonType::string_t::npos))
         {
             JSON_THROW(out_of_range::create(409, concat("BSON key cannot contain code point U+0000 (at byte ", std::to_string(it), ")"), &j));
-            static_cast<void>(j);
         }
 
+        static_cast<void>(j);
         return /*id*/ 1ul + name.size() + /*zero-terminator*/1u;
     }
 
@@ -1087,7 +1097,8 @@ class binary_writer
         }
         else
         {
-            JSON_THROW(out_of_range::create(407, concat("integer number ", std::to_string(j.m_data.m_value.number_unsigned), " cannot be represented by BSON as it does not fit int64"), &j));
+            write_bson_entry_header(name, 0x11 /* uint64 */);
+            write_number<std::uint64_t>(static_cast<std::uint64_t>(j.m_data.m_value.number_unsigned), true);
         }
     }
 
@@ -1541,7 +1552,7 @@ class binary_writer
                 {
                     return 'L';
                 }
-                // anything else is treated as high-precision number
+                // anything else is treated as a high-precision number
                 return 'H'; // LCOV_EXCL_LINE
             }
 
@@ -1579,7 +1590,7 @@ class binary_writer
                 {
                     return 'M';
                 }
-                // anything else is treated as high-precision number
+                // anything else is treated as a high-precision number
                 return 'H'; // LCOV_EXCL_LINE
             }
 
@@ -1615,10 +1626,11 @@ class binary_writer
     /*!
     @return false if the object is successfully converted to a bjdata ndarray, true if the type or size is invalid
     */
-    bool write_bjdata_ndarray(const typename BasicJsonType::object_t& value, const bool use_count, const bool use_type)
+    bool write_bjdata_ndarray(const typename BasicJsonType::object_t& value, const bool use_count, const bool use_type, const bjdata_version_t bjdata_version)
     {
         std::map<string_t, CharType> bjdtype = {{"uint8", 'U'},  {"int8", 'i'},  {"uint16", 'u'}, {"int16", 'I'},
-            {"uint32", 'm'}, {"int32", 'l'}, {"uint64", 'M'}, {"int64", 'L'}, {"single", 'd'}, {"double", 'D'}, {"char", 'C'}
+            {"uint32", 'm'}, {"int32", 'l'}, {"uint64", 'M'}, {"int64", 'L'}, {"single", 'd'}, {"double", 'D'},
+            {"char", 'C'}, {"byte", 'B'}
         };
 
         string_t key = "_ArrayType_";
@@ -1648,10 +1660,10 @@ class binary_writer
         oa->write_character('#');
 
         key = "_ArraySize_";
-        write_ubjson(value.at(key), use_count, use_type, true,  true);
+        write_ubjson(value.at(key), use_count, use_type, true,  true, bjdata_version);
 
         key = "_ArrayData_";
-        if (dtype == 'U' || dtype == 'C')
+        if (dtype == 'U' || dtype == 'C' || dtype == 'B')
         {
             for (const auto& el : value.at(key))
             {
@@ -1744,11 +1756,11 @@ class binary_writer
     template<typename NumberType>
     void write_number(const NumberType n, const bool OutputIsLittleEndian = false)
     {
-        // step 1: write number to array of length NumberType
+        // step 1: write the number to an array of length NumberType
         std::array<CharType, sizeof(NumberType)> vec{};
         std::memcpy(vec.data(), &n, sizeof(NumberType));
 
-        // step 2: write array to output (with possible reordering)
+        // step 2: write the array to output (with possible reordering)
         if (is_little_endian != OutputIsLittleEndian)
         {
             // reverse byte order prior to conversion if necessary
@@ -1801,8 +1813,21 @@ class binary_writer
                enable_if_t < std::is_signed<C>::value && std::is_unsigned<char>::value > * = nullptr >
     static CharType to_char_type(std::uint8_t x) noexcept
     {
-        static_assert(sizeof(std::uint8_t) == sizeof(CharType), "size of CharType must be equal to std::uint8_t");
+        // The std::is_trivial trait is deprecated in C++26. The replacement is to use
+        // std::is_trivially_copyable and std::is_trivially_default_constructible.
+        // However, some older library implementations support std::is_trivial
+        // but not all the std::is_trivially_* traits.
+        // Since detecting full support across all libraries is difficult,
+        // we use std::is_trivial unless we are using a standard where it has been deprecated.
+        // For more details, see: https://github.com/nlohmann/json/pull/4775#issuecomment-2884361627
+#ifdef JSON_HAS_CPP_26
+        static_assert(std::is_trivially_copyable<CharType>::value, "CharType must be trivially copyable");
+        static_assert(std::is_trivially_default_constructible<CharType>::value, "CharType must be trivially default constructible");
+#else
         static_assert(std::is_trivial<CharType>::value, "CharType must be trivial");
+#endif
+
+        static_assert(sizeof(std::uint8_t) == sizeof(CharType), "size of CharType must be equal to std::uint8_t");
         CharType result;
         std::memcpy(&result, &x, sizeof(x));
         return result;

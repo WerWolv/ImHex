@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include <condition_variable>
 #include <filesystem>
 #include <memory>
@@ -11,6 +13,7 @@
 #include <jthread.hpp>
 #include <hex/helpers/opengl.hpp>
 
+struct ImGuiTestEngine;
 struct GLFWwindow;
 struct ImGuiSettingsHandler;
 
@@ -37,6 +40,7 @@ namespace hex {
         void beginNativeWindowFrame();
         void endNativeWindowFrame();
         void drawTitleBar();
+        void drawView(const std::string &name, const std::unique_ptr<View> &view);
 
         void frameBegin();
         void frame();
@@ -52,11 +56,10 @@ namespace hex {
 
         void drawImGui();
         void drawWithShader();
-
         void unlockFrameRate();
-        void forceNewFrame();
 
         GLFWwindow *m_window = nullptr;
+        ImGuiTestEngine *m_testEngine = nullptr;
 
         std::string m_windowTitle, m_windowTitleFull;
 
@@ -71,18 +74,9 @@ namespace hex {
 
         u32 m_searchBarPosition = 0;
         bool m_emergencyPopupOpen = false;
-
-        std::jthread m_frameRateThread;
-        std::chrono::duration<double, std::nano> m_remainingUnlockedTime;
-
-        std::mutex m_sleepMutex;
-        std::atomic<bool> m_sleepFlag;
-        std::condition_variable m_sleepCondVar;
-
-        std::mutex m_wakeupMutex;
-        std::atomic<bool> m_wakeupFlag;
-        std::condition_variable m_wakeupCondVar;
-
+        bool m_shouldUnlockFrameRate = false;
+        double m_fpsUnlockedEndTime = 0.0;
+        bool m_waitEventsBlocked = false;
 
         gl::Shader m_postProcessingShader;
     };

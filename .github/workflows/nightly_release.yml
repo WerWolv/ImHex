@@ -1,0 +1,92 @@
+permissions:
+  contents: write
+
+name: Nightly Release
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  nightly-release:
+    runs-on: ubuntu-24.04
+    name: Update Nightly Release
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ImHex
+
+      - name: 📜 Set version variable
+        run: |
+          project_version=`cat ImHex/VERSION`          
+          echo "IMHEX_VERSION=$project_version" >> $GITHUB_ENV
+
+      - name: ⬇️ Download artifacts from latest workflow
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: build.yml
+          branch: ${{ github.event.release.target_commitish }}
+          workflow_conclusion: success
+          skip_unpack: true
+
+      - name: 🗜️ Unzip files when needed
+        run: |
+          set -x
+          for zipfile in ./*.zip
+          do
+              if [ `zipinfo -1 "$zipfile" | wc -l` -eq 1 ];
+              then
+                echo "unzipping $zipfile"
+                unzip "$zipfile"
+                rm "$zipfile"
+              else
+                echo "keeping $zipfile zipped"
+              fi
+          done
+
+      - name: 🟩 Rename artifacts when needed
+        run: |
+          mv "Windows Portable x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-x86_64.zip
+          mv "Windows Portable arm64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-arm64.zip
+          mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip
+          mv "ImHex Web.zip" imhex-${{ env.IMHEX_VERSION }}-Web.zip
+          mv ./*_amd64.snap $(echo ./*_amd64.snap | sed 's/_amd64\.snap$/-x86_64.snap/' | sed 's/_/-/1')
+          mv ./*_arm64.snap $(echo ./*_arm64.snap | sed 's/_arm64\.snap$/-arm64.snap/' | sed 's/_/-/1')
+          rm artifact.tar || true
+
+      - name: 📖 Generate Release Notes
+        id: release_notes
+        continue-on-error: true
+        run: |
+          cd ImHex
+          echo "## Nightly ${GITHUB_SHA::7} Changelog" > changelog.md
+          git fetch --tags --recurse-submodules=no
+          git log tags/nightly..HEAD --oneline --no-merges --pretty=format:'* %s' >> changelog.md
+
+      - name: 📦 Update Pre-Release
+        run: |
+          set -e
+          
+          cd ImHex
+          
+          # Move nightly tag to latest commit
+          git tag -f nightly
+          git push origin nightly --force
+
+          # Auth for GitHub CLI
+          echo "${{ github.token }}" | gh auth login --with-token
+
+          # Delete existing assets
+          for asset in $(gh release view nightly --json assets --jq '.assets[].name'); do
+            gh release delete-asset nightly "$asset" --yes
+          done
+
+          # Update release notes
+          gh release edit nightly --notes-file changelog.md
+
+          # Upload new assets
+          gh release upload nightly ../*.* --clobber
