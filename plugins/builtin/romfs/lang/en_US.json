@@ -436,7 +436,7 @@
         "hex.builtin.provider.file.size": "Size",
         "hex.builtin.provider.file.menu.open_file": "Open file externally",
         "hex.builtin.provider.file.menu.open_folder": "Open containing folder",
-        "hex.builtin.provider.file.too_large": "File is larger than limit set limit, changes will be written directly to the file. Allow write access anyways?",
+        "hex.builtin.provider.file.too_large": "File is larger than the set limit, changes will be written directly to the file. Allow write access anyway?",
         "hex.builtin.provider.file.too_large.allow_write": "Allow write access",
         "hex.builtin.provider.file.reload_changes": "File has been modified by an external source. Do you want to reload it?",
         "hex.builtin.provider.file.reload_changes.reload": "Reload",
