@@ -140,7 +140,7 @@ std::string_view getUpdateArtifactEnding() {
     return "";
 }
 
-int installUpdate(const std::fs::path &updatePath) {
+bool installUpdate(const std::fs::path &updatePath) {
     struct UpdateHandler {
         const char *ending;
         const char *command;
@@ -163,17 +163,14 @@ int installUpdate(const std::fs::path &updatePath) {
             hex::log::info("Starting update process with command: '{}'", command);
             hex::startProgram(command);
 
-            return EXIT_SUCCESS;
+            return true;
         }
     }
 
     // If the installation type isn't handled here, the detected installation type doesn't support updates through the updater
     hex::log::error("Install type cannot be updated");
 
-    // Open the latest release page in the default browser to allow the user to manually update
-    hex::openWebpage("https://github.com/WerWolv/ImHex/releases/latest");
-
-    return EXIT_FAILURE;
+    return false;
 }
 
 int main(int argc, char **argv) {
@@ -193,12 +190,19 @@ int main(int argc, char **argv) {
 
     // Convert the version type string to the enum value
     hex::ImHexApi::System::UpdateType updateType;
+    std::string releaseUrl;
     if (versionTypeString == "stable") {
         updateType = hex::ImHexApi::System::UpdateType::Stable;
+        releaseUrl = "https://github.com/WerWolv/ImHex/releases/latest";
     } else if (versionTypeString == "nightly") {
         updateType = hex::ImHexApi::System::UpdateType::Nightly;
+        releaseUrl = "https://github.com/WerWolv/ImHex/releases/tag/nightly";
     } else {
         hex::log::error("Invalid version type: {}", versionTypeString);
+
+        // Wait for user input before exiting so logs can be read
+        std::getchar();
+
         return EXIT_FAILURE;
     }
 
@@ -206,6 +210,10 @@ int main(int argc, char **argv) {
     const auto artifactEnding = getUpdateArtifactEnding();
     if (artifactEnding.empty()) {
         hex::log::error("Updater artifact ending is empty");
+
+        // Wait for user input before exiting so logs can be read
+        std::getchar();
+
         return EXIT_FAILURE;
     }
 
@@ -217,14 +225,7 @@ int main(int argc, char **argv) {
         hex::log::warn("Failed to get update artifact URL for ending: {}", artifactEnding);
         hex::log::info("Opening release page in browser to allow manual update");
 
-        switch (updateType) {
-            case hex::ImHexApi::System::UpdateType::Stable:
-                hex::openWebpage("https://github.com/WerWolv/ImHex/releases/latest");
-                break;
-            case hex::ImHexApi::System::UpdateType::Nightly:
-                hex::openWebpage("https://github.com/WerWolv/ImHex/releases/tag/nightly");
-                break;
-        }
+        hex::openWebpage(releaseUrl);
 
         return EXIT_FAILURE;
     }
@@ -233,5 +234,15 @@ int main(int argc, char **argv) {
     const auto updatePath = downloadUpdate(updateArtifactUrl);
 
     // Install the update
-    return installUpdate(*updatePath);
+    if (installUpdate(*updatePath)) {
+        // Open the latest release page in the default browser to allow the user to manually update
+        hex::openWebpage(releaseUrl);
+
+        // Wait for user input before exiting so logs can be read
+        std::getchar();
+
+        return EXIT_FAILURE;
+    } else {
+        return EXIT_SUCCESS;
+    }
 }
