@@ -46,7 +46,7 @@ namespace hex {
                             try {
                                 callback(getSetting(category, name, {}));
                             } catch (const std::exception &e) {
-                                log::error("Failed to load setting [{}/{}]: {}", category, name, e.what());
+                                log::error("Failed to load setting [{} / {}]: {}", category, name, e.what());
                             }
                         }
                     }
@@ -216,12 +216,13 @@ namespace hex {
                 entry->widget = std::move(widget);
                 if (entry->widget != nullptr) {
                     onChange(unlocalizedCategory, unlocalizedName, [widget = entry->widget.get(), unlocalizedCategory, unlocalizedName](const SettingsValue &) {
+                        auto defaultValue = widget->store();
                         try {
-                            auto defaultValue = widget->store();
                             widget->load(ContentRegistry::Settings::impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue));
                             widget->onChanged();
                         } catch (const std::exception &e) {
                             log::error("Failed to load setting [{} / {}]: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+                            ContentRegistry::Settings::impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue) = defaultValue;
                         }
                     });
 
