@@ -883,7 +883,7 @@ namespace hex {
         }
 
         SemanticVersion getImHexVersion() {
-            #if defined IMHEX_VERSION
+            #if defined(IMHEX_VERSION)
                 static auto version = SemanticVersion(IMHEX_VERSION);
                 return version;
             #else
@@ -892,7 +892,7 @@ namespace hex {
         }
 
         std::string getCommitHash(bool longHash) {
-            #if defined GIT_COMMIT_HASH_LONG
+            #if defined(GIT_COMMIT_HASH_LONG)
                 if (longHash) {
                     return GIT_COMMIT_HASH_LONG;
                 } else {
@@ -905,10 +905,18 @@ namespace hex {
         }
 
         std::string getCommitBranch() {
-            #if defined GIT_BRANCH
+            #if defined(GIT_BRANCH)
                 return GIT_BRANCH;
             #else
                 return "Unknown";
+            #endif
+        }
+
+        std::optional<std::chrono::system_clock::time_point> getBuildTime() {
+            #if defined(IMHEX_BUILD_DATE)
+                return hex::parseTime("%Y-%m-%dT%H:%M:%SZ", IMHEX_BUILD_DATE);
+            #else
+                return std::nullopt;
             #endif
         }
 

@@ -51,11 +51,16 @@ namespace hex::plugin::builtin {
                     }
 
                     // Check if the response is valid
-                    if (!releases.contains("published_at") || !releases["published_at"].is_string())
+                    if (!releases.contains("assets") || !releases["assets"].is_array())
                         return;
 
-                    const auto nightlyUpdateTime = hex::parseTime("%FT%TZ", releases["published_at"].get<std::string>());
-                    if (nightlyUpdateTime.has_value() && *nightlyUpdateTime > std::chrono::system_clock::now()) {
+                    const auto firstAsset = releases["assets"].front();
+                    if (!firstAsset.is_object() || !firstAsset.contains("updated_at"))
+                        return;
+
+                    const auto nightlyUpdateTime = hex::parseTime("%Y-%m-%dT%H:%M:%SZ", firstAsset["updated_at"].get<std::string>());
+                    const auto imhexBuildTime = ImHexApi::System::getBuildTime();
+                    if (nightlyUpdateTime.has_value() && imhexBuildTime.has_value() && *nightlyUpdateTime > *imhexBuildTime) {
                         updateString = "Nightly";
                     }
                 } else {
