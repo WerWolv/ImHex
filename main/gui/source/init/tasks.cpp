@@ -228,6 +228,9 @@ namespace hex::init {
 
         // Remove all old update files
         for (const auto &path : paths::Updates.all()) {
+            if (!wolv::io::fs::exists(path))
+                continue;
+
             for (const auto &entry : std::filesystem::directory_iterator(path)) {
                 wolv::io::fs::removeAll(entry.path());
             }
