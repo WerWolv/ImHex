@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
                 }
             }
             ImGui::EndDisabled();
-            ImGui::BeginDisabled(splitterTask.isRunning() || selectedItem != sizes.size() - 1);
+            ImGui::BeginDisabled(splitterTask.isRunning() || selectedItem != (i64(sizes.size()) - 1));
             {
                 ImGui::InputScalar("###custom_size", ImGuiDataType_U64, &splitSize);
                 ImGui::SameLine();
@@ -118,12 +118,12 @@ namespace hex::plugin::builtin {
                             task.update(offset);
 
                             std::fs::path path = baseOutputPath;
-                            path += hex::format(".{:05}", index);
+                            path += fmt::format(".{:05}", index);
 
                             wolv::io::File partFile(path, wolv::io::File::Mode::Create);
 
                             if (!partFile.isValid()) {
-                                ui::ToastError::open(hex::format("hex.builtin.tools.file_tools.splitter.picker.error.create"_lang, index));
+                                ui::ToastError::open(fmt::format("hex.builtin.tools.file_tools.splitter.picker.error.create"_lang, index));
                                 return;
                             }
 

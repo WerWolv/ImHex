@@ -29,8 +29,9 @@
     do {                                                               \
         auto ret = (x);                                                \
         if (!ret) {                                                    \
-            hex::log::error("Test assert '" #x "' failed {} at {}:{}", \
-                hex::format("" __VA_ARGS__),                           \
+            hex::log::error("Test assert '{}' failed {} at {}:{}",     \
+                #x,                                                    \
+                fmt::format("" __VA_ARGS__),                           \
                 __FILE__,                                              \
                 __LINE__);                                             \
             return EXIT_FAILURE;                                       \

@@ -1,5 +1,5 @@
 //--------------------------------------------------
-// ImPlot3D v0.1
+// ImPlot3D v0.3 WIP
 // implot3d_demo.cpp
 // Date: 2024-11-17
 // Author: Breno Cunha Queiroz (brenocq.com)
@@ -46,6 +46,8 @@ namespace ImPlot3D {
 //-----------------------------------------------------------------------------
 // [SECTION] Helpers
 //-----------------------------------------------------------------------------
+
+#define CHECKBOX_FLAG(flags, flag) ImGui::CheckboxFlags(#flag, (unsigned int*)&flags, flag)
 
 static void HelpMarker(const char* desc) {
     ImGui::TextDisabled("(?)");
@@ -196,6 +198,12 @@ void DemoTrianglePlots() {
 
     // Now we have 18 vertices in xs, ys, zs forming the pyramid
 
+    // Triangle flags
+    static ImPlot3DTriangleFlags flags = ImPlot3DTriangleFlags_None;
+    CHECKBOX_FLAG(flags, ImPlot3DTriangleFlags_NoLines);
+    CHECKBOX_FLAG(flags, ImPlot3DTriangleFlags_NoFill);
+    CHECKBOX_FLAG(flags, ImPlot3DTriangleFlags_NoMarkers);
+
     if (ImPlot3D::BeginPlot("Triangle Plots")) {
         ImPlot3D::SetupAxesLimits(-1, 1, -1, 1, -0.5, 1.5);
 
@@ -205,7 +213,7 @@ void DemoTrianglePlots() {
         ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, 3, ImPlot3D::GetColormapColor(2), IMPLOT3D_AUTO, ImPlot3D::GetColormapColor(2));
 
         // Plot pyramid
-        ImPlot3D::PlotTriangle("Pyramid", xs, ys, zs, 6 * 3); // 6 triangles, 3 vertices each = 18
+        ImPlot3D::PlotTriangle("Pyramid", xs, ys, zs, 6 * 3, flags); // 6 triangles, 3 vertices each = 18
         ImPlot3D::EndPlot();
     }
 }
@@ -254,6 +262,12 @@ void DemoQuadPlots() {
     xs[23] = -1; ys[23] =  1; zs[23] = -1;
     // clang-format on
 
+    // Quad flags
+    static ImPlot3DQuadFlags flags = ImPlot3DQuadFlags_None;
+    CHECKBOX_FLAG(flags, ImPlot3DQuadFlags_NoLines);
+    CHECKBOX_FLAG(flags, ImPlot3DQuadFlags_NoFill);
+    CHECKBOX_FLAG(flags, ImPlot3DQuadFlags_NoMarkers);
+
     if (ImPlot3D::BeginPlot("Quad Plots")) {
         ImPlot3D::SetupAxesLimits(-1.5f, 1.5f, -1.5f, 1.5f, -1.5f, 1.5f);
 
@@ -262,21 +276,21 @@ void DemoQuadPlots() {
         ImPlot3D::SetNextFillStyle(colorX);
         ImPlot3D::SetNextLineStyle(colorX, 2);
         ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, 3, colorX, IMPLOT3D_AUTO, colorX);
-        ImPlot3D::PlotQuad("X", &xs[0], &ys[0], &zs[0], 8);
+        ImPlot3D::PlotQuad("X", &xs[0], &ys[0], &zs[0], 8, flags);
 
         // Render +y and -y faces
         static ImVec4 colorY(0.2f, 0.8f, 0.2f, 0.8f); // Green
         ImPlot3D::SetNextFillStyle(colorY);
         ImPlot3D::SetNextLineStyle(colorY, 2);
         ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, 3, colorY, IMPLOT3D_AUTO, colorY);
-        ImPlot3D::PlotQuad("Y", &xs[8], &ys[8], &zs[8], 8);
+        ImPlot3D::PlotQuad("Y", &xs[8], &ys[8], &zs[8], 8, flags);
 
         // Render +z and -z faces
         static ImVec4 colorZ(0.2f, 0.2f, 0.8f, 0.8f); // Blue
         ImPlot3D::SetNextFillStyle(colorZ);
         ImPlot3D::SetNextLineStyle(colorZ, 2);
         ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, 3, colorZ, IMPLOT3D_AUTO, colorZ);
-        ImPlot3D::PlotQuad("Z", &xs[16], &ys[16], &zs[16], 8);
+        ImPlot3D::PlotQuad("Z", &xs[16], &ys[16], &zs[16], 8, flags);
 
         ImPlot3D::EndPlot();
     }
@@ -307,8 +321,7 @@ void DemoSurfacePlots() {
     ImGui::Text("Fill color");
     static int selected_fill = 1; // Colormap by default
     static ImVec4 solid_color = ImVec4(0.8f, 0.8f, 0.2f, 0.6f);
-    const char* colormaps[] = {"Viridis", "Plasma", "Hot", "Cool", "Pink", "Jet",
-                               "Twilight", "RdBu", "BrBG", "PiYG", "Spectral", "Greys"};
+    const char* colormaps[] = {"Viridis", "Plasma", "Hot", "Cool", "Pink", "Jet", "Twilight", "RdBu", "BrBG", "PiYG", "Spectral", "Greys"};
     static int sel_colormap = 5; // Jet by default
     {
         ImGui::Indent();
@@ -347,22 +360,34 @@ void DemoSurfacePlots() {
         ImGui::Unindent();
     }
 
+    // Select flags
+    static ImPlot3DSurfaceFlags flags = ImPlot3DSurfaceFlags_NoMarkers;
+    CHECKBOX_FLAG(flags, ImPlot3DSurfaceFlags_NoLines);
+    CHECKBOX_FLAG(flags, ImPlot3DSurfaceFlags_NoFill);
+    CHECKBOX_FLAG(flags, ImPlot3DSurfaceFlags_NoMarkers);
+
     // Begin the plot
     if (selected_fill == 1)
         ImPlot3D::PushColormap(colormaps[sel_colormap]);
     if (ImPlot3D::BeginPlot("Surface Plots", ImVec2(-1, 400), ImPlot3DFlags_NoClip)) {
-        // Set styles
         ImPlot3D::SetupAxesLimits(-1, 1, -1, 1, -1.5, 1.5);
+
+        // Set fill style
         ImPlot3D::PushStyleVar(ImPlot3DStyleVar_FillAlpha, 0.8f);
         if (selected_fill == 0)
             ImPlot3D::SetNextFillStyle(solid_color);
+
+        // Set line style
         ImPlot3D::SetNextLineStyle(ImPlot3D::GetColormapColor(1));
+
+        // Set marker style
+        ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, IMPLOT3D_AUTO, ImPlot3D::GetColormapColor(2));
 
         // Plot the surface
         if (custom_range)
-            ImPlot3D::PlotSurface("Wave Surface", xs, ys, zs, N, N, (double)range_min, (double)range_max);
+            ImPlot3D::PlotSurface("Wave Surface", xs, ys, zs, N, N, (double)range_min, (double)range_max, flags);
         else
-            ImPlot3D::PlotSurface("Wave Surface", xs, ys, zs, N, N);
+            ImPlot3D::PlotSurface("Wave Surface", xs, ys, zs, N, N, 0.0, 0.0, flags);
 
         // End the plot
         ImPlot3D::PopStyleVar();
@@ -376,55 +401,112 @@ void DemoMeshPlots() {
     static int mesh_id = 0;
     ImGui::Combo("Mesh", &mesh_id, "Duck\0Sphere\0Cube\0\0");
 
-    // Choose fill color
-    static bool set_fill_color = true;
-    static ImVec4 fill_color = ImVec4(0.8f, 0.8f, 0.2f, 0.6f);
-    ImGui::Checkbox("Fill Color", &set_fill_color);
-    if (set_fill_color) {
-        ImGui::SameLine();
-        ImGui::ColorEdit4("##MeshFillColor", (float*)&fill_color);
-    }
-
     // Choose line color
-    static bool set_line_color = true;
-    static ImVec4 line_color = ImVec4(0.2f, 0.2f, 0.2f, 0.8f);
-    ImGui::Checkbox("Line Color", &set_line_color);
-    if (set_line_color) {
-        ImGui::SameLine();
-        ImGui::ColorEdit4("##MeshLineColor", (float*)&line_color);
-    }
+    static ImVec4 line_color = ImVec4(0.5f, 0.5f, 0.2f, 0.6f);
+    ImGui::ColorEdit4("Line Color##Mesh", (float*)&line_color);
+
+    // Choose fill color
+    static ImVec4 fill_color = ImVec4(0.8f, 0.8f, 0.2f, 0.6f);
+    ImGui::ColorEdit4("Fill Color##Mesh", (float*)&fill_color);
 
     // Choose marker color
-    static bool set_marker_color = false;
-    static ImVec4 marker_color = ImVec4(0.2f, 0.2f, 0.2f, 0.8f);
-    ImGui::Checkbox("Marker Color", &set_marker_color);
-    if (set_marker_color) {
-        ImGui::SameLine();
-        ImGui::ColorEdit4("##MeshMarkerColor", (float*)&marker_color);
-    }
+    static ImVec4 marker_color = ImVec4(0.5f, 0.5f, 0.2f, 0.6f);
+    ImGui::ColorEdit4("Marker Color##Mesh", (float*)&marker_color);
+
+    // Mesh flags
+    static ImPlot3DMeshFlags flags = ImPlot3DMeshFlags_NoMarkers;
+    CHECKBOX_FLAG(flags, ImPlot3DMeshFlags_NoLines);
+    CHECKBOX_FLAG(flags, ImPlot3DMeshFlags_NoFill);
+    CHECKBOX_FLAG(flags, ImPlot3DMeshFlags_NoMarkers);
 
     if (ImPlot3D::BeginPlot("Mesh Plots")) {
         ImPlot3D::SetupAxesLimits(-1, 1, -1, 1, -1, 1);
 
-        // Set colors
-        if (set_fill_color)
-            ImPlot3D::SetNextFillStyle(fill_color);
-        else {
-            // If not set as transparent, the fill color will be determined by the colormap
-            ImPlot3D::SetNextFillStyle(ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-        }
-        if (set_line_color)
-            ImPlot3D::SetNextLineStyle(line_color);
-        if (set_marker_color)
-            ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, 3, marker_color, IMPLOT3D_AUTO, marker_color);
+        // Set fill style
+        ImPlot3D::SetNextFillStyle(fill_color);
+
+        // Set line style
+        ImPlot3D::SetNextLineStyle(line_color);
+
+        // Set marker style
+        ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, 3, marker_color, IMPLOT3D_AUTO, marker_color);
 
         // Plot mesh
         if (mesh_id == 0)
-            ImPlot3D::PlotMesh("Duck", duck_vtx, duck_idx, DUCK_VTX_COUNT, DUCK_IDX_COUNT);
+            ImPlot3D::PlotMesh("Duck", duck_vtx, duck_idx, DUCK_VTX_COUNT, DUCK_IDX_COUNT, flags);
         else if (mesh_id == 1)
-            ImPlot3D::PlotMesh("Sphere", sphere_vtx, sphere_idx, SPHERE_VTX_COUNT, SPHERE_IDX_COUNT);
+            ImPlot3D::PlotMesh("Sphere", sphere_vtx, sphere_idx, SPHERE_VTX_COUNT, SPHERE_IDX_COUNT, flags);
         else if (mesh_id == 2)
-            ImPlot3D::PlotMesh("Cube", cube_vtx, cube_idx, CUBE_VTX_COUNT, CUBE_IDX_COUNT);
+            ImPlot3D::PlotMesh("Cube", cube_vtx, cube_idx, CUBE_VTX_COUNT, CUBE_IDX_COUNT, flags);
+
+        ImPlot3D::EndPlot();
+    }
+}
+
+void DemoImagePlots() {
+    ImGui::BulletText("Below we are displaying the font texture, which is the only texture we have\naccess to in this demo.");
+    ImGui::BulletText("Use the 'ImTextureID' type as storage to pass pointers or identifiers to your\nown texture data.");
+    ImGui::BulletText("See ImGui Wiki page 'Image Loading and Displaying Examples'.");
+
+    static ImVec4 tint1(1, 1, 1, 1);
+    static ImVec4 tint2(1, 1, 1, 1);
+
+    static ImPlot3DPoint center1(0, 0, 1);
+    static ImPlot3DPoint axis_u1(1, 0, 0);
+    static ImPlot3DPoint axis_v1(0, 1, 0);
+    static ImVec2 uv0_1(0, 0), uv1_1(1, 1);
+
+    static ImPlot3DPoint p0(-1, -1, 0);
+    static ImPlot3DPoint p1(1, -1, 0);
+    static ImPlot3DPoint p2(1, 1, 0);
+    static ImPlot3DPoint p3(-1, 1, 0);
+    static ImVec2 uv0(0, 0), uv1(1, 0), uv2(1, 1), uv3(0, 1);
+
+    // Spacing
+    ImGui::Dummy(ImVec2(0, 10));
+
+    // Image 1 Controls
+    if (ImGui::TreeNodeEx("Image 1 Controls: Center + Axes")) {
+        ImGui::SliderFloat3("Center", &center1.x, -2, 2, "%.1f");
+        ImGui::SliderFloat3("Axis U", &axis_u1.x, -2, 2, "%.1f");
+        ImGui::SliderFloat3("Axis V", &axis_v1.x, -2, 2, "%.1f");
+        ImGui::SliderFloat2("UV0", &uv0_1.x, 0, 1, "%.2f");
+        ImGui::SliderFloat2("UV1", &uv1_1.x, 0, 1, "%.2f");
+        ImGui::ColorEdit4("Tint", &tint1.x);
+
+        ImGui::TreePop();
+    }
+
+    // Image 2 Controls
+    if (ImGui::TreeNodeEx("Image 2 Controls: Full Quad")) {
+        ImGui::SliderFloat3("P0", &p0.x, -2, 2, "%.1f");
+        ImGui::SliderFloat3("P1", &p1.x, -2, 2, "%.1f");
+        ImGui::SliderFloat3("P2", &p2.x, -2, 2, "%.1f");
+        ImGui::SliderFloat3("P3", &p3.x, -2, 2, "%.1f");
+
+        ImGui::SliderFloat2("UV0", &uv0.x, 0, 1, "%.2f");
+        ImGui::SliderFloat2("UV1", &uv1.x, 0, 1, "%.2f");
+        ImGui::SliderFloat2("UV2", &uv2.x, 0, 1, "%.2f");
+        ImGui::SliderFloat2("UV3", &uv3.x, 0, 1, "%.2f");
+
+        ImGui::ColorEdit4("Tint##2", &tint2.x);
+
+        ImGui::TreePop();
+    }
+
+    // Plot
+    if (ImPlot3D::BeginPlot("Image Plot", ImVec2(-1, 0), ImPlot3DFlags_NoClip)) {
+#ifdef IMGUI_HAS_TEXTURES
+        // We use the font atlas ImTextureRef for this demo, but in your real code when you submit
+        // an image that you have loaded yourself, you would normally have a ImTextureID which works
+        // just as well (as ImTextureRef can be constructed from ImTextureID).
+        ImTextureRef tex = ImGui::GetIO().Fonts->TexRef;
+#else
+        ImTextureID tex = ImGui::GetIO().Fonts->TexID;
+#endif
+
+        ImPlot3D::PlotImage("Image 1", tex, center1, axis_u1, axis_v1, uv0_1, uv1_1, tint1);
+        ImPlot3D::PlotImage("Image 2", tex, p0, p1, p2, p3, uv0, uv1, uv2, uv3, tint2);
 
         ImPlot3D::EndPlot();
     }
@@ -470,7 +552,8 @@ void DemoMarkersAndText() {
 
     if (ImPlot3D::BeginPlot("##MarkerStyles", ImVec2(-1, 0), ImPlot3DFlags_CanvasOnly)) {
 
-        ImPlot3D::SetupAxes(nullptr, nullptr, nullptr, ImPlot3DAxisFlags_NoDecorations, ImPlot3DAxisFlags_NoDecorations, ImPlot3DAxisFlags_NoDecorations);
+        ImPlot3D::SetupAxes(nullptr, nullptr, nullptr, ImPlot3DAxisFlags_NoDecorations, ImPlot3DAxisFlags_NoDecorations,
+                            ImPlot3DAxisFlags_NoDecorations);
         ImPlot3D::SetupAxesLimits(-0.5, 1.5, -0.5, 1.5, 0, ImPlot3DMarker_COUNT + 1);
 
         float xs[2] = {0, 0};
@@ -565,8 +648,54 @@ void DemoBoxScale() {
     }
 }
 
+void DemoBoxRotation() {
+    float origin[2] = {0.0f, 0.0f};
+    float axis[2] = {0.0f, 1.0f};
+
+    // Sliders for rotation angles
+    static float elevation = 45.0f;
+    static float azimuth = -135.0f;
+    static bool animate = false;
+    ImGui::Text("Rotation");
+    bool changed = false;
+    if (ImGui::SliderFloat("Elevation", &elevation, -90.0f, 90.0f, "%.1f degrees"))
+        changed = true;
+    if (ImGui::SliderFloat("Azimuth", &azimuth, -180.0f, 180.0f, "%.1f degrees"))
+        changed = true;
+    ImGui::Checkbox("Animate", &animate);
+
+    ImGui::Text("Initial Rotation");
+    ImGui::SameLine();
+    HelpMarker("The rotation will be reset to the initial rotation when you double right-click");
+    static float init_elevation = 45.0f;
+    static float init_azimuth = -135.0f;
+    ImGui::SliderFloat("Initial Elevation", &init_elevation, -90.0f, 90.0f, "%.1f degrees");
+    ImGui::SliderFloat("Initial Azimuth", &init_azimuth, -180.0f, 180.0f, "%.1f degrees");
+
+    if (ImPlot3D::BeginPlot("##BoxRotation")) {
+        ImPlot3D::SetupAxesLimits(-1, 1, -1, 1, -1, 1, ImPlot3DCond_Always);
+
+        // Set initial rotation
+        ImPlot3D::SetupBoxInitialRotation(init_elevation, init_azimuth);
+
+        // Set the rotation using the specified elevation and azimuth
+        if (changed)
+            ImPlot3D::SetupBoxRotation(elevation, azimuth, animate, ImPlot3DCond_Always);
+
+        // Plot axis lines
+        ImPlot3D::SetNextLineStyle(ImVec4(0.8f, 0.2f, 0.2f, 1));
+        ImPlot3D::PlotLine("X-Axis", axis, origin, origin, 2);
+        ImPlot3D::SetNextLineStyle(ImVec4(0.2f, 0.8f, 0.2f, 1));
+        ImPlot3D::PlotLine("Y-Axis", origin, axis, origin, 2);
+        ImPlot3D::SetNextLineStyle(ImVec4(0.2f, 0.2f, 0.8f, 1));
+        ImPlot3D::PlotLine("Z-Axis", origin, origin, axis, 2);
+
+        ImPlot3D::EndPlot();
+    }
+}
+
 void DemoTickLabels() {
-    static bool custom_ticks = false;
+    static bool custom_ticks = true;
     static bool custom_labels = true;
     ImGui::Checkbox("Show Custom Ticks", &custom_ticks);
     if (custom_ticks) {
@@ -584,6 +713,26 @@ void DemoTickLabels() {
             ImPlot3D::SetupAxisTicks(ImAxis3D_Y, letters_ticks, 6, custom_labels ? letters_labels : nullptr, false);
             ImPlot3D::SetupAxisTicks(ImAxis3D_Z, 0, 1, 6, custom_labels ? letters_labels : nullptr, false);
         }
+        ImPlot3D::EndPlot();
+    }
+}
+
+void DemoAxisConstraints() {
+    static float limit_constraints[2] = {-10, 10};
+    static float zoom_constraints[2] = {1, 20};
+    static ImPlot3DAxisFlags flags;
+    ImGui::DragFloat2("Limits Constraints", limit_constraints, 0.01f);
+    ImGui::DragFloat2("Zoom Constraints", zoom_constraints, 0.01f);
+    CHECKBOX_FLAG(flags, ImPlot3DAxisFlags_PanStretch);
+    if (ImPlot3D::BeginPlot("##AxisConstraints", ImVec2(-1, 0))) {
+        ImPlot3D::SetupAxes("X", "Y", "Z", flags, flags, flags);
+        ImPlot3D::SetupAxesLimits(-1, 1, -1, 1, -1, 1);
+        ImPlot3D::SetupAxisLimitsConstraints(ImAxis3D_X, limit_constraints[0], limit_constraints[1]);
+        ImPlot3D::SetupAxisLimitsConstraints(ImAxis3D_Y, limit_constraints[0], limit_constraints[1]);
+        ImPlot3D::SetupAxisLimitsConstraints(ImAxis3D_Z, limit_constraints[0], limit_constraints[1]);
+        ImPlot3D::SetupAxisZoomConstraints(ImAxis3D_X, zoom_constraints[0], zoom_constraints[1]);
+        ImPlot3D::SetupAxisZoomConstraints(ImAxis3D_Y, zoom_constraints[0], zoom_constraints[1]);
+        ImPlot3D::SetupAxisZoomConstraints(ImAxis3D_Z, zoom_constraints[0], zoom_constraints[1]);
         ImPlot3D::EndPlot();
     }
 }
@@ -624,14 +773,8 @@ void DemoCustomRendering() {
 
         // Draw box
         ImPlot3DPoint corners[8] = {
-            ImPlot3DPoint(0, 0, 0),
-            ImPlot3DPoint(1, 0, 0),
-            ImPlot3DPoint(1, 1, 0),
-            ImPlot3DPoint(0, 1, 0),
-            ImPlot3DPoint(0, 0, 1),
-            ImPlot3DPoint(1, 0, 1),
-            ImPlot3DPoint(1, 1, 1),
-            ImPlot3DPoint(0, 1, 1),
+            ImPlot3DPoint(0, 0, 0), ImPlot3DPoint(1, 0, 0), ImPlot3DPoint(1, 1, 0), ImPlot3DPoint(0, 1, 0),
+            ImPlot3DPoint(0, 0, 1), ImPlot3DPoint(1, 0, 1), ImPlot3DPoint(1, 1, 1), ImPlot3DPoint(0, 1, 1),
         };
         ImVec2 corners_px[8];
         for (int i = 0; i < 8; i++)
@@ -720,18 +863,57 @@ void DemoHeader(const char* label, void (*demo)()) {
     }
 }
 
+void ShowAllDemos() {
+    ImGui::Text("ImPlot3D says olá! (%s)", IMPLOT3D_VERSION);
+    ImGui::Spacing();
+    if (ImGui::BeginTabBar("ImPlot3DDemoTabs")) {
+        if (ImGui::BeginTabItem("Plots")) {
+            DemoHeader("Line Plots", DemoLinePlots);
+            DemoHeader("Scatter Plots", DemoScatterPlots);
+            DemoHeader("Triangle Plots", DemoTrianglePlots);
+            DemoHeader("Quad Plots", DemoQuadPlots);
+            DemoHeader("Surface Plots", DemoSurfacePlots);
+            DemoHeader("Mesh Plots", DemoMeshPlots);
+            DemoHeader("Realtime Plots", DemoRealtimePlots);
+            DemoHeader("Image Plots", DemoImagePlots);
+            DemoHeader("Markers and Text", DemoMarkersAndText);
+            DemoHeader("NaN Values", DemoNaNValues);
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Axes")) {
+            DemoHeader("Box Scale", DemoBoxScale);
+            DemoHeader("Box Rotation", DemoBoxRotation);
+            DemoHeader("Tick Labels", DemoTickLabels);
+            DemoHeader("Axis Constraints", DemoAxisConstraints);
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Custom")) {
+            DemoHeader("Custom Styles", DemoCustomStyles);
+            DemoHeader("Custom Rendering", DemoCustomRendering);
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Help")) {
+            DemoHelp();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+}
+
 void ShowDemoWindow(bool* p_open) {
+    static bool show_implot3d_metrics = false;
     static bool show_implot3d_style_editor = false;
     static bool show_imgui_metrics = false;
     static bool show_imgui_style_editor = false;
     static bool show_imgui_demo = false;
 
+    if (show_implot3d_metrics)
+        ImPlot3D::ShowMetricsWindow(&show_implot3d_metrics);
     if (show_implot3d_style_editor) {
         ImGui::Begin("Style Editor (ImPlot3D)", &show_implot3d_style_editor);
         ImPlot3D::ShowStyleEditor();
         ImGui::End();
     }
-
     if (show_imgui_style_editor) {
         ImGui::Begin("Style Editor (ImGui)", &show_imgui_style_editor);
         ImGui::ShowStyleEditor();
@@ -747,6 +929,7 @@ void ShowDemoWindow(bool* p_open) {
     ImGui::Begin("ImPlot3D Demo", p_open, ImGuiWindowFlags_MenuBar);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("Tools")) {
+            ImGui::MenuItem("Metrics", nullptr, &show_implot3d_metrics);
             ImGui::MenuItem("Style Editor", nullptr, &show_implot3d_style_editor);
             ImGui::Separator();
             ImGui::MenuItem("ImGui Metrics", nullptr, &show_imgui_metrics);
@@ -756,40 +939,7 @@ void ShowDemoWindow(bool* p_open) {
         }
         ImGui::EndMenuBar();
     }
-
-    ImGui::Text("ImPlot3D says olá! (%s)", IMPLOT3D_VERSION);
-
-    ImGui::Spacing();
-
-    if (ImGui::BeginTabBar("ImPlot3DDemoTabs")) {
-        if (ImGui::BeginTabItem("Plots")) {
-            DemoHeader("Line Plots", DemoLinePlots);
-            DemoHeader("Scatter Plots", DemoScatterPlots);
-            DemoHeader("Triangle Plots", DemoTrianglePlots);
-            DemoHeader("Quad Plots", DemoQuadPlots);
-            DemoHeader("Surface Plots", DemoSurfacePlots);
-            DemoHeader("Mesh Plots", DemoMeshPlots);
-            DemoHeader("Realtime Plots", DemoRealtimePlots);
-            DemoHeader("Markers and Text", DemoMarkersAndText);
-            DemoHeader("NaN Values", DemoNaNValues);
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Axes")) {
-            DemoHeader("Box Scale", DemoBoxScale);
-            DemoHeader("Tick Labels", DemoTickLabels);
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Custom")) {
-            DemoHeader("Custom Styles", DemoCustomStyles);
-            DemoHeader("Custom Rendering", DemoCustomRendering);
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Help")) {
-            DemoHelp();
-            ImGui::EndTabItem();
-        }
-        ImGui::EndTabBar();
-    }
+    ShowAllDemos();
     ImGui::End();
 }
 
@@ -810,43 +960,6 @@ bool ShowStyleSelector(const char* label) {
     }
     return false;
 }
-
-void RenderColorBar(const ImU32* colors, int size, ImDrawList& DrawList, const ImRect& bounds, bool vert, bool reversed, bool continuous) {
-    const int n = continuous ? size - 1 : size;
-    ImU32 col1, col2;
-    if (vert) {
-        const float step = bounds.GetHeight() / n;
-        ImRect rect(bounds.Min.x, bounds.Min.y, bounds.Max.x, bounds.Min.y + step);
-        for (int i = 0; i < n; ++i) {
-            if (reversed) {
-                col1 = colors[size - i - 1];
-                col2 = continuous ? colors[size - i - 2] : col1;
-            } else {
-                col1 = colors[i];
-                col2 = continuous ? colors[i + 1] : col1;
-            }
-            DrawList.AddRectFilledMultiColor(rect.Min, rect.Max, col1, col1, col2, col2);
-            rect.TranslateY(step);
-        }
-    } else {
-        const float step = bounds.GetWidth() / n;
-        ImRect rect(bounds.Min.x, bounds.Min.y, bounds.Min.x + step, bounds.Max.y);
-        for (int i = 0; i < n; ++i) {
-            if (reversed) {
-                col1 = colors[size - i - 1];
-                col2 = continuous ? colors[size - i - 2] : col1;
-            } else {
-                col1 = colors[i];
-                col2 = continuous ? colors[i + 1] : col1;
-            }
-            DrawList.AddRectFilledMultiColor(rect.Min, rect.Max, col1, col2, col2, col1);
-            rect.TranslateX(step);
-        }
-    }
-}
-
-static inline ImU32 CalcTextColor(const ImVec4& bg) { return (bg.x * 0.299f + bg.y * 0.587f + bg.z * 0.114f) > 0.5f ? IM_COL32_BLACK : IM_COL32_WHITE; }
-static inline ImU32 CalcTextColor(ImU32 bg) { return CalcTextColor(ImGui::ColorConvertU32ToFloat4(bg)); }
 
 bool ColormapButton(const char* label, const ImVec2& size_arg, ImPlot3DColormap cmap) {
     ImGuiContext& G = *GImGui;
@@ -920,9 +1033,8 @@ void ShowStyleEditor(ImPlot3DStyle* ref) {
     if (ImGui::Button("Revert Ref"))
         style = *ref;
     ImGui::SameLine();
-    HelpMarker(
-        "Save/Revert in local non-persistent storage. Default Colors definition are not affected. "
-        "Use \"Export\" below to save them somewhere.");
+    HelpMarker("Save/Revert in local non-persistent storage. Default Colors definition are not affected. "
+               "Use \"Export\" below to save them somewhere.");
 
     ImGui::Separator();
 
@@ -958,8 +1070,8 @@ void ShowStyleEditor(ImPlot3DStyle* ref) {
                     const ImVec4& col = style.Colors[i];
                     const char* name = ImPlot3D::GetStyleColorName(i);
                     if (!output_only_modified || memcmp(&col, &ref->Colors[i], sizeof(ImVec4)) != 0)
-                        ImGui::LogText("colors[ImPlot3DCol_%s]%*s= ImVec4(%.2ff, %.2ff, %.2ff, %.2ff);\n",
-                                       name, 15 - (int)strlen(name), "", col.x, col.y, col.z, col.w);
+                        ImGui::LogText("colors[ImPlot3DCol_%s]%*s= ImVec4(%.2ff, %.2ff, %.2ff, %.2ff);\n", name, 15 - (int)strlen(name), "", col.x,
+                                       col.y, col.z, col.w);
                 }
                 ImGui::LogFinish();
             }
@@ -973,6 +1085,17 @@ void ShowStyleEditor(ImPlot3DStyle* ref) {
             filter.Draw("Filter colors", ImGui::GetFontSize() * 16);
 
             static ImGuiColorEditFlags alpha_flags = ImGuiColorEditFlags_AlphaPreviewHalf;
+#if IMGUI_VERSION_NUM < 19173
+            if (ImGui::RadioButton("Opaque", alpha_flags == ImGuiColorEditFlags_None))
+                alpha_flags = ImGuiColorEditFlags_None;
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Alpha", alpha_flags == ImGuiColorEditFlags_AlphaPreview))
+                alpha_flags = ImGuiColorEditFlags_AlphaPreview;
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Both", alpha_flags == ImGuiColorEditFlags_AlphaPreviewHalf))
+                alpha_flags = ImGuiColorEditFlags_AlphaPreviewHalf;
+            ImGui::SameLine();
+#else
             if (ImGui::RadioButton("Opaque", alpha_flags == ImGuiColorEditFlags_AlphaOpaque))
                 alpha_flags = ImGuiColorEditFlags_AlphaOpaque;
             ImGui::SameLine();
@@ -982,10 +1105,10 @@ void ShowStyleEditor(ImPlot3DStyle* ref) {
             if (ImGui::RadioButton("Both", alpha_flags == ImGuiColorEditFlags_AlphaPreviewHalf))
                 alpha_flags = ImGuiColorEditFlags_AlphaPreviewHalf;
             ImGui::SameLine();
-            HelpMarker(
-                "In the color list:\n"
-                "Left-click on color square to open color picker,\n"
-                "Right-click to open edit options menu.");
+#endif
+            HelpMarker("In the color list:\n"
+                       "Left-click on color square to open color picker,\n"
+                       "Right-click to open edit options menu.");
 
             ImGui::Separator();
 

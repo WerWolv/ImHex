@@ -45,10 +45,6 @@ namespace hex {
                     return m_patches.rbegin()->first;
             }
 
-            void resizeRaw(u64 newSize) override {
-                std::ignore = newSize;
-            }
-
             void insertRaw(u64 offset, u64 size) override {
                 std::vector<std::pair<u64, u8>> patchesToMove;
 
@@ -78,6 +74,10 @@ namespace hex {
             }
 
             [[nodiscard]] std::string getName() const override {
+                return "";
+            }
+
+            [[nodiscard]] const char* getIcon() const override {
                 return "";
             }
 

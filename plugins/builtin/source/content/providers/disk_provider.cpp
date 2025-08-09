@@ -207,15 +207,15 @@ namespace hex::plugin::builtin {
 
             m_diskHandle = ::open(path.c_str(), O_RDWR);
             if (m_diskHandle == -1) {
-                this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_rw"_lang, path, formatSystemError(errno)));
-                log::warn(this->getErrorMessage());
+                this->setErrorMessage(fmt::format("hex.builtin.provider.disk.error.read_rw"_lang, path, formatSystemError(errno)));
+                log::warn("{}", this->getErrorMessage());
                 m_diskHandle = ::open(path.c_str(), O_RDONLY);
                 m_writable   = false;
             }
 
             if (m_diskHandle == -1) {
-                this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_ro"_lang, path, formatSystemError(errno)));
-                log::warn(this->getErrorMessage());
+                this->setErrorMessage(fmt::format("hex.builtin.provider.disk.error.read_ro"_lang, path, formatSystemError(errno)));
+                log::warn("{}", this->getErrorMessage());
                 m_readable = false;
                 return false;
             }
@@ -442,7 +442,7 @@ namespace hex::plugin::builtin {
         for (char i = 0; i < 26; i++) {
             if (drives[i]) {
                 char letter = 'A' + i;
-                m_availableDrives.insert({ hex::format(R"(\\.\{:c}:)", letter), hex::format(R"({:c}:/)", letter) });
+                m_availableDrives.insert({ fmt::format(R"(\\.\{:c}:)", letter), fmt::format(R"({:c}:/)", letter) });
             }
         }
 

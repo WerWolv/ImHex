@@ -28,7 +28,6 @@ namespace hex {
 
     void UDPServer::stop() {
         m_running = false;
-        if (m_thread.joinable()) m_thread.join();
 
         if (m_socketFd >= 0) {
             #if defined(OS_WINDOWS)
@@ -37,6 +36,8 @@ namespace hex {
                 ::close(m_socketFd);
             #endif
         }
+
+        if (m_thread.joinable()) m_thread.join();
     }
 
     void UDPServer::run() {

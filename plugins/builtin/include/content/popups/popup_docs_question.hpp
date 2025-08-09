@@ -90,7 +90,7 @@ namespace hex::plugin::builtin {
                 for (auto space : { "xj7sbzGbHH260vbpZOu1", "WZzDdGjxmgMSIE3xly6o" }) {
                     m_answer.clear();
 
-                    auto request = HttpRequest("POST", hex::format("https://api.gitbook.com/v1/spaces/{}/search/ask", space));
+                    auto request = HttpRequest("POST", fmt::format("https://api.gitbook.com/v1/spaces/{}/search/ask", space));
 
                     // Documentation API often takes a long time to respond, so we set a timeout of 30 seconds
                     request.setTimeout(30'000);

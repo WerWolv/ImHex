@@ -19,6 +19,7 @@ add_imhex_plugin(
         source/content/command_line_interface.cpp
         source/content/communication_interface.cpp
         source/content/data_inspector.cpp
+        source/content/differing_byte_searcher.cpp
         source/content/pl_builtin_functions.cpp
         source/content/pl_builtin_types.cpp
         source/content/pl_pragmas.cpp
@@ -48,8 +49,6 @@ add_imhex_plugin(
         source/content/minimap_visualizers.cpp
         source/content/window_decoration.cpp
         source/content/data_information_sections.cpp
-
-        source/content/helpers/demangle.cpp
 
         source/content/data_processor_nodes/basic_nodes.cpp
         source/content/data_processor_nodes/control_nodes.cpp
@@ -119,6 +118,10 @@ add_imhex_plugin(
         source/content/views/view_achievements.cpp
         source/content/views/view_highlight_rules.cpp
         source/content/views/view_tutorials.cpp
+
+        source/content/views/fullscreen/view_fullscreen_save_editor.cpp
+
+        source/content/text_highlighting/pattern_language.cpp
     INCLUDES
         include
 
@@ -128,7 +131,6 @@ add_imhex_plugin(
         ${JTHREAD_LIBRARIES}
         plcli
         libpl-gen
-        LLVMDemangle
 )
 
 if (WIN32)

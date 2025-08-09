@@ -74,9 +74,11 @@ namespace hex::init {
         // Process the arguments
         hex::subcommands::processArguments(args);
 
-        // Unload plugins again
-        EventManager::clear();
-        PluginManager::unload();
+        // Explicitly don't unload plugins again here.
+        // Certain CLI commands configure things inside of plugins and then let ImHex start up normally
+        // If plugins were to be unloaded here, this setup would be reset.
+        // PluginManager::load() will be executed again later on, but it will not load any more plugins into the
+        // address space. But they will be properly initialized at that point.
     }
 
 }

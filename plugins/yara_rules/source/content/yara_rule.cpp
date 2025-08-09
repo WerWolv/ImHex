@@ -86,6 +86,8 @@ namespace hex::plugin::yara {
                     YaraRule::Rule newRule;
                     newRule.identifier = rule->identifier;
                     newRule.matches.push_back({ "", Region::Invalid(), true });
+
+                    resultContext.matchedRules.emplace_back(std::move(newRule));
                 }
 
                 break;
@@ -171,7 +173,7 @@ namespace hex::plugin::yara {
             return context.buffer.data();
         };
         iterator.file_size = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> u64 {
-            auto &context = *static_cast<ScanContext *>(iterator->context);
+            const auto &context = *static_cast<ScanContext *>(iterator->context);
 
             return context.region.size;
         };

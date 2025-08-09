@@ -21,7 +21,7 @@
 namespace hex {
 
     void nativeErrorMessage(const std::string &message) {
-        log::fatal(message);
+        log::fatal("{}", message);
         errorMessageMacos(message.c_str());
     }
 
@@ -32,6 +32,7 @@ namespace hex {
         glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+        glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     }
 
     void Window::initNative() {
@@ -40,7 +41,7 @@ namespace hex {
         // Add plugin library folders to dll search path
         for (const auto &path : paths::Libraries.read())  {
             if (std::fs::exists(path))
-                setenv("LD_LIBRARY_PATH", hex::format("{};{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
+                setenv("LD_LIBRARY_PATH", fmt::format("{};{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
         }
 
         // Redirect stdout to log file if we're not running in a terminal
@@ -102,7 +103,8 @@ namespace hex {
     }
 
     void Window::beginNativeWindowFrame() {
-
+        if (!ImHexApi::Provider::isValid())
+            macosMarkContentEdited(m_window, false);
     }
 
     void Window::endNativeWindowFrame() {

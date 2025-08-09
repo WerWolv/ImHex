@@ -176,7 +176,7 @@ namespace hex::plugin::hashes {
             }
 
             if (m_newHashName.empty() && m_selectedHash != nullptr)
-                m_newHashName = hex::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.hashes.view.hashes.hash"_lang));
+                m_newHashName = fmt::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.hashes.view.hashes.hash"_lang));
 
             if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, nullptr, scaled({ 0, 250 }))) {
                 if (m_selectedHash != nullptr) {
@@ -258,7 +258,7 @@ namespace hex::plugin::hashes {
                     PopupTextHash::open(function);
                 }
                 ImGui::SameLine();
-                if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                if (ImGuiExt::IconButton(ICON_VS_CHROME_CLOSE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     indexToRemove = i;
                 }
 

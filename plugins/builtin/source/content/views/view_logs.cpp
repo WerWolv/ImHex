@@ -7,7 +7,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewLogs::ViewLogs() : View::Floating("hex.builtin.view.logs.name") {
+    ViewLogs::ViewLogs() : View::Floating("hex.builtin.view.logs.name", ICON_VS_DEBUG_LINE_BY_LINE) {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.logs.name" }, ICON_VS_BRACKET_ERROR, 2500, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
@@ -53,17 +53,17 @@ namespace hex::plugin::builtin {
             ImGui::TableHeadersRow();
 
             const auto &logs = log::impl::getLogEntries();
-            for (const auto &log : logs | std::views::reverse) {
-                if (!shouldDisplay(log.level, m_logLevel)) {
+            for (const auto &[project, level, message] : logs | std::views::reverse) {
+                if (!shouldDisplay(level, m_logLevel)) {
                     continue;
                 }
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted(log.project.c_str());
+                ImGui::TextUnformatted(project.data(), project.data() + project.size());
                 ImGui::TableNextColumn();
-                ImGui::PushStyleColor(ImGuiCol_Text, getColor(log.level).Value);
-                ImGui::TextUnformatted(log.message.c_str());
+                ImGui::PushStyleColor(ImGuiCol_Text, getColor(level).Value);
+                ImGui::TextUnformatted(message.c_str());
                 ImGui::PopStyleColor();
             }
 

@@ -39,7 +39,7 @@ namespace hex::plugin::visualizers {
         }
 
         if (width >= IMGUI_TABLE_MAX_COLUMNS)
-            throw std::logic_error(hex::format("Table visualizer cannot have more than {} columns.", IMGUI_TABLE_MAX_COLUMNS));
+            throw std::logic_error(fmt::format("Table visualizer cannot have more than {} columns.", IMGUI_TABLE_MAX_COLUMNS));
 
         if (ImGui::BeginTable("##visualizer_table", width, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
             for (u64 i = 0; i < height; i += 1) {

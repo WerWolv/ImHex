@@ -42,6 +42,7 @@ namespace hex::plugin::diffing {
 
         TaskHolder m_diffTask;
         std::atomic<bool> m_analyzed = false;
+        std::atomic<bool> m_analysisInterrupted = false;
         ContentRegistry::Diffing::Algorithm *m_algorithm = nullptr;
     };
 

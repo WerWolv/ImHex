@@ -8,10 +8,14 @@
 #include <mutex>
 #include <string_view>
 #include <thread>
+#include <fonts/vscode_icons.hpp>
+#include <hex/providers/cached_provider.hpp>
 
 namespace hex::plugin::builtin {
 
-    class GDBProvider : public hex::prv::Provider {
+    class GDBProvider : public prv::CachedProvider,
+                        public prv::IProviderDataDescription,
+                        public prv::IProviderLoadInterface {
     public:
         GDBProvider();
         ~GDBProvider() override = default;
@@ -22,9 +26,9 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isResizable() const override;
         [[nodiscard]] bool isSavable() const override;
 
-        void readRaw(u64 offset, void *buffer, size_t size) override;
-        void writeRaw(u64 offset, const void *buffer, size_t size) override;
-        [[nodiscard]] u64 getActualSize() const override;
+        void readFromSource(u64 offset, void *buffer, size_t size) override;
+        void writeToSource(u64 offset, const void *buffer, size_t size) override;
+        [[nodiscard]] u64 getSourceSize() const override;
 
         void save() override;
 
@@ -36,7 +40,6 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] bool isConnected() const;
 
-        [[nodiscard]] bool hasLoadInterface() const override { return true; }
         bool drawLoadInterface() override;
 
         void loadSettings(const nlohmann::json &settings) override;
@@ -44,6 +47,10 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.gdb";
+        }
+
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_CHIP;
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;
@@ -54,22 +61,9 @@ namespace hex::plugin::builtin {
 
         std::string m_ipAddress;
         int m_port = 0;
+        std::mutex m_mutex;
 
         u64 m_size = 0;
-
-        constexpr static size_t CacheLineSize = 0x10;
-
-        struct CacheLine {
-            u64 address;
-
-            std::array<u8, CacheLineSize> data;
-        };
-
-        std::list<CacheLine> m_cache;
-        std::atomic<bool> m_resetCache = false;
-
-        std::thread m_cacheUpdateThread;
-        std::mutex m_cacheLock;
     };
 
 }

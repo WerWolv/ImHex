@@ -57,21 +57,21 @@ namespace hex::plugin::builtin {
                 return value;
             };
 
-            enum class RecordType {
-                Header          = 0x00,
-                Data16          = 0x01,
-                Data24          = 0x02,
-                Data32          = 0x03,
-                Reserved        = 0x04,
-                Count16         = 0x05,
-                Count24         = 0x06,
-                StartAddress32  = 0x07,
-                StartAddress24  = 0x08,
-                StartAddress16  = 0x09,
-            } recordType;
-
-            bool endOfFile = false;
             try {
+                enum class RecordType {
+                    Header          = 0x00,
+                    Data16          = 0x01,
+                    Data24          = 0x02,
+                    Data32          = 0x03,
+                    Reserved        = 0x04,
+                    Count16         = 0x05,
+                    Count24         = 0x06,
+                    StartAddress32  = 0x07,
+                    StartAddress24  = 0x08,
+                    StartAddress16  = 0x09,
+                } recordType;
+                bool endOfFile = false;
+
                 while (offset < string.length()) {
                     // Parse record start
                     if (c() != 'S')
@@ -159,7 +159,7 @@ namespace hex::plugin::builtin {
                             break;
                     }
 
-                    while (std::isspace(string[offset]) && offset < string.length())
+                    while (offset < string.length() && std::isspace(string[offset]))
                         offset++;
                 }
             } catch (const std::runtime_error &e) {
@@ -174,7 +174,7 @@ namespace hex::plugin::builtin {
     bool MotorolaSRECProvider::open() {
         auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
+            this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
             return false;
         }
 
@@ -184,7 +184,7 @@ namespace hex::plugin::builtin {
             return false;
         }
 
-        u64 maxAddress = 0x00;
+        std::optional<u64> maxAddress;
         for (auto &[address, bytes] : data.value()) {
             auto endAddress = (address + bytes.size()) - 1;
             m_data.emplace({ address, endAddress }, std::move(bytes));
@@ -193,7 +193,11 @@ namespace hex::plugin::builtin {
                 maxAddress = endAddress;
         }
 
-        m_dataSize = maxAddress + 1;
+        if (maxAddress.has_value())
+            m_dataSize = *maxAddress + 1;
+        else
+            m_dataSize = 0x00;
+
         m_dataValid = true;
 
         return true;
@@ -204,7 +208,7 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string MotorolaSRECProvider::getName() const {
-        return hex::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(m_sourceFilePath.filename()));
+        return fmt::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(m_sourceFilePath.filename()));
     }
 
 

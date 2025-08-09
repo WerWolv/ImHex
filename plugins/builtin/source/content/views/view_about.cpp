@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
         }
     };
 
-    ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name") {
+    ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name", ICON_VS_HEART) {
         // Add "About" menu item to the help menu
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, ICON_VS_INFO, 1000, Shortcut::None, [this] {
             this->getWindowOpenState() = true;
@@ -176,9 +176,9 @@ namespace hex::plugin::builtin {
             for (const auto &page : DonationPages) {
                 ImGui::TableNextColumn();
 
-                const auto size = page.texture->getSize() / 1.5F;
+                const auto size = (page.texture->getSize() * 1_scaled) / 1.5F;
                 const auto startPos = ImGui::GetCursorScreenPos();
-                ImGui::Image(*page.texture, page.texture->getSize() / 1.5F);
+                ImGui::Image(*page.texture, size);
 
                 if (ImGui::IsItemHovered()) {
                     ImGui::GetForegroundDrawList()->AddShadowCircle(startPos + size / 2, size.x / 2, ImGui::GetColorU32(ImGuiCol_Button), 100.0F, ImVec2(), ImDrawFlags_ShadowCutOutShapeBackground);
@@ -203,9 +203,9 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
             {
                 // Draw basic information about ImHex and its version
-                ImGuiExt::TextFormatted("ImHex Hex Editor v{} by WerWolv", ImHexApi::System::getImHexVersion().get());
+                ImGuiExt::TextFormattedSelectable("ImHex Hex Editor v{} by WerWolv", ImHexApi::System::getImHexVersion().get());
                 ImGui::Indent(25_scaled);
-                ImGuiExt::TextFormatted("Powered by Dear ImGui v{}", ImGui::GetVersion());
+                ImGuiExt::TextFormattedSelectable("Powered by Dear ImGui v{}", ImGui::GetVersion());
                 ImGui::Unindent(25_scaled);
             }
 
@@ -216,14 +216,14 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine(0, 0);
 
                 // Draw a clickable link to the current commit
-                if (ImGuiExt::Hyperlink(hex::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
+                if (ImGuiExt::Hyperlink(fmt::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
                     hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" + ImHexApi::System::getCommitHash(true));
             }
 
             ImGui::TableNextColumn();
             {
                 // Draw the build date and time
-                ImGuiExt::TextFormatted("Compiled on {} at {}", __DATE__, __TIME__);
+                ImGuiExt::TextFormattedSelectable("Compiled on {} at {}", __DATE__, __TIME__);
             }
 
             ImGui::TableNextColumn();
@@ -240,7 +240,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 // Draw a clickable link to the GitHub repository
-                if (ImGuiExt::Hyperlink(ICON_VS_LOGO_GITHUB " " "WerWolv/ImHex"))
+                if (ImGuiExt::Hyperlink(ICON_VS_GITHUB " " "WerWolv/ImHex"))
                     hex::openWebpage("https://github.com/WerWolv/ImHex");
             }
 
@@ -365,7 +365,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled({ 12, 3 }));
 
                     if (ImGui::BeginChild(library.link, ImVec2(), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
-                        if (ImGuiExt::Hyperlink(hex::format("{}/{}", library.author, library.name).c_str())) {
+                        if (ImGuiExt::Hyperlink(fmt::format("{}/{}", library.author, library.name).c_str())) {
                             hex::openWebpage(library.link);
                         }
                         ImGui::SetItemTooltip("%s", library.link);
@@ -444,7 +444,7 @@ namespace hex::plugin::builtin {
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
         ImGui::TableNextColumn();
-        ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
+        ImGui::TextUnformatted(plugin.isInitialized() ? ICON_VS_CHECK : ICON_VS_CLOSE);
 
         if (open) {
             for (const auto &feature : plugin.getFeatures()) {
@@ -473,6 +473,7 @@ namespace hex::plugin::builtin {
                 { "Yara Patterns",                  &paths::Yara                 },
                 { "Yara Advaned Analysis",          &paths::YaraAdvancedAnalysis },
                 { "Config",                         &paths::Config               },
+                { "Updates",                        &paths::Updates              },
                 { "Backups",                        &paths::Backups              },
                 { "Resources",                      &paths::Resources            },
                 { "Constants lists",                &paths::Constants            },
@@ -612,7 +613,7 @@ namespace hex::plugin::builtin {
 
         // Draw the release title
         if (!notes.title.empty()) {
-            auto title = hex::format("{}: {}", notes.versionString, notes.title);
+            auto title = fmt::format("{}: {}", notes.versionString, notes.title);
             ImGuiExt::Header(title.c_str(), true);
             ImGui::Separator();
         }
@@ -683,7 +684,7 @@ namespace hex::plugin::builtin {
                 auto url = commit["html_url"].get<std::string>();
                 auto sha = commit["sha"].get<std::string>();
                 auto date = commit["commit"]["author"]["date"].get<std::string>();
-                auto author = hex::format("{} <{}>",
+                auto author = fmt::format("{} <{}>",
                                           commit["commit"]["author"]["name"].get<std::string>(),
                                           commit["commit"]["author"]["email"].get<std::string>()
                 );

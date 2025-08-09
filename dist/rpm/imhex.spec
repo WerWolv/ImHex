@@ -6,7 +6,7 @@ Release:        0%{?dist}
 Summary:        A hex editor for reverse engineers and programmers
 
 License:        GPL-2.0-only AND Zlib AND MIT AND Apache-2.0
-# imhex is gplv2.  capstone is custom.  nativefiledialog is Zlib.
+# imhex is gplv2.  capstone is custom.
 # see license dir for full breakdown
 URL:            https://imhex.werwolv.net/
 # We need the archive with deps bundled
@@ -16,7 +16,6 @@ BuildRequires:  cmake
 BuildRequires:  desktop-file-utils
 BuildRequires:  dbus-devel
 BuildRequires:  file-devel
-BuildRequires:  fontconfig-devel
 BuildRequires:  freetype-devel
 BuildRequires:  fmt-devel
 BuildRequires:  gcc-c++
@@ -25,32 +24,41 @@ BuildRequires:  libglvnd-devel
 BuildRequires:  glfw-devel
 BuildRequires:  json-devel
 BuildRequires:  libcurl-devel
-BuildRequires:  llvm-devel
-BuildRequires:  mbedtls-devel
-BuildRequires:  yara-devel
-BuildRequires:  nativefiledialog-extended-devel
-BuildRequires:  dotnet-sdk-8.0
+BuildRequires:  libarchive-devel
 BuildRequires:  libzstd-devel
 BuildRequires:  zlib-devel
 BuildRequires:  bzip2-devel
 BuildRequires:  xz-devel
-%if 0%{?rhel}
+BuildRequires:  llvm-devel
+BuildRequires:  mbedtls-devel
+BuildRequires:  yara-devel
+BuildRequires:  nativefiledialog-extended-devel
+BuildRequires:  lz4-devel
+BuildRequires:  libssh2-devel
+%if 0%{?rhel} == 9
 BuildRequires:  gcc-toolset-14
 %endif
+%if 0%{?fedora} || 0%{?rhel} > 9
+BuildRequires:  capstone-devel
+%endif
+BuildRequires:  lunasvg-devel
+
 
 Provides:       bundled(gnulib)
-Provides:       bundled(capstone) = 5.0-rc2
-Provides:       bundled(imgui)
+%if 0%{?rhel} == 10
+Provides:       bundled(capstone) = 5.0.1
+%endif
+Provides:       bundled(imgui) = 1.90.8
 Provides:       bundled(libromfs)
 Provides:       bundled(microtar)
+Provides:       bundled(libpl) = %{version}
 Provides:       bundled(xdgpp)
+# working on packaging this, bundling for now as to now delay updates
+Provides:       bundled(miniaudio) = 0.11.11
 
-# ftbfs on these arches.  armv7hl might compile when capstone 5.x
-# is released upstream and we can build against it
 # [7:02 PM] WerWolv: We're not supporting 32 bit anyways soooo
 # [11:38 AM] WerWolv: Officially supported are x86_64 and aarch64
-ExclusiveArch:  x86_64 %{arm64} ppc64le
-
+ExclusiveArch:  x86_64 %{arm64}
 
 %description
 ImHex is a Hex Editor, a tool to display, decode and analyze binary data to
@@ -64,16 +72,33 @@ displayed, a disassembler, diffing support, bookmarks and much much more. At the
 same time ImHex is completely free and open source under the GPLv2 language.
 
 
+%package devel
+Summary:        Development files for %{name}
+License:        GPL-2.0-only
+%description devel
+%{summary}
+
+
 %prep
-%autosetup -n ImHex
+%autosetup -n ImHex -p1
 # remove bundled libs we aren't using
-rm -rf lib/third_party/{fmt,nlohmann_json,yara}
+rm -rf lib/third_party/{curl,fmt,llvm,nlohmann_json,yara}
+%if 0%{?fedora} || 0%{?rhel} > 9
+rm -rf lib/third_party/capstone
+%endif
+
+# rhel 9 doesn't support all of the new appstream metainfo tags
+%if 0%{?rhel} && 0%{?rhel} < 10
+sed -i -e '/url type="vcs-browser"/d' \
+	-e '/url type="contribute"/d' \
+	dist/net.werwolv.ImHex.metainfo.xml
+%endif
 
 %build
-%if 0%{?rhel}
+%if 0%{?rhel} == 9
 . /opt/rh/gcc-toolset-14/enable
 %set_build_flags
-CXXFLAGS+=" -std=gnu++23"
+CXXFLAGS+=" -std=gnu++2b"
 %endif
 %cmake \
  -D CMAKE_BUILD_TYPE=Release             \
@@ -81,23 +106,30 @@ CXXFLAGS+=" -std=gnu++23"
  -D IMHEX_OFFLINE_BUILD=ON               \
  -D USE_SYSTEM_NLOHMANN_JSON=ON          \
  -D USE_SYSTEM_FMT=ON                    \
+ -D USE_SYSTEM_CURL=ON                   \
+ -D USE_SYSTEM_LLVM=ON                   \
+%if 0%{?fedora} || 0%{?rhel} > 9
+ -D USE_SYSTEM_CAPSTONE=ON               \
+%endif
+ -D USE_SYSTEM_LUNASVG=ON                \
  -D USE_SYSTEM_YARA=ON                   \
  -D USE_SYSTEM_NFD=ON                    \
- -D IMHEX_USE_GTK_FILE_PICKER=ON         \
- -D IMHEX_BUNDLE_DOTNET=OFF              \
-# when capstone >= 5.x is released we should be able to build against \
-# system libs of it \
-# -D USE_SYSTEM_CAPSTONE=ON
+ -D IMHEX_ENABLE_UNIT_TESTS=ON           \
+%if 0%{?rhel}
+ -D IMHEX_BUILD_HARDENING=OFF
+%endif
+# disable built-in build hardening because it is already
+# done in rhel buildroots.  adding the flags again from
+# upstream generates build errors
 
 %cmake_build
 
 
 %check
-%if 0%{?rhel}
-. /opt/rh/gcc-toolset-14/enable
-%set_build_flags
-CXXFLAGS+=" -std=gnu++23"
-%endif
+# build binaries required for tests
+%cmake_build --target unit_tests
+%ctest --exclude-regex '(Helpers/StoreAPI|Helpers/TipsAPI|Helpers/ContentAPI)'
+# Helpers/*API exclude tests that require network access
 
 
 %install
@@ -105,15 +137,16 @@ CXXFLAGS+=" -std=gnu++23"
 desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop
 
 # this is a symlink for the old appdata name that we don't need
-rm -f %{buildroot}%{_metainfodir}/net.werwolv.%{name}.appdata.xml
+rm -f %{buildroot}%{_metainfodir}/net.werwolv.ImHex.appdata.xml
 
 # AppData
-appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/net.werwolv.%{name}.metainfo.xml
+appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/net.werwolv.ImHex.metainfo.xml
 
 # install licenses
-cp -a lib/third_party/nativefiledialog/LICENSE                       %{buildroot}%{_datadir}/licenses/%{name}/nativefiledialog-LICENSE
+%if 0%{?rhel} == 9
 cp -a lib/third_party/capstone/LICENSE.TXT                           %{buildroot}%{_datadir}/licenses/%{name}/capstone-LICENSE
 cp -a lib/third_party/capstone/suite/regress/LICENSE                 %{buildroot}%{_datadir}/licenses/%{name}/capstone-regress-LICENSE
+%endif
 cp -a lib/third_party/microtar/LICENSE                               %{buildroot}%{_datadir}/licenses/%{name}/microtar-LICENSE
 cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot}%{_datadir}/licenses/%{name}/xdgpp-LICENSE
 
@@ -122,11 +155,15 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %license %{_datadir}/licenses/%{name}/
 %doc README.md
 %{_bindir}/imhex
-%{_bindir}/imhex-updater
-%{_datadir}/pixmaps/%{name}.svg
+%{_datadir}/pixmaps/%{name}.*
 %{_datadir}/applications/%{name}.desktop
-%{_datadir}/mime/packages/%{name}.xml
-%{_libdir}/libimhex.so*
+%{_libdir}/libimhex.so.*
 %{_libdir}/%{name}/
-/usr/lib/debug/%{_libdir}/*.debug
-%{_metainfodir}/net.werwolv.%{name}.metainfo.xml
+%{_metainfodir}/net.werwolv.ImHex.metainfo.xml
+%exclude %{_bindir}/imhex-updater
+%{_datadir}/mime/packages/%{name}.xml
+
+
+%files devel
+%{_libdir}/libimhex.so
+%{_datadir}/%{name}/sdk/

@@ -380,6 +380,7 @@ namespace hex::ui {
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;
+        bool m_showExtendedAscii = false;
         bool m_showCustomEncoding = true;
         bool m_showMiniMap = false;
         bool m_showSelectionInFooter = false;

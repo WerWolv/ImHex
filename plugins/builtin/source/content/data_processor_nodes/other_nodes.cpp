@@ -341,7 +341,7 @@ namespace hex::plugin::builtin {
 
             const size_t requiredBytes = width * height * 4;
             if (requiredBytes > rawData.size())
-                throwNodeError(hex::format("Image requires at least {} bytes of data, but only {} bytes are available", requiredBytes, rawData.size()));
+                throwNodeError(fmt::format("Image requires at least {} bytes of data, but only {} bytes are available", requiredBytes, rawData.size()));
 
             m_data = rawData;
             m_width = width;
@@ -430,7 +430,7 @@ namespace hex::plugin::builtin {
                     }
                 }, outVars.at(m_name));
             } else {
-                throwNodeError(hex::format("Out variable '{}' has not been defined!", m_name));
+                throwNodeError(fmt::format("Out variable '{}' has not been defined!", m_name));
             }
         }
 

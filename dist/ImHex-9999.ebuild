@@ -28,6 +28,7 @@ RDEPEND="${DEPEND}
 		app-arch/lzma
 		app-arch/zstd
 		app-arch/lz4
+		net-libs/libssh2
 		"
 BDEPEND="${DEPEND}
 		dev-cpp/nlohmann_json

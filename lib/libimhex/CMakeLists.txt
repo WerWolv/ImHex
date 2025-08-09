@@ -40,12 +40,12 @@ set(LIBIMHEX_SOURCES
         source/helpers/imgui_hooks.cpp
         source/helpers/semantic_version.cpp
         source/helpers/keys.cpp
-        source/helpers/freetype.cpp
         source/helpers/udp_server.cpp
 
         source/test/tests.cpp
 
         source/providers/provider.cpp
+        source/providers/cached_provider.cpp
         source/providers/memory_provider.cpp
         source/providers/undo/stack.cpp
 
@@ -97,6 +97,8 @@ else()
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
 
+addCppCheck(libimhex)
+
 
 if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_BRANCH)
     set(GIT_COMMIT_HASH_LONG "${IMHEX_COMMIT_HASH_LONG}")
@@ -130,6 +132,9 @@ else()
 endif ()
 
 addDefineToSource(source/api/imhex_api.cpp "IMHEX_VERSION=\"${IMHEX_VERSION_STRING}\"")
+
+string(TIMESTAMP IMHEX_BUILD_DATE UTC)
+addDefineToSource(source/api/imhex_api.cpp "IMHEX_BUILD_DATE=\"${IMHEX_BUILD_DATE}\"")
 
 enableUnityBuild(libimhex)
 setupCompilerFlags(libimhex)

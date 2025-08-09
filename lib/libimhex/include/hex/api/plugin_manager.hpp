@@ -46,6 +46,7 @@ EXPORT_MODULE namespace hex {
         using SetImGuiContextFunc      = void (*)(ImGuiContext *);
         using GetSubCommandsFunc       = void* (*)();
         using GetFeaturesFunc          = void* (*)();
+        using IsBuiltinPluginFunc      = bool (*)();
 
         InitializePluginFunc        initializePluginFunction        = nullptr;
         InitializeLibraryFunc       initializeLibraryFunction       = nullptr;
@@ -58,6 +59,7 @@ EXPORT_MODULE namespace hex {
         SetImGuiContextFunc         setImGuiContextLibraryFunction  = nullptr;
         GetSubCommandsFunc          getSubCommandsFunction          = nullptr;
         GetFeaturesFunc             getFeaturesFunction             = nullptr;
+        IsBuiltinPluginFunc         isBuiltinPluginFunction         = nullptr;
     };
 
     class Plugin {
@@ -81,8 +83,10 @@ EXPORT_MODULE namespace hex {
 
         [[nodiscard]] const std::fs::path &getPath() const;
 
-        [[nodiscard]] bool isValid() const;
         [[nodiscard]] bool isLoaded() const;
+        [[nodiscard]] bool isValid() const;
+        [[nodiscard]] bool isInitialized() const;
+        [[nodiscard]] bool isBuiltinPlugin() const;
 
         [[nodiscard]] std::span<SubCommand> getSubCommands() const;
         [[nodiscard]] std::span<Feature> getFeatures() const;
@@ -91,12 +95,15 @@ EXPORT_MODULE namespace hex {
 
         [[nodiscard]] bool wasAddedManually() const;
 
+        void setEnabled(bool enabled);
+
     private:
         uintptr_t m_handle = 0;
         std::fs::path m_path;
 
         mutable bool m_initialized = false;
         bool m_addedManually = false;
+        bool m_enabled = true;
 
         PluginFunctions m_functions = {};
 
@@ -131,6 +138,8 @@ EXPORT_MODULE namespace hex {
         static const std::vector<std::fs::path>& getPluginLoadPaths();
 
         static bool isPluginLoaded(const std::fs::path &path);
+
+        static void setPluginEnabled(const Plugin &plugin, bool enabled);
 
     private:
         static std::list<Plugin>& getPluginsMutable();

@@ -8,22 +8,22 @@
 
 namespace hex::plugin::builtin {
 
-    ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name") {
+    ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name", ICON_VS_SETTINGS) {
         EventProviderCreated::subscribe(this, [this](const hex::prv::Provider *provider) {
-            if (provider->hasLoadInterface() && !provider->shouldSkipLoadInterface())
+            if (dynamic_cast<const prv::IProviderLoadInterface*>(provider) != nullptr && !provider->shouldSkipLoadInterface())
                 this->getWindowOpenState() = true;
         });
 
         ContentRegistry::Interface::addSidebarItem(ICON_VS_SERVER_PROCESS, [] {
             auto provider = hex::ImHexApi::Provider::get();
 
-            if (provider != nullptr)
-                provider->drawInterface();
+            if (auto *sidebarInterfaceProvider = dynamic_cast<prv::IProviderSidebarInterface*>(provider); sidebarInterfaceProvider != nullptr)
+                sidebarInterfaceProvider->drawSidebarInterface();
         },
         [] {
             auto provider = hex::ImHexApi::Provider::get();
 
-            return provider != nullptr && provider->hasInterface() && provider->isAvailable();
+            return provider != nullptr && dynamic_cast<prv::IProviderSidebarInterface*>(provider) != nullptr && provider->isAvailable();
         });
     }
 
@@ -33,8 +33,8 @@ namespace hex::plugin::builtin {
 
     void ViewProviderSettings::drawContent() {
         auto provider = hex::ImHexApi::Provider::get();
-        if (provider != nullptr) {
-            bool settingsValid = provider->drawLoadInterface();
+            if (auto *loadInterfaceProvider = dynamic_cast<prv::IProviderLoadInterface*>(provider); loadInterfaceProvider != nullptr) {
+            bool settingsValid = loadInterfaceProvider->drawLoadInterface();
 
             ImGui::NewLine();
             ImGui::Separator();
@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
                     if (errorMessage.empty()) {
                         ui::ToastError::open("hex.builtin.view.provider_settings.load_error"_lang);
                     } else {
-                        ui::ToastError::open(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
+                        ui::ToastError::open(fmt::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
                     }
                     TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
                 }

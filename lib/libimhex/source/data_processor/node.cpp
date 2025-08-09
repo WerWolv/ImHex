@@ -24,7 +24,7 @@ namespace hex::dp {
         auto attribute = this->getConnectedInputAttribute(index);
 
         if (attribute == nullptr)
-            throwNodeError(hex::format("Nothing connected to input '{0}'", Lang(m_attributes[index].getUnlocalizedName())));
+            throwNodeError(fmt::format("Nothing connected to input '{0}'", Lang(m_attributes[index].getUnlocalizedName())));
 
         if (attribute->getType() != Attribute::Type::Buffer)
             throwNodeError("Tried to read buffer from non-buffer attribute");

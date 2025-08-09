@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
             } catch (boost::regex_error &) { }
         }
 
-        ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.output"_lang, outputString.data(), outputString.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.output"_lang, outputString, ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
 
         ImGui::PopItemWidth();
     }

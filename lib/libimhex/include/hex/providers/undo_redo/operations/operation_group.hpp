@@ -37,13 +37,13 @@ namespace hex::prv::undo {
             if (m_formattedContent.size() <= 10)
                 m_formattedContent.emplace_back(newOperation->format());
             else
-                m_formattedContent.back() = hex::format("[{}x] ...", (m_operations.size() - 10) + 1);
+                m_formattedContent.back() = fmt::format("[{}x] ...", (m_operations.size() - 10) + 1);
 
             m_operations.emplace_back(std::move(newOperation));
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("{}", Lang(m_unlocalizedName));
+            return fmt::format("{}", Lang(m_unlocalizedName));
         }
 
         [[nodiscard]] Region getRegion() const override {

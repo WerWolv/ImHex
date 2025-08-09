@@ -24,8 +24,6 @@ namespace hex::init {
         bool running;
     };
 
-    enum FrameResult{ Success, Failure, Running };
-
     struct Highlight {
         ImVec2 start;
         size_t count;
@@ -37,18 +35,13 @@ namespace hex::init {
         WindowSplash();
         ~WindowSplash();
 
-        bool loop();
+        std::optional<bool> loop();
+        void startStartupTaskExecution();
+        void addStartupTask(const std::string &taskName, const TaskFunction &function, bool async);
 
-        FrameResult fullFrame();
-        void startStartupTasks();
-
+    private:
         void createTask(const Task &task);
-
-        void addStartupTask(const std::string &taskName, const TaskFunction &function, bool async) {
-            std::scoped_lock lock(m_tasksMutex);
-
-            m_tasks.emplace_back(taskName, function, async);
-        }
+        void fullFrame();
 
     private:
         GLFWwindow *m_window;

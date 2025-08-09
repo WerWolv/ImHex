@@ -13,11 +13,9 @@
 #include <init/tasks.hpp>
 #include <hex/trace/stacktrace.hpp>
 
-#include <llvm/Demangle/Demangle.h>
 #include <nlohmann/json.hpp>
 
 #include <hex/trace/stacktrace.hpp>
-#include <llvm/Demangle/Demangle.h>
 
 #include <csignal>
 #include <exception>
@@ -41,7 +39,7 @@ namespace hex::crash {
     void resetCrashHandlers();
     
     static void sendNativeMessage(const std::string& message) {
-        hex::nativeErrorMessage(hex::format("ImHex crashed during initial setup!\nError: {}", message));
+        hex::nativeErrorMessage(fmt::format("ImHex crashed during initial setup!\nError: {}", message));
     }
 
     // Function that decides what should happen on a crash
@@ -50,9 +48,9 @@ namespace hex::crash {
     static CrashCallback crashCallback = sendNativeMessage;
 
     static void saveCrashFile(const std::string& message) {
-        log::fatal(message);
+        log::fatal("{}", message);
 
-        nlohmann::json crashData {
+        const nlohmann::json crashData {
             { "logFile", wolv::io::fs::toNormalizedPathString(hex::log::impl::getFile().getPath()) },
             { "project", wolv::io::fs::toNormalizedPathString(ProjectFile::getPath()) },
         };
@@ -125,8 +123,8 @@ namespace hex::crash {
         printStackTrace();
 
         // Flush all streams
-        fflush(stdout);
-        fflush(stderr);
+        std::fflush(stdout);
+        std::fflush(stderr);
 
         #if defined(IMGUI_TEST_ENGINE)
             ImGuiTestEngine_CrashHandler();
@@ -146,7 +144,7 @@ namespace hex::crash {
         resetCrashHandlers();
 
         // Actually handle the crash
-        handleCrash(hex::format("Received signal '{}' ({})", signalName, signalNumber));
+        handleCrash(fmt::format("Received signal '{}' ({})", signalName, signalNumber));
 
         // Detect if the crash was due to an uncaught exception
         if (std::uncaught_exceptions() > 0) {
@@ -164,7 +162,7 @@ namespace hex::crash {
         try {
             std::rethrow_exception(std::current_exception());
         } catch (std::exception &ex) {
-            std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::demangle(std::string("_Z") + typeid(ex).name()), ex.what());
+            std::string exceptionStr = fmt::format("{}()::what() -> {}", trace::demangle(typeid(ex).name()), ex.what());
 
             handleCrash(exceptionStr);
             log::fatal("Program terminated with uncaught exception: {}", exceptionStr);

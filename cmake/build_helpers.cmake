@@ -4,6 +4,7 @@
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
 set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0141 NEW)
 
 if (POLICY CMP0177)
     set(CMAKE_POLICY_DEFAULT_CMP0177 OLD)
@@ -64,6 +65,32 @@ function(addCommonFlag)
     addCFlag(${ARGV0} ${ARGV1})
     addCXXFlag(${ARGV0} ${ARGV1})
     addObjCFlag(${ARGV0} ${ARGV1})
+endfunction()
+
+function(addCppCheck target)
+    if (NOT IMHEX_ENABLE_CPPCHECK)
+        return()
+    endif()
+
+    find_program(cppcheck_exe NAMES cppcheck REQUIRED)
+    if (NOT cppcheck_exe)
+        return()
+    endif()
+
+    set(target_build_dir $<TARGET_FILE_DIR:${target}>)
+    set(cppcheck_opts
+            --enable=all
+            --inline-suppr
+            --quiet
+            --std=c++23
+            --check-level=exhaustive
+            --error-exitcode=10
+            --suppressions-list=${CMAKE_SOURCE_DIR}/dist/cppcheck.supp
+            --checkers-report=${target_build_dir}/cppcheck-report.txt
+    )
+    set_target_properties(${target} PROPERTIES
+        CXX_CPPCHECK "${cppcheck_exe};${cppcheck_opts}"
+    )
 endfunction()
 
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
@@ -261,6 +288,17 @@ macro(createPackage)
             list(APPEND PLUGIN_TARGET_FILES "$<TARGET_FILE:${plugin}>")
         endforeach ()
 
+        if (DEFINED VCPKG_TARGET_TRIPLET)
+            set(VCPKG_DEPS_FOLDER "")
+            if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+                set(VCPKG_DEPS_FOLDER "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/debug/bin")
+            else()
+                set(VCPKG_DEPS_FOLDER "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin")
+            endif()
+
+            install(CODE "set(VCPKG_DEPS_FOLDER \"${VCPKG_DEPS_FOLDER}\")")
+        endif()
+
         # Grab all dynamically linked dependencies.
         install(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
         install(CODE "set(PLUGIN_TARGET_FILES \"${PLUGIN_TARGET_FILES}\")")
@@ -274,8 +312,13 @@ macro(createPackage)
             POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
         )
 
-        if(_c_deps_FILENAMES)
+        if(_c_deps_FILENAMES AND NOT _c_deps STREQUAL "")
             message(WARNING "Conflicting dependencies for library: \"${_c_deps}\"!")
+        endif()
+
+        if (DEFINED VCPKG_DEPS_FOLDER)
+            file(GLOB VCPKG_DEPS "${VCPKG_DEPS_FOLDER}/*.dll")
+            list(APPEND _r_deps ${VCPKG_DEPS})
         endif()
 
         foreach(_file ${_r_deps})
@@ -302,12 +345,7 @@ macro(createPackage)
         downloadImHexPatternsFiles("./share/imhex")
 
         # install AppStream file
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/net.werwolv.imhex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
-
-        # install symlink for the old standard name
-        file(CREATE_LINK net.werwolv.imhex.metainfo.xml ${CMAKE_CURRENT_BINARY_DIR}/net.werwolv.imhex.appdata.xml SYMBOLIC)
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/net.werwolv.imhex.appdata.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
-
+        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/net.werwolv.ImHex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
     endif()
 
     if (APPLE)
@@ -388,6 +426,8 @@ macro(configureCMake)
 
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code for all targets" FORCE)
 
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+
     # Configure use of recommended build tools
     if (IMHEX_USE_DEFAULT_BUILD_SETTINGS)
         message(STATUS "Configuring CMake to use recommended build tools...")
@@ -434,19 +474,6 @@ macro(configureCMake)
             message(WARNING "ninja not found, using default generator!")
         endif ()
     endif()
-
-    # Enable LTO if desired and supported
-    if (IMHEX_ENABLE_LTO)
-        include(CheckIPOSupported)
-
-        check_ipo_supported(RESULT result OUTPUT output_error)
-        if (result)
-            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-            message(STATUS "LTO enabled!")
-        else ()
-            message(WARNING "LTO is not supported: ${output_error}")
-        endif ()
-    endif ()
 endmacro()
 
 function(configureProject)
@@ -459,6 +486,19 @@ function(configureProject)
     else()
         set(IMHEX_MAIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" PARENT_SCOPE)
     endif()
+
+    # Enable LTO if desired and supported
+    if (IMHEX_ENABLE_LTO)
+        include(CheckIPOSupported)
+
+        check_ipo_supported(RESULT result OUTPUT output_error)
+        if (result OR WIN32)
+            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:ON>)
+            message(STATUS "LTO enabled!")
+        else ()
+            message(WARNING "LTO is not supported: ${output_error}")
+        endif ()
+    endif ()
 endfunction()
 
 macro(setDefaultBuiltTypeIfUnset)
@@ -670,12 +710,14 @@ macro(setupCompilerFlags target)
         addCXXFlag("-Wno-include-angled-in-module-purview" ${target})
 
         # Enable hardening flags
-        if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-            addCommonFlag("-U_FORTIFY_SOURCE" ${target})
-            addCommonFlag("-D_FORTIFY_SOURCE=3" ${target})
+        if (IMHEX_BUILD_HARDENING)
+            if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+                addCommonFlag("-U_FORTIFY_SOURCE" ${target})
+                addCommonFlag("-D_FORTIFY_SOURCE=3" ${target})
 
-            if (NOT EMSCRIPTEN)
-                addCommonFlag("-fstack-protector-strong" ${target})
+                if (NOT EMSCRIPTEN)
+                    addCommonFlag("-fstack-protector-strong" ${target})
+                endif()
             endif()
         endif()
 
@@ -755,9 +797,7 @@ endmacro()
 macro(addBundledLibraries)
     set(EXTERNAL_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/external")
     set(THIRD_PARTY_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/third_party")
-
     set(BUILD_SHARED_LIBS OFF)
-    add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/imgui)
 
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/microtar EXCLUDE_FROM_ALL)
 
@@ -844,6 +884,8 @@ macro(addBundledLibraries)
 
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/disassembler EXCLUDE_FROM_ALL)
+
+    add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/imgui)
 
     if (LIBPL_SHARED_LIBRARY)
         install(
@@ -934,8 +976,9 @@ function(precompileHeaders target includeFolder)
     endif()
 
     file(GLOB_RECURSE TARGET_INCLUDES "${includeFolder}/**/*.hpp")
+    file(GLOB_RECURSE LIBIMHEX_INCLUDES "${CMAKE_SOURCE_DIR}/lib/libimhex/include/**/*.hpp")
     set(SYSTEM_INCLUDES "<algorithm>;<array>;<atomic>;<chrono>;<cmath>;<cstddef>;<cstdint>;<cstdio>;<cstdlib>;<cstring>;<exception>;<filesystem>;<functional>;<iterator>;<limits>;<list>;<map>;<memory>;<optional>;<ranges>;<set>;<stdexcept>;<string>;<string_view>;<thread>;<tuple>;<type_traits>;<unordered_map>;<unordered_set>;<utility>;<variant>;<vector>")
-    set(INCLUDES "${SYSTEM_INCLUDES};${TARGET_INCLUDES}")
+    set(INCLUDES "${SYSTEM_INCLUDES};${TARGET_INCLUDES};${LIBIMHEX_INCLUDES}")
     string(REPLACE ">" "$<ANGLE-R>" INCLUDES "${INCLUDES}")
     target_precompile_headers(${target}
             PUBLIC

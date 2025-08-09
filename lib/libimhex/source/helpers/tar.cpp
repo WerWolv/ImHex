@@ -95,7 +95,7 @@ namespace hex {
     }
 
     std::string Tar::getOpenErrorString() const {
-        return hex::format("{}: {}", mtar_strerror(m_tarOpenErrno), std::strerror(m_fileOpenErrno));
+        return fmt::format("{}: {}", mtar_strerror(m_tarOpenErrno), std::strerror(m_fileOpenErrno));
     }
 
     void Tar::close() {

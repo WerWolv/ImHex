@@ -11,6 +11,7 @@
 
 #include <set>
 #include <thread>
+#include <fonts/vscode_icons.hpp>
 #include <hex/helpers/auto_reset.hpp>
 
 #include <nlohmann/json.hpp>
@@ -23,7 +24,10 @@
 
 namespace hex::plugin::builtin {
 
-    class ProcessMemoryProvider : public hex::prv::Provider {
+    class ProcessMemoryProvider : public prv::Provider,
+                                  public prv::IProviderDataDescription,
+                                  public prv::IProviderLoadInterface,
+                                  public prv::IProviderSidebarInterface {
     public:
         ProcessMemoryProvider() = default;
         ~ProcessMemoryProvider() override = default;
@@ -47,7 +51,7 @@ namespace hex::plugin::builtin {
 
         void save() override {}
 
-        [[nodiscard]] std::string getName() const override { return hex::format("hex.builtin.provider.process_memory.name"_lang, m_selectedProcess != nullptr ? m_selectedProcess->name : ""); }
+        [[nodiscard]] std::string getName() const override { return fmt::format("hex.builtin.provider.process_memory.name"_lang, m_selectedProcess != nullptr ? m_selectedProcess->name : ""); }
         [[nodiscard]] std::vector<Description> getDataDescription() const override {
             return {
                     { "hex.builtin.provider.process_memory.process_name"_lang, m_selectedProcess->name },
@@ -58,16 +62,18 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool open() override;
         void close() override;
 
-        [[nodiscard]] bool hasLoadInterface() const override { return true; }
-        [[nodiscard]] bool hasInterface() const override { return true; }
         bool drawLoadInterface() override;
-        void drawInterface() override;
+        void drawSidebarInterface() override;
 
         void loadSettings(const nlohmann::json &) override {}
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json) const override { return { }; }
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.process_memory";
+        }
+
+        [[nodiscard]] const char* getIcon() const override {
+            return ICON_VS_SERVER_PROCESS;
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64) const override;

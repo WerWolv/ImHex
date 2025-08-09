@@ -1,5 +1,6 @@
 #pragma once
 
+#include <hex/api/imhex_api.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/api/events/events_provider.hpp>
 
@@ -42,7 +43,10 @@ namespace hex::plugin::builtin {
         [[nodiscard]] u64 getActualSize() const override { return 0x00; }
 
         [[nodiscard]] std::string getName() const override { return "ImHex"; }
-        [[nodiscard]] std::vector<Description> getDataDescription() const override { return { }; }
+
+        [[nodiscard]] const char* getIcon() const override {
+            return "";
+        }
 
         void loadSettings(const nlohmann::json &settings) override { std::ignore = settings; }
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }

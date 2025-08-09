@@ -17,6 +17,19 @@
         "hex.visualizers.pl_visualizer.coordinates.query": "查找地址",
         "hex.visualizers.pl_visualizer.coordinates.querying": "正在查找地址……",
         "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "找不到地址",
-        "hex.visualizers.pl_visualizer.task.visualizing": "可视化数据……"
+        "hex.visualizers.pl_visualizer.task.visualizing": "可视化数据……",
+        "hex.visualizers.pl_visualizer.3d.error_message_colors": "颜色数据​",
+        "hex.visualizers.pl_visualizer.3d.error_message_count": "{} 的数量必须是 {} 的倍数",
+        "hex.visualizers.pl_visualizer.3d.error_message_expected": "预期类型为 {}，实际类型为 {}",
+        "hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count": " 共需 {} 个顶点",
+        "hex.visualizers.pl_visualizer.3d.error_message_index_count": "错误：索引数量必须是3的倍数",
+        "hex.visualizers.pl_visualizer.3d.error_message_invalid_index_pattern": "错误：无法确定索引类型大小​",
+        "hex.visualizers.pl_visualizer.3d.error_message_invalid_indices": "错误：索引值必须在0到顶点数减1范围内。无效索引：",
+        "hex.visualizers.pl_visualizer.3d.error_message_invalid_texture_file": "错误：无效纹理文件",
+        "hex.visualizers.pl_visualizer.3d.error_message_normals": "​法线数据",
+        "hex.visualizers.pl_visualizer.3d.error_message_not_empty": "{} 不能为空",
+        "hex.visualizers.pl_visualizer.3d.error_message_positions": "顶点位置数据",
+        "hex.visualizers.pl_visualizer.3d.error_message_uv_coords": "纹理坐标数据",
+        "hex.visualizers.pl_visualizer.3d.error_message_vertex_count": "错误：顶点数量必须是3的倍数"
     }
 }

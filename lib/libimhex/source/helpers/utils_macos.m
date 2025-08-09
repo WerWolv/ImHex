@@ -91,16 +91,23 @@
         for (CFIndex i = 0; i < count; i++) {
             CFStringRef fontName = (CFStringRef)CFArrayGetValueAtIndex(fontDescriptors, i);
 
-            // Get font path
-            CFDictionaryRef attributes = (__bridge CFDictionaryRef)@{ (__bridge NSString *)kCTFontNameAttribute : (__bridge NSString *)fontName };
+            // Get font path - skip fonts without valid URLs
+            CFDictionaryRef attributes = (__bridge CFDictionaryRef)@{ (__bridge NSString *)kCTFontFamilyNameAttribute : (__bridge NSString *)fontName };
             CTFontDescriptorRef descriptor = CTFontDescriptorCreateWithAttributes(attributes);
             CFURLRef fontURL = CTFontDescriptorCopyAttribute(descriptor, kCTFontURLAttribute);
-            CFStringRef fontPath = CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
 
-            registerFont([(__bridge NSString *)fontName UTF8String], [(__bridge NSString *)fontPath UTF8String]);
+            if (fontURL != NULL) {
+                CFStringRef fontPath = CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
+
+                if (fontPath != NULL) {
+                    registerFont([(__bridge NSString *)fontName UTF8String], [(__bridge NSString *)fontPath UTF8String]);
+                    CFRelease(fontPath);
+                }
+
+                CFRelease(fontURL);
+            }
 
             CFRelease(descriptor);
-            CFRelease(fontURL);
         }
 
         CFRelease(fontDescriptors);

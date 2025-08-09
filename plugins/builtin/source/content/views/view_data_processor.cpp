@@ -398,7 +398,7 @@ namespace hex::plugin::builtin {
         });
 
         /* Import Nodes */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, ICON_VS_CHIP, 4050, Shortcut::None, [this]{
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, ICON_VS_CHIP, 5600, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Read);
@@ -707,10 +707,11 @@ namespace hex::plugin::builtin {
 
             // Draw custom nodes submenu
             if (ImGui::BeginMenu("hex.builtin.nodes.custom"_lang)) {
-                ImGui::Separator();
+                if (!m_customNodes.empty())
+                    ImGui::Separator();
 
                 // Draw entries for each custom node
-                for (auto &customNode : m_customNodes) {
+                for (const auto &customNode : m_customNodes) {
                     if (ImGui::MenuItem(customNode.name.c_str())) {
                         node = loadNode(customNode.data);
                     }
@@ -888,6 +889,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataProcessor::drawContent() {
+        if (m_workspaceStack->empty()) return;
+
         auto &workspace = *m_workspaceStack->back();
 
         ImGui::BeginDisabled(m_evaluationTask.isRunning());
@@ -913,7 +916,7 @@ namespace hex::plugin::builtin {
         }
 
         // Draw the main node editor workspace window
-        if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.3F))) {
+        if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.25F))) {
             ImNodes::BeginNodeEditor();
 
             if (m_evaluationTask.isRunning())
@@ -981,6 +984,8 @@ namespace hex::plugin::builtin {
 
         ImGui::EndDisabled();
 
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
+
         // Draw the control bar at the bottom
         {
             if (!m_evaluationTask.isRunning()) {
@@ -995,7 +1000,9 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            ImGui::Checkbox("Continuous evaluation", &m_continuousEvaluation);
+            ImGuiExt::DimmedIconToggle(ICON_VS_DEBUG_RERUN, &m_continuousEvaluation);
+            ImGui::SetItemTooltip("%s", "hex.builtin.view.data_processor.continuous_evaluation"_lang.get());
+
         }
 
 
@@ -1276,7 +1283,7 @@ namespace hex::plugin::builtin {
 
             m_updateNodePositions = true;
         } catch (nlohmann::json::exception &e) {
-            ui::ToastError::open(hex::format("Failed to load nodes: {}", e.what()));
+            ui::ToastError::open(fmt::format("Failed to load nodes: {}", e.what()));
         }
     }
 

@@ -3,11 +3,11 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/http_requests.hpp>
+#include <hex/trace/stacktrace.hpp>
 
 #include <pl/core/token.hpp>
 #include <pl/core/evaluator.hpp>
 
-#include <content/helpers/demangle.hpp>
 #include <pl/patterns/pattern.hpp>
 
 namespace hex::plugin::builtin {
@@ -75,7 +75,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::addFunction(nsHexDec, "demangle", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto mangledString = params[0].toString(false);
 
-                return hex::plugin::builtin::demangle(mangledString);
+                return trace::demangle(mangledString);
             });
         }
 

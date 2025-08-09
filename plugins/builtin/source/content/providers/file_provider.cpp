@@ -135,13 +135,13 @@ namespace hex::plugin::builtin {
         if (m_fileStats.has_value()) {
             std::string creationTime, accessTime, modificationTime;
 
-            try { creationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", *std::localtime(&m_fileStats->st_ctime)); }
+            try { creationTime = fmt::format("{:%Y-%m-%d %H:%M:%S}", *std::localtime(&m_fileStats->st_ctime)); }
             catch (const fmt::format_error&) { creationTime = "???"; }
 
-            try { accessTime = hex::format("{:%Y-%m-%d %H:%M:%S}", *std::localtime(&m_fileStats->st_atime)); }
+            try { accessTime = fmt::format("{:%Y-%m-%d %H:%M:%S}", *std::localtime(&m_fileStats->st_atime)); }
             catch (const fmt::format_error&) { accessTime = "???"; }
 
-            try { modificationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", *std::localtime(&m_fileStats->st_mtime)); }
+            try { modificationTime = fmt::format("{:%Y-%m-%d %H:%M:%S}", *std::localtime(&m_fileStats->st_mtime)); }
             catch (const fmt::format_error&) { modificationTime = "???"; }
 
             result.emplace_back("hex.builtin.provider.file.creation"_lang,      creationTime);
@@ -178,7 +178,7 @@ namespace hex::plugin::builtin {
     }
 
     std::vector<FileProvider::MenuEntry> FileProvider::getMenuEntries() {
-        FileProvider::MenuEntry loadMenuItem;
+        MenuEntry loadMenuItem;
 
         if (m_loadedIntoMemory)
             loadMenuItem = { "hex.builtin.provider.file.menu.direct_access"_lang, ICON_VS_ARROW_SWAP, [this] { this->convertToDirectAccess(); } };
@@ -204,7 +204,7 @@ namespace hex::plugin::builtin {
         {
             wolv::io::File file(m_path, wolv::io::File::Mode::Read);
             if (!file.isValid()) {
-                this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
+                this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
                 return false;
             }
 
@@ -237,7 +237,7 @@ namespace hex::plugin::builtin {
             file = wolv::io::File(m_path, wolv::io::File::Mode::Read);
             if (!file.isValid()) {
                 m_readable = false;
-                this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
+                this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
                 return false;
             }
 
@@ -291,6 +291,8 @@ namespace hex::plugin::builtin {
         m_data.clear();
         s_openedFiles.erase(this);
         m_changeTracker.stopTracking();
+        m_readable = false;
+        m_writable = false;
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
@@ -311,7 +313,7 @@ namespace hex::plugin::builtin {
                 fullPath = path;
 
             if (!wolv::io::fs::exists(fullPath)) {
-                this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(ENOENT)));
+                this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(ENOENT)));
             }
 
             path = std::move(fullPath);

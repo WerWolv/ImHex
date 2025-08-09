@@ -3,6 +3,8 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#include <fmt/chrono.h>
+
 namespace hex::plugin::builtin {
 
     bool UDPProvider::open() {
@@ -25,6 +27,8 @@ namespace hex::plugin::builtin {
             std::vector(data.begin(), data.end()),
             std::chrono::system_clock::now()
         );
+
+        this->markDirty();
     }
 
     u64 UDPProvider::getActualSize() const {
@@ -64,7 +68,7 @@ namespace hex::plugin::builtin {
         /* Not supported */
     }
 
-    void UDPProvider::drawInterface() {
+    void UDPProvider::drawSidebarInterface() {
         std::scoped_lock lock(m_mutex);
 
         if (ImGui::BeginTable("##Messages", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImGui::GetContentRegionAvail())) {

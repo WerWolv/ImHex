@@ -3,6 +3,7 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/events/events_interaction.hpp>
+#include <hex/trace/stacktrace.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
 
@@ -13,7 +14,6 @@
 #include <string>
 #include <utility>
 
-#include <content/helpers/demangle.hpp>
 #include <boost/regex.hpp>
 
 namespace hex::plugin::builtin {
@@ -71,7 +71,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
                                 ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", region.getStartAddress(), region.getEndAddress());
 
-                                auto demangledValue = hex::plugin::builtin::demangle(value);
+                                auto demangledValue = trace::demangle(value);
 
                                 if (value != demangledValue) {
                                     ImGui::TableNextRow();
@@ -168,7 +168,7 @@ namespace hex::plugin::builtin {
         if (std::signed_integral<T>)
             value = T(hex::signExtend(bytes.size() * 8, value));
 
-        return hex::format("{}", value);
+        return fmt::format("{}", value);
     }
 
     std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchStrings(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Strings &settings) {
@@ -465,6 +465,17 @@ namespace hex::plugin::builtin {
         return results;
     }
 
+    template<typename T> T convert_signed_integer( T value, size_t size ) {
+
+        switch (size) {
+            case 1: return static_cast<T>(static_cast<i8>(value));
+            case 2: return static_cast<T>(static_cast<i16>(value));
+            case 4: return static_cast<T>(static_cast<i32>(value));
+            case 8: return static_cast<T>(static_cast<i64>(value));
+            default: return value;
+        }
+    }
+
     std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings) {
         std::vector<Occurrence> results;
 
@@ -500,6 +511,8 @@ namespace hex::plugin::builtin {
                 DecayedType value = 0;
                 reader.read(address, reinterpret_cast<u8*>(&value), size);
                 value = hex::changeEndianness(value, size, settings.endian);
+                if constexpr (std::signed_integral<DecayedType>)
+                    value = convert_signed_integer<DecayedType>(value, size);
 
                 return value >= minValue && value <= maxValue;
             }, min);
@@ -650,7 +663,7 @@ namespace hex::plugin::builtin {
             if (ImGui::MenuItemEx("hex.builtin.view.find.context.copy"_lang, ICON_VS_COPY))
                 ImGui::SetClipboardText(value.c_str());
             if (ImGui::MenuItemEx("hex.builtin.view.find.context.copy_demangle"_lang, ICON_VS_FILES))
-                ImGui::SetClipboardText(hex::plugin::builtin::demangle(value).c_str());
+                ImGui::SetClipboardText(trace::demangle(value).c_str());
             if (ImGui::BeginMenuEx("hex.builtin.view.find.context.replace"_lang, ICON_VS_REPLACE)) {
                 if (ImGui::BeginTabBar("##replace_tabs")) {
                     if (ImGui::BeginTabItem("hex.builtin.view.find.context.replace.hex"_lang)) {
@@ -718,8 +731,8 @@ namespace hex::plugin::builtin {
                         "hex.ui.common.encoding.utf8"_lang,
                         "hex.ui.common.encoding.utf16le"_lang,
                         "hex.ui.common.encoding.utf16be"_lang,
-                        hex::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16le"_lang),
-                        hex::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16be"_lang)
+                        fmt::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16le"_lang),
+                        fmt::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16be"_lang)
                 };
 
                 auto &mode = m_searchSettings.mode;
@@ -747,13 +760,13 @@ namespace hex::plugin::builtin {
                         ImGui::Checkbox("hex.builtin.view.find.strings.null_term"_lang, &settings.nullTermination);
 
                         ImGuiExt::Header("hex.builtin.view.find.strings.chars"_lang);
-                        ImGui::Checkbox(hex::format("{} [a-z]", "hex.builtin.view.find.strings.lower_case"_lang.get()).c_str(), &settings.lowerCaseLetters);
-                        ImGui::Checkbox(hex::format("{} [A-Z]", "hex.builtin.view.find.strings.upper_case"_lang.get()).c_str(), &settings.upperCaseLetters);
-                        ImGui::Checkbox(hex::format("{} [0-9]", "hex.builtin.view.find.strings.numbers"_lang.get()).c_str(), &settings.numbers);
-                        ImGui::Checkbox(hex::format("{} [_]", "hex.builtin.view.find.strings.underscores"_lang.get()).c_str(), &settings.underscores);
-                        ImGui::Checkbox(hex::format("{} [!\"#$%...]", "hex.builtin.view.find.strings.symbols"_lang.get()).c_str(), &settings.symbols);
-                        ImGui::Checkbox(hex::format("{} [ \\f\\t\\v]", "hex.builtin.view.find.strings.spaces"_lang.get()).c_str(), &settings.spaces);
-                        ImGui::Checkbox(hex::format("{} [\\r\\n]", "hex.builtin.view.find.strings.line_feeds"_lang.get()).c_str(), &settings.lineFeeds);
+                        ImGui::Checkbox(fmt::format("{} [a-z]", "hex.builtin.view.find.strings.lower_case"_lang.get()).c_str(), &settings.lowerCaseLetters);
+                        ImGui::Checkbox(fmt::format("{} [A-Z]", "hex.builtin.view.find.strings.upper_case"_lang.get()).c_str(), &settings.upperCaseLetters);
+                        ImGui::Checkbox(fmt::format("{} [0-9]", "hex.builtin.view.find.strings.numbers"_lang.get()).c_str(), &settings.numbers);
+                        ImGui::Checkbox(fmt::format("{} [_]", "hex.builtin.view.find.strings.underscores"_lang.get()).c_str(), &settings.underscores);
+                        ImGui::Checkbox(fmt::format("{} [!\"#$%...]", "hex.builtin.view.find.strings.symbols"_lang.get()).c_str(), &settings.symbols);
+                        ImGui::Checkbox(fmt::format("{} [ \\f\\t\\v]", "hex.builtin.view.find.strings.spaces"_lang.get()).c_str(), &settings.spaces);
+                        ImGui::Checkbox(fmt::format("{} [\\r\\n]", "hex.builtin.view.find.strings.line_feeds"_lang.get()).c_str(), &settings.lineFeeds);
                     }
 
                     m_settingsValid = true;

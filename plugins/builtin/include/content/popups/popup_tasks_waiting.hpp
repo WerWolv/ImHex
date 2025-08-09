@@ -10,10 +10,13 @@ namespace hex::plugin::builtin {
 
     class PopupTasksWaiting : public Popup<PopupTasksWaiting> {
     public:
-        PopupTasksWaiting()
-            : hex::Popup<PopupTasksWaiting>("hex.builtin.popup.waiting_for_tasks.title", false) { }
+        PopupTasksWaiting(std::function<void()> onFinish)
+            : hex::Popup<PopupTasksWaiting>("hex.builtin.popup.waiting_for_tasks.title", false),
+              m_onFinish(std::move(onFinish)){ }
 
         void drawContent() override {
+            ImHexApi::System::unlockFrameRate();
+
             ImGui::TextUnformatted("hex.builtin.popup.waiting_for_tasks.desc"_lang);
             ImGui::Separator();
 
@@ -26,13 +29,16 @@ namespace hex::plugin::builtin {
 
             if (TaskManager::getRunningTaskCount() == 0 && TaskManager::getRunningBackgroundTaskCount() == 0) {
                 ImGui::CloseCurrentPopup();
-                ImHexApi::System::closeImHex();
+                m_onFinish();
             }
         }
 
         [[nodiscard]] ImGuiWindowFlags getFlags() const override {
             return ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
         }
+
+    private:
+        std::function<void()> m_onFinish;
     };
 
 }

@@ -28,7 +28,7 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
 
     target_include_directories(imgui_imgui PUBLIC ${FREETYPE_INCLUDE_DIRS})
     target_link_directories(imgui_imgui PUBLIC ${FREETYPE_LIBRARY_DIRS})
-    target_link_libraries(imgui_imgui PUBLIC ${FREETYPE_LIBRARIES})
+    target_link_libraries(imgui_imgui PUBLIC ${FREETYPE_LIBRARIES} ${LUNASVG_LIBRARIES})
     target_compile_definitions(imgui_imgui PRIVATE EXPORT_SYMBOLS=1)
 endif()
 

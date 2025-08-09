@@ -311,11 +311,15 @@ EXPORT_MODULE namespace hex {
             }
 
             [[nodiscard]] bool isUnlockable() const {
-                return std::all_of(this->parents.begin(), this->parents.end(), [](auto &parent) { return parent->achievement->isUnlocked(); });
+                return std::ranges::all_of(this->parents, [](const auto &parent) {
+                    return parent->achievement->isUnlocked();
+                });
             }
 
             [[nodiscard]] bool isVisible() const {
-                return std::all_of(this->visibilityParents.begin(), this->visibilityParents.end(), [](auto &parent) { return parent->achievement->isUnlocked(); });
+                return std::ranges::all_of(this->visibilityParents, [](const auto &parent) {
+                    return parent->achievement->isUnlocked();
+                });
             }
 
             [[nodiscard]] bool isUnlocked() const {

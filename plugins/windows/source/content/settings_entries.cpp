@@ -22,11 +22,11 @@ namespace hex::plugin::windows {
             // Add 'Icon' key to use first icon embedded in exe
             std::array<char, MAX_PATH> imHexPath = { 0 };
             GetModuleFileNameA(nullptr, imHexPath.data(), imHexPath.size());
-            auto iconValue = hex::format(R"("{}",0)", imHexPath.data());
+            auto iconValue = fmt::format(R"("{}",0)", imHexPath.data());
             RegSetKeyValueA(imHexRootKey, nullptr, "Icon", REG_SZ, iconValue.c_str(), iconValue.size() + 1);
 
             // Add 'command' key to pass the right-clicked file path as first argument to ImHex
-            auto commandValue = hex::format(R"("{}" "%1")", imHexPath.data());
+            auto commandValue = fmt::format(R"("{}" "%1")", imHexPath.data());
             RegSetValueA(imHexRootKey, "command", REG_SZ, commandValue.c_str(), commandValue.size() + 1);
             RegCloseKey(imHexRootKey);
         }

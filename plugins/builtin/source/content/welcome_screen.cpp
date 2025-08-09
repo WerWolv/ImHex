@@ -186,6 +186,8 @@ namespace hex::plugin::builtin {
             if (over)
                 return;
 
+            ImHexApi::System::unlockFrameRate();
+
             const auto drawTile = [&](u32 x, u32 y) {
                 drawList->AddRectFilled(
                     {
@@ -308,7 +310,7 @@ namespace hex::plugin::builtin {
                         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
 
                         ImGui::Image(*s_nightlyTexture, s_nightlyTexture->getSize());
-                        ImGuiExt::InfoTooltip(hex::format("{0}\n\nCommit: {1}@{2}", "hex.builtin.welcome.nightly_build"_lang, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(true)).c_str());
+                        ImGuiExt::InfoTooltip(fmt::format("{0}\n\nCommit: {1}@{2}", "hex.builtin.welcome.nightly_build"_lang, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(true)).c_str());
 
                         ImGui::SetCursorPos(cursor);
                     }
@@ -349,13 +351,12 @@ namespace hex::plugin::builtin {
                             ImGui::SameLine(0, 2_scaled);
 
                             if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, nullptr, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 5.8), ImGuiChildFlags_AutoResizeX)) {
-                                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
-                                    if (ImGuiExt::Hyperlink(Lang(unlocalizedProviderName))) {
+                                for (const auto &[unlocalizedProviderName, icon] : ContentRegistry::Provider::impl::getEntries()) {
+                                    if (ImGuiExt::IconHyperlink(icon, Lang(unlocalizedProviderName))) {
                                         ImHexApi::Provider::createProvider(unlocalizedProviderName);
                                         otherProvidersVisible = false;
                                     }
                                 }
-
                             }
                             ImGuiExt::EndSubWindow();
                         }
@@ -453,7 +454,7 @@ namespace hex::plugin::builtin {
                             hovered = ImGui::IsItemHovered();
 
                             if (ImGui::IsItemClicked()) {
-                                hex::openWebpage(ImHexApiURL + hex::format("/info/{}/link", hex::toLower(ImHexApi::System::getOSName())));
+                                hex::openWebpage(ImHexApiURL + fmt::format("/info/{}/link", hex::toLower(ImHexApi::System::getOSName())));
                             }
                         }
                         ImGuiExt::EndSubWindow();
@@ -500,33 +501,50 @@ namespace hex::plugin::builtin {
                         if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                             ImGui::BringWindowToDisplayBack(ImGui::GetCurrentWindowRead());
 
-                            drawWelcomeScreenBackground();
+                            if (const auto &fullScreenView = ContentRegistry::Views::impl::getFullScreenView(); fullScreenView != nullptr) {
+                                fullScreenView->draw();
+                            } else {
+                                drawWelcomeScreenBackground();
 
-                            if (s_simplifiedWelcomeScreen)
-                                drawWelcomeScreenContentSimplified();
-                            else
-                                drawWelcomeScreenContentFull();
+                                if (s_simplifiedWelcomeScreen)
+                                    drawWelcomeScreenContentSimplified();
+                                else
+                                    drawWelcomeScreenContentFull();
 
-                            static bool hovered = false;
-                            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
-                            {
-                                const ImVec2 windowSize = { 150_scaled, ImGui::GetTextLineHeightWithSpacing() * 3.5F };
-                                ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
-                                ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
-                                if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
-                                    if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen)) {
-                                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
-                                        WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
+                                static bool hovered = false;
+                                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
+                                {
+                                    const auto &quickSettings = ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles();
+                                    if (!quickSettings.empty()) {
+                                        const auto padding = ImGui::GetStyle().FramePadding.y;
+                                        const ImVec2 windowSize = { 150_scaled, 2 * ImGui::GetTextLineHeightWithSpacing() + padding + std::ceil(quickSettings.size() / 5.0F) * (ImGui::GetTextLineHeightWithSpacing() + padding) };
+                                        ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
+                                        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
+                                        if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
+                                            u32 id = 0;
+                                            for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : quickSettings) {
+                                                ImGui::PushID(id + 1);
+                                                if (ImGuiExt::DimmedIconToggle(onIcon.c_str(), offIcon.c_str(), &state)) {
+                                                    toggleCallback(state);
+                                                    ContentRegistry::Settings::write<bool>("hex.builtin.settings.quick_settings", unlocalizedTooltip, state);
+                                                }
+                                                if (id % 5 > 0)
+                                                    ImGui::SameLine();
+                                                ImGui::SetItemTooltip("%s", Lang(unlocalizedTooltip).get());
+                                                ImGui::PopID();
+                                                id += 1;
+                                            }
+                                        }
+                                        ImGuiExt::EndSubWindow();
+
+                                        ImGui::PopStyleColor();
+                                        hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
                                     }
 
                                 }
-                                ImGuiExt::EndSubWindow();
-
-                                ImGui::PopStyleColor();
-                                hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-
+                                ImGui::PopStyleVar();
                             }
-                            ImGui::PopStyleVar();
+
                         }
                         ImGui::End();
                         ImGui::PopStyleVar();
@@ -627,7 +645,32 @@ namespace hex::plugin::builtin {
             ImHexApi::System::setTargetFPS(static_cast<float>(value.get<int>(14)));
         });
 
-        RequestChangeTheme::subscribe([](const std::string &theme) {
+
+        ContentRegistry::Interface::addWelcomeScreenQuickSettingsToggle(ICON_VS_COMPASS_ACTIVE, ICON_VS_COMPASS, "hex.builtin.welcome.quick_settings.simplified", false, [](bool state) {
+            s_simplifiedWelcomeScreen = state;
+            WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
+        });
+
+        EventImHexStartupFinished::subscribe([]() {
+            for (const auto &quickSetting : ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles()) {
+                auto &setting = quickSetting.unlocalizedTooltip;
+                ContentRegistry::Settings::onChange("hex.builtin.settings.quick_settings", setting, [setting](const ContentRegistry::Settings::SettingsValue &value) {
+                    for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles()) {
+                        if (unlocalizedTooltip == setting) {
+                            state = value.get<bool>(state);
+                            toggleCallback(state);
+                            break;
+                        }
+                    }
+                });
+
+                bool state = ContentRegistry::Settings::read<bool>("hex.builtin.settings.quick_settings", quickSetting.unlocalizedTooltip, quickSetting.state);
+                quickSetting.state = state;
+                quickSetting.callback(state);
+            }
+        });
+
+        static auto updateTextures = [](float scale) {
             auto changeTexture = [&](const std::string &path) {
                 return ImGuiExt::Texture::fromImage(romfs::get(path).span(), ImGuiExt::Texture::Filter::Nearest);
             };
@@ -636,14 +679,17 @@ namespace hex::plugin::builtin {
                 return ImGuiExt::Texture::fromSVG(romfs::get(path).span(), width, 0, ImGuiExt::Texture::Filter::Linear);
             };
 
-            ThemeManager::changeTheme(theme);
-            s_bannerTexture = changeTextureSvg(hex::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300_scaled);
-            s_nightlyTexture = changeTextureSvg(hex::format("assets/{}/nightly.svg", "common"), 35_scaled);
-            s_backdropTexture = changeTexture(hex::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
+            s_bannerTexture = changeTextureSvg(fmt::format("assets/{}/banner.svg", ThemeManager::getImageTheme()), 300 * scale);
+            s_nightlyTexture = changeTextureSvg(fmt::format("assets/{}/nightly.svg", "common"), 35 * scale);
+            s_backdropTexture = changeTexture(fmt::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
+        };
 
-            if (!s_bannerTexture->isValid()) {
-                log::error("Failed to load banner texture!");
-            }
+        RequestChangeTheme::subscribe([]() { updateTextures(ImHexApi::System::getGlobalScale()); });
+        EventDPIChanged::subscribe([](float oldScale, float newScale) {
+            if (oldScale == newScale)
+                return;
+
+            updateTextures(newScale);
         });
 
         // Clear project context if we go back to the welcome screen
@@ -719,7 +765,7 @@ namespace hex::plugin::builtin {
                                 }
                                 RequestUpdateWindowTitle::post();
                             } else {
-                                ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(backupFilePath)));
+                                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(backupFilePath)));
                             }
                         } else {
                             if (hasProject) {
@@ -793,7 +839,7 @@ namespace hex::plugin::builtin {
             if (!s_infoBannerTexture->isValid() && allowNetworking) {
                 TaskManager::createBackgroundTask("hex.builtin.task.loading_banner", [](auto&) {
                     HttpRequest request("GET",
-                        ImHexApiURL + hex::format("/info/{}/image", hex::toLower(ImHexApi::System::getOSName())));
+                        ImHexApiURL + fmt::format("/info/{}/image", hex::toLower(ImHexApi::System::getOSName())));
 
                     auto response = request.downloadFile().get();
 

@@ -4,20 +4,42 @@
 #include <hex/api/content_registry.hpp>
 
 namespace hex::fonts {
+
+    enum class AntialiasingType {
+        None,
+        Grayscale,
+        Lcd
+    };
+
     class AntialiasPicker : public ContentRegistry::Settings::Widgets::DropDown {
     public:
-        AntialiasPicker() : DropDown(
-                // Only allow subpixel rendering on Windows and Linux
-                #if defined(OS_WINDOWS) || defined(OS_LINUX)
-                    std::vector<UnlocalizedString>({"hex.fonts.setting.font.antialias_none", "hex.fonts.setting.font.antialias_grayscale", "hex.fonts.setting.font.antialias_subpixel"}),
-                    std::vector<nlohmann::json>({"none", "grayscale" , "subpixel"}),
-                    nlohmann::json("subpixel")
-                #else
-                    std::vector<UnlocalizedString>({"hex.fonts.setting.font.antialias_none", "hex.fonts.setting.font.antialias_grayscale"}),
-                    std::vector<nlohmann::json>({"none", "grayscale"}),
-                    nlohmann::json("grayscale")
-                #endif
-                ){}
+
+        AntialiasPicker() : DropDown(create()) { }
+
+    private:
+        static bool isSubpixelRenderingSupported() {
+            #if defined(OS_WINDOWS) || defined(OS_LINUX)
+                return ImHexApi::System::getGLVersion() >= SemanticVersion(4,1,0);
+            #else
+                return false;
+            #endif
+        }
+
+        static DropDown create() {
+            if (isSubpixelRenderingSupported()) {
+                return DropDown(
+                    std::vector<UnlocalizedString>{ "hex.fonts.setting.font.antialias_none", "hex.fonts.setting.font.antialias_grayscale", "hex.fonts.setting.font.antialias_subpixel" },
+                    { "none", "grayscale" , "subpixel" },
+                    "subpixel"
+                );
+            } else {
+                return DropDown(
+                    std::vector<UnlocalizedString>{ "hex.fonts.setting.font.antialias_none", "hex.fonts.setting.font.antialias_grayscale" },
+                    { "none", "grayscale" },
+                    "grayscale"
+                );
+            }
+        }
     };
 
     class FontFilePicker : public ContentRegistry::Settings::Widgets::FilePicker {
@@ -59,18 +81,14 @@ namespace hex::fonts {
         [[nodiscard]] float getFontSize() const;
         [[nodiscard]] bool isBold() const;
         [[nodiscard]] bool isItalic() const;
-        [[nodiscard]] const std::string antiAliasingType() const;
-
-    private:
-        bool drawPopup();
+        [[nodiscard]] AntialiasingType getAntialiasingType() const;
 
     private:
         FontFilePicker m_fontFilePicker;
         SliderPoints m_fontSize;
         AntialiasPicker m_antiAliased;
-        ContentRegistry::Settings::Widgets::Checkbox m_bold, m_italic;
 
-        bool m_applyEnabled = false;
+        bool m_bold, m_italic;
     };
 
     ContentRegistry::Settings::Widgets::Widget::Interface& addFontSettingsWidget(UnlocalizedString name);

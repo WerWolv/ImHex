@@ -43,12 +43,12 @@ namespace hex::plugin::builtin {
 
         ImGuiExt::Header("hex.builtin.tools.permissions.absolute"_lang);
 
-        auto result = hex::format("{}{}{}{}",
+        auto result = fmt::format("{}{}{}{}",
             (setuid << 2) | (setgid << 1) | (sticky << 0),
             (r[0] << 2) | (w[0] << 1) | (x[0] << 0),
             (r[1] << 2) | (w[1] << 1) | (x[1] << 0),
             (r[2] << 2) | (w[2] << 1) | (x[2] << 0));
-        ImGui::InputText("##permissions_absolute", result.data(), result.size(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputText("##permissions_absolute", result, ImGuiInputTextFlags_ReadOnly);
 
         ImGui::NewLine();
 
