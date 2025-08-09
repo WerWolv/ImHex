@@ -28,6 +28,7 @@
 #include <hex/helpers/menu_items.hpp>
 
 #include <GLFW/glfw3.h>
+#include <popups/popup_question.hpp>
 
 using namespace std::literals::string_literals;
 using namespace wolv::literals;
@@ -633,6 +634,22 @@ namespace hex::plugin::builtin {
 
     static void createExtrasMenu() {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.extras", 5000);
+
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 2600);
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.check_for_update" }, ICON_VS_SYNC, 2700, Shortcut::None, [] {
+            TaskManager::createBackgroundTask("Checking for updates", [] {
+                auto versionString = ImHexApi::System::checkForUpdate();
+                if (!versionString.has_value()) {
+                    ui::ToastInfo::open("hex.builtin.popup.no_update_available"_lang);
+                    return;
+                }
+
+                ui::PopupQuestion::open(fmt::format(fmt::runtime("hex.builtin.popup.update_available"_lang.get()), versionString.value()), [] {
+                    ImHexApi::System::updateImHex(ImHexApi::System::isNightlyBuild() ? ImHexApi::System::UpdateType::Nightly : ImHexApi::System::UpdateType::Stable);
+                }, [] { });
+            });
+        });
 
         if (ImHexApi::System::isNightlyBuild()) {
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_stable" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {

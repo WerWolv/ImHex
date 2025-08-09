@@ -33,67 +33,9 @@ namespace hex::plugin::builtin {
 
             // Check if we should check for updates
             TaskManager::createBackgroundTask("Update Check", [] {
-                std::string updateString;
-                if (ImHexApi::System::isNightlyBuild()) {
-                    HttpRequest request("GET", GitHubApiURL + "/releases/tags/nightly"s);
-                    request.setTimeout(10000);
+                const auto updateString = ImHexApi::System::checkForUpdate();
 
-                    // Query the GitHub API for the latest release version
-                    auto response = request.execute().get();
-                    if (response.getStatusCode() != 200)
-                        return;
-
-                    nlohmann::json releases;
-                    try {
-                        releases = nlohmann::json::parse(response.getData());
-                    } catch (const std::exception &) {
-                        return;
-                    }
-
-                    // Check if the response is valid
-                    if (!releases.contains("assets") || !releases["assets"].is_array())
-                        return;
-
-                    const auto firstAsset = releases["assets"].front();
-                    if (!firstAsset.is_object() || !firstAsset.contains("updated_at"))
-                        return;
-
-                    const auto nightlyUpdateTime = hex::parseTime("%Y-%m-%dT%H:%M:%SZ", firstAsset["updated_at"].get<std::string>());
-                    const auto imhexBuildTime = ImHexApi::System::getBuildTime();
-                    if (nightlyUpdateTime.has_value() && imhexBuildTime.has_value() && *nightlyUpdateTime > *imhexBuildTime) {
-                        updateString = "Nightly";
-                    }
-                } else {
-                    HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
-
-                    // Query the GitHub API for the latest release version
-                    auto response = request.execute().get();
-                    if (response.getStatusCode() != 200)
-                        return;
-
-                    nlohmann::json releases;
-                    try {
-                        releases = nlohmann::json::parse(response.getData());
-                    } catch (const std::exception &) {
-                        return;
-                    }
-
-                    // Check if the response is valid
-                    if (!releases.contains("tag_name") || !releases["tag_name"].is_string())
-                        return;
-
-                    // Convert the current version string to a format that can be compared to the latest release
-                    auto currVersion   = "v" + ImHexApi::System::getImHexVersion().get(false);
-
-                    // Get the latest release version string
-                    auto latestVersion = releases["tag_name"].get<std::string_view>();
-
-                    // Check if the latest release is different from the current version
-                    if (latestVersion != currVersion)
-                        updateString = latestVersion;
-                }
-
-                if (updateString.empty())
+                if (!updateString.has_value())
                     return;
 
                 TaskManager::doLater([updateString] {
@@ -101,7 +43,7 @@ namespace hex::plugin::builtin {
                         ImHexApi::System::updateImHex(ImHexApi::System::isNightlyBuild() ? ImHexApi::System::UpdateType::Nightly : ImHexApi::System::UpdateType::Stable);
                     });
 
-                    ui::ToastInfo::open(fmt::format("hex.builtin.welcome.update.desc"_lang, updateString));
+                    ui::ToastInfo::open(fmt::format("hex.builtin.welcome.update.desc"_lang, *updateString));
                 });
             });
 

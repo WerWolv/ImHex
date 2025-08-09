@@ -680,6 +680,12 @@ EXPORT_MODULE namespace hex {
              */
             bool isNightlyBuild();
 
+            /**
+             * @brief Checks if there's an update available for the current version of ImHex
+             * @return Optional string returning the version string of the new version, or std::nullopt if no update is available
+             */
+            std::optional<std::string> checkForUpdate();
+
             enum class UpdateType {
                 Stable,
                 Nightly
