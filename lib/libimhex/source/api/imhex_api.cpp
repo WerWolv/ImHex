@@ -560,6 +560,11 @@ namespace hex {
                 s_glRenderer = renderer;
             }
 
+            static SemanticVersion s_openGLVersion;
+            void setGLVersion(SemanticVersion version) {
+                s_openGLVersion = version;
+            }
+
             static AutoReset<std::map<std::string, std::string>> s_initArguments;
             void addInitArgument(const std::string &key, const std::string &value) {
                 static std::mutex initArgumentsMutex;
@@ -753,6 +758,10 @@ namespace hex {
 
         const std::string &getGLRenderer() {
             return impl::s_glRenderer;
+        }
+
+        const SemanticVersion& getGLVersion() {
+            return impl::s_openGLVersion;
         }
 
         bool isCorporateEnvironment() {

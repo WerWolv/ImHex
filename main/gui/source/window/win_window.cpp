@@ -397,8 +397,13 @@ namespace hex {
     }
 
     void Window::configureGLFW() {
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        if (ImHexApi::System::getGLVersion() >= SemanticVersion(4,1,0)) {
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        } else {
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        }
         glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
 
         // Windows versions before Windows 10 have issues with transparent framebuffers

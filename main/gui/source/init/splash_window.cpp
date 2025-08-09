@@ -71,6 +71,13 @@ namespace hex::init {
 
             ImHexApi::System::impl::setGPUVendor(glVendor);
             ImHexApi::System::impl::setGLRenderer(glRenderer);
+
+            {
+                int glVersionMajor = 0, glVersionMinor = 0;
+                glGetIntegerv(GL_MAJOR_VERSION, &glVersionMajor);
+                glGetIntegerv(GL_MINOR_VERSION, &glVersionMinor);
+                ImHexApi::System::impl::setGLVersion(SemanticVersion(glVersionMajor, glVersionMinor, 0));
+            }
         }
     }
 

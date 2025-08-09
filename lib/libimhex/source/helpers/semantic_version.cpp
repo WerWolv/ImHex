@@ -4,6 +4,10 @@
 
 namespace hex {
 
+    SemanticVersion::SemanticVersion(u32 major, u32 minor, u32 patch) : SemanticVersion(fmt::format("{}.{}.{}", major, minor, patch)) {
+
+    }
+
     SemanticVersion::SemanticVersion(const char *version) : SemanticVersion(std::string(version)) {
 
     }

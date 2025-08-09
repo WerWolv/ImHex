@@ -11,6 +11,7 @@ EXPORT_MODULE namespace hex {
     class SemanticVersion {
     public:
         SemanticVersion() = default;
+        SemanticVersion(u32 major, u32 minor, u32 patch);
         SemanticVersion(std::string version);
         SemanticVersion(std::string_view version);
         SemanticVersion(const char *version);

@@ -443,6 +443,7 @@ EXPORT_MODULE namespace hex {
 
                 void setGPUVendor(const std::string &vendor);
                 void setGLRenderer(const std::string &renderer);
+                void setGLVersion(SemanticVersion version);
 
                 void addInitArgument(const std::string &key, const std::string &value = { });
 
@@ -593,6 +594,12 @@ EXPORT_MODULE namespace hex {
              * @return The current GPU vendor
              */
             const std::string& getGLRenderer();
+
+            /**
+             * @brief Gets the current OpenGL version
+             * @return The current OpenGL version
+             */
+            const SemanticVersion& getGLVersion();
 
             /**
              * @brief Checks if ImHex is being run in a "Corporate Environment"
