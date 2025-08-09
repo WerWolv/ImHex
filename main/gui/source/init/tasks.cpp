@@ -210,7 +210,7 @@ namespace hex::init {
                     if (files.size() <= count)
                         return;
 
-                    std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
+                    std::ranges::sort(files, [](const auto& a, const auto& b) {
                         return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
                     });
 
@@ -225,6 +225,13 @@ namespace hex::init {
 
         keepNewest(10, paths::Logs);
         keepNewest(25, paths::Backups);
+
+        // Remove all old update files
+        for (const auto &path : paths::Updates.all()) {
+            for (const auto &entry : std::filesystem::directory_iterator(path)) {
+                wolv::io::fs::removeAll(entry.path());
+            }
+        }
 
         return result;
     }

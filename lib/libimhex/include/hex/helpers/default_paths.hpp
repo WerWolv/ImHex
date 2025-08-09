@@ -63,6 +63,7 @@ namespace hex::paths {
 
     const static inline impl::ConfigPath Config("config");
     const static inline impl::ConfigPath Recent("recent");
+    const static inline impl::ConfigPath Updates("updates");
 
     const static inline impl::PluginPath Libraries("lib");
     const static inline impl::PluginPath Plugins("plugins");

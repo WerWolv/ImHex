@@ -75,7 +75,7 @@ std::optional<std::fs::path> downloadUpdate(const std::string &url) {
     {
         // Loop over all available paths
         wolv::io::File file;
-        for (const auto &path : hex::paths::Config.write()) {
+        for (const auto &path : hex::paths::Updates.write()) {
             // Remove any existing update files
             wolv::io::fs::remove(path / updateFileName);
 
