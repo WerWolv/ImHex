@@ -18,7 +18,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ImHex
-          submodules: recursive
 
       - name: 📜 Set version variable
         run: |
@@ -62,8 +61,8 @@ jobs:
         continue-on-error: true
         run: |
           cd ImHex
-          echo "## Nightly Changelog" > changelog.md
-          git fetch --tags
+          echo "## Nightly ${GITHUB_SHA::7} Changelog" > changelog.md
+          git fetch --tags --recurse-submodules=no
           git log tags/nightly..HEAD --oneline --no-merges --pretty=format:'* %s' >> changelog.md
 
       - name: 📦 Update Pre-Release
