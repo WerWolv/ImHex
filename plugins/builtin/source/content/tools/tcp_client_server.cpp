@@ -89,7 +89,7 @@ namespace hex::plugin::builtin {
                     }
                     if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
                         if (ImHexApi::Provider::isValid()) {
-                            ImGui::SetTooltip(hex::format("{} ({})", "hex.builtin.tools.tcp_client_server.send_current_provider"_lang, ImHexApi::Provider::get()->getName()).c_str());
+                            ImGui::SetTooltip(fmt::format("{} ({})", "hex.builtin.tools.tcp_client_server.send_current_provider"_lang, ImHexApi::Provider::get()->getName()).c_str());
                         }
                         else {
                             ImGui::SetTooltip("hex.builtin.tools.tcp_client_server.send_current_provider"_lang);
@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_Header));
                                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
                                     std::vector<uint8_t> data(message.begin(), message.end());
-                                    ImHexApi::Provider::add<prv::MemoryProvider>(data, hex::format("hex.builtin.tools.tcp_client_server.tcp_message"_lang, index));
+                                    ImHexApi::Provider::add<prv::MemoryProvider>(data, fmt::format("hex.builtin.tools.tcp_client_server.tcp_message"_lang, index));
                                 }
                             }
                             ImGui::PopID();
@@ -232,7 +232,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_Header));
                                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
                                     std::vector<uint8_t> data(message.begin(), message.end());
-                                    ImHexApi::Provider::add<prv::MemoryProvider>(data, hex::format("hex.builtin.tools.tcp_client_server.tcp_message"_lang, index));
+                                    ImHexApi::Provider::add<prv::MemoryProvider>(data, fmt::format("hex.builtin.tools.tcp_client_server.tcp_message"_lang, index));
                                 }
                             }
                             ImGui::PopID();
