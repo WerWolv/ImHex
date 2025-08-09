@@ -633,6 +633,16 @@ namespace hex::plugin::builtin {
 
     static void createExtrasMenu() {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.extras", 5000);
+
+        if (ImHexApi::System::isNightlyBuild()) {
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_stable" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {
+                ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
+            });
+        } else {
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_nightly" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {
+                ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Nightly);
+            });
+        }
     }
 
     static void createHelpMenu() {

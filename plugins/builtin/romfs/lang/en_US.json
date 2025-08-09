@@ -128,6 +128,8 @@
         "hex.builtin.view.hex_editor.menu.edit.redo": "Redo",
         "hex.builtin.view.hex_editor.menu.edit.undo": "Undo",
         "hex.builtin.menu.extras": "Extras",
+        "hex.builtin.menu.extras.switch_to_stable": "Downgrade to Release",
+        "hex.builtin.menu.extras.switch_to_nightly": "Update to Nightly",
         "hex.builtin.menu.file": "File",
         "hex.builtin.menu.file.bookmark.export": "Export bookmarks",
         "hex.builtin.menu.file.bookmark.import": "Import bookmarks",

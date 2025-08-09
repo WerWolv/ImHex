@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
     const auto updatePath = downloadUpdate(updateArtifactUrl);
 
     // Install the update
-    if (installUpdate(*updatePath)) {
+    if (!installUpdate(*updatePath)) {
         // Open the latest release page in the default browser to allow the user to manually update
         hex::openWebpage(releaseUrl);
 
