@@ -48,6 +48,8 @@
                 // Main window
                 {
                     Window window;
+                    initializationFinished();
+
                     window.loop();
                 }
 

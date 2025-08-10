@@ -280,7 +280,7 @@ namespace hex::plugin::builtin {
                  RequestOpenFile::post(path);
         });
 
-        RequestStartMigration::subscribe([] {
+        EventImHexStartupFinished::subscribe([] {
             const auto currVersion = ImHexApi::System::getImHexVersion();
             const auto prevLaunchVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
             if (prevLaunchVersion == "") {
@@ -354,6 +354,30 @@ namespace hex::plugin::builtin {
 
         RequestChangeTheme::subscribe([](const std::string &theme) {
             ThemeManager::changeTheme(theme);
+        });
+
+        static std::mutex s_popupMutex;
+        static std::list<std::string> s_popupsToOpen;
+        RequestOpenPopup::subscribe([](auto name) {
+            std::scoped_lock lock(s_popupMutex);
+
+            s_popupsToOpen.push_back(name);
+        });
+
+        EventFrameBegin::subscribe([]() {
+            // Open popups when plugins requested it
+            // We retry every frame until the popup actually opens
+            // It might not open the first time because another popup is already open
+
+            std::scoped_lock lock(s_popupMutex);
+            s_popupsToOpen.remove_if([](const auto &name) {
+                if (ImGui::IsPopupOpen(name.c_str()))
+                    return true;
+                else
+                    ImGui::OpenPopup(name.c_str());
+
+                return false;
+            });
         });
 
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){

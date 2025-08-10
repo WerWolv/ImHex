@@ -41,7 +41,7 @@ static void detectSystemTheme() {
         }
     });
 
-    EventWindowInitialized::subscribe([=] {
+    EventImHexStartupFinished::subscribe([=] {
         bool themeFollowSystem = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme) == ThemeManager::NativeTheme;
 
         if (themeFollowSystem)

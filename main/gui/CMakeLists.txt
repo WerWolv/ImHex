@@ -5,22 +5,22 @@ add_executable(main ${APPLICATION_TYPE}
     source/crash_handlers.cpp
 
     source/window/window.cpp
-    source/window/win_window.cpp
-    source/window/macos_window.cpp
-    source/window/linux_window.cpp
-    source/window/web_window.cpp
+    source/window/platform/windows.cpp
+    source/window/platform/macos.cpp
+    source/window/platform/linux.cpp
+    source/window/platform/web.cpp
 
     source/messaging/common.cpp
     source/messaging/linux.cpp
     source/messaging/macos.cpp
-    source/messaging/win.cpp
+    source/messaging/windows.cpp
     source/messaging/web.cpp
 
     source/init/splash_window.cpp
     source/init/tasks.cpp
 
     source/init/run/common.cpp
-    source/init/run/native.cpp
+    source/init/run/desktop.cpp
     source/init/run/web.cpp
     source/init/run/cli.cpp
 

@@ -57,17 +57,6 @@ namespace hex {
     EVENT_DEF(RequestInitThemeHandlers);
 
     /**
-     * @brief Requests version and first-startup checks
-     *
-     * This request is called during ImHex's startup, and allows ImHex to check if it was updated since last launch.
-     * It also ensures newcomers (that open ImHex for the first time) are greeted with the tutorial.
-     *
-     * FIXME: the name is misleading, as this request does not effectively start any migration. It only executes
-     *  checks about ImHex's version. The name should be changed to reflect this behaviour.
-     */
-    EVENT_DEF(RequestStartMigration);
-
-    /**
      * @brief Send a subcommand to the main Imhex instance
      *
      * This request is called to send a subcommand to the main ImHex instance.

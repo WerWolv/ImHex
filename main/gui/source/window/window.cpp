@@ -59,6 +59,67 @@ namespace hex {
     using namespace std::literals::chrono_literals;
 
     Window::Window() {
+        this->initGLFW();
+        this->initImGui();
+        this->setupNativeWindow();
+        this->registerEventHandlers();
+        this->setupEmergencyPopups();
+
+        #if !defined(OS_WEB)
+            this->loadPostProcessingShader();
+        #endif
+    }
+
+    Window::~Window() {
+        RequestCloseImHex::unsubscribe(this);
+        EventDPIChanged::unsubscribe(this);
+
+        EventWindowDeinitializing::post(m_window);
+
+        this->exitImGui();
+        this->exitGLFW();
+    }
+
+    void Window::registerEventHandlers() {
+        // Initialize default theme
+        RequestChangeTheme::post("Dark");
+
+        // Handle the close window request by telling GLFW to shut down
+        RequestCloseImHex::subscribe(this, [this](bool noQuestions) {
+            glfwSetWindowShouldClose(m_window, GLFW_TRUE);
+
+            if (!noQuestions)
+                EventWindowClosing::post(m_window);
+        });
+
+        EventDPIChanged::subscribe(this, [this](float oldScaling, float newScaling) {
+            if (oldScaling == newScaling || oldScaling == 0 || newScaling == 0)
+                return;
+
+            int width, height;
+            glfwGetWindowSize(m_window, &width, &height);
+
+            width = float(width) * newScaling / oldScaling;
+            height = float(height) * newScaling / oldScaling;
+
+            ImHexApi::System::impl::setMainWindowSize(width, height);
+            glfwSetWindowSize(m_window, width, height);
+        });
+
+
+        LayoutManager::registerLoadCallback([this](std::string_view line) {
+            int width = 0, height = 0;
+            sscanf(line.data(), "MainWindowSize=%d,%d", &width, &height);
+
+            if (width > 0 && height > 0) {
+                TaskManager::doLater([width, height, this]{
+                    glfwSetWindowSize(m_window, width, height);
+                });
+            }
+        });
+    }
+
+    void Window::setupEmergencyPopups() {
         const static auto openEmergencyPopup = [this](const std::string &title){
             TaskManager::doLater([this, title] {
                 for (const auto &provider : ImHexApi::Provider::getProviders())
@@ -79,91 +140,8 @@ namespace hex {
                 }
             }
         }
-
-        // Initialize the window
-        this->initGLFW();
-        this->initImGui();
-        this->setupNativeWindow();
-        this->registerEventHandlers();
-
-        #if !defined(OS_WEB)
-            this->loadPostProcessingShader();
-        #endif
-
-        ContentRegistry::Settings::impl::store();
-        ContentRegistry::Settings::impl::load();
-
-        EventWindowInitialized::post();
-        EventImHexStartupFinished::post();
-        RequestStartMigration::post();
-
-        TutorialManager::init();
-
-        #if defined(OS_MACOS)
-            ShortcutManager::enableMacOSMode();
-        #endif
     }
 
-    Window::~Window() {
-        EventProviderDeleted::unsubscribe(this);
-        RequestCloseImHex::unsubscribe(this);
-        RequestUpdateWindowTitle::unsubscribe(this);
-        EventAbnormalTermination::unsubscribe(this);
-        RequestOpenPopup::unsubscribe(this);
-
-        EventWindowDeinitializing::post(m_window);
-
-        ContentRegistry::Settings::impl::store();
-
-        this->exitImGui();
-        this->exitGLFW();
-    }
-
-    void Window::registerEventHandlers() {
-        // Initialize default theme
-        RequestChangeTheme::post("Dark");
-
-        // Handle the close window request by telling GLFW to shut down
-        RequestCloseImHex::subscribe(this, [this](bool noQuestions) {
-            glfwSetWindowShouldClose(m_window, GLFW_TRUE);
-
-            if (!noQuestions)
-                EventWindowClosing::post(m_window);
-        });
-
-        // Handle opening popups
-        RequestOpenPopup::subscribe(this, [this](auto name) {
-            std::scoped_lock lock(m_popupMutex);
-
-            m_popupsToOpen.push_back(name);
-        });
-
-        EventDPIChanged::subscribe([this](float oldScaling, float newScaling) {
-            if (oldScaling == newScaling || oldScaling == 0 || newScaling == 0)
-                return;
-
-            int width, height;
-            glfwGetWindowSize(m_window, &width, &height);
-
-            width = float(width) * newScaling / oldScaling;
-            height = float(height) * newScaling / oldScaling;
-
-            ImHexApi::System::impl::setMainWindowSize(width, height);
-            glfwSetWindowSize(m_window, width, height);
-        });
-
-
-        LayoutManager::registerLoadCallback([this](std::string_view line) {
-            int width = 0, height = 0;
-                sscanf(line.data(), "MainWindowSize=%d,%d", &width, &height);
-
-                if (width > 0 && height > 0) {
-                    TaskManager::doLater([width, height, this]{
-                        glfwSetWindowSize(m_window, width, height);
-                    });
-                }
-        });
-    }
 
     void Window::loadPostProcessingShader() {
 
@@ -530,21 +508,6 @@ namespace hex {
 
                 ImGui::EndPopup();
             }
-        }
-
-        // Open popups when plugins requested it
-        // We retry every frame until the popup actually opens
-        // It might not open the first time because another popup is already open
-        {
-            std::scoped_lock lock(m_popupMutex);
-            m_popupsToOpen.remove_if([](const auto &name) {
-                if (ImGui::IsPopupOpen(name.c_str()))
-                    return true;
-                else
-                    ImGui::OpenPopup(name.c_str());
-
-                return false;
-            });
         }
 
         // Draw popup stack

@@ -90,6 +90,8 @@
                     static std::optional<Window> window;
                     window.emplace();
 
+                    initializationFinished();
+
                     emscripten_set_main_loop([]() {
                         window->fullFrame();
                     }, 60, 0);

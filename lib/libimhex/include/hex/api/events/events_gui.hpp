@@ -62,15 +62,6 @@ namespace hex {
     EVENT_DEF(EventWindowClosing, GLFWwindow*);
 
     /**
-     * @brief Informs that the main window is initialized
-     *
-     * On Windows OS, it is used to initialize system theme, if ImHex's theme is following it.
-     *
-     * FIXME: Change event name to reflect Theme detection, if it's only used for that purpose?
-     */
-    EVENT_DEF(EventWindowInitialized);
-
-    /**
      * @brief Informs that the main window is deinitializing
      *
      * Allows for lifecycle cleanup before ImHex shutdown.
