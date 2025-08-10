@@ -352,7 +352,7 @@ namespace hex {
 
             while (frameTime < targetFrameTime - longestExceededFrameTime) {
                 auto remainingFrameTime = targetFrameTime - frameTime;
-                glfwWaitEventsTimeout(remainingFrameTime);
+                glfwWaitEventsTimeout(std::min(remainingFrameTime, 1000.0));
 
                 auto newFrameTime = glfwGetTime() - frameTimeStart;
 

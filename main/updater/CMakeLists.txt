@@ -5,7 +5,12 @@ add_executable(updater
 )
 
 target_compile_definitions(updater PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
+
 target_link_libraries(updater PRIVATE libimhex ${FMT_LIBRARIES})
+if (UNIX OR BSD)
+    target_link_libraries(updater PRIVATE pthread)
+endif()
+
 add_dependencies(main updater)
 setupCompilerFlags(updater)
 
