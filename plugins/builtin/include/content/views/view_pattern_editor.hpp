@@ -17,7 +17,7 @@
 #include <filesystem>
 #include <functional>
 
-#include <TextEditor.h>
+#include <ui/text_editor.hpp>
 #include <popups/popup_file_chooser.hpp>
 #include <content/text_highlighting/pattern_language.hpp>
 

@@ -2,7 +2,7 @@
 
 #include <hex/ui/view.hpp>
 
-#include <TextEditor.h>
+#include <ui/text_editor.hpp>
 
 #include <list>
 
