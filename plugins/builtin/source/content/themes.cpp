@@ -8,7 +8,7 @@
 #include <imgui_internal.h>
 #include <implot.h>
 #include <imnodes.h>
-#include <TextEditor.h>
+#include <ui/text_editor.hpp>
 #include <romfs/romfs.hpp>
 
 #include <wolv/io/file.hpp>

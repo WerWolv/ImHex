@@ -13,6 +13,12 @@ add_imhex_plugin(
         source/ui/visualizer_drawer.cpp
         source/ui/menu_items.cpp
         source/ui/pattern_value_editor.cpp
+        source/ui/text_editor/editor.cpp
+        source/ui/text_editor/highlighter.cpp
+        source/ui/text_editor/navigate.cpp
+        source/ui/text_editor/render.cpp
+        source/ui/text_editor/support.cpp
+        source/ui/text_editor/utf8.cpp
     INCLUDES
         include
     LIBRARIES

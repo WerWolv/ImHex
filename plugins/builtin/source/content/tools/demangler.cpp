@@ -4,7 +4,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <imgui.h>
-#include <TextEditor.h>
+#include <ui/text_editor.hpp>
 
 
 namespace hex::plugin::builtin {

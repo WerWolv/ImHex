@@ -2,7 +2,7 @@
 #include <pl/core/token.hpp>
 #include <pl/core/preprocessor.hpp>
 #include <pl/helpers/safe_iterator.hpp>
-#include <TextEditor.h>
+#include <ui/text_editor.hpp>
 #include <hex/helpers/types.hpp>
 
 namespace pl {

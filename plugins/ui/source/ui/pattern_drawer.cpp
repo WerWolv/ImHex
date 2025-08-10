@@ -27,7 +27,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
-#include <TextEditor.h>
+#include <ui/text_editor.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
