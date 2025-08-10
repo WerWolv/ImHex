@@ -371,7 +371,7 @@ namespace hex::ui {
     }
 
     std::string Markdown::getElementId() {
-        return hex::format("##Element{}", m_elementId++);
+        return fmt::format("##Element{}", m_elementId++);
     }
 
 }
