@@ -1,5 +1,6 @@
 #include <ui/text_editor.hpp>
 #include <hex/helpers/utils.hpp>
+#include <algorithm>
 
 namespace hex::ui {
     extern TextEditor::Palette s_paletteBase;

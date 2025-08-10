@@ -1,5 +1,5 @@
 #include <ui/text_editor.hpp>
-
+#include <algorithm>
 
 namespace hex::ui {
     bool TextEditor::Coordinates::operator==(const Coordinates &o) const {

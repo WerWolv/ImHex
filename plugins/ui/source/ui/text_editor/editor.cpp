@@ -37,7 +37,7 @@ namespace hex::ui {
             result = m_lines[selection.m_start.m_line].substr(columns.m_line, columns.m_column, Line::LinePart::Utf8);
         else {
             auto lines = selection.getSelectedLines();
-            result = m_lines[lines.m_line].substr(columns.m_line, -1, Line::LinePart::Utf8) + '\n';
+            result = m_lines[lines.m_line].substr(columns.m_line, (u64) -1, Line::LinePart::Utf8) + '\n';
             for (i32 i = lines.m_line + 1; i < lines.m_column; i++) {
                 result += m_lines[i].m_chars + '\n';
             }
@@ -60,7 +60,7 @@ namespace hex::ui {
             auto lines = selection.getSelectedLines();
             auto &firstLine = m_lines[lines.m_line];
             auto &lastLine = m_lines[lines.m_column];
-            firstLine.erase(columns.m_line, -1);
+            firstLine.erase(columns.m_line,(u64) -1);
             lastLine.erase(0, columns.m_column);
 
             if (!lastLine.empty()) {
@@ -103,8 +103,8 @@ namespace hex::ui {
         auto lineCount = (i32) stringVector.size();
         where.m_line += lineCount - 1;
         where.m_column += getStringCharacterCount(stringVector[lineCount - 1]);
-        stringVector[lineCount - 1].append(line.substr(start.m_column, -1, Line::LinePart::Utf8));
-        line.erase(start.m_column, -1);
+        stringVector[lineCount - 1].append(line.substr(start.m_column,(u64) -1, Line::LinePart::Utf8));
+        line.erase(start.m_column, (u64) -1);
 
         line.append(stringVector[0]);
         line.m_colorized = false;
@@ -369,7 +369,7 @@ namespace hex::ui {
                 charPosition = (i32) whitespaceSize;
             }
             newLine.insert(newLine.end(), line.begin() + charStart, line.end());
-            line.erase(line.begin() + charStart, -1);
+            line.erase(line.begin() + charStart,(u64) -1);
             line.m_colorized = false;
             setCursorPosition(getCharacterCoordinates(coord.m_line + 1, charPosition));
             u.m_added = (char) character;
