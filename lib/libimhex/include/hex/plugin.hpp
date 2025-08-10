@@ -45,7 +45,7 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
 }
 
 [[maybe_unused]] static auto& getFeaturesImpl() {
-    static std::vector<hex::Feature> features;
+    static hex::AutoReset<std::vector<hex::Feature>> features;
     return features;
 }
 
