@@ -153,14 +153,14 @@ bool installUpdate(const std::fs::path &updatePath) {
     };
 
     const static auto UpdateHandlers = {
-        UpdateHandler { ".msi",             "msiexec /i \"{}\" /qb"                                                                       },
-        UpdateHandler { ".dmg",             "hdiutil attach -autoopen \"{}\""                                                             },
-        UpdateHandler { ".deb",             "sudo apt install -y --fix-broken \"{}\""                                                     },
-        UpdateHandler { ".rpm",             "sudo rpm -i \"{}\""                                                                          },
-        UpdateHandler { ".pkg.tar.zst",     "sudo pacman -Syy && sudo pacman -U --noconfirm \"{}\""                                       },
-        UpdateHandler { ".AppImage",        fmt::format("sudo cp \"{{}}\" \"{}\"", *hex::getEnvironmentVariable("APPIMAGE"))    },
-        UpdateHandler { ".flatpak",         "sudo flatpak install -y --reinstall \"{}\""                                                  },
-        UpdateHandler { ".snap",            "sudo snap install --dangerous \"{}\""                                                        },
+        UpdateHandler { ".msi",             "msiexec /i \"{}\" /qb"                                                                                     },
+        UpdateHandler { ".dmg",             "hdiutil attach -autoopen \"{}\""                                                                           },
+        UpdateHandler { ".deb",             "sudo apt install -y --fix-broken \"{}\""                                                                   },
+        UpdateHandler { ".rpm",             "sudo rpm -i \"{}\""                                                                                        },
+        UpdateHandler { ".pkg.tar.zst",     "sudo pacman -Syy && sudo pacman -U --noconfirm \"{}\""                                                     },
+        UpdateHandler { ".AppImage",        fmt::format("sudo cp \"{{}}\" \"{}\"", hex::getEnvironmentVariable("APPIMAGE").value_or(""))    },
+        UpdateHandler { ".flatpak",         "sudo flatpak install -y --reinstall \"{}\""                                                                },
+        UpdateHandler { ".snap",            "sudo snap install --dangerous \"{}\""                                                                      },
     };
 
     const auto updateFileName = wolv::util::toUTF8String(updatePath.filename());
