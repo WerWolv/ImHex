@@ -3,7 +3,7 @@
     "country": "Taiwan",
     "language": "Chinese (Traditional)",
     "translations": {
-        "hex.builtin.setting.general.context_menu_entry": "視窗內容功能表項目",
+        "hex.builtin.setting.general.context_menu_entry": "加至檔案總管的環境選單",
         "hex.builtin.setting.interface.show_resource_usage": "",
         "hex.windows.view.tty_console.auto_scroll": "自動捲動",
         "hex.windows.view.tty_console.baud": "鮑率",
