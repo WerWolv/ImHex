@@ -1276,7 +1276,7 @@ namespace ImGuiExt {
                     const auto framePadding = style.FramePadding.x;
                     ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0);
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() - style.WindowPadding.x + framePadding);
-                    *collapsed = !ImGui::TreeNodeEx("##CollapseHeader", ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanLabelWidth);
+                    *collapsed = !ImGui::TreeNodeEx("##CollapseHeader", ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanLabelWidth | (*collapsed ? ImGuiTreeNodeFlags_None : ImGuiTreeNodeFlags_DefaultOpen));
                     ImGui::SameLine(0, framePadding);
                     ImGui::TextUnformatted(label);
                     if (!*collapsed) ImGui::TreePop();
@@ -1287,8 +1287,6 @@ namespace ImGuiExt {
             }
 
             if (collapsed != nullptr && *collapsed) {
-                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetStyle().FramePadding.y * 2));
-                ImGuiExt::TextFormattedDisabled("...");
                 result = false;
             }
         }

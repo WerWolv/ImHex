@@ -20,6 +20,7 @@ namespace hex::plugin::builtin {
 
         std::map<ImGuiWindow*, float> m_windowHeights;
         std::map<UnlocalizedString, bool> m_detachedTools;
+        std::map<UnlocalizedString, bool> m_collapsedTools;
     };
 
 }

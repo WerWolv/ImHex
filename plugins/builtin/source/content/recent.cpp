@@ -347,6 +347,8 @@ namespace hex::plugin::builtin::recent {
                 }
             }
 
+        } else {
+            ImGui::TextUnformatted("...");
         }
         ImGuiExt::EndSubWindow();
     }

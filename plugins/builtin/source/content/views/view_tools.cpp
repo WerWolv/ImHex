@@ -37,15 +37,18 @@ namespace hex::plugin::builtin {
             // If the tool has been detached from the main window, don't draw it here anymore
             if (m_detachedTools[unlocalizedName]) continue;
 
+            if (!m_collapsedTools.contains(unlocalizedName))
+                m_collapsedTools[unlocalizedName] = true;
+
             // Draw the tool
-            if (ImGui::CollapsingHeader(fmt::format("{} {}", icon, Lang(unlocalizedName)).c_str())) {
+            auto &collapsed = m_collapsedTools[unlocalizedName];
+            if (ImGuiExt::BeginSubWindow(fmt::format("{} {}", icon, Lang(unlocalizedName)).c_str(), &collapsed, ImVec2(0, collapsed ? 1 : 0))) {
                 function();
-                ImGui::NewLine();
             } else {
                 // Handle dragging the tool out of the main window
 
                 // If the user clicks on the header, start dragging the tool remember the iterator
-                if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && m_dragStartIterator == tools.end())
+                if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && m_dragStartIterator == tools.end())
                     m_dragStartIterator = iter;
 
                 // If the user released the mouse button, stop dragging the tool
@@ -53,11 +56,11 @@ namespace hex::plugin::builtin {
                     m_dragStartIterator = tools.end();
 
                 // Detach the tool if the user dragged it out of the main window
-                if (!ImGui::IsItemHovered() && m_dragStartIterator == iter) {
+                if (!ImGui::IsWindowHovered() && m_dragStartIterator == iter) {
                     m_detachedTools[unlocalizedName] = true;
                 }
-
             }
+            ImGuiExt::EndSubWindow();
         }
     }
 
@@ -81,22 +84,22 @@ namespace hex::plugin::builtin {
                 ImGui::SetNextWindowSizeConstraints(ImVec2(400_scaled, height), ImVec2(FLT_MAX, height));
 
             // Create a new window for the tool
+            ImGui::SetNextWindowPos(ImGui::GetMousePos() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing()), ImGuiCond_Appearing);
             if (ImGui::Begin(windowName.c_str(), &m_detachedTools[unlocalizedName], ImGuiWindowFlags_NoCollapse)) {
                 // Draw the tool content
                 function();
+
+                const auto window = ImGui::GetCurrentWindowRead();
 
                 // Handle the first frame after the tool has been detached
                 if (ImGui::IsWindowAppearing() && m_dragStartIterator == iter) {
                     m_dragStartIterator = tools.end();
 
                     // Attach the newly created window to the cursor, so it gets dragged around
-                    auto& g = *ImGui::GetCurrentContext();
-                    g.MovingWindow = ImGui::GetCurrentWindowRead();
-                    g.ActiveId = g.MovingWindow->MoveId;
+                    ImGui::StartMouseMovingWindowOrNode(window, nullptr, true);
                 }
 
-                const auto window = ImGui::GetCurrentWindowRead();
-                m_windowHeights[ImGui::GetCurrentWindowRead()] = ImGui::CalcWindowNextAutoFitSize(window).y;
+                m_windowHeights[window] = ImGui::CalcWindowNextAutoFitSize(window).y;
             }
             ImGui::End();
         }

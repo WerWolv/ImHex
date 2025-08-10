@@ -580,7 +580,7 @@
         "hex.builtin.tools.http_requests.headers": "",
         "hex.builtin.tools.http_requests.response": "",
         "hex.builtin.tools.http_requests.send": "",
-        "hex.builtin.tools.ieee754": "IEEE 754 Floating Point Tester",
+        "hex.builtin.tools.ieee754": "IEEE 754 Floating Point Explorer",
         "hex.builtin.tools.ieee754.clear": "",
         "hex.builtin.tools.ieee754.description": "",
         "hex.builtin.tools.ieee754.double_precision": "Double Precision",
