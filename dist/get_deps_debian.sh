@@ -30,4 +30,5 @@ apt install -y \
   libzstd-dev           \
   liblz4-dev            \
   libssh2-1-dev         \
-  libmd4c-dev
+  libmd4c-dev           \
+  libmd4c-html0-dev

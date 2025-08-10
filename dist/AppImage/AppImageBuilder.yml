@@ -33,6 +33,7 @@ AppDir:
     - libselinux1
     - libtinfo6
     - libmd4c-dev
+    - libmd4c-html0-dev
   files:
     include:
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libLLVM-13.so.1"
