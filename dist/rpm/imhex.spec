@@ -35,6 +35,7 @@ BuildRequires:  yara-devel
 BuildRequires:  nativefiledialog-extended-devel
 BuildRequires:  lz4-devel
 BuildRequires:  libssh2-devel
+BuildRequires:  md4c-devel
 %if 0%{?rhel} == 9
 BuildRequires:  gcc-toolset-14
 %endif

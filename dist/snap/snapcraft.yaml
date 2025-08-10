@@ -63,6 +63,7 @@ parts:
       - libzstd-dev
       - liblz4-dev
       - libssh2-1-dev
+      - libmd4c-dev
     stage-packages:
       - libglfw3
       - libmagic1

@@ -19,4 +19,5 @@ pacboy -S --needed --noconfirm  \
   xz:p              \
   zstd:p            \
   lz4:p             \
-  libssh2-wincng:p
+  libssh2-wincng:p  \
+  md4c:p

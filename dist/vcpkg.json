@@ -12,6 +12,7 @@
         "zstd",
         "glfw3",
         "curl",
-        "libssh2"
+        "libssh2",
+        "md4c"
     ]
 }
