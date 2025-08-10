@@ -16,6 +16,7 @@ namespace hex::ui {
     };
 
     inline void regionSelectionPicker(Region *region, prv::Provider *provider, RegionType *type, bool showHeader = true, bool firstEntry = false) {
+        ImGui::BeginGroup();
         if (showHeader)
             ImGuiExt::Header("hex.ui.common.range"_lang, firstEntry);
 
@@ -59,6 +60,8 @@ namespace hex::ui {
                 *region = { start, (end - start) + 1 };
                 break;
         }
+
+        ImGui::EndGroup();
     }
 
 }
