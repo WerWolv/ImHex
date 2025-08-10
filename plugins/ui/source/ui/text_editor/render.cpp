@@ -1,5 +1,6 @@
 #include "imgui.h"
 #include <ui/text_editor.hpp>
+#include <algorithm>
 
 
 namespace hex::ui {
