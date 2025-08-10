@@ -258,13 +258,6 @@ namespace hex::plugin::builtin {
             return;
         }
 
-        u32 validLineCount = m_cachedData.size();
-        if (!m_tableEditingModeEnabled) {
-            validLineCount = std::count_if(m_cachedData.begin(), m_cachedData.end(), [this](const auto &entry) {
-                return !m_hiddenValues.contains(entry.filterValue);
-            });
-        }
-
         const auto selection = ImHexApi::HexEditor::getSelection();
         const auto selectedEntryIt = std::find_if(m_cachedData.begin(), m_cachedData.end(), [this](const InspectorCacheEntry &entry) {
             return entry.unlocalizedName == m_selectedEntryName;
@@ -304,9 +297,11 @@ namespace hex::plugin::builtin {
         }
         ImGui::EndDisabled();
 
+        static bool hideSettings = true;
+
         if (ImGui::BeginTable("##datainspector", m_tableEditingModeEnabled ? 3 : 2,
-                              ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg,
-                              ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (validLineCount + 1)))) {
+                              ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY,
+                              ImVec2(0, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() * (hideSettings ? 2.75 : 7.5)))) {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.name"_lang,
                                     ImGuiTableColumnFlags_WidthFixed);
@@ -332,16 +327,13 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         }
 
-        ImGuiExt::DimmedButtonToggle("hex.ui.common.edit"_lang, &m_tableEditingModeEnabled,
-                                     ImVec2(ImGui::GetContentRegionAvail().x, 0));
-
-        ImGui::NewLine();
-        ImGui::Separator();
-        ImGui::NewLine();
+        ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(ICON_VS_EDIT).x);
+        ImGuiExt::DimmedButtonToggle(ICON_VS_EDIT, &m_tableEditingModeEnabled);
+        ImGui::SetItemTooltip("%s", "hex.ui.common.edit"_lang.get());
 
         // Draw inspector settings
 
-        if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang)) {
+        if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, &hideSettings, hideSettings ? ImVec2(0, 1) : ImVec2(0, 0))) {
             ImGui::PushItemWidth(-1);
             {
                 // Draw endian setting
@@ -416,6 +408,12 @@ namespace hex::plugin::builtin {
 
         if (!entry.editing) {
             // Handle regular display case
+
+            if (ImGui::BeginPopup("##DataInspectorRowContextMenu")) {
+                ImGuiExt::TextFormattedDisabled("{} bits", entry.requiredSize * 8);
+                ImGui::Separator();
+                ImGui::EndPopup();
+            }
 
             // Render inspector row value
             const auto &copyValue = entry.displayFunction();
