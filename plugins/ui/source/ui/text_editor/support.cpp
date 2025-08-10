@@ -1,4 +1,5 @@
 #include <ui/text_editor.hpp>
+#include <hex/helpers/logger.hpp>
 #include <algorithm>
 
 namespace hex::ui {
@@ -685,12 +686,14 @@ namespace hex::ui {
                 try {
                     regularExpression.assign(wordLower);
                 } catch (const std::regex_error &e) {
+                    hex::log::error("Error in regular expression: {}", e.what());
                     return false;
                 }
             } else {
                 try {
                     regularExpression.assign(make_wholeWord(wordLower));
                 } catch (const std::regex_error &e) {
+                    hex::log::error("Error in regular expression: {}", e.what());
                     return false;
                 }
             }
