@@ -42,8 +42,8 @@ namespace hex::init {
     }
 
     void initializationFinished() {
-        ContentRegistry::Settings::impl::store();
         ContentRegistry::Settings::impl::load();
+        ContentRegistry::Settings::impl::store();
 
         EventImHexStartupFinished::post();
 

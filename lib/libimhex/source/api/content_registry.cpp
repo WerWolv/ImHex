@@ -37,7 +37,13 @@ namespace hex {
                 OnChangeCallback callback;
             };
 
+            struct OnSave {
+                u64 id;
+                OnSaveCallback callback;
+            };
+
             static AutoReset<std::map<std::string, std::map<std::string, std::vector<OnChange>>>> s_onChangeCallbacks;
+            static AutoReset<std::vector<OnSave>> s_onSaveCallbacks;
 
             static void runAllOnChangeCallbacks() {
                 for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
@@ -152,6 +158,20 @@ namespace hex {
                 }
 
                 void store() {
+                    thread_local bool isRunningCallbacks = false;
+
+                    if (isRunningCallbacks)
+                        return;
+                    isRunningCallbacks = true;
+                    for (const auto &[id, callback] : *s_onSaveCallbacks) {
+                        try {
+                            callback();
+                        } catch (const std::exception &e) {
+                            log::error("Failed to run onSave handler for setting: {}", e.what());
+                        }
+                    }
+                    isRunningCallbacks = false;
+
                     if (!s_settings.isValid())
                         return;
 
@@ -279,6 +299,16 @@ namespace hex {
                 if (categoryIt->second.empty())
                     impl::s_onChangeCallbacks->erase(categoryIt);
             }
+        }
+
+        u64 onSave(const OnSaveCallback &callback) {
+            static u64 id = 1;
+            impl::s_onSaveCallbacks->emplace_back(id, callback);
+
+            auto result = id;
+            id += 1;
+
+            return result;
         }
 
         namespace Widgets {

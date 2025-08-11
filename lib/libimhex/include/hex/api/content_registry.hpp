@@ -369,6 +369,9 @@ EXPORT_MODULE namespace hex {
             using OnChangeCallback = std::function<void(const SettingsValue &)>;
             u64 onChange(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const OnChangeCallback &callback);
 
+            using OnSaveCallback = std::function<void()>;
+            u64 onSave(const OnSaveCallback &callback);
+
         }
 
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */

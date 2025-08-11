@@ -573,6 +573,40 @@ namespace hex::plugin::builtin {
             showHighlights = value.get<bool>(true);
         });
 
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.gray_out_zeros", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.enableGrayOutZeros(value.get<bool>(true));
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.upper_case_hex", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.enableUpperCaseHex(value.get<bool>(true));
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_ascii", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.enableShowAscii(value.get<bool>(true));
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_extended_ascii", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.enableShowExtendedAscii(value.get<bool>(true));
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.minimap", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.setMiniMapVisualizer(value.get<std::string>(""));
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.minimap_width", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.setMiniMapWidth(value.get<int>(m_hexEditor.getMiniMapWidth()));
+        });
+
+        ContentRegistry::Settings::onSave([this] {
+            ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow());
+            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.gray_out_zeros", m_hexEditor.shouldGrayOutZeros());
+            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.upper_case_hex", m_hexEditor.shouldUpperCaseHex());
+            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_ascii", m_hexEditor.shouldShowAscii());
+            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_extended_ascii", m_hexEditor.shouldShowExtendedAscii());
+            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.minimap", m_hexEditor.getMiniMapVisualizer().value_or(""));
+            ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.minimap_width", m_hexEditor.getMiniMapWidth());
+        });
+
         m_hexEditor.setBackgroundHighlightCallback([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
             if (!showHighlights)
                 return std::nullopt;
@@ -659,8 +693,7 @@ namespace hex::plugin::builtin {
         EventProviderChanged::unsubscribe(this);
         EventProviderOpened::unsubscribe(this);
         EventHighlightingChanged::unsubscribe(this);
-
-        ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow());
+        EventImHexClosing::unsubscribe(this);
     }
 
     void ViewHexEditor::drawPopup() {
@@ -1138,7 +1171,9 @@ namespace hex::plugin::builtin {
             }
         });
 
-        m_hexEditor.setBytesPerRow(ContentRegistry::Settings::read<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow()));
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.setBytesPerRow(value.get<int>(m_hexEditor.getBytesPerRow()));
+        });
         ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.setSelectionColor(value.get<int>(0x60C08080));
         });
