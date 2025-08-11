@@ -307,7 +307,7 @@ namespace hex::ui {
 
                 std::string_view word = sv.substr(0, end);
 
-                auto textSize = ImGui::CalcTextSize(word.begin(), word.end());
+                auto textSize = ImGui::CalcTextSize(word.data(), word.data() + word.size());
                 if (ImGui::GetCursorPosX() > ImGui::GetStyle().WindowPadding.x && ImGui::GetCursorPosX() + textSize.x > ImGui::GetWindowSize().x && !whiteSpaces) {
                     ImGui::NewLine();
                 }
