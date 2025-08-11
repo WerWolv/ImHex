@@ -27,6 +27,7 @@ option(IMHEX_ENABLE_PRECOMPILED_HEADERS "Enable precompiled headers"            
 option(IMHEX_COMPRESS_DEBUG_INFO        "Compress debug information"                                                            ON )
 option(IMHEX_ENABLE_CXX_MODULES         "Enable C++20 Module compilation. Testing only!"                                        OFF)
 option(IMHEX_ENABLE_CPPCHECK            "Enable cppcheck static analysis"                                                       OFF)
+option(IMHEX_BUNDLE_PLUGIN_SDK          "Enable bundling of Plugin SDK into install package"                                    ON )
 
 set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
@@ -88,7 +89,9 @@ if (IMHEX_ENABLE_UNIT_TESTS)
 endif ()
 
 # Configure more resources that will be added to the install package
-generateSDKDirectory()
+if (IMHEX_BUNDLE_PLUGIN_SDK)
+    generateSDKDirectory()
+endif()
 
 # Handle package generation
 createPackage()
