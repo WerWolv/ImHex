@@ -152,6 +152,12 @@ namespace hex::plugin::builtin {
         };
         std::atomic<bool>  m_needsToUpdateColors = true;
         std::atomic<bool>  m_wasInterrupted = false;
+        std::atomic<bool>  m_interrupt = false;
+
+
+        void interrupt() {
+            m_interrupt = true;
+        }
 
         TextHighlighter(ViewPatternEditor *viewPatternEditor, std::unique_ptr<pl::PatternLanguage> *patternLanguage ) :
                 m_viewPatternEditor(viewPatternEditor), patternLanguage(patternLanguage), m_needsToUpdateColors(true) {}
@@ -315,6 +321,10 @@ namespace hex::plugin::builtin {
         }
 
         void next(i32 count = 1) {
+            if (m_interrupt) {
+                m_interrupt = false;
+                throw std::out_of_range("Highlights were deliberately interrupted");
+            }
             if (count == 0)
                 return;
             i32 id = getTokenId(m_curr->location);

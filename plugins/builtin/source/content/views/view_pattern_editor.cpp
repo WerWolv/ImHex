@@ -578,7 +578,7 @@ namespace hex::plugin::builtin {
                     m_changesWereParsed = false;
                     taskHolder = TaskManager::createBackgroundTask("HighlightSourceCode", [this](auto &) { m_textHighlighter.highlightSourceCode(); });
                 } else {
-                    taskHolder.interrupt();
+                    m_textHighlighter.interrupt();
                 }
             }
         }
