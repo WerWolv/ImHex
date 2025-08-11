@@ -302,17 +302,18 @@ namespace hex {
         return std::to_string(value).substr(0, 5) + Suffixes[suffixIndex];
     }
 
-    void startProgram(const std::string &command) {
-
-#if defined(OS_WINDOWS)
-        std::ignore = system(fmt::format("start \"\" {0}", command).c_str());
-#elif defined(OS_MACOS)
-        std::ignore = system(fmt::format("{0}", command).c_str());
-#elif defined(OS_LINUX)
-        executeCmd({"xdg-open", command});
-#elif defined(OS_WEB)
-        std::ignore = command;
-#endif
+    void startProgram(const std::vector<std::string> &command) {
+        #if defined(OS_WINDOWS)
+            std::ignore = system(fmt::format("start \"\" {0:?}", fmt::join(command, " ")).c_str());
+        #elif defined(OS_MACOS)
+            std::ignore = system(fmt::format("{0:?}", fmt::join(command, " ")).c_str());
+        #elif defined(OS_LINUX)
+            std::vector<std::string> xdgCommand = { "xdg-open" };
+            xdgCommand.insert(xdgCommand.end(), command.begin(), command.end());
+            executeCmd(xdgCommand);
+        #elif defined(OS_WEB)
+            std::ignore = command;
+        #endif
     }
 
     int executeCommand(const std::string &command) {
@@ -323,19 +324,19 @@ namespace hex {
         if (!url.contains("://"))
             url = "https://" + url;
 
-#if defined(OS_WINDOWS)
-        ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-#elif defined(OS_MACOS)
-        openWebpageMacos(url.c_str());
-#elif defined(OS_LINUX)
-        executeCmd({"xdg-open", url});
-#elif defined(OS_WEB)
-        EM_ASM({
-            window.open(UTF8ToString($0), '_blank');
-        }, url.c_str());
-#else
-#warning "Unknown OS, can't open webpages"
-#endif
+        #if defined(OS_WINDOWS)
+            ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+        #elif defined(OS_MACOS)
+            openWebpageMacos(url.c_str());
+        #elif defined(OS_LINUX)
+            executeCmd({ "xdg-open", url });
+        #elif defined(OS_WEB)
+            EM_ASM({
+                window.open(UTF8ToString($0), '_blank');
+            }, url.c_str());
+        #else
+            #warning "Unknown OS, can't open webpages"
+        #endif
     }
 
     std::optional<u8> hexCharToValue(char c) {

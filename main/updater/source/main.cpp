@@ -124,21 +124,21 @@ std::string_view getUpdateArtifactEnding() {
             return ARCH_DEPENDENT("x86_64.flatpak", "arm64.flatpak");
         } else if (hex::getEnvironmentVariable("SNAP").has_value()) {
             return ARCH_DEPENDENT("x86_64.snap", "arm64.snap");
-        } else if (hex::executeCommand("grep 'ID=ubuntu' /etc/os-release") == 0) {
+        } else if (hex::executeCommand("grep -q 'ID=ubuntu' /etc/os-release") == 0) {
             if (hex::executeCommand("grep 'VERSION_ID=\"24.04\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Ubuntu-24.04-x86_64.deb", "");
-            else if (hex::executeCommand("grep 'VERSION_ID=\"24.10\"' /etc/os-release") == 0)
+            else if (hex::executeCommand("grep -q 'VERSION_ID=\"24.10\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Ubuntu-24.10-x86_64.deb", "");
-            else if (hex::executeCommand("grep 'VERSION_ID=\"25.04\"' /etc/os-release") == 0)
+            else if (hex::executeCommand("grep -q 'VERSION_ID=\"25.04\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Ubuntu-25.04-x86_64.deb", "");
-        } else if (hex::executeCommand("grep 'ID=fedora' /etc/os-release") == 0) {
-            if (hex::executeCommand("grep 'VERSION_ID=\"41\"' /etc/os-release") == 0)
+        } else if (hex::executeCommand("grep -q 'ID=fedora' /etc/os-release") == 0) {
+            if (hex::executeCommand("grep -q 'VERSION_ID=\"41\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Fedora-41-x86_64.rpm", "");
-            else if (hex::executeCommand("grep 'VERSION_ID=\"42\"' /etc/os-release") == 0)
+            else if (hex::executeCommand("grep -q 'VERSION_ID=\"42\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Fedora-42-x86_64.rpm", "");
-            else if (hex::executeCommand("grep 'VERSION_ID=\"rawhide\"' /etc/os-release") == 0)
+            else if (hex::executeCommand("grep -q 'VERSION_ID=\"rawhide\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Fedora-rawhide-x86_64.rpm", "");
-        } else if (hex::executeCommand("grep '^NAME=\"Arch Linux\"' /etc/os-release") == 0) {
+        } else if (hex::executeCommand("grep -q '^NAME=\"Arch Linux\"' /etc/os-release") == 0) {
             return ARCH_DEPENDENT("ArchLinux-x86_64.pkg.tar.zst", "");
         }
     #endif
@@ -155,12 +155,12 @@ bool installUpdate(const std::fs::path &updatePath) {
     const static auto UpdateHandlers = {
         UpdateHandler { ".msi",             "msiexec /i \"{}\" /qb"                                                                                     },
         UpdateHandler { ".dmg",             "hdiutil attach -autoopen \"{}\""                                                                           },
-        UpdateHandler { ".deb",             "sudo apt install -y --fix-broken \"{}\""                                                                   },
-        UpdateHandler { ".rpm",             "sudo rpm -i \"{}\""                                                                                        },
-        UpdateHandler { ".pkg.tar.zst",     "sudo pacman -Syy && sudo pacman -U --noconfirm \"{}\""                                                     },
-        UpdateHandler { ".AppImage",        fmt::format("sudo cp \"{{}}\" \"{}\"", hex::getEnvironmentVariable("APPIMAGE").value_or(""))    },
-        UpdateHandler { ".flatpak",         "sudo flatpak install -y --reinstall \"{}\""                                                                },
-        UpdateHandler { ".snap",            "sudo snap install --dangerous \"{}\""                                                                      },
+        UpdateHandler { ".deb",             "zenity --password | sudo -S apt install -y --fix-broken \"{}\""                                                                   },
+        UpdateHandler { ".rpm",             "zenity --password | sudo -S rpm -i \"{}\""                                                                                        },
+        UpdateHandler { ".pkg.tar.zst",     "zenity --password | sudo -S pacman -Syy && sudo pacman -U --noconfirm \"{}\""                                                     },
+        UpdateHandler { ".AppImage",        fmt::format("zenity --password | sudo -S cp \"{{}}\" \"{}\"", hex::getEnvironmentVariable("APPIMAGE").value_or(""))    },
+        UpdateHandler { ".flatpak",         "zenity --password | sudo -S flatpak install -y --reinstall \"{}\""                                                                },
+        UpdateHandler { ".snap",            "zenity --password | sudo -S snap install --dangerous \"{}\""                                                                      },
     };
 
     const auto updateFileName = wolv::util::toUTF8String(updatePath.filename());
@@ -170,7 +170,7 @@ bool installUpdate(const std::fs::path &updatePath) {
             const auto command = fmt::format(fmt::runtime(handler.command), updatePath.string());
 
             hex::log::info("Starting update process with command: '{}'", command);
-            hex::startProgram(command);
+            hex::executeCommand(command);
 
             return true;
         }

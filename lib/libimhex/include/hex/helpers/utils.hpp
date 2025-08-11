@@ -98,7 +98,7 @@ namespace hex {
     [[nodiscard]] std::string toByteString(u64 bytes);
     [[nodiscard]] std::string makePrintable(u8 c);
 
-    void startProgram(const std::string &command);
+    void startProgram(const std::vector<std::string> &command);
     int executeCommand(const std::string &command);
     void openWebpage(std::string url);
 

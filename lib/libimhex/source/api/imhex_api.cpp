@@ -1048,12 +1048,7 @@ namespace hex {
                 }
 
                 EventImHexClosing::subscribe([executablePath, updateTypeString] {
-                    hex::startProgram(
-                            fmt::format("\"{}\" \"{}\"",
-                                        wolv::util::toUTF8String(executablePath),
-                                        updateTypeString
-                                        )
-                                    );
+                    hex::startProgram({ wolv::util::toUTF8String(executablePath), updateTypeString });
                 });
 
                 ImHexApi::System::closeImHex();
