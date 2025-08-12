@@ -450,7 +450,6 @@
     "hex.builtin.setting.folders.add_folder": "Добавить папку",
     "hex.builtin.setting.folders.description": "Укажите дополнительные пути для поиска шаблонов, скриптов, правил Yara и т.д.",
     "hex.builtin.setting.folders.remove_folder": "Удалить выделенную папку из списка",
-    "hex.builtin.setting.font.font_antialias": "Сглаживание",
     "hex.builtin.setting.general": "Основное",
     "hex.builtin.setting.general.patterns": "Шаблоны",
     "hex.builtin.setting.general.network": "Сеть",
