@@ -893,7 +893,6 @@
     "hex.builtin.view.pattern_editor.replace_hint": "",
     "hex.builtin.view.pattern_editor.replace_hint_history": "",
     "hex.builtin.view.pattern_editor.settings": "설정",
-    "hex.builtin.view.pattern_editor.shortcut.step_debugger": "스텝 디버거",
     "hex.builtin.view.pattern_editor.virtual_files": "",
     "hex.builtin.view.provider_settings.load_error": "이 공급자를 여는 동안 오류가 발생했습니다!",
     "hex.builtin.view.provider_settings.load_error_details": "이 공급자를 여는 동안 오류가 발생했습니다!\n세부 정보: {}",

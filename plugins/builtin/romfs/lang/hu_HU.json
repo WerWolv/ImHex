@@ -901,7 +901,6 @@
     "hex.builtin.view.pattern_editor.replace_hint": "Csere",
     "hex.builtin.view.pattern_editor.replace_hint_history": " előzményekhez)",
     "hex.builtin.view.pattern_editor.settings": "Beállítások",
-    "hex.builtin.view.pattern_editor.shortcut.add_breakpoint": "Új breakpoint",
     "hex.builtin.view.pattern_editor.virtual_files": "Virtuális fájlrendszer",
     "hex.builtin.view.provider_settings.load_error": "Egy hiba lépett fel a forrás megnyitása során!",
     "hex.builtin.view.provider_settings.load_error_details": "Egy hiba lépett fel a forrás megnyitása során! Részletek: {0}",

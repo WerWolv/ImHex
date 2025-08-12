@@ -893,7 +893,6 @@
     "hex.builtin.view.pattern_editor.replace_hint": "",
     "hex.builtin.view.pattern_editor.replace_hint_history": "",
     "hex.builtin.view.pattern_editor.settings": "設定",
-    "hex.builtin.view.pattern_editor.shortcut.step_debugger": "",
     "hex.builtin.view.pattern_editor.virtual_files": "",
     "hex.builtin.view.provider_settings.load_error": "An error occurred while trying to open this provider!",
     "hex.builtin.view.provider_settings.load_error_details": "",

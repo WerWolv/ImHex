@@ -1023,7 +1023,6 @@
     "hex.builtin.view.pattern_editor.shortcut.paste": "Wklej zawartość schowka w pozycji kursora",
     "hex.builtin.view.pattern_editor.menu.edit.redo": "Ponów",
     "hex.builtin.view.pattern_editor.shortcut.regex_toggle": "Przełącz wyszukiwanie/zamianę wyrażeń regularnych",
-    "hex.builtin.view.pattern_editor.shortcut.save_project_as": "Zapisz projekt jako ...",
     "hex.builtin.view.pattern_editor.shortcut.select_all": "Zaznacz cały plik",
     "hex.builtin.view.pattern_editor.shortcut.select_bottom": "Rozszerz zaznaczenie do końca pliku",
     "hex.builtin.view.pattern_editor.shortcut.select_down": "Rozszerz zaznaczenie o jedną linię w dół od kursora",
