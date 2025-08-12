@@ -29,16 +29,19 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 EOF
 
 ENV VCPKG_DEFAULT_BINARY_CACHE=/cache/vcpkg
-RUN --mount=type=cache,target=/cache \
-    --mount=type=bind,source=.,target=/imhex <<EOF
+RUN --mount=type=cache,target=/cache <<EOF
 # Install dependencies with vcpkg
 set -xe
 
 mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
-cp /imhex/dist/vcpkg.json .
-git -C /vcpkg pull
-/vcpkg/vcpkg install --triplet=wasm32-emscripten
 
+/vcpkg/vcpkg install --triplet=wasm32-emscripten libmagic
+/vcpkg/vcpkg install --triplet=wasm32-emscripten freetype
+/vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
+/vcpkg/vcpkg install --triplet=wasm32-emscripten zlib
+/vcpkg/vcpkg install --triplet=wasm32-emscripten bzip2
+/vcpkg/vcpkg install --triplet=wasm32-emscripten liblzma
+/vcpkg/vcpkg install --triplet=wasm32-emscripten zstd
 EOF
 
 # Build ImHex
