@@ -60,6 +60,7 @@ set -xe
 
 mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 cp /imhex/dist/vcpkg.json .
+git -C /vcpkg fetch
 vcpkg install --triplet=arm-osx-mytriplet
 EOF
 
