@@ -1,17 +1,11 @@
 {
-    "code": "ko-KR",
-    "country": "Korea",
-    "fallback": false,
-    "language": "Korean",
-    "translations": {
-        "hex.fonts.setting.font": "글꼴",
-        "hex.fonts.setting.font.custom_font": "사용자 정의 글꼴",
-        "hex.fonts.setting.font.font_antialias": "안티에일리어싱",
-        "hex.fonts.setting.font.font_bold": "굵게",
-        "hex.fonts.setting.font.font_italic": "기울임꼴",
-        "hex.fonts.setting.font.font_path": "글꼴",
-        "hex.fonts.setting.font.font_size": "글꼴 크기",
-        "hex.fonts.setting.font.glyphs": "글리프",
-        "hex.fonts.setting.font.load_all_unicode_chars": "모든 유니코드 문자 불러오기"
-    }
+    "hex.fonts.setting.font": "글꼴",
+    "hex.fonts.setting.font.custom_font": "사용자 정의 글꼴",
+    "hex.fonts.setting.font.font_antialias": "안티에일리어싱",
+    "hex.fonts.setting.font.font_bold": "굵게",
+    "hex.fonts.setting.font.font_italic": "기울임꼴",
+    "hex.fonts.setting.font.font_path": "글꼴",
+    "hex.fonts.setting.font.font_size": "글꼴 크기",
+    "hex.fonts.setting.font.glyphs": "글리프",
+    "hex.fonts.setting.font.load_all_unicode_chars": "모든 유니코드 문자 불러오기"
 }

@@ -1,17 +1,11 @@
 {
-    "code": "it-IT",
-    "country": "Italy",
-    "fallback": false,
-    "language": "Italian",
-    "translations": {
-        "hex.fonts.setting.font": "",
-        "hex.fonts.setting.font.custom_font": "",
-        "hex.fonts.setting.font.font_antialias": "",
-        "hex.fonts.setting.font.font_bold": "",
-        "hex.fonts.setting.font.font_italic": "",
-        "hex.fonts.setting.font.font_path": "",
-        "hex.fonts.setting.font.font_size": "",
-        "hex.fonts.setting.font.glyphs": "",
-        "hex.fonts.setting.font.load_all_unicode_chars": ""
-    }
+    "hex.fonts.setting.font": "",
+    "hex.fonts.setting.font.custom_font": "",
+    "hex.fonts.setting.font.font_antialias": "",
+    "hex.fonts.setting.font.font_bold": "",
+    "hex.fonts.setting.font.font_italic": "",
+    "hex.fonts.setting.font.font_path": "",
+    "hex.fonts.setting.font.font_size": "",
+    "hex.fonts.setting.font.glyphs": "",
+    "hex.fonts.setting.font.load_all_unicode_chars": ""
 }

@@ -830,8 +830,8 @@ namespace hex::plugin::builtin {
             std::vector<std::string> languageNames;
             std::vector<nlohmann::json> languageCodes;
 
-            for (auto &[languageCode, languageName] : LocalizationManager::getSupportedLanguages()) {
-                languageNames.emplace_back(languageName);
+            for (auto &[languageCode, definition] : LocalizationManager::getLanguageDefinitions()) {
+                languageNames.emplace_back(fmt::format("{} ({})", definition.nativeName, definition.name));
                 languageCodes.emplace_back(languageCode);
             }
 

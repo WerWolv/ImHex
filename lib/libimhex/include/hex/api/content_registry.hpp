@@ -36,10 +36,6 @@ EXPORT_MODULE namespace hex {
         namespace prv {
             class Provider;
         }
-
-        namespace LocalizationManager {
-            class LanguageDefinition;
-        }
     #endif
 
     /*
@@ -761,24 +757,6 @@ EXPORT_MODULE namespace hex {
              * @brief Adds a separator to the data processor right click menu
              */
             void addSeparator();
-
-        }
-
-        /* Language Registry. Allows together with the Lang class and the _lang user defined literal to add new languages */
-        namespace Language {
-
-            /**
-             * @brief Loads localization information from json data
-             * @param data The language data
-             */
-            void addLocalization(const nlohmann::json &data);
-
-            namespace impl {
-
-                const std::map<std::string, std::string>& getLanguages();
-                const std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>>& getLanguageDefinitions();
-
-            }
 
         }
 

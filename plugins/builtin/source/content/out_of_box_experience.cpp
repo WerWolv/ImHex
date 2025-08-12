@@ -198,7 +198,7 @@ namespace hex::plugin::builtin {
 
                     // Language selection page
                     case 1: {
-                        static const auto &languages = LocalizationManager::getSupportedLanguages();
+                        static const auto &languages = LocalizationManager::getLanguageDefinitions();
                         static auto currLanguage = languages.begin();
                         static float prevTime = 0;
 
@@ -238,7 +238,7 @@ namespace hex::plugin::builtin {
                         const auto availableWidth = ImGui::GetContentRegionAvail().x;
                         if (ImGui::BeginChild("##language_text", ImVec2(availableWidth, 30_scaled))) {
                             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_Text, textFadeIn - textFadeOut));
-                            ImGuiExt::TextFormattedCentered("{}", LocalizationManager::getLocalizedString("hex.builtin.setting.interface.language", currLanguage->first));
+                            ImGuiExt::TextFormattedCentered("{}", "hex.builtin.setting.interface.language"_lang);
                             ImGui::PopStyleColor();
                         }
                         ImGui::EndChild();
@@ -248,9 +248,9 @@ namespace hex::plugin::builtin {
                         // Draw language selection list
                         ImGui::SetCursorPosX(availableWidth / 3);
                         if (ImGui::BeginListBox("##language", ImVec2(availableWidth / 3, 0))) {
-                            for (const auto &[langId, language] : LocalizationManager::getSupportedLanguages()) {
-                                if (ImGui::Selectable(language.c_str(), langId == LocalizationManager::getSelectedLanguage())) {
-                                    LocalizationManager::loadLanguage(langId);
+                            for (const auto &[langId, definition] : LocalizationManager::getLanguageDefinitions()) {
+                                if (ImGui::Selectable(definition.name.c_str(), langId == LocalizationManager::getSelectedLanguageId())) {
+                                    LocalizationManager::setLanguage(langId);
                                 }
                             }
                             ImGui::EndListBox();

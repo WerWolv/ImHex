@@ -638,8 +638,8 @@ namespace hex::plugin::builtin {
         });
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", [](const ContentRegistry::Settings::SettingsValue &value) {
             auto language = value.get<std::string>("en-US");
-            if (language != LocalizationManager::getSelectedLanguage())
-                LocalizationManager::loadLanguage(language);
+            if (language != LocalizationManager::getSelectedLanguageId())
+                LocalizationManager::setLanguage(language);
         });
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", [](const ContentRegistry::Settings::SettingsValue &value) {
             ImHexApi::System::setTargetFPS(static_cast<float>(value.get<int>(14)));

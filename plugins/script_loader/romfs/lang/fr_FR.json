@@ -1,12 +1,7 @@
 {
-    "code": "fr-FR",
-    "country": "France",
-    "language": "Français",
-    "translations": {
-        "hex.script_loader.menu.run_script": "Exécuter le script...",
-        "hex.script_loader.menu.loading": "Chargement...",
-        "hex.script_loader.menu.no_scripts": "Aucun script trouvé",
-        "hex.script_loader.task.updating": "Mise à jour des scripts...",
-        "hex.script_loader.task.running": "Exécution du script..."
-    }
+    "hex.script_loader.menu.run_script": "Exécuter le script...",
+    "hex.script_loader.menu.loading": "Chargement...",
+    "hex.script_loader.menu.no_scripts": "Aucun script trouvé",
+    "hex.script_loader.task.updating": "Mise à jour des scripts...",
+    "hex.script_loader.task.running": "Exécution du script..."
 }

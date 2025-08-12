@@ -1,21 +1,15 @@
 {
-    "code": "zh-TW",
-    "country": "Taiwan",
-    "fallback": false,
-    "language": "Chinese (Traditional)",
-    "translations": {
-        "hex.yara_rules.view.yara.error": "Yara 編譯器錯誤：",
-        "hex.yara_rules.view.yara.header.matches": "Matches",
-        "hex.yara_rules.view.yara.header.rules": "規則",
-        "hex.yara_rules.view.yara.match": "Match Rules",
-        "hex.yara_rules.view.yara.matches.identifier": "識別碼",
-        "hex.yara_rules.view.yara.matches.variable": "變數",
-        "hex.yara_rules.view.yara.matching": "Matching...",
-        "hex.yara_rules.view.yara.name": "Yara 規則",
-        "hex.yara_rules.view.yara.no_rules": "找不到 YARA 規則。請放進 ImHex 的 'yara' 資料夾中",
-        "hex.yara_rules.view.yara.reload": "重新載入",
-        "hex.yara_rules.view.yara.reset": "重設",
-        "hex.yara_rules.view.yara.rule_added": " Yara 規則已新增！",
-        "hex.yara_rules.view.yara.whole_data": "Whole file matches!"
-    }
+    "hex.yara_rules.view.yara.error": "Yara 編譯器錯誤：",
+    "hex.yara_rules.view.yara.header.matches": "Matches",
+    "hex.yara_rules.view.yara.header.rules": "規則",
+    "hex.yara_rules.view.yara.match": "Match Rules",
+    "hex.yara_rules.view.yara.matches.identifier": "識別碼",
+    "hex.yara_rules.view.yara.matches.variable": "變數",
+    "hex.yara_rules.view.yara.matching": "Matching...",
+    "hex.yara_rules.view.yara.name": "Yara 規則",
+    "hex.yara_rules.view.yara.no_rules": "找不到 YARA 規則。請放進 ImHex 的 'yara' 資料夾中",
+    "hex.yara_rules.view.yara.reload": "重新載入",
+    "hex.yara_rules.view.yara.reset": "重設",
+    "hex.yara_rules.view.yara.rule_added": " Yara 規則已新增！",
+    "hex.yara_rules.view.yara.whole_data": "Whole file matches!"
 }

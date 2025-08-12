@@ -1,9 +1,4 @@
 {
-  "code": "en-US",
-  "language": "English",
-  "country": "United States",
-  "fallback": true,
-  "translations": {
     "hex.plugin.remote.ssh_provider": "Remote SSH File",
     "hex.plugin.remote.ssh_provider.host": "Host",
     "hex.plugin.remote.ssh_provider.port": "Port",
@@ -12,5 +7,4 @@
     "hex.plugin.remote.ssh_provider.key_file": "Private Key Path",
     "hex.plugin.remote.ssh_provider.passphrase": "Passphrase",
     "hex.plugin.remote.ssh_provider.connect": "Connect"
-  }
 }

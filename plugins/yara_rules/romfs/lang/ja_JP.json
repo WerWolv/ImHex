@@ -1,21 +1,15 @@
 {
-    "code": "ja-JP",
-    "country": "Japan",
-    "fallback": false,
-    "language": "Japanese",
-    "translations": {
-        "hex.yara_rules.view.yara.error": "Yaraコンパイルエラー: {0}",
-        "hex.yara_rules.view.yara.header.matches": "マッチ結果",
-        "hex.yara_rules.view.yara.header.rules": "ルール",
-        "hex.yara_rules.view.yara.match": "検出",
-        "hex.yara_rules.view.yara.matches.identifier": "識別子",
-        "hex.yara_rules.view.yara.matches.variable": "変数",
-        "hex.yara_rules.view.yara.matching": "マッチ中…",
-        "hex.yara_rules.view.yara.name": "Yaraルール",
-        "hex.yara_rules.view.yara.no_rules": "YARAルールが見つかりませんでした。ImHexの'yara'フォルダ内に入れてください",
-        "hex.yara_rules.view.yara.reload": "リロード",
-        "hex.yara_rules.view.yara.reset": "",
-        "hex.yara_rules.view.yara.rule_added": "Yaraルールが追加されました。",
-        "hex.yara_rules.view.yara.whole_data": "ファイル全体が一致します。"
-    }
+    "hex.yara_rules.view.yara.error": "Yaraコンパイルエラー: {0}",
+    "hex.yara_rules.view.yara.header.matches": "マッチ結果",
+    "hex.yara_rules.view.yara.header.rules": "ルール",
+    "hex.yara_rules.view.yara.match": "検出",
+    "hex.yara_rules.view.yara.matches.identifier": "識別子",
+    "hex.yara_rules.view.yara.matches.variable": "変数",
+    "hex.yara_rules.view.yara.matching": "マッチ中…",
+    "hex.yara_rules.view.yara.name": "Yaraルール",
+    "hex.yara_rules.view.yara.no_rules": "YARAルールが見つかりませんでした。ImHexの'yara'フォルダ内に入れてください",
+    "hex.yara_rules.view.yara.reload": "リロード",
+    "hex.yara_rules.view.yara.reset": "",
+    "hex.yara_rules.view.yara.rule_added": "Yaraルールが追加されました。",
+    "hex.yara_rules.view.yara.whole_data": "ファイル全体が一致します。"
 }

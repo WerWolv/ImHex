@@ -1,0 +1,42 @@
+[
+    {
+        "code": "en-US",
+        "path": "lang/en_US.json"
+    },
+    {
+        "code": "es-ES",
+        "path": "lang/es_ES.json"
+    },
+    {
+        "code": "fr-FR",
+        "path": "lang/fr_FR.json"
+    },
+    {
+        "code": "de-DE",
+        "path": "lang/de_DE.json"
+    },
+    {
+        "code": "hu-HU",
+        "path": "lang/hu_HU.json"
+    },
+    {
+        "code": "pt-BR",
+        "path": "lang/pt_BR.json"
+    },
+    {
+        "code": "ru-RU",
+        "path": "lang/ru_RU.json"
+    },
+    {
+        "code": "zh-CN",
+        "path": "lang/zh_CN.json"
+    },
+    {
+        "code": "zh-TW",
+        "path": "lang/zh_TW.json"
+    },
+    {
+        "code": "ko-KR",
+        "path": "lang/ko_KR.json"
+    }
+]

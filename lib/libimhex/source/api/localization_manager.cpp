@@ -1,6 +1,10 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
+
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/logger.hpp>
+
+#include <nlohmann/json.hpp>
 
 namespace hex {
 
@@ -8,101 +12,75 @@ namespace hex {
 
         namespace {
 
-            AutoReset<std::string> s_fallbackLanguage;
-            AutoReset<std::string> s_selectedLanguage;
-            AutoReset<std::map<size_t, std::string>> s_currStrings;
+            AutoReset<std::map<std::string, LanguageDefinition>> s_languageDefinitions;
+            AutoReset<std::unordered_map<std::size_t, std::string>> s_localizations;
+            AutoReset<std::string> s_selectedLanguageId;
 
         }
 
-        namespace impl {
+        void addLanguages(const std::string_view &languageList, std::function<std::string_view(const std::filesystem::path &path)> callback) {
+            const auto json = nlohmann::json::parse(languageList);
 
-            void resetLanguageStrings() {
-                s_currStrings->clear();
-                s_selectedLanguage->clear();
-            }
-
-            void setFallbackLanguage(const std::string &language) {
-                s_fallbackLanguage = language;
-            }
-
-        }
-
-        LanguageDefinition::LanguageDefinition(std::map<std::string, std::string> &&entries) {
-            m_entries = std::move(entries);
-            std::erase_if(m_entries, [](const auto &entry) {
-                return entry.second.empty();
-            });
-        }
-
-        const std::map<std::string, std::string> &LanguageDefinition::getEntries() const {
-            return m_entries;
-        }
-
-        static void loadLanguageDefinitions(const std::vector<LanguageDefinition> &definitions) {
-            for (const auto &definition : definitions) {
-                const auto &entries = definition.getEntries();
-                if (entries.empty())
+            for (const auto &item : json) {
+                if (!item.contains("code") || !item.contains("path")) {
+                    log::error("Invalid language definition: {}", item.dump(4));
                     continue;
+                }
 
-                for (const auto &[key, value] : entries) {
+                auto &definition = (*s_languageDefinitions)[item["code"].get<std::string>()];
+
+                if (definition.name.empty() && item.contains("name")) {
+                    definition.name = item["name"].get<std::string>();
+                }
+
+                if (definition.nativeName.empty() && item.contains("native_name")) {
+                    definition.nativeName = item["native_name"].get<std::string>();
+                }
+
+                if (definition.fallbackLanguageId.empty() && item.contains("fallback")) {
+                    definition.fallbackLanguageId = item["fallback"].get<std::string>();
+                }
+
+                definition.languageFilePaths.emplace_back(PathEntry{ item["path"].get<std::string>(), callback });
+            }
+        }
+
+        static void populateLocalization(const std::string &languageId) {
+            if (languageId.empty())
+                return;
+
+            log::debug("Populating localization for language: {}", languageId);
+
+            const auto &definition = (*s_languageDefinitions)[languageId];
+            for (const auto &path : definition.languageFilePaths) {
+                const auto translation = path.callback(path.path);
+                const auto json = nlohmann::json::parse(translation);
+
+                for (const auto &entry : json.items()) {
+                    auto value = entry.value().get<std::string>();
                     if (value.empty())
                         continue;
 
-                    s_currStrings->emplace(LangConst::hash(key), value);
-                }
-            }
-        }
-
-        void loadLanguage(std::string language) {
-            auto &definitions = ContentRegistry::Language::impl::getLanguageDefinitions();
-
-            const auto& fallbackLanguage = getFallbackLanguage();
-            if (!definitions.contains(language))
-                language = fallbackLanguage;
-
-            s_currStrings->clear();
-
-            loadLanguageDefinitions(definitions.at(language));
-
-            if (language != fallbackLanguage)
-                loadLanguageDefinitions(definitions.at(fallbackLanguage));
-
-            s_selectedLanguage = language;
-        }
-
-        std::string getLocalizedString(const std::string& unlocalizedString, const std::string& language) {
-            if (language.empty())
-                return getLocalizedString(unlocalizedString, getSelectedLanguage());
-
-            auto &languageDefinitions = ContentRegistry::Language::impl::getLanguageDefinitions();
-            if (!languageDefinitions.contains(language))
-                return "";
-
-            std::string localizedString;
-            for (const auto &definition : languageDefinitions.at(language)) {
-                if (definition.getEntries().contains(unlocalizedString)) {
-                    localizedString = definition.getEntries().at(unlocalizedString);
-                    break;
+                    s_localizations->try_emplace(LangConst::hash(entry.key()), std::move(value));
                 }
             }
 
-            if (localizedString.empty())
-                return getLocalizedString(unlocalizedString, getFallbackLanguage());
-
-            return localizedString;
+            populateLocalization(definition.fallbackLanguageId);
         }
 
+        void setLanguage(const std::string &languageId) {
+            s_localizations->clear();
+            s_selectedLanguageId = languageId;
 
-        const std::map<std::string, std::string> &getSupportedLanguages() {
-            return ContentRegistry::Language::impl::getLanguages();
+            populateLocalization(languageId);
         }
 
-        const std::string &getFallbackLanguage() {
-            return s_fallbackLanguage;
+        [[nodiscard]] const std::string& getSelectedLanguageId() {
+            return *s_selectedLanguageId;
         }
 
-        const std::string &getSelectedLanguage() {
-            return s_selectedLanguage;
+        const std::map<std::string, LanguageDefinition>& getLanguageDefinitions() {
+            return *s_languageDefinitions;
         }
 
     }
@@ -126,7 +104,7 @@ namespace hex {
     }
 
     const char *Lang::get() const {
-        const auto &lang = *LocalizationManager::s_currStrings;
+        const auto &lang = *LocalizationManager::s_localizations;
 
         const auto it = lang.find(m_entryHash);
         if (it == lang.end()) {
@@ -149,7 +127,7 @@ namespace hex {
     }
 
     const char *LangConst::get() const {
-        const auto &lang = *LocalizationManager::s_currStrings;
+        const auto &lang = *LocalizationManager::s_localizations;
 
         const auto it = lang.find(m_entryHash);
         if (it == lang.end()) {

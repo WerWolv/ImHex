@@ -1,21 +1,15 @@
 {
-    "code": "ja-JP",
-    "country": "Japan",
-    "fallback": false,
-    "language": "Japanese",
-    "translations": {
-        "hex.visualizers.pl_visualizer.3d.ambient_brightness": "",
-        "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "",
-        "hex.visualizers.pl_visualizer.3d.light_color": "",
-        "hex.visualizers.pl_visualizer.3d.light_position": "",
-        "hex.visualizers.pl_visualizer.3d.more_settings": "",
-        "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "",
-        "hex.visualizers.pl_visualizer.3d.specular_brightness": "",
-        "hex.visualizers.pl_visualizer.3d.texture_file": "",
-        "hex.visualizers.pl_visualizer.coordinates.latitude": "",
-        "hex.visualizers.pl_visualizer.coordinates.longitude": "",
-        "hex.visualizers.pl_visualizer.coordinates.query": "",
-        "hex.visualizers.pl_visualizer.coordinates.querying": "",
-        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": ""
-    }
+    "hex.visualizers.pl_visualizer.3d.ambient_brightness": "",
+    "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "",
+    "hex.visualizers.pl_visualizer.3d.light_color": "",
+    "hex.visualizers.pl_visualizer.3d.light_position": "",
+    "hex.visualizers.pl_visualizer.3d.more_settings": "",
+    "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "",
+    "hex.visualizers.pl_visualizer.3d.specular_brightness": "",
+    "hex.visualizers.pl_visualizer.3d.texture_file": "",
+    "hex.visualizers.pl_visualizer.coordinates.latitude": "",
+    "hex.visualizers.pl_visualizer.coordinates.longitude": "",
+    "hex.visualizers.pl_visualizer.coordinates.query": "",
+    "hex.visualizers.pl_visualizer.coordinates.querying": "",
+    "hex.visualizers.pl_visualizer.coordinates.querying_no_address": ""
 }

@@ -318,7 +318,7 @@ namespace hex::plugin::builtin {
         EventImHexStartupFinished::subscribe([] {
             const auto &initArgs = ImHexApi::System::getInitArguments();
             if (auto it = initArgs.find("language"); it != initArgs.end())
-                LocalizationManager::loadLanguage(it->second);
+                LocalizationManager::setLanguage(it->second);
         });
 
         EventWindowFocused::subscribe([](bool focused) {

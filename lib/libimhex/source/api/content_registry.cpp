@@ -871,65 +871,6 @@ namespace hex {
 
     }
 
-    namespace ContentRegistry::Language {
-
-        namespace impl {
-
-            static AutoReset<std::map<std::string, std::string>> s_languages;
-            const std::map<std::string, std::string>& getLanguages() {
-                return *s_languages;
-            }
-
-            static AutoReset<std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>>> s_definitions;
-            const std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>>& getLanguageDefinitions() {
-                return *s_definitions;
-            }
-
-        }
-
-        void addLocalization(const nlohmann::json &data) {
-            if (!data.is_object())
-                return;
-
-            if (!data.contains("code") || !data.contains("country") || !data.contains("language") || !data.contains("translations")) {
-                log::error("Localization data is missing required fields!");
-                return;
-            }
-
-            const auto &code            = data["code"];
-            const auto &country         = data["country"];
-            const auto &language        = data["language"];
-            const auto &translations    = data["translations"];
-
-            if (!code.is_string() || !country.is_string() || !language.is_string() || !translations.is_object()) {
-                log::error("Localization data has invalid fields!");
-                return;
-            }
-
-            if (data.contains("fallback")) {
-                const auto &fallback = data["fallback"];
-
-                if (fallback.is_boolean() && fallback.get<bool>())
-                    LocalizationManager::impl::setFallbackLanguage(code.get<std::string>());
-            }
-
-            impl::s_languages->emplace(code.get<std::string>(), fmt::format("{} ({})", language.get<std::string>(), country.get<std::string>()));
-
-            std::map<std::string, std::string> translationDefinitions;
-            for (auto &[key, value] : translations.items()) {
-                if (!value.is_string()) [[unlikely]] {
-                    log::error("Localization data has invalid fields!");
-                    continue;
-                }
-
-                translationDefinitions.emplace(std::move(key), value.get<std::string>());
-            }
-
-            (*impl::s_definitions)[code.get<std::string>()].emplace_back(std::move(translationDefinitions));
-        }
-
-    }
-
     namespace ContentRegistry::Interface {
 
         namespace impl {

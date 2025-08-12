@@ -1,12 +1,7 @@
 {
-    "code": "zh-CN",
-    "country": "China",
-    "language": "Chinese (Simplified)",
-    "translations": {
-        "hex.script_loader.menu.loading": "加载中……",
-        "hex.script_loader.menu.no_scripts": "空空如也",
-        "hex.script_loader.menu.run_script": "运行脚本……",
-        "hex.script_loader.task.running": "运行脚本……",
-        "hex.script_loader.task.updating": "更新脚本……"
-    }
+    "hex.script_loader.menu.loading": "加载中……",
+    "hex.script_loader.menu.no_scripts": "空空如也",
+    "hex.script_loader.menu.run_script": "运行脚本……",
+    "hex.script_loader.task.running": "运行脚本……",
+    "hex.script_loader.task.updating": "更新脚本……"
 }

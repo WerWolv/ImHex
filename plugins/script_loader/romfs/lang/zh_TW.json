@@ -1,10 +1,5 @@
 {
-    "code": "zh-TW",
-    "country": "Taiwan",
-    "language": "Chinese (Traditional)",
-    "translations": {
-        "hex.script_loader.menu.loading": "正在載入...",
-        "hex.script_loader.menu.no_scripts": "找不到指令碼",
-        "hex.script_loader.menu.run_script": "執行指令碼..."
-    }
+    "hex.script_loader.menu.loading": "正在載入...",
+    "hex.script_loader.menu.no_scripts": "找不到指令碼",
+    "hex.script_loader.menu.run_script": "執行指令碼..."
 }

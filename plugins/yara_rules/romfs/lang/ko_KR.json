@@ -1,21 +1,15 @@
 {
-    "code": "ko-KR",
-    "country": "Korea",
-    "fallback": false,
-    "language": "Korean",
-    "translations": {
-        "hex.yara_rules.view.yara.error": "Yara 컴파일러 오류: {0}",
-        "hex.yara_rules.view.yara.header.matches": "일치",
-        "hex.yara_rules.view.yara.header.rules": "규칙",
-        "hex.yara_rules.view.yara.match": "규칙 일치 찾기",
-        "hex.yara_rules.view.yara.matches.identifier": "식별자",
-        "hex.yara_rules.view.yara.matches.variable": "변수",
-        "hex.yara_rules.view.yara.matching": "검색 중...",
-        "hex.yara_rules.view.yara.name": "Yara 규칙",
-        "hex.yara_rules.view.yara.no_rules": "Yara 규칙이 없습니다. ImHex의 'yara' 폴더에 Yara 규칙을 넣으세요",
-        "hex.yara_rules.view.yara.reload": "새로 고침",
-        "hex.yara_rules.view.yara.reset": "재설정",
-        "hex.yara_rules.view.yara.rule_added": "Yara 규칙 추가됨!",
-        "hex.yara_rules.view.yara.whole_data": "모든 파일을 검색했습니다!"
-    }
+    "hex.yara_rules.view.yara.error": "Yara 컴파일러 오류: {0}",
+    "hex.yara_rules.view.yara.header.matches": "일치",
+    "hex.yara_rules.view.yara.header.rules": "규칙",
+    "hex.yara_rules.view.yara.match": "규칙 일치 찾기",
+    "hex.yara_rules.view.yara.matches.identifier": "식별자",
+    "hex.yara_rules.view.yara.matches.variable": "변수",
+    "hex.yara_rules.view.yara.matching": "검색 중...",
+    "hex.yara_rules.view.yara.name": "Yara 규칙",
+    "hex.yara_rules.view.yara.no_rules": "Yara 규칙이 없습니다. ImHex의 'yara' 폴더에 Yara 규칙을 넣으세요",
+    "hex.yara_rules.view.yara.reload": "새로 고침",
+    "hex.yara_rules.view.yara.reset": "재설정",
+    "hex.yara_rules.view.yara.rule_added": "Yara 규칙 추가됨!",
+    "hex.yara_rules.view.yara.whole_data": "모든 파일을 검색했습니다!"
 }

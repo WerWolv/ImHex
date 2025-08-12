@@ -1,21 +1,15 @@
 {
-    "code": "it-IT",
-    "country": "Italy",
-    "fallback": false,
-    "language": "Italian",
-    "translations": {
-        "hex.yara_rules.view.yara.error": "Errore compilazione Yara: {0}",
-        "hex.yara_rules.view.yara.header.matches": "Abbinamenti",
-        "hex.yara_rules.view.yara.header.rules": "Regola",
-        "hex.yara_rules.view.yara.match": "Abbina Regole",
-        "hex.yara_rules.view.yara.matches.identifier": "Identificatore",
-        "hex.yara_rules.view.yara.matches.variable": "Variabile",
-        "hex.yara_rules.view.yara.matching": "Abbinamento...",
-        "hex.yara_rules.view.yara.name": "Regole di Yara",
-        "hex.yara_rules.view.yara.no_rules": "Nessuna regola di YARA. Aggiungile in nella cartella 'yara' di 'ImHex'",
-        "hex.yara_rules.view.yara.reload": "Ricarica",
-        "hex.yara_rules.view.yara.reset": "",
-        "hex.yara_rules.view.yara.rule_added": "Regola di Yara aggiunta!",
-        "hex.yara_rules.view.yara.whole_data": "Tutti i file combaciano!"
-    }
+    "hex.yara_rules.view.yara.error": "Errore compilazione Yara: {0}",
+    "hex.yara_rules.view.yara.header.matches": "Abbinamenti",
+    "hex.yara_rules.view.yara.header.rules": "Regola",
+    "hex.yara_rules.view.yara.match": "Abbina Regole",
+    "hex.yara_rules.view.yara.matches.identifier": "Identificatore",
+    "hex.yara_rules.view.yara.matches.variable": "Variabile",
+    "hex.yara_rules.view.yara.matching": "Abbinamento...",
+    "hex.yara_rules.view.yara.name": "Regole di Yara",
+    "hex.yara_rules.view.yara.no_rules": "Nessuna regola di YARA. Aggiungile in nella cartella 'yara' di 'ImHex'",
+    "hex.yara_rules.view.yara.reload": "Ricarica",
+    "hex.yara_rules.view.yara.reset": "",
+    "hex.yara_rules.view.yara.rule_added": "Regola di Yara aggiunta!",
+    "hex.yara_rules.view.yara.whole_data": "Tutti i file combaciano!"
 }

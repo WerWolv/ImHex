@@ -6,37 +6,36 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <functional>
 
 #include <fmt/core.h>
 #include <wolv/types/static_string.hpp>
+#include <wolv/io/fs.hpp>
 
 EXPORT_MODULE namespace hex {
 
     namespace LocalizationManager {
 
-        class LanguageDefinition {
-        public:
-            explicit LanguageDefinition(std::map<std::string, std::string> &&entries);
-
-            [[nodiscard]] const std::map<std::string, std::string> &getEntries() const;
-
-        private:
-            std::map<std::string, std::string> m_entries;
+        struct PathEntry {
+            std::filesystem::path path;
+            std::function<std::string_view(const std::filesystem::path &path)> callback;
         };
 
-        namespace impl {
+        struct LanguageDefinition {
+            std::string id;
+            std::string name, nativeName;
+            std::string flag;
+            std::fs::path filePath;
+            std::string fallbackLanguageId;
 
-            void setFallbackLanguage(const std::string &language);
-            void resetLanguageStrings();
+            std::vector<PathEntry> languageFilePaths;
+        };
 
-        }
-
-        void loadLanguage(std::string language);
-        std::string getLocalizedString(const std::string &unlocalizedString, const std::string &language = "");
-
-        [[nodiscard]] const std::map<std::string, std::string> &getSupportedLanguages();
-        [[nodiscard]] const std::string &getFallbackLanguage();
-        [[nodiscard]] const std::string &getSelectedLanguage();
+        void addLanguages(const std::string_view &languageList, std::function<std::string_view(const std::filesystem::path &path)> callback);
+        void setLanguage(const std::string &languageId);
+        [[nodiscard]] const std::string& getSelectedLanguageId();
+        [[nodiscard]] const std::string& get(const std::string &unlocalizedString);
+        [[nodiscard]] const std::map<std::string, LanguageDefinition>& getLanguageDefinitions();
 
     }
 

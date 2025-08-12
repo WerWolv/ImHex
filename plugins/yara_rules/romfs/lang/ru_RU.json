@@ -1,23 +1,17 @@
 {
-    "code": "ru-RU",
-    "language": "Russian",
-    "country": "Russia",
-    "fallback": false,
-    "translations": {
-        "hex.yara.information_section.advanced_data_info": "Дополнительная информация",
-        "hex.yara.information_section.advanced_data_info.no_information": "Информация не найдена",
-        "hex.yara_rules.view.yara.error": "Ошибка компилятора YARA: {0}",
-        "hex.yara_rules.view.yara.header.matches": "Совпадения",
-        "hex.yara_rules.view.yara.header.rules": "Правила",
-        "hex.yara_rules.view.yara.match": "Найти совпадения",
-        "hex.yara_rules.view.yara.matches.identifier": "Идентификатор",
-        "hex.yara_rules.view.yara.matches.variable": "Переменная",
-        "hex.yara_rules.view.yara.matching": "Поиск совпадений...",
-        "hex.yara_rules.view.yara.name": "Правила YARA",
-        "hex.yara_rules.view.yara.no_rules": "Правила YARA не найдены. Поместите их в папку 'yara'",
-        "hex.yara_rules.view.yara.reload": "Перезагрузить",
-        "hex.yara_rules.view.yara.reset": "Сбросить",
-        "hex.yara_rules.view.yara.rule_added": "Правило YARA добавлено!",
-        "hex.yara_rules.view.yara.whole_data": "Файл соответствует правилам!"
-    }
+    "hex.yara.information_section.advanced_data_info": "Дополнительная информация",
+    "hex.yara.information_section.advanced_data_info.no_information": "Информация не найдена",
+    "hex.yara_rules.view.yara.error": "Ошибка компилятора YARA: {0}",
+    "hex.yara_rules.view.yara.header.matches": "Совпадения",
+    "hex.yara_rules.view.yara.header.rules": "Правила",
+    "hex.yara_rules.view.yara.match": "Найти совпадения",
+    "hex.yara_rules.view.yara.matches.identifier": "Идентификатор",
+    "hex.yara_rules.view.yara.matches.variable": "Переменная",
+    "hex.yara_rules.view.yara.matching": "Поиск совпадений...",
+    "hex.yara_rules.view.yara.name": "Правила YARA",
+    "hex.yara_rules.view.yara.no_rules": "Правила YARA не найдены. Поместите их в папку 'yara'",
+    "hex.yara_rules.view.yara.reload": "Перезагрузить",
+    "hex.yara_rules.view.yara.reset": "Сбросить",
+    "hex.yara_rules.view.yara.rule_added": "Правило YARA добавлено!",
+    "hex.yara_rules.view.yara.whole_data": "Файл соответствует правилам!"
 }

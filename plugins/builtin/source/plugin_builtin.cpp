@@ -103,8 +103,9 @@ IMHEX_PLUGIN_SETUP_BUILTIN("Built-in", "WerWolv", "Default ImHex functionality")
     #endif
 
     hex::log::debug("Using romfs: '{}'", romfs::name());
-    for (auto &path : romfs::list("lang"))
-        hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
+    LocalizationManager::addLanguages(romfs::get("lang/languages.json").string(), [](const std::filesystem::path &path) {
+        return romfs::get(path).string();
+    });
 
     addInitTasks();
     extractBundledFiles();

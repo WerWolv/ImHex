@@ -1,0 +1,34 @@
+[
+    {
+        "code": "en-US",
+        "path": "lang/en_US.json"
+    },
+    {
+        "code": "fr-FR",
+        "path": "lang/fr_FR.json"
+    },
+    {
+        "code": "de-DE",
+        "path": "lang/de_DE.json"
+    },
+    {
+        "code": "hu-HU",
+        "path": "lang/hu_HU.json"
+    },
+    {
+        "code": "ru-RU",
+        "path": "lang/ru_RU.json"
+    },
+    {
+        "code": "pl-PL",
+        "path": "lang/pl_PL.json"
+    },
+    {
+        "code": "zh-CN",
+        "path": "lang/zh_CN.json"
+    },
+    {
+        "code": "zh-TW",
+        "path": "lang/zh_TW.json"
+    }
+]
