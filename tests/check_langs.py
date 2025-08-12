@@ -31,7 +31,7 @@ def get_langs(filepath) -> list[str]:
         data = json.loads(file.read())
         existing_langs = []
 
-        for key, _ in data["translations"].items():
+        for key, _ in data.items():
             existing_langs.append(key)
 
         return existing_langs
