@@ -36,6 +36,7 @@ set -xe
 
 mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 cp /imhex/dist/vcpkg.json .
+git -C /vcpkg pull
 /vcpkg/vcpkg install --triplet=wasm32-emscripten
 
 EOF
