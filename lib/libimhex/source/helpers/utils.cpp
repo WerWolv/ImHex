@@ -17,6 +17,7 @@
 
 #include <clocale>
 #include <sstream>
+#include <hex/helpers/auto_reset.hpp>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -660,9 +661,9 @@ namespace hex {
         return s_fileToOpen;
     }
 
-    static std::map<std::fs::path, std::string> s_fonts;
+    static AutoReset<std::map<std::fs::path, std::string>> s_fonts;
     extern "C" void registerFont(const char *fontName, const char *fontPath) {
-        s_fonts.emplace(fontPath, fontName);
+        s_fonts->emplace(fontPath, fontName);
     }
 
     const std::map<std::fs::path, std::string>& getFonts() {

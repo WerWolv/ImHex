@@ -5,6 +5,7 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/default_paths.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -109,13 +110,13 @@ namespace hex::log {
             #endif
         }
 
-        static std::vector<LogEntry> s_logEntries;
+        static AutoReset<std::vector<LogEntry>> s_logEntries;
         const std::vector<LogEntry>& getLogEntries() {
             return s_logEntries;
         }
 
         void addLogEntry(std::string_view project, std::string_view level, std::string message) {
-            s_logEntries.emplace_back(
+            s_logEntries->emplace_back(
                 std::move(project),
                 std::move(level),
                 std::move(message)

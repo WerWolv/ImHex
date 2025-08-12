@@ -1176,25 +1176,10 @@ namespace hex {
             return getFont(m_fontName).regular;
         }
 
-        void registerMergeFont(const std::fs::path &path, Offset offset, std::optional<float> fontSizeMultiplier) {
-            wolv::io::File fontFile(path, wolv::io::File::Mode::Read);
-            if (!fontFile.isValid()) {
-                log::error("Failed to load font from file '{}'", wolv::util::toUTF8String(path));
-                return;
-            }
-
-            impl::s_fonts->emplace_back(
-                wolv::util::toUTF8String(path.filename()),
-                fontFile.readVector(),
-                offset,
-                fontSizeMultiplier
-            );
-        }
-
         void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset, std::optional<float> fontSizeMultiplier) {
             impl::s_fonts->emplace_back(
                 name,
-                std::vector<u8> { data.begin(), data.end() },
+                data,
                 offset,
                 fontSizeMultiplier
             );

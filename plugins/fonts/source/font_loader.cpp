@@ -56,18 +56,17 @@ namespace hex::fonts::loader {
         }
 
         {
+            config.FontDataOwnedByAtlas = true;
             if (const auto fontPath = settings.getFontPath(); !fontPath.empty()) {
-                config.FontDataOwnedByAtlas = true;
                 *imguiFont = atlas->AddFontFromFileTTF(fontPath.string().c_str(), 0.0F, &config);
             }
-
-            config.FontDataOwnedByAtlas = false;
 
             if (*imguiFont == nullptr) {
                 if (settings.isPixelPerfectFont()) {
                     auto defaultConfig = config;
                     defaultConfig.SizePixels = 0;
                     *imguiFont = atlas->AddFontDefault(&defaultConfig);
+                    atlas->Sources.back().FontDataOwnedByAtlas = false;
                 } else {
                     static auto jetbrainsFont = romfs::get("fonts/JetBrainsMono.ttf");
                     *imguiFont = atlas->AddFontFromMemoryTTF(const_cast<u8 *>(jetbrainsFont.data<u8>()), jetbrainsFont.size(), 0.0F, &config);
@@ -75,6 +74,8 @@ namespace hex::fonts::loader {
                     if (*imguiFont == nullptr) {
                         log::error("Failed to load font '{}', using default font instead", name.get());
                         *imguiFont = atlas->AddFontDefault();
+                    } else {
+                        atlas->Sources.back().FontDataOwnedByAtlas = false;
                     }
                 }
             }
@@ -86,6 +87,7 @@ namespace hex::fonts::loader {
             config.GlyphOffset *= ImHexApi::System::getGlobalScale();
             config.SizePixels = settings.getFontSize() * extraFont.fontSizeMultiplier.value_or(1);
             atlas->AddFontFromMemoryTTF(const_cast<u8 *>(extraFont.fontData.data()), extraFont.fontData.size(), 0.0F, &config);
+            atlas->Sources.back().FontDataOwnedByAtlas = false;
         }
     }
 
