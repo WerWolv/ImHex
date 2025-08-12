@@ -3081,7 +3081,7 @@ CIMGUI_API int igImParseFormatPrecision(const char* format,int default_value)
 {
     return ImParseFormatPrecision(format,default_value);
 }
-CIMGUI_API const char* igImTextCharToUtf8(char out_buf[5],unsigned int c)
+CIMGUI_API int igImTextCharToUtf8(char out_buf[5],unsigned int c)
 {
     return ImTextCharToUtf8(out_buf,c);
 }
@@ -4589,9 +4589,9 @@ CIMGUI_API void igPushMultiItemsWidths(int components,float width_full)
 {
     return ImGui::PushMultiItemsWidths(components,width_full);
 }
-CIMGUI_API void igShrinkWidths(ImGuiShrinkWidthItem* items,int count,float width_excess)
+CIMGUI_API void igShrinkWidths(ImGuiShrinkWidthItem* items,int count,float width_excess,float width_min)
 {
-    return ImGui::ShrinkWidths(items,count,width_excess);
+    return ImGui::ShrinkWidths(items,count,width_excess,width_min);
 }
 CIMGUI_API const ImGuiStyleVarInfo* igGetStyleVarInfo(ImGuiStyleVar idx)
 {
