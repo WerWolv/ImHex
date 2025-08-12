@@ -53,13 +53,13 @@ RUN --mount=type=cache,target=/var/lib/apt/lists/ apt update && apt install -y l
 # -- DOWNLOADING + BUILDING STUFF
 
 ENV VCPKG_DEFAULT_BINARY_CACHE /cache/vcpkg
-COPY --from=imhex /dist/vcpkg.json /vcpkg.json
-RUN --mount=type=cache,target=/cache <<EOF
+RUN --mount=type=cache,target=/cache \
+    --mount=type=bind,source=.,target=/imhex <<EOF
 ## Install dependencies with vcpkg
 set -xe
 
 mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
-
+cp /imhex/dist/vcpkg.json .
 vcpkg install --triplet=arm-osx-mytriplet
 EOF
 

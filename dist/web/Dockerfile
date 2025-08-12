@@ -29,13 +29,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 EOF
 
 ENV VCPKG_DEFAULT_BINARY_CACHE=/cache/vcpkg
-COPY --from=imhex /dist/vcpkg.json /vcpkg.json
-RUN --mount=type=cache,target=/cache <<EOF
+RUN --mount=type=cache,target=/cache \
+    --mount=type=bind,source=.,target=/imhex <<EOF
 # Install dependencies with vcpkg
 set -xe
 
 mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
-
+cp /imhex/dist/vcpkg.json .
 /vcpkg/vcpkg install --triplet=wasm32-emscripten
 
 EOF
