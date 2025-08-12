@@ -288,7 +288,7 @@ namespace hex::ui {
         std::optional<std::string> getMiniMapVisualizer() const {
             if (!m_showMiniMap)
                 return std::nullopt;
-            return m_miniMapVisualizer->unlocalizedName;
+            return m_miniMapVisualizer->unlocalizedName.get();
         }
 
         void setMiniMapVisualizer(const UnlocalizedString &miniMapVisualizerName) {
