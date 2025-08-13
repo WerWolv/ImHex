@@ -261,7 +261,11 @@ namespace hex::plugin::builtin {
                 
                 if (s_showSearchBar) {
                     fonts::Default().pushBold(0.8);
-                    ImGui::GetWindowDrawList()->AddText(ImGui::GetCursorScreenPos() + ImGui::GetStyle().FramePadding, ImGui::GetColorU32(ImGuiCol_Text), ICON_VS_SEARCH);
+                    #if defined(OS_MACOS)
+                        ImGui::GetWindowDrawList()->AddText(ImGui::GetCursorScreenPos() + ImGui::GetStyle().FramePadding + ImVec2(0, 2_scaled), ImGui::GetColorU32(ImGuiCol_Text), ICON_VS_SEARCH);
+                    #else
+                        ImGui::GetWindowDrawList()->AddText(ImGui::GetCursorScreenPos() + ImGui::GetStyle().FramePadding, ImGui::GetColorU32(ImGuiCol_Text), ICON_VS_SEARCH);
+                    #endif
                     fonts::Default().pop();
 
                     const auto buttonColor = [](float alpha) {
