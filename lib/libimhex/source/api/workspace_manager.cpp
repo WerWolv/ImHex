@@ -165,7 +165,8 @@ namespace hex {
     void WorkspaceManager::reload() {
         WorkspaceManager::reset();
 
-        for (const auto &defaultPath : paths::Workspaces.read()) {
+        // Explicitly only search paths that are writable so the workspaces can be modified
+        for (const auto &defaultPath : paths::Workspaces.write()) {
             for (const auto &entry : std::fs::directory_iterator(defaultPath)) {
                 if (!entry.is_regular_file()) {
                     continue;
