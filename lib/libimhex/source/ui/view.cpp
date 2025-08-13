@@ -1,5 +1,6 @@
 #include <hex/ui/view.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <imgui.h>
 
@@ -7,7 +8,7 @@
 
 namespace hex {
 
-    static View* s_lastFocusedView = nullptr;
+    static AutoReset<View*> s_lastFocusedView = nullptr;
 
     View::View(UnlocalizedString unlocalizedName, const char *icon) : m_unlocalizedViewName(std::move(unlocalizedName)), m_icon(icon) { }
 
