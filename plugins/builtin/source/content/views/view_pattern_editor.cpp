@@ -1364,10 +1364,19 @@ namespace hex::plugin::builtin {
             *m_executionDone = true;
         }
 
+        // DEBUBBING
+        //m_shouldAnalyze = false;
+        //
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
             m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider](const Task &task) {
+                const auto startTime = std::chrono::high_resolution_clock::now();
+                ON_SCOPE_EXIT {
+                    const auto endTime = std::chrono::high_resolution_clock::now();
+                    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime);
+                    log::info("***analyzing_data***: {}", ms.count());
+                };
                 if (!m_autoLoadPatterns)
                     return;
 
