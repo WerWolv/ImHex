@@ -326,8 +326,16 @@ namespace hex::plugin::builtin {
             if (ctx == nullptr)
                 return;
 
-            if (ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup))
+            if (ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup)) {
+                for (const auto& popup : ctx->OpenPopupStack) {
+                    if (!(popup.Window->Flags & ImGuiWindowFlags_Modal)) {
+                        ctx->OpenPopupStack.erase_unsorted(&popup);
+                        log::debug("Closing popup '{}' because the main window lost focus", popup.Window->Name ? popup.Window->Name : "Unknown Popup");
+                        break;
+                    }
+                }
                 return;
+            }
             if (ImGui::IsAnyItemHovered())
                 return;
 
