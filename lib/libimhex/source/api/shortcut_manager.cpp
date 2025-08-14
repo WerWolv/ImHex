@@ -2,7 +2,9 @@
 #include <imgui.h>
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/task_manager.hpp>
+
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <hex/ui/view.hpp>
 
