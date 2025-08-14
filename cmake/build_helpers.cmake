@@ -331,7 +331,7 @@ macro(createPackage)
         endforeach()
         ]])
 
-        downloadImHexPatternsFiles("${CMAKE_INSTALL_PREFIX}")
+        downloadImHexPatternsFiles("./")
     elseif(UNIX AND NOT APPLE)
 
         set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
@@ -342,7 +342,7 @@ macro(createPackage)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.mime.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mime/packages RENAME imhex.xml)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.svg DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.svg)
-        downloadImHexPatternsFiles("${CMAKE_INSTALL_PREFIX}/share/imhex")
+        downloadImHexPatternsFiles("./share/imhex")
 
         # install AppStream file
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/net.werwolv.ImHex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
@@ -516,10 +516,6 @@ function(loadVersion version plain_version)
     string(REPLACE ".WIP" "" read_version_plain ${read_version})
     set(${version} ${read_version} PARENT_SCOPE)
     set(${plain_version} ${read_version_plain} PARENT_SCOPE)
-
-    if (read_version MATCHES ".+\.WIP")
-        set(IMHEX_PATTERNS_PULL_MASTER ON PARENT_SCOPE)
-    endif()
 endfunction()
 
 function(detectBadClone)
@@ -593,46 +589,44 @@ macro(setVariableInParent variable value)
 endmacro()
 
 function(downloadImHexPatternsFiles dest)
-    install(CODE "set(dest \"${dest}\")")
-    install(CODE "set(IMHEX_OFFLINE_BUILD ${IMHEX_OFFLINE_BUILD})")
-    install(CODE "set(IMHEX_PATTERNS_PULL_MASTER ${IMHEX_PATTERNS_PULL_MASTER})")
-    install(CODE "set(IMHEX_VERSION \"${IMHEX_VERSION}\")")
-    install(CODE [[
-        if (NOT IMHEX_OFFLINE_BUILD)
-            if (IMHEX_PATTERNS_PULL_MASTER)
-                set(PATTERNS_BRANCH master)
-            else ()
-                set(PATTERNS_BRANCH ImHex-v${IMHEX_VERSION})
-            endif ()
+    if (NOT IMHEX_OFFLINE_BUILD)
+        if (IMHEX_PATTERNS_PULL_MASTER)
+            set(PATTERNS_BRANCH master)
+        else ()
+            set(PATTERNS_BRANCH ImHex-v${IMHEX_VERSION})
+        endif ()
 
-            set(imhex_patterns_SOURCE_DIR "${CMAKE_BINARY_DIR}/imhex_patterns")
+        set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/ImHex-Patterns")
+        install(CODE "set(PATTERNS_BRANCH \"${PATTERNS_BRANCH}\")")
+        install(CODE "set(imhex_patterns_SOURCE_DIR \"${imhex_patterns_SOURCE_DIR}\")")
+        install(CODE [[
             execute_process(
                 COMMAND
                     git clone --recurse-submodules --branch ${PATTERNS_BRANCH} https://github.com/WerWolv/ImHex-Patterns.git ${imhex_patterns_SOURCE_DIR}
                 OUTPUT_QUIET
                 ERROR_QUIET
             )
+        ]])
+    else ()
+        set(imhex_patterns_SOURCE_DIR "")
 
-            message(STATUS "Downloading ImHex-Patterns repo branch ${PATTERNS_BRANCH}...")
-            message(STATUS "Finished downloading ImHex-Patterns to ${imhex_patterns_SOURCE_DIR}")
-
-        else ()
-            set(imhex_patterns_SOURCE_DIR "")
-
-            # Maybe patterns are cloned to a subdirectory
-            if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
-                set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")
-            endif()
-
-            # Or a sibling directory
-            if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
-                set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ImHex-Patterns")
-            endif()
-        endif ()
-
+        # Maybe patterns are cloned to a subdirectory
         if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
-            message(WARNING "Failed to locate ImHex-Patterns repository, some resources will be missing during install!")
-        elseif(XCODE)
+            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")
+        endif()
+
+        # Or a sibling directory
+        if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
+            set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ImHex-Patterns")
+        endif()
+    endif ()
+
+    install(CODE "set(imhex_patterns_SOURCE_DIR \"${imhex_patterns_SOURCE_DIR}\")")
+
+    if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
+        message(WARNING "Failed to locate ImHex-Patterns repository, some resources will be missing during install!")
+    elseif(XCODE)
+        install(CODE [[
             # The Xcode build has multiple configurations, which each need a copy of these files
             file(GLOB_RECURSE sourceFilePaths LIST_DIRECTORIES NO CONFIGURE_DEPENDS RELATIVE "${imhex_patterns_SOURCE_DIR}"
                 "${imhex_patterns_SOURCE_DIR}/constants/*"
@@ -647,13 +641,13 @@ function(downloadImHexPatternsFiles dest)
             foreach(relativePath IN LISTS sourceFilePaths)
                 file(GENERATE OUTPUT "${dest}/${relativePath}" INPUT "${imhex_patterns_SOURCE_DIR}/${relativePath}")
             endforeach()
-        else()
-            set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic nodes)
-            foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
-                file(COPY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "${dest}" PATTERN "**/_schema.json" EXCLUDE)
-            endforeach ()
-        endif ()
-    ]])
+        ]])
+    else()
+        set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic nodes)
+        foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
+            install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "${dest}" PATTERN "**/_schema.json" EXCLUDE)
+        endforeach ()
+    endif ()
 
 endfunction()
 
