@@ -1124,7 +1124,7 @@ jobs:
       - name: 📜 Move snap directory to root
         run: |
           mkdir -p ./snap
-          envsubst '${IMHEX_VERSION},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
+          envsubst '${IMHEX_VERSION},${SNAP_GRADE},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1
