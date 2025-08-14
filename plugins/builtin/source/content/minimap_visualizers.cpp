@@ -1,4 +1,4 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/hex_editor.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -8,9 +8,6 @@
 #include <hex/helpers/utils.hpp>
 #include <pl/patterns/pattern.hpp>
 #include <wolv/utils/lock.hpp>
-
-#include <wolv/utils/string.hpp>
-
 
 namespace hex::plugin::builtin {
 

@@ -1,8 +1,7 @@
 #include <hex/api/layout_manager.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/views.hpp>
 #include <hex/ui/view.hpp>
-#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/auto_reset.hpp>
 #include <hex/helpers/default_paths.hpp>

@@ -1,5 +1,6 @@
 #include <hex/api/imhex_api/system.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api_urls.hpp>
 
@@ -37,7 +38,7 @@ namespace hex::plugin::builtin {
                     return;
 
                 TaskManager::doLater([updateString] {
-                    ContentRegistry::Interface::addTitleBarButton(ICON_VS_ARROW_DOWN, ImGuiCustomCol_ToolbarGreen, "hex.builtin.welcome.update.title", [] {
+                    ContentRegistry::UserInterface::addTitleBarButton(ICON_VS_ARROW_DOWN, ImGuiCustomCol_ToolbarGreen, "hex.builtin.welcome.update.title", [] {
                         ImHexApi::System::updateImHex(ImHexApi::System::isNightlyBuild() ? ImHexApi::System::UpdateType::Nightly : ImHexApi::System::UpdateType::Stable);
                     });
 

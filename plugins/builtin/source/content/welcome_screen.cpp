@@ -1,7 +1,10 @@
 #include <hex.hpp>
 
 #include <hex/api/workspace_manager.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/content_registry/provider.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/layout_manager.hpp>
@@ -430,7 +433,7 @@ namespace hex::plugin::builtin {
                     }
                     ImGuiExt::EndSubWindow();
 
-                    auto extraWelcomeScreenEntries = ContentRegistry::Interface::impl::getWelcomeScreenEntries();
+                    auto extraWelcomeScreenEntries = ContentRegistry::UserInterface::impl::getWelcomeScreenEntries();
                     if (!extraWelcomeScreenEntries.empty()) {
                         ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                         ImGui::TableNextColumn();
@@ -514,7 +517,7 @@ namespace hex::plugin::builtin {
                                 static bool hovered = false;
                                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
                                 {
-                                    const auto &quickSettings = ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles();
+                                    const auto &quickSettings = ContentRegistry::UserInterface::impl::getWelcomeScreenQuickSettingsToggles();
                                     if (!quickSettings.empty()) {
                                         const auto padding = ImGui::GetStyle().FramePadding.y;
                                         const ImVec2 windowSize = { 150_scaled, 2 * ImGui::GetTextLineHeightWithSpacing() + padding + std::ceil(quickSettings.size() / 5.0F) * (ImGui::GetTextLineHeightWithSpacing() + padding) };
@@ -646,16 +649,16 @@ namespace hex::plugin::builtin {
         });
 
 
-        ContentRegistry::Interface::addWelcomeScreenQuickSettingsToggle(ICON_VS_COMPASS_ACTIVE, ICON_VS_COMPASS, "hex.builtin.welcome.quick_settings.simplified", false, [](bool state) {
+        ContentRegistry::UserInterface::addWelcomeScreenQuickSettingsToggle(ICON_VS_COMPASS_ACTIVE, ICON_VS_COMPASS, "hex.builtin.welcome.quick_settings.simplified", false, [](bool state) {
             s_simplifiedWelcomeScreen = state;
             WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
         });
 
         EventImHexStartupFinished::subscribe([]() {
-            for (const auto &quickSetting : ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles()) {
+            for (const auto &quickSetting : ContentRegistry::UserInterface::impl::getWelcomeScreenQuickSettingsToggles()) {
                 auto &setting = quickSetting.unlocalizedTooltip;
                 ContentRegistry::Settings::onChange("hex.builtin.settings.quick_settings", setting, [setting](const ContentRegistry::Settings::SettingsValue &value) {
-                    for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : ContentRegistry::Interface::impl::getWelcomeScreenQuickSettingsToggles()) {
+                    for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : ContentRegistry::UserInterface::impl::getWelcomeScreenQuickSettingsToggles()) {
                         if (unlocalizedTooltip == setting) {
                             state = value.get<bool>(state);
                             toggleCallback(state);

@@ -1,14 +1,12 @@
 #pragma once
 
 #include <hex/api/task_manager.hpp>
-#include <hex/api/content_registry.hpp>
 #include <ui/visualizer_drawer.hpp>
 
 #include <pl/patterns/pattern.hpp>
 #include <pl/pattern_visitor.hpp>
 
 #include <pl/formatters.hpp>
-#include <pl/patterns/pattern_error.hpp>
 
 #include <set>
 

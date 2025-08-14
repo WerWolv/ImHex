@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/data_processor.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/scaling.hpp>
 #include <hex/helpers/crypto.hpp>
@@ -145,9 +145,9 @@ namespace hex::plugin::builtin {
     };
 
     void registerDecodeDataProcessorNodes() {
-        ContentRegistry::DataProcessorNode::add<NodeDecodingBase64>("hex.builtin.nodes.decoding", "hex.builtin.nodes.decoding.base64");
-        ContentRegistry::DataProcessorNode::add<NodeDecodingHex>("hex.builtin.nodes.decoding", "hex.builtin.nodes.decoding.hex");
-        ContentRegistry::DataProcessorNode::add<NodeCryptoAESDecrypt>("hex.builtin.nodes.crypto", "hex.builtin.nodes.crypto.aes");
+        ContentRegistry::DataProcessor::add<NodeDecodingBase64>("hex.builtin.nodes.decoding", "hex.builtin.nodes.decoding.base64");
+        ContentRegistry::DataProcessor::add<NodeDecodingHex>("hex.builtin.nodes.decoding", "hex.builtin.nodes.decoding.hex");
+        ContentRegistry::DataProcessor::add<NodeCryptoAESDecrypt>("hex.builtin.nodes.crypto", "hex.builtin.nodes.crypto.aes");
     }
 
 }

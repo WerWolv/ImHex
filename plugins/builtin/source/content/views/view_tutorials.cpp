@@ -1,6 +1,6 @@
 #include "content/views/view_tutorials.hpp"
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_gui.hpp>
@@ -12,7 +12,7 @@
 namespace hex::plugin::builtin {
 
     ViewTutorials::ViewTutorials() : View::Floating("hex.builtin.view.tutorials.name", ICON_VS_BOOK) {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.tutorials.name" }, ICON_VS_COMPASS, 4000, Shortcut::None, [&, this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.tutorials.name" }, ICON_VS_COMPASS, 4000, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
 

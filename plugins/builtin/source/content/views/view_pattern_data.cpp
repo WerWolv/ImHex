@@ -1,6 +1,6 @@
 #include <content/views/view_pattern_data.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/providers/memory_provider.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/events/events_interaction.hpp>

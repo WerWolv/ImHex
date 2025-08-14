@@ -5,7 +5,7 @@
     #include "messaging.hpp"
 
     #include <hex/api/imhex_api/system.hpp>
-    #include <hex/api/content_registry.hpp>
+    #include <hex/api/content_registry/settings.hpp>
     #include <hex/api/theme_manager.hpp>
 
     #include <hex/helpers/utils.hpp>

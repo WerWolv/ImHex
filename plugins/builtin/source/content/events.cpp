@@ -7,7 +7,8 @@
 #include <hex/api/events/requests_gui.hpp>
 
 #include <hex/api/localization_manager.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/file_type_handler.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
@@ -262,7 +263,7 @@ namespace hex::plugin::builtin {
         EventFileDropped::subscribe([](const std::fs::path &path) {
              // Check if a custom file handler can handle the file
              bool handled = false;
-             for (const auto &[extensions, handler] : ContentRegistry::FileHandler::impl::getEntries()) {
+             for (const auto &[extensions, handler] : ContentRegistry::FileTypeHandler::impl::getEntries()) {
                  for (const auto &extension : extensions) {
                      if (path.extension() == extension) {
                          // Pass the file to the handler and check if it was successful

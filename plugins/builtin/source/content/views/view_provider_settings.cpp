@@ -1,7 +1,7 @@
 #include "content/views/view_provider_settings.hpp"
 
 #include <hex/api/imhex_api/hex_editor.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/providers/provider.hpp>
@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
                 this->getWindowOpenState() = true;
         });
 
-        ContentRegistry::Interface::addSidebarItem(ICON_VS_SERVER_PROCESS, [] {
+        ContentRegistry::UserInterface::addSidebarItem(ICON_VS_SERVER_PROCESS, [] {
             auto provider = hex::ImHexApi::Provider::get();
 
             if (auto *sidebarInterfaceProvider = dynamic_cast<prv::IProviderSidebarInterface*>(provider); sidebarInterfaceProvider != nullptr)

@@ -1,5 +1,5 @@
 #include <script_api.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/provider.hpp>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
 

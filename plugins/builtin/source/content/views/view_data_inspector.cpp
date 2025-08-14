@@ -1,6 +1,7 @@
 #include "content/views/view_data_inspector.hpp"
 
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>

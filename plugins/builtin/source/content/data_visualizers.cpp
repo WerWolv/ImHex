@@ -1,4 +1,4 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/hex_editor.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>

@@ -1,7 +1,7 @@
 #include "content/views/view_yara.hpp"
 
 #include <hex/api/imhex_api/hex_editor.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/file_type_handler.hpp>
 #include <hex/api/project_file_manager.hpp>
 
 #include <hex/helpers/fs.hpp>
@@ -10,10 +10,9 @@
 #include <toasts/toast_notification.hpp>
 #include <popups/popup_file_chooser.hpp>
 
-#include <filesystem>
-
 #include <wolv/io/fs.hpp>
 #include <wolv/literals.hpp>
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::yara {
 
@@ -22,7 +21,7 @@ namespace hex::plugin::yara {
     ViewYara::ViewYara() : View::Window("hex.yara_rules.view.yara.name", ICON_VS_BUG) {
         YaraRule::init();
 
-        ContentRegistry::FileHandler::add({ ".yar", ".yara" }, [](const auto &path) {
+        ContentRegistry::FileTypeHandler::add({ ".yar", ".yara" }, [](const auto &path) {
             for (const auto &destPath : paths::Yara.write()) {
                 if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
                     ui::ToastInfo::open("hex.yara_rules.view.yara.rule_added"_lang);

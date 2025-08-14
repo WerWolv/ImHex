@@ -1,6 +1,6 @@
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/data_inspector.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/crypto.hpp>

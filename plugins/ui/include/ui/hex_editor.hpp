@@ -1,7 +1,7 @@
 #pragma once
 
 #include <hex.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/hex_editor.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/encoding_file.hpp>
 

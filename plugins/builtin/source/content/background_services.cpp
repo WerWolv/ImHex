@@ -1,6 +1,7 @@
 #include <hex/api/imhex_api/provider.hpp>
-#include <hex/api/content_registry.hpp>
-#include <hex/api/localization_manager.hpp>
+#include <hex/api/content_registry/communication_interface.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/background_services.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/project_file_manager.hpp>

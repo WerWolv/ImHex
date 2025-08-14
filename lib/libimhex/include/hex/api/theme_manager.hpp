@@ -6,7 +6,7 @@
 #include <string>
 #include <variant>
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <imgui.h>
 
 EXPORT_MODULE namespace hex {

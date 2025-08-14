@@ -1,7 +1,7 @@
 #include "content/views/view_tools.hpp"
 #include <imgui_internal.h>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/tools.hpp>
 #include <hex/api/layout_manager.hpp>
 
 #include <fonts/vscode_icons.hpp>

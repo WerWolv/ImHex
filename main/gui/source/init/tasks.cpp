@@ -9,7 +9,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 

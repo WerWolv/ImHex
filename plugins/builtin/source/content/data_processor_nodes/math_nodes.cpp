@@ -1,4 +1,4 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/data_processor.hpp>
 #include <hex/data_processor/node.hpp>
 
 #include <numeric>
@@ -152,16 +152,16 @@ namespace hex::plugin::builtin {
     };
         
     void registerMathDataProcessorNodes() {
-        ContentRegistry::DataProcessorNode::add<NodeArithmeticAdd>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.add");
-        ContentRegistry::DataProcessorNode::add<NodeArithmeticSubtract>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.sub");
-        ContentRegistry::DataProcessorNode::add<NodeArithmeticMultiply>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mul");
-        ContentRegistry::DataProcessorNode::add<NodeArithmeticDivide>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.div");
-        ContentRegistry::DataProcessorNode::add<NodeArithmeticModulus>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mod");
-        ContentRegistry::DataProcessorNode::add<NodeArithmeticAverage>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.average");
-        ContentRegistry::DataProcessorNode::add<NodeArithmeticMedian>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.median");
-        ContentRegistry::DataProcessorNode::add<NodeArithmeticCeil>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.ceil");
-        ContentRegistry::DataProcessorNode::add<NodeArithmeticFloor>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.floor");
-        ContentRegistry::DataProcessorNode::add<NodeArithmeticRound>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.round");
+        ContentRegistry::DataProcessor::add<NodeArithmeticAdd>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.add");
+        ContentRegistry::DataProcessor::add<NodeArithmeticSubtract>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.sub");
+        ContentRegistry::DataProcessor::add<NodeArithmeticMultiply>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mul");
+        ContentRegistry::DataProcessor::add<NodeArithmeticDivide>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.div");
+        ContentRegistry::DataProcessor::add<NodeArithmeticModulus>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mod");
+        ContentRegistry::DataProcessor::add<NodeArithmeticAverage>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.average");
+        ContentRegistry::DataProcessor::add<NodeArithmeticMedian>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.median");
+        ContentRegistry::DataProcessor::add<NodeArithmeticCeil>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.ceil");
+        ContentRegistry::DataProcessor::add<NodeArithmeticFloor>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.floor");
+        ContentRegistry::DataProcessor::add<NodeArithmeticRound>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.round");
     }
 
 }

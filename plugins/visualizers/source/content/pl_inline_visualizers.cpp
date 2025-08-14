@@ -1,12 +1,9 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 
 #include <imgui.h>
+#include <fonts/vscode_icons.hpp>
 
 #include <pl/patterns/pattern.hpp>
-
-#include <hex/helpers/fmt.hpp>
-
-#include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::visualizers {
 

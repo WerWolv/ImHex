@@ -1,7 +1,9 @@
 #include "content/views/view_data_processor.hpp"
 #include <toasts/toast_notification.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/data_processor.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/file_type_handler.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 
@@ -355,9 +357,9 @@ namespace hex::plugin::builtin {
     };
 
     ViewDataProcessor::ViewDataProcessor() : View::Window("hex.builtin.view.data_processor.name", ICON_VS_CHIP) {
-        ContentRegistry::DataProcessorNode::add<NodeCustom>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.custom", this);
-        ContentRegistry::DataProcessorNode::add<NodeCustomInput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.input");
-        ContentRegistry::DataProcessorNode::add<NodeCustomOutput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.output");
+        ContentRegistry::DataProcessor::add<NodeCustom>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.custom", this);
+        ContentRegistry::DataProcessor::add<NodeCustomInput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.input");
+        ContentRegistry::DataProcessor::add<NodeCustomOutput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.output");
 
         ProjectFile::registerPerProviderHandler({
             .basePath = "data_processor.json",
@@ -398,7 +400,7 @@ namespace hex::plugin::builtin {
         });
 
         /* Import Nodes */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, ICON_VS_CHIP, 5600, Shortcut::None, [this]{
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, ICON_VS_CHIP, 5600, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Read);
@@ -410,7 +412,7 @@ namespace hex::plugin::builtin {
         }, ImHexApi::Provider::isValid);
 
         /* Export Nodes */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.data_processor" }, ICON_VS_CHIP, 8050, Shortcut::None, [this]{
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.data_processor" }, ICON_VS_CHIP, 8050, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&, this](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Create);
@@ -421,7 +423,7 @@ namespace hex::plugin::builtin {
             return ImHexApi::Provider::isValid() && !m_workspaceStack->empty() && !m_workspaceStack->back()->nodes.empty();
         });
 
-        ContentRegistry::FileHandler::add({ ".hexnode" }, [this](const auto &path) {
+        ContentRegistry::FileTypeHandler::add({ ".hexnode" }, [this](const auto &path) {
             wolv::io::File file(path, wolv::io::File::Mode::Read);
             if (!file.isValid()) return false;
 
@@ -685,7 +687,7 @@ namespace hex::plugin::builtin {
             }
 
             // Draw all nodes that are registered in the content registry
-            for (const auto &[unlocalizedCategory, unlocalizedName, function] : ContentRegistry::DataProcessorNode::impl::getEntries()) {
+            for (const auto &[unlocalizedCategory, unlocalizedName, function] : ContentRegistry::DataProcessor::impl::getEntries()) {
                 if (unlocalizedCategory.empty() && unlocalizedName.empty()) {
                     // Draw a separator if the node has no category and no name
                     ImGui::Separator();
@@ -1147,7 +1149,7 @@ namespace hex::plugin::builtin {
 
     std::unique_ptr<dp::Node> ViewDataProcessor::loadNode(nlohmann::json data) {
         try {
-            auto &nodeEntries = ContentRegistry::DataProcessorNode::impl::getEntries();
+            auto &nodeEntries = ContentRegistry::DataProcessor::impl::getEntries();
 
             std::unique_ptr<dp::Node> newNode;
             for (auto &entry : nodeEntries) {

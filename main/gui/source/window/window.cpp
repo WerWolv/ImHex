@@ -3,7 +3,7 @@
 #include <hex.hpp>
 
 #include <hex/api/plugin_manager.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/views.hpp>
 #include <hex/api/imhex_api/fonts.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>

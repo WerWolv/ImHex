@@ -1,6 +1,6 @@
 #include <content/views/fullscreen/view_fullscreen_save_editor.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <toasts/toast_notification.hpp>

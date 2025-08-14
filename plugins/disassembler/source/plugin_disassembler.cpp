@@ -1,6 +1,7 @@
 #include <hex/plugin.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <pl/api.hpp>

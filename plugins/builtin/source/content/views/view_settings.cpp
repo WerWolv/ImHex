@@ -1,7 +1,7 @@
 #include "content/views/view_settings.hpp"
 
 #include <fonts/fonts.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/logger.hpp>
 
@@ -23,8 +23,8 @@ namespace hex::plugin::builtin {
         });
 
         // Add the settings menu item to the Extras menu
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name" }, ICON_VS_SETTINGS_GEAR, 4000, CTRLCMD + Keys::Comma, [&, this] {
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name" }, ICON_VS_SETTINGS_GEAR, 4000, CTRLCMD + Keys::Comma, [&, this] {
             this->getWindowOpenState() = true;
         });
 

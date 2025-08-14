@@ -1,5 +1,5 @@
 #include <hex/api/imhex_api/provider.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/magic.hpp>
 

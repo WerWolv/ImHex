@@ -2,8 +2,9 @@
 
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/providers/memory_provider.hpp>
 #include <hex/api/events/events_interaction.hpp>
+#include <hex/api/content_registry/hashes.hpp>
+#include <hex/providers/memory_provider.hpp>
 
 #include <hex/helpers/crypto.hpp>
 
@@ -11,6 +12,7 @@
 #include <fonts/vscode_icons.hpp>
 
 #include <imgui_internal.h>
+#include <nlohmann/json.hpp>
 
 #include <vector>
 

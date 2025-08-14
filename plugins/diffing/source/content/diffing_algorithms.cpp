@@ -1,6 +1,6 @@
 #include <hex.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/diffing.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
 #include <wolv/utils/guards.hpp>

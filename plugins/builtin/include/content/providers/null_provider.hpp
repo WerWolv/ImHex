@@ -4,6 +4,8 @@
 #include <hex/providers/provider.hpp>
 #include <hex/api/events/events_provider.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace hex::plugin::builtin {
 
     class NullProvider : public hex::prv::Provider {

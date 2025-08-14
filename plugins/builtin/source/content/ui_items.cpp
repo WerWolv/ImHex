@@ -1,4 +1,5 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/task_manager.hpp>
@@ -29,7 +30,7 @@ namespace hex::plugin::builtin {
 
     void addTitleBarButtons() {
         if (dbg::debugModeEnabled()) {
-            ContentRegistry::Interface::addTitleBarButton(ICON_VS_DEBUG, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.debug_build", []{
+            ContentRegistry::UserInterface::addTitleBarButton(ICON_VS_DEBUG, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.debug_build", []{
                 if (ImGui::GetIO().KeyShift) {
                     RequestOpenPopup::post("DebugMenu");
                 } else {
@@ -38,7 +39,7 @@ namespace hex::plugin::builtin {
             });
         }
 
-        ContentRegistry::Interface::addTitleBarButton(ICON_VS_SMILEY, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.feedback", []{
+        ContentRegistry::UserInterface::addTitleBarButton(ICON_VS_SMILEY, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.feedback", []{
             hex::openWebpage("https://github.com/WerWolv/ImHex/discussions/categories/feedback");
         });
 
@@ -223,7 +224,7 @@ namespace hex::plugin::builtin {
 
     void addFooterItems() {
         if (hex::isProcessElevated()) {
-            ContentRegistry::Interface::addFooterItem([] {
+            ContentRegistry::UserInterface::addFooterItem([] {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight));
                 ImGui::TextUnformatted(ICON_VS_SHIELD);
                 ImGui::PopStyleColor();
@@ -231,7 +232,7 @@ namespace hex::plugin::builtin {
         }
 
         if (dbg::debugModeEnabled()) {
-            ContentRegistry::Interface::addFooterItem([] {
+            ContentRegistry::UserInterface::addFooterItem([] {
                 static float framerate = 0;
                 if (ImGuiExt::HasSecondPassed()) {
                     framerate = 1.0F / ImGui::GetIO().DeltaTime;
@@ -273,7 +274,7 @@ namespace hex::plugin::builtin {
             });
         }
 
-        ContentRegistry::Interface::addFooterItem([] {
+        ContentRegistry::UserInterface::addFooterItem([] {
             static bool shouldResetProgress = false;
 
             auto taskCount = TaskManager::getRunningTaskCount();
@@ -452,11 +453,11 @@ namespace hex::plugin::builtin {
         });
 
         // Toolbar items
-        ContentRegistry::Interface::addToolbarItem([] {
+        ContentRegistry::UserInterface::addToolbarItem([] {
 
-            for (const auto &menuItem : ContentRegistry::Interface::impl::getToolbarMenuItems()) {
+            for (const auto &menuItem : ContentRegistry::UserInterface::impl::getToolbarMenuItems()) {
                 const auto &unlocalizedItemName = menuItem->unlocalizedNames.back();
-                if (unlocalizedItemName.get() == ContentRegistry::Interface::impl::SeparatorValue) {
+                if (unlocalizedItemName.get() == ContentRegistry::UserInterface::impl::SeparatorValue) {
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                     continue;
                 }
@@ -472,7 +473,7 @@ namespace hex::plugin::builtin {
         });
 
         // Provider switcher
-        ContentRegistry::Interface::addToolbarItem([] {
+        ContentRegistry::UserInterface::addToolbarItem([] {
             const bool providerValid = ImHexApi::Provider::get() != nullptr;
             const bool tasksRunning  = TaskManager::getRunningTaskCount() > 0;
 
@@ -549,13 +550,13 @@ namespace hex::plugin::builtin {
         });
 
         EventImHexStartupFinished::subscribe([] {
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.edit.undo", ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.edit.redo", ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.file.create_file", ImGuiCustomCol_ToolbarGray);
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.file.open_file", ImGuiCustomCol_ToolbarBrown);
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save", ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save_as", ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.bookmark.create", ImGuiCustomCol_ToolbarGreen);
+            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.edit.undo", ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.edit.redo", ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.menu.file.create_file", ImGuiCustomCol_ToolbarGray);
+            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.menu.file.open_file", ImGuiCustomCol_ToolbarBrown);
+            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save", ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save_as", ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.menu.edit.bookmark.create", ImGuiCustomCol_ToolbarGreen);
         });
     }
 

@@ -3,7 +3,8 @@
 
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
@@ -359,7 +360,7 @@ namespace hex::plugin::builtin::recent {
             return;
         #endif
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
             if (menu::beginMenuEx("hex.builtin.menu.file.open_recent"_lang, ICON_VS_ARCHIVE, !recent::s_recentEntriesUpdating && !s_recentEntries.empty())) {
                 // Copy to avoid changing list while iteration
                 auto recentEntries = s_recentEntries;
