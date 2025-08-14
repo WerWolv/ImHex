@@ -623,9 +623,7 @@ function(downloadImHexPatternsFiles dest)
 
     install(CODE "set(imhex_patterns_SOURCE_DIR \"${imhex_patterns_SOURCE_DIR}\")")
 
-    if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
-        message(WARNING "Failed to locate ImHex-Patterns repository, some resources will be missing during install!")
-    elseif(XCODE)
+    if(XCODE)
         install(CODE [[
             # The Xcode build has multiple configurations, which each need a copy of these files
             file(GLOB_RECURSE sourceFilePaths LIST_DIRECTORIES NO CONFIGURE_DEPENDS RELATIVE "${imhex_patterns_SOURCE_DIR}"
