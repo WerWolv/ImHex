@@ -1,5 +1,6 @@
 #include <hex/plugin.hpp>
 
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/debugging.hpp>

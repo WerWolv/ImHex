@@ -132,6 +132,7 @@ namespace hex::init {
         const auto shouldLoadPlugin = [executablePath = wolv::io::fs::getExecutablePath()](const Plugin &plugin) {
             // In debug builds, ignore all plugins that are not part of the executable directory
             #if !defined(DEBUG)
+                std::ignore = plugin;
                 return true;
 			#else
 	            if (!executablePath.has_value())
