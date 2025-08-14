@@ -516,6 +516,10 @@ function(loadVersion version plain_version)
     string(REPLACE ".WIP" "" read_version_plain ${read_version})
     set(${version} ${read_version} PARENT_SCOPE)
     set(${plain_version} ${read_version_plain} PARENT_SCOPE)
+
+    if (read_version MATCHES ".+\.WIP")
+        set(IMHEX_PATTERNS_PULL_MASTER ON PARENT_SCOPE)
+    endif()
 endfunction()
 
 function(detectBadClone)
