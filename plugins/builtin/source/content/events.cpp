@@ -34,6 +34,7 @@
 
 #include <GLFW/glfw3.h>
 #include <hex/api/theme_manager.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -319,6 +320,34 @@ namespace hex::plugin::builtin {
             const auto &initArgs = ImHexApi::System::getInitArguments();
             if (auto it = initArgs.find("language"); it != initArgs.end())
                 LocalizationManager::setLanguage(it->second);
+
+            // Set the user-defined post-processing shader if one exists
+            #if !defined(OS_WEB)
+                for (const auto &folder : paths::Resources.all()) {
+                    auto vertexShaderPath = folder / "shader.vert";
+                    auto fragmentShaderPath = folder / "shader.frag";
+
+                    if (!wolv::io::fs::exists(vertexShaderPath))
+                        continue;
+                    if (!wolv::io::fs::exists(fragmentShaderPath))
+                        continue;
+
+                    auto vertexShaderFile = wolv::io::File(vertexShaderPath, wolv::io::File::Mode::Read);
+                    if (!vertexShaderFile.isValid())
+                        continue;
+
+                    auto fragmentShaderFile = wolv::io::File(fragmentShaderPath, wolv::io::File::Mode::Read);
+                    if (!fragmentShaderFile.isValid())
+                        continue;
+
+                    const auto vertexShaderSource = vertexShaderFile.readString();
+                    const auto fragmentShaderSource = fragmentShaderFile.readString();
+
+                    ImHexApi::System::setPostProcessingShader(vertexShaderSource, fragmentShaderSource);
+
+                    break;
+                }
+            #endif
         });
 
         EventWindowFocused::subscribe([](bool focused) {

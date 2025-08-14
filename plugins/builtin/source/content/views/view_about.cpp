@@ -810,6 +810,18 @@ namespace hex::plugin::builtin {
         ImGui::Indent(indentation);
         ImGuiExt::TextFormattedWrapped("{}", romfs::get("licenses/LICENSE").string());
         ImGui::Unindent(indentation);
+
+        static bool enabled = false;
+        if (ImGuiExt::DimmedButtonToggle("N" "E" "R" "D", &enabled)) {
+            if (enabled) {
+                ImHexApi::System::setPostProcessingShader(
+                    romfs::get("shaders/retro/vertex.glsl").data<char>(),
+                    romfs::get("shaders/retro/fragment.glsl").data<char>()
+                );
+            } else {
+                ImHexApi::System::setPostProcessingShader("", "");
+            }
+        }
     }
 
     void ViewAbout::drawAboutPopup() {

@@ -1074,6 +1074,10 @@ namespace hex {
             impl::s_frameRateUnlockRequested = true;
         }
 
+        void setPostProcessingShader(const std::string &vertexShader, const std::string &fragmentShader) {
+            RequestSetPostProcessingShader::post(vertexShader, fragmentShader);
+        }
+
 
     }
 

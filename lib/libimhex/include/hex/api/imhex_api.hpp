@@ -747,6 +747,14 @@ EXPORT_MODULE namespace hex {
              * @brief Unlocks the frame rate temporarily, allowing animations to run smoothly
              */
             void unlockFrameRate();
+
+            /**
+             * @brief Sets the current post-processing shader to use
+             * @param vertexShader The vertex shader to use
+             * @param fragmentShader The fragment shader to use
+             */
+            void setPostProcessingShader(const std::string &vertexShader, const std::string &fragmentShader);
+
         }
 
         /**
