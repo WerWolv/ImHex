@@ -5,6 +5,8 @@
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
+#include <imgui_internal.h>
+
 #include <wolv/utils/guards.hpp>
 
 #include <fonts/vscode_icons.hpp>

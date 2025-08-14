@@ -1,4 +1,9 @@
-#include <hex/helpers/utils.hpp>
+#include <content/helpers/disassembler.hpp>
+
+#include <hex/api/localization_manager.hpp>
+
+#include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/helpers/scaling.hpp>
 
 #include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>
@@ -6,10 +11,6 @@
 #include <imgui.h>
 
 #include <capstone/capstone.h>
-#include <content/helpers/disassembler.hpp>
-
-#include <hex/ui/imgui_imhex_extensions.h>
-#include <hex/api/localization_manager.hpp>
 
 namespace hex::plugin::disasm {
 

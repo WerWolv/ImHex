@@ -1,7 +1,6 @@
 #pragma once
 
 #include <hex.hpp>
-#include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/encoding_file.hpp>

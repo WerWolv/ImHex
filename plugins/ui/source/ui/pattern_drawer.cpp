@@ -20,12 +20,12 @@
 
 #include <string>
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 
-#include <hex/helpers/utils.hpp>
+#include <hex/helpers/scaling.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
 #include <ui/text_editor.hpp>
 

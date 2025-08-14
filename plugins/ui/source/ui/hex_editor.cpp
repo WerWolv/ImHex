@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <fonts/fonts.hpp>
 
+#include <imgui_internal.h>
+
 namespace hex::ui {
 
     /* Data Visualizer */

@@ -1,5 +1,6 @@
-#include "content/views/view_disassembler.hpp"
-#include "hex/api/content_registry.hpp"
+#include <content/views/view_disassembler.hpp>
+#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>

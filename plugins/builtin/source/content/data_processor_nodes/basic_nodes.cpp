@@ -2,10 +2,9 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/scaling.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/data_processor/node.hpp>
-
-#include <wolv/utils/core.hpp>
 
 #include <nlohmann/json.hpp>
 

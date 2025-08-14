@@ -1,4 +1,4 @@
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/theme_manager.hpp>

@@ -1,3 +1,4 @@
+#include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/content_registry.hpp>
 
 #include <imgui.h>
@@ -9,17 +10,17 @@
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/events/requests_gui.hpp>
-#include <hex/api/tutorial_manager.hpp>
+#include <hex/api/workspace_manager.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/patches.hpp>
-#include <hex/helpers/debugging.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <content/global_actions.hpp>
 #include <toasts/toast_notification.hpp>
 #include <popups/popup_text_input.hpp>
-#include <hex/api/workspace_manager.hpp>
-#include <hex/api/events/events_interaction.hpp>
+
 
 #include <wolv/io/file.hpp>
 #include <wolv/literals.hpp>

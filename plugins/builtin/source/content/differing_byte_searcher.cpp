@@ -1,5 +1,6 @@
 #include <content/differing_byte_searcher.hpp>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/provider.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
 
 namespace hex::plugin::builtin {
 

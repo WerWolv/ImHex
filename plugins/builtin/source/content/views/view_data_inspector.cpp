@@ -7,9 +7,11 @@
 #include <hex/api/events/events_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
-#include <hex/ui/imgui_imhex_extensions.h>
 #include <ui/pattern_drawer.hpp>
 #include <ui/visualizer_drawer.hpp>
+
+#include <hex/ui/imgui_imhex_extensions.h>
+#include <imgui_internal.h>
 
 #include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>

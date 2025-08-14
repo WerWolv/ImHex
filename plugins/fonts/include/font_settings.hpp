@@ -1,6 +1,7 @@
 #pragma once
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/imhex_api/fonts.hpp>
 #include <hex/api/content_registry.hpp>
 
 namespace hex::fonts {

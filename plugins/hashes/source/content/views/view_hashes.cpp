@@ -10,6 +10,8 @@
 #include <hex/ui/popup.hpp>
 #include <fonts/vscode_icons.hpp>
 
+#include <imgui_internal.h>
+
 #include <vector>
 
 namespace hex::plugin::hashes {

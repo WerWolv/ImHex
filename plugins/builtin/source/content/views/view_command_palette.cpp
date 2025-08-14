@@ -6,6 +6,7 @@
 #include <hex/api/events/events_interaction.hpp>
 
 #include "imstb_textedit.h"
+#include <imgui_internal.h>
 
 namespace hex::plugin::builtin {
 

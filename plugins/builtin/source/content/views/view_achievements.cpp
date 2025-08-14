@@ -6,6 +6,7 @@
 #include <hex/api/events/events_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
+#include <imgui_internal.h>
 
 #include <cmath>
 

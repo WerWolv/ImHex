@@ -4,7 +4,7 @@
 
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/content_registry.hpp>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/fonts.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
@@ -17,6 +17,8 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
+
+#include <hex/providers/provider.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>

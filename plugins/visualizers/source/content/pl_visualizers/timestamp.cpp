@@ -2,13 +2,12 @@
 
 #include <content/visualizer_helpers.hpp>
 
-#include <numbers>
+#include <hex/helpers/scaling.hpp>
 
 #include <imgui.h>
-#include <hex/api/imhex_api.hpp>
-
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#include <numbers>
 #include <chrono>
 #include <fmt/chrono.h>
 

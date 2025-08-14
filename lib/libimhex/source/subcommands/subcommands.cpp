@@ -6,7 +6,7 @@
 
 #include <hex/api/events/requests_lifecycle.hpp>
 #include <hex/api/plugin_manager.hpp>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/messaging.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
 

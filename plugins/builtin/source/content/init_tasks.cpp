@@ -1,4 +1,4 @@
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api_urls.hpp>
@@ -14,9 +14,7 @@
 #include <fonts/vscode_icons.hpp>
 #include <nlohmann/json.hpp>
 
-#include <chrono>
 #include <string>
-#include <sstream>
 
 namespace hex::fonts { bool setupFonts(); }
 

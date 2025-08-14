@@ -18,13 +18,11 @@
 #include <string>
 #include <algorithm>
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 
 #include <hex/api/task_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/utils_macos.hpp>
-
 
 namespace ImGuiExt {
 

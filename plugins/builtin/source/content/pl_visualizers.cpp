@@ -1,4 +1,3 @@
-#include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
 
 #include <pl/core/evaluator.hpp>

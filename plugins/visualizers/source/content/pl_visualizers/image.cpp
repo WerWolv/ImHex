@@ -1,10 +1,9 @@
-#include <hex/helpers/utils.hpp>
-
 #include <content/visualizer_helpers.hpp>
 
-#include <imgui.h>
+#include <hex/helpers/scaling.hpp>
 #include <hex/helpers/auto_reset.hpp>
 
+#include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex::plugin::visualizers {

@@ -4,6 +4,7 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/debugging.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <romfs/romfs.hpp>
 #include <nlohmann/json.hpp>

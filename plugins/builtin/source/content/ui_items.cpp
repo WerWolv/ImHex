@@ -1,5 +1,5 @@
 #include <hex/api/content_registry.hpp>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
@@ -11,6 +11,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/debugging.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <imgui.h>

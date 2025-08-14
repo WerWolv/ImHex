@@ -1,10 +1,15 @@
 #include <content/views/fullscreen/view_fullscreen_save_editor.hpp>
-#include <fonts/vscode_icons.hpp>
+
 #include <hex/api/content_registry.hpp>
+
+#include <fonts/vscode_icons.hpp>
 #include <toasts/toast_notification.hpp>
+#include <popups/popup_question.hpp>
+
 #include <wolv/utils/lock.hpp>
 #include <pl/patterns/pattern.hpp>
-#include <popups/popup_question.hpp>
+
+#include <imgui_internal.h>
 
 namespace hex::plugin::builtin {
 

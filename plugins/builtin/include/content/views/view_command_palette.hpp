@@ -5,7 +5,9 @@
 #include <imgui.h>
 
 #include <vector>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/content_registry.hpp>
+#include <hex/helpers/utils.hpp>
 
 namespace hex::plugin::builtin {
 

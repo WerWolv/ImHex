@@ -1,8 +1,11 @@
-#include <imgui_internal.h>
-#include <hex/api/content_registry.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/data_processor/node.hpp>
+
+#include <hex/api/content_registry.hpp>
+
 #include <hex/ui/imgui_imhex_extensions.h>
+
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/scaling.hpp>
 
 namespace hex::plugin::builtin {
 

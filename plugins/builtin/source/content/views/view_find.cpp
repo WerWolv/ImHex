@@ -1,16 +1,16 @@
 #include "content/views/view_find.hpp"
 
-#include <hex/api/imhex_api.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/events/events_interaction.hpp>
 #include <hex/trace/stacktrace.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
 
 #include <fonts/vscode_icons.hpp>
+#include <imgui_internal.h>
 
 #include <array>
-#include <ranges>
 #include <string>
 #include <utility>
 

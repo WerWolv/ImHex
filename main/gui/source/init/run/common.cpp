@@ -1,5 +1,6 @@
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>

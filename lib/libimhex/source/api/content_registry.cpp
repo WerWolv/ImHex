@@ -6,9 +6,12 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/auto_reset.hpp>
 #include <hex/helpers/default_paths.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/data_processor/node.hpp>
+
+#include <hex/providers/provider.hpp>
 
 #include <algorithm>
 #include <filesystem>

@@ -3,12 +3,11 @@
 #include <hex.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <hex/helpers/utils.hpp>
+#include <hex/helpers/scaling.hpp>
 
 #include <list>
 #include <memory>
 #include <mutex>
-#include "hex/api/localization_manager.hpp"
 
 namespace hex {
 

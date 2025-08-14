@@ -1,11 +1,11 @@
-#include <hex/helpers/utils.hpp>
-
 #include <content/visualizer_helpers.hpp>
+
+#include <hex/helpers/scaling.hpp>
 
 #include <implot.h>
 #include <imgui.h>
-
 #include <hex/ui/imgui_imhex_extensions.h>
+
 #include <pl/patterns/pattern_bitfield.hpp>
 
 namespace hex::plugin::visualizers {

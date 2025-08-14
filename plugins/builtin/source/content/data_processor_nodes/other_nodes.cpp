@@ -1,4 +1,4 @@
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/events/events_interaction.hpp>

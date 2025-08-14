@@ -2,7 +2,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <hex/helpers/utils.hpp>

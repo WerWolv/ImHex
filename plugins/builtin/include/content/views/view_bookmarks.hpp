@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/ui/view.hpp>
+#include <hex/api/imhex_api/bookmarks.hpp>
 
 #include <ui/text_editor.hpp>
 

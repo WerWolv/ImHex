@@ -1,5 +1,5 @@
 #include <hex/api/plugin_manager.hpp>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>

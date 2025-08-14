@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 
 namespace hex {
 
