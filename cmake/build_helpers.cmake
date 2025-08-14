@@ -331,7 +331,7 @@ macro(createPackage)
         endforeach()
         ]])
 
-        downloadImHexPatternsFiles("./")
+        downloadImHexPatternsFiles("${CMAKE_INSTALL_PREFIX}")
     elseif(UNIX AND NOT APPLE)
 
         set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
@@ -342,7 +342,7 @@ macro(createPackage)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.mime.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mime/packages RENAME imhex.xml)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.svg DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.svg)
-        downloadImHexPatternsFiles("./share/imhex")
+        downloadImHexPatternsFiles("${CMAKE_INSTALL_PREFIX}/share/imhex")
 
         # install AppStream file
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/net.werwolv.ImHex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
