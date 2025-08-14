@@ -6,6 +6,7 @@
 #include <hex/helpers/crypto.hpp>
 
 #include <hex/helpers/fmt.hpp>
+#include <wolv/types.hpp>
 #include <fmt/chrono.h>
 
 #include <hex/providers/provider.hpp>
