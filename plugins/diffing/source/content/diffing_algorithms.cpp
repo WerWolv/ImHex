@@ -10,6 +10,8 @@
 #include <imgui.h>
 #include <hex/api/task_manager.hpp>
 
+#include <span>
+
 namespace hex::plugin::diffing {
 
     using namespace ContentRegistry::Diffing;
