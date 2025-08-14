@@ -2,7 +2,7 @@
 #include "hex/ui/popup.hpp"
 
 #include <hex/api_urls.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
 
@@ -11,16 +11,15 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/default_paths.hpp>
-
-#include <content/popups/popup_docs_question.hpp>
+#include <hex/helpers/menu_items.hpp>
 
 #include <fonts/vscode_icons.hpp>
 
 #include <romfs/romfs.hpp>
 #include <wolv/utils/string.hpp>
+#include <nlohmann/json.hpp>
 
 #include <string>
-#include <hex/helpers/menu_items.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -80,13 +79,13 @@ namespace hex::plugin::builtin {
 
     ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name", ICON_VS_HEART) {
         // Add "About" menu item to the help menu
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, ICON_VS_INFO, 1000, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, ICON_VS_INFO, 1000, Shortcut::None, [this] {
             this->getWindowOpenState() = true;
         });
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.help" }, 3000, [] {
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.help" }, 3000, [] {
             if (menu::isNativeMenuBarUsed())
                 return;
 
@@ -100,11 +99,11 @@ namespace hex::plugin::builtin {
             ImGui::PopStyleVar();
         });
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 4000);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 4000);
 
 
         // Add documentation link to the help menu
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, ICON_VS_BOOK, 5000, Shortcut::None, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, ICON_VS_BOOK, 5000, Shortcut::None, [] {
             hex::openWebpage("https://docs.werwolv.net/imhex");
             AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
         });
@@ -810,6 +809,18 @@ namespace hex::plugin::builtin {
         ImGui::Indent(indentation);
         ImGuiExt::TextFormattedWrapped("{}", romfs::get("licenses/LICENSE").string());
         ImGui::Unindent(indentation);
+
+        static bool enabled = false;
+        if (ImGuiExt::DimmedButtonToggle("N" "E" "R" "D", &enabled)) {
+            if (enabled) {
+                ImHexApi::System::setPostProcessingShader(
+                    romfs::get("shaders/retro/vertex.glsl").data<char>(),
+                    romfs::get("shaders/retro/fragment.glsl").data<char>()
+                );
+            } else {
+                ImHexApi::System::setPostProcessingShader("", "");
+            }
+        }
     }
 
     void ViewAbout::drawAboutPopup() {

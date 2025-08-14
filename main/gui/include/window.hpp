@@ -52,7 +52,7 @@ namespace hex {
         void exitImGui();
 
         void registerEventHandlers();
-        void loadPostProcessingShader();
+        void loadPostProcessingShader(const std::string &vertexShader, const std::string &fragmentShader);
         void setupEmergencyPopups();
 
         void drawImGui();

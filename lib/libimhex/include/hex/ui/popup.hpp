@@ -10,7 +10,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <hex/api/task_manager.hpp>
-#include <hex/helpers/utils.hpp>
+#include <hex/helpers/scaling.hpp>
 
 namespace hex {
 

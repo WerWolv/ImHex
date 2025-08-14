@@ -1,4 +1,4 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <romfs/romfs.hpp>

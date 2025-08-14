@@ -1,6 +1,6 @@
 #include "content/views/view_diff.hpp"
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/events/requests_gui.hpp>
 
 #include <hex/helpers/fmt.hpp>

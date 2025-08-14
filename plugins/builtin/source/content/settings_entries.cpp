@@ -1,5 +1,8 @@
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/experiments.hpp>
+#include <hex/api/content_registry/views.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
@@ -412,7 +415,7 @@ namespace hex::plugin::builtin {
             bool draw(const std::string &) override {
                 bool changed = false;
 
-                const auto currIndex = std::ranges::count_if(ContentRegistry::Interface::impl::getMenuItems(), [](const auto &entry) {
+                const auto currIndex = std::ranges::count_if(ContentRegistry::UserInterface::impl::getMenuItems(), [](const auto &entry) {
                     return entry.second.toolbarIndex != -1;
                 });
 
@@ -429,7 +432,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
 
                         // Loop over all available menu items
-                        for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                        for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItems()) {
                             ImGui::PushID(&menuItem);
                             ON_SCOPE_EXIT { ImGui::PopID(); };
 
@@ -441,9 +444,9 @@ namespace hex::plugin::builtin {
                             const auto &unlocalizedName = menuItem.unlocalizedNames.back();
                             if (menuItem.unlocalizedNames.size() > 2)
                                 continue;
-                            if (unlocalizedName.get() == ContentRegistry::Interface::impl::SeparatorValue)
+                            if (unlocalizedName.get() == ContentRegistry::UserInterface::impl::SeparatorValue)
                                 continue;
-                            if (unlocalizedName.get() == ContentRegistry::Interface::impl::SubMenuValue)
+                            if (unlocalizedName.get() == ContentRegistry::UserInterface::impl::SubMenuValue)
                                 continue;
                             if (menuItem.toolbarIndex != -1)
                                 continue;
@@ -478,7 +481,7 @@ namespace hex::plugin::builtin {
                     // Handle dropping menu items from the toolbar box
                     if (ImGui::BeginDragDropTarget()) {
                         if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_ITEM_PAYLOAD"); payload != nullptr) {
-                            auto &menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
+                            auto &menuItem = *static_cast<ContentRegistry::UserInterface::impl::MenuItem **>(payload->Data);
 
                             menuItem->toolbarIndex = -1;
                             changed = true;
@@ -497,8 +500,8 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextRow();
 
                             // Find all menu items that are in the toolbar and sort them by their toolbar index
-                            std::vector<ContentRegistry::Interface::impl::MenuItem*> toolbarItems;
-                            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable()) {
+                            std::vector<ContentRegistry::UserInterface::impl::MenuItem*> toolbarItems;
+                            for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItemsMutable()) {
                                 if (menuItem.toolbarIndex == -1)
                                     continue;
 
@@ -520,7 +523,7 @@ namespace hex::plugin::builtin {
                                 const auto &unlocalizedName = menuItem->unlocalizedNames.back();
                                 if (menuItem->unlocalizedNames.size() > 2)
                                     continue;
-                                if (unlocalizedName.get() == ContentRegistry::Interface::impl::SubMenuValue)
+                                if (unlocalizedName.get() == ContentRegistry::UserInterface::impl::SubMenuValue)
                                     continue;
                                 if (menuItem->toolbarIndex == -1)
                                     continue;
@@ -542,10 +545,10 @@ namespace hex::plugin::builtin {
                                 // Handle dropping toolbar items onto each other to reorder them
                                 if (ImGui::BeginDragDropTarget()) {
                                     if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_ITEM_PAYLOAD"); payload != nullptr) {
-                                        auto &otherMenuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
+                                        auto &otherMenuItem = *static_cast<ContentRegistry::UserInterface::impl::MenuItem **>(payload->Data);
 
                                         // Get all toolbar items sorted by toolbarIndex
-                                        std::vector<ContentRegistry::Interface::impl::MenuItem*> newToolbarItems = toolbarItems;
+                                        std::vector<ContentRegistry::UserInterface::impl::MenuItem*> newToolbarItems = toolbarItems;
 
                                         // Remove otherMenuItem from its current position
                                         auto it = std::ranges::find(newToolbarItems, otherMenuItem);
@@ -636,7 +639,7 @@ namespace hex::plugin::builtin {
                     // Handle dropping menu items onto the toolbar box
                     if (ImGui::BeginDragDropTarget()) {
                         if (auto payload = ImGui::AcceptDragDropPayload("MENU_ITEM_PAYLOAD"); payload != nullptr) {
-                            auto &menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
+                            auto &menuItem = *static_cast<ContentRegistry::UserInterface::impl::MenuItem **>(payload->Data);
 
                             menuItem->toolbarIndex = currIndex;
                             changed = true;
@@ -649,7 +652,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (changed) {
-                    ContentRegistry::Interface::updateToolbarItems();
+                    ContentRegistry::UserInterface::updateToolbarItems();
                 }
 
                 return changed;
@@ -658,7 +661,7 @@ namespace hex::plugin::builtin {
             nlohmann::json store() override {
                 std::map<i32, std::pair<std::string, u32>> items;
 
-                for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                for (const auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItems()) {
                     if (menuItem.toolbarIndex != -1)
                         items.emplace(menuItem.toolbarIndex, std::make_pair(menuItem.unlocalizedNames.back().get(), menuItem.icon.color));
                 }
@@ -673,14 +676,14 @@ namespace hex::plugin::builtin {
                 if (data.is_array() && data.empty())
                     return;
 
-                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable())
+                for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItemsMutable())
                     menuItem.toolbarIndex = -1;
 
                 auto toolbarItems = data.get<std::map<i32, std::pair<std::string, u32>>>();
                 if (toolbarItems.empty())
                     return;
 
-                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable()) {
+                for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItemsMutable()) {
                     for (const auto &[index, value] : toolbarItems) {
                         const auto &[name, color] = value;
                         if (menuItem.unlocalizedNames.back().get() == name) {
@@ -691,7 +694,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                ContentRegistry::Interface::updateToolbarItems();
+                ContentRegistry::UserInterface::updateToolbarItems();
             }
         };
 

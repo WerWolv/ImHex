@@ -1,7 +1,7 @@
 #include <hex.hpp>
 #include <hex/plugin.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 #include <pl/core/evaluator.hpp>
 #include <pl/patterns/pattern.hpp>
 

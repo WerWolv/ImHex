@@ -1112,7 +1112,13 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+          export IMHEX_VERSION=$(cat VERSION)
+          echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
+          if echo $IMHEX_VERSION | grep -q "WIP"; then
+            echo "SNAP_GRADE=devel" >> $GITHUB_ENV
+          else
+            echo "SNAP_GRADE=stable" >> $GITHUB_ENV
+          fi
           echo "CCACHE=ccache" >> $GITHUB_ENV
 
       - name: 📜 Move snap directory to root

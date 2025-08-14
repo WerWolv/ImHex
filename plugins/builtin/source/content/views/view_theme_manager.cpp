@@ -1,6 +1,6 @@
 #include "content/views/view_theme_manager.hpp"
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
@@ -10,7 +10,7 @@
 namespace hex::plugin::builtin {
 
     ViewThemeManager::ViewThemeManager() : View::Floating("hex.builtin.view.theme_manager.name", ICON_VS_SYMBOL_COLOR) {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.theme_manager.name" }, ICON_VS_SYMBOL_COLOR, 2000, Shortcut::None, [&, this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.theme_manager.name" }, ICON_VS_SYMBOL_COLOR, 2000, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
     }

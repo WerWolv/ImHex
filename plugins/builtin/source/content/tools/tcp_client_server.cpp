@@ -1,5 +1,9 @@
 #include <hex/api/localization_manager.hpp>
-#include <hex/helpers/utils.hpp>
+#include <hex/api/imhex_api/provider.hpp>
+
+#include <hex/providers/memory_provider.hpp>
+#include <hex/helpers/scaling.hpp>
+
 #include <wolv/net/socket_client.hpp>
 #include <wolv/net/socket_server.hpp>
 
@@ -7,8 +11,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <hex/api/imhex_api.hpp>
-#include <hex/providers/memory_provider.hpp>
 
 #include <jthread.hpp>
 #include <string>

@@ -1,15 +1,18 @@
 #include "content/views/view_data_inspector.hpp"
 
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
-#include <hex/ui/imgui_imhex_extensions.h>
 #include <ui/pattern_drawer.hpp>
 #include <ui/visualizer_drawer.hpp>
+
+#include <hex/ui/imgui_imhex_extensions.h>
+#include <imgui_internal.h>
 
 #include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>

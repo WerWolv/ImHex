@@ -2,8 +2,7 @@
 
 #if defined(OS_LINUX)
 
-    #include <hex/api/imhex_api.hpp>
-    #include <hex/api/content_registry.hpp>
+    #include <hex/api/imhex_api/system.hpp>
     #include <hex/api/events/events_gui.hpp>
     #include <hex/api/events/events_interaction.hpp>
     #include <hex/api/events/requests_gui.hpp>

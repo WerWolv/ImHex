@@ -1,4 +1,4 @@
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/fonts.hpp>
 
 #include <fonts/fonts.hpp>
 #include <romfs/romfs.hpp>

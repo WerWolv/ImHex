@@ -2,6 +2,7 @@
 
 #include <hex/helpers/fmt.hpp>
 
+#include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <popups/popup_text_input.hpp>

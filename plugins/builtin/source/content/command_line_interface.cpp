@@ -1,7 +1,9 @@
 #include <content/command_line_interface.hpp>
 
-#include <hex/api/content_registry.hpp>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/views.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/plugin_manager.hpp>

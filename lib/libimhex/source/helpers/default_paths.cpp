@@ -1,6 +1,6 @@
 #include <hex/helpers/default_paths.hpp>
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/project_file_manager.hpp>
 
 #if defined(OS_WINDOWS)

@@ -1,5 +1,5 @@
 #include <hex/api_urls.hpp>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/task_manager.hpp>
 
 #include <hex/helpers/http_requests.hpp>

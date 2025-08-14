@@ -41,6 +41,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/semantic_version.cpp
         source/helpers/keys.cpp
         source/helpers/udp_server.cpp
+        source/helpers/scaling.cpp
 
         source/test/tests.cpp
 

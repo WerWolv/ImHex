@@ -1,6 +1,7 @@
 #include <optional>
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/messaging.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/events/requests_lifecycle.hpp>
 #include <hex/helpers/logger.hpp>
@@ -30,10 +31,10 @@ namespace hex::messaging {
         EventNativeMessageReceived::subscribe([](const std::vector<u8> &rawData) {
             i64 nullIndex = -1;
 
-            auto messageData = reinterpret_cast<const char*>(rawData.data());
-            size_t messageSize = rawData.size();
+            const auto messageData = reinterpret_cast<const char*>(rawData.data());
+            const std::size_t messageSize = rawData.size();
 
-            for (size_t i = 0; i < messageSize; i++) {
+            for (std::size_t i = 0; i < messageSize; i++) {
                 if (messageData[i] == '\0') {
                     nullIndex = i;
                     break;
@@ -45,8 +46,8 @@ namespace hex::messaging {
                 return;
             }
 
-            std::string eventName(messageData, nullIndex);
-            std::vector<u8> eventData(messageData + nullIndex + 1, messageData + messageSize);
+            const std::string eventName(messageData, nullIndex);
+            const std::vector<u8> eventData(messageData + nullIndex + 1, messageData + messageSize);
 
             messageReceived(eventName, eventData);
         });

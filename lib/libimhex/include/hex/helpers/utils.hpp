@@ -73,10 +73,6 @@ namespace hex {
         return result;
     }
 
-    [[nodiscard]] float operator""_scaled(long double value);
-    [[nodiscard]] float operator""_scaled(unsigned long long value);
-    [[nodiscard]] ImVec2 scaled(const ImVec2 &vector);
-
     template<typename T>
     [[nodiscard]] std::vector<T> operator|(const std::vector<T> &lhs, const std::vector<T> &rhs) {
         std::vector<T> result;

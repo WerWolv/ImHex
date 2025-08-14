@@ -5,8 +5,9 @@
 #include <imgui.h>
 #include <implot.h>
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/helpers/scaling.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>

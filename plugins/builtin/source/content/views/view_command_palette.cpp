@@ -1,11 +1,12 @@
 #include "content/views/view_command_palette.hpp"
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/command_palette.hpp>
 #include <wolv/utils/guards.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
 #include "imstb_textedit.h"
+#include <imgui_internal.h>
 
 namespace hex::plugin::builtin {
 
@@ -176,7 +177,7 @@ namespace hex::plugin::builtin {
         std::vector<CommandResult> results;
 
         // Loop over every registered command and check if the input matches it
-        for (const auto &[type, command, unlocalizedDescription, displayCallback, executeCallback] : ContentRegistry::CommandPaletteCommands::impl::getEntries()) {
+        for (const auto &[type, command, unlocalizedDescription, displayCallback, executeCallback] : ContentRegistry::CommandPalette::impl::getEntries()) {
 
             auto AutoComplete = [this, currCommand = command](auto) {
                 this->focusInputTextBox();
@@ -186,7 +187,7 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
             };
 
-            if (type == ContentRegistry::CommandPaletteCommands::Type::SymbolCommand) {
+            if (type == ContentRegistry::CommandPalette::Type::SymbolCommand) {
                 // Handle symbol commands
                 // These commands are used by entering a single symbol and then any input
 
@@ -198,7 +199,7 @@ namespace hex::plugin::builtin {
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
                     }
                 }
-            } else if (type == ContentRegistry::CommandPaletteCommands::Type::KeywordCommand) {
+            } else if (type == ContentRegistry::CommandPalette::Type::KeywordCommand) {
                 // Handle keyword commands
                 // These commands are used by entering a keyword followed by a space and then any input
 
@@ -214,7 +215,7 @@ namespace hex::plugin::builtin {
         }
 
         // WHen a command has been identified, show the query results for that command
-        for (const auto &handler : ContentRegistry::CommandPaletteCommands::impl::getHandlers()) {
+        for (const auto &handler : ContentRegistry::CommandPalette::impl::getHandlers()) {
             const auto &[type, command, queryCallback, displayCallback] = handler;
 
             auto processedInput = input;
@@ -222,11 +223,11 @@ namespace hex::plugin::builtin {
                 processedInput = wolv::util::trim(processedInput.substr(command.length()));
 
             for (const auto &[description, callback] : queryCallback(processedInput)) {
-                if (type == ContentRegistry::CommandPaletteCommands::Type::SymbolCommand) {
+                if (type == ContentRegistry::CommandPalette::Type::SymbolCommand) {
                     if (auto [match, value] = MatchCommand(input, command); match != MatchType::NoMatch) {
                         results.push_back({ fmt::format("{} ({})", command, description), "", [callback](auto ... args){ callback(args...); return std::nullopt; } });
                     }
-                } else if (type == ContentRegistry::CommandPaletteCommands::Type::KeywordCommand) {
+                } else if (type == ContentRegistry::CommandPalette::Type::KeywordCommand) {
                     if (auto [match, value] = MatchCommand(input, command + " "); match != MatchType::NoMatch) {
                         results.push_back({ fmt::format("{} ({})", command, description), "", [callback](auto ... args){ callback(args...); return std::nullopt; } });
                     }

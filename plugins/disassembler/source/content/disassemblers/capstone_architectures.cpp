@@ -1,4 +1,4 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/disassemblers.hpp>
 
 #include <content/helpers/disassembler.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -7,7 +7,7 @@
 
 namespace hex::plugin::disasm {
 
-    class CapstoneArchitecture : public ContentRegistry::Disassembler::Architecture {
+    class CapstoneArchitecture : public ContentRegistry::Disassemblers::Architecture {
     public:
         explicit CapstoneArchitecture(BuiltinArchitecture architecture, cs_mode mode = cs_mode(0))
             : Architecture(CapstoneDisassembler::ArchitectureNames[u32(architecture)]),
@@ -51,7 +51,7 @@ namespace hex::plugin::disasm {
             ImGui::NewLine();
         }
 
-        std::optional<ContentRegistry::Disassembler::Instruction> disassemble(u64 imageBaseAddress, u64 instructionLoadAddress, u64 instructionDataAddress, std::span<const u8> code) override {
+        std::optional<ContentRegistry::Disassemblers::Instruction> disassemble(u64 imageBaseAddress, u64 instructionLoadAddress, u64 instructionDataAddress, std::span<const u8> code) override {
             auto ptr = code.data();
             auto size = code.size_bytes();
 
@@ -59,7 +59,7 @@ namespace hex::plugin::disasm {
                 return std::nullopt;
             }
 
-            ContentRegistry::Disassembler::Instruction disassembly = { };
+            ContentRegistry::Disassemblers::Instruction disassembly = { };
             disassembly.address     = m_instruction->address;
             disassembly.offset      = instructionDataAddress - imageBaseAddress;
             disassembly.size        = m_instruction->size;
@@ -440,26 +440,26 @@ namespace hex::plugin::disasm {
 #endif
 
     void registerCapstoneArchitectures() {
-        ContentRegistry::Disassembler::add<ArchitectureARM>();
-        ContentRegistry::Disassembler::add<ArchitectureARM64>();
-        ContentRegistry::Disassembler::add<ArchitectureMIPS>();
-        ContentRegistry::Disassembler::add<ArchitectureX86>();
-        ContentRegistry::Disassembler::add<ArchitecturePowerPC>();
-        ContentRegistry::Disassembler::add<ArchitectureSPARC>();
-        ContentRegistry::Disassembler::add<ArchitectureSystemZ>();
-        ContentRegistry::Disassembler::add<ArchitectureXCore>();
-        ContentRegistry::Disassembler::add<ArchitectureM68K>();
-        ContentRegistry::Disassembler::add<ArchitectureTMS320C64X>();
-        ContentRegistry::Disassembler::add<ArchitectureM680X>();
-        ContentRegistry::Disassembler::add<ArchitectureEVM>();
+        ContentRegistry::Disassemblers::add<ArchitectureARM>();
+        ContentRegistry::Disassemblers::add<ArchitectureARM64>();
+        ContentRegistry::Disassemblers::add<ArchitectureMIPS>();
+        ContentRegistry::Disassemblers::add<ArchitectureX86>();
+        ContentRegistry::Disassemblers::add<ArchitecturePowerPC>();
+        ContentRegistry::Disassemblers::add<ArchitectureSPARC>();
+        ContentRegistry::Disassemblers::add<ArchitectureSystemZ>();
+        ContentRegistry::Disassemblers::add<ArchitectureXCore>();
+        ContentRegistry::Disassemblers::add<ArchitectureM68K>();
+        ContentRegistry::Disassemblers::add<ArchitectureTMS320C64X>();
+        ContentRegistry::Disassemblers::add<ArchitectureM680X>();
+        ContentRegistry::Disassemblers::add<ArchitectureEVM>();
 
         #if CS_API_MAJOR >= 5
-            ContentRegistry::Disassembler::add<ArchitectureWASM>();
-            ContentRegistry::Disassembler::add<ArchitectureRISCV>();
-            ContentRegistry::Disassembler::add<ArchitectureMOS65XX>();
-            ContentRegistry::Disassembler::add<ArchitectureBPF>();
-            ContentRegistry::Disassembler::add<ArchitectureSuperH>();
-            ContentRegistry::Disassembler::add<ArchitectureTricore>();
+            ContentRegistry::Disassemblers::add<ArchitectureWASM>();
+            ContentRegistry::Disassemblers::add<ArchitectureRISCV>();
+            ContentRegistry::Disassemblers::add<ArchitectureMOS65XX>();
+            ContentRegistry::Disassemblers::add<ArchitectureBPF>();
+            ContentRegistry::Disassemblers::add<ArchitectureSuperH>();
+            ContentRegistry::Disassemblers::add<ArchitectureTricore>();
         #endif
     }
 

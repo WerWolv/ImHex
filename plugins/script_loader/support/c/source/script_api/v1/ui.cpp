@@ -1,7 +1,8 @@
 #include <script_api.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/localization_manager.hpp>
 
 #include <hex/ui/popup.hpp>
@@ -182,5 +183,5 @@ SCRIPT_API(void registerView, const char *icon, const char *name, void *drawFunc
 
 SCRIPT_API(void addMenuItem, const char *icon, const char *menuName, const char *itemName, void *function) {
     using MenuFunction = void(*)();
-    ContentRegistry::Interface::addMenuItem({ menuName, itemName }, icon, 9999, Shortcut::None, reinterpret_cast<MenuFunction>(function));
+    ContentRegistry::UserInterface::addMenuItem({ menuName, itemName }, icon, 9999, Shortcut::None, reinterpret_cast<MenuFunction>(function));
 }

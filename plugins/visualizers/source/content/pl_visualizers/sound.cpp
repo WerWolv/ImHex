@@ -1,14 +1,15 @@
-#include <hex/helpers/utils.hpp>
-
 #include <content/visualizer_helpers.hpp>
 
 #include <implot.h>
 #include <imgui.h>
 #include <miniaudio.h>
 #include <fonts/vscode_icons.hpp>
+
 #include <hex/api/task_manager.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/helpers/scaling.hpp>
+#include <hex/helpers/utils.hpp>
 
 namespace hex::plugin::visualizers {
 

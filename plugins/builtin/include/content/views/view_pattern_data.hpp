@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/ui/view.hpp>
+#include <hex/api/content_registry/views.hpp>
 
 #include <ui/pattern_drawer.hpp>
 

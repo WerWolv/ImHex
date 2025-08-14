@@ -1,6 +1,5 @@
 #include <hex/plugin.hpp>
 
-#include <hex/api/content_registry.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/helpers/logger.hpp>
 

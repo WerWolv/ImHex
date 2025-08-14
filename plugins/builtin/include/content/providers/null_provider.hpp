@@ -1,8 +1,10 @@
 #pragma once
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/provider.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/api/events/events_provider.hpp>
+
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
 

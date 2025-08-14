@@ -3,7 +3,8 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api_urls.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
 #include <popups/popup_notification.hpp>
@@ -30,7 +31,7 @@ namespace hex::plugin::builtin {
     using namespace std::literals::chrono_literals;
 
     ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name", ICON_VS_EXTENSIONS) {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, ICON_VS_EXTENSIONS, 1000, Shortcut::None, [&, this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, ICON_VS_EXTENSIONS, 1000, Shortcut::None, [&, this] {
             if (m_requestStatus == RequestStatus::NotAttempted)
                 this->refresh();
 

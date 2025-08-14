@@ -1,4 +1,3 @@
-#include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/auto_reset.hpp>
@@ -18,7 +17,7 @@ namespace hex {
 
         }
 
-        void addLanguages(const std::string_view &languageList, std::function<std::string_view(const std::filesystem::path &path)> callback) {
+        void addLanguages(const std::string_view &languageList, std::function<std::string_view(const std::string &path)> callback) {
             const auto json = nlohmann::json::parse(languageList);
 
             for (const auto &item : json) {
@@ -41,7 +40,7 @@ namespace hex {
                     definition.fallbackLanguageId = item["fallback"].get<std::string>();
                 }
 
-                definition.languageFilePaths.emplace_back(PathEntry{ item["path"].get<std::string>(), callback });
+                definition.languageFilePaths.emplace_back(PathEntry{ item["path"].get<std::string>(), std::move(callback) });
             }
         }
 

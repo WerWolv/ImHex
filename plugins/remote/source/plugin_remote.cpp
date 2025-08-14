@@ -1,6 +1,6 @@
 #include <hex/plugin.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/provider.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <pl/api.hpp>

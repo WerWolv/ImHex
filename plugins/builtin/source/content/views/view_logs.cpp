@@ -1,6 +1,6 @@
 #include "content/views/view_logs.hpp"
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <fonts/vscode_icons.hpp>
@@ -8,7 +8,7 @@
 namespace hex::plugin::builtin {
 
     ViewLogs::ViewLogs() : View::Floating("hex.builtin.view.logs.name", ICON_VS_DEBUG_LINE_BY_LINE) {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.logs.name" }, ICON_VS_BRACKET_ERROR, 2500, Shortcut::None, [&, this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.logs.name" }, ICON_VS_BRACKET_ERROR, 2500, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
     }

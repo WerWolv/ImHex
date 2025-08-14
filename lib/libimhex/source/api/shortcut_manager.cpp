@@ -1,10 +1,12 @@
 #include <hex/api/shortcut_manager.hpp>
 #include <imgui.h>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/auto_reset.hpp>
 
 #include <hex/ui/view.hpp>
+
+#include <imgui_internal.h>
 
 namespace hex {
 
@@ -443,7 +445,7 @@ namespace hex {
         }
 
         if (result) {
-            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable()) {
+            for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItemsMutable()) {
                 if (menuItem.view == view && menuItem.shortcut == oldShortcut) {
                     menuItem.shortcut = newShortcut;
                     break;

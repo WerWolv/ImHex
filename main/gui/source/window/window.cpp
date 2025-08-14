@@ -3,8 +3,8 @@
 #include <hex.hpp>
 
 #include <hex/api/plugin_manager.hpp>
-#include <hex/api/content_registry.hpp>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/imhex_api/fonts.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
@@ -17,6 +17,8 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
+
+#include <hex/providers/provider.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
@@ -66,13 +68,14 @@ namespace hex {
         this->setupEmergencyPopups();
 
         #if !defined(OS_WEB)
-            this->loadPostProcessingShader();
+
         #endif
     }
 
     Window::~Window() {
         RequestCloseImHex::unsubscribe(this);
         EventDPIChanged::unsubscribe(this);
+        RequestSetPostProcessingShader::unsubscribe(this);
 
         EventWindowDeinitializing::post(m_window);
 
@@ -104,6 +107,12 @@ namespace hex {
 
             ImHexApi::System::impl::setMainWindowSize(width, height);
             glfwSetWindowSize(m_window, width, height);
+        });
+
+        RequestSetPostProcessingShader::subscribe(this, [this](const std::string &vertexShader, const std::string &fragmentShader) {
+            TaskManager::doLater([this, vertexShader, fragmentShader] {
+                this->loadPostProcessingShader(vertexShader, fragmentShader);
+            });
         });
 
 
@@ -143,33 +152,8 @@ namespace hex {
     }
 
 
-    void Window::loadPostProcessingShader() {
-
-        for (const auto &folder : paths::Resources.all()) {
-            auto vertexShaderPath = folder / "shader.vert";
-            auto fragmentShaderPath = folder / "shader.frag";
-
-            if (!wolv::io::fs::exists(vertexShaderPath))
-                continue;
-            if (!wolv::io::fs::exists(fragmentShaderPath))
-                continue;
-
-            auto vertexShaderFile = wolv::io::File(vertexShaderPath, wolv::io::File::Mode::Read);
-            if (!vertexShaderFile.isValid())
-                continue;
-
-            auto fragmentShaderFile = wolv::io::File(fragmentShaderPath, wolv::io::File::Mode::Read);
-            if (!fragmentShaderFile.isValid())
-                continue;
-
-            const auto vertexShaderSource = vertexShaderFile.readString();
-            const auto fragmentShaderSource = fragmentShaderFile.readString();
-            m_postProcessingShader = gl::Shader(vertexShaderSource, fragmentShaderSource);
-            if (!m_postProcessingShader.isValid())
-                continue;
-
-            break;
-        }
+    void Window::loadPostProcessingShader(const std::string &vertexShader, const std::string &fragmentShader) {
+        m_postProcessingShader = gl::Shader(vertexShader, fragmentShader);
     }
 
 
@@ -808,44 +792,49 @@ namespace hex {
         // If not, there's no point in sending the draw data off to the GPU and swapping buffers
         // NOTE: For anybody looking at this code and thinking "why not just hash the buffer and compare the hashes",
         // the reason is that hashing the buffer is significantly slower than just comparing the buffers directly.
-        // The buffer might become quite large if there's a lot of vertices on the screen but it's still usually less than
+        // The buffer might become quite large if there's a lot of vertices on the screen, but it's still usually less than
         // 10MB (out of which only the active portion needs to actually be compared) which is worth the ~60x speedup.
-        bool shouldRender = false;
-        {
+        bool shouldRender = [this] {
+            if (m_postProcessingShader.isValid() && m_postProcessingShader.hasUniform("Time"))
+                return true;
+
             static std::vector<u8> previousVtxData;
             static size_t previousVtxDataSize = 0;
 
+            size_t totalVtxDataSize = 0;
+
+            for (const auto *viewport : ImGui::GetPlatformIO().Viewports) {
+                const auto drawData = viewport->DrawData;
+                for (int n = 0; n < drawData->CmdListsCount; n++) {
+                    totalVtxDataSize += drawData->CmdLists[n]->VtxBuffer.size() * sizeof(ImDrawVert);
+                }
+            }
+
+            if (totalVtxDataSize != previousVtxDataSize) {
+                previousVtxDataSize = totalVtxDataSize;
+                previousVtxData.resize(totalVtxDataSize);
+                return true;
+            }
+
             size_t offset = 0;
-            size_t vtxDataSize = 0;
-
-            for (const auto viewPort : ImGui::GetPlatformIO().Viewports) {
-                auto drawData = viewPort->DrawData;
+            for (const auto *viewport : ImGui::GetPlatformIO().Viewports) {
+                const auto drawData = viewport->DrawData;
                 for (int n = 0; n < drawData->CmdListsCount; n++) {
-                    vtxDataSize += drawData->CmdLists[n]->VtxBuffer.size() * sizeof(ImDrawVert);
-                }
-            }
-            for (const auto viewPort : ImGui::GetPlatformIO().Viewports) {
-                auto drawData = viewPort->DrawData;
-                for (int n = 0; n < drawData->CmdListsCount; n++) {
-                    const ImDrawList *cmdList = drawData->CmdLists[n];
+                    const auto& vtxBuffer = drawData->CmdLists[n]->VtxBuffer;
+                    const std::size_t bufSize = vtxBuffer.size() * sizeof(ImDrawVert);
 
-                    if (vtxDataSize == previousVtxDataSize) {
-                        shouldRender = shouldRender || std::memcmp(previousVtxData.data() + offset, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.size() * sizeof(ImDrawVert)) != 0;
-                    } else {
-                        shouldRender = true;
+                    if (std::memcmp(previousVtxData.data() + offset, vtxBuffer.Data, bufSize) != 0) {
+                        std::memcpy(previousVtxData.data() + offset, vtxBuffer.Data, bufSize);
+                        return true;
                     }
 
-                    if (previousVtxData.size() < offset + cmdList->VtxBuffer.size() * sizeof(ImDrawVert)) {
-                        previousVtxData.resize(offset + cmdList->VtxBuffer.size() * sizeof(ImDrawVert));
-                    }
-
-                    std::memcpy(previousVtxData.data() + offset, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.size() * sizeof(ImDrawVert));
-                    offset += cmdList->VtxBuffer.size() * sizeof(ImDrawVert);
+                    offset += bufSize;
                 }
             }
 
-            previousVtxDataSize = vtxDataSize;
-        }
+            return false;
+        }();
+
 
         GLFWwindow *backupContext = glfwGetCurrentContext();
         ImGui::UpdatePlatformWindows();
@@ -947,6 +936,9 @@ namespace hex {
             glBindVertexArray(0);
 
             m_postProcessingShader.bind();
+
+            m_postProcessingShader.setUniform("Time", static_cast<float>(glfwGetTime()));
+            m_postProcessingShader.setUniform("Resolution", gl::Vector<float, 2>{{ float(displayWidth), float(displayHeight) }});
 
             glBindVertexArray(quadVAO);
             glBindTexture(GL_TEXTURE_2D, texture);

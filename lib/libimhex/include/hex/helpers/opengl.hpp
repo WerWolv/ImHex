@@ -811,6 +811,7 @@ namespace hex::gl {
 
         void setUniform(std::string_view name, const int &value);
         void setUniform(std::string_view name, const float &value);
+        bool hasUniform(std::string_view name);
 
         template<size_t N>
         void setUniform(std::string_view name, const Vector<float, N> &value) {
