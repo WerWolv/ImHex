@@ -1,4 +1,5 @@
 name: imhex
+title: ImHex
 base: core24
 version: ${IMHEX_VERSION}
 summary: Hex editor for reverse engineering
@@ -7,11 +8,13 @@ description: |
   analyzing binary files. It provides a powerful and flexible interface for
   working with binary data, including features like pattern matching, scripting,
   and a customizable user interface.
-grade: stable
+grade: ${SNAP_GRADE}
 confinement: classic
 contact: https://github.com/WerWolv/ImHex/discussions
 issues: https://github.com/WerWolv/ImHex/issues
+source-code: https://github.com/WerWolv/ImHex
 website: https://imhex.werwolv.net
+donation: https://github.com/sponsors/WerWolv
 license: GPL-2.0-only
 icon: resources/icon.svg
 adopt-info: imhex
