@@ -136,10 +136,9 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted(ICON_VS_TARGET);
                         ImGui::EndMenuBar();
                     }
-
-                    displayedContent->callback();
                 }
 
+                displayedContent->callback();
             } else {
                 if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
                     u32 id = 1;
