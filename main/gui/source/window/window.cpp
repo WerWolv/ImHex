@@ -357,7 +357,7 @@ namespace hex {
                 longestExceededFrameTime = std::max(exceedTime, longestExceededFrameTime);
             m_waitEventsBlocked = false;
 
-            if (std::fmod(longestExceededFrameTime, 5.0) < 0.01) {
+            if (std::fmod(frameTimeStart, 5.0) < 0.01) {
                 // Reset the longest exceeded frame time every 5 seconds
                 longestExceededFrameTime = 0.0;
             }
