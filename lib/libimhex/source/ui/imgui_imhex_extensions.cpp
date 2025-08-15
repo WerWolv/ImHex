@@ -911,9 +911,40 @@ namespace ImGuiExt {
         return pressed;
     }
 
+    bool InputPrefix(const char* label, const char *prefix, std::string &buffer, ImGuiInputTextFlags flags) {
+        auto window             = GetCurrentWindow();
+        const ImGuiStyle &style = GImGui->Style;
+
+
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
+        const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), CalcTextSize(prefix).x, label_size.y + style.FramePadding.y * 2.0F);
+        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(CalcItemWidth(), frame_size.y));
+
+        SetCursorPosX(GetCursorPosX() + frame_size.x);
+
+        RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+
+        PushStyleVar(ImGuiStyleVar_Alpha, 0.6F);
+        RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), prefix);
+        PopStyleVar();
+
+        bool value_changed = false;
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
+        PushStyleColor(ImGuiCol_FrameBg, 0x00000000);
+        PushStyleColor(ImGuiCol_FrameBgHovered, 0x00000000);
+        PushStyleColor(ImGuiCol_FrameBgActive, 0x00000000);
+        value_changed = ImGui::InputText(label, buffer, flags);
+        PopStyleColor(3);
+        PopStyleVar();
+
+        if (value_changed)
+            MarkItemEdited(GImGui->LastItemData.ID);
+
+        return value_changed;
+    }
+
     bool InputIntegerPrefix(const char *label, const char *prefix, void *value, ImGuiDataType type, const char *format, ImGuiInputTextFlags flags) {
         auto window             = GetCurrentWindow();
-        const ImGuiID id        = window->GetID(label);
         const ImGuiStyle &style = GImGui->Style;
 
 
@@ -926,8 +957,7 @@ namespace ImGuiExt {
         char buf[64];
         DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, format);
 
-        RenderNavCursor(frame_bb, id);
-        RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+        RenderFrame(frame_bb.Min, frame_bb.Max + ImVec2(frame_size.x, 0), GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
 
         PushStyleVar(ImGuiStyleVar_Alpha, 0.6F);
         RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), prefix);
