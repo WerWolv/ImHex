@@ -607,6 +607,10 @@ function(downloadImHexPatternsFiles dest)
             message(STATUS "Downloading ImHex patterns from branch '${PATTERNS_BRANCH}'...")
             if (EXISTS "${imhex_patterns_SOURCE_DIR}")
                 file(REMOVE_RECURSE "${imhex_patterns_SOURCE_DIR}")
+            else ()
+                file(MAKE_DIRECTORY "${imhex_patterns_SOURCE_DIR}")
+            endif()
+
             execute_process(
                 COMMAND
                     git clone --recurse-submodules --branch ${PATTERNS_BRANCH} https://github.com/WerWolv/ImHex-Patterns.git "${imhex_patterns_SOURCE_DIR}"
