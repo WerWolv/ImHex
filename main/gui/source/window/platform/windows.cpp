@@ -267,10 +267,6 @@ namespace hex {
                     RegionTop * (cursor.y < (window.top + border.y)) |
                     RegionBottom * (cursor.y >= (window.bottom - border.y));
 
-                if (result != 0 && (ImGui::IsAnyItemHovered())) {
-                    break;
-                }
-
                 if (ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)) {
                     if (result == RegionClient)
                         return HTCLIENT;
