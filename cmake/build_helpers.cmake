@@ -331,7 +331,7 @@ macro(createPackage)
         endforeach()
         ]])
 
-        downloadImHexPatternsFiles("./")
+        downloadImHexPatternsFiles(".")
     elseif(UNIX AND NOT APPLE)
 
         set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
