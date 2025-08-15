@@ -1051,7 +1051,7 @@ jobs:
             --enable-network -N -v                               \
             --enable-plugin=ccache                               \
             --plugin-option=ccache:compress=True                 \
-            --plugin-option=ccache:max_cache_size=1G             \
+            --plugin-option=ccache:max_cache_size=200M           \
             --plugin-option=ccache:dir=$GITHUB_WORKSPACE/.ccache \
             --spec $GITHUB_WORKSPACE/imhex.spec                  \
             --sources $GITHUB_WORKSPACE                          \
