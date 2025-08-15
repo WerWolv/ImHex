@@ -604,6 +604,9 @@ function(downloadImHexPatternsFiles dest)
         install(CODE "set(PATTERNS_BRANCH \"${PATTERNS_BRANCH}\")")
         install(CODE "set(imhex_patterns_SOURCE_DIR \"${imhex_patterns_SOURCE_DIR}\")")
         install(CODE [[
+            message(STATUS "Downloading ImHex patterns from branch '${PATTERNS_BRANCH}'...")
+            if (EXISTS "${imhex_patterns_SOURCE_DIR}")
+                file(REMOVE_RECURSE "${imhex_patterns_SOURCE_DIR}")
             execute_process(
                 COMMAND
                     git clone --recurse-submodules --branch ${PATTERNS_BRANCH} https://github.com/WerWolv/ImHex-Patterns.git "${imhex_patterns_SOURCE_DIR}"
