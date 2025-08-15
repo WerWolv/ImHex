@@ -21,12 +21,14 @@ EXPORT_MODULE namespace hex {
 
         namespace impl {
 
+            using QueryResultCallback = std::function<void(std::string)>;
+
             struct QueryResult {
                 std::string name;
-                std::function<void(std::string)> callback;
+                QueryResultCallback callback;
             };
 
-            using ContentDisplayCallback = std::function<void(std::string)>;
+            using ContentDisplayCallback = std::function<void()>;
             using DisplayCallback = std::function<std::string(std::string)>;
             using ExecuteCallback = std::function<std::optional<std::string>(std::string)>;
             using QueryCallback   = std::function<std::vector<QueryResult>(std::string)>;
@@ -46,10 +48,15 @@ EXPORT_MODULE namespace hex {
                 DisplayCallback displayCallback;
             };
 
+            struct ContentDisplay {
+                bool showSearchBox;
+                ContentDisplayCallback callback;
+            };
+
             const std::vector<Entry>& getEntries();
             const std::vector<Handler>& getHandlers();
 
-            std::optional<ContentDisplayCallback>& getDisplayedContent();
+            std::optional<ContentDisplay>& getDisplayedContent();
 
         }
 
@@ -86,6 +93,12 @@ EXPORT_MODULE namespace hex {
          * @param displayCallback Display callback that will be called to display the content
          */
         void setDisplayedContent(const impl::ContentDisplayCallback &displayCallback);
+
+        /**
+         * @brief Opens the command palette window, displaying a user defined interface
+         * @param displayCallback Display callback that will be called to display the content
+         */
+        void openWithContent(const impl::ContentDisplayCallback &displayCallback);
     }
 
 }

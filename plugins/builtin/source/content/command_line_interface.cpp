@@ -566,7 +566,7 @@ namespace hex::plugin::builtin {
             }
 
             RequestSetPatternLanguageCode::post(patternSourceCode);
-            RequestRunPatternCode::post();
+            RequestTriggerPatternEvaluation::post();
         });
     }
 

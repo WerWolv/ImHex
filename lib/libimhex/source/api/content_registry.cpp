@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <jthread.hpp>
+#include <hex/api/events/requests_interaction.hpp>
 
 #if defined(OS_WEB)
 #include <emscripten.h>
@@ -613,8 +614,8 @@ namespace hex {
                 return *s_handlers;
             }
 
-            static AutoReset<std::optional<ContentDisplayCallback>> s_displayedContent;
-            std::optional<ContentDisplayCallback>& getDisplayedContent() {
+            static AutoReset<std::optional<ContentDisplay>> s_displayedContent;
+            std::optional<ContentDisplay>& getDisplayedContent() {
                 return *s_displayedContent;
             }
 
@@ -633,7 +634,12 @@ namespace hex {
         }
 
         void setDisplayedContent(const impl::ContentDisplayCallback &displayCallback) {
-            impl::s_displayedContent = displayCallback;
+            impl::s_displayedContent = impl::ContentDisplay { true, displayCallback };
+        }
+
+        void openWithContent(const impl::ContentDisplayCallback &displayCallback) {
+            RequestOpenCommandPalette::post();
+            impl::s_displayedContent = impl::ContentDisplay { false, displayCallback };
         }
 
     }

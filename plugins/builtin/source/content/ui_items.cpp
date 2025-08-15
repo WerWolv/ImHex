@@ -3,9 +3,12 @@
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/task_manager.hpp>
+
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/requests_gui.hpp>
+#include <hex/api/events/events_interaction.hpp>
+#include <hex/api/events/requests_interaction.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>
@@ -24,7 +27,6 @@
 #include <toasts/toast_notification.hpp>
 
 #include <csignal>
-#include <hex/api/events/events_interaction.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -423,8 +425,10 @@ namespace hex::plugin::builtin {
         EventProviderChanged::subscribe([](auto, auto) { providerJustChanged = true; });
 
         static prv::Provider *rightClickedProvider = nullptr;
-        EventSearchBoxClicked::subscribe([](ImGuiMouseButton button){
-            if (button == ImGuiMouseButton_Right) {
+        EventSearchBoxClicked::subscribe([](ImGuiMouseButton button) {
+            if (button == ImGuiMouseButton_Left) {
+                RequestOpenCommandPalette::post();
+            } else if (button == ImGuiMouseButton_Right) {
                 rightClickedProvider = ImHexApi::Provider::get();
                 RequestOpenPopup::post("ProviderMenu");
             }

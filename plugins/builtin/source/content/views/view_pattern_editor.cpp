@@ -238,7 +238,7 @@ namespace hex::plugin::builtin {
     ViewPatternEditor::~ViewPatternEditor() {
         RequestPatternEditorSelectionChange::unsubscribe(this);
         RequestSetPatternLanguageCode::unsubscribe(this);
-        RequestRunPatternCode::unsubscribe(this);
+        RequestTriggerPatternEvaluation::unsubscribe(this);
         EventFileLoaded::unsubscribe(this);
         EventProviderChanged::unsubscribe(this);
         EventProviderClosed::unsubscribe(this);
@@ -1854,18 +1854,8 @@ namespace hex::plugin::builtin {
             m_textEditor.get(provider).setCursorPosition(coords);
         });
 
-        RequestLoadPatternLanguageFile::subscribe(this, [this](const std::fs::path &path, bool trackFile) {
-            this->loadPatternFile(path, ImHexApi::Provider::get(), trackFile);
-        });
-
-        RequestRunPatternCode::subscribe(this, [this] {
+        RequestTriggerPatternEvaluation::subscribe(this, [this] {
             m_triggerAutoEvaluate = true;
-        });
-
-        RequestSavePatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
-            auto provider = ImHexApi::Provider::get();
-            wolv::io::File file(path, wolv::io::File::Mode::Create);
-            file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
         });
 
         RequestSetPatternLanguageCode::subscribe(this, [this](const std::string &code) {

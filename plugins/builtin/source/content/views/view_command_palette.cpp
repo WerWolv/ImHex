@@ -2,51 +2,51 @@
 
 #include <hex/api/content_registry/command_palette.hpp>
 #include <wolv/utils/guards.hpp>
+
 #include <hex/api/events/requests_gui.hpp>
-#include <hex/api/events/events_interaction.hpp>
+#include <hex/api/events/requests_interaction.hpp>
 
 #include "imstb_textedit.h"
 #include <imgui_internal.h>
+#include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::builtin {
 
     ViewCommandPalette::ViewCommandPalette() : View::Special("hex.builtin.view.command_palette.name") {
         // Add global shortcut to open the command palette
         ShortcutManager::addGlobalShortcut(CTRLCMD + SHIFT + Keys::P, "hex.builtin.view.command_palette.name", [this] {
-            RequestOpenPopup::post("hex.builtin.view.command_palette.name"_lang);
-            m_commandPaletteOpen = true;
-            m_justOpened         = true;
+            RequestOpenCommandPalette::post();
         });
 
-        EventSearchBoxClicked::subscribe([this](ImGuiMouseButton button) {
-            if (button == ImGuiMouseButton_Left) {
-                m_commandPaletteOpen = true;
-                m_justOpened         = true;
-            }
+        RequestOpenCommandPalette::subscribe([this]() {
+            m_commandPaletteOpen = true;
+            m_justOpened         = true;
+            ContentRegistry::CommandPalette::impl::getDisplayedContent().reset();
         });
     }
 
     void ViewCommandPalette::drawAlwaysVisibleContent() {
+        auto &displayedContent = ContentRegistry::CommandPalette::impl::getDisplayedContent();
+
         if (m_justOpened) {
             ImGui::OpenPopup("hex.builtin.view.command_palette.name"_lang);
-            ContentRegistry::CommandPalette::impl::getDisplayedContent().reset();
         }
 
         // If the command palette is hidden, don't draw it
         if (!m_commandPaletteOpen) return;
 
-        auto windowPos  = ImHexApi::System::getMainWindowPosition();
-        auto windowSize = ImHexApi::System::getMainWindowSize();
-
-        const auto &displayedContent = ContentRegistry::CommandPalette::impl::getDisplayedContent();
+        const auto windowPos  = ImHexApi::System::getMainWindowPosition();
+        const auto windowSize = ImHexApi::System::getMainWindowSize();
 
         ImGui::SetNextWindowPos(ImVec2(windowPos.x + windowSize.x * 0.5F, windowPos.y), ImGuiCond_Always, ImVec2(0.5F, 0.0F));
         if (!displayedContent.has_value())
             ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
         else
-            ImGui::SetNextWindowSizeConstraints(this->getMinSize(), ImVec2(FLT_MAX, FLT_MAX));
+            ImGui::SetNextWindowSizeConstraints(ImVec2(this->getMinSize().x, 20_scaled), ImVec2(FLT_MAX, FLT_MAX));
 
-        if (ImGui::BeginPopup("hex.builtin.view.command_palette.name"_lang)) {
+        const bool hasSearchBox = !displayedContent.has_value() || displayedContent->showSearchBox;
+
+        if (ImGui::BeginPopup("hex.builtin.view.command_palette.name"_lang, !hasSearchBox ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
             ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
             ImGui::BringWindowToFocusFront(ImGui::GetCurrentWindowRead());
 
@@ -54,82 +54,92 @@ namespace hex::plugin::builtin {
             if (ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
+            if (hasSearchBox) {
+                const auto buttonColor = [](float alpha) {
+                    return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_ModalWindowDimBg) * ImVec4(1, 1, 1, alpha)));
+                };
 
-            const auto buttonColor = [](float alpha) {
-                return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_ModalWindowDimBg) * ImVec4(1, 1, 1, alpha)));
-            };
+                // Draw the main input text box
+                ImGui::PushItemWidth(-1);
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, buttonColor(0.5F));
+                ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, buttonColor(0.7F));
+                ImGui::PushStyleColor(ImGuiCol_FrameBgActive, buttonColor(0.9F));
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0_scaled);
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4_scaled);
 
-            // Draw the main input text box
-            ImGui::PushItemWidth(-1);
-            ImGui::PushStyleColor(ImGuiCol_FrameBg, buttonColor(0.5F));
-            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, buttonColor(0.7F));
-            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, buttonColor(0.9F));
-            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0_scaled);
-            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4_scaled);
-
-            if (ImGui::InputText("##command_input", m_commandBuffer)) {
-                m_lastResults = this->getCommandResults(m_commandBuffer);
-            }
-            ImGui::SetItemKeyOwner(ImGuiKey_LeftAlt, ImGuiInputFlags_CondActive);
-
-            ImGui::PopStyleVar(2);
-            ImGui::PopStyleColor(3);
-            ImGui::PopItemWidth();
-            ImGui::SetItemDefaultFocus();
-
-            if (m_moveCursorToEnd) {
-                auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
-                if (textState != nullptr) {
-                    auto stb = reinterpret_cast<STB_TexteditState*>(textState->Stb);
-                    stb->cursor =
-                    stb->select_start =
-                    stb->select_end = m_commandBuffer.size();
+                if (ImGui::InputText("##command_input", m_commandBuffer)) {
+                    m_lastResults = this->getCommandResults(m_commandBuffer);
                 }
-                m_moveCursorToEnd = false;
-            }
+                ImGui::SetItemKeyOwner(ImGuiKey_LeftAlt, ImGuiInputFlags_CondActive);
 
-            // Handle giving back focus to the input text box
-            if (m_focusInputTextBox) {
-                ImGui::SetKeyboardFocusHere(-1);
-                ImGui::ActivateItemByID(ImGui::GetID("##command_input"));
+                ImGui::PopStyleVar(2);
+                ImGui::PopStyleColor(3);
+                ImGui::PopItemWidth();
+                ImGui::SetItemDefaultFocus();
 
-                m_focusInputTextBox = false;
-                m_moveCursorToEnd = true;
-            }
+                if (m_moveCursorToEnd) {
+                    auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
+                    if (textState != nullptr) {
+                        auto stb = reinterpret_cast<STB_TexteditState*>(textState->Stb);
+                        stb->cursor =
+                        stb->select_start =
+                        stb->select_end = m_commandBuffer.size();
+                    }
+                    m_moveCursorToEnd = false;
+                }
 
-            // Execute the currently selected command when pressing enter
-            if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter, false) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false))) {
-                bool closePalette = true;
-                if (!m_lastResults.empty()) {
-                    auto &[displayResult, matchedCommand, callback] = m_lastResults.front();
+                // Handle giving back focus to the input text box
+                if (m_focusInputTextBox) {
+                    ImGui::SetKeyboardFocusHere(-1);
+                    ImGui::ActivateItemByID(ImGui::GetID("##command_input"));
 
-                    if (auto result = callback(matchedCommand); result.has_value()) {
-                        m_commandBuffer = result.value();
-                        closePalette = false;
-                        m_focusInputTextBox = true;
+                    m_focusInputTextBox = false;
+                    m_moveCursorToEnd = true;
+                }
+
+                // Execute the currently selected command when pressing enter
+                if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter, false) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false))) {
+                    bool closePalette = true;
+                    if (!m_lastResults.empty()) {
+                        auto &[displayResult, matchedCommand, callback] = m_lastResults.front();
+
+                        if (auto result = callback(matchedCommand); result.has_value()) {
+                            m_commandBuffer = result.value();
+                            closePalette = false;
+                            m_focusInputTextBox = true;
+                        }
+                    }
+
+                    if (closePalette) {
+                        ImGui::CloseCurrentPopup();
                     }
                 }
 
-                if (closePalette) {
-                    ImGui::CloseCurrentPopup();
+                // Focus the input text box when the popup is opened
+                if (m_justOpened) {
+                    focusInputTextBox();
+                    m_lastResults = this->getCommandResults("");
+                    m_commandBuffer.clear();
                 }
+
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
+
+                ImGui::Separator();
             }
 
-            // Focus the input text box when the popup is opened
-            if (m_justOpened) {
-                focusInputTextBox();
-                m_lastResults = this->getCommandResults("");
-                m_commandBuffer.clear();
-                m_justOpened = false;
-            }
-
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
-
-            ImGui::Separator();
+            m_justOpened = false;
 
             // Draw the results
             if (displayedContent.has_value()) {
-                (*displayedContent)(m_commandBuffer);
+                if (!displayedContent->showSearchBox){
+                    if (ImGui::BeginMenuBar()) {
+                        ImGui::TextUnformatted(ICON_VS_TARGET);
+                        ImGui::EndMenuBar();
+                    }
+
+                    displayedContent->callback();
+                }
+
             } else {
                 if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
                     u32 id = 1;

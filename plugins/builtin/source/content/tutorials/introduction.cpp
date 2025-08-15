@@ -75,7 +75,7 @@ namespace hex::plugin::builtin {
             })
             .onAppear([] {
                 RequestSetPatternLanguageCode::post("\n\n\n\n\n\nstruct Test {\n    u8 value;\n};\n\nTest test @ 0x00;");
-                RequestRunPatternCode::post();
+                RequestTriggerPatternEvaluation::post();
             })
             .allowSkip();
         }

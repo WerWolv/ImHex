@@ -454,7 +454,7 @@ namespace hex::plugin::builtin {
                         continue;
 
                     result.emplace_back(name, [&toolEntry](const auto &) {
-                        ContentRegistry::CommandPalette::setDisplayedContent([&toolEntry](const auto) {
+                        ContentRegistry::CommandPalette::setDisplayedContent([&toolEntry]() {
                             toolEntry.function();
                         });
                     });
