@@ -606,7 +606,8 @@ function(downloadImHexPatternsFiles dest)
         install(CODE [[
             execute_process(
                 COMMAND
-                    git clone --recurse-submodules --branch ${PATTERNS_BRANCH} https://github.com/WerWolv/ImHex-Patterns.git ${imhex_patterns_SOURCE_DIR}
+                    git clone --recurse-submodules --branch ${PATTERNS_BRANCH} https://github.com/WerWolv/ImHex-Patterns.git "${imhex_patterns_SOURCE_DIR}"
+                COMMAND_ERROR_IS_FATAL ANY
             )
         ]])
     else ()
