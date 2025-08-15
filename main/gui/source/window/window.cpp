@@ -376,8 +376,9 @@ namespace hex {
     }
 
     void Window::frameBegin() {
+        auto &io = ImGui::GetIO();
         ImHexApi::Fonts::getDefaultFont().push();
-        ImGui::GetIO().FontDefault = ImHexApi::Fonts::getDefaultFont();
+        io.FontDefault = ImHexApi::Fonts::getDefaultFont();
 
         // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -395,6 +396,12 @@ namespace hex {
         TutorialManager::drawTutorial();
 
         EventFrameBegin::post();
+
+        static bool lastFocusLost = io.AppFocusLost;
+        if (io.AppFocusLost != lastFocusLost) {
+            EventWindowFocused::post(!io.AppFocusLost);
+        }
+        lastFocusLost = io.AppFocusLost;
 
         // Handle all undocked floating windows
         ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -1127,11 +1134,7 @@ namespace hex {
         glfwSetCursorPosCallback(m_window, unlockFrameRate);
         glfwSetMouseButtonCallback(m_window, unlockFrameRate);
         glfwSetScrollCallback(m_window, unlockFrameRate);
-
-        glfwSetWindowFocusCallback(m_window, [](GLFWwindow *window, int focused) {
-            unlockFrameRate(window);
-            EventWindowFocused::post(focused == GLFW_TRUE);
-        });
+        glfwSetWindowFocusCallback(m_window, unlockFrameRate);
 
         glfwSetWindowMaximizeCallback(m_window, [](GLFWwindow *window, int) {
             glfwShowWindow(window);

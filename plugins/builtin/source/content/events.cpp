@@ -356,16 +356,24 @@ namespace hex::plugin::builtin {
             if (ctx == nullptr)
                 return;
 
-            if (ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup)) {
-                for (const auto& popup : ctx->OpenPopupStack) {
-                    if (!(popup.Window->Flags & ImGuiWindowFlags_Modal)) {
-                        ctx->OpenPopupStack.erase_unsorted(&popup);
-                        log::debug("Closing popup '{}' because the main window lost focus", popup.Window->Name ? popup.Window->Name : "Unknown Popup");
-                        break;
+            // Close any open non-modal popups when ImHex loses focus
+            // Disable this in debug mode though to allow for easier debugging
+            #if !defined(DEBUG)
+                if (ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup)) {
+                    for (const auto& popup : ctx->OpenPopupStack) {
+                        if (popup.Window == nullptr)
+                            continue;
+
+                        if (!(popup.Window->Flags & ImGuiWindowFlags_Modal)) {
+                            ctx->OpenPopupStack.erase_unsorted(&popup);
+                            log::debug("Closing popup '{}' because the main window lost focus", popup.Window->Name ? popup.Window->Name : "Unknown Popup");
+                            break;
+                        }
                     }
+                    return;
                 }
-                return;
-            }
+            #endif
+
             if (ImGui::IsAnyItemHovered())
                 return;
 
