@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewSettings::drawContent() {
-        if (ImGui::BeginTable("Settings", 2, ImGuiTableFlags_BordersInner)) {
+        if (ImGui::BeginTable("Settings", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_Resizable)) {
             ImGui::TableSetupColumn("##category", ImGuiTableColumnFlags_WidthFixed, 120_scaled);
             ImGui::TableSetupColumn("##settings", ImGuiTableColumnFlags_WidthStretch);
 
@@ -85,7 +85,7 @@ namespace hex::plugin::builtin {
             if (m_selectedCategory != nullptr) {
                 auto &category = *m_selectedCategory;
 
-                if (ImGui::BeginChild("scrolling")) {
+                if (ImGui::BeginChild("scrolling", ImVec2(0, 0), ImGuiChildFlags_Borders)) {
 
                     // Draw the category description
                     if (!category.unlocalizedDescription.empty()) {
