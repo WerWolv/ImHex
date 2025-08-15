@@ -613,6 +613,11 @@ namespace hex {
                 return *s_handlers;
             }
 
+            static AutoReset<std::optional<ContentDisplayCallback>> s_displayedContent;
+            std::optional<ContentDisplayCallback>& getDisplayedContent() {
+                return *s_displayedContent;
+            }
+
         }
 
         void add(Type type, const std::string &command, const UnlocalizedString &unlocalizedDescription, const impl::DisplayCallback &displayCallback, const impl::ExecuteCallback &executeCallback) {
@@ -625,6 +630,10 @@ namespace hex {
             log::debug("Registered new command palette command handler: {}", command);
 
             impl::s_handlers->push_back(impl::Handler { type, command, queryCallback, displayCallback });
+        }
+
+        void setDisplayedContent(const impl::ContentDisplayCallback &displayCallback) {
+            impl::s_displayedContent = displayCallback;
         }
 
     }

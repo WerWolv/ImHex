@@ -26,6 +26,7 @@ EXPORT_MODULE namespace hex {
                 std::function<void(std::string)> callback;
             };
 
+            using ContentDisplayCallback = std::function<void(std::string)>;
             using DisplayCallback = std::function<std::string(std::string)>;
             using ExecuteCallback = std::function<std::optional<std::string>(std::string)>;
             using QueryCallback   = std::function<std::vector<QueryResult>(std::string)>;
@@ -47,6 +48,8 @@ EXPORT_MODULE namespace hex {
 
             const std::vector<Entry>& getEntries();
             const std::vector<Handler>& getHandlers();
+
+            std::optional<ContentDisplayCallback>& getDisplayedContent();
 
         }
 
@@ -77,6 +80,12 @@ EXPORT_MODULE namespace hex {
             const std::string &command,
             const impl::QueryCallback &queryCallback,
             const impl::DisplayCallback &displayCallback);
+
+        /**
+         * @brief Specify UI content that will be displayed inside the command palette
+         * @param displayCallback Display callback that will be called to display the content
+         */
+        void setDisplayedContent(const impl::ContentDisplayCallback &displayCallback);
     }
 
 }

@@ -20,7 +20,6 @@ namespace hex::plugin::builtin {
 
         EventSearchBoxClicked::subscribe([this](ImGuiMouseButton button) {
             if (button == ImGuiMouseButton_Left) {
-                RequestOpenPopup::post("hex.builtin.view.command_palette.name"_lang);
                 m_commandPaletteOpen = true;
                 m_justOpened         = true;
             }
@@ -28,14 +27,25 @@ namespace hex::plugin::builtin {
     }
 
     void ViewCommandPalette::drawAlwaysVisibleContent() {
+        if (m_justOpened) {
+            ImGui::OpenPopup("hex.builtin.view.command_palette.name"_lang);
+            ContentRegistry::CommandPalette::impl::getDisplayedContent().reset();
+        }
+
         // If the command palette is hidden, don't draw it
         if (!m_commandPaletteOpen) return;
 
         auto windowPos  = ImHexApi::System::getMainWindowPosition();
         auto windowSize = ImHexApi::System::getMainWindowSize();
 
+        const auto &displayedContent = ContentRegistry::CommandPalette::impl::getDisplayedContent();
+
         ImGui::SetNextWindowPos(ImVec2(windowPos.x + windowSize.x * 0.5F, windowPos.y), ImGuiCond_Always, ImVec2(0.5F, 0.0F));
-        ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
+        if (!displayedContent.has_value())
+            ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
+        else
+            ImGui::SetNextWindowSizeConstraints(this->getMinSize(), ImVec2(FLT_MAX, FLT_MAX));
+
         if (ImGui::BeginPopup("hex.builtin.view.command_palette.name"_lang)) {
             ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
             ImGui::BringWindowToFocusFront(ImGui::GetCurrentWindowRead());
@@ -118,33 +128,37 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
 
             // Draw the results
-            if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-                u32 id = 1;
-                for (const auto &[displayResult, matchedCommand, callback] : m_lastResults) {
-                    ImGui::PushID(id);
-                    ImGui::PushItemFlag(ImGuiItemFlags_NoTabStop, false);
-                    ON_SCOPE_EXIT {
-                        ImGui::PopItemFlag();
-                        ImGui::PopID();
-                        id += 1;
-                    };
+            if (displayedContent.has_value()) {
+                (*displayedContent)(m_commandBuffer);
+            } else {
+                if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+                    u32 id = 1;
+                    for (const auto &[displayResult, matchedCommand, callback] : m_lastResults) {
+                        ImGui::PushID(id);
+                        ImGui::PushItemFlag(ImGuiItemFlags_NoTabStop, false);
+                        ON_SCOPE_EXIT {
+                            ImGui::PopItemFlag();
+                            ImGui::PopID();
+                            id += 1;
+                        };
 
-                    // Allow executing a command by clicking on it or selecting it with the keyboard and pressing enter
-                    if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_NoAutoClosePopups)) {
-                        if (auto result = callback(matchedCommand); result.has_value())
-                            m_commandBuffer = result.value();
+                        // Allow executing a command by clicking on it or selecting it with the keyboard and pressing enter
+                        if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_NoAutoClosePopups)) {
+                            if (auto result = callback(matchedCommand); result.has_value())
+                                m_commandBuffer = result.value();
 
-                        break;
-                    }
-                    if (ImGui::IsItemFocused() && (ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter))) {
-                        if (auto result = callback(matchedCommand); result.has_value())
-                            m_commandBuffer = result.value();
+                            break;
+                        }
+                        if (ImGui::IsItemFocused() && (ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter))) {
+                            if (auto result = callback(matchedCommand); result.has_value())
+                                m_commandBuffer = result.value();
 
-                        break;
+                            break;
+                        }
                     }
                 }
+                ImGui::EndChild();
             }
-            ImGui::EndChild();
 
             ImGui::EndPopup();
         } else {
