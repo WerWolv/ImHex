@@ -17,6 +17,12 @@ Extract the zip file to any location on your system.
 ### macOS
 Simply use the drag-n-drop dmg package to install ImHex on your system. It's possible that you need to allow the app to run in the security settings.
 
+Alternatively, ImHex can be installed using [Homebrew](https://brew.sh/):
+
+```bash
+brew install imhex
+```
+
 ### Linux
 
 #### AppImage
