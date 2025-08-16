@@ -9,6 +9,7 @@
 #include <pl/pattern_language.hpp>
 #include <pl/core/errors/error.hpp>
 #include <pl/core/lexer.hpp>
+#include <pl/core/new_lexer.hpp>
 
 #include <ui/hex_editor.hpp>
 #include <ui/pattern_drawer.hpp>
@@ -392,7 +393,15 @@ namespace hex::plugin::builtin {
             ui::PopupNamedFileChooser::open(
                 basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
                 [this, runtime = createRuntime()](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
+                    static std::chrono::high_resolution_clock::duration lex_total{};
+
                     if (auto it = m_patternNames.find(path); it != m_patternNames.end()) {
+                        static bool once = false;
+                        if (!once) {
+                            once = true;
+                            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(lex_total);
+                            log::info("***total_lex: {}", ms.count());
+                        }
                         return it->second;
                     }
 
@@ -404,7 +413,13 @@ namespace hex::plugin::builtin {
 
                     // Only run the lexer on the source file and manually extract the #pragma description to make this
                     // process as fast as possible. Running the preprocessor directly takes too much time
-                    auto result = runtime->getInternals().lexer->lex(&source);
+
+                    const auto startTime = std::chrono::high_resolution_clock::now();
+                    //auto result = runtime->getInternals().lexer->lex(&source);
+                    auto result = runtime->getInternals().new_lexer->lex(&source);
+                    const auto endTime = std::chrono::high_resolution_clock::now();
+                    lex_total += endTime-startTime;
+
                     if (result.isOk()) {
                         const auto tokens = result.unwrap();
                         for (auto it = tokens.begin(); it != tokens.end(); ++it) {
