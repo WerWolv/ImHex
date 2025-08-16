@@ -61,6 +61,10 @@ namespace hex::gl {
     }
 
     Shader::Shader(std::string_view vertexSource, std::string_view fragmentSource) {
+        if (vertexSource.empty() || fragmentSource.empty()) {
+            return;
+        }
+
         auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
         this->compile(vertexShader, vertexSource);
 
@@ -79,7 +83,7 @@ namespace hex::gl {
         glGetProgramiv(m_program, GL_LINK_STATUS, &result);
         if (!result) {
             std::vector<char> log(512);
-            glGetShaderInfoLog(m_program, log.size(), nullptr, log.data());
+            glGetProgramInfoLog(m_program, log.size(), nullptr, log.data());
             log::error("Failed to link shader: {}", log.data());
 
             glDeleteProgram(m_program);
@@ -98,6 +102,9 @@ namespace hex::gl {
     }
 
     Shader& Shader::operator=(Shader &&other) noexcept {
+        if (m_program != 0)
+            glDeleteProgram(m_program);
+
         m_program = other.m_program;
         other.m_program = 0;
         return *this;
@@ -119,6 +126,11 @@ namespace hex::gl {
         glUniform1f(getUniformLocation(name), value);
     }
 
+    bool Shader::hasUniform(std::string_view name) {
+        return getUniformLocation(name) != -1;
+    }
+
+
 
     GLint Shader::getUniformLocation(std::string_view name) {
         auto uniform = m_uniforms.find(name.data());
@@ -126,6 +138,7 @@ namespace hex::gl {
             auto location = glGetUniformLocation(m_program, name.data());
             if (location == -1) {
                 log::warn("Uniform '{}' not found in shader", name);
+                m_uniforms[name.data()] = -1;
                 return -1;
             }
 

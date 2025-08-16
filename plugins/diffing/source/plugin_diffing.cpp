@@ -1,6 +1,6 @@
 #include <hex/plugin.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/views.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <romfs/romfs.hpp>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/data_information.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/ui/view.hpp>
 #include <ui/widgets.hpp>

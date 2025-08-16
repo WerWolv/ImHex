@@ -1,4 +1,6 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
@@ -49,15 +51,15 @@ namespace hex::plugin::builtin {
             ImGui::GetWindowDrawList()->AddShadowCircle(pos, diameter / 2, ImGui::GetColorU32(ImGuiCol_ButtonActive, 0.8F), diameter / 4, ImVec2());
         }
 
-        void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, View *view, const ContentRegistry::Interface::impl::MenuCallback &callback, const ContentRegistry::Interface::impl::EnabledCallback &enabledCallback, const ContentRegistry::Interface::impl::SelectedCallback &selectedCallback) {
+        void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, View *view, const ContentRegistry::UserInterface::impl::MenuCallback &callback, const ContentRegistry::UserInterface::impl::EnabledCallback &enabledCallback, const ContentRegistry::UserInterface::impl::SelectedCallback &selectedCallback) {
             const auto &name = menuItems.front();
 
-            if (name.get() == ContentRegistry::Interface::impl::SeparatorValue) {
+            if (name.get() == ContentRegistry::UserInterface::impl::SeparatorValue) {
                 menu::menuSeparator();
                 return;
             }
 
-            if (name.get() == ContentRegistry::Interface::impl::SubMenuValue) {
+            if (name.get() == ContentRegistry::UserInterface::impl::SubMenuValue) {
                 if (enabledCallback()) {
                     callback();
                 }
@@ -74,9 +76,9 @@ namespace hex::plugin::builtin {
                     }
                 }
             } else {
-                bool isSubmenu = (menuItems.begin() + 1)->get() == ContentRegistry::Interface::impl::SubMenuValue;
+                bool isSubmenu = (menuItems.begin() + 1)->get() == ContentRegistry::UserInterface::impl::SubMenuValue;
 
-                if (menu::beginMenuEx(Lang(name), std::next(menuItems.begin())->get() == ContentRegistry::Interface::impl::SubMenuValue ? icon : nullptr, isSubmenu ? enabledCallback() : true)) {
+                if (menu::beginMenuEx(Lang(name), std::next(menuItems.begin())->get() == ContentRegistry::UserInterface::impl::SubMenuValue ? icon : nullptr, isSubmenu ? enabledCallback() : true)) {
                     createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, view, callback, enabledCallback, selectedCallback);
                     menu::endMenu();
                 }
@@ -89,7 +91,7 @@ namespace hex::plugin::builtin {
 
             ImGui::Separator();
             ImGui::SetCursorPosX(8);
-            for (const auto &callback : ContentRegistry::Interface::impl::getFooterItems()) {
+            for (const auto &callback : ContentRegistry::UserInterface::impl::getFooterItems()) {
                 const auto y = ImGui::GetCursorPosY();
                 const auto prevIdx = drawList->_VtxCurrentIdx;
                 callback();
@@ -110,7 +112,7 @@ namespace hex::plugin::builtin {
             u32 index = 0;
             u32 drawIndex = 1;
             ImGui::PushID("SideBarWindows");
-            for (const auto &[icon, callback, enabledCallback] : ContentRegistry::Interface::impl::getSidebarItems()) {
+            for (const auto &[icon, callback, enabledCallback] : ContentRegistry::UserInterface::impl::getSidebarItems()) {
                 ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * drawIndex);
 
                 ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
@@ -234,7 +236,7 @@ namespace hex::plugin::builtin {
                 #endif
             }
 
-            const auto &titleBarButtons = ContentRegistry::Interface::impl::getTitlebarButtons();
+            const auto &titleBarButtons = ContentRegistry::UserInterface::impl::getTitlebarButtons();
 
             // Draw custom title bar buttons
             if (!titleBarButtons.empty()) {
@@ -261,7 +263,11 @@ namespace hex::plugin::builtin {
                 
                 if (s_showSearchBar) {
                     fonts::Default().pushBold(0.8);
-                    ImGui::GetWindowDrawList()->AddText(ImGui::GetCursorScreenPos() + ImGui::GetStyle().FramePadding, ImGui::GetColorU32(ImGuiCol_Text), ICON_VS_SEARCH);
+                    #if defined(OS_MACOS)
+                        ImGui::GetWindowDrawList()->AddText(ImGui::GetCursorScreenPos() + ImGui::GetStyle().FramePadding + ImVec2(0, 2_scaled), ImGui::GetColorU32(ImGuiCol_Text), ICON_VS_SEARCH);
+                    #else
+                        ImGui::GetWindowDrawList()->AddText(ImGui::GetCursorScreenPos() + ImGui::GetStyle().FramePadding, ImGui::GetColorU32(ImGuiCol_Text), ICON_VS_SEARCH);
+                    #endif
                     fonts::Default().pop();
 
                     const auto buttonColor = [](float alpha) {
@@ -304,7 +310,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        bool isMenuItemVisible(const ContentRegistry::Interface::impl::MenuItem &menuItem) {
+        bool isMenuItemVisible(const ContentRegistry::UserInterface::impl::MenuItem &menuItem) {
             const auto lastFocusedView = View::getLastFocusedView();
             if (lastFocusedView == nullptr && menuItem.view != nullptr) {
                 return false;
@@ -321,7 +327,7 @@ namespace hex::plugin::builtin {
 
         std::set<UnlocalizedString> getVisibleMainMenus() {
             std::set<UnlocalizedString> result;
-            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+            for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItems()) {
                 if (isMenuItemVisible(menuItem)) {
                     result.emplace(menuItem.unlocalizedNames.front());
                 }
@@ -331,7 +337,7 @@ namespace hex::plugin::builtin {
         }
 
         void populateMenu(const UnlocalizedString &menuName) {
-            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+            for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItems()) {
                 if (!menuName.empty()) {
                     if (menuItem.unlocalizedNames[0] != menuName)
                         continue;
@@ -379,7 +385,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawMenu() {
-            const auto &menuItems = ContentRegistry::Interface::impl::getMainMenuItems();
+            const auto &menuItems = ContentRegistry::UserInterface::impl::getMainMenuItems();
             const auto visibleMainMenus = getVisibleMainMenus();
 
             if (menu::isNativeMenuBarUsed()) {
@@ -557,7 +563,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::BeginDisabled(ContentRegistry::Views::impl::getFullScreenView() != nullptr);
                 {
-                    for (const auto &callback : ContentRegistry::Interface::impl::getToolbarItems()) {
+                    for (const auto &callback : ContentRegistry::UserInterface::impl::getToolbarItems()) {
                         callback();
                         ImGui::SameLine();
                     }
@@ -578,7 +584,7 @@ namespace hex::plugin::builtin {
         }
 
         bool anySidebarItemsAvailable() {
-            if (const auto &items = ContentRegistry::Interface::impl::getSidebarItems(); items.empty()) {
+            if (const auto &items = ContentRegistry::UserInterface::impl::getSidebarItems(); items.empty()) {
                 return false;
             } else {
                 return std::any_of(items.begin(), items.end(), [](const auto &item) {
@@ -666,7 +672,7 @@ namespace hex::plugin::builtin {
             ImGui::PopStyleVar(2);
 
             // Draw main menu popups
-            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMainMenuItems()) {
+            for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMainMenuItems()) {
                 const auto &unlocalizedNames = menuItem.unlocalizedName;
                 if (ImGui::BeginPopup(unlocalizedNames.get().c_str())) {
                     populateMenu(unlocalizedNames);

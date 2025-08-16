@@ -2,6 +2,9 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/auto_reset.hpp>
 
+#include <hex/api/imhex_api/provider.hpp>
+#include <hex/providers/provider.hpp>
+
 #include <imgui.h>
 
 #include <string>

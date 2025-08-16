@@ -1,5 +1,7 @@
-#include "content/views/view_disassembler.hpp"
-#include "hex/api/content_registry.hpp"
+#include <content/views/view_disassembler.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -20,7 +22,7 @@ namespace hex::plugin::disasm {
             m_disassembly.get(provider).clear();
         });
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.disassemble_range" }, ICON_VS_DEBUG_LINE_BY_LINE, 3100, CTRLCMD + SHIFT + Keys::D, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.disassemble_range" }, ICON_VS_DEBUG_LINE_BY_LINE, 3100, CTRLCMD + SHIFT + Keys::D, [this] {
             ImGui::SetWindowFocus(this->getName().c_str());
             this->getWindowOpenState() = true;
 
@@ -120,7 +122,7 @@ namespace hex::plugin::disasm {
                     }
 
                     // As disassembly code can be quite long, we prefer writing each disassembled instruction to file
-                    for (const ContentRegistry::Disassembler::Instruction& instruction : m_disassembly.get(provider)) {
+                    for (const ContentRegistry::Disassemblers::Instruction& instruction : m_disassembly.get(provider)) {
                         // We test for a "bugged" case that should never happen - the instruction should always have a mnemonic
                         if (instruction.mnemonic.empty())
                             continue;
@@ -171,7 +173,7 @@ namespace hex::plugin::disasm {
                     ImGuiExt::Header("hex.ui.common.settings"_lang);
 
                     // Draw architecture selector
-                    const auto &architectures = ContentRegistry::Disassembler::impl::getArchitectures();
+                    const auto &architectures = ContentRegistry::Disassemblers::impl::getArchitectures();
                     if (architectures.empty()) {
                         ImGuiExt::TextSpinner("hex.disassembler.view.disassembler.arch"_lang);
                     } else {

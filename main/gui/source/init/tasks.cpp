@@ -9,7 +9,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 
@@ -132,17 +132,18 @@ namespace hex::init {
         const auto shouldLoadPlugin = [executablePath = wolv::io::fs::getExecutablePath()](const Plugin &plugin) {
             // In debug builds, ignore all plugins that are not part of the executable directory
             #if !defined(DEBUG)
+                std::ignore = plugin;
                 return true;
+			#else
+	            if (!executablePath.has_value())
+	                return true;
+
+	            if (!PluginManager::getPluginLoadPaths().empty())
+	                return true;
+
+	            // Check if the plugin is somewhere in the same directory tree as the executable
+	            return !std::fs::relative(plugin.getPath(), executablePath->parent_path()).string().starts_with("..");
             #endif
-
-            if (!executablePath.has_value())
-                return true;
-
-            if (!PluginManager::getPluginLoadPaths().empty())
-                return true;
-
-            // Check if the plugin is somewhere in the same directory tree as the executable
-            return !std::fs::relative(plugin.getPath(), executablePath->parent_path()).string().starts_with("..");
         };
 
         u32 loadErrors = 0;

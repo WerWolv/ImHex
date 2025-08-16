@@ -1,11 +1,10 @@
-#include <hex/helpers/utils.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/helpers/scaling.hpp>
 #include <hex/trace/stacktrace.hpp>
-#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <imgui.h>
 #include <ui/text_editor.hpp>
-
+#include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex::plugin::builtin {
 

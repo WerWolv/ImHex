@@ -1,4 +1,4 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/data_information.hpp>
 
 #include <imgui.h>
 #include <hex/api/task_manager.hpp>
@@ -8,6 +8,8 @@
 #include <content/yara_rule.hpp>
 #include <romfs/romfs.hpp>
 #include <wolv/io/file.hpp>
+
+#include <set>
 
 namespace hex::plugin::yara {
 

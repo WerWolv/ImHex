@@ -4,9 +4,15 @@
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <fonts/vscode_icons.hpp>
-
 namespace hex::plugin::builtin {
+
+    static u32 digitsNeeded(u32 numDigits, u32 baseX, u32 baseY) {
+        if (numDigits == 0)
+            return 0;
+
+        const double ratio = std::log(static_cast<double>(baseX)) / std::log(static_cast<double>(baseY));
+        return static_cast<u32>(std::ceil(numDigits * ratio));
+    }
 
     void drawBaseConverter() {
         static std::array<std::string, 4> buffers;
@@ -14,12 +20,30 @@ namespace hex::plugin::builtin {
         static auto ConvertBases = [](u8 base) {
             u64 number;
 
+            // Store how many digits were in the source string
+            u32 srcDigits = 0;
             switch (base) {
-                case 16:
-                    number = std::strtoull(buffers[1].c_str(), nullptr, base);
-                    break;
+                case 10: srcDigits = static_cast<u32>(buffers[0].size()); break;
+                case 16: srcDigits = static_cast<u32>(buffers[1].size()); break;
+                case 8:  srcDigits = static_cast<u32>(buffers[2].size()); break;
+                case 2:  srcDigits = static_cast<u32>(buffers[3].size()); break;
+                default: return;
+            }
+
+            // Calculate how many digits each target base should have
+            const std::array widths = {
+                srcDigits,
+                digitsNeeded(srcDigits, base, 16),
+                digitsNeeded(srcDigits, base, 8),
+                digitsNeeded(srcDigits, base, 2)
+            };
+
+            switch (base) {
                 case 10:
                     number = std::strtoull(buffers[0].c_str(), nullptr, base);
+                    break;
+                case 16:
+                    number = std::strtoull(buffers[1].c_str(), nullptr, base);
                     break;
                 case 8:
                     number = std::strtoull(buffers[2].c_str(), nullptr, base);
@@ -32,22 +56,38 @@ namespace hex::plugin::builtin {
             }
 
             buffers[0] = std::to_string(number);
-            buffers[1] = fmt::format("0x{0:X}", number);
-            buffers[2]  = fmt::format("{0:#o}", number);
-            buffers[3]  = hex::toBinaryString(number);
+            buffers[1] = fmt::format("{0:X}", number);
+            buffers[2] = fmt::format("{0:o}", number);
+            buffers[3] = hex::toBinaryString(number);
+
+            // Pad all outputs to match computed widths
+            for (u8 i = 0; i < 4; i++) {
+                if (buffers[i].size() < widths[i]) {
+                    buffers[i] = std::string(widths[i] - buffers[i].size(), '0') + buffers[i];
+                }
+            }
         };
 
-        if (ImGuiExt::InputTextIcon("hex.builtin.tools.base_converter.dec"_lang, ICON_VS_SYMBOL_NUMERIC, buffers[0]))
-            ConvertBases(10);
+        ImGui::PushItemWidth(-1);
+        {
+            if (ImGuiExt::InputPrefix("##Decimal", "  ", buffers[0], ImGuiInputTextFlags_CharsDecimal))
+                ConvertBases(10);
+            ImGui::SetItemTooltip("%s", "hex.builtin.tools.base_converter.dec"_lang.get());
 
-        if (ImGuiExt::InputTextIcon("hex.builtin.tools.base_converter.hex"_lang, ICON_VS_SYMBOL_NUMERIC, buffers[1]))
-            ConvertBases(16);
+            if (ImGuiExt::InputPrefix("##Hexadecimal", "0x", buffers[1], ImGuiInputTextFlags_CharsHexadecimal))
+                ConvertBases(16);
+            ImGui::SetItemTooltip("%s", "hex.builtin.tools.base_converter.hex"_lang.get());
 
-        if (ImGuiExt::InputTextIcon("hex.builtin.tools.base_converter.oct"_lang, ICON_VS_SYMBOL_NUMERIC, buffers[2]))
-            ConvertBases(8);
+            if (ImGuiExt::InputPrefix("##Octal", "0o", buffers[2], ImGuiInputTextFlags_CharsDecimal))
+                ConvertBases(8);
+            ImGui::SetItemTooltip("%s", "hex.builtin.tools.base_converter.oct"_lang.get());
 
-        if (ImGuiExt::InputTextIcon("hex.builtin.tools.base_converter.bin"_lang, ICON_VS_SYMBOL_NUMERIC, buffers[3]))
-            ConvertBases(2);
+            if (ImGuiExt::InputPrefix("##Binary", "0b", buffers[3], ImGuiInputTextFlags_CharsDecimal))
+                ConvertBases(2);
+            ImGui::SetItemTooltip("%s", "hex.builtin.tools.base_converter.bin"_lang.get());
+        }
+        ImGui::PopItemWidth();
     }
+
 
 }

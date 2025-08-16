@@ -1,6 +1,6 @@
 #include <hex.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/diffing.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
 #include <wolv/utils/guards.hpp>
@@ -9,6 +9,8 @@
 #include <edlib.h>
 #include <imgui.h>
 #include <hex/api/task_manager.hpp>
+
+#include <span>
 
 namespace hex::plugin::diffing {
 

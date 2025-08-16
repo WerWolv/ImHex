@@ -1,17 +1,16 @@
 #include <font_settings.hpp>
 
-#include <hex/api/content_registry.hpp>
-#include <wolv/utils/string.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <imgui.h>
 #include <fonts/fonts.hpp>
-#include <fonts/vscode_icons.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <romfs/romfs.hpp>
 
-#include "hex/api/imhex_api.hpp"
+#include <wolv/utils/guards.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::fonts {
     constexpr static auto PixelPerfectFontName = "Pixel-Perfect Default Font (Proggy Clean)";

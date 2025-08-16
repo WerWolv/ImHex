@@ -1,8 +1,10 @@
-#include <hex/api/content_registry.hpp>
-#include <hex/api/imhex_api.hpp>
-
+#include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/localization_manager.hpp>
-#include <hex/api/shortcut_manager.hpp>
+#include <hex/api/content_registry/command_palette.hpp>
+#include <hex/api/content_registry/tools.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/views.hpp>
 
 #include <hex/ui/view.hpp>
 
@@ -251,8 +253,8 @@ namespace hex::plugin::builtin {
 
     void registerCommandPaletteCommands() {
 
-        ContentRegistry::CommandPaletteCommands::add(
-            ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+        ContentRegistry::CommandPalette::add(
+            ContentRegistry::CommandPalette::Type::SymbolCommand,
             "=",
             "hex.builtin.command.calc.desc",
             [](auto input) {
@@ -280,8 +282,8 @@ namespace hex::plugin::builtin {
                 }
             });
 
-        ContentRegistry::CommandPaletteCommands::add(
-            ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+        ContentRegistry::CommandPalette::add(
+            ContentRegistry::CommandPalette::Type::SymbolCommand,
             "@",
             "hex.builtin.command.goto.desc",
             [](auto input) {
@@ -308,8 +310,8 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
             });
 
-        ContentRegistry::CommandPaletteCommands::add(
-            ContentRegistry::CommandPaletteCommands::Type::KeywordCommand,
+        ContentRegistry::CommandPalette::add(
+            ContentRegistry::CommandPalette::Type::KeywordCommand,
             "/web",
             "hex.builtin.command.web.desc",
             [](auto input) {
@@ -320,8 +322,8 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
             });
 
-        ContentRegistry::CommandPaletteCommands::add(
-            ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+        ContentRegistry::CommandPalette::add(
+            ContentRegistry::CommandPalette::Type::SymbolCommand,
             "$",
             "hex.builtin.command.cmd.desc",
             [](auto input) {
@@ -350,13 +352,13 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
             });
 
-        ContentRegistry::CommandPaletteCommands::addHandler(
-                ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+        ContentRegistry::CommandPalette::addHandler(
+                ContentRegistry::CommandPalette::Type::SymbolCommand,
                 ">",
                 [](const auto &input) {
-                    std::vector<ContentRegistry::CommandPaletteCommands::impl::QueryResult> result;
+                    std::vector<ContentRegistry::CommandPalette::impl::QueryResult> result;
 
-                    for (const auto &[priority, entry] : ContentRegistry::Interface::impl::getMenuItems()) {
+                    for (const auto &[priority, entry] : ContentRegistry::UserInterface::impl::getMenuItems()) {
                         if (!entry.enabledCallback())
                             continue;
 
@@ -368,8 +370,8 @@ namespace hex::plugin::builtin {
                         std::vector<std::string> names;
                         std::transform(entry.unlocalizedNames.begin(), entry.unlocalizedNames.end(), std::back_inserter(names), [](auto &name) { return Lang(name); });
 
-                        if (auto combined = wolv::util::combineStrings(names, " -> "); hex::containsIgnoreCase(combined, input) && !combined.contains(ContentRegistry::Interface::impl::SeparatorValue) && !combined.contains(ContentRegistry::Interface::impl::SubMenuValue)) {
-                            result.emplace_back(ContentRegistry::CommandPaletteCommands::impl::QueryResult {
+                        if (auto combined = wolv::util::combineStrings(names, " -> "); hex::containsIgnoreCase(combined, input) && !combined.contains(ContentRegistry::UserInterface::impl::SeparatorValue) && !combined.contains(ContentRegistry::UserInterface::impl::SubMenuValue)) {
+                            result.emplace_back(ContentRegistry::CommandPalette::impl::QueryResult {
                                 std::move(combined),
                                 [&entry](const auto&) { entry.callback(); }
                             });
@@ -382,11 +384,11 @@ namespace hex::plugin::builtin {
                     return fmt::format("Menu Item: {}", input.data());
                 });
 
-        ContentRegistry::CommandPaletteCommands::addHandler(
-        ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+        ContentRegistry::CommandPalette::addHandler(
+        ContentRegistry::CommandPalette::Type::SymbolCommand,
         ".",
         [](const auto &input) {
-            std::vector<ContentRegistry::CommandPaletteCommands::impl::QueryResult> result;
+            std::vector<ContentRegistry::CommandPalette::impl::QueryResult> result;
 
             u32 index = 0;
             for (const auto &provider : ImHexApi::Provider::getProviders()) {
@@ -396,7 +398,7 @@ namespace hex::plugin::builtin {
                 if (!hex::containsIgnoreCase(name, input))
                     continue;
 
-                result.emplace_back(ContentRegistry::CommandPaletteCommands::impl::QueryResult {
+                result.emplace_back(ContentRegistry::CommandPalette::impl::QueryResult {
                     provider->getName(),
                     [index](const auto&) { ImHexApi::Provider::setCurrentProvider(index); }
                 });
@@ -408,17 +410,17 @@ namespace hex::plugin::builtin {
             return fmt::format("Data Source: {}", input.data());
         });
 
-        ContentRegistry::CommandPaletteCommands::add(
-                    ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+        ContentRegistry::CommandPalette::add(
+                    ContentRegistry::CommandPalette::Type::SymbolCommand,
                     "%",
                     "hex.builtin.command.convert.desc",
                     handleConversionCommand);
 
-        ContentRegistry::CommandPaletteCommands::addHandler(
-                ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+        ContentRegistry::CommandPalette::addHandler(
+                ContentRegistry::CommandPalette::Type::SymbolCommand,
                 "+",
                 [](const auto &input) {
-                    std::vector<ContentRegistry::CommandPaletteCommands::impl::QueryResult> result;
+                    std::vector<ContentRegistry::CommandPalette::impl::QueryResult> result;
 
                     for (const auto &[unlocalizedName, view] : ContentRegistry::Views::impl::getEntries()) {
                         if (!view->shouldProcess())
@@ -440,6 +442,27 @@ namespace hex::plugin::builtin {
                     return fmt::format("Focus {} View", input.data());
                 });
 
+        ContentRegistry::CommandPalette::addHandler(
+            ContentRegistry::CommandPalette::Type::KeywordCommand,
+            "/tool",
+            [](const auto &input) {
+                std::vector<ContentRegistry::CommandPalette::impl::QueryResult> result;
+
+                for (const auto &toolEntry : ContentRegistry::Tools::impl::getEntries()) {
+                    const auto name = Lang(toolEntry.unlocalizedName);
+                    if (!hex::containsIgnoreCase(name, input) && !std::string("/tool").contains(input))
+                        continue;
+
+                    result.emplace_back(name, [&toolEntry](const auto &) {
+                        ContentRegistry::CommandPalette::setDisplayedContent([&toolEntry]() {
+                            toolEntry.function();
+                        });
+                    });
+                }
+
+                return result;
+            },
+            [](const auto &input) { return input; });
     }
 
 }

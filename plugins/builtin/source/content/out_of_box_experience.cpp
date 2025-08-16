@@ -1,23 +1,24 @@
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <fonts/vscode_icons.hpp>
-#include <hex/ui/imgui_imhex_extensions.h>
-
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/tutorial_manager.hpp>
+
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/scaling.hpp>
+
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <fonts/vscode_icons.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <romfs/romfs.hpp>
 #include <wolv/hash/uuid.hpp>
 #include <wolv/utils/guards.hpp>
 
 #include <list>
-#include <numbers>
 #include <ranges>
 #include <string>
 

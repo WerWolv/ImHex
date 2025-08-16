@@ -1,4 +1,10 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api/provider.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/data_formatter.hpp>
+#include <hex/api/content_registry/reports.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/content_registry/provider.hpp>
+#include <hex/api/content_registry/settings.hpp>
 
 #include <imgui.h>
 #include <implot.h>
@@ -9,17 +15,17 @@
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/events/requests_gui.hpp>
-#include <hex/api/tutorial_manager.hpp>
+#include <hex/api/workspace_manager.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/patches.hpp>
-#include <hex/helpers/debugging.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <content/global_actions.hpp>
 #include <toasts/toast_notification.hpp>
 #include <popups/popup_text_input.hpp>
-#include <hex/api/workspace_manager.hpp>
-#include <hex/api/events/events_interaction.hpp>
+
 
 #include <wolv/io/file.hpp>
 #include <wolv/literals.hpp>
@@ -366,10 +372,10 @@ namespace hex::plugin::builtin {
 
     static void createFileMenu() {
 
-        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.file", 1000);
+        ContentRegistry::UserInterface::registerMainMenuItem("hex.builtin.menu.file", 1000);
 
         /* Create File */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ICON_VS_FILE, 1050, CTRLCMD + Keys::N + AllowWhileTyping, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ICON_VS_FILE, 1050, CTRLCMD + Keys::N + AllowWhileTyping, [] {
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
             if (newProvider != nullptr && !newProvider->open())
                 hex::ImHexApi::Provider::remove(newProvider);
@@ -378,12 +384,12 @@ namespace hex::plugin::builtin {
         }, noRunningTasks);
 
         /* Open File */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_file" }, ICON_VS_FOLDER_OPENED, 1100, CTRLCMD + Keys::O + AllowWhileTyping, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_file" }, ICON_VS_FOLDER_OPENED, 1100, CTRLCMD + Keys::O + AllowWhileTyping, [] {
             RequestOpenWindow::post("Open File");
         }, noRunningTasks, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
 
         /* Open Other */
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_other"}, ICON_VS_TELESCOPE, 1150, [] {
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_other"}, ICON_VS_TELESCOPE, 1150, [] {
             for (const auto &[unlocalizedProviderName, icon] : ContentRegistry::Provider::impl::getEntries()) {
                 if (menu::menuItemEx(Lang(unlocalizedProviderName), icon))
                     ImHexApi::Provider::createProvider(unlocalizedProviderName);
@@ -391,7 +397,7 @@ namespace hex::plugin::builtin {
         }, noRunningTasks);
 
         /* Reload Provider */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.reload_provider"}, ICON_VS_REFRESH, 1250, CTRLCMD + Keys::R + AllowWhileTyping, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.reload_provider"}, ICON_VS_REFRESH, 1250, CTRLCMD + Keys::R + AllowWhileTyping, [] {
             auto provider = ImHexApi::Provider::get();
 
             provider->close();
@@ -403,41 +409,41 @@ namespace hex::plugin::builtin {
 
 
         /* Project open / save */
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.project" }, ICON_VS_NOTEBOOK, 1400, []{}, noRunningTasks);
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.project" }, ICON_VS_NOTEBOOK, 1400, []{}, noRunningTasks);
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.open" }, ICON_VS_ROOT_FOLDER_OPENED, 1410,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.open" }, ICON_VS_ROOT_FOLDER_OPENED, 1410,
                                                 CTRL + ALT + Keys::O + AllowWhileTyping,
                                                 openProject, noRunningTasks);
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.save" }, ICON_VS_SAVE, 1450,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.save" }, ICON_VS_SAVE, 1450,
                                                 CTRL + ALT + Keys::S + AllowWhileTyping,
                                                 saveProject, [&] { return noRunningTaskAndValidProvider() && ProjectFile::hasPath(); });
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.save_as" }, ICON_VS_SAVE_AS, 1500,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.save_as" }, ICON_VS_SAVE_AS, 1500,
                                                 ALT + SHIFT + Keys::S + AllowWhileTyping,
                                                 saveProjectAs, noRunningTaskAndValidProvider);
 
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 2000);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 2000);
 
         /* Import */
         {
-            ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, ICON_VS_SIGN_IN, 5140, []{}, noRunningTaskAndValidProvider);
+            ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, ICON_VS_SIGN_IN, 5140, []{}, noRunningTaskAndValidProvider);
 
             /* IPS */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips"}, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 5150,
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips"}, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 5150,
                                                     Shortcut::None,
                                                     importIPSPatch,
                                                     noRunningTaskAndWritableProvider);
 
             /* IPS32 */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips32"}, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 5200,
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips32"}, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 5200,
                                                     Shortcut::None,
                                                     importIPS32Patch,
                                                     noRunningTaskAndWritableProvider);
 
             /* Modified File */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.modified_file" }, ICON_VS_FILES, 5300,
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.modified_file" }, ICON_VS_FILES, 5300,
                                                     Shortcut::None,
                                                     importModifiedFile,
                                                     noRunningTaskAndWritableProvider);
@@ -446,68 +452,68 @@ namespace hex::plugin::builtin {
         /* Export */
         /* Only make them accessible if the current provider is dumpable */
         {
-            ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.export" }, ICON_VS_SIGN_OUT, 6000, []{}, isProviderDumpable);
+            ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.export" }, ICON_VS_SIGN_OUT, 6000, []{}, isProviderDumpable);
 
             /* Selection to File */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.selection_to_file" }, ICON_VS_FILE_BINARY, 6010,
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.selection_to_file" }, ICON_VS_FILE_BINARY, 6010,
                                                     Shortcut::None,
                                                     exportSelectionToFile,
                                                     ImHexApi::HexEditor::isSelectionValid);
 
             /* Base 64 */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.base64" }, ICON_VS_NOTE, 6020,
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.base64" }, ICON_VS_NOTE, 6020,
                                                     Shortcut::None,
                                                     exportBase64,
                                                     isProviderDumpable);
 
             /* Language */
-            ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.as_language" }, ICON_VS_CODE, 6030,
+            ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.as_language" }, ICON_VS_CODE, 6030,
                                                     drawExportLanguageMenu,
                                                     isProviderDumpable);
 
             /* Report */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.report" }, ICON_VS_MARKDOWN, 6040,
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.report" }, ICON_VS_MARKDOWN, 6040,
                                                     Shortcut::None,
                                                     exportReport,
                                                     ImHexApi::Provider::isValid);
 
-            ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.export" }, 6050);
+            ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.export" }, 6050);
 
             /* IPS */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.ips" }, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 6100,
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.ips" }, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 6100,
                                                     Shortcut::None,
                                                     exportIPSPatch,
                                                     isProviderDumpable);
 
             /* IPS32 */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.ips32" }, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 6150,
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.ips32" }, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 6150,
                                                     Shortcut::None,
                                                     exportIPS32Patch,
                                                     isProviderDumpable);
         }
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 10000);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 10000);
 
         /* Close Provider */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.close"}, ICON_VS_CHROME_CLOSE, 10050, CTRLCMD + Keys::W + AllowWhileTyping, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.close"}, ICON_VS_CHROME_CLOSE, 10050, CTRLCMD + Keys::W + AllowWhileTyping, [] {
             ImHexApi::Provider::remove(ImHexApi::Provider::get());
         }, noRunningTaskAndValidProvider);
 
         /* Quit ImHex */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.quit"}, ICON_VS_CLOSE_ALL, 10100, ALT + Keys::F4 + AllowWhileTyping, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.quit"}, ICON_VS_CLOSE_ALL, 10100, ALT + Keys::F4 + AllowWhileTyping, [] {
             ImHexApi::System::closeImHex();
         });
     }
 
     static void createEditMenu() {
-        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.edit", 2000);
+        ContentRegistry::UserInterface::registerMainMenuItem("hex.builtin.menu.edit", 2000);
     }
 
     static void createViewMenu() {
-        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.view", 3000);
+        ContentRegistry::UserInterface::registerMainMenuItem("hex.builtin.menu.view", 3000);
 
         #if !defined(OS_WEB)
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.always_on_top" }, ICON_VS_PINNED, 1000, Keys::F10 + AllowWhileTyping, [] {
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.always_on_top" }, ICON_VS_PINNED, 1000, Keys::F10 + AllowWhileTyping, [] {
                 static bool state = false;
 
                 state = !state;
@@ -516,7 +522,7 @@ namespace hex::plugin::builtin {
         #endif
 
         #if !defined(OS_MACOS) && !defined(OS_WEB)
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.fullscreen" }, ICON_VS_SCREEN_FULL, 2000, Keys::F11 + AllowWhileTyping, [] {
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.fullscreen" }, ICON_VS_SCREEN_FULL, 2000, Keys::F11 + AllowWhileTyping, [] {
                 static bool state = false;
                 static ImVec2 position, size;
 
@@ -541,10 +547,10 @@ namespace hex::plugin::builtin {
         #endif
 
         #if !defined(OS_WEB)
-            ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.view" }, 3000);
+            ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.view" }, 3000);
         #endif
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.view" }, 4000, [] {
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.view" }, 4000, [] {
             for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
                 if (view->hasViewMenuItemEntry()) {
                     auto &state = view->getWindowOpenState();
@@ -560,15 +566,15 @@ namespace hex::plugin::builtin {
     static void createLayoutMenu() {
         LayoutManager::reload();
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, ICON_VS_LAYOUT, 1050, []{}, ImHexApi::Provider::isValid);
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, ICON_VS_LAYOUT, 1050, []{}, ImHexApi::Provider::isValid);
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout", "hex.builtin.menu.workspace.layout.save" }, 1100, Shortcut::None, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout", "hex.builtin.menu.workspace.layout.save" }, 1100, Shortcut::None, [] {
             ui::PopupTextInput::open("hex.builtin.popup.save_layout.title", "hex.builtin.popup.save_layout.desc", [](const std::string &name) {
                 LayoutManager::save(name);
             });
         }, ImHexApi::Provider::isValid);
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, ICON_VS_LAYOUT, 1150, [] {
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, ICON_VS_LAYOUT, 1150, [] {
             bool locked = LayoutManager::isLayoutLocked();
             if (menu::menuItemEx("hex.builtin.menu.workspace.layout.lock"_lang, ICON_VS_LOCK, Shortcut::None, locked, ImHexApi::Provider::isValid())) {
                 LayoutManager::lockLayout(!locked);
@@ -576,9 +582,9 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, 1200);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, 1200);
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, 2000, [] {
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, 2000, [] {
             for (const auto &path : romfs::list("layouts")) {
                 if (menu::menuItem(wolv::util::capitalizeString(path.stem().string()).c_str(), Shortcut::None, false, ImHexApi::Provider::isValid())) {
                     LayoutManager::loadFromString(std::string(romfs::get(path).string()));
@@ -600,19 +606,19 @@ namespace hex::plugin::builtin {
     }
 
     static void createWorkspaceMenu() {
-        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.workspace", 4000);
+        ContentRegistry::UserInterface::registerMainMenuItem("hex.builtin.menu.workspace", 4000);
 
         createLayoutMenu();
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.workspace" }, 3000);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.workspace" }, 3000);
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.create" }, ICON_VS_ADD, 3100, Shortcut::None, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.create" }, ICON_VS_ADD, 3100, Shortcut::None, [] {
             ui::PopupTextInput::open("hex.builtin.popup.create_workspace.title", "hex.builtin.popup.create_workspace.desc", [](const std::string &name) {
                 WorkspaceManager::createWorkspace(name);
             });
         }, ImHexApi::Provider::isValid);
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace" }, 3200, [] {
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.workspace" }, 3200, [] {
             const auto &workspaces = WorkspaceManager::getWorkspaces();
 
             bool shiftPressed = ImGui::GetIO().KeyShift;
@@ -633,11 +639,11 @@ namespace hex::plugin::builtin {
     }
 
     static void createExtrasMenu() {
-        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.extras", 5000);
+        ContentRegistry::UserInterface::registerMainMenuItem("hex.builtin.menu.extras", 5000);
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 2600);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 2600);
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.check_for_update" }, ICON_VS_SYNC, 2700, Shortcut::None, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.check_for_update" }, ICON_VS_SYNC, 2700, Shortcut::None, [] {
             TaskManager::createBackgroundTask("Checking for updates", [] {
                 auto versionString = ImHexApi::System::checkForUpdate();
                 if (!versionString.has_value()) {
@@ -652,18 +658,18 @@ namespace hex::plugin::builtin {
         });
 
         if (ImHexApi::System::isNightlyBuild()) {
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_stable" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_stable" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {
                 ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
             });
         } else {
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_nightly" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_nightly" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {
                 ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Nightly);
             });
         }
     }
 
     static void createHelpMenu() {
-        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.help", 6000);
+        ContentRegistry::UserInterface::registerMainMenuItem("hex.builtin.menu.help", 6000);
     }
 
 

@@ -1,6 +1,6 @@
 #include <hex/helpers/utils.hpp>
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
@@ -37,21 +37,6 @@
 #endif
 
 namespace hex {
-    float operator""_scaled(long double value) {
-        return value * ImHexApi::System::getGlobalScale();
-    }
-
-    float operator""_scaled(unsigned long long value) {
-        return value * ImHexApi::System::getGlobalScale();
-    }
-
-    ImVec2 scaled(const ImVec2 &vector) {
-        return vector * ImHexApi::System::getGlobalScale();
-    }
-
-    ImVec2 scaled(float x, float y) {
-        return ImVec2(x, y) * ImHexApi::System::getGlobalScale();
-    }
 
     std::string to_string(u128 value) {
         char data[45] = { 0 };

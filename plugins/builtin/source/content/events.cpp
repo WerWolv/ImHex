@@ -7,7 +7,8 @@
 #include <hex/api/events/requests_gui.hpp>
 
 #include <hex/api/localization_manager.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/file_type_handler.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
@@ -34,6 +35,7 @@
 
 #include <GLFW/glfw3.h>
 #include <hex/api/theme_manager.hpp>
+#include <hex/helpers/default_paths.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -261,7 +263,7 @@ namespace hex::plugin::builtin {
         EventFileDropped::subscribe([](const std::fs::path &path) {
              // Check if a custom file handler can handle the file
              bool handled = false;
-             for (const auto &[extensions, handler] : ContentRegistry::FileHandler::impl::getEntries()) {
+             for (const auto &[extensions, handler] : ContentRegistry::FileTypeHandler::impl::getEntries()) {
                  for (const auto &extension : extensions) {
                      if (path.extension() == extension) {
                          // Pass the file to the handler and check if it was successful
@@ -319,6 +321,34 @@ namespace hex::plugin::builtin {
             const auto &initArgs = ImHexApi::System::getInitArguments();
             if (auto it = initArgs.find("language"); it != initArgs.end())
                 LocalizationManager::setLanguage(it->second);
+
+            // Set the user-defined post-processing shader if one exists
+            #if !defined(OS_WEB)
+                for (const auto &folder : paths::Resources.all()) {
+                    auto vertexShaderPath = folder / "shader.vert";
+                    auto fragmentShaderPath = folder / "shader.frag";
+
+                    if (!wolv::io::fs::exists(vertexShaderPath))
+                        continue;
+                    if (!wolv::io::fs::exists(fragmentShaderPath))
+                        continue;
+
+                    auto vertexShaderFile = wolv::io::File(vertexShaderPath, wolv::io::File::Mode::Read);
+                    if (!vertexShaderFile.isValid())
+                        continue;
+
+                    auto fragmentShaderFile = wolv::io::File(fragmentShaderPath, wolv::io::File::Mode::Read);
+                    if (!fragmentShaderFile.isValid())
+                        continue;
+
+                    const auto vertexShaderSource = vertexShaderFile.readString();
+                    const auto fragmentShaderSource = fragmentShaderFile.readString();
+
+                    ImHexApi::System::setPostProcessingShader(vertexShaderSource, fragmentShaderSource);
+
+                    break;
+                }
+            #endif
         });
 
         EventWindowFocused::subscribe([](bool focused) {
@@ -326,8 +356,24 @@ namespace hex::plugin::builtin {
             if (ctx == nullptr)
                 return;
 
-            if (ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup))
-                return;
+            // Close any open non-modal popups when ImHex loses focus
+            // Disable this in debug mode though to allow for easier debugging
+            #if !defined(DEBUG)
+                if (ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup)) {
+                    for (const auto& popup : ctx->OpenPopupStack) {
+                        if (popup.Window == nullptr)
+                            continue;
+
+                        if (!(popup.Window->Flags & ImGuiWindowFlags_Modal)) {
+                            ctx->OpenPopupStack.erase_unsorted(&popup);
+                            log::debug("Closing popup '{}' because the main window lost focus", popup.Window->Name ? popup.Window->Name : "Unknown Popup");
+                            break;
+                        }
+                    }
+                    return;
+                }
+            #endif
+
             if (ImGui::IsAnyItemHovered())
                 return;
 

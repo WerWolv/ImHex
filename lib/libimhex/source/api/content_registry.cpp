@@ -1,4 +1,24 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/background_services.hpp>
+#include <hex/api/content_registry/command_palette.hpp>
+#include <hex/api/content_registry/communication_interface.hpp>
+#include <hex/api/content_registry/data_formatter.hpp>
+#include <hex/api/content_registry/data_information.hpp>
+#include <hex/api/content_registry/data_inspector.hpp>
+#include <hex/api/content_registry/data_processor.hpp>
+#include <hex/api/content_registry/diffing.hpp>
+#include <hex/api/content_registry/disassemblers.hpp>
+#include <hex/api/content_registry/experiments.hpp>
+#include <hex/api/content_registry/file_type_handler.hpp>
+#include <hex/api/content_registry/hashes.hpp>
+#include <hex/api/content_registry/hex_editor.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
+#include <hex/api/content_registry/provider.hpp>
+#include <hex/api/content_registry/reports.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/tools.hpp>
+#include <hex/api/content_registry/views.hpp>
+
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/events/requests_provider.hpp>
 
@@ -6,13 +26,17 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/auto_reset.hpp>
 #include <hex/helpers/default_paths.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/data_processor/node.hpp>
 
+#include <hex/providers/provider.hpp>
+
 #include <algorithm>
 #include <filesystem>
 #include <jthread.hpp>
+#include <hex/api/events/requests_interaction.hpp>
 
 #if defined(OS_WEB)
 #include <emscripten.h>
@@ -576,7 +600,7 @@ namespace hex {
     }
 
 
-    namespace ContentRegistry::CommandPaletteCommands {
+    namespace ContentRegistry::CommandPalette {
 
         namespace impl {
 
@@ -588,6 +612,11 @@ namespace hex {
             static AutoReset<std::vector<Handler>> s_handlers;
             const std::vector<Handler>& getHandlers() {
                 return *s_handlers;
+            }
+
+            static AutoReset<std::optional<ContentDisplay>> s_displayedContent;
+            std::optional<ContentDisplay>& getDisplayedContent() {
+                return *s_displayedContent;
             }
 
         }
@@ -602,6 +631,15 @@ namespace hex {
             log::debug("Registered new command palette command handler: {}", command);
 
             impl::s_handlers->push_back(impl::Handler { type, command, queryCallback, displayCallback });
+        }
+
+        void setDisplayedContent(const impl::ContentDisplayCallback &displayCallback) {
+            impl::s_displayedContent = impl::ContentDisplay { true, displayCallback };
+        }
+
+        void openWithContent(const impl::ContentDisplayCallback &displayCallback) {
+            RequestOpenCommandPalette::post();
+            impl::s_displayedContent = impl::ContentDisplay { false, displayCallback };
         }
 
     }
@@ -848,7 +886,7 @@ namespace hex {
 
     }
 
-    namespace ContentRegistry::DataProcessorNode {
+    namespace ContentRegistry::DataProcessor {
 
         namespace impl {
 
@@ -871,7 +909,7 @@ namespace hex {
 
     }
 
-    namespace ContentRegistry::Interface {
+    namespace ContentRegistry::UserInterface {
 
         namespace impl {
 
@@ -1023,7 +1061,7 @@ namespace hex {
         };
 
         void updateToolbarItems() {
-            std::set<ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> menuItems;
+            std::set<impl::MenuItem*, MenuItemSorter> menuItems;
 
             for (auto &[priority, menuItem] : impl::getMenuItemsMutable()) {
                 if (menuItem.toolbarIndex != -1) {
@@ -1121,7 +1159,7 @@ namespace hex {
 
     }
 
-    namespace ContentRegistry::FileHandler {
+    namespace ContentRegistry::FileTypeHandler {
 
         namespace impl {
 
@@ -1426,6 +1464,16 @@ namespace hex {
 
     namespace ContentRegistry::DataInformation {
 
+        void InformationSection::load(const nlohmann::json &data) {
+            m_enabled = data.value<bool>("enabled", true);
+        }
+        [[nodiscard]] nlohmann::json InformationSection::store() {
+            nlohmann::json data;
+            data["enabled"] = m_enabled.load();
+
+            return data;
+        }
+
         namespace impl {
 
             static AutoReset<std::vector<CreateCallback>> s_informationSectionConstructors;
@@ -1441,7 +1489,7 @@ namespace hex {
 
     }
 
-    namespace ContentRegistry::Disassembler {
+    namespace ContentRegistry::Disassemblers {
 
         namespace impl {
 

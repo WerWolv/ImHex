@@ -1,4 +1,9 @@
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/bookmarks.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
+#include <hex/api/imhex_api/fonts.hpp>
+#include <hex/api/imhex_api/messaging.hpp>
+#include <hex/api/imhex_api/provider.hpp>
+#include <hex/api/imhex_api/system.hpp>
 
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
@@ -255,7 +260,7 @@ namespace hex {
             setSelection({ { address, size }, provider == nullptr ? Provider::get() : provider });
         }
 
-        void addVirtualFile(const std::fs::path &path, std::vector<u8> data, Region region) {
+        void addVirtualFile(const std::string &path, std::vector<u8> data, Region region) {
             RequestAddVirtualFile::post(path, std::move(data), region);
         }
 
@@ -1072,6 +1077,10 @@ namespace hex {
 
         void unlockFrameRate() {
             impl::s_frameRateUnlockRequested = true;
+        }
+
+        void setPostProcessingShader(const std::string &vertexShader, const std::string &fragmentShader) {
+            RequestSetPostProcessingShader::post(vertexShader, fragmentShader);
         }
 
 

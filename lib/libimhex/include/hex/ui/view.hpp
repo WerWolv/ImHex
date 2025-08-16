@@ -3,17 +3,14 @@
 #include <hex.hpp>
 
 #include <imgui.h>
-#include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <hex/api/imhex_api.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 
-#include <hex/providers/provider.hpp>
 #include <hex/providers/provider_data.hpp>
-#include <hex/helpers/utils.hpp>
 
+#include <hex/helpers/scaling.hpp>
 
 #include <map>
 #include <string>

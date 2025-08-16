@@ -1,10 +1,12 @@
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api/provider.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
+#include <hex/api/content_registry/data_inspector.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/crypto.hpp>
 
 #include <hex/helpers/fmt.hpp>
+#include <wolv/types.hpp>
 #include <fmt/chrono.h>
 
 #include <hex/providers/provider.hpp>

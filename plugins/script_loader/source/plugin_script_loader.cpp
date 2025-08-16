@@ -1,6 +1,6 @@
 #include <fonts/vscode_icons.hpp>
 #include <hex/plugin.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 
@@ -86,7 +86,7 @@ std::vector<const Script*> loadAllScripts() {
     void addScriptsMenu() {
         static std::vector<const Script*> scripts;
         static TaskHolder runnerTask, updaterTask;
-        hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
+        hex::ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
             static bool menuJustOpened = true;
 
             if (menu::beginMenuEx("hex.script_loader.menu.run_script"_lang, ICON_VS_LIBRARY)) {

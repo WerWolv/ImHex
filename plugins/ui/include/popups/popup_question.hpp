@@ -3,6 +3,7 @@
 #include <hex/ui/popup.hpp>
 
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/imhex_api/system.hpp>
 
 #include <functional>
 #include <string>

@@ -39,9 +39,16 @@ module;
 export module hex;
 
 #define HEX_MODULE_EXPORT
+
+#include <hex/api/imhex_api/bookmarks.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
+#include <hex/api/imhex_api/fonts.hpp>
+#include <hex/api/imhex_api/messaging.hpp>
+#include <hex/api/imhex_api/provider.hpp>
+#include <hex/api/imhex_api/system.hpp>
+
 #include <hex/api/task_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api/imhex_api.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/plugin_manager.hpp>

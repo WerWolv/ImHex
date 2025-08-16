@@ -1,5 +1,5 @@
 #include <hex/api/tutorial_manager.hpp>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/events_gui.hpp>
@@ -8,6 +8,7 @@
 
 #include <imgui_internal.h>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/scaling.hpp>
 #include <wolv/utils/core.hpp>
 
 #include <map>

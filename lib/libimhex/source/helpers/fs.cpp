@@ -1,7 +1,5 @@
 #include <hex/helpers/fs.hpp>
 
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils_linux.hpp>

@@ -1,13 +1,16 @@
 #include "content/views/view_highlight_rules.hpp"
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/views.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
-#include <wolv/utils/guards.hpp>
-
 #include <fonts/vscode_icons.hpp>
+#include <imgui_internal.h>
+#include <wolv/utils/guards.hpp>
+#include <nlohmann/json.hpp>
+
 
 namespace hex::plugin::builtin {
 
@@ -113,7 +116,7 @@ namespace hex::plugin::builtin {
 
 
     ViewHighlightRules::ViewHighlightRules() : View::Floating("hex.builtin.view.highlight_rules.name", ICON_VS_TAG) {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.highlight_rules.menu.edit.rules" }, ICON_VS_TAG, 1950, Shortcut::None, [&, this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.highlight_rules.menu.edit.rules" }, ICON_VS_TAG, 1950, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         }, ImHexApi::Provider::isValid,
         ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));

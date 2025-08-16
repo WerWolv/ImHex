@@ -5,7 +5,7 @@
 #include <array>
 #include <memory>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/data_formatter.hpp>
 
 namespace hex::plugin::builtin::export_fmt {
 

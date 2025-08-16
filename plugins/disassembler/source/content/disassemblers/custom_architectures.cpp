@@ -1,4 +1,4 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/disassemblers.hpp>
 #include <hex/helpers/default_paths.hpp>
 
 #include <disasm/disasm.hpp>
@@ -8,7 +8,7 @@
 
 namespace hex::plugin::disasm {
 
-    class CustomArchitecture : public ContentRegistry::Disassembler::Architecture {
+    class CustomArchitecture : public ContentRegistry::Disassemblers::Architecture {
     public:
         CustomArchitecture(std::string name, std::fs::path path) : Architecture(std::move(name)), m_path(std::move(path)) {}
 
@@ -26,7 +26,7 @@ namespace hex::plugin::disasm {
 
         }
 
-        std::optional<ContentRegistry::Disassembler::Instruction> disassemble(u64 imageBaseAddress, u64 instructionLoadAddress, u64 instructionDataAddress, std::span<const u8> code) override {
+        std::optional<ContentRegistry::Disassemblers::Instruction> disassemble(u64 imageBaseAddress, u64 instructionLoadAddress, u64 instructionDataAddress, std::span<const u8> code) override {
             std::ignore = imageBaseAddress;
             std::ignore = instructionDataAddress;
             std::ignore = instructionLoadAddress;
@@ -39,7 +39,7 @@ namespace hex::plugin::disasm {
 
             const auto &instruction = instructions.front();
 
-            ContentRegistry::Disassembler::Instruction disassembly = { };
+            ContentRegistry::Disassemblers::Instruction disassembly = { };
             disassembly.address     = instructionDataAddress;
             disassembly.offset      = instructionDataAddress - imageBaseAddress;
             disassembly.size        = instruction.bytes.size();
@@ -69,7 +69,7 @@ namespace hex::plugin::disasm {
                 try {
                     auto spec = ::disasm::spec::Loader::load(entry.path(), { entry.path().parent_path() });
 
-                    ContentRegistry::Disassembler::add<CustomArchitecture>(spec.getName(), entry.path());
+                    ContentRegistry::Disassemblers::add<CustomArchitecture>(spec.getName(), entry.path());
                 } catch (const std::exception &e) {
                     log::error("Failed to load disassembler config '{}': {}", wolv::util::toUTF8String(entry.path()), e.what());
                 }

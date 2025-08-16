@@ -10,28 +10,27 @@
 
 #include <fmt/core.h>
 #include <wolv/types/static_string.hpp>
-#include <wolv/io/fs.hpp>
 
 EXPORT_MODULE namespace hex {
 
     namespace LocalizationManager {
 
         struct PathEntry {
-            std::filesystem::path path;
-            std::function<std::string_view(const std::filesystem::path &path)> callback;
+            std::string path;
+            std::function<std::string_view(const std::string &path)> callback;
         };
 
         struct LanguageDefinition {
             std::string id;
             std::string name, nativeName;
             std::string flag;
-            std::fs::path filePath;
+            std::string filePath;
             std::string fallbackLanguageId;
 
             std::vector<PathEntry> languageFilePaths;
         };
 
-        void addLanguages(const std::string_view &languageList, std::function<std::string_view(const std::filesystem::path &path)> callback);
+        void addLanguages(const std::string_view &languageList, std::function<std::string_view(const std::string &path)> callback);
         void setLanguage(const std::string &languageId);
         [[nodiscard]] const std::string& getSelectedLanguageId();
         [[nodiscard]] const std::string& get(const std::string &unlocalizedString);

@@ -3,12 +3,14 @@
 #if defined(OS_MACOS)
 
     #include <hex/api/project_file_manager.hpp>
-    #include <hex/api/imhex_api.hpp>
+    #include <hex/api/imhex_api/system.hpp>
+    #include <hex/api/imhex_api/provider.hpp>
     #include <hex/api/events/events_gui.hpp>
     #include <hex/api/events/requests_gui.hpp>
     #include <hex/api/events/events_interaction.hpp>
     #include <hex/api/task_manager.hpp>
 
+    #include <hex/helpers/utils.hpp>
     #include <hex/helpers/utils_macos.hpp>
     #include <hex/helpers/logger.hpp>
     #include <hex/helpers/default_paths.hpp>

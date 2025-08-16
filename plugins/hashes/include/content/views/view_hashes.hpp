@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/hashes.hpp>
 
 #include <hex/ui/view.hpp>
 

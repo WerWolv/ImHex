@@ -1,14 +1,15 @@
-#include <hex/helpers/utils.hpp>
-
 #include <content/visualizer_helpers.hpp>
 
-#include <imgui.h>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/http_requests.hpp>
-#include <nlohmann/json.hpp>
 
+#include <hex/helpers/scaling.hpp>
+
+#include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+
+#include <nlohmann/json.hpp>
 #include <romfs/romfs.hpp>
 
 namespace hex::plugin::visualizers {

@@ -1,14 +1,15 @@
 #include "content/views/view_information.hpp"
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/data_information.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 
 #include <hex/providers/provider.hpp>
-
 #include <hex/helpers/magic.hpp>
 
 #include <toasts/toast_notification.hpp>
+
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
 

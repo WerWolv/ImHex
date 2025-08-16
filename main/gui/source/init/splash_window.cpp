@@ -1,13 +1,12 @@
 #include "window.hpp"
 #include "init/splash_window.hpp"
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/events/requests_lifecycle.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
-#include <fmt/chrono.h>
 
 #include <romfs/romfs.hpp>
 

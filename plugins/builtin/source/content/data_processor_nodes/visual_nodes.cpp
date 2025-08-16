@@ -1,8 +1,11 @@
-#include <imgui_internal.h>
-#include <hex/api/content_registry.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/data_processor/node.hpp>
+
+#include <hex/api/content_registry/data_processor.hpp>
+
 #include <hex/ui/imgui_imhex_extensions.h>
+
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/scaling.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -181,11 +184,11 @@ namespace hex::plugin::builtin {
     };
 
     void registerVisualDataProcessorNodes() {
-        ContentRegistry::DataProcessorNode::add<NodeDisplayInteger>("hex.builtin.nodes.display", "hex.builtin.nodes.display.int");
-        ContentRegistry::DataProcessorNode::add<NodeDisplayFloat>("hex.builtin.nodes.display", "hex.builtin.nodes.display.float");
-        ContentRegistry::DataProcessorNode::add<NodeDisplayBuffer>("hex.builtin.nodes.display", "hex.builtin.nodes.display.buffer");
-        ContentRegistry::DataProcessorNode::add<NodeDisplayString>("hex.builtin.nodes.display", "hex.builtin.nodes.display.string");
-        ContentRegistry::DataProcessorNode::add<NodeDisplayBits>("hex.builtin.nodes.display", "hex.builtin.nodes.display.bits");
+        ContentRegistry::DataProcessor::add<NodeDisplayInteger>("hex.builtin.nodes.display", "hex.builtin.nodes.display.int");
+        ContentRegistry::DataProcessor::add<NodeDisplayFloat>("hex.builtin.nodes.display", "hex.builtin.nodes.display.float");
+        ContentRegistry::DataProcessor::add<NodeDisplayBuffer>("hex.builtin.nodes.display", "hex.builtin.nodes.display.buffer");
+        ContentRegistry::DataProcessor::add<NodeDisplayString>("hex.builtin.nodes.display", "hex.builtin.nodes.display.string");
+        ContentRegistry::DataProcessor::add<NodeDisplayBits>("hex.builtin.nodes.display", "hex.builtin.nodes.display.bits");
     }
 
 }

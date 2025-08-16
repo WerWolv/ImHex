@@ -2,6 +2,7 @@
 
 #include "content/views/view_hex_editor.hpp"
 
+#include <hex/api/content_registry/views.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/providers/buffered_reader.hpp>

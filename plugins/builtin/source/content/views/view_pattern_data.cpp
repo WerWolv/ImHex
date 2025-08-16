@@ -1,11 +1,12 @@
 #include <content/views/view_pattern_data.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/providers/memory_provider.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
+#include <imgui_internal.h>
 
 #include <pl/patterns/pattern.hpp>
 #include <wolv/utils/lock.hpp>

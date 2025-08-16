@@ -3,7 +3,8 @@
 #include <hex/ui/view.hpp>
 #include <ui/visualizer_drawer.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/content_registry/data_inspector.hpp>
 #include <hex/api/task_manager.hpp>
 
 #include <bit>

@@ -2,7 +2,7 @@
 
 #include <string>
 #include <map>
-#include "hex/api/content_registry.hpp"
+#include <hex/api/content_registry/pattern_language.hpp>
 
 namespace  hex::ui {
 

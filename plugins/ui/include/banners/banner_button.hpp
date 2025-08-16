@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/ui/banner.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>

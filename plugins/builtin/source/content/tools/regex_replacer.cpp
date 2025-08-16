@@ -1,5 +1,5 @@
 #include <hex/helpers/http_requests.hpp>
-#include <hex/helpers/utils.hpp>
+#include <hex/helpers/scaling.hpp>
 #include <hex/api/localization_manager.hpp>
 
 #include <boost/regex.hpp>

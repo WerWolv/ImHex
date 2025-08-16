@@ -11,7 +11,8 @@
 
 #include <wolv/container/interval_tree.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/content_registry/data_formatter.hpp>
 
 namespace hex::plugin::builtin {
 

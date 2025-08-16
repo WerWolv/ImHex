@@ -1,5 +1,7 @@
 #include <ui/visualizer_drawer.hpp>
 
+#include <hex/api/localization_manager.hpp>
+
 #include "imgui.h"
 
 namespace hex::ui {

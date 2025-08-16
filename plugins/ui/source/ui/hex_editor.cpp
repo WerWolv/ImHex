@@ -1,6 +1,6 @@
 #include <ui/hex_editor.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/hex_editor.hpp>
 #include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/encoding_file.hpp>
@@ -13,6 +13,8 @@
 
 #include <algorithm>
 #include <fonts/fonts.hpp>
+
+#include <imgui_internal.h>
 
 namespace hex::ui {
 
