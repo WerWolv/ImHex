@@ -1006,14 +1006,19 @@ namespace hex::plugin::builtin {
             if (m_filterTask.isRunning())
                 m_filterTask.interrupt();
 
+            static std::mutex mutex;
+            std::lock_guard lock(mutex);
+
             if (!m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data", currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
+                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data", currOccurrences.size(), [this, provider, &currOccurrences, filter = m_currFilter.get(provider)](Task &task) {
+                    std::lock_guard lock(mutex);
+
                     u64 progress = 0;
-                    std::erase_if(currOccurrences, [this, provider, &task, &progress](const auto &region) {
+                    std::erase_if(currOccurrences, [this, provider, &task, &progress, &filter](const auto &region) {
                         task.update(progress);
                         progress += 1;
 
-                        return !hex::containsIgnoreCase(this->decodeValue(provider, region), m_currFilter.get(provider));
+                        return !hex::containsIgnoreCase(this->decodeValue(provider, region), filter);
                     });
                 });
             }
