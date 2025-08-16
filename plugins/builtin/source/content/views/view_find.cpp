@@ -13,6 +13,7 @@
 #include <array>
 #include <string>
 #include <utility>
+#include <barrier>
 
 #include <boost/regex.hpp>
 
@@ -592,8 +593,9 @@ namespace hex::plugin::builtin {
             for (const auto &occurrence : m_foundOccurrences.get(provider))
                 m_occurrenceTree->insert({ occurrence.region.getStartAddress(), occurrence.region.getEndAddress() }, occurrence);
 
-            TaskManager::doLater([] {
+            TaskManager::doLater([this, provider] {
                 EventHighlightingChanged::post();
+                m_settingsCollapsed.get(provider) = !m_foundOccurrences->empty();
             });
         });
     }
@@ -721,7 +723,9 @@ namespace hex::plugin::builtin {
 
         ImGui::BeginDisabled(m_searchTask.isRunning());
         {
-            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang)) {
+            auto &collapsed = m_settingsCollapsed.get(provider);
+            ImGui::SetNextWindowScroll(ImVec2(0, 0));
+            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, &collapsed, collapsed ? ImVec2(0, 1) : ImVec2(0, 0))) {
                 ui::regionSelectionPicker(&m_searchSettings.region, provider, &m_searchSettings.range, false, true);
 
                 ImGui::SameLine();
