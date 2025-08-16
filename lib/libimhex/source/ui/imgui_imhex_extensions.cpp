@@ -1189,7 +1189,7 @@ namespace ImGuiExt {
         PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
         PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
-        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.5 * hex::ImHexApi::System::getGlobalScale());
 
         bool res = IconButton(symbol, color, size, iconOffset);
 
