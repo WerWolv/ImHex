@@ -957,7 +957,7 @@ namespace ImGuiExt {
         char buf[64];
         DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, format);
 
-        RenderFrame(frame_bb.Min, frame_bb.Max + ImVec2(frame_size.x, 0), GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+        RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
 
         PushStyleVar(ImGuiStyleVar_Alpha, 0.6F);
         RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), prefix);
@@ -1304,7 +1304,8 @@ namespace ImGuiExt {
                     const auto framePadding = style.FramePadding.x;
                     ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0);
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() - style.WindowPadding.x + framePadding);
-                    *collapsed = !ImGui::TreeNodeEx("##CollapseHeader", ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanLabelWidth | (*collapsed ? ImGuiTreeNodeFlags_None : ImGuiTreeNodeFlags_DefaultOpen));
+                    ImGui::TreeNodeSetOpen(ImGui::GetID("##CollapseHeader"), !*collapsed);
+                    *collapsed = !ImGui::TreeNodeEx("##CollapseHeader", ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanLabelWidth);
                     ImGui::SameLine(0, framePadding);
                     ImGui::TextUnformatted(label);
                     if (!*collapsed) ImGui::TreePop();
