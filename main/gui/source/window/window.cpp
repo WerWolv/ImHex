@@ -380,6 +380,26 @@ namespace hex {
         ImHexApi::Fonts::getDefaultFont().push();
         io.FontDefault = ImHexApi::Fonts::getDefaultFont();
 
+        {
+            static bool lastAnyWindowFocused = false;
+            bool anyWindowFocused = glfwGetWindowAttrib(m_window, GLFW_FOCUSED);
+
+            if (!anyWindowFocused) {
+                const auto platformIo = ImGui::GetPlatformIO();
+                for (auto *viewport : platformIo.Viewports) {
+                    if (platformIo.Platform_GetWindowFocus(viewport)) {
+                        anyWindowFocused = true;
+                        break;
+                    }
+                }
+            }
+
+            if (lastAnyWindowFocused != anyWindowFocused)
+                EventWindowFocused::post(anyWindowFocused);
+
+            lastAnyWindowFocused = anyWindowFocused;
+        }
+
         // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -396,12 +416,6 @@ namespace hex {
         TutorialManager::drawTutorial();
 
         EventFrameBegin::post();
-
-        static bool lastFocusLost = io.AppFocusLost;
-        if (io.AppFocusLost != lastFocusLost) {
-            EventWindowFocused::post(!io.AppFocusLost);
-        }
-        lastFocusLost = io.AppFocusLost;
 
         // Handle all undocked floating windows
         ImGuiViewport *viewport = ImGui::GetMainViewport();
