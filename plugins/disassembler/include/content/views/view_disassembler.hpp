@@ -31,6 +31,7 @@ namespace hex::plugin::disasm {
         PerProvider<std::unique_ptr<ContentRegistry::Disassemblers::Architecture>> m_currArchitecture;
 
         PerProvider<std::vector<ContentRegistry::Disassemblers::Instruction>> m_disassembly;
+        PerProvider<bool> m_settingsCollapsed;
 
         void disassemble();
         void exportToFile();
