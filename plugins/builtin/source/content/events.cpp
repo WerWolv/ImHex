@@ -287,6 +287,7 @@ namespace hex::plugin::builtin {
             const auto prevLaunchVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
             if (prevLaunchVersion == "") {
                 EventFirstLaunch::post();
+                return;
             }
 
             const auto prevLaunchVersionParsed = SemanticVersion(prevLaunchVersion);
