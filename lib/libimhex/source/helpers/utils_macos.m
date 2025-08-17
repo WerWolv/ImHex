@@ -18,6 +18,7 @@
     #import <Cocoa/Cocoa.h>
     #import <Foundation/Foundation.h>
     #import <AppleScriptObjC/AppleScriptObjC.h>
+    #import <UserNotifications/UserNotifications.h>
 
     #include <hex/helpers/keys.hpp>
 
@@ -363,18 +364,48 @@
         }
     }
 
+
+    static bool isRunningInAppBundle(void) {
+        NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
+        return [bundlePath.pathExtension.lowercaseString isEqualToString:@"app"];
+    }
+
     void toastMessageMacos(const char *title, const char *message) {
         @autoreleasepool {
+            // Only show notification if we're inside a bundle
+            if (!isRunningInAppBundle()) {
+                return;
+            }
+
             NSString *nsTitle = [NSString stringWithUTF8String:title];
             NSString *nsMessage = [NSString stringWithUTF8String:message];
 
-            NSUserNotification *notification = [[NSUserNotification alloc] init];
-            notification.title = nsTitle;
-            notification.informativeText = nsMessage;
-            notification.soundName = NSUserNotificationDefaultSoundName;
+            UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
 
-            [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
+            // Request permission if needed
+            [center requestAuthorizationWithOptions:(UNAuthorizationOptionAlert | UNAuthorizationOptionSound)
+                                  completionHandler:^(BOOL granted, NSError * _Nullable error) {
+
+                (void)error;
+                if (!granted) return;
+
+                UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
+                content.title = nsTitle;
+                content.body = nsMessage;
+                content.sound = [UNNotificationSound defaultSound];
+
+                // Show notification immediately
+                UNTimeIntervalNotificationTrigger *trigger = [UNTimeIntervalNotificationTrigger triggerWithTimeInterval:0.1 repeats:NO];
+
+                NSString *identifier = [[NSUUID UUID] UUIDString];
+                UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:identifier
+                                                                                      content:content
+                                                                                      trigger:trigger];
+
+                [center addNotificationRequest:request withCompletionHandler:nil];
+            }];
         }
     }
+
 
 #endif
