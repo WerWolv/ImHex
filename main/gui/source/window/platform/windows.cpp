@@ -267,6 +267,13 @@ namespace hex {
                     RegionTop * (cursor.y < (window.top + border.y)) |
                     RegionBottom * (cursor.y >= (window.bottom - border.y));
 
+                // If the mouse is hovering over any button, disable resize controls.
+                // Without this, the window buttons and menu bar would not be clickable
+                // correctly at the edges of the window.
+                if (result != 0 && (ImGui::IsAnyItemHovered())) {
+                    break;
+                }
+
                 if (ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)) {
                     if (result == RegionClient)
                         return HTCLIENT;
