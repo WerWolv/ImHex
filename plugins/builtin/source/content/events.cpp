@@ -371,6 +371,7 @@ namespace hex::plugin::builtin {
 
                 if (lastFocusedWindow != nullptr)
                     log::debug("Restoring focus on window '{}'", lastFocusedWindow->Name ? lastFocusedWindow->Name : "Unknown Window");
+                lastFocusedWindow = nullptr;
             } else {
                 // If the main window loses focus, store the currently focused window
                 // and remove focus from it so it doesn't look like it's focused and
