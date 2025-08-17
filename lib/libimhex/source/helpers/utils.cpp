@@ -787,6 +787,56 @@ namespace hex {
         return std::chrono::system_clock::from_time_t(std::mktime(&time));
     }
 
+    std::optional<std::string> getOSLanguage() {
+        const static auto osLanguage = [] -> std::optional<std::string> {
+            #if defined(OS_WINDOWS)
+                const auto langId = ::GetUserDefaultUILanguage();
+                std::array<wchar_t, LOCALE_NAME_MAX_LENGTH> localeName;
+                if (::LCIDToLocaleName(MAKELCID(langId, SORT_DEFAULT), localeName.data(), localeName.size(), 0) > 0) {
+                    return utf16ToUtf8(localeName.data());
+                }
+
+                return std::nullopt;
+            #elif defined(OS_MACOS)
+                const auto langs = CFLocaleCopyPreferredLanguages();
+                if (langs == nullptr || CFArrayGetCount(langs) == 0)
+                    return std::nullopt;
+
+                ON_SCOPE_EXIT { CFRelease(langs); };
+
+                const auto lang = (CFStringRef)CFArrayGetValueAtIndex(langs, 0);
+                std::array<char, 256> buffer;
+                if (CFStringGetCString(lang, buffer.data(), buffer.size(), kCFStringEncodingUTF8)) {
+                    return std::string(buffer.data());
+                }
+
+                return std::nullopt;
+            #elif defined(OS_LINUX)
+                auto lang = getEnvironmentVariable("LC_ALL");
+                if (!lang.has_value()) lang = getEnvironmentVariable("LC_MESSAGES");
+                if (!lang.has_value()) lang = getEnvironmentVariable("LANG");
+
+                if (lang.has_value() && !lang->empty() && *lang != "C" && *lang != "C.UTF-8") {
+                    auto parts = wolv::util::splitString(*lang, ".");
+                    if (parts.size() > 0)
+                        return parts[0];
+                    else
+                        return *lang;
+                }
+
+                return std::nullopt;
+            #elif defined(OS_WEB)
+                return toLower(EM_ASM_INT({
+                    return (int)navigator.language.length > 0 ? navigator.language : navigator.languages[0];
+                }));
+            #else
+                return std::nullopt;
+            #endif
+        }();
+
+        return osLanguage;
+    }
+
     extern "C" void macOSCloseButtonPressed() {
         EventCloseButtonPressed::post();
     }

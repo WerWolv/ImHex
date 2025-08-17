@@ -192,7 +192,7 @@ namespace hex::plugin::builtin {
                             }
 
                             // Continue button
-                            const auto buttonSize = scaled({ 100, 50 });
+                            const auto buttonSize = scaled({ 130, 50 });
                             ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - buttonSize - scaled({ 10, 10 }));
                             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, buttonFadeIn);
                             if (ImGuiExt::DimmedButton(fmt::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
@@ -236,7 +236,7 @@ namespace hex::plugin::builtin {
 
                         // Draw globe image
                         const auto imageSize = s_compassTexture->getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
-                        ImGui::SetCursorPos((ImGui::GetWindowSize() / 2 - imageSize / 2) - ImVec2(0, 50_scaled));
+                        ImGui::SetCursorPos((ImGui::GetWindowSize() / 2 - imageSize / 2) - ImVec2(0, 100_scaled));
                         ImGui::Image(*s_globeTexture, imageSize);
 
                         ImGui::NewLine();
@@ -249,7 +249,9 @@ namespace hex::plugin::builtin {
                         const auto availableSize = ImGui::GetContentRegionAvail();
                         if (ImGui::BeginChild("##language_text", ImVec2(availableSize.x, 30_scaled))) {
                             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_Text, textFadeIn - textFadeOut));
+                            fonts::Default().push(1.2);
                             ImGuiExt::TextFormattedCentered("{}", LocalizationManager::get(currLanguage->first, "hex.builtin.setting.interface.language"));
+                            fonts::Default().pop();
                             ImGui::PopStyleColor();
                         }
                         ImGui::EndChild();
@@ -260,6 +262,17 @@ namespace hex::plugin::builtin {
                         ImGui::SetCursorPosX(availableSize.x / 3);
                         if (ImGuiExt::BeginSubWindow(ICON_VS_GLOBE, nullptr, ImVec2(availableSize.x / 3, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3))) {
                             if (ImGui::BeginListBox("##language", ImGui::GetContentRegionAvail())) {
+                                {
+                                    const auto osLanguage = hex::getOSLanguage();
+                                    if (osLanguage.has_value()) {
+                                        const auto &languageDefinition = LocalizationManager::getLanguageDefinition(osLanguage.value());
+                                        if (ImGui::Selectable(fmt::format("Native ({})", languageDefinition.nativeName).c_str(), LocalizationManager::getSelectedLanguageId() == "native")) {
+                                            LocalizationManager::setLanguage("native");
+                                        }
+                                        ImGui::Separator();
+                                    }
+                                }
+
                                 for (const auto &[langId, definition] : LocalizationManager::getLanguageDefinitions()) {
                                     if (ImGui::Selectable(definition.name.c_str(), langId == LocalizationManager::getSelectedLanguageId())) {
                                         LocalizationManager::setLanguage(langId);
@@ -271,7 +284,7 @@ namespace hex::plugin::builtin {
                         ImGuiExt::EndSubWindow();
 
                         // Continue button
-                        const auto buttonSize = scaled({ 100, 50 });
+                        const auto buttonSize = scaled({ 130, 50 });
                         ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - buttonSize - scaled({ 10, 10 }));
                         if (ImGuiExt::DimmedButton(fmt::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
                             page += 1;
@@ -397,7 +410,7 @@ namespace hex::plugin::builtin {
                         ImGuiExt::TextFormattedCentered("hex.builtin.oobe.tutorial_question"_lang);
 
                         // Draw no button
-                        const auto buttonSize = scaled({ 100, 50 });
+                        const auto buttonSize = scaled({ 130, 50 });
                         ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - ImVec2(buttonSize.x * 2 + 20, buttonSize.y + 10));
                         if (ImGuiExt::DimmedButton("hex.ui.common.no"_lang, buttonSize)) {
                             oobeDone = true;

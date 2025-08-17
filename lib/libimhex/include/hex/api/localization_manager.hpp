@@ -26,8 +26,6 @@ EXPORT_MODULE namespace hex {
         struct LanguageDefinition {
             LanguageId id;
             std::string name, nativeName;
-            std::string flag;
-            std::string filePath;
             LanguageId fallbackLanguageId;
 
             std::vector<PathEntry> languageFilePaths;
@@ -38,6 +36,7 @@ EXPORT_MODULE namespace hex {
         [[nodiscard]] const LanguageId& getSelectedLanguageId();
         [[nodiscard]] const std::string& get(const LanguageId& languageId, const UnlocalizedString &unlocalizedString);
         [[nodiscard]] const std::map<LanguageId, LanguageDefinition>& getLanguageDefinitions();
+        [[nodiscard]] const LanguageDefinition& getLanguageDefinition(const LanguageId &languageId);
 
     }
 

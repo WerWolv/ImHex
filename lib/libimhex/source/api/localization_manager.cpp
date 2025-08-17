@@ -10,6 +10,8 @@ namespace hex {
 
     namespace LocalizationManager {
 
+        constexpr static auto FallbackLanguageId = "en-US";
+
         namespace {
 
             AutoReset<std::map<LanguageId, LanguageDefinition>> s_languageDefinitions;
@@ -28,6 +30,10 @@ namespace hex {
                 }
 
                 auto &definition = (*s_languageDefinitions)[item["code"].get<std::string>()];
+
+                if (definition.id.empty()) {
+                    definition.id = item["code"].get<std::string>();
+                }
 
                 if (definition.name.empty() && item.contains("name")) {
                     definition.name = item["name"].get<std::string>();
@@ -80,7 +86,6 @@ namespace hex {
             if (const auto it = s_languageDefinitions->find(languageId); it == s_languageDefinitions->end()) {
                 log::error("No language definition found for language: {}", languageId);
 
-                constexpr static auto FallbackLanguageId = "en-US";
                 if (languageId != FallbackLanguageId)
                     populateLocalization(FallbackLanguageId, localizations);
             } else {
@@ -107,6 +112,12 @@ namespace hex {
         }
 
         void setLanguage(const LanguageId &languageId) {
+            if (languageId == "native") {
+                setLanguage(hex::getOSLanguage().value_or(FallbackLanguageId));
+                s_selectedLanguageId = languageId;
+                return;
+            }
+
             if (*s_selectedLanguageId == languageId)
                 return;
 
@@ -137,6 +148,11 @@ namespace hex {
 
         const std::map<std::string, LanguageDefinition>& getLanguageDefinitions() {
             return *s_languageDefinitions;
+        }
+
+        const LanguageDefinition& getLanguageDefinition(const LanguageId &languageId) {
+            const auto bestMatch = findBestLanguageMatch(languageId);
+            return (*s_languageDefinitions)[bestMatch];
         }
 
     }

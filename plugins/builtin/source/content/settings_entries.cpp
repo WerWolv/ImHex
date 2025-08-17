@@ -830,15 +830,26 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.show_header_command_palette", true);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.display_shortcut_highlights", true);
 
-            std::vector<std::string> languageNames;
-            std::vector<nlohmann::json> languageCodes;
+            {
+                std::vector<std::string> languageNames;
+                std::vector<nlohmann::json> languageCodes;
 
-            for (auto &[languageCode, definition] : LocalizationManager::getLanguageDefinitions()) {
-                languageNames.emplace_back(fmt::format("{} ({})", definition.nativeName, definition.name));
-                languageCodes.emplace_back(languageCode);
+                {
+                    const auto osLanguage = hex::getOSLanguage();
+                    if (osLanguage.has_value()) {
+                        const auto &languageDefinition = LocalizationManager::getLanguageDefinition(osLanguage.value());
+                        languageNames.emplace_back(fmt::format("Native ({})", languageDefinition.nativeName));
+                        languageCodes.emplace_back("native");
+                    }
+                }
+
+                for (auto &[languageCode, definition] : LocalizationManager::getLanguageDefinitions()) {
+                    languageNames.emplace_back(fmt::format("{} ({})", definition.nativeName, definition.name));
+                    languageCodes.emplace_back(languageCode);
+                }
+
+                ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
             }
-
-            ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
 
             ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.wiki_explain_language", "en");
             ContentRegistry::Settings::add<FPSWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.fps");
