@@ -30,7 +30,7 @@
         "name": "Italian",
         "code": "it-IT",
         "native_name": "Italiano",
-        "path": "lang/it_IT.json",
+        "git ch": "lang/it_IT.json",
         "fallback": "en-US"
     },
     {
