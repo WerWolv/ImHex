@@ -285,7 +285,7 @@ namespace hex::plugin::builtin {
         EventImHexStartupFinished::subscribe([] {
             const auto currVersion = ImHexApi::System::getImHexVersion();
             const auto prevLaunchVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
-            if (prevLaunchVersion == "") {
+            if (prevLaunchVersion == "" || getEnvironmentVariable("IMHEX_FORCE_OOBE") != "0") {
                 EventFirstLaunch::post();
                 return;
             }
