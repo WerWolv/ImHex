@@ -44,15 +44,6 @@ namespace hex {
         return false;
     }
 
-    void nativeErrorMessage(const std::string &message) {
-        log::fatal("{}", message);
-        if (isFileInPath("zenity")) {
-            executeCmd({"zenity", "--error", "--text", message});
-        } else if (isFileInPath("notify-send")) {
-            executeCmd({"notify-send", "-i", "script-error", "Error", message});
-        } // Hopefully one of these commands is installed
-    }
-
     #if defined(IMHEX_HAS_FONTCONFIG)
         static bool enumerateFontConfig() {
             if (!FcInit())

@@ -22,11 +22,6 @@
 
 namespace hex {
 
-    void nativeErrorMessage(const std::string &message) {
-        log::fatal("{}", message);
-        errorMessageMacos(message.c_str());
-    }
-
     void Window::configureGLFW() {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);

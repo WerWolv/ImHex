@@ -1,3 +1,4 @@
+#include <cwchar>
 #include <hex/helpers/utils.hpp>
 
 #include <hex/api/imhex_api/system.hpp>
@@ -22,6 +23,7 @@
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shellapi.h>
+    #include <wchar.h>
 
     #include <wolv/utils/guards.hpp>
 #elif defined(OS_LINUX)
@@ -849,6 +851,83 @@ namespace hex {
 
     extern "C" void macosEventDataReceived(const u8 *data, size_t length) {
         EventNativeMessageReceived::post(std::vector<u8>(data, data + length));
+    }
+
+    void showErrorMessageBox(const std::string &message) {
+        log::fatal("{}", message);
+        #if defined(OS_WINDOWS)
+            MessageBoxA(nullptr, message.c_str(), "Error", MB_ICONERROR | MB_OK);
+        #elif defined (OS_MACOS)
+            errorMessageMacos(message.c_str());
+        #elif defined(OS_LINUX)
+            // Hopefully one of these commands is installed
+            if (isFileInPath("zenity")) {
+                executeCmd({"zenity", "--error", "--text", message});
+            } else if (isFileInPath("notify-send")) {
+                executeCmd({"notify-send", "-i", "script-error", "Error", message});
+            }
+        #elif defined(OS_WEB)
+            EM_ASM({
+                alert(UTF8ToString($0));
+            }, message.c_str());
+        #endif
+    }
+
+    void showToastMessage(const std::string &title, const std::string &message) {
+        #if defined(OS_WINDOWS)
+            const auto wideTitle = wolv::util::utf8ToWstring(title).value_or(L"???");
+            const auto wideMessage = wolv::util::utf8ToWstring(message).value_or(L"???");
+
+            WNDCLASS wc = { };
+            wc.lpfnWndProc = DefWindowProc;
+            wc.hInstance = GetModuleHandle(nullptr);
+            wc.lpszClassName = L"ImHex Toast";
+            RegisterClass(&wc);
+
+            HWND hwnd = CreateWindow(
+                wc.lpszClassName, L"", 0,
+                0, 0, 0, 0,
+                nullptr, nullptr, wc.hInstance, nullptr);
+
+            NOTIFYICONDATA nid = { };
+            nid.cbSize = sizeof(nid);
+            nid.hWnd = hwnd;
+            nid.uID = 1;
+            nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_INFO;
+            nid.uCallbackMessage = WM_USER + 1;
+            nid.dwInfoFlags = NIIF_USER | NIIF_LARGE_ICON;
+            nid.hIcon = LoadIcon(nullptr, IDI_INFORMATION);
+            nid.uTimeout = 5000;
+            wcsncpy(nid.szTip, L"ImHex", ARRAYSIZE(nid.szTip));
+            wcsncpy(nid.szInfoTitle, wideTitle.c_str(), ARRAYSIZE(nid.szInfoTitle));
+            wcsncpy(nid.szInfo, wideMessage.c_str(), ARRAYSIZE(nid.szInfo));
+
+            nid.dwInfoFlags = NIIF_INFO;
+
+            Shell_NotifyIcon(NIM_ADD, &nid);
+        #elif defined(OS_MACOS)
+            toastMessageMacos(title.c_str(), message.c_str());
+        #elif defined(OS_LINUX)
+            if (std::system(fmt::format(R"(notify-send "{}" "{}")", title, message).c_str()) != 0) {
+                // Fallback to zenity if notify-send fails
+                std::system(fmt::format(R"(zenity --info --title="{}" --text="{}")", title, message).c_str());
+            }
+        #elif defined(OS_WEB)
+            EM_ASM({
+                const t = UTF8ToString($0);
+                const m = UTF8ToString($1);
+
+                if (Notification.permission === "granted") {
+                    new Notification(t, { body: m });
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(function(p) {
+                        if (p === "granted") {
+                            new Notification(t, { body: m });
+                        }
+                    });
+                }
+            }, title.c_str(), message.c_str());
+        #endif
     }
 
 }

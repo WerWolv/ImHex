@@ -363,4 +363,18 @@
         }
     }
 
+    void toastMessageMacos(const char *title, const char *message) {
+        @autoreleasepool {
+            NSString *nsTitle = [NSString stringWithUTF8String:title];
+            NSString *nsMessage = [NSString stringWithUTF8String:message];
+
+            NSUserNotification *notification = [[NSUserNotification alloc] init];
+            notification.title = nsTitle;
+            notification.informativeText = nsMessage;
+            notification.soundName = NSUserNotificationDefaultSoundName;
+
+            [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
+        }
+    }
+
 #endif
