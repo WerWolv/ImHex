@@ -4,6 +4,10 @@
         "path": "lang/en_US.json"
     },
     {
+        "code": "es-ES",
+        "path": "lang/es_ES.json"
+    },
+    {
         "code": "fr-FR",
         "path": "lang/fr_FR.json"
     },
@@ -12,8 +16,16 @@
         "path": "lang/de_DE.json"
     },
     {
+        "code": "it-IT",
+        "path": "lang/it_IT.json"
+    },
+    {
         "code": "hu-HU",
         "path": "lang/hu_HU.json"
+    },
+    {
+        "code": "pt-BR",
+        "path": "lang/pt_BR.json"
     },
     {
         "code": "ru-RU",
@@ -30,5 +42,13 @@
     {
         "code": "zh-TW",
         "path": "lang/zh_TW.json"
+    },
+    {
+        "code": "ja-JP",
+        "path": "lang/ja_JP.json"
+    },
+    {
+        "code": "ko-KR",
+        "path": "lang/ko_KR.json"
     }
 ]

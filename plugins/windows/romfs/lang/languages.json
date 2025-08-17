@@ -16,6 +16,10 @@
         "path": "lang/de_DE.json"
     },
     {
+        "code": "it-IT",
+        "path": "lang/it_IT.json"
+    },
+    {
         "code": "hu-HU",
         "path": "lang/hu_HU.json"
     },
@@ -28,12 +32,20 @@
         "path": "lang/ru_RU.json"
     },
     {
+        "code": "pl-PL",
+        "path": "lang/pl_PL.json"
+    },
+    {
         "code": "zh-CN",
         "path": "lang/zh_CN.json"
     },
     {
         "code": "zh-TW",
         "path": "lang/zh_TW.json"
+    },
+    {
+        "code": "ja-JP",
+        "path": "lang/ja_JP.json"
     },
     {
         "code": "ko-KR",

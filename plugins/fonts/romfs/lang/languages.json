@@ -28,6 +28,10 @@
         "path": "lang/pt_BR.json"
     },
     {
+        "code": "ru-RU",
+        "path": "lang/ru_RU.json"
+    },
+    {
         "code": "pl-PL",
         "path": "lang/pl_PL.json"
     },
