@@ -199,16 +199,21 @@ namespace hex::fonts {
     }
 
     bool SliderPoints::draw(const std::string &name) {
-        auto scaleFactor = ImHexApi::System::getBackingScaleFactor();
-        float value = ImHexApi::Fonts::pixelsToPoints(m_value) * scaleFactor;
-        float min = ImHexApi::Fonts::pixelsToPoints(m_min) * scaleFactor;
-        float max = ImHexApi::Fonts::pixelsToPoints(m_max) * scaleFactor;
+        float value = ImHexApi::Fonts::pixelsToPoints(m_value);
+        float min = ImHexApi::Fonts::pixelsToPoints(m_min);
+        float max = ImHexApi::Fonts::pixelsToPoints(m_max);
 
-        auto changed = ImGui::SliderFloat(name.c_str(), &value, min, max, "%.0f pt");
+        if (ImGui::SliderFloat(name.c_str(), &value, min, max, "%.0f pt"))
+            m_changed = true;
 
-        m_value = ImHexApi::Fonts::pointsToPixels(value / scaleFactor);
+        m_value = ImHexApi::Fonts::pointsToPixels(value);
 
-        return changed;
+        if (m_changed && !ImGui::IsItemActive()) {
+            m_changed = false;
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
