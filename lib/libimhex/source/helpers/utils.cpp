@@ -32,6 +32,8 @@
     #include <unistd.h>
     #include <dlfcn.h>
     #include <hex/helpers/utils_macos.hpp>
+    #include <CFLocale.h>
+    #include <CoreFoundation/CoreFoundation.h>
 #elif defined(OS_WEB)
     #include "emscripten.h"
 #endif
@@ -826,9 +828,14 @@ namespace hex {
 
                 return std::nullopt;
             #elif defined(OS_WEB)
-                return toLower(EM_ASM_INT({
-                    return (int)navigator.language.length > 0 ? navigator.language : navigator.languages[0];
-                }));
+                char *resultRaw = (char*)EM_ASM_PTR({
+                    return stringToNewUTF8(navigator.language.length > 0 ? navigator.language : navigator.languages[0]);
+                });
+
+                std::string result(resultRaw);
+                std::free(resultRaw);
+
+                return result;
             #else
                 return std::nullopt;
             #endif
