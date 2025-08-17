@@ -32,7 +32,6 @@
     #include <unistd.h>
     #include <dlfcn.h>
     #include <hex/helpers/utils_macos.hpp>
-    #include <CFLocale.h>
     #include <CoreFoundation/CoreFoundation.h>
 #elif defined(OS_WEB)
     #include "emscripten.h"
