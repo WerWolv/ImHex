@@ -6,6 +6,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <mutex>
+
 namespace hex {
 
     namespace LocalizationManager {
