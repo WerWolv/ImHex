@@ -15,9 +15,9 @@
 namespace hex {
 
     static AutoReset<std::map<std::string, WorkspaceManager::Workspace>> s_workspaces;
-    static decltype(s_workspaces)::Type::iterator s_currentWorkspace  = s_workspaces->end();
-    static decltype(s_workspaces)::Type::iterator s_previousWorkspace = s_workspaces->end();
-    static decltype(s_workspaces)::Type::iterator s_workspaceToRemove = s_workspaces->end();
+    static auto s_currentWorkspace  = s_workspaces->end();
+    static auto s_previousWorkspace = s_workspaces->end();
+    static auto s_workspaceToRemove = s_workspaces->end();
 
     void WorkspaceManager::createWorkspace(const std::string& name, const std::string &layout) {
         s_currentWorkspace = s_workspaces->insert_or_assign(name, Workspace {
