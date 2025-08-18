@@ -313,7 +313,7 @@ namespace hex::plugin::builtin {
         bool isMenuItemVisible(const ContentRegistry::UserInterface::impl::MenuItem &menuItem) {
             const auto lastFocusedView = View::getLastFocusedView();
             if (lastFocusedView == nullptr && menuItem.view != nullptr) {
-                return false;
+                return menuItem.shortcut.has(ShowOnWelcomeScreen);
             }
 
             if (lastFocusedView != nullptr && menuItem.view != nullptr) {
