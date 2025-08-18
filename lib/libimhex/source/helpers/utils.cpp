@@ -860,11 +860,8 @@ namespace hex {
         #elif defined (OS_MACOS)
             errorMessageMacos(message.c_str());
         #elif defined(OS_LINUX)
-            // Hopefully one of these commands is installed
-            if (isFileInPath("zenity")) {
-                executeCmd({"zenity", "--error", "--text", message});
-            } else if (isFileInPath("notify-send")) {
-                executeCmd({"notify-send", "-i", "script-error", "Error", message});
+            if (std::system(fmt::format(R"(zenity --error --text="{}")", message).c_str()) != 0) {
+                std::system(fmt::format(R"(notify-send -i "net.werwolv.ImHex" "Error" "{}")", message).c_str());
             }
         #elif defined(OS_WEB)
             EM_ASM({
@@ -908,8 +905,7 @@ namespace hex {
         #elif defined(OS_MACOS)
             toastMessageMacos(title.c_str(), message.c_str());
         #elif defined(OS_LINUX)
-            if (std::system(fmt::format(R"(notify-send "{}" "{}")", title, message).c_str()) != 0) {
-                // Fallback to zenity if notify-send fails
+            if (std::system(fmt::format(R"(notify-send -i "net.werwolv.ImHex" "{}" "{}")", title, message).c_str()) != 0) {
                 std::system(fmt::format(R"(zenity --info --title="{}" --text="{}")", title, message).c_str());
             }
         #elif defined(OS_WEB)
