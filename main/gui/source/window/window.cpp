@@ -388,7 +388,7 @@ namespace hex {
                 if (!anyWindowFocused) {
                     const auto platformIo = ImGui::GetPlatformIO();
                     for (auto *viewport : platformIo.Viewports) {
-                        if (platformIo.Platform_GetWindowFocus(viewport)) {
+                        if (platformIo.Platform_GetWindowFocus != nullptr && platformIo.Platform_GetWindowFocus(viewport)) {
                             anyWindowFocused = true;
                             break;
                         }
