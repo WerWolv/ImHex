@@ -523,6 +523,7 @@ namespace hex {
             static bool sizeSet = false;
             static double popupDelay = -2.0;
             static u32 displayFrameCount = 0;
+            static bool popupClosed = true;
 
             static AutoReset<std::unique_ptr<impl::PopupBase>> currPopupStorage;
             static Lang name("");
@@ -530,7 +531,7 @@ namespace hex {
             auto &currPopup = *currPopupStorage;
 
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
-                if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId)) {
+                if (popupClosed) {
                     if (popupDelay <= -1.0) {
                         popupDelay = 0.2;
                     } else {
@@ -542,6 +543,8 @@ namespace hex {
                             displayFrameCount = 0;
 
                             ImGui::OpenPopup(name);
+                            popupClosed = false;
+
                             popups.pop_back();
                         }
                     }
@@ -610,6 +613,7 @@ namespace hex {
                     positionSet = sizeSet = false;
 
                     currPopup = nullptr;
+                    popupClosed = true;
                 }
             }
         }
