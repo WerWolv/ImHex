@@ -2,9 +2,13 @@
 
 #include <cstring>
 
+#include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/localization_manager.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/logger.hpp>
+#include <hex/helpers/scaling.hpp>
+#include <hex/helpers/utils.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <nlohmann/json.hpp>
 
@@ -208,12 +212,36 @@ namespace hex::plugin::builtin {
         }
 
         std::optional<u64> maxAddress;
+        bool firstAddress = true;
+        u64 regionStartAddr = 0;
+        u32 prevAddrEnd = 0;
+        u32 blockIdx = 0;
+        u64 blockSize = 0;
+
         for (auto &[address, bytes] : data.value()) {
             auto endAddress = (address + bytes.size()) - 1;
-            m_data.emplace({ address, endAddress }, std::move(bytes));
+            if (firstAddress) {
+                regionStartAddr = address;
+                firstAddress = false;
+            } else {
+                if (address > (prevAddrEnd + 1)) {
+                    m_memoryRegions.insert({{.address=regionStartAddr, .size=blockSize},
+                        fmt::format("Block {}", blockIdx)});
+                    regionStartAddr = address;
+                    blockSize = 0;
+                    blockIdx++;
+                }
+            }
+            blockSize += bytes.size();
+            prevAddrEnd = endAddress;
 
+            m_data.emplace({ address, endAddress }, std::move(bytes));
             if (endAddress > maxAddress)
                 maxAddress = endAddress;
+        }
+
+        if (blockSize > 0) {
+            m_memoryRegions.insert({{.address=regionStartAddr, .size=blockSize}, fmt::format("Block {}", blockIdx)});
         }
 
         if (maxAddress.has_value())
@@ -223,6 +251,9 @@ namespace hex::plugin::builtin {
 
         m_dataValid = true;
 
+        // jump to first region
+        auto firstRegion = *m_memoryRegions.begin();
+        ImHexApi::HexEditor::setSelection(firstRegion.region.getStartAddress(), 1);
         return true;
     }
 
@@ -283,6 +314,51 @@ namespace hex::plugin::builtin {
         }
 
         return { Region { closestInterval.start, (closestInterval.end - closestInterval.start) + 1}, Provider::getRegionValidity(address).second };
+    }
+    void IntelHexProvider::drawSidebarInterface() {
+        ImGuiExt::Header("hex.builtin.provider.process_memory.memory_regions"_lang, true);
+
+        auto availableX = ImGui::GetContentRegionAvail().x;
+        ImGui::PushItemWidth(availableX);
+        const auto &filtered = m_regionSearchWidget.draw(m_memoryRegions);
+        ImGui::PopItemWidth();
+
+#if defined(OS_WINDOWS)
+        auto availableY = 400_scaled;
+#else
+        // Take up full height on Linux since there are no DLL injection controls
+        auto availableY = ImGui::GetContentRegionAvail().y;
+#endif
+
+        if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(availableX, availableY))) {
+            ImGui::TableSetupColumn("hex.ui.common.region"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.size"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.name"_lang);
+            ImGui::TableSetupScrollFreeze(0, 1);
+
+            ImGui::TableHeadersRow();
+
+            for (const auto &memoryRegion : filtered) {
+                ImGui::PushID(&memoryRegion);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGuiExt::TextFormatted("0x{0:08X} - 0x{1:08X}", memoryRegion->region.getStartAddress(), memoryRegion->region.getEndAddress());
+
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(hex::toByteString(memoryRegion->region.getSize()).c_str());
+
+
+                ImGui::TableNextColumn();
+                if (ImGui::Selectable(memoryRegion->name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns))
+                    ImHexApi::HexEditor::setSelection(memoryRegion->region.getStartAddress(), 1);
+
+                ImGui::PopID();
+            }
+
+            ImGui::EndTable();
+        }
     }
 
     void IntelHexProvider::loadSettings(const nlohmann::json &settings) {
