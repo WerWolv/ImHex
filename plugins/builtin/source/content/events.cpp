@@ -365,6 +365,9 @@ namespace hex::plugin::builtin {
             static ImGuiWindow *lastFocusedWindow = nullptr;
 
             if (focused) {
+                if (lastFocusedWindow == nullptr)
+                    return;
+
                 // If the main window gains focus again, restore the last focused window
                 ImGui::FocusWindow(lastFocusedWindow);
                 ImGui::FocusWindow(lastFocusedWindow, ImGuiFocusRequestFlags_RestoreFocusedChild);
@@ -373,10 +376,13 @@ namespace hex::plugin::builtin {
                     log::debug("Restoring focus on window '{}'", lastFocusedWindow->Name ? lastFocusedWindow->Name : "Unknown Window");
                 lastFocusedWindow = nullptr;
             } else {
+                if (ctx->NavWindow != nullptr && (ctx->NavWindow->Flags & ImGuiWindowFlags_Modal))
+                    return;
+
                 // If the main window loses focus, store the currently focused window
                 // and remove focus from it so it doesn't look like it's focused and
                 // cursor blink animations don't play
-                lastFocusedWindow =  ctx->NavWindow;
+                lastFocusedWindow = ctx->NavWindow;
                 ImGui::FocusWindow(nullptr);
 
                 if (lastFocusedWindow != nullptr)

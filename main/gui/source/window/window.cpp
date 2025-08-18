@@ -549,6 +549,8 @@ namespace hex {
                         }
                     }
                 }
+            } else {
+                popupClosed = true;
             }
 
             if (currPopup != nullptr) {
