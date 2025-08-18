@@ -2,9 +2,7 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
-
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/fs.hpp>
 #include <hex/helpers/default_paths.hpp>
 
 #include <wolv/utils/string.hpp>
@@ -15,11 +13,10 @@
 
 #include <nlohmann/json.hpp>
 
-#include <hex/trace/stacktrace.hpp>
-
 #include <csignal>
 #include <exception>
 #include <typeinfo>
+#include <hex/helpers/utils.hpp>
 
 #if defined(IMGUI_TEST_ENGINE)
     #include <imgui_te_engine.h>
@@ -39,7 +36,7 @@ namespace hex::crash {
     void resetCrashHandlers();
     
     static void sendNativeMessage(const std::string& message) {
-        hex::nativeErrorMessage(fmt::format("ImHex crashed during initial setup!\nError: {}", message));
+        hex::showErrorMessageBox(fmt::format("ImHex crashed during initial setup!\nError: {}", message));
     }
 
     // Function that decides what should happen on a crash

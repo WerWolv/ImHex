@@ -285,7 +285,9 @@ namespace hex::plugin::builtin {
         EventImHexStartupFinished::subscribe([] {
             const auto currVersion = ImHexApi::System::getImHexVersion();
             const auto prevLaunchVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
-            if (prevLaunchVersion == "") {
+
+            const auto forceOobe = getEnvironmentVariable("IMHEX_FORCE_OOBE");
+            if (prevLaunchVersion == "" || (forceOobe.has_value() && *forceOobe != "0")) {
                 EventFirstLaunch::post();
                 return;
             }
@@ -369,6 +371,7 @@ namespace hex::plugin::builtin {
 
                 if (lastFocusedWindow != nullptr)
                     log::debug("Restoring focus on window '{}'", lastFocusedWindow->Name ? lastFocusedWindow->Name : "Unknown Window");
+                lastFocusedWindow = nullptr;
             } else {
                 // If the main window loses focus, store the currently focused window
                 // and remove focus from it so it doesn't look like it's focused and

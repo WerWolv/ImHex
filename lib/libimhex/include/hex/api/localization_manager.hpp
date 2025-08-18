@@ -13,6 +13,9 @@
 
 EXPORT_MODULE namespace hex {
 
+    struct UnlocalizedString;
+    using LanguageId = std::string;
+
     namespace LocalizationManager {
 
         struct PathEntry {
@@ -21,24 +24,21 @@ EXPORT_MODULE namespace hex {
         };
 
         struct LanguageDefinition {
-            std::string id;
+            LanguageId id;
             std::string name, nativeName;
-            std::string flag;
-            std::string filePath;
-            std::string fallbackLanguageId;
+            LanguageId fallbackLanguageId;
 
             std::vector<PathEntry> languageFilePaths;
         };
 
         void addLanguages(const std::string_view &languageList, std::function<std::string_view(const std::string &path)> callback);
-        void setLanguage(const std::string &languageId);
-        [[nodiscard]] const std::string& getSelectedLanguageId();
-        [[nodiscard]] const std::string& get(const std::string &unlocalizedString);
-        [[nodiscard]] const std::map<std::string, LanguageDefinition>& getLanguageDefinitions();
+        void setLanguage(const LanguageId &languageId);
+        [[nodiscard]] const LanguageId& getSelectedLanguageId();
+        [[nodiscard]] const std::string& get(const LanguageId& languageId, const UnlocalizedString &unlocalizedString);
+        [[nodiscard]] const std::map<LanguageId, LanguageDefinition>& getLanguageDefinitions();
+        [[nodiscard]] const LanguageDefinition& getLanguageDefinition(const LanguageId &languageId);
 
     }
-
-    struct UnlocalizedString;
 
     class LangConst;
 

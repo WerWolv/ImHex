@@ -56,11 +56,6 @@ namespace hex {
     static Microsoft::WRL::ComPtr<ITaskbarList4> s_taskbarList;
     static bool s_useLayeredWindow = true;
 
-    void nativeErrorMessage(const std::string &message) {
-        log::fatal("{}", message);
-        MessageBoxA(nullptr, message.c_str(), "Error", MB_ICONERROR | MB_OK);
-    }
-
     // Custom Window procedure for receiving OS events
     static LRESULT commonWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {

@@ -56,6 +56,10 @@ namespace hex::plugin::builtin {
         void reloadCustomNodes();
         void updateNodePositions();
 
+        [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
+            return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        }
+
         std::vector<Workspace*> &getWorkspaceStack() { return *m_workspaceStack; }
 
     private:

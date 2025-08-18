@@ -21,6 +21,7 @@
 #include <list>
 #include <ranges>
 #include <string>
+#include <fonts/fonts.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -65,6 +66,9 @@ namespace hex::plugin::builtin {
             static bool oobeDone = false;
             static bool tutorialEnabled = false;
 
+            // Keep the frame rate unlocked so animations play nicely
+            ImHexApi::System::unlockFrameRate();
+
             ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition());
             ImGui::SetNextWindowSize(ImHexApi::System::getMainWindowSize());
 
@@ -99,7 +103,13 @@ namespace hex::plugin::builtin {
                         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, textFadeIn);
                         ImGui::SameLine();
                         if (ImGui::BeginChild("Text", ImVec2(ImGui::GetContentRegionAvail().x, bannerSize.y))) {
-                            ImGuiExt::TextFormattedCentered("Welcome to ImHex!\n\nA powerful data analysis and visualization suite for Reverse Engineers, Hackers and Security Researchers.");
+                            fonts::Default().pushBold(1.2);
+                            ImGuiExt::TextFormattedCentered("Welcome to ImHex!");
+                            fonts::Default().pop();
+                            ImGui::NewLine();
+                            ImGui::NewLine();
+                            ImGui::NewLine();
+                            ImGuiExt::TextFormattedCentered("A powerful data analysis and visualization suite forReverse Engineers, Hackers and Security Researchers.");
                         }
                         ImGui::EndChild();
 
@@ -182,7 +192,7 @@ namespace hex::plugin::builtin {
                             }
 
                             // Continue button
-                            const auto buttonSize = scaled({ 100, 50 });
+                            const auto buttonSize = scaled({ 130, 50 });
                             ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - buttonSize - scaled({ 10, 10 }));
                             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, buttonFadeIn);
                             if (ImGuiExt::DimmedButton(fmt::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
@@ -226,7 +236,7 @@ namespace hex::plugin::builtin {
 
                         // Draw globe image
                         const auto imageSize = s_compassTexture->getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
-                        ImGui::SetCursorPos((ImGui::GetWindowSize() / 2 - imageSize / 2) - ImVec2(0, 50_scaled));
+                        ImGui::SetCursorPos((ImGui::GetWindowSize() / 2 - imageSize / 2) - ImVec2(0, 100_scaled));
                         ImGui::Image(*s_globeTexture, imageSize);
 
                         ImGui::NewLine();
@@ -236,10 +246,12 @@ namespace hex::plugin::builtin {
                         // Draw information text
                         ImGui::SetCursorPosX(0);
 
-                        const auto availableWidth = ImGui::GetContentRegionAvail().x;
-                        if (ImGui::BeginChild("##language_text", ImVec2(availableWidth, 30_scaled))) {
+                        const auto availableSize = ImGui::GetContentRegionAvail();
+                        if (ImGui::BeginChild("##language_text", ImVec2(availableSize.x, 30_scaled))) {
                             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_Text, textFadeIn - textFadeOut));
-                            ImGuiExt::TextFormattedCentered("{}", "hex.builtin.setting.interface.language"_lang);
+                            fonts::Default().push(1.2);
+                            ImGuiExt::TextFormattedCentered("{}", LocalizationManager::get(currLanguage->first, "hex.builtin.setting.interface.language"));
+                            fonts::Default().pop();
                             ImGui::PopStyleColor();
                         }
                         ImGui::EndChild();
@@ -247,18 +259,32 @@ namespace hex::plugin::builtin {
                         ImGui::NewLine();
 
                         // Draw language selection list
-                        ImGui::SetCursorPosX(availableWidth / 3);
-                        if (ImGui::BeginListBox("##language", ImVec2(availableWidth / 3, 0))) {
-                            for (const auto &[langId, definition] : LocalizationManager::getLanguageDefinitions()) {
-                                if (ImGui::Selectable(definition.name.c_str(), langId == LocalizationManager::getSelectedLanguageId())) {
-                                    LocalizationManager::setLanguage(langId);
+                        ImGui::SetCursorPosX(availableSize.x / 3);
+                        if (ImGuiExt::BeginSubWindow(ICON_VS_GLOBE, nullptr, ImVec2(availableSize.x / 3, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3))) {
+                            if (ImGui::BeginListBox("##language", ImGui::GetContentRegionAvail())) {
+                                {
+                                    const auto osLanguage = hex::getOSLanguage();
+                                    if (osLanguage.has_value()) {
+                                        const auto &languageDefinition = LocalizationManager::getLanguageDefinition(osLanguage.value());
+                                        if (ImGui::Selectable(fmt::format("Native ({})", languageDefinition.nativeName).c_str(), LocalizationManager::getSelectedLanguageId() == "native")) {
+                                            LocalizationManager::setLanguage("native");
+                                        }
+                                        ImGui::Separator();
+                                    }
                                 }
+
+                                for (const auto &[langId, definition] : LocalizationManager::getLanguageDefinitions()) {
+                                    if (ImGui::Selectable(definition.name.c_str(), langId == LocalizationManager::getSelectedLanguageId())) {
+                                        LocalizationManager::setLanguage(langId);
+                                    }
+                                }
+                                ImGui::EndListBox();
                             }
-                            ImGui::EndListBox();
                         }
+                        ImGuiExt::EndSubWindow();
 
                         // Continue button
-                        const auto buttonSize = scaled({ 100, 50 });
+                        const auto buttonSize = scaled({ 130, 50 });
                         ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - buttonSize - scaled({ 10, 10 }));
                         if (ImGuiExt::DimmedButton(fmt::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
                             page += 1;
@@ -384,7 +410,7 @@ namespace hex::plugin::builtin {
                         ImGuiExt::TextFormattedCentered("hex.builtin.oobe.tutorial_question"_lang);
 
                         // Draw no button
-                        const auto buttonSize = scaled({ 100, 50 });
+                        const auto buttonSize = scaled({ 130, 50 });
                         ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - ImVec2(buttonSize.x * 2 + 20, buttonSize.y + 10));
                         if (ImGuiExt::DimmedButton("hex.ui.common.no"_lang, buttonSize)) {
                             oobeDone = true;
@@ -447,9 +473,9 @@ namespace hex::plugin::builtin {
             ImHexApi::System::setWindowResizable(false);
 
             const auto imageTheme = ThemeManager::getImageTheme();
-            s_imhexBanner    = ImGuiExt::Texture::fromSVG(romfs::get(fmt::format("assets/{}/banner.svg", imageTheme)).span<std::byte>());
-            s_compassTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/compass.png").span<std::byte>());
-            s_globeTexture   = ImGuiExt::Texture::fromImage(romfs::get("assets/common/globe.png").span<std::byte>());
+            s_imhexBanner    = ImGuiExt::Texture::fromSVG(romfs::get(fmt::format("assets/{}/banner.svg", imageTheme)).span<std::byte>(), 0, 0, ImGuiExt::Texture::Filter::Linear);
+            s_compassTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/compass.png").span<std::byte>(), ImGuiExt::Texture::Filter::Linear);
+            s_globeTexture   = ImGuiExt::Texture::fromImage(romfs::get("assets/common/globe.png").span<std::byte>(), ImGuiExt::Texture::Filter::Linear);
             s_screenshotDescriptions = nlohmann::json::parse(romfs::get("assets/screenshot_descriptions.json").string());
 
             for (const auto &path : romfs::list("assets/screenshots")) {

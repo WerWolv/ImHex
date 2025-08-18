@@ -65,6 +65,9 @@ namespace hex::fonts {
     public:
         SliderPoints(float defaultValue, float min, float max) : SliderFloat(defaultValue, min, max) { }
         bool draw(const std::string &name) override;
+
+    private:
+        bool m_changed = false;
     };
 
 

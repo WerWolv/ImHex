@@ -77,13 +77,6 @@ extern "C" void enterTouchMode() {
 
 namespace hex {
 
-    void nativeErrorMessage(const std::string &message) {
-        log::fatal("{}", message);
-        EM_ASM({
-            alert(UTF8ToString($0));
-        }, message.c_str());
-    }
-
     void Window::configureGLFW() {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);

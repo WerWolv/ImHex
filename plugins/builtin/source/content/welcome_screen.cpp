@@ -535,7 +535,6 @@ namespace hex::plugin::builtin {
                                             for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : quickSettings) {
                                                 ImGui::PushID(id + 1);
                                                 if (ImGuiExt::DimmedIconToggle(onIcon.c_str(), offIcon.c_str(), &state)) {
-                                                    toggleCallback(state);
                                                     ContentRegistry::Settings::write<bool>("hex.builtin.settings.quick_settings", unlocalizedTooltip, state);
                                                 }
                                                 if (id % 5 > 0)

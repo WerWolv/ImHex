@@ -90,12 +90,16 @@ EXPORT_MODULE namespace hex {
 
             template<typename E>
             void call(auto&& ... params) const {
-                try {
+                #if defined(DEBUG)
                     m_func(std::forward<decltype(params)>(params)...);
-                } catch (const std::exception &e) {
-                    log::error("An exception occurred while handling event {}: {}", wolv::type::getTypeName<E>(), e.what());
-                    throw;
-                }
+                #else
+                    try {
+                        m_func(std::forward<decltype(params)>(params)...);
+                    } catch (const std::exception &e) {
+                        log::error("An exception occurred while handling event {}: {}", wolv::type::getTypeName<E>(), e.what());
+                        throw;
+                    }
+                #endif
             }
 
         private:

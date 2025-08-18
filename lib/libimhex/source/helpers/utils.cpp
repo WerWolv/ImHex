@@ -1,3 +1,4 @@
+#include <cwchar>
 #include <hex/helpers/utils.hpp>
 
 #include <hex/api/imhex_api/system.hpp>
@@ -22,6 +23,7 @@
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shellapi.h>
+    #include <wchar.h>
 
     #include <wolv/utils/guards.hpp>
 #elif defined(OS_LINUX)
@@ -32,6 +34,7 @@
     #include <unistd.h>
     #include <dlfcn.h>
     #include <hex/helpers/utils_macos.hpp>
+    #include <CoreFoundation/CoreFoundation.h>
 #elif defined(OS_WEB)
     #include "emscripten.h"
 #endif
@@ -787,12 +790,140 @@ namespace hex {
         return std::chrono::system_clock::from_time_t(std::mktime(&time));
     }
 
+    std::optional<std::string> getOSLanguage() {
+        const static auto osLanguage = [] -> std::optional<std::string> {
+            #if defined(OS_WINDOWS)
+                const auto langId = ::GetUserDefaultUILanguage();
+                std::array<wchar_t, LOCALE_NAME_MAX_LENGTH> localeName;
+                if (::LCIDToLocaleName(MAKELCID(langId, SORT_DEFAULT), localeName.data(), localeName.size(), 0) > 0) {
+                    return utf16ToUtf8(localeName.data());
+                }
+
+                return std::nullopt;
+            #elif defined(OS_MACOS)
+                const auto langs = CFLocaleCopyPreferredLanguages();
+                if (langs == nullptr || CFArrayGetCount(langs) == 0)
+                    return std::nullopt;
+
+                ON_SCOPE_EXIT { CFRelease(langs); };
+
+                const auto lang = (CFStringRef)CFArrayGetValueAtIndex(langs, 0);
+                std::array<char, 256> buffer;
+                if (CFStringGetCString(lang, buffer.data(), buffer.size(), kCFStringEncodingUTF8)) {
+                    return std::string(buffer.data());
+                }
+
+                return std::nullopt;
+            #elif defined(OS_LINUX)
+                auto lang = getEnvironmentVariable("LC_ALL");
+                if (!lang.has_value()) lang = getEnvironmentVariable("LC_MESSAGES");
+                if (!lang.has_value()) lang = getEnvironmentVariable("LANG");
+
+                if (lang.has_value() && !lang->empty() && *lang != "C" && *lang != "C.UTF-8") {
+                    auto parts = wolv::util::splitString(*lang, ".");
+                    if (parts.size() > 0)
+                        return parts[0];
+                    else
+                        return *lang;
+                }
+
+                return std::nullopt;
+            #elif defined(OS_WEB)
+                char *resultRaw = (char*)EM_ASM_PTR({
+                    return stringToNewUTF8(navigator.language.length > 0 ? navigator.language : navigator.languages[0]);
+                });
+
+                std::string result(resultRaw);
+                std::free(resultRaw);
+
+                return result;
+            #else
+                return std::nullopt;
+            #endif
+        }();
+
+        return osLanguage;
+    }
+
     extern "C" void macOSCloseButtonPressed() {
         EventCloseButtonPressed::post();
     }
 
     extern "C" void macosEventDataReceived(const u8 *data, size_t length) {
         EventNativeMessageReceived::post(std::vector<u8>(data, data + length));
+    }
+
+    void showErrorMessageBox(const std::string &message) {
+        log::fatal("{}", message);
+        #if defined(OS_WINDOWS)
+            MessageBoxA(nullptr, message.c_str(), "Error", MB_ICONERROR | MB_OK);
+        #elif defined (OS_MACOS)
+            errorMessageMacos(message.c_str());
+        #elif defined(OS_LINUX)
+            if (std::system(fmt::format(R"(zenity --error --text="{}")", message).c_str()) != 0) {
+                std::system(fmt::format(R"(notify-send -i "net.werwolv.ImHex" "Error" "{}")", message).c_str());
+            }
+        #elif defined(OS_WEB)
+            EM_ASM({
+                alert(UTF8ToString($0));
+            }, message.c_str());
+        #endif
+    }
+
+    void showToastMessage(const std::string &title, const std::string &message) {
+        #if defined(OS_WINDOWS)
+            const auto wideTitle = wolv::util::utf8ToWstring(title).value_or(L"???");
+            const auto wideMessage = wolv::util::utf8ToWstring(message).value_or(L"???");
+
+            WNDCLASS wc = { };
+            wc.lpfnWndProc = DefWindowProc;
+            wc.hInstance = GetModuleHandle(nullptr);
+            wc.lpszClassName = L"ImHex Toast";
+            RegisterClass(&wc);
+
+            HWND hwnd = CreateWindow(
+                wc.lpszClassName, L"", 0,
+                0, 0, 0, 0,
+                nullptr, nullptr, wc.hInstance, nullptr);
+
+            NOTIFYICONDATA nid = { };
+            nid.cbSize = sizeof(nid);
+            nid.hWnd = hwnd;
+            nid.uID = 1;
+            nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_INFO;
+            nid.uCallbackMessage = WM_USER + 1;
+            nid.dwInfoFlags = NIIF_USER | NIIF_LARGE_ICON;
+            nid.hIcon = LoadIcon(nullptr, IDI_INFORMATION);
+            nid.uTimeout = 5000;
+            wcsncpy(nid.szTip, L"ImHex", ARRAYSIZE(nid.szTip));
+            wcsncpy(nid.szInfoTitle, wideTitle.c_str(), ARRAYSIZE(nid.szInfoTitle));
+            wcsncpy(nid.szInfo, wideMessage.c_str(), ARRAYSIZE(nid.szInfo));
+
+            nid.dwInfoFlags = NIIF_INFO;
+
+            Shell_NotifyIcon(NIM_ADD, &nid);
+        #elif defined(OS_MACOS)
+            toastMessageMacos(title.c_str(), message.c_str());
+        #elif defined(OS_LINUX)
+            if (std::system(fmt::format(R"(notify-send -i "net.werwolv.ImHex" "{}" "{}")", title, message).c_str()) != 0) {
+                std::system(fmt::format(R"(zenity --info --title="{}" --text="{}")", title, message).c_str());
+            }
+        #elif defined(OS_WEB)
+            EM_ASM({
+                const t = UTF8ToString($0);
+                const m = UTF8ToString($1);
+
+                if (Notification.permission === "granted") {
+                    new Notification(t, { body: m });
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(function(p) {
+                        if (p === "granted") {
+                            new Notification(t, { body: m });
+                        }
+                    });
+                }
+            }, title.c_str(), message.c_str());
+        #endif
     }
 
 }

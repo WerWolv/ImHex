@@ -380,25 +380,27 @@ namespace hex {
         ImHexApi::Fonts::getDefaultFont().push();
         io.FontDefault = ImHexApi::Fonts::getDefaultFont();
 
-        {
-            static bool lastAnyWindowFocused = false;
-            bool anyWindowFocused = glfwGetWindowAttrib(m_window, GLFW_FOCUSED);
+        #if !defined(OS_WEB)
+            {
+                static bool lastAnyWindowFocused = false;
+                bool anyWindowFocused = glfwGetWindowAttrib(m_window, GLFW_FOCUSED);
 
-            if (!anyWindowFocused) {
-                const auto platformIo = ImGui::GetPlatformIO();
-                for (auto *viewport : platformIo.Viewports) {
-                    if (platformIo.Platform_GetWindowFocus(viewport)) {
-                        anyWindowFocused = true;
-                        break;
+                if (!anyWindowFocused) {
+                    const auto platformIo = ImGui::GetPlatformIO();
+                    for (auto *viewport : platformIo.Viewports) {
+                        if (platformIo.Platform_GetWindowFocus != nullptr && platformIo.Platform_GetWindowFocus(viewport)) {
+                            anyWindowFocused = true;
+                            break;
+                        }
                     }
                 }
+
+                if (lastAnyWindowFocused != anyWindowFocused)
+                    EventWindowFocused::post(anyWindowFocused);
+
+                lastAnyWindowFocused = anyWindowFocused;
             }
-
-            if (lastAnyWindowFocused != anyWindowFocused)
-                EventWindowFocused::post(anyWindowFocused);
-
-            lastAnyWindowFocused = anyWindowFocused;
-        }
+        #endif
 
         // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -522,14 +524,10 @@ namespace hex {
             static double popupDelay = -2.0;
             static u32 displayFrameCount = 0;
 
-            static std::unique_ptr<impl::PopupBase> currPopup;
+            static AutoReset<std::unique_ptr<impl::PopupBase>> currPopupStorage;
             static Lang name("");
 
-            AT_FIRST_TIME {
-                EventImHexClosing::subscribe([] {
-                    currPopup.reset();
-                });
-            };
+            auto &currPopup = *currPopupStorage;
 
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
                 if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId)) {
