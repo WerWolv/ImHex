@@ -524,14 +524,10 @@ namespace hex {
             static double popupDelay = -2.0;
             static u32 displayFrameCount = 0;
 
-            static std::unique_ptr<impl::PopupBase> currPopup;
+            static AutoReset<std::unique_ptr<impl::PopupBase>> currPopupStorage;
             static Lang name("");
 
-            AT_FIRST_TIME {
-                EventImHexClosing::subscribe([] {
-                    currPopup.reset();
-                });
-            };
+            auto &currPopup = *currPopupStorage;
 
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
                 if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId)) {
