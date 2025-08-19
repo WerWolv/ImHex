@@ -1,12 +1,7 @@
 {
-    "code": "ru-RU",
-    "country": "Russia",
-    "language": "Russian",
-    "translations": {
-        "hex.script_loader.menu.run_script": "Запустить скрипт",
-        "hex.script_loader.menu.loading": "Загрузка...",
-        "hex.script_loader.menu.no_scripts": "Скрипты не найдены",
-        "hex.script_loader.task.updating": "Обновление скриптов...",
-        "hex.script_loader.task.running": "Запуск скрипта..."
-    }
+    "hex.script_loader.menu.run_script": "Запустить скрипт",
+    "hex.script_loader.menu.loading": "Загрузка...",
+    "hex.script_loader.menu.no_scripts": "Скрипты не найдены",
+    "hex.script_loader.task.updating": "Обновление скриптов...",
+    "hex.script_loader.task.running": "Запуск скрипта..."
 }

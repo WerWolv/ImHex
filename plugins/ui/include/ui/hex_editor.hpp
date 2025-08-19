@@ -1,8 +1,7 @@
 #pragma once
 
 #include <hex.hpp>
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/hex_editor.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/encoding_file.hpp>
 
@@ -233,12 +232,32 @@ namespace hex::ui {
             m_upperCaseHex = upperCaseHex;
         }
 
+        bool shouldUpperCaseHex() const {
+            return m_upperCaseHex;
+        }
+
         void enableGrayOutZeros(bool grayOutZeros) {
             m_grayOutZero = grayOutZeros;
         }
 
+        bool shouldGrayOutZeros() const {
+            return m_grayOutZero;
+        }
+
         void enableShowAscii(bool showAscii) {
             m_showAscii = showAscii;
+        }
+
+        bool shouldShowAscii() const {
+            return m_showAscii;
+        }
+
+        void enableShowExtendedAscii(bool showExtendedAscii) {
+            m_showExtendedAscii = showExtendedAscii;
+        }
+
+        bool shouldShowExtendedAscii() const {
+            return m_showExtendedAscii;
         }
 
         void enableSyncScrolling(bool syncScrolling) {
@@ -251,6 +270,39 @@ namespace hex::ui {
 
         void setCharacterCellPadding(u32 characterCellPadding) {
             m_characterCellPadding = characterCellPadding;
+        }
+
+        void setMiniMapWidth(int miniMapWidth) {
+            m_miniMapWidth = miniMapWidth;
+        }
+
+        [[nodiscard]] bool isMiniMapVisible() const {
+            return m_showMiniMap;
+        }
+
+        int getMiniMapWidth() const {
+            return m_miniMapWidth;
+        }
+
+        std::optional<std::string> getMiniMapVisualizer() const {
+            if (!m_showMiniMap)
+                return std::nullopt;
+            return m_miniMapVisualizer->unlocalizedName.get();
+        }
+
+        void setMiniMapVisualizer(const UnlocalizedString &miniMapVisualizerName) {
+            if (miniMapVisualizerName.empty()) {
+                m_showMiniMap = false;
+                m_miniMapVisualizer = nullptr;
+            } else {
+                for (const auto &visualizer : ContentRegistry::HexEditor::impl::getMiniMapVisualizers()) {
+                    if (visualizer->unlocalizedName == miniMapVisualizerName) {
+                        m_miniMapVisualizer = visualizer;
+                        m_showMiniMap = true;
+                        return;
+                    }
+                }
+            }
         }
 
         [[nodiscard]] const std::optional<EncodingFile>& getCustomEncoding() const {

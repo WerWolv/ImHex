@@ -4,7 +4,7 @@
 
 #include <hex/api/localization_manager.hpp>
 
-#include <string>
+#include <imgui_internal.h>
 
 namespace hex::plugin::builtin {
 

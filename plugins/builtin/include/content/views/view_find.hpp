@@ -11,7 +11,8 @@
 
 #include <wolv/container/interval_tree.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/content_registry/data_formatter.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -105,6 +106,7 @@ namespace hex::plugin::builtin {
         PerProvider<Occurrence*> m_lastSelectedOccurrence;
         PerProvider<OccurrenceTree> m_occurrenceTree;
         PerProvider<std::string> m_currFilter;
+        PerProvider<bool> m_settingsCollapsed;
 
         TaskHolder m_searchTask, m_filterTask;
         bool m_settingsValid = false;

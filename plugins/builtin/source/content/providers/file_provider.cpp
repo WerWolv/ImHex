@@ -1,8 +1,8 @@
 #include "content/providers/file_provider.hpp"
 #include "content/providers/memory_file_provider.hpp"
 
-#include <hex/api/content_registry.hpp>
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>

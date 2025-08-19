@@ -1,6 +1,6 @@
 #include <hex/plugin.hpp>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/views.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <romfs/romfs.hpp>
@@ -21,8 +21,9 @@ namespace hex::plugin::yara {
 
 IMHEX_PLUGIN_SETUP("Yara Rules", "WerWolv", "Support for matching Yara rules") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
-    for (auto &path : romfs::list("lang"))
-        hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
+    hex::LocalizationManager::addLanguages(romfs::get("lang/languages.json").string(), [](const std::filesystem::path &path) {
+        return romfs::get(path).string();
+    });
 
     registerViews();
     registerDataInformationSections();

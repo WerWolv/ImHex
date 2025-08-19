@@ -11,6 +11,7 @@
 
 #include <hex/api/task_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
+#include <hex/helpers/utils.hpp>
 
 namespace hex::init {
 
@@ -61,8 +62,7 @@ int main(int argc, char **argv) {
             log::info("Linux distribution: {}. Version: {}", distro->name, distro->version == "" ? "None" : distro->version);
         }
     #endif
-
-
+    
     // Run ImHex
     return init::runImHex();
 }

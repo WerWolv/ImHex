@@ -53,14 +53,22 @@ RUN --mount=type=cache,target=/var/lib/apt/lists/ apt update && apt install -y l
 # -- DOWNLOADING + BUILDING STUFF
 
 ENV VCPKG_DEFAULT_BINARY_CACHE /cache/vcpkg
-COPY --from=imhex /dist/vcpkg.json /vcpkg.json
 RUN --mount=type=cache,target=/cache <<EOF
 ## Install dependencies with vcpkg
 set -xe
 
 mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 
-vcpkg install --triplet=arm-osx-mytriplet
+vcpkg install --triplet=arm-osx-mytriplet curl
+vcpkg install --triplet=arm-osx-mytriplet mbedtls
+vcpkg install --triplet=arm-osx-mytriplet freetype
+vcpkg install --triplet=arm-osx-mytriplet josuttis-jthread
+vcpkg install --triplet=arm-osx-mytriplet zlib
+vcpkg install --triplet=arm-osx-mytriplet bzip2
+vcpkg install --triplet=arm-osx-mytriplet liblzma
+vcpkg install --triplet=arm-osx-mytriplet zstd
+vcpkg install --triplet=arm-osx-mytriplet openssl
+vcpkg install --triplet=arm-osx-mytriplet libssh2
 EOF
 
 ## Install glfw3 dep

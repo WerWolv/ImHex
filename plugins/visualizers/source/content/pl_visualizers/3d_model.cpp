@@ -1,6 +1,9 @@
-#include <algorithm>
-#include <hex/helpers/utils.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/localization_manager.hpp>
 
+#include <hex/helpers/scaling.hpp>
+#include <hex/helpers/auto_reset.hpp>
 #include <content/visualizer_helpers.hpp>
 
 #include <fonts/vscode_icons.hpp>
@@ -11,15 +14,12 @@
 #include <hex/helpers/opengl.hpp>
 #include <opengl_support.h>
 
+#include <algorithm>
 #include <numbers>
-
-#include <hex/ui/imgui_imhex_extensions.h>
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/localization_manager.hpp>
+#include <numeric>
 
 #include <romfs/romfs.hpp>
-#include <numeric>
-#include <hex/helpers/auto_reset.hpp>
+
 
 namespace hex::plugin::visualizers {
 

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <hex/ui/popup.hpp>
-
 #include <hex/api/localization_manager.hpp>
+
+#include <imgui_internal.h>
 
 #include <string>
 

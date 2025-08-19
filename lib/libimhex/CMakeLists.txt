@@ -41,6 +41,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/semantic_version.cpp
         source/helpers/keys.cpp
         source/helpers/udp_server.cpp
+        source/helpers/scaling.cpp
 
         source/test/tests.cpp
 
@@ -154,7 +155,8 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_compile_definitions(libimhex PRIVATE EXPORT_SYMBOLS=1)
     elseif (APPLE)
         find_library(FOUNDATION NAMES Foundation)
-        target_link_libraries(libimhex PUBLIC ${FOUNDATION})
+        find_library(USERNOTIFICATIONS NAMES UserNotifications)
+        target_link_libraries(libimhex PUBLIC ${FOUNDATION} ${USERNOTIFICATIONS})
     endif ()
 
     target_link_libraries(libimhex PRIVATE libpl microtar ${NFD_LIBRARIES} magic)

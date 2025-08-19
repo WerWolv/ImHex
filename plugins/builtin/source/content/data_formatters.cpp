@@ -1,4 +1,4 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/data_formatter.hpp>
 #include <hex/api/achievement_manager.hpp>
 
 #include <hex/providers/provider.hpp>

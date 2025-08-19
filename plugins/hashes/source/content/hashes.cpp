@@ -1,4 +1,4 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/hashes.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/utils.hpp>

@@ -1,21 +1,15 @@
 {
-    "code": "es_ES",
-    "country": "Spain",
-    "fallback": false,
-    "language": "Spanish",
-    "translations": {
-        "hex.yara_rules.view.yara.error": "Error del compilador de Yara: ",
-        "hex.yara_rules.view.yara.header.matches": "Coincidenciasç",
-        "hex.yara_rules.view.yara.header.rules": "Rules",
-        "hex.yara_rules.view.yara.match": "Reglas de Coincidencia",
-        "hex.yara_rules.view.yara.matches.identifier": "Identificador",
-        "hex.yara_rules.view.yara.matches.variable": "",
-        "hex.yara_rules.view.yara.matching": "Analizando coincidencias...",
-        "hex.yara_rules.view.yara.name": "Yara Rules",
-        "hex.yara_rules.view.yara.no_rules": "No se encontraron Yara Rules. Estas han de encontrarse en la carpeta 'yara' de ImHex.",
-        "hex.yara_rules.view.yara.reload": "Recargar",
-        "hex.yara_rules.view.yara.reset": "Restablecer",
-        "hex.yara_rules.view.yara.rule_added": "¡La Yara Rule fue añadida con éxito!",
-        "hex.yara_rules.view.yara.whole_data": "¡El archivo completo coincide!"
-    }
+    "hex.yara_rules.view.yara.error": "Error del compilador de Yara: ",
+    "hex.yara_rules.view.yara.header.matches": "Coincidenciasç",
+    "hex.yara_rules.view.yara.header.rules": "Rules",
+    "hex.yara_rules.view.yara.match": "Reglas de Coincidencia",
+    "hex.yara_rules.view.yara.matches.identifier": "Identificador",
+    "hex.yara_rules.view.yara.matches.variable": "",
+    "hex.yara_rules.view.yara.matching": "Analizando coincidencias...",
+    "hex.yara_rules.view.yara.name": "Yara Rules",
+    "hex.yara_rules.view.yara.no_rules": "No se encontraron Yara Rules. Estas han de encontrarse en la carpeta 'yara' de ImHex.",
+    "hex.yara_rules.view.yara.reload": "Recargar",
+    "hex.yara_rules.view.yara.reset": "Restablecer",
+    "hex.yara_rules.view.yara.rule_added": "¡La Yara Rule fue añadida con éxito!",
+    "hex.yara_rules.view.yara.whole_data": "¡El archivo completo coincide!"
 }

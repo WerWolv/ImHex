@@ -1,6 +1,6 @@
 #include <script_api.hpp>
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/bookmarks.hpp>
 
 #define VERSION V1
 

@@ -92,18 +92,7 @@ def main():
 
             with lang_file_path.open("w", encoding="utf-8") as new_lang_file:
                 new_lang_data = {
-                    "code": lang,
-                    "language": (
-                        exist_lang_data["language"]
-                        if exist_lang_data
-                        else input("Enter language name: ")
-                    ),
-                    "country": (
-                        exist_lang_data["country"]
-                        if exist_lang_data
-                        else input("Enter country name: ")
-                    ),
-                    "translations": {},
+
                 }
                 json.dump(new_lang_data, new_lang_file, indent=4, ensure_ascii=False)
 
@@ -124,10 +113,10 @@ def main():
             with lang_file_path.open("r+", encoding="utf-8") as target_lang_file:
                 lang_data = json.load(target_lang_file)
 
-                for key, value in default_lang_data["translations"].items():
+                for key, value in default_lang_data.items():
                     has_translation = (
-                        key in lang_data["translations"]
-                        and lang_data["translations"][key] != INVALID_TRANSLATION
+                        key in lang_data
+                        and lang_data[key] != INVALID_TRANSLATION
                     )
                     if (
                         has_translation
@@ -140,7 +129,7 @@ def main():
                         continue
                     if command == "check":
                         print(
-                            f"Error: Translation {lang_data['code']} is missing translation for key '{key}'"
+                            f"Error: Translation {lang_file_path} is missing translation for key '{key}'"
                         )
                     elif (
                         command == "translate"
@@ -150,45 +139,45 @@ def main():
                         if command == "untranslate" and not has_translation:
                             continue
                         reference_tranlsation = (
-                            " '%s'" % reference_lang_data["translations"][key]
+                            " '%s'" % reference_lang_data[key]
                             if (
                                 reference_lang_data
-                                and key in reference_lang_data["translations"]
+                                and key in reference_lang_data
                             )
                             else ""
                         )
                         print(
-                            f"\033[1m'{key}' '{value}'{reference_tranlsation}\033[0m => {lang_data['language']}",
+                            f"\033[1m'{key}' '{value}'{reference_tranlsation}\033[0m => ",
                             end="",
                         )
                         if has_translation:
-                            translation = lang_data["translations"][key]
+                            translation = lang_data[key]
                             print(f" <= \033[1m'{translation}'\033[0m")
                         print()  # for a new line
                         if command == "untranslate":
-                            lang_data["translations"][key] = INVALID_TRANSLATION
+                            lang_data[key] = INVALID_TRANSLATION
                             continue
                         try:
                             new_value = input("=> ")
-                            lang_data["translations"][key] = new_value
+                            lang_data[key] = new_value
                         except KeyboardInterrupt:
                             break
                     elif command == "update" or command == "create":
-                        lang_data["translations"][key] = INVALID_TRANSLATION
+                        lang_data[key] = INVALID_TRANSLATION
                     elif command == "fmtzh":
                         if has_translation:
-                            lang_data["translations"][key] = fmtzh(
-                                lang_data["translations"][key]
+                            lang_data[key] = fmtzh(
+                                lang_data[key]
                             )
 
                 keys_to_remove = []
-                for key, value in lang_data["translations"].items():
-                    if key not in default_lang_data["translations"]:
+                for key, value in lang_data.items():
+                    if key not in default_lang_data:
                         keys_to_remove.append(key)
                 for key in keys_to_remove:
-                    lang_data["translations"].pop(key)
+                    lang_data.pop(key)
                     print(
-                        f"Removed unused key '{key}' from translation '{lang_data['code']}'"
+                        f"Removed unused key '{key}' from translation '{lang_file_path}'"
                     )
 
                 target_lang_file.seek(0)

@@ -20,12 +20,12 @@
 
 #include <string>
 
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 
-#include <hex/helpers/utils.hpp>
+#include <hex/helpers/scaling.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
 #include <ui/text_editor.hpp>
 
@@ -983,7 +983,30 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
 
+                bool shouldOpen = false;
+                if (m_jumpToPattern != nullptr) {
+                    if (m_jumpToPattern == &pattern) {
+                        ImGui::SetScrollHereY();
+                        m_jumpToPattern = nullptr;
+                    }
+                    else {
+                        auto parent = m_jumpToPattern->getParent();
+                        while (parent != nullptr) {
+                            if (&pattern == parent) {
+                                ImGui::SetScrollHereY();
+                                shouldOpen = true;
+                                break;
+                            }
+
+                            parent = parent->getParent();
+                        }
+                    }
+                }
+
                 chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{
+                    if (shouldOpen)
+                        ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+
                     ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0.0F);
                     const auto result = ImGui::TreeNodeEx(fmt::format("##TreeNode_{:X}", endOffset).c_str(), ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_OpenOnArrow);
                     ImGui::PopStyleVar();

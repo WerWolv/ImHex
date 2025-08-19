@@ -1,7 +1,8 @@
 #pragma once
 
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/imhex_api/fonts.hpp>
+#include <hex/api/content_registry/settings.hpp>
 
 namespace hex::fonts {
 
@@ -64,6 +65,9 @@ namespace hex::fonts {
     public:
         SliderPoints(float defaultValue, float min, float max) : SliderFloat(defaultValue, min, max) { }
         bool draw(const std::string &name) override;
+
+    private:
+        bool m_changed = false;
     };
 
 

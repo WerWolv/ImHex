@@ -1,23 +1,17 @@
 {
-    "code": "fr-FR",
-    "language": "Français",
-    "country": "France",
-    "fallback": false,
-    "translations": {
-        "hex.yara.information_section.advanced_data_info": "Informations avancées sur les données",
-        "hex.yara.information_section.advanced_data_info.no_information": "Aucune information supplémentaire trouvée",
-        "hex.yara_rules.view.yara.error": "Erreur du compilateur Yara : {0}",
-        "hex.yara_rules.view.yara.header.matches": "Correspondances",
-        "hex.yara_rules.view.yara.header.rules": "Règles",
-        "hex.yara_rules.view.yara.match": "Règles de correspondance",
-        "hex.yara_rules.view.yara.matches.identifier": "Identifiant",
-        "hex.yara_rules.view.yara.matches.variable": "Variable",
-        "hex.yara_rules.view.yara.matching": "Correspondance en cours...",
-        "hex.yara_rules.view.yara.name": "Règles Yara",
-        "hex.yara_rules.view.yara.no_rules": "Aucune règle YARA trouvée. Placez-les dans le dossier 'yara' d'ImHex",
-        "hex.yara_rules.view.yara.reload": "Recharger",
-        "hex.yara_rules.view.yara.reset": "Réinitialiser",
-        "hex.yara_rules.view.yara.rule_added": "Règle Yara ajoutée !",
-        "hex.yara_rules.view.yara.whole_data": "Le fichier entier correspond !"
-    }
+    "hex.yara.information_section.advanced_data_info": "Informations avancées sur les données",
+    "hex.yara.information_section.advanced_data_info.no_information": "Aucune information supplémentaire trouvée",
+    "hex.yara_rules.view.yara.error": "Erreur du compilateur Yara : {0}",
+    "hex.yara_rules.view.yara.header.matches": "Correspondances",
+    "hex.yara_rules.view.yara.header.rules": "Règles",
+    "hex.yara_rules.view.yara.match": "Règles de correspondance",
+    "hex.yara_rules.view.yara.matches.identifier": "Identifiant",
+    "hex.yara_rules.view.yara.matches.variable": "Variable",
+    "hex.yara_rules.view.yara.matching": "Correspondance en cours...",
+    "hex.yara_rules.view.yara.name": "Règles Yara",
+    "hex.yara_rules.view.yara.no_rules": "Aucune règle YARA trouvée. Placez-les dans le dossier 'yara' d'ImHex",
+    "hex.yara_rules.view.yara.reload": "Recharger",
+    "hex.yara_rules.view.yara.reset": "Réinitialiser",
+    "hex.yara_rules.view.yara.rule_added": "Règle Yara ajoutée !",
+    "hex.yara_rules.view.yara.whole_data": "Le fichier entier correspond !"
 }

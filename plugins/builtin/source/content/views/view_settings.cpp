@@ -1,7 +1,7 @@
 #include "content/views/view_settings.hpp"
 
 #include <fonts/fonts.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/logger.hpp>
 
@@ -23,8 +23,8 @@ namespace hex::plugin::builtin {
         });
 
         // Add the settings menu item to the Extras menu
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name" }, ICON_VS_SETTINGS_GEAR, 4000, CTRLCMD + Keys::Comma, [&, this] {
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name" }, ICON_VS_SETTINGS_GEAR, 4000, CTRLCMD + Keys::Comma, [&, this] {
             this->getWindowOpenState() = true;
         });
 
@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewSettings::drawContent() {
-        if (ImGui::BeginTable("Settings", 2, ImGuiTableFlags_BordersInner)) {
+        if (ImGui::BeginTable("Settings", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_Resizable)) {
             ImGui::TableSetupColumn("##category", ImGuiTableColumnFlags_WidthFixed, 120_scaled);
             ImGui::TableSetupColumn("##settings", ImGuiTableColumnFlags_WidthStretch);
 
@@ -85,7 +85,7 @@ namespace hex::plugin::builtin {
             if (m_selectedCategory != nullptr) {
                 auto &category = *m_selectedCategory;
 
-                if (ImGui::BeginChild("scrolling")) {
+                if (ImGui::BeginChild("scrolling", ImVec2(0, 0), ImGuiChildFlags_Borders)) {
 
                     // Draw the category description
                     if (!category.unlocalizedDescription.empty()) {

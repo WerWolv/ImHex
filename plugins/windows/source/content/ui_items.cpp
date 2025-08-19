@@ -1,4 +1,5 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 
 #include <hex/helpers/utils.hpp>
 
@@ -19,7 +20,7 @@ namespace hex::plugin::windows {
             showResourceUsage = value.get<bool>(false);
         });
 
-        ContentRegistry::Interface::addFooterItem([] {
+        ContentRegistry::UserInterface::addFooterItem([] {
             if (!showResourceUsage)
                 return;
 
@@ -72,7 +73,7 @@ namespace hex::plugin::windows {
             ImGuiExt::TextFormatted(ICON_VS_DASHBOARD " {0:2}.{1:02}%", u32(cpuUsage), u32(cpuUsage * 100) % 100);
         });
 
-        ContentRegistry::Interface::addFooterItem([] {
+        ContentRegistry::UserInterface::addFooterItem([] {
             if (!showResourceUsage)
                 return;
 

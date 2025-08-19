@@ -237,7 +237,7 @@ namespace hex::ui {
             }
 
         private:
-            TextEditor *m_editor;
+            TextEditor *m_editor = nullptr;
         };
 
         using ErrorGotoBoxes = std::map<Coordinates, ErrorGotoBox>;
@@ -474,7 +474,7 @@ namespace hex::ui {
         ImVec2 &getCharAdvance() { return m_charAdvance; }
         void clearGotoBoxes() { m_errorGotoBoxes.clear(); }
         void clearCursorBoxes() { m_cursorBoxes.clear(); }
-        void addClickableText(std::string text) { m_clickableText.push_back(text); }
+        void addClickableText(std::string text) { m_clickableText.emplace_back(std::move(text)); }
         void setErrorMarkers(const ErrorMarkers &markers) { m_errorMarkers = markers; }
         Breakpoints &getBreakpoints() { return m_breakpoints; }
         void setBreakpoints(const Breakpoints &markers) { m_breakpoints = markers; }

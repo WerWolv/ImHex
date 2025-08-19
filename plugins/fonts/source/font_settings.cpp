@@ -1,17 +1,16 @@
 #include <font_settings.hpp>
 
-#include <hex/api/content_registry.hpp>
-#include <wolv/utils/string.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <imgui.h>
 #include <fonts/fonts.hpp>
-#include <fonts/vscode_icons.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <romfs/romfs.hpp>
 
-#include "hex/api/imhex_api.hpp"
+#include <wolv/utils/guards.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::fonts {
     constexpr static auto PixelPerfectFontName = "Pixel-Perfect Default Font (Proggy Clean)";
@@ -200,16 +199,21 @@ namespace hex::fonts {
     }
 
     bool SliderPoints::draw(const std::string &name) {
-        auto scaleFactor = ImHexApi::System::getBackingScaleFactor();
-        float value = ImHexApi::Fonts::pixelsToPoints(m_value) * scaleFactor;
-        float min = ImHexApi::Fonts::pixelsToPoints(m_min) * scaleFactor;
-        float max = ImHexApi::Fonts::pixelsToPoints(m_max) * scaleFactor;
+        float value = ImHexApi::Fonts::pixelsToPoints(m_value);
+        float min = ImHexApi::Fonts::pixelsToPoints(m_min);
+        float max = ImHexApi::Fonts::pixelsToPoints(m_max);
 
-        auto changed = ImGui::SliderFloat(name.c_str(), &value, min, max, "%.0f pt");
+        if (ImGui::SliderFloat(name.c_str(), &value, min, max, "%.0f pt"))
+            m_changed = true;
 
-        m_value = ImHexApi::Fonts::pointsToPixels(value / scaleFactor);
+        m_value = ImHexApi::Fonts::pointsToPixels(value);
 
-        return changed;
+        if (m_changed && !ImGui::IsItemActive()) {
+            m_changed = false;
+            return true;
+        } else {
+            return false;
+        }
     }
 
 

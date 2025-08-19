@@ -1,17 +1,11 @@
 ﻿{
-    "code": "hu_HU",
-    "language": "Hungarian",
-    "country": "Hungary",
-    "fallback": false,
-    "translations": {
-        "hex.fonts.setting.font": "Betűtípus",
-        "hex.fonts.setting.font.glyphs": "Szimbólumok",
-        "hex.fonts.setting.font.custom_font": "Saját betűtípus",
-        "hex.fonts.setting.font.font_bold": "Félkövér",
-        "hex.fonts.setting.font.font_italic": "Dőlt",
-        "hex.fonts.setting.font.font_antialias": "Élsimítás",
-        "hex.fonts.setting.font.font_path": "Betűtípus",
-        "hex.fonts.setting.font.font_size": "Betűméret",
-        "hex.fonts.setting.font.load_all_unicode_chars": "Minden Unicode karakter betöltése"
-    }
+    "hex.fonts.setting.font": "Betűtípus",
+    "hex.fonts.setting.font.glyphs": "Szimbólumok",
+    "hex.fonts.setting.font.custom_font": "Saját betűtípus",
+    "hex.fonts.setting.font.font_bold": "Félkövér",
+    "hex.fonts.setting.font.font_italic": "Dőlt",
+    "hex.fonts.setting.font.font_antialias": "Élsimítás",
+    "hex.fonts.setting.font.font_path": "Betűtípus",
+    "hex.fonts.setting.font.font_size": "Betűméret",
+    "hex.fonts.setting.font.load_all_unicode_chars": "Minden Unicode karakter betöltése"
 }

@@ -1,21 +1,15 @@
 {
-    "code": "pt-BR",
-    "country": "Brazil",
-    "fallback": false,
-    "language": "Portuguese",
-    "translations": {
-        "hex.yara_rules.view.yara.error": "Erro do compilador Yara: {0}",
-        "hex.yara_rules.view.yara.header.matches": "Combinações",
-        "hex.yara_rules.view.yara.header.rules": "Regras",
-        "hex.yara_rules.view.yara.match": "Combinar Regras",
-        "hex.yara_rules.view.yara.matches.identifier": "Identificador",
-        "hex.yara_rules.view.yara.matches.variable": "Variável",
-        "hex.yara_rules.view.yara.matching": "Combinando...",
-        "hex.yara_rules.view.yara.name": "Regras Yara",
-        "hex.yara_rules.view.yara.no_rules": "Nenhuma regra YARA encontrada. Coloque-os na pasta 'yara' do ImHex",
-        "hex.yara_rules.view.yara.reload": "Recarregar",
-        "hex.yara_rules.view.yara.reset": "",
-        "hex.yara_rules.view.yara.rule_added": "Regra Yara Adicionada!",
-        "hex.yara_rules.view.yara.whole_data": "O arquivo inteiro corresponde!"
-    }
+    "hex.yara_rules.view.yara.error": "Erro do compilador Yara: {0}",
+    "hex.yara_rules.view.yara.header.matches": "Combinações",
+    "hex.yara_rules.view.yara.header.rules": "Regras",
+    "hex.yara_rules.view.yara.match": "Combinar Regras",
+    "hex.yara_rules.view.yara.matches.identifier": "Identificador",
+    "hex.yara_rules.view.yara.matches.variable": "Variável",
+    "hex.yara_rules.view.yara.matching": "Combinando...",
+    "hex.yara_rules.view.yara.name": "Regras Yara",
+    "hex.yara_rules.view.yara.no_rules": "Nenhuma regra YARA encontrada. Coloque-os na pasta 'yara' do ImHex",
+    "hex.yara_rules.view.yara.reload": "Recarregar",
+    "hex.yara_rules.view.yara.reset": "",
+    "hex.yara_rules.view.yara.rule_added": "Regra Yara Adicionada!",
+    "hex.yara_rules.view.yara.whole_data": "O arquivo inteiro corresponde!"
 }

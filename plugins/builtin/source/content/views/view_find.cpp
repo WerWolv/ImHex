@@ -1,18 +1,19 @@
 #include "content/views/view_find.hpp"
 
-#include <hex/api/imhex_api.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/events/events_interaction.hpp>
 #include <hex/trace/stacktrace.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
 
 #include <fonts/vscode_icons.hpp>
+#include <imgui_internal.h>
 
 #include <array>
-#include <ranges>
 #include <string>
 #include <utility>
+#include <barrier>
 
 #include <boost/regex.hpp>
 
@@ -213,15 +214,8 @@ namespace hex::plugin::builtin {
                 return { Occurrence::DecodeType::Binary, std::endian::native };
         }();
 
-        i64 countedCharacters = 0;
-        u64 startAddress = reader.begin().getAddress();
-        u64 endAddress = reader.end().getAddress();
-
-        u64 progress = 0;
-        u64 codePointWidth = 0;
-        i8 remainingCharacters = 0;
-        for (u8 byte : reader) {
-            bool validChar =
+        const auto validAscii = [&](u8 byte) {
+            return
                 (settings.lowerCaseLetters    && std::islower(byte))  ||
                 (settings.upperCaseLetters    && std::isupper(byte))  ||
                 (settings.numbers             && std::isdigit(byte))  ||
@@ -229,50 +223,64 @@ namespace hex::plugin::builtin {
                 (settings.underscores         && byte == '_')             ||
                 (settings.symbols             && std::ispunct(byte) && !std::isspace(byte))  ||
                 (settings.lineFeeds           && (byte == '\r' || byte == '\n'));
+        };
 
-            if (settings.type == UTF16LE) {
+        i64 countedCharacters = 0;
+        u64 startAddress = reader.begin().getAddress();
+        u64 endAddress = reader.end().getAddress();
+
+        u64 progress = 0;
+        i8 remainingCharacters = 0;
+        for (const u8 byte : reader) {
+            bool validChar = false;
+
+            if (settings.type == ASCII) {
+                validChar = validAscii(byte);
+            } else if (settings.type == UTF16LE) {
                 // Check if second byte of UTF-16 encoded string is 0x00
                 if (countedCharacters % 2 == 1)
                     validChar = byte == 0x00;
+                else
+                    validChar = validAscii(byte);
             } else if (settings.type == UTF16BE) {
                 // Check if first byte of UTF-16 encoded string is 0x00
                 if (countedCharacters % 2 == 0)
                     validChar = byte == 0x00;
+                else
+                    validChar = validAscii(byte);
             } else if (settings.type == UTF8) {
-                if ((byte & 0b1000'0000) == 0b0000'0000) {
-                    // ASCII range
-                    codePointWidth = 1;
-                    remainingCharacters = 0;
-                    validChar = true;
-                } else if ((byte & 0b1100'0000) == 0b1000'0000) {
-                    // Continuation mark
-
-                    if (remainingCharacters > 0) {
-                        remainingCharacters -= 1;
+                if (remainingCharacters > 0) {
+                    // Expect continuation byte
+                    if ((byte & 0b1100'0000) == 0b1000'0000) {
                         validChar = true;
+                        remainingCharacters -= 1;
                     } else {
-                        countedCharacters -= std::max<i64>(0, codePointWidth - (remainingCharacters + 1));
-                        codePointWidth = 0;
+                        validChar = false; // broken sequence
                         remainingCharacters = 0;
-                        validChar = false;
                     }
-                } else if ((byte & 0b1110'0000) == 0b1100'0000) {
-                    // Two bytes
-                    codePointWidth = 2;
-                    remainingCharacters = codePointWidth - 1;
-                    validChar = true;
-                } else if ((byte & 0b1111'0000) == 0b1110'0000) {
-                    // Three bytes
-                    codePointWidth = 3;
-                    remainingCharacters = codePointWidth - 1;
-                    validChar = true;
-                } else if ((byte & 0b1111'1000) == 0b1111'0000) {
-                    // Four bytes
-                    codePointWidth = 4;
-                    remainingCharacters = codePointWidth - 1;
-                    validChar = true;
                 } else {
-                    validChar = false;
+                    // New character
+                    if (byte <= 0x7F) {
+                        // ASCII
+                        validChar = validAscii(byte);
+                        remainingCharacters = 0;
+                    } else if ((byte & 0b1110'0000) == 0b1100'0000) {
+                        // 2-byte start (U+80..U+7FF)
+                        validChar = (byte >= 0xC2); // exclude overlongs (0xC0, 0xC1)
+                        remainingCharacters = 1;
+                    } else if ((byte & 0b1111'0000) == 0b1110'0000) {
+                        // 3-byte start (U+800..U+FFFF)
+                        validChar = !(byte == 0xE0 || byte == 0xED);
+                        // E0 must be followed by >= 0xA0, ED must be <= 0x9F (avoid surrogates)
+                        remainingCharacters = 2;
+                    } else if ((byte & 0b1111'1000) == 0b1111'0000) {
+                        // 4-byte start (U+10000..U+10FFFF)
+                        validChar = (byte <= 0xF4); // reject > U+10FFFF
+                        remainingCharacters = 3;
+                    } else {
+                        validChar = false;
+                        remainingCharacters = 0;
+                    }
                 }
             }
 
@@ -592,8 +600,9 @@ namespace hex::plugin::builtin {
             for (const auto &occurrence : m_foundOccurrences.get(provider))
                 m_occurrenceTree->insert({ occurrence.region.getStartAddress(), occurrence.region.getEndAddress() }, occurrence);
 
-            TaskManager::doLater([] {
+            TaskManager::doLater([this, provider] {
                 EventHighlightingChanged::post();
+                m_settingsCollapsed.get(provider) = !m_foundOccurrences->empty();
             });
         });
     }
@@ -721,7 +730,9 @@ namespace hex::plugin::builtin {
 
         ImGui::BeginDisabled(m_searchTask.isRunning());
         {
-            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang)) {
+            auto &collapsed = m_settingsCollapsed.get(provider);
+            ImGui::SetNextWindowScroll(ImVec2(0, 0));
+            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, &collapsed, collapsed ? ImVec2(0, 1) : ImVec2(0, 0))) {
                 ui::regionSelectionPicker(&m_searchSettings.region, provider, &m_searchSettings.range, false, true);
 
                 ImGui::SameLine();
@@ -1002,14 +1013,19 @@ namespace hex::plugin::builtin {
             if (m_filterTask.isRunning())
                 m_filterTask.interrupt();
 
+            static std::mutex mutex;
+            std::lock_guard lock(mutex);
+
             if (!m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data", currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
+                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data", currOccurrences.size(), [this, provider, &currOccurrences, filter = m_currFilter.get(provider)](Task &task) {
+                    std::lock_guard lock(mutex);
+
                     u64 progress = 0;
-                    std::erase_if(currOccurrences, [this, provider, &task, &progress](const auto &region) {
+                    std::erase_if(currOccurrences, [this, provider, &task, &progress, &filter](const auto &region) {
                         task.update(progress);
                         progress += 1;
 
-                        return !hex::containsIgnoreCase(this->decodeValue(provider, region), m_currFilter.get(provider));
+                        return !hex::containsIgnoreCase(this->decodeValue(provider, region), filter);
                     });
                 });
             }

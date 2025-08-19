@@ -1,4 +1,4 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 

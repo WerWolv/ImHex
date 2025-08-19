@@ -1,11 +1,10 @@
 #include <algorithm>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/data_processor.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/scaling.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/data_processor/node.hpp>
-
-#include <wolv/utils/core.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -264,13 +263,13 @@ namespace hex::plugin::builtin {
     };
 
     void registerBasicDataProcessorNodes() {
-        ContentRegistry::DataProcessorNode::add<NodeInteger>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.int");
-        ContentRegistry::DataProcessorNode::add<NodeFloat>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.float");
-        ContentRegistry::DataProcessorNode::add<NodeNullptr>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.nullptr");
-        ContentRegistry::DataProcessorNode::add<NodeBuffer>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.buffer");
-        ContentRegistry::DataProcessorNode::add<NodeString>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.string");
-        ContentRegistry::DataProcessorNode::add<NodeRGBA8>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.rgba8");
-        ContentRegistry::DataProcessorNode::add<NodeComment>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.comment");
+        ContentRegistry::DataProcessor::add<NodeInteger>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.int");
+        ContentRegistry::DataProcessor::add<NodeFloat>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.float");
+        ContentRegistry::DataProcessor::add<NodeNullptr>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.nullptr");
+        ContentRegistry::DataProcessor::add<NodeBuffer>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.buffer");
+        ContentRegistry::DataProcessor::add<NodeString>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.string");
+        ContentRegistry::DataProcessor::add<NodeRGBA8>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.rgba8");
+        ContentRegistry::DataProcessor::add<NodeComment>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.comment");
     }
 
 }

@@ -1,6 +1,6 @@
 #include <fonts/vscode_icons.hpp>
 #include <hex/plugin.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 
@@ -86,7 +86,7 @@ std::vector<const Script*> loadAllScripts() {
     void addScriptsMenu() {
         static std::vector<const Script*> scripts;
         static TaskHolder runnerTask, updaterTask;
-        hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
+        hex::ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
             static bool menuJustOpened = true;
 
             if (menu::beginMenuEx("hex.script_loader.menu.run_script"_lang, ICON_VS_LIBRARY)) {
@@ -134,8 +134,9 @@ std::vector<const Script*> loadAllScripts() {
 
 IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
-    for (auto &path : romfs::list("lang"))
-        hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
+    hex::LocalizationManager::addLanguages(romfs::get("lang/languages.json").string(), [](const std::filesystem::path &path) {
+        return romfs::get(path).string();
+    });
 
     if (initializeAllLoaders()) {
         addScriptsMenu();

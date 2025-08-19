@@ -15,6 +15,7 @@ add_imhex_plugin(
         source/ui/visualizer_drawer.cpp
         source/ui/menu_items.cpp
         source/ui/pattern_value_editor.cpp
+        source/ui/widgets.cpp
         source/ui/markdown.cpp
         source/ui/text_editor/editor.cpp
         source/ui/text_editor/highlighter.cpp

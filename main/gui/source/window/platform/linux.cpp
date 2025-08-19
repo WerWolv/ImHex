@@ -2,8 +2,7 @@
 
 #if defined(OS_LINUX)
 
-    #include <hex/api/imhex_api.hpp>
-    #include <hex/api/content_registry.hpp>
+    #include <hex/api/imhex_api/system.hpp>
     #include <hex/api/events/events_gui.hpp>
     #include <hex/api/events/events_interaction.hpp>
     #include <hex/api/events/requests_gui.hpp>
@@ -43,15 +42,6 @@ namespace hex {
             }
         }
         return false;
-    }
-
-    void nativeErrorMessage(const std::string &message) {
-        log::fatal("{}", message);
-        if (isFileInPath("zenity")) {
-            executeCmd({"zenity", "--error", "--text", message});
-        } else if (isFileInPath("notify-send")) {
-            executeCmd({"notify-send", "-i", "script-error", "Error", message});
-        } // Hopefully one of these commands is installed
     }
 
     #if defined(IMHEX_HAS_FONTCONFIG)

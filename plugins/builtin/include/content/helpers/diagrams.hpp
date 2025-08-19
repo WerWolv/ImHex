@@ -5,8 +5,9 @@
 #include <imgui.h>
 #include <implot.h>
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/helpers/scaling.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
@@ -749,7 +750,7 @@ namespace hex {
         void draw(ImVec2 size, ImPlotFlags flags) {
 
             if (!m_processing && ImPlot::BeginPlot("##distribution", size, flags | ImPlotFlags_NoMouseText)) {
-                ImPlot::SetupAxes("hex.ui.common.value"_lang, "hex.ui.common.count"_lang,
+                ImPlot::SetupAxes("hex.ui.common.count"_lang, "hex.ui.common.value"_lang,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch | ImPlotAxisFlags_Invert);
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);

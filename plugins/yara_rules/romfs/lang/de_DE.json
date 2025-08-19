@@ -1,23 +1,17 @@
 {
-    "code": "de-DE",
-    "country": "Germany",
-    "fallback": false,
-    "language": "German",
-    "translations": {
-        "hex.yara.information_section.advanced_data_info": "Erweiterte Dateninformationen",
-        "hex.yara.information_section.advanced_data_info.no_information": "Kein erweiterten Informationen gefunden",
-        "hex.yara_rules.view.yara.error": "Yara Kompilerfehler: {0}",
-        "hex.yara_rules.view.yara.header.matches": "Treffer",
-        "hex.yara_rules.view.yara.header.rules": "Regeln",
-        "hex.yara_rules.view.yara.match": "Regeln anwenden",
-        "hex.yara_rules.view.yara.matches.identifier": "Kennung",
-        "hex.yara_rules.view.yara.matches.variable": "Variable",
-        "hex.yara_rules.view.yara.matching": "Anwenden...",
-        "hex.yara_rules.view.yara.name": "Yara Regeln",
-        "hex.yara_rules.view.yara.no_rules": "Keine Yara Regeln gefunden. Platziere sie in ImHex's 'yara' Ordner",
-        "hex.yara_rules.view.yara.reload": "Neu laden",
-        "hex.yara_rules.view.yara.reset": "Zurücksetzen",
-        "hex.yara_rules.view.yara.rule_added": "Yara Regel hinzugefügt!",
-        "hex.yara_rules.view.yara.whole_data": "Gesamte Daten Übereinstimmung!"
-    }
+    "hex.yara.information_section.advanced_data_info": "Erweiterte Dateninformationen",
+    "hex.yara.information_section.advanced_data_info.no_information": "Kein erweiterten Informationen gefunden",
+    "hex.yara_rules.view.yara.error": "Yara Kompilerfehler: {0}",
+    "hex.yara_rules.view.yara.header.matches": "Treffer",
+    "hex.yara_rules.view.yara.header.rules": "Regeln",
+    "hex.yara_rules.view.yara.match": "Regeln anwenden",
+    "hex.yara_rules.view.yara.matches.identifier": "Kennung",
+    "hex.yara_rules.view.yara.matches.variable": "Variable",
+    "hex.yara_rules.view.yara.matching": "Anwenden...",
+    "hex.yara_rules.view.yara.name": "Yara Regeln",
+    "hex.yara_rules.view.yara.no_rules": "Keine Yara Regeln gefunden. Platziere sie in ImHex's 'yara' Ordner",
+    "hex.yara_rules.view.yara.reload": "Neu laden",
+    "hex.yara_rules.view.yara.reset": "Zurücksetzen",
+    "hex.yara_rules.view.yara.rule_added": "Yara Regel hinzugefügt!",
+    "hex.yara_rules.view.yara.whole_data": "Gesamte Daten Übereinstimmung!"
 }

@@ -1,11 +1,13 @@
 #include "content/views/view_achievements.hpp"
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
+#include <imgui_internal.h>
 
 #include <cmath>
 
@@ -13,7 +15,7 @@ namespace hex::plugin::builtin {
 
     ViewAchievements::ViewAchievements() : View::Floating("hex.builtin.view.achievements.name", ICON_VS_SPARKLE) {
         // Add achievements menu item to Extas menu
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.achievements.name" }, ICON_VS_SPARKLE, 2600, Shortcut::None, [&, this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.achievements.name" }, ICON_VS_SPARKLE, 2600, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
 

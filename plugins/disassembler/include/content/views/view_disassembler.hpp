@@ -9,7 +9,7 @@
 
 #include <string>
 #include <vector>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/disassemblers.hpp>
 
 namespace hex::plugin::disasm {
 
@@ -28,9 +28,10 @@ namespace hex::plugin::disasm {
         PerProvider<ui::RegionType> m_range;
         PerProvider<Region> m_regionToDisassemble;
 
-        PerProvider<std::unique_ptr<ContentRegistry::Disassembler::Architecture>> m_currArchitecture;
+        PerProvider<std::unique_ptr<ContentRegistry::Disassemblers::Architecture>> m_currArchitecture;
 
-        PerProvider<std::vector<ContentRegistry::Disassembler::Instruction>> m_disassembly;
+        PerProvider<std::vector<ContentRegistry::Disassemblers::Instruction>> m_disassembly;
+        PerProvider<bool> m_settingsCollapsed;
 
         void disassemble();
         void exportToFile();

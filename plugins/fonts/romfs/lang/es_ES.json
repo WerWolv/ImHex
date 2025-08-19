@@ -1,17 +1,11 @@
 {
-    "code": "es_ES",
-    "country": "Spain",
-    "fallback": false,
-    "language": "Spanish",
-    "translations": {
-        "hex.fonts.setting.font": "Fuente",
-        "hex.fonts.setting.font.custom_font": "",
-        "hex.fonts.setting.font.font_antialias": "",
-        "hex.fonts.setting.font.font_bold": "",
-        "hex.fonts.setting.font.font_italic": "",
-        "hex.fonts.setting.font.font_path": "Fuente",
-        "hex.fonts.setting.font.font_size": "Tamaño de Fuente",
-        "hex.fonts.setting.font.glyphs": "",
-        "hex.fonts.setting.font.load_all_unicode_chars": "Cargar todos los caracteres unicode"
-    }
+    "hex.fonts.setting.font": "Fuente",
+    "hex.fonts.setting.font.custom_font": "",
+    "hex.fonts.setting.font.font_antialias": "",
+    "hex.fonts.setting.font.font_bold": "",
+    "hex.fonts.setting.font.font_italic": "",
+    "hex.fonts.setting.font.font_path": "Fuente",
+    "hex.fonts.setting.font.font_size": "Tamaño de Fuente",
+    "hex.fonts.setting.font.glyphs": "",
+    "hex.fonts.setting.font.load_all_unicode_chars": "Cargar todos los caracteres unicode"
 }

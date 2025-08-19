@@ -5,7 +5,9 @@
 #include <imgui.h>
 
 #include <vector>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/content_registry/command_palette.hpp>
+#include <hex/helpers/utils.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -36,7 +38,7 @@ namespace hex::plugin::builtin {
         struct CommandResult {
             std::string displayResult;
             std::string matchedCommand;
-            ContentRegistry::CommandPaletteCommands::impl::ExecuteCallback executeCallback;
+            ContentRegistry::CommandPalette::impl::ExecuteCallback executeCallback;
         };
 
         bool m_commandPaletteOpen = false;

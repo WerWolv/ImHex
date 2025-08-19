@@ -34,4 +34,11 @@ namespace hex {
      */
     EVENT_DEF(RequestOpenPopup, std::string);
 
+    /**
+     * @brief Requests updating of the active post-processing shader
+     *
+     * @param vertexShader the vertex shader source code
+     * @param fragmentShader the fragment shader source code
+     */
+    EVENT_DEF(RequestSetPostProcessingShader, std::string, std::string);
 }

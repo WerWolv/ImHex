@@ -1,17 +1,11 @@
 {
-    "code": "ja-JP",
-    "country": "Japan",
-    "fallback": false,
-    "language": "Japanese",
-    "translations": {
-        "hex.fonts.setting.font": "フォント",
-        "hex.fonts.setting.font.custom_font": "",
-        "hex.fonts.setting.font.font_antialias": "",
-        "hex.fonts.setting.font.font_bold": "",
-        "hex.fonts.setting.font.font_italic": "",
-        "hex.fonts.setting.font.font_path": "フォント",
-        "hex.fonts.setting.font.font_size": "フォントサイズ",
-        "hex.fonts.setting.font.glyphs": "",
-        "hex.fonts.setting.font.load_all_unicode_chars": ""
-    }
+    "hex.fonts.setting.font": "フォント",
+    "hex.fonts.setting.font.custom_font": "",
+    "hex.fonts.setting.font.font_antialias": "",
+    "hex.fonts.setting.font.font_bold": "",
+    "hex.fonts.setting.font.font_italic": "",
+    "hex.fonts.setting.font.font_path": "フォント",
+    "hex.fonts.setting.font.font_size": "フォントサイズ",
+    "hex.fonts.setting.font.glyphs": "",
+    "hex.fonts.setting.font.load_all_unicode_chars": ""
 }

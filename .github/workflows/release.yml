@@ -186,17 +186,17 @@ jobs:
         run: |
           tagname=${GITHUB_REF#refs/tags/}
           version=${tagname#v}
-          wget https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex_${version}_amd64.snap
-          wget https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex_${version}_arm64.snap
+          wget https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-x86_64.snap
+          wget https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-arm64.snap
 
       - name: ⬆️ Publish x86_64 Snap package
         uses: snapcore/action-publish@v1
         with:
           store_login: ${{ secrets.SNAP_STORE_LOGIN }}
-          snap: imhex_${{ env.IMHEX_VERSION }}_amd64.snap
+          snap: imhex-${{ env.IMHEX_VERSION }}-x86_64.snap
 
       - name: ⬆️ Publish arm64 Snap package
         uses: snapcore/action-publish@v1
         with:
           store_login: ${{ secrets.SNAP_STORE_LOGIN }}
-          snap: imhex_${{ env.IMHEX_VERSION }}_arm64.snap
+          snap: imhex-${{ env.IMHEX_VERSION }}-arm64.snap

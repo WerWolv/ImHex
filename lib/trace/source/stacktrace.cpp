@@ -1,4 +1,5 @@
 #include <iostream>
+#include <mutex>
 #include <hex/trace/stacktrace.hpp>
 
 #include <llvm/Demangle/Demangle.h>
@@ -19,6 +20,8 @@ namespace hex::trace {
     }
 
 }
+
+static std::mutex s_traceMutex;
 
 #if defined(HEX_HAS_STD_STACKTRACE) && __has_include(<stacktrace>)
 
@@ -45,6 +48,8 @@ namespace hex::trace {
         }
 
         StackTraceResult getStackTrace() {
+            std::lock_guard lock(s_traceMutex);
+
             StackTrace result;
 
             auto stackTrace = std::stacktrace::current();
@@ -99,6 +104,8 @@ namespace hex::trace {
         }
 
         StackTraceResult getStackTrace() {
+            std::lock_guard lock(s_traceMutex);
+
             std::vector<StackFrame> stackTrace;
 
             HANDLE process = GetCurrentProcess();
@@ -211,6 +218,8 @@ namespace hex::trace {
             }
 
             StackTraceResult getStackTrace() {
+                std::lock_guard lock(s_traceMutex);
+
                 static std::vector<StackFrame> result;
 
                 std::array<void*, 128> addresses = {};
@@ -247,6 +256,8 @@ namespace hex::trace {
 
 
             void initialize() {
+                std::lock_guard lock(s_traceMutex);
+
                 if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value()) {
                     static std::string path = executablePath->string();
                     s_backtraceState = backtrace_create_state(path.c_str(), 1, [](void *, const char *, int) { }, nullptr);
@@ -254,6 +265,8 @@ namespace hex::trace {
             }
 
             StackTraceResult getStackTrace() {
+                std::lock_guard lock(s_traceMutex);
+
                 static std::vector<StackFrame> result;
 
                 if (s_backtraceState != nullptr) {
@@ -283,6 +296,8 @@ namespace hex::trace {
 
         void initialize() { }
         StackTraceResult getStackTrace() {
+            std::lock_guard lock(s_traceMutex);
+
             return StackTraceResult {
                 {StackFrame { "??", "Stacktrace collecting not available!", 0 }},
                 "none"

@@ -1,6 +1,7 @@
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
 
@@ -42,8 +43,8 @@ namespace hex::init {
     }
 
     void initializationFinished() {
-        ContentRegistry::Settings::impl::store();
         ContentRegistry::Settings::impl::load();
+        ContentRegistry::Settings::impl::store();
 
         EventImHexStartupFinished::post();
 

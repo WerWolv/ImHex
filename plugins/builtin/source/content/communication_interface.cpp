@@ -1,4 +1,5 @@
-#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/content_registry/communication_interface.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 
 #include <nlohmann/json.hpp>

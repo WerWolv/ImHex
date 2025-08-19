@@ -4632,7 +4632,7 @@ CIMGUI_API const char* igImParseFormatTrimDecorations(const char* format,char* b
 CIMGUI_API void igImParseFormatSanitizeForPrinting(const char* fmt_in,char* fmt_out,size_t fmt_out_size);
 CIMGUI_API const char* igImParseFormatSanitizeForScanning(const char* fmt_in,char* fmt_out,size_t fmt_out_size);
 CIMGUI_API int igImParseFormatPrecision(const char* format,int default_value);
-CIMGUI_API const char* igImTextCharToUtf8(char out_buf[5],unsigned int c);
+CIMGUI_API int igImTextCharToUtf8(char out_buf[5],unsigned int c);
 CIMGUI_API int igImTextStrToUtf8(char* out_buf,int out_buf_size,const ImWchar* in_text,const ImWchar* in_text_end);
 CIMGUI_API int igImTextCharFromUtf8(unsigned int* out_char,const char* in_text,const char* in_text_end);
 CIMGUI_API int igImTextStrFromUtf8(ImWchar* out_buf,int out_buf_size,const char* in_text,const char* in_text_end,const char** in_remaining);
@@ -5009,7 +5009,7 @@ CIMGUI_API void igSetLastItemData(ImGuiID item_id,ImGuiItemFlags item_flags,ImGu
 CIMGUI_API void igCalcItemSize(ImVec2 *pOut,ImVec2 size,float default_w,float default_h);
 CIMGUI_API float igCalcWrapWidthForPos(const ImVec2 pos,float wrap_pos_x);
 CIMGUI_API void igPushMultiItemsWidths(int components,float width_full);
-CIMGUI_API void igShrinkWidths(ImGuiShrinkWidthItem* items,int count,float width_excess);
+CIMGUI_API void igShrinkWidths(ImGuiShrinkWidthItem* items,int count,float width_excess,float width_min);
 CIMGUI_API const ImGuiStyleVarInfo* igGetStyleVarInfo(ImGuiStyleVar idx);
 CIMGUI_API void igBeginDisabledOverrideReenable(void);
 CIMGUI_API void igEndDisabledOverrideReenable(void);

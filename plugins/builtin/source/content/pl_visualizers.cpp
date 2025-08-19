@@ -1,5 +1,4 @@
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 
 #include <pl/core/evaluator.hpp>
 

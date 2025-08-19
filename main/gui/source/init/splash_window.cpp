@@ -1,13 +1,12 @@
 #include "window.hpp"
 #include "init/splash_window.hpp"
 
-#include <hex/api/imhex_api.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/events/requests_lifecycle.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
-#include <fmt/chrono.h>
 
 #include <romfs/romfs.hpp>
 
@@ -479,7 +478,7 @@ namespace hex::init {
         // Create the splash screen window
         m_window = glfwCreateWindow(WindowSize.x, WindowSize.y, "Starting ImHex...", nullptr, nullptr);
         if (m_window == nullptr) {
-            hex::nativeErrorMessage(fmt::format(
+            hex::showErrorMessageBox(fmt::format(
                 "Failed to create GLFW window: [{}] {}.\n"
                 "You may not have a renderer available.\n"
                 "The most common cause of this is using a virtual machine\n"

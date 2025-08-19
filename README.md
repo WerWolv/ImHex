@@ -336,12 +336,14 @@ To use ImHex, the following minimal system requirements need to be met.
     - RHEL/AlmaLinux
     - Arch Linux
     - Basically any other distro will work as well when compiling ImHex from sources.
+  - **FreeBSD**: Tested on FreeBSD 14.3
+    - Other versions will most likely work too but are untested
 - **CPU**: Officially supported are x86, AMD64 and ARM64, though any Little Endian CPU should work.
 - **GPU**: OpenGL 3.0 or higher 
   - Integrated Intel HD iGPUs are supported, however certain drivers are known to cause various graphical artifacts, especially on Windows. Use at your own risk.
   - In case you don't have a GPU available, there are software rendered releases available for Windows and macOS
-- **RAM**: ~120MiB, more is required for more complex analysis
-- **Storage**: 150MiB
+- **RAM**: ~50MiB, more is required for more complex analysis
+- **Storage**: ~100MiB
 
 ## Installing
 

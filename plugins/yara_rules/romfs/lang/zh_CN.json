@@ -1,23 +1,17 @@
 {
-    "code": "zh-CN",
-    "country": "China",
-    "fallback": false,
-    "language": "Chinese (Simplified)",
-    "translations": {
-        "hex.yara.information_section.advanced_data_info": "高级数据信息",
-        "hex.yara.information_section.advanced_data_info.no_information": "没有找到更多信息",
-        "hex.yara_rules.view.yara.error": "Yara 编译器错误: {0}",
-        "hex.yara_rules.view.yara.header.matches": "匹配",
-        "hex.yara_rules.view.yara.header.rules": "规则",
-        "hex.yara_rules.view.yara.match": "匹配规则",
-        "hex.yara_rules.view.yara.matches.identifier": "标识符",
-        "hex.yara_rules.view.yara.matches.variable": "变量",
-        "hex.yara_rules.view.yara.matching": "匹配中……",
-        "hex.yara_rules.view.yara.name": "Yara 规则",
-        "hex.yara_rules.view.yara.no_rules": "没有找到 Yara 规则。请将规则放到 ImHex 的 'yara' 目录下。",
-        "hex.yara_rules.view.yara.reload": "重新加载",
-        "hex.yara_rules.view.yara.reset": "重置",
-        "hex.yara_rules.view.yara.rule_added": "Yara 规则已添加！",
-        "hex.yara_rules.view.yara.whole_data": "全文件匹配！"
-    }
+    "hex.yara.information_section.advanced_data_info": "高级数据信息",
+    "hex.yara.information_section.advanced_data_info.no_information": "没有找到更多信息",
+    "hex.yara_rules.view.yara.error": "Yara 编译器错误: {0}",
+    "hex.yara_rules.view.yara.header.matches": "匹配",
+    "hex.yara_rules.view.yara.header.rules": "规则",
+    "hex.yara_rules.view.yara.match": "匹配规则",
+    "hex.yara_rules.view.yara.matches.identifier": "标识符",
+    "hex.yara_rules.view.yara.matches.variable": "变量",
+    "hex.yara_rules.view.yara.matching": "匹配中……",
+    "hex.yara_rules.view.yara.name": "Yara 规则",
+    "hex.yara_rules.view.yara.no_rules": "没有找到 Yara 规则。请将规则放到 ImHex 的 'yara' 目录下。",
+    "hex.yara_rules.view.yara.reload": "重新加载",
+    "hex.yara_rules.view.yara.reset": "重置",
+    "hex.yara_rules.view.yara.rule_added": "Yara 规则已添加！",
+    "hex.yara_rules.view.yara.whole_data": "全文件匹配！"
 }

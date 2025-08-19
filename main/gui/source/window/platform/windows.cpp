@@ -4,7 +4,8 @@
 
     #include "messaging.hpp"
 
-    #include <hex/api/content_registry.hpp>
+    #include <hex/api/imhex_api/system.hpp>
+    #include <hex/api/content_registry/settings.hpp>
     #include <hex/api/theme_manager.hpp>
 
     #include <hex/helpers/utils.hpp>
@@ -54,11 +55,6 @@ namespace hex {
     static float s_titleBarHeight;
     static Microsoft::WRL::ComPtr<ITaskbarList4> s_taskbarList;
     static bool s_useLayeredWindow = true;
-
-    void nativeErrorMessage(const std::string &message) {
-        log::fatal("{}", message);
-        MessageBoxA(nullptr, message.c_str(), "Error", MB_ICONERROR | MB_OK);
-    }
 
     // Custom Window procedure for receiving OS events
     static LRESULT commonWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -266,6 +262,9 @@ namespace hex {
                     RegionTop * (cursor.y < (window.top + border.y)) |
                     RegionBottom * (cursor.y >= (window.bottom - border.y));
 
+                // If the mouse is hovering over any button, disable resize controls.
+                // Without this, the window buttons and menu bar would not be clickable
+                // correctly at the edges of the window.
                 if (result != 0 && (ImGui::IsAnyItemHovered())) {
                     break;
                 }

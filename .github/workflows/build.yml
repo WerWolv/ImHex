@@ -1051,7 +1051,7 @@ jobs:
             --enable-network -N -v                               \
             --enable-plugin=ccache                               \
             --plugin-option=ccache:compress=True                 \
-            --plugin-option=ccache:max_cache_size=1G             \
+            --plugin-option=ccache:max_cache_size=200M           \
             --plugin-option=ccache:dir=$GITHUB_WORKSPACE/.ccache \
             --spec $GITHUB_WORKSPACE/imhex.spec                  \
             --sources $GITHUB_WORKSPACE                          \
@@ -1112,13 +1112,19 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+          export IMHEX_VERSION=$(cat VERSION)
+          echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
+          if echo $IMHEX_VERSION | grep -q "WIP"; then
+            echo "SNAP_GRADE=devel" >> $GITHUB_ENV
+          else
+            echo "SNAP_GRADE=stable" >> $GITHUB_ENV
+          fi
           echo "CCACHE=ccache" >> $GITHUB_ENV
 
       - name: 📜 Move snap directory to root
         run: |
           mkdir -p ./snap
-          envsubst '${IMHEX_VERSION},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
+          envsubst '${IMHEX_VERSION},${SNAP_GRADE},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1

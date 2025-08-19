@@ -1,22 +1,17 @@
 {
-    "code": "ru-RU",
-    "country": "Russia",
-    "language": "Russian",
-    "translations": {
-        "hex.diffing.algorithm.simple.name": "Простой побайтовый алгоритм",
-        "hex.diffing.algorithm.simple.description": "Наивное побайтовое сравнение O(N).\nМожет определять только модификации байтов и вставки/удаления в конце данных.",
-        "hex.diffing.algorithm.myers.name": "Алгоритм Майерса с битовым вектором",
-        "hex.diffing.algorithm.myers.description": "Умный алгоритм сравнения O(N*M).\nМожет определять изменения, вставки и удаления в любом месте данных",
-        "hex.diffing.algorithm.myers.settings.window_size": "Размер окна",
-        "hex.diffing.view.diff.name": "Сравнение",
-        "hex.diffing.view.diff.added": "Добавлено",
-        "hex.diffing.view.diff.modified": "Изменено",
-        "hex.diffing.view.diff.provider_a": "Источник A",
-        "hex.diffing.view.diff.provider_b": "Источник B",
-        "hex.diffing.view.diff.removed": "Удалено",
-        "hex.diffing.view.diff.algorithm": "Алгоритм сравнения",
-        "hex.diffing.view.diff.settings": "Настройки",
-        "hex.diffing.view.diff.settings.no_settings": "Нет доступных настроек",
-        "hex.diffing.view.diff.task.diffing": "Сравнение данных..."
-    }
+    "hex.diffing.algorithm.simple.name": "Простой побайтовый алгоритм",
+    "hex.diffing.algorithm.simple.description": "Наивное побайтовое сравнение O(N).\nМожет определять только модификации байтов и вставки/удаления в конце данных.",
+    "hex.diffing.algorithm.myers.name": "Алгоритм Майерса с битовым вектором",
+    "hex.diffing.algorithm.myers.description": "Умный алгоритм сравнения O(N*M).\nМожет определять изменения, вставки и удаления в любом месте данных",
+    "hex.diffing.algorithm.myers.settings.window_size": "Размер окна",
+    "hex.diffing.view.diff.name": "Сравнение",
+    "hex.diffing.view.diff.added": "Добавлено",
+    "hex.diffing.view.diff.modified": "Изменено",
+    "hex.diffing.view.diff.provider_a": "Источник A",
+    "hex.diffing.view.diff.provider_b": "Источник B",
+    "hex.diffing.view.diff.removed": "Удалено",
+    "hex.diffing.view.diff.algorithm": "Алгоритм сравнения",
+    "hex.diffing.view.diff.settings": "Настройки",
+    "hex.diffing.view.diff.settings.no_settings": "Нет доступных настроек",
+    "hex.diffing.view.diff.task.diffing": "Сравнение данных..."
 }

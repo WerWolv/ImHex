@@ -1,18 +1,12 @@
 {
-    "code": "zh-TW",
-    "country": "Taiwan",
-    "fallback": false,
-    "language": "Chinese (Traditional)",
-    "translations": {
-        "hex.fonts.setting.font": "字體",
-        "hex.fonts.setting.font.custom_font": "",
-        "hex.fonts.setting.font.custom_font_info": "",
-        "hex.fonts.setting.font.font_antialias": "",
-        "hex.fonts.setting.font.font_bold": "",
-        "hex.fonts.setting.font.font_italic": "",
-        "hex.fonts.setting.font.font_path": "字體",
-        "hex.fonts.setting.font.font_size": "字體大小",
-        "hex.fonts.setting.font.glyphs": "",
-        "hex.fonts.setting.font.load_all_unicode_chars": "載入所有 unicode 字元"
-    }
+    "hex.fonts.setting.font": "字體",
+    "hex.fonts.setting.font.custom_font": "",
+    "hex.fonts.setting.font.custom_font_info": "",
+    "hex.fonts.setting.font.font_antialias": "",
+    "hex.fonts.setting.font.font_bold": "",
+    "hex.fonts.setting.font.font_italic": "",
+    "hex.fonts.setting.font.font_path": "字體",
+    "hex.fonts.setting.font.font_size": "字體大小",
+    "hex.fonts.setting.font.glyphs": "",
+    "hex.fonts.setting.font.load_all_unicode_chars": "載入所有 unicode 字元"
 }

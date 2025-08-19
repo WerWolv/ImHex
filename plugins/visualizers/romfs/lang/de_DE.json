@@ -1,21 +1,15 @@
 {
-    "code": "de-DE",
-    "country": "Germany",
-    "fallback": false,
-    "language": "German",
-    "translations": {
-        "hex.visualizers.pl_visualizer.3d.ambient_brightness": "Umgebungslicht",
-        "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "Diffuses Licht",
-        "hex.visualizers.pl_visualizer.3d.light_color": "Lichtfarbe",
-        "hex.visualizers.pl_visualizer.3d.light_position": "Lichtposition",
-        "hex.visualizers.pl_visualizer.3d.more_settings": "Mehr Einstellungen",
-        "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "Objektreflexion",
-        "hex.visualizers.pl_visualizer.3d.specular_brightness": "Spiegelndes Licht",
-        "hex.visualizers.pl_visualizer.3d.texture_file": "Texturdatei",
-        "hex.visualizers.pl_visualizer.coordinates.latitude": "Breitengrade",
-        "hex.visualizers.pl_visualizer.coordinates.longitude": "Längengrad",
-        "hex.visualizers.pl_visualizer.coordinates.query": "Adresse finden",
-        "hex.visualizers.pl_visualizer.coordinates.querying": "Adresse abfragen...",
-        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "Keine Adresse gefunden"
-    }
+    "hex.visualizers.pl_visualizer.3d.ambient_brightness": "Umgebungslicht",
+    "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "Diffuses Licht",
+    "hex.visualizers.pl_visualizer.3d.light_color": "Lichtfarbe",
+    "hex.visualizers.pl_visualizer.3d.light_position": "Lichtposition",
+    "hex.visualizers.pl_visualizer.3d.more_settings": "Mehr Einstellungen",
+    "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "Objektreflexion",
+    "hex.visualizers.pl_visualizer.3d.specular_brightness": "Spiegelndes Licht",
+    "hex.visualizers.pl_visualizer.3d.texture_file": "Texturdatei",
+    "hex.visualizers.pl_visualizer.coordinates.latitude": "Breitengrade",
+    "hex.visualizers.pl_visualizer.coordinates.longitude": "Längengrad",
+    "hex.visualizers.pl_visualizer.coordinates.query": "Adresse finden",
+    "hex.visualizers.pl_visualizer.coordinates.querying": "Adresse abfragen...",
+    "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "Keine Adresse gefunden"
 }

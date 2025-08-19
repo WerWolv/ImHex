@@ -1,0 +1,92 @@
+[
+    {
+        "name": "English",
+        "code": "en-US",
+        "native_name": "English",
+        "path": "lang/en_US.json"
+    },
+    {
+        "name": "Spanish",
+        "code": "es-ES",
+        "native_name": "Español",
+        "path": "lang/es_ES.json",
+        "fallback": "en-US"
+    },
+    {
+        "name": "French",
+        "code": "fr-FR",
+        "native_name": "Français",
+        "path": "lang/fr_FR.json",
+        "fallback": "en-US"
+    },
+    {
+        "name": "German",
+        "code": "de-DE",
+        "native_name": "Deutsch",
+        "path": "lang/de_DE.json",
+        "fallback": "en-US"
+    },
+    {
+        "name": "Italian",
+        "code": "it-IT",
+        "native_name": "Italiano",
+        "path": "lang/it_IT.json",
+        "fallback": "en-US"
+    },
+    {
+        "name": "Hungarian",
+        "code": "hu-HU",
+        "native_name": "Magyar",
+        "path": "lang/hu_HU.json",
+        "fallback": "en-US"
+    },
+    {
+        "name": "Portuguese",
+        "code": "pt-BR",
+        "native_name": "Português",
+        "path": "lang/pt_BR.json",
+        "fallback": "en-US"
+    },
+    {
+        "name": "Russian",
+        "code": "ru-RU",
+        "native_name": "Русский",
+        "path": "lang/ru_RU.json",
+        "fallback": "en-US"
+    },
+    {
+        "name": "Polish",
+        "code": "pl-PL",
+        "native_name": "Polski",
+        "path": "lang/pl_PL.json",
+        "fallback": "en-US"
+    },
+    {
+        "name": "Chinese (Simplified)",
+        "code": "zh-CN",
+        "native_name": "简体中文",
+        "path": "lang/zh_CN.json",
+        "fallback": "en-US"
+    },
+    {
+        "name": "Chinese (Traditional)",
+        "code": "zh-TW",
+        "native_name": "繁體中文",
+        "path": "lang/zh_TW.json",
+        "fallback": "zh-CN"
+    },
+    {
+        "name": "Japanese",
+        "code": "ja-JP",
+        "native_name": "日本語",
+        "path": "lang/ja_JP.json",
+        "fallback": "en-US"
+    },
+    {
+        "name": "Korean",
+        "code": "ko-KR",
+        "native_name": "한국어",
+        "path": "lang/ko_KR.json",
+        "fallback": "en-US"
+    }
+]

@@ -1,21 +1,15 @@
 {
-    "code": "ko-KR",
-    "country": "Korea",
-    "fallback": false,
-    "language": "Korean",
-    "translations": {
-        "hex.visualizers.pl_visualizer.3d.ambient_brightness": "주변 밝기",
-        "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "확산 밝기",
-        "hex.visualizers.pl_visualizer.3d.light_color": "조명 색상",
-        "hex.visualizers.pl_visualizer.3d.light_position": "조명 위치",
-        "hex.visualizers.pl_visualizer.3d.more_settings": "설정 더 보기",
-        "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "개체 반사도",
-        "hex.visualizers.pl_visualizer.3d.specular_brightness": "반사 밝기",
-        "hex.visualizers.pl_visualizer.3d.texture_file": "텍스처 파일 경로",
-        "hex.visualizers.pl_visualizer.coordinates.latitude": "위도",
-        "hex.visualizers.pl_visualizer.coordinates.longitude": "경도",
-        "hex.visualizers.pl_visualizer.coordinates.query": "주소 찾기",
-        "hex.visualizers.pl_visualizer.coordinates.querying": "주소 쿼리 중...",
-        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "찾은 주소가 없습니다"
-    }
+    "hex.visualizers.pl_visualizer.3d.ambient_brightness": "주변 밝기",
+    "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "확산 밝기",
+    "hex.visualizers.pl_visualizer.3d.light_color": "조명 색상",
+    "hex.visualizers.pl_visualizer.3d.light_position": "조명 위치",
+    "hex.visualizers.pl_visualizer.3d.more_settings": "설정 더 보기",
+    "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "개체 반사도",
+    "hex.visualizers.pl_visualizer.3d.specular_brightness": "반사 밝기",
+    "hex.visualizers.pl_visualizer.3d.texture_file": "텍스처 파일 경로",
+    "hex.visualizers.pl_visualizer.coordinates.latitude": "위도",
+    "hex.visualizers.pl_visualizer.coordinates.longitude": "경도",
+    "hex.visualizers.pl_visualizer.coordinates.query": "주소 찾기",
+    "hex.visualizers.pl_visualizer.coordinates.querying": "주소 쿼리 중...",
+    "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "찾은 주소가 없습니다"
 }

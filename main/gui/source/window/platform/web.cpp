@@ -5,6 +5,7 @@
 #include <emscripten.h>
 #include <emscripten/html5.h>
 
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/events_interaction.hpp>
 #include <hex/api/events/requests_gui.hpp>
@@ -75,13 +76,6 @@ extern "C" void enterTouchMode() {
 }
 
 namespace hex {
-
-    void nativeErrorMessage(const std::string &message) {
-        log::fatal("{}", message);
-        EM_ASM({
-            alert(UTF8ToString($0));
-        }, message.c_str());
-    }
 
     void Window::configureGLFW() {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);

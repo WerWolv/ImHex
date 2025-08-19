@@ -1,21 +1,15 @@
 {
-    "code": "zh-TW",
-    "country": "Taiwan",
-    "fallback": false,
-    "language": "Chinese (Traditional)",
-    "translations": {
-        "hex.visualizers.pl_visualizer.3d.ambient_brightness": "",
-        "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "",
-        "hex.visualizers.pl_visualizer.3d.light_color": "",
-        "hex.visualizers.pl_visualizer.3d.light_position": "",
-        "hex.visualizers.pl_visualizer.3d.more_settings": "",
-        "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "",
-        "hex.visualizers.pl_visualizer.3d.specular_brightness": "",
-        "hex.visualizers.pl_visualizer.3d.texture_file": "",
-        "hex.visualizers.pl_visualizer.coordinates.latitude": "緯度",
-        "hex.visualizers.pl_visualizer.coordinates.longitude": "經度",
-        "hex.visualizers.pl_visualizer.coordinates.query": "查詢地址",
-        "hex.visualizers.pl_visualizer.coordinates.querying": "正在查詢地址...",
-        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "找不到地址"
-    }
+    "hex.visualizers.pl_visualizer.3d.ambient_brightness": "",
+    "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "",
+    "hex.visualizers.pl_visualizer.3d.light_color": "",
+    "hex.visualizers.pl_visualizer.3d.light_position": "",
+    "hex.visualizers.pl_visualizer.3d.more_settings": "",
+    "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "",
+    "hex.visualizers.pl_visualizer.3d.specular_brightness": "",
+    "hex.visualizers.pl_visualizer.3d.texture_file": "",
+    "hex.visualizers.pl_visualizer.coordinates.latitude": "緯度",
+    "hex.visualizers.pl_visualizer.coordinates.longitude": "經度",
+    "hex.visualizers.pl_visualizer.coordinates.query": "查詢地址",
+    "hex.visualizers.pl_visualizer.coordinates.querying": "正在查詢地址...",
+    "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "找不到地址"
 }

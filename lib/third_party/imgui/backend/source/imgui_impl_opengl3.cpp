@@ -441,6 +441,10 @@ void    ImGui_ImplOpenGL3_Shutdown()
     io.BackendRendererUserData = nullptr;
     io.BackendFlags &= ~(ImGuiBackendFlags_RendererHasVtxOffset | ImGuiBackendFlags_RendererHasTextures | ImGuiBackendFlags_RendererHasViewports);
     IM_DELETE(bd);
+
+#ifdef IMGUI_IMPL_OPENGL_LOADER_IMGL3W
+    imgl3wShutdown();
+#endif
 }
 
 void    ImGui_ImplOpenGL3_NewFrame()
@@ -756,6 +760,17 @@ static void ImGui_ImplOpenGL3_DestroyTexture(ImTextureData* tex)
 
 void ImGui_ImplOpenGL3_UpdateTexture(ImTextureData* tex)
 {
+    // FIXME: Consider backing up and restoring
+    if (tex->Status == ImTextureStatus_WantCreate || tex->Status == ImTextureStatus_WantUpdates)
+    {
+#ifdef GL_UNPACK_ROW_LENGTH // Not on WebGL/ES
+        GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
+#endif
+#ifdef GL_UNPACK_ALIGNMENT
+        GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+#endif
+    }
+
     if (tex->Status == ImTextureStatus_WantCreate)
     {
         // Create and upload new texture to graphics system

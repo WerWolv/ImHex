@@ -1,7 +1,7 @@
 #include <hex/plugin.hpp>
 
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/views.hpp>
 
 #include <hex/helpers/logger.hpp>
 
@@ -20,8 +20,9 @@ using namespace hex::plugin::hashes;
 
 IMHEX_PLUGIN_SETUP("Hashes", "WerWolv", "Hashing algorithms") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
-    for (auto &path : romfs::list("lang"))
-        hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
+    hex::LocalizationManager::addLanguages(romfs::get("lang/languages.json").string(), [](const std::filesystem::path &path) {
+        return romfs::get(path).string();
+    });
 
     registerHashes();
     ContentRegistry::Views::add<ViewHashes>();

@@ -1,41 +1,52 @@
 #include "content/views/view_command_palette.hpp"
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/content_registry/command_palette.hpp>
 #include <wolv/utils/guards.hpp>
+
 #include <hex/api/events/requests_gui.hpp>
-#include <hex/api/events/events_interaction.hpp>
+#include <hex/api/events/requests_interaction.hpp>
 
 #include "imstb_textedit.h"
+#include <imgui_internal.h>
+#include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::builtin {
 
     ViewCommandPalette::ViewCommandPalette() : View::Special("hex.builtin.view.command_palette.name") {
         // Add global shortcut to open the command palette
-        ShortcutManager::addGlobalShortcut(CTRLCMD + SHIFT + Keys::P, "hex.builtin.view.command_palette.name", [this] {
-            RequestOpenPopup::post("hex.builtin.view.command_palette.name"_lang);
-            m_commandPaletteOpen = true;
-            m_justOpened         = true;
+        ShortcutManager::addGlobalShortcut(CTRLCMD + SHIFT + Keys::P, "hex.builtin.view.command_palette.name", [] {
+            RequestOpenCommandPalette::post();
         });
 
-        EventSearchBoxClicked::subscribe([this](ImGuiMouseButton button) {
-            if (button == ImGuiMouseButton_Left) {
-                RequestOpenPopup::post("hex.builtin.view.command_palette.name"_lang);
-                m_commandPaletteOpen = true;
-                m_justOpened         = true;
-            }
+        RequestOpenCommandPalette::subscribe([this]() {
+            m_commandPaletteOpen = true;
+            m_justOpened         = true;
+            ContentRegistry::CommandPalette::impl::getDisplayedContent().reset();
         });
     }
 
     void ViewCommandPalette::drawAlwaysVisibleContent() {
+        auto &displayedContent = ContentRegistry::CommandPalette::impl::getDisplayedContent();
+
+        if (m_justOpened) {
+            ImGui::OpenPopup("hex.builtin.view.command_palette.name"_lang);
+        }
+
         // If the command palette is hidden, don't draw it
         if (!m_commandPaletteOpen) return;
 
-        auto windowPos  = ImHexApi::System::getMainWindowPosition();
-        auto windowSize = ImHexApi::System::getMainWindowSize();
+        const auto windowPos  = ImHexApi::System::getMainWindowPosition();
+        const auto windowSize = ImHexApi::System::getMainWindowSize();
 
         ImGui::SetNextWindowPos(ImVec2(windowPos.x + windowSize.x * 0.5F, windowPos.y), ImGuiCond_Always, ImVec2(0.5F, 0.0F));
-        ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-        if (ImGui::BeginPopup("hex.builtin.view.command_palette.name"_lang)) {
+        if (!displayedContent.has_value())
+            ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
+        else
+            ImGui::SetNextWindowSizeConstraints(ImVec2(this->getMinSize().x, 20_scaled), ImVec2(FLT_MAX, FLT_MAX));
+
+        const bool hasSearchBox = !displayedContent.has_value() || displayedContent->showSearchBox;
+
+        if (ImGui::BeginPopup("hex.builtin.view.command_palette.name"_lang, !hasSearchBox ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
             ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
             ImGui::BringWindowToFocusFront(ImGui::GetCurrentWindowRead());
 
@@ -43,107 +54,120 @@ namespace hex::plugin::builtin {
             if (ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
+            if (hasSearchBox) {
+                const auto buttonColor = [](float alpha) {
+                    return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_ModalWindowDimBg) * ImVec4(1, 1, 1, alpha)));
+                };
 
-            const auto buttonColor = [](float alpha) {
-                return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_ModalWindowDimBg) * ImVec4(1, 1, 1, alpha)));
-            };
+                // Draw the main input text box
+                ImGui::PushItemWidth(-1);
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, buttonColor(0.5F));
+                ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, buttonColor(0.7F));
+                ImGui::PushStyleColor(ImGuiCol_FrameBgActive, buttonColor(0.9F));
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0_scaled);
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4_scaled);
 
-            // Draw the main input text box
-            ImGui::PushItemWidth(-1);
-            ImGui::PushStyleColor(ImGuiCol_FrameBg, buttonColor(0.5F));
-            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, buttonColor(0.7F));
-            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, buttonColor(0.9F));
-            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0_scaled);
-            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4_scaled);
-
-            if (ImGui::InputText("##command_input", m_commandBuffer)) {
-                m_lastResults = this->getCommandResults(m_commandBuffer);
-            }
-            ImGui::SetItemKeyOwner(ImGuiKey_LeftAlt, ImGuiInputFlags_CondActive);
-
-            ImGui::PopStyleVar(2);
-            ImGui::PopStyleColor(3);
-            ImGui::PopItemWidth();
-            ImGui::SetItemDefaultFocus();
-
-            if (m_moveCursorToEnd) {
-                auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
-                if (textState != nullptr) {
-                    auto stb = reinterpret_cast<STB_TexteditState*>(textState->Stb);
-                    stb->cursor =
-                    stb->select_start =
-                    stb->select_end = m_commandBuffer.size();
+                if (ImGui::InputText("##command_input", m_commandBuffer)) {
+                    m_lastResults = this->getCommandResults(m_commandBuffer);
                 }
-                m_moveCursorToEnd = false;
-            }
+                ImGui::SetItemKeyOwner(ImGuiKey_LeftAlt, ImGuiInputFlags_CondActive);
 
-            // Handle giving back focus to the input text box
-            if (m_focusInputTextBox) {
-                ImGui::SetKeyboardFocusHere(-1);
-                ImGui::ActivateItemByID(ImGui::GetID("##command_input"));
+                ImGui::PopStyleVar(2);
+                ImGui::PopStyleColor(3);
+                ImGui::PopItemWidth();
+                ImGui::SetItemDefaultFocus();
 
-                m_focusInputTextBox = false;
-                m_moveCursorToEnd = true;
-            }
+                if (m_moveCursorToEnd) {
+                    auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
+                    if (textState != nullptr) {
+                        auto stb = reinterpret_cast<STB_TexteditState*>(textState->Stb);
+                        stb->cursor =
+                        stb->select_start =
+                        stb->select_end = m_commandBuffer.size();
+                    }
+                    m_moveCursorToEnd = false;
+                }
 
-            // Execute the currently selected command when pressing enter
-            if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter, false) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false))) {
-                bool closePalette = true;
-                if (!m_lastResults.empty()) {
-                    auto &[displayResult, matchedCommand, callback] = m_lastResults.front();
+                // Handle giving back focus to the input text box
+                if (m_focusInputTextBox) {
+                    ImGui::SetKeyboardFocusHere(-1);
+                    ImGui::ActivateItemByID(ImGui::GetID("##command_input"));
 
-                    if (auto result = callback(matchedCommand); result.has_value()) {
-                        m_commandBuffer = result.value();
-                        closePalette = false;
-                        m_focusInputTextBox = true;
+                    m_focusInputTextBox = false;
+                    m_moveCursorToEnd = true;
+                }
+
+                // Execute the currently selected command when pressing enter
+                if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter, false) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false))) {
+                    bool closePalette = true;
+                    if (!m_lastResults.empty()) {
+                        auto &[displayResult, matchedCommand, callback] = m_lastResults.front();
+
+                        if (auto result = callback(matchedCommand); result.has_value()) {
+                            m_commandBuffer = result.value();
+                            closePalette = false;
+                            m_focusInputTextBox = true;
+                        }
+                    }
+
+                    if (closePalette) {
+                        ImGui::CloseCurrentPopup();
                     }
                 }
 
-                if (closePalette) {
-                    ImGui::CloseCurrentPopup();
+                // Focus the input text box when the popup is opened
+                if (m_justOpened) {
+                    focusInputTextBox();
+                    m_lastResults = this->getCommandResults("");
+                    m_commandBuffer.clear();
                 }
+
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
+
+                ImGui::Separator();
             }
 
-            // Focus the input text box when the popup is opened
-            if (m_justOpened) {
-                focusInputTextBox();
-                m_lastResults = this->getCommandResults("");
-                m_commandBuffer.clear();
-                m_justOpened = false;
-            }
-
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
-
-            ImGui::Separator();
+            m_justOpened = false;
 
             // Draw the results
-            if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-                u32 id = 1;
-                for (const auto &[displayResult, matchedCommand, callback] : m_lastResults) {
-                    ImGui::PushID(id);
-                    ImGui::PushItemFlag(ImGuiItemFlags_NoTabStop, false);
-                    ON_SCOPE_EXIT {
-                        ImGui::PopItemFlag();
-                        ImGui::PopID();
-                        id += 1;
-                    };
-
-                    // Allow executing a command by clicking on it or selecting it with the keyboard and pressing enter
-                    if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_NoAutoClosePopups)) {
-                        if (auto result = callback(matchedCommand); result.has_value())
-                            m_commandBuffer = result.value();
-
-                        break;
-                    }
-                    if (ImGui::IsItemFocused() && (ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter))) {
-                        if (auto result = callback(matchedCommand); result.has_value())
-                            m_commandBuffer = result.value();
-
-                        break;
+            if (displayedContent.has_value()) {
+                if (!displayedContent->showSearchBox){
+                    if (ImGui::BeginMenuBar()) {
+                        ImGui::TextUnformatted(ICON_VS_TARGET);
+                        ImGui::EndMenuBar();
                     }
                 }
+
+                displayedContent->callback();
+            } else {
+                if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+                    u32 id = 1;
+                    for (const auto &[displayResult, matchedCommand, callback] : m_lastResults) {
+                        ImGui::PushID(id);
+                        ImGui::PushItemFlag(ImGuiItemFlags_NoTabStop, false);
+                        ON_SCOPE_EXIT {
+                            ImGui::PopItemFlag();
+                            ImGui::PopID();
+                            id += 1;
+                        };
+
+                        // Allow executing a command by clicking on it or selecting it with the keyboard and pressing enter
+                        if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_NoAutoClosePopups)) {
+                            if (auto result = callback(matchedCommand); result.has_value())
+                                m_commandBuffer = result.value();
+
+                            break;
+                        }
+                        if (ImGui::IsItemFocused() && (ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter))) {
+                            if (auto result = callback(matchedCommand); result.has_value())
+                                m_commandBuffer = result.value();
+
+                            break;
+                        }
+                    }
+                }
+                ImGui::EndChild();
             }
-            ImGui::EndChild();
 
             ImGui::EndPopup();
         } else {
@@ -176,7 +200,7 @@ namespace hex::plugin::builtin {
         std::vector<CommandResult> results;
 
         // Loop over every registered command and check if the input matches it
-        for (const auto &[type, command, unlocalizedDescription, displayCallback, executeCallback] : ContentRegistry::CommandPaletteCommands::impl::getEntries()) {
+        for (const auto &[type, command, unlocalizedDescription, displayCallback, executeCallback] : ContentRegistry::CommandPalette::impl::getEntries()) {
 
             auto AutoComplete = [this, currCommand = command](auto) {
                 this->focusInputTextBox();
@@ -186,7 +210,7 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
             };
 
-            if (type == ContentRegistry::CommandPaletteCommands::Type::SymbolCommand) {
+            if (type == ContentRegistry::CommandPalette::Type::SymbolCommand) {
                 // Handle symbol commands
                 // These commands are used by entering a single symbol and then any input
 
@@ -198,7 +222,7 @@ namespace hex::plugin::builtin {
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
                     }
                 }
-            } else if (type == ContentRegistry::CommandPaletteCommands::Type::KeywordCommand) {
+            } else if (type == ContentRegistry::CommandPalette::Type::KeywordCommand) {
                 // Handle keyword commands
                 // These commands are used by entering a keyword followed by a space and then any input
 
@@ -214,7 +238,7 @@ namespace hex::plugin::builtin {
         }
 
         // WHen a command has been identified, show the query results for that command
-        for (const auto &handler : ContentRegistry::CommandPaletteCommands::impl::getHandlers()) {
+        for (const auto &handler : ContentRegistry::CommandPalette::impl::getHandlers()) {
             const auto &[type, command, queryCallback, displayCallback] = handler;
 
             auto processedInput = input;
@@ -222,11 +246,11 @@ namespace hex::plugin::builtin {
                 processedInput = wolv::util::trim(processedInput.substr(command.length()));
 
             for (const auto &[description, callback] : queryCallback(processedInput)) {
-                if (type == ContentRegistry::CommandPaletteCommands::Type::SymbolCommand) {
+                if (type == ContentRegistry::CommandPalette::Type::SymbolCommand) {
                     if (auto [match, value] = MatchCommand(input, command); match != MatchType::NoMatch) {
                         results.push_back({ fmt::format("{} ({})", command, description), "", [callback](auto ... args){ callback(args...); return std::nullopt; } });
                     }
-                } else if (type == ContentRegistry::CommandPaletteCommands::Type::KeywordCommand) {
+                } else if (type == ContentRegistry::CommandPalette::Type::KeywordCommand) {
                     if (auto [match, value] = MatchCommand(input, command + " "); match != MatchType::NoMatch) {
                         results.push_back({ fmt::format("{} ({})", command, description), "", [callback](auto ... args){ callback(args...); return std::nullopt; } });
                     }
