@@ -13,6 +13,11 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/http_requests.hpp>
 
+#include <hex/helpers/scaling.hpp>
+#include <hex/helpers/utils.hpp>
+
+#include <md4c.h>
+
 namespace hex::ui {
 
     Markdown::Markdown(const std::string &text) : m_text(text) {
@@ -23,7 +28,9 @@ namespace hex::ui {
 
             switch (type) {
                 case MD_BLOCK_H:
-                    fonts::Default().pushBold(ImGui::GetFontSize() * std::lerp(2.0F, 1.1F, ((MD_BLOCK_H_DETAIL*)detail)->level / 6.0F));
+                    ImGui::NewLine();
+                    ImGui::NewLine();
+                    fonts::Default().pushBold(std::lerp(2.0F, 1.1F, ((MD_BLOCK_H_DETAIL*)detail)->level / 6.0F));
                     break;
                 case MD_BLOCK_HR:
                     ImGui::Separator();
@@ -71,8 +78,8 @@ namespace hex::ui {
                     self.m_quoteStart = true;
                     break;
                 case MD_BLOCK_UL: {
+                    ImGui::NewLine();
                     if (self.m_listIndent > 0) {
-                        ImGui::NewLine();
                         ImGui::Indent();
                     }
                     self.m_listIndent += 1;
@@ -93,6 +100,9 @@ namespace hex::ui {
                     }
                     break;
                 }
+                case MD_BLOCK_P:
+                    ImGui::NewLine();
+                    break;
                 default:
                     break;
             }
@@ -107,7 +117,6 @@ namespace hex::ui {
             switch (type) {
                 case MD_BLOCK_H:
                     fonts::Default().pop();
-                    ImGui::NewLine();
                     break;
                 case MD_BLOCK_CODE:
                     if (self.inTable()) {
@@ -142,7 +151,6 @@ namespace hex::ui {
                     break;
                 case MD_BLOCK_UL:
                     if (self.m_listIndent > 0) {
-                        ImGui::Unindent();
                     }
                     self.m_listIndent -= 1;
                     ImGui::SameLine();
@@ -226,7 +234,12 @@ namespace hex::ui {
                                 if (data.empty())
                                     return ImGuiExt::Texture();
 
-                                return ImGuiExt::Texture::fromImage(data.data(), data.size(), ImGuiExt::Texture::Filter::Linear);
+                                auto texture = ImGuiExt::Texture::fromImage(data.data(), data.size(), ImGuiExt::Texture::Filter::Linear);
+                                if (!texture.isValid()) {
+                                    texture = ImGuiExt::Texture::fromSVG({ reinterpret_cast<const std::byte*>(data.data()), data.size() }, 0, 0, ImGuiExt::Texture::Filter::Nearest);
+                                }
+
+                                return texture;
                             });
                         }));
                     }
@@ -241,17 +254,27 @@ namespace hex::ui {
             return 0; // No special handling for span enter
         };
         m_mdRenderer.leave_span = [](MD_SPANTYPE type, void *detail, void *userdata) -> int {
+            auto &self = *static_cast<Markdown*>(userdata);
+
             std::ignore = detail;
-            std::ignore = userdata;
             switch (type) {
                 case MD_SPAN_STRONG:
                 case MD_SPAN_EM:
                     fonts::Default().pop();
                     break;
+                case MD_SPAN_IMG:
+                    if (!self.m_currentLink.empty()) {
+                        if (ImGui::IsItemClicked())
+                            hex::openWebpage(self.m_currentLink);
+                        ImGui::SetItemTooltip("%s", self.m_currentLink.c_str());
+                        self.m_currentLink.clear();
+                    }
+                    break;
                 default:
                     break;
             }
             return 0; // No special handling for span leave
+
         };
         m_mdRenderer.text = [](MD_TEXTTYPE type, const MD_CHAR *text, MD_SIZE size, void *userdata) -> int {
             auto &self = *static_cast<Markdown*>(userdata);
@@ -332,6 +355,8 @@ namespace hex::ui {
                         } else {
                             ImGui::TextUnformatted(word.data(), word.data() + word.size());
                         }
+                        
+                        self.m_drawingImageAltText = false;
                         break;
                     case MD_TEXT_NULLCHAR:
                         ImGui::TextUnformatted("�");
@@ -348,8 +373,6 @@ namespace hex::ui {
 
                 sv.remove_prefix(end);  // Remove the word
             }
-
-            self.m_drawingImageAltText = false;
 
             return 0; // Continue parsing
         };

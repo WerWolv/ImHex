@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 
 include(ImHexPlugin)
 
-find_package(md4c REQUIRED)
-
 add_imhex_plugin(
     NAME
         ui
@@ -27,6 +25,6 @@ add_imhex_plugin(
         include
     LIBRARIES
         fonts
-        md4c::md4c
+        ${MD4C_LIBRARIES}
     LIBRARY_PLUGIN
 )
