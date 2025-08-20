@@ -22,14 +22,20 @@ namespace hex::ui {
 
     Markdown::Markdown(const std::string &text) : m_text(text) {
         m_mdRenderer = MD_RENDERER();
-        m_mdRenderer.flags = MD_DIALECT_GITHUB | MD_FLAG_NOHTML | MD_FLAG_TABLES | MD_FLAG_NOHTMLBLOCKS | MD_FLAG_TASKLISTS;
+        m_initialized = true;
+        m_mdRenderer.flags = MD_DIALECT_GITHUB | MD_FLAG_TABLES | MD_FLAG_TASKLISTS;
         m_mdRenderer.enter_block = [](MD_BLOCKTYPE type, void *detail, void *userdata) -> int {
             auto &self = *static_cast<Markdown*>(userdata);
 
             switch (type) {
+                case MD_BLOCK_DOC:
+                    self.m_firstLine = true;
+                    return 0;
                 case MD_BLOCK_H:
-                    ImGui::NewLine();
-                    ImGui::NewLine();
+                    if (!self.m_firstLine) {
+                        ImGui::NewLine();
+                        ImGui::NewLine();
+                    }
                     fonts::Default().pushBold(std::lerp(2.0F, 1.1F, ((MD_BLOCK_H_DETAIL*)detail)->level / 6.0F));
                     break;
                 case MD_BLOCK_HR:
@@ -107,6 +113,8 @@ namespace hex::ui {
                     break;
             }
 
+            self.m_firstLine = false;
+
             std::ignore = detail;
             std::ignore = userdata;
             return 0; // No special handling for block enter
@@ -150,7 +158,8 @@ namespace hex::ui {
 
                     break;
                 case MD_BLOCK_UL:
-                    if (self.m_listIndent > 0) {
+                    if (self.m_listIndent > 1) {
+                        ImGui::Unindent();
                     }
                     self.m_listIndent -= 1;
                     ImGui::SameLine();
@@ -383,9 +392,18 @@ namespace hex::ui {
     }
 
     void Markdown::draw() {
+        if (!m_initialized)
+            return;
+
         m_elementId = 1;
         md_parse(m_text.c_str(), m_text.size(), &m_mdRenderer, this);
     }
+
+    void Markdown::reset() {
+        m_futureImages.clear();
+        m_images.clear();
+    }
+
 
     bool Markdown::inTable() const {
         if (m_tableVisibleStack.empty())

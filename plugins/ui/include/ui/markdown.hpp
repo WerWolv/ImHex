@@ -22,6 +22,7 @@ namespace hex::ui {
         Markdown(const std::string &text);
 
         void draw();
+        void reset();
 
         void setRomfsTextureLookupFunction(std::function<wolv::container::Lazy<ImGuiExt::Texture>(const std::string &)> romfsFileReader) {
             m_romfsFileReader = std::move(romfsFileReader);
@@ -33,7 +34,9 @@ namespace hex::ui {
 
     private:
         std::string m_text;
+        bool m_initialized = false;
         MD_RENDERER m_mdRenderer;
+        bool m_firstLine = true;
         u32 m_elementId = 1;
         std::string m_currentLink;
         bool m_drawingImageAltText = false;

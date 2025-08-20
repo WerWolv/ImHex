@@ -25,6 +25,6 @@ add_imhex_plugin(
         include
     LIBRARIES
         fonts
-        ${MD4C_LIBRARIES}
+        md4c::md4c
     LIBRARY_PLUGIN
 )
