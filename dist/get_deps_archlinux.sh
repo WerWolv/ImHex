@@ -21,4 +21,5 @@ pacman -S $@ --needed \
   xz            \
   zstd          \
   lz4           \
-  libssh2
+  libssh2       \
+  md4c

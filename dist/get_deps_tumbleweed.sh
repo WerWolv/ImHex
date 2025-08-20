@@ -19,4 +19,5 @@ zypper install     \
   bzip3-devel      \
   xz-devel         \
   lz4-dev          \
-  libssh2-devel
+  libssh2-devel    \
+  md4c-devel

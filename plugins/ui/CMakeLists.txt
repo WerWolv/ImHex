@@ -14,6 +14,7 @@ add_imhex_plugin(
         source/ui/menu_items.cpp
         source/ui/pattern_value_editor.cpp
         source/ui/widgets.cpp
+        source/ui/markdown.cpp
         source/ui/text_editor/editor.cpp
         source/ui/text_editor/highlighter.cpp
         source/ui/text_editor/navigate.cpp
@@ -24,5 +25,6 @@ add_imhex_plugin(
         include
     LIBRARIES
         fonts
+        md4c::md4c
     LIBRARY_PLUGIN
 )

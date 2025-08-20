@@ -32,6 +32,8 @@ AppDir:
     - libpcre3
     - libselinux1
     - libtinfo6
+    - libmd4c-dev
+    - libmd4c-html0-dev
   files:
     include:
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libLLVM-13.so.1"
@@ -121,6 +123,7 @@ AppDir:
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libxml2.so.2"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libxshmfence.so.1"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libzstd.so.1"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmd4c.so"
     exclude:
     - usr/share/man
     - usr/share/doc/*/README.*

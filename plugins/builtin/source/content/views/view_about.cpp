@@ -20,6 +20,7 @@
 #include <nlohmann/json.hpp>
 
 #include <string>
+#include <ui/markdown.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -527,35 +528,10 @@ namespace hex::plugin::builtin {
 
     }
 
-    static void drawRegularLine(const std::string& line) {
-        ImGui::Bullet();
-        ImGui::SameLine();
-
-        // Check if the line contains bold text
-        auto boldStart = line.find("**");
-        if (boldStart == std::string::npos) {
-            // Draw the line normally
-            ImGui::TextUnformatted(line.c_str());
-
-            return;
-        }
-
-        // Find the end of the bold text
-        auto boldEnd = line.find("**", boldStart + 2);
-
-        // Draw the line with the bold text highlighted
-        ImGui::TextUnformatted(line.substr(0, boldStart).c_str());
-        ImGui::SameLine(0, 0);
-        ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}",
-                                       line.substr(boldStart + 2, boldEnd - boldStart - 2).c_str());
-        ImGui::SameLine(0, 0);
-        ImGui::TextUnformatted(line.substr(boldEnd + 2).c_str());
-    }
-
     struct ReleaseNotes {
         std::string title;
         std::string versionString;
-        std::vector<std::string> notes;
+        AutoReset<std::shared_ptr<ui::Markdown>> markdown;
     };
 
     static ReleaseNotes parseReleaseNotes(const HttpRequest::Result<std::string>& response) {
@@ -564,7 +540,7 @@ namespace hex::plugin::builtin {
 
         if (!response.isSuccess()) {
             // An error occurred, display it
-            notes.notes.push_back("## HTTP Error: " + std::to_string(response.getStatusCode()));
+            notes.markdown = std::make_shared<ui::Markdown>("## HTTP Error: " + std::to_string(response.getStatusCode()));
 
             return notes;
         }
@@ -581,9 +557,14 @@ namespace hex::plugin::builtin {
 
             // Get the release notes and split it into lines
             auto body = json["body"].get<std::string>();
-            notes.notes = wolv::util::splitString(body, "\r\n");
+
+            std::string content;
+            content += fmt::format("# {} | {}\n", notes.versionString, notes.title);
+            content += fmt::format("--\n");
+            content += body;
+            notes.markdown = std::make_shared<ui::Markdown>(content);
         } catch (std::exception &e) {
-            notes.notes.push_back("## Error: " + std::string(e.what()));
+            notes.markdown = std::make_shared<ui::Markdown>("## Error: " + std::string(e.what()));
         }
 
         return notes;
@@ -610,34 +591,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        // Draw the release title
-        if (!notes.title.empty()) {
-            auto title = fmt::format("{}: {}", notes.versionString, notes.title);
-            ImGuiExt::Header(title.c_str(), true);
-            ImGui::Separator();
-        }
-
-        // Draw the release notes and format them using parts of the GitHub Markdown syntax
-        // This is not a full implementation of the syntax, but it's enough to make the release notes look good.
-        for (const auto &line : notes.notes) {
-            if (line.starts_with("## ")) {
-                // Draw H2 Header
-                ImGuiExt::Header(line.substr(3).c_str());
-            } else if (line.starts_with("### ")) {
-                // Draw H3 Header
-                ImGuiExt::Header(line.substr(4).c_str());
-            } else if (line.starts_with("- ")) {
-                // Draw bullet point
-                drawRegularLine(line.substr(2));
-            } else if (line.starts_with("    - ")) {
-                // Draw further indented bullet point
-                ImGui::Indent();
-                ImGui::Indent();
-                drawRegularLine(line.substr(6));
-                ImGui::Unindent();
-                ImGui::Unindent();
-            }
-        }
+        (*notes.markdown)->draw();
     }
 
     struct Commit {

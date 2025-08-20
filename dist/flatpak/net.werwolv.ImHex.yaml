@@ -100,6 +100,18 @@ modules:
       - /lib/cmake
       - /lib64/cmake
 
+  - name: md4c
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+      - -DMD4C_BUILD_TESTS=OFF
+      - -DMD4C_BUILD_EXAMPLES=OFF
+      - -DMD4C_BUILD_DOCS=OFF
+    sources:
+      - type: git
+        url: https://github.com/mity/md4c.git
+        tag: release-0.5.2
+
   - name: imhex
     buildsystem: cmake-ninja
     builddir: true
