@@ -442,6 +442,7 @@ namespace hex::init {
             s_lastGlfwError.desc = std::string(desc);
             log::error("GLFW Error [{:05X}] : {}", errorCode, desc);
         });
+
 	#if defined(OS_LINUX)
         #if defined(GLFW_WAYLAND_APP_ID)
 	        glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
@@ -454,8 +455,21 @@ namespace hex::init {
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 	#endif
 
+        // Configure used OpenGL version
+    #if defined(OS_MACOS)
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
+        glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
+    #else
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    #endif
+
         // Make splash screen non-resizable, undecorated and transparent
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
