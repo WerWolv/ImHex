@@ -3,12 +3,8 @@ title: ImHex
 base: core24
 version: ${IMHEX_VERSION}
 summary: Hex editor for reverse engineering
-description: |
-  ImHex is a hex editor for reverse engineering, reverse engineering, and
-  analyzing binary files. It provides a powerful and flexible interface for
-  working with binary data, including features like pattern matching, scripting,
-  and a customizable user interface.
-grade: ${SNAP_GRADE}
+description: ImHex is a hex editor for reverse engineering, reverse engineering, and analyzing binary files. It provides a powerful and flexible interface for working with binary data, including features like pattern matching, scripting, and a customizable user interface.
+grade: stable
 confinement: classic
 contact: https://github.com/WerWolv/ImHex/discussions
 issues: https://github.com/WerWolv/ImHex/issues
