@@ -874,7 +874,7 @@ macro(addBundledLibraries)
         target_include_directories(md4c_lib INTERFACE ${THIRD_PARTY_LIBS_FOLDER}/md4c/src)
         target_link_libraries(md4c_lib INTERFACE md4c)
     else()
-        find_package(lunasvg REQUIRED)
+        find_package(md4c REQUIRED)
     endif()
 
     if (NOT USE_SYSTEM_LLVM)
