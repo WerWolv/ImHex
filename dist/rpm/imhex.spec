@@ -35,7 +35,6 @@ BuildRequires:  yara-devel
 BuildRequires:  nativefiledialog-extended-devel
 BuildRequires:  lz4-devel
 BuildRequires:  libssh2-devel
-BuildRequires:  md4c-devel
 %if 0%{?rhel} == 9
 BuildRequires:  gcc-toolset-14
 %endif
@@ -109,6 +108,7 @@ CXXFLAGS+=" -std=gnu++2b"
  -D USE_SYSTEM_FMT=ON                    \
  -D USE_SYSTEM_CURL=ON                   \
  -D USE_SYSTEM_LLVM=ON                   \
+ -D USE_SYSTEM_MD4C=OFF                  \
 %if 0%{?fedora} || 0%{?rhel} > 9
  -D USE_SYSTEM_CAPSTONE=ON               \
 %endif

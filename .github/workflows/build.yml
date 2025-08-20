@@ -91,6 +91,7 @@ jobs:
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                               \
           -DUSE_SYSTEM_CAPSTONE=ON                                                \
+          -DUSE_SYSTEM_MD4C=ON                                                    \
           -DIMHEX_GENERATE_PDBS=ON                                                \
           -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                                       \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                \
@@ -367,6 +368,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
           -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
           -DUSE_SYSTEM_CAPSTONE=ON                                  \
+          -DUSE_SYSTEM_MD4C=ON                                      \
           ..
           
           ninja
@@ -885,6 +887,7 @@ jobs:
           -DUSE_SYSTEM_YARA=ON                          \
           -DUSE_SYSTEM_NLOHMANN_JSON=ON                 \
           -DUSE_SYSTEM_CAPSTONE=OFF                     \
+          -DUSE_SYSTEM_MD4C=ON                          \
           -DIMHEX_PATTERNS_PULL_MASTER=ON               \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
