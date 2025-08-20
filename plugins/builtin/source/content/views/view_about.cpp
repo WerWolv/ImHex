@@ -531,7 +531,7 @@ namespace hex::plugin::builtin {
     struct ReleaseNotes {
         std::string title;
         std::string versionString;
-        AutoReset<ui::Markdown> markdown;
+        AutoReset<std::shared_ptr<ui::Markdown>> markdown;
     };
 
     static ReleaseNotes parseReleaseNotes(const HttpRequest::Result<std::string>& response) {
@@ -540,7 +540,7 @@ namespace hex::plugin::builtin {
 
         if (!response.isSuccess()) {
             // An error occurred, display it
-            notes.markdown = ui::Markdown("## HTTP Error: " + std::to_string(response.getStatusCode()));
+            notes.markdown = std::make_shared<ui::Markdown>("## HTTP Error: " + std::to_string(response.getStatusCode()));
 
             return notes;
         }
@@ -562,9 +562,9 @@ namespace hex::plugin::builtin {
             content += fmt::format("# {} | {}\n", notes.versionString, notes.title);
             content += fmt::format("--\n");
             content += body;
-            notes.markdown = ui::Markdown(content);
+            notes.markdown = std::make_shared<ui::Markdown>(content);
         } catch (std::exception &e) {
-            notes.markdown = ui::Markdown("## Error: " + std::string(e.what()));
+            notes.markdown = std::make_shared<ui::Markdown>("## Error: " + std::string(e.what()));
         }
 
         return notes;
@@ -591,7 +591,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        notes.markdown->draw();
+        (*notes.markdown)->draw();
     }
 
     struct Commit {
