@@ -194,9 +194,11 @@ jobs:
         with:
           store_login: ${{ secrets.SNAP_STORE_LOGIN }}
           snap: imhex-${{ env.IMHEX_VERSION }}-x86_64.snap
+          release: stable
 
       - name: ⬆️ Publish arm64 Snap package
         uses: snapcore/action-publish@v1
         with:
           store_login: ${{ secrets.SNAP_STORE_LOGIN }}
           snap: imhex-${{ env.IMHEX_VERSION }}-arm64.snap
+          release: stable
