@@ -6451,7 +6451,13 @@ static int open_libgl(void)
     return GL3W_OK;
 }
 
-static void close_libgl(void) { dlclose(libgl); }
+static void close_libgl(void) {
+    if (!libgl)
+        return;
+
+    dlclose(libgl);
+    libgl = NULL;
+}
 
 static GL3WglProc get_proc(const char *proc)
 {
@@ -6496,6 +6502,7 @@ int imgl3wInit2(GL3WGetProcAddressProc proc)
 void imgl3wShutdown(void)
 {
     close_libgl();
+    gl3wProcs = {};
 }
 
 int imgl3wIsSupported(int major, int minor)
