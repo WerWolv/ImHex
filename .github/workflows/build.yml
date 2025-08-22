@@ -23,10 +23,10 @@ jobs:
         include:
           - architecture_name: "x86_64"
             msystem: "mingw64"
-            runner_os: "windows-2025"
+            runner_os: runs-on=${{ github.run_id }}/image=windows22-base-x64/family=c7a.16xlarge
           - architecture_name: "arm64"
             msystem: "clangarm64"
-            runner_os: "windows-11-arm"
+            runner_os: runs-on=${{ github.run_id }}/image=windows22-base-arm64/family=c7g.16xlarge
 
     runs-on: ${{ matrix.runner_os }}
     name: 🪟 Windows MSYS2 ${{ matrix.architecture_name }}
@@ -206,10 +206,10 @@ jobs:
         include:
           - architecture_name: "x86_64"
             vs_arch: "amd64"
-            runner_os: "windows-2025"
+            runner_os: runs-on=${{ github.run_id }}/image=windows22-base-x64/family=c7a.16xlarge
           - architecture_name: "arm64"
             vs_arch: "amd64_arm64"
-            runner_os: "windows-11-arm"
+            runner_os: runs-on=${{ github.run_id }}/image=windows22-base-arm64/family=c7g.16xlarge
 
     runs-on: ${{ matrix.runner_os }}
     name: 🪟 Windows MSVC ${{ matrix.architecture_name }}
@@ -316,7 +316,7 @@ jobs:
             imhex-*.msi
 
   win-plugin-template-test:
-    runs-on: windows-2022
+    runs-on: runs-on=${{ github.run_id }}/image=windows22-base-x64/family=c7a.16xlarge
     name: 🧪 Plugin Template Test
 
     defaults:
@@ -545,7 +545,7 @@ jobs:
         path: ./*.dmg
 
   macos-arm64:
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=64cpu-linux-x64
     name: 🍎 macOS 13 arm64
 
     outputs:
@@ -676,7 +676,7 @@ jobs:
           - release_num: "25.04"
 
     name: 🐧 Ubuntu ${{ matrix.release_num }}
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=64cpu-linux-x64
 
     container:
       image: "ubuntu:${{ matrix.release_num }}"
@@ -769,11 +769,11 @@ jobs:
           - architecture: "x86_64"
             architecture_package: "amd64"
             architecture_appimage_builder: "x86_64"
-            image: ubuntu-24.04
+            image: runs-on=${{ github.run_id }}/runner=64cpu-linux-x64
           - architecture: "arm64"
             architecture_package: "arm64"
             architecture_appimage_builder: "aarch64"
-            image: ubuntu-24.04-arm
+            image: runs-on=${{ github.run_id }}/runner=64cpu-linux-arm64
 
     runs-on: ${{ matrix.image }}
     name: ⬇️ AppImage ${{ matrix.architecture }}
@@ -833,7 +833,7 @@ jobs:
   # ArchLinux build
   archlinux-build:
     name: 🐧 ArchLinux
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=64cpu-linux-x64
 
     container:
       image: archlinux:base-devel
@@ -961,7 +961,7 @@ jobs:
             mock_config: "alma+epel-9"
 
     name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }}
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=64cpu-linux-x64
 
     container:
       image: "almalinux:10"
@@ -1086,9 +1086,9 @@ jobs:
       matrix:
         include:
           - architecture: "x86_64"
-            image: ubuntu-24.04
+            image: runs-on=${{ github.run_id }}/runner=64cpu-linux-x64
           - architecture: "arm64"
-            image: ubuntu-24.04-arm
+            image: runs-on=${{ github.run_id }}/runner=64cpu-linux-arm64
     name: 🐧 Snap ${{ matrix.architecture }}
     runs-on: ${{ matrix.image }}
 
@@ -1157,10 +1157,10 @@ jobs:
         include:
           - architecture: "x86_64"
             flatpak_arch: "x86_64"
-            image: ubuntu-24.04
+            image: runs-on=${{ github.run_id }}/runner=64cpu-linux-x64
           - architecture: "arm64"
             flatpak_arch: "aarch64"
-            image: ubuntu-24.04-arm
+            image: runs-on=${{ github.run_id }}/runner=64cpu-linux-arm64
     name: 🐧 Flatpak ${{ matrix.architecture }}
     runs-on: ${{ matrix.image }}
 
@@ -1211,7 +1211,7 @@ jobs:
             imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
 
   webassembly-build:
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=64cpu-linux-x64
     name: 🌍 Web
     permissions:
       pages: write
