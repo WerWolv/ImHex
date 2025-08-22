@@ -1,1 +1,11 @@
-{}
+{
+    "hex.plugin.remote.ssh_provider": "Zdalny plik SSH",
+    "hex.plugin.remote.ssh_provider.host": "Host",
+    "hex.plugin.remote.ssh_provider.port": "Port",
+    "hex.plugin.remote.ssh_provider.username": "Nazwa użytkownika",
+    "hex.plugin.remote.ssh_provider.password": "Hasło",
+    "hex.plugin.remote.ssh_provider.key_file": "Ścieżka do klucza prywatnego",
+    "hex.plugin.remote.ssh_provider.passphrase": "Hasło do klucza",
+    "hex.plugin.remote.ssh_provider.connect": "Połącz"
+}
+
