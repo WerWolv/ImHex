@@ -92,19 +92,19 @@ namespace hex {
     }
 
     std::strong_ordering SemanticVersion::operator<=>(const SemanticVersion &other) const {
-        if (*this == other)
-            return std::strong_ordering::equivalent;
+        if (const auto result = major() <=> other.major(); result != std::strong_ordering::equal)
+            return result;
+        if (auto result = minor() <=> other.minor(); result != std::strong_ordering::equal)
+            return result;
+        if (auto result = patch() <=> other.patch(); result != std::strong_ordering::equal)
+            return result;
 
-        if (this->major() > other.major())
-            return std::strong_ordering::greater;
-        if (this->minor() > other.minor())
-            return std::strong_ordering::greater;
-        if (this->patch() > other.patch())
-            return std::strong_ordering::greater;
-        if (!this->nightly() && other.nightly())
-            return std::strong_ordering::greater;
+        // nightly builds are considered "greater" than release builds
+        if (nightly() != other.nightly())
+            return nightly() ? std::strong_ordering::greater
+                             : std::strong_ordering::less;
 
-        return std::strong_ordering::less;
+        return std::strong_ordering::equal;
     }
 
     std::string SemanticVersion::get(bool withBuildType) const {
