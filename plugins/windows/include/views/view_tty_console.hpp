@@ -19,6 +19,7 @@ namespace hex::plugin::windows {
         void drawContent() override;
 
     private:
+        void drawSettings();
         void drawConsole();
 
     private:
@@ -69,6 +70,7 @@ namespace hex::plugin::windows {
         bool m_hasCTSFlowControl = false;
 
         bool m_shouldAutoScroll = true;
+        bool m_settingsCollapsed = false;
 
         std::mutex m_receiveBufferMutex;
         std::vector<std::string> m_receiveLines;
