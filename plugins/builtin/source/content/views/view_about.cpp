@@ -560,7 +560,7 @@ namespace hex::plugin::builtin {
 
             std::string content;
             content += fmt::format("# {} | {}\n", notes.versionString, notes.title);
-            content += fmt::format("--\n");
+            content += fmt::format("---\n");
             content += body;
             notes.markdown = std::make_shared<ui::Markdown>(content);
         } catch (std::exception &e) {
@@ -591,7 +591,8 @@ namespace hex::plugin::builtin {
             }
         }
 
-        (*notes.markdown)->draw();
+        if (*notes.markdown != nullptr)
+            (*notes.markdown)->draw();
     }
 
     struct Commit {

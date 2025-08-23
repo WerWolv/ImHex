@@ -1334,7 +1334,11 @@ namespace hex {
             ImGui_ImplOpenGL3_Init();
             ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, "#canvas");
         #else
-            ImGui_ImplOpenGL3_Init("#version 410");
+            if (ImHexApi::System::getGLVersion() >= SemanticVersion(4,1,0)) {
+                ImGui_ImplOpenGL3_Init("#version 410");
+            } else {
+                ImGui_ImplOpenGL3_Init("#version 130");
+            }
         #endif
 
         ImGui_ImplGlfw_SetCallbacksChainForAllWindows(true);

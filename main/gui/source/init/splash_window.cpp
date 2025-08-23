@@ -58,24 +58,40 @@ namespace hex::init {
         this->loadAssets();
 
         {
-            auto glVendor = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
-            auto glRenderer = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
-            auto glVersion = reinterpret_cast<const char *>(glGetString(GL_VERSION));
+            auto glVendorString = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
+            auto glRendererString = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+            auto glVersionString = reinterpret_cast<const char *>(glGetString(GL_VERSION));
             auto glShadingLanguageVersion = reinterpret_cast<const char *>(glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-            log::debug("OpenGL Vendor: '{}'", glVendor);
-            log::debug("OpenGL Renderer: '{}'", glRenderer);
-            log::debug("OpenGL Version: '{}'", glVersion);
+            log::debug("OpenGL Vendor: '{}'", glVendorString);
+            log::debug("OpenGL Renderer: '{}'", glRendererString);
+            log::debug("OpenGL Version: '{}'", glVersionString);
             log::debug("OpenGL Shading Language Version: '{}'", glShadingLanguageVersion);
 
-            ImHexApi::System::impl::setGPUVendor(glVendor);
-            ImHexApi::System::impl::setGLRenderer(glRenderer);
+            ImHexApi::System::impl::setGPUVendor(glVendorString);
+            ImHexApi::System::impl::setGLRenderer(glRendererString);
 
             {
                 int glVersionMajor = 0, glVersionMinor = 0;
                 glGetIntegerv(GL_MAJOR_VERSION, &glVersionMajor);
                 glGetIntegerv(GL_MINOR_VERSION, &glVersionMinor);
                 ImHexApi::System::impl::setGLVersion(SemanticVersion(glVersionMajor, glVersionMinor, 0));
+            }
+
+            {
+                #if !defined(OS_MACOS)
+                    const static auto MinGLVersion = SemanticVersion(3, 1, 0);
+                #else
+                    const static auto MinGLVersion = SemanticVersion(3, 2, 0);
+                #endif
+
+                const auto &glVersion = ImHexApi::System::getGLVersion();
+                if (glVersion < MinGLVersion) {
+                    showErrorMessageBox(fmt::format("ImHex requires at least OpenGL {} to run but your system seems to only support up to OpenGL {}!\n\nTry upgrading your GPU drivers or try one of the NoGPU releases to use software rendering instead.", MinGLVersion.get(false), glVersion.get()));
+                    this->exitImGui();
+                    this->exitGLFW();
+                    std::exit(EXIT_FAILURE);
+                }
             }
         }
     }
@@ -440,20 +456,8 @@ namespace hex::init {
 
             s_lastGlfwError.errorCode = errorCode;
             s_lastGlfwError.desc = std::string(desc);
-            log::error("GLFW Error [{}] : {}", errorCode, desc);
+            log::error("GLFW Error [{:05X}] : {}", errorCode, desc);
         });
-
-        // Configure used OpenGL version
-        #if defined(OS_MACOS)
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-            glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
-            glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
-        #else
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-        #endif
 
 	#if defined(OS_LINUX)
         #if defined(GLFW_WAYLAND_APP_ID)
@@ -467,9 +471,14 @@ namespace hex::init {
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 	#endif
 
+        // Configure used OpenGL version
+    #if defined(OS_MACOS)
+        glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
+        glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
+    #endif
+
         // Make splash screen non-resizable, undecorated and transparent
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
@@ -533,7 +542,7 @@ namespace hex::init {
             ImGui_ImplOpenGL3_Init();
             ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, "#canvas");
         #else
-            ImGui_ImplOpenGL3_Init("#version 410");
+            ImGui_ImplOpenGL3_Init("#version 130");
         #endif
 
         auto &io = ImGui::GetIO();
