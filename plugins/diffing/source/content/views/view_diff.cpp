@@ -64,6 +64,13 @@ namespace hex::plugin::diffing {
             auto providers = ImHexApi::Provider::getProviders();
             auto &providerIndex = column.provider;
 
+            std::erase_if(providers, [&](const prv::Provider *provider) {
+                if (!provider->isAvailable() || !provider->isReadable())
+                    return true;
+
+                return false;
+            });
+
             // Get the name of the currently selected provider
             std::string preview;
             if (ImHexApi::Provider::isValid() && providerIndex >= 0)
@@ -217,8 +224,8 @@ namespace hex::plugin::diffing {
 
         // Draw the two hex editor columns side by side
         if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, diffingColumnSize)) {
-            ImGui::TableSetupColumn("hex.diffing.view.diff.provider_a"_lang);
-            ImGui::TableSetupColumn("hex.diffing.view.diff.provider_b"_lang);
+            ImGui::TableSetupColumn(fmt::format(" {}", "hex.diffing.view.diff.provider_a"_lang).c_str());
+            ImGui::TableSetupColumn(fmt::format(" {}", "hex.diffing.view.diff.provider_b"_lang).c_str());
             ImGui::TableHeadersRow();
 
             ImGui::BeginDisabled(m_diffTask.isRunning());
