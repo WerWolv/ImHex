@@ -199,14 +199,8 @@ namespace hex::fonts {
     }
 
     bool SliderPoints::draw(const std::string &name) {
-        float value = ImHexApi::Fonts::pixelsToPoints(m_value);
-        float min = ImHexApi::Fonts::pixelsToPoints(m_min);
-        float max = ImHexApi::Fonts::pixelsToPoints(m_max);
-
-        if (ImGui::SliderFloat(name.c_str(), &value, min, max, "%.0f pt"))
+        if (ImGui::SliderFloat(name.c_str(), &m_value, m_min, m_max, "%.0f pt"))
             m_changed = true;
-
-        m_value = ImHexApi::Fonts::pointsToPixels(value);
 
         if (m_changed && !ImGui::IsItemActive()) {
             m_changed = false;
@@ -287,7 +281,7 @@ namespace hex::fonts {
     }
 
     [[nodiscard]] float FontSelector::getFontSize() const {
-        return m_fontSize.getValue();
+        return ImHexApi::Fonts::pointsToPixels(m_fontSize.getValue());
     }
 
     [[nodiscard]] bool FontSelector::isBold() const {
