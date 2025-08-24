@@ -444,7 +444,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::BeginMenu(ICON_VS_ELLIPSIS)) {
                         for (const auto &[priority, menuItem] : menuItems) {
                             ON_SCOPE_EXIT { count += 1; };
-                            if (count < fittingItems)
+                            if (count <= fittingItems)
                                 continue;
                             if (!visibleMainMenus.contains(menuItem.unlocalizedName))
                                 continue;
