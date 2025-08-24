@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
         const auto optionsWindowSize = ImVec2(windowSize.x * 2 / 3, 0);
         ImGui::NewLine();
         ImGui::SetCursorPosX((windowSize.x - optionsWindowSize.x) / 2.0F);
-        if (ImGuiExt::BeginSubWindow(m_saveEditorName.empty() ? "Save Editor" : m_saveEditorName.c_str(), nullptr, optionsWindowSize)) {
+        if (ImGuiExt::BeginSubWindow(m_saveEditorName.empty() ? "hex.builtin.view.fullscreen.save_editor.name"_lang : m_saveEditorName.c_str(), nullptr, optionsWindowSize)) {
             for (const auto &author : m_saveEditorAuthors) {
                 ImGui::TextUnformatted(author.c_str());
                 ImGui::SameLine();
@@ -64,16 +64,16 @@ namespace hex::plugin::builtin {
 
             ImGui::NewLine();
 
-            if (ImGuiExt::DimmedButton(fmt::format("{} {}", ICON_VS_OPEN_PREVIEW, "Select Save File").c_str(), ImVec2(-1, 0))) {
+            if (ImGuiExt::DimmedButton(fmt::format("{} {}", ICON_VS_OPEN_PREVIEW, "hex.builtin.view.fullscreen.save_editor.select_file"_lang).c_str(), ImVec2(-1, 0))) {
                 fs::openFileBrowser(fs::DialogMode::Open, {}, [this](const std::fs::path &path) {
                     this->m_provider.setPath(path);
                     if (!this->m_provider.open()) {
-                        ui::ToastError::open("The selected file could not be opened. Please ensure the file exists and is readable.");
+                        ui::ToastError::open("hex.builtin.view.fullscreen.save_editor.error.not_readable"_lang);
                     }
 
                     ContentRegistry::PatternLanguage::configureRuntime(m_runtime, &m_provider);
                     if (!m_runtime.executeString(this->m_sourceCode)) {
-                        ui::ToastError::open("Failed to execute the save editor script. Please check the log for errors.");
+                        ui::ToastError::open("hex.builtin.view.fullscreen.save_editor.error.failed_execution"_lang);
                         for (const auto &error : m_runtime.getCompileErrors()) {
                             log::error("Save Editor Error: {}", error.format());
                         }
@@ -108,7 +108,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::SameLine();
             if (ImGuiExt::DimmedIconButton(ICON_VS_CLOSE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
-                ui::PopupQuestion::open("Do you want to close the Save Editor?", [this] {
+                ui::PopupQuestion::open("hex.builtin.view.fullscreen.save_editor.should_close"_lang, [this] {
                     this->m_provider.close();
                 }, []{});
             }
