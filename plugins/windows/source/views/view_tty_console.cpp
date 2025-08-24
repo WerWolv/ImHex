@@ -213,8 +213,10 @@ namespace hex::plugin::windows {
                         const auto scale = 1.0 / (signal.size() - 1);
                         ImPlot::PlotStairs("Signal", signal.data(), signal.size(), scale, 0);
 
-                        u32 index = 0;
-                        for (const auto &[x1, x2] : annotations | std::views::adjacent<2>) {
+                        for (u32 index = 0; index < annotations.size() - 1; index++) {
+                            const auto &x1 = annotations[index];
+                            const auto &x2 = annotations[index + 1];
+
                             ImPlot::Annotation((x2.x - (x2.x - x1.x) / 2) * scale, index & 1 ? 0.77 : 0.90, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(0, 0), false, x1.text);
 
                             const auto lineX = (x1.x - 0.1) * scale;
@@ -222,7 +224,6 @@ namespace hex::plugin::windows {
                             const double ys[] = { 0.0, 1.0 };
                             ImPlot::PlotLine("##line", xs, ys, 2);
 
-                            index += 1;
                         }
 
                         ImPlot::EndPlot();
