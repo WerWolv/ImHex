@@ -16,6 +16,7 @@
 #include <nlohmann/json.hpp>
 
 #include <string>
+#include <hex/api/events/events_lifecycle.hpp>
 
 namespace hex::fonts { bool setupFonts(); }
 
@@ -108,8 +109,10 @@ namespace hex::plugin::builtin {
                 ImHexApi::System::impl::setGlobalScale(interfaceScaling);
             });
 
-            const auto nativeScale = ImHexApi::System::getNativeScale();
-            EventDPIChanged::post(nativeScale, nativeScale);
+            EventImHexStartupFinished::subscribe([] {
+                const auto nativeScale = ImHexApi::System::getNativeScale();
+                EventDPIChanged::post(nativeScale, nativeScale);
+            });
 
             return true;
         }
