@@ -1505,100 +1505,6 @@ namespace hex::plugin::builtin {
                 bool foundCorrectType = false;
 
                 auto mimeType = magic::getMIMEType(provider, 0, 4_KiB, true);
-                runtime.addPragma("MIME", [&mimeType, &foundCorrectType](const pl::PatternLanguage &runtime, const std::string &value) {
-                    std::ignore = runtime;
-
-                    if (!magic::isValidMIMEType(value))
-                        return false;
-
-                    if (value == mimeType) {
-                        foundCorrectType = true;
-                        return true;
-                    }
-                    return !std::ranges::all_of(value, isspace) && !value.ends_with('\n') && !value.ends_with('\r');
-                });
-
-                // Format: [ AA BB CC DD ] @ 0x12345678
-                runtime.addPragma("magic", [provider, &foundCorrectType](pl::PatternLanguage &, const std::string &value) -> bool {
-                    const auto pattern = [value = value]() mutable -> std::optional<BinaryPattern> {
-                        value = wolv::util::trim(value);
-
-                        if (value.empty())
-                            return std::nullopt;
-
-                        if (!value.starts_with('['))
-                            return std::nullopt;
-
-                        value = value.substr(1);
-
-                        const auto end = value.find(']');
-                        if (end == std::string::npos)
-                            return std::nullopt;
-                        value.resize(end);
-
-                        value = wolv::util::trim(value);
-
-                        return BinaryPattern(value);
-                    }();
-
-                    const auto address = [value = value, provider]() mutable -> std::optional<u64> {
-                        value = wolv::util::trim(value);
-
-                        if (value.empty())
-                            return std::nullopt;
-
-                        const auto start = value.find('@');
-                        if (start == std::string::npos)
-                            return std::nullopt;
-
-                        value = value.substr(start + 1);
-                        value = wolv::util::trim(value);
-
-                        size_t end = 0;
-                        auto result = std::stoll(value, &end, 0);
-                        if (end != value.length())
-                            return std::nullopt;
-
-                        if (result < 0) {
-                            const auto size = provider->getActualSize();
-                            if (u64(-result) > size) {
-                                return std::nullopt;
-                            }
-
-                            return size + result;
-                        } else {
-                            return result;
-                        }
-                    }();
-
-                    if (!address)
-                        return false;
-                    if (!pattern)
-                        return false;
-
-                    std::vector<u8> bytes(pattern->getSize());
-                    if (bytes.empty())
-                        return false;
-
-                    provider->read(*address, bytes.data(), bytes.size());
-
-                    if (pattern->matches(bytes))
-                        foundCorrectType = true;
-
-                    return true;
-                });
-
-                std::string author;
-                runtime.addPragma("author", [&author](pl::PatternLanguage &, const std::string &value) -> bool {
-                    author = value;
-                    return true;
-                });
-
-                std::string description;
-                runtime.addPragma("description", [&description](pl::PatternLanguage &, const std::string &value) -> bool {
-                    description = value;
-                    return true;
-                });
 
                 m_possiblePatternFiles.get(provider).clear();
 
@@ -1616,12 +1522,81 @@ namespace hex::plugin::builtin {
                         if (!file.isValid())
                             continue;
 
-                        author.clear();
-                        description.clear();
+                        std::string author, description;
 
-                        auto result = runtime.preprocessString(file.readString(), pl::api::Source::DefaultSource);
-                        if (!result.has_value()) {
-                            log::warn("Failed to preprocess file {} during MIME analysis", entry.path().string());
+                        const auto pragmaValues = runtime.getPragmaValues(file.readString());
+                        if (auto it = pragmaValues.find("author"); it != pragmaValues.end())
+                            author = it->second;
+                        if (auto it = pragmaValues.find("description"); it != pragmaValues.end())
+                            description = it->second;
+
+                        // Format: #pragma MIME type/subtype
+                        if (auto it = pragmaValues.find("MIME"); it != pragmaValues.end()) {
+                            if (magic::isValidMIMEType(it->second) && it->second == mimeType)
+                                foundCorrectType = true;
+                        }
+                        // Format: #pragma magic [ AA BB CC DD ] @ 0x12345678
+                        if (auto it = pragmaValues.find("magic"); it != pragmaValues.end()) {
+                            const auto pattern = [value = it->second]() mutable -> std::optional<BinaryPattern> {
+                                value = wolv::util::trim(value);
+
+                                if (value.empty())
+                                    return std::nullopt;
+
+                                if (!value.starts_with('['))
+                                    return std::nullopt;
+
+                                value = value.substr(1);
+
+                                const auto end = value.find(']');
+                                if (end == std::string::npos)
+                                    return std::nullopt;
+                                value.resize(end);
+
+                                value = wolv::util::trim(value);
+
+                                return BinaryPattern(value);
+                            }();
+
+                            const auto address = [value = it->second, provider]() mutable -> std::optional<u64> {
+                                value = wolv::util::trim(value);
+
+                                if (value.empty())
+                                    return std::nullopt;
+
+                                const auto start = value.find('@');
+                                if (start == std::string::npos)
+                                    return std::nullopt;
+
+                                value = value.substr(start + 1);
+                                value = wolv::util::trim(value);
+
+                                size_t end = 0;
+                                auto result = std::stoll(value, &end, 0);
+                                if (end != value.length())
+                                    return std::nullopt;
+
+                                if (result < 0) {
+                                    const auto size = provider->getActualSize();
+                                    if (u64(-result) > size) {
+                                        return std::nullopt;
+                                    }
+
+                                    return size + result;
+                                } else {
+                                    return result;
+                                }
+                            }();
+
+                            if (address && pattern) {
+                                std::vector<u8> bytes(pattern->getSize());
+                                if (!bytes.empty()) {
+                                    provider->read(*address, bytes.data(), bytes.size());
+
+                                    if (pattern->matches(bytes))
+                                        foundCorrectType = true;
+                                }
+                            }
                         }
 
                         if (foundCorrectType) {
@@ -2760,35 +2735,14 @@ namespace hex::plugin::builtin {
                 }
 
                 const auto fileName = wolv::util::toUTF8String(adjustedPath.filename());
-                m_patternNames[path] = fileName;
 
                 wolv::io::File file(path, wolv::io::File::Mode::Read);
-                pl::api::Source source(file.readString());
 
-                // Only run the lexer on the source file and manually extract the #pragma description to make this
-                // process as fast as possible. Running the preprocessor directly takes too much time
-                auto result = runtime->getInternals().lexer->lex(&source);
-                if (result.isOk()) {
-                    const auto tokens = result.unwrap();
-                    for (auto it = tokens.begin(); it != tokens.end(); ++it) {
-                        if (it->type == pl::core::Token::Type::Directive && std::get<pl::core::Token::Directive>(it->value) == pl::core::Token::Directive::Pragma) {
-                            ++it;
-                            if (it != tokens.end() && it->type == pl::core::Token::Type::String) {
-                                auto literal = std::get<pl::core::Token::Literal>(it->value);
-                                auto string = std::get_if<std::string>(&literal);
-                                if (string != nullptr && *string == "description") {
-                                    ++it;
-                                    if (it != tokens.end() && it->type == pl::core::Token::Type::String) {
-                                        literal = std::get<pl::core::Token::Literal>(it->value);
-                                        string = std::get_if<std::string>(&literal);
-                                        if (string != nullptr) {
-                                            m_patternNames[path] = fmt::format("{} ({})", *string, fileName);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                const auto pragmaValues = runtime->getPragmaValues(file.readString());
+                if (auto it = pragmaValues.find("description"); it != pragmaValues.end() && !it->second.empty()) {
+                    m_patternNames[path] = fmt::format("{} ({})", it->second, fileName);
+                } else {
+                    m_patternNames[path] = fileName;
                 }
 
                 return m_patternNames[path];
