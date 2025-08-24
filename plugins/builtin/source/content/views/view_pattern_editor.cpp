@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginListBox("##patterns_accept", ImVec2(400_scaled, 0))) {
                 u32 index = 0;
-                for (const auto &[path, author, description] : m_view->m_possiblePatternFiles.get(provider)) {
+                for (const auto &[path, author, description, mimeType, magicOffset] : m_view->m_possiblePatternFiles.get(provider)) {
                     ImGui::PushID(index + 1);
                     auto fileName = wolv::util::toUTF8String(path.filename());
 
@@ -105,7 +105,7 @@ namespace hex::plugin::builtin {
                     }
 
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-                        m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider, false);
+                        m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].patternFilePath, provider, false);
 
                     ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
@@ -127,7 +127,7 @@ namespace hex::plugin::builtin {
 
             ImGuiExt::ConfirmButtons("hex.ui.common.yes"_lang, "hex.ui.common.no"_lang,
                 [this, provider] {
-                    m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].path, provider, false);
+                    m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].patternFilePath, provider, false);
                     this->close();
                 },
                 [this] {
@@ -1495,129 +1495,17 @@ namespace hex::plugin::builtin {
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
-            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider](const Task &task) {
+            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider] {
                 if (!m_autoLoadPatterns)
                     return;
 
-                pl::PatternLanguage runtime;
-                ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
+                auto foundPatterns = magic::findViablePatterns(provider);
 
-                bool foundCorrectType = false;
+                if (!foundPatterns.empty()) {
+                    std::scoped_lock lock(m_possiblePatternFilesMutex);
 
-                auto mimeType = magic::getMIMEType(provider, 0, 4_KiB, true);
-
-                m_possiblePatternFiles.get(provider).clear();
-
-                bool popupOpen = false;
-                std::error_code errorCode;
-                for (const auto &dir : paths::Patterns.read()) {
-                    for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
-                        task.update();
-
-                        foundCorrectType = false;
-                        if (!entry.is_regular_file())
-                            continue;
-
-                        wolv::io::File file(entry.path(), wolv::io::File::Mode::Read);
-                        if (!file.isValid())
-                            continue;
-
-                        std::string author, description;
-
-                        const auto pragmaValues = runtime.getPragmaValues(file.readString());
-                        if (auto it = pragmaValues.find("author"); it != pragmaValues.end())
-                            author = it->second;
-                        if (auto it = pragmaValues.find("description"); it != pragmaValues.end())
-                            description = it->second;
-
-                        // Format: #pragma MIME type/subtype
-                        if (auto it = pragmaValues.find("MIME"); it != pragmaValues.end()) {
-                            if (magic::isValidMIMEType(it->second) && it->second == mimeType)
-                                foundCorrectType = true;
-                        }
-                        // Format: #pragma magic [ AA BB CC DD ] @ 0x12345678
-                        if (auto it = pragmaValues.find("magic"); it != pragmaValues.end()) {
-                            const auto pattern = [value = it->second]() mutable -> std::optional<BinaryPattern> {
-                                value = wolv::util::trim(value);
-
-                                if (value.empty())
-                                    return std::nullopt;
-
-                                if (!value.starts_with('['))
-                                    return std::nullopt;
-
-                                value = value.substr(1);
-
-                                const auto end = value.find(']');
-                                if (end == std::string::npos)
-                                    return std::nullopt;
-                                value.resize(end);
-
-                                value = wolv::util::trim(value);
-
-                                return BinaryPattern(value);
-                            }();
-
-                            const auto address = [value = it->second, provider]() mutable -> std::optional<u64> {
-                                value = wolv::util::trim(value);
-
-                                if (value.empty())
-                                    return std::nullopt;
-
-                                const auto start = value.find('@');
-                                if (start == std::string::npos)
-                                    return std::nullopt;
-
-                                value = value.substr(start + 1);
-                                value = wolv::util::trim(value);
-
-                                size_t end = 0;
-                                auto result = std::stoll(value, &end, 0);
-                                if (end != value.length())
-                                    return std::nullopt;
-
-                                if (result < 0) {
-                                    const auto size = provider->getActualSize();
-                                    if (u64(-result) > size) {
-                                        return std::nullopt;
-                                    }
-
-                                    return size + result;
-                                } else {
-                                    return result;
-                                }
-                            }();
-
-                            if (address && pattern) {
-                                std::vector<u8> bytes(pattern->getSize());
-                                if (!bytes.empty()) {
-                                    provider->read(*address, bytes.data(), bytes.size());
-
-                                    if (pattern->matches(bytes))
-                                        foundCorrectType = true;
-                                }
-                            }
-                        }
-
-                        if (foundCorrectType) {
-                            {
-                                std::scoped_lock lock(m_possiblePatternFilesMutex);
-
-                                m_possiblePatternFiles.get(provider).emplace_back(
-                                    entry.path(),
-                                    std::move(author),
-                                    std::move(description)
-                                );
-                            }
-
-                            if (!popupOpen) {
-                                PopupAcceptPattern::open(this);
-                                popupOpen = true;
-                            }
-                        }
-
-                        runtime.reset();
-                    }
+                    m_possiblePatternFiles.get(provider) = std::move(foundPatterns);
+                    PopupAcceptPattern::open(this);
                 }
             });
         }
@@ -1959,6 +1847,9 @@ namespace hex::plugin::builtin {
 
         RequestSetPatternLanguageCode::subscribe(this, [this](const std::string &code) {
             auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return;
+
             m_textEditor.get(provider).setText(wolv::util::preprocessText(code));
             m_sourceCode.get(provider) = code;
             m_hasUnevaluatedChanges.get(provider) = true;
@@ -2362,6 +2253,9 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::registerHandlers() {
         ContentRegistry::FileTypeHandler::add({ ".hexpat", ".pat" }, [](const std::fs::path &path) -> bool {
             wolv::io::File file(path, wolv::io::File::Mode::Read);
+
+            if (!ImHexApi::Provider::isValid())
+                return false;
 
             if (file.isValid()) {
                 RequestSetPatternLanguageCode::post(wolv::util::preprocessText(file.readString()));

@@ -73,8 +73,8 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "open",            "o", "Open files passed as argument. [default]",     hex::plugin::builtin::handleOpenCommand             },
     { "new",             "n", "Create a new empty file",                      hex::plugin::builtin::handleNewCommand              },
 
-    { "select",          "",  "Select a range of bytes in the Hex Editor",    hex::plugin::builtin::handleSelectCommand           },
-    { "pattern",         "",  "Sets the loaded pattern",                      hex::plugin::builtin::handlePatternCommand          },
+    { "select",          "s",  "Select a range of bytes in the Hex Editor",    hex::plugin::builtin::handleSelectCommand           },
+    { "pattern",         "p",  "Sets the loaded pattern",                      hex::plugin::builtin::handlePatternCommand          },
     { "calc",            "",  "Evaluate a mathematical expression",           hex::plugin::builtin::handleCalcCommand             },
     { "hash",            "",  "Calculate the hash of a file",                 hex::plugin::builtin::handleHashCommand             },
     { "encode",          "",  "Encode a string",                              hex::plugin::builtin::handleEncodeCommand           },
@@ -87,6 +87,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "debug-mode",      "",  "Enables debugging features",                   hex::plugin::builtin::handleDebugModeCommand,       },
     { "validate-plugin", "",  "Validates that a plugin can be loaded",        hex::plugin::builtin::handleValidatePluginCommand   },
     { "save-editor",     "",  "Opens a pattern file for save file editing",   hex::plugin::builtin::handleSaveEditorCommand       },
+    { "file-info",       "i", "Displays information about a file",            hex::plugin::builtin::handleFileInfoCommand         },
 };
 
 IMHEX_PLUGIN_SETUP_BUILTIN("Built-in", "WerWolv", "Default ImHex functionality") {

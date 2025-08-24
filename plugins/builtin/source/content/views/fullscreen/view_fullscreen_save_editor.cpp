@@ -70,7 +70,6 @@ namespace hex::plugin::builtin {
                     if (!this->m_provider.open()) {
                         ui::ToastError::open("The selected file could not be opened. Please ensure the file exists and is readable.");
                     }
-                    this->m_provider.convertToMemoryFile();
 
                     ContentRegistry::PatternLanguage::configureRuntime(m_runtime, &m_provider);
                     if (!m_runtime.executeString(this->m_sourceCode)) {

@@ -9,6 +9,7 @@
 
 #include <ui/text_editor.hpp>
 #include <content/text_highlighting/pattern_language.hpp>
+#include <hex/helpers/magic.hpp>
 #include <ui/pattern_drawer.hpp>
 
  namespace pl::ptrn { class Pattern; }
@@ -114,16 +115,10 @@ namespace hex::plugin::builtin {
             u32 color;
         };
 
-        struct PossiblePattern {
-            std::fs::path path;
-            std::string author;
-            std::string description;
-        };
-
         std::unique_ptr<pl::PatternLanguage> m_editorRuntime;
 
         std::mutex m_possiblePatternFilesMutex;
-        PerProvider<std::vector<PossiblePattern>> m_possiblePatternFiles;
+        PerProvider<std::vector<magic::FoundPattern>> m_possiblePatternFiles;
         bool m_runAutomatically   = false;
         bool m_triggerEvaluation  = false;
         std::atomic<bool> m_triggerAutoEvaluate = false;
