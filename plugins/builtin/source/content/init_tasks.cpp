@@ -109,10 +109,8 @@ namespace hex::plugin::builtin {
                 ImHexApi::System::impl::setGlobalScale(interfaceScaling);
             });
 
-            EventImHexStartupFinished::subscribe([] {
-                const auto nativeScale = ImHexApi::System::getNativeScale();
-                EventDPIChanged::post(nativeScale, nativeScale);
-            });
+            const auto nativeScale = ImHexApi::System::getNativeScale();
+            EventDPIChanged::post(nativeScale, nativeScale);
 
             return true;
         }
