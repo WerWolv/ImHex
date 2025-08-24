@@ -469,10 +469,10 @@ namespace hex::init {
         #endif
 
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
-	#endif
+	#elif defined(OS_MACOS)
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 
-        // Configure used OpenGL version
-    #if defined(OS_MACOS)
         glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
         glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
     #endif
