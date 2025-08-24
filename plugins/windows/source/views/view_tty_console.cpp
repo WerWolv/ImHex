@@ -109,6 +109,8 @@ namespace hex::plugin::windows {
 
                     ImGui::Checkbox("hex.windows.view.tty_console.cts"_lang, &m_hasCTSFlowControl);
 
+                    ImGui::Separator();
+
                     ImGui::EndDisabled();
 
                     {
