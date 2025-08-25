@@ -217,7 +217,7 @@ namespace hex::plugin::windows {
                             const auto &x1 = annotations[index];
                             const auto &x2 = annotations[index + 1];
 
-                            ImPlot::Annotation((x2.x - (x2.x - x1.x) / 2) * scale, index & 1 ? 0.77 : 0.90, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(0, 0), false, x1.text);
+                            ImPlot::Annotation((x2.x - (x2.x - x1.x) / 2) * scale, index & 1 ? 0.77 : 0.90, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(0, 0), false, "%s", x1.text);
 
                             const auto lineX = (x1.x - 0.1) * scale;
                             const double xs[] = { lineX, lineX };
