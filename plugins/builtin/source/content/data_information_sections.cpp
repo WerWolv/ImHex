@@ -10,6 +10,10 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/helpers/logger.hpp>
 #include <hex/api/events/events_interaction.hpp>
+#include <hex/api/events/requests_interaction.hpp>
+#include <toasts/toast_notification.hpp>
+#include <ui/markdown.hpp>
+#include <ui/pattern_drawer.hpp>
 
 #include <wolv/literals.hpp>
 
@@ -80,10 +84,34 @@ namespace hex::plugin::builtin {
                 std::vector<u8> data(region.getSize());
                 provider->read(region.getStartAddress(), data.data(), data.size());
 
-                m_dataDescription       = magic::getDescription(data);
-                m_dataMimeType          = magic::getMIMEType(data);
-                m_dataAppleCreatorType  = magic::getAppleCreatorType(data);
-                m_dataExtensions        = magic::getExtensions(data);
+                m_dataDescription           = magic::getDescription(data);
+                m_dataMimeType              = magic::getMIMEType(data);
+                m_dataAppleCreatorType      = magic::getAppleCreatorType(data);
+                m_dataExtensions            = magic::getExtensions(data);
+                m_patternDataDescription    = std::nullopt;
+
+                const auto foundPatterns = magic::findViablePatterns(provider);
+                if (!foundPatterns.empty()) {
+                    pl::PatternLanguage runtime;
+                    ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
+
+                    const auto &pattern = foundPatterns.front();
+
+                    m_foundPattern = pattern;
+
+                    constexpr static auto DataDescriptionFunction = "get_data_description";
+                    if (runtime.executeFile(pattern.patternFilePath)) {
+                        const auto &evaluator = runtime.getInternals().evaluator;
+                        const auto &functions = evaluator->getCustomFunctions();
+                        if (const auto function = functions.find(DataDescriptionFunction); function != functions.end()) {
+                            if (const auto value = function->second.func(evaluator.get(), {}); value.has_value()) {
+                                if (value->isString()) {
+                                    m_patternDataDescription = ui::Markdown(value->toString());
+                                }
+                            }
+                        }
+                    }
+                }
             } catch (const std::bad_alloc &) {
                 hex::log::error("Failed to allocate enough memory for full file magic analysis!");
 
@@ -144,10 +172,51 @@ namespace hex::plugin::builtin {
                         ImGuiExt::TextFormattedSelectable("{}", m_dataExtensions);
                     }
 
-                    ImGui::EndTable();
-                }
+                    if (m_foundPattern.has_value()) {
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted("hex.builtin.information_section.magic.pattern_info"_lang);
+                        ImGui::TableNextColumn();
+                    }
 
-                ImGui::NewLine();
+                    ImGui::EndTable();
+
+                    // Explicitly draw this part outside the table so we can have the sub window take the full width
+                    // of the parent window
+                    if (m_foundPattern.has_value()) {
+                        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
+                        if (ImGui::BeginChild("##pattern_information", ImVec2(0, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_MenuBar)) {
+                            if (ImGui::BeginMenuBar()) {
+                                ImGui::TextUnformatted(m_foundPattern->description.c_str());
+                                ImGui::TextUnformatted(ICON_VS_ARROW_RIGHT);
+                                ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 0.0F);
+                                if (ImGuiExt::DimmedButton("hex.builtin.information_section.magic.pattern_info.load_pattern"_lang, {}, ImGuiButtonFlags_AlignTextBaseLine)) {
+                                    wolv::io::File patternFile(m_foundPattern->patternFilePath, wolv::io::File::Mode::Read);
+                                    if (patternFile.isValid()) {
+                                        const auto patternCode = patternFile.readString();
+                                        RequestSetPatternLanguageCode::post(patternCode);
+                                        RequestTriggerPatternEvaluation::post();
+                                    } else {
+                                        ui::ToastError::open("hex.builtin.information_section.magic.pattern_info.load_pattern_failed"_lang);
+                                    }
+                                }
+                                ImGui::PopStyleVar();
+                                ImGui::EndMenuBar();
+                            }
+
+                            if (m_patternDataDescription.has_value())
+                                m_patternDataDescription->draw();
+                            else {
+                                ImGui::BeginDisabled();
+                                ImGuiExt::TextFormattedCenteredHorizontal("hex.builtin.information_section.magic.pattern_info.no_description"_lang);
+                                ImGui::EndDisabled();
+                                ImGui::SameLine();
+                                ImGuiExt::HelpHover("hex.builtin.information_section.magic.pattern_info.add_description"_lang, ICON_VS_INFO);
+                            }
+                        }
+                        ImGui::EndChild();
+                        ImGui::PopStyleVar();
+                    }
+                }
             }
         }
 
@@ -163,6 +232,9 @@ namespace hex::plugin::builtin {
         std::string m_dataMimeType;
         std::string m_dataAppleCreatorType;
         std::string m_dataExtensions;
+
+        std::optional<magic::FoundPattern> m_foundPattern;
+        std::optional<ui::Markdown> m_patternDataDescription;
     };
 
     class InformationByteAnalysis : public ContentRegistry::DataInformation::InformationSection {

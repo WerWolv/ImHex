@@ -314,7 +314,7 @@ namespace ImGuiExt {
 
     bool BitCheckbox(const char* label, bool* v);
 
-    bool DimmedButton(const char* label, ImVec2 size = ImVec2(0, 0));
+    bool DimmedButton(const char* label, ImVec2 size = ImVec2(0, 0), ImGuiButtonFlags flags = ImGuiButtonFlags_None);
     bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size = ImVec2(0, 0), ImVec2 iconOffset = ImVec2(0, 0));
     bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size = ImVec2(0, 0), ImVec2 iconOffset = ImVec2(0, 0));
     bool DimmedIconToggle(const char *icon, bool *v);

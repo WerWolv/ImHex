@@ -1169,14 +1169,14 @@ namespace ImGuiExt {
         return pressed;
     }
 
-    bool DimmedButton(const char* label, ImVec2 size){
+    bool DimmedButton(const char* label, ImVec2 size, ImGuiButtonFlags flags){
         PushStyleColor(ImGuiCol_ButtonHovered, GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
         PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
         PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
         PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-        bool res = Button(label, size);
+        bool res = ButtonEx(label, size, flags);
 
         PopStyleColor(4);
         PopStyleVar(1);
