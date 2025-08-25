@@ -107,7 +107,8 @@ namespace hex::ui {
                     break;
                 }
                 case MD_BLOCK_P:
-                    ImGui::NewLine();
+                    if (!self.m_firstLine)
+                        ImGui::NewLine();
                     break;
                 default:
                     break;

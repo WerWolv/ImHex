@@ -443,8 +443,8 @@ namespace ImGuiExt {
         ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(label);
-        const ImVec2 text_size  = CalcTextSize(label, nullptr, true) + CalcTextSize(description, nullptr, true);
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
+        const ImVec2 text_size  = label_size + CalcTextSize(description, nullptr, true);
 
         ImVec2 pos = window->DC.CursorPos;
         if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset)    // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
