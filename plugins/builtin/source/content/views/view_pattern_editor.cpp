@@ -659,68 +659,6 @@ namespace hex::plugin::builtin {
                     }
                 }
             }
-
-            if (m_textEditor.get(provider).isBreakpointsChanged()) {
-                m_breakpoints = m_textEditor.get(provider).getBreakpoints();
-                m_textEditor.get(provider).clearBreakpointsChanged();
-                const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-                auto &evaluator = runtime.getInternals().evaluator;
-                if (evaluator) {
-                    evaluator->setBreakpoints(m_breakpoints);
-                }
-            }
-
-            if (m_textEditor.get(provider).isTextChanged()) {
-                m_textEditor.get(provider).setTextChanged(false);
-                if (!m_hasUnevaluatedChanges.get(provider) ) {
-                    m_hasUnevaluatedChanges.get(provider) = true;
-                    m_changesWereParsed = false;
-                }
-                m_lastEditorChangeTime = std::chrono::steady_clock::now();
-                ImHexApi::Provider::markDirty();
-                markPatternFileDirty(provider);
-            }
-
-            if (m_hasUnevaluatedChanges.get(provider) && m_runningEvaluators == 0 && m_runningParsers == 0 &&
-                (std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
-
-                    auto code = m_textEditor.get(provider).getText();
-                    EventPatternEditorChanged::post(code);
-
-                    TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code = std::move(code), provider](auto &){
-                        this->parsePattern(code, provider);
-
-                        if (m_runAutomatically)
-                            m_triggerAutoEvaluate = true;
-                    });
-                    m_hasUnevaluatedChanges.get(provider) = false;
-            }
-
-            if (m_triggerAutoEvaluate.exchange(false)) {
-                this->evaluatePattern(m_textEditor.get(provider).getText(), provider);
-            }
-            if (m_textHighlighter.m_needsToUpdateColors && m_changesWereParsed && (m_runningParsers + m_runningEvaluators == 0)) {
-                TaskHolder taskHolder;
-                if (m_textHighlighter.getRunningColorizers() == 0) {
-                    m_textHighlighter.m_needsToUpdateColors = false;
-                    m_changesWereParsed = false;
-                    taskHolder = TaskManager::createBackgroundTask("HighlightSourceCode", [this](auto &) { m_textHighlighter.highlightSourceCode(); });
-                } else {
-                    m_textHighlighter.interrupt();
-                }
-            }
-        }
-
-        if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
-            ui::PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
-                [this] {
-                    m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
-                }, [this] {
-                    m_dangerousFunctionsAllowed = DangerousFunctionPerms::Deny;
-                }
-            );
-
-            m_dangerousFunctionCalled = false;
         }
 
         View::discardNavigationRequests();
@@ -1508,6 +1446,70 @@ namespace hex::plugin::builtin {
                     PopupAcceptPattern::open(this);
                 }
             });
+        }
+
+        {
+            if (m_textEditor.get(provider).isBreakpointsChanged()) {
+                m_breakpoints = m_textEditor.get(provider).getBreakpoints();
+                m_textEditor.get(provider).clearBreakpointsChanged();
+                const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+                auto &evaluator = runtime.getInternals().evaluator;
+                if (evaluator) {
+                    evaluator->setBreakpoints(m_breakpoints);
+                }
+            }
+
+            if (m_textEditor.get(provider).isTextChanged()) {
+                m_textEditor.get(provider).setTextChanged(false);
+                if (!m_hasUnevaluatedChanges.get(provider) ) {
+                    m_hasUnevaluatedChanges.get(provider) = true;
+                    m_changesWereParsed = false;
+                }
+                m_lastEditorChangeTime = std::chrono::steady_clock::now();
+                ImHexApi::Provider::markDirty();
+                markPatternFileDirty(provider);
+            }
+
+            if (m_hasUnevaluatedChanges.get(provider) && m_runningEvaluators == 0 && m_runningParsers == 0 &&
+                (std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
+
+                    auto code = m_textEditor.get(provider).getText();
+                    EventPatternEditorChanged::post(code);
+
+                    TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code = std::move(code), provider](auto &){
+                        this->parsePattern(code, provider);
+
+                        if (m_runAutomatically)
+                            m_triggerAutoEvaluate = true;
+                    });
+                    m_hasUnevaluatedChanges.get(provider) = false;
+            }
+
+            if (m_triggerAutoEvaluate.exchange(false)) {
+                this->evaluatePattern(m_textEditor.get(provider).getText(), provider);
+            }
+
+            if (m_textHighlighter.m_needsToUpdateColors && m_changesWereParsed && (m_runningParsers + m_runningEvaluators == 0)) {
+                if (m_textHighlighter.getRunningColorizers() == 0) {
+                    m_textHighlighter.m_needsToUpdateColors = false;
+                    m_changesWereParsed = false;
+                    TaskManager::createBackgroundTask("HighlightSourceCode", [this](auto &) { m_textHighlighter.highlightSourceCode(); });
+                } else {
+                    m_textHighlighter.interrupt();
+                }
+            }
+
+            if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
+                ui::PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
+                    [this] {
+                        m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
+                    }, [this] {
+                        m_dangerousFunctionsAllowed = DangerousFunctionPerms::Deny;
+                    }
+                );
+
+                m_dangerousFunctionCalled = false;
+            }
         }
     }
 
