@@ -79,10 +79,12 @@ namespace hex::init {
             }
 
             {
-                #if !defined(OS_MACOS)
-                    const static auto MinGLVersion = SemanticVersion(3, 1, 0);
-                #else
+                #if defined(OS_MACOS)
                     const static auto MinGLVersion = SemanticVersion(3, 2, 0);
+                #elif defined(OS_WEB)
+                    const static auto MinGLVersion = SemanticVersion(3, 0, 0);
+                #else
+                    const static auto MinGLVersion = SemanticVersion(3, 1, 0);
                 #endif
 
                 const auto &glVersion = ImHexApi::System::getGLVersion();
