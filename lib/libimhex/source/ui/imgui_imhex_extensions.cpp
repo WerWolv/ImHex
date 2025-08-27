@@ -1275,12 +1275,15 @@ namespace ImGuiExt {
     }
 
     bool BeginBox() {
-        PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5, 5));
-        auto result = BeginTable("##box", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchSame);
-        TableNextRow();
-        TableNextColumn();
+        PushStyleVar(ImGuiStyleVar_CellPadding, hex::scaled(5, 5));
+        if (BeginTable("##box", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchSame)) {
+            TableNextRow();
+            TableNextColumn();
 
-        return result;
+            return true;
+        }
+
+        return false;
     }
 
     void EndBox() {
