@@ -112,7 +112,12 @@ namespace hex::crash {
         #endif
     }
 
+    static std::atomic_bool s_terminationStarted;
+
     void handleCrash(const std::string &msg) {
+        if (s_terminationStarted.exchange(true))
+            return;
+
         // Call the crash callback
         crashCallback(msg);
 
@@ -130,6 +135,9 @@ namespace hex::crash {
 
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
+        if (s_terminationStarted.exchange(true))
+            return;
+
         #if !defined (DEBUG)
             if (signalNumber == SIGINT) {
                 ImHexApi::System::closeImHex();
@@ -152,6 +160,9 @@ namespace hex::crash {
     }
 
     static void uncaughtExceptionHandler() {
+        if (s_terminationStarted.exchange(true))
+            return;
+
         // Reset crash handlers, so we can't have a recursion if this code crashes
         resetCrashHandlers();
 
