@@ -292,7 +292,8 @@ namespace hex::plugin::builtin {
 
                 const auto progress = frontTask->getMaxValue() == 0 ? -1 : float(frontTask->getValue()) / float(frontTask->getMaxValue());
 
-                ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, u32(progress * 100));
+                if (progress >= 0)
+                    ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, u32(progress * 100));
 
                 const auto widgetStart = ImGui::GetCursorPos();
                 {
