@@ -623,27 +623,31 @@ namespace hex {
         // Draw Toasts
         {
             u32 index = 0;
+            float yOffset = 0;
             for (const auto &toast : impl::ToastBase::getQueuedToasts() | std::views::take(4)) {
-                const auto toastHeight = 60_scaled;
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5_scaled);
-                ImGui::SetNextWindowSize(ImVec2(350_scaled, toastHeight));
-                ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }) - scaled({ 0, (10 + toastHeight) * index }), ImGuiCond_Always, ImVec2(1, 1));
+                ImGui::SetNextWindowSize(ImVec2(350_scaled, 0));
+                ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }) - scaled({ 0, yOffset }), ImGuiCond_Always, ImVec2(1, 1));
+                ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, 100_scaled));
                 if (ImGui::Begin(fmt::format("##Toast_{}", index).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
                     auto drawList = ImGui::GetWindowDrawList();
 
                     const auto min = ImGui::GetWindowPos();
-                    const auto max = min + ImGui::GetWindowSize();
 
-                    drawList->PushClipRect(min, min + scaled({ 5, 60 }));
-                    drawList->AddRectFilled(min, max, toast->getColor(), 5_scaled);
-                    drawList->PopClipRect();
-
-                    ImGui::Indent();
+                    ImGui::Indent(5_scaled);
                     toast->draw();
                     ImGui::Unindent();
 
                     if (ImGui::IsWindowHovered() || toast->getAppearTime() <= 0)
                         toast->setAppearTime(ImGui::GetTime());
+
+                    const auto max = min + ImGui::GetWindowSize();
+
+                    drawList->PushClipRect(min, min + scaled({ 5, max.y - min.y }));
+                    drawList->AddRectFilled(min, max, toast->getColor(), 5_scaled);
+                    drawList->PopClipRect();
+
+                    yOffset += ImGui::GetWindowSize().y + 10_scaled;
                 }
                 ImGui::End();
                 ImGui::PopStyleVar();
