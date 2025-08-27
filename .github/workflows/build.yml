@@ -1115,7 +1115,7 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          export IMHEX_VERSION=$(cat VERSION)
+          export IMHEX_VERSION=$(cat VERSION)-${GITHUB_RUN_NUMBER}
           echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
           echo "CCACHE=ccache" >> $GITHUB_ENV
 
