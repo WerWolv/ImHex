@@ -1115,7 +1115,13 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          export IMHEX_VERSION=$(cat VERSION)-${GITHUB_RUN_NUMBER}
+          export IMHEX_VERSION=$(cat VERSION)
+          
+          if [[ "$IMHEX_VERSION" == *.WIP ]]; then
+              echo "IMHEX_VERSION=$IMHEX_VERSION-${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+          else
+              echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
+          fi
           echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
           echo "CCACHE=ccache" >> $GITHUB_ENV
 
