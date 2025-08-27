@@ -979,7 +979,13 @@ namespace hex {
 
                     const auto nightlyUpdateTime = hex::parseTime("%Y-%m-%dT%H:%M:%SZ", firstAsset["updated_at"].get<std::string>());
                     const auto imhexBuildTime = ImHexApi::System::getBuildTime();
-                    if (nightlyUpdateTime.has_value() && imhexBuildTime.has_value() && *nightlyUpdateTime > *imhexBuildTime) {
+
+                    // Give a bit of time leniency for the update time check
+                    // We're comparing here the binary build time to the release upload time. If we were to strictly compare
+                    // upload time to be greater than current build time, the check would always be true since the CI
+                    // takes a few minutes after the build to actually upload the artifact.
+                    // TODO: Is there maybe a better way to handle this without downloading the artifact just to check the build time?
+                    if (nightlyUpdateTime.has_value() && imhexBuildTime.has_value() && *nightlyUpdateTime > *imhexBuildTime + std::chrono::hours(1)) {
                         return "Nightly";
                     }
                 } else {
