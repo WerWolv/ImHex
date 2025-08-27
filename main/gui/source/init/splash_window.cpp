@@ -65,7 +65,7 @@ namespace hex::init {
 
             log::debug("OpenGL Vendor: '{}'", glVendorString);
             log::debug("OpenGL Renderer: '{}'", glRendererString);
-            log::debug("OpenGL Version: '{}'", glVersionString);
+            log::debug("OpenGL Version String: '{}'", glVersionString);
             log::debug("OpenGL Shading Language Version: '{}'", glShadingLanguageVersion);
 
             ImHexApi::System::impl::setGPUVendor(glVendorString);
@@ -75,6 +75,7 @@ namespace hex::init {
                 int glVersionMajor = 0, glVersionMinor = 0;
                 glGetIntegerv(GL_MAJOR_VERSION, &glVersionMajor);
                 glGetIntegerv(GL_MINOR_VERSION, &glVersionMinor);
+                log::debug("OpenGL Version: v{}.{}", glVersionMajor, glVersionMinor);
                 ImHexApi::System::impl::setGLVersion(SemanticVersion(glVersionMajor, glVersionMinor, 0));
             }
 
