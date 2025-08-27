@@ -77,7 +77,18 @@ namespace hex::crash {
         }
     }
 
-    extern "C" void triggerSafeShutdown(int signalNumber = 0) {
+     extern "C" [[noreturn]] void triggerSafeShutdown(int signalNumber = 0) {
+        if (!TaskManager::isMainThread()) {
+            log::error("Terminating from non-main thread, scheduling termination on main thread");
+            TaskManager::doLater([signalNumber] {
+                triggerSafeShutdown(signalNumber);
+            });
+
+            while (true) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        }
+
         // Trigger an event so that plugins can handle crashes
         EventAbnormalTermination::post(signalNumber);
 
@@ -168,7 +179,10 @@ namespace hex::crash {
 
         // Print the current exception info
         try {
-            std::rethrow_exception(std::current_exception());
+            if (std::uncaught_exceptions() > 0)
+                std::rethrow_exception(std::current_exception());
+            else
+                log::fatal("std::terminate() called without an active exception");
         } catch (std::exception &ex) {
             std::string exceptionStr = fmt::format("{}()::what() -> {}", trace::demangle(typeid(ex).name()), ex.what());
 
