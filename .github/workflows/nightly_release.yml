@@ -11,7 +11,7 @@ on:
 jobs:
   nightly-release:
     runs-on: ubuntu-24.04
-    name: Update Nightly Release
+    name: 🌃 Update Nightly Release
 
     steps:
       - name: 🧰 Checkout
