@@ -317,10 +317,10 @@ namespace hex::plugin::builtin {
             const u32 sizeBytes = (totalBits + 7) / 8;
             if (currSelection.has_value() && currSelection->size >= sizeBytes) {
                 u64 fixedPointValue = 0x00;
-                ImHexApi::Provider::get()->read(currSelection->address, &fixedPointValue, std::min(sizeof(fixedPointValue), currSelection->size));
+                ImHexApi::Provider::get()->read(currSelection->address, &fixedPointValue, std::min<u64>(sizeof(fixedPointValue), currSelection->size));
 
                 fixedPointValue = changeEndianness(fixedPointValue, sizeBytes, endian);
-                fixedPointValue &= hex::bitmask(totalBits);
+                fixedPointValue &= u64(hex::bitmask(totalBits));
 
                 const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
                 value = fmt::format(fmt::runtime(formatString), double(fixedPointValue) / double(1ULL << fractionBits));
