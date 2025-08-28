@@ -494,7 +494,7 @@ namespace hex::plugin::builtin {
                 { "Magic",                          &paths::Magic                },
                 { "Plugins",                        &paths::Plugins              },
                 { "Yara Patterns",                  &paths::Yara                 },
-                { "Yara Advaned Analysis",          &paths::YaraAdvancedAnalysis },
+                { "Yara Advanced Analysis",         &paths::YaraAdvancedAnalysis },
                 { "Config",                         &paths::Config               },
                 { "Updates",                        &paths::Updates              },
                 { "Backups",                        &paths::Backups              },
