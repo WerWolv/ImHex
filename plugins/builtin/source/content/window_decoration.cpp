@@ -728,6 +728,11 @@ namespace hex::plugin::builtin {
             }
         });
 
+        EventProviderDirtied::subscribe([] {
+            RequestUpdateWindowTitle::post();
+        });
+
+
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_header_command_palette", [](const ContentRegistry::Settings::SettingsValue &value) {
             s_showSearchBar = value.get<bool>(true);
         });
