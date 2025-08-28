@@ -121,9 +121,9 @@ namespace hex::plugin::builtin {
 
             // Draw the ImHex icon
             if (!m_logoTexture.isValid())
-                m_logoTexture = ImGuiExt::Texture::fromSVG(romfs::get("assets/common/logo.svg").span(), 0, 0, ImGuiExt::Texture::Filter::Linear);
+                m_logoTexture = ImGuiExt::Texture::fromSVG(romfs::get("assets/common/logo.svg").span(), 160_scaled, 160_scaled, ImGuiExt::Texture::Filter::Linear);
 
-            ImGui::Image(m_logoTexture, scaled({ 160, 160 }));
+            ImGui::Image(m_logoTexture, m_logoTexture.getSize());
             if (ImGui::IsItemClicked()) {
                 m_clickCount += 1;
             }
