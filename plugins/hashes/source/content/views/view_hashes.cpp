@@ -151,21 +151,20 @@ namespace hex::plugin::hashes {
     }
 
 
-    void ViewHashes::drawContent() {
+    void ViewHashes::drawAddHashPopup() {
         const auto &hashes = ContentRegistry::Hashes::impl::getHashes();
 
         if (m_selectedHash == nullptr && !hashes.empty()) {
             m_selectedHash = hashes.front().get();
         }
 
-        if (ImGuiExt::DimmedButton("hex.hashes.view.hashes.add"_lang)) {
-            ImGui::OpenPopup("##CreateHash");
-        }
-
-        ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos(), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(scaled({ 400, 0 }), ImGuiCond_Always);
         if (ImGui::BeginPopup("##CreateHash")) {
-            ImGuiExt::InputTextIcon("hex.hashes.view.hashes.hash_name"_lang, ICON_VS_SYMBOL_KEY, m_newHashName);
+            {
+                const auto text = "hex.hashes.view.hashes.hash_name"_lang;
+                ImGui::PushItemWidth(-ImGui::CalcTextSize(text).x - ImGui::GetStyle().FramePadding.x * 2);
+                ImGuiExt::InputTextIcon(text, ICON_VS_SYMBOL_KEY, m_newHashName);
+                ImGui::PopItemWidth();
+            }
 
             ImGui::NewLine();
 
@@ -208,10 +207,10 @@ namespace hex::plugin::hashes {
 
             ImGui::EndPopup();
         }
+    }
 
-        ImGui::SameLine(0, 10_scaled);
-        ImGuiExt::HelpHover("hex.hashes.view.hashes.hover_info"_lang, ICON_VS_INFO);
 
+    void ViewHashes::drawContent() {
         if (ImGui::BeginTable("##hashes", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupColumn("hex.hashes.view.hashes.table.name"_lang);
             ImGui::TableSetupColumn("hex.hashes.view.hashes.table.type"_lang);
@@ -270,6 +269,31 @@ namespace hex::plugin::hashes {
 
             if (indexToRemove.has_value()) {
                 m_hashFunctions->erase(m_hashFunctions->begin() + indexToRemove.value());
+            }
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            const auto startPos = ImGui::GetCursorScreenPos();
+            ImGui::TableNextColumn();
+            ImGui::TableNextColumn();
+            ImGui::Selectable("##add_hash", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap | ImGuiSelectableFlags_NoAutoClosePopups);
+
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                ImGui::OpenPopup("##CreateHash");
+
+            ImGui::SetNextWindowPos(startPos + ImVec2(-ImGui::GetStyle().CellPadding.x, ImGui::GetTextLineHeight()), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x, 0), ImGuiCond_Always);
+            this->drawAddHashPopup();
+
+            ImGui::SameLine();
+
+            {
+                ImGui::PushClipRect(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize(), false);
+                const auto text = "(Double click to add new Hash...)";
+                const auto textSize = ImGui::CalcTextSize(text);
+                ImGui::SetCursorPosX((ImGui::GetWindowSize().x - textSize.x) / 2);
+                ImGuiExt::TextFormattedDisabled(text);
+                ImGui::PopClipRect();
             }
 
             ImGui::EndTable();

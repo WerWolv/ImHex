@@ -17,6 +17,8 @@ namespace hex::plugin::hashes {
         bool importHashes(prv::Provider *provider, const nlohmann::json &json);
         bool exportHashes(prv::Provider *provider, nlohmann::json &json);
 
+        void drawAddHashPopup();
+
     private:
         ContentRegistry::Hashes::Hash *m_selectedHash = nullptr;
         std::string m_newHashName;
