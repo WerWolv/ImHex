@@ -689,14 +689,7 @@ namespace hex::plugin::builtin {
                     std::vector<u8> stringBuffer(std::min<size_t>(currSelection->size, 0x1000), 0x00);
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
-                    u64 offset = 0;
-                    while (offset < stringBuffer.size()) {
-                        const auto [character, size] = encodingFile.getEncodingFor(std::span(stringBuffer).subspan(offset));
-                        value += character;
-                        offset += size;
-                    }
-                    copyValue = value;
-
+                    copyValue = value = encodingFile.decodeAll(stringBuffer);
 
                     if (value.size() > MaxStringLength) {
                         value.resize(MaxStringLength);

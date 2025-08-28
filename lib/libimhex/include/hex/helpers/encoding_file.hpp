@@ -27,10 +27,11 @@ namespace hex {
         EncodingFile& operator=(const EncodingFile &other);
         EncodingFile& operator=(EncodingFile &&other) noexcept;
 
-        [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(std::span<u8> buffer) const;
+        [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(std::span<const u8> buffer) const;
         [[nodiscard]] u64 getEncodingLengthFor(std::span<u8> buffer) const;
         [[nodiscard]] u64 getShortestSequence() const { return m_shortestSequence; }
         [[nodiscard]] u64 getLongestSequence()  const { return m_longestSequence;  }
+        [[nodiscard]] std::string decodeAll(std::span<const u8> buffer) const;
 
         [[nodiscard]] bool valid() const { return m_valid; }
 

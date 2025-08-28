@@ -26,6 +26,9 @@ namespace hex::plugin::builtin {
             [[nodiscard]] virtual bool canBePinned() const { return false; }
             [[nodiscard]] bool isPinned() const { return m_isPinned; }
             void setPinned(const bool pinned) { m_isPinned = pinned; }
+
+            [[nodiscard]] virtual ImGuiWindowFlags getFlags() const { return ImGuiWindowFlags_AlwaysAutoResize; }
+
         private:
             bool m_isPinned = false;
         };

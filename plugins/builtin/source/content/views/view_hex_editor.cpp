@@ -32,6 +32,7 @@
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
 #include <pl/patterns/pattern.hpp>
 #include <hex/helpers/menu_items.hpp>
+#include <ui/text_editor.hpp>
 #include <wolv/literals.hpp>
 
 using namespace std::literals::string_literals;
@@ -545,6 +546,46 @@ namespace hex::plugin::builtin {
         std::function<void(const Region &selection, bool selectionCheck)> m_pasteCallback;
     };
 
+    class PopupDecodedString final : public ViewHexEditor::Popup {
+    public:
+        explicit PopupDecodedString(std::string decodedString) : m_decodedString(std::move(decodedString)) {
+        }
+
+        void draw(ViewHexEditor *) override {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
+
+            auto text = wolv::util::trim(wolv::util::wrapMonospacedString(
+                m_decodedString,
+                ImGui::CalcTextSize("M").x,
+                std::max(100_scaled, ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize)
+            ));
+
+            ImGui::InputTextMultiline(
+                    "##",
+                    text.data(),
+                    text.size() + 1,
+                    ImGui::GetContentRegionAvail(),
+                    ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll
+            );
+
+            ImGui::PopStyleColor();
+            ImGui::PopStyleVar(2);
+        }
+
+        [[nodiscard]] UnlocalizedString getTitle() const override {
+            return "hex.builtin.view.hex_editor.menu.edit.decoded_string.popup.title";
+        }
+
+        [[nodiscard]] bool canBePinned() const override { return true; }
+        [[nodiscard]] ImGuiWindowFlags getFlags() const override { return ImGuiWindowFlags_None; }
+
+    private:
+        std::string m_decodedString;
+        ui::TextEditor m_editor;
+    };
+
     /* Hex Editor */
 
     ViewHexEditor::ViewHexEditor() : View::Window("hex.builtin.view.hex_editor.name", ICON_VS_FILE_BINARY) {
@@ -711,7 +752,7 @@ namespace hex::plugin::builtin {
         }
 
         if (m_currPopup != nullptr) {
-            if (ImGui::Begin(fmt::format("##{}", m_currPopup->getTitle().get()).c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking)) {
+            if (ImGui::Begin(fmt::format("##{}", m_currPopup->getTitle().get()).c_str(), &open, m_currPopup->getFlags() | ImGuiWindowFlags_NoDocking)) {
                 if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                     this->closePopup();
                 } else {
@@ -1665,6 +1706,32 @@ namespace hex::plugin::builtin {
                                                     }
                                                 },
                                                 [] { return ImHexApi::HexEditor::isSelectionValid() && ImHexApi::Provider::isValid(); },
+                                                this);
+
+        /* Decode as Text */
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.decode_as_text" }, ICON_VS_CHAT_SPARKLE, 1960, Shortcut::None,
+                                                [this] {
+                                                    const auto selection = ImHexApi::HexEditor::getSelection();
+
+                                                    TaskManager::createTask("", TaskManager::NoProgress, [this, selection] {
+                                                        const auto &customEncoding = this->m_hexEditor.getCustomEncoding();
+                                                        if (!customEncoding.has_value())
+                                                            return;
+
+                                                        std::vector<u8> buffer(selection->getSize());
+                                                        selection->getProvider()->read(selection->getStartAddress(), buffer.data(), buffer.size());
+
+                                                        auto decodedString = customEncoding->decodeAll(buffer);
+                                                        TaskManager::doLater([this, decodedString = std::move(decodedString)]() mutable {
+                                                            this->openPopup<PopupDecodedString>(std::move(decodedString));
+                                                        });
+                                                    });
+                                                },
+                                                [this] {
+                                                    return  ImHexApi::HexEditor::isSelectionValid() &&
+                                                            ImHexApi::Provider::isValid() &&
+                                                            this->m_hexEditor.getCustomEncoding().has_value();
+                                                },
                                                 this);
     }
 
