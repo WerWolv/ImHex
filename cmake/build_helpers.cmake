@@ -809,6 +809,13 @@ macro(setUninstallTarget)
 endmacro()
 
 macro(addBundledLibraries)
+    # Make sure the build is using vcpkg on Windows and Emscripten, otherwise none of these dependencies will be found
+    if (MSVC OR EMSCRIPTEN)
+        if (NOT (CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg"))
+            message(AUTHOR_WARNING "Your current environment probably needs to be setup to use vcpkg, otherwise none of the dependencies will be found!")
+        endif()
+    endif()
+
     set(EXTERNAL_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/external")
     set(THIRD_PARTY_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/third_party")
     set(BUILD_SHARED_LIBS OFF)
