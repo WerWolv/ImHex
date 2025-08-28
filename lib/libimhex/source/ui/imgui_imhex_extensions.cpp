@@ -550,7 +550,7 @@ namespace ImGuiExt {
 
         PushStyleColor(ImGuiCol_Text, iconColor);
         ImGui::PushID(text);
-        Button(icon);
+        Button(icon, ImVec2(0, ImGui::GetTextLineHeightWithSpacing()));
         ImGui::PopID();
         PopStyleColor();
 

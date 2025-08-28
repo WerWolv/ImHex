@@ -304,7 +304,7 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginTable("##datainspector", m_tableEditingModeEnabled ? 3 : 2,
                               ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY,
-                              ImVec2(0, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() * (hideSettings ? 2.75 : 7.5)))) {
+                              ImVec2(0, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() * (hideSettings ? 1.5 : 7.5)))) {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.name"_lang,
                                     ImGuiTableColumnFlags_WidthFixed);
@@ -330,13 +330,12 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         }
 
-        ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(ICON_VS_EDIT).x);
-        ImGuiExt::DimmedButtonToggle(ICON_VS_EDIT, &m_tableEditingModeEnabled);
-        ImGui::SetItemTooltip("%s", "hex.ui.common.edit"_lang.get());
-
         // Draw inspector settings
+        const auto width = ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(ICON_VS_EDIT).x - ImGui::GetStyle().ItemSpacing.x * 2;
+        if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, &hideSettings, hideSettings ? ImVec2(width, 1) : ImVec2(0, 0))) {
+            ImGuiExt::DimmedButtonToggle(fmt::format("{}  {}", ICON_VS_EDIT, "hex.ui.common.edit"_lang).c_str(), &m_tableEditingModeEnabled, ImVec2(-1, 0));
+            ImGui::Separator();
 
-        if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, &hideSettings, hideSettings ? ImVec2(0, 1) : ImVec2(0, 0))) {
             ImGui::PushItemWidth(-1);
             {
                 // Draw endian setting
@@ -351,6 +350,12 @@ namespace hex::plugin::builtin {
             ImGui::PopItemWidth();
         }
         ImGuiExt::EndSubWindow();
+
+        if (hideSettings) {
+            ImGui::SameLine();
+            ImGuiExt::DimmedButtonToggle(ICON_VS_EDIT, &m_tableEditingModeEnabled);
+            ImGui::SetItemTooltip("%s", "hex.ui.common.edit"_lang.get());
+        }
     }
 
     void ViewDataInspector::drawInspectorRows() {
