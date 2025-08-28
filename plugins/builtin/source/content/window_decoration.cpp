@@ -724,7 +724,9 @@ namespace hex::plugin::builtin {
 
                 title = wolv::util::replaceStrings(title, DefaultImHexTitle, s_applicationName);
 
-                glfwSetWindowTitle(window, title.c_str());
+                TaskManager::doLater([window, title] {
+                    glfwSetWindowTitle(window, title.c_str());
+                });
             }
         });
 
