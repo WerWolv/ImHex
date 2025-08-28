@@ -67,7 +67,7 @@ namespace hex::plugin::builtin {
         }
 
         // Run analyzers for each section
-        analysis.task = TaskManager::createTask("hex.builtin.view.information.analyzing", analysis.informationSections.size(), [provider, &analysis](Task &task) {
+        analysis.task = TaskManager::createTask("hex.builtin.view.information.analyzing", analysis.informationSections.size(), [this, provider, &analysis](Task &task) {
             u32 progress = 0;
             for (const auto &section : analysis.informationSections) {
                 // Only process the section if it is enabled
@@ -92,6 +92,8 @@ namespace hex::plugin::builtin {
                 progress += 1;
                 task.update(progress);
             }
+
+            m_settingsCollapsed.get(provider) = true;
         });
     }        
 
@@ -104,7 +106,7 @@ namespace hex::plugin::builtin {
 
                 // Draw settings window
                 ImGui::BeginDisabled(analysis.task.isRunning());
-                if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang)) {
+                if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, &m_settingsCollapsed.get(provider), m_settingsCollapsed.get(provider) ? ImVec2(0, 1) : ImVec2(0, 0))) {
                     // Create a table so we can draw global settings on the left and section specific settings on the right
                     if (ImGui::BeginTable("SettingsTable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingStretchProp, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                         ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.3F);
@@ -152,6 +154,8 @@ namespace hex::plugin::builtin {
                 }
                 ImGuiExt::EndSubWindow();
                 ImGui::EndDisabled();
+
+                ImGui::NewLine();
 
                 if (analysis.analyzedProvider != nullptr) {
                     for (const auto &section : analysis.informationSections) {
@@ -217,8 +221,11 @@ namespace hex::plugin::builtin {
                                     section->drawContent();
                                 else if (section->isAnalyzing())
                                     ImGuiExt::TextSpinner("hex.builtin.view.information.analyzing"_lang);
-                                else
+                                else {
+                                    ImGui::BeginDisabled();
                                     ImGuiExt::TextFormattedCenteredHorizontal("hex.builtin.view.information.not_analyzed"_lang);
+                                    ImGui::EndDisabled();
+                                }
                             }
                             ImGui::EndDisabled();
                         }
@@ -226,8 +233,6 @@ namespace hex::plugin::builtin {
                         ImGui::PopStyleVar();
 
                         ImGui::PopID();
-
-                        ImGui::NewLine();
                     }
                 }
             }

@@ -30,6 +30,7 @@ namespace hex::plugin::builtin {
         };
 
         PerProvider<AnalysisData> m_analysisData;
+        PerProvider<bool> m_settingsCollapsed;
     };
 
 }
