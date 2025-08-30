@@ -346,7 +346,9 @@ namespace hex::plugin::builtin {
             if (requiredBytes > rawData.size())
                 throwNodeError(fmt::format("Image requires at least {} bytes of data, but only {} bytes are available", requiredBytes, rawData.size()));
 
-            m_data = rawData;
+            m_data.clear();
+            m_data.resize(requiredBytes);
+            std::copy_n(rawData.data(), requiredBytes, m_data.data());
             m_width = width;
             m_height = height;
             m_texture.reset();
