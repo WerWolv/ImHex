@@ -85,7 +85,11 @@ namespace hex::crash {
             });
 
             // Terminate this thread
-            pthread_kill(pthread_self(), SIGABRT);
+            #if defined(_MSC_VER)
+                TerminateThread(GetCurrentThread(), EXIT_FAILURE);
+            #else
+                pthread_kill(pthread_self(), SIGABRT);
+            #endif
 
             while (true) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
