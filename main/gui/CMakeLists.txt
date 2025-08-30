@@ -64,6 +64,8 @@ if (WIN32)
 
     if (MSVC)
         target_link_options(main PRIVATE /MANIFEST:NO /ENTRY:mainCRTStartup)
+    else()
+        target_link_libraries(main PRIVATE pthread)
     endif()
 else ()
     target_link_libraries(main PRIVATE pthread)
