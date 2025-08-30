@@ -1122,7 +1122,6 @@ jobs:
           else
               echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
           fi
-          echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
           echo "CCACHE=ccache" >> $GITHUB_ENV
 
       - name: 📜 Move snap directory to root
