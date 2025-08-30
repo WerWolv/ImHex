@@ -274,8 +274,12 @@ namespace hex::init {
     // Run all exit tasks, and print to console
     void runExitTasks() {
         for (const auto &[name, task, async, running] : init::getExitTasks()) {
-            const bool result = task();
-            log::info("Exit task '{0}' finished {1}", name, result ? "successfully" : "unsuccessfully");
+            try {
+                const bool result = task();
+                log::info("Exit task '{0}' finished {1}", name, result ? "successfully" : "unsuccessfully");
+            } catch (const std::exception &e) {
+                log::error("Exit task '{}' failed with exception: {}", name, e.what());
+            }
         }
     }
 

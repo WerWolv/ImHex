@@ -179,18 +179,18 @@ namespace hex::crash {
 
         // Print the current exception info
         try {
-            if (std::uncaught_exceptions() > 0)
-                std::rethrow_exception(std::current_exception());
+            if (auto exception = std::current_exception(); exception != nullptr)
+                std::rethrow_exception(exception);
             else
-                log::fatal("std::terminate() called without an active exception");
+                log::fatal("Program terminated due to unknown reason!");
         } catch (std::exception &ex) {
             std::string exceptionStr = fmt::format("{}()::what() -> {}", trace::demangle(typeid(ex).name()), ex.what());
 
             handleCrash(exceptionStr);
             log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
-        }
 
-        triggerSafeShutdown();
+            triggerSafeShutdown();
+        }
     }
 
     // Setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
