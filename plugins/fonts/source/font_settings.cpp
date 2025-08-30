@@ -257,7 +257,7 @@ namespace hex::fonts {
         nlohmann::json json = nlohmann::json::object();
 
         json["font_file"] = m_fontFilePicker.store();
-        json["font_size"] = m_fontSize.store();
+        json["font_size_pt"] = m_fontSize.store();
         json["bold"] = m_bold;
         json["italic"] = m_italic;
         json["antialiased"] = m_antiAliased.store();
@@ -265,11 +265,16 @@ namespace hex::fonts {
         return json;
     }
     void FontSelector::load(const nlohmann::json& data) {
-        m_fontFilePicker.load(data["font_file"]);
-        m_fontSize.load(data["font_size"]);
-        m_bold = data["bold"];
-        m_italic = data["italic"];
-        m_antiAliased.load(data["antialiased"]);
+        if (data.contains("font_file"))
+            m_fontFilePicker.load(data["font_file"]);
+        if (data.contains("font_size_pt"))
+            m_fontSize.load(data["font_size_pt"]);
+        if (data.contains("bold"))
+            m_bold = data["bold"];
+        if (data.contains("italic"))
+            m_italic = data["italic"];
+        if (data.contains("antialiased"))
+            m_antiAliased.load(data["antialiased"]);
     }
 
     [[nodiscard]] const std::fs::path& FontSelector::getFontPath() const {
