@@ -1,9 +1,9 @@
 #include "content/providers/motorola_srec_provider.hpp"
 
-
+#include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/localization_manager.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
@@ -185,12 +185,36 @@ namespace hex::plugin::builtin {
         }
 
         std::optional<u64> maxAddress;
+        bool firstAddress = true;
+        u64 regionStartAddr = 0;
+        u32 prevAddrEnd = 0;
+        u32 blockIdx = 0;
+        u64 blockSize = 0;
+
         for (auto &[address, bytes] : data.value()) {
             auto endAddress = (address + bytes.size()) - 1;
-            m_data.emplace({ address, endAddress }, std::move(bytes));
+            if (firstAddress) {
+                regionStartAddr = address;
+                firstAddress = false;
+            } else {
+                if (address > (prevAddrEnd + 1)) {
+                    m_memoryRegions.insert({{.address=regionStartAddr, .size=blockSize},
+                        fmt::format("Block {}", blockIdx)});
+                    regionStartAddr = address;
+                    blockSize = 0;
+                    blockIdx++;
+                }
+            }
+            blockSize += bytes.size();
+            prevAddrEnd = endAddress;
 
+            m_data.emplace({ address, endAddress }, std::move(bytes));
             if (endAddress > maxAddress)
                 maxAddress = endAddress;
+        }
+
+        if (blockSize > 0) {
+            m_memoryRegions.insert({{.address=regionStartAddr, .size=blockSize}, fmt::format("Block {}", blockIdx)});
         }
 
         if (maxAddress.has_value())
@@ -200,6 +224,9 @@ namespace hex::plugin::builtin {
 
         m_dataValid = true;
 
+        // jump to first region
+        auto firstRegion = *m_memoryRegions.begin();
+        ImHexApi::HexEditor::setSelection(firstRegion.region.getStartAddress(), 1);
         return true;
     }
 
