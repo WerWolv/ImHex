@@ -24,6 +24,10 @@
 
 #if defined (OS_WINDOWS)
     #include <windows.h>
+
+    #if !defined(_MSC_VER)
+        #include <pthread.h>
+    #endif
 #elif defined (OS_MACOS)
     #include <sys/utsname.h>
 #endif
