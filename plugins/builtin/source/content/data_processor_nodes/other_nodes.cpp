@@ -25,10 +25,14 @@ namespace hex::plugin::builtin {
             const auto &address = u64(this->getIntegerOnInput(0));
             const auto &size    = u64(this->getIntegerOnInput(1));
 
+            const auto provider = ImHexApi::Provider::get();
+            if (address + size > provider->getActualSize())
+                throwNodeError("Read exceeds file size");
+
             std::vector<u8> data;
             data.resize(size);
 
-            ImHexApi::Provider::get()->readRaw(address, data.data(), size);
+            provider->readRaw(address, data.data(), size);
 
             this->setBufferOnOutput(2, data);
         }
