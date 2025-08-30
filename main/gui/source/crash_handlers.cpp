@@ -269,6 +269,7 @@ namespace hex::crash {
     }
 
     void resetCrashHandlers() {
+        log::resumeLogging();
         std::set_terminate(nullptr);
 
         for (auto signal : Signals)
