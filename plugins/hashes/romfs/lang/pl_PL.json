@@ -18,6 +18,7 @@
     "hex.hashes.hash.common.xor_out": "XOR wyjścia",
     "hex.hashes.hash.sum": "Suma",
     "hex.hashes.hash.sum.fold": "Zwiń wynik",
+    "hex.hashes.view.hashes.add": "Dodaj hash",
     "hex.hashes.view.hashes.function": "Funkcja skrótu",
     "hex.hashes.view.hashes.hash": "Hash",
     "hex.hashes.view.hashes.hash_name": "Nazwa hash",

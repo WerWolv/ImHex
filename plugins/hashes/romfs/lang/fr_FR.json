@@ -6,6 +6,7 @@
     "hex.hashes.view.hashes.hover_info": "Passez la souris sur la sélection de l'éditeur hexadécimal et maintenez la touche MAJ enfoncée pour voir les hachages de cette région.",
     "hex.hashes.view.hashes.name": "Hachages",
     "hex.hashes.view.hashes.no_settings": "Aucun paramètre disponible",
+    "hex.hashes.view.hashes.add": "Ajouter un hachage",
     "hex.hashes.view.hashes.remove": "Supprimer un hachage",
     "hex.hashes.view.hashes.hash_name": "Nom du hachage",
     "hex.hashes.view.hashes.table.name": "Nom",

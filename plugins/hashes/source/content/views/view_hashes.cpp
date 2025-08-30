@@ -291,7 +291,7 @@ namespace hex::plugin::hashes {
 
             {
                 ImGui::PushClipRect(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize(), false);
-                const auto text = "hex.hashes.view.hashes.add"_lang;
+                const auto text = "hex.hashes.view.hashes.table_add"_lang;
                 const auto textSize = ImGui::CalcTextSize(text);
                 ImGui::SetCursorPosX((ImGui::GetWindowSize().x - textSize.x) / 2);
                 ImGuiExt::TextFormattedDisabled(text);
