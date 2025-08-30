@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
             ui::ToastError::open("hex.builtin.view.fullscreen.file_info.error.file_not_readable"_lang);
         }
 
-        m_analysisTask = TaskManager::createBlockingTask("hex.builtin.view.fullscreen.file_info.analyzing", TaskManager::NoProgress, [this] {
+        m_analysisTask = TaskManager::createBlockingTask("hex.builtin.view.fullscreen.file_info.analyzing", TaskManager::NoProgress, [this](Task &task) {
             m_mimeType = magic::getMIMEType(&m_provider);
             if (!magic::isValidMIMEType(m_mimeType)) {
                 m_mimeType.clear();
@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
                 m_fileDescription = magic::getDescription(&m_provider, 0, 100_KiB, true);
             }
 
-            m_foundPatterns = magic::findViablePatterns(&m_provider);
+            m_foundPatterns = magic::findViablePatterns(&m_provider, &task);
             if (!m_foundPatterns.empty()) {
                 pl::PatternLanguage runtime;
                 ContentRegistry::PatternLanguage::configureRuntime(runtime, &m_provider);

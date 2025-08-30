@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 
+#include <hex/api/task_manager.hpp>
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/fs.hpp>
 
@@ -36,6 +37,6 @@ namespace hex::magic {
         std::optional<u64> magicOffset;
     };
 
-    std::vector<FoundPattern> findViablePatterns(prv::Provider *provider);
+    std::vector<FoundPattern> findViablePatterns(prv::Provider *provider, Task* task = nullptr);
 
 }

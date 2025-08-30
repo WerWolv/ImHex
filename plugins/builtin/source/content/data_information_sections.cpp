@@ -90,7 +90,7 @@ namespace hex::plugin::builtin {
                 m_dataExtensions            = magic::getExtensions(data);
                 m_patternDataDescription    = std::nullopt;
 
-                const auto foundPatterns = magic::findViablePatterns(provider);
+                const auto foundPatterns = magic::findViablePatterns(provider, &task);
                 if (!foundPatterns.empty()) {
                     pl::PatternLanguage runtime;
                     ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);

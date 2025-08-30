@@ -15,6 +15,7 @@
 #include <string>
 
 #include <magic.h>
+#include <hex/api/task_manager.hpp>
 #include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/helpers/binary_pattern.hpp>
 
@@ -233,7 +234,7 @@ namespace hex::magic {
     }
 
 
-    std::vector<FoundPattern> findViablePatterns(prv::Provider *provider) {
+    std::vector<FoundPattern> findViablePatterns(prv::Provider *provider, Task* task) {
         std::vector<FoundPattern> result;
 
         pl::PatternLanguage runtime;
@@ -246,6 +247,9 @@ namespace hex::magic {
         std::error_code errorCode;
         for (const auto &dir : paths::Patterns.read()) {
             for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
+                if (task != nullptr)
+                    task->update();
+
                 foundCorrectType = false;
                 if (!entry.is_regular_file())
                     continue;

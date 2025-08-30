@@ -65,6 +65,10 @@ namespace hex::plugin::builtin {
             std::scoped_lock lock(m_view->m_possiblePatternFilesMutex);
 
             auto* provider = ImHexApi::Provider::get();
+            if (provider == nullptr) {
+                this->close();
+                return;
+            }
 
             ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
@@ -1433,11 +1437,11 @@ namespace hex::plugin::builtin {
         if (m_shouldAnalyze) {
             m_shouldAnalyze = false;
 
-            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider] {
+            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider](Task &task) {
                 if (!m_autoLoadPatterns)
                     return;
 
-                auto foundPatterns = magic::findViablePatterns(provider);
+                auto foundPatterns = magic::findViablePatterns(provider, &task);
 
                 if (!foundPatterns.empty()) {
                     std::scoped_lock lock(m_possiblePatternFilesMutex);
