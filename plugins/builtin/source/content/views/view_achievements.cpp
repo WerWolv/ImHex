@@ -33,14 +33,18 @@ namespace hex::plugin::builtin {
             }
         });
 
+
         // Load settings
         {
-            bool defaultValue = true;
             #if defined(OS_WEB)
-                defaultValue = false;
+                m_showPopup = false;
+            #else
+                m_showPopup = true;
             #endif
 
-            m_showPopup = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", defaultValue);
+            ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", [this](const ContentRegistry::Settings::SettingsValue &value) {
+                m_showPopup = value.get<bool>(true);
+            });
         }
     }
 
