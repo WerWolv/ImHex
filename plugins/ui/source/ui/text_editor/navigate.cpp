@@ -328,7 +328,7 @@ namespace hex::ui {
         setCursorPosition(m_state.m_selection.m_end);
     }
 
-    TextEditor::Coordinates TextEditor::setCoordinates(i32 line, i32 column) const {
+    TextEditor::Coordinates TextEditor::setCoordinates(i32 line, i32 column) {
         if (isEmpty())
             return Coordinates(0, 0);
 
@@ -348,12 +348,12 @@ namespace hex::ui {
         return result;
     }
 
-    TextEditor::Coordinates TextEditor::setCoordinates(const Coordinates &value) const {
+    TextEditor::Coordinates TextEditor::setCoordinates(const Coordinates &value) {
         auto sanitized_value = setCoordinates(value.m_line, value.m_column);
         return sanitized_value;
     }
 
-    TextEditor::Selection TextEditor::setCoordinates(const Selection &value) const {
+    TextEditor::Selection TextEditor::setCoordinates(const Selection &value) {
         auto start = setCoordinates(value.m_start);
         auto end = setCoordinates(value.m_end);
         if (start == Invalid || end == Invalid)
@@ -379,7 +379,7 @@ namespace hex::ui {
         coordinates.m_column += incr;
     }
 
-    TextEditor::Coordinates TextEditor::findWordStart(const Coordinates &from) const {
+    TextEditor::Coordinates TextEditor::findWordStart(const Coordinates &from) {
         Coordinates at = setCoordinates(from);
         if (at.m_line >= (i32) m_lines.size())
             return at;
@@ -400,7 +400,7 @@ namespace hex::ui {
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
-    TextEditor::Coordinates TextEditor::findWordEnd(const Coordinates &from) const {
+    TextEditor::Coordinates TextEditor::findWordEnd(const Coordinates &from) {
         Coordinates at = from;
         if (at.m_line >= (i32) m_lines.size())
             return at;
@@ -421,7 +421,7 @@ namespace hex::ui {
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
-    TextEditor::Coordinates TextEditor::findNextWord(const Coordinates &from) const {
+    TextEditor::Coordinates TextEditor::findNextWord(const Coordinates &from)  {
         Coordinates at = from;
         if (at.m_line >= (i32) m_lines.size())
             return at;
@@ -443,7 +443,7 @@ namespace hex::ui {
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
-    TextEditor::Coordinates TextEditor::findPreviousWord(const Coordinates &from) const {
+    TextEditor::Coordinates TextEditor::findPreviousWord(const Coordinates &from) {
         Coordinates at = from;
         if (at.m_line >= (i32) m_lines.size())
             return at;

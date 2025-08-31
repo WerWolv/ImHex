@@ -27,6 +27,22 @@ namespace hex::ui {
         return count;
     }
 
+    i32 TextEditor::getLineCharacterCount(i32 lineIndex) {
+        if (lineIndex >= (i64) m_lines.size() || lineIndex < 0)
+            return 0;
+        Line &line = m_lines[lineIndex];
+        if (line.m_lineMaxColumn != -1)
+            return line.m_lineMaxColumn;
+        else {
+            auto str = line.m_chars;
+            i32 count = 0;
+            for (u32 idx = 0; idx < str.size(); count++)
+                idx += TextEditor::utf8CharLength(str[idx]);
+            line.m_lineMaxColumn = count;
+            return count;
+        }
+    }
+
     // "Borrowed" from ImGui source
     void TextEditor::imTextCharToUtf8(std::string &buffer, u32 c) {
         if (c < 0x80) {
@@ -78,7 +94,7 @@ namespace hex::ui {
         return index;
     }
 
-    TextEditor::Coordinates TextEditor::screenPosToCoordinates(const ImVec2 &position) const {
+    TextEditor::Coordinates TextEditor::screenPosToCoordinates(const ImVec2 &position) {
         ImVec2 local = position - ImGui::GetCursorScreenPos();
         i32 lineNo = std::max(0, (i32) floor(local.y / m_charAdvance.y));
         if (local.x < (m_leftMargin - 2) || lineNo >= (i32) m_lines.size() || m_lines[lineNo].empty())
@@ -129,7 +145,11 @@ namespace hex::ui {
         return col;
     }
 
-    TextEditor::Coordinates TextEditor::getCharacterCoordinates(i32 lineIndex, i32 strIndex) const {
+    i32 TextEditor::Line::getMaxCharColumn() const {
+        return getCharacterColumn(size());
+    }
+
+    TextEditor::Coordinates TextEditor::getCharacterCoordinates(i32 lineIndex, i32 strIndex) {
         if (lineIndex < 0 || lineIndex >= (i32) m_lines.size())
             return Coordinates(0, 0);
         auto &line = m_lines[lineIndex];
@@ -144,14 +164,8 @@ namespace hex::ui {
         return line.size();
     }
 
-    i32 TextEditor::getLineCharacterCount(i32 line) const {
-        return getLineMaxColumn(line);
-    }
-
-    i32 TextEditor::getLineMaxColumn(i32 line) const {
-        if (line >= (i64) m_lines.size() || line < 0)
-            return 0;
-        return getStringCharacterCount(m_lines[line].m_chars);
+    i32 TextEditor::getLineMaxColumn(i32 lineIndex) {
+        return getLineCharacterCount(lineIndex);
     }
 
     TextEditor::Coordinates TextEditor::stringIndexToCoordinates(i32 strIndex, const std::string &input) {

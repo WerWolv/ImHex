@@ -156,6 +156,7 @@ namespace hex::ui {
         m_colors = line.m_colors;
         m_flags = line.m_flags;
         m_colorized = line.m_colorized;
+        m_lineMaxColumn = line.m_lineMaxColumn;
         return *this;
     }
 
@@ -164,6 +165,7 @@ namespace hex::ui {
         m_colors = std::move(line.m_colors);
         m_flags = std::move(line.m_flags);
         m_colorized = line.m_colorized;
+        m_lineMaxColumn = line.m_lineMaxColumn;
         return *this;
     }
 
@@ -196,6 +198,7 @@ namespace hex::ui {
         m_colors.push_back(0x00);
         m_flags.push_back(0x00);
         m_colorized = false;
+        m_lineMaxColumn = -1;
     }
 
     bool TextEditor::Line::empty() const {
@@ -273,8 +276,11 @@ namespace hex::ui {
     }
 
     void TextEditor::Line::append(LineIterator begin, LineIterator end) {
-        if (begin.m_charsIter < end.m_charsIter)
+        if (begin.m_charsIter < end.m_charsIter) {
             m_chars.append(begin.m_charsIter, end.m_charsIter);
+            std::string charsAppended(begin.m_charsIter, end.m_charsIter);
+            m_lineMaxColumn += TextEditor::getStringCharacterCount(charsAppended);
+        }
         if (begin.m_colorsIter < end.m_colorsIter)
             m_colors.append(begin.m_colorsIter, end.m_colorsIter);
         if (begin.m_flagsIter < end.m_flagsIter)
@@ -307,6 +313,8 @@ namespace hex::ui {
             m_colors.insert(iter.m_colorsIter, beginLine.m_colorsIter, endLine.m_colorsIter);
             m_flags.insert(iter.m_flagsIter, beginLine.m_flagsIter, endLine.m_flagsIter);
             m_colorized = false;
+            std::string charsInserted(beginLine.m_charsIter, endLine.m_charsIter);
+            m_lineMaxColumn += TextEditor::getStringCharacterCount(charsInserted);
         }
     }
 
@@ -315,6 +323,8 @@ namespace hex::ui {
         m_colors.erase(begin.m_colorsIter);
         m_flags.erase(begin.m_flagsIter);
         m_colorized = false;
+        std::string charsErased(begin.m_charsIter, end().m_charsIter);
+        m_lineMaxColumn -= TextEditor::getStringCharacterCount(charsErased);
     }
 
     void TextEditor::Line::erase(LineIterator begin, u64 count) {
@@ -324,6 +334,8 @@ namespace hex::ui {
         m_colors.erase(begin.m_colorsIter, begin.m_colorsIter + count);
         m_flags.erase(begin.m_flagsIter, begin.m_flagsIter + count);
         m_colorized = false;
+        std::string charsErased(begin.m_charsIter, begin.m_charsIter + count);
+        m_lineMaxColumn -= TextEditor::getStringCharacterCount(charsErased);
     }
 
     void TextEditor::Line::erase(u64 start, u64 length) {
@@ -346,6 +358,7 @@ namespace hex::ui {
         m_colors.clear();
         m_flags.clear();
         m_colorized = false;
+        m_lineMaxColumn = 0;
     }
 
     void TextEditor::Line::setLine(const std::string &text) {
@@ -353,6 +366,7 @@ namespace hex::ui {
         m_colors = std::string(text.size(), 0x00);
         m_flags = std::string(text.size(), 0x00);
         m_colorized = false;
+        m_lineMaxColumn = -1;
     }
 
     void TextEditor::Line::setLine(const Line &text) {
@@ -360,6 +374,7 @@ namespace hex::ui {
         m_colors = text.m_colors;
         m_flags = text.m_flags;
         m_colorized = text.m_colorized;
+        m_lineMaxColumn = text.m_lineMaxColumn;
     }
 
     bool TextEditor::Line::needsUpdate() const {

@@ -324,13 +324,16 @@ namespace hex::ui {
             std::string m_colors;
             std::string m_flags;
             bool m_colorized = false;
+            i32 m_lineMaxColumn;
 
-            Line() : m_chars(), m_colors(), m_flags(), m_colorized(false) {}
+            Line() : m_chars(), m_colors(), m_flags(), m_colorized(false), m_lineMaxColumn(-1) {}
             explicit Line(const char *line) { Line(std::string(line)); }
-            explicit Line(const std::string &line) : m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false) {}
-            Line(const Line &line) : m_chars(line.m_chars), m_colors(line.m_colors), m_flags(line.m_flags), m_colorized(line.m_colorized) {}
+            explicit Line(const std::string &line) :
+                m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false), m_lineMaxColumn(getMaxCharColumn()) {}
+            Line(const Line &line) : m_chars(line.m_chars), m_colors(line.m_colors), m_flags(line.m_flags), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
 
             i32 getCharacterColumn(i32 index) const;
+            i32 getMaxCharColumn() const;
             LineIterator begin();
             LineIterator end();
             Line &operator=(const Line &line);
@@ -481,7 +484,7 @@ namespace hex::ui {
         void setLongestLineLength(u64 line) { m_longestLineLength = line; }
         u64 getLongestLineLength() const { return m_longestLineLength; }
         void setTopMarginChanged(i32 newMargin);
-        void setFocusAtCoords(const Coordinates &coords);
+        void setFocusAtCoords(const Coordinates &coords, bool ensureVisible = false);
         void clearErrorMarkers();
         void clearActionables();
     private:
@@ -533,10 +536,10 @@ namespace hex::ui {
         void setOverwrite(bool value) { m_overwrite = value; }
         bool isOverwrite() const { return m_overwrite; }
         void setText(const std::string &text, bool undo = false);
-        std::string getText() const;
+        std::string getText();
         std::vector<std::string> getTextLines() const;
-        std::string getSelectedText() const;
-        std::string getLineText(i32 line) const;
+        std::string getSelectedText();
+        std::string getLineText(i32 line);
         inline void setTextChanged(bool value) { m_textChanged = value; }
         inline bool isTextChanged() { return m_textChanged; }
         inline void setReadOnly(bool value) { m_readOnly = value; }
@@ -545,7 +548,7 @@ namespace hex::ui {
         inline void setHandleKeyboardInputs(bool value) { m_handleKeyboardInputs = value; }
         inline bool isHandleKeyboardInputsEnabled() const { return m_handleKeyboardInputs; }
     private:
-        std::string getText(const Selection &selection) const;
+        std::string getText(const Selection &selection);
         void deleteRange(const Selection &selection);
         i32 insertTextAt(Coordinates &where, const std::string &value);
         void removeLine(i32 start, i32 end);
@@ -568,18 +571,18 @@ namespace hex::ui {
         void moveEnd(bool select = false);
         void moveToMatchedBracket(bool select = false);
         void setScrollY();
-        Coordinates getCursorPosition() const { return setCoordinates(m_state.m_cursorPosition); }
+        Coordinates getCursorPosition()  { return setCoordinates(m_state.m_cursorPosition); }
         void setCursorPosition(const Coordinates &position);
         void setCursorPosition();
     private:
-        Coordinates setCoordinates(const Coordinates &value) const;
-        Coordinates setCoordinates(i32 line, i32 column) const;
-        Selection setCoordinates(const Selection &value) const;
+        Coordinates setCoordinates(const Coordinates &value);
+        Coordinates setCoordinates(i32 line, i32 column);
+        Selection setCoordinates(const Selection &value);
         void advance(Coordinates &coordinates) const;
-        Coordinates findWordStart(const Coordinates &from) const;
-        Coordinates findWordEnd(const Coordinates &from) const;
-        Coordinates findPreviousWord(const Coordinates &from) const;
-        Coordinates findNextWord(const Coordinates &from) const;
+        Coordinates findWordStart(const Coordinates &from);
+        Coordinates findWordEnd(const Coordinates &from);
+        Coordinates findPreviousWord(const Coordinates &from);
+        Coordinates findNextWord(const Coordinates &from);
         u32 skipSpaces(const Coordinates &from);
 //Support
     public:
@@ -614,13 +617,13 @@ namespace hex::ui {
         static TextEditor::Coordinates stringIndexToCoordinates(i32 strIndex, const std::string &input);
     private:
 
-        Coordinates screenPosToCoordinates(const ImVec2 &position) const;
+        Coordinates screenPosToCoordinates(const ImVec2 &position);
         Coordinates lineCoordsToIndexCoords(const Coordinates &coordinates) const;
         i32 lineCoordinatesToIndex(const Coordinates &coordinates) const;
-        Coordinates getCharacterCoordinates(i32 line, i32 index) const;
-        i32 getLineCharacterCount(i32 line) const;
+        Coordinates getCharacterCoordinates(i32 line, i32 index);
+        i32 getLineCharacterCount(i32 line);
         u64 getLineByteCount(i32 line) const;
-        i32 getLineMaxColumn(i32 line) const;
+        i32 getLineMaxColumn(i32 line);
 
     public:
         FindReplaceHandler m_findReplaceHandler;
@@ -680,6 +683,7 @@ namespace hex::ui {
         bool m_raiseContextMenu = false;
         Coordinates m_focusAtCoords = {};
         bool m_updateFocus = false;
+        bool m_ensureCursorVisible = false;
 
         std::vector<std::string> m_clickableText;
 
