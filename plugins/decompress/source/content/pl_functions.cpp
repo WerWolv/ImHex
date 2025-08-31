@@ -54,7 +54,7 @@ namespace hex::plugin::decompress {
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "zlib_decompress", FunctionParameterCount::exactly(3), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(ZLIB)
                 auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(u64(params[1].toUnsigned()));
+                auto &section = evaluator->getRuntime().getSection(u64(params[1].toUnsigned()));
                 auto windowSize = u64(params[2].toUnsigned());
 
                 z_stream stream = { };
@@ -105,7 +105,7 @@ namespace hex::plugin::decompress {
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "bzip_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(BZIP2)
                 auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(u64(params[1].toUnsigned()));
+                auto &section = evaluator->getRuntime().getSection(u64(params[1].toUnsigned()));
 
                 bz_stream stream = { };
                 if (BZ2_bzDecompressInit(&stream, 0, 1) != Z_OK) {
@@ -156,7 +156,7 @@ namespace hex::plugin::decompress {
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "lzma_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(LIBLZMA)
                 auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(u64(params[1].toUnsigned()));
+                auto &section = evaluator->getRuntime().getSection(u64(params[1].toUnsigned()));
 
                 lzma_stream stream = LZMA_STREAM_INIT;
                 constexpr static i64 MemoryLimit = 0x40000000;  // 1GiB
@@ -216,7 +216,7 @@ namespace hex::plugin::decompress {
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "zstd_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(ZSTD)
                 auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(i64(params[1].toUnsigned()));
+                auto &section = evaluator->getRuntime().getSection(i64(params[1].toUnsigned()));
 
                 ZSTD_DCtx* dctx = ZSTD_createDCtx();
                 if (dctx == nullptr) {
@@ -286,7 +286,7 @@ namespace hex::plugin::decompress {
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "lz4_decompress", FunctionParameterCount::exactly(3), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(LZ4)
                 auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(u64(params[1].toUnsigned()));
+                auto &section = evaluator->getRuntime().getSection(u64(params[1].toUnsigned()));
                 bool frame = params[2].toBoolean();
 
                 if (frame) {

@@ -105,7 +105,7 @@ namespace hex::plugin::disasm {
                     cs_option(capstone, CS_OPT_SKIPDATA, CS_OPT_ON);
 
                     const auto sectionId = evaluator->getSectionId();
-                    std::vector<u8> data(std::min<u64>(32, evaluator->getSectionSize(sectionId) - address));
+                    std::vector<u8> data(std::min<u64>(32, evaluator->getRuntime().getSectionSize(sectionId) - address));
                     evaluator->readData(address, data.data(), data.size(), sectionId);
 
                     auto *instruction = cs_malloc(capstone);
