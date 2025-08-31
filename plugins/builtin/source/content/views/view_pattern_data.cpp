@@ -119,6 +119,7 @@ namespace hex::plugin::builtin {
                     static i32 selectedSection = -1;
                     for (auto &[id, drawer] : *m_patternDrawer) {
                         ImGui::PushID(id + 1);
+                        ON_SCOPE_EXIT { ImGui::PopID(); };
                         drawer->enablePatternEditing(ImHexApi::Provider::get()->isWritable());
 
                         // If the runtime has finished evaluating, draw the patterns
@@ -151,8 +152,6 @@ namespace hex::plugin::builtin {
                                 }
                             }
                         }
-
-                        ImGui::PopID();
                     }
                 }
 
