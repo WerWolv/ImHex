@@ -18,9 +18,10 @@ namespace hex::ui {
         m_topMarginChanged = true;
     }
 
-    void TextEditor::setFocusAtCoords(const Coordinates &coords) {
+    void TextEditor::setFocusAtCoords(const Coordinates &coords, bool ensureVisible) {
         m_focusAtCoords = coords;
         m_updateFocus = true;
+        m_ensureCursorVisible = ensureVisible;
     }
 
     void TextEditor::clearErrorMarkers() {
@@ -286,11 +287,15 @@ namespace hex::ui {
                     continue;
                 }
                 auto colors = m_lines[lineNo].m_colors;
-                u64 colorsSize = colors.size();
-                u64 i = skipSpaces(setCoordinates(lineNo, 0));
-                while (i < colorsSize) {
+                u64 colorsSize = std::min((u64)std::floor(textEditorSize.x / m_charAdvance.x), (u64) colors.size());
+                u64 i = ImGui::GetScrollX() / m_charAdvance.x;
+                u64 maxI = i + colorsSize;
+                while (i < maxI) {
                     char color = std::clamp(colors[i], (char) PaletteIndex::Default, (char) ((u8) PaletteIndex::Max - 1));
-                    u32 tokenLength = std::clamp((u64) (colors.find_first_not_of(color, i) - i),(u64) 1, colorsSize - i);
+                    auto index = colors.find_first_not_of(color, i);
+                    index -= i;
+
+                    u32 tokenLength = std::clamp((u64) index,(u64) 1, maxI - i);
                     if (m_updateFocus)
                         setFocus();
                     auto lineStart = setCoordinates(lineNo, i);
@@ -314,7 +319,9 @@ namespace hex::ui {
     void TextEditor::setFocus() {
         m_state.m_cursorPosition = m_focusAtCoords;
         resetCursorBlinkTime();
-        ensureCursorVisible();
+        if (m_ensureCursorVisible)
+            ensureCursorVisible();
+
         if (!this->m_readOnly)
             ImGui::SetKeyboardFocusHere(0);
         m_updateFocus = false;
@@ -364,7 +371,7 @@ namespace hex::ui {
     void TextEditor::drawLineNumbers(ImVec2 position, float lineNo, const ImVec2 &contentSize, bool focused, ImDrawList *drawList) {
         ImVec2 lineStartScreenPos = s_cursorScreenPosition + ImVec2(m_leftMargin, m_topMargin + std::floor(lineNo) * m_charAdvance.y);
         ImVec2 lineNoStartScreenPos = ImVec2(position.x, m_topMargin + s_cursorScreenPosition.y + std::floor(lineNo) * m_charAdvance.y);
-        auto start = ImVec2(lineNoStartScreenPos.x + m_lineNumberFieldWidth, lineStartScreenPos.y);
+        auto start = ImVec2(lineNoStartScreenPos.x + m_lineNumberFieldWidth - m_charAdvance.x / 2, lineStartScreenPos.y);
         i32 totalDigitCount = std::floor(std::log10(m_lines.size())) + 1;
         ImGui::SetCursorScreenPos(position);
         if (!m_ignoreImGuiChild)
@@ -380,13 +387,18 @@ namespace hex::ui {
             else
                 m_breakpoints.insert(lineNo + 1);
             m_breakPointsChanged = true;
-            auto cursorPosition = setCoordinates(lineNo, 0);
-            if (cursorPosition == Invalid)
-                return;
+            setFocusAtCoords(m_state.m_cursorPosition, false);
+        }
+        auto color = m_palette[(i32) PaletteIndex::LineNumber];
 
-            m_state.m_cursorPosition = cursorPosition;
-
-            jumpToCoords(m_state.m_cursorPosition);
+        if (m_state.m_cursorPosition.m_line == lineNo && m_showCursor) {
+            color = m_palette[(i32) PaletteIndex::Cursor];
+            // Highlight the current line (where the cursor is)
+            if (!hasSelection()) {
+                auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + m_lineNumberFieldWidth, lineStartScreenPos.y + m_charAdvance.y);
+                drawList->AddRectFilled(ImVec2(position.x, lineStartScreenPos.y), end, m_palette[(i32) (focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
+                drawList->AddRect(ImVec2(position.x, lineStartScreenPos.y), end, m_palette[(i32) PaletteIndex::CurrentLineEdge], 1.0f);
+            }
         }
         // Draw breakpoints
         if (m_breakpoints.count(lineNo + 1) != 0) {
@@ -395,20 +407,9 @@ namespace hex::ui {
 
             drawList->AddCircleFilled(start + ImVec2(0, m_charAdvance.y) / 2, m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Breakpoint]);
             drawList->AddCircle(start + ImVec2(0, m_charAdvance.y) / 2, m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Default]);
-            drawList->AddText(ImVec2(lineNoStartScreenPos.x + m_leftMargin, lineStartScreenPos.y), m_palette[(i32) PaletteIndex::LineNumber], lineNoStr.c_str());
+            drawList->AddText(ImVec2(lineNoStartScreenPos.x + m_leftMargin, lineStartScreenPos.y), color, lineNoStr.c_str());
         }
-
-        if (m_state.m_cursorPosition.m_line == lineNo && m_showCursor) {
-
-            // Highlight the current line (where the cursor is)
-            if (!hasSelection()) {
-                auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + m_lineNumberFieldWidth, lineStartScreenPos.y + m_charAdvance.y);
-                drawList->AddRectFilled(ImVec2(position.x, lineStartScreenPos.y), end, m_palette[(i32) (focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
-                drawList->AddRect(ImVec2(position.x, lineStartScreenPos.y), end, m_palette[(i32) PaletteIndex::CurrentLineEdge], 1.0f);
-            }
-        }
-
-        TextUnformattedColoredAt(ImVec2(m_leftMargin + lineNoStartScreenPos.x, lineStartScreenPos.y), m_palette[(i32) PaletteIndex::LineNumber], lineNoStr.c_str());
+        TextUnformattedColoredAt(ImVec2(m_leftMargin + lineNoStartScreenPos.x, lineStartScreenPos.y), color, lineNoStr.c_str());
 
         if (!m_ignoreImGuiChild)
             ImGui::EndChild();

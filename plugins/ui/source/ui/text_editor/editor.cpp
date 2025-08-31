@@ -29,7 +29,7 @@ namespace hex::ui {
     TextEditor::~TextEditor() {
     }
 
-    std::string TextEditor::getText(const Selection &from) const {
+    std::string TextEditor::getText(const Selection &from) {
         std::string result;
         auto selection = setCoordinates(from);
         auto columns = selection.getSelectedColumns();
@@ -734,7 +734,7 @@ namespace hex::ui {
         refreshSearchResults();
     }
 
-    std::string TextEditor::getText() const {
+    std::string TextEditor::getText()  {
         auto start = setCoordinates(0, 0);
         auto end = setCoordinates(-1, -1);
         if (start == Invalid || end == Invalid)
@@ -755,11 +755,11 @@ namespace hex::ui {
         return result;
     }
 
-    std::string TextEditor::getSelectedText() const {
+    std::string TextEditor::getSelectedText() {
         return getText(m_state.m_selection);
     }
 
-    std::string TextEditor::getLineText(i32 line) const {
+    std::string TextEditor::getLineText(i32 line) {
         auto sanitizedLine = setCoordinates(line, 0);
         auto endLine = setCoordinates(line, -1);
         if (sanitizedLine == Invalid || endLine == Invalid)

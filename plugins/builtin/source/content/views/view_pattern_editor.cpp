@@ -2665,7 +2665,7 @@ namespace hex::plugin::builtin {
                 file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
                 m_patternFileDirty.get(provider) = false;
                 auto loadedPath = m_changeTracker.get(provider).getPath();
-                if ((loadedPath.empty() && loadedPath != path) || (!loadedPath.empty() && !trackFile))
+                if ((loadedPath.empty() && loadedPath != path) || (!loadedPath.empty() && !trackFile) || loadedPath == path)
                     m_changeTracker.get(provider).stopTracking();
 
                 if (trackFile) {
