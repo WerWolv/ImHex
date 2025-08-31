@@ -551,13 +551,25 @@ namespace hex::plugin::builtin {
         #endif
 
         ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.view" }, 4000, [] {
-            for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
-                if (view->hasViewMenuItemEntry()) {
-                    auto &state = view->getWindowOpenState();
-
-                    if (menu::menuItemEx(Lang(view->getUnlocalizedName()), view->getIcon(), Shortcut::None, state, ImHexApi::Provider::isValid() && !LayoutManager::isLayoutLocked()))
-                        state = !state;
+            auto getSortedViews = [] {
+                std::vector<std::pair<std::string, View*>> views;
+                for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
+                    if (view->hasViewMenuItemEntry())
+                        views.emplace_back(name, view.get());
                 }
+
+                std::ranges::sort(views, [](const auto &a, const auto &b) {
+                    return std::string_view(Lang(a.first)) < std::string_view(Lang(b.first));
+                });
+
+                return views;
+            };
+
+            for (auto &[name, view] : getSortedViews()) {
+                auto &state = view->getWindowOpenState();
+
+                if (menu::menuItemEx(Lang(name), view->getIcon(), Shortcut::None, state, ImHexApi::Provider::isValid() && !LayoutManager::isLayoutLocked()))
+                    state = !state;
             }
         });
 
