@@ -287,7 +287,7 @@ namespace hex::ui {
                     continue;
                 }
                 auto colors = m_lines[lineNo].m_colors;
-                u64 colorsSize = std::min((u64)std::floor(textEditorSize.x / m_charAdvance.x), colors.size());
+                u64 colorsSize = std::min((u64)std::floor(textEditorSize.x / m_charAdvance.x), (u64) colors.size());
                 u64 i = ImGui::GetScrollX() / m_charAdvance.x;
                 u64 maxI = i + colorsSize;
                 while (i < maxI) {
