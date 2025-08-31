@@ -724,11 +724,14 @@ namespace hex {
         if (const auto &fullScreenView = ContentRegistry::Views::impl::getFullScreenView(); fullScreenView == nullptr) {
 
             // Loop through all views and draw them
-            for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
+            static ImGuiWindow *nextFocusWindow = nullptr;
+
+            for (auto &[name, view] : ContentRegistry::Views::impl::getEntries() | std::views::reverse) {
                 ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 
                 // Draw always visible views
                 view->drawAlwaysVisibleContent();
+                view->trackViewState();
 
                 // Skip views that shouldn't be processed currently
                 if (!view->shouldProcess())
@@ -749,15 +752,29 @@ namespace hex {
 
                 ImGui::SetNextWindowClass(&windowClass);
 
-                const auto window = ImGui::FindWindowByName(view->getName().c_str());
+                auto window = ImGui::FindWindowByName(view->getName().c_str());
                 if (window != nullptr && window->DockNode == nullptr)
                     ImGui::SetNextWindowBgAlpha(1.0F);
 
+                if (nextFocusWindow == window && !view->didWindowJustOpen() && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
+                    ImGui::SetNextWindowFocus();
+                    nextFocusWindow = nullptr;
+                }
+
                 // Draw view
                 view->draw();
-                view->trackViewState();
+
+                // If the window was just opened, it wasn't found above, so try to find it again
+                if (window == nullptr)
+                    window = ImGui::FindWindowByName(view->getName().c_str());
 
                 if (window != nullptr) {
+                    if (window->Appearing) {
+                        if (view->shouldDefaultFocus()) {
+                            nextFocusWindow = window;
+                        }
+                    }
+
                     if (view->getWindowOpenState()) {
                         // Get the currently focused view
                         auto windowName = View::toWindowName(name);
@@ -794,7 +811,6 @@ namespace hex {
                 }
             }
         }
-
 
         // Handle global shortcuts
         for (const auto &key : m_pressedKeys) {

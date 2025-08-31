@@ -16,6 +16,33 @@ namespace hex::plugin::builtin {
             return ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
         }
 
+        bool shouldDefaultFocus() const override { return true; }
+
+        bool isSelectionValid() const {
+            return m_hexEditor.isSelectionValid();
+        }
+
+        Region getSelection() const {
+            return m_hexEditor.getSelection();
+        }
+
+        void setSelection(const Region &region) {
+            m_hexEditor.setSelection(region);
+        }
+
+        void setSelection(u64 start, u64 end) {
+            m_hexEditor.setSelection(start, end);
+        }
+
+        void jumpToSelection() {
+            m_hexEditor.jumpToSelection();
+        }
+
+        void jumpIfOffScreen() {
+            m_hexEditor.jumpIfOffScreen();
+        }
+
+    public:
         class Popup {
         public:
             virtual ~Popup() = default;
@@ -50,30 +77,6 @@ namespace hex::plugin::builtin {
 
         void closePopup() {
             m_currPopup.reset();
-        }
-
-        bool isSelectionValid() const {
-            return m_hexEditor.isSelectionValid();
-        }
-
-        Region getSelection() const {
-            return m_hexEditor.getSelection();
-        }
-
-        void setSelection(const Region &region) {
-            m_hexEditor.setSelection(region);
-        }
-
-        void setSelection(u64 start, u64 end) {
-            m_hexEditor.setSelection(start, end);
-        }
-
-        void jumpToSelection() {
-            m_hexEditor.jumpToSelection();
-        }
-
-        void jumpIfOffScreen() {
-            m_hexEditor.jumpIfOffScreen();
         }
 
     private:
