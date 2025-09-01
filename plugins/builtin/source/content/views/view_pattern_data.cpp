@@ -74,7 +74,7 @@ namespace hex::plugin::builtin {
             const auto &sections = ContentRegistry::PatternLanguage::getRuntime().getSections();
 
             (*m_patternDrawer)[0] = createDefaultDrawer();
-            for (const auto &id : sections | std::views::keys) {
+            for (const auto &[id, section] : sections) {
                 (*m_patternDrawer)[id] = createDefaultDrawer();
             }
         });
@@ -143,9 +143,11 @@ namespace hex::plugin::builtin {
 
                                 if (ImGui::BeginPopup("##PatternDataContextMenu")) {
                                     if (ImGui::MenuItemEx("hex.builtin.view.pattern_data.section.view_raw"_lang, ICON_VS_OPEN_PREVIEW)) {
-                                        if (auto it = sections.find(selectedSection); it != sections.end()) {
-                                            const auto &[sectionId, section] = *it;
-                                            ImHexApi::Provider::add<prv::MemoryProvider>(section.data, section.name);
+                                        if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                                            if (auto it = sections.find(selectedSection); it != sections.end()) {
+                                                const auto &[sectionId, section] = *it;
+                                                ImHexApi::Provider::add<prv::MemoryProvider>(section.data, section.name);
+                                            }
                                         }
                                     }
                                     ImGui::EndPopup();
