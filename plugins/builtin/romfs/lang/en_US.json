@@ -1048,6 +1048,7 @@
     "hex.builtin.view.pattern_editor.menu.edit.copy": "Copy",
     "hex.builtin.view.pattern_editor.shortcut.copy": "Copy Selection to the Clipboard",
     "hex.builtin.view.pattern_editor.shortcut.cut": "Copy Selection to the Clipboard and Delete it",
+    "hex.builtin.view.pattern_editor.warning_paste_large": "The clipboard contains a large amount of data. Are you sure you want to paste it?",
     "hex.builtin.view.pattern_editor.shortcut.paste": "Paste Clipboard Contents at the Cursor Position",
     "hex.builtin.view.pattern_editor.menu.edit.paste": "Paste",
     "hex.builtin.view.pattern_editor.menu.edit.undo": "Undo",

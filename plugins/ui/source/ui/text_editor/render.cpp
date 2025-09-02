@@ -287,18 +287,52 @@ namespace hex::ui {
                     continue;
                 }
                 auto colors = m_lines[lineNo].m_colors;
-                u64 colorsSize = std::min((u64)std::floor(textEditorSize.x / m_charAdvance.x), (u64) colors.size());
-                u64 i = ImGui::GetScrollX() / m_charAdvance.x;
-                u64 maxI = i + colorsSize;
+                auto lineSize = line.getLineTextSize();
+                i64 colorsSize = std::min((u64)textEditorSize.x, (u64) lineSize);
+                i64 start = ImGui::GetScrollX();
+                i64 textSize = 0;
+                Coordinates head = Coordinates(lineNo, start / m_charAdvance.x);
+                textSize = textDistanceToLineStart(head);
+                auto maxColumn = line.getCharColumn(line.size());
+                if (textSize < start) {
+                    while (textSize < start && head.m_column < maxColumn) {
+                        head.m_column += 1;
+                        textSize = textDistanceToLineStart(head);
+                    }
+                } else {
+                    while (textSize > start && head.m_column > 0) {
+                        head.m_column -= 1;
+                        textSize = textDistanceToLineStart(head);
+                    }
+                }
+                Coordinates current = Coordinates(lineNo, (start + colorsSize) / m_charAdvance.x);
+                textSize = textDistanceToLineStart(current);
+                if (textSize < start + colorsSize) {
+                    while (textSize < start + colorsSize && current.m_column < maxColumn) {
+                        current.m_column += 1;
+                        textSize = textDistanceToLineStart(current);
+                    }
+                } else {
+                    while (textSize > start + colorsSize && current.m_column > 0) {
+                        current.m_column -= 1;
+                        textSize = textDistanceToLineStart(current);
+                    }
+                }
+
+                u64 i = line.getColumnIndex(head.m_column);
+                u64 maxI = line.getColumnIndex(current.m_column);
                 while (i < maxI) {
                     char color = std::clamp(colors[i], (char) PaletteIndex::Default, (char) ((u8) PaletteIndex::Max - 1));
                     auto index = colors.find_first_not_of(color, i);
-                    index -= i;
+                    if (index == std::string::npos)
+                        index = maxI;
+                    else
+                        index -= i;
 
                     u32 tokenLength = std::clamp((u64) index,(u64) 1, maxI - i);
                     if (m_updateFocus)
                         setFocus();
-                    auto lineStart = setCoordinates(lineNo, i);
+                    auto lineStart = setCoordinates(lineNo, line.getCharColumn(i));
 
                     drawText(lineStart, i, tokenLength, color);
 
@@ -571,10 +605,17 @@ namespace hex::ui {
         return ImVec2(fontSize, ImGui::GetTextLineHeightWithSpacing() * m_lineSpacing);
     }
 
-    float TextEditor::textDistanceToLineStart(const Coordinates &aFrom) const {
+    float TextEditor::textDistanceToLineStart(const Coordinates &aFrom) {
         auto &line = m_lines[aFrom.m_line];
         i32 colIndex = lineCoordinatesToIndex(aFrom);
-        auto substr = line.m_chars.substr(0, colIndex);
-        return ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, substr.c_str(), nullptr, nullptr).x;
+        auto substr1 = line.m_chars.substr(0, colIndex);
+        auto substr2 =line.m_chars.substr(colIndex, line.m_chars.size() - colIndex);
+        if (substr2.size() < substr1.size()) {
+            auto distanceToEnd = line.getStringTextSize(substr2.c_str());
+            line.m_lineTextSize = line.getLineTextSize();
+            return line.m_lineTextSize - distanceToEnd;
+        }
+
+        return line.getStringTextSize(substr1.c_str());
     }
 }

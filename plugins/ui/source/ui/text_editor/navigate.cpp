@@ -124,7 +124,7 @@ namespace hex::ui {
             return;
 
         auto lindex = m_state.m_cursorPosition.m_line;
-        auto lineMaxColumn = getLineMaxColumn(lindex);
+        auto lineMaxColumn = getLineMaxCharColumn(lindex);
         auto column = std::min(m_state.m_cursorPosition.m_column, lineMaxColumn);
 
         while (amount-- > 0) {
@@ -167,7 +167,7 @@ namespace hex::ui {
             return;
 
         auto lindex = m_state.m_cursorPosition.m_line;
-        auto lineMaxColumn = getLineMaxColumn(lindex);
+        auto lineMaxColumn = getLineMaxCharColumn(lindex);
         auto column = std::min(m_state.m_cursorPosition.m_column, lineMaxColumn);
 
         while (amount-- > 0) {
@@ -247,7 +247,7 @@ namespace hex::ui {
                 else {
                     postIdx = postfix.find_first_not_of(" ");
                     if (postIdx == std::string::npos)
-                        home = getLineMaxColumn(oldPos.m_line);
+                        home = getLineMaxCharColumn(oldPos.m_line);
                     else if (postIdx == 0)
                         home = 0;
                     else
@@ -262,7 +262,7 @@ namespace hex::ui {
             else {
                 postIdx = postfix.find_first_not_of(" ");
                 if (postIdx == std::string::npos)
-                    home = getLineMaxColumn(oldPos.m_line);
+                    home = getLineMaxCharColumn(oldPos.m_line);
                 else
                     home = oldPos.m_column + postIdx;
             }
@@ -288,7 +288,7 @@ namespace hex::ui {
     void TextEditor::moveEnd(bool select) {
         resetCursorBlinkTime();
         auto oldPos = m_state.m_cursorPosition;
-        setCursorPosition(setCoordinates(m_state.m_cursorPosition.m_line, getLineMaxColumn(oldPos.m_line)));
+        setCursorPosition(setCoordinates(m_state.m_cursorPosition.m_line, getLineMaxCharColumn(oldPos.m_line)));
 
         if (m_state.m_cursorPosition != oldPos) {
             if (select) {
@@ -339,7 +339,7 @@ namespace hex::ui {
         else
             result.m_line = std::clamp(line, 0, lineCount - 1);
 
-        auto maxColumn = getLineMaxColumn(result.m_line) + 1;
+        auto maxColumn = getLineMaxCharColumn(result.m_line) + 1;
         if (column < 0 && maxColumn + column >= 0)
             result.m_column = maxColumn + column;
         else
