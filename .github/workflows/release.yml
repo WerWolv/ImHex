@@ -118,10 +118,47 @@ jobs:
           mv "Windows Portable x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-x86_64.zip
           mv "Windows Portable arm64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-arm64.zip
           mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip
-          mv ./*_amd64.snap $(echo ./*_amd64.snap | sed 's/_amd64\.snap$/-x86_64.snap/' | sed 's/_/-/1')
-          mv ./*_arm64.snap $(echo ./*_arm64.snap | sed 's/_arm64\.snap$/-arm64.snap/' | sed 's/_/-/1')
           mv "ImHex Web.zip" imhex-${{ env.IMHEX_VERSION }}-Web.zip
           rm artifact.tar || true
+
+      - name: ⬆️ Upload Unsigned x86_64 Windows Installer
+        if: false
+        uses: actions/upload-artifact@v4
+        id: upload-installer-x86_64
+        with:
+          if-no-files-found: error
+          name: Windows Installer ${{ matrix.architecture_name }}
+          path: |
+            imhex-*-x86_64.msi
+
+      - name: ⬆️ Upload Unsigned ARM64 Windows Installer
+        if: false
+        uses: actions/upload-artifact@v4
+        id: upload-installer-arm64
+        with:
+          if-no-files-found: error
+          name: Windows Installer ${{ matrix.architecture_name }}
+          path: |
+            imhex-*-arm64.msi
+
+      - name: 🗑️ Delete unsigned installers
+        if: false
+        run: |
+          rm imhex-*.msi
+
+      - name: 🗝️ Sign Installer
+        if: false
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+          organization-id: 'f605a0e8-86cd-411c-bb6f-e05025afcc33'
+          project-slug: 'ImHex'
+          signing-policy-slug: 'release-signing'
+          github-artifact-id: '${{ steps.upload-installer.outputs.artifact-id }}'
+          wait-for-completion: true
+          output-artifact-directory: '.'
+          parameters: |
+            version: ${{ env.IMHEX_VERSION }}-${ matrix.architecture_name }
 
       - name: ⬆️ Upload everything to release
         uses: softprops/action-gh-release@4634c16e79c963813287e889244c50009e7f0981
