@@ -156,7 +156,7 @@ namespace hex::ui {
         m_colors = line.m_colors;
         m_flags = line.m_flags;
         m_colorized = line.m_colorized;
-        m_lineMaxColumn = line.m_lineMaxColumn;
+        m_lineTextSize = line.m_lineTextSize;
         return *this;
     }
 
@@ -165,7 +165,7 @@ namespace hex::ui {
         m_colors = std::move(line.m_colors);
         m_flags = std::move(line.m_flags);
         m_colorized = line.m_colorized;
-        m_lineMaxColumn = line.m_lineMaxColumn;
+        m_lineTextSize = line.m_lineTextSize;
         return *this;
     }
 
@@ -198,7 +198,7 @@ namespace hex::ui {
         m_colors.push_back(0x00);
         m_flags.push_back(0x00);
         m_colorized = false;
-        m_lineMaxColumn = -1;
+        m_lineTextSize = -1;
     }
 
     bool TextEditor::Line::empty() const {
@@ -278,12 +278,7 @@ namespace hex::ui {
     void TextEditor::Line::append(LineIterator begin, LineIterator end) {
         if (begin.m_charsIter < end.m_charsIter) {
             m_chars.append(begin.m_charsIter, end.m_charsIter);
-            std::string charsAppended(begin.m_charsIter, end.m_charsIter);
-
-            if (m_lineMaxColumn < 0)
-                m_lineMaxColumn = this->getMaxCharColumn();
-
-            m_lineMaxColumn += TextEditor::getStringCharacterCount(charsAppended);
+            m_lineTextSize = -1;
         }
         if (begin.m_colorsIter < end.m_colorsIter)
             m_colors.append(begin.m_colorsIter, end.m_colorsIter);
@@ -317,12 +312,7 @@ namespace hex::ui {
             m_colors.insert(iter.m_colorsIter, beginLine.m_colorsIter, endLine.m_colorsIter);
             m_flags.insert(iter.m_flagsIter, beginLine.m_flagsIter, endLine.m_flagsIter);
             m_colorized = false;
-            std::string charsInserted(beginLine.m_charsIter, endLine.m_charsIter);
-
-            if (m_lineMaxColumn < 0)
-                m_lineMaxColumn = this->getMaxCharColumn();
-
-            m_lineMaxColumn += TextEditor::getStringCharacterCount(charsInserted);
+            m_lineTextSize = -1;
         }
     }
 
@@ -331,12 +321,7 @@ namespace hex::ui {
         m_colors.erase(begin.m_colorsIter);
         m_flags.erase(begin.m_flagsIter);
         m_colorized = false;
-        std::string charsErased(begin.m_charsIter, end().m_charsIter);
-
-        if (m_lineMaxColumn < 0)
-            m_lineMaxColumn = this->getMaxCharColumn();
-
-        m_lineMaxColumn -= TextEditor::getStringCharacterCount(charsErased);
+        m_lineTextSize = -1;
     }
 
     void TextEditor::Line::erase(LineIterator begin, u64 count) {
@@ -346,12 +331,7 @@ namespace hex::ui {
         m_colors.erase(begin.m_colorsIter, begin.m_colorsIter + count);
         m_flags.erase(begin.m_flagsIter, begin.m_flagsIter + count);
         m_colorized = false;
-        std::string charsErased(begin.m_charsIter, begin.m_charsIter + count);
-
-        if (m_lineMaxColumn < 0)
-            m_lineMaxColumn = this->getMaxCharColumn();
-
-        m_lineMaxColumn -= TextEditor::getStringCharacterCount(charsErased);
+        m_lineTextSize = -1;
     }
 
     void TextEditor::Line::erase(u64 start, u64 length) {
@@ -374,7 +354,7 @@ namespace hex::ui {
         m_colors.clear();
         m_flags.clear();
         m_colorized = false;
-        m_lineMaxColumn = 0;
+        m_lineTextSize = -1;
     }
 
     void TextEditor::Line::setLine(const std::string &text) {
@@ -382,7 +362,7 @@ namespace hex::ui {
         m_colors = std::string(text.size(), 0x00);
         m_flags = std::string(text.size(), 0x00);
         m_colorized = false;
-        m_lineMaxColumn = -1;
+        m_lineTextSize = -1;
     }
 
     void TextEditor::Line::setLine(const Line &text) {
@@ -390,7 +370,7 @@ namespace hex::ui {
         m_colors = text.m_colors;
         m_flags = text.m_flags;
         m_colorized = text.m_colorized;
-        m_lineMaxColumn = text.m_lineMaxColumn;
+        m_lineTextSize = text.m_lineTextSize;
     }
 
     bool TextEditor::Line::needsUpdate() const {
@@ -520,7 +500,7 @@ namespace hex::ui {
                         m_state.m_cursorPosition = screenPosToCoordinates(ImGui::GetMousePos());
                         auto line = m_state.m_cursorPosition.m_line;
                         m_state.m_selection.m_start = setCoordinates(line, 0);
-                        m_state.m_selection.m_end = setCoordinates(line, getLineMaxColumn(line));
+                        m_state.m_selection.m_end = setCoordinates(line, getLineMaxCharColumn(line));
                     }
 
                     m_lastClick = -1.0f;
@@ -824,7 +804,7 @@ namespace hex::ui {
             editor->m_state.m_cursorPosition = editor->m_state.m_selection.m_start;
             if (editor->isStartOfLine()) {
                 editor->m_state.m_cursorPosition.m_line--;
-                editor->m_state.m_cursorPosition.m_column = editor->getLineMaxColumn(editor->m_state.m_cursorPosition.m_line);
+                editor->m_state.m_cursorPosition.m_column = editor->getLineMaxCharColumn(editor->m_state.m_cursorPosition.m_line);
             } else
                 editor->m_state.m_cursorPosition.m_column--;
         }

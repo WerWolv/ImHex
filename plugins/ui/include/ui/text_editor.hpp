@@ -324,16 +324,19 @@ namespace hex::ui {
             std::string m_colors;
             std::string m_flags;
             bool m_colorized = false;
-            i32 m_lineMaxColumn;
+            i32 m_lineTextSize;
 
-            Line() : m_chars(), m_colors(), m_flags(), m_colorized(false), m_lineMaxColumn(-1) {}
+            Line() : m_chars(), m_colors(), m_flags(), m_colorized(false), m_lineTextSize(-1) {}
             explicit Line(const char *line) { Line(std::string(line)); }
             explicit Line(const std::string &line) :
-                m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false), m_lineMaxColumn(getMaxCharColumn()) {}
-            Line(const Line &line) : m_chars(line.m_chars), m_colors(line.m_colors), m_flags(line.m_flags), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
+                    m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false), m_lineTextSize(
+                    getLineTextSize()) {}
+            Line(const Line &line) : m_chars(line.m_chars), m_colors(line.m_colors), m_flags(line.m_flags), m_colorized(line.m_colorized), m_lineTextSize(line.m_lineTextSize) {}
 
-            i32 getCharacterColumn(i32 index) const;
-            i32 getMaxCharColumn() const;
+            i32 getCharColumn(i32 stringIndex) const;
+            i32 getColumnIndex(i32 column) const;
+            i32 getLineTextSize();
+            i32 getStringTextSize(const std::string &str) const;
             LineIterator begin();
             LineIterator end();
             Line &operator=(const Line &line);
@@ -500,7 +503,7 @@ namespace hex::ui {
         void drawText(Coordinates &lineStart, u64 i, u32 tokenLength, char color);
         void postRender(const char *title, ImVec2 position, float lineNo);
         ImVec2 calculateCharAdvance() const;
-        float textDistanceToLineStart(const Coordinates &from) const;
+        float textDistanceToLineStart(const Coordinates &from);
 // Highlighting
     public:
         void colorize();
@@ -529,6 +532,7 @@ namespace hex::ui {
         void copy();
         void cut();
         void paste();
+        void doPaste(const char *clipText);
         void deleteChar();
         void insertText(const std::string &value);
         void insertText(const char *value);
@@ -621,9 +625,9 @@ namespace hex::ui {
         Coordinates lineCoordsToIndexCoords(const Coordinates &coordinates) const;
         i32 lineCoordinatesToIndex(const Coordinates &coordinates) const;
         Coordinates getCharacterCoordinates(i32 line, i32 index);
-        i32 getLineCharacterCount(i32 line);
+        i32 getLineCharColumn(i32 lineIndex, i32 stringIndex);
         u64 getLineByteCount(i32 line) const;
-        i32 getLineMaxColumn(i32 line);
+        i32 getLineMaxCharColumn(i32 lineIndex);
 
     public:
         FindReplaceHandler m_findReplaceHandler;
