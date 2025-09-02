@@ -211,9 +211,9 @@ jobs:
         wait-for-completion: true
         output-artifact-directory: './signed'
         parameters: |
-          version: ${{ env.IMHEX_VERSION }}-${ matrix.architecture_name }-${{ github.sha }}-${{ github.run_number }}
+          version: ${{ env.IMHEX_VERSION }}-${{ matrix.architecture_name }}-${{ github.sha }}-${{ github.run_number }}
 
-    - name: ⬆️ Upload NoGPU Portable ZIP
+    - name: ⬆️ Upload Signed Windows Installer
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
