@@ -110,8 +110,6 @@ jobs:
           github-artifact-id: '${{ steps.upload-installer.outputs.artifact-id }}'
           wait-for-completion: true
           output-artifact-directory: '.'
-          parameters: |
-            version: ${{ env.IMHEX_VERSION }}-${ matrix.architecture_name }-${{ github.sha }}-${{ github.run_number }}
 
       - name: 📦 Update Pre-Release
         run: |
