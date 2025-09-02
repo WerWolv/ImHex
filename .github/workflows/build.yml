@@ -210,8 +210,6 @@ jobs:
         github-artifact-id: '${{ steps.upload-installer.outputs.artifact-id }}'
         wait-for-completion: true
         output-artifact-directory: './signed'
-        parameters: |
-          version: ${{ env.IMHEX_VERSION }}-${{ matrix.architecture_name }}-${{ github.sha }}-${{ github.run_number }}
 
     - name: ⬆️ Upload Signed Windows Installer
       uses: actions/upload-artifact@v4
