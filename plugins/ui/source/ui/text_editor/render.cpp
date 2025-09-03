@@ -1,4 +1,5 @@
 #include "imgui.h"
+#include "fonts/fonts.hpp"
 #include <ui/text_editor.hpp>
 #include <algorithm>
 
@@ -530,8 +531,12 @@ namespace hex::ui {
         auto textStart = textDistanceToLineStart(lineStart);
         auto begin = lineStartScreenPos + ImVec2(textStart, 0);
 
+        if (color <= (char) TextEditor::PaletteIndex::Comment && color >= (char) TextEditor::PaletteIndex::DocComment)
+            fonts::CodeEditor().pushItalic();
         TextUnformattedColoredAt(begin, m_palette[(i32) color], line.substr(i, tokenLength).c_str());
 
+        if (color <= (char) TextEditor::PaletteIndex::Comment && color >= (char) TextEditor::PaletteIndex::DocComment)
+            fonts::CodeEditor().pop();
         ErrorMarkers::iterator errorIt;
         auto key = lineStart + Coordinates(1, 1);
         if (errorIt = m_errorMarkers.find(key); errorIt != m_errorMarkers.end()) {
