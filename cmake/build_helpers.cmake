@@ -744,7 +744,7 @@ macro(setupCompilerFlags target)
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND APPLE)
-        execute_process(COMMAND brew --prefix llvm OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+        execute_process(COMMAND brew --prefix llvm@20 OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
         set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
         set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
         addCCXXFlag("-Wno-unknown-warning-option" ${target})
