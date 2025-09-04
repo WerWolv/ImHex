@@ -387,16 +387,17 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isWordChar(line.m_chars[charIndex])) {
-            while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1]))
-                --charIndex;
-        } else if (ispunct(line.m_chars[charIndex])) {
-            while (charIndex > 0 && ispunct(line.m_chars[charIndex - 1]))
-                --charIndex;
-        } else if (isspace(line.m_chars[charIndex])) {
-            while (charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
-                --charIndex;
+        bool found = false;
+        while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1])) {
+            found = true;
+            --charIndex;
         }
+        while (!found && charIndex > 0 && ispunct(line.m_chars[charIndex - 1])) {
+            found = true;
+            --charIndex;
+        }
+        while (!found && charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
+            --charIndex;
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
@@ -408,16 +409,18 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isWordChar(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && isWordChar(line.m_chars[charIndex]))
-                ++charIndex;
-        } else if (ispunct(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && ispunct(line.m_chars[charIndex]))
-                ++charIndex;
-        } else if (isspace(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
-                ++charIndex;
+        bool found = false;
+        while (charIndex < (i32) line.m_chars.size() && isWordChar(line.m_chars[charIndex])) {
+            found = true;
+            ++charIndex;
         }
+        while (!found && charIndex < (i32) line.m_chars.size() && ispunct(line.m_chars[charIndex])) {
+            found = true;
+            ++charIndex;
+        }
+        while (!found && charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
+            ++charIndex;
+
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
@@ -429,17 +432,16 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isspace(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
-                ++charIndex;
+        while (charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
+            ++charIndex;
+        bool found = false;
+        while (charIndex < (i32) line.m_chars.size() && (isWordChar(line.m_chars[charIndex]))) {
+            found = true;
+            ++charIndex;
         }
-        if (isWordChar(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && (isWordChar(line.m_chars[charIndex])))
-                ++charIndex;
-        } else if (ispunct(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && (ispunct(line.m_chars[charIndex])))
-                ++charIndex;
-        }
+        while (!found && charIndex < (i32) line.m_chars.size() && (ispunct(line.m_chars[charIndex])))
+            ++charIndex;
+
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
@@ -451,17 +453,17 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isspace(line.m_chars[charIndex - 1])) {
-            while (charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
-                --charIndex;
+        bool found = false;
+        while (charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
+            --charIndex;
+
+        while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1])) {
+            found = true;
+            --charIndex;
         }
-        if (isWordChar(line.m_chars[charIndex - 1])) {
-            while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1]))
-                --charIndex;
-        } else if (ispunct(line.m_chars[charIndex - 1])) {
-            while (charIndex > 0 && ispunct(line.m_chars[charIndex - 1]))
-                --charIndex;
-        }
+        while (!found && charIndex > 0 && ispunct(line.m_chars[charIndex - 1]))
+            --charIndex;
+
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 

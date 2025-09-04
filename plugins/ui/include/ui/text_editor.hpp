@@ -59,6 +59,12 @@ namespace hex::ui {
             Coordinates getSelectedColumns();
             bool isSingleLine();
             bool contains(Coordinates coordinates, int8_t endsInclusive=1);
+            bool operator==(const Selection &o) const {
+                return m_start == o.m_start && m_end == o.m_end;
+            }
+            bool operator!=(const Selection &o) const {
+                return m_start != o.m_start || m_end != o.m_end;
+            }
         };
 
         struct EditorState {
@@ -72,7 +78,7 @@ namespace hex::ui {
             typedef std::vector<EditorState> Matches;
             Matches &getMatches() { return m_matches; }
             bool findNext(TextEditor *editor);
-            u32 findMatch(TextEditor *editor, bool isNex);
+            u32 findMatch(TextEditor *editor, i32 index);
             bool replace(TextEditor *editor, bool right);
             bool replaceAll(TextEditor *editor);
             std::string &getFindWord() { return m_findWord; }
