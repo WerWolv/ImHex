@@ -555,6 +555,7 @@ namespace hex::ui {
                     io.WantCaptureMouse = true;
                     m_state.m_cursorPosition = m_interactiveSelection.m_end = screenPosToCoordinates(ImGui::GetMousePos());
                     setSelection(m_interactiveSelection);
+                    ensureCursorVisible();
                     resetBlinking = true;
                 }
                 if (resetBlinking)
