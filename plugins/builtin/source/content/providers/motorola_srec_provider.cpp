@@ -183,50 +183,8 @@ namespace hex::plugin::builtin {
             this->setErrorMessage(data.error());
             return false;
         }
+        processMemoryRegions(data);
 
-        std::optional<u64> maxAddress;
-        bool firstAddress = true;
-        u64 regionStartAddr = 0;
-        u32 prevAddrEnd = 0;
-        u32 blockIdx = 0;
-        u64 blockSize = 0;
-
-        for (auto &[address, bytes] : data.value()) {
-            auto endAddress = (address + bytes.size()) - 1;
-            if (firstAddress) {
-                regionStartAddr = address;
-                firstAddress = false;
-            } else {
-                if (address > (prevAddrEnd + 1)) {
-                    m_memoryRegions.insert({{.address=regionStartAddr, .size=blockSize},
-                        fmt::format("Block {}", blockIdx)});
-                    regionStartAddr = address;
-                    blockSize = 0;
-                    blockIdx++;
-                }
-            }
-            blockSize += bytes.size();
-            prevAddrEnd = endAddress;
-
-            m_data.emplace({ address, endAddress }, std::move(bytes));
-            if (endAddress > maxAddress)
-                maxAddress = endAddress;
-        }
-
-        if (blockSize > 0) {
-            m_memoryRegions.insert({{.address=regionStartAddr, .size=blockSize}, fmt::format("Block {}", blockIdx)});
-        }
-
-        if (maxAddress.has_value())
-            m_dataSize = *maxAddress + 1;
-        else
-            m_dataSize = 0x00;
-
-        m_dataValid = true;
-
-        // jump to first region
-        auto firstRegion = *m_memoryRegions.begin();
-        ImHexApi::HexEditor::setSelection(firstRegion.region.getStartAddress(), 1);
         return true;
     }
 

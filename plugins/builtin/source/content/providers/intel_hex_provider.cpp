@@ -198,19 +198,7 @@ namespace hex::plugin::builtin {
         return m_dataSize;
     }
 
-    bool IntelHexProvider::open() {
-        auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
-        if (!file.isValid()) {
-            this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
-            return false;
-        }
-
-        auto data = intel_hex::parseIntelHex(file.readString());
-        if (!data.has_value()) {
-            this->setErrorMessage(data.error());
-            return false;
-        }
-
+    void IntelHexProvider::processMemoryRegions(wolv::util::Expected<std::map<u64, std::vector<u8>>, std::string> data) {
         std::optional<u64> maxAddress;
         bool firstAddress = true;
         u64 regionStartAddr = 0;
@@ -225,8 +213,7 @@ namespace hex::plugin::builtin {
                 firstAddress = false;
             } else {
                 if (address > (prevAddrEnd + 1)) {
-                    m_memoryRegions.insert({{.address=regionStartAddr, .size=blockSize},
-                        fmt::format("Block {}", blockIdx)});
+                    m_memoryRegions.emplace(Region(regionStartAddr, blockSize), fmt::format("Block {}", blockIdx));
                     regionStartAddr = address;
                     blockSize = 0;
                     blockIdx++;
@@ -241,7 +228,7 @@ namespace hex::plugin::builtin {
         }
 
         if (blockSize > 0) {
-            m_memoryRegions.insert({{.address=regionStartAddr, .size=blockSize}, fmt::format("Block {}", blockIdx)});
+            m_memoryRegions.emplace(Region(regionStartAddr, blockSize), fmt::format("Block {}", blockIdx));
         }
 
         if (maxAddress.has_value())
@@ -251,9 +238,25 @@ namespace hex::plugin::builtin {
 
         m_dataValid = true;
 
-        // jump to first region
-        auto firstRegion = *m_memoryRegions.begin();
-        ImHexApi::HexEditor::setSelection(firstRegion.region.getStartAddress(), 1);
+        // Jump to first region after loading all region
+        auto [region, _] = *m_memoryRegions.begin();
+        ImHexApi::HexEditor::setSelection(region.getStartAddress(), 1);
+    }
+
+    bool IntelHexProvider::open() {
+        auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
+        if (!file.isValid()) {
+            this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
+            return false;
+        }
+
+        auto data = intel_hex::parseIntelHex(file.readString());
+        if (!data.has_value()) {
+            this->setErrorMessage(data.error());
+            return false;
+        }
+        processMemoryRegions(data);
+
         return true;
     }
 
@@ -323,12 +326,8 @@ namespace hex::plugin::builtin {
         const auto &filtered = m_regionSearchWidget.draw(m_memoryRegions);
         ImGui::PopItemWidth();
 
-#if defined(OS_WINDOWS)
-        auto availableY = 400_scaled;
-#else
         // Take up full height on Linux since there are no DLL injection controls
         auto availableY = ImGui::GetContentRegionAvail().y;
-#endif
 
         if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(availableX, availableY))) {
             ImGui::TableSetupColumn("hex.ui.common.region"_lang);

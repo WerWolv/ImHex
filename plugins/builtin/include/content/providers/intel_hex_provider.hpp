@@ -5,9 +5,10 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/ui/widgets.hpp>
-#include <ui/pattern_drawer.hpp>
+#include <set>
 
 #include <wolv/container/interval_tree.hpp>
+#include <wolv/utils/expected.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -32,7 +33,7 @@ namespace hex::plugin::builtin {
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
         [[nodiscard]] u64 getActualSize() const override;
-
+        void processMemoryRegions(wolv::util::Expected<std::map<u64, std::vector<u8>>, std::string> data);
         bool open() override;
         void close() override;
 
