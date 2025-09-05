@@ -120,7 +120,7 @@ namespace hex::ui {
         auto oldPos = m_state.m_cursorPosition;
 
 
-        if (isEmpty() || oldPos.m_line >= (i64)m_lines.size())
+        if (isEmpty() || oldPos < Coordinates(0, 0))
             return;
 
         auto lindex = m_state.m_cursorPosition.m_line;
@@ -163,7 +163,7 @@ namespace hex::ui {
 
         auto oldPos = m_state.m_cursorPosition;
 
-        if (isEmpty() || oldPos.m_line >= (i64) m_lines.size())
+        if (isEmpty() || oldPos > setCoordinates(-1, -1))
             return;
 
         auto lindex = m_state.m_cursorPosition.m_line;
@@ -184,11 +184,9 @@ namespace hex::ui {
         }
 
         if (select) {
-            if (oldPos == m_interactiveSelection.m_end) {
-                m_interactiveSelection.m_end = Coordinates(m_state.m_cursorPosition);
-                if (m_interactiveSelection.m_end == Invalid)
-                    return;
-            } else if (oldPos == m_interactiveSelection.m_start)
+            if (oldPos == m_interactiveSelection.m_end)
+                m_interactiveSelection.m_end = m_state.m_cursorPosition;
+            else if (oldPos == m_interactiveSelection.m_start)
                 m_interactiveSelection.m_start = m_state.m_cursorPosition;
             else {
                 m_interactiveSelection.m_start = oldPos;

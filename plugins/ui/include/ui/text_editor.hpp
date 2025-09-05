@@ -693,7 +693,6 @@ namespace hex::ui {
         bool m_raiseContextMenu = false;
         Coordinates m_focusAtCoords = {};
         bool m_updateFocus = false;
-        bool m_ensureCursorVisible = false;
 
         std::vector<std::string> m_clickableText;
 
