@@ -114,8 +114,10 @@ namespace hex::ui {
     TextEditor::Coordinates TextEditor::screenPosToCoordinates(const ImVec2 &position) {
         ImVec2 local = position - ImGui::GetCursorScreenPos();
         i32 lineNo = std::max(0, (i32) floor(local.y / m_charAdvance.y));
-        if (local.x < (m_leftMargin - 2_scaled) || lineNo >= (i32) m_lines.size() || m_lines[lineNo].empty())
-            return setCoordinates(std::min(lineNo, (i32) m_lines.size() - 1), 0);
+        if (lineNo >= (i32) m_lines.size())
+            return setCoordinates((i32) m_lines.size() - 1, -1);
+        else if (local.x < (m_leftMargin - 2_scaled) || m_lines[lineNo].empty())
+            return setCoordinates(lineNo, 0);
         std::string line = m_lines[lineNo].m_chars;
         local.x -= (m_leftMargin - 5_scaled);
         i32 count = 0;
