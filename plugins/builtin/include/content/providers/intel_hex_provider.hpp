@@ -1,15 +1,22 @@
 #pragma once
 
 #include <fonts/vscode_icons.hpp>
+#include <hex/helpers/logger.hpp>
+#include <hex/helpers/utils.hpp>
 #include <hex/providers/provider.hpp>
+#include <hex/ui/widgets.hpp>
+#include <set>
 
 #include <wolv/container/interval_tree.hpp>
+#include <wolv/utils/expected.hpp>
 
 namespace hex::plugin::builtin {
 
     class IntelHexProvider : public hex::prv::Provider,
                              public hex::prv::IProviderDataDescription,
-                             public hex::prv::IProviderFilePicker {
+                             public hex::prv::IProviderFilePicker,
+                             public hex::prv::IProviderSidebarInterface
+                                                                        {
     public:
         IntelHexProvider() = default;
         ~IntelHexProvider() override = default;
@@ -21,11 +28,12 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isSavable() const override { return false; }
 
         void setBaseAddress(u64 address) override;
+        void drawSidebarInterface() override;
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
         [[nodiscard]] u64 getActualSize() const override;
-
+        void processMemoryRegions(wolv::util::Expected<std::map<u64, std::vector<u8>>, std::string> data);
         bool open() override;
         void close() override;
 
@@ -52,6 +60,22 @@ namespace hex::plugin::builtin {
         size_t m_dataSize = 0x00;
         wolv::container::IntervalTree<std::vector<u8>> m_data;
 
+        struct MemoryRegion {
+            Region region;
+            std::string name;
+
+            constexpr bool operator<(const MemoryRegion &other) const {
+                return this->region.getStartAddress() < other.region.getStartAddress();
+            }
+        };
+        std::set<MemoryRegion> m_memoryRegions;
+        ui::SearchableWidget<MemoryRegion> m_regionSearchWidget = ui::SearchableWidget<MemoryRegion>([](const std::string &search, const MemoryRegion &memoryRegion) {
+             std::string startAddr = std::format("{:#x}", memoryRegion.region.getStartAddress());
+             std::string endAddr  = std::format("{:#x}", memoryRegion.region.getEndAddress());
+
+             return hex::containsIgnoreCase(startAddr, search) ||
+                    hex::containsIgnoreCase(endAddr, search);
+        });
         std::fs::path m_sourceFilePath;
     };
 
