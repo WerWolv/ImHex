@@ -19,10 +19,10 @@ namespace hex::ui {
         m_topMarginChanged = true;
     }
 
-    void TextEditor::setFocusAtCoords(const Coordinates &coords, bool ensureVisible) {
+    void TextEditor::setFocusAtCoords(const Coordinates &coords, bool scrollToCursor) {
         m_focusAtCoords = coords;
         m_updateFocus = true;
-        m_ensureCursorVisible = ensureVisible;
+        m_scrollToCursor = scrollToCursor;
     }
 
     void TextEditor::clearErrorMarkers() {
@@ -199,11 +199,13 @@ namespace hex::ui {
         auto height = ImGui::GetWindowHeight() - m_topMargin - scrollBarSize - m_charAdvance.y;
         auto width = ImGui::GetWindowWidth() - windowPadding.x - scrollBarSize;
 
-        auto top = (i32) rint((m_topMargin > scrollY ? m_topMargin - scrollY : scrollY) / m_charAdvance.y);
-        auto bottom = top + (i32) rint(height / m_charAdvance.y);
+        auto topPixels = m_topMargin > scrollY ? m_topMargin - scrollY : scrollY;
+        auto top = (i32) rint(topPixels / m_charAdvance.y) + 1;
+        top -= (top >= (i32) m_lines.size());
+        auto bottom = (i32) rint((topPixels + height) / m_charAdvance.y);
 
         auto left = (i32) rint(scrollX / m_charAdvance.x);
-        auto right = left + (i32) rint(width / m_charAdvance.x);
+        auto right =  (i32) rint((scrollX + width) / m_charAdvance.x);
 
         auto pos = setCoordinates(m_state.m_cursorPosition);
         pos.m_column = (i32) rint(textDistanceToLineStart(pos) / m_charAdvance.x);
@@ -221,16 +223,24 @@ namespace hex::ui {
         }
 
         if (mScrollToCursorY) {
-            if (pos.m_line < top)
-                ImGui::SetScrollY(std::max(0.0f, pos.m_line * m_charAdvance.y));
-            if (pos.m_line > bottom)
+            if (pos.m_line < top) {
+                ImGui::SetScrollY(std::max(0.0f, (pos.m_line - 1) * m_charAdvance.y));
+                m_scrollToCursor = true;
+            }
+            if (pos.m_line > bottom) {
                 ImGui::SetScrollY(std::max(0.0f, pos.m_line * m_charAdvance.y - height));
+                m_scrollToCursor = true;
+            }
         }
         if (mScrollToCursorX) {
-            if (pos.m_column < left)
+            if (pos.m_column < left) {
                 ImGui::SetScrollX(std::max(0.0f, pos.m_column * m_charAdvance.x));
-            if (pos.m_column > right)
+                m_scrollToCursor = true;
+            }
+            if (pos.m_column > right) {
                 ImGui::SetScrollX(std::max(0.0f, pos.m_column * m_charAdvance.x - width));
+                m_scrollToCursor = true;
+            }
         }
         m_oldTopMargin = m_topMargin;
     }
@@ -354,7 +364,7 @@ namespace hex::ui {
     void TextEditor::setFocus() {
         m_state.m_cursorPosition = m_focusAtCoords;
         resetCursorBlinkTime();
-        if (m_ensureCursorVisible)
+        if (m_scrollToCursor)
             ensureCursorVisible();
 
         if (!this->m_readOnly)
@@ -607,7 +617,7 @@ namespace hex::ui {
     ImVec2 TextEditor::calculateCharAdvance() const {
         /* Compute mCharAdvance regarding scaled font size (Ctrl + mouse wheel)*/
         const float fontSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
-        return ImVec2(fontSize, ImGui::GetTextLineHeightWithSpacing() * m_lineSpacing);
+        return ImVec2(fontSize, GImGui->FontSize * m_lineSpacing);
     }
 
     float TextEditor::textDistanceToLineStart(const Coordinates &aFrom) {

@@ -487,7 +487,6 @@ namespace hex::ui {
             return;
 
         auto pos = setCoordinates(m_state.m_cursorPosition);
-        //auto start = std::min(pos, m_state.m_selection.m_start);
 
         insertTextAt(pos, value);
         m_lines[pos.m_line].m_colorized = false;

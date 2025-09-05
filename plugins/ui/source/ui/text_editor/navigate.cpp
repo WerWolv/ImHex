@@ -120,7 +120,7 @@ namespace hex::ui {
         auto oldPos = m_state.m_cursorPosition;
 
 
-        if (isEmpty() || oldPos.m_line >= (i64)m_lines.size())
+        if (isEmpty() || oldPos < Coordinates(0, 0))
             return;
 
         auto lindex = m_state.m_cursorPosition.m_line;
@@ -163,7 +163,7 @@ namespace hex::ui {
 
         auto oldPos = m_state.m_cursorPosition;
 
-        if (isEmpty() || oldPos.m_line >= (i64) m_lines.size())
+        if (isEmpty() || oldPos > setCoordinates(-1, -1))
             return;
 
         auto lindex = m_state.m_cursorPosition.m_line;
@@ -184,11 +184,9 @@ namespace hex::ui {
         }
 
         if (select) {
-            if (oldPos == m_interactiveSelection.m_end) {
-                m_interactiveSelection.m_end = Coordinates(m_state.m_cursorPosition);
-                if (m_interactiveSelection.m_end == Invalid)
-                    return;
-            } else if (oldPos == m_interactiveSelection.m_start)
+            if (oldPos == m_interactiveSelection.m_end)
+                m_interactiveSelection.m_end = m_state.m_cursorPosition;
+            else if (oldPos == m_interactiveSelection.m_start)
                 m_interactiveSelection.m_start = m_state.m_cursorPosition;
             else {
                 m_interactiveSelection.m_start = oldPos;
@@ -387,16 +385,17 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isWordChar(line.m_chars[charIndex])) {
-            while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1]))
-                --charIndex;
-        } else if (ispunct(line.m_chars[charIndex])) {
-            while (charIndex > 0 && ispunct(line.m_chars[charIndex - 1]))
-                --charIndex;
-        } else if (isspace(line.m_chars[charIndex])) {
-            while (charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
-                --charIndex;
+        bool found = false;
+        while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1])) {
+            found = true;
+            --charIndex;
         }
+        while (!found && charIndex > 0 && ispunct(line.m_chars[charIndex - 1])) {
+            found = true;
+            --charIndex;
+        }
+        while (!found && charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
+            --charIndex;
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
@@ -408,16 +407,18 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isWordChar(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && isWordChar(line.m_chars[charIndex]))
-                ++charIndex;
-        } else if (ispunct(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && ispunct(line.m_chars[charIndex]))
-                ++charIndex;
-        } else if (isspace(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
-                ++charIndex;
+        bool found = false;
+        while (charIndex < (i32) line.m_chars.size() && isWordChar(line.m_chars[charIndex])) {
+            found = true;
+            ++charIndex;
         }
+        while (!found && charIndex < (i32) line.m_chars.size() && ispunct(line.m_chars[charIndex])) {
+            found = true;
+            ++charIndex;
+        }
+        while (!found && charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
+            ++charIndex;
+
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
@@ -429,17 +430,16 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isspace(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
-                ++charIndex;
+        while (charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
+            ++charIndex;
+        bool found = false;
+        while (charIndex < (i32) line.m_chars.size() && (isWordChar(line.m_chars[charIndex]))) {
+            found = true;
+            ++charIndex;
         }
-        if (isWordChar(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && (isWordChar(line.m_chars[charIndex])))
-                ++charIndex;
-        } else if (ispunct(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && (ispunct(line.m_chars[charIndex])))
-                ++charIndex;
-        }
+        while (!found && charIndex < (i32) line.m_chars.size() && (ispunct(line.m_chars[charIndex])))
+            ++charIndex;
+
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
@@ -451,17 +451,17 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isspace(line.m_chars[charIndex - 1])) {
-            while (charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
-                --charIndex;
+        bool found = false;
+        while (charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
+            --charIndex;
+
+        while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1])) {
+            found = true;
+            --charIndex;
         }
-        if (isWordChar(line.m_chars[charIndex - 1])) {
-            while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1]))
-                --charIndex;
-        } else if (ispunct(line.m_chars[charIndex - 1])) {
-            while (charIndex > 0 && ispunct(line.m_chars[charIndex - 1]))
-                --charIndex;
-        }
+        while (!found && charIndex > 0 && ispunct(line.m_chars[charIndex - 1]))
+            --charIndex;
+
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 

@@ -904,7 +904,7 @@ namespace hex::plugin::builtin {
                     static std::string replaceWord;
                     static bool downArrowReplace = false;
                     static bool upArrowReplace = false;
-                    if (ImGui::InputTextWithHint("##replaceInputTextWidget", hint.c_str(), replaceWord, replaceFlags) || downArrowReplace || upArrowReplace) {
+                    if (ImGui::InputTextWithHint("###replaceInputTextWidget", hint.c_str(), replaceWord, replaceFlags) || downArrowReplace || upArrowReplace) {
                         findReplaceHandler->setReplaceWord(replaceWord);
                         historyInsert(m_replaceHistory, m_replaceHistorySize, m_replaceHistoryIndex, replaceWord);
 
@@ -972,7 +972,8 @@ namespace hex::plugin::builtin {
 
                 if ((ImGui::IsKeyPressed(ImGuiKey_F3, false)) || downArrowFind || upArrowFind || enterPressedFind) {
                     historyInsert(m_findHistory, m_findHistorySize, m_findHistoryIndex, findWord);
-                    position = findReplaceHandler->findMatch(textEditor, !shift && !upArrowFind);
+                    i32 index = !shift && !upArrowFind ? 1 : -1;
+                    position = findReplaceHandler->findMatch(textEditor, index);
                     count = findReplaceHandler->getMatches().size();
                     updateCount = true;
                     downArrowFind = false;
@@ -2021,9 +2022,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.find_next" }, 1520, AllowWhileTyping + Keys::F3, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
-                findReplaceHandler->findMatch(editor, true);
+                findReplaceHandler->findMatch(editor, 1);
             } else {
-                m_textEditor->getFindReplaceHandler()->findMatch(&*m_textEditor, true);
+                m_textEditor->getFindReplaceHandler()->findMatch(&*m_textEditor, 1);
             }
         }, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
@@ -2039,9 +2040,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.find_previous" }, 1530, AllowWhileTyping + SHIFT + Keys::F3, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
-                findReplaceHandler->findMatch(editor, false);
+                findReplaceHandler->findMatch(editor, -1);
             } else {
-                m_textEditor->getFindReplaceHandler()->findMatch(&*m_textEditor, false);
+                m_textEditor->getFindReplaceHandler()->findMatch(&*m_textEditor, -1);
             }
         }, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
