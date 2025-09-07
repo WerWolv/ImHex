@@ -22,7 +22,7 @@ namespace hex::ui {
         setCursorPosition(coords);
         ensureCursorVisible();
 
-        setFocusAtCoords(coords);
+        setFocusAtCoords(coords, true);
     }
 
     void TextEditor::moveToMatchedBracket(bool select) {
