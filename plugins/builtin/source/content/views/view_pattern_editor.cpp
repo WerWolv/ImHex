@@ -456,43 +456,29 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::get();
 
         if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
-            static float height = 0;
             const ImGuiContext& g = *ImGui::GetCurrentContext();
             if (g.CurrentWindow->Appearing)
                 return;
-            const auto availableSize = ImVec2(g.CurrentWindow->Size.x, g.CurrentWindow->Size.y - 2 * ImGui::GetFrameHeightWithSpacing());
-            const auto windowPosition = ImGui::GetCursorScreenPos();
-            static ImVec2 oldTextEditorSize = ImVec2(0, 0);
-            ImVec2 textEditorSize = ImVec2(availableSize.x, oldTextEditorSize.x == 0 ? availableSize.y * 3.0F / 5.0F : oldTextEditorSize.y);
-            static ImVec2 oldAvailableSize = ImVec2(0, 0);
-            if (availableSize.y != oldAvailableSize.y && oldAvailableSize.y != 0) {
-                float factor = availableSize.y / oldAvailableSize.y;
-                height *= factor;
-            }
 
-            static float oldHeight = 0;
-            auto heightIncrement = height - oldHeight;
-            if (heightIncrement != 0) {
-                float smallestTexEditorHeight = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ScrollbarSize;
-                float largestTextEditorHeight = availableSize.y - ImGui::GetTextLineHeightWithSpacing() - 2 * ImGui::GetFrameHeightWithSpacing() - ImGui::GetStyle().ScrollbarSize;
-                textEditorSize.y = std::clamp(textEditorSize.y + heightIncrement, smallestTexEditorHeight, largestTextEditorHeight);
-            }
-
-            oldAvailableSize = availableSize;
-            oldTextEditorSize = textEditorSize;
-            oldHeight = height;
             if (g.NavWindow != nullptr) {
                 std::string name =  g.NavWindow->Name;
                 if (name.contains(TextEditorView) || name.contains(ConsoleView) || name.contains(VariablesView) || name.contains(SettingsView) || name.contains(VirtualFilesView) || name.contains(DebuggerView))
                     m_focusedSubWindowName = name;
             }
 
+            auto defaultEditorSize = ImGui::GetContentRegionAvail();
+            defaultEditorSize.y *= 0.66F;
+
             fonts::CodeEditor().push();
-            m_textEditor.get(provider).render("##pattern_editor", textEditorSize, false);
+            if (ImGui::BeginChild("##pattern_editor_resizer", defaultEditorSize, ImGuiChildFlags_ResizeY)) {
+                m_textEditor.get(provider).render("##pattern_editor", ImGui::GetContentRegionAvail(), false);
+                m_textEditorHoverBox = ImGui::GetCurrentWindow()->Rect();
+            }
+            ImGui::EndChild();
             fonts::CodeEditor().pop();
 
-            m_textEditorHoverBox = ImRect(windowPosition,windowPosition+textEditorSize);
-            m_consoleHoverBox = ImRect(ImVec2(windowPosition.x,windowPosition.y+textEditorSize.y),windowPosition+availableSize);
+            m_consoleHoverBox = ImGui::GetCurrentWindow()->Rect();
+            m_consoleHoverBox.Min.y = m_textEditorHoverBox.Max.y + ImGui::GetTextLineHeightWithSpacing() * 1.5F;
 
             if (m_textEditor.get(provider).raiseContextMenu())  {
                 RequestOpenPopup::post("hex.builtin.menu.edit");
@@ -510,23 +496,6 @@ namespace hex::plugin::builtin {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 setupFindReplace(editor);
                 setupGotoLine(editor);
-            }
-
-            static bool dragging = false;
-            ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 4_scaled));
-            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
-                if (ImGui::IsItemHovered())
-                    dragging = true;
-            } else {
-                dragging = false;
-            }
-            if (ImGui::IsItemHovered()) {
-                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-            }
-
-            if (dragging) {
-                height += ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0).y;
-                ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
             }
 
             auto settingsSize = ImGui::GetContentRegionAvail();
