@@ -24,6 +24,7 @@
 #include <hex/ui/popup.hpp>
 #include <hex/ui/banner.hpp>
 
+#include <cmath>
 #include <chrono>
 #include <csignal>
 #include <numbers>
@@ -535,7 +536,7 @@ namespace hex {
                     if (popupDelay <= -1.0) {
                         popupDelay = 0.2;
                     } else {
-                        popupDelay -= m_lastFrameTime;
+                        popupDelay -= io.DeltaTime;
                         if (popupDelay < 0 || popups.size() == 1) {
                             popupDelay = -2.0;
                             currPopup = std::move(popups.back());
