@@ -72,7 +72,7 @@ jobs:
           cd ImHex
           echo "## Nightly ${GITHUB_SHA::7} Changelog" > changelog.md
           git fetch --tags --recurse-submodules=no
-          git log nightly..HEAD --oneline --no-merges --pretty=format:'* %s' >> changelog.md
+          git log nightly..origin/master --oneline --no-merges --pretty=format:'* %s' >> changelog.md
 
       - name: 📦 Update Pre-Release
         run: |
@@ -81,7 +81,7 @@ jobs:
           cd ImHex
           
           # Move nightly tag to latest commit
-          git tag -f nightly HEAD
+          git tag -f nightly origin/master
           git push origin nightly --force
 
           # Auth for GitHub CLI
