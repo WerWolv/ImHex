@@ -713,10 +713,14 @@ namespace hex::plugin::builtin {
                     ImGui::Separator();
 
                 // Draw entries for each custom node
+                u32 id = 1;
                 for (const auto &customNode : m_customNodes) {
+                    ImGui::PushID(id);
                     if (ImGui::MenuItem(customNode.name.c_str())) {
                         node = loadNode(customNode.data);
                     }
+                    ImGui::PopID();
+                    id += 1;
                 }
                 ImGui::EndMenu();
             }
