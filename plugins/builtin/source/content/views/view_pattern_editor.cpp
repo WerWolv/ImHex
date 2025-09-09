@@ -580,13 +580,13 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine(0, 10_scaled);
 
                     if (ImGuiExt::DimmedIconButton(ICON_VS_SETTINGS_GEAR, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        ImGui::OpenPopup("hex.builtin.view.pattern_editor.pattern_settings"_lang);
+                        ImGui::OpenPopup("Pattern Settings");
                     }
 
                     ImGui::SameLine(0, 0);
 
                     ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()), ImGuiCond_Always, ImVec2(0.0F, 1.0F));
-                    if (ImGui::BeginPopup("hex.builtin.view.pattern_editor.pattern_settings"_lang)) {
+                    if (ImGui::BeginPopup("Pattern Settings")) {
                         this->drawPatternSettings();
                         ImGui::EndPopup();
                     }
