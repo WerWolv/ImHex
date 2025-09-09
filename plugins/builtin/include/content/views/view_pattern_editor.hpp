@@ -68,12 +68,6 @@ namespace hex::plugin::builtin {
         void setPopupWindowHeight(u32 height) { m_popupWindowHeight = height; }
         u32 getPopupWindowHeight() const { return m_popupWindowHeight; }
 
-        struct VirtualFile {
-            std::fs::path path;
-            std::vector<u8> data;
-            Region region;
-        };
-
         enum class DangerousFunctionPerms : u8 {
             Ask,
             Allow,
@@ -165,13 +159,13 @@ namespace hex::plugin::builtin {
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
 
-        PerProvider<std::vector<VirtualFile>> m_virtualFiles;
 
         PerProvider<std::list<EnvVar>> m_envVarEntries;
 
         PerProvider<TaskHolder> m_analysisTask;
         PerProvider<bool> m_shouldAnalyze;
         PerProvider<bool> m_breakpointHit;
+        PerProvider<bool> m_debuggerActive;
         PerProvider<std::unique_ptr<ui::PatternDrawer>> m_debuggerDrawer;
         std::atomic<bool> m_resetDebuggerVariables;
         int m_debuggerScopeIndex = 0;
@@ -207,10 +201,11 @@ namespace hex::plugin::builtin {
         TextHighlighter m_textHighlighter = TextHighlighter(this,&this->m_editorRuntime);
     private:
         void drawConsole(ImVec2 size);
-        void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
-        void drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables);
-        void drawVirtualFiles(ImVec2 size, const std::vector<VirtualFile> &virtualFiles) const;
         void drawDebugger(ImVec2 size);
+
+        void drawPatternSettings();
+        void drawEnvVars(std::list<EnvVar> &envVars);
+        void drawVariableSettings(std::map<std::string, PatternVariable> &patternVariables);
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 

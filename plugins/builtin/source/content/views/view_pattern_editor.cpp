@@ -285,74 +285,6 @@ namespace hex::plugin::builtin {
         return langDef;
     }
 
-    int levelId;
-
-    static void loadPatternAsMemoryProvider(const ViewPatternEditor::VirtualFile *file) {
-        ImHexApi::Provider::add<prv::MemoryProvider>(file->data, wolv::util::toUTF8String(file->path.filename()));
-    }
-
-    static void drawVirtualFileTree(const std::vector<const ViewPatternEditor::VirtualFile*> &virtualFiles, u32 level = 0) {
-        ImGui::PushID(level + 1);
-        ON_SCOPE_EXIT { ImGui::PopID(); };
-
-        std::map<std::string, std::vector<const ViewPatternEditor::VirtualFile*>> currFolderEntries;
-        for (const auto &file : virtualFiles) {
-            const auto &path = file->path;
-
-            auto currSegment = wolv::io::fs::toNormalizedPathString(*std::next(path.begin(), level));
-            if (std::distance(path.begin(), path.end()) == ptrdiff_t(level + 1)) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                ImGui::TextUnformatted(ICON_VS_FILE);
-                ImGui::PushID(levelId);
-                ImGui::SameLine();
-
-                ImGui::TreeNodeEx(currSegment.c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
-                if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-                    ImGui::OpenPopup("##virtual_files_context_menu");
-                }
-                if (ImGui::BeginPopup("##virtual_files_context_menu")) {
-                    if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.open_in_new_provider"_lang, nullptr, false)) {
-                        loadPatternAsMemoryProvider(file);
-                    }
-                    ImGui::EndPopup();
-                }
-                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered()) {
-                    loadPatternAsMemoryProvider(file);
-                }
-                ImGui::PopID();
-                levelId +=1;
-                continue;
-            }
-
-            currFolderEntries[currSegment].emplace_back(file);
-        }
-
-        int id = 1;
-        for (const auto &[segment, entries] : currFolderEntries) {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-
-            if (level == 0) {
-                ImGui::TextUnformatted(ICON_VS_DATABASE);
-            } else {
-                ImGui::TextUnformatted(ICON_VS_FOLDER);
-            }
-
-            ImGui::PushID(id);
-
-            ImGui::SameLine();
-            if (ImGui::TreeNodeEx(segment.c_str(), ImGuiTreeNodeFlags_SpanFullWidth)) {
-                drawVirtualFileTree(entries, level + 1);
-                ImGui::TreePop();
-            }
-
-            ImGui::PopID();
-            id += 1;
-        }
-    }
-
     ViewPatternEditor::ViewPatternEditor() : View::Window("hex.builtin.view.pattern_editor.name", ICON_VS_SYMBOL_NAMESPACE) {
         m_editorRuntime = std::make_unique<pl::PatternLanguage>();
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
@@ -452,6 +384,23 @@ namespace hex::plugin::builtin {
         drawTextEditorGotoLinePopup(editor);
     }
 
+    void ViewPatternEditor::drawPatternSettings() {
+        const auto size = scaled(500, 150);
+
+        if (ImGuiExt::BeginSubWindow("hex.builtin.view.pattern_editor.settings"_lang, nullptr, size)) {
+            this->drawVariableSettings(*m_patternVariables);
+        }
+        ImGuiExt::EndSubWindow();
+
+        ImGui::NewLine();
+
+        if (ImGuiExt::BeginSubWindow("hex.builtin.view.pattern_editor.env_vars"_lang, nullptr, size)) {
+            this->drawEnvVars(*m_envVarEntries);
+        }
+        ImGuiExt::EndSubWindow();
+    }
+
+
     void ViewPatternEditor::drawContent() {
         auto provider = ImHexApi::Provider::get();
 
@@ -470,11 +419,27 @@ namespace hex::plugin::builtin {
             defaultEditorSize.y *= 0.66F;
 
             fonts::CodeEditor().push();
+            ImGui::SetNextWindowSizeConstraints(
+                ImVec2(
+                    defaultEditorSize.x,
+                    ImGui::GetTextLineHeightWithSpacing() * 2
+                ),
+                ImVec2(
+                    defaultEditorSize.x,
+                    std::min(
+                        ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() * 4,
+                        ImGui::GetContentRegionAvail().y * 0.8F
+                    )
+                )
+            );
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
             if (ImGui::BeginChild("##pattern_editor_resizer", defaultEditorSize, ImGuiChildFlags_ResizeY)) {
                 m_textEditor.get(provider).render("##pattern_editor", ImGui::GetContentRegionAvail(), false);
                 m_textEditorHoverBox = ImGui::GetCurrentWindow()->Rect();
             }
             ImGui::EndChild();
+            ImGui::PopStyleVar(2);
             fonts::CodeEditor().pop();
 
             m_consoleHoverBox = ImGui::GetCurrentWindow()->Rect();
@@ -499,35 +464,28 @@ namespace hex::plugin::builtin {
             }
 
             auto settingsSize = ImGui::GetContentRegionAvail();
-            settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5F;
+            if (m_debuggerActive) {
+                settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5F;
 
-            if (ImGui::BeginTabBar("##settings")) {
-                const auto startY = ImGui::GetCursorPosY();
+                if (ImGui::BeginTabBar("##settings")) {
+                    const auto startY = ImGui::GetCursorPosY();
 
-                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
-                    this->drawConsole(settingsSize);
-                    ImGui::EndTabItem();
-                }
-                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.env_vars"_lang)) {
-                    this->drawEnvVars(settingsSize, *m_envVarEntries);
-                    ImGui::EndTabItem();
-                }
-                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.settings"_lang)) {
-                    this->drawVariableSettings(settingsSize, *m_patternVariables);
-                    ImGui::EndTabItem();
-                }
-                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.virtual_files"_lang)) {
-                    this->drawVirtualFiles(settingsSize, *m_virtualFiles);
-                    ImGui::EndTabItem();
-                }
-                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.debugger"_lang)) {
-                    this->drawDebugger(settingsSize);
-                    ImGui::EndTabItem();
-                }
+                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
+                        this->drawConsole(settingsSize);
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.debugger"_lang)) {
+                        this->drawDebugger(settingsSize);
+                        ImGui::EndTabItem();
+                    }
 
-                ImGui::SetCursorPosY(startY + settingsSize.y + ImGui::GetStyle().ItemSpacing.y * 2);
+                    ImGui::SetCursorPosY(startY + settingsSize.y + ImGui::GetStyle().ItemSpacing.y * 2);
 
-                ImGui::EndTabBar();
+                    ImGui::EndTabBar();
+                }
+            } else {
+                settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y;
+                this->drawConsole(settingsSize);
             }
 
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
@@ -611,13 +569,27 @@ namespace hex::plugin::builtin {
                     }
                     ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.auto"_lang.get());
 
-                    ImGui::SameLine();
+                    ImGui::SameLine(0, 5_scaled);
 
                     bool synced = m_sourceCode.isSynced();
                     if (ImGuiExt::DimmedIconToggle(ICON_VS_REPO_PINNED, &synced)) {
                         ContentRegistry::Settings::write<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", synced);
                     }
                     ImGui::SetItemTooltip("%s", "hex.builtin.setting.general.sync_pattern_source"_lang.get());
+
+                    ImGui::SameLine(0, 10_scaled);
+
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_SETTINGS_GEAR, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        ImGui::OpenPopup("hex.builtin.view.pattern_editor.pattern_settings"_lang);
+                    }
+
+                    ImGui::SameLine(0, 0);
+
+                    ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()), ImGuiCond_Always, ImVec2(0.0F, 1.0F));
+                    if (ImGui::BeginPopup("hex.builtin.view.pattern_editor.pattern_settings"_lang)) {
+                        this->drawPatternSettings();
+                        ImGui::EndPopup();
+                    }
 
                     ImGui::SameLine();
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -1076,10 +1048,10 @@ namespace hex::plugin::builtin {
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
 
-    void ViewPatternEditor::drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars) {
+    void ViewPatternEditor::drawEnvVars(std::list<EnvVar> &envVars) {
         static u32 envVarCounter = 1;
 
-        if (ImGui::BeginChild("##env_vars", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+        if (ImGui::BeginChild("##env_vars", ImGui::GetContentRegionAvail(), true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
             if (envVars.size() <= 1) {
                 ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_env_vars"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
             }
@@ -1184,9 +1156,9 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
     }
 
-    void ViewPatternEditor::drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables) {
+    void ViewPatternEditor::drawVariableSettings(std::map<std::string, PatternVariable> &patternVariables) {
         auto provider = ImHexApi::Provider::get();
-        if (ImGui::BeginChild("##settings", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+        if (ImGui::BeginChild("##settings", ImGui::GetContentRegionAvail(), true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
             if (patternVariables.empty()) {
                 ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_in_out_vars"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
             }
@@ -1250,26 +1222,6 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
     }
 
-    void ViewPatternEditor::drawVirtualFiles(ImVec2 size, const std::vector<VirtualFile> &virtualFiles) const {
-        std::vector<const VirtualFile*> virtualFilePointers;
-
-        for (const auto &file : virtualFiles)
-            virtualFilePointers.emplace_back(&file);
-
-        if (ImGui::BeginTable("##virtual_file_tree", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
-            if (virtualFiles.empty()) {
-                ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_virtual_files"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
-            }
-            
-            ImGui::TableSetupColumn("##path", ImGuiTableColumnFlags_WidthStretch);
-            levelId = 1;
-            drawVirtualFileTree(virtualFilePointers);
-
-            ImGui::EndTable();
-        }
-    }
-
-
     void ViewPatternEditor::drawDebugger(ImVec2 size) {
         auto provider = ImHexApi::Provider::get();
         const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
@@ -1278,22 +1230,9 @@ namespace hex::plugin::builtin {
             auto &evaluator = runtime.getInternals().evaluator;
             m_breakpoints = m_textEditor.get(provider).getBreakpoints();
             evaluator->setBreakpoints(m_breakpoints);
-            const auto line = m_textEditor.get(provider).getCursorPosition().m_line + 1;
 
-            if (!m_breakpoints->contains(line)) {
-                if (ImGuiExt::IconButton(ICON_VS_CIRCLE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
-                    evaluator->addBreakpoint(line);
-                }
-                ImGuiExt::InfoTooltip("hex.builtin.view.pattern_editor.debugger.add_tooltip"_lang);
-            } else {
-                if (ImGuiExt::IconButton(ICON_VS_CIRCLE_FILLED, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
-                    evaluator->removeBreakpoint(line);
-                }
-                ImGuiExt::InfoTooltip("hex.builtin.view.pattern_editor.debugger.remove_tooltip"_lang);
-            }
             m_breakpoints = evaluator->getBreakpoints();
             m_textEditor.get(provider).setBreakpoints(m_breakpoints);
-            ImGui::SameLine();
 
             if (*m_breakpointHit) {
                 auto displayValue = [&](const auto &parent, size_t index) {
@@ -1703,7 +1642,6 @@ namespace hex::plugin::builtin {
         m_consoleNeedsUpdate = true;
 
         m_consoleEditor.get(provider).setText("");
-        m_virtualFiles->clear();
 
         m_accessHistory = {};
         m_accessHistoryIndex = 0;
@@ -1718,18 +1656,20 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
             runtime.getInternals().evaluator->setBreakpointHitCallback([this, &runtime, provider] {
                 m_debuggerScopeIndex = 0;
-                *m_breakpointHit = true;
+                m_breakpointHit.get(provider) = true;
+                m_debuggerActive.get(provider) = true;
                 m_resetDebuggerVariables = true;
                 auto optPauseLine = runtime.getInternals().evaluator->getPauseLine();
                 if (optPauseLine.has_value())
                     m_textEditor.get(provider).jumpToLine(optPauseLine.value() - 1);
-                while (*m_breakpointHit) {
+                while (m_breakpointHit.get(provider)) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(100LL));
                 }
             });
 
-            task.setInterruptCallback([this, &runtime] {
-                m_breakpointHit = false;
+            task.setInterruptCallback([this, &runtime, provider] {
+                m_breakpointHit.get(provider) = false;
+                m_debuggerActive.get(provider) = false;
                 runtime.abort();
             });
 
@@ -1791,6 +1731,7 @@ namespace hex::plugin::builtin {
                    fmt::format("I: Evaluation took {}", std::chrono::duration<double>(runtime.getLastRunningTime()))
                 );
                 m_consoleNeedsUpdate = true;
+                m_debuggerActive.get(provider) = false;
             };
 
 
@@ -1894,10 +1835,6 @@ namespace hex::plugin::builtin {
             }
             m_textHighlighter.m_needsToUpdateColors = false;
 
-        });
-
-        RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
-            m_virtualFiles->emplace_back(path, data, region);
         });
 
     }

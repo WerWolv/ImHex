@@ -7,6 +7,12 @@
 
 namespace hex::plugin::builtin {
 
+    struct VirtualFile {
+        std::fs::path path;
+        std::vector<u8> data;
+        Region region;
+    };
+
     class ViewPatternData : public View::Window {
     public:
         ViewPatternData();
@@ -26,6 +32,8 @@ namespace hex::plugin::builtin {
         PerProvider<std::map<u64, std::unique_ptr<ui::PatternDrawer>>> m_patternDrawer;
         Region m_hoveredPatternRegion = Region::Invalid();
         ui::PatternValueEditor m_patternValueEditor;
+        PerProvider<std::vector<VirtualFile>> m_virtualFiles;
+
     };
 
 }
