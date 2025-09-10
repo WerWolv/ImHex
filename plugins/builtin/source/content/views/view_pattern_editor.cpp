@@ -1053,7 +1053,10 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginChild("##env_vars", ImGui::GetContentRegionAvail(), true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
             if (envVars.size() <= 1) {
-                ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_env_vars"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
+                ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_env_vars"_lang,
+                    ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2 + ImVec2(0, ImGui::GetTextLineHeight()),
+                    ImGui::GetWindowWidth() * 0.7
+                );
             }
 
             if (ImGui::BeginTable("##env_vars_table", 4, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
@@ -1163,9 +1166,9 @@ namespace hex::plugin::builtin {
                 ImGuiExt::TextOverlay("hex.builtin.view.pattern_editor.no_in_out_vars"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
             }
 
-            if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_RowBg)) {
-                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.25F);
-                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.75F);
+            if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_RowBg)) {
+                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
                 for (auto &[name, variable] : patternVariables) {
                     ImGui::TableNextRow();
@@ -1197,6 +1200,7 @@ namespace hex::plugin::builtin {
                                 m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = value;
                         } else if (variable.type == pl::core::Token::ValueType::Boolean) {
+                            ImGui::SameLine(0, ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing());
                             auto value = hex::get_or<bool>(variable.value, false);
                             if (ImGui::Checkbox(label.c_str(), &value))
                                 m_hasUnevaluatedChanges.get(provider) = true;
