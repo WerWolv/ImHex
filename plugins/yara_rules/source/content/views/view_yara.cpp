@@ -203,33 +203,53 @@ namespace hex::plugin::yara {
         matchesTableSize.y -= ImGui::GetTextLineHeightWithSpacing();
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
         if (ImGuiExt::BeginSubWindow("hex.yara_rules.view.yara.header.matches"_lang, nullptr, matchesTableSize)) {
-            if (ImGui::BeginTable("matches", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+            if (ImGui::BeginTable("matches", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableSetupColumn("hex.yara_rules.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("variable"));
-                ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("address"));
-                ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
+                ImGui::TableSetupColumn("hex.yara_rules.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_None, 0.5);
+                ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_None, 0.25);
+                ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_None, 0.25);
 
                 ImGui::TableHeadersRow();
 
                 if (!m_matcherTask.isRunning()) {
+                    u32 ruleId = 1;
                     for (const auto &rule : *m_matchedRules) {
                         if (rule.matches.empty()) continue;
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        if (ImGui::TreeNode(rule.identifier.c_str())) {
+                        ImGui::PushID(ruleId);
+                        ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0.0F);
+                        const bool open = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                        ImGui::PopStyleVar();
+                        ImGui::SameLine();
+                        ImGui::TextUnformatted(rule.identifier.c_str());
+                        if (open) {
+                            u32 matchId = 1;
                             for (const auto &match : rule.matches) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
+                                ImGui::PushID(matchId);
+
+                                if (ImGui::Selectable("##match_selectable", false, ImGuiSelectableFlags_SpanAllColumns)) {
+                                    ImHexApi::HexEditor::setSelection(match.region);
+                                }
+
+                                ImGui::SameLine();
                                 ImGui::TextUnformatted(match.variable.c_str());
                                 ImGui::TableNextColumn();
                                 ImGui::TextUnformatted(fmt::format("0x{0:08X}", match.region.getStartAddress()).c_str());
                                 ImGui::TableNextColumn();
                                 ImGui::TextUnformatted(fmt::format("0x{0:08X}", match.region.getSize()).c_str());
+
+                                ImGui::PopID();
+                                matchId += 1;
                             }
                             ImGui::TreePop();
                         }
+                        ImGui::PopID();
+                        ruleId += 1;
                     }
                 }
 
