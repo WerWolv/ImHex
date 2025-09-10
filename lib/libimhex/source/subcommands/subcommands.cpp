@@ -13,6 +13,9 @@
 namespace hex::subcommands {
 
     std::optional<SubCommand> findSubCommand(const std::string &arg) {
+        if (arg == "-" || arg == "--")
+            return std::nullopt;
+
         for (auto &plugin : PluginManager::getPlugins()) {
             for (auto &subCommand : plugin.getSubCommands()) {
                 if (fmt::format("--{}", subCommand.commandLong) == arg || fmt::format("-{}", subCommand.commandShort) == arg) {
@@ -35,50 +38,63 @@ namespace hex::subcommands {
 
         auto argsIter = args.begin();
 
-        // Get subcommand associated with the first argument
-        std::optional<SubCommand> currentSubCommand = findSubCommand(*argsIter);
-
-        if (currentSubCommand) {
-            argsIter += 1;
-            // If it is a valid subcommand, remove it from the argument list
-        } else {
-            // If no (valid) subcommand was provided, the default one is --open
-            currentSubCommand = findSubCommand("--open");
-        }
-
-        // Arguments of the current subcommand
+        std::optional<SubCommand> currentSubCommand;
         std::vector<std::string> currentSubCommandArgs;
 
-        // Compute all subcommands to run
-        while (argsIter != args.end()) {
-            const std::string &arg = *argsIter;
+        if (*argsIter == "--") {
+            // Treat the rest of the args as files
+            std::vector<std::string> remainingArgs(++argsIter, args.end());
+            subCommands.emplace_back(*findSubCommand("--open"), remainingArgs);
+            argsIter = args.end(); // Skip while loop
+        } else if (!findSubCommand(*argsIter)) {
+            // First argument not a subcommand, treat all args as files
+            subCommands.emplace_back(*findSubCommand("--open"), args);
+            argsIter = args.end(); // Skip while loop
+        }
 
-            if (!currentSubCommandArgs.empty() && arg.starts_with("--") && !(currentSubCommand.has_value() && currentSubCommand->type == SubCommand::Type::SubCommand)) {
-                // Save command to run
+        while (argsIter != args.end()) {
+            // Get subcommand associated with the argument
+            // Guaranteed to find a match on the first argument, as the other case has been handled above
+            std::optional<SubCommand> newSubCommand = findSubCommand(*argsIter);
+
+            if (*argsIter == "--") {
+                // Treat the rest of the args as files
+                subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
+
+                std::vector<std::string> remainingArgs(++argsIter, args.end());
+                subCommands.emplace_back(*findSubCommand("--open"), remainingArgs);
+
+                currentSubCommand = std::nullopt;
+                currentSubCommandArgs.clear();
+                break;
+            }
+
+            // Will always take this `if` statement on the first time through the loop
+            if (newSubCommand) {
                 if (currentSubCommand) {
                     subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
                 }
 
-                currentSubCommand = std::nullopt;
-                currentSubCommandArgs = { };
-            } else if (currentSubCommand) {
-                // Add current argument to the current command
-                currentSubCommandArgs.push_back(arg);
-                argsIter += 1;
-            } else { 
-                // Get next subcommand from current argument
-                currentSubCommand = findSubCommand(arg);
-                if (!currentSubCommand) {
-                    log::error("No subcommand named '{}' found", arg);
-                    exit(EXIT_FAILURE);
+                if (newSubCommand->type == SubCommand::Type::SubCommand) {
+                    std::vector<std::string> remainingArgs(++argsIter, args.end());
+                    subCommands.emplace_back(*newSubCommand, remainingArgs);
+
+                    currentSubCommand = std::nullopt;
+                    currentSubCommandArgs.clear();
+                    break;
                 }
 
-                argsIter += 1;
+                currentSubCommand = newSubCommand;
+                currentSubCommandArgs.clear();
+            } else {
+                currentSubCommandArgs.push_back(*argsIter);
             }
+
+            ++argsIter;
         }
 
         // Save last command to run
-        if (currentSubCommand.has_value()) {
+        if (currentSubCommand) {
             subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
         }
 
