@@ -31,6 +31,8 @@ namespace hex::plugin::builtin {
         }
 
         void drawContent() override {
+            ImHexApi::System::unlockFrameRate();
+
             ImGuiIO& io = ImGui::GetIO();
             ImVec2 size = scaled({ 320, 180 });
             ImGui::InvisibleButton("canvas", size);
@@ -119,9 +121,9 @@ namespace hex::plugin::builtin {
 
             // Draw the ImHex icon
             if (!m_logoTexture.isValid())
-                m_logoTexture = ImGuiExt::Texture::fromSVG(romfs::get("assets/common/logo.svg").span(), 0, 0, ImGuiExt::Texture::Filter::Linear);
+                m_logoTexture = ImGuiExt::Texture::fromSVG(romfs::get("assets/common/logo.svg").span(), 160_scaled, 160_scaled, ImGuiExt::Texture::Filter::Linear);
 
-            ImGui::Image(m_logoTexture, scaled({ 100, 100 }));
+            ImGui::Image(m_logoTexture, m_logoTexture.getSize());
             if (ImGui::IsItemClicked()) {
                 m_clickCount += 1;
             }
@@ -142,62 +144,66 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         }
 
-        // Draw donation links
-        ImGuiExt::Header("hex.builtin.view.help.about.donations"_lang);
-
-        if (ImGui::BeginChild("##ThanksWrapper", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * 3))) {
-            ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x * 0.8F);
-            ImGuiExt::TextFormattedCentered("{}", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
-            ImGui::PopTextWrapPos();
-        }
-        ImGui::EndChild();
-
         ImGui::NewLine();
 
-        struct DonationPage {
-            DonationPage(const std::fs::path &path, const std::string &link) :
-                texture(ImGuiExt::Texture::fromImage(romfs::get(path).span<std::byte>(), ImGuiExt::Texture::Filter::Linear)),
-                link(std::move(link)) { }
-
-            AutoReset<ImGuiExt::Texture> texture;
-            std::string link;
-        };
-
-        static std::array DonationPages = {
-            DonationPage("assets/common/donation/paypal.png", "https://werwolv.net/donate"),
-            DonationPage("assets/common/donation/github.png", "https://github.com/sponsors/WerWolv"),
-            DonationPage("assets/common/donation/patreon.png", "https://patreon.com/werwolv")
-        };
-
-        if (ImGui::BeginTable("DonationLinks", 5, ImGuiTableFlags_SizingStretchSame)) {
+        if (ImGui::BeginTable("##box", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
-            for (const auto &page : DonationPages) {
+            // Draw donation links
+            if (ImGui::BeginChild("##ThanksWrapper", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * 3))) {
+                ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x * 0.8F);
+                ImGuiExt::TextFormattedCentered("{}", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
+                ImGui::PopTextWrapPos();
+            }
+            ImGui::EndChild();
+
+            struct DonationPage {
+                DonationPage(const std::fs::path &path, const std::string &link) :
+                    texture(ImGuiExt::Texture::fromImage(romfs::get(path).span<std::byte>(), ImGuiExt::Texture::Filter::Linear)),
+                    link(std::move(link)) { }
+
+                AutoReset<ImGuiExt::Texture> texture;
+                std::string link;
+            };
+
+            static std::array DonationPages = {
+                DonationPage("assets/common/donation/paypal.png", "https://werwolv.net/donate"),
+                DonationPage("assets/common/donation/github.png", "https://github.com/sponsors/WerWolv"),
+                DonationPage("assets/common/donation/patreon.png", "https://patreon.com/werwolv")
+            };
+
+            if (ImGui::BeginTable("DonationLinks", 5, ImGuiTableFlags_SizingStretchSame)) {
+                ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                const auto size = (page.texture->getSize() * 1_scaled) / 1.5F;
-                const auto startPos = ImGui::GetCursorScreenPos();
-                ImGui::Image(*page.texture, size);
+                for (const auto &page : DonationPages) {
+                    ImGui::TableNextColumn();
 
-                if (ImGui::IsItemHovered()) {
-                    ImGui::GetForegroundDrawList()->AddShadowCircle(startPos + size / 2, size.x / 2, ImGui::GetColorU32(ImGuiCol_Button), 100.0F, ImVec2(), ImDrawFlags_ShadowCutOutShapeBackground);
+                    const auto size = (page.texture->getSize() * 1_scaled) / 1.5F;
+                    const auto startPos = ImGui::GetCursorScreenPos();
+                    ImGui::Image(*page.texture, size);
+
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::GetForegroundDrawList()->AddShadowCircle(startPos + size / 2, size.x / 2, ImGui::GetColorU32(ImGuiCol_Button), 100.0F, ImVec2(), ImDrawFlags_ShadowCutOutShapeBackground);
+                    }
+
+                    if (ImGui::IsItemClicked()) {
+                        hex::openWebpage(page.link);
+                    }
                 }
 
-                if (ImGui::IsItemClicked()) {
-                    hex::openWebpage(page.link);
-                }
+                ImGui::EndTable();
             }
 
+            ImGui::NewLine();
             ImGui::EndTable();
         }
-
-        ImGui::NewLine();
     }
 
     void ViewAbout::drawBuildInformation() {
         if (ImGui::BeginTable("Information", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInner)) {
-            ImGui::Indent();
+            ImGui::Indent(5_scaled);
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -290,7 +296,7 @@ namespace hex::plugin::builtin {
         constexpr static std::array Contributors = {
             Contributor { "iTrooz", "A huge amount of help maintaining ImHex and the CI", "https://github.com/iTrooz", true },
             Contributor { "jumanji144", "A ton of help with the Pattern Language, API and usage stats", "https://github.com/jumanji144", true },
-            Contributor { "AxCut", "A ton of great pattern language improvements and help with the issue tracker", "https://github.com/paxcut", false },
+            Contributor { "AxCut", "A ton of great pattern language improvements and help with the issue tracker", "https://github.com/paxcut", true },
             Contributor { "Mary", "Porting ImHex to macOS originally", "https://github.com/marysaka", false },
             Contributor { "Roblabla", "Adding the MSI Windows installer", "https://github.com/roblabla", false },
             Contributor { "jam1garner", "Adding support for Rust plugins", "https://github.com/jam1garner", false },
@@ -317,43 +323,59 @@ namespace hex::plugin::builtin {
     }
 
     void ViewAbout::drawLibraryCreditsPage() {
-        struct Library {
+        struct ExternalResource {
             const char *name;
             const char *author;
             const char *link;
         };
 
         constexpr static std::array ImGuiLibraries = {
-            Library { "ImGui", "ocornut", "https://github.com/ocornut/imgui" },
-            Library { "ImPlot", "epezent", "https://github.com/epezent/implot" },
-            Library { "imnodes", "Nelarius", "https://github.com/Nelarius/imnodes" },
-            Library { "ImGuiColorTextEdit", "BalazsJako", "https://github.com/BalazsJako/ImGuiColorTextEdit" },
+            ExternalResource { "ImGui", "ocornut", "https://github.com/ocornut/imgui" },
+            ExternalResource { "ImPlot", "epezent", "https://github.com/epezent/implot" },
+            ExternalResource { "ImPlot3D", "brenocq", "https://github.com/brenocq/implot3d" },
+            ExternalResource { "imnodes", "Nelarius", "https://github.com/Nelarius/imnodes" },
+            ExternalResource { "ImGuiColorTextEdit", "BalazsJako", "https://github.com/BalazsJako/ImGuiColorTextEdit" },
         };
 
         constexpr static std::array ExternalLibraries = {
-            Library { "PatternLanguage", "WerWolv", "https://github.com/WerWolv/PatternLanguage" },
-            Library { "libwolv", "WerWolv", "https://github.com/WerWolv/libwolv" },
-            Library { "libromfs", "WerWolv", "https://github.com/WerWolv/libromfs" },
+            ExternalResource { "PatternLanguage", "WerWolv", "https://github.com/WerWolv/PatternLanguage" },
+            ExternalResource { "libwolv", "WerWolv", "https://github.com/WerWolv/libwolv" },
+            ExternalResource { "libromfs", "WerWolv", "https://github.com/WerWolv/libromfs" },
         };
 
         constexpr static std::array ThirdPartyLibraries = {
-            Library { "json", "nlohmann", "https://github.com/nlohmann/json" },
-            Library { "fmt", "fmtlib", "https://github.com/fmtlib/fmt" },
-            Library { "nativefiledialog-extended", "btzy", "https://github.com/btzy/nativefiledialog-extended" },
-            Library { "xdgpp", "danyspin97", "https://sr.ht/~danyspin97/xdgpp" },
-            Library { "capstone", "aquynh", "https://github.com/aquynh/capstone" },
-            Library { "microtar", "rxi", "https://github.com/rxi/microtar" },
-            Library { "yara", "VirusTotal", "https://github.com/VirusTotal/yara" },
-            Library { "edlib", "Martinsos", "https://github.com/Martinsos/edlib" },
-            Library { "HashLibPlus", "ron4fun", "https://github.com/ron4fun/HashLibPlus" },
-            Library { "miniaudio", "mackron", "https://github.com/mackron/miniaudio" },
-            Library { "freetype", "freetype", "https://gitlab.freedesktop.org/freetype/freetype" },
-            Library { "mbedTLS", "ARMmbed", "https://github.com/ARMmbed/mbedtls" },
-            Library { "curl", "curl", "https://github.com/curl/curl" },
-            Library { "file", "file", "https://github.com/file/file" },
-            Library { "glfw", "glfw", "https://github.com/glfw/glfw" },
-            Library { "llvm", "llvm-project", "https://github.com/llvm/llvm-project" },
-            Library { "Boost.Regex", "John Maddock", "https://github.com/boostorg/regex" },
+            ExternalResource { "json", "nlohmann", "https://github.com/nlohmann/json" },
+            ExternalResource { "fmt", "fmtlib", "https://github.com/fmtlib/fmt" },
+            ExternalResource { "nativefiledialog-extended", "btzy", "https://github.com/btzy/nativefiledialog-extended" },
+            ExternalResource { "xdgpp", "danyspin97", "https://sr.ht/~danyspin97/xdgpp" },
+            ExternalResource { "capstone", "aquynh", "https://github.com/aquynh/capstone" },
+            ExternalResource { "microtar", "rxi", "https://github.com/rxi/microtar" },
+            ExternalResource { "yara", "VirusTotal", "https://github.com/VirusTotal/yara" },
+            ExternalResource { "edlib", "Martinsos", "https://github.com/Martinsos/edlib" },
+            ExternalResource { "HashLibPlus", "ron4fun", "https://github.com/ron4fun/HashLibPlus" },
+            ExternalResource { "miniaudio", "mackron", "https://github.com/mackron/miniaudio" },
+            ExternalResource { "freetype", "freetype", "https://gitlab.freedesktop.org/freetype/freetype" },
+            ExternalResource { "mbedTLS", "ARMmbed", "https://github.com/ARMmbed/mbedtls" },
+            ExternalResource { "curl", "curl", "https://github.com/curl/curl" },
+            ExternalResource { "file", "file", "https://github.com/file/file" },
+            ExternalResource { "glfw", "glfw", "https://github.com/glfw/glfw" },
+            ExternalResource { "llvm", "LLVM Maintainers", "https://github.com/llvm/llvm-project" },
+            ExternalResource { "Boost.Regex", "John Maddock", "https://github.com/boostorg/regex" },
+            ExternalResource { "md4c", "mity", "https://github.com/mity/md4c" },
+            ExternalResource { "lunasvg", "sammycage", "https://github.com/sammycage/lunasvg" },
+            ExternalResource { "zlib", "madler", "https://github.com/madler/zlib" },
+            ExternalResource { "bzip2", "federicomenaquintero", "https://gitlab.com/federicomenaquintero/bzip2" },
+            ExternalResource { "liblzma", "tukaani", "https://github.com/tukaani-project/xz" },
+            ExternalResource { "zstd", "Facebook", "https://github.com/facebook/zstd" },
+            ExternalResource { "libssh2", "libssh2 Maintainers", "https://github.com/libssh2/libssh2" },
+        };
+
+        constexpr static std::array ThirdPartyResources {
+            ExternalResource { "VSCode Icons", "Microsoft", "https://github.com/microsoft/vscode-codicons" },
+            ExternalResource { "Blender Icons", "Blender Maintainers", "https://github.com/blender/blender" },
+            ExternalResource { "Tabler Icons", "codecalm", "https://github.com/tabler/tabler-icons" },
+            ExternalResource { "JetBrains Mono", "JetBrains", "https://github.com/JetBrains/JetBrainsMono" },
+            ExternalResource { "Unifont", "GNU", "https://unifoundry.com/unifont" },
         };
 
         constexpr static auto drawTable = [](const char *category, const auto &libraries) {
@@ -392,6 +414,7 @@ namespace hex::plugin::builtin {
         drawTable("ImGui", ImGuiLibraries);
         drawTable("External", ExternalLibraries);
         drawTable("Third Party", ThirdPartyLibraries);
+        drawTable("Resources", ThirdPartyResources);
     }
 
     void ViewAbout::drawLoadedPlugins() {
@@ -471,7 +494,7 @@ namespace hex::plugin::builtin {
                 { "Magic",                          &paths::Magic                },
                 { "Plugins",                        &paths::Plugins              },
                 { "Yara Patterns",                  &paths::Yara                 },
-                { "Yara Advaned Analysis",          &paths::YaraAdvancedAnalysis },
+                { "Yara Advanced Analysis",         &paths::YaraAdvancedAnalysis },
                 { "Config",                         &paths::Config               },
                 { "Updates",                        &paths::Updates              },
                 { "Backups",                        &paths::Backups              },

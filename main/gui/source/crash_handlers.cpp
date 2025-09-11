@@ -24,6 +24,10 @@
 
 #if defined (OS_WINDOWS)
     #include <windows.h>
+
+    #if !defined(_MSC_VER)
+        #include <pthread.h>
+    #endif
 #elif defined (OS_MACOS)
     #include <sys/utsname.h>
 #endif
@@ -44,12 +48,13 @@ namespace hex::crash {
     using CrashCallback = void (*) (const std::string&);
     static CrashCallback crashCallback = sendNativeMessage;
 
+    static std::fs::path s_crashBackupPath;
     static void saveCrashFile(const std::string& message) {
         log::fatal("{}", message);
 
         const nlohmann::json crashData {
             { "logFile", wolv::io::fs::toNormalizedPathString(hex::log::impl::getFile().getPath()) },
-            { "project", wolv::io::fs::toNormalizedPathString(ProjectFile::getPath()) },
+            { "project", wolv::io::fs::toNormalizedPathString(s_crashBackupPath) },
         };
         
         for (const auto &path : paths::Config.write()) {
@@ -77,9 +82,44 @@ namespace hex::crash {
         }
     }
 
-    extern "C" void triggerSafeShutdown(int signalNumber = 0) {
+    static void callCrashHandlers(const std::string &msg) {
+        // Call the crash callback
+        crashCallback(msg);
+
+        // Print the stacktrace to the console or log file
+        printStackTrace();
+
+        // Flush all streams
+        std::fflush(stdout);
+        std::fflush(stderr);
+
+        #if defined(IMGUI_TEST_ENGINE)
+            ImGuiTestEngine_CrashHandler();
+        #endif
+    }
+
+     extern "C" [[noreturn]] void triggerSafeShutdown(std::string crashMessage, int signalNumber = 0) {
+        if (!TaskManager::isMainThread()) {
+            log::error("Terminating from non-main thread, scheduling termination on main thread");
+            TaskManager::doLater([=] {
+                triggerSafeShutdown(crashMessage, signalNumber);
+            });
+
+            // Terminate this thread
+            #if defined(_MSC_VER)
+                TerminateThread(GetCurrentThread(), EXIT_FAILURE);
+            #else
+                pthread_kill(pthread_self(), SIGABRT);
+            #endif
+
+            while (true) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        }
+
         // Trigger an event so that plugins can handle crashes
         EventAbnormalTermination::post(signalNumber);
+        callCrashHandlers(crashMessage);
 
         // Run exit tasks
         init::runExitTasks();
@@ -112,22 +152,6 @@ namespace hex::crash {
         #endif
     }
 
-    void handleCrash(const std::string &msg) {
-        // Call the crash callback
-        crashCallback(msg);
-
-        // Print the stacktrace to the console or log file
-        printStackTrace();
-
-        // Flush all streams
-        std::fflush(stdout);
-        std::fflush(stderr);
-
-        #if defined(IMGUI_TEST_ENGINE)
-            ImGuiTestEngine_CrashHandler();
-        #endif
-    }
-
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
         #if !defined (DEBUG)
@@ -137,18 +161,12 @@ namespace hex::crash {
             }
         #endif
 
-        // Reset crash handlers, so we can't have a recursion if this code crashes
-        resetCrashHandlers();
-
-        // Actually handle the crash
-        handleCrash(fmt::format("Received signal '{}' ({})", signalName, signalNumber));
-
         // Detect if the crash was due to an uncaught exception
         if (std::uncaught_exceptions() > 0) {
             log::fatal("Uncaught exception thrown!");
         }
 
-        triggerSafeShutdown(signalNumber);
+        triggerSafeShutdown(fmt::format("Received signal '{}' ({})", signalName, signalNumber), signalNumber);
     }
 
     static void uncaughtExceptionHandler() {
@@ -157,15 +175,14 @@ namespace hex::crash {
 
         // Print the current exception info
         try {
-            std::rethrow_exception(std::current_exception());
+            if (auto exception = std::current_exception(); exception != nullptr)
+                std::rethrow_exception(exception);
+            else
+                log::fatal("Program terminated due to unknown reason!");
         } catch (std::exception &ex) {
-            std::string exceptionStr = fmt::format("{}()::what() -> {}", trace::demangle(typeid(ex).name()), ex.what());
-
-            handleCrash(exceptionStr);
-            log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
+            const auto exceptionStr = fmt::format("Program terminated with uncaught exception: {}()::what() -> {}", trace::demangle(typeid(ex).name()), ex.what());
+            triggerSafeShutdown(exceptionStr);
         }
-
-        triggerSafeShutdown();
     }
 
     // Setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
@@ -230,8 +247,11 @@ namespace hex::crash {
                 // Create crash backup if any providers are open
                 if (ImHexApi::Provider::isValid()) {
                     for (const auto &path : paths::Config.write()) {
-                        if (ProjectFile::store(path / CrashBackupFileName, false))
+                        if (ProjectFile::store(path / CrashBackupFileName, false)) {
+                            s_crashBackupPath = path / CrashBackupFileName;
+                            log::fatal("Saved crash backup to '{}'", wolv::util::toUTF8String(s_crashBackupPath));
                             break;
+                        }
                     }
                 }
             });
@@ -244,6 +264,7 @@ namespace hex::crash {
     }
 
     void resetCrashHandlers() {
+        log::resumeLogging();
         std::set_terminate(nullptr);
 
         for (auto signal : Signals)

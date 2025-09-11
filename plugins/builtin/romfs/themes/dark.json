@@ -31,6 +31,7 @@
             "resize-grip": "*#4296F933",
             "resize-grip-active": "*#4296F9F2",
             "resize-grip-hovered": "*#4296F9AA",
+            "input-text-cursor": "#EAEAEAFF",
             "scrollbar-background": "#05050587",
             "scrollbar-grab": "#4F4F4FFF",
             "scrollbar-grab-active": "#828282FF",
@@ -43,16 +44,20 @@
             "tab": "*#2D5993DB",
             "tab-active": "*#3268ADFF",
             "tab-hovered": "*#4296F9CC",
+            "tab-active-overline": "*#4296F9FF",
             "tab-unfocused": "*#111A25F7",
             "tab-unfocused-active": "*#22426CFF",
+            "tab-unfocused-active-overline": "#80808000",
             "table-border-light": "#3A3A3FFF",
             "table-border-strong": "#4F4F59FF",
             "table-header-background": "#303033FF",
             "table-row-background": "#00000000",
             "table-row-background-alt": "#FFFFFF0F",
+            "text-link": "*#4296F9FF",
             "text": "#EAEAEAFF",
             "text-disabled": "#7F7F7FFF",
             "text-selected-background": "*#4296F959",
+            "tree-lines": "#6D6D7F7F",
             "title-background": "#232323FF",
             "title-background-active": "#232323FF",
             "title-background-collapse": "#232323FF",
@@ -85,10 +90,10 @@
             "diff-added":  "#388B42FF",
             "diff-removed":  "#E74C3CFF",
             "diff-changed":  "#F1C40FFF",
-            "advanced-encoding-ascii":  "#06539BFF",
-            "advanced-encoding-single":  "#E74C3CFF",
-            "advanced-encoding-multi":  "#F1C40FFF",
-            "advanced-encoding-unknown":  "#E74C3CFF",
+            "advanced-encoding-ascii":  "#7BB4E9FF",
+            "advanced-encoding-single":  "#E7978FFF",
+            "advanced-encoding-multi":  "#F3DF91FF",
+            "advanced-encoding-unknown":  "#E7978FFF",
             "patches":  "#E74C3CFF",
             "pattern-selected":  "#3683CBFF"
         },
@@ -199,60 +204,103 @@
     "styles": {
         "imgui": {
             "alpha": 1.0,
-            "button-text-align": [
-                0.5,
-                0.5
-            ],
-            "cell-padding": [
-                4.0,
-                2.0
-            ],
-            "child-border-size": 1.0,
-            "child-rounding": 0.0,
             "disabled-alpha": 0.6,
-            "frame-border-size": 0.0,
-            "frame-padding": [
-                4.0,
-                3.0
-            ],
-            "frame-rounding": 0.0,
-            "grab-min-size": 12.0,
-            "grab-rounding": 0.0,
-            "indent-spacing": 10.0,
-            "item-inner-spacing": [
-                4.0,
-                4.0
-            ],
-            "item-spacing": [
-                8.0,
-                4.0
-            ],
-            "popup-border-size": 1.0,
-            "popup-rounding": 0.0,
-            "scrollbar-rounding": 9.0,
-            "scrollbar-size": 14.0,
-            "selectable-text-align": [
-                0.0,
-                0.0
-            ],
-            "tab-rounding": 4.0,
-            "window-border-size": 1.0,
-            "window-min-size": [
-                32.0,
-                32.0
-            ],
             "window-padding": [
                 8.0,
                 8.0
             ],
             "window-rounding": 0.0,
+            "window-border-size": 1.0,
+            "window-border-hover-padding": 4.0,
+            "window-min-size": [
+                32.0,
+                32.0
+            ],
             "window-title-align": [
                 0.0,
                 0.5
             ],
-            "window-shadow-size": 64.0,
+            "child-rounding": 0.0,
+            "child-border-size": 1.0,
+            "popup-rounding": 0.0,
+            "popup-border-size": 1.0,
+            "frame-padding": [
+                4.0,
+                3.0
+            ],
+            "frame-rounding": 0.0,
+            "frame-border-size": 0.0,
+            "item-spacing": [
+                8.0,
+                4.0
+            ],
+            "item-inner-spacing": [
+                4.0,
+                4.0
+            ],
+            "cell-padding": [
+                4.0,
+                2.0
+            ],
+            "touch-extra-padding": [
+                0.0,
+                0.0
+            ],
+            "indent-spacing": 21.0,
+            "columns-min-spacing": 6.0,
+            "scrollbar-size": 14.0,
+            "scrollbar-rounding": 9.0,
+            "grab-min-size": 12.0,
+            "grab-rounding": 0.0,
+            "log-slider-deadzone": 4.0,
+            "image-border-size": 0.0,
+            "tab-rounding": 5.0,
+            "tab-border-size": 0.0,
+            "tab-min-width-base": 1.0,
+            "tab-min-width-shrink": 80.0,
+            "tab-close-button-min-width-selected": -1.0,
+            "tab-close-button-min-width-unselected": 0.0,
+            "tab-bar-border-size": 1.0,
+            "tab-bar-overline-size": 1.0,
+            "table-angled-headers-angle": 0.610865,
+            "table-angled-headers-text-align": [
+                0.5,
+                0.0
+            ],
+            "tree-lines-size": 1.0,
+            "tree-lines-rounding": 0.0,
+            "button-text-align": [
+                0.5,
+                0.5
+            ],
+            "selectable-text-align": [
+                0.0,
+                0.0
+            ],
+            "separator-text-border-size": 3.0,
+            "separator-text-align": [
+                0.0,
+                0.5
+            ],
+            "separator-text-padding": [
+                20.0,
+                3.0
+            ],
+            "display-window-padding": [
+                19.0,
+                19.0
+            ],
+            "display-safe-area-padding": [
+                3.0,
+                3.0
+            ],
+            "docking-separator-size": 2.0,
+            "mouse-cursor-scale": 1.0,
+            "curve-tessellation-tol": 1.25,
+            "circle-tessellation-max-error": 0.3,
+            "window-shadow-size": 100.0,
             "window-shadow-offset": 0.0,
-            "window-shadow-angle": 0.0
+            "window-shadow-angle": 0.785398
         },
         "imnodes": {
             "grid-spacing": 24.0,

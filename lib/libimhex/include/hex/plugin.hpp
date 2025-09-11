@@ -46,7 +46,7 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
 
 [[maybe_unused]] static auto& getFeaturesImpl() {
     static hex::AutoReset<std::vector<hex::Feature>> features;
-    return features;
+    return *features;
 }
 
 #if defined (IMHEX_STATIC_LINK_PLUGINS)

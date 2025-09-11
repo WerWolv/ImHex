@@ -4,15 +4,11 @@
 
 namespace hex::ui {
     bool TextEditor::Coordinates::operator==(const Coordinates &o) const {
-        return
-                m_line == o.m_line &&
-                m_column == o.m_column;
+        return m_line == o.m_line && m_column == o.m_column;
     }
 
     bool TextEditor::Coordinates::operator!=(const Coordinates &o) const {
-        return
-                m_line != o.m_line ||
-                m_column != o.m_column;
+        return m_line != o.m_line || m_column != o.m_column;
     }
 
     bool TextEditor::Coordinates::operator<(const Coordinates &o) const {
@@ -156,6 +152,7 @@ namespace hex::ui {
         m_colors = line.m_colors;
         m_flags = line.m_flags;
         m_colorized = line.m_colorized;
+        m_lineTextSize = line.m_lineTextSize;
         return *this;
     }
 
@@ -164,6 +161,7 @@ namespace hex::ui {
         m_colors = std::move(line.m_colors);
         m_flags = std::move(line.m_flags);
         m_colorized = line.m_colorized;
+        m_lineTextSize = line.m_lineTextSize;
         return *this;
     }
 
@@ -196,6 +194,7 @@ namespace hex::ui {
         m_colors.push_back(0x00);
         m_flags.push_back(0x00);
         m_colorized = false;
+        m_lineTextSize = -1;
     }
 
     bool TextEditor::Line::empty() const {
@@ -273,8 +272,10 @@ namespace hex::ui {
     }
 
     void TextEditor::Line::append(LineIterator begin, LineIterator end) {
-        if (begin.m_charsIter < end.m_charsIter)
+        if (begin.m_charsIter < end.m_charsIter) {
             m_chars.append(begin.m_charsIter, end.m_charsIter);
+            m_lineTextSize = -1;
+        }
         if (begin.m_colorsIter < end.m_colorsIter)
             m_colors.append(begin.m_colorsIter, end.m_colorsIter);
         if (begin.m_flagsIter < end.m_flagsIter)
@@ -307,6 +308,7 @@ namespace hex::ui {
             m_colors.insert(iter.m_colorsIter, beginLine.m_colorsIter, endLine.m_colorsIter);
             m_flags.insert(iter.m_flagsIter, beginLine.m_flagsIter, endLine.m_flagsIter);
             m_colorized = false;
+            m_lineTextSize = -1;
         }
     }
 
@@ -315,15 +317,19 @@ namespace hex::ui {
         m_colors.erase(begin.m_colorsIter);
         m_flags.erase(begin.m_flagsIter);
         m_colorized = false;
+        m_lineTextSize = -1;
     }
 
     void TextEditor::Line::erase(LineIterator begin, u64 count) {
         if (count == (u64) -1)
             count = m_chars.size() - (begin.m_charsIter - m_chars.begin());
+        else
+            count = std::min(count, (u64) (m_chars.size() - (begin.m_charsIter - m_chars.begin())));
         m_chars.erase(begin.m_charsIter, begin.m_charsIter + count);
         m_colors.erase(begin.m_colorsIter, begin.m_colorsIter + count);
         m_flags.erase(begin.m_flagsIter, begin.m_flagsIter + count);
         m_colorized = false;
+        m_lineTextSize = -1;
     }
 
     void TextEditor::Line::erase(u64 start, u64 length) {
@@ -346,6 +352,7 @@ namespace hex::ui {
         m_colors.clear();
         m_flags.clear();
         m_colorized = false;
+        m_lineTextSize = -1;
     }
 
     void TextEditor::Line::setLine(const std::string &text) {
@@ -353,6 +360,7 @@ namespace hex::ui {
         m_colors = std::string(text.size(), 0x00);
         m_flags = std::string(text.size(), 0x00);
         m_colorized = false;
+        m_lineTextSize = -1;
     }
 
     void TextEditor::Line::setLine(const Line &text) {
@@ -360,6 +368,7 @@ namespace hex::ui {
         m_colors = text.m_colors;
         m_flags = text.m_flags;
         m_colorized = text.m_colorized;
+        m_lineTextSize = text.m_lineTextSize;
     }
 
     bool TextEditor::Line::needsUpdate() const {
@@ -489,7 +498,7 @@ namespace hex::ui {
                         m_state.m_cursorPosition = screenPosToCoordinates(ImGui::GetMousePos());
                         auto line = m_state.m_cursorPosition.m_line;
                         m_state.m_selection.m_start = setCoordinates(line, 0);
-                        m_state.m_selection.m_end = setCoordinates(line, getLineMaxColumn(line));
+                        m_state.m_selection.m_end = setCoordinates(line, getLineMaxCharColumn(line));
                     }
 
                     m_lastClick = -1.0f;
@@ -546,6 +555,7 @@ namespace hex::ui {
                     io.WantCaptureMouse = true;
                     m_state.m_cursorPosition = m_interactiveSelection.m_end = screenPosToCoordinates(ImGui::GetMousePos());
                     setSelection(m_interactiveSelection);
+                    ensureCursorVisible();
                     resetBlinking = true;
                 }
                 if (resetBlinking)
@@ -564,7 +574,7 @@ namespace hex::ui {
 
 // The returned index is shown in the form
 //  'index of count' so 1 based
-    u32 TextEditor::FindReplaceHandler::findMatch(TextEditor *editor, bool isNext) {
+    u32 TextEditor::FindReplaceHandler::findMatch(TextEditor *editor, i32 index) {
 
         if (editor->m_textChanged || m_optionsChanged) {
             std::string findWord = getFindWord();
@@ -574,18 +584,34 @@ namespace hex::ui {
             findAllMatches(editor, findWord);
         }
         Coordinates targetPos = editor->m_state.m_cursorPosition;
-        if (editor->hasSelection())
-            targetPos = isNext ? editor->m_state.m_selection.m_end : editor->m_state.m_selection.m_start;
-
-        auto count = m_matches.size();
+        i32 count = m_matches.size();
 
         if (count == 0) {
             editor->setCursorPosition(targetPos);
             return 0;
         }
 
-        if (isNext) {
-            for (u32 i = 0; i < count; i++) {
+        if (editor->hasSelection()) {
+            i32 matchIndex = 0;
+            for (i32 i = 0; i < count; i++) {
+                if (m_matches[i].m_selection == editor->m_state.m_selection) {
+                    matchIndex = i;
+                    break;
+                }
+            }
+            if (matchIndex >= 0 && matchIndex <count) {
+                while (matchIndex + index < 0)
+                    index += count;
+                auto rem = (matchIndex + index) % count;
+                selectFound(editor, rem);
+                return rem + 1;
+            }
+        }
+        targetPos = index > 0 ? editor->m_state.m_selection.m_end : (index < 0 ? editor->m_state.m_selection.m_start :  editor->m_state.m_selection.m_start + Coordinates(0,1));
+
+
+        if (index >= 0) {
+            for (i32 i = 0; i < count; i++) {
                 if (targetPos <= m_matches[i].m_selection.m_start) {
                     selectFound(editor, i);
                     return i + 1;
@@ -793,11 +819,12 @@ namespace hex::ui {
             editor->m_state.m_cursorPosition = editor->m_state.m_selection.m_start;
             if (editor->isStartOfLine()) {
                 editor->m_state.m_cursorPosition.m_line--;
-                editor->m_state.m_cursorPosition.m_column = editor->getLineMaxColumn(editor->m_state.m_cursorPosition.m_line);
+                editor->m_state.m_cursorPosition.m_column = editor->getLineMaxCharColumn(editor->m_state.m_cursorPosition.m_line);
             } else
                 editor->m_state.m_cursorPosition.m_column--;
         }
-        auto matchIndex = findMatch(editor, right);
+        i32 index = right ? 0 : -1;
+        auto matchIndex = findMatch(editor, index);
         if (matchIndex != 0) {
             UndoRecord u;
             u.m_before = editor->m_state;

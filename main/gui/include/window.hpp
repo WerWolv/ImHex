@@ -62,9 +62,6 @@ namespace hex {
 
         std::string m_windowTitle, m_windowTitleFull;
 
-        double m_lastStartFrameTime = 0;
-        double m_lastFrameTime = 0;
-
         std::set<int> m_pressedKeys;
 
         ImGuiExt::ImHexCustomData m_imguiCustomData;

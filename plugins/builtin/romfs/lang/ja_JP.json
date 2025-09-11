@@ -893,7 +893,7 @@
     "hex.builtin.view.pattern_editor.replace_hint": "",
     "hex.builtin.view.pattern_editor.replace_hint_history": "",
     "hex.builtin.view.pattern_editor.settings": "設定",
-    "hex.builtin.view.pattern_editor.virtual_files": "",
+    "hex.builtin.view.pattern_data.virtual_files": "",
     "hex.builtin.view.provider_settings.load_error": "ファイルを開く際にエラーが発生しました。",
     "hex.builtin.view.provider_settings.load_error_details": "",
     "hex.builtin.view.provider_settings.load_popup": "ファイルを開く",

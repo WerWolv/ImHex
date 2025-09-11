@@ -1,7 +1,9 @@
 #include <ui/widgets.hpp>
 
 #include <imgui.h>
+#include <fonts/vscode_icons.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/helpers/scaling.hpp>
 
 #include <hex/api/imhex_api/hex_editor.hpp>
 
@@ -31,25 +33,36 @@ namespace hex::ui {
                         ).getRegion();
                 break;
             case RegionType::Region:
-                ImGui::SameLine();
+                ImGui::SameLine(0, 10_scaled);
 
-                const auto width = ImGui::GetContentRegionAvail().x / 2 - ImGui::CalcTextSize(" - ").x / 2;
-                u64 start = region->getStartAddress(), end = region->getEndAddress();
+                if (ImGuiExt::DimmedIconButton(ICON_VS_TRIANGLE_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    ImGui::OpenPopup("RegionSelectionPopup");
+                }
 
-                if (end < start)
-                    end = start;
-
-                ImGui::PushItemWidth(width);
-                ImGuiExt::InputHexadecimal("##start", &start);
-                ImGui::PopItemWidth();
                 ImGui::SameLine(0, 0);
-                ImGui::TextUnformatted(" - ");
-                ImGui::SameLine(0, 0);
-                ImGui::PushItemWidth(width);
-                ImGuiExt::InputHexadecimal("##end", &end);
-                ImGui::PopItemWidth();
 
-                *region = { start, (end - start) + 1 };
+                ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos());
+                if (ImGui::BeginPopup("RegionSelectionPopup")) {
+                    const auto width = 150_scaled;
+                    u64 start = region->getStartAddress(), end = region->getEndAddress();
+
+                    if (end < start)
+                        end = start;
+
+                    ImGui::PushItemWidth(width);
+                    ImGuiExt::InputHexadecimal("##start", &start);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine(0, 0);
+                    ImGui::TextUnformatted(" - ");
+                    ImGui::SameLine(0, 0);
+                    ImGui::PushItemWidth(width);
+                    ImGuiExt::InputHexadecimal("##end", &end);
+                    ImGui::PopItemWidth();
+
+                    *region = { start, (end - start) + 1 };
+
+                    ImGui::EndPopup();
+                }
                 break;
         }
 

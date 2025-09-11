@@ -65,7 +65,7 @@ namespace hex::init {
 
             log::debug("OpenGL Vendor: '{}'", glVendorString);
             log::debug("OpenGL Renderer: '{}'", glRendererString);
-            log::debug("OpenGL Version: '{}'", glVersionString);
+            log::debug("OpenGL Version String: '{}'", glVersionString);
             log::debug("OpenGL Shading Language Version: '{}'", glShadingLanguageVersion);
 
             ImHexApi::System::impl::setGPUVendor(glVendorString);
@@ -75,14 +75,17 @@ namespace hex::init {
                 int glVersionMajor = 0, glVersionMinor = 0;
                 glGetIntegerv(GL_MAJOR_VERSION, &glVersionMajor);
                 glGetIntegerv(GL_MINOR_VERSION, &glVersionMinor);
+                log::debug("OpenGL Version: v{}.{}", glVersionMajor, glVersionMinor);
                 ImHexApi::System::impl::setGLVersion(SemanticVersion(glVersionMajor, glVersionMinor, 0));
             }
 
             {
-                #if !defined(OS_MACOS)
-                    const static auto MinGLVersion = SemanticVersion(3, 1, 0);
-                #else
+                #if defined(OS_MACOS)
                     const static auto MinGLVersion = SemanticVersion(3, 2, 0);
+                #elif defined(OS_WEB)
+                    const static auto MinGLVersion = SemanticVersion(3, 0, 0);
+                #else
+                    const static auto MinGLVersion = SemanticVersion(3, 1, 0);
                 #endif
 
                 const auto &glVersion = ImHexApi::System::getGLVersion();
@@ -469,10 +472,10 @@ namespace hex::init {
         #endif
 
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
-	#endif
+	#elif defined(OS_MACOS)
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 
-        // Configure used OpenGL version
-    #if defined(OS_MACOS)
         glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
         glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
     #endif

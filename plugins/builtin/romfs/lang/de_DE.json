@@ -899,7 +899,7 @@
     "hex.builtin.view.pattern_editor.replace_hint": "Ersetzen",
     "hex.builtin.view.pattern_editor.replace_hint_history": " für Historie)",
     "hex.builtin.view.pattern_editor.settings": "Einstellungen",
-    "hex.builtin.view.pattern_editor.virtual_files": "Virtuelle Dateien",
+    "hex.builtin.view.pattern_data.virtual_files": "Virtuelle Dateien",
     "hex.builtin.view.provider_settings.load_error": "Ein Fehler beim Öffnen dieses Providers ist aufgetreten!",
     "hex.builtin.view.provider_settings.load_error_details": "Ein Fehler ist aufgetreten während der Provider geladen wurde.\nDetails: {0}",
     "hex.builtin.view.provider_settings.load_popup": "Provider öffnen",

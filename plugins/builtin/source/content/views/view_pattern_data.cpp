@@ -6,6 +6,8 @@
 #include <hex/api/events/events_interaction.hpp>
 
 #include <fonts/vscode_icons.hpp>
+#include <fonts/tabler_icons.hpp>
+
 #include <imgui_internal.h>
 
 #include <pl/patterns/pattern.hpp>
@@ -40,6 +42,7 @@ namespace hex::plugin::builtin {
         });
 
         EventPatternEvaluating::subscribe(this, [this]{
+            m_virtualFiles->clear();
             for (auto &drawers : m_patternDrawer.all())
                 for (auto &[id, drawer] : drawers)
                     drawer->reset();
@@ -74,13 +77,17 @@ namespace hex::plugin::builtin {
             const auto &sections = ContentRegistry::PatternLanguage::getRuntime().getSections();
 
             (*m_patternDrawer)[0] = createDefaultDrawer();
-            for (const auto &id : sections | std::views::keys) {
+            for (const auto &[id, section] : sections) {
                 (*m_patternDrawer)[id] = createDefaultDrawer();
             }
         });
 
         RequestJumpToPattern::subscribe(this, [this](const pl::ptrn::Pattern *pattern) {
            (*m_patternDrawer)[0]->jumpToPattern(pattern);
+        });
+
+        RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
+            m_virtualFiles->emplace_back(path, data, region);
         });
 
         ImHexApi::HexEditor::addHoverHighlightProvider([this](const prv::Provider *, u64, size_t) -> std::set<Region> {
@@ -92,6 +99,105 @@ namespace hex::plugin::builtin {
         EventPatternEvaluating::unsubscribe(this);
         EventPatternExecuted::unsubscribe(this);
     }
+
+
+    static void loadPatternAsMemoryProvider(const VirtualFile *file) {
+        ImHexApi::Provider::add<prv::MemoryProvider>(file->data, wolv::util::toUTF8String(file->path.filename()));
+    }
+
+    static void drawVirtualFileTree(const std::vector<const VirtualFile*> &virtualFiles, u32 level = 0) {
+        static int levelId = 0;
+        if (level == 0)
+            levelId = 1;
+
+        ImGui::PushID(level + 1);
+        ON_SCOPE_EXIT { ImGui::PopID(); };
+
+        std::map<std::string, std::vector<const VirtualFile*>> currFolderEntries;
+        for (const auto &file : virtualFiles) {
+            const auto &path = file->path;
+
+            auto currSegment = wolv::io::fs::toNormalizedPathString(*std::next(path.begin(), level));
+            if (std::distance(path.begin(), path.end()) == ptrdiff_t(level + 1)) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::TextUnformatted(ICON_VS_FILE);
+                ImGui::PushID(levelId);
+                ImGui::SameLine();
+
+                ImGui::TreeNodeEx(currSegment.c_str(), ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+                    ImGui::OpenPopup("##virtual_files_context_menu");
+                }
+                if (ImGui::BeginPopup("##virtual_files_context_menu")) {
+                    if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.open_in_new_provider"_lang, nullptr, false)) {
+                        loadPatternAsMemoryProvider(file);
+                    }
+                    ImGui::EndPopup();
+                }
+                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered()) {
+                    loadPatternAsMemoryProvider(file);
+                }
+                ImGui::PopID();
+                levelId += 1;
+                continue;
+            }
+
+            currFolderEntries[currSegment].emplace_back(file);
+        }
+
+        int id = 1;
+        for (const auto &[segment, entries] : currFolderEntries) {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0.0F);
+
+            if (level == 0) {
+                ImGui::TextUnformatted(ICON_VS_DATABASE);
+            } else {
+                ImGui::TextUnformatted(ICON_VS_FOLDER);
+            }
+
+            ImGui::PushID(id);
+
+            ImGui::SameLine(0, 20_scaled);
+
+            const auto open = ImGui::TreeNodeEx("##Segment", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+            ImGui::SameLine();
+            ImGui::TextUnformatted(segment.c_str());
+            ImGui::PopStyleVar();
+            if (open) {
+                drawVirtualFileTree(entries, level + 1);
+                ImGui::TreePop();
+            }
+
+            ImGui::PopID();
+            id += 1;
+        }
+    }
+
+    static void setItemInfoTooltip(const char *title, const char *description) {
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip)) {
+            ImGui::SetNextWindowSize(scaled(300, 0), ImGuiCond_Always);
+            if (ImGui::BeginTooltipEx(ImGuiTooltipFlags_OverridePrevious, ImGuiWindowFlags_None)) {
+                if (ImGuiExt::BeginSubWindow(title)) {
+                    ImGuiExt::TextFormattedWrapped("{}", description);
+                }
+                ImGuiExt::EndSubWindow();
+                ImGui::EndTooltip();
+            }
+        }
+    }
+
+    static void selectFirstTabItem() {
+        auto tabBar = ImGui::GetCurrentTabBar();
+        if (tabBar != nullptr && tabBar->Tabs.Size > 0) {
+            tabBar->SelectedTabId = tabBar->Tabs.front().ID;
+        }
+    }
+
 
     void ViewPatternData::drawContent() {
         // Draw the pattern tree if the provider is valid
@@ -118,6 +224,8 @@ namespace hex::plugin::builtin {
                 } else {
                     static i32 selectedSection = -1;
                     for (auto &[id, drawer] : *m_patternDrawer) {
+                        ImGui::PushID(id + 1);
+                        ON_SCOPE_EXIT { ImGui::PopID(); };
                         drawer->enablePatternEditing(ImHexApi::Provider::get()->isWritable());
 
                         // If the runtime has finished evaluating, draw the patterns
@@ -126,94 +234,134 @@ namespace hex::plugin::builtin {
                             if (id != 0 && !sections.contains(id))
                                 continue;
 
-                            if (ImGui::BeginTabItem(id == 0 ? "hex.builtin.view.pattern_data.section.main"_lang : sections.at(id).name.c_str())) {
+                            const bool open = ImGui::BeginTabItem(id == 0 ? "hex.builtin.view.pattern_data.section.main"_lang : sections.at(id).name.c_str());
+                            const bool hovered = ImGui::IsItemHovered();
+                            if (open) {
                                 drawer->draw(runtime.getPatterns(id), &runtime, height);
                                 ImGui::EndTabItem();
                             }
 
                             if (id != 0) {
-                                if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+                                if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && hovered && !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
                                     ImGui::OpenPopup("##PatternDataContextMenu");
                                     selectedSection = id;
                                 }
-                            }
-                        }
-                    }
 
-                    if (ImGui::BeginPopup("##PatternDataContextMenu")) {
-                        if (ImGui::MenuItemEx("hex.builtin.view.pattern_data.section.view_raw"_lang, ICON_VS_OPEN_PREVIEW)) {
-                            if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                                const auto &sections = runtime.getSections();
-                                if (auto it = sections.find(selectedSection); it != sections.end()) {
-                                    const auto &[id, section] = *it;
-                                    ImHexApi::Provider::add<prv::MemoryProvider>(section.data, section.name);
+                                if (ImGui::BeginPopup("##PatternDataContextMenu")) {
+                                    if (ImGui::MenuItemEx("hex.builtin.view.pattern_data.section.view_raw"_lang, ICON_VS_OPEN_PREVIEW)) {
+                                        if (auto it = sections.find(selectedSection); it != sections.end()) {
+                                            const auto &[sectionId, section] = *it;
+                                            ImHexApi::Provider::add<prv::MemoryProvider>(section.data, section.name);
+                                        }
+                                    }
+                                    ImGui::EndPopup();
                                 }
                             }
                         }
-                        ImGui::EndPopup();
                     }
                 }
 
                 constexpr static auto SimplifiedEditorAttribute = "hex::editor_export";
-                if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock()) && patternsValid) {
-                    const auto &patternSet = runtime.getPatternsWithAttribute(SimplifiedEditorAttribute);
-                    std::vector<pl::ptrn::Pattern*> patterns = { patternSet.begin(), patternSet.end() };
-                    std::ranges::sort(patterns, [](const pl::ptrn::Pattern *a, const pl::ptrn::Pattern *b) {
-                        return a->getOffset() < b->getOffset() || a->getDisplayName() < b->getDisplayName();
-                    });
+                if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                    constexpr static auto SimplifiedEditorTabName = "hex.builtin.view.pattern_data.simplified_editor"_lang;
+                    const auto simplifiedEditorPatterns = [&] {
+                        const auto &patternSet = runtime.getPatternsWithAttribute(SimplifiedEditorAttribute);
 
-                    if (!patterns.empty()) {
-                        constexpr auto TabName = "hex.builtin.view.pattern_data.simplified_editor"_lang;
+                        std::vector<pl::ptrn::Pattern*> result = { patternSet.begin(), patternSet.end() };
+                        std::ranges::sort(result, [](const pl::ptrn::Pattern *a, const pl::ptrn::Pattern *b) {
+                            return a->getOffset() < b->getOffset() || a->getDisplayName() < b->getDisplayName();
+                        });
 
-                        ImGui::TabItemSpacing("##spacing", 0, ImGui::GetContentRegionAvail().x - ImGui::TabItemCalcSize(TabName, false).x);
-                        if (ImGui::BeginTabItem(TabName, nullptr, ImGuiTabItemFlags_Trailing)) {
-                            if (ImGui::BeginChild("##editor")) {
-                                for (const auto &pattern : patterns) {
-                                    ImGui::PushID(pattern);
-                                    try {
-                                        const auto attribute = pattern->getAttributeArguments(SimplifiedEditorAttribute);
+                        return result;
+                    }();
 
-                                        const auto name = attribute.size() >= 1 ? attribute[0].toString() : pattern->getDisplayName();
-                                        const auto description = attribute.size() >= 2 ? attribute[1].toString() : pattern->getComment();
+                    constexpr static auto VirtualFilesTabName = "hex.builtin.view.pattern_data.virtual_files"_lang;
 
-                                        const auto widgetPos = 200_scaled;
-                                        ImGui::TextUnformatted(name.c_str());
-                                        ImGui::SameLine(0, 20_scaled);
-                                        if (ImGui::GetCursorPosX() < widgetPos)
-                                            ImGui::SetCursorPosX(widgetPos);
+                    float spacingWidth = ImGui::GetContentRegionAvail().x;
 
-                                        ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 0);
-                                        ImGui::PushItemWidth(-50_scaled);
-                                        pattern->accept(m_patternValueEditor);
-                                        ImGui::PopItemWidth();
-                                        ImGui::PopStyleVar();
+                    spacingWidth -= ImGui::TabItemCalcSize(ICON_TA_ACCESSIBLE, false).x;
+                    spacingWidth -= ImGui::TabItemCalcSize(ICON_TA_BINARY_TREE, false).x;
 
-                                        if (!description.empty()) {
-                                            ImGui::PushFont(nullptr, ImGui::GetFontSize() * 0.8F);
-                                            ImGui::BeginDisabled();
-                                            ImGui::Indent();
-                                            ImGui::TextWrapped("%s", description.c_str());
-                                            ImGui::Unindent();
-                                            ImGui::EndDisabled();
-                                            ImGui::PopFont();
-                                        }
+                    ImGui::TabItemSpacing("##spacing", ImGuiTabItemFlags_None, spacingWidth);
 
-                                        ImGui::Separator();
+                    ImGui::BeginDisabled(simplifiedEditorPatterns.empty());
+                    if (ImGui::BeginTabItem(ICON_TA_ACCESSIBLE, nullptr, ImGuiTabItemFlags_Trailing)) {
+                        if (simplifiedEditorPatterns.empty())
+                            selectFirstTabItem();
 
-                                    } catch (const std::exception &e) {
-                                        ImGui::TextUnformatted(pattern->getDisplayName().c_str());
-                                        ImGui::TextUnformatted(e.what());
+                        if (ImGui::BeginChild("##editor")) {
+                            for (const auto &pattern : simplifiedEditorPatterns) {
+                                ImGui::PushID(pattern);
+                                try {
+                                    const auto attribute = pattern->getAttributeArguments(SimplifiedEditorAttribute);
+
+                                    const auto name = attribute.size() >= 1 ? attribute[0].toString() : pattern->getDisplayName();
+                                    const auto description = attribute.size() >= 2 ? attribute[1].toString() : pattern->getComment();
+
+                                    const auto widgetPos = 200_scaled;
+                                    ImGui::TextUnformatted(name.c_str());
+                                    ImGui::SameLine(0, 20_scaled);
+                                    if (ImGui::GetCursorPosX() < widgetPos)
+                                        ImGui::SetCursorPosX(widgetPos);
+
+                                    ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 0);
+                                    ImGui::PushItemWidth(-50_scaled);
+                                    pattern->accept(m_patternValueEditor);
+                                    ImGui::PopItemWidth();
+                                    ImGui::PopStyleVar();
+
+                                    if (!description.empty()) {
+                                        ImGui::PushFont(nullptr, ImGui::GetFontSize() * 0.8F);
+                                        ImGui::BeginDisabled();
+                                        ImGui::Indent();
+                                        ImGui::TextWrapped("%s", description.c_str());
+                                        ImGui::Unindent();
+                                        ImGui::EndDisabled();
+                                        ImGui::PopFont();
                                     }
 
-                                    ImGui::PopID();
+                                    ImGui::Separator();
+
+                                } catch (const std::exception &e) {
+                                    ImGui::TextUnformatted(pattern->getDisplayName().c_str());
+                                    ImGui::TextUnformatted(e.what());
                                 }
 
-                                ImGui::EndChild();
+                                ImGui::PopID();
                             }
 
-                            ImGui::EndTabItem();
+                            ImGui::EndChild();
                         }
+
+                        ImGui::EndTabItem();
                     }
+                    ImGui::EndDisabled();
+
+                    if (simplifiedEditorPatterns.empty())
+                        setItemInfoTooltip(SimplifiedEditorTabName, "hex.builtin.view.pattern_data.simplified_editor.no_patterns"_lang);
+
+                    ImGui::BeginDisabled(m_virtualFiles->empty());
+                    if (ImGui::BeginTabItem(ICON_TA_BINARY_TREE, nullptr, ImGuiTabItemFlags_Trailing)) {
+                        if (m_virtualFiles->empty())
+                            selectFirstTabItem();
+
+                        std::vector<const VirtualFile*> virtualFilePointers;
+                        for (const auto &file : *m_virtualFiles)
+                            virtualFilePointers.emplace_back(&file);
+
+                        if (ImGui::BeginTable("##virtual_file_tree", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImGui::GetContentRegionAvail())) {
+                            ImGui::TableSetupColumn("##path", ImGuiTableColumnFlags_WidthStretch);
+                            drawVirtualFileTree(virtualFilePointers);
+
+                            ImGui::EndTable();
+                        }
+
+                        ImGui::EndTabItem();
+                    }
+                    ImGui::EndDisabled();
+
+                    if (m_virtualFiles->empty())
+                        setItemInfoTooltip(VirtualFilesTabName, "hex.builtin.view.pattern_data.virtual_files.no_virtual_files"_lang);
                 }
 
                 ImGui::EndTabBar();

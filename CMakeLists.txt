@@ -47,7 +47,7 @@ loadVersion(IMHEX_VERSION IMHEX_VERSION_PLAIN)
 setVariableInParent(IMHEX_VERSION ${IMHEX_VERSION})
 
 configureCMake()
-project(imhex
+project(ImHex
         LANGUAGES       C CXX
         VERSION         ${IMHEX_VERSION_PLAIN}
         DESCRIPTION     "The ImHex Hex Editor"

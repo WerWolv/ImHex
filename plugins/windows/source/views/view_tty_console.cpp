@@ -1,6 +1,7 @@
 #include "views/view_tty_console.hpp"
 
 #include <imgui_internal.h>
+#include <implot.h>
 
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/utils.hpp>
@@ -18,125 +19,226 @@ namespace hex::plugin::windows {
     }
 
     void ViewTTYConsole::drawContent() {
-        ImGuiExt::Header("hex.windows.view.tty_console.config"_lang, true);
-
-        bool connected = m_portHandle != INVALID_HANDLE_VALUE;
-
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, connected);
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, connected ? 0.5F : 1.0F);
-
-        if (ImGui::BeginCombo("hex.windows.view.tty_console.port"_lang, m_comPorts.empty() ? "" : m_comPorts[m_selectedPortIndex].name.c_str())) {
-            for (u32 i = 0; i < m_comPorts.size(); i++) {
-                const auto &port = m_comPorts[i];
-                if (ImGui::Selectable(port.name.c_str(), m_selectedPortIndex == i)) {
-                    m_selectedPortIndex = i;
-                }
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("hex.windows.view.tty_console.reload"_lang)) {
-            m_comPorts = getAvailablePorts();
-            m_selectedPortIndex = 0;
-        }
-
-        if (ImGui::BeginCombo("hex.windows.view.tty_console.baud"_lang, std::to_string(m_selectedBaudRate).c_str())) {
-            for (auto baudRate : BaudRates) {
-                if (ImGui::Selectable(std::to_string(baudRate).c_str(), m_selectedBaudRate == baudRate)) {
-                    m_selectedBaudRate = baudRate;
-                }
-            }
-            ImGui::EndCombo();
-        }
-
-        if (ImGui::BeginCombo("hex.windows.view.tty_console.num_bits"_lang, std::to_string(m_selectedNumBits).c_str())) {
-            for (auto numBits : NumBits) {
-                if (ImGui::Selectable(std::to_string(numBits).c_str(), m_selectedBaudRate == numBits)) {
-                    m_selectedBaudRate = numBits;
-                }
-            }
-            ImGui::EndCombo();
-        }
-
-        constexpr static std::array StopBitsStrings = { "1", "1.5", "2" };
-        if (ImGui::BeginCombo( "hex.windows.view.tty_console.stop_bits"_lang, StopBitsStrings[u32(m_selectedStopBits)])) {
-            for (u32 i = 0; i < StopBitsStrings.size(); i++) {
-                if (ImGui::Selectable(StopBitsStrings[i], m_selectedStopBits == StopBits(i))) {
-                    m_selectedStopBits = StopBits(i);
-                }
-            }
-            ImGui::EndCombo();
-        }
-        constexpr static std::array ParityBitsStrings = { "None", "Odd", "Even", "Mark", "Space" };
-        if (ImGui::BeginCombo( "hex.windows.view.tty_console.parity_bits"_lang, ParityBitsStrings[u32(m_selectedParityBits)])) {
-            for (u32 i = 0; i < ParityBitsStrings.size(); i++) {
-                if (ImGui::Selectable(ParityBitsStrings[i], m_selectedParityBits == ParityBits(i))) {
-                    m_selectedParityBits = ParityBits(i);
-                }
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::Checkbox("hex.windows.view.tty_console.cts"_lang, &m_hasCTSFlowControl);
-
-        ImGui::PopStyleVar();
-        ImGui::PopItemFlag();
-
-        ImGui::NewLine();
-
-        if (m_portHandle == INVALID_HANDLE_VALUE) {
-            if (ImGui::Button("hex.windows.view.tty_console.connect"_lang))
-                if (!this->connect())
-                    ui::ToastError::open("hex.windows.view.tty_console.connect_error"_lang);
-        } else {
-            if (ImGui::Button("hex.windows.view.tty_console.disconnect"_lang))
-                this->disconnect();
-        }
-
-        ImGui::NewLine();
-
-        if (ImGui::Button("hex.windows.view.tty_console.clear"_lang)) {
-            std::scoped_lock lock(m_receiveBufferMutex);
-
-            m_receiveLines.clear();
-        }
-
-        ImGui::SameLine();
-
-        ImGui::Checkbox("hex.windows.view.tty_console.auto_scroll"_lang, &m_shouldAutoScroll);
-
+        this->drawSettings();
         this->drawConsole();
-
-        ImGui::PushItemWidth(-1);
-        if (ImGui::InputText("##transmit", m_transmitDataBuffer, ImGuiInputTextFlags_EnterReturnsTrue)) {
-            this->transmitData(m_transmitDataBuffer + "\r\n");
-            m_transmitDataBuffer.clear();
-            ImGui::SetKeyboardFocusHere(0);
-        }
-        ImGui::PopItemWidth();
-
-        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && m_portHandle != INVALID_HANDLE_VALUE && !m_transmitting)
-            ImGui::OpenPopup("ConsoleMenu");
-
-        if (ImGui::BeginPopup("ConsoleMenu")) {
-
-            if (ImGui::MenuItem("hex.windows.view.tty_console.send_etx"_lang, "CTRL + C")) {
-                this->transmitData({ 0x03 });
-            }
-            if (ImGui::MenuItem("hex.windows.view.tty_console.send_eot"_lang, "CTRL + D")) {
-                this->transmitData({ 0x04 });
-            }
-            if (ImGui::MenuItem("hex.windows.view.tty_console.send_sub"_lang, "CTRL + Z")) {
-                this->transmitData({ 0x1A });
-            }
-
-            ImGui::EndPopup();
-        }
     }
 
+    template<size_t N>
+     struct SignalPart {
+        const char *name;
+        std::array<double, N> values;
+    };
+
+    void ViewTTYConsole::drawSettings() {
+        const auto configWidth = 200_scaled;
+        if (ImGuiExt::BeginSubWindow("hex.windows.view.tty_console.config"_lang, &m_settingsCollapsed, m_settingsCollapsed ? ImVec2(0, 1) : ImVec2(0, 0))) {
+            const bool connected = m_portHandle != INVALID_HANDLE_VALUE;
+
+            if (ImGui::BeginTable("##config_table", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV)) {
+                ImGui::TableSetupColumn("##config");
+                ImGui::TableSetupColumn("##visualization");
+                ImGui::TableNextRow();
+
+                {
+                    ImGui::BeginDisabled(connected);
+                    {
+                        ImGui::TableNextColumn();
+
+                        ImGui::PushItemWidth(configWidth - ImGui::GetStyle().ItemSpacing.x - ImGui::GetStyle().FramePadding.x * 2 - ImGui::CalcTextSize(ICON_VS_REFRESH).x);
+                        if (ImGui::BeginCombo("##port", m_comPorts.empty() ? "" : m_comPorts[m_selectedPortIndex].name.c_str())) {
+                            for (u32 i = 0; i < m_comPorts.size(); i++) {
+                                const auto &port = m_comPorts[i];
+                                if (ImGui::Selectable(port.name.c_str(), m_selectedPortIndex == i)) {
+                                    m_selectedPortIndex = i;
+                                }
+                            }
+                            ImGui::EndCombo();
+                        }
+                        ImGui::PopItemWidth();
+
+                        ImGui::SameLine();
+                        if (ImGuiExt::DimmedIconButton(ICON_VS_REFRESH, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                            m_comPorts = getAvailablePorts();
+                            m_selectedPortIndex = 0;
+                        }
+                        ImGui::SetItemTooltip("%s", "hex.windows.view.tty_console.reload"_lang.get());
+
+                        ImGui::SameLine();
+
+                        ImGui::TextUnformatted("hex.windows.view.tty_console.port"_lang);
+                    }
+
+                    ImGui::PushItemWidth(configWidth);
+
+                    if (ImGui::BeginCombo("hex.windows.view.tty_console.baud"_lang, std::to_string(m_selectedBaudRate).c_str())) {
+                        for (auto baudRate : BaudRates) {
+                            if (ImGui::Selectable(std::to_string(baudRate).c_str(), m_selectedBaudRate == baudRate)) {
+                                m_selectedBaudRate = baudRate;
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+
+                    if (ImGui::BeginCombo("hex.windows.view.tty_console.num_bits"_lang, std::to_string(m_selectedNumBits).c_str())) {
+                        for (auto numBits : NumBits) {
+                            if (ImGui::Selectable(std::to_string(numBits).c_str(), m_selectedBaudRate == numBits)) {
+                                m_selectedNumBits = numBits;
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+
+                    constexpr static std::array StopBitsStrings = { "1", "1.5", "2" };
+                    if (ImGui::BeginCombo( "hex.windows.view.tty_console.stop_bits"_lang, StopBitsStrings[u32(m_selectedStopBits)])) {
+                        for (u32 i = 0; i < StopBitsStrings.size(); i++) {
+                            if (ImGui::Selectable(StopBitsStrings[i], m_selectedStopBits == StopBits(i))) {
+                                m_selectedStopBits = StopBits(i);
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+                    constexpr static std::array ParityBitsStrings = { "None", "Odd", "Even", "Mark", "Space" };
+                    if (ImGui::BeginCombo( "hex.windows.view.tty_console.parity_bits"_lang, ParityBitsStrings[u32(m_selectedParityBits)])) {
+                        for (u32 i = 0; i < ParityBitsStrings.size(); i++) {
+                            if (ImGui::Selectable(ParityBitsStrings[i], m_selectedParityBits == ParityBits(i))) {
+                                m_selectedParityBits = ParityBits(i);
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+
+                    ImGui::Checkbox("hex.windows.view.tty_console.cts"_lang, &m_hasCTSFlowControl);
+
+                    ImGui::Separator();
+
+                    ImGui::EndDisabled();
+
+                    {
+                        if (m_portHandle == INVALID_HANDLE_VALUE) {
+                            if (ImGuiExt::DimmedButton("hex.windows.view.tty_console.connect"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                                if (!this->connect()) {
+                                    ui::ToastError::open("hex.windows.view.tty_console.connect_error"_lang);
+                                } else {
+                                    m_settingsCollapsed = true;
+                                }
+                            }
+                        } else {
+                            if (ImGuiExt::DimmedButton("hex.windows.view.tty_console.disconnect"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                                this->disconnect();
+                            }
+                        }
+                    }
+
+                }
+
+                {
+                    ImGui::TableNextColumn();
+
+                    if (ImPlot::BeginPlot("##visualization", ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1).GetSize(), ImPlotFlags_NoFrame | ImPlotFlags_CanvasOnly)) {
+                        ImPlot::SetupAxis(ImAxis_X1, "X", ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax | ImPlotAxisFlags_AutoFit);
+                        ImPlot::SetupAxis(ImAxis_Y1, "Y", ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax);
+
+                        std::vector<double> signal;
+
+                        struct Annotation { double x; const char* text; };
+                        std::vector<Annotation> annotations;
+
+                        constexpr static auto Low = 0.3;
+                        constexpr static auto High = 0.6;
+
+                        annotations.emplace_back(0, "Idle");
+
+                        // Idle
+                        signal.push_back(High);
+                        signal.push_back(High);
+                        signal.push_back(High);
+                        signal.push_back(High);
+
+                        // Start bit
+                        annotations.emplace_back(signal.size(), "Start");
+                        signal.push_back(Low);
+
+                        // Data bits
+                        annotations.emplace_back(signal.size(), "Data");
+                        for (u8 i = 0; i < m_selectedNumBits; i += 1) {
+                            signal.push_back((i & 1) ? Low : High);
+                        }
+
+                        // Parity
+                        if (m_selectedParityBits != ParityBits::None)
+                            annotations.emplace_back(signal.size(), "Parity");
+                        switch (m_selectedParityBits) {
+                            case ParityBits::Even:
+                                signal.push_back(Low);
+                                break;
+                            case ParityBits::Odd:
+                                signal.push_back(High);
+                                break;
+                            case ParityBits::Mark:
+                                signal.push_back(High);
+                                break;
+                            case ParityBits::Space:
+                                signal.push_back(Low);
+                                break;
+                            case ParityBits::None:
+                                break;
+                        }
+
+                        // Stop bits
+                        annotations.emplace_back(signal.size(), "Stop");
+                        switch (m_selectedStopBits) {
+                            case StopBits::_1_0:
+                                signal.push_back(High);
+                                break;
+                            case StopBits::_1_5:
+                                signal.push_back(High);
+                                signal.push_back(High);
+                                break;
+                            case StopBits::_2_0:
+                                signal.push_back(High);
+                                signal.push_back(High);
+                                signal.push_back(High);
+                                break;
+                        }
+
+                        // Idle
+                        annotations.emplace_back(signal.size(), "Idle");
+                        signal.push_back(High);
+                        signal.push_back(High);
+                        signal.push_back(High);
+                        signal.push_back(High);
+
+                        annotations.emplace_back(signal.size(), "");
+
+                        const auto scale = 1.0 / (signal.size() - 1);
+                        ImPlot::PlotStairs("Signal", signal.data(), signal.size(), scale, 0);
+
+                        for (u32 index = 0; index < annotations.size() - 1; index++) {
+                            const auto &x1 = annotations[index];
+                            const auto &x2 = annotations[index + 1];
+
+                            ImPlot::Annotation((x2.x - (x2.x - x1.x) / 2) * scale, index & 1 ? 0.77 : 0.90, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(0, 0), false, "%s", x1.text);
+
+                            const auto lineX = (x1.x - 0.1) * scale;
+                            const double xs[] = { lineX, lineX };
+                            const double ys[] = { 0.0, 1.0 };
+                            ImPlot::PlotLine("##line", xs, ys, 2);
+
+                        }
+
+                        ImPlot::EndPlot();
+                    }
+                }
+
+                ImGui::EndTable();
+            }
+        }
+        ImGuiExt::EndSubWindow();
+    }
+
+
     void ViewTTYConsole::drawConsole() {
-        ImGuiExt::Header("hex.windows.view.tty_console.console"_lang);
+        ImGui::BeginDisabled(m_portHandle == INVALID_HANDLE_VALUE);
 
         auto consoleSize = ImMax(ImGui::GetContentRegionAvail(), ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5));
         consoleSize.y -= ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 4;
@@ -159,6 +261,55 @@ namespace hex::plugin::windows {
             ImGui::PopStyleVar();
         }
         ImGui::EndChild();
+
+        if (ImGuiExt::DimmedIconButton(ICON_VS_CLEAR_ALL, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            std::scoped_lock lock(m_receiveBufferMutex);
+
+            m_receiveLines.clear();
+        }
+        ImGui::SetItemTooltip("%s", "hex.windows.view.tty_console.clear"_lang.get());
+
+        ImGui::SameLine();
+
+        ImGuiExt::DimmedIconToggle(ICON_VS_GIT_FETCH, &m_shouldAutoScroll);
+        ImGui::SetItemTooltip("%s", "hex.windows.view.tty_console.auto_scroll"_lang.get());
+
+        ImGui::SameLine();
+
+        ImGui::PushItemWidth(-ImGui::GetStyle().ItemSpacing.x - ImGui::GetStyle().FramePadding.x * 2 - ImGui::CalcTextSize(ICON_VS_SEND).x);
+        if (ImGui::InputText("##transmit", m_transmitDataBuffer, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            this->transmitData(m_transmitDataBuffer + "\r\n");
+            m_transmitDataBuffer.clear();
+            ImGui::SetKeyboardFocusHere(0);
+        }
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+        if (ImGuiExt::DimmedIconButton(ICON_VS_SEND, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            this->transmitData(m_transmitDataBuffer + "\r\n");
+            m_transmitDataBuffer.clear();
+            ImGui::SetKeyboardFocusHere(-1);
+        }
+
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && m_portHandle != INVALID_HANDLE_VALUE && !m_transmitting)
+            ImGui::OpenPopup("ConsoleMenu");
+
+        if (ImGui::BeginPopup("ConsoleMenu")) {
+
+            if (ImGui::MenuItem("hex.windows.view.tty_console.send_etx"_lang, "CTRL + C")) {
+                this->transmitData({ 0x03 });
+            }
+            if (ImGui::MenuItem("hex.windows.view.tty_console.send_eot"_lang, "CTRL + D")) {
+                this->transmitData({ 0x04 });
+            }
+            if (ImGui::MenuItem("hex.windows.view.tty_console.send_sub"_lang, "CTRL + Z")) {
+                this->transmitData({ 0x1A });
+            }
+
+            ImGui::EndPopup();
+        }
+
+        ImGui::EndDisabled();
     }
 
 

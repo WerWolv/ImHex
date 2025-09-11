@@ -24,6 +24,7 @@
 #include <hex/ui/popup.hpp>
 #include <hex/ui/banner.hpp>
 
+#include <cmath>
 #include <chrono>
 #include <csignal>
 #include <numbers>
@@ -535,7 +536,7 @@ namespace hex {
                     if (popupDelay <= -1.0) {
                         popupDelay = 0.2;
                     } else {
-                        popupDelay -= m_lastFrameTime;
+                        popupDelay -= io.DeltaTime;
                         if (popupDelay < 0 || popups.size() == 1) {
                             popupDelay = -2.0;
                             currPopup = std::move(popups.back());
@@ -623,27 +624,31 @@ namespace hex {
         // Draw Toasts
         {
             u32 index = 0;
+            float yOffset = 0;
             for (const auto &toast : impl::ToastBase::getQueuedToasts() | std::views::take(4)) {
-                const auto toastHeight = 60_scaled;
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5_scaled);
-                ImGui::SetNextWindowSize(ImVec2(350_scaled, toastHeight));
-                ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }) - scaled({ 0, (10 + toastHeight) * index }), ImGuiCond_Always, ImVec2(1, 1));
+                ImGui::SetNextWindowSize(ImVec2(350_scaled, 0));
+                ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }) - scaled({ 0, yOffset }), ImGuiCond_Always, ImVec2(1, 1));
+                ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, 100_scaled));
                 if (ImGui::Begin(fmt::format("##Toast_{}", index).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
                     auto drawList = ImGui::GetWindowDrawList();
 
                     const auto min = ImGui::GetWindowPos();
-                    const auto max = min + ImGui::GetWindowSize();
 
-                    drawList->PushClipRect(min, min + scaled({ 5, 60 }));
-                    drawList->AddRectFilled(min, max, toast->getColor(), 5_scaled);
-                    drawList->PopClipRect();
-
-                    ImGui::Indent();
+                    ImGui::Indent(5_scaled);
                     toast->draw();
                     ImGui::Unindent();
 
                     if (ImGui::IsWindowHovered() || toast->getAppearTime() <= 0)
                         toast->setAppearTime(ImGui::GetTime());
+
+                    const auto max = min + ImGui::GetWindowSize();
+
+                    drawList->PushClipRect(min, min + scaled({ 5, max.y - min.y }));
+                    drawList->AddRectFilled(min, max, toast->getColor(), 5_scaled);
+                    drawList->PopClipRect();
+
+                    yOffset += ImGui::GetWindowSize().y + 10_scaled;
                 }
                 ImGui::End();
                 ImGui::PopStyleVar();
@@ -720,11 +725,14 @@ namespace hex {
         if (const auto &fullScreenView = ContentRegistry::Views::impl::getFullScreenView(); fullScreenView == nullptr) {
 
             // Loop through all views and draw them
-            for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
+            static ImGuiWindow *nextFocusWindow = nullptr;
+
+            for (auto &[name, view] : ContentRegistry::Views::impl::getEntries() | std::views::reverse) {
                 ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 
                 // Draw always visible views
                 view->drawAlwaysVisibleContent();
+                view->trackViewState();
 
                 // Skip views that shouldn't be processed currently
                 if (!view->shouldProcess())
@@ -745,15 +753,29 @@ namespace hex {
 
                 ImGui::SetNextWindowClass(&windowClass);
 
-                const auto window = ImGui::FindWindowByName(view->getName().c_str());
+                auto window = ImGui::FindWindowByName(view->getName().c_str());
                 if (window != nullptr && window->DockNode == nullptr)
                     ImGui::SetNextWindowBgAlpha(1.0F);
 
+                if (nextFocusWindow == window && !view->didWindowJustOpen() && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
+                    ImGui::SetNextWindowFocus();
+                    nextFocusWindow = nullptr;
+                }
+
                 // Draw view
                 view->draw();
-                view->trackViewState();
+
+                // If the window was just opened, it wasn't found above, so try to find it again
+                if (window == nullptr)
+                    window = ImGui::FindWindowByName(view->getName().c_str());
 
                 if (window != nullptr) {
+                    if (window->Appearing) {
+                        if (view->shouldDefaultFocus()) {
+                            nextFocusWindow = window;
+                        }
+                    }
+
                     if (view->getWindowOpenState()) {
                         // Get the currently focused view
                         auto windowName = View::toWindowName(name);
@@ -790,7 +812,6 @@ namespace hex {
                 }
             }
         }
-
 
         // Handle global shortcuts
         for (const auto &key : m_pressedKeys) {

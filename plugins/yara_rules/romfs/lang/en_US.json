@@ -1,6 +1,7 @@
 {
     "hex.yara.information_section.advanced_data_info": "Advanced Data Information",
-    "hex.yara.information_section.advanced_data_info.no_information": "No further information found",
+    "hex.yara.information_section.advanced_data_info.no_information": "No further information available.",
+    "hex.yara.information_section.advanced_data_info.no_information.add_new": "To add new information here, add new matching rules with the 'category' and 'name' meta tags to one of your Yara Advanced Analysis folders.",
     "hex.yara_rules.view.yara.error": "Yara Compiler error: {0}",
     "hex.yara_rules.view.yara.header.matches": "Matches",
     "hex.yara_rules.view.yara.header.rules": "Rules",

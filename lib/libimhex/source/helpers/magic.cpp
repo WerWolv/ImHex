@@ -15,6 +15,9 @@
 #include <string>
 
 #include <magic.h>
+#include <hex/api/task_manager.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
+#include <hex/helpers/binary_pattern.hpp>
 
 #if defined(_MSC_VER)
     #include <direct.h>
@@ -228,6 +231,132 @@ namespace hex::magic {
             return false;
 
         return true;
+    }
+
+
+    std::vector<FoundPattern> findViablePatterns(prv::Provider *provider, Task* task) {
+        std::vector<FoundPattern> result;
+
+        pl::PatternLanguage runtime;
+        ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
+
+        bool foundCorrectType = false;
+
+        auto mimeType = getMIMEType(provider, 0, 4_KiB, true);
+
+        std::error_code errorCode;
+        for (const auto &dir : paths::Patterns.read()) {
+            for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
+                if (task != nullptr)
+                    task->update();
+
+                foundCorrectType = false;
+                if (!entry.is_regular_file())
+                    continue;
+
+                wolv::io::File file(entry.path(), wolv::io::File::Mode::Read);
+                if (!file.isValid())
+                    continue;
+
+                std::string author, description;
+                bool matchedMimeType = false;
+                std::optional<u64> magicOffset;
+
+
+                const auto pragmaValues = runtime.getPragmaValues(file.readString());
+                if (auto it = pragmaValues.find("author"); it != pragmaValues.end())
+                    author = it->second;
+                if (auto it = pragmaValues.find("description"); it != pragmaValues.end())
+                    description = it->second;
+
+                // Format: #pragma MIME type/subtype
+                for (auto [it, itEnd] = pragmaValues.equal_range("MIME"); it != itEnd; ++it) {
+                    if (isValidMIMEType(it->second) && it->second == mimeType) {
+                        foundCorrectType = true;
+                        matchedMimeType = true;
+                    }
+                }
+                // Format: #pragma magic [ AA BB CC DD ] @ 0x12345678
+                for (auto [it, itEnd] = pragmaValues.equal_range("magic"); it != itEnd; ++it) {
+                    const auto pattern = [value = it->second]() mutable -> std::optional<BinaryPattern> {
+                        value = wolv::util::trim(value);
+
+                        if (value.empty())
+                            return std::nullopt;
+
+                        if (!value.starts_with('['))
+                            return std::nullopt;
+
+                        value = value.substr(1);
+
+                        const auto end = value.find(']');
+                        if (end == std::string::npos)
+                            return std::nullopt;
+                        value.resize(end);
+
+                        value = wolv::util::trim(value);
+
+                        return BinaryPattern(value);
+                    }();
+
+                    const auto address = [provider, value = it->second]() mutable -> std::optional<u64> {
+                        value = wolv::util::trim(value);
+
+                        if (value.empty())
+                            return std::nullopt;
+
+                        const auto start = value.find('@');
+                        if (start == std::string::npos)
+                            return std::nullopt;
+
+                        value = value.substr(start + 1);
+                        value = wolv::util::trim(value);
+
+                        size_t end = 0;
+                        auto result = std::stoll(value, &end, 0);
+                        if (end != value.length())
+                            return std::nullopt;
+
+                        if (result < 0) {
+                            const auto size = provider->getActualSize();
+                            if (u64(-result) > size) {
+                                return std::nullopt;
+                            }
+
+                            return size + result;
+                        } else {
+                            return result;
+                        }
+                    }();
+
+                    if (address && pattern) {
+                        std::vector<u8> bytes(pattern->getSize());
+                        if (!bytes.empty()) {
+                            provider->read(*address, bytes.data(), bytes.size());
+
+                            if (pattern->matches(bytes)) {
+                                foundCorrectType = true;
+                                magicOffset = *address;
+                            }
+                        }
+                    }
+                }
+
+                if (foundCorrectType) {
+                    result.emplace_back(
+                        entry.path(),
+                        std::move(author),
+                        std::move(description),
+                        matchedMimeType ? std::make_optional(mimeType) : std::nullopt,
+                        magicOffset
+                    );
+                }
+
+                runtime.reset();
+            }
+        }
+
+        return result;
     }
 
 }

@@ -473,15 +473,15 @@ jobs:
         set -x
         mkdir -p build
         cd build
-        CC=$(brew --prefix llvm)/bin/clang                                                          \
-        CXX=$(brew --prefix llvm)/bin/clang++                                                       \
-        OBJC=$(brew --prefix llvm)/bin/clang                                                        \
-        OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
+        CC=$(brew --prefix llvm@20)/bin/clang                                                          \
+        CXX=$(brew --prefix llvm@20)/bin/clang++                                                       \
+        OBJC=$(brew --prefix llvm@20)/bin/clang                                                        \
+        OBJCXX=$(brew --prefix llvm@20)/bin/clang++                                                    \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
           -DIMHEX_GENERATE_PACKAGE=ON                                                               \
-          -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib" \
+          -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm@20)/lib;$(brew --prefix llvm@20)/lib/unwind;$(brew --prefix llvm@20)/lib/c++;$(brew --prefix)/lib" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
@@ -1117,12 +1117,18 @@ jobs:
         run: |
           export IMHEX_VERSION=$(cat VERSION)
           echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
+          
+          if [[ "$IMHEX_VERSION" == *.WIP ]]; then
+              echo "IMHEX_VERSION_STRING=$IMHEX_VERSION-${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+          else
+              echo "IMHEX_VERSION_STRING=$IMHEX_VERSION" >> $GITHUB_ENV
+          fi
           echo "CCACHE=ccache" >> $GITHUB_ENV
 
       - name: 📜 Move snap directory to root
         run: |
           mkdir -p ./snap
-          envsubst '${IMHEX_VERSION},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
+          envsubst '${IMHEX_VERSION_STRING},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1
@@ -1134,6 +1140,10 @@ jobs:
       - name: 🛠️ Build
         run: |
           sudo snapcraft --destructive-mode
+
+      - name: 🟩 Rename Snap
+        run: |
+          mv *.snap imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.snap
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2

@@ -29,6 +29,7 @@ namespace hex::plugin::builtin {
     void handleDebugModeCommand(const std::vector<std::string> &args);
     void handleValidatePluginCommand(const std::vector<std::string> &args);
     void handleSaveEditorCommand(const std::vector<std::string> &args);
+    void handleFileInfoCommand(const std::vector<std::string> &args);
 
     void registerCommandForwarders();
 

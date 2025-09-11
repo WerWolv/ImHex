@@ -262,14 +262,6 @@ namespace hex::plugin::builtin {
                 ImGui::SetCursorPos(searchBoxPos);
                 
                 if (s_showSearchBar) {
-                    fonts::Default().pushBold(0.8);
-                    #if defined(OS_MACOS)
-                        ImGui::GetWindowDrawList()->AddText(ImGui::GetCursorScreenPos() + ImGui::GetStyle().FramePadding + ImVec2(0, 2_scaled), ImGui::GetColorU32(ImGuiCol_Text), ICON_VS_SEARCH);
-                    #else
-                        ImGui::GetWindowDrawList()->AddText(ImGui::GetCursorScreenPos() + ImGui::GetStyle().FramePadding, ImGui::GetColorU32(ImGuiCol_Text), ICON_VS_SEARCH);
-                    #endif
-                    fonts::Default().pop();
-
                     const auto buttonColor = [](float alpha) {
                         return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg) * ImVec4(1, 1, 1, alpha)));
                     };
@@ -279,8 +271,17 @@ namespace hex::plugin::builtin {
                     ImGui::PushStyleColor(ImGuiCol_ButtonActive, buttonColor(0.9F));
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0_scaled);
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4_scaled);
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, scaled({ 1, 1 }));
 
+                    const auto style = ImGui::GetStyle();
+                    fonts::Default().pushBold(0.8);
+                    ImGui::GetWindowDrawList()->AddText(
+                        ImGui::GetCursorScreenPos() + ImVec2(style.FramePadding.x, style.ChildBorderSize + (searchBoxSize.y - ImGui::CalcTextSize(ICON_VS_SEARCH).y) / 2),
+                        ImGui::GetColorU32(ImGuiCol_Text),
+                        ICON_VS_SEARCH
+                    );
+                    fonts::Default().pop();
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, scaled({ 1, 1 }));
 
                     if (ImGui::Button(s_windowTitle.c_str(), searchBoxSize)) {
                         EventSearchBoxClicked::post(ImGuiMouseButton_Left);
@@ -444,7 +445,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::BeginMenu(ICON_VS_ELLIPSIS)) {
                         for (const auto &[priority, menuItem] : menuItems) {
                             ON_SCOPE_EXIT { count += 1; };
-                            if (count < fittingItems)
+                            if (count <= fittingItems)
                                 continue;
                             if (!visibleMainMenus.contains(menuItem.unlocalizedName))
                                 continue;
@@ -723,9 +724,16 @@ namespace hex::plugin::builtin {
 
                 title = wolv::util::replaceStrings(title, DefaultImHexTitle, s_applicationName);
 
-                glfwSetWindowTitle(window, title.c_str());
+                TaskManager::doLater([window, title] {
+                    glfwSetWindowTitle(window, title.c_str());
+                });
             }
         });
+
+        EventProviderDirtied::subscribe([] {
+            RequestUpdateWindowTitle::post();
+        });
+
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_header_command_palette", [](const ContentRegistry::Settings::SettingsValue &value) {
             s_showSearchBar = value.get<bool>(true);

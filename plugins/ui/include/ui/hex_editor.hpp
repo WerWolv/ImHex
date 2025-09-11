@@ -55,6 +55,9 @@ namespace hex::ui {
         }
 
         ScrollPosition& operator=(ImS64 value) {
+            if (value < 0)
+                 value = 0;
+
             this->get() = value;
             return *this;
         }
@@ -157,7 +160,7 @@ namespace hex::ui {
 
             m_selectionStart = std::clamp<u64>(start, 0, maxAddress);
             m_selectionEnd = std::clamp<u64>(end, 0, maxAddress);
-            m_cursorPosition = m_selectionEnd;
+            m_cursorPosition = m_selectionStart;
 
             if (m_selectionChanged) {
                 auto selection = this->getSelection();

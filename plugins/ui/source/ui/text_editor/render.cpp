@@ -1,4 +1,5 @@
 #include "imgui.h"
+#include "fonts/fonts.hpp"
 #include <ui/text_editor.hpp>
 #include <algorithm>
 
@@ -18,9 +19,10 @@ namespace hex::ui {
         m_topMarginChanged = true;
     }
 
-    void TextEditor::setFocusAtCoords(const Coordinates &coords) {
+    void TextEditor::setFocusAtCoords(const Coordinates &coords, bool scrollToCursor) {
         m_focusAtCoords = coords;
         m_updateFocus = true;
+        m_scrollToCursor = scrollToCursor;
     }
 
     void TextEditor::clearErrorMarkers() {
@@ -197,11 +199,13 @@ namespace hex::ui {
         auto height = ImGui::GetWindowHeight() - m_topMargin - scrollBarSize - m_charAdvance.y;
         auto width = ImGui::GetWindowWidth() - windowPadding.x - scrollBarSize;
 
-        auto top = (i32) rint((m_topMargin > scrollY ? m_topMargin - scrollY : scrollY) / m_charAdvance.y);
-        auto bottom = top + (i32) rint(height / m_charAdvance.y);
+        auto topPixels = m_topMargin > scrollY ? m_topMargin - scrollY : scrollY;
+        auto top = (i32) rint(topPixels / m_charAdvance.y) + 1;
+        top -= (top >= (i32) m_lines.size());
+        auto bottom = (i32) rint((topPixels + height) / m_charAdvance.y);
 
         auto left = (i32) rint(scrollX / m_charAdvance.x);
-        auto right = left + (i32) rint(width / m_charAdvance.x);
+        auto right =  (i32) rint((scrollX + width) / m_charAdvance.x);
 
         auto pos = setCoordinates(m_state.m_cursorPosition);
         pos.m_column = (i32) rint(textDistanceToLineStart(pos) / m_charAdvance.x);
@@ -219,16 +223,24 @@ namespace hex::ui {
         }
 
         if (mScrollToCursorY) {
-            if (pos.m_line < top)
-                ImGui::SetScrollY(std::max(0.0f, pos.m_line * m_charAdvance.y));
-            if (pos.m_line > bottom)
+            if (pos.m_line < top) {
+                ImGui::SetScrollY(std::max(0.0f, (pos.m_line - 1) * m_charAdvance.y));
+                m_scrollToCursor = true;
+            }
+            if (pos.m_line > bottom) {
                 ImGui::SetScrollY(std::max(0.0f, pos.m_line * m_charAdvance.y - height));
+                m_scrollToCursor = true;
+            }
         }
         if (mScrollToCursorX) {
-            if (pos.m_column < left)
+            if (pos.m_column < left) {
                 ImGui::SetScrollX(std::max(0.0f, pos.m_column * m_charAdvance.x));
-            if (pos.m_column > right)
+                m_scrollToCursor = true;
+            }
+            if (pos.m_column > right) {
                 ImGui::SetScrollX(std::max(0.0f, pos.m_column * m_charAdvance.x - width));
+                m_scrollToCursor = true;
+            }
         }
         m_oldTopMargin = m_topMargin;
     }
@@ -286,14 +298,52 @@ namespace hex::ui {
                     continue;
                 }
                 auto colors = m_lines[lineNo].m_colors;
-                u64 colorsSize = colors.size();
-                u64 i = skipSpaces(setCoordinates(lineNo, 0));
-                while (i < colorsSize) {
+                auto lineSize = line.getLineTextSize();
+                i64 colorsSize = std::min((u64)textEditorSize.x, (u64) lineSize);
+                i64 start = ImGui::GetScrollX();
+                i64 textSize = 0;
+                Coordinates head = Coordinates(lineNo, start / m_charAdvance.x);
+                textSize = textDistanceToLineStart(head);
+                auto maxColumn = line.getCharColumn(line.size());
+                if (textSize < start) {
+                    while (textSize < start && head.m_column < maxColumn) {
+                        head.m_column += 1;
+                        textSize = textDistanceToLineStart(head);
+                    }
+                } else {
+                    while (textSize > start && head.m_column > 0) {
+                        head.m_column -= 1;
+                        textSize = textDistanceToLineStart(head);
+                    }
+                }
+                Coordinates current = Coordinates(lineNo, (start + colorsSize) / m_charAdvance.x);
+                textSize = textDistanceToLineStart(current);
+                if (textSize < start + colorsSize) {
+                    while (textSize < start + colorsSize && current.m_column < maxColumn) {
+                        current.m_column += 1;
+                        textSize = textDistanceToLineStart(current);
+                    }
+                } else {
+                    while (textSize > start + colorsSize && current.m_column > 0) {
+                        current.m_column -= 1;
+                        textSize = textDistanceToLineStart(current);
+                    }
+                }
+
+                u64 i = line.getColumnIndex(head.m_column);
+                u64 maxI = line.getColumnIndex(current.m_column);
+                while (i < maxI) {
                     char color = std::clamp(colors[i], (char) PaletteIndex::Default, (char) ((u8) PaletteIndex::Max - 1));
-                    u32 tokenLength = std::clamp((u64) (colors.find_first_not_of(color, i) - i),(u64) 1, colorsSize - i);
+                    auto index = colors.find_first_not_of(color, i);
+                    if (index == std::string::npos)
+                        index = maxI;
+                    else
+                        index -= i;
+
+                    u32 tokenLength = std::clamp((u64) index,(u64) 1, maxI - i);
                     if (m_updateFocus)
                         setFocus();
-                    auto lineStart = setCoordinates(lineNo, i);
+                    auto lineStart = setCoordinates(lineNo, line.getCharColumn(i));
 
                     drawText(lineStart, i, tokenLength, color);
 
@@ -314,7 +364,9 @@ namespace hex::ui {
     void TextEditor::setFocus() {
         m_state.m_cursorPosition = m_focusAtCoords;
         resetCursorBlinkTime();
-        ensureCursorVisible();
+        if (m_scrollToCursor)
+            ensureCursorVisible();
+
         if (!this->m_readOnly)
             ImGui::SetKeyboardFocusHere(0);
         m_updateFocus = false;
@@ -364,7 +416,7 @@ namespace hex::ui {
     void TextEditor::drawLineNumbers(ImVec2 position, float lineNo, const ImVec2 &contentSize, bool focused, ImDrawList *drawList) {
         ImVec2 lineStartScreenPos = s_cursorScreenPosition + ImVec2(m_leftMargin, m_topMargin + std::floor(lineNo) * m_charAdvance.y);
         ImVec2 lineNoStartScreenPos = ImVec2(position.x, m_topMargin + s_cursorScreenPosition.y + std::floor(lineNo) * m_charAdvance.y);
-        auto start = ImVec2(lineNoStartScreenPos.x + m_lineNumberFieldWidth, lineStartScreenPos.y);
+        auto start = ImVec2(lineNoStartScreenPos.x + m_lineNumberFieldWidth - m_charAdvance.x / 2, lineStartScreenPos.y);
         i32 totalDigitCount = std::floor(std::log10(m_lines.size())) + 1;
         ImGui::SetCursorScreenPos(position);
         if (!m_ignoreImGuiChild)
@@ -380,13 +432,18 @@ namespace hex::ui {
             else
                 m_breakpoints.insert(lineNo + 1);
             m_breakPointsChanged = true;
-            auto cursorPosition = setCoordinates(lineNo, 0);
-            if (cursorPosition == Invalid)
-                return;
+            setFocusAtCoords(m_state.m_cursorPosition, false);
+        }
+        auto color = m_palette[(i32) PaletteIndex::LineNumber];
 
-            m_state.m_cursorPosition = cursorPosition;
-
-            jumpToCoords(m_state.m_cursorPosition);
+        if (m_state.m_cursorPosition.m_line == lineNo && m_showCursor) {
+            color = m_palette[(i32) PaletteIndex::Cursor];
+            // Highlight the current line (where the cursor is)
+            if (!hasSelection()) {
+                auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + m_lineNumberFieldWidth, lineStartScreenPos.y + m_charAdvance.y);
+                drawList->AddRectFilled(ImVec2(position.x, lineStartScreenPos.y), end, m_palette[(i32) (focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
+                drawList->AddRect(ImVec2(position.x, lineStartScreenPos.y), end, m_palette[(i32) PaletteIndex::CurrentLineEdge], 1.0f);
+            }
         }
         // Draw breakpoints
         if (m_breakpoints.count(lineNo + 1) != 0) {
@@ -395,20 +452,9 @@ namespace hex::ui {
 
             drawList->AddCircleFilled(start + ImVec2(0, m_charAdvance.y) / 2, m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Breakpoint]);
             drawList->AddCircle(start + ImVec2(0, m_charAdvance.y) / 2, m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Default]);
-            drawList->AddText(ImVec2(lineNoStartScreenPos.x + m_leftMargin, lineStartScreenPos.y), m_palette[(i32) PaletteIndex::LineNumber], lineNoStr.c_str());
+            drawList->AddText(ImVec2(lineNoStartScreenPos.x + m_leftMargin, lineStartScreenPos.y), color, lineNoStr.c_str());
         }
-
-        if (m_state.m_cursorPosition.m_line == lineNo && m_showCursor) {
-
-            // Highlight the current line (where the cursor is)
-            if (!hasSelection()) {
-                auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + m_lineNumberFieldWidth, lineStartScreenPos.y + m_charAdvance.y);
-                drawList->AddRectFilled(ImVec2(position.x, lineStartScreenPos.y), end, m_palette[(i32) (focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
-                drawList->AddRect(ImVec2(position.x, lineStartScreenPos.y), end, m_palette[(i32) PaletteIndex::CurrentLineEdge], 1.0f);
-            }
-        }
-
-        TextUnformattedColoredAt(ImVec2(m_leftMargin + lineNoStartScreenPos.x, lineStartScreenPos.y), m_palette[(i32) PaletteIndex::LineNumber], lineNoStr.c_str());
+        TextUnformattedColoredAt(ImVec2(m_leftMargin + lineNoStartScreenPos.x, lineStartScreenPos.y), color, lineNoStr.c_str());
 
         if (!m_ignoreImGuiChild)
             ImGui::EndChild();
@@ -495,8 +541,12 @@ namespace hex::ui {
         auto textStart = textDistanceToLineStart(lineStart);
         auto begin = lineStartScreenPos + ImVec2(textStart, 0);
 
+        if (color <= (char) TextEditor::PaletteIndex::Comment && color >= (char) TextEditor::PaletteIndex::DocComment)
+            fonts::CodeEditor().pushItalic();
         TextUnformattedColoredAt(begin, m_palette[(i32) color], line.substr(i, tokenLength).c_str());
 
+        if (color <= (char) TextEditor::PaletteIndex::Comment && color >= (char) TextEditor::PaletteIndex::DocComment)
+            fonts::CodeEditor().pop();
         ErrorMarkers::iterator errorIt;
         auto key = lineStart + Coordinates(1, 1);
         if (errorIt = m_errorMarkers.find(key); errorIt != m_errorMarkers.end()) {
@@ -567,13 +617,20 @@ namespace hex::ui {
     ImVec2 TextEditor::calculateCharAdvance() const {
         /* Compute mCharAdvance regarding scaled font size (Ctrl + mouse wheel)*/
         const float fontSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
-        return ImVec2(fontSize, ImGui::GetTextLineHeightWithSpacing() * m_lineSpacing);
+        return ImVec2(fontSize, GImGui->FontSize * m_lineSpacing);
     }
 
-    float TextEditor::textDistanceToLineStart(const Coordinates &aFrom) const {
+    float TextEditor::textDistanceToLineStart(const Coordinates &aFrom) {
         auto &line = m_lines[aFrom.m_line];
         i32 colIndex = lineCoordinatesToIndex(aFrom);
-        auto substr = line.m_chars.substr(0, colIndex);
-        return ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, substr.c_str(), nullptr, nullptr).x;
+        auto substr1 = line.m_chars.substr(0, colIndex);
+        auto substr2 =line.m_chars.substr(colIndex, line.m_chars.size() - colIndex);
+        if (substr2.size() < substr1.size()) {
+            auto distanceToEnd = line.getStringTextSize(substr2.c_str());
+            line.m_lineTextSize = line.getLineTextSize();
+            return line.m_lineTextSize - distanceToEnd;
+        }
+
+        return line.getStringTextSize(substr1.c_str());
     }
 }

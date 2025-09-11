@@ -1197,7 +1197,8 @@ namespace hex::ui {
             this->resetEditing();
         }
 
-        ImGui::PushItemWidth(-(ImGui::GetTextLineHeightWithSpacing() * 8));
+        auto &style = ImGui::GetStyle();
+        ImGui::PushItemWidth(-(style.ItemSpacing.x * 2 + style.WindowPadding.x * 2 + ImGui::GetTextLineHeightWithSpacing() * 5 + 15_scaled));
         if (ImGuiExt::InputTextIcon("##Search", ICON_VS_FILTER, m_filterText)) {
             m_filter = parseRValueFilter(m_filterText).value_or(Filter{ });
             updateFilter();

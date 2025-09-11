@@ -310,6 +310,42 @@ namespace hex::plugin::builtin {
             }
         );
 
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.fixed_point", 1, [totalBits = int(16), fractionBits = int(8)](const std::vector<u8> &, std::endian endian, Style style) mutable {
+            std::string value;
+
+            const auto currSelection = ImHexApi::HexEditor::getSelection();
+            const u32 sizeBytes = (totalBits + 7) / 8;
+            if (currSelection.has_value() && currSelection->size >= sizeBytes) {
+                u64 fixedPointValue = 0x00;
+                ImHexApi::Provider::get()->read(currSelection->address, &fixedPointValue, std::min<u64>(sizeof(fixedPointValue), currSelection->size));
+
+                fixedPointValue = changeEndianness(fixedPointValue, sizeBytes, endian);
+                fixedPointValue &= u64(hex::bitmask(totalBits));
+
+                const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
+                value = fmt::format(fmt::runtime(formatString), double(fixedPointValue) / double(1ULL << fractionBits));
+            } else {
+                value = "???";
+            }
+
+            return [&, value, totalBitsCopy = totalBits, fractionBitsCopy = fractionBits]() mutable -> std::string {
+                ContentRegistry::DataInspector::drawMenuItems([&] {
+                    ImGui::SliderInt("##total_bits", &totalBits, 1, 64, fmt::format("hex.builtin.inspector.fixed_point.total"_lang, totalBits).c_str(), ImGuiSliderFlags_AlwaysClamp);
+                    ImGui::SliderInt("##fractional_bits", &fractionBits, 0, totalBits - 1, fmt::format("hex.builtin.inspector.fixed_point.fraction"_lang, fractionBits).c_str(), ImGuiSliderFlags_AlwaysClamp);
+
+                    if (fractionBits >= totalBits) {
+                        fractionBits = totalBits - 1;
+                    }
+                });
+
+                ImGui::TextUnformatted(value.c_str());
+                ImGui::SameLine();
+                ImGui::TextDisabled("(fp%d.%d)", totalBitsCopy - fractionBitsCopy, fractionBitsCopy);
+
+                return value;
+            };
+        });
+
         ContentRegistry::DataInspector::add("hex.builtin.inspector.sleb128", 1, (16 * 8 / 7) + 1,
             [](auto buffer, auto endian, auto style) {
                 std::ignore = endian;
@@ -496,11 +532,9 @@ namespace hex::plugin::builtin {
                 std::ignore = endian;
                 std::ignore = style;
 
-                auto currSelection = ImHexApi::HexEditor::getSelection();
-
-
                 std::string value, copyValue;
 
+                auto currSelection = ImHexApi::HexEditor::getSelection();
                 if (currSelection.has_value()) {
                     std::vector<u8> stringBuffer(std::min<size_t>(currSelection->size, 0x1000), 0x00);
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
@@ -655,14 +689,7 @@ namespace hex::plugin::builtin {
                     std::vector<u8> stringBuffer(std::min<size_t>(currSelection->size, 0x1000), 0x00);
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
-                    u64 offset = 0;
-                    while (offset < stringBuffer.size()) {
-                        const auto [character, size] = encodingFile.getEncodingFor(std::span(stringBuffer).subspan(offset));
-                        value += character;
-                        offset += size;
-                    }
-                    copyValue = value;
-
+                    copyValue = value = encodingFile.decodeAll(stringBuffer);
 
                     if (value.size() > MaxStringLength) {
                         value.resize(MaxStringLength);

@@ -82,10 +82,12 @@ namespace hex {
          */
         [[nodiscard]] virtual View* getMenuItemInheritView() const { return nullptr; }
 
+
         [[nodiscard]] const char *getIcon() const { return m_icon; }
         [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const;
         [[nodiscard]] std::string getName() const;
 
+        [[nodiscard]] virtual bool shouldDefaultFocus() const { return false; }
         [[nodiscard]] virtual bool shouldStoreWindowState() const { return true; }
 
         [[nodiscard]] bool &getWindowOpenState();

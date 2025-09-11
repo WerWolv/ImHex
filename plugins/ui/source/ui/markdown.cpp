@@ -39,6 +39,7 @@ namespace hex::ui {
                     fonts::Default().pushBold(std::lerp(2.0F, 1.1F, ((MD_BLOCK_H_DETAIL*)detail)->level / 6.0F));
                     break;
                 case MD_BLOCK_HR:
+                    ImGui::NewLine();
                     ImGui::Separator();
                     break;
                 case MD_BLOCK_CODE: {
@@ -107,7 +108,8 @@ namespace hex::ui {
                     break;
                 }
                 case MD_BLOCK_P:
-                    ImGui::NewLine();
+                    if (!self.m_firstLine)
+                        ImGui::NewLine();
                     break;
                 default:
                     break;
@@ -205,7 +207,14 @@ namespace hex::ui {
                     } else if (auto imageIt = self.m_images.find(id); imageIt != self.m_images.end()) {
                         const auto &[_, image] = *imageIt;
                         if (image.isValid()) {
-                            ImGui::Image(image, image.getSize());
+                            auto size = image.getSize();
+                            const auto available = ImGui::GetContentRegionAvail().x;
+                            if (size.x > available) {
+                                size.x = available;
+                                size.y = available / image.getAspectRatio();
+                            }
+
+                            ImGui::Image(image, size);
                         } else {
                             if (ImGui::BeginChild(self.getElementId().c_str(), { 100, 100 }, ImGuiChildFlags_Borders)) {
                                 ImGui::TextUnformatted("???");
@@ -340,7 +349,8 @@ namespace hex::ui {
                 std::string_view word = sv.substr(0, end);
 
                 auto textSize = ImGui::CalcTextSize(word.data(), word.data() + word.size());
-                if (ImGui::GetCursorPosX() > ImGui::GetStyle().WindowPadding.x && ImGui::GetCursorPosX() + textSize.x > ImGui::GetWindowSize().x && !whiteSpaces) {
+                const auto windowPadding = ImGui::GetStyle().WindowPadding.x;
+                if (ImGui::GetCursorPosX() > windowPadding && ImGui::GetCursorPosX() + textSize.x > ImGui::GetWindowSize().x - windowPadding * 2 && !whiteSpaces) {
                     ImGui::NewLine();
                 }
 

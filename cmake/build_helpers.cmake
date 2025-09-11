@@ -359,6 +359,7 @@ macro(createPackage)
 
             # Fix rpath
             install(CODE "execute_process(COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath \"@executable_path/../Frameworks/\" $<TARGET_FILE:main>)")
+            install(CODE "execute_process(COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath \"@executable_path/../Frameworks/\" $<TARGET_FILE:updater>)")
 
             add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
             add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/Resources")
@@ -367,7 +368,7 @@ macro(createPackage)
 
             install(FILES ${IMHEX_ICON} DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/Resources")
             install(TARGETS main BUNDLE DESTINATION ".")
-            install(TARGETS updater BUNDLE DESTINATION ".")
+            install(TARGETS updater DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/MacOS")
 
             # Update library references to make the bundle portable
             postprocess_bundle(imhex_all main)
@@ -605,17 +606,15 @@ function(downloadImHexPatternsFiles dest)
         install(CODE "set(imhex_patterns_SOURCE_DIR \"${imhex_patterns_SOURCE_DIR}\")")
         install(CODE [[
             message(STATUS "Downloading ImHex patterns from branch '${PATTERNS_BRANCH}'...")
-            if (EXISTS "${imhex_patterns_SOURCE_DIR}")
-                file(REMOVE_RECURSE "${imhex_patterns_SOURCE_DIR}")
-            else ()
+            if (NOT EXISTS "${imhex_patterns_SOURCE_DIR}")
                 file(MAKE_DIRECTORY "${imhex_patterns_SOURCE_DIR}")
+                
+                execute_process(
+                    COMMAND
+                        git clone --recurse-submodules --branch ${PATTERNS_BRANCH} https://github.com/WerWolv/ImHex-Patterns.git "${imhex_patterns_SOURCE_DIR}"
+                    COMMAND_ERROR_IS_FATAL ANY
+                )
             endif()
-
-            execute_process(
-                COMMAND
-                    git clone --recurse-submodules --branch ${PATTERNS_BRANCH} https://github.com/WerWolv/ImHex-Patterns.git "${imhex_patterns_SOURCE_DIR}"
-                COMMAND_ERROR_IS_FATAL ANY
-            )
         ]])
     else ()
         set(imhex_patterns_SOURCE_DIR "")
@@ -745,7 +744,7 @@ macro(setupCompilerFlags target)
     endif()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND APPLE)
-        execute_process(COMMAND brew --prefix llvm OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+        execute_process(COMMAND brew --prefix llvm@20 OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
         set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
         set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
         addCCXXFlag("-Wno-unknown-warning-option" ${target})
@@ -810,6 +809,13 @@ macro(setUninstallTarget)
 endmacro()
 
 macro(addBundledLibraries)
+    # Make sure the build is using vcpkg on Windows and Emscripten, otherwise none of these dependencies will be found
+    if (MSVC OR EMSCRIPTEN)
+        if (NOT (CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg"))
+            message(AUTHOR_WARNING "Your current environment probably needs to be setup to use vcpkg, otherwise none of the dependencies will be found!")
+        endif()
+    endif()
+
     set(EXTERNAL_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/external")
     set(THIRD_PARTY_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/third_party")
     set(BUILD_SHARED_LIBS OFF)

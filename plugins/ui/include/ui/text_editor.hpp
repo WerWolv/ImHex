@@ -59,6 +59,12 @@ namespace hex::ui {
             Coordinates getSelectedColumns();
             bool isSingleLine();
             bool contains(Coordinates coordinates, int8_t endsInclusive=1);
+            bool operator==(const Selection &o) const {
+                return m_start == o.m_start && m_end == o.m_end;
+            }
+            bool operator!=(const Selection &o) const {
+                return m_start != o.m_start || m_end != o.m_end;
+            }
         };
 
         struct EditorState {
@@ -72,7 +78,7 @@ namespace hex::ui {
             typedef std::vector<EditorState> Matches;
             Matches &getMatches() { return m_matches; }
             bool findNext(TextEditor *editor);
-            u32 findMatch(TextEditor *editor, bool isNex);
+            u32 findMatch(TextEditor *editor, i32 index);
             bool replace(TextEditor *editor, bool right);
             bool replaceAll(TextEditor *editor);
             std::string &getFindWord() { return m_findWord; }
@@ -324,13 +330,19 @@ namespace hex::ui {
             std::string m_colors;
             std::string m_flags;
             bool m_colorized = false;
+            i32 m_lineTextSize;
 
-            Line() : m_chars(), m_colors(), m_flags(), m_colorized(false) {}
+            Line() : m_chars(), m_colors(), m_flags(), m_colorized(false), m_lineTextSize(-1) {}
             explicit Line(const char *line) { Line(std::string(line)); }
-            explicit Line(const std::string &line) : m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false) {}
-            Line(const Line &line) : m_chars(line.m_chars), m_colors(line.m_colors), m_flags(line.m_flags), m_colorized(line.m_colorized) {}
+            explicit Line(const std::string &line) :
+                    m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false), m_lineTextSize(
+                    getLineTextSize()) {}
+            Line(const Line &line) : m_chars(line.m_chars), m_colors(line.m_colors), m_flags(line.m_flags), m_colorized(line.m_colorized), m_lineTextSize(line.m_lineTextSize) {}
 
-            i32 getCharacterColumn(i32 index) const;
+            i32 getCharColumn(i32 stringIndex) const;
+            i32 getColumnIndex(i32 column) const;
+            i32 getLineTextSize();
+            i32 getStringTextSize(const std::string &str) const;
             LineIterator begin();
             LineIterator end();
             Line &operator=(const Line &line);
@@ -481,7 +493,7 @@ namespace hex::ui {
         void setLongestLineLength(u64 line) { m_longestLineLength = line; }
         u64 getLongestLineLength() const { return m_longestLineLength; }
         void setTopMarginChanged(i32 newMargin);
-        void setFocusAtCoords(const Coordinates &coords);
+        void setFocusAtCoords(const Coordinates &coords, bool ensureVisible = false);
         void clearErrorMarkers();
         void clearActionables();
     private:
@@ -497,7 +509,7 @@ namespace hex::ui {
         void drawText(Coordinates &lineStart, u64 i, u32 tokenLength, char color);
         void postRender(const char *title, ImVec2 position, float lineNo);
         ImVec2 calculateCharAdvance() const;
-        float textDistanceToLineStart(const Coordinates &from) const;
+        float textDistanceToLineStart(const Coordinates &from);
 // Highlighting
     public:
         void colorize();
@@ -526,6 +538,7 @@ namespace hex::ui {
         void copy();
         void cut();
         void paste();
+        void doPaste(const char *clipText);
         void deleteChar();
         void insertText(const std::string &value);
         void insertText(const char *value);
@@ -533,10 +546,10 @@ namespace hex::ui {
         void setOverwrite(bool value) { m_overwrite = value; }
         bool isOverwrite() const { return m_overwrite; }
         void setText(const std::string &text, bool undo = false);
-        std::string getText() const;
+        std::string getText();
         std::vector<std::string> getTextLines() const;
-        std::string getSelectedText() const;
-        std::string getLineText(i32 line) const;
+        std::string getSelectedText();
+        std::string getLineText(i32 line);
         inline void setTextChanged(bool value) { m_textChanged = value; }
         inline bool isTextChanged() { return m_textChanged; }
         inline void setReadOnly(bool value) { m_readOnly = value; }
@@ -545,7 +558,7 @@ namespace hex::ui {
         inline void setHandleKeyboardInputs(bool value) { m_handleKeyboardInputs = value; }
         inline bool isHandleKeyboardInputsEnabled() const { return m_handleKeyboardInputs; }
     private:
-        std::string getText(const Selection &selection) const;
+        std::string getText(const Selection &selection);
         void deleteRange(const Selection &selection);
         i32 insertTextAt(Coordinates &where, const std::string &value);
         void removeLine(i32 start, i32 end);
@@ -568,18 +581,18 @@ namespace hex::ui {
         void moveEnd(bool select = false);
         void moveToMatchedBracket(bool select = false);
         void setScrollY();
-        Coordinates getCursorPosition() const { return setCoordinates(m_state.m_cursorPosition); }
+        Coordinates getCursorPosition()  { return setCoordinates(m_state.m_cursorPosition); }
         void setCursorPosition(const Coordinates &position);
         void setCursorPosition();
     private:
-        Coordinates setCoordinates(const Coordinates &value) const;
-        Coordinates setCoordinates(i32 line, i32 column) const;
-        Selection setCoordinates(const Selection &value) const;
+        Coordinates setCoordinates(const Coordinates &value);
+        Coordinates setCoordinates(i32 line, i32 column);
+        Selection setCoordinates(const Selection &value);
         void advance(Coordinates &coordinates) const;
-        Coordinates findWordStart(const Coordinates &from) const;
-        Coordinates findWordEnd(const Coordinates &from) const;
-        Coordinates findPreviousWord(const Coordinates &from) const;
-        Coordinates findNextWord(const Coordinates &from) const;
+        Coordinates findWordStart(const Coordinates &from);
+        Coordinates findWordEnd(const Coordinates &from);
+        Coordinates findPreviousWord(const Coordinates &from);
+        Coordinates findNextWord(const Coordinates &from);
         u32 skipSpaces(const Coordinates &from);
 //Support
     public:
@@ -614,13 +627,13 @@ namespace hex::ui {
         static TextEditor::Coordinates stringIndexToCoordinates(i32 strIndex, const std::string &input);
     private:
 
-        Coordinates screenPosToCoordinates(const ImVec2 &position) const;
+        Coordinates screenPosToCoordinates(const ImVec2 &position);
         Coordinates lineCoordsToIndexCoords(const Coordinates &coordinates) const;
         i32 lineCoordinatesToIndex(const Coordinates &coordinates) const;
-        Coordinates getCharacterCoordinates(i32 line, i32 index) const;
-        i32 getLineCharacterCount(i32 line) const;
+        Coordinates getCharacterCoordinates(i32 line, i32 index);
+        i32 getLineCharColumn(i32 lineIndex, i32 stringIndex);
         u64 getLineByteCount(i32 line) const;
-        i32 getLineMaxColumn(i32 line) const;
+        i32 getLineMaxCharColumn(i32 lineIndex);
 
     public:
         FindReplaceHandler m_findReplaceHandler;

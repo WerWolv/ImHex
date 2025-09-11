@@ -31,6 +31,7 @@
             "resize-grip": "*#5959592B",
             "resize-grip-active": "*#4296F9F2",
             "resize-grip-hovered": "*#4296F9AA",
+            "input-text-cursor": "#000000FF",
             "scrollbar-background": "#F9F9F987",
             "scrollbar-grab": "#AFAFAFCC",
             "scrollbar-grab-active": "#7C7C7CFF",
@@ -42,9 +43,11 @@
             "slider-grab-active": "*#7589CC99",
             "tab": "*#C2CBD5ED",
             "tab-active": "*#97B9E1FF",
+            "tab-active-overline": "*#4296F9FF",
             "tab-hovered": "*#4296F9CC",
             "tab-unfocused": "*#EAECEEFB",
             "tab-unfocused-active": "*#BDD1E9FF",
+            "tab-unfocused-active-overline": "*#4296FF00",
             "table-border-light": "#ADADBCFF",
             "table-border-strong": "#9191A3FF",
             "table-header-background": "#C6DDF9FF",
@@ -52,7 +55,9 @@
             "table-row-background-alt": "#4C4C4C16",
             "text": "#000000FF",
             "text-disabled": "#999999FF",
+            "text-link": "*#4296F9FF",
             "text-selected-background": "*#4296F959",
+            "tree-lines": "#0000004C",
             "title-background": "#DBDBDBFF",
             "title-background-active": "#DBDBDBFF",
             "title-background-collapse": "#DBDBDBFF",
@@ -75,22 +80,22 @@
             "toolbar-purple": "#672A78FF",
             "toolbar-red": "#E74C3CFF",
             "toolbar-yellow": "#F1C40FFF",
-            "logger-debug":  "#388B42FF",
-            "logger-info":  "#06539BFF",
-            "logger-warning":  "#F1C40FFF",
-            "logger-error":  "#E74C3CFF",
-            "logger-fatal":  "#672A78FF",
-            "achievement-unlocked":  "#F1C40FFF",
-            "find-highlight":  "#672A78FF",
-            "diff-added":  "#388B42FF",
-            "diff-removed":  "#E74C3CFF",
-            "diff-changed":  "#F1C40FFF",
-            "advanced-encoding-ascii":  "#06539BFF",
-            "advanced-encoding-single":  "#E74C3CFF",
-            "advanced-encoding-multi":  "#F1C40FFF",
-            "advanced-encoding-unknown":  "#E74C3CFF",
-            "patches":  "#E74C3CFF",
-            "pattern-selected":  "#06539BFF"
+            "logger-debug": "#388B42FF",
+            "logger-info": "#06539BFF",
+            "logger-warning": "#F1C40FFF",
+            "logger-error": "#E74C3CFF",
+            "logger-fatal": "#672A78FF",
+            "achievement-unlocked": "#F1C40FFF",
+            "find-highlight": "#672A78FF",
+            "diff-added": "#388B42FF",
+            "diff-removed": "#E74C3CFF",
+            "diff-changed": "#F1C40FFF",
+            "advanced-encoding-ascii": "#0B365DFF",
+            "advanced-encoding-single": "#971B0EFF",
+            "advanced-encoding-multi": "#786209FF",
+            "advanced-encoding-unknown": "#971B0EFF",
+            "patches": "#E74C3CFF",
+            "pattern-selected": "#06539BFF"
         },
         "imnodes": {
             "box-selector": "*#5AAAFA1E",
@@ -198,60 +203,103 @@
     "styles": {
         "imgui": {
             "alpha": 1.0,
-            "button-text-align": [
-                0.5,
-                0.5
-            ],
-            "cell-padding": [
-                4.0,
-                2.0
-            ],
-            "child-border-size": 1.0,
-            "child-rounding": 0.0,
             "disabled-alpha": 0.6,
-            "frame-border-size": 1.0,
-            "frame-padding": [
-                4.0,
-                3.0
-            ],
-            "frame-rounding": 0.0,
-            "grab-min-size": 12.0,
-            "grab-rounding": 0.0,
-            "indent-spacing": 10.0,
-            "item-inner-spacing": [
-                4.0,
-                4.0
-            ],
-            "item-spacing": [
-                8.0,
-                4.0
-            ],
-            "popup-border-size": 1.0,
-            "popup-rounding": 0.0,
-            "scrollbar-rounding": 9.0,
-            "scrollbar-size": 14.0,
-            "selectable-text-align": [
-                0.0,
-                0.0
-            ],
-            "tab-rounding": 4.0,
-            "window-border-size": 1.0,
-            "window-min-size": [
-                32.0,
-                32.0
-            ],
             "window-padding": [
                 8.0,
                 8.0
             ],
             "window-rounding": 0.0,
+            "window-border-size": 1.0,
+            "window-border-hover-padding": 4.0,
+            "window-min-size": [
+                32.0,
+                32.0
+            ],
             "window-title-align": [
                 0.0,
                 0.5
             ],
-            "window-shadow-size": 64.0,
+            "child-rounding": 0.0,
+            "child-border-size": 1.0,
+            "popup-rounding": 0.0,
+            "popup-border-size": 1.0,
+            "frame-padding": [
+                4.0,
+                3.0
+            ],
+            "frame-rounding": 0.0,
+            "frame-border-size": 0.0,
+            "item-spacing": [
+                8.0,
+                4.0
+            ],
+            "item-inner-spacing": [
+                4.0,
+                4.0
+            ],
+            "cell-padding": [
+                4.0,
+                2.0
+            ],
+            "touch-extra-padding": [
+                0.0,
+                0.0
+            ],
+            "indent-spacing": 21.0,
+            "columns-min-spacing": 6.0,
+            "scrollbar-size": 14.0,
+            "scrollbar-rounding": 9.0,
+            "grab-min-size": 12.0,
+            "grab-rounding": 0.0,
+            "log-slider-deadzone": 4.0,
+            "image-border-size": 0.0,
+            "tab-rounding": 5.0,
+            "tab-border-size": 0.0,
+            "tab-min-width-base": 1.0,
+            "tab-min-width-shrink": 80.0,
+            "tab-close-button-min-width-selected": -1.0,
+            "tab-close-button-min-width-unselected": 0.0,
+            "tab-bar-border-size": 1.0,
+            "tab-bar-overline-size": 1.0,
+            "table-angled-headers-angle": 0.610865,
+            "table-angled-headers-text-align": [
+                0.5,
+                0.0
+            ],
+            "tree-lines-size": 1.0,
+            "tree-lines-rounding": 0.0,
+            "button-text-align": [
+                0.5,
+                0.5
+            ],
+            "selectable-text-align": [
+                0.0,
+                0.0
+            ],
+            "separator-text-border-size": 3.0,
+            "separator-text-align": [
+                0.0,
+                0.5
+            ],
+            "separator-text-padding": [
+                20.0,
+                3.0
+            ],
+            "display-window-padding": [
+                19.0,
+                19.0
+            ],
+            "display-safe-area-padding": [
+                3.0,
+                3.0
+            ],
+            "docking-separator-size": 2.0,
+            "mouse-cursor-scale": 1.0,
+            "curve-tessellation-tol": 1.25,
+            "circle-tessellation-max-error": 0.3,
+            "window-shadow-size": 100.0,
             "window-shadow-offset": 0.0,
-            "window-shadow-angle": 0.0
+            "window-shadow-angle": 0.785398
         },
         "imnodes": {
             "grid-spacing": 24.0,

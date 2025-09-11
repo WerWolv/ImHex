@@ -73,7 +73,7 @@ namespace hex::fonts {
 
     class FontSelector : public ContentRegistry::Settings::Widgets::Widget {
     public:
-        FontSelector() : m_fontSize(ImHexApi::Fonts::pointsToPixels(12), 2, 100), m_bold(false), m_italic(false) { }
+        FontSelector() : m_fontSize(12, 2, 100), m_bold(false), m_italic(false) { }
 
         bool draw(const std::string &name) override;
 

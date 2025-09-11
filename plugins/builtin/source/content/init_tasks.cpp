@@ -16,6 +16,7 @@
 #include <nlohmann/json.hpp>
 
 #include <string>
+#include <hex/api/events/events_lifecycle.hpp>
 
 namespace hex::fonts { bool setupFonts(); }
 

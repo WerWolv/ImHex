@@ -151,21 +151,20 @@ namespace hex::plugin::hashes {
     }
 
 
-    void ViewHashes::drawContent() {
+    void ViewHashes::drawAddHashPopup() {
         const auto &hashes = ContentRegistry::Hashes::impl::getHashes();
 
         if (m_selectedHash == nullptr && !hashes.empty()) {
             m_selectedHash = hashes.front().get();
         }
 
-        if (ImGuiExt::DimmedButton("hex.hashes.view.hashes.add"_lang)) {
-            ImGui::OpenPopup("##CreateHash");
-        }
-
-        ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos(), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(scaled({ 400, 0 }), ImGuiCond_Always);
         if (ImGui::BeginPopup("##CreateHash")) {
-            ImGuiExt::InputTextIcon("hex.hashes.view.hashes.hash_name"_lang, ICON_VS_SYMBOL_KEY, m_newHashName);
+            {
+                const auto text = "hex.hashes.view.hashes.hash_name"_lang;
+                ImGui::PushItemWidth(-ImGui::CalcTextSize(text).x - ImGui::GetStyle().FramePadding.x * 2);
+                ImGuiExt::InputTextIcon(text, ICON_VS_SYMBOL_KEY, m_newHashName);
+                ImGui::PopItemWidth();
+            }
 
             ImGui::NewLine();
 
@@ -183,7 +182,7 @@ namespace hex::plugin::hashes {
             if (m_newHashName.empty() && m_selectedHash != nullptr)
                 m_newHashName = fmt::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.hashes.view.hashes.hash"_lang));
 
-            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, nullptr, scaled({ 0, 250 }))) {
+            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, nullptr, scaled({ 0, 100 }))) {
                 if (m_selectedHash != nullptr) {
                     auto startPos = ImGui::GetCursorPosY();
                     m_selectedHash->draw();
@@ -208,15 +207,15 @@ namespace hex::plugin::hashes {
 
             ImGui::EndPopup();
         }
+    }
 
-        ImGui::SameLine(0, 10_scaled);
-        ImGuiExt::HelpHover("hex.hashes.view.hashes.hover_info"_lang, ICON_VS_INFO);
 
+    void ViewHashes::drawContent() {
         if (ImGui::BeginTable("##hashes", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupColumn("hex.hashes.view.hashes.table.name"_lang);
             ImGui::TableSetupColumn("hex.hashes.view.hashes.table.type"_lang);
             ImGui::TableSetupColumn("hex.hashes.view.hashes.table.result"_lang, ImGuiTableColumnFlags_WidthStretch);
-            ImGui::TableSetupColumn("##buttons", ImGuiTableColumnFlags_WidthFixed, 50_scaled);
+            ImGui::TableSetupColumn("##buttons", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() * 2);
 
             ImGui::TableHeadersRow();
 
@@ -227,7 +226,7 @@ namespace hex::plugin::hashes {
             for (u32 i = 0; i < m_hashFunctions->size(); i++) {
                 auto &function = (*m_hashFunctions)[i];
 
-                ImGui::PushID(i);
+                ImGui::PushID(i + 1);
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -249,14 +248,15 @@ namespace hex::plugin::hashes {
                     } catch (const std::exception &e) {
                         result = e.what();
                     }
-                }
-                else
+                } else {
                     result = "???";
+                }
 
                 ImGuiExt::TextFormattedSelectable("{}", result);
 
                 ImGui::TableNextColumn();
 
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 if (ImGuiExt::DimmedIconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     PopupTextHash::open(function);
                 }
@@ -264,12 +264,38 @@ namespace hex::plugin::hashes {
                 if (ImGuiExt::DimmedIconButton(ICON_VS_CHROME_CLOSE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     indexToRemove = i;
                 }
+                ImGui::PopStyleVar();
 
                 ImGui::PopID();
             }
 
             if (indexToRemove.has_value()) {
                 m_hashFunctions->erase(m_hashFunctions->begin() + indexToRemove.value());
+            }
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            const auto startPos = ImGui::GetCursorScreenPos();
+            ImGui::TableNextColumn();
+            ImGui::TableNextColumn();
+            ImGui::Selectable("##add_hash", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap | ImGuiSelectableFlags_NoAutoClosePopups);
+
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                ImGui::OpenPopup("##CreateHash");
+
+            ImGui::SetNextWindowPos(startPos + ImVec2(-ImGui::GetStyle().CellPadding.x, ImGui::GetTextLineHeight()), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x, 0), ImGuiCond_Always);
+            this->drawAddHashPopup();
+
+            ImGui::SameLine();
+
+            {
+                ImGui::PushClipRect(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize(), false);
+                const auto text = "hex.hashes.view.hashes.table_add"_lang;
+                const auto textSize = ImGui::CalcTextSize(text);
+                ImGui::SetCursorPosX((ImGui::GetWindowSize().x - textSize.x) / 2);
+                ImGuiExt::TextFormattedDisabled(text);
+                ImGui::PopClipRect();
             }
 
             ImGui::EndTable();

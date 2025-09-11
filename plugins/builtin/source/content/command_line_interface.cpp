@@ -29,6 +29,7 @@
 
 #include <content/providers/file_provider.hpp>
 #include <content/views/fullscreen/view_fullscreen_save_editor.hpp>
+#include <content/views/fullscreen/view_fullscreen_file_info.hpp>
 
 namespace hex::plugin::builtin {
     using namespace hex::literals;
@@ -519,6 +520,21 @@ namespace hex::plugin::builtin {
             log::println("Unknown source type '{}'. Use 'file' or 'gist'.", type);
             std::exit(EXIT_FAILURE);
         }
+    }
+
+    void handleFileInfoCommand(const std::vector<std::string> &args) {
+        if (args.size() != 1) {
+            log::println("usage: imhex --file-info <file>");
+            std::exit(EXIT_FAILURE);
+        }
+
+        const auto path = std::fs::path(args[0]);
+        if (!wolv::io::fs::exists(path)) {
+            log::println("File '{}' does not exist!", args[0]);
+            std::exit(EXIT_FAILURE);
+        }
+
+        ContentRegistry::Views::setFullScreenView<ViewFullScreenFileInfo>(path);
     }
 
 

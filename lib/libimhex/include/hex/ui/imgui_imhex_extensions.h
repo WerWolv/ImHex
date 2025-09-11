@@ -11,6 +11,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/concepts.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/scaling.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -253,11 +254,12 @@ namespace ImGuiExt {
     }
 
     void TextFormattedWrappedSelectable(std::string_view fmt, auto &&...args) {
+        using namespace hex;
         // Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
         auto text = wolv::util::trim(wolv::util::wrapMonospacedString(
                 fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...),
                 ImGui::CalcTextSize("M").x,
-                ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize
+                std::max(100_scaled, ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize)
         ));
 
         auto textSize = ImGui::CalcTextSize(text.c_str());
@@ -268,7 +270,7 @@ namespace ImGuiExt {
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
 
-        ImGui::PushItemWidth(ImGui::CalcTextSize(text.c_str()).x + ImGui::GetStyle().FramePadding.x * 2);
+        ImGui::PushItemWidth(textSize.x + ImGui::GetStyle().FramePadding.x * 2);
         ImGui::InputTextMultiline(
                 "##",
                 const_cast<char *>(text.c_str()),
@@ -312,7 +314,7 @@ namespace ImGuiExt {
 
     bool BitCheckbox(const char* label, bool* v);
 
-    bool DimmedButton(const char* label, ImVec2 size = ImVec2(0, 0));
+    bool DimmedButton(const char* label, ImVec2 size = ImVec2(0, 0), ImGuiButtonFlags flags = ImGuiButtonFlags_None);
     bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size = ImVec2(0, 0), ImVec2 iconOffset = ImVec2(0, 0));
     bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size = ImVec2(0, 0), ImVec2 iconOffset = ImVec2(0, 0));
     bool DimmedIconToggle(const char *icon, bool *v);

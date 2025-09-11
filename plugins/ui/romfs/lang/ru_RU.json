@@ -114,5 +114,6 @@
     "hex.ui.pattern_drawer.visualizer.unknown": "Неизвестный визуализатор",
     "hex.ui.pattern_drawer.visualizer.invalid_parameter_count": "Неверное количество параметров",
     "hex.ui.diagram.byte_type_distribution.plain_text": "Обычный текст",
-    "hex.ui.diagram.byte_type_distribution.similar_bytes": "Похожие байты"
+    "hex.ui.diagram.byte_type_distribution.similar_bytes": "Похожие байты",
+    "hex.ui.common.apply": "Применить"
 }

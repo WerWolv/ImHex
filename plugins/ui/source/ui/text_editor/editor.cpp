@@ -1,12 +1,10 @@
 #include <ui/text_editor.hpp>
 #include <algorithm>
-#include <chrono>
 #include <string>
 #include <regex>
 #include <cmath>
-#include <iostream>
-#include <hex/helpers/utils.hpp>
 #include <wolv/utils/string.hpp>
+#include <popups/popup_question.hpp>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 
@@ -29,7 +27,7 @@ namespace hex::ui {
     TextEditor::~TextEditor() {
     }
 
-    std::string TextEditor::getText(const Selection &from) const {
+    std::string TextEditor::getText(const Selection &from) {
         std::string result;
         auto selection = setCoordinates(from);
         auto columns = selection.getSelectedColumns();
@@ -227,6 +225,7 @@ namespace hex::ui {
             m_lines.resize(1);
             m_lines[0].clear();
         } else {
+            m_lines.clear();
             m_lines.resize(lineCount);
             u64 i = 0;
             for (auto line: vectorString) {
@@ -276,7 +275,7 @@ namespace hex::ui {
                     --end.m_line;
                 if (end.m_line >= (i32) m_lines.size())
                     end.m_line = isEmpty() ? 0 : (i32) m_lines.size() - 1;
-                end.m_column = getLineMaxColumn(end.m_line);
+                end.m_column = getLineMaxCharColumn(end.m_line);
 
                 u.m_removedSelection = Selection(start, end);
                 u.m_removed = getText(u.m_removedSelection);
@@ -488,7 +487,6 @@ namespace hex::ui {
             return;
 
         auto pos = setCoordinates(m_state.m_cursorPosition);
-        //auto start = std::min(pos, m_state.m_selection.m_start);
 
         insertTextAt(pos, value);
         m_lines[pos.m_line].m_colorized = false;
@@ -530,7 +528,7 @@ namespace hex::ui {
             setCursorPosition(pos);
             auto &line = m_lines[pos.m_line];
 
-            if (pos.m_column == getLineMaxColumn(pos.m_line)) {
+            if (pos.m_column == getLineMaxCharColumn(pos.m_line)) {
                 if (pos.m_line == (i32) m_lines.size() - 1)
                     return;
 
@@ -589,7 +587,7 @@ namespace hex::ui {
                 advance(u.m_removedSelection.m_end);
 
                 auto &prevLine = m_lines[pos.m_line - 1];
-                auto prevSize = getLineMaxColumn(pos.m_line - 1);
+                auto prevSize = getLineMaxCharColumn(pos.m_line - 1);
                 if (prevSize == 0)
                     prevLine = line;
                 else
@@ -684,34 +682,45 @@ namespace hex::ui {
         refreshSearchResults();
     }
 
+    void TextEditor::doPaste(const char *clipText) {
+        UndoRecord u;
+        if (clipText != nullptr) {
+            auto clipTextStr = wolv::util::preprocessText(clipText);
+
+            u.m_before = m_state;
+
+            if (hasSelection()) {
+                u.m_removed = getSelectedText();
+                u.m_removedSelection = m_state.m_selection;
+                deleteSelection();
+            }
+
+            u.m_added = clipTextStr;
+            u.m_addedSelection.m_start = setCoordinates(m_state.m_cursorPosition);
+            insertText(clipTextStr);
+
+            u.m_addedSelection.m_end = setCoordinates(m_state.m_cursorPosition);
+            u.m_after = m_state;
+            addUndo(u);
+        }
+        refreshSearchResults();
+    }
+
     void TextEditor::paste() {
         if (m_readOnly)
             return;
 
-        auto clipText = ImGui::GetClipboardText();
+        const char *clipText =  ImGui::GetClipboardText();
         if (clipText != nullptr) {
-            auto len = strlen(clipText);
-            if (len > 0) {
-                std::string text = wolv::util::preprocessText(clipText);
-                UndoRecord u;
-                u.m_before = m_state;
-
-                if (hasSelection()) {
-                    u.m_removed = getSelectedText();
-                    u.m_removedSelection = m_state.m_selection;
-                    deleteSelection();
-                }
-
-                u.m_added = text;
-                u.m_addedSelection.m_start = setCoordinates(m_state.m_cursorPosition);
-                insertText(text);
-
-                u.m_addedSelection.m_end = setCoordinates(m_state.m_cursorPosition);
-                u.m_after = m_state;
-                addUndo(u);
+            auto stringVector = wolv::util::splitString(clipText, "\n", false);
+            if (std::any_of(stringVector.begin(), stringVector.end(), [](const std::string &s) { return s.size() > 1024; })) {
+                ui::PopupQuestion::open("hex.builtin.view.pattern_editor.warning_paste_large"_lang, [this, clipText]() {
+                    this->doPaste(clipText);
+                }, [] {});
+            } else {
+                doPaste(clipText);
             }
         }
-        refreshSearchResults();
     }
 
     bool TextEditor::canUndo() {
@@ -734,7 +743,7 @@ namespace hex::ui {
         refreshSearchResults();
     }
 
-    std::string TextEditor::getText() const {
+    std::string TextEditor::getText()  {
         auto start = setCoordinates(0, 0);
         auto end = setCoordinates(-1, -1);
         if (start == Invalid || end == Invalid)
@@ -755,11 +764,11 @@ namespace hex::ui {
         return result;
     }
 
-    std::string TextEditor::getSelectedText() const {
+    std::string TextEditor::getSelectedText() {
         return getText(m_state.m_selection);
     }
 
-    std::string TextEditor::getLineText(i32 line) const {
+    std::string TextEditor::getLineText(i32 line) {
         auto sanitizedLine = setCoordinates(line, 0);
         auto endLine = setCoordinates(line, -1);
         if (sanitizedLine == Invalid || endLine == Invalid)

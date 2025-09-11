@@ -22,7 +22,7 @@ namespace hex::ui {
         setCursorPosition(coords);
         ensureCursorVisible();
 
-        setFocusAtCoords(coords);
+        setFocusAtCoords(coords, true);
     }
 
     void TextEditor::moveToMatchedBracket(bool select) {
@@ -120,11 +120,11 @@ namespace hex::ui {
         auto oldPos = m_state.m_cursorPosition;
 
 
-        if (isEmpty() || oldPos.m_line >= (i64)m_lines.size())
+        if (isEmpty() || oldPos < Coordinates(0, 0))
             return;
 
         auto lindex = m_state.m_cursorPosition.m_line;
-        auto lineMaxColumn = getLineMaxColumn(lindex);
+        auto lineMaxColumn = getLineMaxCharColumn(lindex);
         auto column = std::min(m_state.m_cursorPosition.m_column, lineMaxColumn);
 
         while (amount-- > 0) {
@@ -163,11 +163,11 @@ namespace hex::ui {
 
         auto oldPos = m_state.m_cursorPosition;
 
-        if (isEmpty() || oldPos.m_line >= (i64) m_lines.size())
+        if (isEmpty() || oldPos > setCoordinates(-1, -1))
             return;
 
         auto lindex = m_state.m_cursorPosition.m_line;
-        auto lineMaxColumn = getLineMaxColumn(lindex);
+        auto lineMaxColumn = getLineMaxCharColumn(lindex);
         auto column = std::min(m_state.m_cursorPosition.m_column, lineMaxColumn);
 
         while (amount-- > 0) {
@@ -184,11 +184,9 @@ namespace hex::ui {
         }
 
         if (select) {
-            if (oldPos == m_interactiveSelection.m_end) {
-                m_interactiveSelection.m_end = Coordinates(m_state.m_cursorPosition);
-                if (m_interactiveSelection.m_end == Invalid)
-                    return;
-            } else if (oldPos == m_interactiveSelection.m_start)
+            if (oldPos == m_interactiveSelection.m_end)
+                m_interactiveSelection.m_end = m_state.m_cursorPosition;
+            else if (oldPos == m_interactiveSelection.m_start)
                 m_interactiveSelection.m_start = m_state.m_cursorPosition;
             else {
                 m_interactiveSelection.m_start = oldPos;
@@ -247,7 +245,7 @@ namespace hex::ui {
                 else {
                     postIdx = postfix.find_first_not_of(" ");
                     if (postIdx == std::string::npos)
-                        home = getLineMaxColumn(oldPos.m_line);
+                        home = getLineMaxCharColumn(oldPos.m_line);
                     else if (postIdx == 0)
                         home = 0;
                     else
@@ -262,7 +260,7 @@ namespace hex::ui {
             else {
                 postIdx = postfix.find_first_not_of(" ");
                 if (postIdx == std::string::npos)
-                    home = getLineMaxColumn(oldPos.m_line);
+                    home = getLineMaxCharColumn(oldPos.m_line);
                 else
                     home = oldPos.m_column + postIdx;
             }
@@ -288,7 +286,7 @@ namespace hex::ui {
     void TextEditor::moveEnd(bool select) {
         resetCursorBlinkTime();
         auto oldPos = m_state.m_cursorPosition;
-        setCursorPosition(setCoordinates(m_state.m_cursorPosition.m_line, getLineMaxColumn(oldPos.m_line)));
+        setCursorPosition(setCoordinates(m_state.m_cursorPosition.m_line, getLineMaxCharColumn(oldPos.m_line)));
 
         if (m_state.m_cursorPosition != oldPos) {
             if (select) {
@@ -328,7 +326,7 @@ namespace hex::ui {
         setCursorPosition(m_state.m_selection.m_end);
     }
 
-    TextEditor::Coordinates TextEditor::setCoordinates(i32 line, i32 column) const {
+    TextEditor::Coordinates TextEditor::setCoordinates(i32 line, i32 column) {
         if (isEmpty())
             return Coordinates(0, 0);
 
@@ -339,7 +337,7 @@ namespace hex::ui {
         else
             result.m_line = std::clamp(line, 0, lineCount - 1);
 
-        auto maxColumn = getLineMaxColumn(result.m_line) + 1;
+        auto maxColumn = getLineMaxCharColumn(result.m_line) + 1;
         if (column < 0 && maxColumn + column >= 0)
             result.m_column = maxColumn + column;
         else
@@ -348,12 +346,12 @@ namespace hex::ui {
         return result;
     }
 
-    TextEditor::Coordinates TextEditor::setCoordinates(const Coordinates &value) const {
+    TextEditor::Coordinates TextEditor::setCoordinates(const Coordinates &value) {
         auto sanitized_value = setCoordinates(value.m_line, value.m_column);
         return sanitized_value;
     }
 
-    TextEditor::Selection TextEditor::setCoordinates(const Selection &value) const {
+    TextEditor::Selection TextEditor::setCoordinates(const Selection &value) {
         auto start = setCoordinates(value.m_start);
         auto end = setCoordinates(value.m_end);
         if (start == Invalid || end == Invalid)
@@ -379,7 +377,7 @@ namespace hex::ui {
         coordinates.m_column += incr;
     }
 
-    TextEditor::Coordinates TextEditor::findWordStart(const Coordinates &from) const {
+    TextEditor::Coordinates TextEditor::findWordStart(const Coordinates &from) {
         Coordinates at = setCoordinates(from);
         if (at.m_line >= (i32) m_lines.size())
             return at;
@@ -387,20 +385,21 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isWordChar(line.m_chars[charIndex])) {
-            while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1]))
-                --charIndex;
-        } else if (ispunct(line.m_chars[charIndex])) {
-            while (charIndex > 0 && ispunct(line.m_chars[charIndex - 1]))
-                --charIndex;
-        } else if (isspace(line.m_chars[charIndex])) {
-            while (charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
-                --charIndex;
+        bool found = false;
+        while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1])) {
+            found = true;
+            --charIndex;
         }
+        while (!found && charIndex > 0 && ispunct(line.m_chars[charIndex - 1])) {
+            found = true;
+            --charIndex;
+        }
+        while (!found && charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
+            --charIndex;
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
-    TextEditor::Coordinates TextEditor::findWordEnd(const Coordinates &from) const {
+    TextEditor::Coordinates TextEditor::findWordEnd(const Coordinates &from) {
         Coordinates at = from;
         if (at.m_line >= (i32) m_lines.size())
             return at;
@@ -408,20 +407,22 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isWordChar(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && isWordChar(line.m_chars[charIndex]))
-                ++charIndex;
-        } else if (ispunct(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && ispunct(line.m_chars[charIndex]))
-                ++charIndex;
-        } else if (isspace(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
-                ++charIndex;
+        bool found = false;
+        while (charIndex < (i32) line.m_chars.size() && isWordChar(line.m_chars[charIndex])) {
+            found = true;
+            ++charIndex;
         }
+        while (!found && charIndex < (i32) line.m_chars.size() && ispunct(line.m_chars[charIndex])) {
+            found = true;
+            ++charIndex;
+        }
+        while (!found && charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
+            ++charIndex;
+
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
-    TextEditor::Coordinates TextEditor::findNextWord(const Coordinates &from) const {
+    TextEditor::Coordinates TextEditor::findNextWord(const Coordinates &from)  {
         Coordinates at = from;
         if (at.m_line >= (i32) m_lines.size())
             return at;
@@ -429,21 +430,20 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isspace(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
-                ++charIndex;
+        while (charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
+            ++charIndex;
+        bool found = false;
+        while (charIndex < (i32) line.m_chars.size() && (isWordChar(line.m_chars[charIndex]))) {
+            found = true;
+            ++charIndex;
         }
-        if (isWordChar(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && (isWordChar(line.m_chars[charIndex])))
-                ++charIndex;
-        } else if (ispunct(line.m_chars[charIndex])) {
-            while (charIndex < (i32) line.m_chars.size() && (ispunct(line.m_chars[charIndex])))
-                ++charIndex;
-        }
+        while (!found && charIndex < (i32) line.m_chars.size() && (ispunct(line.m_chars[charIndex])))
+            ++charIndex;
+
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 
-    TextEditor::Coordinates TextEditor::findPreviousWord(const Coordinates &from) const {
+    TextEditor::Coordinates TextEditor::findPreviousWord(const Coordinates &from) {
         Coordinates at = from;
         if (at.m_line >= (i32) m_lines.size())
             return at;
@@ -451,17 +451,17 @@ namespace hex::ui {
         auto &line = m_lines[at.m_line];
         auto charIndex = lineCoordinatesToIndex(at);
 
-        if (isspace(line.m_chars[charIndex - 1])) {
-            while (charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
-                --charIndex;
+        bool found = false;
+        while (charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
+            --charIndex;
+
+        while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1])) {
+            found = true;
+            --charIndex;
         }
-        if (isWordChar(line.m_chars[charIndex - 1])) {
-            while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1]))
-                --charIndex;
-        } else if (ispunct(line.m_chars[charIndex - 1])) {
-            while (charIndex > 0 && ispunct(line.m_chars[charIndex - 1]))
-                --charIndex;
-        }
+        while (!found && charIndex > 0 && ispunct(line.m_chars[charIndex - 1]))
+            --charIndex;
+
         return getCharacterCoordinates(at.m_line, charIndex);
     }
 

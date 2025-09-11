@@ -187,6 +187,13 @@ int main(int argc, char **argv) {
     hex::TaskManager::setMainThreadId(std::this_thread::get_id());
     hex::log::impl::enableColorPrinting();
 
+    if (argc == 1 || (argc == 2 && (std::string_view(argv[1]) == "--help" || std::string_view(argv[1]) == "-h"))) {
+        fmt::print("ImHex Updater - You should probably not run this on its own\n");
+        fmt::print("Usage: updater <version-type>\n");
+        fmt::print("  version-type: The type of version to update to. Can be either 'stable' or 'nightly'.\n");
+        return EXIT_SUCCESS;
+    }
+
     // Check we have the correct number of arguments
     if (argc != 2) {
         hex::log::error("Failed to start updater: Invalid arguments");

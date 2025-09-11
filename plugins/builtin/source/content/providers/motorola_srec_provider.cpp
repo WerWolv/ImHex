@@ -1,9 +1,8 @@
 #include "content/providers/motorola_srec_provider.hpp"
 
-
 #include <hex/api/localization_manager.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
@@ -183,22 +182,7 @@ namespace hex::plugin::builtin {
             this->setErrorMessage(data.error());
             return false;
         }
-
-        std::optional<u64> maxAddress;
-        for (auto &[address, bytes] : data.value()) {
-            auto endAddress = (address + bytes.size()) - 1;
-            m_data.emplace({ address, endAddress }, std::move(bytes));
-
-            if (endAddress > maxAddress)
-                maxAddress = endAddress;
-        }
-
-        if (maxAddress.has_value())
-            m_dataSize = *maxAddress + 1;
-        else
-            m_dataSize = 0x00;
-
-        m_dataValid = true;
+        processMemoryRegions(data);
 
         return true;
     }

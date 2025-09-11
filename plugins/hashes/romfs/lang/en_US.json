@@ -7,6 +7,7 @@
     "hex.hashes.view.hashes.name": "Hashes",
     "hex.hashes.view.hashes.no_settings": "No settings available",
     "hex.hashes.view.hashes.add": "Add hash",
+    "hex.hashes.view.hashes.table_add": "(Double click to add new Hash...)",
     "hex.hashes.view.hashes.remove": "Remove hash",
     "hex.hashes.view.hashes.hash_name": "Hash Name",
     "hex.hashes.view.hashes.table.name": "Name",

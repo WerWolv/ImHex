@@ -131,19 +131,53 @@ namespace hex::plugin::yara {
     }
 
     void ViewYara::drawContent() {
-        ImGuiExt::Header("hex.yara_rules.view.yara.header.rules"_lang, true);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+        if (ImGuiExt::BeginSubWindow("hex.yara_rules.view.yara.header.rules"_lang, nullptr, ImVec2(0, 150_scaled))) {
+            if (ImGui::BeginTable("##rules", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH)) {
+                ImGui::TableSetupColumn("##rule", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("##delete", ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
 
-        if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
-            for (u32 i = 0; i < m_rulePaths->size(); i++) {
-                const bool selected = (*m_selectedRule == i);
-                if (ImGui::Selectable(wolv::util::toUTF8String((*m_rulePaths)[i].first).c_str(), selected)) {
-                    *m_selectedRule = i;
+                std::optional<u32> indexToErase;
+                for (u32 i = 0; i < m_rulePaths->size(); i++) {
+                    ImGui::PushID(i + 1);
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Indent(5_scaled);
+                    ImGui::TextUnformatted(wolv::util::toUTF8String((*m_rulePaths)[i].first).c_str());
+                    ImGui::Unindent(5_scaled);
+
+                    ImGui::TableNextColumn();
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_TRASH, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        indexToErase = i;
+                    }
+                    ImGui::PopStyleVar();
+                    ImGui::PopID();
                 }
+
+                if (indexToErase.has_value()) {
+                    m_rulePaths->erase(m_rulePaths->begin() + *indexToErase);
+                }
+
+                ImGui::EndTable();
             }
-            ImGui::EndListBox();
+        }
+        ImGuiExt::EndSubWindow();
+        ImGui::PopStyleVar();
+
+        ImGui::BeginDisabled(m_rulePaths->empty());
+        if (ImGuiExt::DimmedButton("hex.yara_rules.view.yara.match"_lang))
+            this->applyRules();
+        ImGui::EndDisabled();
+
+        if (m_matcherTask.isRunning()) {
+            ImGui::SameLine(0, 20_scaled);
+            ImGuiExt::TextSpinner("hex.yara_rules.view.yara.matching"_lang);
         }
 
-        if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(ImGui::GetWindowSize().x - ImGui::CalcTextSize(ICON_VS_ADD).x - ImGui::GetStyle().ItemSpacing.x * 2);
+        if (ImGuiExt::DimmedIconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
             const auto basePaths = paths::Yara.read();
             std::vector<std::fs::path> paths;
             for (const auto &path : basePaths) {
@@ -162,63 +196,68 @@ namespace hex::plugin::yara {
             });
         }
 
-        ImGui::SameLine();
-        ImGui::BeginDisabled(*m_selectedRule >= m_rulePaths->size());
-        if (ImGuiExt::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            m_rulePaths->erase(m_rulePaths->begin() + *m_selectedRule);
-            m_selectedRule = std::min(*m_selectedRule, u32(m_rulePaths->size() - 1));
-        }
-        ImGui::EndDisabled();
-
         ImGui::NewLine();
-
-        ImGui::BeginDisabled(m_rulePaths->empty());
-        if (ImGuiExt::DimmedButton("hex.yara_rules.view.yara.match"_lang)) this->applyRules();
-        ImGui::EndDisabled();
-
-        if (m_matcherTask.isRunning()) {
-            ImGui::SameLine();
-            ImGuiExt::TextSpinner("hex.yara_rules.view.yara.matching"_lang);
-        }
-
-        ImGuiExt::Header("hex.yara_rules.view.yara.header.matches"_lang);
 
         auto matchesTableSize = ImGui::GetContentRegionAvail();
         matchesTableSize.y *= 3.75 / 5.0;
         matchesTableSize.y -= ImGui::GetTextLineHeightWithSpacing();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+        if (ImGuiExt::BeginSubWindow("hex.yara_rules.view.yara.header.matches"_lang, nullptr, matchesTableSize)) {
+            if (ImGui::BeginTable("matches", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn("hex.yara_rules.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_None, 0.5);
+                ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_None, 0.25);
+                ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_None, 0.25);
 
-        if (ImGui::BeginTable("matches", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, matchesTableSize)) {
-            ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.yara_rules.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("variable"));
-            ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("address"));
-            ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
+                ImGui::TableHeadersRow();
 
-            ImGui::TableHeadersRow();
+                if (!m_matcherTask.isRunning()) {
+                    u32 ruleId = 1;
+                    for (const auto &rule : *m_matchedRules) {
+                        if (rule.matches.empty()) continue;
 
-            if (!m_matcherTask.isRunning()) {
-                for (const auto &rule : *m_matchedRules) {
-                    if (rule.matches.empty()) continue;
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
 
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
+                        ImGui::PushID(ruleId);
+                        ImGui::PushStyleVarX(ImGuiStyleVar_FramePadding, 0.0F);
+                        const bool open = ImGui::TreeNodeEx("##TreeNode", ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+                        ImGui::PopStyleVar();
+                        ImGui::SameLine();
+                        ImGui::TextUnformatted(rule.identifier.c_str());
+                        if (open) {
+                            u32 matchId = 1;
+                            for (const auto &match : rule.matches) {
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                ImGui::PushID(matchId);
 
-                    if (ImGui::TreeNode(rule.identifier.c_str())) {
-                        for (const auto &match : rule.matches) {
-                            ImGui::TableNextRow();
-                            ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(match.variable.c_str());
-                            ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(fmt::format("0x{0:08X}", match.region.getStartAddress()).c_str());
-                            ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(fmt::format("0x{0:08X}", match.region.getSize()).c_str());
+                                if (ImGui::Selectable("##match_selectable", false, ImGuiSelectableFlags_SpanAllColumns)) {
+                                    ImHexApi::HexEditor::setSelection(match.region);
+                                }
+
+                                ImGui::SameLine();
+                                ImGui::TextUnformatted(match.variable.c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted(fmt::format("0x{0:08X}", match.region.getStartAddress()).c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted(fmt::format("0x{0:08X}", match.region.getSize()).c_str());
+
+                                ImGui::PopID();
+                                matchId += 1;
+                            }
+                            ImGui::TreePop();
                         }
-                        ImGui::TreePop();
+                        ImGui::PopID();
+                        ruleId += 1;
                     }
                 }
-            }
 
-            ImGui::EndTable();
+                ImGui::EndTable();
+            }
         }
+        ImGuiExt::EndSubWindow();
+        ImGui::PopStyleVar();
 
         auto consoleSize = ImGui::GetContentRegionAvail();
 

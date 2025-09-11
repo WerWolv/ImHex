@@ -88,7 +88,7 @@ namespace hex {
 
 
 
-    std::pair<std::string_view, size_t> EncodingFile::getEncodingFor(std::span<u8> buffer) const {
+    std::pair<std::string_view, size_t> EncodingFile::getEncodingFor(std::span<const u8> buffer) const {
         for (auto riter = m_mapping->crbegin(); riter != m_mapping->crend(); ++riter) {
             const auto &[size, mapping] = *riter;
 
@@ -115,6 +115,19 @@ namespace hex {
 
         return 1;
     }
+
+    std::string EncodingFile::decodeAll(std::span<const u8> buffer) const {
+        std::string result;
+
+        while (!buffer.empty()) {
+            const auto [character, size] = getEncodingFor(buffer);
+            result += character;
+            buffer = buffer.subspan(size);
+        }
+
+        return result;
+    }
+
 
     void EncodingFile::parse(const std::string &content) {
         m_tableContent = content;

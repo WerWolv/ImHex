@@ -443,8 +443,8 @@ namespace ImGuiExt {
         ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(label);
-        const ImVec2 text_size  = CalcTextSize(label, nullptr, true) + CalcTextSize(description, nullptr, true);
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
+        const ImVec2 text_size  = label_size + CalcTextSize(description, nullptr, true);
 
         ImVec2 pos = window->DC.CursorPos;
         if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset)    // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
@@ -550,7 +550,7 @@ namespace ImGuiExt {
 
         PushStyleColor(ImGuiCol_Text, iconColor);
         ImGui::PushID(text);
-        Button(icon);
+        Button(icon, ImVec2(0, ImGui::GetTextLineHeightWithSpacing()));
         ImGui::PopID();
         PopStyleColor();
 
@@ -1046,7 +1046,7 @@ namespace ImGuiExt {
         std::string drawString;
         auto textEnd = text + strlen(text);
         for (auto wrapPos = text; wrapPos != textEnd;) {
-            wrapPos = ImGui::GetFont()->CalcWordWrapPosition(1, wrapPos, textEnd, availableSpace.x * 0.8F);
+            wrapPos = ImGui::GetFont()->CalcWordWrapPosition(GetFontSize(), wrapPos, textEnd, availableSpace.x * 0.8F);
             drawString += std::string(text, wrapPos) + "\n";
             text = wrapPos;
         }
@@ -1169,14 +1169,14 @@ namespace ImGuiExt {
         return pressed;
     }
 
-    bool DimmedButton(const char* label, ImVec2 size){
+    bool DimmedButton(const char* label, ImVec2 size, ImGuiButtonFlags flags){
         PushStyleColor(ImGuiCol_ButtonHovered, GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
         PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
         PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
         PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-        bool res = Button(label, size);
+        bool res = ButtonEx(label, size, flags);
 
         PopStyleColor(4);
         PopStyleVar(1);
@@ -1275,12 +1275,15 @@ namespace ImGuiExt {
     }
 
     bool BeginBox() {
-        PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5, 5));
-        auto result = BeginTable("##box", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchSame);
-        TableNextRow();
-        TableNextColumn();
+        PushStyleVar(ImGuiStyleVar_CellPadding, hex::scaled(5, 5));
+        if (BeginTable("##box", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchSame)) {
+            TableNextRow();
+            TableNextColumn();
 
-        return result;
+            return true;
+        }
+
+        return false;
     }
 
     void EndBox() {
