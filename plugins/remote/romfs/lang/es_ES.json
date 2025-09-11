@@ -1,1 +1,7 @@
-{}
+{
+    "hex.plugin.remote.ssh_provider": "Archivo SSH Remoto",
+    "hex.plugin.remote.ssh_provider.port": "Puerto",
+    "hex.plugin.remote.ssh_provider.username": "Usuario",
+    "hex.plugin.remote.ssh_provider.password": "Contraseña",
+    "hex.plugin.remote.ssh_provider.connect": "Conectar"
+}
