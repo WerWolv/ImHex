@@ -20,6 +20,7 @@
 #include <wolv/utils/string.hpp>
 
 #include <ranges>
+#include <fonts/tabler_icons.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -277,11 +278,11 @@ namespace hex::plugin::builtin {
             const auto providerEndAddress = baseAddress + providerSize;
 
             ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getStartAddress() < baseAddress + requiredSize);
-            if (ImGuiExt::DimmedIconButton(ICON_VS_CHEVRON_LEFT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSizeSmall)) {
+            if (ImGuiExt::DimmedIconButton(ICON_TA_CHEVRON_LEFT_PIPE, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSizeSmall)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() % requiredSize, requiredSize });
             }
             ImGui::SameLine();
-            if (ImGuiExt::DimmedIconButton(ICON_VS_ARROW_LEFT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
+            if (ImGuiExt::DimmedIconButton(ICON_TA_CHEVRON_LEFT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() - requiredSize, requiredSize });
             }
             ImGui::EndDisabled();
@@ -289,11 +290,11 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
 
             ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getEndAddress() >= providerEndAddress - requiredSize);
-            if (ImGuiExt::DimmedIconButton(ICON_VS_ARROW_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
+            if (ImGuiExt::DimmedIconButton(ICON_TA_CHEVRON_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
                 ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() + requiredSize, requiredSize });
             }
             ImGui::SameLine();
-            if (ImGuiExt::DimmedIconButton(ICON_VS_CHEVRON_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSizeSmall)) {
+            if (ImGuiExt::DimmedIconButton(ICON_TA_CHEVRON_RIGHT_PIPE, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSizeSmall)) {
                 ImHexApi::HexEditor::setSelection(Region { providerEndAddress - selection->getStartAddress() % requiredSize - requiredSize, requiredSize });
             }
             ImGui::EndDisabled();
