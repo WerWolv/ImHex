@@ -99,29 +99,22 @@ namespace hex::plugin::builtin {
         }
 
         std::vector<std::string> fullPaths;
-        bool doubleDashFound = false;
-        for (auto &arg : args) {
+        for (const auto &arg : args) {
+            try {
+                std::fs::path path;
 
-            // Skip the first argument named `--`
-            if (arg == "--" && !doubleDashFound) {
-                doubleDashFound = true;
-            } else {
                 try {
-                    std::fs::path path;
-
-                    try {
-                        path = std::fs::weakly_canonical(arg);
-                    } catch(std::fs::filesystem_error &) {
-                        path = arg;
-                    }
-
-                    if (path.empty())
-                        continue;
-
-                    fullPaths.push_back(wolv::util::toUTF8String(path));
-                } catch (std::exception &e) {
-                    log::error("Failed to open file '{}'\n    {}", arg, e.what());
+                    path = std::fs::weakly_canonical(arg);
+                } catch(std::fs::filesystem_error &) {
+                    path = arg;
                 }
+
+                if (path.empty())
+                    continue;
+
+                fullPaths.push_back(wolv::util::toUTF8String(path));
+            } catch (std::exception &e) {
+                log::error("Failed to open file '{}'\n    {}", arg, e.what());
             }
         }
 
@@ -541,9 +534,6 @@ namespace hex::plugin::builtin {
     void registerCommandForwarders() {
         hex::subcommands::registerSubCommand("open", [](const std::vector<std::string> &args){
             for (auto &arg : args) {
-                if (arg.starts_with("--"))
-                    break;
-
                 RequestOpenFile::post(arg);
             }
         });
