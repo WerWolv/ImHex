@@ -50,5 +50,9 @@
     {
         "code": "ko-KR",
         "path": "lang/ko_KR.json"
+    },
+    {
+        "code": "uk-UA",
+        "path": "lang/uk_UA.json"
     }
 ]

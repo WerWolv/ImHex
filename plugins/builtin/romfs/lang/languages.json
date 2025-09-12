@@ -88,5 +88,12 @@
         "native_name": "한국어",
         "path": "lang/ko_KR.json",
         "fallback": "en-US"
+    },
+    {
+        "name": "Ukrainian",
+        "code": "uk-UA",
+        "native_name": "Українська",
+        "path": "lang/uk_UA.json",
+        "fallback": "en-US"
     }
 ]
