@@ -24,6 +24,7 @@
 
 #include <utility>
 #include <hex/api/plugin_manager.hpp>
+#include <hex/helpers/debugging.hpp>
 #include <romfs/romfs.hpp>
 
 #if defined(OS_WEB)
@@ -844,7 +845,10 @@ namespace hex::plugin::builtin {
                 }
 
                 for (auto &[languageCode, definition] : LocalizationManager::getLanguageDefinitions()) {
-                    languageNames.emplace_back(fmt::format("{} ({})", definition.nativeName, definition.name));
+                    if (!dbg::debugModeEnabled() && definition.hidden)
+                        continue;
+
+                    languageNames.emplace_back(fmt::format("{} ({}) {}", definition.nativeName, definition.name, definition.hidden ? "[WORK IN PROGRESS]" : ""));
                     languageCodes.emplace_back(languageCode);
                 }
 

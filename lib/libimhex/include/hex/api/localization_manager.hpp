@@ -27,6 +27,7 @@ EXPORT_MODULE namespace hex {
             LanguageId id;
             std::string name, nativeName;
             LanguageId fallbackLanguageId;
+            bool hidden;
 
             std::vector<PathEntry> languageFilePaths;
         };

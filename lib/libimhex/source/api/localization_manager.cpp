@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 
 #include <mutex>
+#include <hex/helpers/debugging.hpp>
 
 namespace hex {
 
@@ -47,6 +48,10 @@ namespace hex {
 
                 if (definition.fallbackLanguageId.empty() && item.contains("fallback")) {
                     definition.fallbackLanguageId = item["fallback"].get<std::string>();
+                }
+
+                if (item.contains("hidden") && item["hidden"].get<bool>() == true) {
+                    definition.hidden = true;
                 }
 
                 const auto path = item["path"].get<std::string>();
@@ -154,7 +159,14 @@ namespace hex {
 
         const LanguageDefinition& getLanguageDefinition(const LanguageId &languageId) {
             const auto bestMatch = findBestLanguageMatch(languageId);
-            return (*s_languageDefinitions)[bestMatch];
+            const auto &result = (*s_languageDefinitions)[bestMatch];
+
+            if (!dbg::debugModeEnabled()) {
+                if (result.hidden)
+                    return getLanguageDefinition(result.fallbackLanguageId);
+            }
+
+            return result;
         }
 
     }
