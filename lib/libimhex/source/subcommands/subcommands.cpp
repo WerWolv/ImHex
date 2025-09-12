@@ -43,7 +43,8 @@ namespace hex::subcommands {
 
         if (*argsIter == "--") {
             // Treat the rest of the args as files
-            std::vector<std::string> remainingArgs(++argsIter, args.end());
+            ++argsIter;
+            std::vector<std::string> remainingArgs(argsIter, args.end());
             subCommands.emplace_back(*findSubCommand("--open"), remainingArgs);
             argsIter = args.end(); // Skip while loop
         } else if (!findSubCommand(*argsIter)) {
@@ -60,8 +61,8 @@ namespace hex::subcommands {
                 // Treat the rest of the args as files
                 subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
 
-                std::vector<std::string> remainingArgs(argsIter, args.end());
                 ++argsIter;
+                std::vector<std::string> remainingArgs(argsIter, args.end());
 
                 subCommands.emplace_back(*findSubCommand("--open"), remainingArgs);
 
@@ -77,7 +78,8 @@ namespace hex::subcommands {
                 }
 
                 if (newSubCommand->type == SubCommand::Type::SubCommand) {
-                    std::vector<std::string> remainingArgs(++argsIter, args.end());
+                    ++argsIter;
+                    std::vector<std::string> remainingArgs(argsIter, args.end());
                     subCommands.emplace_back(*newSubCommand, remainingArgs);
 
                     currentSubCommand = std::nullopt;
