@@ -99,8 +99,7 @@ namespace hex::plugin::builtin {
         }
 
         std::vector<std::string> fullPaths;
-        for (auto &arg : args) {
-
+        for (const auto &arg : args) {
             try {
                 std::fs::path path;
 

@@ -55,13 +55,14 @@ namespace hex::subcommands {
         while (argsIter != args.end()) {
             // Get subcommand associated with the argument
             // Guaranteed to find a match on the first argument, as the other case has been handled above
-            std::optional<SubCommand> newSubCommand = findSubCommand(*argsIter);
-
+            const auto newSubCommand = findSubCommand(*argsIter);
             if (*argsIter == "--") {
                 // Treat the rest of the args as files
                 subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
 
-                std::vector<std::string> remainingArgs(++argsIter, args.end());
+                std::vector<std::string> remainingArgs(argsIter, args.end());
+                ++argsIter;
+
                 subCommands.emplace_back(*findSubCommand("--open"), remainingArgs);
 
                 currentSubCommand = std::nullopt;
@@ -70,8 +71,8 @@ namespace hex::subcommands {
             }
 
             // Will always take this `if` statement on the first time through the loop
-            if (newSubCommand) {
-                if (currentSubCommand) {
+            if (newSubCommand.has_value()) {
+                if (currentSubCommand.has_value()) {
                     subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
                 }
 
@@ -94,12 +95,12 @@ namespace hex::subcommands {
         }
 
         // Save last command to run
-        if (currentSubCommand) {
+        if (currentSubCommand.has_value()) {
             subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
         }
 
         // Run the subcommands
-        for (auto &[subcommand, subCommandArgs] : subCommands) {
+        for (const auto &[subcommand, subCommandArgs] : subCommands) {
             subcommand.callback(subCommandArgs);
         }
 
