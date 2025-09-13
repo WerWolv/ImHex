@@ -427,3 +427,9 @@ certificate by [SignPath Foundation](https://signpath.org/).
 This program will not transfer any information to other networked systems
 unless specifically requested by the user or the person installing or
 operating it.
+
+#### People with direct push access
+- [WerWolv](https://github.com/WerWolv)
+- [iTrooz](https://github.com/iTrooz)
+- [jumanji144](https://github.com/jumanji144)
+- [AxCut](https://github.com/paxcut)
