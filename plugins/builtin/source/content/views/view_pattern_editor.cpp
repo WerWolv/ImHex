@@ -585,7 +585,8 @@ namespace hex::plugin::builtin {
 
                     ImGui::SameLine(0, 0);
 
-                    ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()), ImGuiCond_Always, ImVec2(0.0F, 1.0F));
+                    ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x, ImGui::GetCursorScreenPos().y - ImGui::GetStyle().ItemSpacing.y * 2), ImGuiCond_Always, ImVec2(0.0F, 1.0F));
+                    ImGui::SetNextWindowSizeConstraints(ImVec2(ImGui::GetWindowSize().x, 0.0F), ImVec2(ImGui::GetWindowSize().x, FLT_MAX));
                     if (ImGui::BeginPopup("Pattern Settings")) {
                         this->drawPatternSettings();
                         ImGui::EndPopup();
