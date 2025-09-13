@@ -1,1 +1,10 @@
-{}
+{
+    "hex.plugin.remote.ssh_provider.host": "Хост",
+    "hex.plugin.remote.ssh_provider.port": "Порт",
+    "hex.plugin.remote.ssh_provider.username": "Ім'я користувача",
+    "hex.plugin.remote.ssh_provider.password": "Пароль",
+    "hex.plugin.remote.ssh_provider.key_file": "Шлях до приватного ключа",
+    "hex.plugin.remote.ssh_provider.passphrase": "Пароль",
+    "hex.plugin.remote.ssh_provider.connect": "Підключитись",
+    "hex.plugin.remote.ssh_provider": "Віддалений SSH-файл"
+}

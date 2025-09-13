@@ -1,1 +1,20 @@
-{}
+{
+    "hex.fonts.setting.font.glyphs": "Гліфи",
+    "hex.fonts.setting.font.button.bold": "Ж",
+    "hex.fonts.setting.font.button.italic": "К",
+    "hex.fonts.setting.font.font_bold": "Жирний",
+    "hex.fonts.setting.font.font_italic": "Курсив",
+    "hex.fonts.setting.font.font_antialias": "Згладжування",
+    "hex.fonts.setting.font.font_size": "Розмір шрифту",
+    "hex.fonts.setting.font.font_path": "Шлях до шрифту",
+    "hex.fonts.setting.font.load_all_unicode_chars": "Завантажити всі символи Unicode",
+    "hex.fonts.font.default": "Загальний шрифт інтерфейсу користувача",
+    "hex.fonts.font.hex_editor": "Шрифт Hex-редактора",
+    "hex.fonts.font.code_editor": "Шрифт редактора коду",
+    "hex.fonts.setting.font.antialias_none": "Жодних",
+    "hex.fonts.setting.font.antialias_subpixel": "Субпіксель",
+    "hex.fonts.setting.font": "Шрифт",
+    "hex.fonts.setting.font.custom_font": "Власний шрифт",
+    "hex.fonts.setting.font.custom_font_info": "Наступні налаштування доступні лише у випадку вибору власного шрифту.",
+    "hex.fonts.setting.font.antialias_grayscale": "Відтінки сірого"
+}

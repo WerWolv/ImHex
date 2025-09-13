@@ -1,1 +1,24 @@
-{}
+{
+    "hex.builtin.setting.interface.show_resource_usage": "Показувати використання ресурсів",
+    "hex.windows.view.tty_console.auto_scroll": "Автопрокручування",
+    "hex.windows.view.tty_console.clear": "Очистити",
+    "hex.windows.view.tty_console.config": "Налаштування",
+    "hex.windows.view.tty_console.connect": "Підключитися",
+    "hex.windows.view.tty_console.console": "Консоль",
+    "hex.windows.view.tty_console.cts": "Використовувати керування потоком CTS",
+    "hex.windows.view.tty_console.disconnect": "Відключитися",
+    "hex.windows.view.tty_console.name": "TTY консоль",
+    "hex.windows.view.tty_console.num_bits": "Біти даних",
+    "hex.windows.view.tty_console.parity_bits": "Біт парності",
+    "hex.windows.view.tty_console.port": "Порт",
+    "hex.windows.view.tty_console.reload": "Перезавантажити",
+    "hex.windows.view.tty_console.send_eot": "Надіслати EOT",
+    "hex.windows.view.tty_console.send_etx": "Надіслати ETX",
+    "hex.windows.view.tty_console.send_sub": "Надіслати SUB",
+    "hex.windows.view.tty_console.stop_bits": "Стоп-біти",
+    "hex.windows.view.tty_console.task.transmitting": "Передача даних...",
+    "hex.builtin.setting.general.context_menu_entry": "Додати в контекстне меню Windows",
+    "hex.windows.view.tty_console.baud": "Швидкіть передачі даних",
+    "hex.windows.view.tty_console.connect_error": "Не вдалося підключитися до COM-порту!",
+    "hex.windows.view.tty_console.no_available_port": "Не вибрано допустимий COM-порт або немає доступних COM-портів!"
+}
