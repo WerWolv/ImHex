@@ -70,6 +70,11 @@ namespace hex::plugin::builtin {
                 return;
             }
 
+            if (!m_view->getTextEditor().isEmpty()) {
+                this->close();
+                return;
+            }
+
             ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
             if (ImGui::BeginListBox("##patterns_accept", ImVec2(400_scaled, 0))) {
