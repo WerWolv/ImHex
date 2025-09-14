@@ -72,9 +72,11 @@ namespace hex::plugin::builtin {
             }
 
             ui::TextEditor *editor = m_view->getTextEditor();
-            if (editor != nullptr && !editor->isEmpty()) {
-                this->close();
-                return;
+            if (editor != nullptr) {
+                if (!editor->isEmpty()) {
+                    this->close();
+                    return;
+                }
             } else {
                 log::warn("Text editor not found, provider is null");
             }
