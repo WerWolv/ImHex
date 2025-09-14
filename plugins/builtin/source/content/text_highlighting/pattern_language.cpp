@@ -1252,7 +1252,11 @@ namespace hex::plugin::builtin {
                 }
             }
         }
-        m_viewPatternEditor->getTextEditor().setErrorMarkers(errorMarkers);
+        ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
+        if (editor != nullptr)
+            editor->setErrorMarkers(errorMarkers);
+        else
+            log::warn("Text editor not found, provider is null");
     }
 
 // creates a map from variable names to a vector of token indices
@@ -1590,7 +1594,11 @@ namespace hex::plugin::builtin {
                         lineOfColors[tokenOffset + j] = color;
                 }
             }
-            m_viewPatternEditor->getTextEditor().setColorizedLine(line, lineOfColors);
+            ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
+            if (editor != nullptr)
+                editor->setColorizedLine(line, lineOfColors);
+            else
+                log::warn("Text editor not found, provider is null");
         }
     }
 
@@ -1918,8 +1926,13 @@ namespace hex::plugin::builtin {
         if (!m_lines.empty())
             m_lines.clear();
 
-        if (m_text.empty())
-            m_text = m_viewPatternEditor->getTextEditor().getText();
+        if (m_text.empty()) {
+            ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
+            if (editor != nullptr)
+                m_text = editor->getText();
+            else
+                log::warn("Text editor not found, provider is null");
+        }
 
         m_lines = wolv::util::splitString(m_text, "\n");
         m_lines.push_back("");
@@ -2248,72 +2261,85 @@ namespace hex::plugin::builtin {
             }
         };
         try {
-        m_runningColorizers++;
-        auto preprocessor = patternLanguage->get()->getInternals().preprocessor.get();
-        auto parser = patternLanguage->get()->getInternals().parser.get();
-        using Types = std::map<std::string, pl::hlp::safe_shared_ptr<pl::core::ast::ASTNodeTypeDecl>>;
-        Types types = parser->getTypes();
+            m_runningColorizers++;
+            auto preprocessor = patternLanguage->get()->getInternals().preprocessor.get();
+            auto parser = patternLanguage->get()->getInternals().parser.get();
+            using Types = std::map<std::string, pl::hlp::safe_shared_ptr<pl::core::ast::ASTNodeTypeDecl>>;
+            Types types = parser->getTypes();
 
-        if (!m_UDTs.empty())
-            m_UDTs.clear();
-        for (auto &[name, type]: types)
-            m_UDTs.push_back(name);
+            if (!m_UDTs.empty())
+                m_UDTs.clear();
+            for (auto &[name, type]: types)
+                m_UDTs.push_back(name);
 
-        // Namespaces from included files.
-        m_nameSpaces.clear();
-        m_nameSpaces = preprocessor->getNamespaces();
-        clearVariables();
+            // Namespaces from included files.
+            m_nameSpaces.clear();
+            m_nameSpaces = preprocessor->getNamespaces();
+            clearVariables();
 
-        m_parsedImports = preprocessor->getParsedImports();
-        for (auto &[name, tokens]: m_parsedImports) {
-            m_tokens = tokens;
-            m_text = tokens[0].location.source->content;
+            m_parsedImports = preprocessor->getParsedImports();
+            for (auto &[name, tokens]: m_parsedImports) {
+                m_tokens = tokens;
+                m_text = tokens[0].location.source->content;
+                if (m_text.empty() || m_text == "\n")
+                    return;
+                loadText();
+                processSource();
+                if (!m_tokenColors.empty())
+                    m_tokenColors.clear();
+            }
+
+            m_tokens = preprocessor->getResult();
+            if (m_tokens.empty())
+                return;
+
+            if (!m_globalTokenRange.empty())
+                m_globalTokenRange.clear();
+            m_globalTokenRange.insert(Interval(0, m_tokens.size()-1));
+
+            ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
+            if (editor != nullptr)
+                m_text = editor->getText();
+            else
+                log::warn("Text editor not found, provider is null");
+
             if (m_text.empty() || m_text == "\n")
                 return;
             loadText();
-            processSource();
-            if (!m_tokenColors.empty())
-                m_tokenColors.clear();
-        }
 
-        m_tokens = preprocessor->getResult();
-        if (m_tokens.empty())
-            return;
+            getAllTokenRanges(IdentifierType::NameSpace);
+            getAllTokenRanges(IdentifierType::UDT);
+            getAllTokenRanges(IdentifierType::Function);
+            getGlobalTokenRanges();
+            fixGlobalVariables();
+            setInitialColors();
+            loadInstances();
+            getAllTokenRanges(IdentifierType::Attribute);
+            getDefinitions();
+            fixAutos();
+            fixChains();
 
-        if (!m_globalTokenRange.empty())
-            m_globalTokenRange.clear();
-        m_globalTokenRange.insert(Interval(0, m_tokens.size()-1));
+            m_excludedLocations = preprocessor->getExcludedLocations();
 
-        m_text = m_viewPatternEditor->getTextEditor().getText();
+            colorRemainingIdentifierTokens();
+            setRequestedIdentifierColors();
 
-        if (m_text.empty() || m_text == "\n")
-            return;
-        loadText();
+            editor = m_viewPatternEditor->getTextEditor();
+            if (editor != nullptr)
+                editor->clearErrorMarkers();
+            else
+                log::warn("Text editor not found, provider is null");
+            m_compileErrors = patternLanguage->get()->getCompileErrors();
 
-        getAllTokenRanges(IdentifierType::NameSpace);
-        getAllTokenRanges(IdentifierType::UDT);
-        getAllTokenRanges(IdentifierType::Function);
-        getGlobalTokenRanges();
-        fixGlobalVariables();
-        setInitialColors();
-        loadInstances();
-        getAllTokenRanges(IdentifierType::Attribute);
-        getDefinitions();
-        fixAutos();
-        fixChains();
-
-        m_excludedLocations = preprocessor->getExcludedLocations();
-
-        colorRemainingIdentifierTokens();
-        setRequestedIdentifierColors();
-
-        m_viewPatternEditor->getTextEditor().clearErrorMarkers();
-        m_compileErrors = patternLanguage->get()->getCompileErrors();
-
-        if (!m_compileErrors.empty())
-            renderErrors();
-        else
-            m_viewPatternEditor->getTextEditor().clearErrorMarkers();
+            if (!m_compileErrors.empty())
+                renderErrors();
+            else {
+                editor = m_viewPatternEditor->getTextEditor();
+                if (editor != nullptr)
+                    editor->clearErrorMarkers();
+                else
+                    log::warn("Text editor not found, provider is null");
+            }
         } catch (const std::out_of_range &e) {
             log::debug("TextHighlighter::highlightSourceCode: Out of range error: {}", e.what());
             m_wasInterrupted = true;

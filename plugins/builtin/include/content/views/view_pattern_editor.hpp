@@ -40,8 +40,12 @@ namespace hex::plugin::builtin {
             return &m_editorRuntime;
         }
 
-        ui::TextEditor &getTextEditor() {
-            return m_textEditor;
+        ui::TextEditor *getTextEditor() {
+            auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return nullptr;
+
+            return &m_textEditor.get(provider);
         }
 
         bool getChangesWereParsed() const {

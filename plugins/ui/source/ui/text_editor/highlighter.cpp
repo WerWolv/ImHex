@@ -1,5 +1,6 @@
 #include <ui/text_editor.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/logger.hpp>
 #include <algorithm>
 
 namespace hex::ui {
@@ -50,8 +51,11 @@ namespace hex::ui {
 
         std::smatch results;
         std::string id;
-        if (m_languageDefinition.m_tokenize == nullptr)
+        if (m_languageDefinition.m_tokenize == nullptr) {
             m_languageDefinition.m_tokenize = [](strConstIter, strConstIter, strConstIter &, strConstIter &, PaletteIndex &) { return false; };
+            log::warn("Syntax highlighting tokenize callback is nullptr");
+            return;
+        }
         i32 linesSize = m_lines.size();
         for (i32 i = 0; i < linesSize; ++i) {
             auto &line = m_lines[i];
@@ -74,28 +78,11 @@ namespace hex::ui {
                 PaletteIndex token_color = PaletteIndex::Default;
 
                 bool hasTokenizeResult = m_languageDefinition.m_tokenize(current.m_charsIter, last.m_charsIter, token_begin, token_end, token_color);
-                auto token_offset = token_begin - first.m_charsIter;
-
-                if (!hasTokenizeResult) {
-                    // todo : remove
-                    // printf("using regex for %.*s\n", first + 10 < last ? 10 : i32(last - first), first);
-
-                    for (auto &p: m_regexList) {
-                        if (std::regex_search(first.m_charsIter, last.m_charsIter, results, p.first, std::regex_constants::match_continuous)) {
-                            hasTokenizeResult = true;
-
-                            const auto &v = results.begin();
-                            token_begin = v->first;
-                            token_end = v->second;
-                            token_color = p.second;
-                            break;
-                        }
-                    }
-                }
 
                 if (!hasTokenizeResult)
                     current = current + 1;
                 else {
+                    auto token_offset = token_begin - first.m_charsIter;
                     current = first + token_offset;
                     u64 token_length = 0;
                     Line::Flags flags(0);

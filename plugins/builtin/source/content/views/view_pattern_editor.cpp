@@ -45,6 +45,7 @@
 #include <fonts/fonts.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/menu_items.hpp>
+#include <hex/helpers/logger.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -68,6 +69,16 @@ namespace hex::plugin::builtin {
             if (provider == nullptr) {
                 this->close();
                 return;
+            }
+
+            ui::TextEditor *editor = m_view->getTextEditor();
+            if (editor != nullptr) {
+                if (!editor->isEmpty()) {
+                    this->close();
+                    return;
+                }
+            } else {
+                log::warn("Text editor not found, provider is null");
             }
 
             ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
