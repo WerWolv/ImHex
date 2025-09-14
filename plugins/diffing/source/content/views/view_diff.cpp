@@ -150,6 +150,7 @@ namespace hex::plugin::diffing {
             column.diffTree.clear();
             column.differences.clear();
         }
+        m_analysisInterrupted = m_analyzed  = false;
     }
 
 
