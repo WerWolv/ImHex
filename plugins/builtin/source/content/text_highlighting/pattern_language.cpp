@@ -1255,6 +1255,8 @@ namespace hex::plugin::builtin {
         ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
         if (editor != nullptr)
             editor->setErrorMarkers(errorMarkers);
+        else
+            log::warn("Text editor not found, provider is null");
     }
 
 // creates a map from variable names to a vector of token indices
@@ -1595,6 +1597,8 @@ namespace hex::plugin::builtin {
             ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
             if (editor != nullptr)
                 editor->setColorizedLine(line, lineOfColors);
+            else
+                log::warn("Text editor not found, provider is null");
         }
     }
 
@@ -1926,6 +1930,8 @@ namespace hex::plugin::builtin {
             ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
             if (editor != nullptr)
                 m_text = editor->getText();
+            else
+                log::warn("Text editor not found, provider is null");
         }
 
         m_lines = wolv::util::splitString(m_text, "\n");
@@ -2294,6 +2300,8 @@ namespace hex::plugin::builtin {
             ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
             if (editor != nullptr)
                 m_text = editor->getText();
+            else
+                log::warn("Text editor not found, provider is null");
 
             if (m_text.empty() || m_text == "\n")
                 return;
@@ -2319,6 +2327,8 @@ namespace hex::plugin::builtin {
             editor = m_viewPatternEditor->getTextEditor();
             if (editor != nullptr)
                 editor->clearErrorMarkers();
+            else
+                log::warn("Text editor not found, provider is null");
             m_compileErrors = patternLanguage->get()->getCompileErrors();
 
             if (!m_compileErrors.empty())
@@ -2327,6 +2337,8 @@ namespace hex::plugin::builtin {
                 editor = m_viewPatternEditor->getTextEditor();
                 if (editor != nullptr)
                     editor->clearErrorMarkers();
+                else
+                    log::warn("Text editor not found, provider is null");
             }
         } catch (const std::out_of_range &e) {
             log::debug("TextHighlighter::highlightSourceCode: Out of range error: {}", e.what());
