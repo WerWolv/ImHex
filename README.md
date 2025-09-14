@@ -38,10 +38,11 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 </p>
 
 ### Notable Sponsors
-|                                                                                                  |                                                                                   |
-|:------------------------------------------------------------------------------------------------:|-----------------------------------------------------------------------------------|
-| [![SignPath logo](https://avatars.githubusercontent.com/u/34448643?s=48)](https://signpath.io/)  | SignPath, providing us with free Code Signing Certificates for our Windows builds |
-|   [![AWS logo](https://avatars.githubusercontent.com/u/2232217?s=48)](https://aws.amazon.com)    | Amazon, providing us with free AWS Cloud Credits for our CI                       |
+|                                                                                                     |                                                                                   |
+|:---------------------------------------------------------------------------------------------------:|-----------------------------------------------------------------------------------|
+| [![JetBrains logo](https://avatars.githubusercontent.com/u/878437?s=48)](https://www.jetbrains.com) | JetBrains, providing us with free All Products Pack licenses for development      |
+|   [![SignPath logo](https://avatars.githubusercontent.com/u/34448643?s=48)](https://signpath.io/)   | SignPath, providing us with free Code Signing Certificates for our Windows builds |
+|     [![AWS logo](https://avatars.githubusercontent.com/u/2232217?s=48)](https://aws.amazon.com)     | Amazon, providing us with free AWS Cloud Credits for our CI                       |
 
 Would you like to appear here as well? Contact us at [imhex@werwolv.net](mailto:imhex@werwolv.net)!
 
