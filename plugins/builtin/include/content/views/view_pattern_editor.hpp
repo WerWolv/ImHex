@@ -41,10 +41,11 @@ namespace hex::plugin::builtin {
         }
 
         ui::TextEditor *getTextEditor() {
-            if (ImHexApi::Provider::get() == nullptr)
+            auto provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
                 return nullptr;
 
-            return &m_textEditor.get();
+            return &m_textEditor.get(provider);
         }
 
         bool getChangesWereParsed() const {
