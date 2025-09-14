@@ -70,7 +70,8 @@ namespace hex::plugin::builtin {
                 return;
             }
 
-            if (!m_view->getTextEditor().isEmpty()) {
+            ui::TextEditor *editor = m_view->getTextEditor();
+            if (editor != nullptr && !editor->isEmpty()) {
                 this->close();
                 return;
             }
