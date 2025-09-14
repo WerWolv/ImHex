@@ -9,6 +9,7 @@
 #include <hex/providers/buffered_reader.hpp>
 
 #include <fonts/vscode_icons.hpp>
+#include <fonts/tabler_icons.hpp>
 #include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::diffing {
@@ -460,7 +461,7 @@ namespace hex::plugin::diffing {
     void ViewDiff::registerMenuItems() {
         ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 1700, this);
 
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.diffing.view.diff.menu.file.jumping" }, 1710,
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.diffing.view.diff.menu.file.jumping" }, ICON_TA_ARROWS_MOVE_HORIZONTAL, 1710,
                                                            []{},
                                                            [this]{ return (bool) m_analyzed; },
                                                            this);
@@ -470,6 +471,7 @@ namespace hex::plugin::diffing {
                                                     "hex.diffing.view.diff.menu.file.jumping",
                                                     "hex.diffing.view.diff.menu.file.jumping.prev_diff"
                                                 },
+                                                ICON_TA_ARROW_BAR_TO_LEFT_DASHED,
                                                 1720,
                                                 CTRLCMD + Keys::Left,
                                                 [this] {
@@ -499,7 +501,6 @@ namespace hex::plugin::diffing {
                                                     }
                                                 },
                                                 [this]{ return (bool) m_analyzed; },
-                                                []{ return false; },
                                                 this);
 
         ContentRegistry::UserInterface::addMenuItem({
@@ -507,6 +508,7 @@ namespace hex::plugin::diffing {
                                                     "hex.diffing.view.diff.menu.file.jumping",
                                                     "hex.diffing.view.diff.menu.file.jumping.next_diff"
                                                 },
+                                                ICON_TA_ARROW_BAR_TO_RIGHT_DASHED,
                                                 1730,
                                                 CTRLCMD + Keys::Right,
                                                 [this] {
@@ -536,7 +538,6 @@ namespace hex::plugin::diffing {
                                                     }
                                                 },
                                                 [this]{ return (bool) m_analyzed; },
-                                                []{ return false; },
                                                 this);
     }
 }
