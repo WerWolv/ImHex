@@ -16,8 +16,8 @@
     "hex.diffing.view.diff.settings.no_settings": "No settings available",
     "hex.diffing.view.diff.task.diffing": "Diffing data...",
     "hex.diffing.view.diff.menu.file.jumping": "Jump Between Differences",
-    "hex.diffing.view.diff.menu.file.jumping.next_diff": "Jump to Next Difference",
     "hex.diffing.view.diff.menu.file.jumping.prev_diff": "Jump to Previous Difference",
+    "hex.diffing.view.diff.menu.file.jumping.next_diff": "Jump to Next Difference",
     "hex.diffing.view.diff.jumping.beginning_reached": "No more differences till the beginning of the file",
     "hex.diffing.view.diff.jumping.end_reached": "No more differences till the end of the file"
 }

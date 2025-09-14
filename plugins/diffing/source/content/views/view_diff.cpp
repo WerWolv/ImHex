@@ -39,79 +39,7 @@ namespace hex::plugin::diffing {
         m_columns[0].hexEditor.setBackgroundHighlightCallback(this->createCompareFunction(1));
         m_columns[1].hexEditor.setBackgroundHighlightCallback(this->createCompareFunction(0));
 
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.diffing.view.diff.menu.file.jumping" }, 1700,
-                                                           []{},
-                                                           [this]{ return (bool) m_analyzed; });
-
-        ContentRegistry::UserInterface::addMenuItem({
-                                                    "hex.builtin.menu.file",
-                                                    "hex.diffing.view.diff.menu.file.jumping",
-                                                    "hex.diffing.view.diff.menu.file.jumping.prev_diff"
-                                                },
-                                                1710,
-                                                CTRLCMD + Keys::Left,
-                                                [this] {
-                                                    if (m_selectedProvider == nullptr)
-                                                        return;
-
-                                                    // Get the column of the currently selected region
-                                                    auto providers = ImHexApi::Provider::getProviders();
-                                                    Column *selectedColumn = nullptr;
-                                                    for (auto &column : m_columns) {
-                                                        if (providers[column.provider] == m_selectedProvider) {
-                                                            selectedColumn = &column;
-                                                            break;
-                                                        }
-                                                    }
-
-                                                    if (selectedColumn == nullptr)
-                                                        return;
-
-                                                    // Jump to previous difference
-                                                    auto prevRange = selectedColumn->diffTree.prevInterval(m_selectedAddress);
-                                                    if (prevRange.has_value()) {
-                                                        selectedColumn->hexEditor.setSelection(prevRange->interval.start, prevRange->interval.end);
-                                                        selectedColumn->hexEditor.jumpToSelection();
-                                                    } else {
-                                                        ui::ToastInfo::open("hex.diffing.view.diff.jumping.beginning_reached"_lang);
-                                                    }
-                                                },
-                                                [this]{ return (bool) m_analyzed; });
-
-        ContentRegistry::UserInterface::addMenuItem({
-                                                    "hex.builtin.menu.file",
-                                                    "hex.diffing.view.diff.menu.file.jumping",
-                                                    "hex.diffing.view.diff.menu.file.jumping.next_diff"
-                                                },
-                                                1720,
-                                                CTRLCMD + Keys::Right,
-                                                [this] {
-                                                    if (m_selectedProvider == nullptr)
-                                                        return;
-
-                                                    // Get the column of the currently selected region
-                                                    auto providers = ImHexApi::Provider::getProviders();
-                                                    Column *selectedColumn = nullptr;
-                                                    for (auto &column : m_columns) {
-                                                        if (providers[column.provider] == m_selectedProvider) {
-                                                            selectedColumn = &column;
-                                                            break;
-                                                        }
-                                                    }
-
-                                                    if (selectedColumn == nullptr)
-                                                        return;
-
-                                                    // Jump to next difference
-                                                    auto nextRange = selectedColumn->diffTree.nextInterval(m_selectedAddress);
-                                                    if (nextRange.has_value()) {
-                                                        selectedColumn->hexEditor.setSelection(nextRange->interval.start, nextRange->interval.end);
-                                                        selectedColumn->hexEditor.jumpToSelection();
-                                                    } else {
-                                                        ui::ToastInfo::open("hex.diffing.view.diff.jumping.end_reached"_lang);
-                                                    }
-                                                },
-                                                [this]{ return (bool) m_analyzed; });
+        this->registerMenuItems();
     }
 
     ViewDiff::~ViewDiff() {
@@ -529,5 +457,86 @@ namespace hex::plugin::diffing {
         }
     }
 
+    void ViewDiff::registerMenuItems() {
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 1700, this);
 
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.diffing.view.diff.menu.file.jumping" }, 1710,
+                                                           []{},
+                                                           [this]{ return (bool) m_analyzed; },
+                                                           this);
+
+        ContentRegistry::UserInterface::addMenuItem({
+                                                    "hex.builtin.menu.file",
+                                                    "hex.diffing.view.diff.menu.file.jumping",
+                                                    "hex.diffing.view.diff.menu.file.jumping.prev_diff"
+                                                },
+                                                1720,
+                                                CTRLCMD + Keys::Left,
+                                                [this] {
+                                                    if (m_selectedProvider == nullptr)
+                                                        return;
+
+                                                    // Get the column of the currently selected region
+                                                    auto providers = ImHexApi::Provider::getProviders();
+                                                    Column *selectedColumn = nullptr;
+                                                    for (auto &column : m_columns) {
+                                                        if (providers[column.provider] == m_selectedProvider) {
+                                                            selectedColumn = &column;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    if (selectedColumn == nullptr)
+                                                        return;
+
+                                                    // Jump to previous difference
+                                                    auto prevRange = selectedColumn->diffTree.prevInterval(m_selectedAddress);
+                                                    if (prevRange.has_value()) {
+                                                        selectedColumn->hexEditor.setSelection(prevRange->interval.start, prevRange->interval.end);
+                                                        selectedColumn->hexEditor.jumpToSelection();
+                                                    } else {
+                                                        ui::ToastInfo::open("hex.diffing.view.diff.jumping.beginning_reached"_lang);
+                                                    }
+                                                },
+                                                [this]{ return (bool) m_analyzed; },
+                                                []{ return false; },
+                                                this);
+
+        ContentRegistry::UserInterface::addMenuItem({
+                                                    "hex.builtin.menu.file",
+                                                    "hex.diffing.view.diff.menu.file.jumping",
+                                                    "hex.diffing.view.diff.menu.file.jumping.next_diff"
+                                                },
+                                                1730,
+                                                CTRLCMD + Keys::Right,
+                                                [this] {
+                                                    if (m_selectedProvider == nullptr)
+                                                        return;
+
+                                                    // Get the column of the currently selected region
+                                                    auto providers = ImHexApi::Provider::getProviders();
+                                                    Column *selectedColumn = nullptr;
+                                                    for (auto &column : m_columns) {
+                                                        if (providers[column.provider] == m_selectedProvider) {
+                                                            selectedColumn = &column;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    if (selectedColumn == nullptr)
+                                                        return;
+
+                                                    // Jump to next difference
+                                                    auto nextRange = selectedColumn->diffTree.nextInterval(m_selectedAddress);
+                                                    if (nextRange.has_value()) {
+                                                        selectedColumn->hexEditor.setSelection(nextRange->interval.start, nextRange->interval.end);
+                                                        selectedColumn->hexEditor.jumpToSelection();
+                                                    } else {
+                                                        ui::ToastInfo::open("hex.diffing.view.diff.jumping.end_reached"_lang);
+                                                    }
+                                                },
+                                                [this]{ return (bool) m_analyzed; },
+                                                []{ return false; },
+                                                this);
+    }
 }
