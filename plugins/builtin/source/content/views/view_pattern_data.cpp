@@ -215,11 +215,13 @@ namespace hex::plugin::builtin {
 
                 if (!patternsValid) {
                     ImGui::BeginDisabled();
+                    ImGui::PushID(1);
                     if (ImGui::BeginTabItem("hex.builtin.view.pattern_data.section.main"_lang)) {
                         static ui::PatternDrawer emptyDrawer;
                         emptyDrawer.draw({ }, nullptr, height);
                         ImGui::EndTabItem();
                     }
+                    ImGui::PopID();
                     ImGui::EndDisabled();
                 } else {
                     static i32 selectedSection = -1;
