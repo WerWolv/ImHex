@@ -1,1 +1,7 @@
-{}
+{
+    "hex.script_loader.menu.loading": "Завантаження...",
+    "hex.script_loader.task.updating": "Оновлення скриптів...",
+    "hex.script_loader.task.running": "Запуск скрипту...",
+    "hex.script_loader.menu.run_script": "Запустити скрипт...",
+    "hex.script_loader.menu.no_scripts": "Скриптів не знайдено"
+}
