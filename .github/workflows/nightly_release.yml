@@ -99,6 +99,7 @@ jobs:
           gh release upload nightly ../*.* --clobber
 
       - name: ⬆️ Publish x86_64 Snap package
+        continue-on-error: true
         uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
@@ -107,6 +108,7 @@ jobs:
           release: edge
 
       - name: ⬆️ Publish arm64 Snap package
+        continue-on-error: true
         uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
