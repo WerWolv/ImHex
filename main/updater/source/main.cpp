@@ -127,8 +127,6 @@ std::string_view getUpdateArtifactEnding() {
         } else if (hex::executeCommand("grep -q 'ID=ubuntu' /etc/os-release") == 0) {
             if (hex::executeCommand("grep 'VERSION_ID=\"24.04\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Ubuntu-24.04-x86_64.deb", "");
-            else if (hex::executeCommand("grep -q 'VERSION_ID=\"24.10\"' /etc/os-release") == 0)
-                return ARCH_DEPENDENT("Ubuntu-24.10-x86_64.deb", "");
             else if (hex::executeCommand("grep -q 'VERSION_ID=\"25.04\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Ubuntu-25.04-x86_64.deb", "");
         } else if (hex::executeCommand("grep -q 'ID=fedora' /etc/os-release") == 0) {
