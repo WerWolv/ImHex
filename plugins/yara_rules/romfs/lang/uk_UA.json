@@ -1,1 +1,18 @@
-{}
+{
+    "hex.yara_rules.view.yara.error": "Помилка компілятора YARA: {0}",
+    "hex.yara_rules.view.yara.header.matches": "Співпадіння",
+    "hex.yara_rules.view.yara.header.rules": "Правила",
+    "hex.yara_rules.view.yara.match": "Знайти збіги",
+    "hex.yara_rules.view.yara.matches.identifier": "Ідентифікатор",
+    "hex.yara_rules.view.yara.matches.variable": "Змінна",
+    "hex.yara_rules.view.yara.matching": "Пошук співпадінь...",
+    "hex.yara_rules.view.yara.name": "Правила YARA",
+    "hex.yara_rules.view.yara.no_rules": "Правила YARA не найдені. Помістіть їх у папку 'yara'",
+    "hex.yara_rules.view.yara.reload": "Перезавантажити",
+    "hex.yara_rules.view.yara.reset": "Скинути",
+    "hex.yara_rules.view.yara.rule_added": "Правило YARA додано!",
+    "hex.yara_rules.view.yara.whole_data": "Файл відповідає правилам!",
+    "hex.yara.information_section.advanced_data_info": "Додаткова інформація",
+    "hex.yara.information_section.advanced_data_info.no_information": "Інша інформація відсутня.",
+    "hex.yara.information_section.advanced_data_info.no_information.add_new": "Щоб додати сюди нову інформацію, додайте нові правила відповідності з метатегами «category» та «name» до однієї з папок Yara Advanced Analysis."
+}
