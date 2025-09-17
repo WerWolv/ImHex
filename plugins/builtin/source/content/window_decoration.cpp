@@ -26,6 +26,7 @@
 #include <GLFW/glfw3.h>
 
 #include <random>
+#include <unordered_set>
 
 namespace hex::plugin::builtin {
 
@@ -311,40 +312,44 @@ namespace hex::plugin::builtin {
             }
         }
 
-        bool isMenuItemVisible(const ContentRegistry::UserInterface::impl::MenuItem &menuItem) {
-            const auto lastFocusedView = View::getLastFocusedView();
-            if (lastFocusedView == nullptr && menuItem.view != nullptr) {
+        bool isMenuItemVisible(const View *lastFocusedView, const ContentRegistry::UserInterface::impl::MenuItem &menuItem) {
+            if (!menuItem.view)
+                return true;
+            if (!lastFocusedView)
                 return menuItem.shortcut.has(ShowOnWelcomeScreen);
-            }
-
-            if (lastFocusedView != nullptr && menuItem.view != nullptr) {
-                if (menuItem.view != lastFocusedView && menuItem.view != lastFocusedView->getMenuItemInheritView()) {
-                    return false;
-                }
-            }
-
-            return true;
+            return menuItem.view == lastFocusedView || menuItem.view == lastFocusedView->getMenuItemInheritView();
         }
 
         std::set<UnlocalizedString> getVisibleMainMenus() {
-            std::set<UnlocalizedString> result;
-            for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItems()) {
-                if (isMenuItemVisible(menuItem)) {
-                    result.emplace(menuItem.unlocalizedNames.front());
-                }
-            }
+            static std::set<UnlocalizedString> result;
+            const auto lastFocusedView = View::getLastFocusedView();
+            static std::optional<const View*> prevLastFocusedView;
 
+            if (lastFocusedView == prevLastFocusedView)
+                return result;
+
+            prevLastFocusedView = lastFocusedView;
+            result.clear();
+
+            for (const auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItems()) {
+                if (result.contains(menuItem.unlocalizedNames.front())) [[likely]]
+                    continue;
+
+                if (isMenuItemVisible(lastFocusedView, menuItem))
+                    result.insert(menuItem.unlocalizedNames.front());
+            }
             return result;
         }
 
         void populateMenu(const UnlocalizedString &menuName) {
+            const auto lastFocusedView = View::getLastFocusedView();
             for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItems()) {
                 if (!menuName.empty()) {
                     if (menuItem.unlocalizedNames[0] != menuName)
                         continue;
                 }
 
-                if (!isMenuItemVisible(menuItem)) {
+                if (!isMenuItemVisible(lastFocusedView, menuItem)) {
                     continue;
                 }
 

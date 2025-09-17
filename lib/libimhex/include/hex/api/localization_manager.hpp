@@ -59,7 +59,6 @@ EXPORT_MODULE namespace hex {
 
     private:
         std::size_t m_entryHash;
-        std::string m_unlocalizedString;
     };
 
     class LangConst {

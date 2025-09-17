@@ -276,7 +276,7 @@ EXPORT_MODULE namespace hex {
          * @brief Gets the current ImHex version
          * @return ImHex version
          */
-        SemanticVersion getImHexVersion();
+        const SemanticVersion& getImHexVersion();
 
         /**
          * @brief Gets the current git commit hash

@@ -494,7 +494,7 @@ namespace ImGuiExt {
         ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(label);
-        const ImVec2 text_size  = CalcTextSize((std::string(label) + "\n  " + std::string(description)).c_str(), nullptr, true);
+        const ImVec2 text_size  = CalcTextSize(fmt::format("{}\n{}", label, description).c_str(), nullptr, true);
         const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         ImVec2 pos = window->DC.CursorPos;
@@ -1296,7 +1296,8 @@ namespace ImGuiExt {
 
         bool result = false;
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0F);
-        if (ImGui::BeginChild(fmt::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+        ImGui::PushID("SubWindow");
+        if (ImGui::BeginChild(label, size, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
             result = true;
 
             if (hasMenuBar && ImGui::BeginMenuBar()) {
@@ -1329,6 +1330,7 @@ namespace ImGuiExt {
 
     void EndSubWindow() {
         ImGui::EndChild();
+        ImGui::PopID();
     }
 
     bool VSliderAngle(const char* label, const ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags) {
