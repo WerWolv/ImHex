@@ -387,6 +387,8 @@ namespace hex::plugin::builtin::recent {
 
                 menu::endMenu();
             }
+        }, [] {
+            return TaskManager::getRunningTaskCount() == 0 && !s_recentEntriesUpdating && !s_recentEntries.empty();
         });
     }
 }
