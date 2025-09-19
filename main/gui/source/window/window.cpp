@@ -1266,7 +1266,7 @@ namespace hex {
 
         #if defined(IMGUI_TEST_ENGINE)
             m_testEngine = ImGuiTestEngine_CreateContext();
-            auto testEngineIo = ImGuiTestEngine_GetIO(m_testEngine);
+            auto &testEngineIo = ImGuiTestEngine_GetIO(m_testEngine);
             testEngineIo.ConfigVerboseLevel = ImGuiTestVerboseLevel_Info;
             testEngineIo.ConfigVerboseLevelOnError = ImGuiTestVerboseLevel_Debug;
 

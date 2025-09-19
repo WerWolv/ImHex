@@ -271,7 +271,7 @@ static void TestStatusButton(const char* id, const ImVec4& color, bool running, 
     }
 }
 
-static void ShowTestGroup(ImGuiTestEngine* e, ImGuiTestGroup group, Str* filter)
+static void ShowTestGroup(ImGuiTestEngine* e, ImGuiTestGroup group, Str* filter, bool run)
 {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
@@ -285,14 +285,14 @@ static void ShowTestGroup(ImGuiTestEngine* e, ImGuiTestGroup group, Str* filter)
     //ImGui::Text("TESTS (%d)", engine->TestsAll.Size);
 #if IMGUI_VERSION_NUM >= 19066
     ImGui::SetNextItemShortcut(ImGuiMod_Ctrl | ImGuiKey_R, ImGuiInputFlags_Tooltip | ImGuiInputFlags_RouteFromRootWindow);
-    bool run = ImGui::Button("Run");
+    run |= ImGui::Button("Run");
 #elif IMGUI_VERSION_NUM >= 18837
-    bool run = ImGui::Button("Run") || ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_R);
+    run |= ImGui::Button("Run") || ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_R);
 #if IMGUI_VERSION_NUM > 18963
     ImGui::SetItemTooltip("Ctrl+R");
 #endif
 #else
-    bool run = ImGui::Button("Run");
+    run |= ImGui::Button("Run");
 #endif
     if (run)
     {
@@ -652,7 +652,13 @@ static void ImGuiTestEngine_ShowLogAndTools(ImGuiTestEngine* engine)
     {
         ImGuiIO& io = ImGui::GetIO();
         ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-        ImGui::Text("TestEngine: HookItems: %d, HookPushId: %d, InfoTasks: %d", g.TestEngineHookItems, g.DebugHookIdInfo != 0, engine->InfoTasks.Size);
+        ImGui::Text("TestEngine: HookItems: %d, HookPushId: %d, InfoTasks: %d", g.TestEngineHookItems,
+#if IMGUI_VERSION_NUM < 19229
+            g.DebugHookIdInfo != 0,
+#else
+            g.DebugHookIdInfoId != 0,
+#endif
+            engine->InfoTasks.Size);
         ImGui::Separator();
 
         if (ImGui::Button("Reboot UI context"))
@@ -739,8 +745,18 @@ static void ImGuiTestEngine_ShowTestTool(ImGuiTestEngine* engine, bool* p_open)
         return;
     }
 
+    bool run = false;
     if (ImGui::BeginMenuBar())
     {
+        if (ImGui::BeginMenu("Tests"))
+        {
+            // FIXME: This idiom showcases an issue with menus vs shortcuts. Would be nice if e.g. we could activate a shortcut?
+            run = ImGui::MenuItem("Run Visible", "Ctrl+R");
+            ImGui::MenuItem("Filter", "Ctrl+F");
+            if (p_open != NULL && ImGui::MenuItem("Close"))
+                *p_open = false;
+            ImGui::EndMenu();
+        }
         if (ImGui::BeginMenu("Tools"))
         {
             ImGuiContext& g = *GImGui;
@@ -824,12 +840,12 @@ static void ImGuiTestEngine_ShowTestTool(ImGuiTestEngine* engine, bool* p_open)
     {
         if (ImGui::BeginTabItem("TESTS", nullptr, ImGuiTabItemFlags_NoPushId))
         {
-            ShowTestGroup(engine, ImGuiTestGroup_Tests, engine->UiFilterTests);
+            ShowTestGroup(engine, ImGuiTestGroup_Tests, engine->UiFilterTests, run);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("PERFS", nullptr, ImGuiTabItemFlags_NoPushId))
         {
-            ShowTestGroup(engine, ImGuiTestGroup_Perfs, engine->UiFilterPerfs);
+            ShowTestGroup(engine, ImGuiTestGroup_Perfs, engine->UiFilterPerfs, run);
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
