@@ -899,12 +899,13 @@ namespace hex {
             return { { name, version } };
         }
 
-        SemanticVersion getImHexVersion() {
+        const SemanticVersion& getImHexVersion() {
             #if defined(IMHEX_VERSION)
                 static auto version = SemanticVersion(IMHEX_VERSION);
                 return version;
             #else
-                return {};
+                static auto version = SemanticVersion();
+                return version;
             #endif
         }
 
@@ -946,7 +947,9 @@ namespace hex {
         }
 
         bool isNightlyBuild() {
-            return getImHexVersion().nightly();
+            const static bool isNightly = getImHexVersion().nightly();
+
+            return isNightly;
         }
 
         std::optional<std::string> checkForUpdate() {

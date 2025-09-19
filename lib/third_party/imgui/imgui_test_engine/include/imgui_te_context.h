@@ -157,6 +157,7 @@ struct IMGUI_API ImGuiTestGenericItemStatus
 {
     int     RetValue;               // return value
     int     Hovered;                // result of IsItemHovered()
+    int     HoveredAllowDisabled;   // result of IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)
     int     Active;                 // result of IsItemActive()
     int     Focused;                // result of IsItemFocused()
     int     Clicked;                // result of IsItemClicked()
@@ -169,7 +170,7 @@ struct IMGUI_API ImGuiTestGenericItemStatus
     ImGuiTestGenericItemStatus()        { Clear(); }
     void Clear()                        { memset(this, 0, sizeof(*this)); }
     void QuerySet(bool ret_val = false) { Clear(); QueryInc(ret_val); }
-    void QueryInc(bool ret_val = false) { RetValue += ret_val; Hovered += ImGui::IsItemHovered(); Active += ImGui::IsItemActive(); Focused += ImGui::IsItemFocused(); Clicked += ImGui::IsItemClicked(); Visible += ImGui::IsItemVisible(); Edited += ImGui::IsItemEdited(); Activated += ImGui::IsItemActivated(); Deactivated += ImGui::IsItemDeactivated(); DeactivatedAfterEdit += ImGui::IsItemDeactivatedAfterEdit(); }
+    void QueryInc(bool ret_val = false) { RetValue += ret_val; Hovered += ImGui::IsItemHovered(); HoveredAllowDisabled += ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled); Active += ImGui::IsItemActive(); Focused += ImGui::IsItemFocused(); Clicked += ImGui::IsItemClicked(); Visible += ImGui::IsItemVisible(); Edited += ImGui::IsItemEdited(); Activated += ImGui::IsItemActivated(); Deactivated += ImGui::IsItemDeactivated(); DeactivatedAfterEdit += ImGui::IsItemDeactivatedAfterEdit(); }
     void Draw()                         { ImGui::Text("Ret: %d, Hovered: %d, Active: %d, Focused: %d\nClicked: %d, Visible: %d, Edited: %d\nActivated: %d, Deactivated: %d, DeactivatedAfterEdit: %d", RetValue, Hovered, Active, Focused, Clicked, Visible, Edited, Activated, Deactivated, DeactivatedAfterEdit); }
 };
 
@@ -187,6 +188,7 @@ struct IMGUI_API ImGuiTestGenericVars
     ImGuiWindowFlags        WindowFlags;
     ImGuiTableFlags         TableFlags;
     ImGuiPopupFlags         PopupFlags;
+    ImGuiInputTextFlags     InputTextFlags;
     ImGuiTestGenericItemStatus  Status;
     bool                    ShowWindow1, ShowWindow2;
     bool                    UseClipper;
@@ -400,6 +402,9 @@ struct IMGUI_API ImGuiTestContext
     void        ScrollToY(ImGuiTestRef ref, float scroll_y) { ScrollTo(ref, ImGuiAxis_Y, scroll_y); }
     void        ScrollToTop(ImGuiTestRef ref);
     void        ScrollToBottom(ImGuiTestRef ref);
+    void        ScrollToPos(ImGuiTestRef window_ref, float pos_v, ImGuiAxis axis, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
+    void        ScrollToPosX(ImGuiTestRef window_ref, float pos_x);
+    void        ScrollToPosY(ImGuiTestRef window_ref, float pos_y);
     void        ScrollToItem(ImGuiTestRef ref, ImGuiAxis axis, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
     void        ScrollToItemX(ImGuiTestRef ref);
     void        ScrollToItemY(ImGuiTestRef ref);

@@ -6,16 +6,15 @@
 
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/http_requests.hpp>
-#include <hex/helpers/logger.hpp>
 
 #include <wolv/hash/uuid.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <toasts/toast_notification.hpp>
 
-#include <fonts/vscode_icons.hpp>
 #include <nlohmann/json.hpp>
 
 #include <string>
+#include <fonts/tabler_icons.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
 
 namespace hex::fonts { bool setupFonts(); }
@@ -39,7 +38,7 @@ namespace hex::plugin::builtin {
                     return;
 
                 TaskManager::doLater([updateString] {
-                    ContentRegistry::UserInterface::addTitleBarButton(ICON_VS_ARROW_DOWN, ImGuiCustomCol_ToolbarGreen, "hex.builtin.welcome.update.title", [] {
+                    ContentRegistry::UserInterface::addTitleBarButton(ICON_TA_DOWNLOAD, ImGuiCustomCol_ToolbarGreen, "hex.builtin.welcome.update.title", [] {
                         ImHexApi::System::updateImHex(ImHexApi::System::isNightlyBuild() ? ImHexApi::System::UpdateType::Nightly : ImHexApi::System::UpdateType::Stable);
                     });
 

@@ -1,4 +1,4 @@
-FROM ubuntu:24.10 as build
+FROM ubuntu:24.04 as build
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493

@@ -16,9 +16,7 @@
 
 #if defined(_WIN32)
 #if !defined(_WINDOWS_)
-#if !defined(WIN32_LEAN_AND_MEAN)
 #define WIN32_LEAN_AND_MEAN
-#endif
 #include <windows.h>
 #endif
 #include <shellapi.h>   // ShellExecuteA()

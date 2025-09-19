@@ -936,6 +936,9 @@ static void ItemInfoErrorLog(ImGuiTestContext* ctx, ImGuiTestRef ref, ImGuiID fu
     if (flags & ImGuiTestOpFlags_NoError)
         return;
 
+    if (ctx->Engine->UiContextHasHooks == false)
+        IM_ERRORF_NOHDR("%s", "IMGUI DOES NOT SEEM COMPILED WITH '#define IMGUI_ENABLE_TEST_ENGINE'!\nMAKE SURE THAT BOTH 'imgui' AND 'imgui_test_engine' ARE USING THE SAME 'imconfig' FILE.");
+
     // Prefixing the string with / ignore the reference/current ID
     Str256 msg;
     if (ref.Path && ref.Path[0] == '/' && ctx->RefStr[0] != 0)
@@ -1410,6 +1413,39 @@ void    ImGuiTestContext::ScrollTo(ImGuiTestRef ref, ImGuiAxis axis, float scrol
 
     // Need another frame for the result->Rect to stabilize
     Yield();
+}
+
+// Supported values for ImGuiTestOpFlags:
+// - ImGuiTestOpFlags_NoFocusWindow
+void    ImGuiTestContext::ScrollToPos(ImGuiTestRef window_ref, float pos_v, ImGuiAxis axis, ImGuiTestOpFlags flags)
+{
+    if (IsError())
+        return;
+
+    IMGUI_TEST_CONTEXT_REGISTER_DEPTH(this);
+    LogDebug("ScrollToPos %c %.2f", 'X' + axis, pos_v);
+
+    // Ensure window size and ScrollMax are up-to-date
+    Yield();
+
+    ImGuiWindow* window = GetWindowByRef(window_ref);
+    IM_CHECK_SILENT(window != NULL);
+    float item_curr = pos_v;
+    float item_target = ImFloor(window->InnerClipRect.GetCenter()[axis]);
+    float scroll_delta = item_target - item_curr;
+    float scroll_target = ImClamp(window->Scroll[axis] - scroll_delta, 0.0f, window->ScrollMax[axis]);
+
+    ScrollTo(window->ID, axis, scroll_target, (flags & ImGuiTestOpFlags_NoFocusWindow));
+}
+
+void    ImGuiTestContext::ScrollToPosX(ImGuiTestRef window_ref, float pos_x)
+{
+    ScrollToPos(window_ref, pos_x, ImGuiAxis_X);
+}
+
+void    ImGuiTestContext::ScrollToPosY(ImGuiTestRef window_ref, float pos_y)
+{
+    ScrollToPos(window_ref, pos_y, ImGuiAxis_Y);
 }
 
 // Supported values for ImGuiTestOpFlags:
@@ -3599,6 +3635,10 @@ void    ImGuiTestContext::ComboClick(ImGuiTestRef ref)
 
     Str128f combo_item_buf = Str128f("//%s/**/%s", popup->Name, p + 1);
     ItemClick(combo_item_buf.c_str());
+
+    // For if Combo Selectables uses ImGuiSelectableFlags_NoAutoClosePopups
+    if (GetWindowByRef("//$FOCUSED") == popup)
+        KeyPress(ImGuiKey_Enter);
 }
 
 void    ImGuiTestContext::ComboClickAll(ImGuiTestRef ref_parent)
@@ -3617,6 +3657,10 @@ void    ImGuiTestContext::ComboClickAll(ImGuiTestRef ref_parent)
             ItemClick(ref_parent);
         ItemClick(item.ID);
     }
+
+    // For if Combo Selectables uses ImGuiSelectableFlags_NoAutoClosePopups
+    if (GetWindowByRef("//$FOCUSED") == popup)
+        KeyPress(ImGuiKey_Enter);
 }
 
 static ImGuiTableColumn* HelperTableFindColumnByName(ImGuiTable* table, const char* name)
@@ -3641,7 +3685,18 @@ void ImGuiTestContext::TableOpenContextMenu(ImGuiTestRef ref, int column_n)
 
     if (column_n == -1)
         column_n = table->RightMostEnabledColumn;
-    ItemClick(TableGetHeaderID(table, column_n), ImGuiMouseButton_Right);
+
+    IM_CHECK(column_n >= 0 && column_n <= table->ColumnsCount);
+    ImGuiTableColumn* column = &table->Columns[column_n];
+    IM_CHECK_SILENT(column->IsEnabled);
+
+    ImGuiID header_id = TableGetHeaderID(table, column_n);
+
+    // Make visible
+    if (!ItemExists(header_id))
+        ScrollToPosX(table->InnerWindow->ID, (column->MinX + column->MaxX) * 0.5f);
+
+    ItemClick(header_id, ImGuiMouseButton_Right);
     Yield();
 }
 
@@ -3658,7 +3713,13 @@ ImGuiSortDirection ImGuiTestContext::TableClickHeader(ImGuiTestRef ref, const ch
     if (key_mods != ImGuiMod_None)
         KeyDown(key_mods);
 
-    ItemClick(TableGetHeaderID(table, label), ImGuiMouseButton_Left);
+    ImGuiID header_id = TableGetHeaderID(table, label);
+
+    // Make visible
+    if (!ItemExists(header_id))
+        ScrollToPosX(table->InnerWindow->ID, (column->MinX + column->MaxX) * 0.5f);
+
+    ItemClick(header_id, ImGuiMouseButton_Left);
 
     if (key_mods != ImGuiMod_None)
         KeyUp(key_mods);
@@ -3674,7 +3735,11 @@ void ImGuiTestContext::TableSetColumnEnabled(ImGuiTestRef ref, const char* label
     ImGuiTestRefDesc desc(ref);
     LogDebug("TableSetColumnEnabled %s label '%s' enabled = %d", desc.c_str(), label, enabled);
 
-    TableOpenContextMenu(ref);
+    ImGuiTable* table = ImGui::TableFindByID(GetID(ref));
+    IM_CHECK_SILENT(table != NULL);
+    ImGuiTableColumn* column = HelperTableFindColumnByName(table, label);
+    int column_n = column->IsEnabled ? table->Columns.index_from_ptr(column) : -1;
+    TableOpenContextMenu(ref, column_n);
 
     ImGuiTestRef backup_ref = GetRef();
     SetRef("//$FOCUSED");

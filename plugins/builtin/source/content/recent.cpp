@@ -320,18 +320,22 @@ namespace hex::plugin::builtin::recent {
                         }
                     }
 
+                    ImGui::PushID(recentEntry.getHash());
+
                     // Detect right click on recent provider
-                    std::string popupID = fmt::format("RecentEntryMenu.{}", recentEntry.getHash());
+                    constexpr static auto PopupID = "RecentEntryMenu";
                     if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
-                        ImGui::OpenPopup(popupID.c_str());
+                        ImGui::OpenPopup(PopupID);
                     }
 
-                    if (ImGui::BeginPopup(popupID.c_str())) {
+                    if (ImGui::BeginPopup(PopupID)) {
                         if (ImGui::MenuItemEx("hex.ui.common.remove"_lang, ICON_VS_REMOVE)) {
                             shouldRemove = true;
                         }
                         ImGui::EndPopup();
                     }
+
+                    ImGui::PopID();
 
                     // Handle deletion from vector and on disk
                     if (shouldRemove) {
@@ -383,6 +387,8 @@ namespace hex::plugin::builtin::recent {
 
                 menu::endMenu();
             }
+        }, [] {
+            return TaskManager::getRunningTaskCount() == 0 && !s_recentEntriesUpdating && !s_recentEntries.empty();
         });
     }
 }

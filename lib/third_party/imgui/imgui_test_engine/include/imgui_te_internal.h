@@ -156,6 +156,7 @@ struct ImGuiTestEngine
     ImGuiContext*               UiContextActive = nullptr;      // imgui context for testing == UiContextTarget or nullptr
 
     bool                        Started = false;
+    bool                        UiContextHasHooks = false;
     ImU64                       BatchStartTime = 0;
     ImU64                       BatchEndTime = 0;
     int                         FrameCount = 0;

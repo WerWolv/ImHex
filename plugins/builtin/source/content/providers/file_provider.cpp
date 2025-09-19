@@ -7,6 +7,7 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_gui.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <banners/banner_button.hpp>
 #include <toasts/toast_notification.hpp>
@@ -375,6 +376,7 @@ namespace hex::plugin::builtin {
 
             getUndoStack().reapply();
             m_changeEventAcknowledgementPending = false;
+            EventDataChanged::post(this);
         });
     }
 

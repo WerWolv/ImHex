@@ -32,6 +32,9 @@
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
 //  2025-XX-XX: Platform: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2025-09-15: Content Scales are always reported as 1.0 on Wayland. FramebufferScale are always reported as 1.0 on X11. (#8920, #8921)
+//  2025-09-10: [Docking] Improve multi-viewport behavior in tiling WMs on X11 via the ImGui_ImplGlfw_SetWindowFloating() function. Note: using GLFW backend on Linux/BSD etc. requires linking with -lX11. (#8884, #8474, #8289)
+//  2025-07-08: Made ImGui_ImplGlfw_GetContentScaleForWindow(), ImGui_ImplGlfw_GetContentScaleForMonitor() helpers return 1.0f on Emscripten and Android platforms, matching macOS logic. (#8742, #8733)
 //  2025-06-18: Added support for multiple Dear ImGui contexts. (#8676, #8239, #8069)
 //  2025-06-11: Added ImGui_ImplGlfw_GetContentScaleForWindow(GLFWwindow* window) and ImGui_ImplGlfw_GetContentScaleForMonitor(GLFWmonitor* monitor) helper to facilitate making DPI-aware apps.
 //  2025-05-15: [Docking] Add Platform_GetWindowFramebufferScale() handler, to allow varying Retina display density on multiple monitors.
@@ -113,13 +116,12 @@
 
 // GLFW
 #include <GLFW/glfw3.h>
-
 #ifdef _WIN32
 #undef APIENTRY
-#ifndef GLFW_EXPOSE_NATIVE_WIN32
+#ifndef GLFW_EXPOSE_NATIVE_WIN32    // for glfwGetWin32Window()
 #define GLFW_EXPOSE_NATIVE_WIN32
 #endif
-#include <GLFW/glfw3native.h>   // for glfwGetWin32Window()
+#include <GLFW/glfw3native.h>
 #endif
 // IMHEX PATCH BEGIN
 // REASON: including this file means either including either ObjC (not supported by gcc)
@@ -130,6 +132,9 @@
 //#include <GLFW/glfw3native.h>   // for glfwGetCocoaWindow()
 // #endif
 // IMHEX PATCH END
+#include <GLFW/glfw3native.h>
+#undef Status                   // X11 headers are leaking this.
+
 #ifndef _WIN32
 #include <unistd.h>             // for usleep()
 // IMHEX PATCH BEGIN
@@ -185,6 +190,11 @@ static std::string clipboardContent;
 #define GLFW_HAS_GETKEYNAME             (GLFW_VERSION_COMBINED >= 3200) // 3.2+ glfwGetKeyName()
 #define GLFW_HAS_GETERROR               (GLFW_VERSION_COMBINED >= 3300) // 3.3+ glfwGetError()
 #define GLFW_HAS_GETPLATFORM            (GLFW_VERSION_COMBINED >= 3400) // 3.4+ glfwGetPlatform()
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
+#define GLFW_HAS_X11_OR_WAYLAND          1
+#else
+#define GLFW_HAS_X11_OR_WAYLAND          0
+#endif
 
 // Map GLFWWindow* to ImGuiContext*.
 // - Would be simpler if we could use glfwSetWindowUserPointer()/glfwGetWindowUserPointer(), but this is a single and shared resource.
@@ -196,14 +206,14 @@ static void ImGui_ImplGlfw_ContextMap_Add(GLFWwindow* window, ImGuiContext* ctx)
 static void ImGui_ImplGlfw_ContextMap_Remove(GLFWwindow* window)                 { for (ImGui_ImplGlfw_WindowToContext& entry : g_ContextMap) if (entry.Window == window) { g_ContextMap.erase_unsorted(&entry); return; } }
 static ImGuiContext* ImGui_ImplGlfw_ContextMap_Get(GLFWwindow* window)           { for (ImGui_ImplGlfw_WindowToContext& entry : g_ContextMap) if (entry.Window == window) return entry.Context; return nullptr; }
 
-// GLFW data
 enum GlfwClientApi
 {
-    GlfwClientApi_Unknown,
     GlfwClientApi_OpenGL,
     GlfwClientApi_Vulkan,
+    GlfwClientApi_Unknown,  // Anything else fits here.
 };
 
+// GLFW data
 struct ImGui_ImplGlfw_Data
 {
     ImGuiContext*           Context;
@@ -216,6 +226,7 @@ struct ImGui_ImplGlfw_Data
     bool                    MouseIgnoreButtonUp;
     ImVec2                  LastValidMousePos;
     GLFWwindow*             KeyOwnerWindows[GLFW_KEY_LAST];
+    bool                    IsWayland;
     bool                    InstalledCallbacks;
     bool                    CallbacksChainForAllWindows;
     char                    BackendPlatformName[32];
@@ -266,6 +277,24 @@ static void ImGui_ImplGlfw_ShutdownMultiViewportSupport();
 
 // Functions
 
+static bool ImGui_ImplGlfw_IsWayland()
+{
+#if !GLFW_HAS_X11_OR_WAYLAND
+    return false;
+#elif GLFW_HAS_GETPLATFORM
+    return glfwGetPlatform() == GLFW_PLATFORM_WAYLAND;
+#else
+    const char* version = glfwGetVersionString();
+    if (strstr(version, "Wayland") == NULL) // e.g. Ubuntu 22.04 ships with GLFW 3.3.6 compiled without Wayland
+        return false;
+#ifdef GLFW_EXPOSE_NATIVE_X11
+    if (glfwGetX11Display() != NULL)
+        return false;
+#endif
+    return true;
+#endif
+}
+
 static const char* ImGui_ImplGlfw_GetClipboardText(void* user_data)
 {
 // IMHEX PATCH BEGIN
@@ -280,12 +309,12 @@ static const char* ImGui_ImplGlfw_GetClipboardText(void* user_data)
 static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text)
 {
     glfwSetClipboardString((GLFWwindow*)user_data, text);
-// IMHEX PATCH BEGIN
+    // IMHEX PATCH BEGIN
 #ifdef __EMSCRIPTEN__
     clipboardContent = text;
     emscripten_browser_clipboard::copy(clipboardContent);
 #endif
-// IMHEX PATCH END
+    // IMHEX PATCH END
 }
 
 // Not static to allow third-party code to use that if they want to (but undocumented)
@@ -674,7 +703,7 @@ void ImGui_ImplGlfw_RestoreCallbacks(GLFWwindow* window)
     bd->PrevUserCallbackMonitor = nullptr;
 }
 
-// Set to 'true' to enable chaining installed callbacks for all windows (including secondary viewports created by backends or by user.
+// Set to 'true' to enable chaining installed callbacks for all windows (including secondary viewports created by backends or by user).
 // This is 'false' by default meaning we only chain callbacks for the main viewport.
 // We cannot set this to 'true' by default because user callbacks code may be not testing the 'window' parameter of their callback.
 // If you set this to 'true' your user callback code will need to make sure you are testing the 'window' parameter.
@@ -724,6 +753,7 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     bd->Context = ImGui::GetCurrentContext();
     bd->Window = window;
     bd->Time = 0.0;
+    bd->IsWayland = ImGui_ImplGlfw_IsWayland();
     ImGui_ImplGlfw_ContextMap_Add(window, bd->Context);
 
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
@@ -1076,7 +1106,12 @@ static void ImGui_ImplGlfw_UpdateMonitors()
 // - Some accessibility applications are declaring virtual monitors with a DPI of 0.0f, see #7902. We preserve this value for caller to handle.
 float ImGui_ImplGlfw_GetContentScaleForWindow(GLFWwindow* window)
 {
-#if GLFW_HAS_PER_MONITOR_DPI && !defined(__APPLE__)
+#if GLFW_HAS_X11_OR_WAYLAND
+    if (ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData(window))
+        if (bd->IsWayland)
+            return 1.0f;
+#endif
+#if GLFW_HAS_PER_MONITOR_DPI && !(defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__ANDROID__))
     float x_scale, y_scale;
     glfwGetWindowContentScale(window, &x_scale, &y_scale);
     return x_scale;
@@ -1088,7 +1123,11 @@ float ImGui_ImplGlfw_GetContentScaleForWindow(GLFWwindow* window)
 
 float ImGui_ImplGlfw_GetContentScaleForMonitor(GLFWmonitor* monitor)
 {
-#if GLFW_HAS_PER_MONITOR_DPI && !defined(__APPLE__)
+#if GLFW_HAS_X11_OR_WAYLAND
+    if (ImGui_ImplGlfw_IsWayland()) // We can't access our bd->IsWayland cache for a monitor.
+        return 1.0f;
+#endif
+#if GLFW_HAS_PER_MONITOR_DPI && !(defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__ANDROID__))
     float x_scale, y_scale;
     glfwGetMonitorContentScale(monitor, &x_scale, &y_scale);
     return x_scale;
@@ -1104,10 +1143,17 @@ static void ImGui_ImplGlfw_GetWindowSizeAndFramebufferScale(GLFWwindow* window, 
     int display_w, display_h;
     glfwGetWindowSize(window, &w, &h);
     glfwGetFramebufferSize(window, &display_w, &display_h);
+    float fb_scale_x = (w > 0) ? (float)display_w / w : 1.0f;
+    float fb_scale_y = (h > 0) ? (float)display_h / h : 1.0f;
+#if GLFW_HAS_X11_OR_WAYLAND
+    ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData(window);
+    if (!bd->IsWayland)
+        fb_scale_x = fb_scale_y = 1.0f;
+#endif
     if (out_size != nullptr)
         *out_size = ImVec2((float)w, (float)h);
     if (out_framebuffer_scale != nullptr)
-        *out_framebuffer_scale = (w > 0 && h > 0) ? ImVec2((float)display_w / (float)w, (float)display_h / (float)h) : ImVec2(1.0f, 1.0f);
+        *out_framebuffer_scale = ImVec2(fb_scale_x, fb_scale_y);
 }
 
 void ImGui_ImplGlfw_NewFrame()
@@ -1262,6 +1308,30 @@ static void ImGui_ImplGlfw_WindowSizeCallback(GLFWwindow* window, int, int)
     }
 }
 
+#if !defined(__APPLE__) && !defined(_WIN32) && !defined(__EMSCRIPTEN__) && GLFW_HAS_GETPLATFORM
+#define IMGUI_GLFW_HAS_SETWINDOWFLOATING
+static void ImGui_ImplGlfw_SetWindowFloating(GLFWwindow* window)
+{
+#ifdef GLFW_EXPOSE_NATIVE_X11
+    if (glfwGetPlatform() == GLFW_PLATFORM_X11)
+    {
+        Display* display = glfwGetX11Display();
+        Window xwindow = glfwGetX11Window(window);
+        Atom wm_type = XInternAtom(display, "_NET_WM_WINDOW_TYPE", False);
+        Atom wm_type_dialog = XInternAtom(display, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+        XChangeProperty(display, xwindow, wm_type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+        XSetWindowAttributes attrs;
+        attrs.override_redirect = False;
+        XChangeWindowAttributes(display, xwindow, CWOverrideRedirect, &attrs);
+        XFlush(display);
+    }
+#endif // GLFW_EXPOSE_NATIVE_X11
+#ifdef GLFW_EXPOSE_NATIVE_WAYLAND
+    // FIXME: Help needed, see #8884, #8474 for discussions about this.
+#endif // GLFW_EXPOSE_NATIVE_X11
+}
+#endif // IMGUI_GLFW_HAS_SETWINDOWFLOATING
+
 static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
 {
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
@@ -1279,7 +1349,7 @@ static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
     glfwWindowHint(GLFW_FOCUSED, false);
 #if GLFW_HAS_FOCUS_ON_SHOW
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, false);
- #endif
+#endif
     glfwWindowHint(GLFW_DECORATED, (viewport->Flags & ImGuiViewportFlags_NoDecoration) ? false : true);
 #if GLFW_HAS_WINDOW_TOPMOST
     glfwWindowHint(GLFW_FLOATING, (viewport->Flags & ImGuiViewportFlags_TopMost) ? true : false);
@@ -1289,6 +1359,9 @@ static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
     vd->WindowOwned = true;
     ImGui_ImplGlfw_ContextMap_Add(vd->Window, bd->Context);
     viewport->PlatformHandle = (void*)vd->Window;
+#ifdef IMGUI_GLFW_HAS_SETWINDOWFLOATING
+    ImGui_ImplGlfw_SetWindowFloating(vd->Window);
+#endif
 #ifdef _WIN32
     viewport->PlatformHandleRaw = glfwGetWin32Window(vd->Window);
     ::SetPropA((HWND)viewport->PlatformHandleRaw, "IMGUI_BACKEND_DATA", bd);

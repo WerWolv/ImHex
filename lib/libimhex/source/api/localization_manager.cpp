@@ -171,11 +171,21 @@ namespace hex {
 
     }
 
-    Lang::Lang(const char *unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString)), m_unlocalizedString(unlocalizedString) { }
-    Lang::Lang(const std::string &unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString)), m_unlocalizedString(unlocalizedString) { }
-    Lang::Lang(const LangConst &localizedString) : m_entryHash(localizedString.m_entryHash), m_unlocalizedString(localizedString.m_unlocalizedString) { }
-    Lang::Lang(const UnlocalizedString &unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString.get())), m_unlocalizedString(unlocalizedString.get()) { }
-    Lang::Lang(std::string_view unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString)), m_unlocalizedString(unlocalizedString) { }
+    static AutoReset<std::map<std::size_t, std::string>> s_unlocalizedNames;
+
+    Lang::Lang(std::string_view unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString)) {
+        if (!s_unlocalizedNames->contains(m_entryHash)) [[unlikely]] {
+            s_unlocalizedNames->emplace(m_entryHash, unlocalizedString);
+        }
+    }
+    Lang::Lang(const char *unlocalizedString) : Lang(std::string_view(unlocalizedString)) { }
+    Lang::Lang(const std::string &unlocalizedString) : Lang(std::string_view(unlocalizedString)) { }
+    Lang::Lang(const LangConst &localizedString) : m_entryHash(localizedString.m_entryHash) {
+        if (!s_unlocalizedNames->contains(m_entryHash)) [[unlikely]] {
+            s_unlocalizedNames->emplace(m_entryHash, localizedString.m_unlocalizedString);
+        }
+    }
+    Lang::Lang(const UnlocalizedString &unlocalizedString) : Lang(unlocalizedString.get()) { }
 
     Lang::operator std::string() const {
         return get();
@@ -194,7 +204,11 @@ namespace hex {
 
         const auto it = lang.find(m_entryHash);
         if (it == lang.end()) {
-            return m_unlocalizedString.c_str();
+            if (auto unlocalizedIt = s_unlocalizedNames->find(m_entryHash); unlocalizedIt != s_unlocalizedNames->end()) {
+                return unlocalizedIt->second.c_str();
+            } else {
+                return "<unlocalized>";
+            }
         } else {
             return it->second.c_str();
         }
