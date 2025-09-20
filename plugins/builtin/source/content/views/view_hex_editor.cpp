@@ -1345,7 +1345,8 @@ namespace hex::plugin::builtin {
         /* Skip until */
         ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.skip_until" }, ICON_VS_DEBUG_STEP_OVER, 1610,
                                                 []{},
-                                                canSearchForDifferingByte);
+                                                canSearchForDifferingByte,
+                                                this);
 
         /* Skip until previous differing byte */
         ContentRegistry::UserInterface::addMenuItem({
@@ -1384,7 +1385,8 @@ namespace hex::plugin::builtin {
                                                         ui::ToastInfo::open("hex.builtin.view.hex_editor.menu.file.skip_until.beginning_reached"_lang);
                                                     }
                                                 },
-                                                canSearchForDifferingByte);
+                                                canSearchForDifferingByte,
+                                                this);
 
         /* Skip until next differing byte */
         ContentRegistry::UserInterface::addMenuItem({
@@ -1423,7 +1425,8 @@ namespace hex::plugin::builtin {
                                                         ui::ToastInfo::open("hex.builtin.view.hex_editor.menu.file.skip_until.end_reached"_lang);
                                                     }
                                                 },
-                                                canSearchForDifferingByte);
+                                                canSearchForDifferingByte,
+                                                this);
 
 
         ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1100, this);

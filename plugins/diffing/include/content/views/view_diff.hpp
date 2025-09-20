@@ -36,6 +36,8 @@ namespace hex::plugin::diffing {
         std::function<std::optional<color_t>(u64, const u8*, size_t)> createCompareFunction(size_t otherIndex) const;
         void analyze(prv::Provider *providerA, prv::Provider *providerB);
 
+        void registerMenuItems();
+
         void reset();
 
     private:
@@ -45,6 +47,9 @@ namespace hex::plugin::diffing {
         std::atomic<bool> m_analyzed = false;
         std::atomic<bool> m_analysisInterrupted = false;
         ContentRegistry::Diffing::Algorithm *m_algorithm = nullptr;
+
+        u64 m_selectedAddress  = 0;
+        prv::Provider *m_selectedProvider = nullptr;
     };
 
 }
