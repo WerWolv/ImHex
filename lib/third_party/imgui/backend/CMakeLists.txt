@@ -19,6 +19,12 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     find_package(OpenGL REQUIRED)
     find_package(Freetype REQUIRED)
 
+    if (UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
+        find_package(X11)
+        target_include_directories(imgui_backend PUBLIC ${X11_INCLUDE_DIR})
+        target_link_libraries(imgui_backend PUBLIC ${X11_LIBRARIES})
+    endif()
+
     find_package(GLFW QUIET)
     if (NOT GLFW_FOUND OR "${GLFW_LIBRARIES}" STREQUAL "")
         find_package(glfw3 QUIET)

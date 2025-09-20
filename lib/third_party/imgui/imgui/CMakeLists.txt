@@ -26,12 +26,6 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
 
     find_package(Freetype REQUIRED)
 
-    if (UNIX AND NOT APPLE)
-        find_package(X11 REQUIRED)
-        target_include_directories(imgui_imgui PUBLIC ${X11_INCLUDE_DIR})
-        target_link_libraries(imgui_imgui PUBLIC ${X11_LIBRARIES})
-    endif()
-
     target_include_directories(imgui_imgui PUBLIC ${FREETYPE_INCLUDE_DIRS})
     target_link_directories(imgui_imgui PUBLIC ${FREETYPE_LIBRARY_DIRS})
     target_link_libraries(imgui_imgui PUBLIC ${FREETYPE_LIBRARIES} ${LUNASVG_LIBRARIES})
