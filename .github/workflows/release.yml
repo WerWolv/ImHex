@@ -122,7 +122,6 @@ jobs:
           rm artifact.tar || true
 
       - name: ⬆️ Upload Unsigned x86_64 Windows Installer
-        if: false
         uses: actions/upload-artifact@v4
         id: upload-installer-x86_64
         with:
@@ -132,7 +131,6 @@ jobs:
             imhex-*-x86_64.msi
 
       - name: ⬆️ Upload Unsigned ARM64 Windows Installer
-        if: false
         uses: actions/upload-artifact@v4
         id: upload-installer-arm64
         with:
@@ -142,19 +140,28 @@ jobs:
             imhex-*-arm64.msi
 
       - name: 🗑️ Delete unsigned installers
-        if: false
         run: |
           rm imhex-*.msi
 
-      - name: 🗝️ Sign Installer
-        if: false
+      - name: 🗝️ Sign x86_64 Installer
         uses: signpath/github-action-submit-signing-request@v1
         with:
           api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
           organization-id: 'f605a0e8-86cd-411c-bb6f-e05025afcc33'
           project-slug: 'ImHex'
           signing-policy-slug: 'release-signing'
-          github-artifact-id: '${{ steps.upload-installer.outputs.artifact-id }}'
+          github-artifact-id: '${{ steps.upload-installer-x86_64.outputs.artifact-id }}'
+          wait-for-completion: true
+          output-artifact-directory: '.'
+
+      - name: 🗝️ Sign ARM64 Installer
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+          organization-id: 'f605a0e8-86cd-411c-bb6f-e05025afcc33'
+          project-slug: 'ImHex'
+          signing-policy-slug: 'release-signing'
+          github-artifact-id: '${{ steps.upload-installer-arm64.outputs.artifact-id }}'
           wait-for-completion: true
           output-artifact-directory: '.'
 

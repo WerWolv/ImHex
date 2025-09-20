@@ -200,25 +200,6 @@ jobs:
         path: |
           build/install/*
 
-    - name: 🗝️ Test-Sign Installer
-      uses: signpath/github-action-submit-signing-request@v1
-      with:
-        api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-        organization-id: 'f605a0e8-86cd-411c-bb6f-e05025afcc33'
-        project-slug: 'ImHex'
-        signing-policy-slug: 'test-signing'
-        github-artifact-id: '${{ steps.upload-installer.outputs.artifact-id }}'
-        wait-for-completion: true
-        output-artifact-directory: './signed'
-
-    - name: ⬆️ Upload Signed Windows Installer
-      uses: actions/upload-artifact@v4
-      with:
-        if-no-files-found: error
-        name: Windows Installer ${{ matrix.architecture_name }} (Signed)
-        path: |
-          signed/*
-
   win_msvc:
     strategy:
       fail-fast: false
