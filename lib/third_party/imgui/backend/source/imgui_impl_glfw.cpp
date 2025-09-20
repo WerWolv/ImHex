@@ -132,8 +132,11 @@
 //#include <GLFW/glfw3native.h>   // for glfwGetCocoaWindow()
 // #endif
 // IMHEX PATCH END
-#include <GLFW/glfw3native.h>
-#undef Status                   // X11 headers are leaking this.
+
+#if !defined(__EMSCRIPTEN__)
+    #include <GLFW/glfw3native.h>
+    #undef Status                   // X11 headers are leaking this.
+#endif
 
 #ifndef _WIN32
 #include <unistd.h>             // for usleep()
