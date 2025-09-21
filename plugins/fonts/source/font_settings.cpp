@@ -6,6 +6,7 @@
 #include <imgui.h>
 #include <fonts/fonts.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/helpers/auto_reset.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <romfs/romfs.hpp>
 
@@ -17,8 +18,8 @@ namespace hex::fonts {
     constexpr static auto SmoothFontName = "Smooth Default Font (JetBrains Mono)";
     constexpr static auto CustomFontName = "Custom Font";
 
-    static std::map<std::fs::path, ImFont*> s_previewFonts, s_usedFonts;
-    static std::map<std::fs::path, std::string> s_filteredFonts;
+    static AutoReset<std::map<std::fs::path, ImFont*>> s_previewFonts, s_usedFonts;
+    static AutoReset<std::map<std::fs::path, std::string>> s_filteredFonts;
     static bool pushPreviewFont(const std::fs::path &fontPath) {
         if (fontPath.empty()) {
             pushPreviewFont(SmoothFontName);
@@ -31,8 +32,8 @@ namespace hex::fonts {
 
         auto atlas = ImGui::GetIO().Fonts;
 
-        auto it = s_previewFonts.find(fontPath);
-        if (it == s_previewFonts.end()) {
+        auto it = s_previewFonts->find(fontPath);
+        if (it == s_previewFonts->end()) {
             ImFont *font = nullptr;
             if (fontPath == PixelPerfectFontName) {
                 font = atlas->AddFontDefault(&config);
@@ -45,7 +46,7 @@ namespace hex::fonts {
                 font = atlas->AddFontFromFileTTF(wolv::util::toUTF8String(fontPath).c_str(), 0.0F, &config);
             }
 
-            it = s_previewFonts.emplace(fontPath, font).first;
+            it = s_previewFonts->emplace(fontPath, font).first;
         }
 
         const auto &[path, font] = *it;
@@ -59,23 +60,23 @@ namespace hex::fonts {
         }
 
         ImGui::PushFont(font, 0.0F);
-        s_usedFonts.emplace(path, font);
+        s_usedFonts->emplace(path, font);
         return true;
     }
 
     static void cleanUnusedPreviewFonts() {
         auto atlas = ImGui::GetIO().Fonts;
-        for (const auto &[path, font] : s_previewFonts) {
+        for (const auto &[path, font] : *s_previewFonts) {
             if (font == nullptr)
                 continue;
 
-            if (!s_usedFonts.contains(path)) {
+            if (!s_usedFonts->contains(path)) {
                 atlas->RemoveFont(font);
             }
         }
 
         s_previewFonts = std::move(s_usedFonts);
-        s_usedFonts = {};
+        s_usedFonts->clear();
     }
 
     bool FontFilePicker::draw(const std::string &name) {
@@ -110,12 +111,12 @@ namespace hex::fonts {
             }
             ImGui::PopFont();
 
-            if (s_filteredFonts.empty()) {
+            if (s_filteredFonts->empty()) {
                 for (const auto &[path, fontName] : hex::getFonts()) {
                     if (!pushPreviewFont(path))
                         continue;
                     ImGui::PopFont();
-                    s_filteredFonts.emplace(path, fontName);
+                    s_filteredFonts->emplace(path, fontName);
                 }
             }
 
@@ -123,10 +124,10 @@ namespace hex::fonts {
                 u32 index = 0;
                 ImGuiListClipper clipper;
 
-                clipper.Begin(s_filteredFonts.size(), ImGui::GetTextLineHeightWithSpacing());
+                clipper.Begin(s_filteredFonts->size(), ImGui::GetTextLineHeightWithSpacing());
 
                 while (clipper.Step())
-                    for (const auto &[path, fontName] : s_filteredFonts | std::views::drop(clipper.DisplayStart) | std::views::take(clipper.DisplayEnd - clipper.DisplayStart)) {
+                    for (const auto &[path, fontName] : *s_filteredFonts | std::views::drop(clipper.DisplayStart) | std::views::take(clipper.DisplayEnd - clipper.DisplayStart)) {
                         if (!pushPreviewFont(path))
                             continue;
 
