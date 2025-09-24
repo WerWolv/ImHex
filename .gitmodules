@@ -18,10 +18,6 @@
 	path = lib/third_party/capstone
 	url = https://github.com/capstone-engine/capstone
 	ignore = dirty
-[submodule "lib/third_party/jthread/jthread"]
-	path = lib/third_party/jthread/jthread
-    url = https://github.com/josuttis/jthread
-    ignore = dirty
 [submodule "lib/third_party/edlib"]
 	path = lib/third_party/edlib
 	url = https://github.com/Martinsos/edlib
