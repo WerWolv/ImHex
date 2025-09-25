@@ -2514,10 +2514,7 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::fileChangedCallback(prv::Provider *provider, const std::fs::path &path) {
         // Arrange for a call from the UI thread
         TaskManager::doLater(
-            [this, provider, path] {
-                this->handleFileChange(provider, path);
-            }
-        );
+            [this, provider, path]{this->handleFileChange(provider, path);});
     }
 
     void ViewPatternEditor::handleFileChange(prv::Provider *provider, const std::fs::path &path) {
