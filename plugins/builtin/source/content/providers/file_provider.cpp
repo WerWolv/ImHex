@@ -359,7 +359,7 @@ namespace hex::plugin::builtin {
         this->open(true);
     }
 
-     // WARNING: this function is called from the context of a worker thread!
+    // WARNING: this function is called from the context of a worker thread!
     void FileProvider::fileChangedCallback() {
         // Arrange for a call from the UI thread
         TaskManager::doLater(
