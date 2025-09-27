@@ -396,7 +396,15 @@ namespace hex {
 
             void SliderDataSize::load(const nlohmann::json &data) {
                 if (data.is_number_integer()) {
-                    m_value = data.get<u64>();
+                    u64 value = data.get<u64>();
+
+                    if (value < m_min) {
+                        m_value = m_min;
+                    } else if (value > m_max) {
+                        m_value = m_max;
+                    } else {
+                        m_value = value;
+                    }
                 } else {
                     log::warn("Invalid data type loaded from settings for slider!");
                 }

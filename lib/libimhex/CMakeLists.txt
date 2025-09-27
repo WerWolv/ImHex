@@ -42,6 +42,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/keys.cpp
         source/helpers/udp_server.cpp
         source/helpers/scaling.cpp
+        source/helpers/ram.cpp
 
         source/test/tests.cpp
 
@@ -63,6 +64,7 @@ if (APPLE)
     set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES}
             source/helpers/utils_macos.m
             source/helpers/macos_menu.m
+            source/helpers/ram.cpp
     )
 endif ()
 
