@@ -192,9 +192,16 @@ namespace hex::plugin::builtin {
     }
 
     static void selectFirstTabItem() {
-        auto tabBar = ImGui::GetCurrentTabBar();
-        if (tabBar != nullptr && tabBar->Tabs.Size > 0) {
-            tabBar->SelectedTabId = tabBar->Tabs.front().ID;
+        auto *tabBar = ImGui::GetCurrentTabBar();
+        if (tabBar != nullptr) {
+            for (const auto &tab : tabBar->Tabs) {
+                if (tab.Flags & ImGuiTabItemFlags_Button) {
+                    continue;
+                }
+
+                tabBar->SelectedTabId = tab.ID;
+                break;
+            }
         }
     }
 

@@ -889,18 +889,6 @@ macro(addBundledLibraries)
         find_package(LLVM REQUIRED Demangle)
     endif()
 
-    if (NOT USE_SYSTEM_JTHREAD)
-        add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/jthread EXCLUDE_FROM_ALL)
-        set(JTHREAD_LIBRARIES jthread)
-    else()
-        find_path(JOSUTTIS_JTHREAD_INCLUDE_DIRS "condition_variable_any2.hpp")
-        include_directories(${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
-
-        add_library(jthread INTERFACE)
-        target_include_directories(jthread INTERFACE ${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
-        set(JTHREAD_LIBRARIES jthread)
-    endif()
-
     if (USE_SYSTEM_BOOST)
         find_package(Boost REQUIRED CONFIG COMPONENTS regex)
         set(BOOST_LIBRARIES Boost::regex)
