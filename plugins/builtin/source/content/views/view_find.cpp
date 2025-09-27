@@ -215,7 +215,6 @@ namespace hex::plugin::builtin {
         }();
 
         
-        // OPTIMIZATION: branchless ASCII validity via bitmask LUT
         std::array<u32, 256> validityMask{};
         constexpr u32 LOWER_FLAG = 1u << 0;
         constexpr u32 UPPER_FLAG = 1u << 1;
