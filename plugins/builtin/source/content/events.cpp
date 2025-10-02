@@ -82,7 +82,7 @@ namespace hex::plugin::builtin {
 
         EventWindowClosing::subscribe([](GLFWwindow *window) {
             imhexClosing = false;
-            if (ImHexApi::Provider::isDirty() && !imhexClosing) {
+            if (!ImHexApi::System::isReadOnlyMode() && ImHexApi::Provider::isDirty() && !imhexClosing) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
                 ui::PopupQuestion::open("hex.builtin.popup.exit_application.desc"_lang,
                     [] {
@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
 
         EventCloseButtonPressed::subscribe([]() {
             if (ImHexApi::Provider::isValid()) {
-                if (ImHexApi::Provider::isDirty()) {
+                if (!ImHexApi::System::isReadOnlyMode() && ImHexApi::Provider::isDirty()) {
                     ui::PopupQuestion::open("hex.builtin.popup.exit_application.desc"_lang,
                         [] {
                             for (const auto &provider : ImHexApi::Provider::getProviders())
@@ -132,7 +132,7 @@ namespace hex::plugin::builtin {
         });
 
         EventProviderClosing::subscribe([](const prv::Provider *provider, bool *shouldClose) {
-            if (provider->isDirty()) {
+            if (!ImHexApi::System::isReadOnlyMode() && provider->isDirty()) {
                 *shouldClose = false;
                 PopupUnsavedChanges::open("hex.builtin.popup.close_provider.desc"_lang,
                     []{
