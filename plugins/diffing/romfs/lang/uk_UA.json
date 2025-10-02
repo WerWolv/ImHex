@@ -14,5 +14,10 @@
     "hex.diffing.view.diff.task.diffing": "Порівняння даних...",
     "hex.diffing.algorithm.simple.name": "Простий побайтовий алгоритм",
     "hex.diffing.algorithm.simple.description": "Вбудоване порівняння байт за байтом O(N).\nМоже ідентифікувати лише зміни байтів та вставки/видалення в кінці даних",
-    "hex.diffing.algorithm.myers.description": "Інтелектуальний алгоритм порівняння O(N*M). Може ідентифікувати зміни, вставки та видалення в будь-якій частині даних"
+    "hex.diffing.algorithm.myers.description": "Інтелектуальний алгоритм порівняння O(N*M). Може ідентифікувати зміни, вставки та видалення в будь-якій частині даних",
+    "hex.diffing.view.diff.menu.file.jumping": "Перейти між відмінностями",
+    "hex.diffing.view.diff.menu.file.jumping.prev_diff": "Перейти до попередньої відмінності",
+    "hex.diffing.view.diff.menu.file.jumping.next_diff": "Перейти до наступної відмінності",
+    "hex.diffing.view.diff.jumping.beginning_reached": "Немає відмінностей до початку файлу",
+    "hex.diffing.view.diff.jumping.end_reached": "Немає відмінностей до кінця файлу"
 }
