@@ -139,7 +139,7 @@ if [ "$CUSTOM_GLFW" ]; then
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache         \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache       \
           -DCMAKE_INSTALL_PREFIX=/vcpkg/installed/arm-osx-mytriplet \
-          -DVCPKG_TARGET_TRIPLET=arm-osx-mytriplet -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/osxcross/target/toolchain.cmake -DCMAKE_OSX_SYSROOT=/osxcross/target/SDK/MacOSX14.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
+          -DVCPKG_TARGET_TRIPLET=arm-osx-mytriplet -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/osxcross/target/toolchain.cmake -DCMAKE_OSX_SYSROOT=/osxcross/target/SDK/MacOSX14.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=13.3 \
         ..
     ninja -j $JOBS install
 
