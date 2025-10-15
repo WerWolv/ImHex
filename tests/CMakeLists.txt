@@ -6,3 +6,4 @@ target_compile_definitions(tests_common PUBLIC IMHEX_PROJECT_NAME="${PROJECT_NAM
 add_subdirectory(helpers)
 add_subdirectory(algorithms)
 add_subdirectory(plugins)
+add_subdirectory(cli)

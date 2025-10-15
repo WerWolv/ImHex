@@ -44,7 +44,7 @@ namespace hex::prv {
     }
 
     void Provider::write(u64 offset, const void *buffer, size_t size) {
-        if (!this->isWritable())
+        if (!this->isWritable() || ImHexApi::System::isReadOnlyMode())
             return;
 
         EventProviderDataModified::post(this, offset, size, static_cast<const u8*>(buffer));
@@ -52,7 +52,7 @@ namespace hex::prv {
     }
 
     void Provider::save() {
-        if (!this->isWritable())
+        if (!this->isWritable() || ImHexApi::System::isReadOnlyMode())
             return;
         
         EventProviderSaved::post(this);
@@ -76,6 +76,9 @@ namespace hex::prv {
     }
 
     bool Provider::resize(u64 newSize) {
+        if (ImHexApi::System::isReadOnlyMode()) {
+            return false;
+        }
         if (newSize >> 63) {
             log::error("new provider size is very large ({}). Is it a negative number ?", newSize);
             return false;
@@ -92,12 +95,14 @@ namespace hex::prv {
     }
 
     void Provider::insert(u64 offset, u64 size) {
+        if (ImHexApi::System::isReadOnlyMode()) return;
         EventProviderDataInserted::post(this, offset, size);
 
         this->markDirty();
     }
 
     void Provider::remove(u64 offset, u64 size) {
+        if (ImHexApi::System::isReadOnlyMode()) return;
         EventProviderDataRemoved::post(this, offset, size);
 
         this->markDirty();
