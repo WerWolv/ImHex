@@ -28,5 +28,6 @@
     "hex.hashes.view.hashes.table.result": "结果",
     "hex.hashes.view.hashes.table.type": "类型",
     "hex.hashes.view.hashes.add": "添加哈希",
-    "hex.hashes.view.hashes.hash_name": "​​哈希名称​"
+    "hex.hashes.view.hashes.hash_name": "​​哈希名称​",
+    "hex.hashes.view.hashes.table_add": "（双击添加新哈希…）"
 }
