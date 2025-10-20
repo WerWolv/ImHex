@@ -1,1 +1,10 @@
-{}
+{
+    "hex.plugin.remote.ssh_provider": "SSH 远程文件",
+    "hex.plugin.remote.ssh_provider.host": "主机名",
+    "hex.plugin.remote.ssh_provider.port": "端口",
+    "hex.plugin.remote.ssh_provider.username": "用户名",
+    "hex.plugin.remote.ssh_provider.password": "密码",
+    "hex.plugin.remote.ssh_provider.passphrase": "口令",
+    "hex.plugin.remote.ssh_provider.connect": "连接",
+    "hex.plugin.remote.ssh_provider.key_file": "私钥路径"
+}
