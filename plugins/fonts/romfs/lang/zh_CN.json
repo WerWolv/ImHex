@@ -11,8 +11,10 @@
     "hex.fonts.font.code_editor": "代码编辑器字体",
     "hex.fonts.font.default": "通用界面字体",
     "hex.fonts.font.hex_editor": "十六进制编辑器字体",
-    "hex.fonts.setting.font.antialias_grayscale": "​​灰度抗锯齿​",
-    "hex.fonts.setting.font.antialias_none": "​​无抗锯齿​",
-    "hex.fonts.setting.font.antialias_subpixel": "​​次像素抗锯齿​",
-    "hex.fonts.setting.font.custom_font_info": "​​以下设置仅在选择了自定义字体时可用。​"
+    "hex.fonts.setting.font.antialias_grayscale": "灰度抗锯齿",
+    "hex.fonts.setting.font.antialias_none": "无抗锯齿",
+    "hex.fonts.setting.font.antialias_subpixel": "次像素抗锯齿",
+    "hex.fonts.setting.font.custom_font_info": "以下设置仅在选择了自定义字体时可用。",
+    "hex.fonts.setting.font.button.bold": "B",
+    "hex.fonts.setting.font.button.italic": "I"
 }
