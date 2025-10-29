@@ -176,9 +176,9 @@ namespace hex::plugin::builtin::recent {
                 return std::fs::last_write_time(a) > std::fs::last_write_time(b);
             });
 
-            std::unordered_set<RecentEntry, RecentEntry::HashFunction> uniqueProviders;
+            std::unordered_set<RecentEntry, RecentEntry::HashFunction> alreadyAddedProviders;
             for (const auto &path : recentFilePaths) {
-                if (uniqueProviders.size() >= MaxRecentEntries)
+                if (s_recentEntries.size() >= MaxRecentEntries)
                     break;
 
                 try {
@@ -193,12 +193,20 @@ namespace hex::plugin::builtin::recent {
                     }
 
                     auto jsonData = nlohmann::json::parse(content);
-                    uniqueProviders.insert(RecentEntry {
+
+                    auto entry = RecentEntry {
                         .displayName    = jsonData.at("displayName"),
                         .type           = jsonData.at("type"),
                         .entryFilePath  = path,
                         .data           = jsonData
-                    });
+                    };
+
+                    // Do not add entry twice
+                    if (alreadyAddedProviders.contains(entry))
+                        continue;
+                    alreadyAddedProviders.insert(entry);
+
+                    s_recentEntries.push_back(entry);
                 } catch (const std::exception &e) {
                     log::error("Failed to parse recent file: {}", e.what());
                 }
@@ -207,7 +215,7 @@ namespace hex::plugin::builtin::recent {
             // Delete all recent provider files that are not in the list
             for (const auto &path : recentFilePaths) {
                 bool found = false;
-                for (const auto &provider : uniqueProviders) {
+                for (const auto &provider : s_recentEntries) {
                     if (path == provider.entryFilePath) {
                         found = true;
                         break;
@@ -217,8 +225,6 @@ namespace hex::plugin::builtin::recent {
                 if (!found)
                     wolv::io::fs::remove(path);
             }
-
-            std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentEntries));
 
             s_autoBackupsFound = false;
             for (const auto &backupPath : paths::Backups.read()) {
