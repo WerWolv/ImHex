@@ -950,6 +950,9 @@ jobs:
             release_num: rawhide
             mock_config: fedora-rawhide
           - name: Fedora
+            release_num: 43
+            mock_config: fedora-43
+          - name: Fedora
             release_num: 42
             mock_config: fedora-42
           - name: Fedora
