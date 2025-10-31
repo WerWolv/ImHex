@@ -202,9 +202,8 @@ namespace hex::plugin::builtin::recent {
                     };
 
                     // Do not add entry twice
-                    if (alreadyAddedProviders.contains(entry))
+                    if (!alreadyAddedProviders.insert(entry).second)
                         continue;
-                    alreadyAddedProviders.insert(entry);
 
                     s_recentEntries.push_back(entry);
                 } catch (const std::exception &e) {
