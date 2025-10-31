@@ -174,6 +174,8 @@ namespace hex::plugin::builtin {
 
         AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.save_project.name");
 
+        EventProjectSaved::post();
+
         return result;
     }
 

@@ -87,6 +87,33 @@ namespace hex::plugin::builtin::recent {
 
     }
 
+    void saveCurrentProjectAsRecent() {
+        if (!ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
+            return;
+        }
+        auto fileName = fmt::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
+
+        auto projectFileName = ProjectFile::getPath().filename();
+        if (projectFileName == BackupFileName)
+            return;
+
+        // The recent provider is saved to every "recent" directory
+        for (const auto &recentPath : paths::Recent.write()) {
+            wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
+            if (!recentFile.isValid())
+                continue;
+
+            nlohmann::json recentEntry {
+                { "type", "project" },
+                { "displayName", wolv::util::toUTF8String(projectFileName) },
+                { "path", wolv::util::toUTF8String(ProjectFile::getPath()) }
+            };
+
+            recentFile.writeString(recentEntry.dump(4));
+        }
+
+        updateRecentEntries();
+    }
 
     void registerEventHandlers() {
         // Save every opened provider as a "recent" shortcut
@@ -123,33 +150,10 @@ namespace hex::plugin::builtin::recent {
             updateRecentEntries();
         });
 
-        // Save opened projects as a "recent" shortcut
-        (void)EventProjectOpened::subscribe([] {
-             if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
-                auto fileName = fmt::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
-
-                auto projectFileName = ProjectFile::getPath().filename();
-                if (projectFileName == BackupFileName)
-                    return;
-
-                // The recent provider is saved to every "recent" directory
-                for (const auto &recentPath : paths::Recent.write()) {
-                    wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
-                    if (!recentFile.isValid())
-                        continue;
-
-                    nlohmann::json recentEntry {
-                        { "type", "project" },
-                        { "displayName", wolv::util::toUTF8String(projectFileName) },
-                        { "path", wolv::util::toUTF8String(ProjectFile::getPath()) }
-                    };
-
-                    recentFile.writeString(recentEntry.dump(4));
-                }
-            }
-            
-            updateRecentEntries();
-        });
+        // Add opened projects to "recents" shortcuts
+        (void)EventProjectOpened::subscribe(saveCurrentProjectAsRecent);
+        // When saving a project, update its "recents" entry. This is mostly useful when using saving a new project
+        (void)EventProjectSaved::subscribe(saveCurrentProjectAsRecent);
     }
 
     void updateRecentEntries() {
