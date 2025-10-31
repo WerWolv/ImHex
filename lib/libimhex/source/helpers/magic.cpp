@@ -336,7 +336,7 @@ namespace hex::magic {
 
                             if (pattern->matches(bytes)) {
                                 foundCorrectType = true;
-                                magicOffset = *address;
+                                magicOffset = address;
                             }
                         }
                     }
