@@ -1,0 +1,32 @@
+--- a/main/gui/source/window/window.cpp
++++ b/main/gui/source/window/window.cpp
+@@ -24,6 +24,10 @@
+ #include <hex/ui/popup.hpp>
+ #include <hex/ui/banner.hpp>
+ 
++#if defined(OS_WEB)
++    #include <hex/helpers/web_clipboard.hpp>
++#endif
++
+ #include <cmath>
+ #include <chrono>
+ #include <csignal>
+@@ -1354,6 +1358,18 @@ namespace hex {
+         #elif defined(OS_WEB)
+             ImGui_ImplOpenGL3_Init();
+             ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, "#canvas");
++            
++            // Initialize web clipboard functionality
++            hex::web::WebClipboard::initialize();
++            
++            // Set up ImGui clipboard callbacks for web
++            auto& io = ImGui::GetIO();
++            io.SetClipboardTextFn = [](void*, const char* text) {
++                hex::web::WebClipboard::setClipboardText(text);
++            };
++            io.GetClipboardTextFn = [](void*) -> const char* {
++                return ""; // Web clipboard is async, handled separately
++            };
+         #else
+             if (ImHexApi::System::getGLVersion() >= SemanticVersion(4,1,0)) {
+                 ImGui_ImplOpenGL3_Init("#version 410");
