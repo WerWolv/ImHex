@@ -102,6 +102,14 @@ EXPORT_MODULE namespace hex {
         UnlocalizedString(const std::string &string) : m_unlocalizedString(string) { }
         UnlocalizedString(const char *string) : m_unlocalizedString(string) { }
         UnlocalizedString(const Lang& arg) = delete;
+        UnlocalizedString(std::string &&string) : m_unlocalizedString(std::move(string)) { }
+        UnlocalizedString(UnlocalizedString &&) = default;
+        UnlocalizedString(const UnlocalizedString &) = default;
+
+        UnlocalizedString &operator=(const UnlocalizedString &) = default;
+        UnlocalizedString &operator=(UnlocalizedString &&) = default;
+        UnlocalizedString &operator=(const std::string &string) { m_unlocalizedString = string; return *this; }
+        UnlocalizedString &operator=(std::string &&string) { m_unlocalizedString = std::move(string); return *this; }
 
         [[nodiscard]] operator std::string() const {
             return m_unlocalizedString;

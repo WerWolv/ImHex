@@ -742,12 +742,12 @@ namespace hex::plugin::builtin {
                 ImGui::BeginGroup();
                 if (ImGui::BeginTabBar("SearchMethods")) {
                     const std::array<std::string, 6> StringTypes = {
-                            "hex.ui.common.encoding.ascii"_lang,
-                            "hex.ui.common.encoding.utf8"_lang,
-                            "hex.ui.common.encoding.utf16le"_lang,
-                            "hex.ui.common.encoding.utf16be"_lang,
-                            fmt::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16le"_lang),
-                            fmt::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16be"_lang)
+                        "hex.ui.common.encoding.ascii"_lang,
+                        "hex.ui.common.encoding.utf8"_lang,
+                        "hex.ui.common.encoding.utf16le"_lang,
+                        "hex.ui.common.encoding.utf16be"_lang,
+                        fmt::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16le"_lang),
+                        fmt::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16be"_lang)
                     };
 
                     auto &mode = m_searchSettings.mode;
@@ -899,24 +899,24 @@ namespace hex::plugin::builtin {
                         }
                         ImGui::NewLine();
 
-                        const std::array<std::string, 10> InputTypes = {
-                                "hex.ui.common.type.u8"_lang,
-                                "hex.ui.common.type.u16"_lang,
-                                "hex.ui.common.type.u32"_lang,
-                                "hex.ui.common.type.u64"_lang,
-                                "hex.ui.common.type.i8"_lang,
-                                "hex.ui.common.type.i16"_lang,
-                                "hex.ui.common.type.i32"_lang,
-                                "hex.ui.common.type.i64"_lang,
-                                "hex.ui.common.type.f32"_lang,
-                                "hex.ui.common.type.f64"_lang
+                        constexpr static std::array InputTypes = {
+                            "hex.ui.common.type.u8"_lang,
+                            "hex.ui.common.type.u16"_lang,
+                            "hex.ui.common.type.u32"_lang,
+                            "hex.ui.common.type.u64"_lang,
+                            "hex.ui.common.type.i8"_lang,
+                            "hex.ui.common.type.i16"_lang,
+                            "hex.ui.common.type.i32"_lang,
+                            "hex.ui.common.type.i64"_lang,
+                            "hex.ui.common.type.f32"_lang,
+                            "hex.ui.common.type.f64"_lang
                         };
 
-                        if (ImGui::BeginCombo("hex.ui.common.type"_lang, InputTypes[std::to_underlying(settings.type)].c_str())) {
+                        if (ImGui::BeginCombo("hex.ui.common.type"_lang, InputTypes[std::to_underlying(settings.type)].get())) {
                             for (size_t i = 0; i < InputTypes.size(); i++) {
                                 auto type = static_cast<SearchSettings::Value::Type>(i);
 
-                                if (ImGui::Selectable(InputTypes[i].c_str(), type == settings.type)) {
+                                if (ImGui::Selectable(InputTypes[i].get(), type == settings.type)) {
                                     settings.type = type;
                                     edited = true;
                                 }

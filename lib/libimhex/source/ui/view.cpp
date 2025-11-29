@@ -75,9 +75,13 @@ namespace hex {
 
     void View::trackViewState() {
         if (m_windowOpen && !m_prevWindowOpen)
+        {
             this->setWindowJustOpened(true);
-        else if (!m_windowOpen && m_prevWindowOpen)
+            this->onOpen();
+        } else if (!m_windowOpen && m_prevWindowOpen) {
             this->setWindowJustClosed(true);
+            this->onClose();
+        }
         m_prevWindowOpen = m_windowOpen;
     }
 

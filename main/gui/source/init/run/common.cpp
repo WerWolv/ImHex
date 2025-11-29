@@ -1,3 +1,4 @@
+#include <hex/api/achievement_manager.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/imhex_api/system.hpp>
@@ -45,6 +46,8 @@ namespace hex::init {
     void initializationFinished() {
         ContentRegistry::Settings::impl::load();
         ContentRegistry::Settings::impl::store();
+
+        AchievementManager::loadProgress();
 
         EventImHexStartupFinished::post();
 

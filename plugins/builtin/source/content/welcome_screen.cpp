@@ -56,13 +56,15 @@ namespace hex::plugin::builtin {
         class PopupRestoreBackup : public Popup<PopupRestoreBackup> {
         private:
             std::fs::path m_logFilePath;
+            bool m_hasAutoBackups;
             std::function<void()> m_restoreCallback;
             std::function<void()> m_deleteCallback;
             bool m_reportError = true;
         public:
-            PopupRestoreBackup(std::fs::path logFilePath, const std::function<void()> &restoreCallback, const std::function<void()> &deleteCallback)
+            PopupRestoreBackup(std::fs::path logFilePath, bool hasAutoBackups, const std::function<void()> &restoreCallback, const std::function<void()> &deleteCallback)
                     : Popup("hex.builtin.popup.safety_backup.title"),
                     m_logFilePath(std::move(logFilePath)),
+                    m_hasAutoBackups(hasAutoBackups),
                     m_restoreCallback(restoreCallback),
                     m_deleteCallback(deleteCallback) {
 
@@ -122,6 +124,12 @@ namespace hex::plugin::builtin {
                     m_deleteCallback();
 
                     this->close();
+                }
+
+                if (m_hasAutoBackups) {
+                    if (ImGui::Button("Show Automatic Backups", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                        recent::PopupAutoBackups::open();
+                    }
                 }
             }
         };
@@ -739,6 +747,10 @@ namespace hex::plugin::builtin {
                 auto backupFilePathOld = path / BackupFileName;
                 backupFilePathOld.replace_extension(".hexproj.old");
 
+                bool autoBackupsEnabled = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.auto_backup_time", 0) > 0;
+                auto autoBackups = recent::PopupAutoBackups::getAutoBackups();
+                bool hasAutoBackups = autoBackupsEnabled && !autoBackups.empty();
+
                 bool hasBackupFile = wolv::io::fs::exists(backupFilePath);
 
                 if (!hasProject && !hasBackupFile) {
@@ -762,13 +774,16 @@ namespace hex::plugin::builtin {
                 PopupRestoreBackup::open(
                     // Path of log file
                     crashFileData.value("logFile", ""),
+                    hasAutoBackups,
 
                     // Restore callback
-                    [crashFileData, backupFilePath, hasProject, hasBackupFile] {
+                    [crashFileData, backupFilePath, hasProject, hasBackupFile, hasAutoBackups, autoBackups = std::move(autoBackups)] {
                         if (hasBackupFile) {
                             if (ProjectFile::load(backupFilePath)) {
                                 if (hasProject) {
                                     ProjectFile::setPath(crashFileData["project"].get<std::string>());
+                                } else if (hasAutoBackups) {
+                                    ProjectFile::setPath(autoBackups.front().path);
                                 } else {
                                     ProjectFile::setPath("");
                                 }
@@ -779,6 +794,8 @@ namespace hex::plugin::builtin {
                         } else {
                             if (hasProject) {
                                 ProjectFile::setPath(crashFileData["project"].get<std::string>());
+                            } else if (hasAutoBackups) {
+                                ProjectFile::setPath(autoBackups.front().path);
                             }
                         }
                     },

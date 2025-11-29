@@ -159,7 +159,7 @@ namespace hex::plugin::builtin {
             ImGui::EndChild();
 
             struct DonationPage {
-                DonationPage(const std::fs::path &path, const std::string &link) :
+                DonationPage(const std::fs::path &path, std::string link) :
                     texture(ImGuiExt::Texture::fromImage(romfs::get(path).span<std::byte>(), ImGuiExt::Texture::Filter::Linear)),
                     link(std::move(link)) { }
 
