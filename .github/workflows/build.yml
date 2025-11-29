@@ -186,7 +186,7 @@ jobs:
       run: |
         set -x
         echo "NoGPU version Powered by Mesa 3D : https://fdossena.com/?p=mesa%2Findex.frag" > build/install/MESA.md
-        curl https://downloads.fdossena.com/geth.php?r=mesa64-latest -L -o mesa.7z
+        curl --connect-timeout 30 --retry 5 --retry-delay 0 --retry-max-time 30 https://downloads.fdossena.com/geth.php?r=mesa64-latest -L -o mesa.7z
         7z e mesa.7z
         mv opengl32.dll build/install
 
