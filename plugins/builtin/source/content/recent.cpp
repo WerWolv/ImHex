@@ -1,3 +1,5 @@
+#include <content/recent.hpp>
+
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -17,7 +19,6 @@
 #include <wolv/utils/guards.hpp>
 #include <wolv/utils/string.hpp>
 
-#include <content/recent.hpp>
 #include <toasts/toast_notification.hpp>
 #include <fonts/vscode_icons.hpp>
 
@@ -36,55 +37,68 @@ namespace hex::plugin::builtin::recent {
         std::list<RecentEntry> s_recentEntries;
         std::atomic_bool s_autoBackupsFound = false;
 
+    }
 
-        class PopupAutoBackups : public Popup<PopupAutoBackups> {
-        private:
-            struct BackupEntry {
-                std::string displayName;
-                std::fs::path path;
-            };
-        public:
-            PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups", true, true) {
-                for (const auto &backupPath : paths::Backups.read()) {
-                    for (const auto &entry : std::fs::directory_iterator(backupPath)) {
-                        if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
-                            wolv::io::File backupFile(entry.path(), wolv::io::File::Mode::Read);
+    std::vector<PopupAutoBackups::BackupEntry> PopupAutoBackups::getAutoBackups() {
+        std::set<BackupEntry> result;
 
-                            m_backups.emplace_back(
-                                fmt::format("hex.builtin.welcome.start.recent.auto_backups.backup"_lang, fmt::gmtime(backupFile.getFileInfo()->st_ctime)),
-                                entry.path()
-                            );
-                        }
-                    }
+        for (const auto &backupPath : paths::Backups.read()) {
+            for (const auto &entry : std::fs::directory_iterator(backupPath)) {
+                if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
+                    // auto_backup.{:%y%m%d_%H%M%S}.hexproj
+                    auto fileName = wolv::util::toUTF8String(entry.path().stem());
+                    if (!fileName.starts_with("auto_backup."))
+                        continue;
+
+                    wolv::io::File backupFile(entry.path(), wolv::io::File::Mode::Read);
+
+                    auto creationTimeString = fileName.substr(12);
+
+                    std::chrono::sys_seconds utcSeconds;
+                    std::istringstream ss(creationTimeString);
+                    ss >> std::chrono::parse("%y%m%d_%H%M%S", utcSeconds);
+                    if (ss.fail())
+                        continue;
+
+                    auto utcTime = std::chrono::system_clock::to_time_t(utcSeconds);
+                    std::tm localTm = *std::localtime(&utcTime);
+
+                    result.emplace(
+                        fmt::format("hex.builtin.welcome.start.recent.auto_backups.backup"_lang, localTm),
+                        entry.path(),
+                        localTm
+                    );
+                }
+            }
+        }
+
+        return { result.begin(), result.end() };
+    }
+
+    PopupAutoBackups::PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups", true, true) {
+        m_backups = getAutoBackups();
+    }
+
+    void PopupAutoBackups::drawContent() {
+        if (ImGui::BeginTable("AutoBackups", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5))) {
+            for (const auto &backup : m_backups | std::views::reverse | std::views::take(10)) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                if (ImGui::Selectable(backup.displayName.c_str())) {
+                    ProjectFile::load(backup.path);
+                    Popup::close();
                 }
             }
 
-            void drawContent() override {
-                if (ImGui::BeginTable("AutoBackups", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5))) {
-                    for (const auto &backup : m_backups | std::views::reverse | std::views::take(10)) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        if (ImGui::Selectable(backup.displayName.c_str())) {
-                            ProjectFile::load(backup.path);
-                            Popup::close();
-                        }
-                    }
+            ImGui::EndTable();
+        }
 
-                    ImGui::EndTable();
-                }
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+            this->close();
+    }
 
-                if (ImGui::IsKeyPressed(ImGuiKey_Escape))
-                    this->close();
-            }
-
-            [[nodiscard]] ImGuiWindowFlags getFlags() const override {
-                return ImGuiWindowFlags_AlwaysAutoResize;
-            }
-
-        private:
-            std::vector<BackupEntry> m_backups;
-        };
-
+    [[nodiscard]] ImGuiWindowFlags PopupAutoBackups::getFlags() const {
+        return ImGuiWindowFlags_AlwaysAutoResize;
     }
 
     void saveCurrentProjectAsRecent() {
