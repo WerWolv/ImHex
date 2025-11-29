@@ -8,11 +8,16 @@
     "hex.diffing.view.diff.algorithm": "差异算法",
     "hex.diffing.view.diff.modified": "修改",
     "hex.diffing.view.diff.name": "差异",
-    "hex.diffing.view.diff.provider_a": "提供者A",
-    "hex.diffing.view.diff.provider_b": "提供者B",
+    "hex.diffing.view.diff.provider_a": "数据源 A",
+    "hex.diffing.view.diff.provider_b": "数据源 B",
     "hex.diffing.view.diff.removed": "移除",
     "hex.diffing.view.diff.settings": "无可用设置",
     "hex.diffing.view.diff.settings.no_settings": "无可用设置",
     "hex.diffing.view.diff.task.diffing": "对比数据……",
-    "hex.diffing.view.diff.changes": "变化"
+    "hex.diffing.view.diff.changes": "变化",
+    "hex.diffing.view.diff.menu.file.jumping": "在差异间跳转",
+    "hex.diffing.view.diff.menu.file.jumping.prev_diff": "跳到上个差异",
+    "hex.diffing.view.diff.menu.file.jumping.next_diff": "跳到下个差异",
+    "hex.diffing.view.diff.jumping.beginning_reached": "直到文件开头都没有差异了",
+    "hex.diffing.view.diff.jumping.end_reached": "直到文件末尾都没有差异了"
 }
