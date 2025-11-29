@@ -49,15 +49,16 @@ jobs:
         set -x
         mkdir -p build
         cd build
-        CC=gcc-14 CXX=g++-14 cmake              \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE        \
-          -DCMAKE_INSTALL_PREFIX="$PWD/install" \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache    \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache  \
-          -DCMAKE_C_FLAGS="-fuse-ld=lld"        \
-          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"      \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON       \
-          -G Ninja                              \
+        CC=gcc-14 CXX=g++-14 cmake                \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
+          -DCMAKE_C_FLAGS="-fuse-ld=lld"          \
+          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"        \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON         \
+          -DIMHEX_EXCLUDE_PLUGINS="script_loader" \
+          -G Ninja                                \
           ..
         ninja install
 
