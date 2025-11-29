@@ -110,6 +110,17 @@ namespace hex {
         void trackViewState();
         void setFocused(bool focused);
 
+    protected:
+        /**
+         * @brief Called when this view is opened (i.e. made visible).
+         */
+        virtual void onOpen() {}
+
+        /**
+         * @brief Called when this view is closed (i.e. made invisible).
+         */
+        virtual void onClose() {}
+
     public:
         class Window;
         class Special;
