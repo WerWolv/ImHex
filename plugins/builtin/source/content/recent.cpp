@@ -54,19 +54,33 @@ namespace hex::plugin::builtin::recent {
 
                     auto creationTimeString = fileName.substr(12);
 
-                    std::chrono::sys_seconds utcSeconds;
-                    std::istringstream ss(creationTimeString);
-                    ss >> std::chrono::parse("%y%m%d_%H%M%S", utcSeconds);
-                    if (ss.fail())
+                    std::tm utcTm = {};
+                    if (sscanf(creationTimeString.c_str(), "%2d%2d%2d_%2d%2d%2d",
+                        &utcTm.tm_year,
+                        &utcTm.tm_mon,
+                        &utcTm.tm_mday,
+                        &utcTm.tm_hour,
+                        &utcTm.tm_min,
+                        &utcTm.tm_sec
+                    ) != 6) {
+                        continue;
+                    }
+
+                    utcTm.tm_year += 100; // Years since 1900
+                    utcTm.tm_mon -= 1;    // Months since January
+
+                    auto utcTime = std::mktime(&utcTm);
+                    if (utcTime == 0)
                         continue;
 
-                    auto utcTime = std::chrono::system_clock::to_time_t(utcSeconds);
-                    std::tm localTm = *std::localtime(&utcTime);
+                    std::tm *localTm = std::localtime(&utcTime);
+                    if (localTm == nullptr)
+                        continue;
 
                     result.emplace(
-                        fmt::format("hex.builtin.welcome.start.recent.auto_backups.backup"_lang, localTm),
+                        fmt::format("hex.builtin.welcome.start.recent.auto_backups.backup"_lang, *localTm),
                         entry.path(),
-                        localTm
+                        *localTm
                     );
                 }
             }
