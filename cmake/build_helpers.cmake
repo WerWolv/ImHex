@@ -333,19 +333,18 @@ macro(createPackage)
 
         downloadImHexPatternsFiles(".")
     elseif(UNIX AND NOT APPLE)
-
         set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
 
-        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dist/DEBIAN/control.in ${CMAKE_BINARY_DIR}/DEBIAN/control)
+        configure_file(${IMHEX_BASE_FOLDER}/dist/DEBIAN/control.in ${CMAKE_BINARY_DIR}/DEBIAN/control)
 
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/imhex)
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.mime.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mime/packages RENAME imhex.xml)
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.svg DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.svg)
+        install(FILES ${IMHEX_BASE_FOLDER}/LICENSE              DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/imhex)
+        install(FILES ${IMHEX_BASE_FOLDER}/dist/imhex.desktop   DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
+        install(FILES ${IMHEX_BASE_FOLDER}/dist/imhex.mime.xml  DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mime/packages RENAME imhex.xml)
+        install(FILES ${IMHEX_BASE_FOLDER}/resources/icon.svg   DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps       RENAME imhex.svg)
         downloadImHexPatternsFiles("./share/imhex")
 
         # install AppStream file
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/net.werwolv.ImHex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
+        install(FILES ${IMHEX_BASE_FOLDER}/dist/net.werwolv.ImHex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
     endif()
 
     if (APPLE)
@@ -369,6 +368,15 @@ macro(createPackage)
             install(FILES ${IMHEX_ICON} DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/Resources")
             install(TARGETS main BUNDLE DESTINATION ".")
             install(TARGETS updater DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/MacOS")
+            install(
+                FILES ${IMHEX_BASE_FOLDER}/dist/cli/imhex.sh
+                DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/MacOS/cli"
+                RENAME imhex
+                PERMISSIONS
+                    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                    GROUP_READ GROUP_EXECUTE
+                    WORLD_READ WORLD_EXECUTE
+            )
 
             # Update library references to make the bundle portable
             postprocess_bundle(imhex_all main)
@@ -398,6 +406,28 @@ macro(createPackage)
         endif()
         if (TARGET main-forwarder)
             install(TARGETS main-forwarder BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR})
+        endif()
+
+        if (WIN32)
+            install(
+                FILES ${IMHEX_BASE_FOLDER}/dist/cli/imhex.bat
+                DESTINATION ${CMAKE_INSTALL_BINDIR}/cli
+                RENAME imhex
+                PERMISSIONS
+                    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                    GROUP_READ GROUP_EXECUTE
+                    WORLD_READ WORLD_EXECUTE
+            )
+        else()
+            install(
+                FILES ${IMHEX_BASE_FOLDER}/dist/cli/imhex.sh
+                DESTINATION ${CMAKE_INSTALL_SBINDIR}
+                RENAME imhex
+                PERMISSIONS
+                    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                    GROUP_READ GROUP_EXECUTE
+                    WORLD_READ WORLD_EXECUTE
+            )
         endif()
     endif()
 
