@@ -304,6 +304,14 @@ namespace hex::plugin::builtin {
         this->registerEvents();
         this->registerMenuItems();
         this->registerHandlers();
+
+        // Initialize the text editor with some basic help text
+        m_textEditor.setOnCreateCallback([](auto, ui::TextEditor &editor) {
+            std::string text = "hex.builtin.view.pattern_editor.default_help_text"_lang;
+            text = "// " + wolv::util::replaceStrings(text, "\n", "\n// ");
+
+            editor.setText(text);
+        });
     }
 
     ViewPatternEditor::~ViewPatternEditor() {

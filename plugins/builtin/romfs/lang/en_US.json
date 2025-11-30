@@ -1001,6 +1001,7 @@
     "hex.builtin.view.pattern_editor.debugger.remove_tooltip": "Remove breakpoint",
     "hex.builtin.view.pattern_editor.debugger.scope": "Scope",
     "hex.builtin.view.pattern_editor.debugger.scope.global": "Global Scope",
+    "hex.builtin.view.pattern_editor.default_help_text": "Enter your pattern code here and click on the Play button\nbelow to execute your code. The results will then be visible\nin the Pattern Data view.\n\nMore information can be found in the documentation.\n\n\nSimple example:\n\nimport std.io;\n\nstruct Pattern {\n    u32 int;\n    float floating_point;\n};\n\nPattern my_pattern @ 0x00;\nstd::print(\"0x{:08X}\", my_pattern.int);",
     "hex.builtin.view.pattern_editor.env_vars": "Environment Variables",
     "hex.builtin.view.pattern_editor.evaluating": "Evaluating...",
     "hex.builtin.view.pattern_editor.find_hint": "Find",
