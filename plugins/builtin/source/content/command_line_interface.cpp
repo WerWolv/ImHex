@@ -104,7 +104,7 @@ namespace hex::plugin::builtin {
                 std::fs::path path;
 
                 try {
-                    path = std::fs::weakly_canonical(arg);
+                    path = std::fs::absolute(arg);
                 } catch(std::fs::filesystem_error &) {
                     path = arg;
                 }
