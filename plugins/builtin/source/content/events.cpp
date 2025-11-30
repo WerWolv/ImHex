@@ -54,16 +54,16 @@ namespace hex::plugin::builtin {
             if (!provider->open() || !provider->isAvailable()) {
                 ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                 TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
-            } else {
-                EventProviderOpened::post(fileProvider);
-                AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
+                return;
             }
 
+            EventProviderOpened::post(fileProvider);
+            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
             ImHexApi::Provider::setCurrentProvider(provider);
-        }
 
-        glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
-        glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
+            glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
+            glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
+        }
     }
 
     void registerEventHandlers() {
