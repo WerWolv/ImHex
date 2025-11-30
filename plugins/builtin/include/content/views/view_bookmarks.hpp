@@ -6,6 +6,7 @@
 #include <ui/text_editor.hpp>
 
 #include <list>
+#include <ui/markdown.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -21,6 +22,7 @@ namespace hex::plugin::builtin {
         struct Bookmark {
             ImHexApi::Bookmarks::Entry entry;
             bool highlightVisible;
+            ui::Markdown commentDisplay;
         };
 
     private:

@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
                 bookmarkId
             };
 
-            m_bookmarks->emplace_back(std::move(bookmark), true);
+            m_bookmarks->emplace_back(std::move(bookmark), true, ui::Markdown(bookmark.comment));
 
             ImHexApi::Provider::markDirty();
 
@@ -85,7 +85,7 @@ namespace hex::plugin::builtin {
             std::ignore = data;
 
             // Loop over all bookmarks
-            for (const auto &[bookmark, highlightVisible] : *m_bookmarks) {
+            for (auto &[bookmark, highlightVisible, commentDisplay] : *m_bookmarks) {
                 if (!highlightVisible)
                     continue;
 
@@ -129,7 +129,7 @@ namespace hex::plugin::builtin {
                                     ImGuiExt::TextFormatted("{}: ", "hex.builtin.view.bookmarks.header.comment"_lang.get());
                                     ImGui::TableNextColumn();
                                     ImGui::PushTextWrapPos(ImGui::CalcTextSize("X").x * 40);
-                                    ImGuiExt::TextFormattedWrapped("{}", bookmark.comment);
+                                    commentDisplay.draw();
                                     ImGui::PopTextWrapPos();
                                 }
 
@@ -183,7 +183,7 @@ namespace hex::plugin::builtin {
 
             result += "## Bookmarks\n\n";
 
-            for (const auto &[bookmark, highlightVisible] : bookmarks) {
+            for (const auto &[bookmark, highlightVisible, commentDisplay] : bookmarks) {
                 result += fmt::format("### <span style=\"background-color: #{:06X}80\">{} [0x{:04X} - 0x{:04X}]</span>\n\n", hex::changeEndianness(bookmark.color, std::endian::big) >> 8, bookmark.name, bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
                 for (const auto &line : wolv::util::splitString(bookmark.comment, "\n"))
@@ -317,7 +317,7 @@ namespace hex::plugin::builtin {
 
             // Draw all bookmarks
             for (auto it = m_bookmarks->begin(); it != m_bookmarks->end(); ++it) {
-                auto &[bookmark, highlightVisible] = *it;
+                auto &[bookmark, highlightVisible, commentDisplay] = *it;
                 auto &[region, name, comment, color, locked, bookmarkId] = bookmark;
 
                 // Apply filter
@@ -362,7 +362,7 @@ namespace hex::plugin::builtin {
                         if (!comment.empty()) {
                             ImGui::Separator();
                             ImGui::PushTextWrapPos(300_scaled);
-                            ImGuiExt::TextFormatted("{}", comment);
+                            commentDisplay.draw();
                             ImGui::PopTextWrapPos();
                         }
 
@@ -520,7 +520,13 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::BeginSubWindow("hex.builtin.view.bookmarks.header.comment"_lang)) {
                             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_ChildBg));
                             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
-                            ImGui::InputTextMultiline("##comment", comment, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), locked ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+                            if (!locked) {
+                                if (ImGui::InputTextMultiline("##comment", comment, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), locked ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None)) {
+                                    commentDisplay = ui::Markdown(comment);
+                                }
+                            } else {
+                                commentDisplay.draw();
+                            }
                             ImGui::PopStyleVar();
                             ImGui::PopStyleColor();
                         }
@@ -566,6 +572,7 @@ namespace hex::plugin::builtin {
                     .id         = bookmark.contains("id") ? bookmark["id"].get<u64>() : m_currBookmarkId.get(provider),
                 },
                 bookmark.contains("highlightVisible") ? bookmark["highlightVisible"].get<bool>() : true,
+                ui::Markdown(bookmark["comment"])
             });
             if (bookmark.contains("id"))
                 m_currBookmarkId.get(provider) = std::max<u64>(m_currBookmarkId.get(provider), bookmark["id"].get<i64>() + 1);
@@ -579,7 +586,7 @@ namespace hex::plugin::builtin {
     bool ViewBookmarks::exportBookmarks(prv::Provider *provider, nlohmann::json &json) {
         json["bookmarks"] = nlohmann::json::array();
         size_t index = 0;
-        for (const auto &[bookmark, highlightVisible]  : m_bookmarks.get(provider)) {
+        for (const auto &[bookmark, highlightVisible, commentDisplay]  : m_bookmarks.get(provider)) {
             json["bookmarks"][index] = {
                     { "name",       bookmark.name },
                     { "comment",    bookmark.comment },
