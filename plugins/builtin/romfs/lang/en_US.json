@@ -1213,7 +1213,7 @@
     "hex.builtin.welcome.start.open_file": "Open File",
     "hex.builtin.welcome.start.open_other": "Other Data Sources",
     "hex.builtin.welcome.start.open_project": "Open Project",
-    "hex.builtin.welcome.start.recent": "Recent Data Sources",
+    "hex.builtin.welcome.start.recent": "Recently Opened",
     "hex.builtin.welcome.start.recent.auto_backups": "Auto Backups",
     "hex.builtin.welcome.start.recent.auto_backups.backup": "Backup from {:%Y-%m-%d %H:%M:%S}",
     "hex.builtin.welcome.tip_of_the_day": "Tip of the Day",

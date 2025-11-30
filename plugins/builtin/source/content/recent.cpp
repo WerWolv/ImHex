@@ -314,7 +314,7 @@ namespace hex::plugin::builtin::recent {
 
                     const char* icon;
                     if (isProject) {
-                        icon = ICON_VS_PROJECT;
+                        icon = ICON_VS_NOTEBOOK;
                     } else {
                         icon = ICON_VS_FILE_BINARY;
                     }
