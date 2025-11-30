@@ -1,4 +1,4 @@
-#include <content/helpers/disassembler.hpp>
+#include <content/helpers/capstone.hpp>
 
 #include <hex/api/localization_manager.hpp>
 

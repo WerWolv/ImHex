@@ -8,8 +8,7 @@
 
 #include <pl/patterns/pattern.hpp>
 
-#include <capstone/capstone.h>
-#include <content/helpers/disassembler.hpp>
+#include <content/helpers/capstone.hpp>
 
 
 namespace hex::plugin::disasm {
