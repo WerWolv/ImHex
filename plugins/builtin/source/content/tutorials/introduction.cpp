@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
             )
             .addHighlight("hex.builtin.tutorial.introduction.step2.highlight",
             {
-                "Welcome Screen/Start##SubWindow_69AA6996",
+                "Welcome Screen/Start_087A287D",
                 Lang("hex.builtin.welcome.start.create_file")
             })
             .onAppear([&step] {
@@ -85,7 +85,7 @@ namespace hex::plugin::builtin {
 
             step.addHighlight("hex.builtin.tutorial.introduction.step6.highlight", {
                 "##MainMenuBar",
-                "##menubar",
+                "##MenuBar",
                 Lang("hex.builtin.menu.help")
             })
             .addHighlight({

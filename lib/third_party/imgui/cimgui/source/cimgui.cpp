@@ -5141,9 +5141,13 @@ CIMGUI_API bool igIsDragDropPayloadBeingAccepted()
 {
     return ImGui::IsDragDropPayloadBeingAccepted();
 }
-CIMGUI_API void igRenderDragDropTargetRect(const ImRect bb,const ImRect item_clip_rect)
+CIMGUI_API void igRenderDragDropTargetRectEx(ImDrawList *draw_list, const ImRect bb)
 {
-    return ImGui::RenderDragDropTargetRect(bb,item_clip_rect);
+    return ImGui::RenderDragDropTargetRectEx(draw_list, bb);
+}
+CIMGUI_API void igRenderDragDropTargetRectForItem(const ImRect bb)
+{
+    return ImGui::RenderDragDropTargetRectForItem(bb);
 }
 CIMGUI_API ImGuiTypingSelectRequest* igGetTypingSelectRequest(ImGuiTypingSelectFlags flags)
 {

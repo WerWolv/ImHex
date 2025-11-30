@@ -416,8 +416,6 @@ namespace hex {
         // Run all deferred calls
         TaskManager::runDeferredCalls();
 
-        TutorialManager::drawTutorial();
-
         EventFrameBegin::post();
 
         // Handle all undocked floating windows
@@ -620,6 +618,8 @@ namespace hex {
                 }
             }
         }
+
+        TutorialManager::drawTutorial();
 
         // Draw Toasts
         {

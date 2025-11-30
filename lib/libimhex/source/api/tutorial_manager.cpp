@@ -251,6 +251,7 @@ namespace hex {
             {
                 auto highlightColor = ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight);
                 highlightColor.w *= ImSin(ImGui::GetTime() * 6.0F) / 4.0F + 0.75F;
+                ImHexApi::System::unlockFrameRate();
 
                 drawList->AddRect(rect.Min - ImVec2(5, 5), rect.Max + ImVec2(5, 5), ImColor(highlightColor), 5.0F, ImDrawFlags_None, 2.0F);
             }
