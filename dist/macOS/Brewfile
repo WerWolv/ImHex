@@ -1,4 +1,4 @@
-brew "mbedtls"
+brew "mbedtls@3"
 brew "nlohmann-json"
 brew "cmake"
 brew "ccache"
