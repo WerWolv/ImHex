@@ -1207,6 +1207,7 @@
     "hex.builtin.popup.safety_backup.log_file": "Log file: ",
     "hex.builtin.popup.safety_backup.report_error": "Send crash log to developers",
     "hex.builtin.popup.safety_backup.restore": "Yes, Restore",
+    "hex.builtin.popup.safety_backup.show_auto_backups": "Show auto backups",
     "hex.builtin.popup.safety_backup.title": "Restore lost data",
     "hex.builtin.welcome.start.create_file": "Create New File",
     "hex.builtin.welcome.start.open_file": "Open File",

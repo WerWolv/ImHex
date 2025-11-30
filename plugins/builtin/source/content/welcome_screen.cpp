@@ -127,7 +127,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (m_hasAutoBackups) {
-                    if (ImGui::Button("Show Automatic Backups", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                    if (ImGui::Button("hex.builtin.popup.safety_backup.show_auto_backups"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                         recent::PopupAutoBackups::open();
                     }
                 }
