@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewAbout>();
         ContentRegistry::Views::add<ViewSettings>();
         ContentRegistry::Views::add<ViewDataProcessor>();
-        ContentRegistry::Views::add<ViewConstants>();
+        //ContentRegistry::Views::add<ViewConstants>();
         ContentRegistry::Views::add<ViewStore>();
         ContentRegistry::Views::add<ViewProviderSettings>();
         ContentRegistry::Views::add<ViewFind>();
