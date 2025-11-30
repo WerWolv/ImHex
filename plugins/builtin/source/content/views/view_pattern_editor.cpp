@@ -311,6 +311,7 @@ namespace hex::plugin::builtin {
             text = "// " + wolv::util::replaceStrings(text, "\n", "\n// ");
 
             editor.setText(text);
+            editor.setTextChanged(false);
         });
     }
 
