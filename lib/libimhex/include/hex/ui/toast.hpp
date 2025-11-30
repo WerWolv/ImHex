@@ -6,6 +6,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <hex/api/task_manager.hpp>
 
 namespace hex {
 
@@ -51,10 +52,10 @@ namespace hex {
 
         template<typename ...Args>
         static void open(Args && ... args) {
-            std::lock_guard lock(getMutex());
-
-            auto toast = std::make_unique<T>(std::forward<Args>(args)...);
-            getQueuedToasts().emplace_back(std::move(toast));
+            TaskManager::doLater([=] {
+                auto toast = std::make_unique<T>(args...);
+                getQueuedToasts().emplace_back(std::move(toast));
+            });
         }
     };
 
