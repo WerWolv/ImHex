@@ -387,6 +387,24 @@ namespace hex {
         s_globalShortcuts->clear();
     }
 
+    Shortcut ShortcutManager::getShortcutByName(const std::vector<UnlocalizedString> &unlocalizedName, const View *view) {
+        if (view != nullptr) {
+            for (const auto &[shortcut, entry] : view->m_shortcuts) {
+                if (entry.unlocalizedName == unlocalizedName) {
+                    return entry.shortcut;
+                }
+            }
+        } else {
+            for (const auto &[shortcut, entry] : *s_globalShortcuts) {
+                if (entry.unlocalizedName == unlocalizedName) {
+                    return entry.shortcut;
+                }
+            }
+        }
+
+        return Shortcut::None;
+    }
+
     void ShortcutManager::resumeShortcuts() {
         s_paused = false;
     }

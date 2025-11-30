@@ -151,6 +151,8 @@ EXPORT_MODULE namespace hex {
          */
         static void clearShortcuts();
 
+        static Shortcut getShortcutByName(const std::vector<UnlocalizedString> &unlocalizedName, const View *view = nullptr);
+
         static void resumeShortcuts();
         static void pauseShortcuts();
 
