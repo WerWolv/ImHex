@@ -421,7 +421,7 @@ macro(createPackage)
         else()
             install(
                 FILES ${IMHEX_BASE_FOLDER}/dist/cli/imhex.sh
-                DESTINATION ${CMAKE_INSTALL_SBINDIR}
+                DESTINATION ${CMAKE_INSTALL_PREFIX}/share/imhex
                 RENAME imhex
                 PERMISSIONS
                     OWNER_READ OWNER_WRITE OWNER_EXECUTE
