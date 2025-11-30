@@ -414,7 +414,7 @@ namespace hex::plugin::builtin {
                     auto windowPadding = ImGui::GetStyle().WindowPadding.x * 3;
 
                     if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.customize"_lang, nullptr, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX)) {
-                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.customize.settings.title"_lang, "hex.builtin.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.customize.settings.title"_lang, "hex.builtin.welcome.customize.settings.desc"_lang, ICON_VS_SETTINGS_GEAR, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                             RequestOpenWindow::post("Settings");
                     }
                     ImGuiExt::EndSubWindow();
@@ -424,24 +424,24 @@ namespace hex::plugin::builtin {
 
                     if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.learn"_lang, nullptr, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX)) {
                         const auto size = ImVec2(ImGui::GetContentRegionAvail().x, 0);
-                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.latest.title"_lang, "hex.builtin.welcome.learn.latest.desc"_lang, size))
+                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.latest.title"_lang, "hex.builtin.welcome.learn.latest.desc"_lang, ICON_VS_GITHUB, size))
                             hex::openWebpage("hex.builtin.welcome.learn.latest.link"_lang);
-                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.imhex.title"_lang, "hex.builtin.welcome.learn.imhex.desc"_lang, size)) {
+                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.imhex.title"_lang, "hex.builtin.welcome.learn.imhex.desc"_lang, ICON_VS_BOOK, size)) {
                             AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
                             hex::openWebpage("hex.builtin.welcome.learn.imhex.link"_lang);
                         }
-                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.pattern.title"_lang, "hex.builtin.welcome.learn.pattern.desc"_lang, size))
+                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.pattern.title"_lang, "hex.builtin.welcome.learn.pattern.desc"_lang, ICON_VS_SYMBOL_NAMESPACE, size))
                             hex::openWebpage("hex.builtin.welcome.learn.pattern.link"_lang);
-                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.plugins.title"_lang, "hex.builtin.welcome.learn.plugins.desc"_lang, size))
+                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.plugins.title"_lang, "hex.builtin.welcome.learn.plugins.desc"_lang, ICON_VS_PLUG, size))
                             hex::openWebpage("hex.builtin.welcome.learn.plugins.link"_lang);
 
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3_scaled);
 
-                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.interactive_tutorial.title"_lang, "hex.builtin.welcome.learn.interactive_tutorial.desc"_lang, size)) {
+                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.interactive_tutorial.title"_lang, "hex.builtin.welcome.learn.interactive_tutorial.desc"_lang, ICON_VS_COMPASS, size)) {
                             RequestOpenWindow::post("Tutorials");
                         }
                         if (auto [unlocked, total] = AchievementManager::getProgress(); unlocked != total) {
-                            if (ImGuiExt::DescriptionButtonProgress("hex.builtin.welcome.learn.achievements.title"_lang, "hex.builtin.welcome.learn.achievements.desc"_lang, float(unlocked) / float(total), size)) {
+                            if (ImGuiExt::DescriptionButtonProgress("hex.builtin.welcome.learn.achievements.title"_lang, "hex.builtin.welcome.learn.achievements.desc"_lang, ICON_VS_SPARKLE, float(unlocked) / float(total), size)) {
                                 RequestOpenWindow::post("Achievements");
                             }
                         }

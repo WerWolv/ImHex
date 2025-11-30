@@ -435,7 +435,7 @@ namespace ImGuiExt {
         return pressed;
     }
 
-    bool DescriptionButton(const char *label, const char *description, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
+    bool DescriptionButton(const char *label, const char *description, const char *icon, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
@@ -465,15 +465,23 @@ namespace ImGuiExt {
         // Render
         const ImU32 col = GetCustomColorU32((held && hovered) ? ImGuiCustomCol_DescButtonActive : hovered ? ImGuiCustomCol_DescButtonHovered
                                                                                                           : ImGuiCustomCol_DescButton);
+        float icon_padding = style.FramePadding.x * 2;
+        float label_padding = icon_padding + style.FramePadding.x * 5;
+        float description_padding = label_padding + style.FramePadding.x * 2;
+
         RenderNavCursor(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
+        PushFont(GImGui->Font, GImGui->FontSizeBase * 1.25F);
+        const ImVec2 icon_size  = CalcTextSize(icon, nullptr, true);
+        RenderTextClipped(bb.Min + ImVec2(icon_padding, (size.y - icon_size.y) / 2), bb.Max - style.FramePadding, icon, nullptr, nullptr);
+        PopFont();
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
-        RenderTextClipped(bb.Min + style.FramePadding * 2, bb.Max - style.FramePadding, label, nullptr, nullptr);
+        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(label_padding, 0), bb.Max - style.FramePadding, label, nullptr, nullptr);
         PopStyleColor();
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_Text));
         auto clipBb = bb;
         clipBb.Max.x -= style.FramePadding.x;
-        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &clipBb);
+        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(description_padding, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &clipBb);
         PopStyleColor();
 
         PopStyleVar(2);
@@ -486,7 +494,7 @@ namespace ImGuiExt {
         return pressed;
     }
 
-    bool DescriptionButtonProgress(const char *label, const char *description, float fraction, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
+    bool DescriptionButtonProgress(const char *label, const char *description, const char *icon, float fraction, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
@@ -516,15 +524,23 @@ namespace ImGuiExt {
         // Render
         const ImU32 col = GetCustomColorU32((held && hovered) ? ImGuiCustomCol_DescButtonActive : hovered ? ImGuiCustomCol_DescButtonHovered
                                                                                                           : ImGuiCustomCol_DescButton);
+        float icon_padding = style.FramePadding.x * 2;
+        float label_padding = icon_padding + style.FramePadding.x * 5;
+        float description_padding = label_padding + style.FramePadding.x * 2;
+
         RenderNavCursor(bb, id);
-        RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
+        RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
+        PushFont(GImGui->Font, GImGui->FontSizeBase * 1.25F);
+        const ImVec2 icon_size  = CalcTextSize(icon, nullptr, true);
+        RenderTextClipped(bb.Min + ImVec2(icon_padding, (size.y - icon_size.y) / 2), bb.Max - style.FramePadding, icon, nullptr, nullptr);
+        PopFont();
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
-        RenderTextClipped(bb.Min + style.FramePadding * 2, bb.Max - style.FramePadding, label, nullptr, nullptr);
+        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(label_padding, 0), bb.Max - style.FramePadding, label, nullptr, nullptr);
         PopStyleColor();
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_Text));
         auto clipBb = bb;
         clipBb.Max.x -= style.FramePadding.x;
-        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &clipBb);
+        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(description_padding, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &clipBb);
         PopStyleColor();
 
         RenderFrame(ImVec2(bb.Min.x, bb.Max.y - 5 * hex::ImHexApi::System::getGlobalScale()), bb.Max, GetColorU32(ImGuiCol_ScrollbarBg), false, style.FrameRounding);
