@@ -336,8 +336,8 @@ To use ImHex, the following minimal system requirements need to be met.
 
 - **OS**: 
   - **Windows**: Windows 7 or higher (Windows 10/11 recommended)
-  - **macOS**: macOS 13 (Ventura) or higher, 
-    - Lower versions should still work too, but you'll need to compile ImHex yourself. The release binaries will NOT work due to GitHub not having any macOS 12 or lower CI runners available.
+  - **macOS**: macOS 15 (Sequoia) or higher, 
+    - Lower versions should still work too, but you'll need to compile ImHex yourself. The release binaries will NOT work due to GitHub not having any macOS 15 or lower CI runners available.
     - The macOS build is not signed and will require you to manually allow them in the Security & Privacy settings.
   - **Linux**: "Modern" Linux. The following distributions have official releases available. Other distros are supported through the AppImage, Flatpak and Snap releases.
     - Ubuntu and Debian

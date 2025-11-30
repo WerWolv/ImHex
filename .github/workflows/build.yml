@@ -380,7 +380,7 @@ jobs:
 
   # MacOS build
   macos-x86:
-    runs-on: macos-13
+    runs-on: macos-15-intel
 
     permissions:
       id-token: write
@@ -397,7 +397,7 @@ jobs:
             name_suffix: ""
             custom_glfw: false
 
-    name: 🍎 macOS 13 x86_64 ${{ matrix.name_suffix }}
+    name: 🍎 macOS 15 x86_64 ${{ matrix.name_suffix }}
 
     steps:
     - name: 🧰 Checkout
@@ -546,7 +546,7 @@ jobs:
 
   macos-arm64:
     runs-on: ubuntu-24.04
-    name: 🍎 macOS 13 arm64
+    name: 🍎 macOS 15 arm64
 
     outputs:
       IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
@@ -593,8 +593,8 @@ jobs:
           gh actions-cache delete "build-macos-arm64-cache" --confirm || true
 
   macos-arm64-package:
-    runs-on: macos-13
-    name: 🍎 macOS 13 arm64 Packaging
+    runs-on: macos-15-intel
+    name: 🍎 macOS 15 arm64 Packaging
     needs: macos-arm64
 
     env:
