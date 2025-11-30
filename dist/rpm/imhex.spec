@@ -145,8 +145,7 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/net.werwolv.Im
 
 # install licenses
 %if 0%{?rhel} == 9
-cp -a lib/third_party/capstone/LICENSE.TXT                           %{buildroot}%{_datadir}/licenses/%{name}/capstone-LICENSE
-cp -a lib/third_party/capstone/suite/regress/LICENSE                 %{buildroot}%{_datadir}/licenses/%{name}/capstone-regress-LICENSE
+cp -a lib/third_party/capstone/LICENSES/LICENSE.TXT                  %{buildroot}%{_datadir}/licenses/%{name}/capstone-LICENSE
 %endif
 cp -a lib/third_party/microtar/LICENSE                               %{buildroot}%{_datadir}/licenses/%{name}/microtar-LICENSE
 cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot}%{_datadir}/licenses/%{name}/xdgpp-LICENSE
