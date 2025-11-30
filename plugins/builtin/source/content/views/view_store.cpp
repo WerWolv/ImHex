@@ -401,4 +401,8 @@ namespace hex::plugin::builtin {
         m_download = {};
     }
 
+    void ViewStore::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view lets you download and update additional content for ImHex, such as pattern files, magic files, themes and more. All content is provided by the ImHex community and can be freely used within ImHex.");
+    }
+
 }

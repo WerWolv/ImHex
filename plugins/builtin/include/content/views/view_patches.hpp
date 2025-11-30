@@ -13,6 +13,7 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
         void drawAlwaysVisibleContent() override;
+        void drawHelpText() override;
 
     private:
         u64 m_selectedPatch = 0x00;

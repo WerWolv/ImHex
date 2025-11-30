@@ -19,6 +19,7 @@ namespace hex::plugin::disasm {
         ~ViewDisassembler() override;
 
         void drawContent() override;
+        void drawHelpText() override;
 
     private:
         TaskHolder m_disassemblerTask;

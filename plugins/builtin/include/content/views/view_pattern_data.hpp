@@ -24,6 +24,8 @@ namespace hex::plugin::builtin {
             return ContentRegistry::Views::getViewByName("hex.builtin.view.pattern_editor.name");
         }
 
+        void drawHelpText() override;
+
     private:
         bool m_rowColoring = false;
         u32 m_maxFilterItems = 128;

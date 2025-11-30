@@ -79,6 +79,8 @@ namespace hex::plugin::builtin {
             m_currPopup.reset();
         }
 
+        void drawHelpText() override;
+
     private:
         void drawPopup();
 

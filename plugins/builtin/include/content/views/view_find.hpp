@@ -27,6 +27,8 @@ namespace hex::plugin::builtin {
             return ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name");
         }
 
+        void drawHelpText() override;
+
     private:
 
         using Occurrence = hex::ContentRegistry::DataFormatter::impl::FindOccurrence;

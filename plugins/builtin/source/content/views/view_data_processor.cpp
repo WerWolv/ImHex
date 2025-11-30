@@ -1293,4 +1293,13 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void ViewDataProcessor::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view lets you create and evaluate data processing pipelines using a node-based interface.\n\n");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("Right click anywhere in the workspace to add nodes. Connect the nodes by dragging links between their input and output attributes. "
+                                      "Nodes that have no output attributes are considered end nodes and will produce the final output of the pipeline.\n\n"
+                                      "Click the green play button at the bottom to evaluate the current pipeline. If any errors occur during evaluation, "
+                                      "the affected node will be highlighted in red and an error message will be shown when hovering over it.");
+    }
+
 }

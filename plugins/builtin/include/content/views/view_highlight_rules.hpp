@@ -14,6 +14,7 @@ namespace hex::plugin::builtin {
         ~ViewHighlightRules() override = default;
 
         void drawContent() override;
+        void drawHelpText() override;
 
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 

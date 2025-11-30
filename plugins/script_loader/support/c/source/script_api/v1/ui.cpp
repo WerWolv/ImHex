@@ -172,6 +172,7 @@ public:
     void drawContent() override {
         m_drawFunction();
     }
+    void drawHelpText() override {}
 
 private:
     DrawFunction m_drawFunction;

@@ -459,4 +459,9 @@ namespace hex::plugin::windows {
         m_transmitting = false;
     }
 
+    void ViewTTYConsole::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view can send and receive data over a Serial (TTY) port.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("Connect your device to a Serial Port (or a USB port with a Serial adapter) and configure the connection settings on the left side. Once connected, you can send and receive data using the console below.");
+    }
 }

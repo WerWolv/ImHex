@@ -73,4 +73,7 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void ViewTutorials::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view contains all available tutorials to help you get started with ImHex. Select a tutorial from the list and click the 'Start Tutorial' button to begin.");
+    }
 }

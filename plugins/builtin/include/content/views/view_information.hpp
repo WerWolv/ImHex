@@ -14,6 +14,8 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
 
+        void drawHelpText() override;
+
     private:
         void analyze();
 

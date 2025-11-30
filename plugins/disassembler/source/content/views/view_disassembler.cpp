@@ -308,4 +308,9 @@ namespace hex::plugin::disasm {
         }
     }
 
+    void ViewDisassembler::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view lets you disassemble byte regions into assembly instructions of various different architectures.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("Select the desired Architecture from the tabs in the settings panel and configure its options as needed. Clicking the \"Disassemble\" button will disassemble the selected region (or the entire data if no region is selected) and display the resulting instructions in a table below.");
+    }
 }

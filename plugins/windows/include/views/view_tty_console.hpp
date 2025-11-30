@@ -17,6 +17,7 @@ namespace hex::plugin::windows {
         ~ViewTTYConsole() override = default;
 
         void drawContent() override;
+        void drawHelpText() override;
 
     private:
         void drawSettings();

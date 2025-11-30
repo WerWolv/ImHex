@@ -23,6 +23,8 @@ namespace hex::plugin::builtin {
             return ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name");
         }
 
+        void drawHelpText() override;
+
     private:
         struct InspectorCacheEntry {
             UnlocalizedString unlocalizedName;

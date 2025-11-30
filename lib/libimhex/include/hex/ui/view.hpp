@@ -14,6 +14,7 @@
 
 #include <map>
 #include <string>
+#include <hex/api/tutorial_manager.hpp>
 
 namespace hex {
 
@@ -147,11 +148,17 @@ namespace hex {
     public:
         explicit Window(UnlocalizedString unlocalizedName, const char *icon) : View(std::move(unlocalizedName), icon) {}
 
+        /**
+         * @brief Draws help text for the view
+         */
+        virtual void drawHelpText() = 0;
+
         void draw() final {
             if (this->shouldDraw()) {
                 ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
                 const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
                 if (ImGui::Begin(title.c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
+                    TutorialManager::setLastItemInteractiveHelpPopup([this]{ this->drawHelpText(); });
                     this->drawContent();
                 }
                 ImGui::End();

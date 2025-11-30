@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::BeginDisabled(size_t(i) < undoneOperationsCount);
 
-                        if (ImGui::Selectable(fmt::format("{} {}", index == undoneOperationsCount ? ICON_VS_ARROW_SMALL_RIGHT : " ", index).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                        if (ImGui::Selectable(fmt::format("{} {}", index == undoneOperationsCount ? ICON_VS_ARROW_SMALL_RIGHT : "  ", index).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                             ImHexApi::HexEditor::setSelection(address, size);
                         }
                         if (ImGui::IsItemHovered()) {
@@ -217,6 +217,13 @@ namespace hex::plugin::builtin {
                 EventHighlightingChanged::post();
             }
         }
+    }
+
+    void ViewPatches::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view shows a list of all patches (modifications, insertions, deletions) that were made to the current data source so far.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("The small arrow next to a patch indicates the current position in the undo/redo stack. When undoing operations, the arrow will move downwards and modifying any data will create new patches from the current position, discarding any patches above it.");
+        ImGuiExt::TextFormattedWrapped("Hovering over a patch will also show a tooltip with more detailed information about the patch and clicking on a patch will select the modified region in the hex editor.");
     }
 
 }

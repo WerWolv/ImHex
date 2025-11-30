@@ -608,5 +608,13 @@ namespace hex::plugin::builtin {
         return displayFunction;
     }
 
+    void ViewDataInspector::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view decodes bytes, starting from the currently selected address in the Hex Editor View, as various different data types.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("The decoding here may or may not make sense depending on the actual data at the selected address but it can give a rough idea of what kind of data is present. If certain types make no sense, they can be hidden by entering the editing mode (pencil icon) and clicking the eye icon next to the corresponding row.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("By clicking on a row, the corresponding bytes will be selected in the Hex Editor View and you can use the navigation buttons at the top to move to the next or previous value, assuming you're dealing with a list of such values.");
+        ImGuiExt::TextFormattedWrapped("Double-clicking a row (if editable) will allow you to change the value and write it back to the underlying data. Some types may also have additional options available in the context menu (right-click on a row).");
+    }
 
 }

@@ -240,4 +240,13 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
     }
 
+    void ViewInformation::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view provides various analyses and information about the currently opened data source. "
+                                      "Use the settings panel to select which sections to analyze and the region to analyze. "
+                                      "Click the 'Analyze' button to start the analysis.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("The results of the analysis will be displayed in separate sections below the settings panel. "
+                                      "Each section can be enabled or disabled individually, and some sections may have additional settings available via the gear icon.");
+    }
+
 }

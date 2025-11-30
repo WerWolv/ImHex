@@ -337,4 +337,13 @@ namespace hex::plugin::yara {
         });
     }
 
+    void ViewYara::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view allows you to apply YARA rules to the currently opened file and highlights matched regions.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped(
+            "You can add YARA rules by clicking the + button in the top right corner of the view. "
+            "This will open a file chooser where you can select one or more YARA files to add."
+            "For further information on how to write YARA rules, please refer to its official documentation."
+        );
+    }
 }

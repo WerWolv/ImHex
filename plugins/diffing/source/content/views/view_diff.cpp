@@ -543,4 +543,15 @@ namespace hex::plugin::diffing {
             this
         );
     }
+
+    void ViewDiff::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view allows you to do binary comparisons between two data sources. Select the data sources you want to compare from the dropdown menus at the top. Once both data sources are selected, the differences will be calculated automatically.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("Differences are highlighted in the hex editors. Green indicates added bytes, red indicates removed bytes, and yellow indicates modified bytes. All differences are also listed in the table below the hex editors, where you can click on a difference to jump to it in both hex editors.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped(
+            "By default, a simple byte-by-byte comparison algorithm is used. This is quick but will only identify byte modifications but doesn't match insertions or deletions.\n"
+            "For a more sophisticated comparison, you can select a different diffing algorithm from the settings menu (gear icon)."
+        );
+    }
 }

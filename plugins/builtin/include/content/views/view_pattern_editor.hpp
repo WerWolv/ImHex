@@ -78,6 +78,8 @@ namespace hex::plugin::builtin {
             Deny
         };
 
+        void drawHelpText() override;
+
     private:
         class PopupAcceptPattern;
 

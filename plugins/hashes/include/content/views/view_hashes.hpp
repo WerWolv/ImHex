@@ -12,6 +12,7 @@ namespace hex::plugin::hashes {
         ~ViewHashes() override;
 
         void drawContent() override;
+        void drawHelpText() override;
 
     private:
         bool importHashes(prv::Provider *provider, const nlohmann::json &json);

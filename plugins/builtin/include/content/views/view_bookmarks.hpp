@@ -15,6 +15,7 @@ namespace hex::plugin::builtin {
         ~ViewBookmarks() override;
 
         void drawContent() override;
+        void drawHelpText() override;
 
     private:
         struct Bookmark {

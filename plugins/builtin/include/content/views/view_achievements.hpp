@@ -12,6 +12,7 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
         void drawAlwaysVisibleContent() override;
+        void drawHelpText() override;
 
         [[nodiscard]] bool shouldDraw() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }

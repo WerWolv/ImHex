@@ -17,6 +17,7 @@ namespace hex::plugin::yara {
         ~ViewYara() override;
 
         void drawContent() override;
+        void drawHelpText() override;
 
     private:
         PerProvider<std::vector<std::pair<std::fs::path, std::fs::path>>> m_rulePaths;

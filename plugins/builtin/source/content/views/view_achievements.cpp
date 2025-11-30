@@ -468,4 +468,7 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void ViewAchievements::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This is the Achievements view. Before you ask yourself what achievements are doing in a hex editor: The Achievements are meant to be a fun way to learn about the various features of ImHex without having to read through the entire documentation. Read through the achievements, try to unlock them all, and have fun!");
+    }
 }

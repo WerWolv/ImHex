@@ -42,6 +42,7 @@ namespace hex::plugin::builtin {
         ~ViewDataProcessor() override;
 
         void drawContent() override;
+        void drawHelpText() override;
 
         static nlohmann::json saveNode(const dp::Node *node);
         static nlohmann::json saveNodes(const Workspace &workspace);

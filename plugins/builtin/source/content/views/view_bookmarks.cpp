@@ -639,4 +639,18 @@ namespace hex::plugin::builtin {
         });
     }
 
+    void ViewBookmarks::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("All your created Bookmarks will be listed in here.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("Bookmarks provide an easy way to mark important regions in your binary and quickly navigate to them later. You can also name them, add further information through comments or change their color.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped(
+            "To create a Bookmark, select a byte region in the Hex Editor view and use the {} option in the {} menu or use the shortcut '{}'.",
+            "hex.builtin.menu.edit.bookmark.create"_lang, "hex.builtin.menu.edit"_lang,
+            ShortcutManager::getShortcutByName(
+                { "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" },
+                ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name")
+            ).toString()
+        );
+    }
 }

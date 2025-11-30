@@ -327,4 +327,13 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void ViewHighlightRules::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view allows you to create custom highlighting rules based on mathematical expressions. Each rule can contain multiple expressions, each defining a color and a mathematical condition. When the condition evaluates to true for a given byte or range of bytes, those bytes's text will be highlighted with the specified color in the hex editor.\n\n"
+                                      "You can use the following variables in your expressions:\n"
+                                      "- 'value': The byte value at the current offset.\n"
+                                      "- 'offset': The current byte offset within the data source.\n\n"
+                                      "Examples of expressions:\n"
+                                      "- 'value == 0x90' : Highlights all x86 NOP instructions (0x90).\n"
+                                      "- 'value >= 0x41 && value <= 0x5A' : Highlights all uppercase ASCII letters.");
+    }
 }

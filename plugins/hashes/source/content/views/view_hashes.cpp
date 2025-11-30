@@ -342,4 +342,10 @@ namespace hex::plugin::hashes {
         return true;
     }
 
+    void ViewHashes::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view allows you to compute various hashes (MD5, SHA1, etc.) on selected data regions.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("Add a new hash function by double clicking on the last row in the Hashes table and configure it to your needs. You can add multiple hash functions and see their results in real-time as you select different regions of data in the hex editor. "
+                                       "Hold SHIFT while selecting data to see hash results in the tooltip.");
+    }
 }

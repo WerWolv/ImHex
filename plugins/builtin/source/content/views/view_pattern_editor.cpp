@@ -404,7 +404,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawPatternSettings() {
-        const auto size = scaled(500, 150);
+        const auto size = scaled(0, 150);
 
         if (ImGuiExt::BeginSubWindow("hex.builtin.view.pattern_editor.settings"_lang, nullptr, size)) {
             this->drawVariableSettings(*m_patternVariables);
@@ -2624,6 +2624,13 @@ namespace hex::plugin::builtin {
         savePatternAsNewFile(trackFile);
     }
 
-
+    void ViewPatternEditor::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This is the Pattern Editor view, where you can write and edit pattern matching code to analyze the loaded data. For more information on how to write pattern code, please refer to the official documentation and the check out the existing patterns included with ImHex.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped("This view works in close conjunction with the Hex Editor view and the Pattern Data view. When you finished writing your code, click on the Play button at the bottom of the view or press {} to evaluate the pattern.",
+            ShortcutManager::getShortcutByName({ "hex.builtin.menu.edit","hex.builtin.view.pattern_editor.menu.edit.run_pattern" }).toString()
+        );
+        ImGuiExt::TextFormattedWrapped("This will execute your code, output any log messages to the console window below and create a pattern tree that gets displayed in the Pattern Data view and highlights matching regions in the Hex Editor view.");
+    }
 
 }

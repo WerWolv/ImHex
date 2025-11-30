@@ -27,6 +27,7 @@
 #include <toasts/toast_notification.hpp>
 
 #include <csignal>
+#include <fonts/tabler_icons.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -45,6 +46,9 @@ namespace hex::plugin::builtin {
             hex::openWebpage("https://github.com/WerWolv/ImHex/discussions/categories/feedback");
         });
 
+        ContentRegistry::UserInterface::addTitleBarButton(ICON_TA_HELP, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.interactive_help", []{
+            TutorialManager::startHelpHover();
+        });
     }
 
     static void drawGlobalPopups() {

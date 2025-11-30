@@ -1149,4 +1149,16 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void ViewFind::drawHelpText() {
+        ImGuiExt::TextFormattedWrapped("This view lets you search for all occurrences of a specific pattern in the opened data source.");
+        ImGui::NewLine();
+        ImGuiExt::TextFormattedWrapped(
+            "- Strings: Search for all strings matching the specified criteria.\n"
+            "- Sequences: Search for a specific string character sequence in various encodings.\n"
+            "- Regex: Search for all strings matching the specified regular expression.\n"
+            "- Binary Pattern: Search for a specific byte pattern with wildcards.\n"
+            "- Numeric Value: Search for numeric values within a specified range in various formats."
+        );
+    }
+
 }
