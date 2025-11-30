@@ -197,6 +197,8 @@
     "hex.builtin.minimap_visualizer.byte_type": "Byte Type",
     "hex.builtin.minimap_visualizer.highlights": "Highlights",
     "hex.builtin.minimap_visualizer.byte_magnitude": "Byte Magnitude",
+    "hex.builtin.minimap_visualizer.rgba8": "RGBA8 Colors",
+    "hex.builtin.minimap_visualizer.rgb565": "RGB565 Colors",
     "hex.builtin.nodes.arithmetic": "Arithmetic",
     "hex.builtin.nodes.arithmetic.add": "Addition",
     "hex.builtin.nodes.arithmetic.add.header": "Add",
