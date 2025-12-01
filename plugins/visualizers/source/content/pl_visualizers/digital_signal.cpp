@@ -29,9 +29,9 @@ namespace hex::plugin::visualizers {
             dataPoints.clear();
             lastPoint = { 0, 0 };
 
-            bitfield->forEachEntry(0, bitfield->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
+            bitfield->forEachEntry(0, bitfield->getEntryCount(), [&](u64, const auto &entry) {
                 size_t bitSize;
-                if (const auto *bitfieldField = dynamic_cast<pl::ptrn::PatternBitfieldField*>(entry); bitfieldField != nullptr)
+                if (const auto *bitfieldField = dynamic_cast<pl::ptrn::PatternBitfieldField*>(entry.get()); bitfieldField != nullptr)
                     bitSize = bitfieldField->getBitSize();
                 else
                     bitSize = entry->getSize() * 8;

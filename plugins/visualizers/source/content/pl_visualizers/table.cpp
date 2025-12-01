@@ -33,7 +33,7 @@ namespace hex::plugin::visualizers {
             height = u64(arguments[2].toUnsigned());
 
             auto iterable = dynamic_cast<pl::ptrn::IIterable*>(pattern.get());
-            iterable->forEachEntry(0, iterable->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
+            iterable->forEachEntry(0, iterable->getEntryCount(), [&](u64, const auto &entry) {
                 tableContent.push_back(entry->toString());
             });
         }

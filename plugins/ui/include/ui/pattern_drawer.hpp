@@ -85,7 +85,7 @@ namespace hex::ui {
         void drawColorColumn(const pl::ptrn::Pattern& pattern);
         void drawCommentColumn(const pl::ptrn::Pattern& pattern);
 
-        bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) const;
+        bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<std::shared_ptr<pl::ptrn::Pattern>> &sortedPatterns, float height) const;
         bool createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf = false);
         void createDefaultEntry(const pl::ptrn::Pattern &pattern);
         void closeTreeNode(bool inlined) const;
@@ -93,23 +93,28 @@ namespace hex::ui {
         bool sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) const;
         [[nodiscard]] bool isEditingPattern(const pl::ptrn::Pattern& pattern) const;
         void resetEditing();
-        void traversePatternTree(pl::ptrn::Pattern &pattern, std::vector<std::string> &patternPath, const std::function<void(pl::ptrn::Pattern&)> &callback);
+        void traversePatternTree(const std::shared_ptr<pl::ptrn::Pattern> &pattern, std::vector<std::string> &patternPath, const std::function<void(const std::shared_ptr<pl::ptrn::Pattern>&)> &callback);
         [[nodiscard]] std::string getDisplayName(const pl::ptrn::Pattern& pattern) const;
 
         [[nodiscard]] std::vector<std::string> getPatternPath(const pl::ptrn::Pattern *pattern) const;
 
         struct Filter {
             std::vector<std::string> path;
+
+            bool inverted = false;
+            bool typeMatch = false;
+            std::strong_ordering operation = std::strong_ordering::equal;
             std::optional<pl::core::Token::Literal> value;
         };
 
         [[nodiscard]] static bool matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch);
         [[nodiscard]] static std::optional<Filter> parseRValueFilter(const std::string &filter);
+        [[nodiscard]] static std::optional<Filter> parseComparison(const Filter &currFilter, std::string filterString);
         void updateFilter();
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
-        std::vector<pl::ptrn::Pattern*> m_sortedPatterns;
+        std::vector<std::shared_ptr<pl::ptrn::Pattern>> m_sortedPatterns;
 
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
         u64 m_editingPatternOffset = 0;
@@ -125,8 +130,8 @@ namespace hex::ui {
         std::set<pl::ptrn::Pattern*> m_visualizedPatterns;
 
         std::string m_filterText;
-        Filter m_filter;
-        std::vector<pl::ptrn::Pattern*> m_filteredPatterns;
+        std::optional<Filter> m_filter;
+        std::vector<std::shared_ptr<pl::ptrn::Pattern>> m_filteredPatterns;
 
         std::vector<std::string> m_currPatternPath;
         std::map<std::vector<std::string>, std::shared_ptr<pl::ptrn::Pattern>> m_favorites;
