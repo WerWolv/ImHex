@@ -171,7 +171,7 @@ EXPORT_MODULE namespace hex {
          * @brief Checks if multi-window mode is enabled currently
          * @return Whether multi-window mode is enabled
          */
-        bool isMutliWindowModeEnabled();
+        bool isMultiWindowModeEnabled();
 
         /**
          * @brief Gets the init arguments passed to ImHex from the splash screen

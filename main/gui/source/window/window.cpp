@@ -54,12 +54,9 @@
 #include <hex/ui/toast.hpp>
 #include <wolv/utils/guards.hpp>
 #include <fmt/printf.h>
-#include <fmt/chrono.h>
 #include <hex/helpers/opengl.hpp>
 
 namespace hex {
-
-    using namespace std::literals::chrono_literals;
 
     Window::Window() {
         this->initGLFW();
@@ -67,10 +64,6 @@ namespace hex {
         this->setupNativeWindow();
         this->registerEventHandlers();
         this->setupEmergencyPopups();
-
-        #if !defined(OS_WEB)
-
-        #endif
     }
 
     Window::~Window() {
@@ -232,6 +225,8 @@ namespace hex {
     }
 
     void Window::loop() {
+        using namespace std::literals::chrono_literals;
+
         glfwShowWindow(m_window);
 
         double returnToIdleTime = 5.0;
@@ -670,7 +665,7 @@ namespace hex {
             float startY = windowPos.y + ImGui::GetTextLineHeight() + ((ImGui::GetTextLineHeight() + (ImGui::GetStyle().FramePadding.y * 2.0F)) * (onWelcomeScreen ? 1 : 2));
             const auto height = ImGui::GetTextLineHeightWithSpacing() * 1.5f;
 
-            // Offset banner based on the size of the title bar. On macOS it's slightly taller
+            // Offset banner based on the size of the title bar. On macOS, it's slightly taller
             #if defined(OS_MACOS)
                 startY += 2 * 8_scaled;
             #else
@@ -914,7 +909,7 @@ namespace hex {
         auto* drawData = ImGui::GetDrawData();
 
         // Avoid accidentally clearing the viewport when the application is minimized,
-        // otherwise the OS will display an empty frame during deminimization on macOS
+        // otherwise the OS will display an empty frame during window restore on macOS
         if (drawData->DisplaySize.x != 0 && drawData->DisplaySize.y != 0) {
             int displayWidth, displayHeight;
             glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
@@ -1285,7 +1280,7 @@ namespace hex {
         io.ConfigDragClickToInputText = true;
 
         if (glfwGetPrimaryMonitor() != nullptr) {
-            if (ImHexApi::System::isMutliWindowModeEnabled()) {
+            if (ImHexApi::System::isMultiWindowModeEnabled()) {
                 io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
                 // Enable viewport window OS decorations on Linux so that the window can be moved around on Wayland

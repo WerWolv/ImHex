@@ -704,7 +704,7 @@ namespace hex {
             return impl::s_borderlessWindowMode;
         }
 
-        bool isMutliWindowModeEnabled() {
+        bool isMultiWindowModeEnabled() {
             return impl::s_multiWindowMode;
         }
 
