@@ -100,6 +100,7 @@
     "hex.ui.hex_editor.no_separator": "No Segment Separators",
     "hex.ui.hex_editor.uppercase_hex": "Upper case Hex characters",
     "hex.ui.hex_editor.visualizer": "Data visualizer",
+    "hex.ui.hex_editor.minimap.value_brightness": "Shade cells based on value",
     "hex.ui.pattern_drawer.color": "Color",
     "hex.ui.pattern_drawer.comment": "Comment",
     "hex.ui.pattern_drawer.double_click": "Double-click to see more items",

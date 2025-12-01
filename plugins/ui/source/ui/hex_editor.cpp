@@ -318,6 +318,13 @@ namespace hex::ui {
                 (std::ceil(innerRect.Max.y - innerRect.Min.y) / characterSize.y),
                 std::nextafterf((numRows - m_visibleRowCount) + ImGui::GetWindowSize().y / characterSize.y, std::numeric_limits<float>::max()),
                 roundingCorners);
+
+            if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+                ImGui::OpenPopup("MiniMapOptions");
+            }
+
+            drawMinimapPopup();
+
             ImGui::PopStyleVar(2);
             ImGui::PopStyleColor(3);
             ImGui::PopID();
@@ -339,7 +346,13 @@ namespace hex::ui {
 
             const auto cellSize = rowSize / ImVec2(rowColors.size(), 1);
             ImVec2 cellPos = rowStart;
-            for (const auto &rowColor : rowColors) {
+            const auto stride = bytesPerRow / rowColors.size();
+            for (u32 i = 0; i < rowColors.size(); i += 1) {
+                auto rowColor = rowColors[i];
+                if (m_minimapValueBrightness) {
+                    rowColor = ImColor(rowColor.Value + ImVec4(0.3F, 0.3F, 0.3F, 0.0F) * ((float(rowData[i * stride]) - 0x7F) / 0xFF));
+                }
+
                 drawList->AddRectFilled(cellPos, cellPos + cellSize, rowColor);
                 cellPos.x += cellSize.x;
             }
@@ -1087,6 +1100,27 @@ namespace hex::ui {
         m_shouldScrollToSelection = false;
     }
 
+    void HexEditor::drawMinimapPopup() {
+        if (ImGui::BeginPopup("MiniMapOptions")) {
+            ImGui::SliderInt("hex.ui.hex_editor.minimap.width"_lang, &m_miniMapWidth, 1, 25, "%d", ImGuiSliderFlags_AlwaysClamp);
+
+            if (ImGui::BeginCombo("##minimap_visualizer", Lang(m_miniMapVisualizer->unlocalizedName))) {
+
+                for (const auto &visualizer : ContentRegistry::HexEditor::impl::getMiniMapVisualizers()) {
+                    if (ImGui::Selectable(Lang(visualizer->unlocalizedName))) {
+                        m_miniMapVisualizer = visualizer;
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::Checkbox("hex.ui.hex_editor.minimap.value_brightness"_lang, &m_minimapValueBrightness);
+
+            ImGui::EndPopup();
+        }
+    }
+
     void HexEditor::drawFooter(const ImVec2 &size) {
         const auto windowEndPos = ImGui::GetWindowPos() + size - ImGui::GetStyle().WindowPadding;
         ImGui::GetWindowDrawList()->AddLine(windowEndPos - ImVec2(0, size.y - 1_scaled), windowEndPos - size + ImVec2(0, 1_scaled), ImGui::GetColorU32(ImGuiCol_Separator), 2.0_scaled);
@@ -1152,22 +1186,7 @@ namespace hex::ui {
                         if (ImGui::IsItemClicked(ImGuiMouseButton_Right) && m_miniMapVisualizer != nullptr)
                             ImGui::OpenPopup("MiniMapOptions");
 
-                        if (ImGui::BeginPopup("MiniMapOptions")) {
-                            ImGui::SliderInt("hex.ui.hex_editor.minimap.width"_lang, &m_miniMapWidth, 1, 25, "%d", ImGuiSliderFlags_AlwaysClamp);
-
-                            if (ImGui::BeginCombo("##minimap_visualizer", Lang(m_miniMapVisualizer->unlocalizedName))) {
-
-                                for (const auto &visualizer : ContentRegistry::HexEditor::impl::getMiniMapVisualizers()) {
-                                    if (ImGui::Selectable(Lang(visualizer->unlocalizedName))) {
-                                        m_miniMapVisualizer = visualizer;
-                                    }
-                                }
-
-                                ImGui::EndCombo();
-                            }
-
-                            ImGui::EndPopup();
-                        }
+                        drawMinimapPopup();
 
                         ImGui::SameLine(0, 1_scaled);
 

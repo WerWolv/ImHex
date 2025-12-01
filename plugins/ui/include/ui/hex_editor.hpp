@@ -111,6 +111,7 @@ namespace hex::ui {
         void drawTooltip(u64 address, const u8 *data, size_t size) const;
         void drawScrollbar(ImVec2 characterSize);
         void drawMinimap(ImVec2 characterSize);
+        void drawMinimapPopup();
 
         void handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered);
         std::optional<color_t> applySelectionColor(u64 byteAddress, std::optional<color_t> color);
@@ -440,6 +441,7 @@ namespace hex::ui {
         bool m_showMiniMap = false;
         bool m_showSelectionInFooter = false;
         int m_miniMapWidth = 5;
+        bool m_minimapValueBrightness = true;
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
         bool m_footerCollapsed = true;
 
