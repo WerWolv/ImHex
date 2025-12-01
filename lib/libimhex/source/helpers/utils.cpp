@@ -601,13 +601,13 @@ namespace hex {
             return value;
     }
 
-    [[nodiscard]] std::string limitStringLength(const std::string &string, size_t maxLength) {
+    [[nodiscard]] std::string limitStringLength(const std::string &string, size_t maxLength, bool fromBothEnds) {
         // If the string is shorter than the max length, return it as is
         if (string.size() < maxLength)
             return string;
 
         // If the string is longer than the max length, find the last space before the max length
-        auto it = string.begin() + maxLength / 2;
+        auto it = string.begin() + (fromBothEnds ? maxLength / 2 : maxLength);
         while (it != string.begin() && !std::isspace(*it)) --it;
 
         // If there's no space before the max length, just cut the string
@@ -623,6 +623,9 @@ namespace hex {
             return string;
 
         auto result = std::string(string.begin(), it) + "…";
+
+        if (!fromBothEnds)
+            return result;
 
         // If the string is longer than the max length, find the last space before the max length
         it = string.end() - 1 - maxLength / 2;

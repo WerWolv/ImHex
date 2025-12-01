@@ -362,7 +362,7 @@ namespace hex {
 
     [[nodiscard]] std::optional<std::string> getEnvironmentVariable(const std::string &env);
 
-    [[nodiscard]] std::string limitStringLength(const std::string &string, size_t maxLength);
+    [[nodiscard]] std::string limitStringLength(const std::string &string, size_t maxLength, bool fromBothEnds = true);
 
     [[nodiscard]] std::optional<std::fs::path> getInitialFilePath();
 

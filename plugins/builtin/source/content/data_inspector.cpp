@@ -524,7 +524,7 @@ namespace hex::plugin::builtin {
             }
         );
 
-        constexpr static auto MaxStringLength = 32;
+        constexpr static auto MaxStringLength = 64;
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 1,
             [](auto buffer, auto endian, auto style) {
@@ -541,10 +541,8 @@ namespace hex::plugin::builtin {
 
                     value = copyValue = hex::encodeByteString(stringBuffer);
 
-                    if (value.size() > MaxStringLength) {
-                        value.resize(MaxStringLength);
-                        value += "...";
-                    }
+                    copyValue = value;
+                    value = hex::limitStringLength(value, MaxStringLength, false);
                 } else {
                     value = "";
                     copyValue = "";
@@ -570,21 +568,18 @@ namespace hex::plugin::builtin {
                 std::string value, copyValue;
 
                 if (currSelection.has_value()) {
-                    std::wstring stringBuffer(std::min<size_t>(currSelection->size * sizeof(wchar_t), 0x1000), 0x00);
+                    std::wstring stringBuffer(std::min<size_t>(alignTo(currSelection->size, sizeof(wchar_t)), 0x1000), 0x00);
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
                     for (auto &c : stringBuffer)
                         c = hex::changeEndianness(c, endian);
 
-                    std::erase_if(buffer, [](auto c) { return c == 0x00; });
+                    std::erase_if(stringBuffer, [](auto c) { return c == 0x00; });
 
                     auto string = wolv::util::wstringToUtf8(stringBuffer).value_or("Invalid");
-                    value = copyValue = hex::encodeByteString({ string.begin(), string.end() });
 
-                    if (value.size() > MaxStringLength) {
-                        value.resize(MaxStringLength);
-                        value += "...";
-                    }
+                    copyValue = string;
+                    value = hex::limitStringLength(string, MaxStringLength, false);
                 } else {
                     value = "";
                     copyValue = "";
@@ -610,21 +605,18 @@ namespace hex::plugin::builtin {
                 std::string value, copyValue;
 
                 if (currSelection.has_value()) {
-                    std::u16string stringBuffer(std::min<size_t>(currSelection->size * sizeof(char16_t), 0x1000), 0x00);
+                    std::u16string stringBuffer(std::min<size_t>(alignTo(currSelection->size, sizeof(char16_t)), 0x1000), 0x00);
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
                     for (auto &c : stringBuffer)
                         c = hex::changeEndianness(c, endian);
 
-                    std::erase_if(buffer, [](auto c) { return c == 0x00; });
+                    std::erase_if(stringBuffer, [](auto c) { return c == 0x00; });
 
                     auto string = wolv::util::utf16ToUtf8(stringBuffer).value_or("Invalid");
-                    value = copyValue = hex::encodeByteString({ string.begin(), string.end() });
 
-                    if (value.size() > MaxStringLength) {
-                        value.resize(MaxStringLength);
-                        value += "...";
-                    }
+                    copyValue = string;
+                    value = hex::limitStringLength(string, MaxStringLength, false);
                 } else {
                     value = "";
                     copyValue = "";
@@ -650,21 +642,18 @@ namespace hex::plugin::builtin {
                 std::string value, copyValue;
 
                 if (currSelection.has_value()) {
-                    std::u32string stringBuffer(std::min<size_t>(currSelection->size * sizeof(char32_t), 0x1000), 0x00);
+                    std::u32string stringBuffer(std::min<size_t>(alignTo(currSelection->size, sizeof(char32_t)), 0x1000), 0x00);
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
                     for (auto &c : stringBuffer)
                         c = hex::changeEndianness(c, endian);
 
-                    std::erase_if(buffer, [](auto c) { return c == 0x00; });
+                    std::erase_if(stringBuffer, [](auto c) { return c == 0x00; });
 
                     auto string = wolv::util::utf32ToUtf8(stringBuffer).value_or("Invalid");
-                    value = copyValue = hex::encodeByteString({ string.begin(), string.end() });
 
-                    if (value.size() > MaxStringLength) {
-                        value.resize(MaxStringLength);
-                        value += "...";
-                    }
+                    copyValue = string;
+                    value = hex::limitStringLength(string, MaxStringLength, false);
                 } else {
                     value = "";
                     copyValue = "";
