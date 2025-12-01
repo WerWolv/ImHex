@@ -20,6 +20,7 @@ namespace hex::plugin::builtin {
     public:
         const std::string& get(prv::Provider *provider) const;
         std::string& get(prv::Provider *provider);
+        [[nodiscard]] bool hasProviderSpecificSource(prv::Provider *provider) const;
 
         bool isSynced() const;
         void enableSync(bool enabled);

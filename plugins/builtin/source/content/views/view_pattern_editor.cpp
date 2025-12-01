@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
 
             ui::TextEditor *editor = m_view->getTextEditor();
             if (editor != nullptr) {
-                if (!editor->isEmpty()) {
+                if (m_view->m_sourceCode.hasProviderSpecificSource(provider)) {
                     this->close();
                     return;
                 }
@@ -176,6 +176,10 @@ namespace hex::plugin::builtin {
             return m_sharedSource;
 
         return m_perProviderSource.get(provider);
+    }
+
+    bool PatternSourceCode::hasProviderSpecificSource(prv::Provider* provider) const {
+        return !m_perProviderSource.get(provider).empty();
     }
 
     void PatternSourceCode::enableSync(bool enabled) {
