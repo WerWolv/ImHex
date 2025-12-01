@@ -393,7 +393,7 @@ namespace hex::ui {
         ImGui::PopStyleVar();
     }
 
-    bool PatternDrawer::drawNameColumn(const pl::ptrn::Pattern &pattern, bool leaf) {
+    bool PatternDrawer::drawNameColumn(pl::ptrn::Pattern &pattern, bool leaf) {
         bool open = createTreeNode(pattern, leaf);
         ImGui::SameLine(0, 0);
         makeSelectable(pattern);
@@ -550,7 +550,7 @@ namespace hex::ui {
         });
     }
 
-    void PatternDrawer::makeSelectable(const pl::ptrn::Pattern &pattern) {
+    void PatternDrawer::makeSelectable(pl::ptrn::Pattern &pattern) {
         ImGui::PushID(static_cast<int>(pattern.getOffset()));
         ImGui::PushID(pattern.getVariableName().c_str());
 
@@ -572,13 +572,34 @@ namespace hex::ui {
             }
         }
 
+        if (ImGui::BeginPopupContextItem(nullptr)) {
+            if (ImGui::MenuItemEx("hex.ui.pattern_drawer.context.copy_name"_lang, ICON_VS_COPY, nullptr, false, true))
+                ImGui::SetClipboardText(pattern.getDisplayName().c_str());
+            if (ImGui::MenuItem("hex.ui.pattern_drawer.context.copy_address"_lang, nullptr, false, true))
+                ImGui::SetClipboardText(fmt::format("0x{:02X}", pattern.getOffset()).c_str());
+            if (ImGui::MenuItem("hex.ui.pattern_drawer.context.copy_value"_lang, nullptr, false, true))
+                ImGui::SetClipboardText(pattern.toString().c_str());
+            if (ImGui::MenuItem("hex.ui.pattern_drawer.context.copy_comment"_lang, nullptr, false, !pattern.getComment().empty()))
+                ImGui::SetClipboardText(pattern.getComment().c_str());
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItemEx("hex.ui.pattern_drawer.context.edit_value"_lang, ICON_VS_EDIT)) {
+                m_editingPattern = &pattern;
+                m_editingPatternOffset = pattern.getOffset();
+                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
+            }
+
+            ImGui::EndPopup();
+        }
+
         ImGui::SameLine(0, 0);
 
         ImGui::PopID();
         ImGui::PopID();
     }
 
-    void PatternDrawer::createDefaultEntry(const pl::ptrn::Pattern &pattern) {
+    void PatternDrawer::createDefaultEntry(pl::ptrn::Pattern &pattern) {
         // Draw Name column
         drawNameColumn(pattern, true);
 

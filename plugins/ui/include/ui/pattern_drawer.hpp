@@ -77,17 +77,17 @@ namespace hex::ui {
 
         void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iterable, bool isInlined);
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
-        void makeSelectable(const pl::ptrn::Pattern &pattern);
+        void makeSelectable(pl::ptrn::Pattern &pattern);
 
         void drawValueColumn(pl::ptrn::Pattern& pattern);
         void drawFavoriteColumn(const pl::ptrn::Pattern& pattern);
-        bool drawNameColumn(const pl::ptrn::Pattern &pattern, bool leaf = false);
+        bool drawNameColumn(pl::ptrn::Pattern &pattern, bool leaf = false);
         void drawColorColumn(const pl::ptrn::Pattern& pattern);
         void drawCommentColumn(const pl::ptrn::Pattern& pattern);
 
         bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<std::shared_ptr<pl::ptrn::Pattern>> &sortedPatterns, float height) const;
         bool createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf = false);
-        void createDefaultEntry(const pl::ptrn::Pattern &pattern);
+        void createDefaultEntry(pl::ptrn::Pattern &pattern);
         void closeTreeNode(bool inlined) const;
 
         bool sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) const;
@@ -117,6 +117,7 @@ namespace hex::ui {
         std::vector<std::shared_ptr<pl::ptrn::Pattern>> m_sortedPatterns;
 
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
+        const pl::ptrn::Pattern *m_contextMenuPattern = nullptr;
         u64 m_editingPatternOffset = 0;
         hex::ui::VisualizerDrawer m_visualizerDrawer;
         hex::ui::PatternValueEditor m_valueEditor;

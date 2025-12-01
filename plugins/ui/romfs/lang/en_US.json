@@ -123,5 +123,10 @@
     "hex.ui.diagram.byte_type_distribution.plain_text": "Plain Text",
     "hex.ui.diagram.byte_type_distribution.similar_bytes": "Similar Bytes",
     "hex.ui.diagram.entropy_analysis.entropy_drop": "Large Entropy Drop",
-    "hex.ui.diagram.entropy_analysis.entropy_spike": "Large Entropy Spike"
+    "hex.ui.diagram.entropy_analysis.entropy_spike": "Large Entropy Spike",
+    "hex.ui.pattern_drawer.context.copy_name": "Copy Name",
+    "hex.ui.pattern_drawer.context.copy_value": "Copy Value",
+    "hex.ui.pattern_drawer.context.copy_address": "Copy Address",
+    "hex.ui.pattern_drawer.context.copy_comment": "Copy Comment",
+    "hex.ui.pattern_drawer.context.edit_value": "Edit Value"
 }
