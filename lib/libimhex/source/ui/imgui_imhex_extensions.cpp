@@ -1063,6 +1063,9 @@ namespace ImGuiExt {
         auto textEnd = text + strlen(text);
         for (auto wrapPos = text; wrapPos != textEnd;) {
             wrapPos = ImGui::GetFont()->CalcWordWrapPosition(GetFontSize(), wrapPos, textEnd, availableSpace.x * 0.8F);
+            if (text == wrapPos)
+                break;
+
             drawString += std::string(text, wrapPos) + "\n";
             text = wrapPos;
         }
