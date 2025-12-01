@@ -568,6 +568,7 @@
     "hex.builtin.task.evaluating_nodes": "Evaluating nodes...",
     "hex.builtin.title_bar_button.debug_build": "Debug build\n\nSHIFT + Click to open Debug Menu",
     "hex.builtin.title_bar_button.feedback": "Leave Feedback",
+    "hex.builtin.title_bar_button.interactive_help": "Interactive Help",
     "hex.builtin.tools.ascii_table": "ASCII table",
     "hex.builtin.tools.ascii_table.octal": "Show octal",
     "hex.builtin.tools.base_converter": "Base converter",

@@ -97,7 +97,7 @@ namespace hex {
         EventImGuiElementRendered::subscribe([](ImGuiID id, const std::array<float, 4> bb){
             const auto boundingBox = ImRect(bb[0], bb[1], bb[2], bb[3]);
 
-            if (!ImGui::IsItemVisible())
+            if (!ImGui::IsRectVisible(boundingBox.Min, boundingBox.Max))
                 return;
 
             {
