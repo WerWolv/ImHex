@@ -206,7 +206,7 @@ namespace hex {
 
     void TutorialManager::drawHighlights() {
         if (s_helpHoverActive) {
-            const auto &drawList = ImGui::GetForegroundDrawList();
+            const auto &drawList = ImGui::GetForegroundDrawList(ImGui::GetMainViewport());
             drawList->AddText(ImGui::GetMousePos() + scaled({ 10, -5, }), ImGui::GetColorU32(ImGuiCol_Text), "?");
 
             for (const auto &[id, boundingBox] : *s_interactiveHelpDisplays) {
