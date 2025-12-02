@@ -109,7 +109,6 @@ add_imhex_plugin(
         source/content/views/view_command_palette.cpp
         source/content/views/view_settings.cpp
         source/content/views/view_data_processor.cpp
-        source/content/views/view_constants.cpp
         source/content/views/view_store.cpp
         source/content/views/view_provider_settings.cpp
         source/content/views/view_find.cpp
@@ -123,6 +122,8 @@ add_imhex_plugin(
         source/content/views/fullscreen/view_fullscreen_file_info.cpp
 
         source/content/text_highlighting/pattern_language.cpp
+
+        source/content/helpers/constants.cpp
     INCLUDES
         include
 

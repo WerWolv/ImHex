@@ -122,11 +122,6 @@ Pos=214,201
 Size=600,350
 Collapsed=0
 
-[Window][###hex.builtin.view.constants.name]
-Pos=419,-124
-Size=652,660
-Collapsed=0
-
 [Window][###hex.disassembler.view.disassembler.name]
 Pos=1004,-204
 Size=1336,1320
@@ -147,7 +142,6 @@ DockSpace       ID=0x81A8BB71 Window=0xF9B0A590 Pos=161,350 Size=2560,1427 Split
 hex.builtin.view.achievements.name=0
 hex.builtin.view.bookmarks.name=0
 hex.builtin.view.command_palette.name=0
-hex.builtin.view.constants.name=0
 hex.builtin.view.data_inspector.name=0
 hex.builtin.view.data_processor.name=0
 hex.diffing.view.diff.name=0

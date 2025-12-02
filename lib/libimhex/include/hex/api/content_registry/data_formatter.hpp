@@ -27,9 +27,10 @@ EXPORT_MODULE namespace hex {
 
             struct FindOccurrence {
                 Region region;
-                enum class DecodeType { ASCII, UTF8, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
                 std::endian endian = std::endian::native;
+                enum class DecodeType : u8 { ASCII, UTF8, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
                 bool selected;
+                std::string string;
             };
 
             using FindExporterCallback = std::function<std::vector<u8>(const std::vector<FindOccurrence>&, std::function<std::string(FindOccurrence)>)>;
