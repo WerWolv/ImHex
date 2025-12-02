@@ -568,7 +568,7 @@ namespace hex::plugin::builtin {
                 std::string value, copyValue;
 
                 if (currSelection.has_value()) {
-                    std::wstring stringBuffer(std::min<size_t>(alignTo(currSelection->size, sizeof(wchar_t)), 0x1000), 0x00);
+                    std::wstring stringBuffer(std::min<size_t>(alignTo<size_t>(currSelection->size, sizeof(wchar_t)), 0x1000), 0x00);
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
                     for (auto &c : stringBuffer)
@@ -605,7 +605,7 @@ namespace hex::plugin::builtin {
                 std::string value, copyValue;
 
                 if (currSelection.has_value()) {
-                    std::u16string stringBuffer(std::min<size_t>(alignTo(currSelection->size, sizeof(char16_t)), 0x1000), 0x00);
+                    std::u16string stringBuffer(std::min<size_t>(alignTo<size_t>(currSelection->size, sizeof(char16_t)), 0x1000), 0x00);
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
                     for (auto &c : stringBuffer)
@@ -642,7 +642,7 @@ namespace hex::plugin::builtin {
                 std::string value, copyValue;
 
                 if (currSelection.has_value()) {
-                    std::u32string stringBuffer(std::min<size_t>(alignTo(currSelection->size, sizeof(char32_t)), 0x1000), 0x00);
+                    std::u32string stringBuffer(std::min<size_t>(alignTo<size_t>(currSelection->size, sizeof(char32_t)), 0x1000), 0x00);
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
                     for (auto &c : stringBuffer)
