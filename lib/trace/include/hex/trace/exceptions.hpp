@@ -7,5 +7,6 @@
 namespace hex::trace {
 
     std::optional<StackTraceResult> getLastExceptionStackTrace();
+    void enableExceptionCaptureForCurrentThread();
 
 }
