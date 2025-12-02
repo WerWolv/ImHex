@@ -313,11 +313,12 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.fixed_point", 1, [totalBits = int(16), fractionBits = int(8)](const std::vector<u8> &, std::endian endian, Style style) mutable {
             std::string value;
 
+            auto provider = ImHexApi::Provider::get();
             const auto currSelection = ImHexApi::HexEditor::getSelection();
             const u32 sizeBytes = (totalBits + 7) / 8;
-            if (currSelection.has_value() && currSelection->size >= sizeBytes) {
+            if (currSelection.has_value() && currSelection->getStartAddress() <= provider->getActualSize() - sizeBytes) {
                 u64 fixedPointValue = 0x00;
-                ImHexApi::Provider::get()->read(currSelection->address, &fixedPointValue, std::min<u64>(sizeof(fixedPointValue), currSelection->size));
+                provider->read(currSelection->address, &fixedPointValue, std::min<size_t>(sizeBytes, sizeof(fixedPointValue)));
 
                 fixedPointValue = changeEndianness(fixedPointValue, sizeBytes, endian);
                 fixedPointValue &= u64(hex::bitmask(totalBits));
