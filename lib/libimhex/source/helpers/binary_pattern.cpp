@@ -1,5 +1,7 @@
 #include <hex/helpers/binary_pattern.hpp>
 
+#include <algorithm>
+
 namespace hex {
 
     namespace {

@@ -4,6 +4,7 @@
 #include <wolv/utils/string.hpp>
 
 #include <array>
+#include <charconv>
 
 #if defined(OS_WINDOWS)
     #include <ws2tcpip.h>
@@ -247,7 +248,7 @@ namespace hex::plugin::remote {
         return fmt::format("{} ({})", std::string(errorString, static_cast<size_t>(length)), libssh2_session_last_errno(session));
     }
 
-    RemoteFileSFTP::RemoteFileSFTP(LIBSSH2_SFTP_HANDLE* handle, SSHClient::OpenMode mode) : m_handle(handle), m_mode(mode) {}
+    RemoteFileSFTP::RemoteFileSFTP(LIBSSH2_SFTP_HANDLE* handle, SSHClient::OpenMode mode) : RemoteFile(mode), m_handle(handle) {}
 
     RemoteFileSFTP::~RemoteFileSFTP() {
         if (m_handle) {

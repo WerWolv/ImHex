@@ -148,7 +148,6 @@ namespace hex::plugin::remote {
     private:
         LIBSSH2_SFTP_HANDLE* m_handle = nullptr;
         bool m_atEOF = false;
-        SSHClient::OpenMode m_mode = SSHClient::OpenMode::Read;
     };
 
     class RemoteFileSSH : public SSHClient::RemoteFile {
@@ -175,8 +174,7 @@ namespace hex::plugin::remote {
         std::vector<u8> executeCommand(const std::string &command, std::span<const u8> writeData = {}) const;
 
     private:
-        LIBSSH2_SESSION* m_handle = nullptr;
-        LIBSSH2_CHANNEL* m_channel = nullptr;
+        LIBSSH2_SESSION *m_handle = nullptr;
         bool m_atEOF = false;
         u64 m_seekPosition = 0x00;
         std::string m_readCommand, m_writeCommand, m_sizeCommand;
