@@ -2,6 +2,7 @@
 #include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/magic.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <pl/core/evaluator.hpp>
 
@@ -10,10 +11,12 @@ namespace hex::plugin::builtin {
     void registerPatternLanguagePragmas() {
 
         ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
-            auto baseAddress = strtoull(value.c_str(), nullptr, 0);
+            auto baseAddress = wolv::util::from_chars<i64>(value);
+            if (!baseAddress.has_value())
+                return false;
 
-            ImHexApi::Provider::get()->setBaseAddress(baseAddress);
-            runtime.setDataBaseAddress(baseAddress);
+            ImHexApi::Provider::get()->setBaseAddress(*baseAddress);
+            runtime.setDataBaseAddress(*baseAddress);
 
             return true;
         });

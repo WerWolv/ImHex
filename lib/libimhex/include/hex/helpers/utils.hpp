@@ -28,6 +28,8 @@
 
 #include <imgui.h>
 
+#include <wolv/utils/charconv.hpp>
+
 namespace hex {
 
     #if !defined(HEX_MODULE_EXPORT)
@@ -261,7 +263,11 @@ namespace hex {
             if (!std::isxdigit(byteString[i]) || !std::isxdigit(byteString[i + 1]))
                 return {};
 
-            result.push_back(std::strtoul(byteString.substr(i, 2).c_str(), nullptr, 16));
+            auto value = wolv::util::from_chars<u64>(byteString.substr(i, 2), 16);
+            if (!value.has_value())
+                return {};
+
+            result.push_back(*value);
         }
 
         return result;

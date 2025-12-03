@@ -4,6 +4,8 @@
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#include <charconv>
+
 namespace hex::plugin::builtin {
 
     static u32 digitsNeeded(u32 numDigits, u32 baseX, u32 baseY) {
@@ -40,16 +42,16 @@ namespace hex::plugin::builtin {
 
             switch (base) {
                 case 10:
-                    number = std::strtoull(buffers[0].c_str(), nullptr, base);
+                    number = wolv::util::from_chars<u64>(buffers[0], base).value_or(0);
                     break;
                 case 16:
-                    number = std::strtoull(buffers[1].c_str(), nullptr, base);
+                    number = wolv::util::from_chars<u64>(buffers[1], base).value_or(0);
                     break;
                 case 8:
-                    number = std::strtoull(buffers[2].c_str(), nullptr, base);
+                    number = wolv::util::from_chars<u64>(buffers[2], base).value_or(0);
                     break;
                 case 2:
-                    number = std::strtoull(buffers[3].c_str(), nullptr, base);
+                    number = wolv::util::from_chars<u64>(buffers[3], base).value_or(0);
                     break;
                 default:
                     return;

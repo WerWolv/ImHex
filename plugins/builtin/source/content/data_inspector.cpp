@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
 
     template<std::unsigned_integral T, size_t Size = sizeof(T)>
     static std::vector<u8> stringToUnsigned(const std::string &value, std::endian endian) requires(sizeof(T) <= sizeof(u64)) {
-        u64 result = std::strtoull(value.c_str(), nullptr, 0);
+        const auto result = wolv::util::from_chars<u64>(value).value_or(0);
         if (result > std::numeric_limits<T>::max()) return {};
 
         std::vector<u8> bytes(Size, 0x00);
@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
 
     template<std::signed_integral T, size_t Size = sizeof(T)>
     static std::vector<u8> stringToSigned(const std::string &value, std::endian endian) requires(sizeof(T) <= sizeof(u64)) {
-        i64 result = std::strtoll(value.c_str(), nullptr, 0);
+        const auto result = wolv::util::from_chars<i64>(value).value_or(0);
         if (result > std::numeric_limits<T>::max() || result < std::numeric_limits<T>::min()) return {};
 
         std::vector<u8> bytes(Size, 0x00);
@@ -62,7 +62,7 @@ namespace hex::plugin::builtin {
 
     template<std::floating_point T>
     static std::vector<u8> stringToFloat(const std::string &value, std::endian endian) requires(sizeof(T) <= sizeof(long double)) {
-        T result = std::strtold(value.c_str(), nullptr);
+        const T result = wolv::util::from_chars<double>(value).value_or(0);
 
         std::vector<u8> bytes(sizeof(T), 0x00);
         std::memcpy(bytes.data(), &result, bytes.size());
@@ -362,7 +362,7 @@ namespace hex::plugin::builtin {
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 std::ignore = endian;
 
-                return hex::crypt::encodeSleb128(std::strtoll(value.c_str(), nullptr, 0));
+                return hex::crypt::encodeSleb128(wolv::util::from_chars<i64>(value).value_or(0));
             }
         );
 
@@ -379,7 +379,7 @@ namespace hex::plugin::builtin {
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 std::ignore = endian;
 
-                return hex::crypt::encodeUleb128(std::strtoull(value.c_str(), nullptr, 0));
+                return hex::crypt::encodeUleb128(wolv::util::from_chars<u64>(value).value_or(0));
             }
         );
 

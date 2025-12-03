@@ -54,7 +54,11 @@ namespace hex::plugin::builtin {
                 if (!std::isxdigit(byteString[i]) || !std::isxdigit(byteString[i + 1]))
                     throwNodeError("Invalid byte string format");
 
-                result.push_back(std::strtoul(byteString.substr(i, 2).c_str(), nullptr, 16));
+                auto value = wolv::util::from_chars<u64>(byteString.substr(i, 2), 16);
+                if (!value.has_value())
+                    throwNodeError("Invalid number value");
+
+                result.push_back(*value);
             }
 
             return result;
