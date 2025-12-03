@@ -217,11 +217,11 @@ namespace hex::ui {
             return m_flags.substr(start, length);
         if (part == LinePart::Utf8) {
             u64 utf8Start = 0;
-            for (u64 utf8Index = 0; utf8Index < start; ++utf8Index) {
+            for (u64 utf8Index = 0; utf8Index < start && utf8Start < m_chars.size(); ++utf8Index) {
                 utf8Start += TextEditor::utf8CharLength(m_chars[utf8Start]);
             }
             u64 utf8Length = 0;
-            for (u64 utf8Index = 0; utf8Index < length; ++utf8Index) {
+            for (u64 utf8Index = 0; utf8Index < length && utf8Start + utf8Length < m_chars.size(); ++utf8Index) {
                 utf8Length += TextEditor::utf8CharLength(m_chars[utf8Start + utf8Length]);
             }
             return m_chars.substr(utf8Start, utf8Length);
@@ -336,11 +336,11 @@ namespace hex::ui {
         if (length == (u64) -1 || start + length >= m_chars.size())
             length = m_chars.size() - start;
         u64 utf8Start = 0;
-        for (u64 utf8Index = 0; utf8Index < start; ++utf8Index) {
+        for (u64 utf8Index = 0; utf8Index < start && utf8Start < m_chars.size(); ++utf8Index) {
             utf8Start += TextEditor::utf8CharLength(m_chars[utf8Start]);
         }
         u64 utf8Length = 0;
-        for (u64 utf8Index = 0; utf8Index < length; ++utf8Index) {
+        for (u64 utf8Index = 0; utf8Index < length && utf8Start + utf8Length < m_chars.size(); ++utf8Index) {
             utf8Length += TextEditor::utf8CharLength(m_chars[utf8Start + utf8Length]);
         }
         utf8Length = std::min(utf8Length, (u64) (m_chars.size() - utf8Start));
