@@ -52,11 +52,14 @@ namespace hex::plugin::builtin {
             ImGui::GetWindowDrawList()->AddShadowCircle(pos, diameter / 2, ImGui::GetColorU32(ImGuiCol_ButtonActive, 0.8F), diameter / 4, ImVec2());
         }
 
+        bool allowSeparator = false;
         void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, View *view, const ContentRegistry::UserInterface::impl::MenuCallback &callback, const ContentRegistry::UserInterface::impl::EnabledCallback &enabledCallback, const ContentRegistry::UserInterface::impl::SelectedCallback &selectedCallback) {
             const auto &name = menuItems.front();
 
             if (name.get() == ContentRegistry::UserInterface::impl::SeparatorValue) {
-                menu::menuSeparator();
+                if (allowSeparator)
+                    menu::menuSeparator();
+                allowSeparator = false;
                 return;
             }
 
@@ -80,10 +83,13 @@ namespace hex::plugin::builtin {
                 bool isSubmenu = (menuItems.begin() + 1)->get() == ContentRegistry::UserInterface::impl::SubMenuValue;
 
                 if (menu::beginMenuEx(Lang(name), std::next(menuItems.begin())->get() == ContentRegistry::UserInterface::impl::SubMenuValue ? icon : nullptr, isSubmenu ? enabledCallback() : true)) {
+                    allowSeparator = true;
                     createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, view, callback, enabledCallback, selectedCallback);
                     menu::endMenu();
                 }
             }
+
+            allowSeparator = true;
         }
 
         void drawFooter(ImDrawList *drawList, ImVec2 dockSpaceSize) {
@@ -342,6 +348,8 @@ namespace hex::plugin::builtin {
         }
 
         void populateMenu(const UnlocalizedString &menuName) {
+            allowSeparator = false;
+
             const auto lastFocusedView = View::getLastFocusedView();
             for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItems()) {
                 if (!menuName.empty()) {

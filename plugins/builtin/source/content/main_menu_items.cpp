@@ -375,13 +375,13 @@ namespace hex::plugin::builtin {
         ContentRegistry::UserInterface::registerMainMenuItem("hex.builtin.menu.file", 1000);
 
         /* Create File */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ICON_VS_FILE, 1050, CTRLCMD + Keys::N + AllowWhileTyping, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ICON_VS_FILE, 1050, CTRLCMD + Keys::N + AllowWhileTyping + ShowOnWelcomeScreen, [] {
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
             if (newProvider != nullptr && !newProvider->open())
                 hex::ImHexApi::Provider::remove(newProvider);
             else
                 EventProviderOpened::post(newProvider);
-        }, noRunningTasks);
+        }, noRunningTasks, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
 
         /* Open File */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_file" }, ICON_VS_FOLDER_OPENED, 1100, CTRLCMD + Keys::O + AllowWhileTyping + ShowOnWelcomeScreen, [] {
@@ -394,10 +394,10 @@ namespace hex::plugin::builtin {
                 if (menu::menuItemEx(Lang(unlocalizedProviderName), icon))
                     ImHexApi::Provider::createProvider(unlocalizedProviderName);
             }
-        }, noRunningTasks);
+        }, noRunningTasks, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"), true);
 
         /* Reload Provider */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.reload_provider"}, ICON_VS_REFRESH, 1250, CTRLCMD + Keys::R + AllowWhileTyping, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.reload_provider"}, ICON_VS_REFRESH, 1250, CTRLCMD + Keys::R + AllowWhileTyping + ShowOnWelcomeScreen, [] {
             auto provider = ImHexApi::Provider::get();
 
             provider->close();
@@ -405,7 +405,7 @@ namespace hex::plugin::builtin {
                 ImHexApi::Provider::remove(provider, true);
 
             EventDataChanged::post(provider);
-        }, noRunningTaskAndValidProvider);
+        }, noRunningTaskAndValidProvider, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
 
 
         /* Project open / save */

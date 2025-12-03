@@ -24,6 +24,7 @@
 
 #include <ranges>
 #include <unordered_set>
+#include <hex/api/content_registry/views.hpp>
 #include <hex/helpers/menu_items.hpp>
 
 namespace hex::plugin::builtin::recent {
@@ -426,6 +427,6 @@ namespace hex::plugin::builtin::recent {
             }
         }, [] {
             return TaskManager::getRunningTaskCount() == 0 && !s_recentEntriesUpdating && !s_recentEntries.empty();
-        });
+        }, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"), true);
     }
 }

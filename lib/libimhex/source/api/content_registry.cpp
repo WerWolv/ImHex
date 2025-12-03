@@ -1006,16 +1006,16 @@ namespace hex {
             }
         }
 
-        void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
-            addMenuItemSubMenu(std::move(unlocalizedMainMenuNames), "", priority, function, enabledCallback, view);
+        void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view, bool showOnWelcomeScreen) {
+            addMenuItemSubMenu(std::move(unlocalizedMainMenuNames), "", priority, function, enabledCallback, view, showOnWelcomeScreen);
         }
 
-        void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, const char *icon, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
+        void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, const char *icon, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view, bool showOnWelcomeScreen) {
             log::debug("Added new menu item sub menu to menu {} with priority {}", unlocalizedMainMenuNames[0].get(), priority);
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, Shortcut::None, view, function, enabledCallback, []{ return false; }, -1 }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, showOnWelcomeScreen ? Shortcut({ ShowOnWelcomeScreen }) : Shortcut::None, view, function, enabledCallback, []{ return false; }, -1 }
             });
         }
 

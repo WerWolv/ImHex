@@ -159,13 +159,15 @@ EXPORT_MODULE namespace hex {
          * @param function The function to call when the entry is clicked
          * @param enabledCallback The function to call to determine if the entry is enabled
          * @param view The view to use for the entry. If nullptr, the item will always be visible
+         * @param showOnWelcomeScreen If this entry should be shown on the welcome screen
          */
         void addMenuItemSubMenu(
             std::vector<UnlocalizedString> unlocalizedMainMenuNames,
             u32 priority,
             const impl::MenuCallback &function,
             const impl::EnabledCallback& enabledCallback = []{ return true; },
-            View *view = nullptr
+            View *view = nullptr,
+            bool showOnWelcomeScreen = false
         );
 
         /**
@@ -176,6 +178,7 @@ EXPORT_MODULE namespace hex {
          * @param function The function to call when the entry is clicked
          * @param enabledCallback The function to call to determine if the entry is enabled
          * @param view The view to use for the entry. If nullptr, the item will always be visible
+         * @param showOnWelcomeScreen If this entry should be shown on the welcome screen
          */
         void addMenuItemSubMenu(
             std::vector<UnlocalizedString> unlocalizedMainMenuNames,
@@ -183,7 +186,8 @@ EXPORT_MODULE namespace hex {
             u32 priority,
             const impl::MenuCallback &function,
             const impl::EnabledCallback& enabledCallback = []{ return true; },
-            View *view = nullptr
+            View *view = nullptr,
+            bool showOnWelcomeScreen = false
         );
 
 
