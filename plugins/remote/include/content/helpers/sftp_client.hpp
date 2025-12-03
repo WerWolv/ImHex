@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <string>
 #include <vector>
 #include <span>
@@ -22,27 +23,27 @@
 
 namespace hex::plugin::remote {
 
-    class SFTPClient {
+    class SSHClient {
     public:
-        SFTPClient() = default;
-        SFTPClient(const std::string &host,
+        SSHClient() = default;
+        SSHClient(const std::string &host,
                    int port,
                    const std::string &user,
                    const std::string &password);
 
-        SFTPClient(const std::string &host,
+        SSHClient(const std::string &host,
                    int port,
                    const std::string &user,
                    const std::fs::path &privateKeyPath,
                    const std::string &passphrase);
 
-        ~SFTPClient();
+        ~SSHClient();
 
-        SFTPClient(const SFTPClient&) = delete;
-        SFTPClient& operator=(const SFTPClient&) = delete;
+        SSHClient(const SSHClient&) = delete;
+        SSHClient& operator=(const SSHClient&) = delete;
 
-        SFTPClient(SFTPClient &&other) noexcept;
-        SFTPClient& operator=(SFTPClient &&other) noexcept;
+        SSHClient(SSHClient &&other) noexcept;
+        SSHClient& operator=(SSHClient &&other) noexcept;
 
         struct FsItem {
             std::string name;
@@ -66,37 +67,34 @@ namespace hex::plugin::remote {
         class RemoteFile {
         public:
             RemoteFile() = default;
-            RemoteFile(LIBSSH2_SFTP_HANDLE* handle, OpenMode mode);
-            ~RemoteFile();
+            explicit RemoteFile(OpenMode mode) : m_mode(mode) {}
+            virtual ~RemoteFile() {}
 
             RemoteFile(const RemoteFile&) = delete;
             RemoteFile& operator=(const RemoteFile&) = delete;
-            RemoteFile(RemoteFile &&other) noexcept;
-            RemoteFile& operator=(RemoteFile &&other) noexcept;
+            RemoteFile(RemoteFile &&other) noexcept = delete;
+            RemoteFile& operator=(RemoteFile &&other) noexcept = delete;
 
-            [[nodiscard]] bool isOpen() const {
-                return m_handle != nullptr;
-            }
+            [[nodiscard]] virtual bool isOpen() const = 0;
 
-            [[nodiscard]] size_t read(std::span<u8> buffer);
-            [[nodiscard]] size_t write(std::span<const u8> buffer);
-            void seek(uint64_t offset);
-            [[nodiscard]] u64 tell() const;
-            [[nodiscard]] u64 size() const;
+            [[nodiscard]] virtual size_t read(std::span<u8> buffer) = 0;
+            [[nodiscard]] virtual size_t write(std::span<const u8> buffer) = 0;
+            virtual void seek(uint64_t offset) = 0;
+            [[nodiscard]] virtual u64 tell() const = 0;
+            [[nodiscard]] virtual u64 size() const = 0;
 
-            bool eof() const;
-            void flush();
-            void close();
+            virtual bool eof() const = 0;
+            virtual void flush() = 0;
+            virtual void close() = 0;
 
             [[nodiscard]] OpenMode getOpenMode() const { return m_mode; }
 
         private:
-            LIBSSH2_SFTP_HANDLE* m_handle = nullptr;
-            bool m_atEOF = false;
             OpenMode m_mode = OpenMode::Read;
         };
 
-        RemoteFile openFile(const std::fs::path& remotePath, OpenMode mode);
+        std::unique_ptr<RemoteFile> openFileSFTP(const std::fs::path& remotePath, OpenMode mode);
+        std::unique_ptr<RemoteFile> openFileSSH(const std::fs::path& remotePath, OpenMode mode);
         void disconnect();
 
         [[nodiscard]] bool isConnected() const {
@@ -125,6 +123,64 @@ namespace hex::plugin::remote {
 
         std::fs::path m_cachedDirectoryPath;
         std::vector<FsItem> m_cachedFsItems;
+    };
+
+    class RemoteFileSFTP : public SSHClient::RemoteFile {
+    public:
+        RemoteFileSFTP() = default;
+        RemoteFileSFTP(LIBSSH2_SFTP_HANDLE* handle, SSHClient::OpenMode mode);
+        ~RemoteFileSFTP() override;
+
+        [[nodiscard]] bool isOpen() const override {
+            return m_handle != nullptr;
+        }
+
+        [[nodiscard]] size_t read(std::span<u8> buffer) override;
+        [[nodiscard]] size_t write(std::span<const u8> buffer) override;
+        void seek(uint64_t offset) override;
+        [[nodiscard]] u64 tell() const override;
+        [[nodiscard]] u64 size() const override;
+
+        bool eof() const override;
+        void flush() override;
+        void close() override;
+
+    private:
+        LIBSSH2_SFTP_HANDLE* m_handle = nullptr;
+        bool m_atEOF = false;
+        SSHClient::OpenMode m_mode = SSHClient::OpenMode::Read;
+    };
+
+    class RemoteFileSSH : public SSHClient::RemoteFile {
+    public:
+        RemoteFileSSH() = default;
+        RemoteFileSSH(LIBSSH2_SESSION* handle, std::string path, SSHClient::OpenMode mode);
+        ~RemoteFileSSH() override;
+
+        [[nodiscard]] bool isOpen() const override {
+            return m_handle != nullptr;
+        }
+
+        [[nodiscard]] size_t read(std::span<u8> buffer) override;
+        [[nodiscard]] size_t write(std::span<const u8> buffer) override;
+        void seek(uint64_t offset) override;
+        [[nodiscard]] u64 tell() const override;
+        [[nodiscard]] u64 size() const override;
+
+        bool eof() const override;
+        void flush() override;
+        void close() override;
+
+    private:
+        std::vector<u8> executeCommand(const std::string &command, std::span<const u8> writeData = {}) const;
+
+    private:
+        LIBSSH2_SESSION* m_handle = nullptr;
+        LIBSSH2_CHANNEL* m_channel = nullptr;
+        bool m_atEOF = false;
+        u64 m_seekPosition = 0x00;
+        std::string m_readCommand, m_writeCommand, m_sizeCommand;
+        mutable std::mutex m_mutex;
     };
 
 }

@@ -17,9 +17,9 @@ IMHEX_PLUGIN_SETUP("Remote", "WerWolv", "Reading data from remote servers") {
         return romfs::get(path).string();
     });
 
-    hex::plugin::remote::SFTPClient::init();
+    hex::plugin::remote::SSHClient::init();
     AT_FINAL_CLEANUP {
-        hex::plugin::remote::SFTPClient::exit();
+        hex::plugin::remote::SSHClient::exit();
     };
 
     hex::ContentRegistry::Provider::add<hex::plugin::remote::SSHProvider>();

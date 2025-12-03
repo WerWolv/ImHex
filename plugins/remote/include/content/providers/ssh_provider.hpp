@@ -9,9 +9,9 @@ namespace hex::plugin::remote {
     class SSHProvider : public prv::CachedProvider,
                         public prv::IProviderLoadInterface {
     public:
-        bool isAvailable() const override { return m_remoteFile.isOpen(); }
+        bool isAvailable() const override { return m_remoteFile != nullptr && m_remoteFile->isOpen(); }
         bool isReadable() const override  { return isAvailable(); }
-        bool isWritable() const override  { return m_remoteFile.getOpenMode() != SFTPClient::OpenMode::Read; }
+        bool isWritable() const override  { return m_remoteFile != nullptr && m_remoteFile->getOpenMode() != SSHClient::OpenMode::Read; }
         bool isResizable() const override { return false; }
         bool isSavable() const override   { return isWritable(); }
 
@@ -41,8 +41,8 @@ namespace hex::plugin::remote {
         };
 
     private:
-        SFTPClient m_sftpClient;
-        SFTPClient::RemoteFile m_remoteFile;
+        SSHClient m_sftpClient;
+        std::unique_ptr<SSHClient::RemoteFile> m_remoteFile;
 
         std::string m_host;
         int m_port = 22;
@@ -53,6 +53,7 @@ namespace hex::plugin::remote {
         AuthMethod m_authMethod = AuthMethod::Password;
 
         bool m_selectedFile = false;
+        bool m_accessFileOverSSH = false;
         std::fs::path m_remoteFilePath = { "/", std::fs::path::format::generic_format };
     };
 

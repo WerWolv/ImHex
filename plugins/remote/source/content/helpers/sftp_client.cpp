@@ -11,15 +11,15 @@
 
 namespace hex::plugin::remote {
 
-    void SFTPClient::init() {
+    void SSHClient::init() {
         libssh2_init(0);
     }
 
-    void SFTPClient::exit() {
+    void SSHClient::exit() {
         libssh2_exit();
     }
 
-    SFTPClient::SFTPClient(const std::string &host, int port, const std::string &user, const std::string &password) {
+    SSHClient::SSHClient(const std::string &host, int port, const std::string &user, const std::string &password) {
         connect(host, port);
         authenticatePassword(user, password);
 
@@ -28,7 +28,7 @@ namespace hex::plugin::remote {
             throw std::runtime_error("Failed to initialize SFTP session");
     }
 
-    SFTPClient::SFTPClient(const std::string &host, int port, const std::string &user, const std::fs::path &publicKeyPath, const std::string &passphrase) {
+    SSHClient::SSHClient(const std::string &host, int port, const std::string &user, const std::fs::path &publicKeyPath, const std::string &passphrase) {
         connect(host, port);
         authenticatePublicKey(user, publicKeyPath, passphrase);
 
@@ -37,7 +37,7 @@ namespace hex::plugin::remote {
             throw std::runtime_error("Failed to initialize SFTP session");
     }
 
-    SFTPClient::~SFTPClient() {
+    SSHClient::~SSHClient() {
         if (m_sftp) libssh2_sftp_shutdown(m_sftp);
         if (m_session) {
             libssh2_session_disconnect(m_session, "Normal Shutdown");
@@ -50,7 +50,7 @@ namespace hex::plugin::remote {
         #endif
     }
 
-    SFTPClient::SFTPClient(SFTPClient &&other) noexcept {
+    SSHClient::SSHClient(SSHClient &&other) noexcept {
         m_sftp = other.m_sftp;
         other.m_sftp = nullptr;
 
@@ -65,7 +65,7 @@ namespace hex::plugin::remote {
         #endif
     }
 
-    SFTPClient& SFTPClient::operator=(SFTPClient &&other) noexcept {
+    SSHClient& SSHClient::operator=(SSHClient &&other) noexcept {
         if (this != &other) {
             if (m_sftp) libssh2_sftp_shutdown(m_sftp);
             if (m_session) {
@@ -96,7 +96,7 @@ namespace hex::plugin::remote {
     }
 
 
-    void SFTPClient::connect(const std::string &host, int port) {
+    void SSHClient::connect(const std::string &host, int port) {
         addrinfo hints = {}, *res;
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
@@ -136,19 +136,19 @@ namespace hex::plugin::remote {
             throw std::runtime_error("SSH handshake failed: " + getErrorString(m_session));
     }
 
-    void SFTPClient::authenticatePassword(const std::string &user, const std::string &password) {
+    void SSHClient::authenticatePassword(const std::string &user, const std::string &password) {
         if (libssh2_userauth_password(m_session, user.c_str(), password.c_str()))
             throw std::runtime_error("Authentication failed: " + getErrorString(m_session));
     }
 
-    void SFTPClient::authenticatePublicKey(const std::string &user, const std::fs::path &privateKeyPath, const std::string &) {
+    void SSHClient::authenticatePublicKey(const std::string &user, const std::fs::path &privateKeyPath, const std::string &) {
         auto result = libssh2_userauth_publickey_fromfile(m_session, user.c_str(), nullptr, wolv::util::toUTF8String(privateKeyPath).c_str(), nullptr);
         if (result)
             throw std::runtime_error("Authentication failed: " + getErrorString(m_session));
     }
 
 
-    const std::vector<SFTPClient::FsItem>& SFTPClient::listDirectory(const std::fs::path &path) {
+    const std::vector<SSHClient::FsItem>& SSHClient::listDirectory(const std::fs::path &path) {
         if (m_sftp == nullptr)
             return m_cachedFsItems;
 
@@ -189,7 +189,7 @@ namespace hex::plugin::remote {
         return m_cachedFsItems;
     }
 
-    SFTPClient::RemoteFile SFTPClient::openFile(const std::fs::path &remotePath, OpenMode mode) {
+    std::unique_ptr<SSHClient::RemoteFile> SSHClient::openFileSFTP(const std::fs::path &remotePath, OpenMode mode) {
         int flags = 0;
 
         switch (mode) {
@@ -209,7 +209,7 @@ namespace hex::plugin::remote {
         if (!handle) {
             long sftpError = libssh2_sftp_last_error(m_sftp);
             if (mode != OpenMode::Read && sftpError == LIBSSH2_FX_PERMISSION_DENIED) {
-                return openFile(remotePath, OpenMode::Read);
+                return openFileSFTP(remotePath, OpenMode::Read);
             } else {
                 throw std::runtime_error("Failed to open remote file '" + pathString +
                                          "' - " + getErrorString(m_session) +
@@ -217,10 +217,15 @@ namespace hex::plugin::remote {
             }
         }
 
-        return RemoteFile(handle, mode);
+        return std::make_unique<RemoteFileSFTP>(handle, mode);
     }
 
-    void SFTPClient::disconnect() {
+    std::unique_ptr<SSHClient::RemoteFile> SSHClient::openFileSSH(const std::fs::path &remotePath, OpenMode mode) {
+        auto pathString = wolv::util::toUTF8String(remotePath);
+        return std::make_unique<RemoteFileSSH>(m_session, pathString, mode);
+    }
+
+    void SSHClient::disconnect() {
         if (m_sftp != nullptr) {
             libssh2_sftp_shutdown(m_sftp);
             m_sftp = nullptr;
@@ -234,7 +239,7 @@ namespace hex::plugin::remote {
     }
 
 
-    std::string SFTPClient::getErrorString(LIBSSH2_SESSION* session) const {
+    std::string SSHClient::getErrorString(LIBSSH2_SESSION* session) const {
         char *errorString;
         int length = 0;
         libssh2_session_last_error(session, &errorString, &length, false);
@@ -242,31 +247,16 @@ namespace hex::plugin::remote {
         return fmt::format("{} ({})", std::string(errorString, static_cast<size_t>(length)), libssh2_session_last_errno(session));
     }
 
-    SFTPClient::RemoteFile::RemoteFile(LIBSSH2_SFTP_HANDLE* handle, OpenMode mode) : m_handle(handle), m_mode(mode) {}
+    RemoteFileSFTP::RemoteFileSFTP(LIBSSH2_SFTP_HANDLE* handle, SSHClient::OpenMode mode) : m_handle(handle), m_mode(mode) {}
 
-    SFTPClient::RemoteFile::~RemoteFile() {
+    RemoteFileSFTP::~RemoteFileSFTP() {
         if (m_handle) {
             libssh2_sftp_close(m_handle);
             m_handle = nullptr;
         }
     }
 
-    SFTPClient::RemoteFile::RemoteFile(RemoteFile &&other) noexcept
-        : m_handle(other.m_handle), m_atEOF(other.m_atEOF), m_mode(other.m_mode) {
-        other.m_handle = nullptr;
-    }
-    SFTPClient::RemoteFile& SFTPClient::RemoteFile::operator=(RemoteFile &&other) noexcept {
-        if (this != &other) {
-            if (m_handle) libssh2_sftp_close(m_handle);
-            m_handle = other.m_handle;
-            m_atEOF = other.m_atEOF;
-            m_mode = other.m_mode;
-            other.m_handle = nullptr;
-        }
-        return *this;
-    }
-
-    size_t SFTPClient::RemoteFile::read(std::span<u8> buffer) {
+    size_t RemoteFileSFTP::read(std::span<u8> buffer) {
         auto dataSize = this->size();
         auto offset = this->tell();
 
@@ -282,7 +272,7 @@ namespace hex::plugin::remote {
         return static_cast<size_t>(n);
     }
 
-    size_t SFTPClient::RemoteFile::write(std::span<const u8> buffer) {
+    size_t RemoteFileSFTP::write(std::span<const u8> buffer) {
         if (buffer.empty())
             return 0;
 
@@ -293,16 +283,16 @@ namespace hex::plugin::remote {
         return static_cast<size_t>(n);
     }
 
-    void SFTPClient::RemoteFile::seek(uint64_t offset) {
+    void RemoteFileSFTP::seek(uint64_t offset) {
         libssh2_sftp_seek64(m_handle, offset);
         m_atEOF = false;
     }
 
-    uint64_t SFTPClient::RemoteFile::tell() const {
+    u64 RemoteFileSFTP::tell() const {
         return libssh2_sftp_tell64(m_handle);
     }
 
-    u64 SFTPClient::RemoteFile::size() const {
+    u64 RemoteFileSFTP::size() const {
         LIBSSH2_SFTP_ATTRIBUTES attrs = {};
         if (libssh2_sftp_fstat(m_handle, &attrs) != 0)
             return 0;
@@ -310,18 +300,130 @@ namespace hex::plugin::remote {
         return attrs.filesize;
     }
 
-    bool SFTPClient::RemoteFile::eof() const {
+    bool RemoteFileSFTP::eof() const {
         return m_atEOF;
     }
 
-    void SFTPClient::RemoteFile::flush() {
+    void RemoteFileSFTP::flush() {
         libssh2_sftp_fsync(m_handle);
     }
 
-    void SFTPClient::RemoteFile::close() {
+    void RemoteFileSFTP::close() {
         libssh2_sftp_close(m_handle);
         m_handle = nullptr;
     }
 
+
+    RemoteFileSSH::RemoteFileSSH(LIBSSH2_SESSION *handle, std::string path, SSHClient::OpenMode mode)
+        : RemoteFile(mode), m_handle(handle) {
+        m_readCommand  = fmt::format("dd if=\"{0}\" skip={{0}} count={{1}} bs=1", path);
+        m_writeCommand = fmt::format("dd of=\"{0}\" seek={{0}} count={{1}} bs=1 conv=notrunc", path);
+        m_sizeCommand  = "stat -c%s {0}";
+    }
+
+    RemoteFileSSH::~RemoteFileSSH() {
+        if (m_handle) {
+            m_handle = nullptr;
+        }
+    }
+
+    size_t RemoteFileSSH::read(std::span<u8> buffer) {
+        auto offset = this->tell();
+
+        if (buffer.empty())
+            return 0;
+
+        auto result = executeCommand(fmt::format(fmt::runtime(m_readCommand), offset, buffer.size()));
+
+        auto size = std::min(result.size(), buffer.size());
+        std::memcpy(buffer.data(), result.data(), size);
+
+        return size;
+    }
+
+    size_t RemoteFileSSH::write(std::span<const u8> buffer) {
+        auto offset = this->tell();
+
+        if (buffer.empty())
+            return 0;
+
+        // Send data via STDIN to dd command remotely
+        auto bytesWritten = executeCommand(
+            fmt::format(fmt::runtime(m_writeCommand), offset, buffer.size()),
+            buffer
+        );
+
+        return buffer.size();
+    }
+
+    void RemoteFileSSH::seek(uint64_t offset) {
+        m_seekPosition = offset;
+    }
+
+    u64 RemoteFileSSH::tell() const {
+        return m_seekPosition;
+    }
+
+    u64 RemoteFileSSH::size() const {
+        auto bytes = executeCommand(m_sizeCommand);
+
+        u64 size = 0;
+        if (std::from_chars(reinterpret_cast<char*>(bytes.data()), reinterpret_cast<char*>(bytes.data() + bytes.size()), size).ec != std::errc()) {
+            return 0;
+        }
+
+        return size;
+    }
+
+    bool RemoteFileSSH::eof() const {
+        return m_atEOF;
+    }
+
+    void RemoteFileSSH::flush() {
+        // Nothing to do
+    }
+
+    void RemoteFileSSH::close() {
+        m_handle = nullptr;
+    }
+
+    std::vector<u8> RemoteFileSSH::executeCommand(const std::string &command, std::span<const u8> writeData) const {
+        std::lock_guard lock(m_mutex);
+
+        LIBSSH2_CHANNEL* channel = libssh2_channel_open_session(m_handle);
+        if (!channel) {
+            return {};
+        }
+
+        ON_SCOPE_EXIT {
+            libssh2_channel_close(channel);
+            libssh2_channel_free(channel);
+        };
+
+        if (libssh2_channel_exec(channel, command.c_str()) != 0) {
+            return {};
+        }
+
+        if (!writeData.empty()) {
+            libssh2_channel_write(channel, reinterpret_cast<const char*>(writeData.data()), writeData.size());
+        }
+
+        std::vector<u8> result;
+        std::array<char, 1024> buffer;
+        while (true) {
+            const auto rc = libssh2_channel_read(channel, buffer.data(), buffer.size());
+            if (rc > 0) {
+                result.insert(result.end(), buffer.data(), buffer.data() + rc);
+            } else if (rc == LIBSSH2_ERROR_EAGAIN) {
+                continue;
+            } else {
+                break;
+            }
+        }
+
+        libssh2_channel_send_eof(channel);
+
+        return result;
+    }
 
 }

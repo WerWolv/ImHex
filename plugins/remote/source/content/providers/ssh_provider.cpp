@@ -15,10 +15,10 @@ namespace hex::plugin::remote {
         if (!m_sftpClient.isConnected()) {
             try {
                 if (m_authMethod == AuthMethod::Password) {
-                    SFTPClient client(m_host, m_port, m_username, m_password);
+                    SSHClient client(m_host, m_port, m_username, m_password);
                     m_sftpClient = std::move(client);
                 } else if (m_authMethod == AuthMethod::KeyFile) {
-                    SFTPClient client(m_host, m_port, m_username, m_privateKeyPath, m_keyPassphrase);
+                    SSHClient client(m_host, m_port, m_username, m_privateKeyPath, m_keyPassphrase);
                     m_sftpClient = std::move(client);
                 }
             } catch (const std::exception& e) {
@@ -28,39 +28,46 @@ namespace hex::plugin::remote {
         }
 
         try {
-            m_remoteFile = m_sftpClient.openFile(m_remoteFilePath, SFTPClient::OpenMode::ReadWrite);
+            if (m_accessFileOverSSH)
+                m_remoteFile = m_sftpClient.openFileSSH(m_remoteFilePath, SSHClient::OpenMode::ReadWrite);
+            else
+                m_remoteFile = m_sftpClient.openFileSFTP(m_remoteFilePath, SSHClient::OpenMode::ReadWrite);
         } catch (const std::exception& e) {
             setErrorMessage(e.what());
             return false;
         }
 
-        return m_remoteFile.isOpen();
+        return m_remoteFile->isOpen();
     }
 
     void SSHProvider::close() {
-        m_remoteFile.close();
+        m_remoteFile->close();
         m_sftpClient.disconnect();
         m_remoteFilePath.clear();
     }
 
     void SSHProvider::save() {
-        if (m_sftpClient.isConnected() && m_remoteFile.isOpen()) {
-            m_remoteFile.flush();
+        if (m_sftpClient.isConnected() && m_remoteFile->isOpen()) {
+            m_remoteFile->flush();
         }
     }
 
     void SSHProvider::readFromSource(u64 offset, void* buffer, size_t size) {
-        m_remoteFile.seek(offset);
-        std::ignore = m_remoteFile.read({ static_cast<u8*>(buffer), size });
+        m_remoteFile->seek(offset);
+        std::ignore = m_remoteFile->read({ static_cast<u8*>(buffer), size });
     }
 
     void SSHProvider::writeToSource(u64 offset, const void* buffer, size_t size) {
-        m_remoteFile.seek(offset);
-        std::ignore = m_remoteFile.write({ static_cast<const u8*>(buffer), size });
+        m_remoteFile->seek(offset);
+        std::ignore = m_remoteFile->write({ static_cast<const u8*>(buffer), size });
     }
 
     u64 SSHProvider::getSourceSize() const {
-        return m_remoteFile.size();
+        auto size = m_remoteFile->size();
+        if (size == 0)
+            return std::numeric_limits<u32>::max();
+        else
+            return size;
     }
 
     std::string SSHProvider::getName() const {
@@ -97,10 +104,10 @@ namespace hex::plugin::remote {
             if (ImGui::Button("hex.plugin.remote.ssh_provider.connect"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                 try {
                     if (m_authMethod == AuthMethod::Password) {
-                        SFTPClient client(m_host, m_port, m_username, m_password);
+                        SSHClient client(m_host, m_port, m_username, m_password);
                         m_sftpClient = std::move(client);
                     } else if (m_authMethod == AuthMethod::KeyFile) {
-                        SFTPClient client(m_host, m_port, m_username, m_privateKeyPath, m_keyPassphrase);
+                        SSHClient client(m_host, m_port, m_username, m_privateKeyPath, m_keyPassphrase);
                         m_sftpClient = std::move(client);
                     }
                 } catch (const std::exception& e) {
@@ -144,6 +151,9 @@ namespace hex::plugin::remote {
                 }
                 ImGui::EndTable();
             }
+
+            ImGui::NewLine();
+            ImGui::Checkbox("hex.plugin.remote.ssh_provider.ssh_access"_lang, &m_accessFileOverSSH);
         }
 
         return m_selectedFile;
@@ -162,6 +172,7 @@ namespace hex::plugin::remote {
         }
 
         settings["remoteFilePath"] = wolv::util::toUTF8String(m_remoteFilePath);
+        settings["accessFileOverSSH"] = m_accessFileOverSSH;
 
         return Provider::storeSettings(settings);
     }
@@ -181,6 +192,7 @@ namespace hex::plugin::remote {
         }
 
         m_remoteFilePath = settings.value("remoteFilePath", "");
+        m_accessFileOverSSH = settings.value("accessFileOverSSH", false);
     }
 
 }
