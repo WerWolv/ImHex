@@ -256,12 +256,6 @@ namespace hex::plugin::builtin {
             this->updateInspectorRows();
         }
 
-        if (m_selectedProvider == nullptr || !m_selectedProvider->isReadable() || m_validBytes <= 0) {
-            ImGuiExt::TextOverlay("hex.builtin.view.data_inspector.no_data"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
-
-            return;
-        }
-
         const auto selection = ImHexApi::HexEditor::getSelection();
         const auto selectedEntryIt = std::find_if(m_cachedData.begin(), m_cachedData.end(), [this](const InspectorCacheEntry &entry) {
             return entry.unlocalizedName == m_selectedEntryName;
@@ -269,12 +263,14 @@ namespace hex::plugin::builtin {
 
         u64 requiredSize = selectedEntryIt == m_cachedData.end() ? 0x00 : selectedEntryIt->requiredSize;
 
-        ImGui::BeginDisabled(!selection.has_value() || !m_selectedEntryName.has_value());
+        bool noData = m_selectedProvider == nullptr || !m_selectedProvider->isReadable() || m_validBytes <= 0;
+
+        ImGui::BeginDisabled(noData || !selection.has_value() || !m_selectedEntryName.has_value());
         {
             const auto buttonSizeSmall = ImVec2(ImGui::GetTextLineHeightWithSpacing() * 1.5F, 0);
             const auto buttonSize = ImVec2((ImGui::GetContentRegionAvail().x / 2) - buttonSizeSmall.x - ImGui::GetStyle().FramePadding.x * 3, 0);
-            const auto baseAddress = m_selectedProvider->getBaseAddress();
-            const auto providerSize = m_selectedProvider->getActualSize();
+            const auto baseAddress = noData ? 0x00 : m_selectedProvider->getBaseAddress();
+            const auto providerSize = noData ? 0x00 : m_selectedProvider->getActualSize();
             const auto providerEndAddress = baseAddress + providerSize;
 
             ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getStartAddress() < baseAddress + requiredSize);
@@ -303,29 +299,32 @@ namespace hex::plugin::builtin {
 
         static bool hideSettings = true;
 
-        if (ImGui::BeginTable("##datainspector", m_tableEditingModeEnabled ? 3 : 2,
+        if (ImGui::BeginTable("##datainspector", noData ? 1 : (m_tableEditingModeEnabled ? 3 : 2),
                               ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY,
-                              ImVec2(0, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() * (hideSettings ? 1.5 : 7.5)))) {
-            ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.name"_lang,
-                                    ImGuiTableColumnFlags_WidthFixed);
-            ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.value"_lang,
-                                    ImGuiTableColumnFlags_WidthStretch);
+                              ImVec2(0, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() * (hideSettings ? 1.25 : 7.25)))) {
+            if (noData) {
+                ImGuiExt::TextOverlay("hex.builtin.view.data_inspector.no_data"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2, ImGui::GetWindowWidth() * 0.7);
+            } else {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.name"_lang,
+                                        ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.value"_lang,
+                                        ImGuiTableColumnFlags_WidthStretch);
 
-            if (m_tableEditingModeEnabled)
-                ImGui::TableSetupColumn("##favorite", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
+                if (m_tableEditingModeEnabled)
+                    ImGui::TableSetupColumn("##favorite", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
 
-            ImGui::TableHeadersRow();
+                ImGui::TableHeadersRow();
 
-            this->drawInspectorRows();
-
-            if (m_tableEditingModeEnabled) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TableNextColumn();
-                ImGuiExt::HelpHover("hex.builtin.view.data_inspector.custom_row.hint"_lang, ICON_VS_INFO);
-                ImGui::SameLine();
-                ImGui::TextUnformatted("hex.builtin.view.data_inspector.custom_row.title"_lang);
+                this->drawInspectorRows();
+                if (m_tableEditingModeEnabled) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    ImGuiExt::HelpHover("hex.builtin.view.data_inspector.custom_row.hint"_lang, ICON_VS_INFO);
+                    ImGui::SameLine();
+                    ImGui::TextUnformatted("hex.builtin.view.data_inspector.custom_row.title"_lang);
+                }
             }
 
             ImGui::EndTable();
@@ -334,7 +333,10 @@ namespace hex::plugin::builtin {
         // Draw inspector settings
         const auto width = ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(ICON_VS_EDIT).x - ImGui::GetStyle().ItemSpacing.x * 2;
         if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, &hideSettings, hideSettings ? ImVec2(width, 1) : ImVec2(0, 0))) {
+            ImGui::BeginDisabled(noData);
             ImGuiExt::DimmedButtonToggle(fmt::format("{}  {}", ICON_VS_EDIT, "hex.ui.common.edit"_lang).c_str(), &m_tableEditingModeEnabled, ImVec2(-1, 0));
+            ImGui::EndDisabled();
+
             ImGui::Separator();
 
             ImGui::PushItemWidth(-1);
@@ -354,7 +356,9 @@ namespace hex::plugin::builtin {
 
         if (hideSettings) {
             ImGui::SameLine();
+            ImGui::BeginDisabled(noData);
             ImGuiExt::DimmedButtonToggle(ICON_VS_EDIT, &m_tableEditingModeEnabled);
+            ImGui::EndDisabled();
             ImGui::SetItemTooltip("%s", "hex.ui.common.edit"_lang.get());
         }
     }
