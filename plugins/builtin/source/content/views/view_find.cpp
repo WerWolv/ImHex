@@ -962,12 +962,13 @@ namespace hex::plugin::builtin {
 
                         mode = SearchSettings::Mode::BinaryPattern;
 
-                        ImGuiExt::InputTextIconHint("hex.builtin.view.find.binary_pattern"_lang, ICON_VS_SYMBOL_NAMESPACE, "AA BB ?? ?D \"XYZ\"", settings.input);
+                        if (ImGuiExt::InputTextIconHint("hex.builtin.view.find.binary_pattern"_lang, ICON_VS_SYMBOL_NAMESPACE, "AA BB ?? ?D \"XYZ\" u32be(1234)", settings.input)) {
+                            settings.pattern = hex::BinaryPattern(settings.input);
+                        }
 
                         constexpr static u32 min = 1, max = 0x1000;
                         ImGui::SliderScalar("hex.builtin.view.find.binary_pattern.alignment"_lang, ImGuiDataType_U32, &settings.alignment, &min, &max);
 
-                        settings.pattern = hex::BinaryPattern(settings.input);
                         m_settingsValid = settings.pattern.isValid() && settings.alignment > 0;
 
                         ImGui::EndTabItem();

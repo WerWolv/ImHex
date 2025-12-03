@@ -42,6 +42,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/keys.cpp
         source/helpers/udp_server.cpp
         source/helpers/scaling.cpp
+        source/helpers/binary_pattern.cpp
 
         source/test/tests.cpp
 
