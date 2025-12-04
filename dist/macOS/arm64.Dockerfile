@@ -1,5 +1,5 @@
 # This base image is also known as "crosscompile". See arm64.crosscompile.Dockerfile
-FROM ghcr.io/werwolv/macos-crosscompile:clang20-nosdk as build
+FROM ghcr.io/werwolv/macos-crosscompile:4c4af2d1a6a102fab93cc9cd660280c2ec9d72af as build
 
 ENV MACOSX_DEPLOYMENT_TARGET 13.0
 
@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/var/lib/apt/lists/ apt update && apt install -y m
 ### add install_name_tool for cmake command that won't have the right env set (see PostprocessBundle.cmake function postprocess_bundle())
 RUN cp /osxcross/build/cctools-port/cctools/misc/install_name_tool /usr/bin/install_name_tool
 ### a cmake thing wants 'otool' and not '' apparently
-RUN cp /osxcross/target/bin/aarch64-apple-darwin23-otool /usr/bin/otool
+RUN cp /osxcross/target/bin/aarch64-apple-darwin24-otool /usr/bin/otool
 
 ## Clone glfw
 RUN <<EOF
@@ -36,10 +36,10 @@ EOF
 RUN --mount=type=cache,target=/cache <<EOF
 ## Download SDK is missing (it may have been removed from the image)
 set -xe
-if [ ! -d /osxcross/target/SDK/MacOSX14.0.sdk ]; then
-    wget https://github.com/joseluisq/macosx-sdks/releases/download/14.0/MacOSX14.0.sdk.tar.xz -O /cache/MacOSX14.0.sdk.tar.xz -nc || true
+if [ ! -d /osxcross/target/SDK/MacOSX15.0.sdk ]; then
+    wget https://github.com/joseluisq/macosx-sdks/releases/download/15.0/MacOSX15.0.sdk.tar.xz -O /cache/MacOSX15.0.sdk.tar.xz -nc || true
     mkdir -p /osxcross/target/SDK
-    tar -C /osxcross/target/SDK -xf /cache/MacOSX14.0.sdk.tar.xz
+    tar -C /osxcross/target/SDK -xf /cache/MacOSX15.0.sdk.tar.xz
 fi
 EOF
 
@@ -101,7 +101,7 @@ RUN --mount=type=cache,target=/cache <<EOF
     make -j $JOBS install
 
     # Now, we cross-compile it and install it in the libraries folder
-    CC=/osxcross/target/bin/aarch64-apple-darwin23-clang CXX=/osxcross/target/bin/aarch64-apple-darwin23-clang++ ./configure --prefix /vcpkg/installed/arm-osx-mytriplet --host $OSXCROSS_HOST
+    CC=/osxcross/target/bin/aarch64-apple-darwin24-clang CXX=/osxcross/target/bin/aarch64-apple-darwin24-clang++ ./configure --prefix /vcpkg/installed/arm-osx-mytriplet --host $OSXCROSS_HOST
     make -j $JOBS
     make install
 
@@ -156,7 +156,7 @@ COPY --from=imhex / /mnt/ImHex
 RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/_deps \
     cd /mnt/ImHex && \
     # compilers
-    CC=o64-clang CXX=o64-clang++ OBJC=/osxcross/target/bin/aarch64-apple-darwin23-clang OBJCXX=/osxcross/target/bin/aarch64-apple-darwin23-clang++ \
+    CC=o64-clang CXX=o64-clang++ OBJC=/osxcross/target/bin/aarch64-apple-darwin24-clang OBJCXX=/osxcross/target/bin/aarch64-apple-darwin24-clang++ \
         cmake -G "Ninja" \
         `# ccache flags` \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \

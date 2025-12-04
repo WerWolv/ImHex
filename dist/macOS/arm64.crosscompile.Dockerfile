@@ -4,9 +4,9 @@ FROM ubuntu:22.04
 ENV PATH                $PATH:/osxcross/target/bin
 ENV LD_LIBRARY_PATH     /osxcross/target/lib
 ENV OSXCROSS_SDK        /osxcross/target/SDK/MacOSX14.0.sdk
-ENV OSXCROSS_TARGET     darwin23
+ENV OSXCROSS_TARGET     darwin24
 ENV OSXCROSS_TARGET_DIR /osxcross/target
-ENV OSXCROSS_HOST       aarch64-apple-darwin23
+ENV OSXCROSS_HOST       aarch64-apple-darwin24
 
 # -- DOWNLOADING STUFF
 
