@@ -70,6 +70,8 @@ EXPORT_MODULE namespace hex {
         [[nodiscard]] u64 getValue() const;
         [[nodiscard]] u64 getMaxValue() const;
 
+        void wait() const;
+
     private:
         void finish();
         void interruption();
@@ -87,9 +89,9 @@ EXPORT_MODULE namespace hex {
         std::atomic<bool> m_background = true;
         std::atomic<bool> m_blocking = false;
 
-        std::atomic<bool> m_interrupted = false;
-        std::atomic<bool> m_finished = false;
-        std::atomic<bool> m_hadException = false;
+        std::atomic_flag m_interrupted = false;
+        std::atomic_flag m_finished = false;
+        std::atomic_flag m_hadException = false;
         std::string m_exceptionMessage;
 
         struct TaskInterruptor { virtual ~TaskInterruptor() = default; };
@@ -114,6 +116,7 @@ EXPORT_MODULE namespace hex {
         [[nodiscard]] u32 getProgress() const;
 
         void interrupt() const;
+        void wait() const;
     private:
         std::weak_ptr<Task> m_task;
     };

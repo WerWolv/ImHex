@@ -20,8 +20,8 @@ namespace hex::plugin::hashes {
 
     class PopupTextHash : public Popup<PopupTextHash> {
     public:
-        explicit PopupTextHash(const ContentRegistry::Hashes::Hash::Function &hash)
-                : hex::Popup<PopupTextHash>(hash.getName(), true, false),
+        explicit PopupTextHash(const ViewHashes::Function &hash)
+                : hex::Popup<PopupTextHash>(hash.getFunction().getName(), true, false),
                   m_hash(hash) { }
 
         void drawContent() override {
@@ -29,16 +29,25 @@ namespace hex::plugin::hashes {
 
             ImGui::PushItemWidth(-1);
             if (ImGui::InputTextMultiline("##input", m_input)) {
-                prv::MemoryProvider provider({ m_input.begin(), m_input.end() });
-
-                m_hash.reset();
-                auto bytes = m_hash.get(Region { 0x00, provider.getActualSize() }, &provider);
-
-                m_result = crypt::encode16(bytes);
+                m_hash.update({ m_input.begin(), m_input.end() });
+                m_result.reset();
             }
 
+
             ImGui::NewLine();
-            ImGui::InputText("##result", m_result, ImGuiInputTextFlags_ReadOnly);
+            if (m_hash.isCalculating()) {
+                ImGuiExt::TextSpinner("");
+            } else {
+                if (!m_result.has_value()) {
+                    const auto data = m_hash.get();
+                    if (!data.empty())
+                        m_result = crypt::encode16(data);
+                }
+
+                auto result = m_result.value_or("???");
+                ImGui::InputText("##result", result, ImGuiInputTextFlags_ReadOnly);
+            }
+
             ImGui::PopItemWidth();
 
             if (ImGui::IsKeyPressed(ImGuiKey_Escape))
@@ -50,22 +59,22 @@ namespace hex::plugin::hashes {
         }
 
         ImVec2 getMinSize() const override {
-            return scaled({ 400, 200 });
+            return scaled({ 400, 230 });
         }
 
         ImVec2 getMaxSize() const override { return this->getMinSize(); }
 
     private:
         std::string m_input;
-        std::string m_result;
-        ContentRegistry::Hashes::Hash::Function m_hash;
+        std::optional<std::string> m_result;
+        ViewHashes::Function m_hash;
     };
 
     ViewHashes::ViewHashes() : View::Window("hex.hashes.view.hashes.name", ICON_VS_KEY) {
         EventRegionSelected::subscribe(this, [this](const auto &providerRegion) {
             if (providerRegion.getProvider() != nullptr)
                 for (auto &function : m_hashFunctions.get(providerRegion.getProvider()))
-                    function.reset();
+                    function.update(providerRegion.getRegion(), providerRegion.getProvider());
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
@@ -92,22 +101,15 @@ namespace hex::plugin::hashes {
                                 if (provider == nullptr)
                                     continue;
 
-                                std::vector<u8> bytes;
-                                try {
-                                    bytes = function.get(*selection, provider);
-                                } catch (const std::exception &) {
-                                    continue;
-                                }
-
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("{}", function.getName());
+                                ImGuiExt::TextFormatted("{}", function.getFunction().getName());
 
                                 ImGui::TableNextColumn();
                                 ImGuiExt::TextFormatted("    ");
 
                                 ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("{}", crypt::encode16(bytes));
+                                ImGuiExt::TextFormatted("{}", crypt::encode16(function.get()));
                             }
 
                             ImGui::EndTable();
@@ -198,7 +200,7 @@ namespace hex::plugin::hashes {
             ImGui::BeginDisabled(m_newHashName.empty() || m_selectedHash == nullptr);
             if (ImGuiExt::DimmedButton("hex.hashes.view.hashes.add"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                 if (m_selectedHash != nullptr) {
-                    m_hashFunctions->push_back(m_selectedHash->create(m_newHashName));
+                    m_hashFunctions->emplace_back(m_selectedHash->create(m_newHashName));
                     AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.hashes.achievement.misc.create_hash.name");
                     ImGui::CloseCurrentPopup();
                 }
@@ -222,10 +224,10 @@ namespace hex::plugin::hashes {
             auto provider  = ImHexApi::Provider::get();
             auto selection = ImHexApi::HexEditor::getSelection();
 
-            std::optional<u32> indexToRemove;
-            for (u32 i = 0; i < m_hashFunctions->size(); i++) {
-                auto &function = (*m_hashFunctions)[i];
-
+            u32 i = 0;
+            auto itToRemove = m_hashFunctions->end();
+            for (auto it = m_hashFunctions->begin(); it != m_hashFunctions->end(); ++it) {
+                auto &function = *it;
                 ImGui::PushID(i + 1);
 
                 ImGui::TableNextRow();
@@ -234,17 +236,17 @@ namespace hex::plugin::hashes {
                 ImGui::PushStyleColor(ImGuiCol_Header, 0x00);
                 ImGui::PushStyleColor(ImGuiCol_HeaderActive, 0x00);
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, 0x00);
-                ImGui::Selectable(function.getName().c_str(), false);
+                ImGui::Selectable(function.getFunction().getName().c_str(), false);
                 ImGui::PopStyleColor(3);
 
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("{}", Lang(function.getType()->getUnlocalizedName()));
+                ImGuiExt::TextFormatted("{}", Lang(function.getFunction().getType()->getUnlocalizedName()));
 
                 ImGui::TableNextColumn();
                 std::string result;
                 if (provider != nullptr && selection.has_value()) {
                     try {
-                        result = crypt::encode16(function.get(*selection, provider));
+                        result = crypt::encode16(function.get());
                     } catch (const std::exception &e) {
                         result = e.what();
                     }
@@ -252,7 +254,10 @@ namespace hex::plugin::hashes {
                     result = "???";
                 }
 
-                ImGuiExt::TextFormattedSelectable("{}", result);
+                if (!function.isCalculating())
+                    ImGuiExt::TextFormattedSelectable("{}", result);
+                else
+                    ImGuiExt::TextSpinner("");
 
                 ImGui::TableNextColumn();
 
@@ -262,15 +267,17 @@ namespace hex::plugin::hashes {
                 }
                 ImGui::SameLine(0, 3_scaled);
                 if (ImGuiExt::DimmedIconButton(ICON_VS_CHROME_CLOSE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    indexToRemove = i;
+                    itToRemove = it;
                 }
                 ImGui::PopStyleVar();
 
                 ImGui::PopID();
+
+                i += 1;
             }
 
-            if (indexToRemove.has_value()) {
-                m_hashFunctions->erase(m_hashFunctions->begin() + indexToRemove.value());
+            if (itToRemove != m_hashFunctions->end()) {
+                m_hashFunctions->erase(itToRemove);
             }
 
             ImGui::TableNextRow();
@@ -318,7 +325,7 @@ namespace hex::plugin::hashes {
                     auto newFunction = newHash->create(hash["name"]);
                     newFunction.getType()->load(hash["settings"]);
 
-                    m_hashFunctions.get(provider).push_back(std::move(newFunction));
+                    m_hashFunctions.get(provider).emplace_back(std::move(newFunction));
                     break;
                 }
             }
@@ -331,10 +338,11 @@ namespace hex::plugin::hashes {
         json["hashes"] = nlohmann::json::array();
         size_t index = 0;
         for (const auto &hashFunction : m_hashFunctions.get(provider)) {
+            const auto &function = hashFunction.getFunction();
             json["hashes"][index] = {
-                    { "name", hashFunction.getName() },
-                    { "type", hashFunction.getType()->getUnlocalizedName() },
-                    { "settings", hashFunction.getType()->store() }
+                    { "name", function.getName() },
+                    { "type", function.getType()->getUnlocalizedName() },
+                    { "settings", function.getType()->store() }
             };
             index++;
         }

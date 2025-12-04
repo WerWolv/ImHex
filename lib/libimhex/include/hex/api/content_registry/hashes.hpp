@@ -38,24 +38,14 @@ EXPORT_MODULE namespace hex {
                 [[nodiscard]] const Hash *getType() const { return m_type; }
                 [[nodiscard]] const std::string& getName() const { return m_name; }
 
-                const std::vector<u8>& get(const Region& region, prv::Provider *provider) {
-                    if (m_cache.empty()) {
-                        m_cache = m_callback(region, provider);
-                    }
-
-                    return m_cache;
-                }
-
-                void reset() {
-                    m_cache.clear();
+                std::vector<u8> get(const Region& region, prv::Provider *provider) const {
+                    return m_callback(region, provider);
                 }
 
             private:
                 Hash *m_type;
                 std::string m_name;
                 Callback m_callback;
-
-                std::vector<u8> m_cache;
             };
 
             virtual void draw() { }

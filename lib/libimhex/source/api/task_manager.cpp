@@ -82,9 +82,17 @@ namespace hex {
         m_maxValue    = u64(other.m_maxValue);
         m_currValue   = u64(other.m_currValue);
 
-        m_finished        = bool(other.m_finished);
-        m_hadException    = bool(other.m_hadException);
-        m_interrupted     = bool(other.m_interrupted);
+        if (other.m_finished.test())
+            m_finished.test_and_set();
+        if (other.m_hadException.test())
+            m_hadException.test_and_set();
+        if (other.m_interrupted.test())
+            m_interrupted.test_and_set();
+
+        m_finished.notify_all();
+        m_hadException.notify_all();
+        m_interrupted.notify_all();
+
         m_shouldInterrupt = bool(other.m_shouldInterrupt);
     }
 
@@ -143,11 +151,11 @@ namespace hex {
 
 
     bool Task::isFinished() const {
-        return m_finished;
+        return m_finished.test();
     }
 
     bool Task::hadException() const {
-        return m_hadException;
+        return m_hadException.test();
     }
 
     bool Task::shouldInterrupt() const {
@@ -155,11 +163,11 @@ namespace hex {
     }
 
     bool Task::wasInterrupted() const {
-        return m_interrupted;
+        return m_interrupted.test();
     }
 
     void Task::clearException() {
-        m_hadException = false;
+        m_hadException.clear();
     }
 
     std::string Task::getExceptionMessage() const {
@@ -180,12 +188,18 @@ namespace hex {
         return m_maxValue;
     }
 
+    void Task::wait() const {
+        m_finished.wait(false);
+    }
+
     void Task::finish() {
-        m_finished = true;
+        m_finished.test_and_set();
+        m_finished.notify_all();
     }
 
     void Task::interruption() {
-        m_interrupted = true;
+        m_interrupted.test_and_set();
+        m_interrupted.notify_all();
     }
 
     void Task::exception(const char *message) {
@@ -193,7 +207,8 @@ namespace hex {
 
         // Store information about the caught exception
         m_exceptionMessage = message;
-        m_hadException = true;
+        m_hadException.test_and_set();
+        m_hadException.notify_all();
 
         // Call the interrupt callback on the current thread if one is set
         if (m_interruptCallback)
@@ -239,6 +254,14 @@ namespace hex {
             return;
 
         task->interrupt();
+    }
+
+    void TaskHolder::wait() const {
+        const auto &task = m_task.lock();
+        if (!task)
+            return;
+
+        task->wait();
     }
 
     u32 TaskHolder::getProgress() const {
