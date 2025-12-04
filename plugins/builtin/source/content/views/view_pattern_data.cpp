@@ -17,7 +17,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name", ICON_VS_DATABASE) {
+    ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name", ICON_VS_DATABASE), m_scheduledEvaluators(0) {
         // Handle tree style setting changes
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", [this](const ContentRegistry::Settings::SettingsValue &value) {
@@ -42,6 +42,7 @@ namespace hex::plugin::builtin {
         });
 
         EventPatternEvaluating::subscribe(this, [this]{
+            m_scheduledEvaluators += 1 ;
             m_virtualFiles->clear();
             for (auto &drawers : m_patternDrawer.all())
                 for (auto &[id, drawer] : drawers)
@@ -49,6 +50,7 @@ namespace hex::plugin::builtin {
         });
 
         EventPatternExecuted::subscribe(this, [this](const auto&){
+            m_scheduledEvaluators -= 1;
             for (auto &drawers : m_patternDrawer.all())
                 for (auto &[id, drawer] : drawers)
                     drawer->reset();
@@ -212,8 +214,10 @@ namespace hex::plugin::builtin {
             // Make sure the runtime has finished evaluating and produced valid patterns
             bool patternsValid = false;
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-            if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                patternsValid = runtime.arePatternsValid();
+            if(m_scheduledEvaluators == 0) {
+                if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                    patternsValid = runtime.arePatternsValid();
+                }
             }
 
             if (ImGui::BeginTabBar("##SectionSelector")) {

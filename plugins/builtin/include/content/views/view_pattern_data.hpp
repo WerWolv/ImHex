@@ -35,6 +35,7 @@ namespace hex::plugin::builtin {
         Region m_hoveredPatternRegion = Region::Invalid();
         ui::PatternValueEditor m_patternValueEditor;
         PerProvider<std::vector<VirtualFile>> m_virtualFiles;
+        u32 m_scheduledEvaluators;
 
     };
 
