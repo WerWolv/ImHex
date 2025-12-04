@@ -1081,6 +1081,12 @@ namespace hex::plugin::builtin {
                     this->runSearch();
 
                     m_decodeSettings = m_searchSettings;
+                    m_foundOccurrences->clear();
+                    m_sortedOccurrences->clear();
+                    m_occurrenceTree->clear();
+                    m_lastSelectedOccurrence = nullptr;
+
+                    EventHighlightingChanged::post();
                 }
                 ImGui::SetItemTooltip("%s", "hex.builtin.view.find.search"_lang.get());
             }
