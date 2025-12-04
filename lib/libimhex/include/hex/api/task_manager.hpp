@@ -89,9 +89,9 @@ EXPORT_MODULE namespace hex {
         std::atomic<bool> m_background = true;
         std::atomic<bool> m_blocking = false;
 
-        std::atomic_flag m_interrupted = false;
-        std::atomic_flag m_finished = false;
-        std::atomic_flag m_hadException = false;
+        std::atomic_flag m_interrupted;
+        std::atomic_flag m_finished;
+        std::atomic_flag m_hadException;
         std::string m_exceptionMessage;
 
         struct TaskInterruptor { virtual ~TaskInterruptor() = default; };
