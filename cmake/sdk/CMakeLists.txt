@@ -65,9 +65,9 @@ elseif (APPLE)
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/trace/include")
 else()
     set_target_properties(libimhex PROPERTIES
-            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../libimhex.so"
+            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../../../lib/libimhex.so"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex/include")
     set_target_properties(tracing PROPERTIES
-            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../libtracing.a"
+            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libtracing.a"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/trace/include")
 endif()
