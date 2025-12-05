@@ -12,6 +12,8 @@
 /install/
 /out/
 
+/dist/ImHex.run.xml
+
 *.mgc
 *.kdev4
 imgui.ini
