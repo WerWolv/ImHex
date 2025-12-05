@@ -776,6 +776,15 @@ macro(setupCompilerFlags target)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND APPLE)
         addCCXXFlag("-Wno-unknown-warning-option" ${target})
 
+        # On macOS, when using clang from Homebrew, properly setup the libc++ library path so
+        # it's using the one from Homebrew instead of the system one.
+        execute_process(COMMAND brew --prefix llvm OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+        if (NOT LLVM_PREFIX STREQUAL "" AND ${CMAKE_CXX_COMPILER} STREQUAL "${LLVM_PREFIX}/bin/clang++")
+            set(CMAKE_EXE_LINKER_FLAGS     "${CMAKE_EXE_LINKER_FLAGS}    -L${LLVM_PREFIX}/lib/c++")
+            set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
+            set(CMAKE_MODULE_LINKER_FLAGS  "${CMAKE_MODULE_LINKER_FLAGS} -L${LLVM_PREFIX}/lib/c++")
+        endif()
+
         if (CMAKE_BUILD_TYPE STREQUAL "Debug")
             add_compile_definitions(_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG)
         endif()
