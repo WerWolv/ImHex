@@ -260,8 +260,11 @@ namespace hex {
                     case CTRLCMD.getKeyCode():
                         result.cmd = true;
                         break;
-                    case CurrentView.getKeyCode(): break;
-                    case AllowWhileTyping.getKeyCode(): break;
+                    case CurrentView.getKeyCode():
+                    case AllowWhileTyping.getKeyCode():
+                    case ShowOnWelcomeScreen.getKeyCode():
+                        // Ignore flags that are only used internally by the ShortcutManager
+                        break;
                     default:
                         macosGetKey(Keys(key.getKeyCode()), &result.key);
                         break;
