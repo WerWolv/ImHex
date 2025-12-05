@@ -375,9 +375,20 @@ For more information, check out the [Compiling](/dist/compiling) guide.
 ## Contributing
 See [Contributing](/CONTRIBUTING.md)
 
-## Plugin development
 
+## Plugin development
 To develop plugins for ImHex, use the following template project to get started. You then have access to the entirety of libimhex as well as the ImHex API and the Content Registry to interact with ImHex or to add new content.
+To build a plugin, you will need to use our SDK
+
+### Getting the SDK locally
+You can build the SDK by compiling ImHex like this:
+- `cmake -G Ninja -DIMHEX_BUNDLE_PLUGIN_SDK=ON -B build`
+- `cd build`
+- `DESTDIR=install ninja install`
+The SDK will then be available at `install/usr/local/share/imhex/sdk`. You will need to set the variable `IMHEX_SDK_PATH` to that (absolute) path.
+
+### Getting the SDK in a Github Actions CI
+You can use [this action](https://github.com/WerWolv/imhex-download-sdk) to automatically download the SDK to your Github Runner
 - [ImHex Plugin Template](https://github.com/WerWolv/ImHex-Plugin-Template)
 
 
