@@ -1,6 +1,9 @@
-#include <content/popups/hex_editor/popup_hex_editor_paste_behaviour.hpp>
+#include "content/popups/hex_editor/popup_hex_editor_paste_behaviour.hpp"
+#include "content/views/view_hex_editor.hpp"
 
-#include <imgui.h>
+#include <hex/api/content_registry/settings.hpp>
+
+#include <ui/text_editor.hpp>
 
 namespace hex::plugin::builtin {
 

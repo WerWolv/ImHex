@@ -1,11 +1,14 @@
+#include "content/popups/hex_editor/popup_hex_editor_decoded_string.hpp"
+#include "content/views/view_hex_editor.hpp"
 
-#include <content/popups/hex_editor/popup_hex_editor_decoded_string.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 
-#include <imgui.h>
-#include <hex/ui/imgui_imhex_extensions.h>
-#include <wolv/utils/string.hpp>
+#include <content/differing_byte_searcher.hpp>
 
-using namespace wolv::literals;
+#include <popups/popup_file_chooser.hpp>
+
+#include <ui/text_editor.hpp>
 
 namespace hex::plugin::builtin {
 

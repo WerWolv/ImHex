@@ -1,14 +1,20 @@
-#include <content/popups/hex_editor/popup_hex_editor_fill.hpp>
+#include "content/popups/hex_editor/popup_hex_editor_fill.hpp"
+#include "content/views/view_hex_editor.hpp"
 
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/provider.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/helpers/crypto.hpp>
-#include <hex/helpers/utils.hpp>
 
-#include <imgui.h>
-#include <hex/ui/imgui_imhex_extensions.h>
+#include <content/differing_byte_searcher.hpp>
+
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/crypto.hpp>
+
 #include <fonts/vscode_icons.hpp>
+
+#include <ui/text_editor.hpp>
+#include <wolv/literals.hpp>
 
 using namespace wolv::literals;
 

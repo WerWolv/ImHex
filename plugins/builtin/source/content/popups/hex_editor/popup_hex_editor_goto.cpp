@@ -1,13 +1,16 @@
-#include <content/popups/hex_editor/popup_hex_editor_goto.hpp>
+#include "content/popups/hex_editor/popup_hex_editor_goto.hpp"
+#include "content/views/view_hex_editor.hpp"
 
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/provider.hpp>
-#include <hex/helpers/fmt.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <hex/ui/imgui_imhex_extensions.h>
+#include <content/differing_byte_searcher.hpp>
+
+#include <toasts/toast_notification.hpp>
+
 #include <fonts/vscode_icons.hpp>
+
+#include <pl/patterns/pattern.hpp>
 
 namespace hex::plugin::builtin {
 

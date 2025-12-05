@@ -1,10 +1,12 @@
-#include <content/popups/hex_editor/popup_hex_editor_remove.hpp>
+#include "content/popups/hex_editor/popup_hex_editor_remove.hpp"
+#include "content/views/view_hex_editor.hpp"
 
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/provider.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 
-#include <imgui.h>
-#include <hex/ui/imgui_imhex_extensions.h>
+#include <content/differing_byte_searcher.hpp>
+
+#include <ui/text_editor.hpp>
 
 namespace hex::plugin::builtin {
 
