@@ -95,7 +95,17 @@ add_imhex_plugin(
         source/content/tutorials/tutorials.cpp
         source/content/tutorials/introduction.cpp
 
+        source/content/popups/hex_editor/popup_hex_editor_base_address.cpp
+        source/content/popups/hex_editor/popup_hex_editor_decoded_string.cpp
+        source/content/popups/hex_editor/popup_hex_editor_fill.cpp
         source/content/popups/hex_editor/popup_hex_editor_find.cpp
+        source/content/popups/hex_editor/popup_hex_editor_goto.cpp
+        source/content/popups/hex_editor/popup_hex_editor_insert.cpp
+        source/content/popups/hex_editor/popup_hex_editor_page_size.cpp
+        source/content/popups/hex_editor/popup_hex_editor_paste_behaviour.cpp
+        source/content/popups/hex_editor/popup_hex_editor_remove.cpp
+        source/content/popups/hex_editor/popup_hex_editor_resize.cpp
+        source/content/popups/hex_editor/popup_hex_editor_select.cpp
 
         source/content/views/view_hex_editor.cpp
         source/content/views/view_pattern_editor.cpp
