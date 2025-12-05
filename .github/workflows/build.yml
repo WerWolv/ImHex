@@ -590,7 +590,7 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
           gh extension install actions/gh-actions-cache
-          gh actions-cache delete "build-macos-arm64-cache" --confirm || true
+          gh cache delete "macos-arm64-cache" --confirm || true
 
   macos-arm64-package:
     runs-on: macos-15-intel

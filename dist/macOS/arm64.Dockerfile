@@ -17,7 +17,7 @@ cp /tmp/arm-osx-mytriplet.cmake /vcpkg/triplets/community/arm-osx-mytriplet.cmak
 EOF
 
 ## Install make
-RUN --mount=type=cache,target=/var/lib/apt/lists/ apt update && apt install -y make
+RUN --mount=type=cache,target=/var/lib/apt/lists/ apt update && apt install -y make cmake
 
 ## fix environment
 ### add install_name_tool for cmake command that won't have the right env set (see PostprocessBundle.cmake function postprocess_bundle())
