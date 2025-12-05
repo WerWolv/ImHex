@@ -117,9 +117,18 @@ typedef CC_SHA256_CTX yr_sha256_ctx;
 #define yr_sha256_final(digest, ctx)     CC_SHA256_Final(digest, ctx)
 
 #elif defined(HAVE_MBEDTLS)
-#include <mbedtls/md5.h>
-#include <mbedtls/sha1.h>
-#include <mbedtls/sha256.h>
+
+#include <mbedtls/version.h>
+#if MBEDTLS_VERSION_MAJOR >= 4
+  #define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS
+  #include <mbedtls/private/md5.h>
+  #include <mbedtls/private/sha1.h>
+  #include <mbedtls/private/sha256.h>
+#else
+  #include <mbedtls/md5.h>
+  #include <mbedtls/sha1.h>
+  #include <mbedtls/sha256.h>
+#endif
 
 typedef mbedtls_md5_context yr_md5_ctx;
 typedef mbedtls_sha1_context yr_sha1_ctx;

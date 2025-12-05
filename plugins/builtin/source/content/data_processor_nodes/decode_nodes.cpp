@@ -4,8 +4,6 @@
 #include <hex/helpers/scaling.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/data_processor/node.hpp>
-
-#include <mbedtls/cipher.h>
 #include <mbedtls/error.h>
 
 #include <nlohmann/json.hpp>

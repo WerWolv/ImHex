@@ -8,12 +8,24 @@
 
 #include <mbedtls/version.h>
 #include <mbedtls/base64.h>
-#include <mbedtls/bignum.h>
-#include <mbedtls/md5.h>
-#include <mbedtls/sha1.h>
-#include <mbedtls/sha256.h>
-#include <mbedtls/sha512.h>
-#include <mbedtls/cipher.h>
+
+#if MBEDTLS_VERSION_MAJOR >= 4
+    // TODO: We'll need to migrate to the new <psa/crypto.h> eventually. For now, just include the old stuff again
+    #define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS
+    #include <mbedtls/private/bignum.h>
+    #include <mbedtls/private/md5.h>
+    #include <mbedtls/private/sha1.h>
+    #include <mbedtls/private/sha256.h>
+    #include <mbedtls/private/sha512.h>
+    #include <mbedtls/private/cipher.h>
+#else
+    #include <mbedtls/bignum.h>
+    #include <mbedtls/md5.h>
+    #include <mbedtls/sha1.h>
+    #include <mbedtls/sha256.h>
+    #include <mbedtls/sha512.h>
+    #include <mbedtls/cipher.h>
+#endif
 
 #include <array>
 #include <functional>
@@ -21,26 +33,6 @@
 #include <cstdint>
 #include <bit>
 #include <span>
-
-#if MBEDTLS_VERSION_MAJOR <= 2
-
-    #define mbedtls_md5_starts mbedtls_md5_starts_ret
-    #define mbedtls_md5_update mbedtls_md5_update_ret
-    #define mbedtls_md5_finish mbedtls_md5_finish_ret
-
-    #define mbedtls_sha1_starts mbedtls_sha1_starts_ret
-    #define mbedtls_sha1_update mbedtls_sha1_update_ret
-    #define mbedtls_sha1_finish mbedtls_sha1_finish_ret
-
-    #define mbedtls_sha256_starts mbedtls_sha256_starts_ret
-    #define mbedtls_sha256_update mbedtls_sha256_update_ret
-    #define mbedtls_sha256_finish mbedtls_sha256_finish_ret
-
-    #define mbedtls_sha512_starts mbedtls_sha512_starts_ret
-    #define mbedtls_sha512_update mbedtls_sha512_update_ret
-    #define mbedtls_sha512_finish mbedtls_sha512_finish_ret
-
-#endif
 
 namespace hex::crypt {
     using namespace std::placeholders;
