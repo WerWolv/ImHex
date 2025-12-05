@@ -1,15 +1,24 @@
 #include "content/popups/hex_editor/popup_hex_editor_find.hpp"
-
 #include "content/views/view_hex_editor.hpp"
 
 #include <hex/api/content_registry/views.hpp>
-#include <hex/helpers/crypto.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
+#include <hex/api/achievement_manager.hpp>
+
+#include <content/differing_byte_searcher.hpp>
+
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/crypto.hpp>
+
 #include <hex/providers/buffered_reader.hpp>
 
 #include <fonts/vscode_icons.hpp>
 
-#include <bit>
+#include <popups/popup_file_chooser.hpp>
+
+#include <ui/text_editor.hpp>
 
 namespace hex::plugin::builtin {
 
