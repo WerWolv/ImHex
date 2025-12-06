@@ -98,3 +98,4 @@ createPackage()
 
 # Accommodate IDEs with FOLDER support
 tweakTargetsForIDESupport()
+
