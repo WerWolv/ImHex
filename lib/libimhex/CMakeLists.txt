@@ -58,6 +58,7 @@ set(LIBIMHEX_SOURCES
         source/ui/banner.cpp
 
         source/subcommands/subcommands.cpp
+        source/init/cli.cpp
 )
 
 if (APPLE)
