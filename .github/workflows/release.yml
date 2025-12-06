@@ -65,7 +65,8 @@ jobs:
   release-upload-artifacts:
     runs-on: ubuntu-24.04
     name: Release Upload Artifacts
-
+    outputs:
+      IMHEX_VERSION: ${{ steps.verify_version.outputs.IMHEX_VERSION }}
     steps:
       - name: 🧰 Checkout
         uses: actions/checkout@v4
@@ -74,6 +75,7 @@ jobs:
           submodules: recursive
 
       - name: 📜 Verify version and set version variable
+        id: verify_version
         run: |
           set -x
           project_version=`cat ImHex/VERSION`
@@ -85,6 +87,7 @@ jobs:
           fi
 
           echo "IMHEX_VERSION=$project_version" >> $GITHUB_ENV
+          echo "IMHEX_VERSION=$project_version" >> $GITHUB_OUTPUT
 
       - name: 🗜️ Create tarball from sources with dependencies
         run: tar --exclude-vcs -czvf Full.Sources.tar.gz ImHex
@@ -115,10 +118,10 @@ jobs:
 
       - name: 🟩 Rename artifacts when needed
         run: |
-          mv "Windows Portable x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-x86_64.zip
-          mv "Windows Portable arm64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-arm64.zip
-          mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip
-          mv "ImHex Web.zip" imhex-${{ env.IMHEX_VERSION }}-Web.zip
+          mv "Windows Portable x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-x86_64.zip || true
+          mv "Windows Portable arm64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-arm64.zip || true
+          mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip || true
+          mv "ImHex Web.zip" imhex-${{ env.IMHEX_VERSION }}-Web.zip || true
           rm artifact.tar || true
 
       - name: ⬆️ Upload everything to release
@@ -193,7 +196,7 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
         with:
-          snap: imhex-${{ env.IMHEX_VERSION }}-x86_64.snap
+          snap: imhex-${{ needs.release-upload-artifacts.outputs.IMHEX_VERSION }}-x86_64.snap
           release: stable
 
       - name: ⬆️ Publish arm64 Snap package
@@ -202,5 +205,5 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
         with:
-          snap: imhex-${{ env.IMHEX_VERSION }}-arm64.snap
+          snap: imhex-${{ needs.release-upload-artifacts.outputs.IMHEX_VERSION }}-arm64.snap
           release: stable
