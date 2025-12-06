@@ -412,7 +412,7 @@ macro(createPackage)
             install(
                 FILES ${IMHEX_BASE_FOLDER}/dist/cli/imhex.bat
                 DESTINATION ${CMAKE_INSTALL_BINDIR}/cli
-                RENAME imhex
+                RENAME imhex.bat
                 PERMISSIONS
                     OWNER_READ OWNER_WRITE OWNER_EXECUTE
                     GROUP_READ GROUP_EXECUTE
