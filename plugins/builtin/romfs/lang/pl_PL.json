@@ -832,6 +832,7 @@
     "hex.builtin.view.hex_editor.menu.edit.paste.popup.button.selection": "Wklej tylko nad zaznaczeniem",
     "hex.builtin.view.hex_editor.menu.edit.paste_all": "Wklej wszystko",
     "hex.builtin.view.hex_editor.menu.edit.paste_all_string": "Wklej wszystko jako string",
+    "hex.builtin.view.hex_editor.menu.edit.paste_all_decoded_base64_string": "Wklej wszystko jako zdekodowany ciąg base64",
     "hex.builtin.view.hex_editor.menu.edit.remove": "Usuń...",
     "hex.builtin.view.hex_editor.menu.edit.resize": "Zmień rozmiar...",
     "hex.builtin.view.hex_editor.menu.edit.select_all": "Zaznacz wszystko",
