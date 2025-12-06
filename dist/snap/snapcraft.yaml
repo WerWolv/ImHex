@@ -40,6 +40,7 @@ parts:
       - -DCMAKE_BUILD_TYPE=Release
       - -DCMAKE_C_COMPILER_LAUNCHER=${CCACHE}
       - -DCMAKE_CXX_COMPILER_LAUNCHER=${CCACHE}
+      - -DIMHEX_PATTERNS_PULL_MASTER=ON
     cmake-generator: Ninja
     build-packages:
       - cmake

@@ -168,6 +168,7 @@ RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/
         -DIMHEX_GENERATE_PACKAGE=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
         `# other flags` \
         -DIMHEX_STRICT_WARNINGS=OFF \
+        -DIMHEX_PATTERNS_PULL_MASTER=ON \
         -DCMAKE_INSTALL_PREFIX=/mnt/ImHex/build/install \
         -B build
 ## Build ImHex
