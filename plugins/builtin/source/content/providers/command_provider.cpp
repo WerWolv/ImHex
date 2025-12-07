@@ -14,6 +14,15 @@
 #include <nlohmann/json.hpp>
 #include <wolv/utils/charconv.hpp>
 
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#else
+    #include <unistd.h>
+    #include <sys/types.h>
+    #include <sys/wait.h>
+    #include <fcntl.h>
+#endif
+
 namespace hex::plugin::builtin {
 
     using namespace std::chrono_literals;
@@ -163,7 +172,7 @@ namespace hex::plugin::builtin {
             close(stdoutPipe[1]);
 
             if (!stdinData.empty()) {
-                write(stdinPipe[1], stdinData.data(), stdinData.size());
+                std::ignore = write(stdinPipe[1], stdinData.data(), stdinData.size());
             }
             close(stdinPipe[1]);
 
