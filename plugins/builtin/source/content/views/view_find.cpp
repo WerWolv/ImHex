@@ -3,6 +3,7 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/events/events_interaction.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/trace/stacktrace.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
@@ -18,6 +19,7 @@
 #include <boost/regex.hpp>
 
 #include <content/helpers/constants.hpp>
+#include <hex/helpers/crypto.hpp>
 #include <hex/helpers/default_paths.hpp>
 #include <toasts/toast_notification.hpp>
 
@@ -113,6 +115,32 @@ namespace hex::plugin::builtin {
             for (auto &occurrence : *m_sortedOccurrences)
                 occurrence.selected = true;
         });
+
+        /* Find Selection */
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.find.find_selection" }, ICON_VS_SEARCH_SPARKLE, 1950, CTRLCMD + SHIFT + Keys::F, [&] {
+            auto selection = ImHexApi::HexEditor::getSelection();
+            if (!selection.has_value())
+                return;
+
+            std::string sequence;
+            {
+                std::vector<u8> buffer(selection->getSize());
+                selection->getProvider()->read(selection->getStartAddress(), buffer.data(), buffer.size());
+                sequence = hex::crypt::encode16(buffer);
+            }
+
+            m_searchSettings.mode = SearchSettings::Mode::BinaryPattern;
+            m_searchSettings.region = { selection->getProvider()->getBaseAddress(), selection->getProvider()->getActualSize() };
+            m_searchSettings.binaryPattern = {
+                .input = sequence,
+                .pattern = hex::BinaryPattern(sequence),
+                .alignment = 1
+            };
+
+            this->runSearch();
+            this->bringToFront();
+        }, []{ return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid(); },
+        ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
     }
 
     template<typename Type, typename StorageType>
@@ -701,6 +729,14 @@ namespace hex::plugin::builtin {
                 m_settingsCollapsed.get(provider) = !m_foundOccurrences->empty();
             });
         });
+
+        m_decodeSettings = m_searchSettings;
+        m_foundOccurrences->clear();
+        m_sortedOccurrences->clear();
+        m_occurrenceTree->clear();
+        m_lastSelectedOccurrence = nullptr;
+
+        EventHighlightingChanged::post();
     }
 
     std::string ViewFind::decodeValue(prv::Provider *provider, const Occurrence &occurrence, size_t maxBytes) const {
@@ -1079,14 +1115,6 @@ namespace hex::plugin::builtin {
             {
                 if (ImGuiExt::DimmedIconButton(ICON_VS_SEARCH, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     this->runSearch();
-
-                    m_decodeSettings = m_searchSettings;
-                    m_foundOccurrences->clear();
-                    m_sortedOccurrences->clear();
-                    m_occurrenceTree->clear();
-                    m_lastSelectedOccurrence = nullptr;
-
-                    EventHighlightingChanged::post();
                 }
                 ImGui::SetItemTooltip("%s", "hex.builtin.view.find.search"_lang.get());
             }

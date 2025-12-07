@@ -123,6 +123,7 @@
     "hex.builtin.layouts.none.restore_default": "Restore default layout",
     "hex.builtin.menu.edit": "Edit",
     "hex.builtin.menu.edit.bookmark.create": "Create Bookmark",
+    "hex.builtin.menu.edit.find.find_selection": "Find occurrences",
     "hex.builtin.view.hex_editor.menu.edit.redo": "Redo",
     "hex.builtin.view.hex_editor.menu.edit.undo": "Undo",
     "hex.builtin.menu.extras": "Extras",
