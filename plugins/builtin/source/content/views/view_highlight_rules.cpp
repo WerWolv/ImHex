@@ -181,7 +181,7 @@ namespace hex::plugin::builtin {
         // Draw a table containing all the existing highlighting rules
         if (ImGui::BeginTable("RulesList", 2, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY, ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().WindowPadding.y))) {
             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 1);
-            ImGui::TableSetupColumn("Enabled", ImGuiTableColumnFlags_WidthFixed, 10_scaled);
+            ImGui::TableSetupColumn("Enabled", ImGuiTableColumnFlags_WidthFixed, 15_scaled);
 
             for (auto it = m_rules->begin(); it != m_rules->end(); ++it) {
                 auto &rule = *it;
@@ -196,6 +196,9 @@ namespace hex::plugin::builtin {
                     m_selectedRule = it;
                 }
                 ImGui::EndDisabled();
+
+                if (m_selectedRule == it && !rule.enabled)
+                    m_selectedRule = m_rules->end();
 
                 // Draw enabled checkbox
                 ImGui::TableNextColumn();
