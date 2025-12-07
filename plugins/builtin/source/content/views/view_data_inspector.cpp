@@ -56,6 +56,12 @@ namespace hex::plugin::builtin {
             auto filterValues = value.get<std::vector<std::string>>({});
             m_hiddenValues = std::set(filterValues.begin(), filterValues.end());
         });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::E, "hex.builtin.view.data_inspector.toggle_endianness", [this] {
+            if (m_endian == std::endian::little) m_endian = std::endian::big;
+            else m_endian = std::endian::little;
+            m_shouldInvalidate = true;
+        });
     }
 
     ViewDataInspector::~ViewDataInspector() {
