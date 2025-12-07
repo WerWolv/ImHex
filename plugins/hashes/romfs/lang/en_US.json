@@ -29,5 +29,5 @@
     "hex.hashes.hash.common.refl_out": "Reflect Out",
     "hex.hashes.hash.common.xor_out": "XOR Out",
     "hex.hashes.hash.sum": "Sum",
-    "hex.hashes.hash.sum.fold": "Fold result"
+    "hex.hashes.hash.sum.fold": "Fold result down to output size"
 }

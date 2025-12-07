@@ -17,6 +17,7 @@ add_imhex_plugin(
     INCLUDES
         include
     LIBRARIES
+        ui
         fonts
         hashplus
 )

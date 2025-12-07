@@ -21,6 +21,7 @@
 
 #include <ranges>
 #include <fonts/tabler_icons.hpp>
+#include <ui/widgets.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -519,33 +520,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataInspector::drawEndianSetting() {
-        int selection = [this] {
-            switch (m_endian) {
-                default:
-                case std::endian::little:
-                    return 0;
-                case std::endian::big:
-                    return 1;
-            }
-        }();
-
-        std::array options = {
-            fmt::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.little"_lang),
-            fmt::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.big"_lang)
-        };
-
-        if (ImGui::SliderInt("##endian", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
+        if (ui::endiannessSlider(m_endian)) {
             m_shouldInvalidate = true;
-
-            switch (selection) {
-                default:
-                case 0:
-                    m_endian = std::endian::little;
-                    break;
-                case 1:
-                    m_endian = std::endian::big;
-                    break;
-            }
         }
     }
 

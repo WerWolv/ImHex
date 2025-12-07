@@ -15,5 +15,6 @@ namespace hex::ui {
     };
 
     void regionSelectionPicker(Region *region, prv::Provider *provider, RegionType *type, bool showHeader = true, bool firstEntry = false);
+    bool endiannessSlider(std::endian &endian);
 
 }
