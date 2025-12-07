@@ -60,8 +60,10 @@ namespace hex::plugin::builtin {
 
             std::optional<color_t> result;
             for (const auto &[id, callback] : ImHexApi::HexEditor::impl::getForegroundHighlightingFunctions()) {
-                if (auto color = callback(address, data, size, result.has_value()); color.has_value())
+                if (auto color = callback(address, data, size, result.has_value()); color.has_value()) {
                     result = color;
+                    break;
+                }
             }
 
             if (!result.has_value()) {
