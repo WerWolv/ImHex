@@ -40,30 +40,32 @@
 namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {
-        if (path.extension() == ".hexproj") {
-            if (!ProjectFile::load(path)) {
-                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
-            }
+        TaskManager::doLater([path] {
+            if (path.extension() == ".hexproj") {
+                if (!ProjectFile::load(path)) {
+                    ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                }
 
-            return;
-        }
-
-        auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
-        if (auto *fileProvider = dynamic_cast<FileProvider*>(provider); fileProvider != nullptr) {
-            fileProvider->setPath(path);
-            if (!provider->open() || !provider->isAvailable()) {
-                ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                 return;
             }
 
-            EventProviderOpened::post(fileProvider);
-            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
-            ImHexApi::Provider::setCurrentProvider(provider);
+            auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
+            if (auto *fileProvider = dynamic_cast<FileProvider*>(provider); fileProvider != nullptr) {
+                fileProvider->setPath(path);
+                if (!provider->open() || !provider->isAvailable()) {
+                    ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    return;
+                }
 
-            glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
-            glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
-        }
+                EventProviderOpened::post(fileProvider);
+                AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
+                ImHexApi::Provider::setCurrentProvider(provider);
+
+                glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
+                glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
+            }
+        });
     }
 
     void registerEventHandlers() {
