@@ -11,15 +11,16 @@
 #include <content/providers/process_memory_provider.hpp>
 #include <content/providers/base64_provider.hpp>
 #include <content/providers/udp_provider.hpp>
-#include <popups/popup_notification.hpp>
+#include <content/providers/command_provider.hpp>
 
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/fmt.hpp>
 
-#include <nlohmann/json.hpp>
+#include <popups/popup_notification.hpp>
 #include <toasts/toast_notification.hpp>
 
+#include <nlohmann/json.hpp>
 #include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
@@ -31,6 +32,7 @@ namespace hex::plugin::builtin {
         #if !defined(OS_WEB)
             ContentRegistry::Provider::add<DiskProvider>();
             ContentRegistry::Provider::add<UDPProvider>();
+            ContentRegistry::Provider::add<CommandProvider>();
         #endif
         ContentRegistry::Provider::add<GDBProvider>();
         ContentRegistry::Provider::add<IntelHexProvider>();
