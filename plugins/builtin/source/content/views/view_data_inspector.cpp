@@ -433,6 +433,10 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                m_selectedEntryName.reset();
+            }
+
             // Handle copying the value to the clipboard when clicking the row
             if (ImGui::Selectable("##InspectorLine", m_selectedEntryName == entry.unlocalizedName, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
                 m_selectedEntryName = entry.unlocalizedName;
@@ -467,6 +471,10 @@ namespace hex::plugin::builtin {
             }
 
             return;
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+            entry.editing = false;
         }
 
         // Handle editing mode
