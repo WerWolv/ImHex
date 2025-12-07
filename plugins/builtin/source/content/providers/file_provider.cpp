@@ -70,13 +70,16 @@ namespace hex::plugin::builtin {
 
         if (m_loadedIntoMemory)
             std::memcpy(m_data.data() + offset, buffer, size);
-        else
+        else {
+            this->createBackupIfNeeded(m_file.getPath());
             m_file.writeBufferAtomic(offset, static_cast<const u8*>(buffer), size);
+        }
     }
 
     void FileProvider::save() {
         if (m_loadedIntoMemory) {
             m_ignoreNextChangeEvent = true;
+            this->createBackupIfNeeded(m_file.getPath());
             m_file.open();
             m_file.writeVectorAtomic(0x00, m_data);
             m_file.setSize(m_data.size());
@@ -113,8 +116,10 @@ namespace hex::plugin::builtin {
     void FileProvider::resizeRaw(u64 newSize) {
         if (m_loadedIntoMemory)
             m_data.resize(newSize);
-        else
+        else {
+            this->createBackupIfNeeded(m_file.getPath());
             m_file.setSize(newSize);
+        }
 
         m_fileSize = newSize;
     }

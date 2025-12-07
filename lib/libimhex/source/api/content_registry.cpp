@@ -594,6 +594,12 @@ namespace hex {
                 return false;
             }
 
+            bool Spacer::draw(const std::string& name) {
+                std::ignore = name;
+                ImGui::NewLine();
+
+                return false;
+            }
 
         }
 

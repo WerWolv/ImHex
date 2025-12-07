@@ -239,6 +239,14 @@ EXPORT_MODULE namespace hex {
                 nlohmann::json store() override { return {}; }
             };
 
+            class Spacer : public Widget {
+            public:
+                bool draw(const std::string &name) override;
+
+                void load(const nlohmann::json &) override {}
+                nlohmann::json store() override { return {}; }
+            };
+
         }
 
         namespace impl {

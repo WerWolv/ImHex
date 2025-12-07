@@ -7,12 +7,14 @@
 #include <cmath>
 #include <cstring>
 #include <optional>
+#include <hex/api/content_registry/settings.hpp>
 
 #include <hex/helpers/magic.hpp>
 #include <wolv/io/file.hpp>
 #include <wolv/literals.hpp>
 
 #include <nlohmann/json.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::prv {
 
@@ -22,6 +24,28 @@ namespace hex::prv {
 
         u32 s_idCounter = 0;
 
+    }
+
+    IProviderDataBackupable::IProviderDataBackupable(Provider* provider) : m_provider(provider) {
+        m_shouldCreateBackups = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.file_backup.enable", true);
+        m_maxSize = ContentRegistry::Settings::read<u32>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.file_backup.max_size", 1_MiB);
+        m_backupExtension = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.file_backup.extension", ".bak");
+    }
+
+    void IProviderDataBackupable::createBackupIfNeeded(const std::fs::path &inputFilePath) {
+        if (!m_shouldCreateBackups || m_backupCreated)
+            return;
+
+        if (m_provider->getActualSize() > m_maxSize)
+            return;
+
+        const std::fs::path backupFilePath = wolv::util::toUTF8String(inputFilePath) + m_backupExtension;
+        if (wolv::io::fs::copyFile(inputFilePath, backupFilePath, std::fs::copy_options::overwrite_existing)) {
+            if (wolv::io::fs::exists(backupFilePath)) {
+                m_backupCreated = true;
+                log::info("Created backup of provider data at '{}'", backupFilePath.string());
+            }
+        }
     }
 
 
