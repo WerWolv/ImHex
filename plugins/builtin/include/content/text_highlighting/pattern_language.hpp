@@ -164,7 +164,7 @@ namespace hex::plugin::builtin {
         /**
          * @brief Entry point to syntax highlighting
          */
-        void highlightSourceCode();
+        void highlightSourceCode(const std::string& text);
         void processSource();
         void clearVariables();
 
