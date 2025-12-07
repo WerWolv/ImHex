@@ -589,9 +589,18 @@ namespace hex::plugin::builtin {
                 return [value, copyValue] { ImGuiExt::TextFormatted("L\"{0}\"", value.c_str()); return copyValue; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
-                std::ignore = endian;
+                auto utf8 =  hex::decodeByteString(value);
+                auto wstring = wolv::util::utf8ToWstring({ utf8.begin(), utf8.end() });
+                if (!wstring.has_value())
+                    return {};
 
-                return hex::decodeByteString(value);
+                for (auto &c : wstring.value()) {
+                    c = hex::changeEndianness(c, endian);
+                }
+
+                std::vector<u8> bytes(wstring->size() * sizeof(wchar_t), 0x00);
+                std::memcpy(bytes.data(), wstring->data(), bytes.size());
+                return bytes;
             }
         );
 
@@ -626,9 +635,18 @@ namespace hex::plugin::builtin {
                 return [value, copyValue] { ImGuiExt::TextFormatted("u\"{0}\"", value.c_str()); return copyValue; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
-                std::ignore = endian;
+                auto utf8 =  hex::decodeByteString(value);
+                auto utf16 = wolv::util::utf8ToUtf16({ utf8.begin(), utf8.end() });
+                if (!utf16.has_value())
+                    return {};
 
-                return hex::decodeByteString(value);
+                for (auto &c : utf16.value()) {
+                    c = hex::changeEndianness(c, endian);
+                }
+
+                std::vector<u8> bytes(utf16->size() * sizeof(char16_t), 0x00);
+                std::memcpy(bytes.data(), utf16->data(), bytes.size());
+                return bytes;
             }
         );
 
@@ -663,9 +681,18 @@ namespace hex::plugin::builtin {
                 return [value, copyValue] { ImGuiExt::TextFormatted("U\"{0}\"", value.c_str()); return copyValue; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
-                std::ignore = endian;
+                auto utf8 =  hex::decodeByteString(value);
+                auto utf32 = wolv::util::utf8ToUtf32({ utf8.begin(), utf8.end() });
+                if (!utf32.has_value())
+                    return {};
 
-                return hex::decodeByteString(value);
+                for (auto &c : utf32.value()) {
+                    c = hex::changeEndianness(c, endian);
+                }
+
+                std::vector<u8> bytes(utf32->size() * sizeof(char32_t), 0x00);
+                std::memcpy(bytes.data(), utf32->data(), bytes.size());
+                return bytes;
             }
         );
 
