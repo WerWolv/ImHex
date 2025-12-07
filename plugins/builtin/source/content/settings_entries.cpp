@@ -761,7 +761,10 @@ namespace hex::plugin::builtin {
                 .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc");
             ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.pattern_data_max_filter_items", 128, 32, 1024);
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
+            auto suggestPatterns = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.suggest_patterns", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_apply_patterns", false).setEnabledCallback([=] {
+                return static_cast<Widgets::Checkbox&>(suggestPatterns.getWidget()).isChecked();
+            });
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);

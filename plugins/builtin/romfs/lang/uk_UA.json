@@ -425,7 +425,7 @@
     "hex.builtin.setting.general.patterns": "Шаблони",
     "hex.builtin.setting.general.auto_backup_time.format.simple": "кожні {0} секунд",
     "hex.builtin.setting.general.auto_backup_time.format.extended": "Кожні {0} хвилин {1} секунд",
-    "hex.builtin.setting.general.auto_load_patterns": "Автоматично завантажувати розпізнані шаблони",
+    "hex.builtin.setting.general.auto_apply_patterns": "Автоматично завантажувати розпізнані шаблони",
     "hex.builtin.setting.general.server_contact": "Увімкнути перевірку оновлень та статистику використання",
     "hex.builtin.setting.general.network_interface": "Увімкнути мережевий інтерфейс",
     "hex.builtin.setting.general.pattern_data_max_filter_items": "Максимальна кількість відфільтрованих елементів шаблону",
