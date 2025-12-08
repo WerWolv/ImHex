@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CPackWiXPatch>
+    <CPackWiXFragment Id="CM_CP_bin.libwinpthread_1.dll">
+        <File Id="CM_FP_bin.libwinpthread_1.dll"
+              CompanionFile="CM_FP_bin.your_main_executable.exe"/>
+    </CPackWiXFragment>
+</CPackWiXPatch>
