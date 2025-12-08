@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CPackWiXPatch>
-    <!-- libwinpthread has a bogus FILEVERSION field that's hardcoded to 1.0.0.0. Ignore it and always install it-->
-    <CPackWiXFragment Id="CM_FP_libwinpthread_1.dll">
-        <File Id="CM_FP_libwinpthread_1.dll"
-              CompanionFile="CM_FP_imhex.exe"/>
-    </CPackWiXFragment>
-</CPackWiXPatch>
