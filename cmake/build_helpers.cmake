@@ -211,10 +211,6 @@ macro(configurePackingResources)
             set(CPACK_WIX_UI_DIALOG "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_dialog.png")
             set(CPACK_WIX_CULTURES "en-US;de-DE;ja-JP;it-IT;pt-BR;zh-CN;zh-TW;ru-RU")
 
-            if (NOT MSVC)
-                set(CPACK_WIX_PATCH_FILE "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_patch.xml")
-            endif()
-
             set(CPACK_PACKAGE_INSTALL_DIRECTORY "ImHex")
             set_property(INSTALL "$<TARGET_FILE_NAME:main>"
                     PROPERTY CPACK_START_MENU_SHORTCUTS "ImHex"
@@ -334,6 +330,20 @@ macro(createPackage)
                 FILES "${_file}"
                 )
         endforeach()
+
+        # Download rcedit if not already present
+        set(RCEDIT_PATH "${CMAKE_BINARY_DIR}/rcedit.exe")
+        if(NOT EXISTS ${RCEDIT_PATH})
+            file(DOWNLOAD
+                "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe"
+                ${RCEDIT_PATH}
+            )
+        endif()
+
+        execute_process(COMMAND ${RCEDIT_PATH}
+                "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/libwinpthread-1.dll"
+                --set-file-version "0,0,0,0"
+        )
         ]])
 
         downloadImHexPatternsFiles(".")
