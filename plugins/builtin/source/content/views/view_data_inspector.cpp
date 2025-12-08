@@ -440,16 +440,16 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-                m_selectedEntryName.reset();
-            }
-
             // Handle copying the value to the clipboard when clicking the row
             if (ImGui::Selectable("##InspectorLine", m_selectedEntryName == entry.unlocalizedName, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
                 m_selectedEntryName = entry.unlocalizedName;
                 if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value()) {
                     ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress(), entry.requiredSize });
                 }
+            }
+
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                m_selectedEntryName.reset();
             }
 
             // Enter editing mode when double-clicking the row
