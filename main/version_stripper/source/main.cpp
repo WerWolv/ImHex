@@ -96,9 +96,8 @@ int main(int argc, char* argv[]) {
     std::filesystem::path inputPath(argv[1]);
     std::filesystem::path outputPath(argv[2]);
 
-    std::filesystem::copy(inputPath, outputPath);
-
     try {
+        std::filesystem::copy(inputPath, outputPath, std::filesystem::copy_options::overwrite_existing);
         nukeVersionResource(outputPath.c_str());
     } catch (const std::exception& e) {
         fprintf(stderr, "%s", e.what());
