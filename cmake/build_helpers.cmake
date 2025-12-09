@@ -351,9 +351,8 @@ macro(createPackage)
                 DEPENDS ${VERSIONLESS_LIBWINPTHREAD}
             )
 
-            # Install the generated file
             install(FILES ${VERSIONLESS_LIBWINPTHREAD}
-                DESTINATION "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}"
+                DESTINATION ${CMAKE_INSTALL_BINDIR}
             )
         endif()
 
