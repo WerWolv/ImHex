@@ -7,6 +7,7 @@ endif ()
 add_subdirectory(gui)
 if (WIN32)
     add_subdirectory(forwarder)
+    add_subdirectory(version_stripper)
 endif ()
 
 if (NOT EMSCRIPTEN)

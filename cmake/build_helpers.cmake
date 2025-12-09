@@ -330,21 +330,30 @@ macro(createPackage)
                 FILES "${_file}"
                 )
         endforeach()
+        ]])
 
-        # Download rcedit if not already present
-        set(RCEDIT_PATH "${CMAKE_BINARY_DIR}/rcedit.exe")
-        if(NOT EXISTS ${RCEDIT_PATH})
-            file(DOWNLOAD
-                "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe"
-                ${RCEDIT_PATH}
-            )
+        set(VERSIONLESS_LIBWINPTHREAD "${CMAKE_BINARY_DIR}/libwinpthread-1.dll")
+        find_file(LIBWINPTHREAD_PATH NAMES libwinpthread-1.dll)
+        if (NOT LIBWINPTHREAD_PATH)
+            message(FATAL_ERROR "Could not find libwinpthread-1.dll!")
         endif()
 
-        execute_process(COMMAND ${RCEDIT_PATH}
-                "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/libwinpthread-1.dll"
-                --set-file-version "0,0,0,0"
+        add_custom_command(
+                OUTPUT ${VERSIONLESS_LIBWINPTHREAD}
+                COMMAND $<TARGET_FILE:version-stripper> ${LIBWINPTHREAD_PATH} ${VERSIONLESS_LIBWINPTHREAD}
+                DEPENDS version-stripper
+                COMMENT "Stripping version info from libwinpthread..."
+                VERBATIM
         )
-        ]])
+
+        add_custom_target(versionless_libwinpthread ALL
+            DEPENDS ${VERSIONLESS_LIBWINPTHREAD}
+        )
+
+        # Install the generated file
+        install(FILES ${VERSIONLESS_LIBWINPTHREAD}
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}"
+        )
 
         downloadImHexPatternsFiles(".")
     elseif(UNIX AND NOT APPLE)
