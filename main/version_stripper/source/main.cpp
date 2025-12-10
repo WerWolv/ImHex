@@ -33,7 +33,7 @@ BOOL CALLBACK EnumResLangProc(
 LangIds getLangIDs(LPCTSTR pExe) {
     LangIds langs;
 
-    HMODULE hMod = LoadLibrary(pExe);
+    HMODULE hMod = LoadLibraryEx(pExe, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
     if (hMod == nullptr)
         throw std::runtime_error("LoadLibrary failed!");
 
