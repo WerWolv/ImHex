@@ -166,6 +166,7 @@ jobs:
 
     - name: ⬆️ Upload Windows Installer
       uses: actions/upload-artifact@v4
+      id: upload-installer
       with:
         if-no-files-found: error
         name: Windows Installer ${{ matrix.architecture_name }}

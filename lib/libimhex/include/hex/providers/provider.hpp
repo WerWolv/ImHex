@@ -72,6 +72,21 @@ namespace hex::prv {
         [[nodiscard]] virtual std::vector<Description> getDataDescription() const = 0;
     };
 
+    class IProviderDataBackupable {
+    public:
+        explicit IProviderDataBackupable(Provider *provider);
+        virtual ~IProviderDataBackupable() = default;
+
+        void createBackupIfNeeded(const std::fs::path &inputFilePath);
+    private:
+        Provider *m_provider = nullptr;
+        bool m_backupCreated = false;
+
+        bool m_shouldCreateBackups = true;
+        u64 m_maxSize;
+        std::string m_backupExtension;
+    };
+
     /**
      * @brief Represent the data source for a tab in the UI
      */

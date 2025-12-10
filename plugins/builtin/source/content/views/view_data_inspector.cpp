@@ -21,6 +21,7 @@
 
 #include <ranges>
 #include <fonts/tabler_icons.hpp>
+#include <ui/widgets.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -55,6 +56,12 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::onChange("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", [this](const ContentRegistry::Settings::SettingsValue &value) {
             auto filterValues = value.get<std::vector<std::string>>({});
             m_hiddenValues = std::set(filterValues.begin(), filterValues.end());
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::E, "hex.builtin.view.data_inspector.toggle_endianness", [this] {
+            if (m_endian == std::endian::little) m_endian = std::endian::big;
+            else m_endian = std::endian::little;
+            m_shouldInvalidate = true;
         });
     }
 
@@ -441,6 +448,10 @@ namespace hex::plugin::builtin {
                 }
             }
 
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                m_selectedEntryName.reset();
+            }
+
             // Enter editing mode when double-clicking the row
             const bool editable = entry.editingFunction.has_value() && m_selectedProvider->isWritable();
             if (ImGui::IsItemHovered()) {
@@ -467,6 +478,10 @@ namespace hex::plugin::builtin {
             }
 
             return;
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+            entry.editing = false;
         }
 
         // Handle editing mode
@@ -505,33 +520,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataInspector::drawEndianSetting() {
-        int selection = [this] {
-            switch (m_endian) {
-                default:
-                case std::endian::little:
-                    return 0;
-                case std::endian::big:
-                    return 1;
-            }
-        }();
-
-        std::array options = {
-            fmt::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.little"_lang),
-            fmt::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.big"_lang)
-        };
-
-        if (ImGui::SliderInt("##endian", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
+        if (ui::endiannessSlider(m_endian)) {
             m_shouldInvalidate = true;
-
-            switch (selection) {
-                default:
-                case 0:
-                    m_endian = std::endian::little;
-                    break;
-                case 1:
-                    m_endian = std::endian::big;
-                    break;
-            }
         }
     }
 

@@ -447,7 +447,7 @@
     "hex.builtin.setting.general.auto_backup_time": "Periodisches Projekt Backup",
     "hex.builtin.setting.general.auto_backup_time.format.extended": "Alle {0}min {1}s",
     "hex.builtin.setting.general.auto_backup_time.format.simple": "Alle {0}s",
-    "hex.builtin.setting.general.auto_load_patterns": "Automatisches Laden unterstützter Pattern",
+    "hex.builtin.setting.general.auto_apply_patterns": "Automatisches Laden unterstützter Pattern",
     "hex.builtin.setting.general.network": "Netzwerk",
     "hex.builtin.setting.general.network_interface": "Netzwerk Interface Aktivieren",
     "hex.builtin.setting.general.patterns": "Patterns",

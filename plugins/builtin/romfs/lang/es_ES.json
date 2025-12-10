@@ -446,7 +446,7 @@
     "hex.builtin.setting.general.auto_backup_time": "",
     "hex.builtin.setting.general.auto_backup_time.format.extended": "",
     "hex.builtin.setting.general.auto_backup_time.format.simple": "",
-    "hex.builtin.setting.general.auto_load_patterns": "Cargar automáticamente patterns soportados",
+    "hex.builtin.setting.general.auto_apply_patterns": "Cargar automáticamente patterns soportados",
     "hex.builtin.setting.general.network": "",
     "hex.builtin.setting.general.network_interface": "",
     "hex.builtin.setting.general.patterns": "",

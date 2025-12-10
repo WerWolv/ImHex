@@ -13,9 +13,10 @@ namespace hex::plugin::builtin {
     class FileProvider : public prv::Provider,
                          public prv::IProviderDataDescription,
                          public prv::IProviderFilePicker,
-                         public prv::IProviderMenuItems {
+                         public prv::IProviderMenuItems,
+                         public prv::IProviderDataBackupable {
     public:
-        FileProvider() = default;
+        FileProvider() : IProviderDataBackupable(this) {}
         ~FileProvider() override = default;
 
         [[nodiscard]] bool isAvailable() const override;

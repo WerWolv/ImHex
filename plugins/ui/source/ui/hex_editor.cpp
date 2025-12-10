@@ -398,17 +398,10 @@ namespace hex::ui {
             if (hovered && m_provider->isWritable()) {
                 // Enter editing mode when double-clicking a cell
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-                    m_editingAddress = address;
-                    m_shouldModifyValue = false;
-                    m_enteredEditingMode = true;
+                    setEditingAddress(address);
 
-                    m_editingBytes.resize(size);
-                    if (m_mode == Mode::Overwrite)
-                        std::memcpy(m_editingBytes.data(), data, size);
-                    else if (m_mode == Mode::Insert) {
-                        std::memset(m_editingBytes.data(), 0x00, size);
+                    if (m_mode == Mode::Insert) {
                         std::memset(data, 0x00, size);
-                        m_provider->insert(address, size);
                     }
 
                     m_editingCellType = cellType;

@@ -227,9 +227,9 @@ namespace hex::plugin::builtin {
                     if (value == 0)
                         return "hex.ui.common.off"_lang;
                     else if (value < 60)
-                        return fmt::format("hex.builtin.setting.general.auto_backup_time.format.simple"_lang, value);
+                        return fmt::format("hex.builtin.setting.general.backups.auto_backup_time.format.simple"_lang, value);
                     else
-                        return fmt::format("hex.builtin.setting.general.auto_backup_time.format.extended"_lang, value / 60, value % 60);
+                        return fmt::format("hex.builtin.setting.general.backups.auto_backup_time.format.extended"_lang, value / 60, value % 60);
                 }();
 
                 if (ImGui::SliderInt(name.data(), &m_value, 0, (30 * 60) / 30, format.c_str(), ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput)) {
@@ -756,12 +756,14 @@ namespace hex::plugin::builtin {
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
-            ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "", "hex.builtin.setting.general.auto_backup_time");
             ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "", "hex.builtin.setting.general.max_mem_file_size", 512_MiB, 0_bytes, 32_GiB, 1_MiB)
                 .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc");
             ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.pattern_data_max_filter_items", 128, 32, 1024);
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
+            auto suggestPatterns = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.suggest_patterns", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_apply_patterns", false).setEnabledCallback([=] {
+                return static_cast<Widgets::Checkbox&>(suggestPatterns.getWidget()).isChecked();
+            });
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
@@ -770,6 +772,20 @@ namespace hex::plugin::builtin {
                 ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact");
                 ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true);
             #endif
+
+
+            ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.auto_backup_time");
+            ContentRegistry::Settings::add<Widgets::Spacer>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.spacer");
+
+            auto fileBackupEnabledWidget = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.file_backup.enable", true);
+            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.file_backup.max_size", 512_MiB, 0_bytes, 32_GiB, 1_MiB)
+                .setEnabledCallback([=] {
+                    return static_cast<Widgets::Checkbox&>(fileBackupEnabledWidget.getWidget()).isChecked();
+                });
+            ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.file_backup.extension", ".bak")
+                .setEnabledCallback([=] {
+                    return static_cast<Widgets::Checkbox&>(fileBackupEnabledWidget.getWidget()).isChecked();
+                });
         }
 
         /* Interface */

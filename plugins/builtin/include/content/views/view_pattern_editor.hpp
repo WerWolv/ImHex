@@ -140,7 +140,8 @@ namespace hex::plugin::builtin {
         std::atomic<bool> m_dangerousFunctionCalled = false;
         std::atomic<DangerousFunctionPerms> m_dangerousFunctionsAllowed = DangerousFunctionPerms::Ask;
 
-        bool m_autoLoadPatterns = true;
+        bool m_suggestSupportedPatterns = true;
+        bool m_autoApplyPatterns = false;
 
         PerProvider<ui::VisualizerDrawer> m_visualizerDrawer;
         bool m_tooltipJustOpened = false;
