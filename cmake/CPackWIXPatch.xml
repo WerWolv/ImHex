@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Patch>
-    <Replace>
-      <File Source="libwinpthread-1.dll" Version=""/>
-    </Replace>
-  </Patch>
-</Wix>
+<CPackWiXPatch>
+  <CPackWiXFragment Id="NoVersionLibWinpthread">
+    <Patch>
+      <Replace>
+        <File Source="libwinpthread-1.dll" Version=""/>
+      </Replace>
+    </Patch>
+  </CPackWiXFragment>
+</CPackWiXPatch>
