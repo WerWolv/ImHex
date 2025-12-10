@@ -215,6 +215,7 @@ macro(configurePackingResources)
                     PROPERTY CPACK_START_MENU_SHORTCUTS "ImHex"
             )
             set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/resources/dist/windows/LICENSE.rtf")
+            set(CPACK_WIX_PATCH_FILE "${PROJECT_SOURCE_DIR}/cmake/CPackWIXPatch.xml")
         endif()
     elseif (APPLE OR ${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
         set(IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/dist/macos/AppIcon.icns")
