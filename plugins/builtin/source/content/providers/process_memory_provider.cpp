@@ -282,7 +282,7 @@ namespace hex::plugin::builtin {
                     const auto result = proc_pidinfo(pids[i], PROC_PIDTBSDINFO, 0,
                                          &proc, PROC_PIDTBSDINFO_SIZE);
                     if (result == PROC_PIDTBSDINFO_SIZE) {
-                        m_processes.emplace_back(pids[i], proc.pbi_name, proc->pbi_comm, ImGuiExt::Texture());
+                        m_processes.emplace_back(pids[i], proc.pbi_name, proc.pbi_comm, ImGuiExt::Texture());
                     }
                 }
             #elif defined(OS_LINUX)
