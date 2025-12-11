@@ -86,6 +86,7 @@ namespace hex::plugin::builtin {
         struct Process {
             u32 id;
             std::string name;
+            std::string commandLine;
             ImGuiExt::Texture icon;
         };
 
