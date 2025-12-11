@@ -110,7 +110,7 @@ namespace hex::plugin::builtin {
             s_networkInterfaceServiceEnabled = value.get<bool>(false);
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.auto_backup_time", [](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.backups.auto_backup_time", [](const ContentRegistry::Settings::SettingsValue &value) {
             s_autoBackupTime = value.get<int>(0) * 30;
         });
 

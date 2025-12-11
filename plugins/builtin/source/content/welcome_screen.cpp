@@ -747,7 +747,7 @@ namespace hex::plugin::builtin {
                 auto backupFilePathOld = path / BackupFileName;
                 backupFilePathOld.replace_extension(".hexproj.old");
 
-                bool autoBackupsEnabled = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.auto_backup_time", 0) > 0;
+                bool autoBackupsEnabled = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.auto_backup_time", 0) > 0;
                 auto autoBackups = recent::PopupAutoBackups::getAutoBackups();
                 bool hasAutoBackups = autoBackupsEnabled && !autoBackups.empty();
 
