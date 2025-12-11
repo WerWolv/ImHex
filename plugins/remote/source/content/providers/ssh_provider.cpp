@@ -41,7 +41,9 @@ namespace hex::plugin::remote {
     }
 
     void SSHProvider::close() {
-        m_remoteFile->close();
+        if (m_remoteFile != nullptr)
+            m_remoteFile->close();
+
         m_sftpClient.disconnect();
         m_remoteFilePath.clear();
     }
