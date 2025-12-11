@@ -211,6 +211,7 @@ macro(configurePackingResources)
             set(CPACK_WIX_UI_BANNER "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_banner.png")
             set(CPACK_WIX_UI_DIALOG "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_dialog.png")
             set(CPACK_WIX_CULTURES "en-US;de-DE;ja-JP;it-IT;pt-BR;zh-CN;zh-TW;ru-RU")
+            set(CPACK_WIX_PATCH_FILE "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_patch.xml")
 
             set(CPACK_PACKAGE_INSTALL_DIRECTORY "ImHex")
             set_property(INSTALL "$<TARGET_FILE_NAME:main>"
@@ -314,7 +315,7 @@ macro(createPackage)
             POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
         )
 
-        if(_c_deps_FILENAMES AND NOT _c_deps STREQUAL "")
+        if(_c_deps_FILENAMES AND _c_deps AND NOT (_c_deps STREQUAL ""))
             message(WARNING "Conflicting dependencies for library: \"${_c_deps}\"!")
         endif()
 
@@ -332,30 +333,6 @@ macro(createPackage)
                 )
         endforeach()
         ]])
-
-        if (NOT MSVC)
-            set(VERSIONLESS_LIBWINPTHREAD "${CMAKE_BINARY_DIR}/libwinpthread-1.dll")
-            find_file(LIBWINPTHREAD_PATH NAMES libwinpthread-1.dll)
-            if (NOT LIBWINPTHREAD_PATH)
-                message(FATAL_ERROR "Could not find libwinpthread-1.dll!")
-            endif()
-
-            add_custom_command(
-                    OUTPUT ${VERSIONLESS_LIBWINPTHREAD}
-                    COMMAND $<TARGET_FILE:version-stripper> ${LIBWINPTHREAD_PATH} ${VERSIONLESS_LIBWINPTHREAD}
-                    DEPENDS version-stripper
-                    COMMENT "Stripping version info from libwinpthread..."
-                    VERBATIM
-            )
-
-            add_custom_target(versionless_libwinpthread ALL
-                DEPENDS ${VERSIONLESS_LIBWINPTHREAD}
-            )
-
-            install(FILES ${VERSIONLESS_LIBWINPTHREAD}
-                DESTINATION ${CMAKE_INSTALL_BINDIR}
-            )
-        endif()
 
         downloadImHexPatternsFiles(".")
     elseif(UNIX AND NOT APPLE)
