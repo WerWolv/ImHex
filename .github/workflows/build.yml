@@ -95,19 +95,12 @@ jobs:
           -DIMHEX_GENERATE_PDBS=ON                                                \
           -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                                       \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                \
-          -DCPACK_WIX_VERSION="4"                                                 \
-          -DCPACK_WIX_ROOT="$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools"   \
           ..
 
     - name: 🛠️ Build
       run: |
         cd build
         ninja install
-
-    - name: 🕯️ Install WiX Toolkit
-      run: |
-        "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
-        "$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
 
     - name: 🪲 Create PDBs for MSI
       run: |
@@ -280,20 +273,12 @@ jobs:
             -DIMHEX_COMMIT_HASH_LONG="$env:GITHUB_SHA"                                `
             -DIMHEX_COMMIT_BRANCH="$($env:GITHUB_REF -replace '.*/', '')"             `
             -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                  `
-            -DCPACK_WIX_VERSION="4"                                                   `
-            -DCPACK_WIX_ROOT="$($env:USERPROFILE -replace '\\','/')/.dotnet/tools"    `
             .
 
       - name: 🛠️ Build
         run: |
           cd build
           ninja install
-
-      - name: 🕯️ Install WiX Toolkit
-        run: |
-          & "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
-          & "$($env:USERPROFILE -replace '\\','/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
-
       - name: 📦 Bundle MSI
         run: |
           cd build
