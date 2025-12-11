@@ -125,7 +125,7 @@ namespace hex::plugin::builtin {
         for (const auto &memoryRegion : m_memoryRegions) {
 
             if (address < memoryRegion.region.getStartAddress())
-                return { Region { lastRegion.getEndAddress() + 1LLU, memoryRegion.region.getStartAddress() - lastRegion.getEndAddress() }, false };
+                return { Region { lastRegion.getEndAddress(), memoryRegion.region.getStartAddress() - lastRegion.getEndAddress() }, false };
 
             lastRegion = memoryRegion.region;
         }
