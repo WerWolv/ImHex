@@ -315,8 +315,8 @@ namespace hex::ui {
                 ImGui::GetWindowScrollbarID(window, axis),
                 axis,
                 &m_scrollPosition.get(),
-                (std::ceil(innerRect.Max.y - innerRect.Min.y) / characterSize.y),
-                std::nextafterf((numRows - m_visibleRowCount) + ImGui::GetWindowSize().y / characterSize.y, std::numeric_limits<float>::max()),
+                static_cast<ImS64>(std::ceil(innerRect.Max.y - innerRect.Min.y) / characterSize.y),
+                static_cast<ImS64>(std::nextafterf(static_cast<float>(numRows) + (ImGui::GetWindowSize().y / characterSize.y), std::numeric_limits<float>::max())),
                 roundingCorners);
 
             if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
