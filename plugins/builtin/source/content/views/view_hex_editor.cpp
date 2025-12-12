@@ -97,7 +97,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_extended_ascii", [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_hexEditor.enableShowExtendedAscii(value.get<bool>(true));
+            m_hexEditor.enableShowExtendedAscii(value.get<bool>(false));
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.minimap", [this](const ContentRegistry::Settings::SettingsValue &value) {
