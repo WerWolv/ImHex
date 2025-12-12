@@ -15,13 +15,13 @@ namespace hex::ui {
         return first1 == last1 && first2 == last2;
     }
 
-    void TextEditor::setNeedsUpdate(u32 line, bool needsUpdate) {
-        if (line < m_lines.size())
+    void TextEditor::setNeedsUpdate(i32 line, bool needsUpdate) {
+        if (line < (i32) m_lines.size())
             m_lines[line].setNeedsUpdate(needsUpdate);
     }
 
-    void TextEditor::setColorizedLine(u64 line, const std::string &tokens) {
-        if (line < m_lines.size()) {
+    void TextEditor::setColorizedLine(i64 line, const std::string &tokens) {
+        if (line < (i64)m_lines.size()) {
             auto &lineTokens = m_lines[line].m_colors;
             if (lineTokens.size() != tokens.size()) {
                 lineTokens.resize(tokens.size());
@@ -103,7 +103,7 @@ namespace hex::ui {
                                 token_color = PaletteIndex::GlobalVariable;
                         }
                     } else {
-                        if ((token_color == PaletteIndex::Identifier || flags.m_bits.preprocessor) && !flags.m_bits.deactivated && !(flags.m_value & Line::inComment)) {
+                        if ((token_color == PaletteIndex::Identifier || flags.m_bits.preprocessor) && !flags.m_bits.deactivated && !(flags.m_value & inComment)) {
                             id.assign(token_begin, token_end);
                             if (m_languageDefinition.m_preprocIdentifiers.count(id) != 0) {
                                 token_color = PaletteIndex::Directive;
@@ -115,7 +115,7 @@ namespace hex::ui {
                                 token_length = token_end - token_begin;
                             }
                         }
-                        if (flags.m_bits.matchedBracket) {
+                        if (flags.m_bits.matchedDelimiter) {
                             token_color = PaletteIndex::WarningText;
                             token_length = token_end - token_begin;
                         } else if (flags.m_bits.preprocessor && !flags.m_bits.deactivated) {
@@ -125,7 +125,7 @@ namespace hex::ui {
                                 token_color = PaletteIndex::PreprocessorDeactivated;
                                 token_begin -= 1;
                                 token_offset -= 1;
-                            } else if (id.assign(token_begin, token_end);flags.m_value & Line::inComment && m_languageDefinition.m_preprocIdentifiers.count(id) != 0) {
+                            } else if (id.assign(token_begin, token_end);flags.m_value & inComment && m_languageDefinition.m_preprocIdentifiers.count(id) != 0) {
                                 token_color = getColorIndexFromFlags(flags);
                                 token_begin -= 1;
                                 token_offset -= 1;
@@ -202,13 +202,18 @@ namespace hex::ui {
 
                 auto setGlyphFlags = [&](i32 index) {
                     Line::Flags flags(0);
-                    flags.m_bits.comment = withinComment;
-                    flags.m_bits.blockComment = withinBlockComment;
-                    flags.m_bits.docComment = withinDocComment;
-                    flags.m_bits.globalDocComment = withinGlobalDocComment;
-                    flags.m_bits.blockDocComment = withinBlockDocComment;
+                    if (withinComment)
+                        flags.m_value = (i32) Line::Comments::Line;
+                    else if (withinDocComment)
+                        flags.m_value = (i32) Line::Comments::Doc;
+                    else if (withinBlockComment)
+                        flags.m_value = (i32) Line::Comments::Block;
+                    else if (withinGlobalDocComment)
+                        flags.m_value = (i32) Line::Comments::Global;
+                    else if (withinBlockDocComment)
+                        flags.m_value = (i32) Line::Comments::BlockDoc;
                     flags.m_bits.deactivated = withinNotDef;
-                    flags.m_bits.matchedBracket = matchedBracket;
+                    flags.m_bits.matchedDelimiter = matchedBracket;
                     if (m_lines[currentLine].m_flags[index] != flags.m_value) {
                         m_lines[currentLine].m_colorized = false;
                         m_lines[currentLine].m_flags[index] = flags.m_value;
@@ -227,12 +232,31 @@ namespace hex::ui {
                         if (m_matchedBracket.m_nearCursor == getCharacterCoordinates(currentLine, currentIndex) || m_matchedBracket.m_matched == getCharacterCoordinates(currentLine, currentIndex))
                             matchedBracket = true;
                     } else if (MatchedBracket::s_operators.contains(c) && m_matchedBracket.isActive()) {
-                        if (m_matchedBracket.m_nearCursor == setCoordinates(currentLine, currentIndex) || m_matchedBracket.m_matched == setCoordinates(currentLine, currentIndex)) {
-                            if ((c == '<' && (line.m_colors[currentIndex - 1] == static_cast<char>(PaletteIndex::UserDefinedType))) ||
-                                (c == '>' && (m_matchedBracket.m_matched.m_column > 0) && (line.m_colors[lineCoordinatesToIndex(m_matchedBracket.m_matched) - 1] == static_cast<char>(PaletteIndex::UserDefinedType) ||
-                                 ((m_matchedBracket.m_nearCursor.m_column > 0) && (line.m_colors[lineCoordinatesToIndex(m_matchedBracket.m_nearCursor) - 1] == static_cast<char>(PaletteIndex::UserDefinedType)))))) {
-                                matchedBracket = true;
+                        Coordinates current = setCoordinates(currentLine,currentIndex);
+                        auto udt = static_cast<char>(PaletteIndex::UserDefinedType);
+                        Coordinates cursor = Invalid;
+                        //if (m_matchedBracket.m_nearCursor == setCoordinates(currentLine, currentIndex) || m_matchedBracket.m_matched == setCoordinates(currentLine, currentIndex)) {
+                        if ((c == '<' && m_matchedBracket.m_nearCursor == current) ||  (c == '>' && m_matchedBracket.m_matched == current))
+                            cursor = m_matchedBracket.m_nearCursor;
+                        else if ((c == '>' && m_matchedBracket.m_nearCursor == current) ||  (c == '<' && m_matchedBracket.m_matched == current))
+                            cursor = m_matchedBracket.m_matched;
+
+                        if (cursor != Invalid) {
+                            if (cursor.m_column == 0 && cursor.m_line > 0) {
+                                cursor.m_line--;
+                                cursor.m_column = m_lines[cursor.m_line].m_colors.size() - 1;
+                            } else if (cursor.m_column > 0) {
+                                cursor.m_column--;
                             }
+                            while (std::isblank(m_lines[cursor.m_line].m_colors[cursor.m_column]) && (cursor.m_line != 0 || cursor.m_column != 0)) {
+                                if (cursor.m_column == 0 && cursor.m_line > 0) {
+                                    cursor.m_line--;
+                                    cursor.m_column = m_lines[cursor.m_line].m_colors.size() - 1;
+                                } else
+                                    cursor.m_column--;
+                            }
+                            if (m_lines[cursor.m_line].m_colors[cursor.m_column] == udt && (cursor.m_line != 0 || cursor.m_column != 0))
+                                matchedBracket = true;
                         }
                     }
 
@@ -240,7 +264,7 @@ namespace hex::ui {
                     if (c != m_languageDefinition.m_preprocChar && !isspace(c))
                         firstChar = false;
 
-                    bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= (i64) currentIndex));
+                    bool isComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= (i64) currentIndex));
 
                     if (withinString) {
                         setGlyphFlags(currentIndex);
@@ -250,7 +274,7 @@ namespace hex::ui {
                         } else if (c == '\"')
                             withinString = false;
                     } else {
-                        if (firstChar && c == m_languageDefinition.m_preprocChar && !inComment && !withinComment && !withinDocComment && !withinString) {
+                        if (firstChar && c == m_languageDefinition.m_preprocChar && !isComment && !withinComment && !withinDocComment && !withinString) {
                             withinPreproc = true;
                             std::string directive;
                             auto start = currentIndex + 1;
@@ -271,21 +295,23 @@ namespace hex::ui {
                                     identifier += line[start];
                                     start++;
                                 }
+                                auto definesBegin = m_defines.begin();
+                                auto definesEnd = m_defines.end();
                                 if (directive == "define") {
-                                    if (identifier.size() > 0 && !withinNotDef && std::find(m_defines.begin(), m_defines.end(), identifier) == m_defines.end())
+                                    if (identifier.size() > 0 && !withinNotDef && std::find(definesBegin, definesEnd, identifier) == definesEnd)
                                         m_defines.push_back(identifier);
                                 } else if (directive == "undef") {
                                     if (identifier.size() > 0 && !withinNotDef)
-                                        m_defines.erase(std::remove(m_defines.begin(), m_defines.end(), identifier), m_defines.end());
+                                        m_defines.erase(std::remove(definesBegin, definesEnd, identifier), definesEnd);
                                 } else if (directive == "ifdef") {
                                     if (!withinNotDef) {
-                                        bool isConditionMet = std::find(m_defines.begin(), m_defines.end(), identifier) != m_defines.end();
+                                        bool isConditionMet = std::find(definesBegin, definesEnd, identifier) != definesEnd;
                                         ifDefs.push_back(isConditionMet);
                                     } else
                                         ifDefs.push_back(false);
                                 } else if (directive == "ifndef") {
                                     if (!withinNotDef) {
-                                        bool isConditionMet = std::find(m_defines.begin(), m_defines.end(), identifier) == m_defines.end();
+                                        bool isConditionMet = std::find(definesBegin, definesEnd, identifier) == definesEnd;
                                         ifDefs.push_back(isConditionMet);
                                     } else
                                         ifDefs.push_back(false);
@@ -293,7 +319,7 @@ namespace hex::ui {
                             }
                         }
 
-                        if (c == '\"' && !withinPreproc && !inComment && !withinComment && !withinDocComment) {
+                        if (c == '\"' && !withinPreproc && !isComment && !withinComment && !withinDocComment) {
                             withinString = true;
                             setGlyphFlags(currentIndex);
                         } else {
@@ -307,12 +333,12 @@ namespace hex::ui {
                                 return !a.empty() && currentIndex + 1 >= a.size() && equals(a.begin(), a.end(), b.begin() + (currentIndex + 1 - a.size()), b.begin() + (currentIndex + 1), pred);
                             };
 
-                            if (!inComment && !withinComment && !withinDocComment && !withinPreproc && !withinString) {
+                            if (!isComment && !withinComment && !withinDocComment && !withinPreproc && !withinString) {
                                 if (compareForth(m_languageDefinition.m_docComment, line.m_chars)) {
-                                    withinDocComment = !inComment;
+                                    withinDocComment = !isComment;
                                     commentLength = 3;
                                 } else if (compareForth(m_languageDefinition.m_singleLineComment, line.m_chars)) {
-                                    withinComment = !inComment;
+                                    withinComment = !isComment;
                                     commentLength = 2;
                                 } else {
                                     bool isGlobalDocComment = compareForth(m_languageDefinition.m_globalDocComment, line.m_chars);
@@ -338,7 +364,7 @@ namespace hex::ui {
                                         }
                                     }
                                 }
-                                inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= (i64) currentIndex));
+                                isComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= (i64) currentIndex));
                             }
                             setGlyphFlags(currentIndex);
 

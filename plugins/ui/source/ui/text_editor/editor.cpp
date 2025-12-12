@@ -27,7 +27,7 @@ namespace hex::ui {
     TextEditor::~TextEditor() {
     }
 
-    std::string TextEditor::getText(const Selection &from) {
+    std::string TextEditor::getText(const Range &from) {
         std::string result;
         auto selection = setCoordinates(from);
         auto columns = selection.getSelectedColumns();
@@ -45,10 +45,10 @@ namespace hex::ui {
         return result;
     }
 
-    void TextEditor::deleteRange(const Selection &rangeToDelete) {
+    void TextEditor::deleteRange(const Range &rangeToDelete) {
         if (m_readOnly)
             return;
-        Selection selection = setCoordinates(rangeToDelete);
+        Range selection = setCoordinates(rangeToDelete);
         auto columns = selection.getSelectedColumns();
 
         if (selection.isSingleLine()) {
@@ -100,7 +100,7 @@ namespace hex::ui {
         auto stringVector = wolv::util::splitString(value, "\n", false);
         auto lineCount = (i32) stringVector.size();
         where.m_line += lineCount - 1;
-        where.m_column += getStringCharacterCount(stringVector[lineCount - 1]);
+        where.m_column += stringCharacterCount(stringVector[lineCount - 1]);
         stringVector[lineCount - 1].append(line.substr(start.m_column,(u64) -1, Line::LinePart::Utf8));
         line.erase(start.m_column, (u64) -1);
 
@@ -117,14 +117,14 @@ namespace hex::ui {
     void TextEditor::deleteWordLeft() {
         const auto wordEnd = getCursorPosition();
         const auto wordStart = findPreviousWord(getCursorPosition());
-        setSelection(Selection(wordStart, wordEnd));
+        setSelection(Range(wordStart, wordEnd));
         backspace();
     }
 
     void TextEditor::deleteWordRight() {
         const auto wordStart = getCursorPosition();
         const auto wordEnd = findNextWord(getCursorPosition());
-        setSelection(Selection(wordStart, wordEnd));
+        setSelection(Range(wordStart, wordEnd));
         backspace();
     }
 
@@ -214,9 +214,9 @@ namespace hex::ui {
         if (!m_readOnly && undo) {
             u.m_before = m_state;
             u.m_removed = getText();
-            u.m_removedSelection.m_start = setCoordinates(0, 0);
-            u.m_removedSelection.m_end = setCoordinates(-1, -1);
-            if (u.m_removedSelection.m_start == Invalid || u.m_removedSelection.m_end == Invalid)
+            u.m_removedRange.m_start = setCoordinates(0, 0);
+            u.m_removedRange.m_end = setCoordinates(-1, -1);
+            if (u.m_removedRange.m_start == Invalid || u.m_removedRange.m_end == Invalid)
                 return;
         }
         auto vectorString = wolv::util::splitString(text, "\n", false);
@@ -236,9 +236,9 @@ namespace hex::ui {
         }
         if (!m_readOnly && undo) {
             u.m_added = text;
-            u.m_addedSelection.m_start = setCoordinates(0, 0);
-            u.m_addedSelection.m_end = setCoordinates(-1, -1);
-            if (u.m_addedSelection.m_start == Invalid || u.m_addedSelection.m_end == Invalid)
+            u.m_addedRange.m_start = setCoordinates(0, 0);
+            u.m_addedRange.m_end = setCoordinates(-1, -1);
+            if (u.m_addedRange.m_start == Invalid || u.m_addedRange.m_end == Invalid)
                 return;
         }
         m_textChanged = true;
@@ -275,10 +275,10 @@ namespace hex::ui {
                     --end.m_line;
                 if (end.m_line >= (i32) m_lines.size())
                     end.m_line = isEmpty() ? 0 : (i32) m_lines.size() - 1;
-                end.m_column = getLineMaxCharColumn(end.m_line);
+                end.m_column = lineMaxColumn(end.m_line);
 
-                u.m_removedSelection = Selection(start, end);
-                u.m_removed = getText(u.m_removedSelection);
+                u.m_removedRange = Range(start, end);
+                u.m_removed = getText(u.m_removedRange);
 
                 bool modified = false;
 
@@ -312,19 +312,19 @@ namespace hex::ui {
                         if (end == Invalid)
                             return;
                         rangeEnd = end;
-                        u.m_added = getText(Selection(start, end));
+                        u.m_added = getText(Range(start, end));
                     } else {
                         end = setCoordinates(originalEnd.m_line, 0);
                         rangeEnd = setCoordinates(end.m_line - 1, -1);
                         if (end == Invalid || rangeEnd == Invalid)
                             return;
-                        u.m_added = getText(Selection(start, rangeEnd));
+                        u.m_added = getText(Range(start, rangeEnd));
                     }
 
-                    u.m_addedSelection = Selection(start, rangeEnd);
+                    u.m_addedRange = Range(start, rangeEnd);
                     u.m_after = m_state;
 
-                    m_state.m_selection = Selection(start, end);
+                    m_state.m_selection = Range(start, end);
                     addUndo(u);
 
                     m_textChanged = true;
@@ -336,13 +336,13 @@ namespace hex::ui {
             }    // c == '\t'
             else {
                 u.m_removed = getSelectedText();
-                u.m_removedSelection = Selection(m_state.m_selection);
+                u.m_removedRange = Range(m_state.m_selection);
                 deleteSelection();
             }
         }    // HasSelection
 
         auto coord = setCoordinates(m_state.m_cursorPosition);
-        u.m_addedSelection.m_start = coord;
+        u.m_addedRange.m_start = coord;
 
         if (m_lines.empty())
             m_lines.push_back(Line());
@@ -372,7 +372,7 @@ namespace hex::ui {
             line.m_colorized = false;
             setCursorPosition(getCharacterCoordinates(coord.m_line + 1, charPosition));
             u.m_added = (char) character;
-            u.m_addedSelection.m_end = setCoordinates(m_state.m_cursorPosition);
+            u.m_addedRange.m_end = setCoordinates(m_state.m_cursorPosition);
         } else if (character == '\t') {
             auto &line = m_lines[coord.m_line];
             auto charIndex = lineCoordinatesToIndex(coord);
@@ -384,7 +384,7 @@ namespace hex::ui {
                 line.m_colorized = false;
                 setCursorPosition(getCharacterCoordinates(coord.m_line, charIndex + spacesToInsert));
                 u.m_added = spaces;
-                u.m_addedSelection.m_end = setCoordinates(m_state.m_cursorPosition);
+                u.m_addedRange.m_end = setCoordinates(m_state.m_cursorPosition);
             } else {
                 auto spacesToRemove = (charIndex % m_tabSize);
                 if (spacesToRemove == 0) spacesToRemove = m_tabSize;
@@ -399,11 +399,11 @@ namespace hex::ui {
                 }
                 std::string spaces(spacesRemoved, ' ');
                 u.m_removed = spaces;
-                u.m_removedSelection = Selection(Coordinates(coord.m_line, charIndex), Coordinates(coord.m_line, charIndex + spacesRemoved));
+                u.m_removedRange = Range(Coordinates(coord.m_line, charIndex), Coordinates(coord.m_line, charIndex + spacesRemoved));
                 line.m_colorized = false;
                 setCursorPosition(getCharacterCoordinates(coord.m_line, std::max(0, charIndex)));
             }
-            u.m_addedSelection.m_end = setCoordinates(m_state.m_cursorPosition);
+            u.m_addedRange.m_end = setCoordinates(m_state.m_cursorPosition);
         } else {
             std::string buf = "";
             imTextCharToUtf8(buf, character);
@@ -414,15 +414,15 @@ namespace hex::ui {
                 if (m_overwrite && charIndex < (i32) line.size()) {
                     i64 column = coord.m_column;
                     std::string c = line[column];
-                    auto charCount = getStringCharacterCount(c);
+                    auto charCount = stringCharacterCount(c);
                     auto d = c.size();
 
-                    u.m_removedSelection = Selection(m_state.m_cursorPosition, getCharacterCoordinates(coord.m_line, coord.m_column + charCount));
+                    u.m_removedRange = Range(m_state.m_cursorPosition, getCharacterCoordinates(coord.m_line, coord.m_column + charCount));
                     u.m_removed = std::string(line.m_chars.begin() + charIndex, line.m_chars.begin() + charIndex + d);
                     line.erase(line.begin() + charIndex, d);
                     line.m_colorized = false;
                 }
-                auto charCount = getStringCharacterCount(buf);
+                auto charCount = stringCharacterCount(buf);
                 if (buf == "{")
                     buf += "}";
                 else if (buf == "[")
@@ -455,7 +455,7 @@ namespace hex::ui {
                 line.insert(line.begin() + charIndex, buf.begin(), buf.end());
                 line.m_colorized = false;
                 u.m_added = buf;
-                u.m_addedSelection.m_end = getCharacterCoordinates(coord.m_line, charIndex + buf.size());
+                u.m_addedRange.m_end = getCharacterCoordinates(coord.m_line, charIndex + buf.size());
                 setCursorPosition(getCharacterCoordinates(coord.m_line, charIndex + charCount));
             } else
                 return;
@@ -491,7 +491,7 @@ namespace hex::ui {
         insertTextAt(pos, value);
         m_lines[pos.m_line].m_colorized = false;
 
-        setSelection(Selection(pos, pos));
+        setSelection(Range(pos, pos));
         setCursorPosition(pos);
         refreshSearchResults();
         colorize();
@@ -504,7 +504,7 @@ namespace hex::ui {
 
         deleteRange(m_state.m_selection);
 
-        setSelection(Selection(m_state.m_selection.m_start, m_state.m_selection.m_start));
+        setSelection(Range(m_state.m_selection.m_start, m_state.m_selection.m_start));
         setCursorPosition(m_state.m_selection.m_start);
         refreshSearchResults();
         colorize();
@@ -521,20 +521,20 @@ namespace hex::ui {
 
         if (hasSelection()) {
             u.m_removed = getSelectedText();
-            u.m_removedSelection = m_state.m_selection;
+            u.m_removedRange = m_state.m_selection;
             deleteSelection();
         } else {
             auto pos = setCoordinates(m_state.m_cursorPosition);
             setCursorPosition(pos);
             auto &line = m_lines[pos.m_line];
 
-            if (pos.m_column == getLineMaxCharColumn(pos.m_line)) {
+            if (pos.m_column == lineMaxColumn(pos.m_line)) {
                 if (pos.m_line == (i32) m_lines.size() - 1)
                     return;
 
                 u.m_removed = '\n';
-                u.m_removedSelection.m_start = u.m_removedSelection.m_end = setCoordinates(m_state.m_cursorPosition);
-                advance(u.m_removedSelection.m_end);
+                u.m_removedRange.m_start = u.m_removedRange.m_end = setCoordinates(m_state.m_cursorPosition);
+                advance(u.m_removedRange.m_end);
 
                 auto &nextLine = m_lines[pos.m_line + 1];
                 line.insert(line.end(), nextLine.begin(), nextLine.end());
@@ -543,9 +543,9 @@ namespace hex::ui {
 
             } else {
                 i64 charIndex = lineCoordinatesToIndex(pos);
-                u.m_removedSelection.m_start = u.m_removedSelection.m_end = setCoordinates(m_state.m_cursorPosition);
-                u.m_removedSelection.m_end.m_column++;
-                u.m_removed = getText(u.m_removedSelection);
+                u.m_removedRange.m_start = u.m_removedRange.m_end = setCoordinates(m_state.m_cursorPosition);
+                u.m_removedRange.m_end.m_column++;
+                u.m_removed = getText(u.m_removedRange);
 
                 auto d = utf8CharLength(line[charIndex][0]);
                 line.erase(line.begin() + charIndex, d);
@@ -572,7 +572,7 @@ namespace hex::ui {
 
         if (hasSelection()) {
             u.m_removed = getSelectedText();
-            u.m_removedSelection = m_state.m_selection;
+            u.m_removedRange = m_state.m_selection;
             deleteSelection();
         } else {
             auto pos = setCoordinates(m_state.m_cursorPosition);
@@ -583,11 +583,11 @@ namespace hex::ui {
                     return;
 
                 u.m_removed = '\n';
-                u.m_removedSelection.m_start = u.m_removedSelection.m_end = setCoordinates(pos.m_line - 1, -1);
-                advance(u.m_removedSelection.m_end);
+                u.m_removedRange.m_start = u.m_removedRange.m_end = setCoordinates(pos.m_line - 1, -1);
+                advance(u.m_removedRange.m_end);
 
                 auto &prevLine = m_lines[pos.m_line - 1];
-                auto prevSize = getLineMaxCharColumn(pos.m_line - 1);
+                auto prevSize = lineMaxColumn(pos.m_line - 1);
                 if (prevSize == 0)
                     prevLine = line;
                 else
@@ -625,7 +625,7 @@ namespace hex::ui {
                         m_state.m_cursorPosition.m_column += 1;
                     }
                 }
-                u.m_removedSelection = Selection(pos, m_state.m_cursorPosition);
+                u.m_removedRange = Range(pos, m_state.m_cursorPosition);
                 u.m_removed = charToRemove;
                 auto charStart = lineCoordinatesToIndex(pos);
                 auto charEnd = lineCoordinatesToIndex(m_state.m_cursorPosition);
@@ -666,12 +666,12 @@ namespace hex::ui {
                 auto lineIndex = setCoordinates(m_state.m_cursorPosition).m_line;
                 if (lineIndex < 0 || lineIndex >= (i32) m_lines.size())
                     return;
-                setSelection(Selection(setCoordinates(lineIndex, 0), setCoordinates(lineIndex + 1, 0)));
+                setSelection(Range(setCoordinates(lineIndex, 0), setCoordinates(lineIndex + 1, 0)));
             }
             UndoRecord u;
             u.m_before = m_state;
             u.m_removed = getSelectedText();
-            u.m_removedSelection = m_state.m_selection;
+            u.m_removedRange = m_state.m_selection;
 
             copy();
             deleteSelection();
@@ -691,15 +691,15 @@ namespace hex::ui {
 
             if (hasSelection()) {
                 u.m_removed = getSelectedText();
-                u.m_removedSelection = m_state.m_selection;
+                u.m_removedRange = m_state.m_selection;
                 deleteSelection();
             }
 
             u.m_added = clipTextStr;
-            u.m_addedSelection.m_start = setCoordinates(m_state.m_cursorPosition);
+            u.m_addedRange.m_start = setCoordinates(m_state.m_cursorPosition);
             insertText(clipTextStr);
 
-            u.m_addedSelection.m_end = setCoordinates(m_state.m_cursorPosition);
+            u.m_addedRange.m_end = setCoordinates(m_state.m_cursorPosition);
             u.m_after = m_state;
             addUndo(u);
         }
@@ -748,7 +748,7 @@ namespace hex::ui {
         auto end = setCoordinates(-1, -1);
         if (start == Invalid || end == Invalid)
             return "";
-        return getText(Selection(start, end));
+        return getText(Range(start, end));
     }
 
     std::vector<std::string> TextEditor::getTextLines() const {
@@ -773,25 +773,25 @@ namespace hex::ui {
         auto endLine = setCoordinates(line, -1);
         if (sanitizedLine == Invalid || endLine == Invalid)
             return "";
-        return getText(Selection(sanitizedLine, endLine));
+        return getText(Range(sanitizedLine, endLine));
     }
 
     TextEditor::UndoRecord::UndoRecord(
             const std::string &added,
-            const TextEditor::Selection addedSelection,
+            const TextEditor::Range addedSelection,
             const std::string &removed,
-            const TextEditor::Selection removedSelection,
+            const TextEditor::Range removedSelection,
             TextEditor::EditorState &before,
-            TextEditor::EditorState &after) : m_added(added), m_addedSelection(addedSelection), m_removed(removed), m_removedSelection(removedSelection), m_before(before), m_after(after) {}
+            TextEditor::EditorState &after) : m_added(added), m_addedRange(addedSelection), m_removed(removed), m_removedRange(removedSelection), m_before(before), m_after(after) {}
 
     void TextEditor::UndoRecord::undo(TextEditor *editor) {
         if (!m_added.empty()) {
-            editor->deleteRange(m_addedSelection);
+            editor->deleteRange(m_addedRange);
             editor->colorize();
         }
 
         if (!m_removed.empty()) {
-            auto start = m_removedSelection.m_start;
+            auto start = m_removedRange.m_start;
             editor->insertTextAt(start, m_removed.c_str());
             editor->colorize();
         }
@@ -802,12 +802,12 @@ namespace hex::ui {
 
     void TextEditor::UndoRecord::redo(TextEditor *editor) {
         if (!m_removed.empty()) {
-            editor->deleteRange(m_removedSelection);
+            editor->deleteRange(m_removedRange);
             editor->colorize();
         }
 
         if (!m_added.empty()) {
-            auto start = m_addedSelection.m_start;
+            auto start = m_addedRange.m_start;
             editor->insertTextAt(start, m_added.c_str());
             editor->colorize();
         }

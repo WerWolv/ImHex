@@ -6,8 +6,6 @@
 
 #include <content/differing_byte_searcher.hpp>
 
-#include <ui/text_editor.hpp>
-
 namespace hex::plugin::builtin {
 
     PopupRemove::PopupRemove(u64 address, size_t size) : m_address(address), m_size(size) {}
