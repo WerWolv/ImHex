@@ -322,7 +322,7 @@ namespace hex::ui {
     }
 
     char Line::operator[](u64 index) const {
-        i64 signedIndex = std::clamp((i64) index, (i64) -m_chars.size(), (i64) (m_chars.size() - 1));
+        i64 signedIndex = std::clamp((i64) index,0 - (i64) m_chars.size(), (i64) (m_chars.size() - 1));
         if (signedIndex < 0)
             return m_chars[m_chars.size() + signedIndex];
         return m_chars[signedIndex];
