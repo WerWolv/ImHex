@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <bit>
 
 EXPORT_MODULE namespace hex {
 
@@ -22,8 +23,10 @@ EXPORT_MODULE namespace hex {
 
         namespace impl {
 
+            struct DoNotUseThisByItselfTag {};
+
             using DisplayFunction   = std::function<std::string()>;
-            using EditingFunction   = std::function<std::vector<u8>(std::string, std::endian)>;
+            using EditingFunction   = std::function<std::optional<std::vector<u8>>(std::string&, std::endian, DoNotUseThisByItselfTag)>;
             using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8> &, std::endian, NumberDisplayStyle)>;
 
             struct Entry {
@@ -35,6 +38,35 @@ EXPORT_MODULE namespace hex {
             };
 
             const std::vector<Entry>& getEntries();
+
+        }
+
+        namespace EditWidget {
+
+            class Widget {
+            public:
+                using Function = std::function<std::vector<u8>(const std::string&, std::endian)>;
+
+                explicit Widget(const Function &function) : m_function(function) {}
+
+                virtual ~Widget() = default;
+                virtual std::optional<std::vector<u8>> draw(std::string &value, std::endian endian) = 0;
+                std::optional<std::vector<u8>> operator()(std::string &value, std::endian endian, impl::DoNotUseThisByItselfTag) {
+                    return draw(value, endian);
+                }
+
+                std::vector<u8> getBytes(const std::string &value, std::endian endian) const {
+                    return m_function(value, endian);
+                }
+
+            private:
+                Function m_function;
+            };
+
+            struct TextInput : Widget {
+                explicit TextInput(const Function &function) : Widget(function) {}
+                std::optional<std::vector<u8>> draw(std::string &value, std::endian endian) override;
+            };
 
         }
 

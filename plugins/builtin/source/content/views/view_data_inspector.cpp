@@ -198,8 +198,7 @@ namespace hex::plugin::builtin {
             // Set up the editing function if a write formatter is available
             std::optional<ContentRegistry::DataInspector::impl::EditingFunction> editingFunction;
             if (!pattern->getWriteFormatterFunction().empty()) {
-                editingFunction = [&pattern](const std::string &value,
-                                                                  std::endian) -> std::vector<u8> {
+                editingFunction = ContentRegistry::DataInspector::EditWidget::TextInput([&pattern](const std::string &value, std::endian) -> std::vector<u8> {
                     try {
                         pattern->setValue(value);
                     } catch (const pl::core::err::EvaluatorError::Exception &error) {
@@ -208,7 +207,7 @@ namespace hex::plugin::builtin {
                     }
 
                     return {};
-                };
+                });
             }
 
             try {
@@ -441,7 +440,7 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
 
             // Handle copying the value to the clipboard when clicking the row
-            if (ImGui::Selectable("##InspectorLine", m_selectedEntryName == entry.unlocalizedName, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
+            if (ImGui::Selectable("##InspectorLine", m_selectedEntryName == entry.unlocalizedName, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap | ImGuiSelectableFlags_AllowDoubleClick)) {
                 m_selectedEntryName = entry.unlocalizedName;
                 if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value()) {
                     ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress(), entry.requiredSize });
@@ -476,47 +475,42 @@ namespace hex::plugin::builtin {
                 }
                 ImGui::EndPopup();
             }
+        } else {
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                entry.editing = false;
+            }
 
-            return;
+            // Handle editing mode
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::SetNextItemWidth(-1);
+            ImGui::SetKeyboardFocusHere();
+
+            // Draw editing widget and capture edited value
+            auto bytes = (*entry.editingFunction)(m_editingValue, m_endian, {});
+            if (bytes.has_value()) {
+                if (m_invert)
+                    std::ranges::transform(*bytes, bytes->begin(), [](auto byte) { return byte ^ 0xFF; });
+
+                // Write those bytes to the selected provider at the current address
+                m_selectedProvider->write(m_startAddress, bytes->data(), bytes->size());
+
+                // Disable editing mode
+                m_editingValue.clear();
+                entry.editing = false;
+
+                // Reload all inspector rows
+                m_shouldInvalidate = true;
+            }
+
+            ImGui::PopStyleVar();
+
+            // Disable editing mode when clicking outside the input text box
+            if (!ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                m_editingValue.clear();
+                entry.editing = false;
+            }
         }
 
-        if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-            entry.editing = false;
-        }
-
-        // Handle editing mode
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::SetNextItemWidth(-1);
-        ImGui::SetKeyboardFocusHere();
-
-        // Draw input text box
-        if (ImGui::InputText("##InspectorLineEditing", m_editingValue,
-                             ImGuiInputTextFlags_EnterReturnsTrue |
-                             ImGuiInputTextFlags_AutoSelectAll)) {
-            // Turn the entered value into bytes
-            auto bytes = entry.editingFunction.value()(m_editingValue, m_endian);
-
-            if (m_invert)
-                std::ranges::transform(bytes, bytes.begin(), [](auto byte) { return byte ^ 0xFF; });
-
-            // Write those bytes to the selected provider at the current address
-            m_selectedProvider->write(m_startAddress, bytes.data(), bytes.size());
-
-            // Disable editing mode
-            m_editingValue.clear();
-            entry.editing = false;
-
-            // Reload all inspector rows
-            m_shouldInvalidate = true;
-        }
-
-        ImGui::PopStyleVar();
-
-        // Disable editing mode when clicking outside the input text box
-        if (!ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-            m_editingValue.clear();
-            entry.editing = false;
-        }
     }
 
     void ViewDataInspector::drawEndianSetting() {

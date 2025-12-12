@@ -870,6 +870,18 @@ namespace hex {
 
         }
 
+        namespace EditWidget {
+            std::optional<std::vector<u8>> TextInput::draw(std::string &value, std::endian endian) {
+                if (ImGui::InputText("##InspectorLineEditing", value,
+                                 ImGuiInputTextFlags_EnterReturnsTrue |
+                                 ImGuiInputTextFlags_AutoSelectAll)) {
+                    return getBytes(value, endian);
+                }
+
+                return std::nullopt;
+            }
+        }
+
         void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
             log::debug("Registered new data inspector format: {}", unlocalizedName.get());
 
