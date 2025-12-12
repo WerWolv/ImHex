@@ -1352,7 +1352,7 @@ namespace hex::plugin::builtin {
                        auto source = error.getLocation().source;
                         if (source != nullptr && source->mainSource) {
                             auto key = ui::TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
-                            if (!errorMarkers.contains(key) ||errorMarkers[key].first < error.getLocation().length)
+                            if (!errorMarkers.contains(key) || (u32) errorMarkers[key].first < error.getLocation().length)
                                     errorMarkers[key] = std::make_pair(u32(error.getLocation().length), processMessage(error.getMessage()));
                         }
                     }
@@ -1860,7 +1860,7 @@ namespace hex::plugin::builtin {
             if (newProvider != nullptr) {
                 m_textEditor.get(newProvider).setText(wolv::util::preprocessText(m_sourceCode.get(newProvider)));
                 m_textEditor.get(newProvider).setCursorPosition(m_cursorPosition.get(newProvider));
-                ui::TextEditor::Selection selection = m_selection.get(newProvider);
+                ui::TextEditor::Range selection = m_selection.get(newProvider);
                 m_textEditor.get(newProvider).setSelection(selection);
                 m_textEditor.get(newProvider).setBreakpoints(m_breakpoints.get(newProvider));
                 m_consoleEditor.get(newProvider).setText(wolv::util::combineStrings(m_console.get(newProvider), "\n"));
@@ -2100,7 +2100,7 @@ namespace hex::plugin::builtin {
 
         /* Add Breakpoint */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.add_breakpoint"}, ICON_VS_DEBUG_BREAKPOINT_DATA, 1750, Keys::F8 + AllowWhileTyping, [this] {
-            const auto line = m_textEditor.get(ImHexApi::Provider::get()).getCursorPosition().m_line + 1;
+            const auto line = m_textEditor.get(ImHexApi::Provider::get()).getCursorPosition().getLine() + 1;
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             auto &evaluator = runtime.getInternals().evaluator;

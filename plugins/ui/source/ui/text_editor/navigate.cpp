@@ -18,7 +18,7 @@ namespace hex::ui {
     }
 
     void TextEditor::jumpToCoords(const Coordinates &coords) {
-        setSelection(Selection(coords, coords));
+        setSelection(Range(coords, coords));
         setCursorPosition(coords);
         ensureCursorVisible();
 
@@ -38,7 +38,7 @@ namespace hex::ui {
                     else if (oldPos == m_interactiveSelection.m_end)
                         m_interactiveSelection.m_end = newPos;
                     else {
-                        m_interactiveSelection = Selection(newPos, oldPos);
+                        m_interactiveSelection = Range(newPos, oldPos);
                     }
                 } else
                     m_interactiveSelection.m_start = m_interactiveSelection.m_end = newPos;
@@ -124,7 +124,7 @@ namespace hex::ui {
             return;
 
         auto lindex = m_state.m_cursorPosition.m_line;
-        auto lineMaxColumn = getLineMaxCharColumn(lindex);
+        auto lineMaxColumn = this->lineMaxColumn(lindex);
         auto column = std::min(m_state.m_cursorPosition.m_column, lineMaxColumn);
 
         while (amount-- > 0) {
@@ -167,7 +167,7 @@ namespace hex::ui {
             return;
 
         auto lindex = m_state.m_cursorPosition.m_line;
-        auto lineMaxColumn = getLineMaxCharColumn(lindex);
+        auto lineMaxColumn = this->lineMaxColumn(lindex);
         auto column = std::min(m_state.m_cursorPosition.m_column, lineMaxColumn);
 
         while (amount-- > 0) {
@@ -207,7 +207,7 @@ namespace hex::ui {
 
         if (m_state.m_cursorPosition != oldPos) {
             if (select) {
-                m_interactiveSelection = Selection(m_state.m_cursorPosition, oldPos);
+                m_interactiveSelection = Range(m_state.m_cursorPosition, oldPos);
             } else
                 m_interactiveSelection.m_start = m_interactiveSelection.m_end = m_state.m_cursorPosition;
             setSelection(m_interactiveSelection);
@@ -220,7 +220,7 @@ namespace hex::ui {
         auto newPos = setCoordinates(-1, -1);
         setCursorPosition(newPos);
         if (select) {
-            m_interactiveSelection = Selection(oldPos, newPos);
+            m_interactiveSelection = Range(oldPos, newPos);
         } else
             m_interactiveSelection.m_start = m_interactiveSelection.m_end = newPos;
         setSelection(m_interactiveSelection);
@@ -245,7 +245,7 @@ namespace hex::ui {
                 else {
                     postIdx = postfix.find_first_not_of(" ");
                     if (postIdx == std::string::npos)
-                        home = getLineMaxCharColumn(oldPos.m_line);
+                        home = this->lineMaxColumn(oldPos.m_line);
                     else if (postIdx == 0)
                         home = 0;
                     else
@@ -260,7 +260,7 @@ namespace hex::ui {
             else {
                 postIdx = postfix.find_first_not_of(" ");
                 if (postIdx == std::string::npos)
-                    home = getLineMaxCharColumn(oldPos.m_line);
+                    home = lineMaxColumn(oldPos.m_line);
                 else
                     home = oldPos.m_column + postIdx;
             }
@@ -286,7 +286,7 @@ namespace hex::ui {
     void TextEditor::moveEnd(bool select) {
         resetCursorBlinkTime();
         auto oldPos = m_state.m_cursorPosition;
-        setCursorPosition(setCoordinates(m_state.m_cursorPosition.m_line, getLineMaxCharColumn(oldPos.m_line)));
+        setCursorPosition(setCoordinates(m_state.m_cursorPosition.m_line, lineMaxColumn(oldPos.m_line)));
 
         if (m_state.m_cursorPosition != oldPos) {
             if (select) {
@@ -326,24 +326,46 @@ namespace hex::ui {
         setCursorPosition(m_state.m_selection.m_end);
     }
 
+    TextEditor::Coordinates::Coordinates(TextEditor *editor, i32 line, i32 column)
+        : m_line(line), m_column(column) {
+        sanitize(editor);
+    }
+
+    bool TextEditor::Coordinates::isValid(TextEditor *editor) const {
+
+        auto maxLine = editor->m_lines.size();
+        if (std::abs(m_line) > (i32) maxLine)
+            return false;
+        auto maxColumn = editor->lineMaxColumn(m_line);
+        if (std::abs(m_column) > maxColumn)
+            return false;
+        return true;
+    }
+
+    TextEditor::Coordinates TextEditor::Coordinates::sanitize(TextEditor *editor) {
+
+        i32 lineCount = editor->m_lines.size();
+        if (m_line < 0) {
+            m_line = std::clamp(m_line, -lineCount, -1);
+            m_line = lineCount + m_line;
+        } else
+            m_line = std::clamp(m_line, 0, lineCount - 1);
+
+
+        auto maxColumn = editor->lineMaxColumn(m_line) + 1;
+        if (m_column < 0) {
+            m_column = std::clamp(m_column, -maxColumn, -1);
+            m_column = maxColumn + m_column;
+        } else
+            m_column = std::clamp(m_column, 0, maxColumn);
+
+        return *this;
+    }
+
     TextEditor::Coordinates TextEditor::setCoordinates(i32 line, i32 column) {
         if (isEmpty())
             return Coordinates(0, 0);
-
-        Coordinates result = Coordinates(0, 0);
-        auto lineCount = (i32) m_lines.size();
-        if (line < 0 && lineCount + line >= 0)
-            result.m_line = lineCount + line;
-        else
-            result.m_line = std::clamp(line, 0, lineCount - 1);
-
-        auto maxColumn = getLineMaxCharColumn(result.m_line) + 1;
-        if (column < 0 && maxColumn + column >= 0)
-            result.m_column = maxColumn + column;
-        else
-            result.m_column = std::clamp(column, 0, maxColumn - 1);
-
-        return result;
+        return Coordinates(this, line, column);
     }
 
     TextEditor::Coordinates TextEditor::setCoordinates(const Coordinates &value) {
@@ -351,15 +373,15 @@ namespace hex::ui {
         return sanitized_value;
     }
 
-    TextEditor::Selection TextEditor::setCoordinates(const Selection &value) {
+    TextEditor::Range TextEditor::setCoordinates(const Range &value) {
         auto start = setCoordinates(value.m_start);
         auto end = setCoordinates(value.m_end);
         if (start == Invalid || end == Invalid)
-            return Selection(Invalid, Invalid);
+            return Range(Invalid, Invalid);
         if (start > end) {
             std::swap(start, end);
         }
-        return Selection(start, end);
+        return Range(start, end);
     }
 
     void TextEditor::advance(Coordinates &coordinates) const {
@@ -373,7 +395,7 @@ namespace hex::ui {
         auto &line = m_lines[coordinates.m_line];
         i64 column = coordinates.m_column;
         std::string lineChar = line[column];
-        auto incr = getStringCharacterCount(lineChar);
+        auto incr = stringCharacterCount(lineChar);
         coordinates.m_column += incr;
     }
 

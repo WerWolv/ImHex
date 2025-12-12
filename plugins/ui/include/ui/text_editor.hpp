@@ -14,68 +14,110 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include <hex/helpers/utils.hpp>
+#include <pl/core/location.hpp>
 
 namespace hex::ui {
     using strConstIter = std::string::const_iterator;
 
     class TextEditor {
-
     public:
-        // indices of the arrays that contain the lines (vector) and the columns (a string) of the
-        // text editor. Negative values indicate the distance to the last element of the array.
-        // When comparing coordinates ensure they have the same sign because coordinates don't have
-        // information about the size of the array. Currently positive coordinates are always bigger
-        // than negatives even if that gives a wrong result.
-        struct Coordinates {
-            i32 m_line, m_column;
 
-            Coordinates() : m_line(0), m_column(0) {}
-            Coordinates(i32 line, i32 column) : m_line(line), m_column(column) {}
-            bool operator==(const Coordinates &o) const;
-            bool operator!=(const Coordinates &o) const;
-            bool operator<(const Coordinates &o) const;
-            bool operator>(const Coordinates &o) const;
-            bool operator<=(const Coordinates &o) const;
-            bool operator>=(const Coordinates &o) const;
-            Coordinates operator+(const Coordinates &o) const;
-            Coordinates operator-(const Coordinates &o) const;
-        };
+        class Range {
+        public:
+            friend class TextEditor;
+            friend class Lines;
 
-        inline static const Coordinates Invalid = Coordinates(0x80000000, 0x80000000);
+            // Coordinates represent 2-dimensional points used to identify locations in the pattern editor.
+            // as line number and column number pairs. Coordinates can be folded and unfolded. Folded
+            // lines are called rows. Columns keep their name. You can convert lines to rows and vice versa or
+            // the supplied functions to convert whole coordinates. Unfolded and folded coordinates come in two types.
+            // The first one referred to as (plain) coordinates correspond to the line number for the y component
+            // and the utf8 character index within the line for the x coordinate. The  second kind are given the
+            // name of Index coordinate or just plain index. These correspond directly
+            // to the indices of the c++ containers holding the editor data. Negative values are used to index
+            // from the end of the respective c++ container. In any document with N lines and M_N columns on each line
+            // first character can be described equally by the Coordinates (0,0) or (-M, -N_0) and the last one as either
+            // (M-1, N_(M-1)-1) or  just (-1,-1).
+            class Coordinates {
+            public:
+                friend class TextEditor;
+                friend class ViewPatternEditor;
+                Coordinates() : m_line(0), m_column(0) {}
+                explicit Coordinates(pl::core::Location location) : m_line(location.line - 1), m_column(location.column - 1) {}
+                Coordinates(i32 lineIndex, i32 column) : m_line(lineIndex), m_column(column) {}
+                Coordinates(TextEditor *editor, i32 lineIndex, i32 column);
+                Coordinates sanitize(TextEditor *editor);
+                bool isValid(TextEditor *editor) const;
+                bool operator==(const Coordinates &o) const;
+                bool operator!=(const Coordinates &o) const;
+                bool operator<(const Coordinates &o) const;
+                bool operator>(const Coordinates &o) const;
+                bool operator<=(const Coordinates &o) const;
+                bool operator>=(const Coordinates &o) const;
+                Coordinates operator+(const Coordinates &o) const;
+                Coordinates operator-(const Coordinates &o) const;
+                i32 getLine() const { return m_line; }
+                i32 getColumn() const { return m_column; }
 
-        struct Selection {
-            Coordinates m_start;
-            Coordinates m_end;
+            private:
+                i32 m_line, m_column;
+            };
 
-            Selection() = default;
+            Range() = default;
+            explicit Range(std::pair<Coordinates,Coordinates> coords) : m_start(coords.first), m_end(coords.second) {
+                if (m_start > m_end) { std::swap(m_start, m_end); }}
+            Range(Coordinates start, Coordinates end) : m_start(start), m_end(end) {
+                if (m_start > m_end) { std::swap(m_start, m_end); }}
 
-            Selection(Coordinates start, Coordinates end) : m_start(start), m_end(end) {
-                if (m_start > m_end) {
-                    std::swap(m_start, m_end);
-                }
-            }
+
 
             Coordinates getSelectedLines();
             Coordinates getSelectedColumns();
+            Coordinates getStart() { return m_start; }
+            Coordinates getEnd() { return m_end; }
             bool isSingleLine();
-            bool contains(Coordinates coordinates, int8_t endsInclusive=1);
-            bool operator==(const Selection &o) const {
-                return m_start == o.m_start && m_end == o.m_end;
+            enum class EndsInclusive : u8 { None = 0, Start = 2, End = 1, Both = 3 };
+            bool contains(const Coordinates &coordinates, EndsInclusive endsInclusive = EndsInclusive::Both) const;
+            bool contains(const Range &range, EndsInclusive endsInclusive = EndsInclusive::Both) const;
+            bool containsLine(i32 value, EndsInclusive endsInclusive = EndsInclusive::Both) const;
+            bool containsColumn(i32 value, EndsInclusive endsInclusive = EndsInclusive::Both) const;
+            bool overlaps(const Range &o, EndsInclusive endsInclusive = EndsInclusive::Both) const;
+            bool operator==(const Range &o) const;
+            bool operator!=(const Range &o) const;
+            bool operator<(const Range &o) const {
+                return m_end < o.m_end;
             }
-            bool operator!=(const Selection &o) const {
-                return m_start != o.m_start || m_end != o.m_end;
+            bool operator>(const Range &o) const {
+                return m_end > o.m_end;
             }
+            bool operator<=(const Range &o) const {
+                return !(*this > o);
+            }
+            bool operator>=(const Range &o) const {
+                return !(*this < o);
+            }
+
+        private:
+            Coordinates m_start;
+            Coordinates m_end;
         };
 
-        struct EditorState {
-            Selection m_selection;
+        using Coordinates = Range::Coordinates;
+        class EditorState {
+        public:
+            friend class TextEditor;
+            bool operator==(const EditorState &o) const;
+            EditorState() : m_selection(), m_cursorPosition() {}
+            EditorState(const Range &selection, const Coordinates &cursorPosition) : m_selection(selection), m_cursorPosition(cursorPosition) {}
+        private:
+            Range m_selection;
             Coordinates m_cursorPosition;
         };
 
         class FindReplaceHandler {
         public:
             FindReplaceHandler();
-            typedef std::vector<EditorState> Matches;
+            using Matches = std::vector<EditorState>;
             Matches &getMatches() { return m_matches; }
             bool findNext(TextEditor *editor);
             u32 findMatch(TextEditor *editor, i32 index);
@@ -139,153 +181,112 @@ namespace hex::ui {
         };
 
         enum class PaletteIndex {
-            Default,
-            Identifier,
-            Directive,
-            Operator,
-            Separator,
-            BuiltInType,
-            Keyword,
-            NumericLiteral,
-            StringLiteral,
-            CharLiteral,
-            Cursor,
-            Background,
-            LineNumber,
-            Selection,
-            Breakpoint,
-            ErrorMarker,
-            PreprocessorDeactivated,
-            CurrentLineFill,
-            CurrentLineFillInactive,
-            CurrentLineEdge,
-            ErrorText,
-            WarningText,
-            DebugText,
-            DefaultText,
-            Attribute,
-            PatternVariable,
-            LocalVariable,
-            CalculatedPointer,
-            TemplateArgument,
-            Function,
-            View,
-            FunctionVariable,
-            FunctionParameter,
-            UserDefinedType,
-            PlacedVariable,
-            GlobalVariable,
-            NameSpace,
-            TypeDef,
-            UnkIdentifier,
-            DocComment,
-            DocBlockComment,
-            BlockComment,
-            GlobalDocComment,
-            Comment,
-            PreprocIdentifier,
-            Max
+            Default, Identifier, Directive, Operator, Separator, BuiltInType, Keyword, NumericLiteral, StringLiteral, CharLiteral, Cursor, Background, LineNumber, Selection, Breakpoint, ErrorMarker, PreprocessorDeactivated,
+            CurrentLineFill, CurrentLineFillInactive, CurrentLineEdge, ErrorText, WarningText, DebugText, DefaultText, Attribute, PatternVariable, LocalVariable, CalculatedPointer, TemplateArgument, Function, View,
+            FunctionVariable, FunctionParameter, UserDefinedType, PlacedVariable, GlobalVariable, NameSpace, TypeDef, UnkIdentifier, DocComment, DocBlockComment, BlockComment, GlobalDocComment, Comment, PreprocIdentifier, Max
         };
 
+        using RegexList     = std::vector<std::pair<std::regex, PaletteIndex>>;
+        using Keywords      = std::unordered_set<std::string>;
+        using ErrorMarkers  = std::map<Coordinates, std::pair<i32, std::string>>;
+        using Breakpoints   = std::unordered_set<u32>;
+        using Palette       = std::array<ImU32, (u64) PaletteIndex::Max>;
+        using Glyph         = u8;
 
-        typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
-
-        struct Identifier {
-            Coordinates m_location;
-            std::string m_declaration;
-        };
-
-        using String = std::string;
-        using Identifiers = std::unordered_map<std::string, Identifier>;
-        using Keywords = std::unordered_set<std::string>;
-        using ErrorMarkers = std::map<Coordinates, std::pair<u32, std::string>>;
-        using Breakpoints = std::unordered_set<u32>;
-        using Palette = std::array<ImU32, (u64) PaletteIndex::Max>;
-        using Glyph = uint8_t;
+        struct Identifier { Coordinates m_location; std::string m_declaration;};
+        using Identifiers   = std::unordered_map<std::string, Identifier>;
 
         class ActionableBox {
-
-            ImRect m_box;
         public:
-            ActionableBox() = default;
+            ActionableBox() : m_box(ImRect(ImVec2(0, 0), ImVec2(0, 0))) {};
             explicit ActionableBox(const ImRect &box) : m_box(box) {}
 
-            virtual bool trigger() {
-                return ImGui::IsMouseHoveringRect(m_box.Min, m_box.Max);
-            }
-
+            ImRect &getBox() const { return const_cast<ImRect &>(m_box);}
+            virtual bool trigger();
             virtual void callback() {}
+            virtual ~ActionableBox() = default;
+            void shiftBoxVertically(float lineCount, float lineHeight);
+        private:
+            ImRect m_box;
         };
 
         class CursorChangeBox : public ActionableBox {
         public:
-            CursorChangeBox() = default;
+            CursorChangeBox() : ActionableBox(ImRect(ImVec2(0, 0), ImVec2(0, 0))) {}
             explicit CursorChangeBox(const ImRect &box) : ActionableBox(box) {}
 
-            void callback() override {
-                ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-            }
+            void callback() override { ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);}
         };
 
         class ErrorGotoBox : public ActionableBox {
-            Coordinates m_pos;
         public:
             ErrorGotoBox() = default;
-
             ErrorGotoBox(const ImRect &box, const Coordinates &pos, TextEditor *editor) : ActionableBox(box), m_pos(pos), m_editor(editor) {}
 
-            bool trigger() override {
-                return ActionableBox::trigger() && ImGui::IsMouseClicked(0);
-            }
-
-            void callback() override {
-                m_editor->jumpToCoords(m_pos);
-            }
-
+            bool trigger() override { return ActionableBox::trigger() && ImGui::IsMouseClicked(0);}
+            void callback() override { m_editor->jumpToCoords(m_pos);}
         private:
+            Coordinates m_pos;
             TextEditor *m_editor = nullptr;
         };
 
-        using ErrorGotoBoxes = std::map<Coordinates, ErrorGotoBox>;
-        using CursorBoxes = std::map<Coordinates, CursorChangeBox>;
-
         class ErrorHoverBox : public ActionableBox {
-            Coordinates m_pos;
-            std::string m_errorText;
         public:
             ErrorHoverBox() = default;
             ErrorHoverBox(const ImRect &box, const Coordinates &pos, const char *errorText) : ActionableBox(box), m_pos(pos), m_errorText(errorText) {}
 
-            void callback() override {
-                ImGui::BeginTooltip();
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
-                ImGui::Text("Error at line %d:", m_pos.m_line);
-                ImGui::PopStyleColor();
-                ImGui::Separator();
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.2f, 1.0f));
-                ImGui::TextUnformatted(m_errorText.c_str());
-                ImGui::PopStyleColor();
-                ImGui::EndTooltip();
-            }
+            void callback() override;
+        private:
+            Coordinates m_pos;
+            std::string m_errorText;
         };
 
-        using ErrorHoverBoxes = std::map<Coordinates, ErrorHoverBox>;
+        using ErrorGotoBoxes        = std::map<Coordinates, ErrorGotoBox>;
+        using CursorBoxes           = std::map<Coordinates, CursorChangeBox>;
+        using ErrorHoverBoxes       = std::map<Coordinates, ErrorHoverBox>;
+        enum class TrimMode : u8 { TrimNone = 0, TrimEnd = 1, TrimStart = 2, TrimBoth = 3 };
 
         // A line of text in the pattern editor consists of three strings; the character encoding, the color encoding and the flags.
         // The char encoding is utf-8, the color encoding are indices to the color palette and the flags are used to override the colors
         // depending on priorities; e.g. comments, strings, etc.
 
+        class LineIterator {
+        public:
+            friend class hex::ui::TextEditor;
+            LineIterator(const LineIterator &other) : m_charsIter(other.m_charsIter), m_colorsIter(other.m_colorsIter), m_flagsIter(other.m_flagsIter) {}
+            LineIterator() = default;
+
+            char operator*();
+            LineIterator operator++();
+            LineIterator operator=(const LineIterator &other);
+            bool operator!=(const LineIterator &other) const;
+            bool operator==(const LineIterator &other) const;
+            LineIterator operator+(i32 n);
+            i32 operator-(LineIterator l);
+        private:
+            strConstIter m_charsIter;
+            strConstIter m_colorsIter;
+            strConstIter m_flagsIter;
+        };
+
         class Line {
         public:
+            friend class TextEditor;
+            enum class Comments : u8 {
+                NoComment = 0,
+                Doc = 0b0001,
+                Block = 0b0010,
+                BlockDoc = 0b0011,
+                Line = 0b0100,
+                Global = 0b0101,
+            };
             struct FlagBits {
-                bool comment: 1;
-                bool blockComment: 1;
-                bool docComment: 1;
-                bool blockDocComment: 1;
-                bool globalDocComment: 1;
+                bool doc: 1;
+                bool block: 1;
+                bool global: 1;
                 bool deactivated: 1;
                 bool preprocessor: 1;
-                bool matchedBracket: 1;
+                bool matchedDelimiter: 1;
             };
 
             union Flags {
@@ -295,64 +296,40 @@ namespace hex::ui {
                 char m_value;
             };
 
-            constexpr static char inComment = 31;
+            enum class LinePart { Chars, Utf8, Colors, Flags };
 
-            class LineIterator {
-            public:
-                strConstIter m_charsIter;
-                strConstIter m_colorsIter;
-                strConstIter m_flagsIter;
+            Line() : m_chars(""), m_colors(""), m_flags(""), m_colorized(false), m_lineMaxColumn(-1) {}
+            explicit Line(const char *line) { Line(std::string(line)); }
+            explicit Line(const std::string &line) : m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false), m_lineMaxColumn(maxColumn()) {}
+            Line(const Line &line) : m_chars(std::string(line.m_chars)), m_colors(std::string(line.m_colors)), m_flags(std::string(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
+            Line(Line &&line) noexcept : m_chars(std::move(line.m_chars)), m_colors(std::move(line.m_colors)), m_flags(std::move(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
+            Line(std::string chars, std::string colors, std::string flags) : m_chars(std::move(chars)), m_colors(std::move(colors)), m_flags(std::move(flags)), m_colorized(false), m_lineMaxColumn(maxColumn()) {}
 
-                LineIterator(const LineIterator &other) : m_charsIter(other.m_charsIter), m_colorsIter(other.m_colorsIter), m_flagsIter(other.m_flagsIter) {}
-
-                LineIterator() = default;
-
-                char operator*();
-                LineIterator operator++();
-                LineIterator operator=(const LineIterator &other);
-                bool operator!=(const LineIterator &other) const;
-                bool operator==(const LineIterator &other) const;
-                LineIterator operator+(i32 n);
-                i32 operator-(LineIterator l);
-            };
-
-            enum class LinePart {
-                Chars,
-                Utf8,
-                Colors,
-                Flags
-            };
-
+            bool operator==(const Line &o) const;
+            bool operator!=(const Line &o) const;
+            i32 indexColumn(i32 stringIndex) const;
+            i32 maxColumn();
+            i32 maxColumn() const;
+            i32 columnIndex(i32 column) const;
+            i32 textSize() const;
+            i32 textSize(u32 index) const;
+            i32 lineTextSize(TrimMode trimMode = TrimMode::TrimNone);
+            i32 stringTextSize(const std::string &str) const;
+            i32 textSizeIndex(float textSize, i32 position);
             LineIterator begin() const;
             LineIterator end() const;
-
-            std::string m_chars;
-            std::string m_colors;
-            std::string m_flags;
-            bool m_colorized = false;
-            i32 m_lineTextSize;
-
-            Line() : m_chars(), m_colors(), m_flags(), m_colorized(false), m_lineTextSize(-1) {}
-            explicit Line(const char *line) { Line(std::string(line)); }
-            explicit Line(const std::string &line) :
-                    m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false), m_lineTextSize(
-                    getLineTextSize()) {}
-            Line(const Line &line) : m_chars(line.m_chars), m_colors(line.m_colors), m_flags(line.m_flags), m_colorized(line.m_colorized), m_lineTextSize(line.m_lineTextSize) {}
-
-            i32 getCharColumn(i32 stringIndex) const;
-            i32 getColumnIndex(i32 column) const;
-            i32 getLineTextSize();
-            i32 getStringTextSize(const std::string &str) const;
             LineIterator begin();
             LineIterator end();
             Line &operator=(const Line &line);
             Line &operator=(Line &&line) noexcept;
             u64 size() const;
+            TextEditor::Line trim(TrimMode trimMode);
             char front(LinePart part = LinePart::Chars) const;
             std::string frontUtf8(LinePart part = LinePart::Chars) const;
             void push_back(char c);
             bool empty() const;
             std::string substr(u64 start, u64 length = (u64) -1, LinePart part = LinePart::Chars) const;
+            Line subLine(u64 start, u64 length = (u64) -1);
             char operator[](u64 index) const;
             // C++ can't overload functions based on return type, so use any type other
             // than u64 to avoid ambiguity.
@@ -370,11 +347,18 @@ namespace hex::ui {
             void insert(LineIterator iter, LineIterator beginLine, LineIterator endLine);
             void erase(LineIterator begin);
             void erase(LineIterator begin, u64 count);
-            void erase(u64 start, u64 length = (u64) -1);
+            void erase(u64 start, i64 length = -1);
             void clear();
             void setLine(const std::string &text);
             void setLine(const Line &text);
             bool needsUpdate() const;
+            bool isEndOfLine(i32 column);
+        private:
+           std::string m_chars;
+           std::string m_colors;
+           std::string m_flags;
+           bool m_colorized = false;
+           i32 m_lineMaxColumn;
         };
 
         using Lines = std::vector<Line>;
@@ -382,9 +366,7 @@ namespace hex::ui {
         struct LanguageDefinition {
             typedef std::pair<std::string, PaletteIndex> TokenRegexString;
             typedef std::vector<TokenRegexString> TokenRegexStrings;
-
-            typedef bool(*TokenizeCallback)(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin,
-                                            strConstIter &out_end, PaletteIndex &paletteIndex);
+            typedef bool(*TokenizeCallback)(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end, PaletteIndex &paletteIndex);
 
             std::string m_name;
             Keywords m_keywords;
@@ -397,11 +379,8 @@ namespace hex::ui {
             TokenRegexStrings m_tokenRegexStrings;
             bool m_caseSensitive;
 
-            LanguageDefinition() : m_name(""), m_keywords({}), m_identifiers({}), m_preprocIdentifiers({}),
-                                   m_singleLineComment(""), m_commentEnd(""),
-                                   m_commentStart(""), m_globalDocComment(""), m_docComment(""), m_blockDocComment(""),
-                                   m_preprocChar('#'), m_autoIndentation(true), m_tokenize(nullptr),
-                                   m_tokenRegexStrings({}), m_caseSensitive(true) {}
+            LanguageDefinition() : m_name(""), m_keywords({}), m_identifiers({}), m_preprocIdentifiers({}), m_singleLineComment(""), m_commentEnd(""), m_commentStart(""), m_globalDocComment(""),
+                                    m_docComment(""), m_blockDocComment(""), m_preprocChar('#'), m_autoIndentation(true), m_tokenize(nullptr), m_tokenRegexStrings({}), m_caseSensitive(true) {}
 
             static const LanguageDefinition &CPlusPlus();
             static const LanguageDefinition &HLSL();
@@ -411,30 +390,29 @@ namespace hex::ui {
             static const LanguageDefinition &AngelScript();
             static const LanguageDefinition &Lua();
         };
+
         TextEditor();
         ~TextEditor();
 
-    private:
         class UndoRecord {
         public:
+            friend class TextEditor;
             UndoRecord() {}
-
             ~UndoRecord() {}
-
             UndoRecord( const std::string &added,
-                        const TextEditor::Selection addedSelection,
+                        const TextEditor::Range addedRange,
                         const std::string &removed,
-                        const TextEditor::Selection removedSelection,
+                        const TextEditor::Range removedRange,
                         TextEditor::EditorState &before,
                         TextEditor::EditorState &after);
 
             void undo(TextEditor *editor);
             void redo(TextEditor *editor);
-
+        private:
             std::string m_added;
-            Selection m_addedSelection;
+            Range m_addedRange;
             std::string m_removed;
-            Selection m_removedSelection;
+            Range m_removedRange;
             EditorState m_before;
             EditorState m_after;
         };
@@ -521,8 +499,8 @@ namespace hex::ui {
         static const Palette &getRetroBluePalette();
         bool isColorizerEnabled() const { return m_colorizerEnabled; }
         const LanguageDefinition &getLanguageDefinition() const { return m_languageDefinition; }
-        void setNeedsUpdate(u32 line, bool needsUpdate);
-        void setColorizedLine(u64 line, const std::string &tokens);
+        void setNeedsUpdate(i32 line, bool needsUpdate);
+        void setColorizedLine(i64 line, const std::string &tokens);
     private:
         void colorizeRange();
         void colorizeInternal();
@@ -558,8 +536,8 @@ namespace hex::ui {
         inline void setHandleKeyboardInputs(bool value) { m_handleKeyboardInputs = value; }
         inline bool isHandleKeyboardInputsEnabled() const { return m_handleKeyboardInputs; }
     private:
-        std::string getText(const Selection &selection);
-        void deleteRange(const Selection &selection);
+        std::string getText(const Range &selection);
+        void deleteRange(const Range &selection);
         i32 insertTextAt(Coordinates &where, const std::string &value);
         void removeLine(i32 start, i32 end);
         void removeLine(i32 index);
@@ -587,7 +565,7 @@ namespace hex::ui {
     private:
         Coordinates setCoordinates(const Coordinates &value);
         Coordinates setCoordinates(i32 line, i32 column);
-        Selection setCoordinates(const Selection &value);
+        Range setCoordinates(const Range &value);
         void advance(Coordinates &coordinates) const;
         Coordinates findWordStart(const Coordinates &from);
         Coordinates findWordEnd(const Coordinates &from);
@@ -596,8 +574,8 @@ namespace hex::ui {
         u32 skipSpaces(const Coordinates &from);
 //Support
     public:
-        void setSelection(const Selection &selection);
-        Selection getSelection() const;
+        void setSelection(const Range &selection);
+        Range getSelection() const;
         void selectWordUnderCursor();
         void selectAll();
         bool hasSelection() const;
@@ -611,7 +589,7 @@ namespace hex::ui {
         inline bool isImGuiChildIgnored() const { return m_ignoreImGuiChild; }
         bool raiseContextMenu() { return m_raiseContextMenu; }
         void clearRaiseContextMenu() { m_raiseContextMenu = false; }
-        TextEditor *GetSourceCodeEditor();
+        TextEditor *getSourceCodeEditor();
         bool isEmpty() const;
     private:
         void addUndo(UndoRecord &value);
@@ -623,17 +601,17 @@ namespace hex::ui {
         static i32 imTextCharToUtf8(char *buffer, i32 buf_size, u32 c);
         static void imTextCharToUtf8(std::string &buffer, u32 c);
         static i32 utf8CharLength(uint8_t c);
-        static i32 getStringCharacterCount(const std::string &str);
+        static i32 stringCharacterCount(const std::string &str);
         static TextEditor::Coordinates stringIndexToCoordinates(i32 strIndex, const std::string &input);
+        i32 lineMaxColumn(i32 lineIndex);
     private:
 
         Coordinates screenPosToCoordinates(const ImVec2 &position);
         Coordinates lineCoordsToIndexCoords(const Coordinates &coordinates) const;
         i32 lineCoordinatesToIndex(const Coordinates &coordinates) const;
         Coordinates getCharacterCoordinates(i32 line, i32 index);
-        i32 getLineCharColumn(i32 lineIndex, i32 stringIndex);
+        i32 lineIndexColumn(i32 lineIndex, i32 stringIndex);
         u64 getLineByteCount(i32 line) const;
-        i32 getLineMaxCharColumn(i32 lineIndex);
 
     public:
         FindReplaceHandler m_findReplaceHandler;
@@ -679,7 +657,7 @@ namespace hex::ui {
         ErrorGotoBoxes m_errorGotoBoxes = {};
         CursorBoxes m_cursorBoxes = {};
         ImVec2 m_charAdvance = {};
-        Selection m_interactiveSelection = {};
+        Range m_interactiveSelection = {};
         u64 m_startTime = 0;
         std::vector<std::string> m_defines;
         TextEditor *m_sourceCodeEditor = nullptr;
@@ -696,6 +674,9 @@ namespace hex::ui {
 
         std::vector<std::string> m_clickableText;
 
+        constexpr static char inComment = 7;
+        inline static const Line m_emptyLine = Line();
+        inline static const Coordinates Invalid = Coordinates(0x80000000, 0x80000000);
         static const i32 s_cursorBlinkInterval;
         static const i32 s_cursorBlinkOnTime;
         static ImVec2 s_cursorScreenPosition;

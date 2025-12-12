@@ -18,8 +18,6 @@
 
 #include <popups/popup_file_chooser.hpp>
 
-#include <ui/text_editor.hpp>
-
 namespace hex::plugin::builtin {
 
     PerProvider<std::string> PopupFind::s_inputString;

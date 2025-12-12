@@ -70,8 +70,7 @@ namespace hex::ui {
     }
 
     float TextEditor::getPageSize() const {
-        auto height = ImGui::GetCurrentWindow()->InnerClipRect.GetHeight();
-        return height / m_charAdvance.y;
+        return ImGui::GetCurrentWindow()->InnerClipRect.GetHeight() / m_charAdvance.y;
     }
 
     bool TextEditor::isEndOfLine() const {
@@ -84,7 +83,7 @@ namespace hex::ui {
 
     bool TextEditor::isEndOfLine(const Coordinates &coordinates) const {
         if (coordinates.m_line < (i32) m_lines.size())
-            return coordinates.m_column >= getStringCharacterCount(m_lines[coordinates.m_line].m_chars);
+            return coordinates.m_column >= stringCharacterCount(m_lines[coordinates.m_line].m_chars);
         return true;
     }
 
@@ -196,49 +195,57 @@ namespace hex::ui {
 
         auto windowPadding = ImGui::GetStyle().FramePadding * 2.0f;
 
-        auto height = ImGui::GetWindowHeight() - m_topMargin - scrollBarSize - m_charAdvance.y;
+        auto height = ImGui::GetWindowHeight() - m_topMargin - scrollBarSize;
         auto width = ImGui::GetWindowWidth() - windowPadding.x - scrollBarSize;
 
-        auto topPixels = m_topMargin > scrollY ? m_topMargin - scrollY : scrollY;
-        auto top = (i32) rint(topPixels / m_charAdvance.y) + 1;
-        top -= (top >= (i32) m_lines.size());
-        auto bottom = (i32) rint((topPixels + height) / m_charAdvance.y);
+        auto top = m_topMargin > scrollY ? m_topMargin - scrollY : scrollY;
+        auto topRow = (i32) rint(top / m_charAdvance.y);
+        auto bottomRow = (i32) rint((top + height) / m_charAdvance.y);
 
-        auto left = (i32) rint(scrollX / m_charAdvance.x);
-        auto right =  (i32) rint((scrollX + width) / m_charAdvance.x);
+        auto leftColumnIndex = (i32) rint(scrollX / m_charAdvance.x);
+        auto rightColumnIndex = (i32) rint((scrollX + width) / m_charAdvance.x);
 
         auto pos = setCoordinates(m_state.m_cursorPosition);
         pos.m_column = (i32) rint(textDistanceToLineStart(pos) / m_charAdvance.x);
+        auto posColumnIndex = (i32) rint(textDistanceToLineStart(pos) / m_charAdvance.x);
+        auto posRow = pos.m_line;
+        bool scrollToCursorX = true;
+        bool scrollToCursorY = true;
 
-        bool mScrollToCursorX = true;
-        bool mScrollToCursorY = true;
+        if ((posRow > topRow && posRow < bottomRow) ||
+            (posRow == topRow && topRow == top  && scrollY == ImGui::GetScrollMaxY()))
+            scrollToCursorY = false;
 
-        if (pos.m_line >= top && pos.m_line <= bottom)
-            mScrollToCursorY = false;
-        if ((pos.m_column >= left) && (pos.m_column <= right))
-            mScrollToCursorX = false;
-        if (!mScrollToCursorX && !mScrollToCursorY && m_oldTopMargin == m_topMargin) {
+        if ((posColumnIndex >= leftColumnIndex) && (posColumnIndex <= rightColumnIndex))
+            scrollToCursorX = false;
+
+        if ((!scrollToCursorX && !scrollToCursorY && m_oldTopMargin == m_topMargin) || pos.m_line < 0) {
             m_scrollToCursor = false;
             return;
         }
 
-        if (mScrollToCursorY) {
-            if (pos.m_line < top) {
-                ImGui::SetScrollY(std::max(0.0f, (pos.m_line - 1) * m_charAdvance.y));
+        if (scrollToCursorY) {
+            if (posRow <= topRow) {
+                if (posRow <= 0) {
+                    ImGui::SetScrollY(0.0f);
+                    m_scrollToCursor = false;
+                    return;
+                }
+                ImGui::SetScrollY((posRow - 1) * m_charAdvance.y);
                 m_scrollToCursor = true;
             }
-            if (pos.m_line > bottom) {
-                ImGui::SetScrollY(std::max(0.0f, pos.m_line * m_charAdvance.y - height));
+            if (posRow >= bottomRow) {
+                ImGui::SetScrollY((posRow + 1) * m_charAdvance.y - height);
                 m_scrollToCursor = true;
             }
         }
-        if (mScrollToCursorX) {
-            if (pos.m_column < left) {
-                ImGui::SetScrollX(std::max(0.0f, pos.m_column * m_charAdvance.x));
+        if (scrollToCursorX) {
+            if (posColumnIndex < leftColumnIndex) {
+                ImGui::SetScrollX(std::max(0.0f, posColumnIndex * m_charAdvance.x));
                 m_scrollToCursor = true;
             }
-            if (pos.m_column > right) {
-                ImGui::SetScrollX(std::max(0.0f, pos.m_column * m_charAdvance.x - width));
+            if (posColumnIndex > rightColumnIndex) {
+                ImGui::SetScrollX(std::max(0.0f, posColumnIndex * m_charAdvance.x - width));
                 m_scrollToCursor = true;
             }
         }
@@ -285,7 +292,8 @@ namespace hex::ui {
                 if (m_state.m_cursorPosition.m_line == lineNo && m_showCursor && focused)
                     renderCursor(lineNo, drawList);
 
-                renderGotoButtons(lineNo);
+                if (!m_showLineNumbers)
+                    renderGotoButtons(lineNo);
 
                 // Render colorized text
 
@@ -298,13 +306,13 @@ namespace hex::ui {
                     continue;
                 }
                 auto colors = m_lines[lineNo].m_colors;
-                auto lineSize = line.getLineTextSize();
+                auto lineSize = line.lineTextSize();
                 i64 colorsSize = std::min((u64)textEditorSize.x, (u64) lineSize);
                 i64 start = ImGui::GetScrollX();
                 i64 textSize = 0;
                 Coordinates head = Coordinates(lineNo, start / m_charAdvance.x);
                 textSize = textDistanceToLineStart(head);
-                auto maxColumn = line.getCharColumn(line.size());
+                auto maxColumn = line.indexColumn(line.size());
                 if (textSize < start) {
                     while (textSize < start && head.m_column < maxColumn) {
                         head.m_column += 1;
@@ -330,8 +338,8 @@ namespace hex::ui {
                     }
                 }
 
-                u64 i = line.getColumnIndex(head.m_column);
-                u64 maxI = line.getColumnIndex(current.m_column);
+                u64 i = line.columnIndex(head.m_column);
+                u64 maxI = line.columnIndex(current.m_column);
                 while (i < maxI) {
                     char color = std::clamp(colors[i], (char) PaletteIndex::Default, (char) ((u8) PaletteIndex::Max - 1));
                     auto index = colors.find_first_not_of(color, i);
@@ -343,7 +351,7 @@ namespace hex::ui {
                     u32 tokenLength = std::clamp((u64) index,(u64) 1, maxI - i);
                     if (m_updateFocus)
                         setFocus();
-                    auto lineStart = setCoordinates(lineNo, line.getCharColumn(i));
+                    auto lineStart = setCoordinates(lineNo, line.indexColumn(i));
 
                     drawText(lineStart, i, tokenLength, color);
 
@@ -398,7 +406,7 @@ namespace hex::ui {
 
     void TextEditor::drawSelection(float lineNo) {
         ImVec2 lineStartScreenPos = s_cursorScreenPosition + ImVec2(m_leftMargin, m_topMargin + std::floor(lineNo) * m_charAdvance.y);
-        Selection lineCoords = Selection(setCoordinates(lineNo, 0), setCoordinates(lineNo, -1));
+        Range lineCoords = Range(setCoordinates(lineNo, 0), setCoordinates(lineNo, -1));
         auto drawList = ImGui::GetWindowDrawList();
 
         if (m_state.m_selection.m_start <= lineCoords.m_end && m_state.m_selection.m_end > lineCoords.m_start) {
@@ -485,6 +493,8 @@ namespace hex::ui {
     }
 
     void TextEditor::renderGotoButtons(float lineNo) {
+        if (isEmpty())
+            return;
         ImVec2 lineStartScreenPos = s_cursorScreenPosition + ImVec2(m_leftMargin, m_topMargin + std::floor(lineNo) * m_charAdvance.y);
         auto lineText = getLineText(lineNo);
         Coordinates gotoKey = setCoordinates(lineNo + 1, 0);
@@ -510,13 +520,13 @@ namespace hex::ui {
                     if (!errorColumn.empty())
                         currColumn = std::stoi(errorColumn) - 1;
                 }
-                TextEditor::Coordinates errorPos = GetSourceCodeEditor()->setCoordinates(currLine, currColumn);
+                TextEditor::Coordinates errorPos = getSourceCodeEditor()->setCoordinates(currLine, currColumn);
                 if (errorPos != Invalid) {
                     ImVec2 errorStart = ImVec2(lineStartScreenPos.x, lineStartScreenPos.y);
                     auto lineEnd = setCoordinates(lineNo, -1);
                     if (lineEnd != Invalid) {
                         ImVec2 errorEnd = ImVec2(lineStartScreenPos.x + textDistanceToLineStart(lineEnd), lineStartScreenPos.y + m_charAdvance.y);
-                        ErrorGotoBox box = ErrorGotoBox(ImRect({errorStart, errorEnd}), errorPos, GetSourceCodeEditor());
+                        ErrorGotoBox box = ErrorGotoBox(ImRect({errorStart, errorEnd}), errorPos, getSourceCodeEditor());
                         m_errorGotoBoxes[gotoKey] = box;
                         CursorChangeBox cursorBox = CursorChangeBox(ImRect({errorStart, errorEnd}));
                         m_cursorBoxes[gotoKey] = cursorBox;
@@ -621,16 +631,10 @@ namespace hex::ui {
     }
 
     float TextEditor::textDistanceToLineStart(const Coordinates &aFrom) {
-        auto &line = m_lines[aFrom.m_line];
-        i32 colIndex = lineCoordinatesToIndex(aFrom);
-        auto substr1 = line.m_chars.substr(0, colIndex);
-        auto substr2 =line.m_chars.substr(colIndex, line.m_chars.size() - colIndex);
-        if (substr2.size() < substr1.size()) {
-            auto distanceToEnd = line.getStringTextSize(substr2.c_str());
-            line.m_lineTextSize = line.getLineTextSize();
-            return line.m_lineTextSize - distanceToEnd;
-        }
+        auto line = m_lines[aFrom.m_line];
+        if (line.empty() || aFrom.m_column == 0)
+            return 0.0f;
 
-        return line.getStringTextSize(substr1.c_str());
+        return line.textSize(line.columnIndex(aFrom.m_column));
     }
 }

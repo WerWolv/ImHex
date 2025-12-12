@@ -43,7 +43,6 @@
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
 #include <pl/patterns/pattern.hpp>
 #include <hex/helpers/menu_items.hpp>
-#include <ui/text_editor.hpp>
 #include <wolv/literals.hpp>
 
 using namespace std::literals::string_literals;

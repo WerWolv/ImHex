@@ -3,8 +3,6 @@
 
 #include <hex/api/content_registry/settings.hpp>
 
-#include <ui/text_editor.hpp>
-
 namespace hex::plugin::builtin {
 
     PopupPasteBehaviour::PopupPasteBehaviour(const Region &selection, const std::function<void(const Region &selection, bool selectionCheck)> &pasteCallback) 

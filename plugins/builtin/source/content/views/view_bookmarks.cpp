@@ -20,6 +20,7 @@
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
+#include "imgui_internal.h"
 
 namespace hex::plugin::builtin {
 
