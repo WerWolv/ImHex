@@ -156,8 +156,8 @@ namespace hex::plugin::builtin {
         PerProvider<ui::TextEditor::Coordinates> m_consoleCursorPosition;
         PerProvider<bool> m_cursorNeedsUpdate;
         PerProvider<bool> m_consoleCursorNeedsUpdate;
-        PerProvider<ui::TextEditor::Selection> m_selection;
-        PerProvider<ui::TextEditor::Selection> m_consoleSelection;
+        PerProvider<ui::TextEditor::Range> m_selection;
+        PerProvider<ui::TextEditor::Range> m_consoleSelection;
         PerProvider<size_t> m_consoleLongestLineLength;
         PerProvider<ui::TextEditor::Breakpoints> m_breakpoints;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;

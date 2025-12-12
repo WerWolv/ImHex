@@ -1247,7 +1247,7 @@ namespace hex::plugin::builtin {
                 if (isLocationValid(error.getLocation())) {
                     auto key = ui::TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
 
-                    if (!errorMarkers.contains(key) || errorMarkers[key].first < error.getLocation().length)
+                    if (!errorMarkers.contains(key) || errorMarkers[key].first < (i32) error.getLocation().length)
                         errorMarkers[key] = std::make_pair(error.getLocation().length, processMessage(error.getMessage()));
                 }
             }
