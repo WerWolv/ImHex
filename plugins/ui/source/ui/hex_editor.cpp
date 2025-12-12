@@ -782,6 +782,7 @@ namespace hex::ui {
                         auto byteCellSize = (CharacterSize * ImVec2(maxCharsPerCell, 1)) + (ImVec2(2, 2) * ImGui::GetStyle().CellPadding) + scaled(ImVec2(1 + m_byteCellPadding, 0));
                         byteCellSize = ImVec2(std::ceil(byteCellSize.x), std::ceil(byteCellSize.y));
 
+                        std::optional<float> prevEndPosX;
                         for (u64 x = 0; x < columnCount; x++) {
                             const u64 byteAddress = y * bytesPerRow + x * bytesPerCell + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
@@ -794,6 +795,7 @@ namespace hex::ui {
 
                             if (x < std::ceil(float(validBytes) / bytesPerCell)) {
                                 auto cellStartPos = getCellPosition();
+
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
 
                                 auto adjustedCellSize = byteCellSize;
@@ -808,6 +810,13 @@ namespace hex::ui {
                                     adjustedCellSize.y -= (ImGui::GetStyle().CellPadding.y);
 
                                 backgroundColor = applySelectionColor(byteAddress, backgroundColor);
+
+                                if (prevEndPosX.has_value()) {
+                                    adjustedCellSize.x += cellStartPos.x - prevEndPosX.value();
+                                    cellStartPos.x = prevEndPosX.value();
+                                }
+
+                                prevEndPosX = cellStartPos.x + adjustedCellSize.x;
 
                                 // Draw highlights and selection
                                 if (backgroundColor.has_value()) {
