@@ -36,3 +36,26 @@ namespace hex::trace {
     }
 
 #endif
+
+#if defined(HEX_WRAP_GLIBCXX_ASSERT_FAIL)
+
+extern "C" {
+
+    [[noreturn]] void __wrap__ZSt21__glibcxx_assert_failPKciS0_S0_(const char* file, int line, const char* function, const char* condition) {
+        if (file != nullptr && function != nullptr && condition != nullptr) {
+            fprintf(stderr, "Assertion failed (glibc++): (%s), function %s, file %s, line %d.\n", condition, function, file, line);
+        } else if (function != nullptr) {
+            fprintf(stderr, "%s: Undefined behavior detected (glibc++).\n", function);
+        }
+
+        auto stackTrace = hex::trace::getStackTrace();
+        for (const auto &entry : stackTrace.stackFrames) {
+            fprintf(stderr, "  %s at %s:%d\n", entry.function.c_str(), entry.file.c_str(), entry.line);
+        }
+
+        std::terminate();
+    }
+
+}
+
+#endif
