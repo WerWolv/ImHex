@@ -834,6 +834,7 @@
     "hex.builtin.view.hex_editor.menu.edit.paste.popup.button.selection": "仅覆盖选区",
     "hex.builtin.view.hex_editor.menu.edit.paste_all": "粘贴全部",
     "hex.builtin.view.hex_editor.menu.edit.paste_all_string": "全部作为字符串粘贴",
+    "hex.builtin.view.hex_editor.menu.edit.paste_all_decoded_base64_string":"粘贴所有内容为解码后的Base64字符串",
     "hex.builtin.view.hex_editor.menu.edit.remove": "删除……",
     "hex.builtin.view.hex_editor.menu.edit.resize": "修改大小……",
     "hex.builtin.view.hex_editor.menu.edit.select_all": "全选",
