@@ -2246,7 +2246,7 @@ namespace hex::plugin::builtin {
 
 
 // Only update if needed. Must wait for the parser to finish first.
-    void TextHighlighter::highlightSourceCode() {
+    void TextHighlighter::highlightSourceCode(const std::string& text) {
         m_wasInterrupted = false;
         ON_SCOPE_EXIT {
             if (!m_tokenColors.empty())
@@ -2298,10 +2298,7 @@ namespace hex::plugin::builtin {
             m_globalTokenRange.insert(Interval(0, m_tokens.size()-1));
 
             ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
-            if (editor != nullptr)
-                m_text = editor->getText();
-            else
-                log::warn("Text editor not found, provider is null");
+            m_text = text;
 
             if (m_text.empty() || m_text == "\n")
                 return;
