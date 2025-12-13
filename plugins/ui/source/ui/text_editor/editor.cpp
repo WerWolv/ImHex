@@ -80,9 +80,14 @@ namespace hex::ui {
             m_lines[0].m_chars = text;
             m_lines[0].m_colors = std::string(text.size(), 0);
             m_lines[0].m_flags = std::string(text.size(), 0);
-        } else
+            m_lines[0].m_lineMaxColumn = -1;
+            m_lines[0].m_lineMaxColumn = m_lines[0].maxColumn();
+        } else {
             m_lines.push_back(Line(text));
-
+            auto &line = m_lines.back();
+            line.m_lineMaxColumn = -1;
+            line.m_lineMaxColumn = line.maxColumn();
+        }
         setCursorPosition(setCoordinates((i32) m_lines.size() - 1, 0));
         m_lines.back().m_colorized = false;
         ensureCursorVisible();
@@ -129,23 +134,26 @@ namespace hex::ui {
     }
 
     void TextEditor::removeLine(i32 lineStart, i32 lineEnd) {
+        ErrorMarkers errorMarkers;
+        for (auto &errorMarker : m_errorMarkers) {
+            if (errorMarker.first.m_line <= lineStart || errorMarker.first.m_line > lineEnd + 1) {
+                if (errorMarker.first.m_line >= lineEnd + 1) {
+                    auto newRow = errorMarker.first.m_line - (lineEnd - lineStart + 1);
+                    auto newCoord = setCoordinates(newRow, errorMarker.first.m_column);
+                    errorMarkers.insert(ErrorMarkers::value_type(newCoord, errorMarker.second));
+                } else
+                    errorMarkers.insert(errorMarker);
+            }
+        }
+        m_errorMarkers = std::move(errorMarkers);
 
-        ErrorMarkers errorMarker;
         u32 uLineStart = static_cast<u32>(lineStart);
         u32 uLineEnd = static_cast<u32>(lineEnd);
-        for (auto &i: m_errorMarkers) {
-            ErrorMarkers::value_type e(i.first.m_line >= lineStart ? setCoordinates(i.first.m_line - 1, i.first.m_column) : i.first, i.second);
-            if (e.first.m_line >= lineStart && e.first.m_line <= lineEnd)
-                continue;
-            errorMarker.insert(e);
-        }
-        m_errorMarkers = std::move(errorMarker);
-
         Breakpoints breakpoints;
-        for (auto breakpoint: m_breakpoints) {
-            if (breakpoint <= uLineStart || breakpoint >= uLineEnd) {
-                if (breakpoint >= uLineEnd) {
-                    breakpoints.insert(breakpoint - 1);
+        for (auto breakpoint : m_breakpoints) {
+            if (breakpoint <= uLineStart || breakpoint > uLineEnd + 1) {
+                if (breakpoint > uLineEnd + 1) {
+                    breakpoints.insert(breakpoint - (uLineEnd - uLineStart + 1));
                     m_breakPointsChanged = true;
                 } else
                     breakpoints.insert(breakpoint);
@@ -190,10 +198,18 @@ namespace hex::ui {
         TextEditor::Line &result = *m_lines.insert(m_lines.begin() + index, newLine);
         result.m_colorized = false;
 
-        ErrorMarkers errorMarker;
-        for (auto &i: m_errorMarkers)
-            errorMarker.insert(ErrorMarkers::value_type(i.first.m_line >= index ? setCoordinates(i.first.m_line + 1, i.first.m_column) : i.first, i.second));
-        m_errorMarkers = std::move(errorMarker);
+        ErrorMarkers errorMarkers;
+        bool errorMarkerChanged = false;
+        for (auto &errorMarker : m_errorMarkers) {
+            if (errorMarker.first.m_line > index) {
+                auto newCoord = setCoordinates(errorMarker.first.m_line + 1, errorMarker.first.m_column);
+                errorMarkers.insert(ErrorMarkers::value_type(newCoord, errorMarker.second));
+                errorMarkerChanged = true;
+            } else
+                errorMarkers.insert(errorMarker);
+        }
+        if (errorMarkerChanged)
+            m_errorMarkers = std::move(errorMarkers);
 
         Breakpoints breakpoints;
         for (auto breakpoint: m_breakpoints) {
@@ -231,6 +247,8 @@ namespace hex::ui {
             for (auto line: vectorString) {
                 m_lines[i].setLine(line);
                 m_lines[i].m_colorized = false;
+                m_lines[i].m_lineMaxColumn = -1;
+                m_lines[i].m_lineMaxColumn = m_lines[i].maxColumn();
                 i++;
             }
         }
@@ -245,8 +263,9 @@ namespace hex::ui {
         m_scrollToTop = true;
         if (!m_readOnly && undo) {
             u.m_after = m_state;
-
-            addUndo(u);
+            UndoRecords v;
+            v.push_back(u);
+            addUndo(v);
         }
 
         colorize();
@@ -325,7 +344,9 @@ namespace hex::ui {
                     u.m_after = m_state;
 
                     m_state.m_selection = Range(start, end);
-                    addUndo(u);
+                    std::vector<UndoRecord> v;
+                    v.push_back(u);
+                    addUndo(v);
 
                     m_textChanged = true;
 
@@ -464,7 +485,9 @@ namespace hex::ui {
         u.m_after = m_state;
         m_textChanged = true;
 
-        addUndo(u);
+        UndoRecords v;
+        v.push_back(u);
+        addUndo(v);
         colorize();
         refreshSearchResults();
         ensureCursorVisible();
@@ -558,7 +581,9 @@ namespace hex::ui {
         }
 
         u.m_after = m_state;
-        addUndo(u);
+        UndoRecords v;
+        v.push_back(u);
+        addUndo(v);
         refreshSearchResults();
     }
 
@@ -641,7 +666,9 @@ namespace hex::ui {
         }
 
         u.m_after = m_state;
-        addUndo(u);
+        UndoRecords v;
+        v.push_back(u);
+        addUndo(v);
         refreshSearchResults();
     }
 
@@ -677,7 +704,9 @@ namespace hex::ui {
             deleteSelection();
 
             u.m_after = m_state;
-            addUndo(u);
+            std::vector<UndoRecord> v;
+            v.push_back(u);
+            addUndo(v);
         }
         refreshSearchResults();
     }
@@ -701,7 +730,9 @@ namespace hex::ui {
 
             u.m_addedRange.m_end = setCoordinates(m_state.m_cursorPosition);
             u.m_after = m_state;
-            addUndo(u);
+            UndoRecords v;
+            v.push_back(u);
+            addUndo(v);
         }
         refreshSearchResults();
     }
@@ -731,21 +762,26 @@ namespace hex::ui {
         return !m_readOnly && m_undoIndex < (i32) m_undoBuffer.size();
     }
 
-    void TextEditor::undo(i32 steps) {
-        while (canUndo() && steps-- > 0)
-            m_undoBuffer[--m_undoIndex].undo(this);
+    void TextEditor::undo() {
+        if (canUndo()) {
+            m_undoIndex--;
+            m_undoBuffer[m_undoIndex].undo(this);
+        }
         refreshSearchResults();
     }
 
-    void TextEditor::redo(i32 steps) {
-        while (canRedo() && steps-- > 0)
-            m_undoBuffer[m_undoIndex++].redo(this);
+    void TextEditor::redo() {
+        if (canRedo()) {
+            m_undoBuffer[m_undoIndex].redo(this);
+            m_undoIndex++;
+        }
         refreshSearchResults();
     }
 
     std::string TextEditor::getText()  {
         auto start = setCoordinates(0, 0);
-        auto end = setCoordinates(-1, -1);
+        auto size = m_lines.size();
+        auto end = setCoordinates(-1, m_lines[size - 1].m_lineMaxColumn);
         if (start == Invalid || end == Invalid)
             return "";
         return getText(Range(start, end));
@@ -778,11 +814,11 @@ namespace hex::ui {
 
     TextEditor::UndoRecord::UndoRecord(
             const std::string &added,
-            const TextEditor::Range addedSelection,
+            const TextEditor::Range addedRange,
             const std::string &removed,
-            const TextEditor::Range removedSelection,
+            const TextEditor::Range removedRange,
             TextEditor::EditorState &before,
-            TextEditor::EditorState &after) : m_added(added), m_addedRange(addedSelection), m_removed(removed), m_removedRange(removedSelection), m_before(before), m_after(after) {}
+            TextEditor::EditorState &after) : m_added(added), m_addedRange(addedRange), m_removed(removed), m_removedRange(removedRange), m_before(before), m_after(after) {}
 
     void TextEditor::UndoRecord::undo(TextEditor *editor) {
         if (!m_added.empty()) {
@@ -814,7 +850,16 @@ namespace hex::ui {
 
         editor->m_state = m_after;
         editor->ensureCursorVisible();
+    }
 
+    void TextEditor::UndoAction::undo(TextEditor *editor) {
+        for (i32 i = (i32) m_records.size() - 1; i >= 0; i--)
+            m_records.at(i).undo(editor);
+    }
+
+    void TextEditor::UndoAction::redo(TextEditor *editor) {
+        for (i32 i = 0; i < (i32) m_records.size(); i++)
+            m_records.at(i).redo(editor);
     }
 
 }

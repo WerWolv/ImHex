@@ -19,7 +19,7 @@ namespace hex::ui {
 
     void TextEditor::jumpToCoords(const Coordinates &coords) {
         setSelection(Range(coords, coords));
-        setCursorPosition(coords);
+        setCursorPosition(coords, true);
         ensureCursorVisible();
 
         setFocusAtCoords(coords, true);
@@ -203,7 +203,7 @@ namespace hex::ui {
     void TextEditor::moveTop(bool select) {
         resetCursorBlinkTime();
         auto oldPos = m_state.m_cursorPosition;
-        setCursorPosition(setCoordinates(0, 0));
+        setCursorPosition(setCoordinates(0, 0), false);
 
         if (m_state.m_cursorPosition != oldPos) {
             if (select) {
@@ -218,7 +218,7 @@ namespace hex::ui {
         resetCursorBlinkTime();
         auto oldPos = getCursorPosition();
         auto newPos = setCoordinates(-1, -1);
-        setCursorPosition(newPos);
+        setCursorPosition(newPos, false);
         if (select) {
             m_interactiveSelection = Range(oldPos, newPos);
         } else
@@ -315,10 +315,33 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::setCursorPosition(const Coordinates &position) {
+    void TextEditor::setScroll(ImVec2 scroll) {
+        if (!m_withinRender) {
+            m_scroll = scroll;
+            m_setScroll = true;
+            return;
+        } else {
+            m_setScroll = false;
+            ImGui::SetScrollX(scroll.x);
+            ImGui::SetScrollY(scroll.y);
+            //m_updateFocus = true;
+        }
+    }
+
+    void TextEditor::setFocusAtCoords(const Coordinates &coords, bool scrollToCursor) {
+        m_focusAtCoords = coords;
+        m_state.m_cursorPosition = coords;
+        m_updateFocus = true;
+        m_scrollToCursor = scrollToCursor;
+    }
+
+
+        void TextEditor::setCursorPosition(const Coordinates &position, bool scrollToCursor) {
         if (m_state.m_cursorPosition != position) {
             m_state.m_cursorPosition = position;
-            ensureCursorVisible();
+            m_scrollToCursor = scrollToCursor;
+            if (scrollToCursor)
+                ensureCursorVisible();
         }
     }
 
