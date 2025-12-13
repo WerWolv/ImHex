@@ -64,6 +64,7 @@ namespace hex::plugin::builtin {
         void convertToDirectAccess();
 
     private:
+        void fileChangedCallback();
         void handleFileChange();
 
         bool open(bool memoryMapped);
