@@ -114,23 +114,23 @@ namespace hex::ui {
             Coordinates m_cursorPosition;
         };
 
+        class UndoRecord;
+        class UndoAction;
+        using UndoBuffer = std::vector<UndoAction>;
+        using UndoRecords = std::vector<UndoRecord>;
+
         class FindReplaceHandler {
         public:
             FindReplaceHandler();
             using Matches = std::vector<EditorState>;
             Matches &getMatches() { return m_matches; }
-            bool findNext(TextEditor *editor);
+            bool findNext(TextEditor *editor, u64 &byteIndex);
             u32 findMatch(TextEditor *editor, i32 index);
             bool replace(TextEditor *editor, bool right);
             bool replaceAll(TextEditor *editor);
             std::string &getFindWord() { return m_findWord; }
 
-            void setFindWord(TextEditor *editor, const std::string &findWord) {
-                if (findWord != m_findWord) {
-                    findAllMatches(editor, findWord);
-                    m_findWord = findWord;
-                }
-            }
+            void setFindWord(TextEditor *editor, const std::string &findWord);
 
             std::string &getReplaceWord() { return m_replaceWord; }
             void setReplaceWord(const std::string &replaceWord) { m_replaceWord = replaceWord; }
@@ -139,37 +139,16 @@ namespace hex::ui {
             u32 findPosition(TextEditor *editor, Coordinates pos, bool isNext);
             bool getMatchCase() const { return m_matchCase; }
 
-            void setMatchCase(TextEditor *editor, bool matchCase) {
-                if (matchCase != m_matchCase) {
-                    m_matchCase = matchCase;
-                    m_optionsChanged = true;
-                    findAllMatches(editor, m_findWord);
-                }
-            }
+            void setMatchCase(TextEditor *editor, bool matchCase);
 
             bool getWholeWord() const { return m_wholeWord; }
-            void setWholeWord(TextEditor *editor, bool wholeWord) {
-                if (wholeWord != m_wholeWord) {
-                    m_wholeWord = wholeWord;
-                    m_optionsChanged = true;
-                    findAllMatches(editor, m_findWord);
-                }
-            }
+            void setWholeWord(TextEditor *editor, bool wholeWord);
 
             bool getFindRegEx() const { return m_findRegEx; }
-            void setFindRegEx(TextEditor *editor, bool findRegEx) {
-                if (findRegEx != m_findRegEx) {
-                    m_findRegEx = findRegEx;
-                    m_optionsChanged = true;
-                    findAllMatches(editor, m_findWord);
-                }
-            }
+            void setFindRegEx(TextEditor *editor, bool findRegEx);
 
-            void resetMatches() {
-                m_matches.clear();
-                m_findWord = "";
-            }
-
+            void resetMatches();
+            UndoRecords m_undoBuffer;
         private:
             std::string m_findWord;
             std::string m_replaceWord;
@@ -299,7 +278,7 @@ namespace hex::ui {
             enum class LinePart { Chars, Utf8, Colors, Flags };
 
             Line() : m_chars(""), m_colors(""), m_flags(""), m_colorized(false), m_lineMaxColumn(-1) {}
-            explicit Line(const char *line) { Line(std::string(line)); }
+            explicit Line(const char *line) : Line(std::string(line)) {}
             explicit Line(const std::string &line) : m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false), m_lineMaxColumn(maxColumn()) {}
             Line(const Line &line) : m_chars(std::string(line.m_chars)), m_colors(std::string(line.m_colors)), m_flags(std::string(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
             Line(Line &&line) noexcept : m_chars(std::move(line.m_chars)), m_colors(std::move(line.m_colors)), m_flags(std::move(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
@@ -400,11 +379,11 @@ namespace hex::ui {
             UndoRecord() {}
             ~UndoRecord() {}
             UndoRecord( const std::string &added,
-                        const TextEditor::Range addedRange,
+                        const Range addedRange,
                         const std::string &removed,
-                        const TextEditor::Range removedRange,
-                        TextEditor::EditorState &before,
-                        TextEditor::EditorState &after);
+                        const Range removedRange,
+                        EditorState &before,
+                        EditorState &after);
 
             void undo(TextEditor *editor);
             void redo(TextEditor *editor);
@@ -417,7 +396,18 @@ namespace hex::ui {
             EditorState m_after;
         };
 
-        typedef std::vector<UndoRecord> UndoBuffer;
+        class UndoAction {
+        public:
+            UndoAction() {}
+            ~UndoAction() {}
+            explicit UndoAction(const UndoRecords &records) : m_records(records) {}
+            void undo(TextEditor *editor);
+            void redo(TextEditor *editor);
+        private:
+            UndoRecords m_records;
+        };
+
+
 
         struct MatchedBracket {
             bool m_active = false;
@@ -511,8 +501,8 @@ namespace hex::ui {
         void backspace();
         bool canUndo();
         bool canRedo() const;
-        void undo(i32 steps = 1);
-        void redo(i32 steps = 1);
+        void undo();
+        void redo();
         void copy();
         void cut();
         void paste();
@@ -559,8 +549,10 @@ namespace hex::ui {
         void moveEnd(bool select = false);
         void moveToMatchedBracket(bool select = false);
         void setScrollY();
+        void setScroll(ImVec2 scroll);
+        ImVec2 getScroll() const { return m_scroll; }
         Coordinates getCursorPosition()  { return setCoordinates(m_state.m_cursorPosition); }
-        void setCursorPosition(const Coordinates &position);
+        void setCursorPosition(const Coordinates &position, bool scrollToCursor = true);
         void setCursorPosition();
     private:
         Coordinates setCoordinates(const Coordinates &value);
@@ -591,8 +583,8 @@ namespace hex::ui {
         void clearRaiseContextMenu() { m_raiseContextMenu = false; }
         TextEditor *getSourceCodeEditor();
         bool isEmpty() const;
+        void addUndo(UndoRecords &value);
     private:
-        void addUndo(UndoRecord &value);
         TextEditor::PaletteIndex getColorIndexFromFlags(Line::Flags flags);
         void handleKeyboardInputs();
         void handleMouseInputs();
@@ -662,7 +654,9 @@ namespace hex::ui {
         std::vector<std::string> m_defines;
         TextEditor *m_sourceCodeEditor = nullptr;
         float m_shiftedScrollY = 0;
+        ImVec2 m_scroll=ImVec2(0, 0);
         float m_scrollYIncrement = 0.0F;
+        bool m_setScroll = false;
         bool m_setScrollY = false;
         float m_numberOfLinesDisplayed = 0;
         float m_lastClick = -1.0F;

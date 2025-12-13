@@ -537,13 +537,13 @@ namespace hex::ui {
         return !isEmpty() && m_state.m_selection.m_end > m_state.m_selection.m_start;
     }
 
-    void TextEditor::addUndo(UndoRecord &value) {
+    void TextEditor::addUndo(UndoRecords &value) {
         if (m_readOnly)
             return;
 
         m_undoBuffer.resize((u64) (m_undoIndex + 1));
-        m_undoBuffer.back() = value;
-        ++m_undoIndex;
+        m_undoBuffer.back() = UndoAction(value);
+        m_undoIndex++;
     }
 
     TextEditor::PaletteIndex TextEditor::getColorIndexFromFlags(Line::Flags flags) {
@@ -711,7 +711,7 @@ namespace hex::ui {
         i32 count = m_matches.size();
 
         if (count == 0) {
-            editor->setCursorPosition(targetPos);
+            editor->setCursorPosition(targetPos, true);
             return 0;
         }
 
@@ -723,7 +723,7 @@ namespace hex::ui {
                     break;
                 }
             }
-            if (matchIndex >= 0 && matchIndex <count) {
+            if (matchIndex >= 0 && matchIndex < count) {
                 while (matchIndex + index < 0)
                     index += count;
                 auto rem = (matchIndex + index) % count;
@@ -804,17 +804,98 @@ namespace hex::ui {
         return out;
     }
 
+    void FindReplaceHandler::setFindWord(TextEditor *editor, const std::string &findWord) {
+        if (findWord != m_findWord) {
+            findAllMatches(editor, findWord);
+            m_findWord = findWord;
+        }
+    }
+
+    void FindReplaceHandler::setMatchCase(TextEditor *editor, bool matchCase) {
+        if (matchCase != m_matchCase) {
+            m_matchCase = matchCase;
+            m_optionsChanged = true;
+            findAllMatches(editor, m_findWord);
+        }
+    }
+
+    void FindReplaceHandler::setWholeWord(TextEditor *editor, bool wholeWord) {
+        if (wholeWord != m_wholeWord) {
+            m_wholeWord = wholeWord;
+            m_optionsChanged = true;
+            findAllMatches(editor, m_findWord);
+        }
+    }
+
+
+    void FindReplaceHandler::setFindRegEx(TextEditor *editor, bool findRegEx) {
+        if (findRegEx != m_findRegEx) {
+            m_findRegEx = findRegEx;
+            m_optionsChanged = true;
+            findAllMatches(editor, m_findWord);
+        }
+    }
+
+    void FindReplaceHandler::resetMatches() {
+        m_matches.clear();
+        m_findWord = "";
+    }
+/*
+    void TextEditor::computeLPSArray(const std::string &pattern, std::vector<i32> & lps) {
+        i32 length = 0; // length of the previous longest prefix suffix
+        i32 i = 1;
+        lps[0] = 0; // lps[0] is always 0
+        i32 patternLength = pattern.length();
+
+        while (i < patternLength) {
+            if (pattern[i] == pattern[length]) {
+                length++;
+                lps[i] = length;
+                i++;
+            } else {
+                if (length != 0)
+                    length = lps[length - 1];
+                else {
+                    lps[i] = 0;
+                    i++;
+                }
+            }
+        }
+    }
+
+    std::vector<i32> TextEditor::KMPSearch(const std::string& text, const std::string& pattern) {
+        i32 textLength = text.length();
+        i32 patternLength = pattern.length();
+        std::vector<i32> result;
+        std::vector<i32> lps(patternLength);
+        computeLPSArray(pattern, lps);
+
+        i32 textIndex = 0;
+        i32 patternIndex = 0;
+
+        while (textIndex < textLength) {
+            if (pattern[patternIndex] == text[textIndex]) {
+                textIndex++;
+                patternIndex++;
+            }
+
+            if (patternIndex == patternLength) {
+                result.push_back(textIndex - patternIndex);
+                patternIndex = lps[patternIndex - 1];
+            } else if (textIndex < textLength && pattern[patternIndex] != text[textIndex]) {
+                if (patternIndex != 0)
+                    patternIndex = lps[patternIndex - 1];
+                else
+                    textIndex++;
+            }
+        }
+        return result;
+    }*/
+
 // Performs actual search to fill mMatches
-    bool FindReplaceHandler::findNext(TextEditor *editor) {
-        Coordinates curPos = m_matches.empty() ? editor->m_state.m_cursorPosition : editor->lineCoordsToIndexCoords(m_matches.back().m_cursorPosition);
+    bool FindReplaceHandler::findNext(TextEditor *editor, u64 &byteIndex) {
 
-        u64 matchLength = stringCharacterCount(m_findWord);
         u64 matchBytes = m_findWord.size();
-        u64 byteIndex = 0;
-
-        for (i64 ln = 0; ln < curPos.m_line; ln++)
-            byteIndex += editor->getLineByteCount(ln) + 1;
-        byteIndex += curPos.m_column;
 
         std::string wordLower = m_findWord;
         if (!getMatchCase())
@@ -854,16 +935,14 @@ namespace hex::ui {
             if (!iter->ready())
                 return false;
             u64 firstLoc = iter->position();
-            u64 firstLength = iter->length();
 
             if (firstLoc > byteIndex) {
                 pos = firstLoc;
-                matchLength = firstLength;
             } else {
 
                 while (iter != end) {
                     iter++;
-                    if (((pos = iter->position()) > byteIndex) && ((matchLength = iter->length()) > 0))
+                    if (((pos = iter->position()) > byteIndex))
                         break;
                 }
             }
@@ -875,15 +954,16 @@ namespace hex::ui {
         } else {
             // non regex search
             textLoc = textSrc.find(wordLower, byteIndex);
-            if (textLoc == std::string::npos)
-                return false;
         }
         if (textLoc == std::string::npos)
             return false;
         TextEditor::EditorState state;
         state.m_selection = Range(TextEditor::stringIndexToCoordinates(textLoc, textSrc), TextEditor::stringIndexToCoordinates(textLoc + matchBytes, textSrc));
         state.m_cursorPosition = state.m_selection.m_end;
+        if (!m_matches.empty() && state == m_matches.back())
+            return false;
         m_matches.push_back(state);
+        byteIndex = textLoc + 1;
         return true;
     }
 
@@ -902,6 +982,7 @@ namespace hex::ui {
         if (m_optionsChanged)
             m_optionsChanged = false;
 
+        u64 byteIndex = 0;
         m_matches.clear();
         m_findWord = findWord;
         auto startingPos = editor->m_state.m_cursorPosition;
@@ -909,7 +990,7 @@ namespace hex::ui {
         Coordinates begin = editor->setCoordinates(0, 0);
         editor->m_state.m_cursorPosition = begin;
 
-        if (!findNext(editor)) {
+        if (!findNext(editor, byteIndex)) {
             editor->m_state = saveState;
             editor->ensureCursorVisible();
             return;
@@ -917,7 +998,7 @@ namespace hex::ui {
         TextEditor::EditorState state = m_matches.back();
 
         while (state.m_cursorPosition < startingPos) {
-            if (!findNext(editor)) {
+            if (!findNext(editor, byteIndex)) {
                 editor->m_state = saveState;
                 editor->ensureCursorVisible();
                 return;
@@ -925,7 +1006,7 @@ namespace hex::ui {
             state = m_matches.back();
         }
 
-        while (findNext(editor));
+        while (findNext(editor, byteIndex));
 
         editor->m_state = saveState;
         editor->ensureCursorVisible();
@@ -972,7 +1053,7 @@ namespace hex::ui {
             ImGui::SetKeyboardFocusHere(0);
 
             u.m_after = editor->m_state;
-            editor->addUndo(u);
+            m_undoBuffer.push_back(u);
             editor->m_textChanged = true;
 
             return true;
@@ -983,10 +1064,11 @@ namespace hex::ui {
 
     bool FindReplaceHandler::replaceAll(TextEditor *editor) {
         u32 count = m_matches.size();
-
+        m_undoBuffer.clear();
         for (u32 i = 0; i < count; i++)
             replace(editor, true);
 
+        editor->addUndo(m_undoBuffer);
         return true;
     }
 }
