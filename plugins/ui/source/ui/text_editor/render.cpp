@@ -19,12 +19,6 @@ namespace hex::ui {
         m_topMarginChanged = true;
     }
 
-    void TextEditor::setFocusAtCoords(const Coordinates &coords, bool scrollToCursor) {
-        m_focusAtCoords = coords;
-        m_updateFocus = true;
-        m_scrollToCursor = scrollToCursor;
-    }
-
     void TextEditor::clearErrorMarkers() {
         m_errorMarkers.clear();
         m_errorHoverBoxes.clear();
@@ -140,8 +134,6 @@ namespace hex::ui {
         bool scroll_x = m_longestLineLength * m_charAdvance.x >= textEditorSize.x;
 
         bool scroll_y = m_lines.size() > 1;
-        if (!border)
-            textEditorSize.x -= scrollBarSize;
         ImGui::SetCursorScreenPos(ImVec2(position.x + m_lineNumberFieldWidth, position.y));
         ImGuiChildFlags childFlags = border ? ImGuiChildFlags_Borders : ImGuiChildFlags_None;
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
@@ -262,9 +254,16 @@ namespace hex::ui {
         auto drawList = ImGui::GetWindowDrawList();
         s_cursorScreenPosition = ImGui::GetCursorScreenPos();
         ImVec2 position = lineNumbersStartPos;
-        if (m_setScrollY)
-            setScrollY();
-        auto scrollY = ImGui::GetScrollY();
+        float scrollY;
+        if (m_setScroll) {
+            setScroll(m_scroll);
+            scrollY = m_scroll.y;
+        } else {
+            scrollY = ImGui::GetScrollY();
+            float scrollX = ImGui::GetScrollX();
+            m_scroll = ImVec2(scrollX, scrollY);
+        }
+
         if (m_setTopLine)
             setTopLine();
         else

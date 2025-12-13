@@ -153,10 +153,10 @@ namespace hex::plugin::builtin {
         std::mutex m_logMutex;
 
         PerProvider<ui::TextEditor::Coordinates>  m_cursorPosition;
+        PerProvider<ImVec2> m_scroll;
+        PerProvider<ImVec2> m_consoleScroll;
 
         PerProvider<ui::TextEditor::Coordinates> m_consoleCursorPosition;
-        PerProvider<bool> m_cursorNeedsUpdate;
-        PerProvider<bool> m_consoleCursorNeedsUpdate;
         PerProvider<ui::TextEditor::Range> m_selection;
         PerProvider<ui::TextEditor::Range> m_consoleSelection;
         PerProvider<size_t> m_consoleLongestLineLength;
