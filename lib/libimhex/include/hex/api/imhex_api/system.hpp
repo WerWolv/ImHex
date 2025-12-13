@@ -88,6 +88,8 @@ EXPORT_MODULE namespace hex {
             bool frameRateUnlockRequested();
             void resetFrameRateUnlockRequested();
 
+            void setReadOnlyMode(bool enabled);
+
         }
 
         /**
@@ -185,6 +187,11 @@ EXPORT_MODULE namespace hex {
          * @return Init argument
         */
         std::string getInitArgument(const std::string &key);
+
+        /**
+         * @brief Returns whether ImHex is running in read-only mode (no edits/saves)
+         */
+        bool isReadOnlyMode();
 
         /**
          * @brief Sets if ImHex should follow the system theme
