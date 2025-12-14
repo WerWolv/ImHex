@@ -29,7 +29,6 @@ option(IMHEX_REPLACE_DWARF_WITH_PDB     "Remove DWARF information from binaries 
 option(IMHEX_STRICT_WARNINGS            "Enable most available warnings and treat them as errors"                               ON )
 option(IMHEX_DISABLE_STACKTRACE         "Disables support for printing stack traces"                                            OFF)
 ## Plugins
-option(IMHEX_PLUGINS_IN_SHARE           "Put the plugins in share/imhex/plugins instead of lib[..]/imhex/plugins (Linux only)"  OFF)
 option(IMHEX_STATIC_LINK_PLUGINS        "Statically link all plugins into the main executable"                                  OFF)
 option(IMHEX_ENABLE_PLUGIN_TESTS        "Enable building plugin tests"                                                          ON )
 option(IMHEX_INCLUDE_PLUGINS            "Semicolon-separated list of plugins to include in the build (empty = build all)"       "" )

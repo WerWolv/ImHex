@@ -97,6 +97,13 @@ namespace hex::paths {
     }
 
     static std::vector<std::fs::path> getPluginPaths() {
+        // If running from an AppImage, only allow loaded plugins from inside it
+        #if defined(OS_LINUX)
+        if(const char* appdir = std::getenv("APPDIR")) { // check for AppImage environment
+            return {std::string(appdir) + "/usr/lib/imhex"};
+        }
+        #endif
+
         std::vector<std::fs::path> paths = getDataPaths(true);
 
         // Add the system plugin directory to the path if one was provided at compile time
