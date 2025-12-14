@@ -17,7 +17,8 @@ git clone --depth 1 https://github.com/microsoft/vcpkg /vcpkg
 sed -i 's/vcpkg_install_make(${EXTRA_ARGS})/vcpkg_install_make(${EXTRA_ARGS} SUBPATH src)/g' /vcpkg/ports/libmagic/portfile.cmake
 EOF
 
-# Patch vcpkg build instructions to add -pthread
+# Patch vcpkg build instructions to add -pthread flag
+# Even dependencies must be built with -pthread to be able to use USE_PTHREADS=1
 RUN <<EOF
 set -xe
 
