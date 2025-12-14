@@ -1,5 +1,4 @@
 # docker compose -f dist/web/compose.yml up --build
-version: '3'
 services:
   imhex_web:
     image: imhex_web:latest
