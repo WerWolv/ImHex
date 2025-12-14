@@ -12,8 +12,7 @@ RUN <<EOF
 # Note: we are a patch on the libmagic port
 set -xe
 
-git clone https://github.com/microsoft/vcpkg /vcpkg
-git -C /vcpkg pull
+git clone --depth 1 https://github.com/microsoft/vcpkg /vcpkg
 /vcpkg/bootstrap-vcpkg.sh
 sed -i 's/vcpkg_install_make(${EXTRA_ARGS})/vcpkg_install_make(${EXTRA_ARGS} SUBPATH src)/g' /vcpkg/ports/libmagic/portfile.cmake
 EOF
