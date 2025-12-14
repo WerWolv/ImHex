@@ -2,7 +2,7 @@ FROM emscripten/emsdk:4.0.21 AS build
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493
-ARG UNIQUEKEY 1
+ARG UNIQUEKEY=1
 
 RUN apt update
 RUN apt install -y git ccache autoconf automake libtool pkg-config ninja-build
