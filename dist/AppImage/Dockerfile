@@ -52,6 +52,7 @@ CC=gcc-14 CXX=g++-14 cmake -G "Ninja"                  \
     -DIMHEX_COMMIT_BRANCH="${GIT_BRANCH}"              \
     -DIMHEX_ENABLE_LTO=${LTO}                          \
     -DIMHEX_PLUGINS_IN_SHARE=ON                        \
+    -DIMHEX_BUNDLE_PLUGIN_SDK=OFF                      \
     /imhex
 EOF
 
