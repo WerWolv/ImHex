@@ -50,6 +50,7 @@ ENV CCACHE_DIR=/cache/ccache
 
 RUN mkdir /build
 WORKDIR /build
+ARG BUILD_TYPE=Release
 RUN --mount=type=cache,target=/cache \
     --mount=type=bind,source=.,target=/imhex <<EOF
 
@@ -70,7 +71,7 @@ ccache -zs
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     -DLIBROMFS_COMPRESS_RESOURCES=OFF                                                                   \
     -DIMHEX_ENABLE_PLUGIN_TESTS=OFF                                                                     \
-    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
 
 ninja -j $JOBS
 
