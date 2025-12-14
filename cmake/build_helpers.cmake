@@ -175,15 +175,11 @@ macro(detectOS)
         endif()
         include(GNUInstallDirs)
 
-        if(IMHEX_PLUGINS_IN_SHARE)
-            set(PLUGINS_INSTALL_LOCATION "share/imhex/plugins")
-        else()
-            set(PLUGINS_INSTALL_LOCATION "${CMAKE_INSTALL_LIBDIR}/imhex/plugins")
+        set(PLUGINS_INSTALL_LOCATION "${CMAKE_INSTALL_LIBDIR}/imhex/plugins")
 
-            # Add System plugin location for plugins to be loaded from
-            # IMPORTANT: This does not work for Sandboxed or portable builds such as the Flatpak or AppImage release
-            add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex")
-        endif()
+        # Add System plugin location for plugins to be loaded from
+        # IMPORTANT: This does not work for Sandboxed or portable builds such as the Flatpak or AppImage release
+        add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex")
 
     else ()
         message(FATAL_ERROR "Unknown / unsupported system!")

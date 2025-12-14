@@ -42,17 +42,18 @@ RUN <<EOF
 # Prepare ImHex build
 set -xe
 
-CC=gcc-14 CXX=g++-14 cmake -G "Ninja"                  \
-    -DCMAKE_BUILD_TYPE=${BUILD_TYPE}                   \
-    -DCMAKE_INSTALL_PREFIX="/usr"                      \
-    -DCMAKE_C_COMPILER_LAUNCHER=ccache                 \
-    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache               \
-    -DIMHEX_PATTERNS_PULL_MASTER=ON                    \
-    -DIMHEX_COMMIT_HASH_LONG="${GIT_COMMIT_HASH}"      \
-    -DIMHEX_COMMIT_BRANCH="${GIT_BRANCH}"              \
-    -DIMHEX_ENABLE_LTO=${LTO}                          \
-    -DIMHEX_PLUGINS_IN_SHARE=ON                        \
-    -DIMHEX_BUNDLE_PLUGIN_SDK=OFF                      \
+CC=gcc-14 CXX=g++-14 cmake -G "Ninja"                                \
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE}                                 \
+    -DCMAKE_INSTALL_PREFIX="/usr"                                    \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache                               \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                             \
+    -DIMHEX_PATTERNS_PULL_MASTER=ON                                  \
+    -DIMHEX_COMMIT_HASH_LONG="${GIT_COMMIT_HASH}"                    \
+    -DIMHEX_COMMIT_BRANCH="${GIT_BRANCH}"                            \
+    -DIMHEX_ENABLE_LTO=${LTO}                                        \
+    -DIMHEX_BUNDLE_PLUGIN_SDK=OFF                                    \
+    `# To prevent using a libdir with an architecture-specific name` \
+    -DCMAKE_INSTALL_LIBDIR="lib"                                     \
     /imhex
 EOF
 
