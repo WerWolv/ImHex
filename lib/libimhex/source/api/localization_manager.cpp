@@ -104,8 +104,20 @@ namespace hex {
 
                         for (const auto &entry : json.items()) {
                             auto value = entry.value().get<std::string>();
+
+                            // Skip empty values
                             if (value.empty())
                                 continue;
+
+                            // Handle references to files
+                            if (value.starts_with("#@")) {
+                                try {
+                                    value = path.callback(value.substr(2));
+                                } catch (std::exception &e) {
+                                    log::error("Failed to load localization file reference '{}': {}", entry.key(), e.what());
+                                    continue;
+                                }
+                            }
 
                             localizations.try_emplace(LangConst::hash(entry.key()), std::move(value));
                         }
