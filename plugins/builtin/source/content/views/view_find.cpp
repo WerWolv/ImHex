@@ -1215,7 +1215,7 @@ namespace hex::plugin::builtin {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("hex.ui.common.offset"_lang, 0, -1, ImGui::GetID("offset"));
             ImGui::TableSetupColumn("hex.ui.common.size"_lang, 0, -1, ImGui::GetID("size"));
-            ImGui::TableSetupColumn("hex.ui.common.value"_lang, 0, -1, ImGui::GetID("value"));
+            ImGui::TableSetupColumn("hex.ui.common.value"_lang, ImGuiTableColumnFlags_WidthStretch, -1, ImGui::GetID("value"));
 
             auto sortSpecs = ImGui::TableGetSortSpecs();
 
@@ -1225,22 +1225,22 @@ namespace hex::plugin::builtin {
             }
 
             if (sortSpecs->SpecsDirty) {
-                std::sort(currOccurrences.begin(), currOccurrences.end(), [this, &sortSpecs, provider](const Occurrence &left, const Occurrence &right) -> bool {
+                std::ranges::stable_sort(currOccurrences, [this, &sortSpecs, provider](const Occurrence &left, const Occurrence &right) -> bool {
                     if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                         if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                            return left.region.getStartAddress() > right.region.getStartAddress();
-                        else
                             return left.region.getStartAddress() < right.region.getStartAddress();
+                        else
+                            return left.region.getStartAddress() > right.region.getStartAddress();
                     } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
                         if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                            return left.region.getSize() > right.region.getSize();
-                        else
                             return left.region.getSize() < right.region.getSize();
+                        else
+                            return left.region.getSize() > right.region.getSize();
                     } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
                         if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                            return this->decodeValue(provider, left) > this->decodeValue(provider, right);
-                        else
                             return this->decodeValue(provider, left) < this->decodeValue(provider, right);
+                        else
+                            return this->decodeValue(provider, left) > this->decodeValue(provider, right);
                     }
 
                     return false;
