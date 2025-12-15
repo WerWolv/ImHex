@@ -1700,6 +1700,9 @@ namespace hex::plugin::builtin {
         EventHighlightingChanged::post();
 
         TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
+            // Disable exception tracing to speed up evaluation
+            trace::disableExceptionCaptureForCurrentThread();
+
             auto runtimeLock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();

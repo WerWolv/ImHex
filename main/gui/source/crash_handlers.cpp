@@ -16,6 +16,7 @@
 #include <csignal>
 #include <exception>
 #include <typeinfo>
+#include <hex/helpers/debugging.hpp>
 #include <hex/helpers/utils.hpp>
 
 #if defined(IMGUI_TEST_ENGINE)
@@ -71,23 +72,12 @@ namespace hex::crash {
         log::warn("Could not write crash.json file!");
     }
 
-    static void printStackTrace() {
-        auto stackTraceResult = trace::getStackTrace();
-        log::fatal("Printing stacktrace using implementation '{}'", stackTraceResult.implementationName);
-        for (const auto &stackFrame : stackTraceResult.stackFrames) {
-            if (stackFrame.line == 0)
-                log::fatal("  ({}) | {}", stackFrame.file, stackFrame.function);
-            else
-                log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
-        }
-    }
-
     static void callCrashHandlers(const std::string &msg) {
         // Call the crash callback
         crashCallback(msg);
 
         // Print the stacktrace to the console or log file
-        printStackTrace();
+        dbg::printStackTrace(trace::getStackTrace());
 
         // Flush all streams
         std::fflush(stdout);
@@ -188,6 +178,7 @@ namespace hex::crash {
     // Setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
     void setupCrashHandlers() {
         trace::initialize();
+        trace::setAssertionHandler(dbg::assertionHandler);
 
         // Register signal handlers
         {

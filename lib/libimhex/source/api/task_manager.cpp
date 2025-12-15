@@ -7,6 +7,8 @@
 #include <ranges>
 
 #include <jthread.hpp>
+#include <hex/helpers/debugging.hpp>
+#include <hex/trace/exceptions.hpp>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -310,6 +312,8 @@ namespace hex {
                     }
 
                     try {
+                        trace::enableExceptionCaptureForCurrentThread();
+
                         // Set the thread name to the name of the task
                         TaskManager::setCurrentThreadName(Lang(task->m_unlocalizedName));
 
@@ -323,14 +327,20 @@ namespace hex {
                     } catch (const std::exception &e) {
                         log::error("Exception in task '{}': {}", task->m_unlocalizedName.get(), e.what());
 
+                        dbg::printStackTrace(trace::getStackTrace());
+
                         // Handle the task throwing an uncaught exception
                         task->exception(e.what());
                     } catch (...) {
                         log::error("Exception in task '{}'", task->m_unlocalizedName.get());
 
+                        dbg::printStackTrace(trace::getStackTrace());
+
                         // Handle the task throwing an uncaught exception of unknown type
                         task->exception("Unknown Exception");
                     }
+
+                    trace::disableExceptionCaptureForCurrentThread();
 
                     s_currentTask = nullptr;
                     task->finish();
