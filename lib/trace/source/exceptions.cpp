@@ -2,8 +2,9 @@
 
 namespace hex::trace {
 
-    static std::optional<StackTraceResult> s_lastExceptionStackTrace;
+    static thread_local std::optional<StackTraceResult> s_lastExceptionStackTrace;
     static thread_local bool s_threadExceptionCaptureEnabled = false;
+    static AssertionHandler s_assertionHandler = nullptr;
 
     std::optional<StackTraceResult> getLastExceptionStackTrace() {
         if (!s_lastExceptionStackTrace.has_value())
@@ -15,8 +16,16 @@ namespace hex::trace {
         return result;
     }
 
+    void setAssertionHandler(AssertionHandler handler) {
+        s_assertionHandler = handler;
+    }
+
     void enableExceptionCaptureForCurrentThread() {
         s_threadExceptionCaptureEnabled = true;
+    }
+
+    void disableExceptionCaptureForCurrentThread() {
+        s_threadExceptionCaptureEnabled = false;
     }
 
 }
@@ -25,8 +34,8 @@ namespace hex::trace {
 
     extern "C" {
 
-        [[noreturn]] void __real___cxa_throw(void* thrownException, void* type, void (*destructor)(void*));
-        [[noreturn]] void __wrap___cxa_throw(void* thrownException, void* type, void (*destructor)(void*)) {
+        [[noreturn]] void __real___cxa_throw(void* thrownException, std::type_info* type, void (*destructor)(void*));
+        [[noreturn]] void __wrap___cxa_throw(void* thrownException, std::type_info* type, void (*destructor)(void*)) {
             if (hex::trace::s_threadExceptionCaptureEnabled)
                 hex::trace::s_lastExceptionStackTrace = hex::trace::getStackTrace();
 
@@ -41,19 +50,15 @@ namespace hex::trace {
 
 extern "C" {
 
+    [[noreturn]] void __real__ZSt21__glibcxx_assert_failPKciS0_S0_(const char* file, int line, const char* function, const char* condition);
     [[noreturn]] void __wrap__ZSt21__glibcxx_assert_failPKciS0_S0_(const char* file, int line, const char* function, const char* condition) {
-        if (file != nullptr && function != nullptr && condition != nullptr) {
-            fprintf(stderr, "Assertion failed (glibc++): (%s), function %s, file %s, line %d.\n", condition, function, file, line);
-        } else if (function != nullptr) {
-            fprintf(stderr, "%s: Undefined behavior detected (glibc++).\n", function);
+        if (hex::trace::s_assertionHandler != nullptr) {
+            hex::trace::s_assertionHandler(file, line, function, condition);
+        } else {
+            __real__ZSt21__glibcxx_assert_failPKciS0_S0_(file, line, function, condition);
         }
 
-        auto stackTrace = hex::trace::getStackTrace();
-        for (const auto &entry : stackTrace.stackFrames) {
-            fprintf(stderr, "  %s at %s:%d\n", entry.function.c_str(), entry.file.c_str(), entry.line);
-        }
-
-        std::terminate();
+        std::abort();
     }
 
 }

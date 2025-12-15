@@ -10,6 +10,7 @@
 #include <condition_variable>
 #include <source_location>
 #include <thread>
+#include <hex/trace/exceptions.hpp>
 
 EXPORT_MODULE namespace hex {
 
@@ -94,7 +95,12 @@ EXPORT_MODULE namespace hex {
         std::atomic_flag m_hadException;
         std::string m_exceptionMessage;
 
-        struct TaskInterruptor { virtual ~TaskInterruptor() = default; };
+        struct TaskInterruptor {
+            TaskInterruptor() {
+                trace::disableExceptionCaptureForCurrentThread();
+            }
+            virtual ~TaskInterruptor() = default;
+        };
 
         friend class TaskHolder;
         friend class TaskManager;
