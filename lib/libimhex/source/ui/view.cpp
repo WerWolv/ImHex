@@ -1,8 +1,10 @@
 #include <hex/ui/view.hpp>
-#include <hex/api/task_manager.hpp>
 #include <hex/helpers/auto_reset.hpp>
 
 #include <hex/api/imhex_api/provider.hpp>
+#include <hex/api/task_manager.hpp>
+#include <hex/api/tutorial_manager.hpp>
+
 #include <hex/providers/provider.hpp>
 
 #include <imgui.h>
@@ -113,6 +115,65 @@ namespace hex {
             return nullptr;
 
         return s_lastFocusedView;
+    }
+
+
+    void View::Window::draw(ImGuiWindowFlags extraFlags) {
+        if (this->shouldDraw()) {
+            if (!allowScroll())
+                extraFlags |= ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+
+            ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
+            const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
+            if (ImGui::Begin(title.c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | extraFlags | this->getWindowFlags())) {
+                TutorialManager::setLastItemInteractiveHelpPopup([this]{ this->drawHelpText(); });
+                this->drawContent();
+            }
+            ImGui::End();
+        }
+    }
+
+    void View::Special::draw(ImGuiWindowFlags extraFlags) {
+        std::ignore = extraFlags;
+
+        if (this->shouldDraw()) {
+            ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
+            this->drawContent();
+        }
+    }
+
+    void View::Floating::draw(ImGuiWindowFlags extraFlags) {
+        Window::draw(extraFlags | ImGuiWindowFlags_NoDocking);
+    }
+
+    void View::Scrolling::draw(ImGuiWindowFlags extraFlags) {
+        Window::draw(extraFlags);
+    }
+
+    void View::Modal::draw(ImGuiWindowFlags extraFlags) {
+        if (this->shouldDraw()) {
+            if (this->getWindowOpenState())
+                ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str());
+
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+            ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
+            const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
+            if (ImGui::BeginPopupModal(title.c_str(), this->hasCloseButton() ? &this->getWindowOpenState() : nullptr, ImGuiWindowFlags_NoCollapse | extraFlags | this->getWindowFlags())) {
+                this->drawContent();
+
+                ImGui::EndPopup();
+            }
+
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+                this->getWindowOpenState() = false;
+        }
+    }
+
+    void View::FullScreen::draw(ImGuiWindowFlags extraFlags) {
+        std::ignore = extraFlags;
+
+        this->drawContent();
+        this->drawAlwaysVisibleContent();
     }
 
 

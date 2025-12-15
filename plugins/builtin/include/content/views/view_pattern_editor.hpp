@@ -66,9 +66,6 @@ namespace hex::plugin::builtin {
         }
 
         void drawContent() override;
-        [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
-            return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
-        }
 
         void setPopupWindowHeight(u32 height) { m_popupWindowHeight = height; }
         u32 getPopupWindowHeight() const { return m_popupWindowHeight; }
