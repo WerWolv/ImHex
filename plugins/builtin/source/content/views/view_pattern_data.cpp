@@ -213,7 +213,7 @@ namespace hex::plugin::builtin {
             bool patternsValid = false;
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                patternsValid = runtime.arePatternsValid();
+                patternsValid = runtime.getCreatedPatternCount() > 0 && runtime.arePatternsValid();
             }
 
             if (ImGui::BeginTabBar("##SectionSelector")) {
