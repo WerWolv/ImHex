@@ -407,7 +407,7 @@
     "hex.builtin.popup.exit_application.title": "Exit Application?",
     "hex.builtin.popup.waiting_for_tasks.title": "Waiting for Tasks",
     "hex.builtin.popup.crash_recover.title": "Crash recovery",
-    "hex.builtin.popup.crash_recover.message": "An exception was thrown, but ImHex was able to catch it and advert a crash",
+    "hex.builtin.popup.crash_recover.message": "An exception was thrown, but ImHex was able to catch it and avert a crash",
     "hex.builtin.popup.foreground_task.title": "Please Wait...",
     "hex.builtin.popup.blocking_task.title": "Running Task",
     "hex.builtin.popup.blocking_task.desc": "A task is currently executing.",
