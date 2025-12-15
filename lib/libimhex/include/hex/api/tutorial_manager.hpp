@@ -22,6 +22,8 @@ EXPORT_MODULE namespace hex {
             Right   = 8
         };
 
+        using DrawFunction = std::function<void()>;
+
         struct Tutorial {
             Tutorial() = delete;
             Tutorial(const UnlocalizedString &unlocalizedName, const UnlocalizedString &unlocalizedDescription) :
@@ -101,6 +103,7 @@ EXPORT_MODULE namespace hex {
                 std::vector<Highlight> m_highlights;
                 std::optional<Message> m_message;
                 std::function<void()> m_onAppear, m_onComplete;
+                DrawFunction m_drawFunction;
             };
 
             Step& addStep();
@@ -165,6 +168,8 @@ EXPORT_MODULE namespace hex {
          * @brief Resets the tutorial manager
          */
         static void reset();
+
+        static void setRenderer(std::function<DrawFunction(const std::string &)> renderer);
 
     private:
         TutorialManager() = delete;

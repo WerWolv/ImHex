@@ -319,6 +319,7 @@ namespace ImGuiExt {
     bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size = ImVec2(0, 0), ImVec2 iconOffset = ImVec2(0, 0));
     bool DimmedIconToggle(const char *icon, bool *v);
     bool DimmedIconToggle(const char *iconOn, const char *iconOff, bool *v);
+    bool DimmedArrowButton(const char *id, ImGuiDir dir, ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
 
     void TextOverlay(const char *text, ImVec2 pos, float maxWidth = -1);
 

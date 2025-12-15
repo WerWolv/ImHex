@@ -1218,6 +1218,21 @@ namespace ImGuiExt {
         return res;
     }
 
+    bool DimmedArrowButton(const char *id, ImGuiDir dir, ImVec2 size) {
+        PushStyleColor(ImGuiCol_ButtonHovered, GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
+        PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
+        PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
+        PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.5 * hex::ImHexApi::System::getGlobalScale());
+
+        bool res = ArrowButtonEx(id, dir, size);
+
+        PopStyleColor(4);
+        PopStyleVar(1);
+
+        return res;
+    }
+
     bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size, ImVec2 iconOffset) {
         bool pushed = false;
         bool toggled = false;

@@ -20,6 +20,11 @@ namespace hex::ui {
     public:
         Markdown() = default;
         Markdown(const std::string &text);
+        Markdown(const Markdown &) = delete;
+        Markdown(Markdown &&other) = default;
+
+        Markdown &operator=(const Markdown &) = delete;
+        Markdown &operator=(Markdown &&other) = default;
 
         void draw();
         void reset();
