@@ -87,13 +87,13 @@ namespace hex::plugin::builtin {
                         newProvider->loadSettings(providerSettings.at("settings"));
                         loaded = true;
                     } catch (const std::exception &e){
-                            providerWarnings[newProvider] = e.what();
+                            providerWarnings[newProvider.get()] = e.what();
                     }
                     if (loaded) {
                         if (!newProvider->open() || !newProvider->isAvailable() || !newProvider->isReadable()) {
-                            providerWarnings[newProvider] = newProvider->getErrorMessage();
+                            providerWarnings[newProvider.get()] = newProvider->getErrorMessage();
                         } else {
-                            EventProviderOpened::post(newProvider);
+                            EventProviderOpened::post(newProvider.get());
                         }
                     }
                 }

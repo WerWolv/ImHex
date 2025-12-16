@@ -294,8 +294,8 @@ namespace hex {
     namespace ImHexApi::Provider {
 
         static i64 s_currentProvider = -1;
-        static AutoReset<std::vector<std::unique_ptr<prv::Provider>>> s_providers;
-        static AutoReset<std::map<prv::Provider*, std::unique_ptr<prv::Provider>>> s_providersToRemove;
+        static AutoReset<std::vector<std::shared_ptr<prv::Provider>>> s_providers;
+        static AutoReset<std::map<prv::Provider*, std::shared_ptr<prv::Provider>>> s_providersToRemove;
 
         namespace impl {
 
@@ -382,7 +382,7 @@ namespace hex {
             });
         }
 
-        void add(std::unique_ptr<prv::Provider> &&provider, bool skipLoadInterface, bool select) {
+        void add(std::shared_ptr<prv::Provider> &&provider, bool skipLoadInterface, bool select) {
             std::scoped_lock lock(impl::s_providerMutex);
 
             if (TaskManager::getRunningTaskCount() > 0)
@@ -491,8 +491,8 @@ namespace hex {
             });
         }
 
-        prv::Provider* createProvider(const UnlocalizedString &unlocalizedName, bool skipLoadInterface, bool select) {
-            prv::Provider* result = nullptr;
+        std::shared_ptr<prv::Provider> createProvider(const UnlocalizedString &unlocalizedName, bool skipLoadInterface, bool select) {
+            std::shared_ptr<prv::Provider> result = nullptr;
             RequestCreateProvider::post(unlocalizedName, skipLoadInterface, select, &result);
 
             return result;

@@ -51,16 +51,16 @@ namespace hex::plugin::builtin {
 
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
 
-            if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider); fileProvider != nullptr) {
+            if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider.get()); fileProvider != nullptr) {
                 fileProvider->setPath(path);
 
                 if (!fileProvider->open()) {
-                    ImHexApi::Provider::remove(newProvider);
+                    ImHexApi::Provider::remove(newProvider.get());
                 } else {
                     MovePerProviderData::post(this, fileProvider);
 
                     fileProvider->markDirty(false);
-                    EventProviderOpened::post(newProvider);
+                    EventProviderOpened::post(newProvider.get());
                     ImHexApi::Provider::remove(this, true);
                 }
             }

@@ -347,9 +347,9 @@ namespace hex::plugin::builtin {
                             if (ImGuiExt::IconHyperlink(ICON_VS_NEW_FILE, "hex.builtin.welcome.start.create_file"_lang)) {
                                 auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
                                 if (newProvider != nullptr && !newProvider->open())
-                                    hex::ImHexApi::Provider::remove(newProvider);
+                                    hex::ImHexApi::Provider::remove(newProvider.get());
                                 else
-                                    EventProviderOpened::post(newProvider);
+                                    EventProviderOpened::post(newProvider.get());
                             }
                             if (ImGuiExt::IconHyperlink(ICON_VS_GO_TO_FILE, "hex.builtin.welcome.start.open_file"_lang))
                                 RequestOpenWindow::post("Open File");

@@ -1168,7 +1168,7 @@ namespace hex::plugin::builtin {
                                                     auto selection = ImHexApi::HexEditor::getSelection();
 
                                                     auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
-                                                    if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                                                    if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider.get()); viewProvider != nullptr) {
                                                         viewProvider->setProvider(selection->getStartAddress(), selection->getSize(), selection->getProvider());
                                                         if (viewProvider->open())
                                                             EventProviderOpened::post(viewProvider);

@@ -19,7 +19,7 @@ EXPORT_MODULE namespace hex {
 
             void addProviderName(const UnlocalizedString &unlocalizedName, const char *icon);
 
-            using ProviderCreationFunction = std::function<std::unique_ptr<prv::Provider>()>;
+            using ProviderCreationFunction = std::function<std::shared_ptr<prv::Provider>()>;
             void add(const std::string &typeName, ProviderCreationFunction creationFunction);
 
             struct Entry {

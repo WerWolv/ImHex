@@ -378,9 +378,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ICON_VS_FILE, 1050, CTRLCMD + Keys::N + AllowWhileTyping + ShowOnWelcomeScreen, [] {
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
             if (newProvider != nullptr && !newProvider->open())
-                hex::ImHexApi::Provider::remove(newProvider);
+                hex::ImHexApi::Provider::remove(newProvider.get());
             else
-                EventProviderOpened::post(newProvider);
+                EventProviderOpened::post(newProvider.get());
         }, noRunningTasks, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
 
         /* Open File */

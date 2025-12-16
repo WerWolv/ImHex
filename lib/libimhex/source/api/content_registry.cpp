@@ -1101,13 +1101,13 @@ namespace hex {
         namespace impl {
 
             void add(const std::string &typeName, ProviderCreationFunction creationFunction) {
-                (void)RequestCreateProvider::subscribe([expectedName = typeName, creationFunction](const std::string &name, bool skipLoadInterface, bool selectProvider, prv::Provider **provider) {
+                (void)RequestCreateProvider::subscribe([expectedName = typeName, creationFunction](const std::string &name, bool skipLoadInterface, bool selectProvider, std::shared_ptr<prv::Provider> *provider) {
                     if (name != expectedName) return;
 
                     auto newProvider = creationFunction();
 
                     if (provider != nullptr) {
-                        *provider = newProvider.get();
+                        *provider = newProvider;
                         ImHexApi::Provider::add(std::move(newProvider), skipLoadInterface, selectProvider);
                     }
                 });
