@@ -2641,7 +2641,7 @@ namespace hex::plugin::builtin {
         if (provider == nullptr)
             return;
         auto path = m_changeTracker.get(provider).getPath();
-        wolv::io::File file(path, wolv::io::File::Mode::Write);
+        wolv::io::File file(path, wolv::io::File::Mode::Create);
         if (file.isValid() && trackFile) {
             if (isPatternDirty(provider)) {
                 file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
