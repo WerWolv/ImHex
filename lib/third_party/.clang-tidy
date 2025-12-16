@@ -1,0 +1,2 @@
+# Disable all checks
+Checks: '-*'
