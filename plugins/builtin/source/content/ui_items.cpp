@@ -29,6 +29,7 @@
 
 #include <csignal>
 #include <fonts/tabler_icons.hpp>
+#include <hex/api/content_registry/communication_interface.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -238,6 +239,20 @@ namespace hex::plugin::builtin {
                 ImGui::PopStyleColor();
             });
         }
+
+        ContentRegistry::UserInterface::addFooterItem([] {
+            if (ContentRegistry::MCP::isConnected()) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight));
+            } else {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
+            }
+
+            if (ContentRegistry::MCP::isEnabled()) {
+                ImGui::TextUnformatted(ICON_VS_MCP);
+            }
+
+            ImGui::PopStyleColor();
+        });
 
         if (dbg::debugModeEnabled()) {
             ContentRegistry::UserInterface::addFooterItem([] {

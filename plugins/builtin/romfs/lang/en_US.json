@@ -54,6 +54,7 @@
     "hex.builtin.achievement.misc.download_from_store.name": "There's an app for that",
     "hex.builtin.achievement.misc.download_from_store.desc": "Download any item from the Content Store",
     "hex.builtin.background_service.network_interface": "Network Interface",
+    "hex.builtin.setting.general.mcp_server": "MCP Server support",
     "hex.builtin.background_service.auto_backup": "Auto Backup",
     "hex.builtin.command.calc.desc": "Calculator",
     "hex.builtin.command.convert.desc": "Unit conversion",

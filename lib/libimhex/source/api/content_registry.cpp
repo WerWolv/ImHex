@@ -1413,6 +1413,40 @@ namespace hex {
 
     }
 
+    namespace ContentRegistry::MCP {
+
+        namespace impl {
+
+            mcp::Server& getMcpServerInstance() {
+                static AutoReset<std::unique_ptr<mcp::Server>> server;
+
+                if (*server == nullptr)
+                    server = std::make_unique<mcp::Server>();
+
+                return **server;
+            }
+
+            static bool s_mcpEnabled = false;
+            void setEnabled(bool enabled) {
+                s_mcpEnabled = enabled;
+            }
+
+        }
+
+        bool isEnabled() {
+            return impl::s_mcpEnabled;
+        }
+
+        bool isConnected() {
+            return impl::getMcpServerInstance().isConnected();
+        }
+
+        void registerTool(std::string_view capabilities, std::function<nlohmann::json(const nlohmann::json &params)> function) {
+            impl::getMcpServerInstance().addPrimitive("tools", capabilities, function);
+        }
+
+    }
+
     namespace ContentRegistry::Experiments {
 
         namespace impl {

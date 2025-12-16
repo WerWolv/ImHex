@@ -1,4 +1,6 @@
+#include <iostream>
 #include <content/command_line_interface.hpp>
+#include <hex/mcp/client.hpp>
 
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
@@ -528,6 +530,14 @@ namespace hex::plugin::builtin {
         }
 
         ContentRegistry::Views::setFullScreenView<ViewFullScreenFileInfo>(path);
+    }
+
+    void handleMCPCommand(const std::vector<std::string> &) {
+        mcp::Client client;
+
+        auto result = client.run(std::cin, std::cout);
+        std::fprintf(stderr, "MCP Client disconnected!\n");
+        std::exit(result);
     }
 
 
