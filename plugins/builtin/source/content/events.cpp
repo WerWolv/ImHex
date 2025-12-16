@@ -50,17 +50,17 @@ namespace hex::plugin::builtin {
             }
 
             auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
-            if (auto *fileProvider = dynamic_cast<FileProvider*>(provider); fileProvider != nullptr) {
+            if (auto *fileProvider = dynamic_cast<FileProvider*>(provider.get()); fileProvider != nullptr) {
                 fileProvider->setPath(path);
                 if (!provider->open() || !provider->isAvailable()) {
                     ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider.get()); });
                     return;
                 }
 
                 EventProviderOpened::post(fileProvider);
                 AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
-                ImHexApi::Provider::setCurrentProvider(provider);
+                ImHexApi::Provider::setCurrentProvider(provider.get());
 
                 glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
                 glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
@@ -184,9 +184,9 @@ namespace hex::plugin::builtin {
             if (name == "Create File") {
                 auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
                 if (newProvider != nullptr && !newProvider->open())
-                    hex::ImHexApi::Provider::remove(newProvider);
+                    hex::ImHexApi::Provider::remove(newProvider.get());
                 else
-                    EventProviderOpened::post(newProvider);
+                    EventProviderOpened::post(newProvider.get());
             } else if (name == "Open File") {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
                     if (path.extension() == ".hexproj") {
@@ -197,9 +197,8 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    auto newProvider = static_cast<FileProvider*>(
-                        ImHexApi::Provider::createProvider("hex.builtin.provider.file", true)
-                    );
+                    auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
+                    auto newProvider = static_cast<FileProvider*>(provider.get());
 
                     if (newProvider == nullptr)
                         return;

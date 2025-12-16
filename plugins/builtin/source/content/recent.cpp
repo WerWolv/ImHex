@@ -279,16 +279,16 @@ namespace hex::plugin::builtin::recent {
             return;
         }
 
-        auto *provider = ImHexApi::Provider::createProvider(recentEntry.type, true);
+        auto provider = ImHexApi::Provider::createProvider(recentEntry.type, true);
         if (provider != nullptr) {
             provider->loadSettings(recentEntry.data);
 
             TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
                 if (!provider->open() || !provider->isAvailable()) {
                     ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider.get()); });
                 } else {
-                    TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
+                    TaskManager::doLater([provider]{ EventProviderOpened::post(provider.get()); });
                 }
             });
 

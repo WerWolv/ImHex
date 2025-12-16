@@ -390,7 +390,7 @@ namespace hex::plugin::builtin {
                         auto provider = ImHexApi::Provider::get();
                         TaskManager::doLater([region, provider, name]{
                             auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
-                            if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                            if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider.get()); viewProvider != nullptr) {
                                 viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
                                 viewProvider->setName(fmt::format("'{}' View", name));
 

@@ -8,7 +8,7 @@ namespace hex {
     /**
      * @brief Creates a provider from its unlocalized name, and add it to the provider list
     */
-    EVENT_DEF(RequestCreateProvider, std::string, bool, bool, hex::prv::Provider **);
+    EVENT_DEF(RequestCreateProvider, std::string, bool, bool, std::shared_ptr<hex::prv::Provider> *);
 
     /**
      * @brief Move the data from all PerProvider instances from one provider to another
