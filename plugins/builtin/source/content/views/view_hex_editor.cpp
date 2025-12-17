@@ -1170,8 +1170,7 @@ namespace hex::plugin::builtin {
                                                     auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
                                                     if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider.get()); viewProvider != nullptr) {
                                                         viewProvider->setProvider(selection->getStartAddress(), selection->getSize(), selection->getProvider());
-                                                        if (viewProvider->open())
-                                                            EventProviderOpened::post(viewProvider);
+                                                        ImHexApi::Provider::openProvider(newProvider);
                                                     }
                                                 },
                                                 [] { return ImHexApi::HexEditor::isSelectionValid() && ImHexApi::Provider::isValid(); },

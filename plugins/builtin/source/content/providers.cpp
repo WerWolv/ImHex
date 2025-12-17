@@ -90,8 +90,9 @@ namespace hex::plugin::builtin {
                             providerWarnings[newProvider.get()] = e.what();
                     }
                     if (loaded) {
-                        if (!newProvider->open() || !newProvider->isAvailable() || !newProvider->isReadable()) {
-                            providerWarnings[newProvider.get()] = newProvider->getErrorMessage();
+                        auto result = newProvider->open();
+                        if (result.isFailure() || !newProvider->isAvailable() || !newProvider->isReadable()) {
+                            providerWarnings[newProvider.get()] = result.getErrorMessage();
                         } else {
                             EventProviderOpened::post(newProvider.get());
                         }

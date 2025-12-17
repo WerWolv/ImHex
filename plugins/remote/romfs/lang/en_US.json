@@ -7,5 +7,6 @@
     "hex.plugin.remote.ssh_provider.key_file": "Private Key Path",
     "hex.plugin.remote.ssh_provider.passphrase": "Passphrase",
     "hex.plugin.remote.ssh_provider.connect": "Connect",
-    "hex.plugin.remote.ssh_provider.ssh_access": "Access file using raw SSH"
+    "hex.plugin.remote.ssh_provider.ssh_access": "Access file using raw SSH",
+    "hex.plugin.remote.ssh_provider.error.open_failed": "Failed to open remote file"
 }

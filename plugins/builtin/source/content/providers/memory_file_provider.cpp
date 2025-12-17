@@ -16,12 +16,12 @@
 
 namespace hex::plugin::builtin {
 
-    bool MemoryFileProvider::open() {
+    prv::Provider::OpenResult MemoryFileProvider::open() {
         if (m_data.empty()) {
             m_data.resize(1);
         }
 
-        return true;
+        return {};
     }
 
     void MemoryFileProvider::readRaw(u64 offset, void *buffer, size_t size) {
@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
             if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider.get()); fileProvider != nullptr) {
                 fileProvider->setPath(path);
 
-                if (!fileProvider->open()) {
+                if (fileProvider->open().isFailure()) {
                     ImHexApi::Provider::remove(newProvider.get());
                 } else {
                     MovePerProviderData::post(this, fileProvider);

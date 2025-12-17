@@ -9,7 +9,7 @@ namespace hex::plugin::builtin {
         MotorolaSRECProvider() = default;
         ~MotorolaSRECProvider() override = default;
 
-        bool open() override;
+        OpenResult open() override;
         void close() override;
 
         [[nodiscard]] std::string getName() const override;

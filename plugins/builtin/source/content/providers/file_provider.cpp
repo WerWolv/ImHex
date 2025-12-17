@@ -198,24 +198,23 @@ namespace hex::plugin::builtin {
         m_path.make_preferred();
     }
 
-    bool FileProvider::open() {
+    prv::Provider::OpenResult FileProvider::open() {
         const size_t maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
 
         size_t fileSize = 0x00;
         {
             wolv::io::File file(m_path, wolv::io::File::Mode::Read);
             if (!file.isValid()) {
-                this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
-                return false;
+                return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
             }
 
             fileSize = file.getSize();
         }
 
         const bool directAccess = fileSize >= maxMemoryFileSize;
-        const bool result = open(directAccess);
+        const auto result = open(directAccess);
 
-        if (result && directAccess) {
+        if (result.isSuccess() && directAccess) {
             m_writable = false;
 
             ui::BannerButton::open(ICON_VS_WARNING, "hex.builtin.provider.file.too_large", ImColor(135, 116, 66), "hex.builtin.provider.file.too_large.allow_write", [this]{
@@ -227,7 +226,7 @@ namespace hex::plugin::builtin {
         return result;
     }
 
-    bool FileProvider::open(bool directAccess) {
+    prv::Provider::OpenResult FileProvider::open(bool directAccess) {
         m_readable = true;
         m_writable = true;
 
@@ -238,8 +237,7 @@ namespace hex::plugin::builtin {
             file = wolv::io::File(m_path, wolv::io::File::Mode::Read);
             if (!file.isValid()) {
                 m_readable = false;
-                this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
-                return false;
+                return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
             }
 
             ui::ToastInfo::open("hex.builtin.popup.error.read_only"_lang);
@@ -258,8 +256,7 @@ namespace hex::plugin::builtin {
             });
 
             if (alreadyOpenedFileProvider != s_openedFiles.end()) {
-                ImHexApi::Provider::setCurrentProvider(*alreadyOpenedFileProvider);
-                return false;
+                return OpenResult::redirect(*alreadyOpenedFileProvider);
             } else {
                 s_openedFiles.insert(this);
             }
@@ -281,7 +278,7 @@ namespace hex::plugin::builtin {
 
         m_changeEventAcknowledgementPending = false;
 
-        return true;
+        return {};
     }
 
 
@@ -312,10 +309,6 @@ namespace hex::plugin::builtin {
 
             if (!wolv::io::fs::exists(fullPath))
                 fullPath = path;
-
-            if (!wolv::io::fs::exists(fullPath)) {
-                this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(ENOENT)));
-            }
 
             path = std::move(fullPath);
         }

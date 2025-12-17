@@ -377,7 +377,7 @@ namespace hex::plugin::builtin {
         /* Create File */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ICON_VS_FILE, 1050, CTRLCMD + Keys::N + AllowWhileTyping + ShowOnWelcomeScreen, [] {
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
-            if (newProvider != nullptr && !newProvider->open())
+            if (newProvider != nullptr && newProvider->open().isFailure())
                 hex::ImHexApi::Provider::remove(newProvider.get());
             else
                 EventProviderOpened::post(newProvider.get());
@@ -401,7 +401,7 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
 
             provider->close();
-            if (!provider->open())
+            if (provider->open().isFailure())
                 ImHexApi::Provider::remove(provider, true);
 
             EventDataChanged::post(provider);

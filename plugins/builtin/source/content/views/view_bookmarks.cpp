@@ -394,10 +394,9 @@ namespace hex::plugin::builtin {
                                 viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
                                 viewProvider->setName(fmt::format("'{}' View", name));
 
-                                if (viewProvider->open()) {
-                                    EventProviderOpened::post(viewProvider);
-                                    AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
-                                }
+                                ImHexApi::Provider::openProvider(newProvider);
+
+                                AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
                             }
                         });
                     }

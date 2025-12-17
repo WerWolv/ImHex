@@ -15,7 +15,7 @@ namespace hex::plugin::remote {
         bool isResizable() const override { return false; }
         bool isSavable() const override   { return isWritable(); }
 
-        bool open() override;
+        OpenResult open() override;
         void close() override;
         void save() override;
 

@@ -11,9 +11,9 @@ namespace hex::prv {
         clearCache();
     }
 
-    bool CachedProvider::open() {
+    Provider::OpenResult CachedProvider::open() {
         clearCache();
-        return true;
+        return {};
     }
 
     void CachedProvider::close() {

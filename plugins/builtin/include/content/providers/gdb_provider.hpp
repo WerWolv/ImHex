@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<Description> getDataDescription() const override;
 
-        [[nodiscard]] bool open() override;
+        [[nodiscard]] OpenResult open() override;
         void close() override;
 
         [[nodiscard]] bool isConnected() const;
