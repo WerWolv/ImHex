@@ -360,7 +360,7 @@ namespace hex::plugin::builtin {
         FileProvider provider;
         provider.setPath(filePath);
         auto result = provider.open();
-        if (!result.isFailure()) {
+        if (result.isFailure()) {
             log::println("Failed to open file '{}': {}", args[0], result.getErrorMessage());
             std::exit(EXIT_FAILURE);
         }
