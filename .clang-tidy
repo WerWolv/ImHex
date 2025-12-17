@@ -64,5 +64,5 @@ Checks:
 - -readability-redundant-access-specifiers
 - -readability-function-cognitive-complexity
 - -readability-identifier-naming
-- '*-include-cleaner'
 - -readability-qualified-auto
+- '*-include-cleaner'
