@@ -41,6 +41,7 @@ parts:
       - -DCMAKE_C_COMPILER_LAUNCHER=${CCACHE}
       - -DCMAKE_CXX_COMPILER_LAUNCHER=${CCACHE}
       - -DIMHEX_PATTERNS_PULL_MASTER=ON
+      - -DIMHEX_BUNDLE_PLUGIN_SDK=OFF
     cmake-generator: Ninja
     build-packages:
       - cmake
