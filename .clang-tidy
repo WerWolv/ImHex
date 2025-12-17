@@ -76,6 +76,7 @@ Checks:
 - -readability-implicit-bool-conversion # Not much of a problem ?
 - -readability-convert-member-functions-to-static #
 - -readability-use-concise-preprocessor-directives # We do not use #ifdef
+- -readability-uppercase-literal-suffix # Not important enough
 - '*-include-cleaner'
 
 # idk
@@ -96,3 +97,5 @@ Checks:
 - -hicpp-exception-baseclass
 - -modernize-use-integer-sign-comparison
 - -performance-for-range-copy
+- -performance-unnecessary-value-param
+- -bugprone-empty-catch
