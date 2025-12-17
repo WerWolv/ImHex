@@ -47,6 +47,7 @@ Checks:
 - -misc-static-assert
 - -misc-no-recursion
 - -misc-const-correctness
+- -misc-use-internal-linkage # False positives if header where function is defined is not included
 - modernize-*
 - -modernize-use-trailing-return-type
 - -modernize-use-std-print # We want to use fmt::print instead
@@ -89,3 +90,9 @@ Checks:
 - -bugprone-unchecked-optional-access
 - -modernize-avoid-c-arrays
 - -misc-non-private-member-variables-in-classes
+- -performance-move-const-arg
+- -bugprone-suspicious-stringview-data-usage
+- -cert-err34-c
+- -hicpp-exception-baseclass
+- -modernize-use-integer-sign-comparison
+- -performance-for-range-copy

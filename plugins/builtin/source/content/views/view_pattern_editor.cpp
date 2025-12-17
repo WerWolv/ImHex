@@ -456,8 +456,8 @@ namespace hex::plugin::builtin {
                     )
                 )
             );
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0F, 0.0F));
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0F, 0.0F));
             if (ImGui::BeginChild("##pattern_editor_resizer", defaultEditorSize, ImGuiChildFlags_ResizeY)) {
                 m_textEditor.get(provider).render("##pattern_editor", ImGui::GetContentRegionAvail(), false);
                 m_textEditorHoverBox = ImGui::GetCurrentWindow()->Rect();
@@ -1257,7 +1257,7 @@ namespace hex::plugin::builtin {
                                 m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = buffer[0];
                         } else if (variable.type == pl::core::Token::ValueType::String) {
-                            std::string buffer = hex::get_or<std::string>(variable.value, "");
+                            auto buffer = hex::get_or<std::string>(variable.value, "");
                             if (ImGui::InputText(label.c_str(), buffer))
                                 m_hasUnevaluatedChanges.get(provider) = true;
                             variable.value = buffer;
@@ -1354,7 +1354,7 @@ namespace hex::plugin::builtin {
                     for (const auto &frame : **m_callStack | std::views::reverse) {
                         auto location = frame.node->getLocation();
                         if (location.source != nullptr && location.source->mainSource) {
-                            std::string message = "";
+                            std::string message;
                             if (m_lastEvaluationError->has_value())
                                 message = processMessage((*m_lastEvaluationError)->message);
                             auto key = ui::TextEditor::Coordinates(location.line, location.column);
@@ -1646,7 +1646,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
         const auto &ast = m_editorRuntime->parseString(code, pl::api::Source::DefaultSource);
-        m_textEditor.get(provider).setLongestLineLength(m_editorRuntime->getInternals().preprocessor.get()->getLongestLineLength());
+        m_textEditor.get(provider).setLongestLineLength(m_editorRuntime->getInternals().preprocessor.getLongestLineLength());
 
         auto &patternVariables = m_patternVariables.get(provider);
         auto oldPatternVariables = std::move(patternVariables);
@@ -2132,7 +2132,7 @@ namespace hex::plugin::builtin {
 
             if (m_breakpoints->contains(line))
                 evaluator->removeBreakpoint(line);
-             else
+            else
                 evaluator->addBreakpoint(line);
 
             m_breakpoints = evaluator->getBreakpoints();

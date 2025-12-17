@@ -176,7 +176,7 @@ namespace hex::plugin::builtin {
             const auto &inputB = this->getBufferOnInput(1);
 
             auto output = inputA;
-            std::copy(inputB.begin(), inputB.end(), std::back_inserter(output));
+            std::ranges::copy(inputB, std::back_inserter(output));
 
             this->setBufferOnOutput(2, output);
         }
@@ -214,7 +214,7 @@ namespace hex::plugin::builtin {
             output.resize(buffer.size() * count);
 
             for (u32 i = 0; i < count; i++)
-                std::copy(buffer.begin(), buffer.end(), output.begin() + buffer.size() * i);
+                std::ranges::copy(buffer, output.begin() + buffer.size() * i);
 
             this->setBufferOnOutput(2, output);
         }
@@ -384,7 +384,7 @@ namespace hex::plugin::builtin {
             if (ImPlot::BeginPlot("##distribution", viewSize, ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect)) {
                 ImPlot::SetupAxes("Address", "Count", ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
-                ImPlot::SetupAxesLimits(0, 256, 1, double(*std::max_element(m_counts.begin(), m_counts.end())) * 1.1F, ImGuiCond_Always);
+                ImPlot::SetupAxesLimits(0, 256, 1, double(*std::ranges::max_element(m_counts)) * 1.1F, ImGuiCond_Always);
 
                 static auto x = [] {
                     std::array<ImU64, 256> result { 0 };

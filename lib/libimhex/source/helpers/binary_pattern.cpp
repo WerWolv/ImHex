@@ -7,7 +7,7 @@ namespace hex {
     namespace {
 
         void skipWhitespace(std::string_view &string) {
-            while (string.length() > 0) {
+            while (!string.empty()) {
                 if (!std::isspace(string.front()))
                     break;
                 string = string.substr(1);
@@ -89,7 +89,7 @@ namespace hex {
                 return { };
 
             bool inString = false;
-            while (string.length() > 0) {
+            while (!string.empty()) {
                 BinaryPattern::Pattern pattern = { 0, 0 };
 
                  if (string.starts_with("\"")) {

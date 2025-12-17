@@ -12,7 +12,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] UnlocalizedString getTitle() const override;
 
     private:
-        static void resize(size_t newSize);
+        void resize(size_t newSize);
         u64 m_size;
     };
 }

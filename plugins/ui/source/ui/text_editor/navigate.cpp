@@ -4,7 +4,7 @@
 
 
 namespace hex::ui {
-    bool isWordChar(char c) {
+    static bool isWordChar(char c) {
         auto asUChar = static_cast<u8>(c);
         return std::isalnum(asUChar) || c == '_' || asUChar > 0x7F;
     }

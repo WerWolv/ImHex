@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <content/tools_entries.hpp>
 
 #include <fonts/vscode_icons.hpp>
 

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/content_registry/data_inspector.hpp>
@@ -42,7 +43,7 @@ namespace hex::plugin::builtin {
              std::memcpy(bytes.data(), &result, bytes.size());
 
              if (endian != std::endian::native)
-                 std::reverse(bytes.begin(), bytes.end());
+                 std::ranges::reverse(bytes);
 
              return bytes;
         });
@@ -58,7 +59,7 @@ namespace hex::plugin::builtin {
             std::memcpy(bytes.data(), &result, bytes.size());
 
             if (endian != std::endian::native)
-                std::reverse(bytes.begin(), bytes.end());
+                std::ranges::reverse(bytes);
 
             return bytes;
         });
@@ -73,7 +74,7 @@ namespace hex::plugin::builtin {
             std::memcpy(bytes.data(), &result, bytes.size());
 
             if (endian != std::endian::native)
-                std::reverse(bytes.begin(), bytes.end());
+                std::ranges::reverse(bytes);
 
             return bytes;
         });
@@ -449,7 +450,7 @@ namespace hex::plugin::builtin {
 				std::memcpy(bytes.data(), wideString->data(), bytes.size());
 
                 if (endian != std::endian::native)
-                    std::reverse(bytes.begin(), bytes.end());
+                    std::ranges::reverse(bytes);
 
                 return bytes;
             })
@@ -477,7 +478,7 @@ namespace hex::plugin::builtin {
                 std::memcpy(bytes.data(), wideString->data(), bytes.size());
 
                 if (endian != std::endian::native)
-                    std::reverse(bytes.begin(), bytes.end());
+                    std::ranges::reverse(bytes);
 
                 return bytes;
             })
@@ -505,7 +506,7 @@ namespace hex::plugin::builtin {
                 std::memcpy(bytes.data(), wideString->data(), bytes.size());
 
                 if (endian != std::endian::native)
-                    std::reverse(bytes.begin(), bytes.end());
+                    std::ranges::reverse(bytes);
 
                 return bytes;
             })

@@ -83,7 +83,7 @@ namespace hex::ui {
             m_lines[0].m_lineMaxColumn = -1;
             m_lines[0].m_lineMaxColumn = m_lines[0].maxColumn();
         } else {
-            m_lines.push_back(Line(text));
+            m_lines.emplace_back(text);
             auto &line = m_lines.back();
             line.m_lineMaxColumn = -1;
             line.m_lineMaxColumn = line.maxColumn();

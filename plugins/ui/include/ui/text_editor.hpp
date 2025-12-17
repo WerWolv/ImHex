@@ -315,12 +315,12 @@ namespace hex::ui {
             std::string operator[](i64 column) const;
             void setNeedsUpdate(bool needsUpdate);
             void append(const char *text);
-            void append(const char text);
+            void append(char text);
             void append(const std::string &text);
             void append(const Line &line);
             void append(LineIterator begin, LineIterator end);
             void insert(LineIterator iter, const std::string &text);
-            void insert(LineIterator iter, const char text);
+            void insert(LineIterator iter, char text);
             void insert(LineIterator iter, strConstIter beginString, strConstIter endString);
             void insert(LineIterator iter, const Line &line);
             void insert(LineIterator iter, LineIterator beginLine, LineIterator endLine);
@@ -446,11 +446,11 @@ namespace hex::ui {
         void setTopLine();
         void render(const char *title, const ImVec2 &size = ImVec2(), bool border = false);
 
-        inline void setShowCursor(bool value) { m_showCursor = value; }
-        inline void setShowLineNumbers(bool value) { m_showLineNumbers = value; }
-        inline void setShowWhitespaces(bool value) { m_showWhitespaces = value; }
-        inline bool isShowingWhitespaces() const { return m_showWhitespaces; }
-        inline i32 getTabSize() const { return m_tabSize; }
+        void setShowCursor(bool value) { m_showCursor = value; }
+        void setShowLineNumbers(bool value) { m_showLineNumbers = value; }
+        void setShowWhitespaces(bool value) { m_showWhitespaces = value; }
+        bool isShowingWhitespaces() const { return m_showWhitespaces; }
+        i32 getTabSize() const { return m_tabSize; }
         ImVec2 &getCharAdvance() { return m_charAdvance; }
         void clearGotoBoxes() { m_errorGotoBoxes.clear(); }
         void clearCursorBoxes() { m_cursorBoxes.clear(); }
@@ -461,7 +461,7 @@ namespace hex::ui {
         void setLongestLineLength(u64 line) { m_longestLineLength = line; }
         u64 getLongestLineLength() const { return m_longestLineLength; }
         void setTopMarginChanged(i32 newMargin);
-        void setFocusAtCoords(const Coordinates &coords, bool ensureVisible = false);
+        void setFocusAtCoords(const Coordinates &coords, bool scrollToCursor = false);
         void clearErrorMarkers();
         void clearActionables();
     private:
@@ -527,7 +527,7 @@ namespace hex::ui {
         inline bool isHandleKeyboardInputsEnabled() const { return m_handleKeyboardInputs; }
     private:
         std::string getText(const Range &selection);
-        void deleteRange(const Range &selection);
+        void deleteRange(const Range &rangeToDelete);
         i32 insertTextAt(Coordinates &where, const std::string &value);
         void removeLine(i32 start, i32 end);
         void removeLine(i32 index);
