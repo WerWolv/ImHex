@@ -352,7 +352,7 @@ namespace hex::plugin::builtin {
     }
 
     void handleHexdumpCommand(const std::vector<std::string> &args) {
-        if (args.size() < 1 || args.size() > 3) {
+        if (args.empty() || args.size() > 3) {
             log::println("usage: imhex --hexdump <file> <offset> <size>");
             std::exit(EXIT_FAILURE);
         }
@@ -399,7 +399,7 @@ namespace hex::plugin::builtin {
         if (std::fgets(input.data(), input.size() - 1, stdin) == nullptr)
             std::exit(EXIT_FAILURE);
 
-        input = input.c_str();
+        input = input.c_str(); // Stop at first null byte
         input = wolv::util::trim(input);
 
         if (input == ConfirmationString) {
@@ -536,7 +536,7 @@ namespace hex::plugin::builtin {
         mcp::Client client;
 
         auto result = client.run(std::cin, std::cout);
-        std::fprintf(stderr, "MCP Client disconnected!\n");
+        fmt::print(stderr, "MCP Client disconnected!\n");
         std::exit(result);
     }
 

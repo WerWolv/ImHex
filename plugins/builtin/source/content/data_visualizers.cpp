@@ -90,8 +90,8 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        constexpr static inline auto ByteCount = 1;
-        constexpr static inline auto CharCount = ByteCount * 2;
+        constexpr static auto ByteCount = 1;
+        constexpr static auto CharCount = ByteCount * 2;
 
         const static inline auto FormattingUpperCase = fmt::format("%0{}{}X", CharCount, ImGuiExt::getFormatLengthSpecifier<u8>());
         const static inline auto FormattingLowerCase = fmt::format("%0{}{}x", CharCount, ImGuiExt::getFormatLengthSpecifier<u8>());

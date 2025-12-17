@@ -51,9 +51,9 @@ namespace hex::plugin::builtin {
         void zerosMiniMapVisualizer(u64, std::span<const u8> data, std::vector<ImColor> &output) {
             for (u8 byte : data) {
                 if (byte == 0x00)
-                    output.push_back(ImColor(1.0F, 1.0F, 1.0F, 1.0F));
+                    output.emplace_back(1.0F, 1.0F, 1.0F, 1.0F);
                 else
-                    output.push_back(ImColor(0.0F, 0.0F, 0.0F, 1.0F));
+                    output.emplace_back(0.0F, 0.0F, 0.0F, 1.0F);
             }
         }
 

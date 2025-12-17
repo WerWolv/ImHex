@@ -961,16 +961,16 @@ namespace hex::ui {
                 langDef.m_identifiers.insert(std::make_pair(std::string(k), id));
             }
 
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::StringLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\!\\%\\^\\&\\*\\-\\+\\=\\~\\|\\<\\>\\?\\/]", PaletteIndex::Operator));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\[\\]\\{\\}\\(\\)\\;\\,\\.]", PaletteIndex::Separator));
+            langDef.m_tokenRegexStrings.emplace_back(R"([ \t]*#[ \t]*[a-zA-Z_]+)", PaletteIndex::Directive);
+            langDef.m_tokenRegexStrings.emplace_back(R"(L?\"(\\.|[^\"])*\")", PaletteIndex::StringLiteral);
+            langDef.m_tokenRegexStrings.emplace_back(R"(\'\\?[^\']\')", PaletteIndex::CharLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\!\%\^\&\*\-\+\=\~\|\<\>\?\/])", PaletteIndex::Operator);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\[\]\{\}\(\)\;\,\.])", PaletteIndex::Separator);
 
             langDef.m_commentStart = "--[[";
             langDef.m_commentEnd = "]]";
@@ -1001,10 +1001,11 @@ namespace hex::ui {
                 }
 
                 // handle escape character for "
-                if (*p == '\\' && p + 1 < in_end && p[1] == '\\')
-                    p++;
-                else if (*p == '\\' && p + 1 < in_end && p[1] == '"')
-                    p++;
+                if (*p == '\\' && p + 1 < in_end) {
+                    if (p[1] == '\\' || p[1] == '"') {
+                        p++;
+                    }
+                }
 
                 p++;
             }
@@ -1169,9 +1170,9 @@ namespace hex::ui {
                 out_begin = in_begin;
                 out_end = in_begin + 1;
                 return true;
+            default:
+                return false;
         }
-
-        return false;
     }
 
     bool tokenizeCStyleSeparator(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end) {

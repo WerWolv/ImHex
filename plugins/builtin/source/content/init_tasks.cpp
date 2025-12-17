@@ -123,7 +123,7 @@ namespace hex::plugin::builtin {
             if (restoreWindowPos) {
                 ImHexApi::System::InitialWindowProperties properties = {};
 
-                properties.maximized = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", 0);
+                properties.maximized = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", false);
                 properties.x       = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", 0);
                 properties.y       = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", 0);
                 properties.width   = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", 0);

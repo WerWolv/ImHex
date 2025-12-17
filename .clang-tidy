@@ -45,6 +45,7 @@ Checks:
 - -misc-const-correctness
 - modernize-*
 - -modernize-use-trailing-return-type
+- -modernize-use-std-print # We want to use fmt::print instead
 - openmp-use-default-none
 - performance-*
 - -performance-no-int-to-ptr
@@ -65,4 +66,20 @@ Checks:
 - -readability-function-cognitive-complexity
 - -readability-identifier-naming
 - -readability-qualified-auto
+- -readability-use-std-min-max # Less readable imo
+- -readability-math-missing-parentheses # Basic math
+- -readability-implicit-bool-conversion # Not much of a problem ?
 - '*-include-cleaner'
+
+# idk
+- -misc-include-cleaner
+- -cppcoreguidelines-narrowing-conversions
+- -modernize-use-designated-initializers
+- -readability-convert-member-functions-to-static
+- -misc-use-internal-linkage,
+- -readability-use-concise-preprocessor-directives # why not #ifdef ?
+- -performance-unnecessary-value-param
+
+
+# check later
+- -misc-unconventional-assign-operator
