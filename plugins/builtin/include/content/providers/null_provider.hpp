@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isResizable() const override { return false; }
         [[nodiscard]] bool isSavable() const override { return false; }
 
-        [[nodiscard]] bool open() override { return true; }
+        [[nodiscard]] OpenResult open() override { return {}; }
         void close() override { }
 
         void readRaw(u64 offset, void *buffer, size_t size) override {

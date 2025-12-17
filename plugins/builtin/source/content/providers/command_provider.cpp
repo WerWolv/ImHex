@@ -242,9 +242,9 @@ namespace hex::plugin::builtin {
         return fmt::format("hex.builtin.provider.command.name"_lang, m_name);
     }
 
-    bool CommandProvider::open() {
+    prv::Provider::OpenResult CommandProvider::open() {
         m_open = true;
-        return true;
+        return {};
     }
 
     void CommandProvider::close() {

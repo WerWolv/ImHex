@@ -11,6 +11,11 @@ namespace hex {
     EVENT_DEF(RequestCreateProvider, std::string, bool, bool, std::shared_ptr<hex::prv::Provider> *);
 
     /**
+     * @brief Used internally when opening a provider through the API
+    */
+    EVENT_DEF(RequestOpenProvider, std::shared_ptr<prv::Provider>);
+
+    /**
      * @brief Move the data from all PerProvider instances from one provider to another
      *
      * The 'from' provider should not have any per provider data after this, and should be immediately deleted

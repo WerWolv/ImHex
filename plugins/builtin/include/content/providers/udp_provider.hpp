@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool drawLoadInterface() override;
         void drawSidebarInterface() override;
 
-        [[nodiscard]] bool open() override;
+        [[nodiscard]] OpenResult open() override;
         void close() override;
 
         void loadSettings(const nlohmann::json &) override;

@@ -39,7 +39,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] u64 getActualSize() const override;
         void processMemoryRegions(wolv::util::Expected<std::map<u64, std::vector<u8>>, std::string> data);
         static bool memoryRegionFilter(const std::string &search, const MemoryRegion &memoryRegion);
-        bool open() override;
+        OpenResult open() override;
         void close() override;
 
         [[nodiscard]] std::string getName() const override;

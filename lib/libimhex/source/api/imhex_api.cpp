@@ -391,7 +391,7 @@ namespace hex {
             if (skipLoadInterface)
                 provider->skipLoadInterface();
 
-            EventProviderCreated::post(provider.get());
+            EventProviderCreated::post(provider);
             s_providers->emplace_back(std::move(provider));
 
             if (select || s_providers->size() == 1)
@@ -496,6 +496,10 @@ namespace hex {
             RequestCreateProvider::post(unlocalizedName, skipLoadInterface, select, &result);
 
             return result;
+        }
+
+        void openProvider(std::shared_ptr<prv::Provider> provider) {
+            RequestOpenProvider::post(provider);
         }
 
     }

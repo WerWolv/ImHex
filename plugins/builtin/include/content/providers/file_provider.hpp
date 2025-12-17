@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
 
         void setPath(const std::fs::path &path);
 
-        [[nodiscard]] bool open() override;
+        [[nodiscard]] OpenResult open() override;
         void close() override;
 
         void loadSettings(const nlohmann::json &settings) override;
@@ -66,7 +66,7 @@ namespace hex::plugin::builtin {
     private:
         void handleFileChange();
 
-        bool open(bool memoryMapped);
+        OpenResult open(bool memoryMapped);
 
     protected:
         std::fs::path m_path;

@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isSavableAsRecent() const override;
 
         void save() override;
-        [[nodiscard]] bool open() override;
+        [[nodiscard]] OpenResult open() override;
         void close() override;
 
         void resizeRaw(u64 newSize) override;

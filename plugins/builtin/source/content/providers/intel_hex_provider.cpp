@@ -245,21 +245,19 @@ namespace hex::plugin::builtin {
         });
     }
 
-    bool IntelHexProvider::open() {
+    prv::Provider::OpenResult IntelHexProvider::open() {
         auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
-            return false;
+            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
         }
 
         auto data = intel_hex::parseIntelHex(file.readString());
         if (!data.has_value()) {
-            this->setErrorMessage(data.error());
-            return false;
+            return OpenResult::failure(data.error());
         }
         processMemoryRegions(data);
 
-        return true;
+        return {};
     }
 
     void IntelHexProvider::close() {

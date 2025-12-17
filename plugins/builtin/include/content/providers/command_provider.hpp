@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] std::string getName() const override;
 
-        [[nodiscard]] bool open() override;
+        [[nodiscard]] OpenResult open() override;
         void close() override;
 
         bool drawLoadInterface() override;

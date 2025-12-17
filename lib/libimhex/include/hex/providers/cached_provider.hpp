@@ -21,7 +21,7 @@ namespace hex::prv {
         CachedProvider(size_t cacheBlockSize = 4096, size_t maxBlocks = 1024);
         ~CachedProvider() override;
 
-        bool open() override;
+        OpenResult open() override;
         void close() override;
 
         void readRaw(u64 offset, void *buffer, size_t size) override;

@@ -67,8 +67,9 @@ namespace hex::plugin::builtin {
             if (ImGuiExt::DimmedButton(fmt::format("{} {}", ICON_VS_OPEN_PREVIEW, "hex.builtin.view.fullscreen.save_editor.select_file"_lang).c_str(), ImVec2(-1, 0))) {
                 fs::openFileBrowser(fs::DialogMode::Open, {}, [this](const std::fs::path &path) {
                     this->m_provider.setPath(path);
-                    if (!this->m_provider.open()) {
+                    if (this->m_provider.open().isFailure()) {
                         ui::ToastError::open("hex.builtin.view.fullscreen.save_editor.error.not_readable"_lang);
+                        return;
                     }
 
                     ContentRegistry::PatternLanguage::configureRuntime(m_runtime, &m_provider);

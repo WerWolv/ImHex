@@ -539,7 +539,6 @@ namespace hex::plugin::builtin {
                             flags |= ImGuiTabItemFlags_UnsavedDocument;
                         if (i64(i) == selectedProviderIndex && providerJustChanged) {
                             flags |= ImGuiTabItemFlags_SetSelected;
-                            providerJustChanged = false;
                         }
 
                         static size_t lastSelectedProvider = 0;
@@ -550,7 +549,7 @@ namespace hex::plugin::builtin {
                             ImGui::EndTabItem();
                         }
 
-                        if (isSelected && lastSelectedProvider != i) {
+                        if (isSelected && lastSelectedProvider != i && !providerJustChanged) {
                             ImHexApi::Provider::setCurrentProvider(i);
                             lastSelectedProvider = i;
                         }
@@ -570,6 +569,8 @@ namespace hex::plugin::builtin {
                         }
                     }
                     ImGui::EndTabBar();
+
+                    providerJustChanged = false;
                 }
             }
             ImGui::EndDisabled();

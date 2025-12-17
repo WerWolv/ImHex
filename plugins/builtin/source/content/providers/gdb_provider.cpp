@@ -254,7 +254,7 @@ namespace hex::plugin::builtin {
         };
     }
 
-    bool GDBProvider::open() {
+    prv::Provider::OpenResult GDBProvider::open() {
         std::scoped_lock lock(m_mutex);
 
         CachedProvider::open();
@@ -264,11 +264,11 @@ namespace hex::plugin::builtin {
         gdb::sendReceivePackage(m_socket, gdb::createPacket("!"));
         gdb::sendReceivePackage(m_socket, gdb::createPacket("Hg0"));
 
-        if (m_socket.isConnected()) {
-            return true;
-        } else {
-            return false;
+        if (!m_socket.isConnected()) {
+            return OpenResult::failure("hex.builtin.provider.gdb.server.error.not_connected"_lang);
         }
+
+        return {};
     }
 
     void GDBProvider::close() {

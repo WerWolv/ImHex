@@ -117,6 +117,12 @@ EXPORT_MODULE namespace hex {
             bool select = true
         );
 
+        /**
+         * @brief Opens a provider, making its data available to ImHex and handling any error that may occur
+         * @param provider The provider to open
+         */
+        void openProvider(std::shared_ptr<prv::Provider> provider);
+
     }
 
 }

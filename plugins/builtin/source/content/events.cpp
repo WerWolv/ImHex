@@ -52,15 +52,10 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
             if (auto *fileProvider = dynamic_cast<FileProvider*>(provider.get()); fileProvider != nullptr) {
                 fileProvider->setPath(path);
-                if (!provider->open() || !provider->isAvailable()) {
-                    ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider.get()); });
-                    return;
-                }
 
-                EventProviderOpened::post(fileProvider);
+                ImHexApi::Provider::openProvider(provider);
+
                 AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
-                ImHexApi::Provider::setCurrentProvider(provider.get());
 
                 glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
                 glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
@@ -182,11 +177,8 @@ namespace hex::plugin::builtin {
 
         RequestOpenWindow::subscribe([](const std::string &name) {
             if (name == "Create File") {
-                auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
-                if (newProvider != nullptr && !newProvider->open())
-                    hex::ImHexApi::Provider::remove(newProvider.get());
-                else
-                    EventProviderOpened::post(newProvider.get());
+                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+                ImHexApi::Provider::openProvider(newProvider);
             } else if (name == "Open File") {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
                     if (path.extension() == ".hexproj") {
@@ -204,12 +196,8 @@ namespace hex::plugin::builtin {
                         return;
 
                     newProvider->setPath(path);
-                    if (!newProvider->open()) {
-                        hex::ImHexApi::Provider::remove(newProvider);
-                    } else {
-                        EventProviderOpened::post(newProvider);
-                        AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
-                    }
+                    ImHexApi::Provider::openProvider(provider);
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
                 }, {}, true);
             } else if (name == "Open Project") {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
@@ -226,34 +214,20 @@ namespace hex::plugin::builtin {
         });
 
         // Handles the provider initialization, and calls EventProviderOpened if successful
-        EventProviderCreated::subscribe([](hex::prv::Provider *provider) {
+        EventProviderCreated::subscribe([](std::shared_ptr<prv::Provider> provider) {
             if (provider->shouldSkipLoadInterface())
                 return;
 
-            if (auto *filePickerProvider = dynamic_cast<prv::IProviderFilePicker*>(provider); filePickerProvider != nullptr) {
+            if (auto *filePickerProvider = dynamic_cast<prv::IProviderFilePicker*>(provider.get()); filePickerProvider != nullptr) {
                 if (!filePickerProvider->handleFilePicker()) {
-                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider.get()); });
                     return;
                 }
 
-                TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
-                    if (!provider->open()) {
-                        ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                        TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
-                    } else {
-                        TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
-                    }
-                });
+                ImHexApi::Provider::openProvider(provider);
             }
-            else if (dynamic_cast<prv::IProviderLoadInterface*>(provider) == nullptr) {
-                TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
-                    if (!provider->open() || !provider->isAvailable()) {
-                        ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                        TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
-                    } else {
-                        TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
-                    }
-                });
+            else if (dynamic_cast<prv::IProviderLoadInterface*>(provider.get()) == nullptr) {
+                ImHexApi::Provider::openProvider(provider);
             }
         });
 
@@ -416,6 +390,25 @@ namespace hex::plugin::builtin {
                     ImGui::OpenPopup(name.c_str());
 
                 return false;
+            });
+        });
+
+        RequestOpenProvider::subscribe([](std::shared_ptr<prv::Provider> provider) {
+            TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
+                auto result = provider->open();
+                if (result.isFailure()) {
+                    ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, result.getErrorMessage()));
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider.get()); });
+                } else if (result.isRedirecting()) {
+                    TaskManager::doLater([result, provider] {
+                        ImHexApi::Provider::remove(provider.get());
+                        ImHexApi::Provider::setCurrentProvider(result.getRedirectProvider());
+                    });
+                } else {
+                    if (result.isWarning())
+                        ui::ToastWarning::open(std::string(result.getErrorMessage()));
+                    TaskManager::doLater([provider]{ EventProviderOpened::post(provider.get()); });
+                }
             });
         });
 

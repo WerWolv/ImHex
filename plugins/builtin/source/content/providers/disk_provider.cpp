@@ -157,7 +157,7 @@ namespace hex::plugin::builtin {
     }
 #endif
 
-    bool DiskProvider::open() {
+    prv::Provider::OpenResult DiskProvider::open() {
         m_readable = true;
         m_writable = true;
 
@@ -207,18 +207,16 @@ namespace hex::plugin::builtin {
             const auto &path = m_path.native();
 
             m_diskHandle = ::open(path.c_str(), O_RDWR);
+            OpenResult result;
             if (m_diskHandle == -1) {
-                this->setErrorMessage(fmt::format("hex.builtin.provider.disk.error.read_rw"_lang, path, formatSystemError(errno)));
-                log::warn("{}", this->getErrorMessage());
+                result = OpenResult::warning(fmt::format("hex.builtin.provider.disk.error.read_rw"_lang, path, formatSystemError(errno)));
                 m_diskHandle = ::open(path.c_str(), O_RDONLY);
                 m_writable   = false;
             }
 
             if (m_diskHandle == -1) {
-                this->setErrorMessage(fmt::format("hex.builtin.provider.disk.error.read_ro"_lang, path, formatSystemError(errno)));
-                log::warn("{}", this->getErrorMessage());
                 m_readable = false;
-                return false;
+                return OpenResult::failure(fmt::format("hex.builtin.provider.disk.error.read_ro"_lang, path, formatSystemError(errno)));
             }
 
             u64 diskSize = 0;
@@ -228,7 +226,7 @@ namespace hex::plugin::builtin {
 
         #endif
 
-        return true;
+        return result;
     }
 
     void DiskProvider::close() {

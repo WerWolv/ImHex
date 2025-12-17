@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
             };
         }
 
-        [[nodiscard]] bool open() override;
+        [[nodiscard]] OpenResult open() override;
         void close() override;
 
         bool drawLoadInterface() override;

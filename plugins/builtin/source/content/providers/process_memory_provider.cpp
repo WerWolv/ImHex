@@ -102,21 +102,21 @@ namespace hex::plugin::builtin {
 
 #endif
 
-    bool ProcessMemoryProvider::open() {
+    prv::Provider::OpenResult ProcessMemoryProvider::open() {
         if (m_selectedProcess == nullptr)
-            return false;
+            return OpenResult::failure("hex.builtin.provider.process_memory.error.no_process_selected"_lang);
 
         #if defined(OS_WINDOWS)
             m_processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, m_selectedProcess->id);
             if (m_processHandle == nullptr)
-                return false;
+                return OpenResult::failure("hex.builtin.provider.process_memory.error.open_process"_lang);
         #else
             m_processId = pid_t(m_selectedProcess->id);
         #endif
 
         this->reloadProcessModules();
 
-        return true;
+        return {};
     }
 
     void ProcessMemoryProvider::close() {
