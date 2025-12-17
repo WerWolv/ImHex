@@ -49,7 +49,7 @@ namespace hex::test {
 
         [[nodiscard]] UnlocalizedString getTypeName() const override { return "hex.test.provider.test"; }
 
-        bool open() override { return true; }
+        OpenResult open() override { return {}; }
         void close() override { }
 
         nlohmann::json storeSettings(nlohmann::json) const override { return {}; }
