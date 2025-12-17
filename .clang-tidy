@@ -72,14 +72,19 @@ Checks:
 - '*-include-cleaner'
 
 # idk
-- -misc-include-cleaner
-- -cppcoreguidelines-narrowing-conversions
-- -modernize-use-designated-initializers
+- -misc-include-cleaner # No direct include
+- -cppcoreguidelines-narrowing-conversions # int -> float without cast
+- -modernize-use-designated-initializers # do not initalize without writing field
 - -readability-convert-member-functions-to-static
-- -misc-use-internal-linkage,
+- -misc-use-internal-linkage
 - -readability-use-concise-preprocessor-directives # why not #ifdef ?
 - -performance-unnecessary-value-param
 
 
-# check later
+# check later, maybe important
 - -misc-unconventional-assign-operator
+
+# Don't want to deal with that now
+- -bugprone-unchecked-optional-access
+- -modernize-avoid-c-arrays
+- -misc-non-private-member-variables-in-classes
