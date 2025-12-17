@@ -10,7 +10,7 @@ namespace hex::plugin::builtin {
 
     }
 
-    static void registerReportGenerators() {
+    void registerReportGenerators() {
         // Generate provider data description report
         ContentRegistry::Reports::addReportProvider([](const prv::Provider *provider) -> std::string {
             std::string result;
