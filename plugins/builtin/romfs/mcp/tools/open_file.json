@@ -1,0 +1,19 @@
+{
+    "name": "open_file",
+    "title": "Open File",
+    "description": "Opens a file from the filesystem, given the file path in ImHex. This is the first step that always needs to be done first before any of the other tools can be used. A file stays open until it's closed by the user.",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "file_path": {
+                "type": "string",
+                "description": "Path of the file to open"
+            }
+        },
+        "required": ["file_path"]
+    },
+    "outputSchema": {
+        "type": "object",
+        "properties": {}
+    }
+}

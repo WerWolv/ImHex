@@ -6,6 +6,40 @@
 
 namespace hex::mcp {
 
+    struct TextContent {
+        std::string text;
+
+        operator nlohmann::json() const {
+            nlohmann::json result;
+            result["content"] = nlohmann::json::array({
+                nlohmann::json::object({
+                    { "type", "text" },
+                    { "text", text }
+                })
+            });
+
+            return result;
+        }
+    };
+
+    struct StructuredContent {
+        std::string text;
+        nlohmann::json data;
+
+        operator nlohmann::json() const {
+            nlohmann::json result;
+            result["content"] = nlohmann::json::array({
+                nlohmann::json::object({
+                    { "type", "text" },
+                    { "text", text }
+                })
+            });
+            result["structuredContent"] = data;
+
+            return result;
+        }
+    };
+
     class Server {
     public:
         constexpr static auto McpInternalPort = 19743;

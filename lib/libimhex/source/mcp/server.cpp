@@ -56,7 +56,7 @@ namespace hex::mcp {
             if (!m_id.has_value())
                 return std::nullopt;
 
-            return createResponseMessage(result);
+            return createResponseMessage(result.is_null() ? nlohmann::json::object() : result);
         }
 
         std::optional<nlohmann::json> handleBatchedMessages(const nlohmann::json &request, auto callback) {
@@ -154,7 +154,9 @@ namespace hex::mcp {
                     if (auto primitiveIt = m_primitives.find(primitive); primitiveIt != m_primitives.end()) {
                         auto name = params.value("name", "");
                         if (auto functionIt = primitiveIt->second.find(name); functionIt != primitiveIt->second.end()) {
-                            return functionIt->second.function(params.value("arguments", nlohmann::json::object()));
+                            auto result = functionIt->second.function(params.value("arguments", nlohmann::json::object()));
+
+                            return result.is_null() ? nlohmann::json::object() : result;
                         }
                     }
                 }

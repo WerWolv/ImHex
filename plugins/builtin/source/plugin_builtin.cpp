@@ -40,6 +40,7 @@ namespace hex::plugin::builtin {
     void registerThemes();
     void registerBackgroundServices();
     void registerNetworkEndpoints();
+    void registerMCPTools();
     void registerFileHandlers();
     void registerProjectHandlers();
     void registerAchievements();
@@ -140,6 +141,7 @@ IMHEX_PLUGIN_SETUP_BUILTIN("Built-in", "WerWolv", "Default ImHex functionality")
     registerStyleHandlers();
     registerBackgroundServices();
     registerNetworkEndpoints();
+    registerMCPTools();
     registerFileHandlers();
     registerProjectHandlers();
     registerCommandForwarders();

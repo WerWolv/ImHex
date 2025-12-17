@@ -18,6 +18,7 @@ add_imhex_plugin(
         source/content/command_palette_commands.cpp
         source/content/command_line_interface.cpp
         source/content/communication_interface.cpp
+        source/content/mcp_tools.cpp
         source/content/data_inspector.cpp
         source/content/differing_byte_searcher.cpp
         source/content/pl_builtin_functions.cpp
