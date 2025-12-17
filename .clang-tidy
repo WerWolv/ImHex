@@ -1,3 +1,7 @@
+# Disabled rules should have a comment associated
+# Or at least an empty comment # to show they were put here explicitely,
+# and not as part of the historical CLion-generated rules
+
 Checks:
 - -*
 - mpi-*
@@ -69,17 +73,14 @@ Checks:
 - -readability-use-std-min-max # Less readable imo
 - -readability-math-missing-parentheses # Basic math
 - -readability-implicit-bool-conversion # Not much of a problem ?
+- -readability-convert-member-functions-to-static #
+- -readability-use-concise-preprocessor-directives # We do not use #ifdef
 - '*-include-cleaner'
 
 # idk
 - -misc-include-cleaner # No direct include
 - -cppcoreguidelines-narrowing-conversions # int -> float without cast
 - -modernize-use-designated-initializers # do not initalize without writing field
-- -readability-convert-member-functions-to-static
-- -misc-use-internal-linkage
-- -readability-use-concise-preprocessor-directives # why not #ifdef ?
-- -performance-unnecessary-value-param
-
 
 # check later, maybe important
 - -misc-unconventional-assign-operator
