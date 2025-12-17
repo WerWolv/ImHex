@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/api/content_registry/data_processor.hpp>
@@ -8,6 +9,7 @@
 #include <hex/data_processor/node.hpp>
 #include <hex/helpers/utils.hpp>
 
+#include <numeric>
 #include <wolv/utils/core.hpp>
 
 #include <content/helpers/diagrams.hpp>
@@ -233,7 +235,7 @@ namespace hex::plugin::builtin {
             if (address + patch.size() > buffer.size())
                 buffer.resize(address + patch.size());
 
-            std::copy(patch.begin(), patch.end(), buffer.begin() + address);
+            std::ranges::copy(patch, buffer.begin() + address);
 
             this->setBufferOnOutput(3, buffer);
         }
@@ -386,7 +388,7 @@ namespace hex::plugin::builtin {
 
                 static auto x = [] {
                     std::array<ImU64, 256> result { 0 };
-                    std::iota(result.begin(), result.end(), 0);
+                    std::ranges::iota(result, 0);
                     return result;
                 }();
 
@@ -463,7 +465,7 @@ namespace hex::plugin::builtin {
 
         void process() override {
             auto data = this->getBufferOnInput(0);
-            std::reverse(data.begin(), data.end());
+            std::ranges::reverse(data);
             this->setBufferOnOutput(1, data);
         }
 
