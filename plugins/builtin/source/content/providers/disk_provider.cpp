@@ -171,8 +171,7 @@ namespace hex::plugin::builtin {
                 m_writable   = false;
 
                 if (m_diskHandle == INVALID_HANDLE_VALUE) {
-                    this->setErrorMessage(hex::formatSystemError(::GetLastError()));
-                    return false;
+                    return OpenResult::failure(hex::formatSystemError(::GetLastError()));
                 }
             }
 
@@ -194,12 +193,12 @@ namespace hex::plugin::builtin {
             }
 
             if (m_diskHandle == nullptr || m_diskHandle == INVALID_HANDLE_VALUE) {
-                this->setErrorMessage(hex::formatSystemError(::GetLastError()));
+                auto error = ::GetLastError();
                 m_readable   = false;
                 m_diskHandle = nullptr;
                 CloseHandle(m_diskHandle);
 
-                return false;
+                return OpenResult::failure(hex::formatSystemError(error));
             }
 
         #else
