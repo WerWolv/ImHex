@@ -1,5 +1,6 @@
 #include "content/views/view_data_inspector.hpp"
 
+#include <algorithm>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/providers/provider.hpp>
@@ -263,7 +264,7 @@ namespace hex::plugin::builtin {
         }
 
         const auto selection = ImHexApi::HexEditor::getSelection();
-        const auto selectedEntryIt = std::find_if(m_cachedData.begin(), m_cachedData.end(), [this](const InspectorCacheEntry &entry) {
+        const auto selectedEntryIt = std::ranges::find_if(m_cachedData, [this](const InspectorCacheEntry &entry) {
             return entry.unlocalizedName == m_selectedEntryName;
         });
 

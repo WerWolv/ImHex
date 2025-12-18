@@ -1,4 +1,5 @@
 #include "content/views/view_data_processor.hpp"
+#include <algorithm>
 #include <toasts/toast_notification.hpp>
 
 #include <hex/api/content_registry/data_processor.hpp>
@@ -52,7 +53,7 @@ namespace hex::plugin::builtin {
 
         void setValue(auto value) { m_value = std::move(value); }
 
-        const std::string &getName() const { return m_name; }
+        [[nodiscard]] const std::string &getName() const { return m_name; }
 
         dp::Attribute::Type getType() const {
             switch (m_type) {
@@ -121,8 +122,8 @@ namespace hex::plugin::builtin {
             ImGui::PopItemWidth();
         }
 
-        const std::string &getName() const { return m_name; }
-        dp::Attribute::Type getType() const {
+        [[nodiscard]] const std::string &getName() const { return m_name; }
+        [[nodiscard]] dp::Attribute::Type getType() const {
             switch (m_type) {
                 case 0: return dp::Attribute::Type::Integer;
                 case 1: return dp::Attribute::Type::Float;
@@ -856,7 +857,7 @@ namespace hex::plugin::builtin {
 
                             auto value = i64(*reinterpret_cast<i128*>(defaultValue.data()));
                             if (ImGui::InputScalar(Lang(attribute.getUnlocalizedName()), ImGuiDataType_S64, &value)) {
-                                std::fill(defaultValue.begin(), defaultValue.end(), 0x00);
+                                std::ranges::fill(defaultValue, 0x00);
 
                                 i128 writeValue = value;
                                 std::memcpy(defaultValue.data(), &writeValue, sizeof(writeValue));
@@ -866,7 +867,7 @@ namespace hex::plugin::builtin {
 
                             auto value = double(*reinterpret_cast<long double*>(defaultValue.data()));
                             if (ImGui::InputScalar(Lang(attribute.getUnlocalizedName()), ImGuiDataType_Double, &value)) {
-                                std::fill(defaultValue.begin(), defaultValue.end(), 0x00);
+                                std::ranges::fill(defaultValue, 0x00);
 
                                 long double writeValue = value;
                                 std::memcpy(defaultValue.data(), &writeValue, sizeof(writeValue));

@@ -83,6 +83,7 @@ Checks:
 - -misc-include-cleaner # No direct include
 - -cppcoreguidelines-narrowing-conversions # int -> float without cast
 - -modernize-use-designated-initializers # do not initalize without writing field
+- -readability-static-accessed-through-instance # this->staticMethod()
 
 # check later, maybe important
 - -misc-unconventional-assign-operator
