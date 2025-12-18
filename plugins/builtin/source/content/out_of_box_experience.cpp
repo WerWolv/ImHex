@@ -472,7 +472,7 @@ namespace hex::plugin::builtin {
         EventFirstLaunch::subscribe([] {
             ImHexApi::System::setWindowResizable(false);
 
-            const auto imageTheme = ThemeManager::getImageTheme();
+            auto &imageTheme = ThemeManager::getImageTheme();
             s_imhexBanner    = ImGuiExt::Texture::fromSVG(romfs::get(fmt::format("assets/{}/banner.svg", imageTheme)).span<std::byte>(), 0, 0, ImGuiExt::Texture::Filter::Linear);
             s_compassTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/compass.png").span<std::byte>(), ImGuiExt::Texture::Filter::Linear);
             s_globeTexture   = ImGuiExt::Texture::fromImage(romfs::get("assets/common/globe.png").span<std::byte>(), ImGuiExt::Texture::Filter::Linear);

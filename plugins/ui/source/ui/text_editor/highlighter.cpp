@@ -1,7 +1,7 @@
+#include <algorithm>
 #include <ui/text_editor.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
-#include <algorithm>
 
 namespace hex::ui {
     extern TextEditor::Palette s_paletteBase;
@@ -94,10 +94,10 @@ namespace hex::ui {
 
                             // todo : almost all language definitions use lower case to specify keywords, so shouldn't this use ::tolower ?
                             if (!m_languageDefinition.m_caseSensitive)
-                                std::transform(id.begin(), id.end(), id.begin(), ::toupper);
-                            else if (m_languageDefinition.m_keywords.count(id) != 0)
+                                std::ranges::transform(id, id.begin(), ::toupper);
+                            else if (m_languageDefinition.m_keywords.contains(id))
                                 token_color = PaletteIndex::Keyword;
-                            else if (m_languageDefinition.m_identifiers.count(id) != 0)
+                            else if (m_languageDefinition.m_identifiers.contains(id))
                                 token_color = PaletteIndex::BuiltInType;
                             else if (id == "$")
                                 token_color = PaletteIndex::GlobalVariable;
@@ -105,7 +105,7 @@ namespace hex::ui {
                     } else {
                         if ((token_color == PaletteIndex::Identifier || flags.m_bits.preprocessor) && !flags.m_bits.deactivated && !(flags.m_value & inComment)) {
                             id.assign(token_begin, token_end);
-                            if (m_languageDefinition.m_preprocIdentifiers.count(id) != 0) {
+                            if (m_languageDefinition.m_preprocIdentifiers.contains(id)) {
                                 token_color = PaletteIndex::Directive;
                                 token_begin -= 1;
                                 token_length = token_end - token_begin;
@@ -125,7 +125,7 @@ namespace hex::ui {
                                 token_color = PaletteIndex::PreprocessorDeactivated;
                                 token_begin -= 1;
                                 token_offset -= 1;
-                            } else if (id.assign(token_begin, token_end);flags.m_value & inComment && m_languageDefinition.m_preprocIdentifiers.count(id) != 0) {
+                            } else if (id.assign(token_begin, token_end);flags.m_value & inComment && m_languageDefinition.m_preprocIdentifiers.contains(id)) {
                                 token_color = getColorIndexFromFlags(flags);
                                 token_begin -= 1;
                                 token_offset -= 1;
@@ -184,7 +184,7 @@ namespace hex::ui {
 
             std::vector<bool> ifDefs;
             ifDefs.push_back(true);
-            m_defines.push_back("__IMHEX__");
+            m_defines.emplace_back("__IMHEX__");
             for (currentLine = 0; currentLine < endLine; currentLine++) {
                 auto &line = m_lines[currentLine];
                 auto lineLength = line.size();

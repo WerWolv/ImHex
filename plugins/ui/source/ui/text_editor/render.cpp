@@ -453,7 +453,7 @@ namespace hex::ui {
             }
         }
         // Draw breakpoints
-        if (m_breakpoints.count(lineNo + 1) != 0) {
+        if (m_breakpoints.contains(lineNo + 1)) {
             auto end = ImVec2(lineNoStartScreenPos.x + contentSize.x + m_lineNumberFieldWidth, lineStartScreenPos.y + m_charAdvance.y);
             drawList->AddRectFilled(ImVec2(position.x, lineStartScreenPos.y), end, m_palette[(i32) PaletteIndex::Breakpoint]);
 
@@ -511,7 +511,7 @@ namespace hex::ui {
             }
             if (found) {
                 i32 currLine = 0, currColumn = 0;
-                if (auto idx = errorLineColumn.find(":"); idx != std::string::npos) {
+                if (auto idx = errorLineColumn.find(':'); idx != std::string::npos) {
                     auto errorLine = errorLineColumn.substr(0, idx);
                     if (!errorLine.empty())
                         currLine = std::stoi(errorLine) - 1;
@@ -532,12 +532,12 @@ namespace hex::ui {
                     }
                 }
             }
-            if (m_cursorBoxes.find(gotoKey) != m_cursorBoxes.end()) {
+            if (m_cursorBoxes.contains(gotoKey)) {
                 auto box = m_cursorBoxes[gotoKey];
                 if (box.trigger()) box.callback();
             }
 
-            if (m_errorGotoBoxes.find(gotoKey) != m_errorGotoBoxes.end()) {
+            if (m_errorGotoBoxes.contains(gotoKey)) {
                 auto box = m_errorGotoBoxes[gotoKey];
                 if (box.trigger()) box.callback();
             }
@@ -568,7 +568,7 @@ namespace hex::ui {
             ErrorHoverBox box = ErrorHoverBox(ImRect({begin, end}), key, errorMessage.c_str());
             m_errorHoverBoxes[key] = box;
         }
-        if (m_errorHoverBoxes.find(key) != m_errorHoverBoxes.end()) {
+        if (m_errorHoverBoxes.contains(key)) {
             auto box = m_errorHoverBoxes[key];
             if (box.trigger()) box.callback();
         }

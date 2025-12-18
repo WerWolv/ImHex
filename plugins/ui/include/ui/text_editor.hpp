@@ -3,14 +3,10 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <memory>
-#include <functional>
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
 #include <regex>
-#include <chrono>
-#include <iostream>
 #include "imgui.h"
 #include "imgui_internal.h"
 #include <hex/helpers/utils.hpp>
@@ -107,7 +103,7 @@ namespace hex::ui {
         public:
             friend class TextEditor;
             bool operator==(const EditorState &o) const;
-            EditorState() : m_selection(), m_cursorPosition() {}
+            EditorState() = default;
             EditorState(const Range &selection, const Coordinates &cursorPosition) : m_selection(selection), m_cursorPosition(cursorPosition) {}
         private:
             Range m_selection;
@@ -277,37 +273,37 @@ namespace hex::ui {
 
             enum class LinePart { Chars, Utf8, Colors, Flags };
 
-            Line() : m_chars(""), m_colors(""), m_flags(""), m_colorized(false), m_lineMaxColumn(-1) {}
+            Line() : m_lineMaxColumn(-1) {}
             explicit Line(const char *line) : Line(std::string(line)) {}
-            explicit Line(const std::string &line) : m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false), m_lineMaxColumn(maxColumn()) {}
+            explicit Line(const std::string &line) : m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_lineMaxColumn(maxColumn()) {}
             Line(const Line &line) : m_chars(std::string(line.m_chars)), m_colors(std::string(line.m_colors)), m_flags(std::string(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
             Line(Line &&line) noexcept : m_chars(std::move(line.m_chars)), m_colors(std::move(line.m_colors)), m_flags(std::move(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
-            Line(std::string chars, std::string colors, std::string flags) : m_chars(std::move(chars)), m_colors(std::move(colors)), m_flags(std::move(flags)), m_colorized(false), m_lineMaxColumn(maxColumn()) {}
+            Line(std::string chars, std::string colors, std::string flags) : m_chars(std::move(chars)), m_colors(std::move(colors)), m_flags(std::move(flags)), m_lineMaxColumn(maxColumn()) {}
 
             bool operator==(const Line &o) const;
             bool operator!=(const Line &o) const;
-            i32 indexColumn(i32 stringIndex) const;
-            i32 maxColumn();
-            i32 maxColumn() const;
-            i32 columnIndex(i32 column) const;
-            i32 textSize() const;
-            i32 textSize(u32 index) const;
+            [[nodiscard]] i32 indexColumn(i32 stringIndex) const;
+            [[nodiscard]] i32 maxColumn();
+            [[nodiscard]] i32 maxColumn() const;
+            [[nodiscard]] i32 columnIndex(i32 column) const;
+            [[nodiscard]] i32 textSize() const;
+            [[nodiscard]] i32 textSize(u32 index) const;
             i32 lineTextSize(TrimMode trimMode = TrimMode::TrimNone);
-            i32 stringTextSize(const std::string &str) const;
+            [[nodiscard]] i32 stringTextSize(const std::string &str) const;
             i32 textSizeIndex(float textSize, i32 position);
-            LineIterator begin() const;
-            LineIterator end() const;
+            [[nodiscard]] LineIterator begin() const;
+            [[nodiscard]] LineIterator end() const;
             LineIterator begin();
             LineIterator end();
             Line &operator=(const Line &line);
             Line &operator=(Line &&line) noexcept;
-            u64 size() const;
+            [[nodiscard]] u64 size() const;
             TextEditor::Line trim(TrimMode trimMode);
-            char front(LinePart part = LinePart::Chars) const;
-            std::string frontUtf8(LinePart part = LinePart::Chars) const;
+            [[nodiscard]] char front(LinePart part = LinePart::Chars) const;
+            [[nodiscard]] std::string frontUtf8(LinePart part = LinePart::Chars) const;
             void push_back(char c);
-            bool empty() const;
-            std::string substr(u64 start, u64 length = (u64) -1, LinePart part = LinePart::Chars) const;
+            [[nodiscard]] bool empty() const;
+            [[nodiscard]] std::string substr(u64 start, u64 length = (u64) -1, LinePart part = LinePart::Chars) const;
             Line subLine(u64 start, u64 length = (u64) -1);
             char operator[](u64 index) const;
             // C++ can't overload functions based on return type, so use any type other
@@ -330,7 +326,7 @@ namespace hex::ui {
             void clear();
             void setLine(const std::string &text);
             void setLine(const Line &text);
-            bool needsUpdate() const;
+            [[nodiscard]] bool needsUpdate() const;
             bool isEndOfLine(i32 column);
         private:
            std::string m_chars;
@@ -352,14 +348,14 @@ namespace hex::ui {
             Identifiers m_identifiers;
             Identifiers m_preprocIdentifiers;
             std::string m_singleLineComment, m_commentEnd, m_commentStart, m_globalDocComment, m_docComment, m_blockDocComment;
-            char m_preprocChar;
-            bool m_autoIndentation;
+            char m_preprocChar = '#';
+            bool m_autoIndentation = true;
             TokenizeCallback m_tokenize;
             TokenRegexStrings m_tokenRegexStrings;
-            bool m_caseSensitive;
+            bool m_caseSensitive = true;
 
-            LanguageDefinition() : m_name(""), m_keywords({}), m_identifiers({}), m_preprocIdentifiers({}), m_singleLineComment(""), m_commentEnd(""), m_commentStart(""), m_globalDocComment(""),
-                                    m_docComment(""), m_blockDocComment(""), m_preprocChar('#'), m_autoIndentation(true), m_tokenize(nullptr), m_tokenRegexStrings({}), m_caseSensitive(true) {}
+            LanguageDefinition() : m_keywords({}), m_identifiers({}), m_preprocIdentifiers({}),
+                                    m_tokenize(nullptr), m_tokenRegexStrings({}) {}
 
             static const LanguageDefinition &CPlusPlus();
             static const LanguageDefinition &HLSL();
@@ -376,12 +372,12 @@ namespace hex::ui {
         class UndoRecord {
         public:
             friend class TextEditor;
-            UndoRecord() {}
+            UndoRecord() = default;
             ~UndoRecord() {}
             UndoRecord( const std::string &added,
-                        const Range addedRange,
+                        Range addedRange,
                         const std::string &removed,
-                        const Range removedRange,
+                        Range removedRange,
                         EditorState &before,
                         EditorState &after);
 
@@ -398,7 +394,7 @@ namespace hex::ui {
 
         class UndoAction {
         public:
-            UndoAction() {}
+            UndoAction() = default;
             ~UndoAction() {}
             explicit UndoAction(const UndoRecords &records) : m_records(records) {}
             void undo(TextEditor *editor);
@@ -412,8 +408,8 @@ namespace hex::ui {
         struct MatchedBracket {
             bool m_active = false;
             bool m_changed = false;
-            Coordinates m_nearCursor = {};
-            Coordinates m_matched = {};
+            Coordinates m_nearCursor;
+            Coordinates m_matched;
             static const std::string s_separators;
             static const std::string s_operators;
 
@@ -421,7 +417,7 @@ namespace hex::ui {
                                                           m_nearCursor(other.m_nearCursor),
                                                           m_matched(other.m_matched) {}
 
-            MatchedBracket() : m_active(false), m_changed(false), m_nearCursor(0, 0), m_matched(0, 0) {}
+            MatchedBracket() : m_nearCursor(0, 0), m_matched(0, 0) {}
             MatchedBracket(bool active, bool changed, const Coordinates &nearCursor, const Coordinates &matched)
                     : m_active(active), m_changed(changed), m_nearCursor(nearCursor), m_matched(matched) {}
 
@@ -429,8 +425,8 @@ namespace hex::ui {
             bool isNearABracket(TextEditor *editor, const Coordinates &from);
             i32 detectDirection(TextEditor *editor, const Coordinates &from);
             void findMatchingBracket(TextEditor *editor);
-            bool isActive() const { return m_active; }
-            bool hasChanged() const { return m_changed; }
+            [[nodiscard]] bool isActive() const { return m_active; }
+            [[nodiscard]] bool hasChanged() const { return m_changed; }
         };
 
 
@@ -518,15 +514,15 @@ namespace hex::ui {
         std::vector<std::string> getTextLines() const;
         std::string getSelectedText();
         std::string getLineText(i32 line);
-        inline void setTextChanged(bool value) { m_textChanged = value; }
-        inline bool isTextChanged() { return m_textChanged; }
-        inline void setReadOnly(bool value) { m_readOnly = value; }
-        inline void setHandleMouseInputs(bool value) { m_handleMouseInputs = value; }
-        inline bool isHandleMouseInputsEnabled() const { return m_handleKeyboardInputs; }
-        inline void setHandleKeyboardInputs(bool value) { m_handleKeyboardInputs = value; }
-        inline bool isHandleKeyboardInputsEnabled() const { return m_handleKeyboardInputs; }
+        void setTextChanged(bool value) { m_textChanged = value; }
+        bool isTextChanged() { return m_textChanged; }
+        void setReadOnly(bool value) { m_readOnly = value; }
+        void setHandleMouseInputs(bool value) { m_handleMouseInputs = value; }
+        bool isHandleMouseInputsEnabled() const { return m_handleMouseInputs; }
+        void setHandleKeyboardInputs(bool value) { m_handleKeyboardInputs = value; }
+        bool isHandleKeyboardInputsEnabled() const { return m_handleKeyboardInputs; }
     private:
-        std::string getText(const Range &selection);
+        std::string getText(const Range &from);
         void deleteRange(const Range &rangeToDelete);
         i32 insertTextAt(Coordinates &where, const std::string &value);
         void removeLine(i32 start, i32 end);
@@ -575,10 +571,10 @@ namespace hex::ui {
         i32 getTotalLines() const { return (i32) m_lines.size(); }
         FindReplaceHandler *getFindReplaceHandler() { return &m_findReplaceHandler; }
         void setSourceCodeEditor(TextEditor *editor) { m_sourceCodeEditor = editor; }
-        inline void clearBreakpointsChanged() { m_breakPointsChanged = false; }
-        inline bool isBreakpointsChanged() { return m_breakPointsChanged; }
-        inline void setImGuiChildIgnored(bool value) { m_ignoreImGuiChild = value; }
-        inline bool isImGuiChildIgnored() const { return m_ignoreImGuiChild; }
+        void clearBreakpointsChanged() { m_breakPointsChanged = false; }
+        bool isBreakpointsChanged() { return m_breakPointsChanged; }
+        void setImGuiChildIgnored(bool value) { m_ignoreImGuiChild = value; }
+        bool isImGuiChildIgnored() const { return m_ignoreImGuiChild; }
         bool raiseContextMenu() { return m_raiseContextMenu; }
         void clearRaiseContextMenu() { m_raiseContextMenu = false; }
         TextEditor *getSourceCodeEditor();
@@ -610,7 +606,7 @@ namespace hex::ui {
     private:
         float m_lineSpacing = 1.0F;
         Lines m_lines;
-        EditorState m_state = {};
+        EditorState m_state;
         UndoBuffer m_undoBuffer;
         i32 m_undoIndex = 0;
         bool m_scrollToBottom = false;
@@ -638,18 +634,18 @@ namespace hex::ui {
         bool m_ignoreImGuiChild = false;
         bool m_showWhitespaces = true;
 
-        MatchedBracket m_matchedBracket = {};
+        MatchedBracket m_matchedBracket;
         Palette m_palette = {};
-        LanguageDefinition m_languageDefinition = {};
+        LanguageDefinition m_languageDefinition;
         RegexList m_regexList;
         bool m_updateFlags = true;
-        Breakpoints m_breakpoints = {};
-        ErrorMarkers m_errorMarkers = {};
-        ErrorHoverBoxes m_errorHoverBoxes = {};
-        ErrorGotoBoxes m_errorGotoBoxes = {};
-        CursorBoxes m_cursorBoxes = {};
-        ImVec2 m_charAdvance = {};
-        Range m_interactiveSelection = {};
+        Breakpoints m_breakpoints;
+        ErrorMarkers m_errorMarkers;
+        ErrorHoverBoxes m_errorHoverBoxes;
+        ErrorGotoBoxes m_errorGotoBoxes;
+        CursorBoxes m_cursorBoxes;
+        ImVec2 m_charAdvance;
+        Range m_interactiveSelection;
         u64 m_startTime = 0;
         std::vector<std::string> m_defines;
         TextEditor *m_sourceCodeEditor = nullptr;
@@ -663,7 +659,7 @@ namespace hex::ui {
         bool m_showCursor = true;
         bool m_showLineNumbers = true;
         bool m_raiseContextMenu = false;
-        Coordinates m_focusAtCoords = {};
+        Coordinates m_focusAtCoords;
         bool m_updateFocus = false;
 
         std::vector<std::string> m_clickableText;

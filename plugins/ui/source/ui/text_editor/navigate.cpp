@@ -237,13 +237,13 @@ namespace hex::ui {
             return;
         i32 home;
         if (!prefix.empty()) {
-            auto idx = prefix.find_first_not_of(" ");
+            auto idx = prefix.find_first_not_of(' ');
             if (idx == std::string::npos) {
-                auto postIdx = postfix.find_first_of(" ");
+                auto postIdx = postfix.find_first_of(' ');
                 if (postIdx == std::string::npos || postIdx == 0)
                     home = 0;
                 else {
-                    postIdx = postfix.find_first_not_of(" ");
+                    postIdx = postfix.find_first_not_of(' ');
                     if (postIdx == std::string::npos)
                         home = this->lineMaxColumn(oldPos.m_line);
                     else if (postIdx == 0)
@@ -254,11 +254,11 @@ namespace hex::ui {
             } else
                 home = idx;
         } else {
-            auto postIdx = postfix.find_first_of(" ");
+            auto postIdx = postfix.find_first_of(' ');
             if (postIdx == std::string::npos)
                 home = 0;
             else {
-                postIdx = postfix.find_first_not_of(" ");
+                postIdx = postfix.find_first_not_of(' ');
                 if (postIdx == std::string::npos)
                     home = lineMaxColumn(oldPos.m_line);
                 else
@@ -360,9 +360,7 @@ namespace hex::ui {
         if (std::abs(m_line) > (i32) maxLine)
             return false;
         auto maxColumn = editor->lineMaxColumn(m_line);
-        if (std::abs(m_column) > maxColumn)
-            return false;
-        return true;
+        return std::abs(m_column) <= maxColumn;
     }
 
     TextEditor::Coordinates TextEditor::Coordinates::sanitize(TextEditor *editor) {

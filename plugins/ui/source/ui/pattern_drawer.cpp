@@ -321,10 +321,9 @@ namespace hex::ui {
                         m_filteredPatterns.push_back(pattern);
                     } else {
                         auto patternValue = pattern->getValue();
-                        if (!m_filter->inverted && (patternValue <=> *m_filter->value) == m_filter->operation) {
-                            if (!m_filter->typeMatch || (m_filter->value->index() == patternValue.index()))
-                                m_filteredPatterns.push_back(pattern);
-                        } else if (m_filter->inverted && (patternValue <=> *m_filter->value) != m_filter->operation) {
+                        auto operation = patternValue <=> *m_filter->value;
+                        bool isOperationOk = operation == m_filter->operation;
+                        if ((!m_filter->inverted && isOperationOk) || (m_filter->inverted && !isOperationOk)) {
                             if (!m_filter->typeMatch || (m_filter->value->index() == patternValue.index()))
                                 m_filteredPatterns.push_back(pattern);
                         }
@@ -481,7 +480,7 @@ namespace hex::ui {
             pattern = pattern->getParent();
         }
 
-        std::reverse(result.begin(), result.end());
+        std::ranges::reverse(result);
 
         return result;
     }

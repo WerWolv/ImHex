@@ -22,6 +22,5 @@ namespace hex::trace {
     };
 
     StackTraceResult getStackTrace();
-    [[nodiscard]] std::string demangle(const std::string &mangledName);
-
+    [[nodiscard]] std::string demangle(const std::string &symbolName);
 }

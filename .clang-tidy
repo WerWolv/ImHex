@@ -84,11 +84,11 @@ Checks:
 - -cppcoreguidelines-narrowing-conversions # int -> float without cast
 - -modernize-use-designated-initializers # do not initalize without writing field
 - -readability-static-accessed-through-instance # this->staticMethod()
+- -readability-make-member-function-const # to make functions const. Seems to not catch everything ?
+- -performance-enum-size
 
-# check later, maybe important
+# Will check later if useful or not
 - -misc-unconventional-assign-operator
-
-# Don't want to deal with that now
 - -bugprone-unchecked-optional-access
 - -modernize-avoid-c-arrays
 - -misc-non-private-member-variables-in-classes
@@ -100,3 +100,5 @@ Checks:
 - -performance-for-range-copy
 - -performance-unnecessary-value-param
 - -bugprone-empty-catch
+- -bugprone-multi-level-implicit-pointer-conversion
+- -modernize-pass-by-value
