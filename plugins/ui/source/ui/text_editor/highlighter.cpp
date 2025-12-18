@@ -25,7 +25,7 @@ namespace hex::ui {
             auto &lineTokens = m_lines[line].m_colors;
             if (lineTokens.size() != tokens.size()) {
                 lineTokens.resize(tokens.size());
-                std::fill(lineTokens.begin(), lineTokens.end(), 0x00);
+                std::ranges::fill(lineTokens, 0x00);
             }
             bool needsUpdate = false;
             for (u64 i = 0; i < tokens.size(); ++i) {
@@ -148,7 +148,7 @@ namespace hex::ui {
                         if (token_offset + token_length >= line.m_colors.size()) {
                             auto colors = line.m_colors;
                             line.m_colors.resize(token_offset + token_length, static_cast<char>(PaletteIndex::Default));
-                            std::copy(colors.begin(), colors.end(), line.m_colors.begin());
+                            std::ranges::copy(colors, line.m_colors.begin());
                         }
                         try {
                             line.m_colors.replace(token_offset, token_length, token_length, static_cast<char>(token_color));
@@ -298,10 +298,10 @@ namespace hex::ui {
                                 auto definesBegin = m_defines.begin();
                                 auto definesEnd = m_defines.end();
                                 if (directive == "define") {
-                                    if (identifier.size() > 0 && !withinNotDef && std::find(definesBegin, definesEnd, identifier) == definesEnd)
+                                    if (!identifier.empty() && !withinNotDef && std::find(definesBegin, definesEnd, identifier) == definesEnd)
                                         m_defines.push_back(identifier);
                                 } else if (directive == "undef") {
-                                    if (identifier.size() > 0 && !withinNotDef)
+                                    if (!identifier.empty() && !withinNotDef)
                                         m_defines.erase(std::remove(definesBegin, definesEnd, identifier), definesEnd);
                                 } else if (directive == "ifdef") {
                                     if (!withinNotDef) {
@@ -407,7 +407,7 @@ namespace hex::ui {
         m_regexList.clear();
 
         for (auto &r: m_languageDefinition.m_tokenRegexStrings)
-            m_regexList.push_back(std::make_pair(std::regex(r.first, std::regex_constants::optimize), r.second));
+            m_regexList.emplace_back(std::regex(r.first, std::regex_constants::optimize), r.second);
 
         colorize();
     }
@@ -649,16 +649,16 @@ namespace hex::ui {
                 langDef.m_identifiers.insert(std::make_pair(std::string(k), id));
             }
 
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::StringLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\!\\%\\^\\&\\*\\-\\+\\=\\~\\|\\<\\>\\?\\/]", PaletteIndex::Operator));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\[\\]\\{\\}\\(\\)\\;\\,\\.]", PaletteIndex::Separator));
+            langDef.m_tokenRegexStrings.emplace_back("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive);
+            langDef.m_tokenRegexStrings.emplace_back(R"(L?\"(\\.|[^\"])*\")", PaletteIndex::StringLiteral);
+            langDef.m_tokenRegexStrings.emplace_back(R"(\'\\?[^\']\')", PaletteIndex::CharLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\!\%\^\&\*\-\+\=\~\|\<\>\?\/])", PaletteIndex::Operator);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\[\]\{\}\(\)\;\,\.])", PaletteIndex::Separator);
             langDef.m_commentStart = "/*";
             langDef.m_commentEnd = "*/";
             langDef.m_singleLineComment = "//";
@@ -700,16 +700,16 @@ namespace hex::ui {
                 langDef.m_identifiers.insert(std::make_pair(std::string(k), id));
             }
 
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::StringLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\!\\%\\^\\&\\*\\-\\+\\=\\~\\|\\<\\>\\?\\/]", PaletteIndex::Operator));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\[\\]\\{\\}\\(\\)\\;\\,\\.]", PaletteIndex::Separator));
+            langDef.m_tokenRegexStrings.emplace_back("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive);
+            langDef.m_tokenRegexStrings.emplace_back(R"(L?\"(\\.|[^\"])*\")", PaletteIndex::StringLiteral);
+            langDef.m_tokenRegexStrings.emplace_back(R"(\'\\?[^\']\')", PaletteIndex::CharLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\!\%\^\&\*\-\+\=\~\|\<\>\?\/])", PaletteIndex::Operator);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\[\]\{\}\(\)\;\,\.])", PaletteIndex::Separator);
             langDef.m_commentStart = "/*";
             langDef.m_commentEnd = "*/";
             langDef.m_singleLineComment = "//";
@@ -844,16 +844,16 @@ namespace hex::ui {
                 langDef.m_identifiers.insert(std::make_pair(std::string(k), id));
             }
 
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::StringLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\!\\%\\^\\&\\*\\-\\+\\=\\~\\|\\<\\>\\?\\/]", PaletteIndex::Operator));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\[\\]\\{\\}\\(\\)\\;\\,\\.]", PaletteIndex::Separator));
+            langDef.m_tokenRegexStrings.emplace_back("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive);
+            langDef.m_tokenRegexStrings.emplace_back(R"(L?\"(\\.|[^\"])*\")", PaletteIndex::StringLiteral);
+            langDef.m_tokenRegexStrings.emplace_back(R"(\'\\?[^\']\')", PaletteIndex::CharLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\!\%\^\&\*\-\+\=\~\|\<\>\?\/])", PaletteIndex::Operator);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\[\]\{\}\(\)\;\,\.])", PaletteIndex::Separator);
 
             langDef.m_commentStart = "/*";
             langDef.m_commentEnd = "*/";
@@ -897,16 +897,16 @@ namespace hex::ui {
                 langDef.m_identifiers.insert(std::make_pair(std::string(k), id));
             }
 
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::StringLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\!\\%\\^\\&\\*\\-\\+\\=\\~\\|\\<\\>\\?\\/]", PaletteIndex::Operator));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\[\\]\\{\\}\\(\\)\\;\\,\\.]", PaletteIndex::Separator));
+            langDef.m_tokenRegexStrings.emplace_back("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive);
+            langDef.m_tokenRegexStrings.emplace_back(R"(L?\"(\\.|[^\"])*\")", PaletteIndex::StringLiteral);
+            langDef.m_tokenRegexStrings.emplace_back(R"(\'\\?[^\']\')", PaletteIndex::CharLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\!\%\^\&\*\-\+\=\~\|\<\>\?\/])", PaletteIndex::Operator);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\[\]\{\}\(\)\;\,\.])", PaletteIndex::Separator);
 
             langDef.m_commentStart = "/*";
             langDef.m_commentEnd = "*/";

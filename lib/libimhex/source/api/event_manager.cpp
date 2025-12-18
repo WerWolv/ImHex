@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/api/event_manager.hpp>
 
 namespace hex {
@@ -35,7 +36,7 @@ namespace hex {
 
     void EventManager::unsubscribe(void *token, impl::EventId id) {
         auto &tokenStore = getTokenStore();
-        auto iter = std::find_if(tokenStore.begin(), tokenStore.end(), [&](auto &item) {
+        auto iter = std::ranges::find_if(tokenStore, [&](auto &item) {
             return item.first == token && item.second->first == id;
         });
 

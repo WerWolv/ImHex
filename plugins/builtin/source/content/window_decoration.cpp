@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/views.hpp>
 #include <hex/api/content_registry/settings.hpp>
@@ -601,7 +602,7 @@ namespace hex::plugin::builtin {
             if (const auto &items = ContentRegistry::UserInterface::impl::getSidebarItems(); items.empty()) {
                 return false;
             } else {
-                return std::any_of(items.begin(), items.end(), [](const auto &item) {
+                return std::ranges::any_of(items, [](const auto &item) {
                     return item.enabledCallback();
                 });
             }
@@ -609,7 +610,7 @@ namespace hex::plugin::builtin {
 
         bool isAnyViewOpen() {
             const auto &views = ContentRegistry::Views::impl::getEntries();
-            return std::any_of(views.begin(), views.end(),
+            return std::ranges::any_of(views,
                                [](const auto &entry) {
                                    return entry.second->getWindowOpenState();
                                });

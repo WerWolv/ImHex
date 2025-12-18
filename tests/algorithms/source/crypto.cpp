@@ -7,7 +7,6 @@
 #include <random>
 #include <vector>
 #include <array>
-#include <algorithm>
 #include <fmt/ranges.h>
 
 using std::string;

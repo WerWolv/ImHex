@@ -2,6 +2,7 @@
 
 #include <hex/helpers/utils.hpp>
 
+#include <ranges>
 #include <wolv/io/file.hpp>
 #include <wolv/utils/string.hpp>
 
@@ -89,9 +90,7 @@ namespace hex {
 
 
     std::pair<std::string_view, size_t> EncodingFile::getEncodingFor(std::span<const u8> buffer) const {
-        for (auto riter = m_mapping->crbegin(); riter != m_mapping->crend(); ++riter) {
-            const auto &[size, mapping] = *riter;
-
+        for (auto [size, mapping] : std::ranges::reverse_view(*m_mapping)) {
             if (size > buffer.size()) continue;
 
             std::vector key(buffer.begin(), buffer.begin() + size);
@@ -103,9 +102,7 @@ namespace hex {
     }
 
     u64 EncodingFile::getEncodingLengthFor(std::span<u8> buffer) const {
-        for (auto riter = m_mapping->crbegin(); riter != m_mapping->crend(); ++riter) {
-            const auto &[size, mapping] = *riter;
-
+        for (auto [size, mapping] : std::ranges::reverse_view(*m_mapping)) {
             if (size > buffer.size()) continue;
 
             std::vector key(buffer.begin(), buffer.begin() + size);

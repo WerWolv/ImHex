@@ -196,7 +196,7 @@ namespace hex::ui {
         auto result = getCharacterCoordinates(lineNo, count - increase);
         result = setCoordinates(result);
         if (result == Invalid)
-            return Coordinates(0, 0);
+            return {0, 0};
         return result;
     }
 
@@ -205,7 +205,7 @@ namespace hex::ui {
             return Invalid;
 
         const auto &line = m_lines[coordinates.m_line];
-        return Coordinates(coordinates.m_line,line.columnIndex(coordinates.m_column));
+        return {coordinates.m_line,line.columnIndex(coordinates.m_column)};
     }
 
     i32 TextEditor::lineCoordinatesToIndex(const Coordinates &coordinates) const {
@@ -218,7 +218,7 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::getCharacterCoordinates(i32 lineIndex, i32 strIndex) {
         if (lineIndex < 0 || lineIndex >= (i32) m_lines.size())
-            return Coordinates(0, 0);
+            return {0, 0};
         auto &line = m_lines[lineIndex];
         return setCoordinates(lineIndex, line.indexColumn(strIndex));
     }
@@ -233,7 +233,7 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::stringIndexToCoordinates(i32 strIndex, const std::string &input) {
         if (strIndex < 0 || strIndex > (i32) input.size())
-            return TextEditor::Coordinates(0, 0);
+            return {0, 0};
         std::string str = input.substr(0, strIndex);
         auto line = std::count(str.begin(), str.end(), '\n');
         auto index = str.find_last_of('\n');

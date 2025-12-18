@@ -258,11 +258,11 @@ namespace hex::plugin::builtin {
         });
 
         EventImHexStartupFinished::subscribe([] {
-            const auto currVersion = ImHexApi::System::getImHexVersion();
+            const auto& currVersion = ImHexApi::System::getImHexVersion();
             const auto prevLaunchVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
 
             const auto forceOobe = getEnvironmentVariable("IMHEX_FORCE_OOBE");
-            if (prevLaunchVersion == "" || (forceOobe.has_value() && *forceOobe != "0")) {
+            if (prevLaunchVersion.empty() || (forceOobe.has_value() && *forceOobe != "0")) {
                 EventFirstLaunch::post();
                 return;
             }

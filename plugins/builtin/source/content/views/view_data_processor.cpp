@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] const std::string &getName() const { return m_name; }
 
-        dp::Attribute::Type getType() const {
+        [[nodiscard]] dp::Attribute::Type getType() const {
             switch (m_type) {
                 default:
                 case 0: return dp::Attribute::Type::Integer;
@@ -140,7 +140,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        const auto& getValue() const { return m_value; }
+        [[nodiscard]] const auto& getValue() const { return m_value; }
 
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
@@ -315,7 +315,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::vector<dp::Attribute> findAttributes() const {
+        [[nodiscard]] std::vector<dp::Attribute> findAttributes() const {
             std::vector<dp::Attribute> result;
 
             // Search through all nodes in the workspace and add all input and output nodes to the result
@@ -329,7 +329,7 @@ namespace hex::plugin::builtin {
             return result;
         }
 
-        NodeCustomInput* findInput(const std::string &name) const {
+        [[nodiscard]] NodeCustomInput* findInput(const std::string &name) const {
             for (auto &node : m_workspace.nodes) {
                 if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr && inputNode->getName() == name)
                     return inputNode;
@@ -338,7 +338,7 @@ namespace hex::plugin::builtin {
             return nullptr;
         }
 
-        NodeCustomOutput* findOutput(const std::string &name) const {
+        [[nodiscard]] NodeCustomOutput* findOutput(const std::string &name) const {
             for (auto &node : m_workspace.nodes) {
                 if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr && outputNode->getName() == name)
                     return outputNode;
@@ -446,7 +446,7 @@ namespace hex::plugin::builtin {
 
     void ViewDataProcessor::eraseLink(Workspace &workspace, int id) {
         // Find the link with the given ID
-        auto link = std::find_if(workspace.links.begin(), workspace.links.end(),
+        auto link = std::ranges::find_if(workspace.links,
                                  [&id](auto link) {
                                      return link.getId() == id;
                                  });
@@ -473,7 +473,7 @@ namespace hex::plugin::builtin {
         // and remove all links that are connected to the attributes of the node
         for (int id : ids) {
             // Find the node with the given ID
-            auto node = std::find_if(workspace.nodes.begin(), workspace.nodes.end(),
+            auto node = std::ranges::find_if(workspace.nodes,
                                     [&id](const auto &node) {
                                         return node->getId() == id;
                                     });
@@ -496,7 +496,7 @@ namespace hex::plugin::builtin {
         // and remove the nodes from the workspace
         for (int id : ids) {
             // Find the node with the given ID
-            auto node = std::find_if(workspace.nodes.begin(), workspace.nodes.end(),
+            auto node = std::ranges::find_if(workspace.nodes,
                                      [&id](const auto &node) {
                                          return node->getId() == id;
                                      });
@@ -763,7 +763,7 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginPopup("Node Menu")) {
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.save_node"_lang)) {
                 // Find the node that was right-clicked
-                auto it = std::find_if(workspace.nodes.begin(), workspace.nodes.end(),
+                auto it = std::ranges::find_if(workspace.nodes,
                                        [this](const auto &node) {
                                            return node->getId() == m_rightClickedId;
                                        });

@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
 
         class Blend {
         public:
-            Blend(float start, float end) : m_time(0), m_start(start), m_end(end) {}
+            Blend(float start, float end) :  m_start(start), m_end(end) {}
 
             [[nodiscard]] operator float() {
                 m_time += ImGui::GetIO().DeltaTime;
@@ -56,7 +56,7 @@ namespace hex::plugin::builtin {
             }
 
         private:
-            float m_time;
+            float m_time = 0;
             float m_start, m_end;
         };
 

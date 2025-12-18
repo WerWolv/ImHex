@@ -1,5 +1,6 @@
 #if defined(OS_WINDOWS) || defined(OS_MACOS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
 
+#include <algorithm>
 #include <content/providers/process_memory_provider.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
 
@@ -568,7 +569,7 @@ namespace hex::plugin::builtin {
 
     std::variant<std::string, i128> ProcessMemoryProvider::queryInformation(const std::string &category, const std::string &argument) {
         auto findRegionByName = [this](const std::string &name) {
-            return std::find_if(m_memoryRegions.begin(), m_memoryRegions.end(),
+            return std::ranges::find_if(m_memoryRegions,
                 [name](const auto &region) {
                     return region.name == name;
                 });

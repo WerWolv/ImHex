@@ -280,8 +280,8 @@ namespace hex::ui {
             Line(Line &&line) noexcept : m_chars(std::move(line.m_chars)), m_colors(std::move(line.m_colors)), m_flags(std::move(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
             Line(std::string chars, std::string colors, std::string flags) : m_chars(std::move(chars)), m_colors(std::move(colors)), m_flags(std::move(flags)), m_lineMaxColumn(maxColumn()) {}
 
-            bool operator==(const Line &o) const;
-            bool operator!=(const Line &o) const;
+            bool operator==(const Line &line) const;
+            bool operator!=(const Line &line) const;
             [[nodiscard]] i32 indexColumn(i32 stringIndex) const;
             [[nodiscard]] i32 maxColumn();
             [[nodiscard]] i32 maxColumn() const;

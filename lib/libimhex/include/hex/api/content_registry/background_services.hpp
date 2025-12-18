@@ -16,7 +16,7 @@ EXPORT_MODULE namespace hex {
             void stopServices();
         }
 
-        void registerService(const UnlocalizedString &unlocalizedString, const impl::Callback &callback);
+        void registerService(const UnlocalizedString &unlocalizedName, const impl::Callback &callback);
     }
 
 }

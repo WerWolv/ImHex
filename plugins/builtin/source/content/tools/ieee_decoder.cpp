@@ -25,12 +25,12 @@ namespace hex::plugin::builtin {
 
         class IEEE754STATICS {
         public:
-            IEEE754STATICS() : value(0), exponentBitCount(8), mantissaBitCount(23), resultFloat(0) {}
+            IEEE754STATICS()  {}
 
-            u128 value;
-            i32 exponentBitCount;
-            i32 mantissaBitCount;
-            long double resultFloat;
+            u128 value = 0;
+            i32 exponentBitCount = 8;
+            i32 mantissaBitCount =23;
+            long double resultFloat = 0;
         };
 
         static IEEE754STATICS ieee754statics;

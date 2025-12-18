@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex.hpp>
 
 #include <hex/api/workspace_manager.hpp>
@@ -162,7 +163,7 @@ namespace hex::plugin::builtin {
 
         bool isAnyViewOpen() {
             const auto &views = ContentRegistry::Views::impl::getEntries();
-            return std::any_of(views.begin(), views.end(),
+            return std::ranges::any_of(views,
                 [](const auto &entry) {
                     return entry.second->getWindowOpenState();
                 });
@@ -819,7 +820,7 @@ namespace hex::plugin::builtin {
             std::mt19937 random(daysSinceEpoch.count());
 
             auto chosenCategory = tipsCategories[random()%tipsCategories.size()].at("tips");
-            auto chosenTip = chosenCategory[random()%chosenCategory.size()];
+            const auto& chosenTip = chosenCategory[random()%chosenCategory.size()];
             s_tipOfTheDay = chosenTip.get<std::string>();
 
             bool showTipOfTheDay = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", false);

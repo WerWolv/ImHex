@@ -388,7 +388,7 @@ namespace hex::plugin::builtin {
 
                 static auto x = [] {
                     std::array<ImU64, 256> result { 0 };
-                    std::iota(result.begin(), result.end(), 0);
+                    std::ranges::iota(result, 0);
                     return result;
                 }();
 

@@ -501,7 +501,7 @@ namespace hex::ui {
             std::string errorLineColumn;
             bool found = false;
             for (auto text: m_clickableText) {
-                if (lineText.find(text) == 0) {
+                if (lineText.starts_with(text)) {
                     errorLineColumn = lineText.substr(text.size());
                     if (!errorLineColumn.empty()) {
                         found = true;
@@ -626,7 +626,7 @@ namespace hex::ui {
     ImVec2 TextEditor::calculateCharAdvance() const {
         /* Compute mCharAdvance regarding scaled font size (Ctrl + mouse wheel)*/
         const float fontSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
-        return ImVec2(fontSize, GImGui->FontSize * m_lineSpacing);
+        return {fontSize, GImGui->FontSize * m_lineSpacing};
     }
 
     float TextEditor::textDistanceToLineStart(const Coordinates &aFrom) {

@@ -4,7 +4,6 @@
 
 #include <hex/helpers/crypto.hpp>
 
-#include <algorithm>
 #include <vector>
 
 TEST_SEQUENCE("TestSucceeding") {

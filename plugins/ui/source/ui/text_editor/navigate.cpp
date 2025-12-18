@@ -385,8 +385,8 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::setCoordinates(i32 line, i32 column) {
         if (isEmpty())
-            return Coordinates(0, 0);
-        return Coordinates(this, line, column);
+            return {0, 0};
+        return {this, line, column};
     }
 
     TextEditor::Coordinates TextEditor::setCoordinates(const Coordinates &value) {
@@ -398,11 +398,11 @@ namespace hex::ui {
         auto start = setCoordinates(value.m_start);
         auto end = setCoordinates(value.m_end);
         if (start == Invalid || end == Invalid)
-            return Range(Invalid, Invalid);
+            return {Invalid, Invalid};
         if (start > end) {
             std::swap(start, end);
         }
-        return Range(start, end);
+        return {start, end};
     }
 
     void TextEditor::advance(Coordinates &coordinates) const {
