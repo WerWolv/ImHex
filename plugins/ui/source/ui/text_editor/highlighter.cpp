@@ -153,7 +153,7 @@ namespace hex::ui {
                         try {
                             line.m_colors.replace(token_offset, token_length, token_length, static_cast<char>(token_color));
                         } catch (const std::exception &e) {
-                            std::cerr << "Error replacing color: " << e.what() << std::endl;
+                            fmt::print(stderr, "Error replacing color: {}\n", e.what());
                             return;
                         }
                     }
