@@ -149,6 +149,7 @@ EXPORT_MODULE namespace hex {
          * @param unlocalizedName Name of tutorial to start
          */
         static void startTutorial(const UnlocalizedString &unlocalizedName);
+        static void stopCurrentTutorial();
 
         static void startHelpHover();
         static void addInteractiveHelpText(std::initializer_list<std::variant<Lang, std::string, int>> &&ids, UnlocalizedString unlocalizedString);

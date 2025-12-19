@@ -1162,6 +1162,7 @@
     "hex.builtin.view.tutorials.name": "Interactive Tutorials",
     "hex.builtin.view.tutorials.description": "Description",
     "hex.builtin.view.tutorials.start": "Start Tutorial",
+    "hex.builtin.view.tutorials.stop": "Cancel current Tutorial",
     "hex.builtin.visualizer.binary": "Binary",
     "hex.builtin.visualizer.decimal.signed.16bit": "Decimal Signed (16 bits)",
     "hex.builtin.visualizer.decimal.signed.32bit": "Decimal Signed (32 bits)",

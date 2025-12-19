@@ -217,6 +217,10 @@ namespace hex {
         s_currentTutorial->second.start();
     }
 
+    void TutorialManager::stopCurrentTutorial() {
+        s_currentTutorial = s_tutorials->end();
+    }
+
     void TutorialManager::drawHighlights() {
         if (s_helpHoverActive) {
             const auto &drawList = ImGui::GetForegroundDrawList(ImGui::GetMainViewport());
@@ -347,7 +351,9 @@ namespace hex {
         ImGui::SetNextWindowPos(position, ImGuiCond_Always, pivot);
         ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
         ImGui::SetNextWindowSize(ImVec2(300_scaled, 0));
-        if (ImGui::Begin(message->unlocalizedTitle.empty() ? "##TutorialMessage" : Lang(message->unlocalizedTitle), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoFocusOnAppearing)) {
+
+        bool open = true;
+        if (ImGui::Begin(message->unlocalizedTitle.empty() ? "##TutorialMessage" : Lang(message->unlocalizedTitle), &open, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoFocusOnAppearing)) {
             ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
 
             auto &step = s_currentTutorial->second.m_currentStep;
@@ -373,6 +379,10 @@ namespace hex {
             ImGui::EndDisabled();
         }
         ImGui::End();
+
+        if (!open) {
+            stopCurrentTutorial();
+        }
     }
 
     void TutorialManager::drawTutorial() {
