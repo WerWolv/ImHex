@@ -104,7 +104,7 @@ std::optional<std::fs::path> downloadUpdate(const std::string &url) {
 
 #if defined(__x86_64__) || defined(_X86_) || defined(_AMD64_)
     #define ARCH_DEPENDENT(x86_64, arm64) x86_64
-#elif defined(__arm64__) || defined(_ARM64_)
+#elif defined(__arm64__) || defined(_ARM64_) || defined(__aarch64__)
     #define ARCH_DEPENDENT(x86_64, arm64) arm64
 #else
     #error "Unsupported architecture for updater"
