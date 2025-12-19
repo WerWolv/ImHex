@@ -247,6 +247,7 @@ jobs:
       - name: ⬇️ Install dependencies
         run: |
           cp dist/vcpkg.json vcpkg.json
+          vcpkg install
 
       - name: ⬇️ Install CMake and Ninja
         uses: lukka/get-cmake@latest
