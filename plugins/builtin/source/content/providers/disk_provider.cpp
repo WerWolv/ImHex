@@ -158,6 +158,7 @@ namespace hex::plugin::builtin {
 #endif
 
     prv::Provider::OpenResult DiskProvider::open() {
+        OpenResult result;
         m_readable = true;
         m_writable = true;
 
@@ -207,7 +208,6 @@ namespace hex::plugin::builtin {
             const auto &path = m_path.native();
 
             m_diskHandle = ::open(path.c_str(), O_RDWR);
-            OpenResult result;
             if (m_diskHandle == -1) {
                 result = OpenResult::warning(fmt::format("hex.builtin.provider.disk.error.read_rw"_lang, path, formatSystemError(errno)));
                 m_diskHandle = ::open(path.c_str(), O_RDONLY);
