@@ -13,8 +13,6 @@
     #include <xdg.hpp>
 # if defined(OS_FREEBSD)
     #include <sys/syslimits.h>
-# else
-    #include <limits.h>
 # endif
 #endif
 

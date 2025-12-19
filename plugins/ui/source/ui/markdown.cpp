@@ -250,7 +250,7 @@ namespace hex::ui {
 
                             return wolv::container::Lazy<ImGuiExt::Texture>([data = std::move(data)]() -> ImGuiExt::Texture {
                                 if (data.empty())
-                                    return ImGuiExt::Texture();
+                                    return {};
 
                                 auto texture = ImGuiExt::Texture::fromImage(data.data(), data.size(), ImGuiExt::Texture::Filter::Linear);
                                 if (!texture.isValid()) {

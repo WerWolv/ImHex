@@ -1516,9 +1516,9 @@ namespace ImGuiExt {
 
     bool IsDarkBackground(const ImColor& bgColor) {
         // Extract RGB components in 0–255 range
-        int r = static_cast<int>(bgColor.Value.x * 255.0f);
-        int g = static_cast<int>(bgColor.Value.y * 255.0f);
-        int b = static_cast<int>(bgColor.Value.z * 255.0f);
+        int r = static_cast<int>(bgColor.Value.x * 255.0F);
+        int g = static_cast<int>(bgColor.Value.y * 255.0F);
+        int b = static_cast<int>(bgColor.Value.z * 255.0F);
 
         // Compute brightness using perceived luminance
         int brightness = (r * 299 + g * 587 + b * 114) / 1000;

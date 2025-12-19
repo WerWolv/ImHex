@@ -191,7 +191,7 @@ namespace hex::plugin::builtin {
         void renderErrors();
         /// A token range is the set of token indices of a definition. The namespace token
         /// ranges are obtained first because they are needed to obtain unique identifiers.
-        void getAllTokenRanges(IdentifierType idtype);
+        void getAllTokenRanges(IdentifierType identifierTypeToSearch);
         /// The global scope is the complement of the union of all the function and UDT token ranges
         void getGlobalTokenRanges();
         /// If the current token is a function or UDT, creates a map entry from the name to the token range. These are ordered alphabetically by name.
@@ -251,10 +251,10 @@ namespace hex::plugin::builtin {
         void skipDelimiters(i32 maxSkipCount, Token delimiter[2], i8 increment);
         void skipToken(Token token, i8 step=1);
         /// from given or current names find the corresponding definition
-        bool findIdentifierDefinition(Definition &result, const std::string &optionalIdentifierName = "",  std::string optionalName = "", bool optional = false);
+        bool findIdentifierDefinition(Definition &result, const std::string &optionalIdentifierName = "",  std::string optionalName = "", bool setInstances = false);
         /// To deal with the Parent keyword
         std::optional<Definition> setChildrenTypes();
-        bool findParentTypes(std::vector<std::string> &parentTypes, const std::string &optionalName="");
+        bool findParentTypes(std::vector<std::string> &parentTypes, const std::string &optionalUDTName="");
         bool findAllParentTypes(std::vector<std::string> &parentTypes, std::vector<Identifier *> &identifiers, std::string &optionalFullName);
         bool tryParentType(const std::string &parentType, std::string &variableName, std::optional<Definition> &result, std::vector<Identifier *> &identifiers);
         /// Convenience function

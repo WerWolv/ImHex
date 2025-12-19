@@ -116,7 +116,7 @@ namespace hex::plugin::builtin::recent {
         return ImGuiWindowFlags_AlwaysAutoResize;
     }
 
-    void saveCurrentProjectAsRecent() {
+    static void saveCurrentProjectAsRecent() {
         if (!ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
             return;
         }

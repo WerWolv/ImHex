@@ -10,6 +10,7 @@
 #include <span>
 #include <string>
 #include <numbers>
+#include <array>
 
 #include <opengl_support.h>
 #include "imgui.h"
@@ -935,7 +936,7 @@ namespace hex::gl {
         void attachTexture(const Texture &texture) const;
 
     private:
-        GLuint m_frameBuffer, m_renderBuffer;
+        GLuint m_frameBuffer = 0, m_renderBuffer = 0;
     };
 
     class AxesVectors {

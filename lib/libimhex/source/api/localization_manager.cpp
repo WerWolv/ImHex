@@ -50,7 +50,7 @@ namespace hex {
                     definition.fallbackLanguageId = item["fallback"].get<std::string>();
                 }
 
-                if (item.contains("hidden") && item["hidden"].get<bool>() == true) {
+                if (item.contains("hidden") && item["hidden"].get<bool>()) {
                     definition.hidden = true;
                 }
 
@@ -155,7 +155,7 @@ namespace hex {
             static AutoReset<std::unordered_map<std::size_t, std::string>> loadedLocalization;
             static std::mutex mutex;
 
-            std::lock_guard lock(mutex);
+            std::scoped_lock lock(mutex);
             if (*currentLanguageId != languageId) {
                 currentLanguageId = languageId;
                 loadedLocalization->clear();

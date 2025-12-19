@@ -1,3 +1,8 @@
+# Disabled rules should have a comment associated
+# Or at least an empty comment # to show they were put here explicitely,
+# and not as part of the historical CLion-generated rules
+# Note: `- -X` means disable X
+
 Checks:
 - -*
 - mpi-*
@@ -22,11 +27,11 @@ Checks:
 - cert-dcl58-cpp
 - cert-flp30-c
 - cppcoreguidelines-avoid-const-or-ref-data-members
-- cppcoreguidelines-pro-type-member-init
+- cppcoreguidelines-pro-type-member-init # We want to use default member initializers
 - cppcoreguidelines-slicing
 - cppcoreguidelines-interfaces-global-init
 - cppcoreguidelines-pro-type-static-cast-downcast
-- cppcoreguidelines-narrowing-conversions
+- -cppcoreguidelines-narrowing-conversions #
 - google-default-arguments
 - google-runtime-operator
 - google-explicit-constructor
@@ -43,8 +48,11 @@ Checks:
 - -misc-static-assert
 - -misc-no-recursion
 - -misc-const-correctness
+- -misc-use-internal-linkage # False positives if header where function is defined is not included
+- -misc-include-cleaner # Allow indirect includes
 - modernize-*
 - -modernize-use-trailing-return-type
+- -modernize-use-std-print # We want to use fmt::print instead
 - openmp-use-default-none
 - performance-*
 - -performance-no-int-to-ptr
@@ -64,5 +72,31 @@ Checks:
 - -readability-redundant-access-specifiers
 - -readability-function-cognitive-complexity
 - -readability-identifier-naming
-- '*-include-cleaner'
 - -readability-qualified-auto
+- -readability-use-std-min-max # Less readable imo
+- -readability-math-missing-parentheses # Basic math
+- -readability-implicit-bool-conversion # Not much of a problem ?
+- -readability-convert-member-functions-to-static #
+- -readability-use-concise-preprocessor-directives # We do not use #ifdef
+- -readability-uppercase-literal-suffix # Not important enough
+- -readability-static-accessed-through-instance
+- '*-include-cleaner'
+
+# idk
+
+# Will check later if useful or not
+- -readability-make-member-function-const # to make functions const. Seems to not catch everything ?
+- -misc-unconventional-assign-operator
+- -bugprone-unchecked-optional-access
+- -modernize-avoid-c-arrays
+- -misc-non-private-member-variables-in-classes
+- -performance-move-const-arg
+- -bugprone-suspicious-stringview-data-usage
+- -cert-err34-c
+- -hicpp-exception-baseclass
+- -modernize-use-integer-sign-comparison
+- -performance-for-range-copy
+- -performance-unnecessary-value-param
+- -bugprone-empty-catch
+- -bugprone-multi-level-implicit-pointer-conversion
+- -modernize-pass-by-value

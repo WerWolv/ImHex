@@ -1,9 +1,14 @@
+#include <cstddef>
+#include "wolv/types.hpp"
+#include <cmath>
 #include <hex/helpers/opengl.hpp>
 #include <opengl_support.h>
 
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
 
+#include <string_view>
+#include <vector>
+#include <span>
 #include <wolv/utils/guards.hpp>
 
 #include <numbers>

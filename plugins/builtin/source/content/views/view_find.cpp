@@ -1,5 +1,6 @@
 #include "content/views/view_find.hpp"
 
+#include <algorithm>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/events/events_interaction.hpp>
@@ -214,16 +215,16 @@ namespace hex::plugin::builtin {
 
             newSettings.type = ASCII;
             auto asciiResults = searchStrings(task, provider, searchRegion, newSettings);
-            std::copy(asciiResults.begin(), asciiResults.end(), std::back_inserter(results));
+            std::ranges::copy(asciiResults, std::back_inserter(results));
 
             if (settings.type == ASCII_UTF16BE) {
                 newSettings.type = UTF16BE;
                 auto utf16Results = searchStrings(task, provider, searchRegion, newSettings);
-                std::copy(utf16Results.begin(), utf16Results.end(), std::back_inserter(results));
+                std::ranges::copy(utf16Results, std::back_inserter(results));
             } else if (settings.type == ASCII_UTF16LE) {
                 newSettings.type = UTF16LE;
                 auto utf16Results = searchStrings(task, provider, searchRegion, newSettings);
-                std::copy(utf16Results.begin(), utf16Results.end(), std::back_inserter(results));
+                std::ranges::copy(utf16Results, std::back_inserter(results));
             }
 
             return results;
@@ -921,7 +922,7 @@ namespace hex::plugin::builtin {
                             ImGui::Checkbox(fmt::format("{} [0-9]", "hex.builtin.view.find.strings.numbers"_lang.get()).c_str(), &settings.numbers);
                             ImGui::Checkbox(fmt::format("{} [_]", "hex.builtin.view.find.strings.underscores"_lang.get()).c_str(), &settings.underscores);
                             ImGui::Checkbox(fmt::format("{} [!\"#$%...]", "hex.builtin.view.find.strings.symbols"_lang.get()).c_str(), &settings.symbols);
-                            ImGui::Checkbox(fmt::format("{} [ \\f\\t\\v]", "hex.builtin.view.find.strings.spaces"_lang.get()).c_str(), &settings.spaces);
+                            ImGui::Checkbox(fmt::format(R"({} [ \f\t\v])", "hex.builtin.view.find.strings.spaces"_lang.get()).c_str(), &settings.spaces);
                             ImGui::Checkbox(fmt::format("{} [\\r\\n]", "hex.builtin.view.find.strings.line_feeds"_lang.get()).c_str(), &settings.lineFeeds);
 
                             ImGui::EndPopup();
@@ -1158,11 +1159,11 @@ namespace hex::plugin::builtin {
                 m_filterTask.interrupt();
 
             static std::mutex mutex;
-            std::lock_guard lock(mutex);
+            std::scoped_lock lock(mutex);
 
             if (!m_currFilter->empty()) {
                 m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data", currOccurrences.size(), [this, provider, &currOccurrences, filter = m_currFilter.get(provider)](Task &task) {
-                    std::lock_guard lock(mutex);
+                    std::scoped_lock lock(mutex);
 
                     u64 progress = 0;
                     std::erase_if(currOccurrences, [this, provider, &task, &progress, &filter](const auto &region) {

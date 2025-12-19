@@ -158,7 +158,7 @@ bool installUpdate(const std::fs::path &updatePath) {
         UpdateHandler { ".deb",             "zenity --password | sudo -S apt install -y --fix-broken \"{}\""                                                                   },
         UpdateHandler { ".rpm",             "zenity --password | sudo -S rpm -i \"{}\""                                                                                        },
         UpdateHandler { ".pkg.tar.zst",     "zenity --password | sudo -S pacman -Syy && sudo pacman -U --noconfirm \"{}\""                                                     },
-        UpdateHandler { ".AppImage",        fmt::format("zenity --password | sudo -S cp \"{{}}\" \"{}\"", hex::getEnvironmentVariable("APPIMAGE").value_or(""))    },
+        UpdateHandler { ".AppImage",        fmt::format(R"(zenity --password | sudo -S cp "{{}}" "{}")", hex::getEnvironmentVariable("APPIMAGE").value_or(""))    },
         UpdateHandler { ".flatpak",         "zenity --password | sudo -S flatpak install -y --reinstall \"{}\""                                                                },
         UpdateHandler { ".snap",            "zenity --password | sudo -S snap install --dangerous \"{}\""                                                                      },
     };

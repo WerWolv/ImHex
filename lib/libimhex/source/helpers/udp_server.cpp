@@ -14,7 +14,7 @@
 namespace hex {
 
     UDPServer::UDPServer(u16 port, Callback callback)
-        : m_port(port), m_callback(std::move(callback)), m_running(false), m_socketFd(-1) {
+        : m_port(port), m_callback(std::move(callback)), m_running(false) {
     }
 
     UDPServer::~UDPServer() {

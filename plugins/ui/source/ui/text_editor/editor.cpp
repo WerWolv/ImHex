@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <ui/text_editor.hpp>
 #include <algorithm>
 #include <string>
@@ -21,11 +22,10 @@ namespace hex::ui {
     TextEditor::TextEditor() {
         m_startTime = ImGui::GetTime() * 1000;
         setLanguageDefinition(LanguageDefinition::HLSL());
-        m_lines.push_back(Line());
+        m_lines.emplace_back();
     }
 
-    TextEditor::~TextEditor() {
-    }
+    TextEditor::~TextEditor() = default;
 
     std::string TextEditor::getText(const Range &from) {
         std::string result;
@@ -83,7 +83,7 @@ namespace hex::ui {
             m_lines[0].m_lineMaxColumn = -1;
             m_lines[0].m_lineMaxColumn = m_lines[0].maxColumn();
         } else {
-            m_lines.push_back(Line(text));
+            m_lines.emplace_back(text);
             auto &line = m_lines.back();
             line.m_lineMaxColumn = -1;
             line.m_lineMaxColumn = line.maxColumn();
@@ -366,7 +366,7 @@ namespace hex::ui {
         u.m_addedRange.m_start = coord;
 
         if (m_lines.empty())
-            m_lines.push_back(Line());
+            m_lines.emplace_back();
 
         if (character == '\n') {
             insertLine(coord.m_line + 1);
@@ -426,9 +426,9 @@ namespace hex::ui {
             }
             u.m_addedRange.m_end = setCoordinates(m_state.m_cursorPosition);
         } else {
-            std::string buf = "";
+            std::string buf;
             imTextCharToUtf8(buf, character);
-            if (buf.size() > 0) {
+            if (!buf.empty()) {
                 auto &line = m_lines[coord.m_line];
                 auto charIndex = lineCoordinatesToIndex(coord);
 
@@ -679,7 +679,7 @@ namespace hex::ui {
             if (!isEmpty()) {
                 std::string str;
                 const auto &line = m_lines[setCoordinates(m_state.m_cursorPosition).m_line];
-                std::copy(line.m_chars.begin(), line.m_chars.end(), std::back_inserter(str));
+                std::ranges::copy(line.m_chars, std::back_inserter(str));
                 ImGui::SetClipboardText(str.c_str());
             }
         }
@@ -744,7 +744,7 @@ namespace hex::ui {
         const char *clipText =  ImGui::GetClipboardText();
         if (clipText != nullptr) {
             auto stringVector = wolv::util::splitString(clipText, "\n", false);
-            if (std::any_of(stringVector.begin(), stringVector.end(), [](const std::string &s) { return s.size() > 1024; })) {
+            if (std::ranges::any_of(stringVector, [](const std::string &s) { return s.size() > 1024; })) {
                 ui::PopupQuestion::open("hex.builtin.view.pattern_editor.warning_paste_large"_lang, [this, clipText]() {
                     this->doPaste(clipText);
                 }, [] {});
@@ -858,8 +858,8 @@ namespace hex::ui {
     }
 
     void TextEditor::UndoAction::redo(TextEditor *editor) {
-        for (i32 i = 0; i < (i32) m_records.size(); i++)
-            m_records.at(i).redo(editor);
+        for (auto & m_record : m_records)
+            m_record.redo(editor);
     }
 
 }

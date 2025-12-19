@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <ui/pattern_drawer.hpp>
 
 #include <pl/core/lexer.hpp>
@@ -320,10 +321,9 @@ namespace hex::ui {
                         m_filteredPatterns.push_back(pattern);
                     } else {
                         auto patternValue = pattern->getValue();
-                        if (!m_filter->inverted && (patternValue <=> *m_filter->value) == m_filter->operation) {
-                            if (!m_filter->typeMatch || (m_filter->value->index() == patternValue.index()))
-                                m_filteredPatterns.push_back(pattern);
-                        } else if (m_filter->inverted && (patternValue <=> *m_filter->value) != m_filter->operation) {
+                        auto operation = patternValue <=> *m_filter->value;
+                        bool isOperationOk = operation == m_filter->operation;
+                        if ((!m_filter->inverted && isOperationOk) || (m_filter->inverted && !isOperationOk)) {
                             if (!m_filter->typeMatch || (m_filter->value->index() == patternValue.index()))
                                 m_filteredPatterns.push_back(pattern);
                         }
@@ -480,7 +480,7 @@ namespace hex::ui {
             pattern = pattern->getParent();
         }
 
-        std::reverse(result.begin(), result.end());
+        std::ranges::reverse(result);
 
         return result;
     }
@@ -1221,7 +1221,7 @@ namespace hex::ui {
         if (!m_favoritesUpdateTask.isRunning()) {
             sortedPatterns = patterns;
 
-            std::stable_sort(sortedPatterns.begin(), sortedPatterns.end(), [this, &sortSpecs](const std::shared_ptr<pl::ptrn::Pattern> &left, const std::shared_ptr<pl::ptrn::Pattern> &right) -> bool {
+            std::ranges::stable_sort(sortedPatterns, [this, &sortSpecs](const std::shared_ptr<pl::ptrn::Pattern> &left, const std::shared_ptr<pl::ptrn::Pattern> &right) -> bool {
                 return this->sortPatterns(sortSpecs, left.get(), right.get());
             });
 
@@ -1365,7 +1365,7 @@ namespace hex::ui {
             for (const auto &formatter : m_formatters) {
                 const auto name = [&]{
                     auto formatterName = formatter->getName();
-                    std::transform(formatterName.begin(), formatterName.end(), formatterName.begin(), [](char c){ return char(std::toupper(c)); });
+                    std::ranges::transform(formatterName, formatterName.begin(), [](char c){ return char(std::toupper(c)); });
 
                     return formatterName;
                 }();

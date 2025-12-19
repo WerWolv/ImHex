@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/helpers/encoding_file.hpp>
 
@@ -43,7 +44,7 @@ namespace hex::plugin::builtin {
 
             this->getEvaluator()->readData(this->getOffset(), result.data(), result.size(), this->getSection());
             if (this->getEndian() != std::endian::native)
-                std::reverse(result.begin(), result.end());
+                std::ranges::reverse(result);
 
             return result;
         }

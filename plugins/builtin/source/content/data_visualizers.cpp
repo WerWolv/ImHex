@@ -90,8 +90,8 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        constexpr static inline auto ByteCount = 1;
-        constexpr static inline auto CharCount = ByteCount * 2;
+        constexpr static auto ByteCount = 1;
+        constexpr static auto CharCount = ByteCount * 2;
 
         const static inline auto FormattingUpperCase = fmt::format("%0{}{}X", CharCount, ImGuiExt::getFormatLengthSpecifier<u8>());
         const static inline auto FormattingLowerCase = fmt::format("%0{}{}x", CharCount, ImGuiExt::getFormatLengthSpecifier<u8>());
@@ -175,13 +175,13 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        constexpr static inline auto ByteCount = sizeof(T);
-        constexpr static inline auto CharCount = 14;
+        constexpr static auto ByteCount = sizeof(T);
+        constexpr static auto CharCount = 14;
 
         const static inline auto FormatStringUpperCase = fmt::format("%{}G", CharCount);
         const static inline auto FormatStringLowerCase = fmt::format("%{}g", CharCount);
 
-        const char *getFormatString(bool upperCase) const {
+        [[nodiscard]] const char *getFormatString(bool upperCase) const {
             if (upperCase)
                 return FormatStringUpperCase.c_str();
             else

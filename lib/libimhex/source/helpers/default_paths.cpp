@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/helpers/default_paths.hpp>
 
 #include <hex/api/imhex_api/system.hpp>
@@ -39,7 +40,7 @@ namespace hex::paths {
             paths.push_back(xdg::DataHomeDir());
 
             auto dataDirs = xdg::DataDirs();
-            std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
+            std::ranges::copy(dataDirs, std::back_inserter(paths));
 
         #endif
 
@@ -108,7 +109,7 @@ namespace hex::paths {
 
         // Add the system plugin directory to the path if one was provided at compile time
         #if defined(OS_LINUX) && defined(SYSTEM_PLUGINS_LOCATION)
-            paths.push_back(SYSTEM_PLUGINS_LOCATION);
+            paths.emplace_back(SYSTEM_PLUGINS_LOCATION);
         #endif
 
         return paths;

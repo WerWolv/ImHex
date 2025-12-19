@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
 
     using namespace std::chrono_literals;
 
-    CommandProvider::CommandProvider() { }
+    CommandProvider::CommandProvider() = default;
 
     bool CommandProvider::isAvailable() const {
         return m_open;

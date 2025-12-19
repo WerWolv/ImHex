@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <ui/text_editor.hpp>
 #include <hex/helpers/logger.hpp>
 #include <algorithm>
@@ -37,11 +38,11 @@ namespace hex::ui {
     }
 
     Coordinates Coordinates::operator+(const Coordinates &o) const {
-        return Coordinates(m_line + o.m_line, m_column + o.m_column);
+        return {m_line + o.m_line, m_column + o.m_column};
     }
 
     Coordinates Coordinates::operator-(const Coordinates &o) const {
-        return Coordinates(m_line - o.m_line, m_column - o.m_column);
+        return {m_line - o.m_line, m_column - o.m_column};
     }
 
     bool Range::operator==(const Range &o) const {
@@ -52,13 +53,13 @@ namespace hex::ui {
     }
 
     Coordinates Range::getSelectedLines() {
-        return Coordinates(m_start.m_line, m_end.m_line);
+        return {m_start.m_line, m_end.m_line};
     }
 
     Coordinates Range::getSelectedColumns() {
         if (isSingleLine())
-            return Coordinates(m_start.m_column, m_end.m_column - m_start.m_column);
-        return Coordinates(m_start.m_column, m_end.m_column);
+            return {m_start.m_column, m_end.m_column - m_start.m_column};
+        return {m_start.m_column, m_end.m_column};
     }
 
     bool Range::isSingleLine() {
@@ -209,14 +210,7 @@ namespace hex::ui {
         return iter;
     }
 
-    Line &Line::operator=(const Line &line) {
-        m_chars = line.m_chars;
-        m_colors = line.m_colors;
-        m_flags = line.m_flags;
-        m_colorized = line.m_colorized;
-        m_lineMaxColumn = line.m_lineMaxColumn;
-        return *this;
-    }
+    Line &Line::operator=(const Line &line) = default;
 
     Line &Line::operator=(Line &&line) noexcept {
         m_chars = std::move(line.m_chars);
@@ -899,11 +893,11 @@ namespace hex::ui {
 
         std::string wordLower = m_findWord;
         if (!getMatchCase())
-            std::transform(wordLower.begin(), wordLower.end(), wordLower.begin(), ::tolower);
+            std::ranges::transform(wordLower, wordLower.begin(), ::tolower);
 
         std::string textSrc = editor->getText();
         if (!getMatchCase())
-            std::transform(textSrc.begin(), textSrc.end(), textSrc.begin(), ::tolower);
+            std::ranges::transform(textSrc, textSrc.begin(), ::tolower);
 
         u64 textLoc;
         // TODO: use regexp find iterator in all cases
@@ -1010,7 +1004,6 @@ namespace hex::ui {
 
         editor->m_state = saveState;
         editor->ensureCursorVisible();
-        return;
     }
 
 

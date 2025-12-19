@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 
     #if defined(OS_LINUX)
         if (auto distro = ImHexApi::System::getLinuxDistro(); distro.has_value()) {
-            log::info("Linux distribution: {}. Version: {}", distro->name, distro->version == "" ? "None" : distro->version);
+            log::info("Linux distribution: {}. Version: {}", distro->name, distro->version.empty() ? "None" : distro->version);
         }
     #endif
     

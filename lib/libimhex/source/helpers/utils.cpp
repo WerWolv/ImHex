@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cwchar>
 #include <hex/helpers/utils.hpp>
 
@@ -98,7 +99,7 @@ namespace hex {
         string = wolv::util::replaceStrings(string, ",", "");
 
         // Check for non-hex characters
-        bool isValidHexString = std::find_if(string.begin(), string.end(), [](char c) {
+        bool isValidHexString = std::ranges::find_if(string, [](char c) {
             return !std::isxdigit(c) && !std::isspace(c);
         }) == string.end();
 
@@ -824,10 +825,10 @@ namespace hex {
 
                 if (lang.has_value() && !lang->empty() && *lang != "C" && *lang != "C.UTF-8") {
                     auto parts = wolv::util::splitString(*lang, ".");
-                    if (parts.size() > 0)
+                    if (!parts.empty())
                         return parts[0];
                     else
-                        return *lang;
+                        return lang;
                 }
 
                 return std::nullopt;

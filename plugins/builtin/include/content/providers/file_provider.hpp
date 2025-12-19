@@ -66,7 +66,7 @@ namespace hex::plugin::builtin {
     private:
         void handleFileChange();
 
-        OpenResult open(bool memoryMapped);
+        OpenResult open(bool directAccess);
 
     protected:
         std::fs::path m_path;

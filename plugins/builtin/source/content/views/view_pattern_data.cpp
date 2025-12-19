@@ -304,7 +304,7 @@ namespace hex::plugin::builtin {
                                 try {
                                     const auto attribute = pattern->getAttributeArguments(SimplifiedEditorAttribute);
 
-                                    const auto name = attribute.size() >= 1 ? attribute[0].toString() : pattern->getDisplayName();
+                                    const auto name = !attribute.empty() ? attribute[0].toString() : pattern->getDisplayName();
                                     const auto description = attribute.size() >= 2 ? attribute[1].toString() : pattern->getComment();
 
                                     const auto widgetPos = 200_scaled;

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
@@ -81,11 +82,7 @@ namespace hex::plugin::builtin {
                         return "%d FPS";
                 }();
 
-                if (ImGui::SliderInt(name.data(), &m_value, 14, 201, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
-                    return true;
-                }
-
-                return false;
+                return ImGui::SliderInt(name.data(), &m_value, 14, 201, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
             }
 
             void load(const nlohmann::json &data) override {
@@ -129,7 +126,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGuiExt::DimmedIconButton(ICON_VS_NEW_FOLDER, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     fs::openFileBrowser(fs::DialogMode::Folder, {}, [&](const std::fs::path &path) {
-                        if (std::find(m_paths.begin(), m_paths.end(), path) == m_paths.end()) {
+                        if (std::ranges::find(m_paths, path) == m_paths.end()) {
                             m_paths.emplace_back(path);
                             ImHexApi::System::setAdditionalFolderPaths(m_paths);
 
@@ -170,7 +167,8 @@ namespace hex::plugin::builtin {
             nlohmann::json store() override {
                 std::vector<std::string> pathStrings;
 
-                for (const auto &path : m_paths) {
+                pathStrings.reserve(m_paths.size());
+for (const auto &path : m_paths) {
                     pathStrings.push_back(wolv::io::fs::toNormalizedPathString(path));
                 }
 
@@ -211,7 +209,7 @@ namespace hex::plugin::builtin {
                 return m_value;
             }
 
-            float getValue() const {
+            [[nodiscard]] float getValue() const {
                 return m_value;
             }
 
@@ -232,11 +230,7 @@ namespace hex::plugin::builtin {
                         return fmt::format("hex.builtin.setting.general.backups.auto_backup_time.format.extended"_lang, value / 60, value % 60);
                 }();
 
-                if (ImGui::SliderInt(name.data(), &m_value, 0, (30 * 60) / 30, format.c_str(), ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput)) {
-                    return true;
-                }
-
-                return false;
+                return ImGui::SliderInt(name.data(), &m_value, 0, (30 * 60) / 30, format.c_str(), ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput);
             }
 
             void load(const nlohmann::json &data) override {
@@ -794,6 +788,7 @@ namespace hex::plugin::builtin {
         {
             auto themeNames = ThemeManager::getThemeNames();
             std::vector<nlohmann::json> themeJsons = { };
+            themeJsons.reserve(themeNames.size());
             for (const auto &themeName : themeNames)
                 themeJsons.emplace_back(themeName);
 
@@ -1059,7 +1054,8 @@ namespace hex::plugin::builtin {
         auto folderPathStrings = ContentRegistry::Settings::read<std::vector<std::string>>("hex.builtin.setting.folders", "hex.builtin.setting.folders", { });
 
         std::vector<std::fs::path> paths;
-        for (const auto &pathString : folderPathStrings) {
+        paths.reserve(folderPathStrings.size());
+for (const auto &pathString : folderPathStrings) {
             paths.emplace_back(pathString);
         }
 

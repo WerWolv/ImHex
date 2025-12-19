@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/api/content_registry/data_processor.hpp>
 #include <hex/data_processor/node.hpp>
 
@@ -159,7 +160,7 @@ namespace hex::plugin::builtin {
             for (u8 &b : data)
                 b = BitFlipLookup[b & 0xf] << 4 | BitFlipLookup[b >> 4];
 
-            std::reverse(data.begin(), data.end());
+            std::ranges::reverse(data);
             this->setBufferOnOutput(1, data);
         }
 

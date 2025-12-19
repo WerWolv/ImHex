@@ -51,9 +51,9 @@ namespace hex::plugin::builtin {
         void zerosMiniMapVisualizer(u64, std::span<const u8> data, std::vector<ImColor> &output) {
             for (u8 byte : data) {
                 if (byte == 0x00)
-                    output.push_back(ImColor(1.0F, 1.0F, 1.0F, 1.0F));
+                    output.emplace_back(1.0F, 1.0F, 1.0F, 1.0F);
                 else
-                    output.push_back(ImColor(0.0F, 0.0F, 0.0F, 1.0F));
+                    output.emplace_back(0.0F, 0.0F, 0.0F, 1.0F);
             }
         }
 
@@ -99,7 +99,7 @@ namespace hex::plugin::builtin {
 
         void rgba8MiniMapVisualizer(u64 address, std::span<const u8> data, std::vector<ImColor> &output) {
             colorMinimapVisualizer(address, data, output, 4, [](std::span<const u8> subData) -> ImColor {
-                return ImColor(subData[0], subData[1], subData[2], 0xFF);
+                return {subData[0], subData[1], subData[2], 0xFF};
             });
         }
 
@@ -108,7 +108,7 @@ namespace hex::plugin::builtin {
                 u8 r = (subData[0] & 0xF8);
                 u8 g = ((subData[0] & 0x07) << 5) | ((subData[1] & 0xE0) >> 3);
                 u8 b = (subData[1] & 0x1F) << 3;
-                return ImColor(r, g, b, 0xFF);
+                return {r, g, b, 0xFF};
             });
         }
 

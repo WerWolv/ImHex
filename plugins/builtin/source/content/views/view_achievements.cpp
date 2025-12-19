@@ -1,5 +1,6 @@
 #include "content/views/view_achievements.hpp"
 
+#include <algorithm>
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/task_manager.hpp>
@@ -321,11 +322,12 @@ namespace hex::plugin::builtin {
 
             // Get all achievement category names
             std::vector<std::string> categories;
-            for (const auto &[categoryName, achievements] : startNodes) {
+            categories.reserve(startNodes.size());
+for (const auto &[categoryName, achievements] : startNodes) {
                 categories.push_back(categoryName);
             }
 
-            std::reverse(categories.begin(), categories.end());
+            std::ranges::reverse(categories);
 
             // Draw each individual achievement category
             for (const auto &categoryName : categories) {

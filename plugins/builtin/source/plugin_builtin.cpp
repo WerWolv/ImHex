@@ -1,5 +1,6 @@
-#include <hex/plugin.hpp>
+#include <plugin_builtin.hpp>
 
+#include <hex/plugin.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/logger.hpp>
@@ -14,54 +15,6 @@
 #include <fonts/vscode_icons.hpp>
 
 using namespace hex;
-
-namespace hex::plugin::builtin {
-
-    void registerEventHandlers();
-    void registerDataVisualizers();
-    void registerMiniMapVisualizers();
-    void registerDataInspectorEntries();
-    void registerToolEntries();
-    void registerPatternLanguageFunctions();
-    void registerPatternLanguageTypes();
-    void registerPatternLanguagePragmas();
-    void registerPatternLanguageVisualizers();
-    void registerCommandPaletteCommands();
-    void registerSettings();
-    void loadSettings();
-    void registerDataProcessorNodes();
-    void registerProviders();
-    void registerDataFormatters();
-    void registerMainMenuEntries();
-    void createWelcomeScreen();
-    void registerViews();
-    void registerThemeHandlers();
-    void registerStyleHandlers();
-    void registerThemes();
-    void registerBackgroundServices();
-    void registerNetworkEndpoints();
-    void registerMCPTools();
-    void registerFileHandlers();
-    void registerProjectHandlers();
-    void registerAchievements();
-    void registerReportGenerators();
-    void registerTutorials();
-    void registerDataInformationSections();
-    void loadWorkspaces();
-
-    void addWindowDecoration();
-    void addFooterItems();
-    void addTitleBarButtons();
-    void addToolbarItems();
-    void addGlobalUIItems();
-    void addInitTasks();
-
-    void handleBorderlessWindowMode();
-    void setupOutOfBoxExperience();
-
-    void extractBundledFiles();
-
-}
 
 IMHEX_PLUGIN_SUBCOMMANDS() {
     { "help",            "h", "Print help about this command",                hex::plugin::builtin::handleHelpCommand             },

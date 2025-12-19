@@ -218,7 +218,7 @@ static std::mutex s_traceMutex;
             }
 
             StackTraceResult getStackTrace() {
-                std::lock_guard lock(s_traceMutex);
+                std::scoped_lock lock(s_traceMutex);
 
                 static std::vector<StackFrame> result;
 

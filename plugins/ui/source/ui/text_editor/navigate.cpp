@@ -4,7 +4,7 @@
 
 
 namespace hex::ui {
-    bool isWordChar(char c) {
+    static bool isWordChar(char c) {
         auto asUChar = static_cast<u8>(c);
         return std::isalnum(asUChar) || c == '_' || asUChar > 0x7F;
     }
@@ -237,13 +237,13 @@ namespace hex::ui {
             return;
         i32 home;
         if (!prefix.empty()) {
-            auto idx = prefix.find_first_not_of(" ");
+            auto idx = prefix.find_first_not_of(' ');
             if (idx == std::string::npos) {
-                auto postIdx = postfix.find_first_of(" ");
+                auto postIdx = postfix.find_first_of(' ');
                 if (postIdx == std::string::npos || postIdx == 0)
                     home = 0;
                 else {
-                    postIdx = postfix.find_first_not_of(" ");
+                    postIdx = postfix.find_first_not_of(' ');
                     if (postIdx == std::string::npos)
                         home = this->lineMaxColumn(oldPos.m_line);
                     else if (postIdx == 0)
@@ -254,11 +254,11 @@ namespace hex::ui {
             } else
                 home = idx;
         } else {
-            auto postIdx = postfix.find_first_of(" ");
+            auto postIdx = postfix.find_first_of(' ');
             if (postIdx == std::string::npos)
                 home = 0;
             else {
-                postIdx = postfix.find_first_not_of(" ");
+                postIdx = postfix.find_first_not_of(' ');
                 if (postIdx == std::string::npos)
                     home = lineMaxColumn(oldPos.m_line);
                 else
@@ -360,9 +360,7 @@ namespace hex::ui {
         if (std::abs(m_line) > (i32) maxLine)
             return false;
         auto maxColumn = editor->lineMaxColumn(m_line);
-        if (std::abs(m_column) > maxColumn)
-            return false;
-        return true;
+        return std::abs(m_column) <= maxColumn;
     }
 
     TextEditor::Coordinates TextEditor::Coordinates::sanitize(TextEditor *editor) {
@@ -387,8 +385,8 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::setCoordinates(i32 line, i32 column) {
         if (isEmpty())
-            return Coordinates(0, 0);
-        return Coordinates(this, line, column);
+            return {0, 0};
+        return {this, line, column};
     }
 
     TextEditor::Coordinates TextEditor::setCoordinates(const Coordinates &value) {
@@ -400,11 +398,11 @@ namespace hex::ui {
         auto start = setCoordinates(value.m_start);
         auto end = setCoordinates(value.m_end);
         if (start == Invalid || end == Invalid)
-            return Range(Invalid, Invalid);
+            return {Invalid, Invalid};
         if (start > end) {
             std::swap(start, end);
         }
-        return Range(start, end);
+        return {start, end};
     }
 
     void TextEditor::advance(Coordinates &coordinates) const {

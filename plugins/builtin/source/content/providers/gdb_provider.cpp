@@ -217,7 +217,7 @@ namespace hex::plugin::builtin {
 
         auto data = gdb::readMemory(m_socket, offset, size);
         if (!data.empty())
-            std::memcpy(buffer, &data[0], data.size());
+            std::memcpy(buffer, data.data(), data.size());
     }
 
     void GDBProvider::writeToSource(u64 offset, const void *buffer, size_t size) {

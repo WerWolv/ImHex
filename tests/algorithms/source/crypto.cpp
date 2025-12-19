@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/test/test_provider.hpp>
@@ -6,12 +7,13 @@
 #include <random>
 #include <vector>
 #include <array>
-#include <algorithm>
 #include <fmt/ranges.h>
 
+using std::string;
+
 struct EncodeChek {
-    std::vector<u8> vec;
-    std::string string;
+  std::vector<u8> vec;
+  std::string string;
 };
 
 TEST_SEQUENCE("EncodeDecode16") {
@@ -40,7 +42,7 @@ TEST_SEQUENCE("EncodeDecode16") {
 
     for (int i = 0; i < 1000; i++) {
         std::vector<u8> original(dataLen(gen));
-        std::generate(std::begin(original), std::end(original), [&] { return data(gen); });
+        std::ranges::generate(original, [&] { return data(gen); });
 
         auto encoded = hex::crypt::encode16(original);
         auto decoded = hex::crypt::decode16(encoded);
@@ -56,11 +58,11 @@ TEST_SEQUENCE("EncodeDecode16") {
 };
 
 std::string vectorToString(std::vector<u8> in) {
-    return std::string(reinterpret_cast<char *>(in.data()), in.size());
+  return { reinterpret_cast<char *>(in.data()), in.size() };
 }
 
 std::vector<u8> stringToVector(std::string in) {
-    return std::vector<u8>(in.begin(), in.end());
+    return  { in.begin(), in.end() };
 }
 
 TEST_SEQUENCE("EncodeDecode64") {
@@ -90,7 +92,7 @@ TEST_SEQUENCE("EncodeDecode64") {
 
     for (int i = 0; i < 1000; i++) {
         std::vector<u8> original(dataLen(gen));
-        std::generate(std::begin(original), std::end(original), [&] { return data(gen); });
+        std::ranges::generate(original, [&] { return data(gen); });
 
         auto encoded = vectorToString(hex::crypt::encode64(original));
         auto decoded = hex::crypt::decode64(stringToVector(encoded));
@@ -147,7 +149,7 @@ TEST_SEQUENCE("EncodeDecodeLEB128") {
 
     for (int i = 0; i < 1000; i++) {
         std::vector<u8> original(sizeof(u128));
-        std::generate(std::begin(original), std::end(original), [&] { return data(gen); });
+        std::ranges::generate(original, [&] { return data(gen); });
         u128 u = *reinterpret_cast<u128*>(original.data());
         i128 s = *reinterpret_cast<i128*>(original.data());
         auto encodedS = hex::crypt::encodeSleb128(s);
@@ -193,7 +195,7 @@ int checkCrcAgainstRandomData(Func func, int width) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution distribLen(0, 1024);
-    std::uniform_int_distribution<uint64_t> distribPoly(0, (0b10ull << (width - 1)) - 1);
+    std::uniform_int_distribution<uint64_t> distribPoly(0, (0b10ULL << (width - 1)) - 1);
     std::uniform_int_distribution<u8> distribData;
 
     for (int i = 0; i < 500; i++) {
