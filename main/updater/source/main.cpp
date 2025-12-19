@@ -134,6 +134,8 @@ std::string_view getUpdateArtifactEnding() {
                 return ARCH_DEPENDENT("Fedora-41-x86_64.rpm", "");
             else if (hex::executeCommand("grep -q 'VERSION_ID=\"42\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Fedora-42-x86_64.rpm", "");
+            else if (hex::executeCommand("grep -q 'VERSION_ID=\"43\"' /etc/os-release") == 0)
+                return ARCH_DEPENDENT("Fedora-43-x86_64.rpm", "");
             else if (hex::executeCommand("grep -q 'VERSION_ID=\"rawhide\"' /etc/os-release") == 0)
                 return ARCH_DEPENDENT("Fedora-rawhide-x86_64.rpm", "");
         } else if (hex::executeCommand("grep -q '^NAME=\"Arch Linux\"' /etc/os-release") == 0) {
