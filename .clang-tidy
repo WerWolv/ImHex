@@ -89,6 +89,7 @@ Checks:
 # Will fix later
 - -modernize-avoid-c-arrays
 - -readability-make-member-function-const # idk + lots of occurences
+- -readability-misleading-indentation # We need to handle cases with #if defined()
 
 # Will check later if useful or not
 # - -readability-make-member-function-const # to make functions const. Seems to not catch everything ?
