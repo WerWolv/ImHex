@@ -468,7 +468,7 @@ namespace hex::plugin::builtin {
                     variableParentType = currentName;
 
                     if (!nameSpace.empty() && !variableParentType.contains(nameSpace))
-                        variableParentType = nameSpace + variableParentType;
+                        variableParentType.insert(0, nameSpace);
 
                     else if (findNamespace(nameSpace) && !variableParentType.contains(nameSpace))
                         variableParentType = fmt::format("{}::{}", nameSpace, variableParentType);
@@ -761,7 +761,7 @@ namespace hex::plugin::builtin {
                 setIdentifierColor(-1, IdentifierType::NameSpace);
                 nameSpace += name + "::";
             } else if (m_UDTDefinitions.contains(nameSpace+name)) {
-                name = nameSpace + name;
+                name.insert(0, nameSpace);
                 auto udtDefinition = m_UDTDefinitions[name];
                 auto definitionIndex = udtDefinition.tokenIndex-1;
                 if (auto *keyword = std::get_if<Keyword>(&m_tokens[definitionIndex].value); keyword != nullptr) {
@@ -1718,7 +1718,8 @@ namespace hex::plugin::builtin {
             std::string nameSpace;
             while (peek(tkn::Operator::ScopeResolution)) {
                 next(-1);
-                nameSpace = getValue<Token::Identifier>(0)->get() + "::" + nameSpace;
+                nameSpace.insert(0, "::" + typeStr);
+                nameSpace.insert(0, getValue<Token::Identifier>(0)->get());
                 next(-1);
             }
             typeStr = nameSpace + typeStr;
