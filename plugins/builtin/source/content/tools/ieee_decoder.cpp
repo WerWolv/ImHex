@@ -36,7 +36,7 @@ namespace hex::plugin::builtin {
         static IEEE754STATICS ieee754statics;
 
 
-        enum class NumberType {
+        enum class NumberType: std::uint8_t {
             Normal,
             Zero,
             Denormal,
@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
             NaN,
         };
 
-        enum class InputType {
+        enum class InputType: std::uint8_t {
             Infinity,
             NotANumber,
             QuietNotANumber,
@@ -53,7 +53,7 @@ namespace hex::plugin::builtin {
             Invalid
         };
 
-        enum class ValueType {
+        enum class ValueType: std::uint8_t {
             Regular,
             SignalingNaN,
             QuietNaN,

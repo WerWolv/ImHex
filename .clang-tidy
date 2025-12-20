@@ -85,19 +85,22 @@ Checks:
 - -readability-static-accessed-through-instance #
 - -readability-ambiguous-smartptr-reset-call # Fix is hard to read
 
-# Will check later if useful or not
-- -readability-make-member-function-const # to make functions const. Seems to not catch everything ?
-- -misc-unconventional-assign-operator
-- -bugprone-unchecked-optional-access
+# Will fix later
 - -modernize-avoid-c-arrays
-- -misc-non-private-member-variables-in-classes
-- -performance-move-const-arg
-- -bugprone-suspicious-stringview-data-usage
-- -cert-err34-c
-- -hicpp-exception-baseclass
-- -modernize-use-integer-sign-comparison
-- -performance-for-range-copy
+
+# Will check later if useful or not
+# - -readability-make-member-function-const # to make functions const. Seems to not catch everything ?
+# - -misc-unconventional-assign-operator
+# - -bugprone-unchecked-optional-access
+# - -modernize-avoid-c-arrays
+# - -misc-non-private-member-variables-in-classes
+# - -performance-move-const-arg
+# - -bugprone-suspicious-stringview-data-usage
+# - -cert-err34-c
+# - -hicpp-exception-baseclass
+# - -modernize-use-integer-sign-comparison
+# - -performance-for-range-copy
 - -performance-unnecessary-value-param
-- -bugprone-empty-catch
-- -bugprone-multi-level-implicit-pointer-conversion
-- -modernize-pass-by-value
+# - -bugprone-empty-catch
+# - -bugprone-multi-level-implicit-pointer-conversion
+# - -modernize-pass-by-value

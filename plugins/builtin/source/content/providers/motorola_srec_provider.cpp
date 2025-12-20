@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
             };
 
             try {
-                enum class RecordType {
+                enum class RecordType: std::uint8_t {
                     Header          = 0x00,
                     Data16          = 0x01,
                     Data24          = 0x02,
