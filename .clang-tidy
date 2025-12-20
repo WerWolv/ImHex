@@ -93,3 +93,4 @@ Checks:
 - -readability-misleading-indentation # We need to handle cases with #if defined()
 - -bugprone-unchecked-optional-access
 - -performance-unnecessary-value-param # idk
+- -readability-avoid-nested-conditional-operator
