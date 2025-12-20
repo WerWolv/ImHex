@@ -3,6 +3,7 @@
 # Or at least an empty comment # to show they were put here explicitely,
 # and not as part of the historical CLion-generated rules
 # Note: `- -X` means disable X
+# CLI usage: go to the build directory and run: `run-clang-tidy -allow-no-checks -source-filter ".*/lib/.*" -fix -j`
 
 Checks:
 - -*
