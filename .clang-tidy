@@ -18,6 +18,7 @@ Checks:
 - -bugprone-unhandled-exception-at-new
 - -bugprone-infinite-loop
 - -bugprone-easily-swappable-parameters
+- -bugprone-float-loop-counter #
 - cert-err52-cpp
 - cert-err60-cpp
 - cert-err34-c
