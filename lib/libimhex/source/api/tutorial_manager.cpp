@@ -57,7 +57,7 @@ namespace hex {
 
             void add(const void *pointer) {
                 const ImGuiID seed = idStack.back();
-                const ImGuiID id = ImHashData(&pointer, sizeof(pointer), seed);
+                const ImGuiID id = ImHashData((const void*) &pointer, sizeof(pointer), seed);
 
                 idStack.push_back(id);
             }

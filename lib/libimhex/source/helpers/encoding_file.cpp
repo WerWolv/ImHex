@@ -66,6 +66,9 @@ namespace hex {
 
 
     EncodingFile &EncodingFile::operator=(const hex::EncodingFile &other) {
+        if(this == &other) {
+            return *this;
+        }
         m_mapping = std::make_unique<std::map<size_t, std::map<std::vector<u8>, std::string>>>(*other.m_mapping);
         m_tableContent = other.m_tableContent;
         m_longestSequence = other.m_longestSequence;
@@ -90,7 +93,7 @@ namespace hex {
 
 
     std::pair<std::string_view, size_t> EncodingFile::getEncodingFor(std::span<const u8> buffer) const {
-        for (auto [size, mapping] : std::ranges::reverse_view(*m_mapping)) {
+        for (const auto &[size, mapping] : std::ranges::reverse_view(*m_mapping)) {
             if (size > buffer.size()) continue;
 
             std::vector key(buffer.begin(), buffer.begin() + size);
@@ -102,7 +105,7 @@ namespace hex {
     }
 
     u64 EncodingFile::getEncodingLengthFor(std::span<u8> buffer) const {
-        for (auto [size, mapping] : std::ranges::reverse_view(*m_mapping)) {
+        for (const auto& [size, mapping] : std::ranges::reverse_view(*m_mapping)) {
             if (size > buffer.size()) continue;
 
             std::vector key(buffer.begin(), buffer.begin() + size);

@@ -7,6 +7,7 @@
 
 #include <set>
 #include <span>
+#include <utility>
 #include <vector>
 
 #include <nlohmann/json_fwd.hpp>
@@ -49,9 +50,15 @@ namespace hex::dp {
         virtual void store(nlohmann::json &j) const { std::ignore = j; }
         virtual void load(const nlohmann::json &j) { std::ignore = j; }
 
-        struct NodeError {
+        struct NodeError: public std::exception {
             Node *node;
-            std::string message;
+            std::string msg;
+
+            NodeError(Node *node, std::string  msg) : node(node), msg(std::move(msg)) {}
+
+            [[nodiscard]] const char* what() const noexcept override {
+                return this->msg.c_str();
+            }
         };
 
         void resetOutputData() {
@@ -102,7 +109,7 @@ namespace hex::dp {
         void unmarkInputProcessed(u32 index);
 
     protected:
-        [[noreturn]] void throwNodeError(const std::string &message);
+        [[noreturn]] void throwNodeError(const std::string &msg);
 
         void setOverlayData(u64 address, const std::vector<u8> &data);
         void setAttributes(std::vector<Attribute> attributes);

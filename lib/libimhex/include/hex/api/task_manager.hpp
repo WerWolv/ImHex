@@ -23,7 +23,7 @@ EXPORT_MODULE namespace hex {
     class Task {
     public:
         Task() = default;
-        Task(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function);
+        Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function);
 
         Task(const Task&) = delete;
         Task(Task &&other) noexcept;
@@ -95,11 +95,15 @@ EXPORT_MODULE namespace hex {
         std::atomic_flag m_hadException;
         std::string m_exceptionMessage;
 
-        struct TaskInterruptor {
+        struct TaskInterruptor: public std::exception {
             TaskInterruptor() {
                 trace::disableExceptionCaptureForCurrentThread();
             }
             virtual ~TaskInterruptor() = default;
+
+            [[nodiscard]] const char* what() const noexcept override {
+                return "Task Interrupted";
+            }
         };
 
         friend class TaskHolder;

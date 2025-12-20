@@ -1336,7 +1336,7 @@ namespace hex {
 
             class Service {
             public:
-                Service(const UnlocalizedString &unlocalizedName, std::jthread thread) : m_unlocalizedName(std::move(unlocalizedName)), m_thread(std::move(thread)) { }
+                Service(UnlocalizedString unlocalizedName, std::jthread thread) : m_unlocalizedName(std::move(unlocalizedName)), m_thread(std::move(thread)) { }
                 Service(const Service&) = delete;
                 Service(Service &&) = default;
                 ~Service() {

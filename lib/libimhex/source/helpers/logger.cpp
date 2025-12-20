@@ -118,8 +118,8 @@ namespace hex::log {
 
         void addLogEntry(std::string_view project, std::string_view level, std::string message) {
             s_logEntries->emplace_back(
-                std::move(project),
-                std::move(level),
+                project,
+                level,
                 std::move(message)
             );
         }

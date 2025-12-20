@@ -464,7 +464,7 @@ namespace hex {
             if (ch <= 0x7F) {
                 unicode = ch;
                 unicodeSize = 0;
-            } else if (ch <= 0xBF) {
+            } else if (ch <= 0xBF) { //NOLINT(bugprone-branch-clone)
                 return { };
             } else if (ch <= 0xDF) {
                 unicode = ch&0x1F;
@@ -525,7 +525,7 @@ namespace hex {
             index += 1;
 
             if (wch < 0xD800 || wch > 0xDFFF) {
-                unicode = static_cast<u32>(wch);
+                unicode = static_cast<u32>(wch); // NOLINT(cert-str34-c)
             } else if (wch >= 0xD800 && wch <= 0xDBFF) {
                 if (index == utf16.size())
                     return "";
@@ -786,7 +786,7 @@ namespace hex {
         input.imbue(std::locale(std::setlocale(LC_ALL, nullptr)));
 
         tm time = {};
-        input >> std::get_time(&time, format.data());
+        input >> std::get_time(&time, std::string(format).data());
         if (input.fail()) {
             return std::nullopt;
         }
