@@ -82,6 +82,7 @@ Checks:
 - -readability-uppercase-literal-suffix # Not important enough
 - -readability-redundant-string-cstr # Sometimes used to stop at first null byte
 - -readability-static-accessed-through-instance #
+- -readability-ambiguous-smartptr-reset-call # Fix is hard to read
 
 # Will check later if useful or not
 - -readability-make-member-function-const # to make functions const. Seems to not catch everything ?
