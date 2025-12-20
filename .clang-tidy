@@ -79,9 +79,8 @@ Checks:
 - -readability-convert-member-functions-to-static #
 - -readability-use-concise-preprocessor-directives # We do not use #ifdef
 - -readability-uppercase-literal-suffix # Not important enough
-- -readability-static-accessed-through-instance
-
-# idk
+- -readability-redundant-string-cstr # Sometimes used to stop at first null byte
+- -readability-static-accessed-through-instance #
 
 # Will check later if useful or not
 - -readability-make-member-function-const # to make functions const. Seems to not catch everything ?
