@@ -180,7 +180,6 @@ namespace hex::ui {
             auto currentLine = endLine;
             auto commentLength = 0;
             auto matchedBracket = false;
-            std::string brackets = "()[]{}<>";
 
             std::vector<bool> ifDefs;
             ifDefs.push_back(true);
@@ -347,12 +346,7 @@ namespace hex::ui {
                                     if (isGlobalDocComment || isBlockDocComment || isBlockComment) {
                                         commentStartLine = currentLine;
                                         commentStartIndex = currentIndex;
-                                        if (currentIndex < line.size() - 4 && isBlockComment &&
-                                            line.m_chars[currentIndex + 2] == '*' &&
-                                            line.m_chars[currentIndex + 3] == '/') {
-                                            withinBlockComment = true;
-                                            commentLength = 2;
-                                        } else if (isGlobalDocComment) {
+                                        if (isGlobalDocComment) {
                                             withinGlobalDocComment = true;
                                             commentLength = 3;
                                         } else if (isBlockDocComment) {
@@ -1191,8 +1185,8 @@ namespace hex::ui {
                 out_begin = in_begin;
                 out_end = in_begin + 1;
                 return true;
+            default:
+                return false;
         }
-
-        return false;
     }
 }
