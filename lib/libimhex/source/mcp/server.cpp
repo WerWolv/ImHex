@@ -78,7 +78,7 @@ namespace hex::mcp {
             return responses.dump();
         }
 
-        enum class ErrorCode: u8 {
+        enum class ErrorCode: i16 {
             ParseError     = -32700,
             InvalidRequest = -32600,
             MethodNotFound = -32601,
