@@ -110,6 +110,7 @@ namespace hex {
 
         LayoutManager::registerLoadCallback([this](std::string_view line) {
             int width = 0, height = 0;
+            //NOLINTNEXTLINE: we do not use values of 0
             sscanf(std::string(line).data(), "MainWindowSize=%d,%d", &width, &height);
 
             if (width > 0 && height > 0) {
