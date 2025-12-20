@@ -153,14 +153,14 @@ bool installUpdate(const std::fs::path &updatePath) {
     };
 
     const static auto UpdateHandlers = {
-        UpdateHandler { ".msi",             "msiexec /i \"{}\" /qb"                                                                                     },
-        UpdateHandler { ".dmg",             "hdiutil attach -autoopen \"{}\""                                                                           },
-        UpdateHandler { ".deb",             "zenity --password | sudo -S apt install -y --fix-broken \"{}\""                                                                   },
-        UpdateHandler { ".rpm",             "zenity --password | sudo -S rpm -i \"{}\""                                                                                        },
-        UpdateHandler { ".pkg.tar.zst",     "zenity --password | sudo -S pacman -Syy && sudo pacman -U --noconfirm \"{}\""                                                     },
-        UpdateHandler { ".AppImage",        fmt::format(R"(zenity --password | sudo -S cp "{{}}" "{}")", hex::getEnvironmentVariable("APPIMAGE").value_or(""))    },
-        UpdateHandler { ".flatpak",         "zenity --password | sudo -S flatpak install -y --reinstall \"{}\""                                                                },
-        UpdateHandler { ".snap",            "zenity --password | sudo -S snap install --dangerous \"{}\""                                                                      },
+        UpdateHandler { .ending=".msi",             .command="msiexec /i \"{}\" /qb"                                                                                     },
+        UpdateHandler { .ending=".dmg",             .command="hdiutil attach -autoopen \"{}\""                                                                           },
+        UpdateHandler { .ending=".deb",             .command="zenity --password | sudo -S apt install -y --fix-broken \"{}\""                                                                   },
+        UpdateHandler { .ending=".rpm",             .command="zenity --password | sudo -S rpm -i \"{}\""                                                                                        },
+        UpdateHandler { .ending=".pkg.tar.zst",     .command="zenity --password | sudo -S pacman -Syy && sudo pacman -U --noconfirm \"{}\""                                                     },
+        UpdateHandler { .ending=".AppImage",        .command=fmt::format(R"(zenity --password | sudo -S cp "{{}}" "{}")", hex::getEnvironmentVariable("APPIMAGE").value_or(""))    },
+        UpdateHandler { .ending=".flatpak",         .command="zenity --password | sudo -S flatpak install -y --reinstall \"{}\""                                                                },
+        UpdateHandler { .ending=".snap",            .command="zenity --password | sudo -S snap install --dangerous \"{}\""                                                                      },
     };
 
     const auto updateFileName = wolv::util::toUTF8String(updatePath.filename());

@@ -42,7 +42,7 @@ namespace hex::init {
         RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
             std::scoped_lock guard(m_progressMutex);
 
-            m_tasks.push_back(Task{ name, function, async, false });
+            m_tasks.push_back(Task{ .name=name, .callback=function, .async=async, .running=false });
             m_totalTaskCount += 1;
             m_progress = float(m_completedTaskCount) / float(m_totalTaskCount);
         });
