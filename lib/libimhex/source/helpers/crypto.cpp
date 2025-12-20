@@ -28,7 +28,6 @@
 #endif
 
 #include <array>
-#include <functional>
 #include <cstddef>
 #include <cstdint>
 #include <bit>
@@ -82,7 +81,7 @@ namespace hex::crypt {
 
     public:
         constexpr Crc(u64 polynomial, u64 init, u64 xorOut, bool reflectInput, bool reflectOutput)
-            : m_value(0x00), m_init(init & ((0b10ull << (NumBits - 1)) - 1)), m_xorOut(xorOut & ((0b10ull << (NumBits - 1)) - 1)),
+            :  m_init(init & ((0b10ull << (NumBits - 1)) - 1)), m_xorOut(xorOut & ((0b10ull << (NumBits - 1)) - 1)),
               m_reflectInput(reflectInput), m_reflectOutput(reflectOutput),
               m_table([polynomial] {
                 auto reflectedPoly = reflect(polynomial & ((0b10ull << (NumBits - 1)) - 1), NumBits);
@@ -129,7 +128,7 @@ namespace hex::crypt {
         }
 
     private:
-        u64 m_value;
+        u64 m_value = 0x00;
 
         u64 m_init;
         u64 m_xorOut;
@@ -144,7 +143,7 @@ namespace hex::crypt {
         using Crc = Crc<NumBits>;
         Crc crc(polynomial, init, xorout, reflectIn, reflectOut);
 
-        processDataByChunks(data, offset, size, std::bind(&Crc::processBytes, &crc, _1, _2));
+        processDataByChunks(data, offset, size, [&crc](auto && data, auto && size) { crc.processBytes(data, size); });
 
         return crc.checksum();
     }
@@ -170,7 +169,7 @@ namespace hex::crypt {
 
         mbedtls_md5_starts(&ctx);
 
-        processDataByChunks(data, offset, size, std::bind(mbedtls_md5_update, &ctx, _1, _2));
+        processDataByChunks(data, offset, size, [&ctx](auto && data, auto && size) { return mbedtls_md5_update(&ctx, data, size); });
 
         mbedtls_md5_finish(&ctx, result.data());
 
@@ -202,7 +201,7 @@ namespace hex::crypt {
 
         mbedtls_sha1_starts(&ctx);
 
-        processDataByChunks(data, offset, size, std::bind(mbedtls_sha1_update, &ctx, _1, _2));
+        processDataByChunks(data, offset, size, [&ctx](auto && data, auto && size) { return mbedtls_sha1_update(&ctx, data, size); });
 
         mbedtls_sha1_finish(&ctx, result.data());
 
@@ -234,7 +233,7 @@ namespace hex::crypt {
 
         mbedtls_sha256_starts(&ctx, true);
 
-        processDataByChunks(data, offset, size, std::bind(mbedtls_sha256_update, &ctx, _1, _2));
+        processDataByChunks(data, offset, size, [&ctx](auto && data, auto && size) { return mbedtls_sha256_update(&ctx, data, size); });
 
         mbedtls_sha256_finish(&ctx, result.data());
 
@@ -266,7 +265,7 @@ namespace hex::crypt {
 
         mbedtls_sha256_starts(&ctx, false);
 
-        processDataByChunks(data, offset, size, std::bind(mbedtls_sha256_update, &ctx, _1, _2));
+        processDataByChunks(data, offset, size, [&ctx](auto && data, auto && size) { return mbedtls_sha256_update(&ctx, data, size); });
 
         mbedtls_sha256_finish(&ctx, result.data());
 
@@ -298,7 +297,7 @@ namespace hex::crypt {
 
         mbedtls_sha512_starts(&ctx, true);
 
-        processDataByChunks(data, offset, size, std::bind(mbedtls_sha512_update, &ctx, _1, _2));
+        processDataByChunks(data, offset, size, [&ctx](auto && data, auto && size) { return mbedtls_sha512_update(&ctx, data, size); });
 
         mbedtls_sha512_finish(&ctx, result.data());
 
@@ -330,7 +329,7 @@ namespace hex::crypt {
 
         mbedtls_sha512_starts(&ctx, false);
 
-        processDataByChunks(data, offset, size, std::bind(mbedtls_sha512_update, &ctx, _1, _2));
+        processDataByChunks(data, offset, size, [&ctx](auto && data, auto && size) { return mbedtls_sha512_update(&ctx, data, size); });
 
         mbedtls_sha512_finish(&ctx, result.data());
 
