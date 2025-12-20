@@ -47,6 +47,10 @@
 
 #if defined(OS_WEB)
     #include <emscripten.h>
+#elif defined(OS_MACOS)
+    extern "C" {
+        void macosRegisterFont(const unsigned char *data, size_t size);
+    }
 #endif
 
 namespace hex {
@@ -1205,6 +1209,10 @@ namespace hex {
                 offset,
                 fontSizeMultiplier
             );
+
+            #if defined(OS_MACOS)
+                macosRegisterFont(data.data(), data.size_bytes());
+            #endif
         }
 
         void registerFont(const Font& font) {

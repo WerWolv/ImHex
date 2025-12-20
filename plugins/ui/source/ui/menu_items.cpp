@@ -1,4 +1,4 @@
-#include <../../../../lib/libimhex/include/hex/helpers/menu_items.hpp>
+#include <hex/helpers/menu_items.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -12,13 +12,14 @@
         void macosEndMainMenuBar(void);
         void macosClearMenu(void);
 
-        bool macosBeginMenu(const char* label, bool enabled);
+        bool macosBeginMenu(const char* label, const char *icon, bool enabled);
         void macosEndMenu(void);
 
-        bool macosMenuItem(const char* label, KeyEquivalent keyEquivalent, bool selected, bool enabled);
-        bool macosMenuItemSelect(const char* label, KeyEquivalent keyEquivalent, bool* p_selected, bool enabled);
+        bool macosMenuItem(const char* label, const char *icon, KeyEquivalent keyEquivalent, bool selected, bool enabled);
+        bool macosMenuItemSelect(const char* label, const char *icon, KeyEquivalent keyEquivalent, bool* p_selected, bool enabled);
 
         void macosSeparator(void);
+
     }
 #endif
 
@@ -71,7 +72,7 @@ namespace hex::menu {
         bool beginMenu(const char *label, bool enabled) {
             #if defined(OS_MACOS)
                 if (s_useNativeMenuBar)
-                    return macosBeginMenu(label, enabled);
+                    return macosBeginMenu(label, nullptr, enabled);
             #endif
 
             return ImGui::BeginMenu(label, enabled);
@@ -80,7 +81,7 @@ namespace hex::menu {
         bool beginMenuEx(const char *label, const char *icon, bool enabled) {
             #if defined(OS_MACOS)
                 if (s_useNativeMenuBar)
-                    return macosBeginMenu(label, enabled);
+                    return macosBeginMenu(label, icon, enabled);
             #endif
 
             return ImGui::BeginMenuEx(label, icon, enabled);
@@ -101,7 +102,7 @@ namespace hex::menu {
         bool menuItem(const char *label, const Shortcut &shortcut, bool selected, bool enabled) {
             #if defined(OS_MACOS)
                 if (s_useNativeMenuBar)
-                    return macosMenuItem(label, shortcut.toKeyEquivalent(), selected, enabled);
+                    return macosMenuItem(label, nullptr, shortcut.toKeyEquivalent(), selected, enabled);
             #endif
 
             return ImGui::MenuItem(label, shortcut.toString().c_str(), selected, enabled);
@@ -110,7 +111,7 @@ namespace hex::menu {
         bool menuItem(const char *label, const Shortcut &shortcut, bool *selected, bool enabled) {
             #if defined(OS_MACOS)
                 if (s_useNativeMenuBar)
-                    return macosMenuItemSelect(label, shortcut.toKeyEquivalent(), selected, enabled);
+                    return macosMenuItemSelect(label, nullptr, shortcut.toKeyEquivalent(), selected, enabled);
             #endif
 
             return ImGui::MenuItem(label, shortcut.toString().c_str(), selected, enabled);
@@ -119,7 +120,7 @@ namespace hex::menu {
         bool menuItemEx(const char *label, const char *icon, const Shortcut &shortcut, bool selected, bool enabled) {
             #if defined(OS_MACOS)
                 if (s_useNativeMenuBar)
-                    return macosMenuItem(label, shortcut.toKeyEquivalent(), selected, enabled);
+                    return macosMenuItem(label, icon, shortcut.toKeyEquivalent(), selected, enabled);
             #endif
 
             return ImGui::MenuItemEx(label, icon, shortcut.toString().c_str(), selected, enabled);
@@ -128,7 +129,7 @@ namespace hex::menu {
         bool menuItemEx(const char *label, const char *icon, const Shortcut &shortcut, bool *selected, bool enabled) {
             #if defined(OS_MACOS)
                 if (s_useNativeMenuBar)
-                    return macosMenuItemSelect(label, shortcut.toKeyEquivalent(), selected, enabled);
+                    return macosMenuItemSelect(label, icon, shortcut.toKeyEquivalent(), selected, enabled);
             #endif
 
             if (ImGui::MenuItemEx(label, icon, shortcut.toString().c_str(), selected != nullptr ? *selected : false, enabled)) {
