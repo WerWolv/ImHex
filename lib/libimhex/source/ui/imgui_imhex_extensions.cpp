@@ -17,6 +17,7 @@
 #include <set>
 #include <string>
 #include <algorithm>
+#include <numbers>
 
 #include <hex/api/imhex_api/system.hpp>
 
