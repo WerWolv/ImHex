@@ -374,9 +374,9 @@ namespace hex::ui {
             friend class TextEditor;
             UndoRecord() = default;
             ~UndoRecord() {}
-            UndoRecord( const std::string &added,
+            UndoRecord( std::string added,
                         Range addedRange,
-                        const std::string &removed,
+                        std::string removed,
                         Range removedRange,
                         EditorState &before,
                         EditorState &after);

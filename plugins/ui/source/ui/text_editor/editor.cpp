@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <ui/text_editor.hpp>
-#include <algorithm>
 #include <string>
 #include <regex>
 #include <cmath>
+#include <utility>
 #include <wolv/utils/string.hpp>
 #include <popups/popup_question.hpp>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -244,7 +244,7 @@ namespace hex::ui {
             m_lines.clear();
             m_lines.resize(lineCount);
             u64 i = 0;
-            for (auto line: vectorString) {
+            for (const auto& line: vectorString) {
                 m_lines[i].setLine(line);
                 m_lines[i].m_colorized = false;
                 m_lines[i].m_lineMaxColumn = -1;
@@ -813,12 +813,12 @@ namespace hex::ui {
     }
 
     TextEditor::UndoRecord::UndoRecord(
-            const std::string &added,
+            std::string added,
             const TextEditor::Range addedRange,
-            const std::string &removed,
+            std::string removed,
             const TextEditor::Range removedRange,
             TextEditor::EditorState &before,
-            TextEditor::EditorState &after) : m_added(added), m_addedRange(addedRange), m_removed(removed), m_removedRange(removedRange), m_before(before), m_after(after) {}
+            TextEditor::EditorState &after) : m_added(std::move(added)), m_addedRange(addedRange), m_removed(std::move(removed)), m_removedRange(removedRange), m_before(before), m_after(after) {}
 
     void TextEditor::UndoRecord::undo(TextEditor *editor) {
         if (!m_added.empty()) {

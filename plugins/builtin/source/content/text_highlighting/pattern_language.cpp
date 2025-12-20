@@ -126,7 +126,7 @@ namespace hex::plugin::builtin {
             }
         }
         bool found = true;
-        for (auto name : vectorString) {
+        for (const auto &name : vectorString) {
             found = found || std::ranges::find(m_nameSpaces, name) != m_nameSpaces.end();
         }
         if (found) {
