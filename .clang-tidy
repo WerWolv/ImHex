@@ -23,7 +23,6 @@ Checks:
 - -bugprone-branch-clone # Mostly warns about one-line duplicates
 - cert-err52-cpp
 - cert-err60-cpp
-- cert-err34-c
 - cert-str34-c
 - cert-dcl21-cpp
 - cert-msc50-cpp
