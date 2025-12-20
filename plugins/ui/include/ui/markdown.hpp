@@ -19,7 +19,7 @@ namespace hex::ui {
     class Markdown {
     public:
         Markdown() = default;
-        Markdown(const std::string &text);
+        Markdown(std::string text);
         Markdown(const Markdown &) = delete;
         Markdown(Markdown &&other) = default;
 

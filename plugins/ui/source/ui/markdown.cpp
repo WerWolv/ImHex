@@ -15,12 +15,13 @@
 
 #include <hex/helpers/scaling.hpp>
 #include <hex/helpers/utils.hpp>
+#include <utility>
 
 #include <md4c.h>
 
 namespace hex::ui {
 
-    Markdown::Markdown(const std::string &text) : m_text(text) {
+    Markdown::Markdown(std::string text) : m_text(std::move(text)) {
         m_initialized = true;
         m_mdRenderer.flags = MD_DIALECT_GITHUB | MD_FLAG_TABLES | MD_FLAG_TASKLISTS;
         m_mdRenderer.enter_block = [](MD_BLOCKTYPE type, void *detail, void *userdata) -> int {
