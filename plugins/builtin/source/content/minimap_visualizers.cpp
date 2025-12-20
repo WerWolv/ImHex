@@ -122,7 +122,7 @@ namespace hex::plugin::builtin {
 
                 if (!result.has_value()) {
                     for (const auto &[id, highlighting] : ImHexApi::HexEditor::impl::getBackgroundHighlights()) {
-                        if (highlighting.getRegion().overlaps({ address, 1 })) {
+                        if (highlighting.getRegion().overlaps({ .address=address, .size=1 })) {
                             result = highlighting.getColor();
                             break;
                         }
@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
                     result->Value.w = 1.0F;
                 } else {
                     if (auto region = ImHexApi::HexEditor::getSelection(); region.has_value()) {
-                        if (region->overlaps({ address + i, 1 }))
+                        if (region->overlaps({ .address=address + i, .size=1 }))
                             result = 0x60C08080;
                     }
                 }

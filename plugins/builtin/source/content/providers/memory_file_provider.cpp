@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
 
     std::vector<MemoryFileProvider::MenuEntry> MemoryFileProvider::getMenuEntries() {
         return {
-            MenuEntry { Lang("hex.builtin.provider.mem_file.rename"), ICON_VS_TAG, [this] { this->renameFile(); } }
+            MenuEntry { .name=Lang("hex.builtin.provider.mem_file.rename"), .icon=ICON_VS_TAG, .callback=[this] { this->renameFile(); } }
         };
     }
 
@@ -88,7 +88,7 @@ namespace hex::plugin::builtin {
         address -= this->getBaseAddress();
 
         if (address < this->getActualSize())
-            return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
+            return { Region { .address=this->getBaseAddress() + address, .size=this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
     }

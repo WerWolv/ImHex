@@ -521,7 +521,7 @@ namespace hex::plugin::builtin {
         address -= this->getBaseAddress();
 
         if (address < this->getActualSize())
-            return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
+            return { Region { .address=this->getBaseAddress() + address, .size=this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
     }

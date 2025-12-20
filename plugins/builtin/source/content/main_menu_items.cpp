@@ -231,7 +231,7 @@ namespace hex::plugin::builtin {
                             auto selection = ImHexApi::HexEditor::getSelection()
                                     .value_or(
                                             ImHexApi::HexEditor::ProviderRegion {
-                                                { provider->getBaseAddress(), provider->getSize() },
+                                                { .address=provider->getBaseAddress(), .size=provider->getSize() },
                                                 provider
                                             });
 

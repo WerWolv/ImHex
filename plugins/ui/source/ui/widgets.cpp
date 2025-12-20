@@ -23,12 +23,12 @@ namespace hex::ui {
 
         switch (*type) {
             case RegionType::EntireData:
-                *region = { provider->getBaseAddress(), provider->getActualSize() };
+                *region = { .address=provider->getBaseAddress(), .size=provider->getActualSize() };
                 break;
             case RegionType::Selection:
                 *region = ImHexApi::HexEditor::getSelection().value_or(
                     ImHexApi::HexEditor::ProviderRegion {
-                        { 0, 1 },
+                        { .address=0, .size=1 },
                         provider }
                         ).getRegion();
                 break;
@@ -59,7 +59,7 @@ namespace hex::ui {
                     ImGuiExt::InputHexadecimal("##end", &end);
                     ImGui::PopItemWidth();
 
-                    *region = { start, (end - start) + 1 };
+                    *region = { .address=start, .size=(end - start) + 1 };
 
                     ImGui::EndPopup();
                 }

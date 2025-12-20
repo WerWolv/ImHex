@@ -24,10 +24,10 @@ namespace hex::plugin::builtin {
         };
 
         static std::array bitValues = {
-            BitValue{ 8, 0.00F, 1.0F, "R", 0 },
-            BitValue{ 8, 0.33F, 1.0F, "G", 1 },
-            BitValue{ 8, 0.66F, 1.0F, "B", 2 },
-            BitValue{ 8, 0.00F, 0.0F, "A", 3 }
+            BitValue{ .bits=8, .color=0.00F, .saturationMultiplier=1.0F, .name="R", .index=0 },
+            BitValue{ .bits=8, .color=0.33F, .saturationMultiplier=1.0F, .name="G", .index=1 },
+            BitValue{ .bits=8, .color=0.66F, .saturationMultiplier=1.0F, .name="B", .index=2 },
+            BitValue{ .bits=8, .color=0.00F, .saturationMultiplier=0.0F, .name="A", .index=3 }
         };
 
         if (ImGui::BeginTable("##color_picker_table", 3, ImGuiTableFlags_BordersInnerV)) {

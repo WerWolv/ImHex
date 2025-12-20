@@ -187,9 +187,9 @@ namespace hex::plugin::builtin {
         MenuEntry loadMenuItem;
 
         if (m_loadedIntoMemory)
-            loadMenuItem = { "hex.builtin.provider.file.menu.direct_access"_lang, ICON_VS_ARROW_SWAP, [this] { this->convertToDirectAccess(); } };
+            loadMenuItem = { .name="hex.builtin.provider.file.menu.direct_access"_lang, .icon=ICON_VS_ARROW_SWAP, .callback=[this] { this->convertToDirectAccess(); } };
         else
-            loadMenuItem = { "hex.builtin.provider.file.menu.into_memory"_lang, ICON_VS_ARROW_SWAP, [this] { this->convertToMemoryFile(); } };
+            loadMenuItem = { .name="hex.builtin.provider.file.menu.into_memory"_lang, .icon=ICON_VS_ARROW_SWAP, .callback=[this] { this->convertToMemoryFile(); } };
 
         return {
             { "hex.builtin.provider.file.menu.open_folder"_lang, ICON_VS_FOLDER_OPENED, [this] { fs::openFolderWithSelectionExternal(m_path); } },
@@ -342,7 +342,7 @@ namespace hex::plugin::builtin {
         address -= this->getBaseAddress();
 
         if (address < this->getActualSize())
-            return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
+            return { Region { .address=this->getBaseAddress() + address, .size=this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
     }

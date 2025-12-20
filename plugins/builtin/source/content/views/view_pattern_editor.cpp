@@ -560,7 +560,7 @@ namespace hex::plugin::builtin {
                         const auto insertPos = [&, this](u64 address, u32 color) {
                             const auto progress = float(address - dataBaseAddress) / float(dataSize);
 
-                            m_accessHistory[m_accessHistoryIndex] = { progress, color };
+                            m_accessHistory[m_accessHistoryIndex] = { .progress=progress, .color=color };
                             m_accessHistoryIndex = (m_accessHistoryIndex + 1) % m_accessHistory.size();
                         };
 
@@ -2272,7 +2272,7 @@ namespace hex::plugin::builtin {
 
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
-            const auto hoveredRegion = Region { address, size };
+            const auto hoveredRegion = Region { .address=address, .size=size };
             for (const auto &pattern : runtime.getPatternsAtAddress(hoveredRegion.getStartAddress())) {
                 const pl::ptrn::Pattern * checkPattern = pattern;
                 if (auto parent = checkPattern->getParent(); parent != nullptr)

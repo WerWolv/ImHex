@@ -240,6 +240,6 @@ namespace hex::ui {
         str = str.substr(index + 1);
         auto col = TextEditor::stringCharacterCount(str);
 
-        return TextEditor::Coordinates(line, col);
+        return {line, col};
     }
 }
