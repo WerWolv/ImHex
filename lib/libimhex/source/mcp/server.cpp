@@ -189,8 +189,8 @@ namespace hex::mcp {
         auto name = json["name"].get<std::string>();
 
         m_primitives[type][name] = {
-            json,
-            function
+            .capabilities=json,
+            .function=function
         };
     }
 

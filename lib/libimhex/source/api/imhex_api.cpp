@@ -257,7 +257,7 @@ namespace hex {
         }
 
         void setSelection(u64 address, size_t size, prv::Provider *provider) {
-            setSelection({ { address, size }, provider == nullptr ? Provider::get() : provider });
+            setSelection({ { .address=address, .size=size }, provider == nullptr ? Provider::get() : provider });
         }
 
         void addVirtualFile(const std::string &path, std::vector<u8> data, Region region) {
@@ -281,7 +281,7 @@ namespace hex {
         }
 
         u64 add(u64 address, size_t size, const std::string &name, const std::string &comment, u32 color) {
-            return add(Region { address, size }, name, comment, color);
+            return add(Region { .address=address, .size=size }, name, comment, color);
         }
 
         void remove(u64 id) {
@@ -900,7 +900,7 @@ namespace hex {
                 }
             }
 
-            return { { name, version } };
+            return { { .name=name, .version=version } };
         }
 
         const SemanticVersion& getImHexVersion() {
@@ -1216,7 +1216,7 @@ namespace hex {
             
             if (it == impl::s_fontDefinitions->end()) {
                 const auto defaultFont = ImGui::GetDefaultFont();
-                return { defaultFont, defaultFont, defaultFont };
+                return { .regular=defaultFont, .bold=defaultFont, .italic=defaultFont };
             } else
                 return it->second;
         }

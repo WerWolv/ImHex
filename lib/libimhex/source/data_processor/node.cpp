@@ -152,7 +152,7 @@ namespace hex::dp {
     }
 
     [[noreturn]] void Node::throwNodeError(const std::string &message) {
-        throw NodeError { this, message };
+        throw NodeError { .node=this, .message=message };
     }
 
     void Node::setAttributes(std::vector<Attribute> attributes) {

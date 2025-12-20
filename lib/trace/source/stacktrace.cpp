@@ -232,10 +232,10 @@ static std::mutex s_traceMutex;
                     auto fileName = info.dli_fname != nullptr ? std::filesystem::path(info.dli_fname).filename().string() : "??";
                     auto demangledName = info.dli_sname != nullptr ? demangle(info.dli_sname) : "??";
 
-                    result.push_back(StackFrame { std::move(fileName), std::move(demangledName), 0 });
+                    result.push_back(StackFrame { .file=std::move(fileName), .function=std::move(demangledName), .line=0 });
                 }
 
-                return StackTraceResult{ result, "execinfo" };
+                return StackTraceResult{ .stackFrames=result, .implementationName="execinfo" };
             }
 
         }

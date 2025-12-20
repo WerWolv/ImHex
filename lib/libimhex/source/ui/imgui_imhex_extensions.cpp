@@ -1370,9 +1370,9 @@ namespace ImGuiExt {
     bool VSliderAngle(const char* label, const ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags) {
         if (format == nullptr)
             format = "%.0f deg";
-        float v_deg = (*v_rad) * 360.0F / (2 * IM_PI);
+        float v_deg = (*v_rad) * 360.0F / (2 * std::numbers::pi_v<float>);
         bool value_changed = ImGui::VSliderFloat(label, size, &v_deg, v_degrees_min, v_degrees_max, format, flags);
-        *v_rad = v_deg * (2 * IM_PI) / 360.0F;
+        *v_rad = v_deg * (2 * std::numbers::pi_v<float>) / 360.0F;
         return value_changed;
     }
 

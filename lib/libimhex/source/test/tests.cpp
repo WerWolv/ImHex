@@ -5,7 +5,7 @@ namespace hex::test {
     static std::map<std::string, Test> s_tests;
     int Tests::addTest(const std::string &name, Function func, bool shouldFail) noexcept {
         s_tests.insert({
-            name, { func, shouldFail }
+            name, { .function=func, .shouldFail=shouldFail }
         });
 
         return 0;

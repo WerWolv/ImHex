@@ -320,10 +320,10 @@ namespace hex {
 
         if (!message.has_value()) {
             message = Tutorial::Step::Message {
-                 Position::None,
-                "",
-                "",
-                false
+                 .position=Position::None,
+                .unlocalizedTitle="",
+                .unlocalizedMessage="",
+                .allowSkip=false
             };
         }
 
@@ -483,10 +483,10 @@ namespace hex {
 
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::setMessage(const UnlocalizedString &unlocalizedTitle, const UnlocalizedString &unlocalizedMessage, Position position) {
         m_message = Message {
-            position,
-            unlocalizedTitle,
-            unlocalizedMessage,
-            false
+            .position=position,
+            .unlocalizedTitle=unlocalizedTitle,
+            .unlocalizedMessage=unlocalizedMessage,
+            .allowSkip=false
         };
 
         return *this;
@@ -497,10 +497,10 @@ namespace hex {
             m_message->allowSkip = true;
         } else {
             m_message = Message {
-                Position::Bottom | Position::Right,
-                "",
-                "",
-                true
+                .position=Position::Bottom | Position::Right,
+                .unlocalizedTitle="",
+                .unlocalizedMessage="",
+                .allowSkip=true
             };
         }
 

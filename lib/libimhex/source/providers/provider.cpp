@@ -57,7 +57,7 @@ namespace hex::prv {
         m_overlays.clear();
 
         if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value() && selection->provider == this)
-            EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion { { 0x00, 0x00 }, nullptr });
+            EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion { { .address=0x00, .size=0x00 }, nullptr });
     }
 
     void Provider::read(u64 offset, void *buffer, size_t size, bool overlays) {
@@ -289,19 +289,19 @@ namespace hex::prv {
         u64 absoluteAddress = address - this->getBaseAddress();
 
         if (absoluteAddress < this->getActualSize())
-            return { Region { this->getBaseAddress() + absoluteAddress, this->getActualSize() - absoluteAddress }, true };
+            return { Region { .address=this->getBaseAddress() + absoluteAddress, .size=this->getActualSize() - absoluteAddress }, true };
 
 
         bool insideValidRegion = false;
 
         std::optional<u64> nextRegionAddress;
         for (const auto &overlay : m_overlays) {
-            Region overlayRegion = { overlay->getAddress(), overlay->getSize() };
+            Region overlayRegion = { .address=overlay->getAddress(), .size=overlay->getSize() };
             if (!nextRegionAddress.has_value() || overlay->getAddress() < nextRegionAddress) {
                 nextRegionAddress = overlayRegion.getStartAddress();
             }
 
-            if (Region { address, 1 }.overlaps(overlayRegion)) {
+            if (Region { .address=address, .size=1 }.overlaps(overlayRegion)) {
                 insideValidRegion = true;
             }
         }
@@ -309,7 +309,7 @@ namespace hex::prv {
         if (!nextRegionAddress.has_value())
             return { Region::Invalid(), false };
         else
-            return { Region { address, *nextRegionAddress - address }, insideValidRegion };
+            return { Region { .address=address, .size=*nextRegionAddress - address }, insideValidRegion };
     }
 
 

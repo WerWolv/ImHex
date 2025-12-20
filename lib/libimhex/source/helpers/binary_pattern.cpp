@@ -90,14 +90,14 @@ namespace hex {
 
             bool inString = false;
             while (!string.empty()) {
-                BinaryPattern::Pattern pattern = { 0, 0 };
+                BinaryPattern::Pattern pattern = { .mask=0, .value=0 };
 
                  if (string.starts_with("\"")) {
                     inString = !inString;
                     string = string.substr(1);
                     continue;
                 } else if (inString) {
-                    pattern = { 0xFF, u8(string.front()) };
+                    pattern = { .mask=0xFF, .value=u8(string.front()) };
                     string = string.substr(1);
                 } else if (string.starts_with("u") || string.starts_with("s")) {
                     auto newPatterns = parseValueExpression(string);
@@ -106,7 +106,7 @@ namespace hex {
                     std::ranges::move(newPatterns, std::back_inserter(result));
                     continue;
                 } else if (string.starts_with("??")) {
-                    pattern = { 0x00, 0x00 };
+                    pattern = { .mask=0x00, .value=0x00 };
                     string = string.substr(2);
                 } else if ((std::isxdigit(string.front()) || string.front() == '?') && string.length() >= 2) {
                     const auto hex = string.substr(0, 2);

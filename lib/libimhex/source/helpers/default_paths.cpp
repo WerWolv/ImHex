@@ -5,7 +5,6 @@
 #include <hex/api/project_file_manager.hpp>
 
 #include <ranges>
-#include <algorithm>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>

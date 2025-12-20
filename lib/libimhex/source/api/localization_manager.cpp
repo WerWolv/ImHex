@@ -56,7 +56,7 @@ namespace hex {
 
                 const auto path = item["path"].get<std::string>();
 
-                definition.languageFilePaths.emplace_back(PathEntry{ path, callback });
+                definition.languageFilePaths.emplace_back(PathEntry{ .path=path, .callback=callback });
             }
         }
 
