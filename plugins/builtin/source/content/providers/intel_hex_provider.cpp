@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
             u16 address = 0x0000;
             std::vector<u8> data;
 
-            enum class RecordType: std::uint8_t {
+            enum class RecordType: u8 {
                 Data                    = 0x00,
                 EndOfFile               = 0x01,
                 ExtendedSegmentAddress  = 0x02,

@@ -155,7 +155,7 @@ namespace hex::ui {
             Matches m_matches;
         };
 
-        enum class PaletteIndex: std::uint8_t {
+        enum class PaletteIndex: u8 {
             Default, Identifier, Directive, Operator, Separator, BuiltInType, Keyword, NumericLiteral, StringLiteral, CharLiteral, Cursor, Background, LineNumber, Selection, Breakpoint, ErrorMarker, PreprocessorDeactivated,
             CurrentLineFill, CurrentLineFillInactive, CurrentLineEdge, ErrorText, WarningText, DebugText, DefaultText, Attribute, PatternVariable, LocalVariable, CalculatedPointer, TemplateArgument, Function, View,
             FunctionVariable, FunctionParameter, UserDefinedType, PlacedVariable, GlobalVariable, NameSpace, TypeDef, UnkIdentifier, DocComment, DocBlockComment, BlockComment, GlobalDocComment, Comment, PreprocIdentifier, Max
