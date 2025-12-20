@@ -110,7 +110,7 @@ namespace hex {
 
         LayoutManager::registerLoadCallback([this](std::string_view line) {
             int width = 0, height = 0;
-            sscanf(line.data(), "MainWindowSize=%d,%d", &width, &height);
+            sscanf(std::string(line).data(), "MainWindowSize=%d,%d", &width, &height);
 
             if (width > 0 && height > 0) {
                 TaskManager::doLater([width, height, this]{
