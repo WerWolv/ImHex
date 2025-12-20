@@ -52,12 +52,12 @@ namespace hex::dp {
 
         struct NodeError: public std::exception {
             Node *node;
-            std::string msg;
+            std::string message;
 
-            NodeError(Node *node, std::string  msg) : node(node), msg(std::move(msg)) {}
+            NodeError(Node *node, std::string  message) : node(node), message(std::move(message)) {}
 
             [[nodiscard]] const char* what() const noexcept override {
-                return this->msg.c_str();
+                return this->message.c_str();
             }
         };
 
