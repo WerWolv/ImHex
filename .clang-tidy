@@ -54,6 +54,7 @@ Checks:
 - modernize-*
 - -modernize-use-trailing-return-type
 - -modernize-use-std-print # We want to use fmt::print instead
+- -modernize-use-integer-sign-comparison # Too much occurrences to change
 - openmp-use-default-none
 - performance-*
 - -performance-no-int-to-ptr
