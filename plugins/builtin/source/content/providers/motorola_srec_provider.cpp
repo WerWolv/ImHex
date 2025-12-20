@@ -147,7 +147,6 @@ namespace hex::plugin::builtin {
                             break;
                         case RecordType::Header:
                         case RecordType::Reserved:
-                            break;
                         case RecordType::Count16:
                         case RecordType::Count24:
                             break;

@@ -193,7 +193,7 @@ namespace hex::plugin::builtin {
 
     static std::string executeCommandString(const std::string &command) {
         auto output = executeCommand(command);
-        return std::string(output.begin(), output.end());
+        return  { output.begin(), output.end() };
     }
 
     void CommandProvider::readFromSource(u64 offset, void *buffer, size_t size) {
