@@ -228,12 +228,12 @@ namespace hex::ui {
         class LineIterator {
         public:
             friend class hex::ui::TextEditor;
-            LineIterator(const LineIterator &other) : m_charsIter(other.m_charsIter), m_colorsIter(other.m_colorsIter), m_flagsIter(other.m_flagsIter) {}
+            LineIterator(const LineIterator &other) = default;
             LineIterator() = default;
 
             char operator*();
             LineIterator operator++();
-            LineIterator operator=(const LineIterator &other);
+            LineIterator& operator=(const LineIterator &other);
             bool operator!=(const LineIterator &other) const;
             bool operator==(const LineIterator &other) const;
             LineIterator operator+(i32 n);
@@ -265,13 +265,13 @@ namespace hex::ui {
             };
 
             union Flags {
-                Flags(char value) : m_value(value) {}
-                Flags(FlagBits bits) : m_bits(bits) {}
+                explicit Flags(char value) : m_value(value) {}
+                explicit Flags(FlagBits bits) : m_bits(bits) {}
                 FlagBits m_bits;
                 char m_value;
             };
 
-            enum class LinePart { Chars, Utf8, Colors, Flags };
+            enum class LinePart: u8 { Chars, Utf8, Colors, Flags };
 
             Line() : m_lineMaxColumn(-1) {}
             explicit Line(const char *line) : Line(std::string(line)) {}
