@@ -933,7 +933,8 @@ namespace hex::ui {
 
                 while (iter != end) {
                     iter++;
-                    if (((pos = iter->position()) > byteIndex))
+                    pos = iter->position();
+                    if (pos > byteIndex)
                         break;
                 }
             }
