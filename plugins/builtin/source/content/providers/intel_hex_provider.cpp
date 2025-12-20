@@ -348,7 +348,7 @@ namespace hex::plugin::builtin {
             ImGui::TableHeadersRow();
 
             for (const auto &memoryRegion : filtered) {
-                ImGui::PushID(&memoryRegion);
+                ImGui::PushID((const void*) &memoryRegion);
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
