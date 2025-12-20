@@ -718,7 +718,7 @@ namespace hex::ui {
                     i = 0;
             }
             if ((direction * i) >= (i32) ((line.size() - 1) * (1 + direction) / 2)) {
-                if (lineIndex == (i64)                                         maxLineIndex * (1 + direction) / 2) {
+                if (lineIndex == (i64) maxLineIndex * (1 + direction) / 2) {
                     if (m_active) {
                         m_active = false;
                         m_changed = true;
