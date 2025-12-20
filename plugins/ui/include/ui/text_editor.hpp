@@ -151,11 +151,11 @@ namespace hex::ui {
             bool m_matchCase;
             bool m_wholeWord;
             bool m_findRegEx;
-            bool m_optionsChanged;
+            bool m_optionsChanged = false;
             Matches m_matches;
         };
 
-        enum class PaletteIndex {
+        enum class PaletteIndex: std::uint8_t {
             Default, Identifier, Directive, Operator, Separator, BuiltInType, Keyword, NumericLiteral, StringLiteral, CharLiteral, Cursor, Background, LineNumber, Selection, Breakpoint, ErrorMarker, PreprocessorDeactivated,
             CurrentLineFill, CurrentLineFillInactive, CurrentLineEdge, ErrorText, WarningText, DebugText, DefaultText, Attribute, PatternVariable, LocalVariable, CalculatedPointer, TemplateArgument, Function, View,
             FunctionVariable, FunctionParameter, UserDefinedType, PlacedVariable, GlobalVariable, NameSpace, TypeDef, UnkIdentifier, DocComment, DocBlockComment, BlockComment, GlobalDocComment, Comment, PreprocIdentifier, Max

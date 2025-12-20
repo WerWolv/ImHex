@@ -204,7 +204,7 @@ namespace hex::plugin::builtin {
     }
 
     prv::Provider::OpenResult FileProvider::open() {
-        const size_t maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
+        const auto maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
 
         size_t fileSize = 0x00;
         {

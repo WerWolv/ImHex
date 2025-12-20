@@ -382,7 +382,7 @@ namespace hex::ui {
 
         if (m_editingAddress != address || m_editingCellType != cellType) {
             if (cellType == CellType::Hex) {
-                std::array<u8, 32> buffer;
+                std::array<u8, 32> buffer{};
                 std::memcpy(buffer.data(), data, std::min(size, buffer.size()));
 
                 if (m_dataVisualizerEndianness != std::endian::native)
