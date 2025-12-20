@@ -33,9 +33,9 @@ Checks:
 - cppcoreguidelines-interfaces-global-init
 - -cppcoreguidelines-pro-type-static-cast-downcast # dynamic_cast has a runtime overhead
 - -cppcoreguidelines-narrowing-conversions #
-- google-default-arguments
 - google-runtime-operator
 - google-explicit-constructor
+- -google-default-arguments # Provider and ViewProvider read() is a good example of why this is useful
 - hicpp-multiway-paths-covered
 - hicpp-exception-baseclass
 - misc-*
