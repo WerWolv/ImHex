@@ -1012,7 +1012,7 @@ namespace hex {
 
             try {
                 log::error("GLFW Error [0x{:05X}] : {}", error, desc);
-            } catch (const std::system_error &) {
+            } catch (const std::system_error &) { //NOLINT(bugprone-empty-catch): we can't log it
                 // Catch and ignore system error that might be thrown when too many errors are being logged to a file
             }
         });
