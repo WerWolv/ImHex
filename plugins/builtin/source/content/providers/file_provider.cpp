@@ -274,7 +274,7 @@ namespace hex::plugin::builtin {
                 m_data = m_file.readVectorAtomic(0x00, m_fileSize);
                 if (!m_data.empty()) {
                     m_changeTracker = wolv::io::ChangeTracker(m_file);
-                    m_changeTracker.startTracking([this]{ this->handleFileChange(); });
+                    m_changeTracker.startTracking([this]{ this->fileChangedCallback(); });
                     m_file.close();
                     m_loadedIntoMemory = true;
                 }
@@ -355,6 +355,14 @@ namespace hex::plugin::builtin {
     void FileProvider::convertToDirectAccess() {
         this->close();
         this->open(true);
+    }
+
+    // WARNING: this function is called from the context of a worker thread!
+    void FileProvider::fileChangedCallback() {
+        // Arrange for a call from the UI thread
+        TaskManager::doLater(
+            [this]{this->handleFileChange();}
+        );
     }
 
     void FileProvider::handleFileChange() {

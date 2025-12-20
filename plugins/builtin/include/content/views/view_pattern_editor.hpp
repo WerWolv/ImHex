@@ -234,7 +234,8 @@ namespace hex::plugin::builtin {
         void registerMenuItems();
         void registerHandlers();
 
-        void handleFileChange(prv::Provider *provider);
+        void fileChangedCallback(prv::Provider *provider, const std::fs::path &path);
+        void handleFileChange(prv::Provider *provider, const std::fs::path &path);
 
         void openPatternFile(bool trackFile);
         void savePatternToCurrentFile(bool trackFile);

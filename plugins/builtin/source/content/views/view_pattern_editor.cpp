@@ -1634,7 +1634,7 @@ namespace hex::plugin::builtin {
             m_sourceCode.get(provider) = code;
             if (trackFile) {
                 m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
-                m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
+                m_changeTracker.get(provider).startTracking([this, provider, path]{ this->fileChangedCallback(provider, path); });
             }
             m_textHighlighter.m_needsToUpdateColors = false;
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
@@ -2557,7 +2557,15 @@ namespace hex::plugin::builtin {
         });
     }
 
-    void ViewPatternEditor::handleFileChange(prv::Provider *provider) {
+    // WARNING: this function is called from the context of a worker thread!
+    void ViewPatternEditor::fileChangedCallback(prv::Provider *provider, const std::fs::path &path) {
+        // Arrange for a call from the UI thread
+        TaskManager::doLater(
+            [this, provider, path]{this->handleFileChange(provider, path);}
+        );
+    }
+
+    void ViewPatternEditor::handleFileChange(prv::Provider *provider, const std::fs::path &path) {
         if (m_ignoreNextChangeEvent.get(provider)) {
             m_ignoreNextChangeEvent.get(provider) = false;
             return;
@@ -2568,9 +2576,10 @@ namespace hex::plugin::builtin {
         }
 
         m_changeEventAcknowledgementPending.get(provider) = true;
-        hex::ui::BannerButton::open(ICON_VS_INFO, "hex.builtin.provider.file.reload_changes", ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this, provider] {
-            m_changeEventAcknowledgementPending.get(provider) = false;
+        hex::ui::BannerButton::open(ICON_VS_INFO, "hex.builtin.provider.file.reload_changes", ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this, provider, path] {
+            loadPatternFile(path, provider, true);
         });
+        m_changeEventAcknowledgementPending.get(provider) = false;
     }
 
     void ViewPatternEditor::openPatternFile(bool trackFile) {
@@ -2640,7 +2649,7 @@ namespace hex::plugin::builtin {
 
                 if (trackFile) {
                     m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
-                    m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
+                    m_changeTracker.get(provider).startTracking([this, provider, path]{ this->fileChangedCallback(provider, path); });
                     m_ignoreNextChangeEvent.get(provider) = true;
                 }
             }
