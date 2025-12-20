@@ -21,7 +21,6 @@
 namespace hex::ui {
 
     Markdown::Markdown(const std::string &text) : m_text(text) {
-        m_mdRenderer = MD_RENDERER();
         m_initialized = true;
         m_mdRenderer.flags = MD_DIALECT_GITHUB | MD_FLAG_TABLES | MD_FLAG_TASKLISTS;
         m_mdRenderer.enter_block = [](MD_BLOCKTYPE type, void *detail, void *userdata) -> int {
@@ -60,11 +59,7 @@ namespace hex::ui {
                     self.m_tableVisibleStack.emplace_back(open);
                     break;
                 }
-                case MD_BLOCK_TD: {
-                    if (self.inTable())
-                        ImGui::TableNextColumn();
-                    break;
-                }
+                case MD_BLOCK_TD:
                 case MD_BLOCK_TH: {
                     if (self.inTable())
                         ImGui::TableNextColumn();
