@@ -80,7 +80,6 @@ Checks:
 - -readability-use-concise-preprocessor-directives # We do not use #ifdef
 - -readability-uppercase-literal-suffix # Not important enough
 - -readability-static-accessed-through-instance
-- '*-include-cleaner'
 
 # idk
 
