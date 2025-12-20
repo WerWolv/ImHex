@@ -865,7 +865,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        return nameSpace != "";
+        return !nameSpace.empty();
     }
 
 //The context is the name of the function or UDT that the variable is in.

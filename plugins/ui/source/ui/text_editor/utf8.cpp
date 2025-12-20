@@ -235,11 +235,11 @@ namespace hex::ui {
         if (strIndex < 0 || strIndex > (i32) input.size())
             return {0, 0};
         std::string str = input.substr(0, strIndex);
-        auto line = std::count(str.begin(), str.end(), '\n');
+        i32 line = std::count(str.begin(), str.end(), '\n');
         auto index = str.find_last_of('\n');
         str = str.substr(index + 1);
-        auto col = TextEditor::stringCharacterCount(str);
+        i32 col = TextEditor::stringCharacterCount(str);
 
-        return TextEditor::Coordinates(line, col);
+        return {line, col};
     }
 }

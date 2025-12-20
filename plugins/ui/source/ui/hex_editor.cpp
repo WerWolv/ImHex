@@ -555,7 +555,7 @@ namespace hex::ui {
 
         if (!this->isSelectionValid()) return;
 
-        if (!Region { byteAddress, 1 }.isWithin(region))
+        if (!Region { .address=byteAddress, .size=1 }.isWithin(region))
             return;
 
         // Draw vertical line at the left of first byte and the start of the line
@@ -581,7 +581,7 @@ namespace hex::ui {
 
         if (!this->isSelectionValid()) return;
 
-        if (!Region { byteAddress, 1 }.isWithin(region))
+        if (!Region { .address=byteAddress, .size=1 }.isWithin(region))
             return;
 
         bool cursorVisible = (!ImGui::GetIO().ConfigInputTextCursorBlink) || (m_cursorBlinkTimer <= 0.0F) || std::fmod(m_cursorBlinkTimer, 1.20F) <= 0.80F;
@@ -694,7 +694,7 @@ namespace hex::ui {
                 if (m_provider != nullptr && m_provider->isReadable()) {
                     const auto isCurrRegionValid = [this](u64 address) {
                         auto &[currRegion, currRegionValid] = m_currValidRegion;
-                        if (!Region{ address, 1 }.isWithin(currRegion)) {
+                        if (!Region{ .address=address, .size=1 }.isWithin(currRegion)) {
                             m_currValidRegion = m_provider->getRegionValidity(address);
                         }
 
@@ -802,7 +802,7 @@ namespace hex::ui {
                                 if (isColumnSeparatorColumn(x + 1, columnCount) && cellColors.size() > x + 1) {
                                     auto separatorAddress = x + y * columnCount;
                                     auto [nextForegroundColor, nextBackgroundColor] = cellColors[x + 1];
-                                    if ((isSelectionValid() && getSelection().overlaps({ separatorAddress, 1 }) && getSelection().getEndAddress() != separatorAddress) || backgroundColor == nextBackgroundColor)
+                                    if ((isSelectionValid() && getSelection().overlaps({ .address=separatorAddress, .size=1 }) && getSelection().getEndAddress() != separatorAddress) || backgroundColor == nextBackgroundColor)
                                         adjustedCellSize.x += SeparatorColumWidth + 1;
                                 }
 
@@ -846,7 +846,7 @@ namespace hex::ui {
                                     ImGuiExt::TextFormatted("{:?>{}}", "", maxCharsPerCell);
 
                                 if (cellHovered) {
-                                    Region newHoveredCell = { byteAddress, bytesPerCell };
+                                    Region newHoveredCell = { .address=byteAddress, .size=bytesPerCell };
                                     if (hoveredCell != newHoveredCell) {
                                         hoveredCell = newHoveredCell;
                                     }
@@ -912,7 +912,7 @@ namespace hex::ui {
                                             this->drawCell(byteAddress, &bytes[x], 1, cellHovered, CellType::ASCII);
 
                                         if (cellHovered) {
-                                            Region newHoveredCell = { byteAddress, bytesPerCell };
+                                            Region newHoveredCell = { .address=byteAddress, .size=bytesPerCell };
                                             if (hoveredCell != newHoveredCell) {
                                                 hoveredCell = newHoveredCell;
                                             }
@@ -1007,7 +1007,7 @@ namespace hex::ui {
                                             this->handleSelection(address, data.advance, &bytes[address % bytesPerRow], cellHovered);
 
                                             if (cellHovered) {
-                                                Region newHoveredCell = { address, data.advance };
+                                                Region newHoveredCell = { .address=address, .size=data.advance };
                                                 if (hoveredCell != newHoveredCell) {
                                                     hoveredCell = newHoveredCell;
                                                 }

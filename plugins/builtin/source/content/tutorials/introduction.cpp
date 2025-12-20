@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
                 View::toWindowName("hex.builtin.view.data_inspector.name")
             })
             .onAppear([]{
-                ImHexApi::HexEditor::setSelection(Region { 0, 1 });
+                ImHexApi::HexEditor::setSelection(Region { .address=0, .size=1 });
             })
             .allowSkip();
         }

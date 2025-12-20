@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <ui/text_editor.hpp>
 #include <hex/helpers/logger.hpp>
-#include <algorithm>
 
 namespace hex::ui {
     using Coordinates        = TextEditor::Coordinates;
@@ -324,13 +323,13 @@ namespace hex::ui {
 
     // C++ can't overload functions based on return type, so use any type other
     // than u64 to avoid ambiguity.
-    std::string Line::operator[](i64 index) const {
+    std::string Line::operator[](i64 column) const {
         i64 utf8Length = TextEditor::stringCharacterCount(m_chars);
-        index = std::clamp(index, (i64) -utf8Length, (i64) utf8Length - 1);
-        if (index < 0)
-            index = utf8Length + index;
+        column = std::clamp(column, (-utf8Length), utf8Length - 1);
+        if (column < 0)
+            column = utf8Length + column;
         i64 utf8Start = 0;
-        for (i64 utf8Index = 0; utf8Index < index; ++utf8Index) {
+        for (i64 utf8Index = 0; utf8Index < column; ++utf8Index) {
             utf8Start += TextEditor::utf8CharLength(m_chars[utf8Start]);
         }
         i64 utf8CharLen = TextEditor::utf8CharLength(m_chars[utf8Start]);
@@ -468,10 +467,8 @@ namespace hex::ui {
 
     bool TextEditor::ActionableBox::trigger() {
         auto mousePos = ImGui::GetMousePos();
-        if (mousePos.x <= m_box.Min.x || mousePos.x >= m_box.Max.x ||
-            mousePos.y < m_box.Min.y || mousePos.y > m_box.Max.y)
-            return false;
-        return true;
+        return mousePos.x > m_box.Min.x && mousePos.x < m_box.Max.x &&
+            mousePos.y >= m_box.Min.y && mousePos.y <= m_box.Max.y;
     }
 
     void TextEditor::ActionableBox::shiftBoxVertically(float lineCount, float lineHeight) {

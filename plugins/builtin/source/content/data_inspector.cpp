@@ -134,7 +134,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::MenuItemEx("hex.builtin.inspector.jump_to_address"_lang, ICON_VS_DEBUG_STEP_OUT)) {
                         auto address = bufferToInteger<T, Size>(buffer, endian);
                         if (address >= 0) {
-                            ImHexApi::HexEditor::setSelection(Region { u64(address), sizeof(u8) });
+                            ImHexApi::HexEditor::setSelection(Region { .address=u64(address), .size=sizeof(u8) });
                         }
                     }
                 });
@@ -318,7 +318,7 @@ namespace hex::plugin::builtin {
             }
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.fixed_point", 1, [totalBits = int(16), fractionBits = int(8)](const std::vector<u8> &, std::endian endian, Style style) mutable {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.fixed_point", 1, [totalBits = 16, fractionBits = 8](const std::vector<u8> &, std::endian endian, Style style) mutable {
             std::string value;
 
             auto provider = ImHexApi::Provider::get();

@@ -71,7 +71,7 @@ namespace hex::plugin::builtin {
                     if (!operation->shouldHighlight())
                         continue;
 
-                    if (operation->getRegion().overlaps(Region { offset, 1}))
+                    if (operation->getRegion().overlaps(Region { .address=offset, .size=1}))
                         return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
                 }
             } else {
@@ -79,7 +79,7 @@ namespace hex::plugin::builtin {
                     if (!operation->shouldHighlight())
                         continue;
 
-                    if (operation->getRegion().overlaps(Region { offset, 1}))
+                    if (operation->getRegion().overlaps(Region { .address=offset, .size=1}))
                         return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
                 }
             }

@@ -182,14 +182,14 @@ namespace hex::plugin::builtin {
         address -= this->getBaseAddress();
 
         if (address < this->getActualSize())
-            return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
+            return { Region { .address=this->getBaseAddress() + address, .size=this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
     }
 
     std::vector<prv::IProviderMenuItems::MenuEntry> ViewProvider::getMenuEntries() {
         return {
-            MenuEntry { Lang("hex.builtin.provider.rename"), ICON_VS_TAG, [this] { this->renameFile(); } }
+            MenuEntry { .name=Lang("hex.builtin.provider.rename"), .icon=ICON_VS_TAG, .callback=[this] { this->renameFile(); } }
         };
     }
 

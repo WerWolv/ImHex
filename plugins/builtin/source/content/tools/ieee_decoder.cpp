@@ -25,7 +25,7 @@ namespace hex::plugin::builtin {
 
         class IEEE754STATICS {
         public:
-            IEEE754STATICS()  {}
+            IEEE754STATICS()  = default;
 
             u128 value = 0;
             i32 exponentBitCount = 8;

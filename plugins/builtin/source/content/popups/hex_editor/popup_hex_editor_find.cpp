@@ -249,7 +249,7 @@ namespace hex::plugin::builtin {
 
             auto occurrence = searchFunction(reader.begin(), reader.end(), sequence.begin(), sequence.end());
             if (occurrence != reader.end()) {
-                return Region{occurrence.getAddress(), sequence.size()};
+                return Region{.address=occurrence.getAddress(), .size=sequence.size()};
             }
         } else {
             if (m_reachedEnd || !m_foundRegion.has_value()) {
@@ -261,7 +261,7 @@ namespace hex::plugin::builtin {
 
             auto occurrence = searchFunction(reader.rbegin(), reader.rend(), sequence.rbegin(), sequence.rend());
             if (occurrence != reader.rend()) {
-                return Region{occurrence.getAddress() - (sequence.size() - 1), sequence.size()};
+                return Region{.address=occurrence.getAddress() - (sequence.size() - 1), .size=sequence.size()};
             }
         }
 

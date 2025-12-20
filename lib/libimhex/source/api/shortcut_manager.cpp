@@ -281,25 +281,25 @@ namespace hex {
 
     void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const std::function<void()> &callback, const EnabledCallback &enabledCallback) {
         log::debug("Adding global shortcut {} for {}", shortcut.toString(), unlocalizedName.back().get());
-        auto [it, inserted] = s_globalShortcuts->insert({ shortcut, { shortcut, unlocalizedName, callback, enabledCallback } });
+        auto [it, inserted] = s_globalShortcuts->insert({ shortcut, { .shortcut=shortcut, .unlocalizedName=unlocalizedName, .callback=callback, .enabledCallback=enabledCallback } });
         if (!inserted) log::error("Failed to add shortcut!");
     }
 
     void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const std::function<void()> &callback, const EnabledCallback &enabledCallback) {
         log::debug("Adding global shortcut {} for {}", shortcut.toString(), unlocalizedName.get());
-        auto [it, inserted] = s_globalShortcuts->insert({ shortcut, { shortcut, { unlocalizedName }, callback, enabledCallback } });
+        auto [it, inserted] = s_globalShortcuts->insert({ shortcut, { .shortcut=shortcut, .unlocalizedName={ unlocalizedName }, .callback=callback, .enabledCallback=enabledCallback } });
         if (!inserted) log::error("Failed to add shortcut!");
     }
 
     void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const std::function<void()> &callback, const EnabledCallback &enabledCallback) {
         log::debug("Adding shortcut {} for {}", shortcut.toString(), unlocalizedName.back().get());
-        auto [it, inserted] = view->m_shortcuts.insert({ shortcut + CurrentView, { shortcut, unlocalizedName, callback, enabledCallback } });
+        auto [it, inserted] = view->m_shortcuts.insert({ shortcut + CurrentView, { .shortcut=shortcut, .unlocalizedName=unlocalizedName, .callback=callback, .enabledCallback=enabledCallback } });
         if (!inserted) log::error("Failed to add shortcut!");
     }
 
     void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const std::function<void()> &callback, const EnabledCallback &enabledCallback) {
         log::debug("Adding shortcut {} for {}", shortcut.toString(), unlocalizedName.get());
-        auto [it, inserted] = view->m_shortcuts.insert({ shortcut + CurrentView, { shortcut, { unlocalizedName }, callback, enabledCallback } });
+        auto [it, inserted] = view->m_shortcuts.insert({ shortcut + CurrentView, { .shortcut=shortcut, .unlocalizedName={ unlocalizedName }, .callback=callback, .enabledCallback=enabledCallback } });
         if (!inserted) log::error("Failed to add shortcut!");
     }
 

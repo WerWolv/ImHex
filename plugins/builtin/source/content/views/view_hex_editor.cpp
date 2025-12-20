@@ -67,7 +67,7 @@ namespace hex::plugin::builtin {
 
             if (!result.has_value()) {
                 for (const auto &[id, highlighting] : ImHexApi::HexEditor::impl::getForegroundHighlights()) {
-                    if (highlighting.getRegion().overlaps({ address, size }))
+                    if (highlighting.getRegion().overlaps({ .address=address, .size=size }))
                         return highlighting.getColor();
                 }
             }
@@ -137,7 +137,7 @@ namespace hex::plugin::builtin {
 
             if (!result.has_value()) {
                 for (const auto &[id, highlighting] : ImHexApi::HexEditor::impl::getBackgroundHighlights()) {
-                    if (highlighting.getRegion().overlaps({ address, size })) {
+                    if (highlighting.getRegion().overlaps({ .address=address, .size=size })) {
                         result = blendColors(result, highlighting.getColor());
                     }
                 }
@@ -173,7 +173,7 @@ namespace hex::plugin::builtin {
             }
 
             for (const auto &[id, tooltip] : ImHexApi::HexEditor::impl::getTooltips()) {
-                if (tooltip.getRegion().overlaps({ address, size })) {
+                if (tooltip.getRegion().overlaps({ .address=address, .size=size })) {
                     ImGui::BeginTooltip();
                     if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
                         ImGui::TableNextRow();
@@ -991,7 +991,7 @@ namespace hex::plugin::builtin {
         /* Paste */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste" }, ICON_VS_OUTPUT, 1450, CurrentView + CTRLCMD + Keys::V,
                                                 [this] {
-                                                    processPasteBehaviour(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())));
+                                                    processPasteBehaviour(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get())));
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid,
                                                 this);
@@ -1002,7 +1002,7 @@ namespace hex::plugin::builtin {
         /* Paste... > Paste all */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_as", "hex.builtin.view.hex_editor.menu.edit.paste_all" }, ICON_VS_CLIPPY, 1500, CurrentView + CTRLCMD + SHIFT + Keys::V,
                                                 [] {
-                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())), false, false);
+                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get())), false, false);
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid,
                                                 this);
@@ -1011,7 +1011,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_as", "hex.builtin.view.hex_editor.menu.edit.paste_all_string" }, ICON_VS_SYMBOL_KEY, 1510,
                                                 Shortcut::None,
                                                 [] {
-                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())), false, true);
+                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get())), false, true);
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid,
                                                 this);
@@ -1020,7 +1020,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.select" }, ICON_VS_LIST_SELECTION, 1525,
                                                 CTRLCMD + SHIFT + Keys::A,
                                                 [this] {
-                                                    auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion{ { 0, 1 }, nullptr });
+                                                    auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion{ { .address=0, .size=1 }, nullptr });
                                                     this->openPopup<PopupSelect>(selection.getStartAddress(), selection.getSize());
                                                 },
                                                 ImHexApi::Provider::isValid,

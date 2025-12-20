@@ -1,4 +1,5 @@
-# Disabled rules should have a comment associated
+# All rules should have a comment associated
+# Directives that do not have any effect (e.g. disabling a rule that is not enabled) can be done to add an explanation comment. 
 # Or at least an empty comment # to show they were put here explicitely,
 # and not as part of the historical CLion-generated rules
 # Note: `- -X` means disable X
@@ -30,7 +31,7 @@ Checks:
 - cppcoreguidelines-pro-type-member-init # We want to use default member initializers
 - cppcoreguidelines-slicing
 - cppcoreguidelines-interfaces-global-init
-- cppcoreguidelines-pro-type-static-cast-downcast
+- -cppcoreguidelines-pro-type-static-cast-downcast # dynamic_cast has a runtime overhead
 - -cppcoreguidelines-narrowing-conversions #
 - google-default-arguments
 - google-runtime-operator
@@ -79,10 +80,8 @@ Checks:
 - -readability-convert-member-functions-to-static #
 - -readability-use-concise-preprocessor-directives # We do not use #ifdef
 - -readability-uppercase-literal-suffix # Not important enough
-- -readability-static-accessed-through-instance
-- '*-include-cleaner'
-
-# idk
+- -readability-redundant-string-cstr # Sometimes used to stop at first null byte
+- -readability-static-accessed-through-instance #
 
 # Will check later if useful or not
 - -readability-make-member-function-const # to make functions const. Seems to not catch everything ?

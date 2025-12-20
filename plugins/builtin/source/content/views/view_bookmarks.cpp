@@ -41,12 +41,12 @@ namespace hex::plugin::builtin {
                 *id = bookmarkId;
 
             auto bookmark = ImHexApi::Bookmarks::Entry {
-                region,
-                name,
-                std::move(comment),
-                color,
-                true,
-                bookmarkId
+                .region=region,
+                .name=name,
+                .comment=std::move(comment),
+                .color=color,
+                .locked=true,
+                .id=bookmarkId
             };
 
             m_bookmarks->emplace_back(std::move(bookmark), true, ui::Markdown(bookmark.comment));
@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
                 if (!bookmark.highlightVisible)
                     continue;
 
-                if (Region { address, size }.isWithin(bookmark.entry.region)) {
+                if (Region { .address=address, .size=size }.isWithin(bookmark.entry.region)) {
                     color = blendColors(color, bookmark.entry.color);
                 }
             }
@@ -91,7 +91,7 @@ namespace hex::plugin::builtin {
                     continue;
 
                 // Make sure the bookmark overlaps the currently hovered address
-                if (!Region { address, size }.isWithin(bookmark.region))
+                if (!Region { .address=address, .size=size }.isWithin(bookmark.region))
                     continue;
 
                 // Draw tooltip
@@ -564,7 +564,7 @@ namespace hex::plugin::builtin {
 
             m_bookmarks.get(provider).push_back({
                 {
-                    .region     = { region["address"], region["size"] },
+                    .region     = { .address=region["address"], .size=region["size"] },
                     .name       = bookmark["name"],
                     .comment    = bookmark["comment"],
                     .color      = bookmark["color"],

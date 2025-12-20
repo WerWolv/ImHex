@@ -36,7 +36,7 @@ namespace hex::plugin::builtin {
             if (m_searchTask.isRunning())
                 return { };
 
-            if (!m_occurrenceTree->overlapping({ address, address }).empty())
+            if (!m_occurrenceTree->overlapping({ .start=address, .end=address }).empty())
                 return HighlightColor();
             else
                 return std::nullopt;
@@ -49,7 +49,7 @@ namespace hex::plugin::builtin {
             if (m_searchTask.isRunning())
                 return;
 
-            auto occurrences = m_occurrenceTree->overlapping({ address, address + size });
+            auto occurrences = m_occurrenceTree->overlapping({ .start=address, .end=address + size });
             if (occurrences.empty())
                 return;
 
@@ -131,7 +131,7 @@ namespace hex::plugin::builtin {
             }
 
             m_searchSettings.mode = SearchSettings::Mode::BinaryPattern;
-            m_searchSettings.region = { selection->getProvider()->getBaseAddress(), selection->getProvider()->getActualSize() };
+            m_searchSettings.region = { .address=selection->getProvider()->getBaseAddress(), .size=selection->getProvider()->getActualSize() };
             m_searchSettings.binaryPattern = {
                 .input = sequence,
                 .pattern = hex::BinaryPattern(sequence),
@@ -303,7 +303,7 @@ namespace hex::plugin::builtin {
                         remainingCharacters = 1;
                     } else if ((byte & 0b1111'0000) == 0b1110'0000) {
                         // 3-byte start (U+800..U+FFFF)
-                        validChar = !(byte == 0xE0 || byte == 0xED);
+                        validChar = byte != 0xE0 && byte != 0xED;
                         // E0 must be followed by >= 0xA0, ED must be <= 0x9F (avoid surrogates)
                         remainingCharacters = 2;
                     } else if ((byte & 0b1111'1000) == 0b1111'0000) {
@@ -324,7 +324,7 @@ namespace hex::plugin::builtin {
             if (!validChar || startAddress + countedCharacters == endAddress) {
                 if (countedCharacters >= settings.minLength) {
                     if (!settings.nullTermination || byte == 0x00) {
-                        results.push_back(Occurrence { Region { startAddress, size_t(countedCharacters) }, endian, decodeType, false, {} });
+                        results.push_back(Occurrence { Region { .address=startAddress, .size=size_t(countedCharacters) }, endian, decodeType, false, {} });
                     }
                 }
 
@@ -412,7 +412,7 @@ namespace hex::plugin::builtin {
 
             auto address = occurrence.getAddress();
             reader.seek(address + 1);
-            results.push_back(Occurrence{ Region { address, bytes.size() }, endian, decodeType, false, {} });
+            results.push_back(Occurrence{ Region { .address=address, .size=bytes.size() }, endian, decodeType, false, {} });
             progress = address - searchRegion.getStartAddress();
         }
 
@@ -473,7 +473,7 @@ namespace hex::plugin::builtin {
                     if (matchedBytes == settings.pattern.getSize()) {
                         auto occurrenceAddress = it.getAddress() - (patternSize - 1);
 
-                        results.push_back(Occurrence { Region { occurrenceAddress, patternSize }, std::endian::native, Occurrence::DecodeType::Binary, false, {} });
+                        results.push_back(Occurrence { Region { .address=occurrenceAddress, .size=patternSize }, std::endian::native, Occurrence::DecodeType::Binary, false, {} });
                         it.setAddress(occurrenceAddress);
                         matchedBytes = 0;
                     }
@@ -499,7 +499,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (match)
-                    results.push_back(Occurrence { Region { address, patternSize }, std::endian::native, Occurrence::DecodeType::Binary, false, {} });
+                    results.push_back(Occurrence { Region { .address=address, .size=patternSize }, std::endian::native, Occurrence::DecodeType::Binary, false, {} });
             }
         }
 
@@ -583,7 +583,7 @@ namespace hex::plugin::builtin {
                     }
                 }();
 
-                results.push_back(Occurrence { Region { address, size }, settings.endian, decodeType, false, {} });
+                results.push_back(Occurrence { Region { .address=address, .size=size }, settings.endian, decodeType, false, {} });
             }
         }
 
@@ -631,7 +631,7 @@ namespace hex::plugin::builtin {
                                 auto occurrenceAddress = it.getAddress() - (patternSize - 1);
 
                                 results.push_back(Occurrence {
-                                    Region { occurrenceAddress, patternSize },
+                                    Region { .address=occurrenceAddress, .size=patternSize },
                                     std::endian::native,
                                     Occurrence::DecodeType::ASCII,
                                     false,
@@ -663,7 +663,7 @@ namespace hex::plugin::builtin {
 
                         if (match)
                             results.push_back(Occurrence {
-                                Region { address, patternSize },
+                                Region { .address=address, .size=patternSize },
                                 std::endian::native,
                                 Occurrence::DecodeType::ASCII,
                                 false,
@@ -723,7 +723,7 @@ namespace hex::plugin::builtin {
             m_lastSelectedOccurrence = nullptr;
 
             for (const auto &occurrence : m_foundOccurrences.get(provider))
-                m_occurrenceTree->insert({ occurrence.region.getStartAddress(), occurrence.region.getEndAddress() }, occurrence);
+                m_occurrenceTree->insert({ .start=occurrence.region.getStartAddress(), .end=occurrence.region.getEndAddress() }, occurrence);
 
             TaskManager::doLater([this, provider] {
                 EventHighlightingChanged::post();

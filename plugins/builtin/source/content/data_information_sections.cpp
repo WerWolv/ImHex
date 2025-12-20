@@ -117,7 +117,7 @@ namespace hex::plugin::builtin {
 
                 // Retry analysis with only the first 100 KiB
                 if (region.getSize() != 100_kiB) {
-                    process(task, provider, { region.getStartAddress(), 100_kiB });
+                    process(task, provider, { .address=region.getStartAddress(), .size=100_kiB });
                 }
             }
         }

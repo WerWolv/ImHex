@@ -622,7 +622,7 @@ namespace hex::plugin::builtin {
                     nlohmann::json nodeJson = nlohmann::json::parse(file.readString());
 
                     // Add the loaded node to the list of custom nodes
-                    m_customNodes.push_back(CustomNode { Lang(nodeJson.at("name").get<std::string>()), nodeJson });
+                    m_customNodes.push_back(CustomNode { .name=Lang(nodeJson.at("name").get<std::string>()), .data=nodeJson });
                 } catch (nlohmann::json::exception &e) {
                     log::warn("Failed to load custom node '{}': {}", entry.path().string(), e.what());
                 }

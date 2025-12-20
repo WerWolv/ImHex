@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
 
                 auto selection = ImHexApi::HexEditor::getSelection();
 
-                return u128(u128(selection->getStartAddress()) << 64 | u128(selection->getSize()));
+                return (u128(selection->getStartAddress()) << 64 | u128(selection->getSize()));
             });
 
             /* add_virtual_file(path, pattern) */

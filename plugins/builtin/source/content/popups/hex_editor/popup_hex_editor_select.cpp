@@ -8,7 +8,7 @@
 
 namespace hex::plugin::builtin {
 
-    PopupSelect::PopupSelect(u64 address, size_t size) : m_region({address, size}) {}
+    PopupSelect::PopupSelect(u64 address, size_t size) : m_region({.address=address, .size=size}) {}
 
     void PopupSelect::draw(ViewHexEditor *editor) {
         if (ImGui::BeginTabBar("select_tabs")) {
@@ -26,7 +26,7 @@ namespace hex::plugin::builtin {
                 if (inputB < inputA)
                     inputB = inputA;
 
-                m_region = { inputA, (inputB - inputA) + 1 };
+                m_region = { .address=inputA, .size=(inputB - inputA) + 1 };
 
                 ImGui::EndTabItem();
             }
@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
                 if (inputB <= 0)
                     inputB = 1;
 
-                m_region = { inputA, inputB };
+                m_region = { .address=inputA, .size=inputB };
                 ImGui::EndTabItem();
             }
 

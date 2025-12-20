@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
 
     std::pair<Region, bool> ProcessMemoryProvider::getRegionValidity(u64 address) const {
         for (const auto &memoryRegion : m_memoryRegions) {
-            if (memoryRegion.region.overlaps({ address, 1LLU }))
+            if (memoryRegion.region.overlaps({ .address=address, .size=1LLU }))
                 return { memoryRegion.region, true };
         }
 
@@ -195,7 +195,7 @@ namespace hex::plugin::builtin {
         for (const auto &memoryRegion : m_memoryRegions) {
 
             if (address < memoryRegion.region.getStartAddress())
-                return { Region { lastRegion.getEndAddress(), memoryRegion.region.getStartAddress() - lastRegion.getEndAddress() }, false };
+                return { Region { .address=lastRegion.getEndAddress(), .size=memoryRegion.region.getStartAddress() - lastRegion.getEndAddress() }, false };
 
             lastRegion = memoryRegion.region;
         }
@@ -561,7 +561,7 @@ namespace hex::plugin::builtin {
                 if (split.size() > 5)
                     name = wolv::util::trim(wolv::util::combineStrings(std::vector(split.begin() + 5, split.end()), " "));
 
-                m_memoryRegions.insert({ { start, end - start }, name });
+                m_memoryRegions.insert({ { .address=start, .size=end - start }, name });
             }
         #endif
     }

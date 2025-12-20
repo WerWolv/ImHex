@@ -282,11 +282,11 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getStartAddress() < baseAddress + requiredSize);
             if (ImGuiExt::DimmedIconButton(ICON_TA_CHEVRON_LEFT_PIPE, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSizeSmall)) {
-                ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() % requiredSize, requiredSize });
+                ImHexApi::HexEditor::setSelection(Region { .address=selection->getStartAddress() % requiredSize, .size=requiredSize });
             }
             ImGui::SameLine();
             if (ImGuiExt::DimmedIconButton(ICON_TA_CHEVRON_LEFT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
-                ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() - requiredSize, requiredSize });
+                ImHexApi::HexEditor::setSelection(Region { .address=selection->getStartAddress() - requiredSize, .size=requiredSize });
             }
             ImGui::EndDisabled();
 
@@ -294,11 +294,11 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getEndAddress() >= providerEndAddress - requiredSize);
             if (ImGuiExt::DimmedIconButton(ICON_TA_CHEVRON_RIGHT, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSize)) {
-                ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress() + requiredSize, requiredSize });
+                ImHexApi::HexEditor::setSelection(Region { .address=selection->getStartAddress() + requiredSize, .size=requiredSize });
             }
             ImGui::SameLine();
             if (ImGuiExt::DimmedIconButton(ICON_TA_CHEVRON_RIGHT_PIPE, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonSizeSmall)) {
-                ImHexApi::HexEditor::setSelection(Region { providerEndAddress - selection->getStartAddress() % requiredSize - requiredSize, requiredSize });
+                ImHexApi::HexEditor::setSelection(Region { .address=providerEndAddress - selection->getStartAddress() % requiredSize - requiredSize, .size=requiredSize });
             }
             ImGui::EndDisabled();
         }
@@ -444,7 +444,7 @@ namespace hex::plugin::builtin {
             if (ImGui::Selectable("##InspectorLine", m_selectedEntryName == entry.unlocalizedName, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap | ImGuiSelectableFlags_AllowDoubleClick)) {
                 m_selectedEntryName = entry.unlocalizedName;
                 if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value()) {
-                    ImHexApi::HexEditor::setSelection(Region { selection->getStartAddress(), entry.requiredSize });
+                    ImHexApi::HexEditor::setSelection(Region { .address=selection->getStartAddress(), .size=entry.requiredSize });
                 }
             }
 
