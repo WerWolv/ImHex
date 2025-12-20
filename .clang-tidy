@@ -19,6 +19,8 @@ Checks:
 - -bugprone-infinite-loop
 - -bugprone-easily-swappable-parameters
 - -bugprone-float-loop-counter #
+- -bugprone-unchecked-string-to-number-conversion # Unfortunately no alternative
+- -bugprone-branch-clone # Mostly warns about one-line duplicates
 - cert-err52-cpp
 - cert-err60-cpp
 - cert-err34-c
@@ -27,7 +29,6 @@ Checks:
 - cert-msc50-cpp
 - cert-msc51-cpp
 - cert-dcl58-cpp
-- cert-flp30-c
 - cppcoreguidelines-avoid-const-or-ref-data-members
 - cppcoreguidelines-pro-type-member-init # We want to use default member initializers
 - cppcoreguidelines-slicing

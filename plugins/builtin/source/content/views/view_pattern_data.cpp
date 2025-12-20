@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
             const auto &path = file->path;
 
             auto currSegment = wolv::io::fs::toNormalizedPathString(*std::next(path.begin(), level));
-            if (std::distance(path.begin(), path.end()) == ptrdiff_t(level + 1)) {
+            if (std::distance(path.begin(), path.end()) == level + 1) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 

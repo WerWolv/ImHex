@@ -23,7 +23,7 @@ namespace hex::ui {
 
     Markdown::Markdown(std::string text) : m_text(std::move(text)) {
         m_initialized = true;
-        m_mdRenderer.flags = MD_DIALECT_GITHUB | MD_FLAG_TABLES | MD_FLAG_TASKLISTS;
+        m_mdRenderer.flags = MD_DIALECT_GITHUB;
         m_mdRenderer.enter_block = [](MD_BLOCKTYPE type, void *detail, void *userdata) -> int {
             auto &self = *static_cast<Markdown*>(userdata);
 
@@ -125,11 +125,6 @@ namespace hex::ui {
                     fonts::Default().pop();
                     break;
                 case MD_BLOCK_CODE:
-                    if (self.inTable()) {
-                        ImGui::EndTable();
-                        self.m_tableVisibleStack.pop_back();
-                    }
-                    break;
                 case MD_BLOCK_TABLE:
                     if (self.inTable()) {
                         ImGui::EndTable();
