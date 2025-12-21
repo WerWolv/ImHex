@@ -98,6 +98,7 @@ namespace hex {
 
     void startProgram(const std::vector<std::string> &command);
     int executeCommand(const std::string &command);
+    std::optional<std::string> executeCommandWithOutput(const std::string &command);
     void openWebpage(std::string url);
 
     extern "C" void registerFont(const char *fontName, const char *fontPath);
