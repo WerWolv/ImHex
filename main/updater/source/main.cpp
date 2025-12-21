@@ -146,33 +146,103 @@ std::string_view getUpdateArtifactEnding() {
     return "";
 }
 
+auto updateCommand(std::string command) {
+    return [command](const std::fs::path &updatePath) -> bool {
+        const auto formattedCommand = fmt::format(fmt::runtime(command), updatePath.string());
+
+        hex::log::info("Starting update process with command: '{}'", formattedCommand);
+        return hex::executeCommand(formattedCommand) == 0;
+    };
+}
+
+auto updateMacOSBundle(const std::fs::path &updatePath) {
+    // Mount the DMG
+    auto mountCmd = fmt::format("hdiutil attach \"{}\" -nobrowse", updatePath.string());
+    auto mountOutput = hex::executeCommandWithOutput(mountCmd);
+    if (!mountOutput.has_value()) {
+        hex::log::error("Failed to mount DMG");
+        return false;
+    }
+
+    // Extract mount point from output
+    std::string mountPoint;
+    for (const auto &line : wolv::util::splitString(*mountOutput, "\n")) {
+        if (line.contains("/Volumes/")) {
+            auto parts = wolv::util::splitString(line, "\t");
+            mountPoint = parts.back();
+            break;
+        }
+    }
+
+    if (mountPoint.empty()) {
+        hex::log::error("Failed to find mount point");
+        return false;
+    }
+
+    ON_SCOPE_EXIT {
+        hex::executeCommand(fmt::format("hdiutil detach \"{}\"", mountPoint));
+    };
+
+    // Find the .app bundle in the mounted DMG
+    auto findCmd = fmt::format("find \"{}\" -name '*.app' -maxdepth 1", mountPoint);
+    auto appPath = hex::executeCommandWithOutput(findCmd);
+    if (!appPath.has_value()) {
+        hex::log::error("Failed to find .app in DMG");
+        hex::executeCommand(fmt::format("hdiutil detach \"{}\"", mountPoint));
+        return false;
+    }
+
+    appPath = wolv::util::trim(*appPath);
+
+    if (appPath->empty()) {
+        hex::log::error("Failed to find .app in DMG");
+        return false;
+    }
+
+    // Get the app name
+    auto appName = std::fs::path(*appPath).filename().string();
+    auto installPath = fmt::format("/Applications/{}", appName);
+
+    // Use AppleScript to copy with elevated privileges
+    auto installScript = fmt::format(
+        R"(osascript -e 'do shell script "rm -rf \"{}\" && cp -R \"{}\" /Applications/" with administrator privileges')",
+        installPath, *appPath
+    );
+
+    if (hex::executeCommand(installScript) != 0) {
+        hex::log::error("Failed to install update");
+        return false;
+    }
+
+    // Launch the new version
+    hex::executeCommand(fmt::format("open \"{}\"", installPath));
+
+    return true;
+}
+
 bool installUpdate(const std::fs::path &updatePath) {
+    using UpdaterFunction = std::function<bool(const std::fs::path &updatePath)>;
     struct UpdateHandler {
         std::string ending;
-        std::string command;
+        UpdaterFunction func;
     };
 
     const static auto UpdateHandlers = {
-        UpdateHandler { ".msi",             "msiexec /i \"{}\" /qb"                                                                                     },
-        UpdateHandler { ".dmg",             "hdiutil attach -autoopen \"{}\""                                                                           },
-        UpdateHandler { ".deb",             "zenity --password | sudo -S apt install -y --fix-broken \"{}\""                                                                   },
-        UpdateHandler { ".rpm",             "zenity --password | sudo -S rpm -i \"{}\""                                                                                        },
-        UpdateHandler { ".pkg.tar.zst",     "zenity --password | sudo -S pacman -Syy && sudo pacman -U --noconfirm \"{}\""                                                     },
-        UpdateHandler { ".AppImage",        fmt::format("zenity --password | sudo -S cp \"{{}}\" \"{}\"", hex::getEnvironmentVariable("APPIMAGE").value_or(""))    },
-        UpdateHandler { ".flatpak",         "zenity --password | sudo -S flatpak install -y --reinstall \"{}\""                                                                },
-        UpdateHandler { ".snap",            "zenity --password | sudo -S snap install --dangerous \"{}\""                                                                      },
+        UpdateHandler { .ending=".msi",             .func=updateCommand("msiexec /i \"{}\" /qb")                                                                                                            },
+        UpdateHandler { .ending=".dmg",             .func=updateMacOSBundle                                                                                                                                    },
+        UpdateHandler { .ending=".deb",             .func=updateCommand("zenity --password | sudo -S apt install -y --fix-broken \"{}\"")                                                                   },
+        UpdateHandler { .ending=".rpm",             .func=updateCommand("zenity --password | sudo -S rpm -i \"{}\"")                                                                                        },
+        UpdateHandler { .ending=".pkg.tar.zst",     .func=updateCommand("zenity --password | sudo -S pacman -Syy && sudo pacman -U --noconfirm \"{}\"")                                                     },
+        UpdateHandler { .ending=".AppImage",        .func=updateCommand(fmt::format(R"(zenity --password | sudo -S cp "{{}}" "{}")", hex::getEnvironmentVariable("APPIMAGE").value_or("")))    },
+        UpdateHandler { .ending=".flatpak",         .func=updateCommand("zenity --password | sudo -S flatpak install -y --reinstall \"{}\"")                                                                },
+        UpdateHandler { .ending=".snap",            .func=updateCommand("zenity --password | sudo -S snap install --dangerous \"{}\"")                                                                      },
     };
 
     const auto updateFileName = wolv::util::toUTF8String(updatePath.filename());
     for (const auto &handler : UpdateHandlers) {
         if (updateFileName.ends_with(handler.ending)) {
             // Install the update using the correct command
-            const auto command = fmt::format(fmt::runtime(handler.command), updatePath.string());
-
-            hex::log::info("Starting update process with command: '{}'", command);
-            hex::executeCommand(command);
-
-            return true;
+            return handler.func(updatePath);
         }
     }
 
@@ -200,9 +270,11 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
+    hex::log::info("Updating ImHex...");
+
     // Read the version type from the arguments
     const std::string_view versionTypeString = argv[1];
-    hex::log::info("Updater started with version type: {}", versionTypeString);
+    hex::log::info("Installing '{}' version of ImHex", versionTypeString);
 
     // Convert the version type string to the enum value
     hex::ImHexApi::System::UpdateType updateType;

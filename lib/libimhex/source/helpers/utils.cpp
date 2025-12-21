@@ -309,6 +309,50 @@ namespace hex {
         return ::system(command.c_str());
     }
 
+    std::optional<std::string> executeCommandWithOutput(const std::string &command) {
+        std::array<char, 256> buffer = {};
+        std::string result;
+
+        #if defined(OS_WINDOWS)
+            FILE* pipe = _popen(command.c_str(), "r");
+        #else
+            FILE* pipe = popen(command.c_str(), "r");
+        #endif
+
+        if (!pipe) {
+            hex::log::error("Failed to open pipe for command: {}", command);
+            return std::nullopt;
+        }
+
+        try {
+            while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+                result += buffer.data();
+            }
+        } catch (const std::exception &e) {
+            hex::log::error("Exception while reading command output: {}", e.what());
+
+            #if defined(OS_WINDOWS)
+                _pclose(pipe);
+            #else
+                pclose(pipe);
+            #endif
+
+            return std::nullopt;
+        }
+
+        #if defined(OS_WINDOWS)
+            int exitCode = _pclose(pipe);
+        #else
+            int exitCode = pclose(pipe);
+        #endif
+
+        if (exitCode != 0) {
+            hex::log::debug("Command exited with code {}: {}", exitCode, command);
+        }
+
+        return result;
+    }
+
     void openWebpage(std::string url) {
         if (!url.contains("://"))
             url = "https://" + url;
