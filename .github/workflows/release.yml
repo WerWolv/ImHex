@@ -144,6 +144,7 @@ jobs:
             imhex-*-x86_64.msi
 
       - name: ⬆️ Upload Unsigned ARM64 Windows Installer
+        if: false
         uses: actions/upload-artifact@v4
         id: upload-installer-arm64
         with:
@@ -154,7 +155,7 @@ jobs:
 
       - name: 🗑️ Delete unsigned installers
         run: |
-          rm imhex-*.msi
+          rm imhex-*-x86_64.msi
 
       - name: 🗝️ Sign x86_64 Installer
         uses: signpath/github-action-submit-signing-request@v1
@@ -168,6 +169,7 @@ jobs:
           output-artifact-directory: '.'
 
       - name: 🗝️ Sign ARM64 Installer
+        if: false
         uses: signpath/github-action-submit-signing-request@v1
         with:
           api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
