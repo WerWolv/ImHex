@@ -131,7 +131,12 @@ int launchExecutable() {
    ::CloseHandle(pi.hThread);
    ::CloseHandle(hChildStdoutRead);
 
-    return EXIT_SUCCESS;
+    DWORD exitCode = 0;
+    if (::GetExitCodeProcess(pi.hProcess, &exitCode)) {
+        return static_cast<int>(exitCode);
+    } else {
+        return EXIT_FAILURE;
+    }
 }
 
 int main() {
