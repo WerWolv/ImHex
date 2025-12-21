@@ -31,7 +31,7 @@ jobs:
           project_version=`cat ImHex/VERSION`
           tag_version="${{github.event.release.tag_name}}"
           tag_version="${tag_version:1}"
-          if [ "$project_version" != "$tag_version" ]; then
+          if [ "$project_version" != "$tag_version" ] && [ ! -z "$tag_version" ]; then
             echo "::warning::$project_version and $tag_version are not the same ! Refusing to populate release"
             exit 1
           fi
@@ -90,7 +90,7 @@ jobs:
           project_version=`cat ImHex/VERSION`
           tag_version="${{github.event.release.tag_name}}"
           tag_version="${tag_version:1}"
-          if [ "$project_version" != "$tag_version" ]; then
+          if [ "$project_version" != "$tag_version" ] && [ ! -z "$tag_version" ]; then
             echo "::warning::$project_version and $tag_version are not the same ! Refusing to populate release"
             exit 1
           fi
