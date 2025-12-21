@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
                     m_foundPattern = pattern;
 
                     constexpr static auto DataDescriptionFunction = "get_data_description";
-                    if (runtime.executeFile(pattern.patternFilePath)) {
+                    if (runtime.executeFile(pattern.patternFilePath) == 0) {
                         const auto &evaluator = runtime.getInternals().evaluator;
                         const auto &functions = evaluator->getCustomFunctions();
                         if (const auto function = functions.find(DataDescriptionFunction); function != functions.end()) {

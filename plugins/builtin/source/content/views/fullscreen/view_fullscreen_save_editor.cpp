@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
                     }
 
                     ContentRegistry::PatternLanguage::configureRuntime(m_runtime, &m_provider);
-                    if (!m_runtime.executeString(this->m_sourceCode)) {
+                    if (m_runtime.executeString(this->m_sourceCode) != 0) {
                         ui::ToastError::open("hex.builtin.view.fullscreen.save_editor.error.failed_execution"_lang);
                         for (const auto &error : m_runtime.getCompileErrors()) {
                             log::error("Save Editor Error: {}", error.format());

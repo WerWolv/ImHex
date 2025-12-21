@@ -1335,7 +1335,7 @@ namespace hex::plugin::builtin {
             return;
 
         if (!m_lastEvaluationProcessed) {
-            if (!m_lastEvaluationResult) {
+            if (m_lastEvaluationResult != 0) {
                 const auto processMessage = [](const auto &message) {
                     auto lines = wolv::util::splitString(message, "\n");
 
@@ -1796,7 +1796,7 @@ namespace hex::plugin::builtin {
 
 
             m_lastEvaluationResult = runtime.executeString(code, pl::api::Source::DefaultSource, envVars, inVariables);
-            if (!m_lastEvaluationResult) {
+            if (m_lastEvaluationResult != 0) {
                 *m_lastEvaluationError = runtime.getEvalError();
                 *m_lastCompileError    = runtime.getCompileErrors();
                 *m_callStack           = &runtime.getInternals().evaluator->getCallStack();

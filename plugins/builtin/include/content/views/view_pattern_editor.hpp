@@ -122,7 +122,7 @@ namespace hex::plugin::builtin {
         std::atomic<bool> m_triggerAutoEvaluate = false;
 
         volatile bool m_lastEvaluationProcessed = true;
-        bool m_lastEvaluationResult    = false;
+        int m_lastEvaluationResult    = false;
 
         std::atomic<u32> m_runningEvaluators = 0;
         std::atomic<u32> m_runningParsers    = 0;

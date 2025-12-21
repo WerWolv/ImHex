@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
                 ContentRegistry::PatternLanguage::configureRuntime(runtime, &m_provider);
 
                 constexpr static auto DataDescriptionFunction = "get_data_description";
-                if (runtime.executeFile(m_foundPatterns.front().patternFilePath)) {
+                if (runtime.executeFile(m_foundPatterns.front().patternFilePath) == 0) {
                     const auto &evaluator = runtime.getInternals().evaluator;
                     const auto &functions = evaluator->getCustomFunctions();
                     if (const auto function = functions.find(DataDescriptionFunction); function != functions.end()) {
