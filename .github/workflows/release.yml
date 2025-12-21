@@ -139,7 +139,7 @@ jobs:
         id: upload-installer-x86_64
         with:
           if-no-files-found: error
-          name: Windows Installer ${{ matrix.architecture_name }}
+          name: Windows Installer x86_64
           path: |
             imhex-*-x86_64.msi
 
@@ -148,7 +148,7 @@ jobs:
         id: upload-installer-arm64
         with:
           if-no-files-found: error
-          name: Windows Installer ${{ matrix.architecture_name }}
+          name: Windows Installer ARM64
           path: |
             imhex-*-arm64.msi
 
