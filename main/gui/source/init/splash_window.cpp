@@ -589,8 +589,8 @@ namespace hex::init {
         for (auto &highlight : m_highlights) {
             u32 newPos = lastPos + lastCount + (rng() % 35);
             u32 newCount = (rng() % 7) + 3;
-            highlight.start.x = float(newPos % 13);
-            highlight.start.y = float(newPos / 13);
+            highlight.start.x = newPos % 13;
+            highlight.start.y = int(newPos / 13);
             highlight.count = newCount;
 
             highlight.color = getHighlightColor(index);

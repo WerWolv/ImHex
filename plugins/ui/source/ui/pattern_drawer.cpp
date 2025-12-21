@@ -207,7 +207,7 @@ namespace hex::ui {
 
         filterString = wolv::util::trim(filterString);
         if (filterString.empty())
-            return std::nullopt;
+            return std::nullopt; //NOLINT: optimise for empty string
         else if (filterString.starts_with("===")) {
             result.operation = std::strong_ordering::equal;
             result.inverted = false;

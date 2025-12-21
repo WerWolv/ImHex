@@ -500,7 +500,7 @@ namespace hex::ui {
         if (gotoKey != Invalid) {
             std::string errorLineColumn;
             bool found = false;
-            for (auto text: m_clickableText) {
+            for (const auto& text: m_clickableText) {
                 if (lineText.starts_with(text)) {
                     errorLineColumn = lineText.substr(text.size());
                     if (!errorLineColumn.empty()) {

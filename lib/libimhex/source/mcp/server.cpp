@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 #include <hex/helpers/logger.hpp>
 #include <nlohmann/json.hpp>
+#include <utility>
 #include <wolv/net/socket_client.hpp>
 #include <hex/api/imhex_api/system.hpp>
 
@@ -13,7 +14,7 @@ namespace hex::mcp {
 
     class JsonRpc {
     public:
-        explicit JsonRpc(const std::string &request) : m_request(request) { }
+        explicit JsonRpc(std::string request) : m_request(std::move(request)) { }
 
         struct MethodNotFoundException : std::exception {};
         struct InvalidParametersException : std::exception {};
@@ -77,7 +78,7 @@ namespace hex::mcp {
             return responses.dump();
         }
 
-        enum class ErrorCode {
+        enum class ErrorCode: i16 {
             ParseError     = -32700,
             InvalidRequest = -32600,
             MethodNotFound = -32601,

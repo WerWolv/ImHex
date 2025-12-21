@@ -122,7 +122,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     const auto character = row * 0x10 + column;
-                    for (u8 i = 0; i < HighlightFunctions.size(); i++) {
+                    for (size_t i = 0; i < HighlightFunctions.size(); i++) {
                         if (highlightFunctionEnabled[i] && HighlightFunctions[i](character) != 0) {
                             ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImGuiCustomCol_Highlight));
                             break;

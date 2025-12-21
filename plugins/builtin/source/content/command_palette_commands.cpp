@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
 
         class Value {
         public:
-            enum class Unit {
+            enum class Unit: u8 {
                 Unitless,
                 Decimal,
                 Hexadecimal,

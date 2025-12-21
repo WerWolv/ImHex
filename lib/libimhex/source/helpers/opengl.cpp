@@ -138,17 +138,18 @@ namespace hex::gl {
 
 
     GLint Shader::getUniformLocation(std::string_view name) {
-        auto uniform = m_uniforms.find(name.data());
+        auto nameStr = std::string(name);
+        auto uniform = m_uniforms.find(nameStr);
         if (uniform == m_uniforms.end()) {
-            auto location = glGetUniformLocation(m_program, name.data());
+            auto location = glGetUniformLocation(m_program, nameStr.data());
             if (location == -1) {
                 log::warn("Uniform '{}' not found in shader", name);
-                m_uniforms[name.data()] = -1;
+                m_uniforms[nameStr] = -1;
                 return -1;
             }
 
-            m_uniforms[name.data()] = location;
-            uniform = m_uniforms.find(name.data());
+            m_uniforms[nameStr] = location;
+            uniform = m_uniforms.find(nameStr);
         }
 
         return uniform->second;

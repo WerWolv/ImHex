@@ -148,12 +148,7 @@ namespace hex::ui {
         return iter;
     }
 
-    LineIterator LineIterator::operator=(const LineIterator &other) {
-        m_charsIter = other.m_charsIter;
-        m_colorsIter = other.m_colorsIter;
-        m_flagsIter = other.m_flagsIter;
-        return *this;
-    }
+    LineIterator& LineIterator::operator=(const LineIterator &other) = default;
 
     bool LineIterator::operator!=(const LineIterator &other) const {
         return m_charsIter != other.m_charsIter || m_colorsIter != other.m_colorsIter ||
@@ -532,7 +527,7 @@ namespace hex::ui {
         if (m_readOnly)
             return;
 
-        m_undoBuffer.resize((u64) (m_undoIndex + 1));
+        m_undoBuffer.resize(m_undoIndex + 1);
         m_undoBuffer.back() = UndoAction(value);
         m_undoIndex++;
     }
@@ -933,7 +928,8 @@ namespace hex::ui {
 
                 while (iter != end) {
                     iter++;
-                    if (((pos = iter->position()) > byteIndex))
+                    pos = iter->position();
+                    if (pos > byteIndex)
                         break;
                 }
             }

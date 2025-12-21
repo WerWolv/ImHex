@@ -9,6 +9,7 @@
 #include <jthread.hpp>
 #include <hex/helpers/debugging.hpp>
 #include <hex/trace/exceptions.hpp>
+#include <utility>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -66,8 +67,8 @@ namespace hex {
     }
 
 
-    Task::Task(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function)
-    : m_unlocalizedName(unlocalizedName),
+    Task::Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function)
+    : m_unlocalizedName(std::move(unlocalizedName)),
       m_maxValue(maxValue),
       m_function(std::move(function)),
       m_background(background), m_blocking(blocking) { }

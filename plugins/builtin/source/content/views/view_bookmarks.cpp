@@ -626,7 +626,9 @@ namespace hex::plugin::builtin {
             fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&, this](const std::fs::path &path) {
                 try {
                     this->importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString()));
-                } catch (...) { }
+                } catch (const std::exception &e) {
+                    log::warn("Failed to import bookmarks: {}", e.what());
+                }
             });
         }, ImHexApi::Provider::isValid);
 

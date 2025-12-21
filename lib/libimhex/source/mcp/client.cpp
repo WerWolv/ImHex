@@ -30,7 +30,7 @@ namespace hex::mcp {
             client.writeString(request);
             auto response = client.readString();
             if (!response.empty() && response.front() != 0x00)
-                output << response << std::endl;
+                output << response << '\n';
         }
 
         return EXIT_SUCCESS;

@@ -3,6 +3,7 @@
 # Or at least an empty comment # to show they were put here explicitely,
 # and not as part of the historical CLion-generated rules
 # Note: `- -X` means disable X
+# CLI usage: go to the build directory and run: `run-clang-tidy -allow-no-checks -source-filter ".*/lib/.*" -fix -j`
 
 Checks:
 - -*
@@ -18,24 +19,25 @@ Checks:
 - -bugprone-unhandled-exception-at-new
 - -bugprone-infinite-loop
 - -bugprone-easily-swappable-parameters
+- -bugprone-float-loop-counter #
+- -bugprone-unchecked-string-to-number-conversion # Unfortunately no alternative
+- -bugprone-branch-clone # Mostly warns about one-line duplicates
 - cert-err52-cpp
 - cert-err60-cpp
-- cert-err34-c
 - cert-str34-c
 - cert-dcl21-cpp
 - cert-msc50-cpp
 - cert-msc51-cpp
 - cert-dcl58-cpp
-- cert-flp30-c
 - cppcoreguidelines-avoid-const-or-ref-data-members
 - cppcoreguidelines-pro-type-member-init # We want to use default member initializers
 - cppcoreguidelines-slicing
 - cppcoreguidelines-interfaces-global-init
 - -cppcoreguidelines-pro-type-static-cast-downcast # dynamic_cast has a runtime overhead
 - -cppcoreguidelines-narrowing-conversions #
-- google-default-arguments
 - google-runtime-operator
 - google-explicit-constructor
+- -google-default-arguments # Provider and ViewProvider read() is a good example of why this is useful
 - hicpp-multiway-paths-covered
 - hicpp-exception-baseclass
 - misc-*
@@ -51,9 +53,11 @@ Checks:
 - -misc-const-correctness
 - -misc-use-internal-linkage # False positives if header where function is defined is not included
 - -misc-include-cleaner # Allow indirect includes
+- -misc-non-private-member-variables-in-classes #
 - modernize-*
 - -modernize-use-trailing-return-type
 - -modernize-use-std-print # We want to use fmt::print instead
+- -modernize-use-integer-sign-comparison # Too much occurrences to change
 - openmp-use-default-none
 - performance-*
 - -performance-no-int-to-ptr
@@ -82,20 +86,12 @@ Checks:
 - -readability-uppercase-literal-suffix # Not important enough
 - -readability-redundant-string-cstr # Sometimes used to stop at first null byte
 - -readability-static-accessed-through-instance #
+- -readability-ambiguous-smartptr-reset-call # Fix is hard to read
 
-# Will check later if useful or not
-- -readability-make-member-function-const # to make functions const. Seems to not catch everything ?
-- -misc-unconventional-assign-operator
-- -bugprone-unchecked-optional-access
+# Will fix later
 - -modernize-avoid-c-arrays
-- -misc-non-private-member-variables-in-classes
-- -performance-move-const-arg
-- -bugprone-suspicious-stringview-data-usage
-- -cert-err34-c
-- -hicpp-exception-baseclass
-- -modernize-use-integer-sign-comparison
-- -performance-for-range-copy
-- -performance-unnecessary-value-param
-- -bugprone-empty-catch
-- -bugprone-multi-level-implicit-pointer-conversion
-- -modernize-pass-by-value
+- -readability-make-member-function-const # idk + lots of occurences
+- -readability-misleading-indentation # We need to handle cases with #if defined()
+- -bugprone-unchecked-optional-access
+- -performance-unnecessary-value-param # idk
+- -readability-avoid-nested-conditional-operator

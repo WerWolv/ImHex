@@ -151,11 +151,11 @@ namespace hex::ui {
             bool m_matchCase;
             bool m_wholeWord;
             bool m_findRegEx;
-            bool m_optionsChanged;
+            bool m_optionsChanged = false;
             Matches m_matches;
         };
 
-        enum class PaletteIndex {
+        enum class PaletteIndex: u8 {
             Default, Identifier, Directive, Operator, Separator, BuiltInType, Keyword, NumericLiteral, StringLiteral, CharLiteral, Cursor, Background, LineNumber, Selection, Breakpoint, ErrorMarker, PreprocessorDeactivated,
             CurrentLineFill, CurrentLineFillInactive, CurrentLineEdge, ErrorText, WarningText, DebugText, DefaultText, Attribute, PatternVariable, LocalVariable, CalculatedPointer, TemplateArgument, Function, View,
             FunctionVariable, FunctionParameter, UserDefinedType, PlacedVariable, GlobalVariable, NameSpace, TypeDef, UnkIdentifier, DocComment, DocBlockComment, BlockComment, GlobalDocComment, Comment, PreprocIdentifier, Max
@@ -228,12 +228,12 @@ namespace hex::ui {
         class LineIterator {
         public:
             friend class hex::ui::TextEditor;
-            LineIterator(const LineIterator &other) : m_charsIter(other.m_charsIter), m_colorsIter(other.m_colorsIter), m_flagsIter(other.m_flagsIter) {}
+            LineIterator(const LineIterator &other) = default;
             LineIterator() = default;
 
             char operator*();
             LineIterator operator++();
-            LineIterator operator=(const LineIterator &other);
+            LineIterator& operator=(const LineIterator &other);
             bool operator!=(const LineIterator &other) const;
             bool operator==(const LineIterator &other) const;
             LineIterator operator+(i32 n);
@@ -265,13 +265,13 @@ namespace hex::ui {
             };
 
             union Flags {
-                Flags(char value) : m_value(value) {}
-                Flags(FlagBits bits) : m_bits(bits) {}
+                explicit Flags(char value) : m_value(value) {}
+                explicit Flags(FlagBits bits) : m_bits(bits) {}
                 FlagBits m_bits;
                 char m_value;
             };
 
-            enum class LinePart { Chars, Utf8, Colors, Flags };
+            enum class LinePart: u8 { Chars, Utf8, Colors, Flags };
 
             Line() : m_lineMaxColumn(-1) {}
             explicit Line(const char *line) : Line(std::string(line)) {}
@@ -374,9 +374,9 @@ namespace hex::ui {
             friend class TextEditor;
             UndoRecord() = default;
             ~UndoRecord() {}
-            UndoRecord( const std::string &added,
+            UndoRecord( std::string added,
                         Range addedRange,
-                        const std::string &removed,
+                        std::string removed,
                         Range removedRange,
                         EditorState &before,
                         EditorState &after);

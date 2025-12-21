@@ -126,32 +126,32 @@ namespace hex::plugin::builtin {
             }
         }
         bool found = true;
-        for (auto name : vectorString) {
+        for (const auto &name : vectorString) {
             found = found || std::ranges::find(m_nameSpaces, name) != m_nameSpaces.end();
         }
         if (found) {
             if (!shortName.empty())
-                identifierName = identifierName + "::" + shortName;
+                identifierName = fmt::format("{}::{}", identifierName, shortName);
             return true;
         }
 
         if (useDefinitions) {
             if (m_functionDefinitions.contains(identifierName) || m_UDTDefinitions.contains(identifierName)) {
                 if (!shortName.empty())
-                    identifierName = identifierName + "::" + shortName;
+                    identifierName = fmt::format("{}::{}", identifierName, shortName);
                 return true;
             }
             std::string nameSpace;
-            for (auto [name, definition]: m_UDTDefinitions) {
+            for (const auto &[name, definition]: m_UDTDefinitions) {
                 findNamespace(nameSpace, definition.tokenIndex);
 
                 if (!nameSpace.empty() && !identifierName.contains(nameSpace)) {
-                    qualifiedName = nameSpace + "::" + identifierName;
+                    qualifiedName = fmt::format("{}::{}", nameSpace, identifierName);
 
                     if (name == qualifiedName) {
                         identifierName = qualifiedName;
                         if (!shortName.empty())
-                            identifierName = identifierName + "::" + shortName;
+                            identifierName = fmt::format("{}::{}", identifierName, shortName);
                         return true;
                     }
                 }
@@ -159,7 +159,7 @@ namespace hex::plugin::builtin {
                 if (name == identifierName) {
                     identifierName = name;
                     if (!shortName.empty())
-                        identifierName = identifierName + "::" + shortName;
+                        identifierName = fmt::format("{}::{}", identifierName, shortName);
                     return true;
                 }
             }
@@ -192,7 +192,7 @@ namespace hex::plugin::builtin {
             std::string nameSpace;
             findNamespace(nameSpace, getTokenId(m_curr->location));
             if (!nameSpace.empty())
-                name = nameSpace + "::" + name;
+                name = fmt::format("{}::{}", nameSpace, name);
         }
 
         i32 tokenCount = m_tokens.size();
@@ -217,7 +217,7 @@ namespace hex::plugin::builtin {
             next(-1);
         i32 index1 = getTokenId(m_curr->location);
         bool result = true;
-        for (auto keyword: keywords)
+        for (const auto &keyword: keywords)
             result = result && !peek(keyword);
         if (result)
             return false;
@@ -468,10 +468,10 @@ namespace hex::plugin::builtin {
                     variableParentType = currentName;
 
                     if (!nameSpace.empty() && !variableParentType.contains(nameSpace))
-                        variableParentType = nameSpace + variableParentType;
+                        variableParentType.insert(0, nameSpace);
 
                     else if (findNamespace(nameSpace) && !variableParentType.contains(nameSpace))
-                        variableParentType = nameSpace + "::" + variableParentType;
+                        variableParentType = fmt::format("{}::{}", nameSpace, variableParentType);
 
                     currentName = vectorString[index];
 
@@ -566,7 +566,7 @@ namespace hex::plugin::builtin {
                     break;
                 }
             }
-            for (auto definition : definitions) {
+            for (const auto &definition : definitions) {
                 for (auto block = blocksIterBegin; block != blocksIterEnd; block++) {
 
                     if (definition.tokenIndex > block->start && definition.tokenIndex < block->end) {
@@ -600,7 +600,7 @@ namespace hex::plugin::builtin {
                 }
             }
             for (auto block = blocksIterBegin; block != blocksIterEnd; block++) {
-                for (auto definition: definitions) {
+                for (const auto &definition: definitions) {
 
                     if (definition.tokenIndex > block->start && definition.tokenIndex < block->end) {
                         result = definition;
@@ -761,7 +761,7 @@ namespace hex::plugin::builtin {
                 setIdentifierColor(-1, IdentifierType::NameSpace);
                 nameSpace += name + "::";
             } else if (m_UDTDefinitions.contains(nameSpace+name)) {
-                 name = nameSpace + name;
+                name.insert(0, nameSpace);
                 auto udtDefinition = m_UDTDefinitions[name];
                 auto definitionIndex = udtDefinition.tokenIndex-1;
                 if (auto *keyword = std::get_if<Keyword>(&m_tokens[definitionIndex].value); keyword != nullptr) {
@@ -839,7 +839,7 @@ namespace hex::plugin::builtin {
     bool TextHighlighter::findScope(std::string &name, const UnorderedBlocks &map, i32 optionalTokenId) {
         auto tokenId = optionalTokenId ==-1 ? getTokenId(m_curr->location) : optionalTokenId;
 
-        for (auto [scopeName, range]: map) {
+        for (const auto &[scopeName, range]: map) {
 
             if (range.contains(tokenId)) {
                 name = scopeName;
@@ -861,7 +861,7 @@ namespace hex::plugin::builtin {
                 if (nameSpace.empty())
                     nameSpace = name;
                 else
-                    nameSpace = name + "::" + nameSpace;
+                    nameSpace = fmt::format("{}::{}", name,  nameSpace);
             }
         }
 
@@ -916,12 +916,12 @@ namespace hex::plugin::builtin {
                 std::string namespaceName;
 
                 if (findNamespace(namespaceName))
-                    functionName = namespaceName + "::" + functionName;
+                    functionName = fmt::format("{}::{}", namespaceName, functionName);
             } else {
 
                 auto vectorString = wolv::util::splitString(functionName, "::");
                 vectorString.pop_back();
-                for (auto nameSpace: vectorString) {
+                for (const auto &nameSpace: vectorString) {
 
                     if (std::ranges::find(m_nameSpaces, nameSpace) == m_nameSpaces.end())
                         m_nameSpaces.push_back(nameSpace);
@@ -965,7 +965,7 @@ namespace hex::plugin::builtin {
                 std::string namespaceName;
 
                 if (findNamespace(namespaceName))
-                    UDTName = namespaceName + "::" + UDTName;
+                    UDTName = fmt::format("{}::{}", namespaceName, UDTName);
             }
             if (types.contains(UDTName))
                 m_attributeFunctionArgumentType[functionName] = UDTName;
@@ -1002,7 +1002,7 @@ namespace hex::plugin::builtin {
         identifiers.erase(identifiers.begin());
 
         while (currentName == "Parent" && !nameParts.empty()) {
-            for (auto parentType: parentTypes)
+            for (const auto &parentType: parentTypes)
                 findParentTypes(grandpaTypes, parentType);
 
             currentName = nameParts[0];
@@ -1038,9 +1038,9 @@ namespace hex::plugin::builtin {
 
         bool found = false;
         if (!isFunction) {
-            for (auto [name, variables]: m_UDTVariables) {
-                for (auto [variableName, definitions]: variables) {
-                    for (auto definition: definitions) {
+            for (const auto &[name, variables]: m_UDTVariables) {
+                for (const auto &[variableName, definitions]: variables) {
+                    for (const auto &definition: definitions) {
 
                         if (definition.typeStr == UDTName) {
 
@@ -1054,7 +1054,7 @@ namespace hex::plugin::builtin {
             }
         } else {
             auto curr = m_curr;
-            for (auto [name, range] : m_UDTTokenRange) {
+            for (const auto &[name, range] : m_UDTTokenRange) {
                 auto startToken = TokenIter(m_tokens.begin()+range.start,m_tokens.begin()+range.end);
                 auto endToken = TokenIter(m_tokens.begin()+range.end,m_tokens.end());
 
@@ -1089,7 +1089,7 @@ namespace hex::plugin::builtin {
 
         if (m_UDTVariables.contains(UDTName) && m_UDTVariables[UDTName].contains(currentName)) {
             auto definitions = m_UDTVariables[UDTName][currentName];
-            for (auto definition: definitions) {
+            for (const auto &definition: definitions) {
                 UDTName = definition.typeStr;
 
                 if (count == 1) {
@@ -1151,7 +1151,7 @@ namespace hex::plugin::builtin {
             return std::nullopt;
         }
 
-        for (auto parentType: parentTypes) {
+        for (const auto &parentType: parentTypes) {
             m_curr = curr;
             while (peek(tkn::Keyword::Parent))
                 next(2);
@@ -1451,7 +1451,7 @@ namespace hex::plugin::builtin {
     void TextHighlighter::colorRemainingIdentifierTokens() {
         std::vector<i32> taggedIdentifiers;
         taggedIdentifiers.reserve(m_taggedIdentifiers.size());
-for (auto index: m_taggedIdentifiers) {
+        for (auto index: m_taggedIdentifiers) {
             taggedIdentifiers.push_back(index);
         }
         m_taggedIdentifiers.clear();
@@ -1603,12 +1603,12 @@ for (auto index: m_taggedIdentifiers) {
 
     void TextHighlighter::recurseInheritances(std::string name) {
         if (m_inheritances.contains(name)) {
-            for (auto inheritance: m_inheritances[name]) {
+            for (const auto &inheritance: m_inheritances[name]) {
                 recurseInheritances(inheritance);
                 auto definitions = m_UDTVariables[inheritance];
                 if (definitions.empty())
                     definitions = m_ImportedUDTVariables[inheritance];
-                for (auto [variableName, variableDefinitions]: definitions) {
+                for (const auto &[variableName, variableDefinitions]: definitions) {
                     auto tokenRange = m_UDTTokenRange[name];
                     u32 tokenIndex = tokenRange.start;
                     for (auto token = tokenRange.start; token < tokenRange.end; token++) {
@@ -1627,7 +1627,7 @@ for (auto index: m_taggedIdentifiers) {
     }
 
     void TextHighlighter::appendInheritances() {
-        for (auto [name, inheritances]: m_inheritances)
+        for (const auto &[name, inheritances]: m_inheritances)
             recurseInheritances(name);
     }
 
@@ -1718,7 +1718,8 @@ for (auto index: m_taggedIdentifiers) {
             std::string nameSpace;
             while (peek(tkn::Operator::ScopeResolution)) {
                 next(-1);
-                nameSpace = getValue<Token::Identifier>(0)->get() + "::" + nameSpace;
+                nameSpace.insert(0, "::" + typeStr);
+                nameSpace.insert(0, getValue<Token::Identifier>(0)->get());
                 next(-1);
             }
             typeStr = nameSpace + typeStr;
@@ -1731,7 +1732,7 @@ for (auto index: m_taggedIdentifiers) {
                 return typeStr;
             }
             std::vector<std::string> candidates;
-            for (auto name: m_UDTs) {
+            for (const auto &name: m_UDTs) {
                 auto vectorString = wolv::util::splitString(name, "::");
 
                 if (typeStr == vectorString.back())
@@ -1781,7 +1782,7 @@ for (auto index: m_taggedIdentifiers) {
     void TextHighlighter::loadVariableDefinitions(UnorderedBlocks tokenRangeMap, Token delimiter1, Token delimiter2,
                                                                      std::vector<IdentifierType> identifierTypes,
                                                                      bool isArgument, VariableMap &variableMap) {
-        for (auto [name, range]: tokenRangeMap) {
+        for (const auto &[name, range]: tokenRangeMap) {
             m_curr = m_startToken;
             auto endToken = m_startToken;
             next(range.start);
@@ -1851,7 +1852,7 @@ for (auto index: m_taggedIdentifiers) {
 
 // Definitions of user defined types and functions.
     void TextHighlighter::loadTypeDefinitions( UnorderedBlocks tokenRangeMap, std::vector<IdentifierType> identifierTypes, Definitions &types) {
-        for (auto [name, range]: tokenRangeMap) {
+        for (const auto &[name, range]: tokenRangeMap) {
 
             m_curr = m_startToken + range.start+1;
 
@@ -2129,9 +2130,9 @@ for (auto index: m_taggedIdentifiers) {
 // and inverts the result.
     void TextHighlighter::getGlobalTokenRanges() {
         std::set<Interval> ranges;
-        for (auto [name, range]: m_UDTTokenRange)
+        for (const auto &[name, range]: m_UDTTokenRange)
             ranges.insert(range);
-        for (auto [name, range]: m_functionTokenRange)
+        for (const auto &[name, range]: m_functionTokenRange)
             ranges.insert(range);
 
         if (ranges.empty())

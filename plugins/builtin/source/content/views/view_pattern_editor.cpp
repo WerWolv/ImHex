@@ -1753,7 +1753,7 @@ namespace hex::plugin::builtin {
                 return m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
             });
 
-            runtime.setLogCallback([this, provider](auto level, auto message) {
+            runtime.setLogCallback([this, provider](auto level, const auto& message) {
                 std::scoped_lock lock(m_logMutex);
 
                 auto lines = wolv::util::splitString(message, "\n");

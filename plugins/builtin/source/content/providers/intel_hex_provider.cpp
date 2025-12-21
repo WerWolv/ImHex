@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
             u16 address = 0x0000;
             std::vector<u8> data;
 
-            enum class RecordType {
+            enum class RecordType: u8 {
                 Data                    = 0x00,
                 EndOfFile               = 0x01,
                 ExtendedSegmentAddress  = 0x02,
@@ -348,7 +348,7 @@ namespace hex::plugin::builtin {
             ImGui::TableHeadersRow();
 
             for (const auto &memoryRegion : filtered) {
-                ImGui::PushID(&memoryRegion);
+                ImGui::PushID((const void*) &memoryRegion);
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();

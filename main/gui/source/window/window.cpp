@@ -110,7 +110,7 @@ namespace hex {
 
         LayoutManager::registerLoadCallback([this](std::string_view line) {
             int width = 0, height = 0;
-            sscanf(line.data(), "MainWindowSize=%d,%d", &width, &height);
+            sscanf(std::string(line).data(), "MainWindowSize=%d,%d", &width, &height);
 
             if (width > 0 && height > 0) {
                 TaskManager::doLater([width, height, this]{
@@ -1011,7 +1011,7 @@ namespace hex {
 
             try {
                 log::error("GLFW Error [0x{:05X}] : {}", error, desc);
-            } catch (const std::system_error &) {
+            } catch (const std::system_error &) { //NOLINT(bugprone-empty-catch): we can't log it
                 // Catch and ignore system error that might be thrown when too many errors are being logged to a file
             }
         });
