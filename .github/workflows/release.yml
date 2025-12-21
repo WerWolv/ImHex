@@ -190,6 +190,11 @@ jobs:
     needs: release-upload-artifacts
     runs-on: ubuntu-24.04
     steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ImHex
+
       - name: ⬇️ Download artifacts
         run: |
           tagname=${GITHUB_REF#refs/tags/}
