@@ -222,7 +222,7 @@ jobs:
           pkgname: imhex-bin
           pkgbuild: ./PKGBUILD
           commit_username: iTrooz
-          commit_email: itrooz@protonmail.com
+          commit_email: hey@itrooz.fr
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           commit_message: Bump to version ${{ needs.release-upload-artifacts.outputs.IMHEX_VERSION }}
           ssh_keyscan_types: rsa,ecdsa,ed25519
