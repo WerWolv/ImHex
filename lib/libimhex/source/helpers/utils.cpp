@@ -362,7 +362,7 @@ namespace hex {
             PROCESS_INFORMATION pi = { };
             si.cb = sizeof(si);
 
-            DWORD flags = CREATE_NEW_PROCESS_GROUP | DETACH_PROCESS;
+            DWORD flags = CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW;
             std::string cmdCopy = command;
 
             BOOL result = ::CreateProcessA(
