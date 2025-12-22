@@ -121,13 +121,13 @@ namespace hex::plugin::builtin {
         bool m_triggerEvaluation  = false;
         std::atomic<bool> m_triggerAutoEvaluate = false;
 
-        volatile bool m_lastEvaluationProcessed = true;
-        bool m_lastEvaluationResult    = false;
+        std::atomic<bool> m_lastEvaluationProcessed = true;
+        std::atomic<int> m_lastEvaluationResult    = 0;
 
         std::atomic<u32> m_runningEvaluators = 0;
         std::atomic<u32> m_runningParsers    = 0;
 
-        bool m_changesWereParsed = false;
+        std::atomic<bool> m_changesWereParsed = false;
         PerProvider<bool> m_hasUnevaluatedChanges;
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
 
