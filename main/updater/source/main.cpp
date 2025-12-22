@@ -151,7 +151,10 @@ auto updateCommand(std::string command) {
         const auto formattedCommand = fmt::format(fmt::runtime(command), updatePath.string());
 
         hex::log::info("Starting update process with command: '{}'", formattedCommand);
-        return hex::executeCommand(formattedCommand) == 0;
+
+        hex::executeCommandDetach(formattedCommand);
+
+        return 0;
     };
 }
 
