@@ -375,18 +375,33 @@ namespace hex::plugin::builtin {
         ContentRegistry::UserInterface::registerMainMenuItem("hex.builtin.menu.file", 1000);
 
         /* Create File */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ICON_VS_FILE, 1050, CTRLCMD + Keys::N + AllowWhileTyping + ShowOnWelcomeScreen, [] {
+        const auto createFile = [] {
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
             if (newProvider != nullptr && newProvider->open().isFailure())
                 hex::ImHexApi::Provider::remove(newProvider.get());
             else
                 EventProviderOpened::post(newProvider.get());
-        }, noRunningTasks, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
+        };
+
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ICON_VS_FILE, 1050, CTRLCMD + Keys::N + AllowWhileTyping + ShowOnWelcomeScreen,
+            createFile,
+            noRunningTasks,
+            ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name")
+        );
+
+        ContentRegistry::UserInterface::addTaskBarMenuItem({ "hex.builtin.menu.file.create_file" }, 100,
+            createFile,
+            noRunningTasks
+        );
 
         /* Open File */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_file" }, ICON_VS_FOLDER_OPENED, 1100, CTRLCMD + Keys::O + AllowWhileTyping + ShowOnWelcomeScreen, [] {
             RequestOpenWindow::post("Open File");
         }, noRunningTasks, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
+
+        ContentRegistry::UserInterface::addTaskBarMenuItem({ "hex.builtin.menu.file.open_file" }, 200, [] {
+            RequestOpenWindow::post("Open File");
+        }, noRunningTasks);
 
         /* Open Other */
         ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_other"}, ICON_VS_TELESCOPE, 1150, [] {

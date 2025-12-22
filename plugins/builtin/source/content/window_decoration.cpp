@@ -470,6 +470,11 @@ namespace hex::plugin::builtin {
                     }
                 }
             }
+
+            if (menu::beginTaskBarMenu()) {
+                populateMenu(ContentRegistry::UserInterface::impl::TaskBarMenuValue);
+                menu::endTaskBarMenu();
+            }
         }
 
         void drawMainMenu([[maybe_unused]] float menuBarHeight) {

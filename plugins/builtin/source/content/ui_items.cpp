@@ -577,13 +577,13 @@ namespace hex::plugin::builtin {
         });
 
         EventImHexStartupFinished::subscribe([] {
-            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.edit.undo", ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.edit.redo", ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.menu.file.create_file", ImGuiCustomCol_ToolbarGray);
-            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.menu.file.open_file", ImGuiCustomCol_ToolbarBrown);
-            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save", ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save_as", ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::UserInterface::addMenuItemToToolbar("hex.builtin.menu.edit.bookmark.create", ImGuiCustomCol_ToolbarGreen);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.undo" }, ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.redo" }, ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ImGuiCustomCol_ToolbarGray);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_file" }, ImGuiCustomCol_ToolbarBrown);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save" }, ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save_as" }, ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, ImGuiCustomCol_ToolbarGreen);
         });
     }
 

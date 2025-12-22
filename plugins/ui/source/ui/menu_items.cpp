@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <hex/api/shortcut_manager.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 
 #if defined(OS_MACOS)
     extern "C" {
@@ -96,6 +97,22 @@ namespace hex::menu {
             #endif
 
             ImGui::EndMenu();
+        }
+
+        bool beginTaskBarMenu() {
+            #if defined(OS_MACOS)
+                return beginMenu(ContentRegistry::UserInterface::impl::TaskBarMenuValue, true);
+            #else
+                return false;
+            #endif
+        }
+
+        void endTaskBarMenu() {
+            #if defined(OS_MACOS)
+                endMenu();
+            #else
+
+            #endif
         }
 
 

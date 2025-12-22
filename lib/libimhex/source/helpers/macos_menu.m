@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
+#import <objc/runtime.h>
 
 struct KeyEquivalent {
     bool valid;
@@ -192,6 +193,11 @@ bool macosBeginMenu(const char* label, const char *icon, bool enabled) {
         menuItem.title = title;
         [menuItem setSubmenu:newMenu];
 
+        // Hide menus starting with '$' (used for special menus)
+        if (label[0] == '$') {
+            [menuItem setHidden:YES];
+        }
+
         if (icon != NULL) {
             NSString *iconString = [NSString stringWithUTF8String:icon];
             NSImage* iconImage = imageFromIconFont(iconString, 16.0, [NSColor blackColor]);
@@ -303,5 +309,96 @@ void macosSeparator(void) {
     if (s_constructingMenu) {
         NSMenuItem* separator = [NSMenuItem separatorItem];
         [s_menuStack[s_menuStackSize - 1] addItem:separator];
+    }
+}
+
+@interface NSObject (DockMenuAddition)
+- (NSMenu *)imhexApplicationDockMenu:(NSApplication *)sender;
+@end
+
+@implementation NSObject (DockMenuAddition)
+
+- (NSMenu *)cloneMenu:(NSMenu *)originalMenu {
+    NSMenu *clonedMenu = [[NSMenu alloc] initWithTitle:[originalMenu title]];
+
+    for (NSMenuItem *item in [originalMenu itemArray]) {
+        NSMenuItem *clonedItem = [self cloneMenuItem:item];
+        [clonedMenu addItem:clonedItem];
+    }
+
+    return clonedMenu;
+}
+
+- (NSMenuItem *)cloneMenuItem:(NSMenuItem *)original {
+    if ([original isSeparatorItem]) {
+        return [NSMenuItem separatorItem];
+    }
+
+    // Create new item with same properties
+    NSMenuItem *clone = [[NSMenuItem alloc] initWithTitle:[original title]
+                                                   action:[original action]
+                                            keyEquivalent:[original keyEquivalent]];
+
+    // Copy other properties
+    [clone setTarget:[original target]];
+    [clone setEnabled:[original isEnabled]];
+    [clone setImage:[original image]];
+    [clone setTag:[original tag]];
+    [clone setRepresentedObject:[original representedObject]];
+    [clone setToolTip:[original toolTip]];
+    [clone setState:[original state]];
+
+    // Handle submenus recursively
+    if ([original hasSubmenu]) {
+        NSMenu *clonedSubmenu = [self cloneMenu:[original submenu]];
+        [clone setSubmenu:clonedSubmenu];
+    }
+
+    return clone;
+}
+
+- (NSMenu *)imhexApplicationDockMenu:(NSApplication *)sender {
+    NSMenu *dockMenu = [[NSMenu alloc] init];
+
+    NSInteger menuIndex = [s_menuStack[s_menuStackSize - 1] indexOfItemWithTitle:@"$TASKBAR$"];
+    if (menuIndex == -1) {
+        return dockMenu;
+    }
+    NSMenuItem *fileMenuItem = [s_menuStack[s_menuStackSize - 1] itemAtIndex:menuIndex];
+
+    // Get the File submenu
+    NSMenu *fileSubmenu = [fileMenuItem submenu];
+
+    if (fileSubmenu) {
+        // Clone each item from the File submenu directly into the dock menu
+        for (NSMenuItem *item in [fileSubmenu itemArray]) {
+            NSMenuItem *clonedItem = [self cloneMenuItem:item];
+            [dockMenu addItem:clonedItem];
+        }
+    }
+
+    return dockMenu;
+}
+
+@end
+
+void macosSetupDockMenu(void) {
+    @autoreleasepool {
+        // Get GLFW's delegate class
+        Class delegateClass = objc_getClass("GLFWApplicationDelegate");
+
+        if (delegateClass != nil) {
+            // Get our custom implementation
+            Method customMethod = class_getInstanceMethod([NSObject class],
+                                                         @selector(imhexApplicationDockMenu:));
+
+            // Add the method to GLFW's delegate class
+            class_addMethod(delegateClass,
+                          @selector(applicationDockMenu:),
+                          method_getImplementation(customMethod),
+                          method_getTypeEncoding(customMethod));
+        } else {
+            NSLog(@"ERROR: Could not find GLFWApplicationDelegate class");
+        }
     }
 }

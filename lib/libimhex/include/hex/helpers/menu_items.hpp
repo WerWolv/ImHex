@@ -12,6 +12,9 @@ namespace hex::menu {
     bool beginMenu(const char *label, bool enabled = true);
     void endMenu();
 
+    bool beginTaskBarMenu();
+    void endTaskBarMenu();
+
     bool beginMenuEx(const char* label, const char* icon, bool enabled = true);
 
     bool menuItem(const char *label, const Shortcut &shortcut = Shortcut::None, bool selected = false, bool enabled = true);

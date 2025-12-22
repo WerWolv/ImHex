@@ -1044,6 +1044,15 @@ namespace hex {
             });
         }
 
+        void addTaskBarMenuItem(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
+            log::debug("Added new taskbar menu item to menu {} ", unlocalizedMainMenuNames[0].get());
+
+            unlocalizedMainMenuNames.insert(unlocalizedMainMenuNames.begin(), impl::TaskBarMenuValue);
+            impl::s_menuItems->insert({
+                priority, impl::MenuItem { .unlocalizedNames=unlocalizedMainMenuNames, .icon="", .shortcut=Shortcut::None, .view=nullptr, .callback=function, .enabledCallback=enabledCallback, .selectedCallback=[]{ return false; }, .toolbarIndex=-1 }
+            });
+        }
+
         void addWelcomeScreenEntry(const impl::DrawCallback &function) {
             impl::s_welcomeScreenEntries->push_back(function);
         }
@@ -1056,13 +1065,13 @@ namespace hex {
             impl::s_toolbarItems->push_back(function);
         }
 
-        void addMenuItemToToolbar(const UnlocalizedString& unlocalizedName, ImGuiCustomCol color) {
+        void addMenuItemToToolbar(const std::vector<UnlocalizedString>& unlocalizedNames, ImGuiCustomCol color) {
             const auto maxIndex = std::ranges::max_element(impl::getMenuItems(), [](const auto &a, const auto &b) {
                 return a.second.toolbarIndex < b.second.toolbarIndex;
             })->second.toolbarIndex;
 
             for (auto &[priority, menuItem] : *impl::s_menuItems) {
-                if (menuItem.unlocalizedNames.back() == unlocalizedName) {
+                if (menuItem.unlocalizedNames == unlocalizedNames) {
                     menuItem.toolbarIndex = maxIndex + 1;
                     menuItem.icon.color = color;
                     updateToolbarItems();
