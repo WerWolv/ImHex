@@ -245,7 +245,7 @@ namespace hex {
         }
 
         std::optional<ProviderRegion> getSelection() {
-            return { impl::s_currentSelection };
+            return impl::s_currentSelection;
         }
 
         void clearSelection() {
