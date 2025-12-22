@@ -217,9 +217,9 @@ macro(configurePackingResources)
         endif()
     elseif (APPLE OR ${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
         set(IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/dist/macos/AppIcon.icns")
-        set(BUNDLE_NAME "imhex.app")
+        set(BUNDLE_NAME "ImHex.app")
 
-        if (IMHEX_GENERATE_PACKAGE)
+        if (IMHEX_MACOS_CREATE_BUNDLE)
             set(APPLICATION_TYPE MACOSX_BUNDLE)
             set_source_files_properties(${IMHEX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
             set(MACOSX_BUNDLE_ICON_FILE "AppIcon.icns")
@@ -235,9 +235,9 @@ macro(configurePackingResources)
             string(TIMESTAMP CURR_YEAR "%Y")
             set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2020 - ${CURR_YEAR} WerWolv. All rights reserved." )
             if ("${CMAKE_GENERATOR}" STREQUAL "Xcode")
-                set (IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${BUNDLE_NAME}")
+                set(IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${BUNDLE_NAME}")
             else ()
-                set (IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}")
+                set(IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}")
             endif()
 
             set(PLUGINS_INSTALL_LOCATION "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
@@ -255,7 +255,7 @@ macro(addPluginDirectories)
             set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${IMHEX_MAIN_OUTPUT_DIRECTORY}/plugins")
 
             if (APPLE)
-                if (IMHEX_GENERATE_PACKAGE)
+                if (IMHEX_MACOS_CREATE_BUNDLE)
                     set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PLUGINS_INSTALL_LOCATION})
                 endif ()
             else ()
@@ -347,24 +347,21 @@ macro(createPackage)
     endif()
 
     if (APPLE)
-        if (IMHEX_GENERATE_PACKAGE)
+        if (IMHEX_MACOS_CREATE_BUNDLE)
             set(EXTRA_BUNDLE_LIBRARY_PATHS ${EXTRA_BUNDLE_LIBRARY_PATHS} "${IMHEX_SYSTEM_LIBRARY_PATH}")
             include(PostprocessBundle)
 
             set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
 
             set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
+            set_property(TARGET main PROPERTY MACOSX_BUNDLE_BUNDLE_NAME "${MACOSX_BUNDLE_BUNDLE_NAME}")
 
             # Fix rpath
             install(CODE "execute_process(COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath \"@executable_path/../Frameworks/\" $<TARGET_FILE:main>)")
             install(CODE "execute_process(COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath \"@executable_path/../Frameworks/\" $<TARGET_FILE:updater>)")
 
-            add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
-            add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/Resources")
-
             downloadImHexPatternsFiles("${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/MacOS")
 
-            install(FILES ${IMHEX_ICON} DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/Resources")
             install(TARGETS main BUNDLE DESTINATION ".")
             install(TARGETS updater DESTINATION "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}/Contents/MacOS")
             install(
@@ -430,7 +427,7 @@ macro(createPackage)
         endif()
     endif()
 
-    if (IMHEX_GENERATE_PACKAGE)
+    if (IMHEX_MACOS_CREATE_BUNDLE)
         set(CPACK_BUNDLE_NAME "ImHex")
 
         include(CPack)

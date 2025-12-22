@@ -503,7 +503,6 @@ jobs:
       run: |
         set -x
         cd build/install
-        mv imhex.app ImHex.app
         codesign --remove-signature ImHex.app
         codesign --force --deep --sign - ImHex.app
 
@@ -624,7 +623,6 @@ jobs:
         run: |
           set -x
           cd out
-          mv imhex.app ImHex.app
           codesign --remove-signature ImHex.app
           codesign --force --deep --entitlements Entitlements.plist --sign - ImHex.app
 

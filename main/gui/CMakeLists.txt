@@ -70,7 +70,22 @@ if (WIN32)
 else ()
     target_link_libraries(main PRIVATE pthread)
 
-    if (NOT APPLE)
+    if (APPLE)
+        set_target_properties(main PROPERTIES
+                OUTPUT_NAME "${MACOSX_BUNDLE_BUNDLE_NAME}"
+        )
+        if (IMHEX_MACOS_CREATE_BUNDLE)
+            add_custom_command(TARGET main PRE_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins"
+            )
+            add_custom_command(TARGET main PRE_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/Resources"
+            )
+            add_custom_command(TARGET main POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy ${IMHEX_ICON} $<TARGET_FILE_DIR:main>/../Resources/${MACOSX_BUNDLE_ICON_FILE}
+            )
+        endif()
+    else()
         find_package(Fontconfig)
         if (TARGET Fontconfig::Fontconfig)
             message(STATUS "Using Fontconfig version: ${Fontconfig_VERSION}")
