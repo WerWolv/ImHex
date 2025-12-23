@@ -699,7 +699,7 @@ namespace hex::ui {
         }
 
         int id = 1;
-        pattern.forEachEntry(0, pattern.getEntryCount(), [&] (u64, const auto &field) {
+        pattern.forEachEntrySorted(0, pattern.getEntryCount(), [&] (u64, const auto &field) {
             ImGui::PushID(id);
             this->draw(*field);
             ImGui::PopID();
@@ -895,7 +895,7 @@ namespace hex::ui {
         }
 
         int id = 1;
-        pattern.forEachEntry(0, pattern.getEntryCount(), [&](u64, const auto &member){
+        pattern.forEachEntrySorted(0, pattern.getEntryCount(), [&](u64, const auto &member){
             ImGui::PushID(id);
             this->draw(*member);
             ImGui::PopID();
@@ -940,7 +940,7 @@ namespace hex::ui {
         }
 
         int id = 1;
-        pattern.forEachEntry(0, pattern.getEntryCount(), [&](u64, const auto &member) {
+        pattern.forEachEntrySorted(0, pattern.getEntryCount(), [&](u64, const auto &member) {
             ImGui::PushID(id);
             this->draw(*member);
             ImGui::PopID();
@@ -1142,7 +1142,7 @@ namespace hex::ui {
             }
 
             int id = 1;
-            iterable.forEachEntry(i, endIndex, [&](u64, const auto &entry){
+            iterable.forEachEntrySorted(i, endIndex, [&](u64, const auto &entry){
                 ImGui::PushID(id);
                 this->draw(*entry);
                 ImGui::PopID();
@@ -1201,7 +1201,7 @@ namespace hex::ui {
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.var_name"_lang,  ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.color"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.start"_lang,     ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("start"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.end"_lang,       ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("end"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.end"_lang,       ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("end"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.size"_lang,      ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.type"_lang,      ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("type"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.value"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("value"));
@@ -1247,7 +1247,7 @@ namespace hex::ui {
             if (dynamic_cast<pl::ptrn::PatternString*>(pattern.get()) || dynamic_cast<pl::ptrn::PatternWideString*>(pattern.get()))
                 return;
 
-            iterable->forEachEntry(0, iterable->getEntryCount(), [&](u64, const auto &entry) {
+            iterable->forEachEntrySorted(0, iterable->getEntryCount(), [&](u64, const auto &entry) {
                 traversePatternTree(entry, patternPath, callback);
             });
         }
