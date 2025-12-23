@@ -2263,9 +2263,14 @@ namespace hex::plugin::builtin {
 
             const auto hoveredRegion = Region { address, size };
             for (const auto &pattern : runtime.getPatternsAtAddress(hoveredRegion.getStartAddress())) {
+                if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden || pattern->getVisibility() == pl::ptrn::Visibility::HighlightHidden)
+                    continue;
                 const pl::ptrn::Pattern * checkPattern = pattern;
                 if (auto parent = checkPattern->getParent(); parent != nullptr)
                     checkPattern = parent;
+
+                if (checkPattern->getVisibility() == pl::ptrn::Visibility::Hidden || checkPattern->getVisibility() == pl::ptrn::Visibility::HighlightHidden)
+                    continue;
 
                 result.emplace(checkPattern->getOffset(), checkPattern->getSize());
             }
