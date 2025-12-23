@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/api/imhex_api/system.hpp>
+#include <hex/helpers/logger.hpp>
 
 namespace hex {
 
@@ -9,6 +10,9 @@ namespace hex {
         class AutoResetBase {
         public:
             virtual ~AutoResetBase() = default;
+
+        private:
+            friend void ImHexApi::System::impl::cleanup();
             virtual void reset() = 0;
         };
 
@@ -19,16 +23,20 @@ namespace hex {
     public:
         using Type = T;
 
-        AutoReset() {
-            ImHexApi::System::impl::addAutoResetObject(this);
+        AutoReset() noexcept {
+            try {
+                ImHexApi::System::impl::addAutoResetObject(this);
+            } catch (std::exception &e) {
+                log::error("Failed to register AutoReset object: {}", e.what());
+            }
         }
 
-        AutoReset(const T &value) : AutoReset() {
+        explicit(false) AutoReset(const T &value) : AutoReset() {
             m_value = value;
             m_valid = true;
         }
 
-        AutoReset(T &&value) noexcept : AutoReset() {
+        explicit(false) AutoReset(T &&value) noexcept : AutoReset() {
             m_value = std::move(value);
             m_valid = true;
         }
@@ -61,25 +69,23 @@ namespace hex {
             return m_value;
         }
 
-        T& operator=(const T &value) {
+        AutoReset& operator=(const T &value) {
             m_value = value;
             m_valid = true;
-            return m_value;
+            return *this;
         }
 
-        T& operator=(T &&value) noexcept {
+        AutoReset& operator=(T &&value) noexcept {
             m_value = std::move(value);
             m_valid = true;
-            return m_value;
+            return *this;
         }
 
-        bool isValid() const {
+        [[nodiscard]] bool isValid() const {
             return m_valid;
         }
 
     private:
-        friend void ImHexApi::System::impl::cleanup();
-
         void reset() override {
             if constexpr (requires { m_value.reset(); }) {
                 m_value.reset();
