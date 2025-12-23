@@ -235,6 +235,9 @@ namespace hex::plugin::builtin {
         m_readable = true;
         m_writable = true;
 
+        if (wolv::io::fs::isDirectory(m_path))
+            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.is_directory"_lang, m_path.string()));
+
         wolv::io::File file(m_path, wolv::io::File::Mode::Write);
         if (!file.isValid()) {
             m_writable = false;
