@@ -431,6 +431,7 @@
     "hex.builtin.provider.file": "Regular File",
     "hex.builtin.provider.file.error.open": "Failed to open file {}: {}",
     "hex.builtin.provider.file.error.already_open": "Same file is already open",
+    "hex.builtin.provider.file.error.is_directory": "Selected entry '{}' is a directory",
     "hex.builtin.provider.file.access": "Last access time",
     "hex.builtin.provider.file.creation": "Creation time",
     "hex.builtin.provider.file.menu.direct_access": "Direct access file",
