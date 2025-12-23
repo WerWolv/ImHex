@@ -44,7 +44,7 @@ namespace hex {
     }
 
     std::fs::path ProjectFile::getPath() {
-        return { s_currProjectPath };
+        return *s_currProjectPath;
     }
 
     void ProjectFile::setPath(const std::fs::path &path) {
