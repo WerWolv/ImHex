@@ -52,7 +52,7 @@ EXPORT_MODULE namespace hex {
                         return *this;
                     }
 
-                    Interface& setTooltip(const std::string &tooltip) {
+                    Interface& setTooltip(const UnlocalizedString &tooltip) {
                         m_tooltip = tooltip;
 
                         return *this;
