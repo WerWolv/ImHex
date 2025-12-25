@@ -310,7 +310,10 @@ namespace hex::plugin::builtin {
         this->registerHandlers();
 
         // Initialize the text editor with some basic help text
-        m_textEditor.setOnCreateCallback([](auto, ui::TextEditor &editor) {
+        m_textEditor.setOnCreateCallback([this](prv::Provider *provider, ui::TextEditor &editor) {
+            if (m_sourceCode.isSynced() && !m_sourceCode.get(provider).empty())
+                return;
+
             std::string text = "hex.builtin.view.pattern_editor.default_help_text"_lang;
             text = "// " + wolv::util::replaceStrings(text, "\n", "\n// ");
 
