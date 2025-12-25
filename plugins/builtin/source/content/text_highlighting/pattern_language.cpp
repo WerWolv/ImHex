@@ -1718,7 +1718,7 @@ namespace hex::plugin::builtin {
             std::string nameSpace;
             while (peek(tkn::Operator::ScopeResolution)) {
                 next(-1);
-                nameSpace.insert(0, "::" + typeStr);
+                nameSpace.insert(0, "::");
                 nameSpace.insert(0, getValue<Token::Identifier>(0)->get());
                 next(-1);
             }
