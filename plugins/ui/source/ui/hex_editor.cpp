@@ -1190,10 +1190,10 @@ namespace hex::ui {
 
                         drawMinimapPopup();
 
-                        ImGui::SameLine(0, 1_scaled);
+                        ImGui::SameLine();
 
                         // Data Cell configuration
-                        if (ImGuiExt::DimmedIconButton(ICON_VS_TABLE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        if (ImGuiExt::DimmedIconButton(ICON_VS_SETTINGS_GEAR, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                             ImGui::OpenPopup("DataCellOptions");
                         }
                         ImGuiExt::InfoTooltip("hex.ui.hex_editor.data_cell_options"_lang);
