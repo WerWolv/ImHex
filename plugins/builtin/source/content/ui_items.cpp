@@ -482,6 +482,17 @@ namespace hex::plugin::builtin {
         ContentRegistry::UserInterface::addToolbarItem([] {
 
             for (const auto &menuItem : ContentRegistry::UserInterface::impl::getToolbarMenuItems()) {
+                // Remove invalid toolbar items from the toolbar
+                if (menuItem == nullptr)
+                    continue;
+                if (menuItem->unlocalizedNames.empty() || menuItem->icon.glyph.empty()) {
+                    menuItem->toolbarIndex = -1;
+                    continue;
+                }
+
+                ImGui::PushID(menuItem);
+                ON_SCOPE_EXIT { ImGui::PopID(); };
+
                 const auto &unlocalizedItemName = menuItem->unlocalizedNames.back();
                 if (unlocalizedItemName.get() == ContentRegistry::UserInterface::impl::SeparatorValue) {
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
