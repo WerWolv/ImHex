@@ -380,6 +380,7 @@ namespace hex {
         s_deferredCalls.clear();
         s_onceDeferredCalls.clear();
         s_tasksFinishedCallbacks.clear();
+        s_taskCompletionCallbacks.clear();
     }
 
     TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task&)> function) {
