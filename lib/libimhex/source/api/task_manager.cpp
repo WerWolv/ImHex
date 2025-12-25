@@ -55,6 +55,7 @@ namespace hex {
         std::list<std::function<void()>> s_deferredCalls;
         std::unordered_map<SourceLocationWrapper, std::function<void()>> s_onceDeferredCalls;
         std::list<std::function<void()>> s_tasksFinishedCallbacks;
+        std::list<std::function<void(Task&)>> s_taskCompletionCallbacks;
 
         std::mutex s_queueMutex;
         std::condition_variable s_jobCondVar;
@@ -322,6 +323,13 @@ namespace hex {
                         task->m_function(*task);
 
                         log::debug("Task '{}' finished", task->m_unlocalizedName.get());
+
+                        {
+                            std::scoped_lock lock(s_tasksFinishedMutex);
+
+                            for (const auto &callback : s_taskCompletionCallbacks)
+                                callback(*task);
+                        }
                     } catch (const Task::TaskInterruptor &) {
                         // Handle the task being interrupted by user request
                         task->interruption();
@@ -580,5 +588,13 @@ namespace hex {
         return s_mainThreadId == std::this_thread::get_id();
     }
 
+    void TaskManager::addTaskCompletionCallback(const std::function<void(Task &)> &function) {
+        std::scoped_lock lock(s_tasksFinishedMutex);
 
+        for (const auto &task : s_tasks) {
+            task->interrupt();
+        }
+
+        s_taskCompletionCallbacks.push_back(function);
+    }
 }

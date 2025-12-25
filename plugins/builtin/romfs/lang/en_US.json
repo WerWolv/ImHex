@@ -75,6 +75,7 @@
     "hex.builtin.command.web.desc": "Website lookup",
     "hex.builtin.command.web.result": "Navigate to '{0}'",
     "hex.builtin.drag_drop.text": "Drop files here to open them...",
+    "hex.builtin.os_toast_message.task_finished": "Task '{0}' finished",
     "hex.builtin.inspector.ascii": "char",
     "hex.builtin.inspector.binary": "Binary",
     "hex.builtin.inspector.bfloat16": "bfloat16",

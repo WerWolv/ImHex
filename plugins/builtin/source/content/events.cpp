@@ -206,6 +206,13 @@ namespace hex::plugin::builtin {
                             ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                         }
                     });
+            } else if (name == "Open Folder") {
+                fs::openFileBrowser(fs::DialogMode::Folder, {  },
+                    [](const auto &path) {
+                        if (!ProjectFile::load(path)) {
+                            ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                        }
+                    });
             }
         });
 
@@ -418,6 +425,11 @@ namespace hex::plugin::builtin {
             #else
                 ui::PopupError::open(fmt::format("hex.builtin.popup.error.file_dialog.common"_lang, errMsg));
             #endif
+        });
+
+        TaskManager::addTaskCompletionCallback([](Task &task) {
+            if (!glfwGetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FOCUSED) && !task.isBackgroundTask())
+                hex::showToastMessage("ImHex", fmt::format("hex.builtin.os_toast_message.task_finished"_lang, Lang(task.getUnlocalizedName())));
         });
 
     }

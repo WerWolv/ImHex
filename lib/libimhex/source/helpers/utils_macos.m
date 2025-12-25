@@ -416,6 +416,21 @@
         return [bundlePath.pathExtension.lowercaseString isEqualToString:@"app"];
     }
 
+    @interface NotificationDelegate : NSObject <UNUserNotificationCenterDelegate>
+    @end
+
+    @implementation NotificationDelegate
+
+    - (void)userNotificationCenter:(UNUserNotificationCenter *)center
+           willPresentNotification:(UNNotification *)notification
+             withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
+        completionHandler(UNNotificationPresentationOptionBanner |
+                          UNNotificationPresentationOptionSound |
+                          UNNotificationPresentationOptionList);
+    }
+
+    @end
+
     void toastMessageMacos(const char *title, const char *message) {
         @autoreleasepool {
             // Only show notification if we're inside a bundle

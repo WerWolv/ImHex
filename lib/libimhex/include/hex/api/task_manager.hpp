@@ -252,6 +252,8 @@ EXPORT_MODULE namespace hex {
         static const std::list<std::shared_ptr<Task>>& getRunningTasks();
         static void runDeferredCalls();
 
+        static void addTaskCompletionCallback(const std::function<void(Task&)>& function);
+
     private:
         static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function);
     };
