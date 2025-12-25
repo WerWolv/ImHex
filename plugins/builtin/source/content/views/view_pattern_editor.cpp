@@ -1466,7 +1466,9 @@ namespace hex::plugin::builtin {
                 if (m_textHighlighter.getRunningColorizers() == 0) {
                     m_textHighlighter.m_needsToUpdateColors = false;
                     m_changesWereParsed = false;
-                    TaskManager::createBackgroundTask("HighlightSourceCode", [this](auto &) { m_textHighlighter.highlightSourceCode(); });
+                      
+                    auto text = m_textEditor.get(provider).getText();
+                    TaskManager::createBackgroundTask("HighlightSourceCode", [this, text](auto &) { m_textHighlighter.highlightSourceCode(text); });
                 } else {
                     m_textHighlighter.interrupt();
                 }
