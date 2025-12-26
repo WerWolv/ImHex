@@ -12,44 +12,40 @@
 
 namespace hex::mcp {
 
-    class JsonRpc {
-    public:
-        explicit JsonRpc(std::string request) : m_request(std::move(request)) { }
+    std::optional<std::string> JsonRpc::execute(const Callback &callback) {
+        try {
+            auto requestJson = nlohmann::json::parse(m_request);
 
-        struct MethodNotFoundException : std::exception {};
-        struct InvalidParametersException : std::exception {};
-
-        std::optional<std::string> execute(auto callback) {
-            try {
-                auto requestJson = nlohmann::json::parse(m_request);
-
-                if (requestJson.is_array()) {
-                    return handleBatchedMessages(requestJson, callback).transform([](const auto &response) { return response.dump(); });
-                } else {
-                    return handleMessage(requestJson, callback).transform([](const auto &response) { return response.dump(); });
-                }
-            } catch (const MethodNotFoundException &) {
-                return createErrorMessage(ErrorCode::MethodNotFound, "Method not found").dump();
-            } catch (const InvalidParametersException &) {
-                return createErrorMessage(ErrorCode::InvalidParams, "Invalid params").dump();
-            } catch (const nlohmann::json::parse_error &) {
-                return createErrorMessage(ErrorCode::ParseError, "Parse error").dump();
-            } catch (const std::exception &e) {
-                return createErrorMessage(ErrorCode::InternalError, e.what()).dump();
+            if (requestJson.is_array()) {
+                return handleBatchedMessages(requestJson, callback).transform([](const auto &response) { return response.dump(); });
+            } else {
+                return handleMessage(requestJson, callback).transform([](const auto &response) { return response.dump(); });
             }
+        } catch (const nlohmann::json::exception &) {
+            return createErrorMessage(ErrorCode::ParseError, "Parse error").dump();
         }
+    }
 
-    private:
-        std::optional<nlohmann::json> handleMessage(const nlohmann::json &request, auto callback) {
+    void JsonRpc::setError(ErrorCode code, std::string message) {
+        m_error = Error{ code, std::move(message) };
+    }
+
+    std::optional<nlohmann::json> JsonRpc::handleMessage(const nlohmann::json &request, const Callback &callback) {
+        try {
             // Validate JSON-RPC request
             if (!request.contains("jsonrpc") || request["jsonrpc"] != "2.0" ||
                 !request.contains("method") || !request["method"].is_string()) {
                 m_id = request.contains("id") ? std::optional(request["id"].get<int>()) : std::nullopt;
 
-                return createErrorMessage(ErrorCode::InvalidRequest, "Invalid Request").dump();
+                return createErrorMessage(ErrorCode::InvalidRequest, "Invalid Request");
             }
 
             m_id = request.contains("id") ? std::optional(request["id"].get<int>()) : std::nullopt;
+
+            // Return a user-specified error if set
+            if (m_error.has_value()) {
+                return createErrorMessage(m_error->code, m_error->message);
+            }
 
             // Execute the method
             auto result = callback(request["method"].get<std::string>(), request.value("params", nlohmann::json::object()));
@@ -58,64 +54,58 @@ namespace hex::mcp {
                 return std::nullopt;
 
             return createResponseMessage(result.is_null() ? nlohmann::json::object() : result);
+        } catch (const MethodNotFoundException &) {
+            return createErrorMessage(ErrorCode::MethodNotFound, "Method not found");
+        } catch (const InvalidParametersException &) {
+            return createErrorMessage(ErrorCode::InvalidParams, "Invalid params");
+        } catch (const std::exception &e) {
+            return createErrorMessage(ErrorCode::InternalError, e.what());
+        }
+    }
+
+    std::optional<nlohmann::json> JsonRpc::handleBatchedMessages(const nlohmann::json &request, const Callback &callback) {
+        if (!request.is_array()) {
+            return createErrorMessage(ErrorCode::InvalidRequest, "Invalid Request");
         }
 
-        std::optional<nlohmann::json> handleBatchedMessages(const nlohmann::json &request, auto callback) {
-            if (!request.is_array()) {
-                return createErrorMessage(ErrorCode::InvalidRequest, "Invalid Request").dump();
-            }
-
-            nlohmann::json responses = nlohmann::json::array();
-            for (const auto &message : request) {
-                auto response = handleMessage(message, callback);
-                if (response.has_value())
-                    responses.push_back(*response);
-            }
-
-            if (responses.empty())
-                return std::nullopt;
-
-            return responses.dump();
+        nlohmann::json responses = nlohmann::json::array();
+        for (const auto &message : request) {
+            auto response = handleMessage(message, callback);
+            if (response.has_value())
+                responses.push_back(*response);
         }
 
-        enum class ErrorCode: i16 {
-            ParseError     = -32700,
-            InvalidRequest = -32600,
-            MethodNotFound = -32601,
-            InvalidParams  = -32602,
-            InternalError  = -32603,
+        if (responses.empty())
+            return std::nullopt;
+
+        return responses;
+    }
+
+    nlohmann::json JsonRpc::createDefaultMessage() {
+        nlohmann::json message;
+        message["jsonrpc"] = "2.0";
+        if (m_id.has_value())
+            message["id"] = m_id.value();
+        else
+            message["id"] = nullptr;
+
+        return message;
+    }
+
+    nlohmann::json JsonRpc::createErrorMessage(ErrorCode code, const std::string &message) {
+        auto json = createDefaultMessage();
+        json["error"] = {
+            { "code",    int(code) },
+            { "message", message   }
         };
+        return json;
+    }
 
-        nlohmann::json createDefaultMessage() {
-            nlohmann::json message;
-            message["jsonrpc"] = "2.0";
-            if (m_id.has_value())
-                message["id"] = m_id.value();
-            else
-                message["id"] = nullptr;
-
-            return message;
-        }
-
-        nlohmann::json createErrorMessage(ErrorCode code, const std::string &message) {
-            auto json = createDefaultMessage();
-            json["error"] = {
-                { "code",    int(code) },
-                { "message", message   }
-            };
-            return json;
-        }
-
-        nlohmann::json createResponseMessage(const nlohmann::json &result) {
-            auto json = createDefaultMessage();
-            json["result"] = result;
-            return json;
-        }
-
-    private:
-        std::string m_request;
-        std::optional<int> m_id;
-    };
+    nlohmann::json JsonRpc::createResponseMessage(const nlohmann::json &result) {
+        auto json = createDefaultMessage();
+        json["result"] = result;
+        return json;
+    }
 
     Server::Server() : m_server(McpInternalPort, 1024, 1, true) {
 

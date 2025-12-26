@@ -1,10 +1,50 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include <functional>
 #include <nlohmann/json.hpp>
 #include <wolv/net/socket_server.hpp>
 
 namespace hex::mcp {
+
+    class JsonRpc {
+    public:
+        explicit JsonRpc(std::string request) : m_request(std::move(request)){ }
+
+        struct MethodNotFoundException : std::exception {};
+        struct InvalidParametersException : std::exception {};
+
+        enum class ErrorCode: i16 {
+            ParseError     = -32700,
+            InvalidRequest = -32600,
+            MethodNotFound = -32601,
+            InvalidParams  = -32602,
+            InternalError  = -32603,
+        };
+
+        using Callback = std::function<nlohmann::json(const std::string &method, const nlohmann::json &params)>;
+        std::optional<std::string> execute(const Callback &callback);
+        void setError(ErrorCode code, std::string message);
+
+    private:
+        std::optional<nlohmann::json> handleMessage(const nlohmann::json &request, const Callback &callback);
+        std::optional<nlohmann::json> handleBatchedMessages(const nlohmann::json &request, const Callback &callback);
+
+        nlohmann::json createDefaultMessage();
+        nlohmann::json createErrorMessage(ErrorCode code, const std::string &message);
+        nlohmann::json createResponseMessage(const nlohmann::json &result);
+
+    private:
+        std::string m_request;
+        std::optional<int> m_id;
+
+        struct Error {
+            ErrorCode code;
+            std::string message;
+        };
+        std::optional<Error> m_error;
+    };
 
     struct TextContent {
         std::string text;
