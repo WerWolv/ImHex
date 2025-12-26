@@ -1,3 +1,5 @@
+#include <crash_handlers.hpp>
+
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
@@ -46,8 +48,11 @@ namespace hex::crash {
 
     // Function that decides what should happen on a crash
     // (either sending a message or saving a crash file, depending on when the crash occurred)
-    using CrashCallback = void (*) (const std::string&);
-    static CrashCallback crashCallback = sendNativeMessage;
+    static CrashCallback s_crashCallback = sendNativeMessage;
+
+    void setCrashCallback(CrashCallback callback) {
+        s_crashCallback = std::move(callback);
+    }
 
     static std::fs::path s_crashBackupPath;
     static void saveCrashFile(const std::string& message) {
@@ -74,7 +79,7 @@ namespace hex::crash {
 
     static void callCrashHandlers(const std::string &msg) {
         // Call the crash callback
-        crashCallback(msg);
+        s_crashCallback(msg);
 
         // Print the stacktrace to the console or log file
         dbg::printStackTrace(trace::getStackTrace());
@@ -213,7 +218,6 @@ namespace hex::crash {
                 HANDLE_SIGNAL(SIGILL);
                 HANDLE_SIGNAL(SIGABRT);
                 HANDLE_SIGNAL(SIGFPE);
-                HANDLE_SIGNAL(SIGINT);
 
                 #if defined (SIGBUS)
                     HANDLE_SIGNAL(SIGBUS);
@@ -250,7 +254,7 @@ namespace hex::crash {
 
         // Change the crash callback when ImHex has finished startup
         EventImHexStartupFinished::subscribe([]{
-            crashCallback = saveCrashFile;
+            setCrashCallback(saveCrashFile);
         });
     }
 

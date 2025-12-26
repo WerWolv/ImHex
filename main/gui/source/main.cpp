@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
 
     // Handle command line arguments if any have been passed
     if (argc > 1) {
+        crash::setCrashCallback([](auto){});
         init::runCommandLine(argc, argv);
     }
 
