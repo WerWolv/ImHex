@@ -78,10 +78,7 @@ namespace hex::plugin::builtin {
             return result;
         });
 
-        static bool showHighlights = true;
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_highlights", [](const ContentRegistry::Settings::SettingsValue &value) {
-            showHighlights = value.get<bool>(true);
-        });
+        static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_highlights"> showHighlights = true;
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.gray_out_zeros", [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.enableGrayOutZeros(value.get<bool>(true));

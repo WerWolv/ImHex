@@ -1840,14 +1840,6 @@ namespace hex::plugin::builtin {
             m_sourceCode.enableSync(value.get<bool>(false));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.suggest_patterns", [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_suggestSupportedPatterns = value.get<bool>(true);
-        });
-
-        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.auto_apply_patterns", [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_autoApplyPatterns = value.get<bool>(true);
-        });
-
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
             m_textEditor.get(provider).setLanguageDefinition(PatternLanguage());
             m_textEditor.get(provider).setShowWhitespaces(false);
@@ -2242,10 +2234,6 @@ namespace hex::plugin::builtin {
             } else {
                 return false;
             }
-        });
-
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.pattern_parent_highlighting", [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_parentHighlightingEnabled = bool(value.get<int>(false));
         });
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {

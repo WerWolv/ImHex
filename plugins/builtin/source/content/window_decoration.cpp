@@ -39,10 +39,11 @@ namespace hex::plugin::builtin {
         std::string s_windowTitle, s_windowTitleFull;
         u32 s_searchBarPosition = 0;
         AutoReset<ImGuiExt::Texture> s_logoTexture;
-        bool s_showSearchBar = true;
-        bool s_displayShortcutHighlights = true;
-        bool s_useNativeMenuBar = false;
-        bool s_showTitlebarBackDrop = true;
+
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.show_header_command_palette"> s_showSearchBar = true;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.display_shortcut_highlights"> s_displayShortcutHighlights = true;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.use_native_menu_bar"> s_useNativeMenuBar = true;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.show_titlebar_backdrop"> s_showTitlebarBackDrop = true;
 
         void drawTitleBarBackDrop() {
             if (!s_showTitlebarBackDrop)
@@ -751,23 +752,6 @@ namespace hex::plugin::builtin {
 
         EventProviderDirtied::subscribe([] {
             RequestUpdateWindowTitle::post();
-        });
-
-
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_header_command_palette", [](const ContentRegistry::Settings::SettingsValue &value) {
-            s_showSearchBar = value.get<bool>(true);
-        });
-
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.display_shortcut_highlights", [](const ContentRegistry::Settings::SettingsValue &value) {
-            s_displayShortcutHighlights = value.get<bool>(true);
-        });
-
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.use_native_menu_bar", [](const ContentRegistry::Settings::SettingsValue &value) {
-            s_useNativeMenuBar = value.get<bool>(true);
-        });
-
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_titlebar_backdrop", [](const ContentRegistry::Settings::SettingsValue &value) {
-            s_showTitlebarBackDrop = value.get<bool>(true);
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.randomize_window_title", [](const ContentRegistry::Settings::SettingsValue &value) {

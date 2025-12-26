@@ -2,6 +2,7 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/content_registry/settings.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -33,7 +34,8 @@ namespace hex::plugin::builtin {
         const Achievement *m_currAchievement = nullptr;
         const Achievement *m_achievementToGoto = nullptr;
         float m_achievementUnlockQueueTimer = -1;
-        bool m_showPopup = true;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup"> m_showPopup = true;
+
 
         ImVec2 m_offset;
     };

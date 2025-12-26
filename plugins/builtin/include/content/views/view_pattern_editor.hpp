@@ -9,6 +9,7 @@
 
 #include <ui/text_editor.hpp>
 #include <content/text_highlighting/pattern_language.hpp>
+#include <hex/api/content_registry/settings.hpp>
 #include <hex/helpers/magic.hpp>
 #include <ui/pattern_drawer.hpp>
 
@@ -137,8 +138,8 @@ namespace hex::plugin::builtin {
         std::atomic<bool> m_dangerousFunctionCalled = false;
         std::atomic<DangerousFunctionPerms> m_dangerousFunctionsAllowed = DangerousFunctionPerms::Ask;
 
-        bool m_suggestSupportedPatterns = true;
-        bool m_autoApplyPatterns = false;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.suggest_patterns"> m_suggestSupportedPatterns = true;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.auto_apply_patterns"> m_autoApplyPatterns = false;
 
         PerProvider<ui::VisualizerDrawer> m_visualizerDrawer;
         bool m_tooltipJustOpened = false;
@@ -177,7 +178,7 @@ namespace hex::plugin::builtin {
 
         std::array<AccessData, 512> m_accessHistory = {};
         u32 m_accessHistoryIndex = 0;
-        bool m_parentHighlightingEnabled = true;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.pattern_parent_highlighting"> m_parentHighlightingEnabled = false;
         bool m_replaceMode = false;
         bool m_openFindReplacePopUp = false;
         bool m_openGotoLinePopUp = false;

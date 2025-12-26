@@ -344,9 +344,58 @@ EXPORT_MODULE namespace hex {
 
         using OnChangeCallback = std::function<void(const SettingsValue &)>;
         u64 onChange(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const OnChangeCallback &callback);
+        void removeOnChangeHandler(u64 id);
 
         using OnSaveCallback = std::function<void()>;
         u64 onSave(const OnSaveCallback &callback);
+
+        template<typename T, wolv::type::StaticString UnlocalizedCategory, wolv::type::StaticString UnlocalizedName>
+        class SettingsVariable {
+        public:
+            explicit(false) SettingsVariable(const std::common_type_t<T> &defaultValue) : m_defaultValue(defaultValue) {
+                m_onChangeId = onChange(UnlocalizedCategory.value.data(), UnlocalizedName.value.data(), [this](const SettingsValue &value) {
+                    m_value = value.get<T>(m_defaultValue);
+                });
+            }
+
+            ~SettingsVariable() {
+                removeOnChangeHandler(m_onChangeId);
+            }
+
+            [[nodiscard]] T get() const {
+                if (!m_value.has_value()) {
+                    m_value = read<T>(
+                        UnlocalizedCategory.value.data(),
+                        UnlocalizedName.value.data(),
+                        m_defaultValue
+                    );
+                }
+
+                return m_value.value_or(m_defaultValue);
+            }
+
+            void set(const std::common_type_t<T> &value) {
+                write<T>(
+                    UnlocalizedCategory.value.data(),
+                    UnlocalizedName.value.data(),
+                    value
+                );
+            }
+
+            explicit(false) operator T() const {
+                return get();
+            }
+
+            SettingsVariable& operator=(const std::common_type_t<T> &value) {
+                set(value);
+                return *this;
+            }
+
+        private:
+            mutable std::optional<T> m_value;
+            T m_defaultValue;
+            u64 m_onChangeId;
+        };
 
     }
 

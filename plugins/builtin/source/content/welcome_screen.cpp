@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
 
         std::string s_tipOfTheDay;
 
-        bool s_simplifiedWelcomeScreen = false;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen"> s_simplifiedWelcomeScreen = false;
 
         class PopupRestoreBackup : public Popup<PopupRestoreBackup> {
         private:
@@ -651,9 +651,7 @@ namespace hex::plugin::builtin {
                 }
             }
         });
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", [](const ContentRegistry::Settings::SettingsValue &value) {
-            s_simplifiedWelcomeScreen = value.get<bool>(false);
-        });
+
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", [](const ContentRegistry::Settings::SettingsValue &value) {
             auto language = value.get<std::string>("en-US");
             if (language != LocalizationManager::getSelectedLanguageId())

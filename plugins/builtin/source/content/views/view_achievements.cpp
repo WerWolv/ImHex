@@ -42,10 +42,6 @@ namespace hex::plugin::builtin {
             #else
                 m_showPopup = true;
             #endif
-
-            ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", [this](const ContentRegistry::Settings::SettingsValue &value) {
-                m_showPopup = value.get<bool>(true);
-            });
         }
     }
 
@@ -404,8 +400,10 @@ for (const auto &[categoryName, achievements] : startNodes) {
                     ImGui::SetCursorScreenPos(innerWindowPos + ImVec2(0, innerWindowSize.y + windowPadding.y));
                     ImGui::BeginGroup();
                     {
-                        if (ImGui::Checkbox("Show popup", &m_showPopup))
-                            ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", m_showPopup);
+                        bool showPopup = m_showPopup;
+                        if (ImGui::Checkbox("Show popup", &showPopup)) {
+                            m_showPopup = showPopup;
+                        }
                     }
                     ImGui::EndGroup();
 

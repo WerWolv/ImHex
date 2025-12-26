@@ -473,10 +473,7 @@ namespace hex::plugin::builtin {
             rightClickedProvider = nullptr;
         });
 
-        static bool alwaysShowProviderTabs = false;
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.always_show_provider_tabs", [](const ContentRegistry::Settings::SettingsValue &value) {
-            alwaysShowProviderTabs = value.get<bool>(false);
-        });
+        static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.always_show_provider_tabs"> alwaysShowProviderTabs = false;
 
         // Toolbar items
         ContentRegistry::UserInterface::addToolbarItem([] {
