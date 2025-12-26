@@ -14,6 +14,34 @@
     },
     "outputSchema": {
         "type": "object",
-        "properties": {}
+        "properties": {
+            "name": {
+                "type": "string",
+                "description": "Name of the data source"
+            },
+            "type": {
+                "type": "string",
+                "description": "Internal type of the data source"
+            },
+            "size": {
+                "type": "number",
+                "description": "Size of the data source in bytes"
+            },
+            "is_writable": {
+                "type": "boolean",
+                "description": "Whether the data source is writable"
+            },
+            "handle": {
+                "type": "number",
+                "description": "Handle of the data source to reference it in other tools"
+            }
+        },
+        "required": [
+            "name",
+            "type",
+            "size",
+            "is_writable",
+            "handle"
+        ]
     }
 }

@@ -10,15 +10,16 @@
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/helpers/logger.hpp>
 #include <nlohmann/json.hpp>
+#include <wolv/literals.hpp>
 #include <wolv/net/socket_client.hpp>
 
 namespace hex::mcp {
 
+    using namespace wolv::literals;
+
     int Client::run(std::istream &input, std::ostream &output) {
         wolv::net::SocketClient client(wolv::net::SocketClient::Type::TCP, true);
         client.connect("127.0.0.1", Server::McpInternalPort);
-
-        fprintf(stderr, "Established connection to main ImHex instance!\n");
 
         while (true) {
             std::string request;
@@ -32,12 +33,14 @@ namespace hex::mcp {
             }
 
             client.writeString(request);
-            auto response = client.readString();
+            auto response = client.readString(4_MiB);
             if (!response.empty() && response.front() != 0x00)
                 output << response << '\n';
 
             if (!client.isConnected())
                 break;
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
         return EXIT_SUCCESS;

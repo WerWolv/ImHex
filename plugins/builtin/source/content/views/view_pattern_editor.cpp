@@ -43,9 +43,11 @@
 #include <wolv/utils/lock.hpp>
 
 #include <fonts/fonts.hpp>
+#include <hex/api/content_registry/communication_interface.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/menu_items.hpp>
 #include <hex/helpers/logger.hpp>
+#include <romfs/romfs.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -2550,6 +2552,81 @@ namespace hex::plugin::builtin {
             result += "\n```\n\n";
 
             return result;
+        });
+
+        ContentRegistry::MCP::registerTool(romfs::get("mcp/tools/execute_pattern_code.json").string(), [this](const nlohmann::json &data) -> nlohmann::json {
+            auto provider = ImHexApi::Provider::get();
+
+            auto sourceCode = data.at("source_code").get<std::string>();
+
+            this->evaluatePattern(sourceCode, provider);
+
+            // Wait until evaluation has finished
+            while (m_runningEvaluators > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+
+            auto evaluationResult = m_lastEvaluationResult.load();
+
+            nlohmann::json result = {
+                { "handle", provider->getID() },
+                { "result_code", evaluationResult }
+            };
+            return mcp::StructuredContent {
+                .text = result.dump(),
+                .data = result
+            };
+        });
+
+        ContentRegistry::MCP::registerTool(romfs::get("mcp/tools/get_pattern_console_content.json").string(), [this](const nlohmann::json &data) -> nlohmann::json {
+            std::ignore = data;
+
+            auto provider = ImHexApi::Provider::get();
+
+            // Wait until evaluation has finished
+            while (m_runningEvaluators > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+
+            auto consoleOutput = m_console.get(provider);
+
+            nlohmann::json result = {
+                { "handle", provider->getID() },
+                { "content", wolv::util::combineStrings(consoleOutput, "\n") }
+            };
+            return mcp::StructuredContent {
+                .text = result.dump(),
+                .data = result
+            };
+        });
+
+        ContentRegistry::MCP::registerTool(romfs::get("mcp/tools/get_patterns.json").string(), [this](const nlohmann::json &data) -> nlohmann::json {
+            std::ignore = data;
+
+            auto provider = ImHexApi::Provider::get();
+
+            // Wait until evaluation has finished
+            while (m_runningEvaluators > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+
+            pl::gen::fmt::FormatterJson formatter;
+            auto formattedPatterns = formatter.format(ContentRegistry::PatternLanguage::getRuntime());
+
+            nlohmann::json result = {
+                { "handle", provider->getID() },
+                { "patterns", nlohmann::json::parse(std::string(formattedPatterns.begin(), formattedPatterns.end())) }
+            };
+            return mcp::StructuredContent {
+                .text = result.dump(),
+                .data = result
+            };
         });
     }
 

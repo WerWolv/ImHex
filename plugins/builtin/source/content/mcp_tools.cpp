@@ -20,8 +20,17 @@ namespace hex::plugin::builtin {
                 ImHexApi::Provider::openProvider(provider);
             }
 
-            return mcp::TextContent {
-                .text = "File opened"
+            nlohmann::json result = {
+                { "handle", provider->getID() },
+                { "name", provider->getName() },
+                { "type", provider->getTypeName().get() },
+                { "size", provider->getSize() },
+                { "is_writable", provider->isWritable() }
+            };
+
+            return mcp::StructuredContent {
+                .text = result.dump(),
+                .data = result
             };
         });
 
@@ -59,7 +68,9 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            nlohmann::json result = { "selected_handle", ImHexApi::Provider::get()->getID() };
+            nlohmann::json result = {
+                { "selected_handle", ImHexApi::Provider::get()->getID() }
+            };
             return mcp::StructuredContent {
                 .text = result.dump(),
                 .data = result
@@ -79,9 +90,9 @@ namespace hex::plugin::builtin {
             auto base64 = crypt::encode64(buffer);
 
             nlohmann::json result = {
-                "handle", provider->getID(),
-                "data", std::string(base64.begin(), base64.end()),
-                "data_size", buffer.size()
+                { "handle", provider->getID() },
+                { "data", std::string(base64.begin(), base64.end()) },
+                { "data_size", buffer.size() }
             };
             return mcp::StructuredContent {
                 .text = result.dump(),

@@ -1,0 +1,29 @@
+{
+    "name": "execute_pattern_code",
+    "title": "Execute Pattern Code",
+    "description": "Executes code written in the Pattern Language on the currently opened data source. This will parse the binary data using the defined patterns and you can then get the console output using the get_pattern_console_content tool and the content of the generated patterns using the get_patterns tool. The runtime returns a result_code in form of an integer. If that value is 0, then patterns should have been generated. If it's non-zero, an error occurred during execution and you can check the console output for more details. This command may take some time to execute depending on the complexity of the code and the size of the data source.",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "source_code": {
+                "type": "string",
+                "description": "Code written in the Pattern Language to be executed on the currently opened data source."
+            }
+        },
+        "required": ["source_code"]
+    },
+    "outputSchema": {
+        "type": "object",
+        "properties": {
+            "handle": {
+                "type": "number",
+                "description": "Handle of the data source the data was read from"
+            },
+            "result_code": {
+                "type": "number",
+                "description": "Return code of the Pattern Language runtime after executing the provided source code. A value of 0 indicates successful execution, while a non-zero value indicates an error occurred."
+            }
+        },
+        "required": ["handle", "result_code"]
+    }
+}
