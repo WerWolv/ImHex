@@ -298,8 +298,8 @@ EXPORT_MODULE namespace hex {
         public:
             SettingsValue(nlohmann::json value) : m_value(std::move(value)) {}
 
-            template<typename T>
-            T get(std::common_type_t<T> defaultValue) const {
+            template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
+            [[nodiscard]] T get(T defaultValue) const {
                 try {
                     auto result = m_value;
                     if (result.is_number() && std::same_as<T, bool>)
@@ -316,8 +316,8 @@ EXPORT_MODULE namespace hex {
             nlohmann::json m_value;
         };
 
-        template<typename T>
-        [[nodiscard]] T read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const std::common_type_t<T> &defaultValue) {
+        template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
+        [[nodiscard]] T read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, T defaultValue) {
             auto setting = impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue);
 
             try {
@@ -334,9 +334,9 @@ EXPORT_MODULE namespace hex {
             }
         }
 
-        template<typename T>
-        void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const std::common_type_t<T> &value) {
-            impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
+        template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
+        void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, T value) {
+            impl::getSetting(unlocalizedCategory, unlocalizedName, value) = std::move(value);
             impl::runOnChangeHandlers(unlocalizedCategory, unlocalizedName, value);
 
             impl::store();
@@ -350,9 +350,10 @@ EXPORT_MODULE namespace hex {
         u64 onSave(const OnSaveCallback &callback);
 
         template<typename T, wolv::type::StaticString UnlocalizedCategory, wolv::type::StaticString UnlocalizedName>
+        requires (!(std::is_reference_v<T> || std::is_const_v<T>))
         class SettingsVariable {
         public:
-            explicit(false) SettingsVariable(const std::common_type_t<T> &defaultValue) : m_defaultValue(defaultValue) {
+            explicit(false) SettingsVariable(T defaultValue) : m_defaultValue(std::move(defaultValue)) {
                 m_onChangeId = onChange(UnlocalizedCategory.value.data(), UnlocalizedName.value.data(), [this](const SettingsValue &value) {
                     m_value = value.get<T>(m_defaultValue);
                 });
@@ -374,11 +375,11 @@ EXPORT_MODULE namespace hex {
                 return m_value.value_or(m_defaultValue);
             }
 
-            void set(const std::common_type_t<T> &value) {
+            void set(T value) {
                 write<T>(
                     UnlocalizedCategory.value.data(),
                     UnlocalizedName.value.data(),
-                    value
+                    std::move(value)
                 );
             }
 
@@ -386,8 +387,8 @@ EXPORT_MODULE namespace hex {
                 return get();
             }
 
-            SettingsVariable& operator=(const std::common_type_t<T> &value) {
-                set(value);
+            SettingsVariable& operator=(T value) {
+                set(std::move(value));
                 return *this;
             }
 
