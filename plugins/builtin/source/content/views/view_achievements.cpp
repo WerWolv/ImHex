@@ -2,6 +2,7 @@
 
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/settings.hpp>
+#include <hex/api/imhex_api/fonts.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/events/events_interaction.hpp>
@@ -81,28 +82,21 @@ namespace hex::plugin::builtin {
 
         // Draw achievement background
         if (achievement.isUnlocked()) {
-            drawList->AddRectFilled(position, position + achievementSize, fillColor, 5_scaled, 0);
-            drawList->AddRect(position, position + achievementSize, borderColor, 5_scaled, 0, 2_scaled);
+            drawList->AddRectFilled(position, position + achievementSize, fillColor, 2_scaled, 0);
+            drawList->AddRect(position, position + achievementSize, borderColor, 2_scaled, 0, 1_scaled);
         } else {
-            drawList->AddRectFilled(position, position + achievementSize, ImGui::GetColorU32(ImGuiCol_WindowBg) | 0xFF000000, 5_scaled, 0);
+            drawList->AddRectFilled(position, position + achievementSize, ImGui::GetColorU32(ImGuiCol_WindowBg) | 0xFF000000, 2_scaled, 0);
         }
 
         // Draw achievement icon if available
-        if (const auto &icon = achievement.getIcon(); icon.isValid()) {
-            ImVec2 iconSize;
-            if (icon.getSize().x > icon.getSize().y) {
-                iconSize.x = achievementSize.x;
-                iconSize.y = iconSize.x / icon.getSize().x * icon.getSize().y;
-            } else {
-                iconSize.y = achievementSize.y;
-                iconSize.x = iconSize.y / icon.getSize().y * icon.getSize().x;
-            }
+        ImHexApi::Fonts::getDefaultFont().push(2);
+        if (const auto &icon = achievement.getIcon(); icon != nullptr) {
+            const auto textSize = ImGui::CalcTextSize(icon);
 
-            iconSize *= 0.7F;
-
-            ImVec2 margin = (achievementSize - iconSize) / 2.0F;
-            drawList->AddImage(icon, position + margin, position + margin + iconSize);
+            const auto centeredPosition = position + (achievementSize - textSize) / 2.0F;
+            drawList->AddText(centeredPosition, ImGui::GetColorU32(ImGuiCol_Text), icon);
         }
+        ImHexApi::Fonts::getDefaultFont().pop();
 
         // Dim achievement if it is not unlocked
         if (!achievement.isUnlocked()) {
@@ -217,31 +211,26 @@ namespace hex::plugin::builtin {
     }
 
     void drawBackground(ImDrawList *drawList, ImVec2 min, ImVec2 max, ImVec2 offset) {
-        const auto patternSize = scaled({ 10, 10 });
+        const auto patternSize = scaled({ 20, 20 });
 
-        const auto darkColor  = ImGui::GetColorU32(ImGuiCol_TableRowBg);
-        const auto lightColor = ImGui::GetColorU32(ImGuiCol_TableRowBgAlt);
+        const auto lineColor = ImGui::GetColorU32(ImGuiCol_Text, 0.03F);
 
         // Draw a border around the entire background
+        drawList->AddRectFilled(min, max, ImGui::GetColorU32(ImGuiCol_WindowBg));
         drawList->AddRect(min, max, ImGui::GetColorU32(ImGuiCol_Border), 0.0F, 0, 1.0_scaled);
 
         // Draw a checkerboard pattern
-        bool light = false;
-        bool prevStart = false;
         for (float x = min.x + offset.x; x < max.x; x += i32(patternSize.x)) {
-            if (prevStart == light)
-                light = !light;
-            prevStart = light;
-
             for (float y = min.y + offset.y; y < max.y; y += i32(patternSize.y)) {
-                drawList->AddRectFilled({ x, y }, { x + patternSize.x, y + patternSize.y }, light ? lightColor : darkColor);
-                light = !light;
+                drawList->AddRect({ x, y }, { x + patternSize.x, y + patternSize.y }, lineColor);
             }
         }
     }
 
     ImVec2 ViewAchievements::drawAchievementTree(ImDrawList *drawList, const AchievementManager::AchievementNode * prevNode, const std::vector<AchievementManager::AchievementNode*> &nodes, ImVec2 position) {
         ImVec2 maxPos = position;
+
+        ImHexApi::System::unlockFrameRate();
 
         // Loop over all available achievement nodes
         for (auto &node : nodes) {
@@ -436,7 +425,9 @@ namespace hex::plugin::builtin {
                     ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "{}", "hex.builtin.view.achievements.unlocked"_lang);
 
                     // Draw achievement icon
-                    ImGui::Image(m_currAchievement->getIcon(), scaled({ 20, 20 }));
+                    ImHexApi::Fonts::getDefaultFont().push(1.25F);
+                    ImGui::TextUnformatted(m_currAchievement->getIcon());
+                    ImHexApi::Fonts::getDefaultFont().pop();
 
                     ImGui::SameLine();
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
