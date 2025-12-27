@@ -37,11 +37,11 @@ namespace hex::ui {
     }
 
     Coordinates Coordinates::operator+(const Coordinates &o) const {
-        return {m_line + o.m_line, m_column + o.m_column};
+        return Coordinates(m_line + o.m_line, m_column + o.m_column);
     }
 
     Coordinates Coordinates::operator-(const Coordinates &o) const {
-        return {m_line - o.m_line, m_column - o.m_column};
+        return Coordinates(m_line - o.m_line, m_column - o.m_column);
     }
 
     bool Range::operator==(const Range &o) const {
@@ -52,13 +52,13 @@ namespace hex::ui {
     }
 
     Coordinates Range::getSelectedLines() {
-        return {m_start.m_line, m_end.m_line};
+        return Coordinates(m_start.m_line, m_end.m_line);
     }
 
     Coordinates Range::getSelectedColumns() {
         if (isSingleLine())
-            return {m_start.m_column, m_end.m_column - m_start.m_column};
-        return {m_start.m_column, m_end.m_column};
+            return Coordinates(m_start.m_column, m_end.m_column - m_start.m_column);
+        return Coordinates(m_start.m_column, m_end.m_column);
     }
 
     bool Range::isSingleLine() {
@@ -148,7 +148,12 @@ namespace hex::ui {
         return iter;
     }
 
-    LineIterator& LineIterator::operator=(const LineIterator &other) = default;
+    LineIterator LineIterator::operator=(const LineIterator &other) {
+        m_charsIter = other.m_charsIter;
+        m_colorsIter = other.m_colorsIter;
+        m_flagsIter = other.m_flagsIter;
+        return *this;
+    }
 
     bool LineIterator::operator!=(const LineIterator &other) const {
         return m_charsIter != other.m_charsIter || m_colorsIter != other.m_colorsIter ||
@@ -204,7 +209,14 @@ namespace hex::ui {
         return iter;
     }
 
-    Line &Line::operator=(const Line &line) = default;
+    Line &Line::operator=(const Line &line) {
+        m_chars = line.m_chars;
+        m_colors = line.m_colors;
+        m_flags = line.m_flags;
+        m_colorized = line.m_colorized;
+        m_lineMaxColumn = line.m_lineMaxColumn;
+        return *this;
+    }
 
     Line &Line::operator=(Line &&line) noexcept {
         m_chars = std::move(line.m_chars);
@@ -310,21 +322,26 @@ namespace hex::ui {
     }
 
     char Line::operator[](u64 index) const {
-        i64 signedIndex = std::clamp((i64) index,0 - (i64) m_chars.size(), (i64) (m_chars.size() - 1));
+        auto charsSize = (i64) m_chars.size();
+        if (charsSize == 0)
+            return '\0';
+        i64 signedIndex = std::clamp((i64) index,0 - charsSize,charsSize - 1);
         if (signedIndex < 0)
-            return m_chars[m_chars.size() + signedIndex];
+            return m_chars[charsSize + signedIndex];
         return m_chars[signedIndex];
     }
 
     // C++ can't overload functions based on return type, so use any type other
     // than u64 to avoid ambiguity.
-    std::string Line::operator[](i64 column) const {
+    std::string Line::operator[](i64 index) const {
         i64 utf8Length = TextEditor::stringCharacterCount(m_chars);
-        column = std::clamp(column, (-utf8Length), utf8Length - 1);
-        if (column < 0)
-            column = utf8Length + column;
+        if (utf8Length == 0)
+            return "";
+        index = std::clamp(index, -utf8Length, utf8Length - 1);
+        if (index < 0)
+            index = utf8Length + index;
         i64 utf8Start = 0;
-        for (i64 utf8Index = 0; utf8Index < column; ++utf8Index) {
+        for (i64 utf8Index = 0; utf8Index < index; ++utf8Index) {
             utf8Start += TextEditor::utf8CharLength(m_chars[utf8Start]);
         }
         i64 utf8CharLen = TextEditor::utf8CharLength(m_chars[utf8Start]);
@@ -462,8 +479,10 @@ namespace hex::ui {
 
     bool TextEditor::ActionableBox::trigger() {
         auto mousePos = ImGui::GetMousePos();
-        return mousePos.x > m_box.Min.x && mousePos.x < m_box.Max.x &&
-            mousePos.y >= m_box.Min.y && mousePos.y <= m_box.Max.y;
+        if (mousePos.x <= m_box.Min.x || mousePos.x >= m_box.Max.x ||
+            mousePos.y < m_box.Min.y || mousePos.y > m_box.Max.y)
+            return false;
+        return true;
     }
 
     void TextEditor::ActionableBox::shiftBoxVertically(float lineCount, float lineHeight) {
@@ -527,7 +546,7 @@ namespace hex::ui {
         if (m_readOnly)
             return;
 
-        m_undoBuffer.resize(m_undoIndex + 1);
+        m_undoBuffer.resize((u64) (m_undoIndex + 1));
         m_undoBuffer.back() = UndoAction(value);
         m_undoIndex++;
     }
@@ -885,11 +904,11 @@ namespace hex::ui {
 
         std::string wordLower = m_findWord;
         if (!getMatchCase())
-            std::ranges::transform(wordLower, wordLower.begin(), ::tolower);
+            std::transform(wordLower.begin(), wordLower.end(), wordLower.begin(), ::tolower);
 
         std::string textSrc = editor->getText();
         if (!getMatchCase())
-            std::ranges::transform(textSrc, textSrc.begin(), ::tolower);
+            std::transform(textSrc.begin(), textSrc.end(), textSrc.begin(), ::tolower);
 
         u64 textLoc;
         // TODO: use regexp find iterator in all cases
@@ -928,8 +947,7 @@ namespace hex::ui {
 
                 while (iter != end) {
                     iter++;
-                    pos = iter->position();
-                    if (pos > byteIndex)
+                    if (((pos = iter->position()) > byteIndex))
                         break;
                 }
             }
@@ -997,6 +1015,7 @@ namespace hex::ui {
 
         editor->m_state = saveState;
         editor->ensureCursorVisible();
+        return;
     }
 
 

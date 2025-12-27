@@ -1,14 +1,15 @@
 #pragma once
-
+#include "imgui_internal.h"
 #include <string>
 #include <vector>
 #include <array>
+#include <memory>
+#include <functional>
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
 #include <regex>
-#include "imgui.h"
-#include "imgui_internal.h"
+#include <chrono>
 #include <hex/helpers/utils.hpp>
 #include <pl/core/location.hpp>
 
@@ -103,7 +104,7 @@ namespace hex::ui {
         public:
             friend class TextEditor;
             bool operator==(const EditorState &o) const;
-            EditorState() = default;
+            EditorState() : m_selection(), m_cursorPosition() {}
             EditorState(const Range &selection, const Coordinates &cursorPosition) : m_selection(selection), m_cursorPosition(cursorPosition) {}
         private:
             Range m_selection;
@@ -151,11 +152,11 @@ namespace hex::ui {
             bool m_matchCase;
             bool m_wholeWord;
             bool m_findRegEx;
-            bool m_optionsChanged = false;
+            bool m_optionsChanged;
             Matches m_matches;
         };
 
-        enum class PaletteIndex: u8 {
+        enum class PaletteIndex {
             Default, Identifier, Directive, Operator, Separator, BuiltInType, Keyword, NumericLiteral, StringLiteral, CharLiteral, Cursor, Background, LineNumber, Selection, Breakpoint, ErrorMarker, PreprocessorDeactivated,
             CurrentLineFill, CurrentLineFillInactive, CurrentLineEdge, ErrorText, WarningText, DebugText, DefaultText, Attribute, PatternVariable, LocalVariable, CalculatedPointer, TemplateArgument, Function, View,
             FunctionVariable, FunctionParameter, UserDefinedType, PlacedVariable, GlobalVariable, NameSpace, TypeDef, UnkIdentifier, DocComment, DocBlockComment, BlockComment, GlobalDocComment, Comment, PreprocIdentifier, Max
@@ -228,12 +229,12 @@ namespace hex::ui {
         class LineIterator {
         public:
             friend class hex::ui::TextEditor;
-            LineIterator(const LineIterator &other) = default;
+            LineIterator(const LineIterator &other) : m_charsIter(other.m_charsIter), m_colorsIter(other.m_colorsIter), m_flagsIter(other.m_flagsIter) {}
             LineIterator() = default;
 
             char operator*();
             LineIterator operator++();
-            LineIterator& operator=(const LineIterator &other);
+            LineIterator operator=(const LineIterator &other);
             bool operator!=(const LineIterator &other) const;
             bool operator==(const LineIterator &other) const;
             LineIterator operator+(i32 n);
@@ -275,10 +276,10 @@ namespace hex::ui {
 
             Line() : m_lineMaxColumn(-1) {}
             explicit Line(const char *line) : Line(std::string(line)) {}
-            explicit Line(const std::string &line) : m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_lineMaxColumn(maxColumn()) {}
+            explicit Line(const std::string &line) : m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false), m_lineMaxColumn(maxColumn()) {}
             Line(const Line &line) : m_chars(std::string(line.m_chars)), m_colors(std::string(line.m_colors)), m_flags(std::string(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
             Line(Line &&line) noexcept : m_chars(std::move(line.m_chars)), m_colors(std::move(line.m_colors)), m_flags(std::move(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
-            Line(std::string chars, std::string colors, std::string flags) : m_chars(std::move(chars)), m_colors(std::move(colors)), m_flags(std::move(flags)), m_lineMaxColumn(maxColumn()) {}
+            Line(std::string chars, std::string colors, std::string flags) : m_chars(std::move(chars)), m_colors(std::move(colors)), m_flags(std::move(flags)), m_colorized(false), m_lineMaxColumn(maxColumn()) {}
 
             bool operator==(const Line &line) const;
             bool operator!=(const Line &line) const;
@@ -311,12 +312,12 @@ namespace hex::ui {
             std::string operator[](i64 column) const;
             void setNeedsUpdate(bool needsUpdate);
             void append(const char *text);
-            void append(char text);
+            void append(const char text);
             void append(const std::string &text);
             void append(const Line &line);
             void append(LineIterator begin, LineIterator end);
             void insert(LineIterator iter, const std::string &text);
-            void insert(LineIterator iter, char text);
+            void insert(LineIterator iter, const char text);
             void insert(LineIterator iter, strConstIter beginString, strConstIter endString);
             void insert(LineIterator iter, const Line &line);
             void insert(LineIterator iter, LineIterator beginLine, LineIterator endLine);
@@ -372,7 +373,7 @@ namespace hex::ui {
         class UndoRecord {
         public:
             friend class TextEditor;
-            UndoRecord() = default;
+            UndoRecord() {}
             ~UndoRecord() {}
             UndoRecord( std::string added,
                         Range addedRange,
@@ -457,7 +458,7 @@ namespace hex::ui {
         void setLongestLineLength(u64 line) { m_longestLineLength = line; }
         u64 getLongestLineLength() const { return m_longestLineLength; }
         void setTopMarginChanged(i32 newMargin);
-        void setFocusAtCoords(const Coordinates &coords, bool scrollToCursor = false);
+        void setFocusAtCoords(const Coordinates &coords, bool ensureVisible = false);
         void clearErrorMarkers();
         void clearActionables();
     private:
