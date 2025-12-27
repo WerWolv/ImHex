@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CPackWiXPatch>
+  <CPackWiXFragment Id="NoVersionLibWinpthread">
+    <Patch>
+      <Replace>
+        <File Source="libwinpthread-1.dll" Version=""/>
+      </Replace>
+    </Patch>
+  </CPackWiXFragment>
+</CPackWiXPatch>
