@@ -218,6 +218,7 @@ namespace hex::crash {
                 HANDLE_SIGNAL(SIGILL);
                 HANDLE_SIGNAL(SIGABRT);
                 HANDLE_SIGNAL(SIGFPE);
+                HANDLE_SIGNAL(SIGINT)
 
                 #if defined (SIGBUS)
                     HANDLE_SIGNAL(SIGBUS);

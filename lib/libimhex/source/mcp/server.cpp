@@ -157,8 +157,10 @@ namespace hex::mcp {
 
             log::debug("MCP <---- {}", response.value_or("<Nothing>"));
 
-            if (response.has_value())
+            if (response.has_value()) {
+                response->push_back(0x00);
                 return { response->begin(), response->end() };
+            }
             else
                 return std::vector<u8>{ 0x00 };
         }, [this](auto) {
