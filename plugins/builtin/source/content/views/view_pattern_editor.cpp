@@ -43,6 +43,21 @@
 #include <hex/helpers/logger.hpp>
 #include <content/text_highlighting/pattern_language.hpp>
 
+#include <fmt/chrono.h>
+
+// Specialization for std::chrono::duration<double>
+template <>
+struct fmt::formatter<std::chrono::duration<double>> {
+    constexpr auto parse(fmt::format_parse_context& ctx) -> decltype(ctx.begin()) {
+        return ctx.end();
+    }
+
+    template <typename FormatContext>
+    auto format(const std::chrono::duration<double>& duration, FormatContext& ctx) const {
+        return fmt::format_to(ctx.out(), "{} seconds", duration.count());
+    }
+};
+
 namespace hex::plugin::builtin {
 
     using namespace hex::literals;
@@ -1473,7 +1488,7 @@ namespace hex::plugin::builtin {
                     m_textHighlighter.get(provider).updateRequiredInputs();
                     coloringTaskHolder = TaskManager::createBackgroundTask("HighlightSourceCode", [this,provider](auto &) { m_textHighlighter.get(provider).highlightSourceCode(); });
                     m_hasUncoloredChanges.get(provider) = false;
-                } catch (const std::out_of_range &e) {
+                } catch (const std::out_of_range&) {
                     interrupt();
                 }
             } else if (m_changesWereColored) {
