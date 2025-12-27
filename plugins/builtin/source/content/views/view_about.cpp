@@ -159,18 +159,20 @@ namespace hex::plugin::builtin {
             ImGui::EndChild();
 
             struct DonationPage {
-                DonationPage(const std::fs::path &path, std::string link) :
+                DonationPage(std::string name, const std::fs::path &path, std::string link) :
+                    name(std::move(name)),
                     texture(ImGuiExt::Texture::fromImage(romfs::get(path).span<std::byte>(), ImGuiExt::Texture::Filter::Linear)),
                     link(std::move(link)) { }
 
+                std::string name;
                 AutoReset<ImGuiExt::Texture> texture;
                 std::string link;
             };
 
             static std::array DonationPages = {
-                DonationPage("assets/common/donation/paypal.png", "https://werwolv.net/donate"),
-                DonationPage("assets/common/donation/github.png", "https://github.com/sponsors/WerWolv"),
-                DonationPage("assets/common/donation/patreon.png", "https://patreon.com/werwolv")
+                DonationPage("GitHub Sponsors", "assets/common/donation/github.png", "https://github.com/sponsors/WerWolv"),
+                DonationPage("Ko-Fi", "assets/common/donation/ko-fi.png", "https://ko-fi.com/werwolv"),
+                DonationPage("PayPal", "assets/common/donation/paypal.png", "https://werwolv.net/donate")
             };
 
             if (ImGui::BeginTable("DonationLinks", 5, ImGuiTableFlags_SizingStretchSame)) {
@@ -183,7 +185,7 @@ namespace hex::plugin::builtin {
                     const auto size = (page.texture->getSize() * 1_scaled) / 1.5F;
                     const auto startPos = ImGui::GetCursorScreenPos();
                     ImGui::Image(*page.texture, size);
-
+                    ImGui::SetItemTooltip("%s (%s)", page.name.c_str(), page.link.c_str());
                     if (ImGui::IsItemHovered()) {
                         ImGui::GetForegroundDrawList()->AddShadowCircle(startPos + size / 2, size.x / 2, ImGui::GetColorU32(ImGuiCol_Button), 100.0F, ImVec2(), ImDrawFlags_ShadowCutOutShapeBackground);
                     }
