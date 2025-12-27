@@ -346,7 +346,12 @@ namespace hex::ui {
                                     if (isGlobalDocComment || isBlockDocComment || isBlockComment) {
                                         commentStartLine = currentLine;
                                         commentStartIndex = currentIndex;
-                                        if (isGlobalDocComment) {
+                                        if (currentIndex < line.size() - 4 && isBlockComment &&
+                                            line.m_chars[currentIndex + 2] == '*' &&
+                                            line.m_chars[currentIndex + 3] == '/') {
+                                            withinBlockComment = true;
+                                            commentLength = 2;
+                                        } else if (isGlobalDocComment) {
                                             withinGlobalDocComment = true;
                                             commentLength = 3;
                                         } else if (isBlockDocComment) {

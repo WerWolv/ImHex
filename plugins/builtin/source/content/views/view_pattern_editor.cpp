@@ -22,18 +22,13 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/magic.hpp>
-#include <hex/helpers/binary_pattern.hpp>
 #include <hex/helpers/default_paths.hpp>
 #include <banners/banner_button.hpp>
 
 #include <hex/providers/memory_provider.hpp>
 
-#include <hex/helpers/fmt.hpp>
-#include <fmt/chrono.h>
-
 #include <popups/popup_question.hpp>
 #include <popups/popup_file_chooser.hpp>
-#include <toasts/toast_notification.hpp>
 
 #include <chrono>
 
@@ -43,11 +38,25 @@
 #include <wolv/utils/lock.hpp>
 
 #include <fonts/fonts.hpp>
-#include <hex/api/content_registry/communication_interface.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/menu_items.hpp>
 #include <hex/helpers/logger.hpp>
-#include <romfs/romfs.hpp>
+#include <content/text_highlighting/pattern_language.hpp>
+
+#include <fmt/chrono.h>
+
+// Specialization for std::chrono::duration<double>
+template <>
+struct fmt::formatter<std::chrono::duration<double>> {
+    constexpr auto parse(fmt::format_parse_context& ctx) -> decltype(ctx.begin()) {
+        return ctx.end();
+    }
+
+    template <typename FormatContext>
+    auto format(const std::chrono::duration<double>& duration, FormatContext& ctx) const {
+        return fmt::format_to(ctx.out(), "{} seconds", duration.count());
+    }
+};
 
 namespace hex::plugin::builtin {
 
@@ -73,7 +82,7 @@ namespace hex::plugin::builtin {
                 return;
             }
 
-            ui::TextEditor *editor = m_view->getTextEditor();
+            ui::TextEditor const *editor = m_view->getTextEditor();
             if (editor != nullptr) {
                 if (m_view->m_sourceCode.hasProviderSpecificSource(provider)) {
                     this->close();
@@ -306,16 +315,12 @@ namespace hex::plugin::builtin {
         m_editorRuntime = std::make_unique<pl::PatternLanguage>();
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
 
-
-        this->registerEvents();
-        this->registerMenuItems();
-        this->registerHandlers();
+        registerEvents();
+        registerMenuItems();
+        registerHandlers();
 
         // Initialize the text editor with some basic help text
-        m_textEditor.setOnCreateCallback([this](prv::Provider *provider, ui::TextEditor &editor) {
-            if (m_sourceCode.isSynced() && !m_sourceCode.get(provider).empty())
-                return;
-
+        m_textEditor.setOnCreateCallback([](auto, ui::TextEditor &editor) {
             std::string text = "hex.builtin.view.pattern_editor.default_help_text"_lang;
             text = "// " + wolv::util::replaceStrings(text, "\n", "\n// ");
 
@@ -999,9 +1004,9 @@ namespace hex::plugin::builtin {
                 }
             }
             ImGui::EndPopup();
-            m_frPopupIsClosed = false;
-        } else if (!m_frPopupIsClosed) {
-            m_frPopupIsClosed = true;
+            m_findReplacePopupIsClosed = false;
+        } else if (!m_findReplacePopupIsClosed) {
+            m_findReplacePopupIsClosed = true;
             m_popupWindowHeight = 0;
             m_textEditor.get(provider).setTopMarginChanged(0);
         }
@@ -1436,10 +1441,7 @@ namespace hex::plugin::builtin {
 
             if (m_textEditor.get(provider).isTextChanged()) {
                 m_textEditor.get(provider).setTextChanged(false);
-                if (!m_hasUnevaluatedChanges.get(provider) ) {
-                    m_hasUnevaluatedChanges.get(provider) = true;
-                    m_changesWereParsed = false;
-                }
+                m_hasUnevaluatedChanges.get(provider) = true;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
                 markPatternFileDirty(provider);
@@ -1450,7 +1452,6 @@ namespace hex::plugin::builtin {
 
                     auto code = m_textEditor.get(provider).getText();
                     EventPatternEditorChanged::post(code);
-
                     TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code = std::move(code), provider](auto &){
                         this->parsePattern(code, provider);
 
@@ -1464,14 +1465,35 @@ namespace hex::plugin::builtin {
                 this->evaluatePattern(m_textEditor.get(provider).getText(), provider);
             }
 
-            if (m_textHighlighter.m_needsToUpdateColors && m_changesWereParsed && (m_runningParsers + m_runningEvaluators == 0)) {
-                if (m_textHighlighter.getRunningColorizers() == 0) {
-                    m_textHighlighter.m_needsToUpdateColors = false;
-                    m_changesWereParsed = false;
-                    TaskManager::createBackgroundTask("HighlightSourceCode", [this](auto &) { m_textHighlighter.highlightSourceCode(); });
-                } else {
-                    m_textHighlighter.interrupt();
+            TaskHolder coloringTaskHolder;
+            if (m_changesWereParsed || m_wasInterrupted || m_hasUnevaluatedChanges.get(provider)) {
+                if (coloringTaskHolder.isRunning())
+                    interrupt();
+                if (m_wasInterrupted)
+                    resetInterrupt();
+
+                m_changesWereParsed = false;
+                if(!m_hasUnevaluatedChanges.get(provider)) {
+                    m_hasUncoloredChanges.get(provider) = true;
+                    m_changesWereColored = false;
+                } else
+                    m_hasUncoloredChanges.get(provider) = false;
+            }
+
+
+            if (m_hasUncoloredChanges.get(provider) && (m_runningHighlighters + m_runningEvaluators == 0)) {
+
+                try {
+                    m_textHighlighter.get(provider).setViewPatternEditor(this);
+                    m_textHighlighter.get(provider).updateRequiredInputs();
+                    coloringTaskHolder = TaskManager::createBackgroundTask("HighlightSourceCode", [this,provider](auto &) { m_textHighlighter.get(provider).highlightSourceCode(); });
+                    m_hasUncoloredChanges.get(provider) = false;
+                } catch (const std::out_of_range&) {
+                    interrupt();
                 }
+            } else if (m_changesWereColored) {
+                m_textHighlighter.get(provider).setRequestedIdentifierColors();
+                m_changesWereColored = false;
             }
 
             if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
@@ -1641,7 +1663,6 @@ namespace hex::plugin::builtin {
                 m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
                 m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
             }
-            m_textHighlighter.m_needsToUpdateColors = false;
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
@@ -1651,7 +1672,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
         const auto &ast = m_editorRuntime->parseString(code, pl::api::Source::DefaultSource);
-        m_textEditor.get(provider).setLongestLineLength(m_editorRuntime->getInternals().preprocessor->getLongestLineLength());
+        m_textEditor.get(provider).setLongestLineLength(m_editorRuntime->getInternals().preprocessor.get()->getLongestLineLength());
 
         auto &patternVariables = m_patternVariables.get(provider);
         auto oldPatternVariables = std::move(patternVariables);
@@ -1683,7 +1704,6 @@ namespace hex::plugin::builtin {
             patternVariables = std::move(oldPatternVariables);
         }
 
-        m_textHighlighter.m_needsToUpdateColors = true;
         m_changesWereParsed = true;
         m_runningParsers -= 1;
     }
@@ -1707,7 +1727,6 @@ namespace hex::plugin::builtin {
 
         m_accessHistory = {};
         m_accessHistoryIndex = 0;
-        m_patternEvaluating = true;
 
         EventHighlightingChanged::post();
 
@@ -1835,11 +1854,18 @@ namespace hex::plugin::builtin {
             m_textEditor.get(provider).setText(wolv::util::preprocessText(code));
             m_sourceCode.get(provider) = code;
             m_hasUnevaluatedChanges.get(provider) = true;
-            m_textHighlighter.m_needsToUpdateColors = false;
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_sourceCode.enableSync(value.get<bool>(false));
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.suggest_patterns", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_suggestSupportedPatterns = value.get<bool>(true);
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.auto_apply_patterns", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_autoApplyPatterns = value.get<bool>(true);
         });
 
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
@@ -1893,7 +1919,6 @@ namespace hex::plugin::builtin {
                 m_consoleEditor.get(newProvider).setScroll(m_consoleScroll.get(newProvider));
 
             }
-            m_textHighlighter.m_needsToUpdateColors = false;
 
         });
 
@@ -2238,6 +2263,10 @@ namespace hex::plugin::builtin {
             }
         });
 
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.pattern_parent_highlighting", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_parentHighlightingEnabled = bool(value.get<int>(false));
+        });
+
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {
             std::ignore = data;
             std::ignore = size;
@@ -2337,7 +2366,6 @@ namespace hex::plugin::builtin {
                     m_textEditor.get(provider).setText(sourceCode);
 
                 m_hasUnevaluatedChanges.get(provider) = true;
-                m_textHighlighter.m_needsToUpdateColors = false;
                 return true;
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
@@ -2553,81 +2581,6 @@ namespace hex::plugin::builtin {
 
             return result;
         });
-
-        ContentRegistry::MCP::registerTool(romfs::get("mcp/tools/execute_pattern_code.json").string(), [this](const nlohmann::json &data) -> nlohmann::json {
-            auto provider = ImHexApi::Provider::get();
-
-            auto sourceCode = data.at("source_code").get<std::string>();
-
-            this->evaluatePattern(sourceCode, provider);
-
-            // Wait until evaluation has finished
-            while (m_runningEvaluators > 0) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
-
-            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
-
-            auto evaluationResult = m_lastEvaluationResult.load();
-
-            nlohmann::json result = {
-                { "handle", provider->getID() },
-                { "result_code", evaluationResult }
-            };
-            return mcp::StructuredContent {
-                .text = result.dump(),
-                .data = result
-            };
-        });
-
-        ContentRegistry::MCP::registerTool(romfs::get("mcp/tools/get_pattern_console_content.json").string(), [this](const nlohmann::json &data) -> nlohmann::json {
-            std::ignore = data;
-
-            auto provider = ImHexApi::Provider::get();
-
-            // Wait until evaluation has finished
-            while (m_runningEvaluators > 0) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
-
-            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
-
-            auto consoleOutput = m_console.get(provider);
-
-            nlohmann::json result = {
-                { "handle", provider->getID() },
-                { "content", wolv::util::combineStrings(consoleOutput, "\n") }
-            };
-            return mcp::StructuredContent {
-                .text = result.dump(),
-                .data = result
-            };
-        });
-
-        ContentRegistry::MCP::registerTool(romfs::get("mcp/tools/get_patterns.json").string(), [this](const nlohmann::json &data) -> nlohmann::json {
-            std::ignore = data;
-
-            auto provider = ImHexApi::Provider::get();
-
-            // Wait until evaluation has finished
-            while (m_runningEvaluators > 0) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
-
-            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
-
-            pl::gen::fmt::FormatterJson formatter;
-            auto formattedPatterns = formatter.format(ContentRegistry::PatternLanguage::getRuntime());
-
-            nlohmann::json result = {
-                { "handle", provider->getID() },
-                { "patterns", nlohmann::json::parse(std::string(formattedPatterns.begin(), formattedPatterns.end())) }
-            };
-            return mcp::StructuredContent {
-                .text = result.dump(),
-                .data = result
-            };
-        });
     }
 
     void ViewPatternEditor::handleFileChange(prv::Provider *provider) {
@@ -2743,6 +2696,14 @@ namespace hex::plugin::builtin {
             ShortcutManager::getShortcutByName({ "hex.builtin.menu.edit","hex.builtin.view.pattern_editor.menu.edit.run_pattern" }).toString()
         );
         ImGuiExt::TextFormattedWrapped("This will execute your code, output any log messages to the console window below and create a pattern tree that gets displayed in the Pattern Data view and highlights matching regions in the Hex Editor view.");
+    }
+
+    ui::TextEditor *ViewPatternEditor::getTextEditor() {
+        auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return nullptr;
+
+        return &m_textEditor.get(provider);
     }
 
 }
