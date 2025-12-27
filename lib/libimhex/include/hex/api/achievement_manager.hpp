@@ -145,62 +145,17 @@ EXPORT_MODULE namespace hex {
          * @brief Returns the icon of the achievement
          * @return Icon of the achievement
          */
-        [[nodiscard]] const ImGuiExt::Texture &getIcon() const {
-            if (m_iconData.empty())
-                return m_icon;
-
-            if (m_icon.isValid())
-                return m_icon;
-
-            m_icon = ImGuiExt::Texture::fromImage(m_iconData.data(), m_iconData.size(), ImGuiExt::Texture::Filter::Linear);
-
-            return m_icon;
+        [[nodiscard]] const char* getIcon() const {
+            return m_icon.c_str();
         }
 
         /**
          * @brief Sets the icon of the achievement
-         * @param data Icon data
+         * @param icon Icon glyph
          * @return Reference to the achievement
          */
-        Achievement& setIcon(std::span<const std::byte> data) {
-            m_iconData.reserve(data.size());
-            for (auto &byte : data)
-                m_iconData.emplace_back(static_cast<u8>(byte));
-
-            return *this;
-        }
-
-        /**
-         * @brief Sets the icon of the achievement
-         * @param data Icon data
-         * @return Reference to the achievement
-         */
-        Achievement& setIcon(std::span<const u8> data) {
-            m_iconData.assign(data.begin(), data.end());
-
-            return *this;
-        }
-
-        /**
-         * @brief Sets the icon of the achievement
-         * @param data Icon data
-         * @return Reference to the achievement
-         */
-        Achievement& setIcon(std::vector<u8> data) {
-            m_iconData = std::move(data);
-
-            return *this;
-        }
-
-        /**
-         * @brief Sets the icon of the achievement
-         * @param data Icon data
-         * @return Reference to the achievement
-         */
-        Achievement& setIcon(const std::vector<std::byte> &data) {
-            m_iconData.reserve(data.size());
-            for (auto &byte : data)
-                m_iconData.emplace_back(static_cast<u8>(byte));
+        Achievement& setIcon(std::string icon) {
+            m_icon = std::move(icon);
 
             return *this;
         }
@@ -284,8 +239,7 @@ EXPORT_MODULE namespace hex {
 
         std::function<void(Achievement &)> m_clickCallback;
 
-        std::vector<u8> m_iconData;
-        mutable ImGuiExt::Texture m_icon;
+        std::string m_icon;
 
         u32 m_progress = 0;
         u32 m_maxProgress = 1;

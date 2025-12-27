@@ -8,6 +8,7 @@
 #include <romfs/romfs.hpp>
 
 #include <content/views/view_hashes.hpp>
+#include <fonts/tabler_icons.hpp>
 
 namespace hex::plugin::hashes {
 
@@ -29,6 +30,6 @@ IMHEX_PLUGIN_SETUP("Hashes", "WerWolv", "Hashing algorithms") {
 
     AchievementManager::addAchievement<Achievement>("hex.builtin.achievement.misc", "hex.hashes.achievement.misc.create_hash.name")
         .setDescription("hex.hashes.achievement.misc.create_hash.desc")
-        .setIcon(romfs::get("assets/achievements/fortune-cookie.png").span())
+        .setIcon(ICON_TA_CRYSTAL_BALL)
         .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
 }

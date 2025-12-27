@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fonts/tabler_icons.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 
@@ -53,60 +54,60 @@ namespace hex::plugin::builtin {
         void registerGettingStartedAchievements() {
             AchievementManager::addAchievement<AchievementStartingOut>("hex.builtin.achievement.starting_out.docs.name")
                     .setDescription("hex.builtin.achievement.starting_out.docs.desc")
-                    .setIcon(romfs::get("assets/achievements/open-book.png").span());
+                    .setIcon(ICON_TA_BOOK);
 
             AchievementManager::addAchievement<AchievementStartingOut>("hex.builtin.achievement.starting_out.open_file.name")
                     .setDescription("hex.builtin.achievement.starting_out.open_file.desc")
-                    .setIcon(romfs::get("assets/achievements/page-facing-up.png").span());
+                    .setIcon(ICON_VS_NEW_FILE);
 
             AchievementManager::addAchievement<AchievementStartingOut>("hex.builtin.achievement.starting_out.save_project.name")
                     .setDescription("hex.builtin.achievement.starting_out.save_project.desc")
-                    .setIcon(romfs::get("assets/achievements/card-index-dividers.png").span())
+                    .setIcon(ICON_VS_NOTEBOOK)
                     .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
 
 
             AchievementManager::addAchievement<AchievementStartingOut>("hex.builtin.achievement.starting_out.crash.name")
                     .setDescription("hex.builtin.achievement.starting_out.crash.desc")
-                    .setIcon(romfs::get("assets/achievements/collision-symbol.png").span())
+                    .setIcon(ICON_TA_BOOM)
                     .setInvisible();
         }
 
         void registerHexEditorAchievements() {
             AchievementManager::addAchievement<AchievementHexEditor>("hex.builtin.achievement.hex_editor.select_byte.name")
                     .setDescription("hex.builtin.achievement.hex_editor.select_byte.desc")
-                    .setIcon(romfs::get("assets/achievements/bookmark-tabs.png").span())
+                    .setIcon(ICON_VS_LIST_SELECTION)
                     .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
 
             AchievementManager::addAchievement<AchievementHexEditor>("hex.builtin.achievement.hex_editor.open_new_view.name")
                     .setDescription("hex.builtin.achievement.hex_editor.open_new_view.desc")
-                    .setIcon(romfs::get("assets/achievements/frame-with-picture.png").span())
+                    .setIcon(ICON_VS_GO_TO_FILE)
                     .addRequirement("hex.builtin.achievement.hex_editor.create_bookmark.name");
 
             AchievementManager::addAchievement<AchievementHexEditor>("hex.builtin.achievement.hex_editor.modify_byte.name")
                     .setDescription("hex.builtin.achievement.hex_editor.modify_byte.desc")
-                    .setIcon(romfs::get("assets/achievements/pencil.png").span())
+                    .setIcon(ICON_VS_EDIT)
                     .addRequirement("hex.builtin.achievement.hex_editor.select_byte.name")
                     .addVisibilityRequirement("hex.builtin.achievement.hex_editor.select_byte.name");
 
             AchievementManager::addAchievement<AchievementHexEditor>("hex.builtin.achievement.hex_editor.copy_as.name")
                     .setDescription("hex.builtin.achievement.hex_editor.copy_as.desc")
-                    .setIcon(romfs::get("assets/achievements/copy.png").span())
+                    .setIcon(ICON_VS_PREVIEW)
                     .addRequirement("hex.builtin.achievement.hex_editor.modify_byte.name");
 
             AchievementManager::addAchievement<AchievementHexEditor>("hex.builtin.achievement.hex_editor.create_patch.name")
                     .setDescription("hex.builtin.achievement.hex_editor.create_patch.desc")
-                    .setIcon(romfs::get("assets/achievements/adhesive-bandage.png").span())
+                    .setIcon(ICON_TA_BANDAGE)
                     .addRequirement("hex.builtin.achievement.hex_editor.modify_byte.name");
 
             AchievementManager::addAchievement<AchievementHexEditor>("hex.builtin.achievement.hex_editor.fill.name")
                     .setDescription("hex.builtin.achievement.hex_editor.fill.desc")
-                    .setIcon(romfs::get("assets/achievements/water-wave.png").span())
+                    .setIcon(ICON_VS_PAINTCAN)
                     .addRequirement("hex.builtin.achievement.hex_editor.select_byte.name")
                     .addVisibilityRequirement("hex.builtin.achievement.hex_editor.select_byte.name");
 
             AchievementManager::addAchievement<AchievementHexEditor>("hex.builtin.achievement.hex_editor.create_bookmark.name")
                     .setDescription("hex.builtin.achievement.hex_editor.create_bookmark.desc")
-                    .setIcon(romfs::get("assets/achievements/bookmark.png").span())
+                    .setIcon(ICON_VS_BOOKMARK)
                     .addRequirement("hex.builtin.achievement.hex_editor.select_byte.name")
                     .addVisibilityRequirement("hex.builtin.achievement.hex_editor.select_byte.name");
         }
@@ -114,23 +115,23 @@ namespace hex::plugin::builtin {
         void registerPatternsAchievements() {
             AchievementManager::addAchievement<AchievementPatterns>("hex.builtin.achievement.patterns.place_menu.name")
                     .setDescription("hex.builtin.achievement.patterns.place_menu.desc")
-                    .setIcon(romfs::get("assets/achievements/clipboard.png").span())
+                    .setIcon(ICON_TA_CATEGORY_2)
                     .addRequirement("hex.builtin.achievement.hex_editor.select_byte.name");
 
             AchievementManager::addAchievement<AchievementPatterns>("hex.builtin.achievement.patterns.load_existing.name")
                     .setDescription("hex.builtin.achievement.patterns.load_existing.desc")
-                    .setIcon(romfs::get("assets/achievements/hourglass.png").span())
+                    .setIcon(ICON_TA_HOURGLASS)
                     .addRequirement("hex.builtin.achievement.patterns.place_menu.name");
 
             AchievementManager::addAchievement<AchievementPatterns>("hex.builtin.achievement.patterns.modify_data.name")
                     .setDescription("hex.builtin.achievement.patterns.modify_data.desc")
-                    .setIcon(romfs::get("assets/achievements/hammer.png").span())
+                    .setIcon(ICON_TA_HAMMER)
                     .addRequirement("hex.builtin.achievement.patterns.place_menu.name");
 
 
             AchievementManager::addAchievement<AchievementPatterns>("hex.builtin.achievement.patterns.data_inspector.name")
                     .setDescription("hex.builtin.achievement.patterns.data_inspector.desc")
-                    .setIcon(romfs::get("assets/achievements/eye-in-speech-bubble.png").span())
+                    .setIcon(ICON_TA_BUBBLE_TEXT)
                     .addRequirement("hex.builtin.achievement.hex_editor.select_byte.name");
         }
 
@@ -138,51 +139,51 @@ namespace hex::plugin::builtin {
         void registerFindAchievements() {
             AchievementManager::addAchievement<AchievementFind>("hex.builtin.achievement.find.find_strings.name")
                     .setDescription("hex.builtin.achievement.find.find_strings.desc")
-                    .setIcon(romfs::get("assets/achievements/ring.png").span())
+                    .setIcon(ICON_TA_HAND_RING_FINGER)
                     .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
 
             AchievementManager::addAchievement<AchievementFind>("hex.builtin.achievement.find.find_specific_string.name")
                     .setDescription("hex.builtin.achievement.find.find_specific_string.desc")
-                    .setIcon(romfs::get("assets/achievements/right-pointing-magnifying-glass.png").span())
+                    .setIcon(ICON_TA_DIAMOND)
                     .addRequirement("hex.builtin.achievement.find.find_strings.name");
 
             AchievementManager::addAchievement<AchievementFind>("hex.builtin.achievement.find.find_numeric.name")
                     .setDescription("hex.builtin.achievement.find.find_numeric.desc")
-                    .setIcon(romfs::get("assets/achievements/abacus.png").span())
+                    .setIcon(ICON_TA_ABACUS)
                     .addRequirement("hex.builtin.achievement.find.find_strings.name");
         }
 
         void registerDataProcessorAchievements() {
             AchievementManager::addAchievement<AchievementDataProcessor>("hex.builtin.achievement.data_processor.place_node.name")
                     .setDescription("hex.builtin.achievement.data_processor.place_node.desc")
-                    .setIcon(romfs::get("assets/achievements/cloud.png").span())
+                    .setIcon(ICON_TA_CLOUD)
                     .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
 
             AchievementManager::addAchievement<AchievementDataProcessor>("hex.builtin.achievement.data_processor.create_connection.name")
                     .setDescription("hex.builtin.achievement.data_processor.create_connection.desc")
-                    .setIcon(romfs::get("assets/achievements/linked-paperclips.png").span())
+                    .setIcon(ICON_TA_SHARE)
                     .addRequirement("hex.builtin.achievement.data_processor.place_node.name");
 
             AchievementManager::addAchievement<AchievementDataProcessor>("hex.builtin.achievement.data_processor.modify_data.name")
                     .setDescription("hex.builtin.achievement.data_processor.modify_data.desc")
-                    .setIcon(romfs::get("assets/achievements/hammer-and-pick.png").span())
+                    .setIcon(ICON_TA_LAYERS_SUBTRACT)
                     .addRequirement("hex.builtin.achievement.data_processor.create_connection.name");
 
             AchievementManager::addAchievement<AchievementDataProcessor>("hex.builtin.achievement.data_processor.custom_node.name")
                     .setDescription("hex.builtin.achievement.data_processor.custom_node.desc")
-                    .setIcon(romfs::get("assets/achievements/wrench.png").span())
+                    .setIcon(ICON_TA_MANUAL_GEARBOX)
                     .addRequirement("hex.builtin.achievement.data_processor.create_connection.name");
         }
 
         void registerMiscAchievements() {
             AchievementManager::addAchievement<AchievementMisc>("hex.builtin.achievement.misc.analyze_file.name")
                     .setDescription("hex.builtin.achievement.misc.analyze_file.desc")
-                    .setIcon(romfs::get("assets/achievements/brain.png").span())
+                    .setIcon(ICON_TA_BRAIN)
                     .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
 
             AchievementManager::addAchievement<AchievementMisc>("hex.builtin.achievement.misc.download_from_store.name")
                     .setDescription("hex.builtin.achievement.misc.download_from_store.desc")
-                    .setIcon(romfs::get("assets/achievements/package.png").span())
+                    .setIcon(ICON_TA_PACKAGE)
                     .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
         }
 
@@ -199,7 +200,7 @@ namespace hex::plugin::builtin {
 
             EventProviderDataModified::subscribe([](const prv::Provider *, u64, const u64, const u8*) {
                 // Warning: overlaps with the "Flood fill" achievement, since "Fill" works by writing to bytes one-by-one.
-                    // Thus, we do not check for size, that will always be equal to 1 even during a fill operation.
+                // Thus, we do not check for size, that will always be equal to 1 even during a fill operation.
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.modify_byte.name");
             });
 
@@ -226,8 +227,6 @@ namespace hex::plugin::builtin {
             static std::string challengeAchievement;
             static std::string challengeDescription;
 
-            static std::map<std::string, std::vector<u8>> icons;
-
             ProjectFile::registerHandler({
                 .basePath = "challenge",
                 .required = false,
@@ -253,11 +252,9 @@ namespace hex::plugin::builtin {
 
                                 if (achievement.contains("icon")) {
                                     if (const auto &icon = achievement["icon"]; icon.is_string() && !icon.is_null()) {
-                                        auto iconPath = icon.get<std::string>();
+                                        auto glyph = icon.get<std::string>();
 
-                                        auto data = tar.readVector(basePath / iconPath);
-                                        newAchievement.setIcon(data);
-                                        icons[iconPath] = std::move(data);
+                                        newAchievement.setIcon(glyph);
                                     }
                                 }
 
@@ -318,10 +315,6 @@ namespace hex::plugin::builtin {
                         tar.writeString(basePath / "achievements.json", challengeAchievement);
                     if (!challengeDescription.empty())
                         tar.writeString(basePath / "description.txt", challengeDescription);
-
-                    for (const auto &[iconPath, data] : icons) {
-                        tar.writeVector(basePath / iconPath, data);
-                    }
 
                     nlohmann::json unlockedJson;
 
