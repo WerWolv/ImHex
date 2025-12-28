@@ -840,7 +840,7 @@ jobs:
 
   # ArchLinux build
   archlinux-build:
-    name: 🐧 ArchLinux
+    name: 🐧 ArchLinux x86_64
     runs-on: ubuntu-24.04
 
     container:
@@ -971,7 +971,7 @@ jobs:
             release_num: 9
             mock_config: "alma+epel-9"
 
-    name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }}
+    name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
     runs-on: ubuntu-24.04
 
     container:
