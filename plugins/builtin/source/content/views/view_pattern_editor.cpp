@@ -1680,9 +1680,10 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::evaluatePattern(const std::string &code, prv::Provider *provider) {
-        EventPatternEvaluating::post();
-
         auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+
+        ContentRegistry::PatternLanguage::getRuntime().reset();
+        EventPatternEvaluating::post();
 
         m_runningEvaluators += 1;
         m_executionDone.get(provider) = false;
