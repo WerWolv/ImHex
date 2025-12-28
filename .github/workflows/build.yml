@@ -673,14 +673,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - release_num: "24.04"
-          - release_num: "25.04"
+          - name: "Ubuntu"
+            release_num: "24.04"
+            image: "ubuntu:24.04"
+          - name: "Ubuntu"
+            release_num: "25.10"
+            image: "ubuntu:25.10"
+          - name: "Debian"
+            release_num: "13"
+            image: "debian:13"
 
-    name: 🐧 Ubuntu ${{ matrix.release_num }}
+    name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
     runs-on: ubuntu-24.04
 
     container:
-      image: "ubuntu:${{ matrix.release_num }}"
+      image: "${{ matrix.image }}"
       options: --privileged
 
     permissions:
@@ -699,8 +706,8 @@ jobs:
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1
         with:
-          key: Ubuntu-${{ matrix.release_num }}-ccache-${{ github.run_id }}
-          restore-keys: Ubuntu-${{ matrix.release_num }}-ccache
+          key: ${{ matrix.image }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ matrix.image }}-ccache
           max-size: 1G
 
       - name: ⬇️ Install dependencies
@@ -745,7 +752,7 @@ jobs:
         run: |
           cp -r build/DEBIAN build/DebDir
           dpkg-deb -Zzstd --build build/DebDir
-          mv build/DebDir.deb imhex-${{ env.IMHEX_VERSION }}-Ubuntu-${{ matrix.release_num }}-x86_64.deb
+          mv build/DebDir.deb imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.deb
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
@@ -758,7 +765,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: Ubuntu ${{ matrix.release_num }} DEB x86_64
+          name: ${{ matrix.name }} ${{ matrix.release_num }} DEB x86_64
           path: '*.deb'
 
   # AppImage build
