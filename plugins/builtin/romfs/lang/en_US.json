@@ -556,6 +556,8 @@
     "hex.builtin.setting.interface.scaling.native": "Native",
     "hex.builtin.setting.interface.scaling.fractional_warning": "The default font does not support fractional scaling. For better results, select a custom font in the 'Font' tab.",
     "hex.builtin.setting.interface.show_header_command_palette": "Show Command Palette in Window Header",
+    "hex.builtin.setting.interface.show_task_finish_notification": "Show task completion notifications",
+    "hex.builtin.setting.interface.show_task_finish_notification.desc": "Should a notification be shown when a long-running task finishes while ImHex is in the background?",
     "hex.builtin.setting.interface.show_titlebar_backdrop": "Show titlebar backdrop color",
     "hex.builtin.setting.interface.style": "Styling",
     "hex.builtin.setting.interface.use_native_menu_bar": "Use native menu bar",

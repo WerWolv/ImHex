@@ -427,7 +427,11 @@ namespace hex::plugin::builtin {
             #endif
         });
 
+        static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.show_task_finish_notification"> taskFinishedNotificationEnabled = false;
         TaskManager::addTaskCompletionCallback([](Task &task) {
+            if (!taskFinishedNotificationEnabled)
+                return;
+
             if (!glfwGetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FOCUSED) && !task.isBackgroundTask())
                 hex::showToastMessage("ImHex", fmt::format("hex.builtin.os_toast_message.task_finished"_lang, Lang(task.getUnlocalizedName())));
         });
