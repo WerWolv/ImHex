@@ -440,6 +440,9 @@ jobs:
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15                                                       \
+          -DVCPKG_OSX_DEPLOYMENT_TARGET=10.15                                                       \
+          -DVCPKG_C_FLAGS="-mmacosx-version-min=10.15"                                              \
+          -DVCPKG_CXX_FLAGS="-mmacosx-version-min=10.15"                                            \
           -DCMAKE_TOOLCHAIN_FILE="${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"                   \
           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
           -DIMHEX_GENERATE_PACKAGE=ON                                                               \
