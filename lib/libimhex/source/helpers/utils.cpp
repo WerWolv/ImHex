@@ -29,10 +29,12 @@
 #elif defined(OS_LINUX)
     #include <unistd.h>
     #include <dlfcn.h>
+    #include <spawn.h>
     #include <hex/helpers/utils_linux.hpp>
 #elif defined(OS_MACOS)
     #include <unistd.h>
     #include <dlfcn.h>
+    #include <spawn.h>
     #include <hex/helpers/utils_macos.hpp>
     #include <CoreFoundation/CoreFoundation.h>
 #elif defined(OS_WEB)
@@ -351,6 +353,42 @@ namespace hex {
         }
 
         return result;
+    }
+
+    void executeCommandDetach(const std::string &command) {
+        #if defined(OS_WINDOWS)
+            STARTUPINFOA si = { };
+            PROCESS_INFORMATION pi = { };
+            si.cb = sizeof(si);
+
+            DWORD flags = CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW;
+            std::string cmdCopy = command;
+
+            BOOL result = ::CreateProcessA(
+                nullptr,
+                cmdCopy.data(),
+                nullptr,
+                nullptr,
+                false,
+                flags,
+                nullptr,
+                nullptr,
+                &si,
+                &pi
+            );
+
+            if (result) {
+                ::CloseHandle(pi.hProcess);
+                ::CloseHandle(pi.hThread);
+            }
+        #elif defined(OS_MACOS) || defined(OS_LINUX)
+            pid_t pid;
+            const char* argv[] = { "sh", "-c", command.c_str(), nullptr };
+
+            ::posix_spawnp(&pid, "sh", nullptr, nullptr, const_cast<char* const*>(argv), nullptr);
+        #elif defined(OS_WEB)
+            std::ignore = command;
+        #endif
     }
 
     void openWebpage(std::string url) {
