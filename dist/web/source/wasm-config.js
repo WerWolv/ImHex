@@ -59,8 +59,14 @@ monkeyPatch((file, done) =>  {
     const mibTotal = (wasmSize / 1024**2).toFixed(1);
 
     let root = document.querySelector(':root');
-    root.style.setProperty("--progress", `${percent}%`)
-    document.getElementById("progress-bar-content").innerHTML = `${percent}% &nbsp;[${mibNow} MiB / ${mibTotal} MiB]`;
+    if (root != null) {
+        root.style.setProperty("--progress", `${percent}%`)
+        let progressBar = document.getElementById("progress-bar-content");
+
+        if (progressBar != null) {
+            progressBar.innerHTML = `${percent}% &nbsp;[${mibNow} MiB / ${mibTotal} MiB]`;
+        }
+    }
 });
 
 function glfwSetCursorCustom(wnd, shape) {
@@ -174,7 +180,9 @@ var Module = {
     },
     onRuntimeInitialized: function() {
         // Triggered when the wasm module is loaded and ready to use.
-        document.getElementById("loading").style.display = "none"
+        let loading = document.getElementById("loading");
+        if (loading != null)
+            document.getElementById("loading").style.display = "none"
         document.getElementById("canvas").style.display = "initial"
 
         clearTimeout(notWorkingTimer);
@@ -263,8 +271,8 @@ function js_resizeCanvas() {
 
     canvas.top    = document.documentElement.clientTop;
     canvas.left   = document.documentElement.clientLeft;
-    canvas.width  = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    canvas.height = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    canvas.width  = Math.min(document.documentElement.clientWidth, window.innerWidth || 0) * window.devicePixelRatio;
+    canvas.height = Math.min(document.documentElement.clientHeight, window.innerHeight || 0) * window.devicePixelRatio;
 }
 
 // Prevent some default browser shortcuts from preventing ImHex ones to work
