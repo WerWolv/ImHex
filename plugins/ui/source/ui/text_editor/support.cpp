@@ -505,10 +505,12 @@ namespace hex::ui {
 
     bool TextEditor::isEmpty() const {
         auto size = m_lines.size();
-        for (u32 i = 0; i < size; ++i) {
-            if (!m_lines[i].empty())
-                return false;
-        }
+        if (size > 1)
+            return false;
+        if (size == 0)
+            return true;
+        if (m_lines[0].empty())
+            return true;
         return true;
     }
 
