@@ -442,7 +442,7 @@ jobs:
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15                                                       \
-          -DCMAKE_TOOLCHAIN_FILE="$(vcpkg integrate cmake)"                                         \
+          -DCMAKE_TOOLCHAIN_FILE="${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"                   \
           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
           -DIMHEX_GENERATE_PACKAGE=ON                                                               \
           -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib" \
