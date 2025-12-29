@@ -37,7 +37,10 @@
 #include <wolv/utils/guards.hpp>
 #include <wolv/utils/lock.hpp>
 
+#include <romfs/romfs.hpp>
+
 #include <fonts/fonts.hpp>
+#include <hex/api/content_registry/communication_interface.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/menu_items.hpp>
 #include <hex/helpers/logger.hpp>
@@ -320,7 +323,10 @@ namespace hex::plugin::builtin {
         registerHandlers();
 
         // Initialize the text editor with some basic help text
-        m_textEditor.setOnCreateCallback([](auto, ui::TextEditor &editor) {
+        m_textEditor.setOnCreateCallback([this](auto *provider, ui::TextEditor &editor) {
+            if (m_sourceCode.isSynced() && !m_sourceCode.get(provider).empty())
+                return;
+
             std::string text = "hex.builtin.view.pattern_editor.default_help_text"_lang;
             text = "// " + wolv::util::replaceStrings(text, "\n", "\n// ");
 
@@ -1861,14 +1867,6 @@ namespace hex::plugin::builtin {
             m_sourceCode.enableSync(value.get<bool>(false));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.suggest_patterns", [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_suggestSupportedPatterns = value.get<bool>(true);
-        });
-
-        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.auto_apply_patterns", [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_autoApplyPatterns = value.get<bool>(true);
-        });
-
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
             m_textEditor.get(provider).setLanguageDefinition(PatternLanguage());
             m_textEditor.get(provider).setShowWhitespaces(false);
@@ -2264,10 +2262,6 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.pattern_parent_highlighting", [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_parentHighlightingEnabled = bool(value.get<int>(false));
-        });
-
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {
             std::ignore = data;
             std::ignore = size;
@@ -2581,6 +2575,81 @@ namespace hex::plugin::builtin {
             result += "\n```\n\n";
 
             return result;
+        });
+
+        ContentRegistry::MCP::registerTool(romfs::get("mcp/tools/execute_pattern_code.json").string(), [this](const nlohmann::json &data) -> nlohmann::json {
+            auto provider = ImHexApi::Provider::get();
+
+            auto sourceCode = data.at("source_code").get<std::string>();
+
+            this->evaluatePattern(sourceCode, provider);
+
+            // Wait until evaluation has finished
+            while (m_runningEvaluators > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+
+            auto evaluationResult = m_lastEvaluationResult.load();
+
+            nlohmann::json result = {
+                { "handle", provider->getID() },
+                { "result_code", evaluationResult }
+            };
+            return mcp::StructuredContent {
+                .text = result.dump(),
+                .data = result
+            };
+        });
+
+        ContentRegistry::MCP::registerTool(romfs::get("mcp/tools/get_pattern_console_content.json").string(), [this](const nlohmann::json &data) -> nlohmann::json {
+            std::ignore = data;
+
+            auto provider = ImHexApi::Provider::get();
+
+            // Wait until evaluation has finished
+            while (m_runningEvaluators > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+
+            auto consoleOutput = m_console.get(provider);
+
+            nlohmann::json result = {
+                { "handle", provider->getID() },
+                { "content", wolv::util::combineStrings(consoleOutput, "\n") }
+            };
+            return mcp::StructuredContent {
+                .text = result.dump(),
+                .data = result
+            };
+        });
+
+        ContentRegistry::MCP::registerTool(romfs::get("mcp/tools/get_patterns.json").string(), [this](const nlohmann::json &data) -> nlohmann::json {
+            std::ignore = data;
+
+            auto provider = ImHexApi::Provider::get();
+
+            // Wait until evaluation has finished
+            while (m_runningEvaluators > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+
+            pl::gen::fmt::FormatterJson formatter;
+            auto formattedPatterns = formatter.format(ContentRegistry::PatternLanguage::getRuntime());
+
+            nlohmann::json result = {
+                { "handle", provider->getID() },
+                { "patterns", nlohmann::json::parse(std::string(formattedPatterns.begin(), formattedPatterns.end())) }
+            };
+            return mcp::StructuredContent {
+                .text = result.dump(),
+                .data = result
+            };
         });
     }
 
