@@ -421,7 +421,7 @@ jobs:
         # Make brew not display useless errors
         HOMEBREW_TESTS: 1
       run: |
-        brew install llvm ccache ninja pkg-config cmake git
+        brew install llvm automake
         cp dist/vcpkg.json vcpkg.json
         vcpkg install
 
