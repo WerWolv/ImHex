@@ -251,7 +251,6 @@ jobs:
       - name: ⬇️ Install dependencies
         run: |
           cp dist/vcpkg.json vcpkg.json
-          vcpkg install
 
       - name: ⬇️ Install CMake and Ninja
         uses: lukka/get-cmake@latest
@@ -423,7 +422,6 @@ jobs:
       run: |
         brew install llvm automake
         cp dist/vcpkg.json vcpkg.json
-        vcpkg install
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v4
