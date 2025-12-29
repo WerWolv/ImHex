@@ -68,7 +68,11 @@ namespace hex::plugin::builtin {
                     callback();
                 }
             } else if (menuItems.size() == 1) {
-                if (menu::menuItemEx(Lang(name), icon, shortcut, selectedCallback(), enabledCallback())) {
+                bool enabled = enabledCallback();
+                if (!shortcut.has(AllowWhileTyping) && ImGui::GetIO().WantTextInput)
+                    enabled = false;
+
+                if (menu::menuItemEx(Lang(name), icon, shortcut, selectedCallback(), enabled)) {
                     if (shortcut == Shortcut::None)
                         callback();
                     else {
