@@ -329,12 +329,13 @@ namespace hex {
         if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
             return true;
 
-        const bool currentlyTyping = ImGui::GetIO().WantTextInput;
-
-        auto it = shortcuts.find(shortcut + AllowWhileTyping);
-        if (!currentlyTyping && it == shortcuts.end()) {
+        auto it = shortcuts.end();
+        if (ImGui::GetIO().WantTextInput) {
+            it = shortcuts.find(shortcut + AllowWhileTyping);
+        } else {
+            it = shortcuts.find(shortcut);
             if (it == shortcuts.end())
-                it = shortcuts.find(shortcut);
+                it = shortcuts.find(shortcut + AllowWhileTyping);
         }
 
         if (it != shortcuts.end()) {
