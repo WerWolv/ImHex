@@ -196,6 +196,8 @@ var Module = {
             e.preventDefault();
         }, false);
 
+        js_resizeCanvas()
+
         // Turn long touches into right-clicks
         let timer = null;
         canvas.addEventListener('touchstart', event => {
