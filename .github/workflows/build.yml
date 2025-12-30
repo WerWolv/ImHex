@@ -256,6 +256,7 @@ jobs:
           echo "Installed vcpkg at $VCPKG_ROOT"
 
       - name: ⬇️ Install vcpkg dependencies
+        shell: bash
         run: |
           cp dist/vcpkg.json vcpkg.json
           $env:VCPKG_ROOT/vcpkg install
