@@ -259,7 +259,7 @@ jobs:
         shell: bash
         run: |
           cp dist/vcpkg.json vcpkg.json
-          $env:VCPKG_ROOT/vcpkg install
+          $VCPKG_ROOT/vcpkg install
 
       - name: ⬇️ Install CMake and Ninja
         run: winget install -e --id Kitware.CMake Ninja-build.Ninja
