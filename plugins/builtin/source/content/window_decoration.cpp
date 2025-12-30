@@ -347,6 +347,9 @@ namespace hex::plugin::builtin {
                 if (result.contains(menuItem.unlocalizedNames.front())) [[likely]]
                     continue;
 
+                if (menuItem.unlocalizedNames.front().get().starts_with('$'))
+                    continue;
+
                 if (isMenuItemVisible(lastFocusedView, menuItem))
                     result.insert(menuItem.unlocalizedNames.front());
             }
@@ -413,6 +416,11 @@ namespace hex::plugin::builtin {
                     if (visibleMainMenus.contains(menuItem.unlocalizedName))
                         defineMenu(menuItem.unlocalizedName);
                 }
+
+                if (menu::beginTaskBarMenu()) {
+                    populateMenu(ContentRegistry::UserInterface::impl::TaskBarMenuValue);
+                    menu::endTaskBarMenu();
+                }
             } else {
                 auto cursorPos = ImGui::GetCursorPosX();
                 u32 fittingItems = 0;
@@ -474,11 +482,6 @@ namespace hex::plugin::builtin {
                         ImGui::EndMenu();
                     }
                 }
-            }
-
-            if (menu::beginTaskBarMenu()) {
-                populateMenu(ContentRegistry::UserInterface::impl::TaskBarMenuValue);
-                menu::endTaskBarMenu();
             }
         }
 
