@@ -336,7 +336,7 @@ EXPORT_MODULE namespace hex {
 
         template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
         void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, T value) {
-            impl::getSetting(unlocalizedCategory, unlocalizedName, value) = std::move(value);
+            impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
             impl::runOnChangeHandlers(unlocalizedCategory, unlocalizedName, value);
 
             impl::store();
@@ -353,17 +353,21 @@ EXPORT_MODULE namespace hex {
         requires (!(std::is_reference_v<T> || std::is_const_v<T>))
         class SettingsVariable {
         public:
-            explicit(false) SettingsVariable(T defaultValue) : m_defaultValue(std::move(defaultValue)) {
-                m_onChangeId = onChange(UnlocalizedCategory.value.data(), UnlocalizedName.value.data(), [this](const SettingsValue &value) {
-                    m_value = value.get<T>(m_defaultValue);
-                });
-            }
+            explicit(false) SettingsVariable(T defaultValue) : m_defaultValue(std::move(defaultValue)) { }
+
+            SettingsVariable(const SettingsVariable&) = delete;
+            SettingsVariable& operator=(const SettingsVariable&) = delete;
+
+            SettingsVariable(SettingsVariable&&) = delete;
+            SettingsVariable& operator=(SettingsVariable&&) = delete;
 
             ~SettingsVariable() {
-                removeOnChangeHandler(m_onChangeId);
+                if (m_onChangeId > 0)
+                    removeOnChangeHandler(m_onChangeId);
             }
 
             [[nodiscard]] T get() const {
+                registerChangeHandler();
                 if (!m_value.has_value()) {
                     m_value = read<T>(
                         UnlocalizedCategory.value.data(),
@@ -376,6 +380,7 @@ EXPORT_MODULE namespace hex {
             }
 
             void set(T value) {
+                registerChangeHandler();
                 write<T>(
                     UnlocalizedCategory.value.data(),
                     UnlocalizedName.value.data(),
@@ -393,9 +398,19 @@ EXPORT_MODULE namespace hex {
             }
 
         private:
+            void registerChangeHandler() const {
+                if (m_onChangeId > 0)
+                    return;
+
+                m_onChangeId = onChange(UnlocalizedCategory.value.data(), UnlocalizedName.value.data(), [this](const SettingsValue &value) {
+                    m_value = value.get<T>(m_defaultValue);
+                });
+            }
+
+        private:
             mutable std::optional<T> m_value;
             T m_defaultValue;
-            u64 m_onChangeId;
+            mutable u64 m_onChangeId = 0;
         };
 
     }
