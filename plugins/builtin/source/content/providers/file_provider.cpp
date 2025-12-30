@@ -276,6 +276,7 @@ namespace hex::plugin::builtin {
                         m_data.resize(startSize + ChunkSize);
                         auto result = m_file.readBuffer(m_data.data() + startSize, ChunkSize);
                         if (result <= 0) {
+                            m_data.resize(startSize);
                             break;
                         } else if (result < ChunkSize) {
                             m_data.resize(startSize + result);
