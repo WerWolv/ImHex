@@ -509,9 +509,7 @@ namespace hex::ui {
             return false;
         if (size == 0)
             return true;
-        if (m_lines[0].empty())
-            return true;
-        return true;
+        return m_lines[0].empty();
     }
 
     bool TextEditor::EditorState::operator==(const EditorState &o) const {
