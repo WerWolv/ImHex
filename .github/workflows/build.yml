@@ -256,7 +256,7 @@ jobs:
       - name: ⬇️ Install vcpkg dependencies
         run: |
           cp dist/vcpkg.json vcpkg.json
-          $VCPKG_ROOT/vcpkg install
+          $env:VCPKG_ROOT/vcpkg install
 
       - name: ⬇️ Install CMake and Ninja
         run: winget install -e --id Kitware.CMake Ninja-build.Ninja
