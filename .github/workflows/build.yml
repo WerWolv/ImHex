@@ -250,7 +250,7 @@ jobs:
           VCPKG_ROOT="$(realpath ../vcpkg)"
           mkdir -p $VCPKG_ROOT
           curl -L $URL -o - | tar -xz --strip 1 -C $VCPKG_ROOT
-          $VCPKG_ROOT/bootstrap-vcpkg.bat
+          $VCPKG_ROOT\bootstrap-vcpkg.bat
           echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
           echo "Installed vcpkg at $VCPKG_ROOT"
 
