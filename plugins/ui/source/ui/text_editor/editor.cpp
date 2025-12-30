@@ -1,63 +1,68 @@
-#include <algorithm>
 #include <ui/text_editor.hpp>
+#include <algorithm>
 #include <string>
 #include <regex>
 #include <cmath>
-#include <utility>
 #include <wolv/utils/string.hpp>
 #include <popups/popup_question.hpp>
+#include <hex/helpers/logger.hpp>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 
 namespace hex::ui {
 
-    const i32 TextEditor::s_cursorBlinkInterval = 1200;
-    const i32 TextEditor::s_cursorBlinkOnTime = 800;
-    ImVec2 TextEditor::s_cursorScreenPosition;
 
     TextEditor::FindReplaceHandler::FindReplaceHandler() : m_matchCase(false), m_wholeWord(false), m_findRegEx(false) {}
-    const std::string TextEditor::MatchedBracket::s_separators = "()[]{}";
-    const std::string TextEditor::MatchedBracket::s_operators = "<>";
 
     TextEditor::TextEditor() {
-        m_startTime = ImGui::GetTime() * 1000;
-        setLanguageDefinition(LanguageDefinition::HLSL());
-        m_lines.emplace_back();
+        m_lines.m_startTime = ImGui::GetTime() * 1000;
+        m_lines.setLanguageDefinition(LanguageDefinition::HLSL());
+        m_lines.m_unfoldedLines.push_back(Line());
+        m_lineSpacing = 1.0f;
+        m_tabSize = 4;
+
+        m_lines.m_state.m_cursorPosition = lineCoordinates( 0, 0);
+        m_lines.m_state.m_selection.m_start = m_lines.m_state.m_selection.m_end = lineCoordinates( 0, 0);
     }
 
-    TextEditor::~TextEditor() = default;
+    TextEditor::~TextEditor() {
+    }
 
-    std::string TextEditor::getText(const Range &from) {
+    std::string TextEditor::Lines::getRange(const Range &rangeToGet) {
         std::string result;
-        auto selection = setCoordinates(from);
+        auto selection = lineCoordinates(const_cast<Range &>(rangeToGet));
+        selection.m_end = rangeToGet.m_end;
         auto columns = selection.getSelectedColumns();
-        if (selection.isSingleLine())
-            result = m_lines[selection.m_start.m_line].substr(columns.m_line, columns.m_column, Line::LinePart::Utf8);
-        else {
+
+        if (selection.isSingleLine()) {
+            result = m_unfoldedLines[selection.m_start.m_line].substr(columns.m_line, columns.m_column, Line::LinePart::Utf8);
+        } else {
             auto lines = selection.getSelectedLines();
-            result = m_lines[lines.m_line].substr(columns.m_line, (u64) -1, Line::LinePart::Utf8) + '\n';
+            std::vector<std::string> lineContents;
+            lineContents.push_back(m_unfoldedLines[lines.m_line].substr(columns.m_line, (u64) -1, Line::LinePart::Utf8));
             for (i32 i = lines.m_line + 1; i < lines.m_column; i++) {
-                result += m_lines[i].m_chars + '\n';
+                lineContents.push_back(m_unfoldedLines[i].m_chars);
             }
-            result += m_lines[lines.m_column].substr(0, columns.m_column, Line::LinePart::Utf8);
+            lineContents.push_back(m_unfoldedLines[lines.m_column].substr(0, columns.m_column, Line::LinePart::Utf8));
+            result = wolv::util::combineStrings(lineContents, "\n");
         }
 
         return result;
     }
 
-    void TextEditor::deleteRange(const Range &rangeToDelete) {
+    void TextEditor::Lines::deleteRange(const Range &rangeToDelete) {
         if (m_readOnly)
             return;
-        Range selection = setCoordinates(rangeToDelete);
+        Range selection = lineCoordinates(const_cast<Range &>(rangeToDelete));
         auto columns = selection.getSelectedColumns();
 
         if (selection.isSingleLine()) {
-            auto &line = m_lines[selection.m_start.m_line];
+            auto &line = m_unfoldedLines[selection.m_start.m_line];
             line.erase(columns.m_line, columns.m_column);
         } else {
             auto lines = selection.getSelectedLines();
-            auto &firstLine = m_lines[lines.m_line];
-            auto &lastLine = m_lines[lines.m_column];
+            auto &firstLine = m_unfoldedLines[lines.m_line];
+            auto &lastLine = m_unfoldedLines[lines.m_column];
             firstLine.erase(columns.m_line,(u64) -1);
             lastLine.erase(0, columns.m_column);
 
@@ -65,43 +70,72 @@ namespace hex::ui {
                 firstLine.insert(firstLine.end(), lastLine.begin(), lastLine.end());
                 firstLine.m_colorized = false;
             }
-            if (lines.m_line < lines.m_column)
-                removeLine(lines.m_line + 1, lines.m_column);
+            if (lines.m_line+1 < lines.m_column)
+                removeLines(lines.m_line+1,lines.m_column);
+            else
+                removeLine(lines.m_column);
         }
 
         m_textChanged = true;
     }
 
-    void TextEditor::appendLine(const std::string &value) {
+    void TextEditor::Lines::appendLine(const std::string &value) {
         auto text = wolv::util::replaceStrings(wolv::util::preprocessText(value), "\000", ".");
         if (text.empty())
             return;
         if (isEmpty()) {
-            m_lines[0].m_chars = text;
-            m_lines[0].m_colors = std::string(text.size(), 0);
-            m_lines[0].m_flags = std::string(text.size(), 0);
-            m_lines[0].m_lineMaxColumn = -1;
-            m_lines[0].m_lineMaxColumn = m_lines[0].maxColumn();
+            m_unfoldedLines[0].m_chars = text;
+            m_unfoldedLines[0].m_colors = std::string(text.size(), 0);
+            m_unfoldedLines[0].m_flags = std::string(text.size(), 0);
         } else {
-            m_lines.emplace_back(text);
-            auto &line = m_lines.back();
-            line.m_lineMaxColumn = -1;
+            m_unfoldedLines.push_back(Line(text));
+            auto line = m_unfoldedLines.back();
             line.m_lineMaxColumn = line.maxColumn();
         }
-        setCursorPosition(setCoordinates((i32) m_lines.size() - 1, 0));
-        m_lines.back().m_colorized = false;
-        ensureCursorVisible();
-        m_textChanged = true;
+        m_unfoldedLines.back().m_colorized = false;
     }
 
+    void TextEditor::appendLine(const std::string &value) {
+       m_lines.appendLine(value);
+        m_lines.setCursorPosition(m_lines.lineCoordinates((i32) m_lines.size() - 1, 0), false);
+        m_lines.m_unfoldedLines.back().m_colorized = false;
+        m_lines.ensureCursorVisible();
+        m_lines.m_textChanged = true;
+    }
 
-    i32 TextEditor::insertTextAt(Coordinates /* inout */ &where, const std::string &value) {
+    i32 TextEditor::Lines::insertTextAtCursor(const std::string &value) {
         if (value.empty())
             return 0;
-        auto start = setCoordinates(where);
+        auto start = lineCoordinates(m_state.m_cursorPosition);
         if (start == Invalid)
             return 0;
-        auto &line = m_lines[start.m_line];
+        auto &line = m_unfoldedLines[start.m_line];
+        auto stringVector = wolv::util::splitString(value, "\n", false);
+        auto lineCount = (i32) stringVector.size();
+        auto state = m_state;
+        state.m_cursorPosition.m_line  += lineCount - 1;
+        state.m_cursorPosition.m_column += stringCharacterCount(stringVector[lineCount - 1]);
+        m_state = state;
+        stringVector[lineCount - 1].append(line.substr(start.m_column,(u64) -1, Line::LinePart::Utf8));
+        line.erase(start.m_column, (u64) -1);
+
+        line.append(stringVector[0]);
+        line.m_colorized = false;
+        for (i32 i = 1; i < lineCount; i++) {
+            insertLine(start.m_line + i, stringVector[i]);
+            m_unfoldedLines[start.m_line + i].m_colorized =false;
+        }
+        m_textChanged = true;
+        return lineCount;
+    }
+
+    i32 TextEditor::Lines::insertTextAt(Coordinates /* inout */ &where, const std::string &value) {
+        if (value.empty())
+            return 0;
+        auto start = lineCoordinates(where);
+        if (start == Invalid)
+            return 0;
+        auto &line = m_unfoldedLines[start.m_line];
         auto stringVector = wolv::util::splitString(value, "\n", false);
         auto lineCount = (i32) stringVector.size();
         where.m_line += lineCount - 1;
@@ -113,7 +147,7 @@ namespace hex::ui {
         line.m_colorized = false;
         for (i32 i = 1; i < lineCount; i++) {
             insertLine(start.m_line + i, stringVector[i]);
-            m_lines[start.m_line + i].m_colorized = false;
+            m_unfoldedLines[start.m_line + i].m_colorized =false;
         }
         m_textChanged = true;
         return lineCount;
@@ -121,25 +155,24 @@ namespace hex::ui {
 
     void TextEditor::deleteWordLeft() {
         const auto wordEnd = getCursorPosition();
-        const auto wordStart = findPreviousWord(getCursorPosition());
-        setSelection(Range(wordStart, wordEnd));
+        setSelection(Range(m_lines.findPreviousWord(wordEnd), wordEnd));
         backspace();
     }
 
     void TextEditor::deleteWordRight() {
         const auto wordStart = getCursorPosition();
-        const auto wordEnd = findNextWord(getCursorPosition());
-        setSelection(Range(wordStart, wordEnd));
+        setSelection(Range(wordStart, m_lines.findNextWord(wordStart)));
         backspace();
     }
 
-    void TextEditor::removeLine(i32 lineStart, i32 lineEnd) {
+    void TextEditor::Lines::removeLines(i32 lineStart, i32 lineEnd) {
+
         ErrorMarkers errorMarkers;
         for (auto &errorMarker : m_errorMarkers) {
             if (errorMarker.first.m_line <= lineStart || errorMarker.first.m_line > lineEnd + 1) {
                 if (errorMarker.first.m_line >= lineEnd + 1) {
                     auto newRow = errorMarker.first.m_line - (lineEnd - lineStart + 1);
-                    auto newCoord = setCoordinates(newRow, errorMarker.first.m_column);
+                    auto newCoord = lineCoordinates(newRow, errorMarker.first.m_column);
                     errorMarkers.insert(ErrorMarkers::value_type(newCoord, errorMarker.second));
                 } else
                     errorMarkers.insert(errorMarker);
@@ -159,25 +192,54 @@ namespace hex::ui {
                     breakpoints.insert(breakpoint);
             }
         }
-
         m_breakpoints = std::move(breakpoints);
+
+        CodeFoldKeys folds;
+        bool foldsChanged = false;
+        CodeFoldState codeFoldState;
+        Range fold;
+        for (auto interval : m_codeFoldKeys) {
+            fold = interval;
+            if (interval.m_end.m_line < lineStart) {
+                folds.insert(fold);
+                codeFoldState[fold] = m_codeFoldState[interval];
+            } else if (interval.m_start.m_line > lineEnd) {
+                fold.m_start.m_line -= (lineEnd - lineStart + 1);
+                fold.m_end.m_line -= (lineEnd - lineStart + 1);
+                codeFoldState[fold] = m_codeFoldState[interval];
+                foldsChanged = true;
+                folds.insert(fold);
+            } else if (interval.m_start.m_line < lineStart && interval.m_end.m_line > lineEnd) {
+                fold.m_end.m_line -=  (lineEnd - lineStart + 1);
+                codeFoldState[fold] = m_codeFoldState[interval];
+                foldsChanged = true;
+                folds.insert(fold);
+            } else
+                foldsChanged = true;
+        }
+        if (foldsChanged) {
+            m_codeFoldState = std::move(codeFoldState);
+            m_codeFoldKeys = std::move(folds);
+            m_saveCodeFoldStateRequested = true;
+        }
+
         // use clamp to ensure valid results instead of assert.
-        auto start = std::clamp(lineStart, 0, (i32) m_lines.size() - 1);
-        auto end = std::clamp(lineEnd, 0, (i32) m_lines.size());
+        auto start = std::clamp(lineStart, 0, (i32) size() - 1);
+        auto end = std::clamp(lineEnd, 0, (i32) size());
         if (start > end)
             std::swap(start, end);
 
-        m_lines.erase(m_lines.begin() + lineStart, m_lines.begin() + lineEnd + 1);
+        m_unfoldedLines.erase(m_unfoldedLines.begin() + lineStart, m_unfoldedLines.begin() + lineEnd + 1);
 
         m_textChanged = true;
     }
 
-    void TextEditor::removeLine(i32 index) {
-        removeLine(index, index);
+    void TextEditor::Lines::removeLine(i32 index) {
+        removeLines(index, index);
     }
 
-    void TextEditor::insertLine(i32 index, const std::string &text) {
-        if (index < 0 || index > (i32) m_lines.size())
+    void TextEditor::Lines::insertLine(i32 index, const std::string &text) {
+        if (index < 0 || index > (i32) size())
             return;
         auto &line = insertLine(index);
         line.append(text);
@@ -185,24 +247,22 @@ namespace hex::ui {
         m_textChanged = true;
     }
 
-    TextEditor::Line &TextEditor::insertLine(i32 index) {
+    TextEditor::Line &TextEditor::Lines::insertLine(i32 index) {
 
         if (isEmpty())
-            return *m_lines.insert(m_lines.begin(), Line());
+            return *m_unfoldedLines.insert(m_unfoldedLines.begin(), Line());
 
-        if (index == (i32)m_lines.size())
-            return *m_lines.insert(m_lines.end(), Line());
+        if (index == (i32)size())
+            return *m_unfoldedLines.insert(m_unfoldedLines.end(), Line());
 
-        auto newLine = Line();
-
-        TextEditor::Line &result = *m_lines.insert(m_lines.begin() + index, newLine);
+        TextEditor::Line &result = *m_unfoldedLines.insert(m_unfoldedLines.begin() + index, Line());
         result.m_colorized = false;
 
         ErrorMarkers errorMarkers;
         bool errorMarkerChanged = false;
         for (auto &errorMarker : m_errorMarkers) {
             if (errorMarker.first.m_line > index) {
-                auto newCoord = setCoordinates(errorMarker.first.m_line + 1, errorMarker.first.m_column);
+                auto newCoord = lineCoordinates(errorMarker.first.m_line + 1, errorMarker.first.m_column);
                 errorMarkers.insert(ErrorMarkers::value_type(newCoord, errorMarker.second));
                 errorMarkerChanged = true;
             } else
@@ -212,8 +272,8 @@ namespace hex::ui {
             m_errorMarkers = std::move(errorMarkers);
 
         Breakpoints breakpoints;
-        for (auto breakpoint: m_breakpoints) {
-            if (breakpoint >= (u32)index) {
+        for (auto breakpoint : m_breakpoints) {
+            if (breakpoint > (u32) index) {
                 breakpoints.insert(breakpoint + 1);
                 m_breakPointsChanged = true;
             } else
@@ -222,87 +282,137 @@ namespace hex::ui {
         if (m_breakPointsChanged)
             m_breakpoints = std::move(breakpoints);
 
+        CodeFoldKeys folds;
+        Range fold;
+        CodeFoldState codeFoldState;
+        bool foldsChanged = false;
+        for (auto key : m_codeFoldKeys) {
+            fold = key;
+            if (index <= key.m_start.m_line) {
+                fold.m_start.m_line++;
+                fold.m_end.m_line++;
+                foldsChanged = true;
+            } else if (index <= key.m_end.m_line) {
+                fold.m_end.m_line++;
+                foldsChanged = true;
+            }
+            codeFoldState[fold] = m_codeFoldState[key];
+            folds.insert(fold);
+        }
+        if (foldsChanged) {
+            m_codeFoldState = std::move(codeFoldState);
+            m_codeFoldKeys = std::move(folds);
+            m_saveCodeFoldStateRequested = true;
+        }
+
         return result;
     }
 
     void TextEditor::setText(const std::string &text, bool undo) {
+
         UndoRecord u;
-        if (!m_readOnly && undo) {
-            u.m_before = m_state;
-            u.m_removed = getText();
-            u.m_removedRange.m_start = setCoordinates(0, 0);
-            u.m_removedRange.m_end = setCoordinates(-1, -1);
+        if (!m_lines.m_readOnly && undo) {
+            u.m_before = m_lines.m_state;
+            u.m_removed = m_lines.getText(false);
+            u.m_removedRange.m_start = m_lines.lineCoordinates(0, 0);
+            u.m_removedRange.m_end = m_lines.lineCoordinates(-1, -1);
             if (u.m_removedRange.m_start == Invalid || u.m_removedRange.m_end == Invalid)
                 return;
         }
         auto vectorString = wolv::util::splitString(text, "\n", false);
         auto lineCount = vectorString.size();
         if (lineCount == 0) {
-            m_lines.resize(1);
-            m_lines[0].clear();
+            m_lines.m_unfoldedLines.resize(1);
+            m_lines.m_unfoldedLines[0].clear();
         } else {
-            m_lines.clear();
-            m_lines.resize(lineCount);
+            m_lines.m_hiddenLines.clear();
             u64 i = 0;
-            for (const auto& line: vectorString) {
-                m_lines[i].setLine(line);
-                m_lines[i].m_colorized = false;
-                m_lines[i].m_lineMaxColumn = -1;
-                m_lines[i].m_lineMaxColumn = m_lines[i].maxColumn();
+            while (vectorString[i].starts_with("//+-")) {
+                m_lines.m_hiddenLines.push_back(HiddenLine(i, vectorString[i])), i++;
+            }
+            vectorString.erase(vectorString.begin(), vectorString.begin() + i);
+            lineCount = vectorString.size();
+            i = 0;
+            m_lines.m_unfoldedLines.clear();
+            m_lines.m_unfoldedLines.resize(lineCount);
+
+            for (auto line: vectorString) {
+                auto &unfoldedLine = m_lines.m_unfoldedLines[i];
+
+                unfoldedLine.setLine(line);
+                unfoldedLine.m_colorized = false;
+                unfoldedLine.m_lineMaxColumn = unfoldedLine.maxColumn();
                 i++;
             }
         }
-        if (!m_readOnly && undo) {
+        if (!m_lines.m_readOnly && undo) {
             u.m_added = text;
-            u.m_addedRange.m_start = setCoordinates(0, 0);
-            u.m_addedRange.m_end = setCoordinates(-1, -1);
+            u.m_addedRange.m_start = m_lines.lineCoordinates(0, 0);
+            u.m_addedRange.m_end = m_lines.lineCoordinates(-1, -1);
             if (u.m_addedRange.m_start == Invalid || u.m_addedRange.m_end == Invalid)
                 return;
         }
-        m_textChanged = true;
-        m_scrollToTop = true;
-        if (!m_readOnly && undo) {
-            u.m_after = m_state;
-            UndoRecords v;
+        m_lines.m_textChanged = true;
+        if (!m_lines.m_readOnly && undo) {
+            u.m_after = m_lines.m_state;
+            std::vector<UndoRecord> v;
             v.push_back(u);
-            addUndo(v);
+            m_lines.addUndo(v);
         }
-
-        colorize();
+        m_lines.setAllCodeFolds();
+        applyCodeFoldStates();
+        m_lines.m_useSavedFoldStatesRequested = true;
+        m_lines.colorize();
     }
 
     void TextEditor::enterCharacter(ImWchar character, bool shift) {
-        if (m_readOnly)
+
+        if (m_lines.m_readOnly)
             return;
+        auto row = lineIndexToRow(m_lines.m_state.m_cursorPosition.m_line);
+        if (m_lines.m_foldedLines.contains(row)) {
+            auto foldedLine = m_lines.m_foldedLines[row];
+            auto foldedCoords = m_lines.unfoldedToFoldedCoords(m_lines.m_state.m_cursorPosition);
+            if (foldedLine.m_foldedLine.m_chars[foldedCoords.m_column] == '.') {
+                auto keyCount = foldedLine.m_keys.size();
+                for (u32 i = 0; i < keyCount; i++) {
+                    if (foldedCoords.m_column >= foldedLine.m_ellipsisIndices[i] &&
+                     foldedCoords.m_column <= foldedLine.m_ellipsisIndices[i] + 3) {
+                        m_lines.openCodeFold(m_lines.m_foldedLines[row].m_keys[i]);
+                        return;
+                    }
+                }
+            }
+        }
 
         UndoRecord u;
 
-        u.m_before = m_state;
+        u.m_before =m_lines. m_state;
 
-        resetCursorBlinkTime();
+        m_lines.resetCursorBlinkTime();
 
-        if (hasSelection()) {
+        if (m_lines.hasSelection()) {
             if (character == '\t') {
 
-                auto start = m_state.m_selection.m_start;
-                auto end = m_state.m_selection.m_end;
+                auto start = m_lines.m_state.m_selection.m_start;
+                auto end = m_lines.m_state.m_selection.m_end;
                 auto originalEnd = end;
 
                 start.m_column = 0;
 
                 if (end.m_column == 0 && end.m_line > 0)
                     --end.m_line;
-                if (end.m_line >= (i32) m_lines.size())
-                    end.m_line = isEmpty() ? 0 : (i32) m_lines.size() - 1;
-                end.m_column = lineMaxColumn(end.m_line);
+                if (end.m_line >= (i32) m_lines.getGlobalRowMax())
+                    end.m_line = m_lines.isEmpty() ? 0 : (i32) m_lines.getGlobalRowMax();
+                end.m_column = m_lines.lineMaxColumn(end.m_line);
 
                 u.m_removedRange = Range(start, end);
-                u.m_removed = getText(u.m_removedRange);
+                u.m_removed = m_lines.getRange(u.m_removedRange);
 
                 bool modified = false;
 
                 for (i32 i = start.m_line; i <= end.m_line; i++) {
-                    auto &line = m_lines[i];
+                    auto &line = m_lines.m_unfoldedLines[i];
                     if (shift) {
                         if (!line.empty()) {
                             auto index = line.m_chars.find_first_not_of(' ', 0);
@@ -327,61 +437,63 @@ namespace hex::ui {
                 if (modified) {
                     Coordinates rangeEnd;
                     if (originalEnd.m_column != 0) {
-                        end = setCoordinates(end.m_line, -1);
+                        end = m_lines.lineCoordinates(end.m_line, -1);
                         if (end == Invalid)
                             return;
                         rangeEnd = end;
-                        u.m_added = getText(Range(start, end));
+                        u.m_added = m_lines.getRange(Range(start, end));
                     } else {
-                        end = setCoordinates(originalEnd.m_line, 0);
-                        rangeEnd = setCoordinates(end.m_line - 1, -1);
+                        end = m_lines.lineCoordinates(originalEnd.m_line, 0);
+                        rangeEnd = m_lines.lineCoordinates(end.m_line - 1, -1);
                         if (end == Invalid || rangeEnd == Invalid)
                             return;
-                        u.m_added = getText(Range(start, rangeEnd));
+                        u.m_added = m_lines.getRange(Range(start, rangeEnd));
                     }
 
                     u.m_addedRange = Range(start, rangeEnd);
-                    u.m_after = m_state;
+                    u.m_after = m_lines.m_state;
 
-                    m_state.m_selection = Range(start, end);
+                    m_lines.m_state.m_selection = Range(start, end);
                     std::vector<UndoRecord> v;
                     v.push_back(u);
-                    addUndo(v);
+                    m_lines.addUndo(v);
 
-                    m_textChanged = true;
+                    m_lines.m_textChanged = true;
 
-                    ensureCursorVisible();
+                    m_lines.ensureCursorVisible();
                 }
 
                 return;
             }    // c == '\t'
             else {
-                u.m_removed = getSelectedText();
-                u.m_removedRange = Range(m_state.m_selection);
-                deleteSelection();
+                u.m_removed = m_lines.getSelectedText();
+                u.m_removedRange = Range(m_lines.m_state.m_selection);
+                m_lines.deleteSelection();
             }
         }    // HasSelection
 
-        auto coord = setCoordinates(m_state.m_cursorPosition);
+        auto coord = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
         u.m_addedRange.m_start = coord;
 
-        if (m_lines.empty())
-            m_lines.emplace_back();
+        if (m_lines.m_unfoldedLines.empty())
+            m_lines.m_unfoldedLines.push_back(Line());
 
         if (character == '\n') {
-            insertLine(coord.m_line + 1);
-            auto &line = m_lines[coord.m_line];
-            auto &newLine = m_lines[coord.m_line + 1];
+            m_lines.insertLine(coord.m_line + 1);
+            auto &line = m_lines.m_unfoldedLines[coord.m_line];
+            auto &newLine = m_lines.m_unfoldedLines[coord.m_line + 1];
+            if (m_lines.m_languageDefinition.m_autoIndentation)
+                newLine.append(std::string(m_lines.m_leadingLineSpaces[coord.m_line], ' '));
 
-            if (m_languageDefinition.m_autoIndentation)
-                for (u64 it = 0; it < line.size() && isascii(line[it]) && isblank(line[it]); ++it)
-                    newLine.push_back(line[it]);
+            //if (m_languageDefinition.m_autoIndentation)
+              //  for (u64 it = 0; it < line.size() && isascii(line[it]) && isblank(line[it]); ++it)
+                //    newLine.push_back(line[it]);
 
             const u64 whitespaceSize = newLine.size();
             i32 charStart;
             i32 charPosition;
-            auto charIndex = lineCoordinatesToIndex(coord);
-            if (charIndex < (i32) whitespaceSize && m_languageDefinition.m_autoIndentation) {
+            auto charIndex = m_lines.lineCoordsIndex(coord);
+            if (charIndex < (i32) whitespaceSize && m_lines.m_languageDefinition.m_autoIndentation) {
                 charStart = (i32) whitespaceSize;
                 charPosition = charIndex;
             } else {
@@ -391,21 +503,21 @@ namespace hex::ui {
             newLine.insert(newLine.end(), line.begin() + charStart, line.end());
             line.erase(line.begin() + charStart,(u64) -1);
             line.m_colorized = false;
-            setCursorPosition(getCharacterCoordinates(coord.m_line + 1, charPosition));
-            u.m_added = (char) character;
-            u.m_addedRange.m_end = setCoordinates(m_state.m_cursorPosition);
+            m_lines.setCursorPosition(m_lines.lineIndexCoords(coord.m_line + 2, charPosition), false);
+            u.m_added = (char) character + std::string(charPosition, ' ');
+            u.m_addedRange.m_end = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
         } else if (character == '\t') {
-            auto &line = m_lines[coord.m_line];
-            auto charIndex = lineCoordinatesToIndex(coord);
+            auto &line = m_lines.m_unfoldedLines[coord.m_line];
+            auto charIndex = m_lines.lineCoordsIndex(coord);
 
             if (!shift) {
                 auto spacesToInsert = m_tabSize - (charIndex % m_tabSize);
                 std::string spaces(spacesToInsert, ' ');
                 line.insert(line.begin() + charIndex, spaces.begin(), spaces.end());
                 line.m_colorized = false;
-                setCursorPosition(getCharacterCoordinates(coord.m_line, charIndex + spacesToInsert));
+                m_lines.setCursorPosition(m_lines.lineIndexCoords(coord.m_line + 1, charIndex + spacesToInsert), false);
                 u.m_added = spaces;
-                u.m_addedRange.m_end = setCoordinates(m_state.m_cursorPosition);
+                u.m_addedRange.m_end = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
             } else {
                 auto spacesToRemove = (charIndex % m_tabSize);
                 if (spacesToRemove == 0) spacesToRemove = m_tabSize;
@@ -420,17 +532,17 @@ namespace hex::ui {
                 }
                 std::string spaces(spacesRemoved, ' ');
                 u.m_removed = spaces;
-                u.m_removedRange = Range(Coordinates(coord.m_line, charIndex), Coordinates(coord.m_line, charIndex + spacesRemoved));
+                u.m_removedRange = Range(lineCoordinates( coord.m_line, charIndex), lineCoordinates( coord.m_line, charIndex + spacesRemoved));
                 line.m_colorized = false;
-                setCursorPosition(getCharacterCoordinates(coord.m_line, std::max(0, charIndex)));
+                m_lines.setCursorPosition(m_lines.lineIndexCoords(coord.m_line + 1, std::max(0, charIndex)), false);
             }
-            u.m_addedRange.m_end = setCoordinates(m_state.m_cursorPosition);
+            u.m_addedRange.m_end = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
         } else {
-            std::string buf;
+            std::string buf = "";
             imTextCharToUtf8(buf, character);
-            if (!buf.empty()) {
-                auto &line = m_lines[coord.m_line];
-                auto charIndex = lineCoordinatesToIndex(coord);
+            if (buf.size() > 0) {
+                auto &line = m_lines.m_unfoldedLines[coord.m_line];
+                auto charIndex = m_lines.lineCoordsIndex(coord);
 
                 if (m_overwrite && charIndex < (i32) line.size()) {
                     i64 column = coord.m_column;
@@ -438,7 +550,7 @@ namespace hex::ui {
                     auto charCount = stringCharacterCount(c);
                     auto d = c.size();
 
-                    u.m_removedRange = Range(m_state.m_cursorPosition, getCharacterCoordinates(coord.m_line, coord.m_column + charCount));
+                    u.m_removedRange = Range(m_lines.m_state.m_cursorPosition, m_lines.lineIndexCoords(coord.m_line + 1, coord.m_column + charCount));
                     u.m_removed = std::string(line.m_chars.begin() + charIndex, line.m_chars.begin() + charIndex + d);
                     line.erase(line.begin() + charIndex, d);
                     line.m_colorized = false;
@@ -476,24 +588,24 @@ namespace hex::ui {
                 line.insert(line.begin() + charIndex, buf.begin(), buf.end());
                 line.m_colorized = false;
                 u.m_added = buf;
-                u.m_addedRange.m_end = getCharacterCoordinates(coord.m_line, charIndex + buf.size());
-                setCursorPosition(getCharacterCoordinates(coord.m_line, charIndex + charCount));
+                u.m_addedRange.m_end = m_lines.lineIndexCoords(coord.m_line + 1, charIndex + buf.size());
+                m_lines.setCursorPosition(m_lines.lineIndexCoords(coord.m_line + 1, charIndex + charCount), false);
             } else
                 return;
         }
 
-        u.m_after = m_state;
-        m_textChanged = true;
+        u.m_after = m_lines.m_state;
+        m_lines.m_textChanged = true;
 
-        UndoRecords v;
+        std::vector<UndoRecord> v;
         v.push_back(u);
-        addUndo(v);
-        colorize();
-        refreshSearchResults();
-        ensureCursorVisible();
+        m_lines.addUndo(v);
+        m_lines.colorize();
+        m_lines.refreshSearchResults();
+        m_lines.ensureCursorVisible();
     }
 
-    void TextEditor::refreshSearchResults() {
+    void TextEditor::Lines::refreshSearchResults() {
         std::string findWord = m_findReplaceHandler.getFindWord();
         if (!findWord.empty()) {
             m_findReplaceHandler.resetMatches();
@@ -501,26 +613,21 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::insertText(const std::string &value) {
+    void TextEditor::Lines::insertText(const std::string &value) {
         insertText(value.c_str());
     }
 
-    void TextEditor::insertText(const char *value) {
+    void TextEditor::Lines::insertText(const char *value) {
         if (value == nullptr)
             return;
 
-        auto pos = setCoordinates(m_state.m_cursorPosition);
+        insertTextAtCursor(value);
 
-        insertTextAt(pos, value);
-        m_lines[pos.m_line].m_colorized = false;
-
-        setSelection(Range(pos, pos));
-        setCursorPosition(pos);
         refreshSearchResults();
         colorize();
     }
 
-    void TextEditor::deleteSelection() {
+    void TextEditor::Lines::deleteSelection() {
 
         if (m_state.m_selection.m_end == m_state.m_selection.m_start)
             return;
@@ -528,91 +635,91 @@ namespace hex::ui {
         deleteRange(m_state.m_selection);
 
         setSelection(Range(m_state.m_selection.m_start, m_state.m_selection.m_start));
-        setCursorPosition(m_state.m_selection.m_start);
+        setCursorPosition(m_state.m_selection.m_start, false);
         refreshSearchResults();
         colorize();
     }
 
     void TextEditor::deleteChar() {
-        resetCursorBlinkTime();
+        m_lines.resetCursorBlinkTime();
 
-        if (isEmpty() || m_readOnly)
+        if (m_lines.isEmpty() || m_lines.m_readOnly)
             return;
 
         UndoRecord u;
-        u.m_before = m_state;
+        u.m_before = m_lines.m_state;
 
-        if (hasSelection()) {
-            u.m_removed = getSelectedText();
-            u.m_removedRange = m_state.m_selection;
-            deleteSelection();
+        if (m_lines.hasSelection()) {
+            u.m_removed = m_lines.getSelectedText();
+            u.m_removedRange = m_lines.m_state.m_selection;
+            m_lines.deleteSelection();
         } else {
-            auto pos = setCoordinates(m_state.m_cursorPosition);
-            setCursorPosition(pos);
-            auto &line = m_lines[pos.m_line];
+            auto pos = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
+            m_lines.setCursorPosition(pos, false);
+            auto &line = m_lines.m_unfoldedLines[pos.m_line];
 
-            if (pos.m_column == lineMaxColumn(pos.m_line)) {
+            if (pos.m_column == line.maxColumn()) {
                 if (pos.m_line == (i32) m_lines.size() - 1)
                     return;
 
                 u.m_removed = '\n';
-                u.m_removedRange.m_start = u.m_removedRange.m_end = setCoordinates(m_state.m_cursorPosition);
+                u.m_removedRange.m_start = u.m_removedRange.m_end = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
                 advance(u.m_removedRange.m_end);
 
-                auto &nextLine = m_lines[pos.m_line + 1];
+                auto &nextLine = m_lines.m_unfoldedLines[pos.m_line + 1];
                 line.insert(line.end(), nextLine.begin(), nextLine.end());
                 line.m_colorized = false;
-                removeLine(pos.m_line + 1);
+                m_lines.removeLine(pos.m_line + 1);
 
             } else {
-                i64 charIndex = lineCoordinatesToIndex(pos);
-                u.m_removedRange.m_start = u.m_removedRange.m_end = setCoordinates(m_state.m_cursorPosition);
+                i64 charIndex = m_lines.lineCoordsIndex(pos);
+                u.m_removedRange.m_start = u.m_removedRange.m_end = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
                 u.m_removedRange.m_end.m_column++;
-                u.m_removed = getText(u.m_removedRange);
+                u.m_removed = m_lines.getRange(u.m_removedRange);
 
                 auto d = utf8CharLength(line[charIndex][0]);
                 line.erase(line.begin() + charIndex, d);
                 line.m_colorized = false;
             }
 
-            m_textChanged = true;
+            m_lines.m_textChanged = true;
 
-            colorize();
+            m_lines.colorize();
         }
 
-        u.m_after = m_state;
-        UndoRecords v;
+        u.m_after = m_lines.m_state;
+        std::vector<UndoRecord> v;
         v.push_back(u);
-        addUndo(v);
-        refreshSearchResults();
+        m_lines.addUndo(v);
+        m_lines.refreshSearchResults();
     }
 
     void TextEditor::backspace() {
-        resetCursorBlinkTime();
-        if (isEmpty() || m_readOnly)
+        m_lines.resetCursorBlinkTime();
+        if (m_lines.isEmpty() || m_lines.m_readOnly)
             return;
 
         UndoRecord u;
-        u.m_before = m_state;
+        u.m_before = m_lines.m_state;
 
-        if (hasSelection()) {
-            u.m_removed = getSelectedText();
-            u.m_removedRange = m_state.m_selection;
-            deleteSelection();
+        if (m_lines.hasSelection()) {
+            u.m_removed = m_lines.getSelectedText();
+            u.m_removedRange = m_lines.m_state.m_selection;
+            m_lines.deleteSelection();
         } else {
-            auto pos = setCoordinates(m_state.m_cursorPosition);
-            auto &line = m_lines[pos.m_line];
+            auto pos = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
+            auto &line = m_lines.m_unfoldedLines[pos.m_line];
 
             if (pos.m_column == 0) {
                 if (pos.m_line == 0)
                     return;
 
                 u.m_removed = '\n';
-                u.m_removedRange.m_start = u.m_removedRange.m_end = setCoordinates(pos.m_line - 1, -1);
+                u.m_removedRange.m_start = u.m_removedRange.m_end = m_lines.lineCoordinates(pos.m_line - 1, -1);
                 advance(u.m_removedRange.m_end);
 
-                auto &prevLine = m_lines[pos.m_line - 1];
-                auto prevSize = lineMaxColumn(pos.m_line - 1);
+                auto &prevLine = m_lines.m_unfoldedLines[pos.m_line - 1];
+                auto prevSize = prevLine.maxColumn();
                 if (prevSize == 0)
                     prevLine = line;
                 else
@@ -621,12 +728,12 @@ namespace hex::ui {
 
 
                 ErrorMarkers errorMarker;
-                for (auto &i: m_errorMarkers)
-                    errorMarker.insert(ErrorMarkers::value_type(i.first.m_line - 1 == m_state.m_cursorPosition.m_line ? setCoordinates(i.first.m_line - 1, i.first.m_column) : i.first, i.second));
-                m_errorMarkers = std::move(errorMarker);
-                removeLine(m_state.m_cursorPosition.m_line);
-                --m_state.m_cursorPosition.m_line;
-                m_state.m_cursorPosition.m_column = prevSize;
+                for (auto &i: m_lines.m_errorMarkers)
+                    errorMarker.insert(ErrorMarkers::value_type(i.first.m_line - 1 == m_lines.m_state.m_cursorPosition.m_line ? m_lines.lineCoordinates(i.first.m_line - 1, i.first.m_column) : i.first, i.second));
+                m_lines.m_errorMarkers = std::move(errorMarker);
+                m_lines.removeLine(m_lines.m_state.m_cursorPosition.m_line);
+                m_lines.m_state.m_cursorPosition.m_line--;
+                m_lines.m_state.m_cursorPosition.m_column = prevSize;
             } else {
                 pos.m_column -= 1;
                 i64 column = pos.m_column;
@@ -635,80 +742,80 @@ namespace hex::ui {
                     std::string charToRemoveNext = line[column + 1];
                     if (charToRemove == "{" && charToRemoveNext == "}") {
                         charToRemove += "}";
-                        m_state.m_cursorPosition.m_column += 1;
+                        m_lines.m_state.m_cursorPosition.m_column += 1;
                     } else if (charToRemove == "[" && charToRemoveNext == "]") {
                         charToRemove += "]";
-                        m_state.m_cursorPosition.m_column += 1;
+                        m_lines.m_state.m_cursorPosition.m_column += 1;
                     } else if (charToRemove == "(" && charToRemoveNext == ")") {
                         charToRemove += ")";
-                        m_state.m_cursorPosition.m_column += 1;
+                        m_lines.m_state.m_cursorPosition.m_column += 1;
                     } else if (charToRemove == "\"" && charToRemoveNext == "\"") {
                         charToRemove += "\"";
-                        m_state.m_cursorPosition.m_column += 1;
+                        m_lines.m_state.m_cursorPosition.m_column += 1;
                     } else if (charToRemove == "'" && charToRemoveNext == "'") {
                         charToRemove += "'";
-                        m_state.m_cursorPosition.m_column += 1;
+                        m_lines.m_state.m_cursorPosition.m_column += 1;
                     }
                 }
-                u.m_removedRange = Range(pos, m_state.m_cursorPosition);
+                u.m_removedRange = Range(pos, m_lines.m_state.m_cursorPosition);
                 u.m_removed = charToRemove;
-                auto charStart = lineCoordinatesToIndex(pos);
-                auto charEnd = lineCoordinatesToIndex(m_state.m_cursorPosition);
+                auto charStart = m_lines.lineCoordsIndex(pos);
+                auto charEnd = m_lines.lineCoordsIndex(m_lines.m_state.m_cursorPosition);
                 line.erase(line.begin() + charStart, charEnd - charStart);
-                m_state.m_cursorPosition = pos;
+                m_lines.m_state.m_cursorPosition = pos;
                 line.m_colorized = false;
             }
 
-            m_textChanged = true;
+            m_lines.m_textChanged = true;
 
-            ensureCursorVisible();
-            colorize();
+            m_lines.ensureCursorVisible();
+            m_lines.colorize();
         }
 
-        u.m_after = m_state;
-        UndoRecords v;
+        u.m_after = m_lines.m_state;
+        std::vector<UndoRecord> v;
         v.push_back(u);
-        addUndo(v);
-        refreshSearchResults();
+        m_lines.addUndo(v);
+        m_lines.refreshSearchResults();
     }
 
     void TextEditor::copy() {
-        if (hasSelection()) {
-            ImGui::SetClipboardText(getSelectedText().c_str());
+        if (m_lines.hasSelection()) {
+            ImGui::SetClipboardText(m_lines.getSelectedText().c_str());
         } else {
-            if (!isEmpty()) {
+            if (!m_lines.isEmpty()) {
                 std::string str;
-                const auto &line = m_lines[setCoordinates(m_state.m_cursorPosition).m_line];
-                std::ranges::copy(line.m_chars, std::back_inserter(str));
+                const auto &line = m_lines.m_unfoldedLines[m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition).m_line];
+                std::copy(line.m_chars.begin(), line.m_chars.end(), std::back_inserter(str));
                 ImGui::SetClipboardText(str.c_str());
             }
         }
     }
 
     void TextEditor::cut() {
-        if (m_readOnly) {
+        if (m_lines.m_readOnly) {
             copy();
         } else {
-            if (!hasSelection()) {
-                auto lineIndex = setCoordinates(m_state.m_cursorPosition).m_line;
+            if (!m_lines.hasSelection()) {
+                auto lineIndex = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition).m_line;
                 if (lineIndex < 0 || lineIndex >= (i32) m_lines.size())
                     return;
-                setSelection(Range(setCoordinates(lineIndex, 0), setCoordinates(lineIndex + 1, 0)));
+                setSelection(Range(m_lines.lineCoordinates(lineIndex, 0), m_lines.lineCoordinates(lineIndex + 1, 0)));
             }
             UndoRecord u;
-            u.m_before = m_state;
-            u.m_removed = getSelectedText();
-            u.m_removedRange = m_state.m_selection;
+            u.m_before = m_lines.m_state;
+            u.m_removed = m_lines.getSelectedText();
+            u.m_removedRange = m_lines.m_state.m_selection;
 
             copy();
-            deleteSelection();
+            m_lines.deleteSelection();
 
-            u.m_after = m_state;
+            u.m_after = m_lines.m_state;
             std::vector<UndoRecord> v;
             v.push_back(u);
-            addUndo(v);
+            m_lines.addUndo(v);
         }
-        refreshSearchResults();
+        m_lines.refreshSearchResults();
     }
 
     void TextEditor::doPaste(const char *clipText) {
@@ -716,35 +823,39 @@ namespace hex::ui {
         if (clipText != nullptr) {
             auto clipTextStr = wolv::util::preprocessText(clipText);
 
-            u.m_before = m_state;
+            u.m_before = m_lines.m_state;
 
-            if (hasSelection()) {
-                u.m_removed = getSelectedText();
-                u.m_removedRange = m_state.m_selection;
-                deleteSelection();
+            if (m_lines.hasSelection()) {
+                u.m_removed = m_lines.getSelectedText();
+                u.m_removedRange = m_lines.m_state.m_selection;
+                m_lines.deleteSelection();
             }
 
             u.m_added = clipTextStr;
-            u.m_addedRange.m_start = setCoordinates(m_state.m_cursorPosition);
-            insertText(clipTextStr);
+            u.m_addedRange.m_start = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
+            m_lines.insertText(clipTextStr);
 
-            u.m_addedRange.m_end = setCoordinates(m_state.m_cursorPosition);
-            u.m_after = m_state;
-            UndoRecords v;
+            u.m_addedRange.m_end = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
+
+
+            m_lines.setCursorPosition(u.m_addedRange.m_end, false);
+            setSelection(Range(u.m_addedRange.m_end, u.m_addedRange.m_end));
+            u.m_after = m_lines.m_state;
+            std::vector<UndoRecord> v;
             v.push_back(u);
-            addUndo(v);
+            m_lines.addUndo(v);
         }
-        refreshSearchResults();
+        m_lines.refreshSearchResults();
     }
 
     void TextEditor::paste() {
-        if (m_readOnly)
+        if (m_lines.m_readOnly)
             return;
 
         const char *clipText =  ImGui::GetClipboardText();
         if (clipText != nullptr) {
             auto stringVector = wolv::util::splitString(clipText, "\n", false);
-            if (std::ranges::any_of(stringVector, [](const std::string &s) { return s.size() > 1024; })) {
+            if (std::any_of(stringVector.begin(), stringVector.end(), [](const std::string &s) { return s.size() > 1024; })) {
                 ui::PopupQuestion::open("hex.builtin.view.pattern_editor.warning_paste_large"_lang, [this, clipText]() {
                     this->doPaste(clipText);
                 }, [] {});
@@ -755,36 +866,44 @@ namespace hex::ui {
     }
 
     bool TextEditor::canUndo() {
-        return !m_readOnly && m_undoIndex > 0;
+        return !m_lines.m_readOnly && m_lines.m_undoIndex > 0;
     }
 
     bool TextEditor::canRedo() const {
-        return !m_readOnly && m_undoIndex < (i32) m_undoBuffer.size();
+        return !m_lines.m_readOnly && m_lines.m_undoIndex < (i32) m_lines.m_undoBuffer.size();
     }
 
     void TextEditor::undo() {
         if (canUndo()) {
-            m_undoIndex--;
-            m_undoBuffer[m_undoIndex].undo(this);
+            m_lines.m_undoIndex--;
+            m_lines.m_undoBuffer[m_lines.m_undoIndex].undo(this);
         }
-        refreshSearchResults();
+        m_lines.refreshSearchResults();
     }
 
     void TextEditor::redo() {
         if (canRedo()) {
-            m_undoBuffer[m_undoIndex].redo(this);
-            m_undoIndex++;
+            m_lines.m_undoBuffer[m_lines.m_undoIndex].redo(this);
+            m_lines.m_undoIndex++;
         }
-        refreshSearchResults();
+        m_lines.refreshSearchResults();
     }
 
-    std::string TextEditor::getText()  {
-        auto start = setCoordinates(0, 0);
-        auto size = m_lines.size();
-        auto end = setCoordinates(-1, m_lines[size - 1].m_lineMaxColumn);
+    std::string TextEditor::Lines::getText(bool includeHiddenLines) {
+        auto start = lineCoordinates(0, 0);
+        auto size = m_unfoldedLines.size();
+        auto line = m_unfoldedLines[size - 1];
+        auto end = Coordinates( size - 1, line.m_lineMaxColumn);
         if (start == Invalid || end == Invalid)
             return "";
-        return getText(Range(start, end));
+        std::string result;
+        if (includeHiddenLines) {
+            for (const auto &hiddenLine: m_hiddenLines) {
+                result += hiddenLine.m_line + "\n";
+            }
+        }
+        result += getRange(Range(start, end));
+        return result;
     }
 
     std::vector<std::string> TextEditor::getTextLines() const {
@@ -792,7 +911,7 @@ namespace hex::ui {
 
         result.reserve(m_lines.size());
 
-        for (const auto &line: m_lines) {
+        for (const auto &line: m_lines.m_unfoldedLines) {
             std::string text = line.m_chars;
             result.emplace_back(std::move(text));
         }
@@ -800,56 +919,56 @@ namespace hex::ui {
         return result;
     }
 
-    std::string TextEditor::getSelectedText() {
-        return getText(m_state.m_selection);
+    std::string TextEditor::Lines::getSelectedText() {
+        return getRange(m_state.m_selection);
     }
 
     std::string TextEditor::getLineText(i32 line) {
-        auto sanitizedLine = setCoordinates(line, 0);
-        auto endLine = setCoordinates(line, -1);
-        if (sanitizedLine == Invalid || endLine == Invalid)
+        auto sanitizedLine = m_lines.lineCoordinates(line, 0);
+        auto endLine = m_lines.lineCoordinates(line, -1);
+        if (!sanitizedLine.isValid(m_lines) || !endLine.isValid(m_lines))
             return "";
-        return getText(Range(sanitizedLine, endLine));
+        return m_lines.getRange(Range(sanitizedLine, endLine));
     }
 
     TextEditor::UndoRecord::UndoRecord(
             std::string added,
-            const TextEditor::Range addedRange,
+            TextEditor::Range addedRange,
             std::string removed,
-            const TextEditor::Range removedRange,
+            TextEditor::Range removedRange,
             TextEditor::EditorState &before,
-            TextEditor::EditorState &after) : m_added(std::move(added)), m_addedRange(addedRange), m_removed(std::move(removed)), m_removedRange(removedRange), m_before(before), m_after(after) {}
+            TextEditor::EditorState &after) : m_added(added), m_addedRange(addedRange), m_removed(removed), m_removedRange(removedRange), m_before(before), m_after(after) {}
 
     void TextEditor::UndoRecord::undo(TextEditor *editor) {
         if (!m_added.empty()) {
-            editor->deleteRange(m_addedRange);
-            editor->colorize();
+            editor->m_lines.deleteRange(m_addedRange);
+            editor->m_lines.colorize();
         }
 
         if (!m_removed.empty()) {
             auto start = m_removedRange.m_start;
-            editor->insertTextAt(start, m_removed.c_str());
-            editor->colorize();
+            editor->m_lines.insertTextAt(start, m_removed.c_str());
+            editor->m_lines.colorize();
         }
 
-        editor->m_state = m_before;
-        editor->ensureCursorVisible();
+        editor->m_lines.m_state = m_before;
+        editor->m_lines.ensureCursorVisible();
     }
 
     void TextEditor::UndoRecord::redo(TextEditor *editor) {
         if (!m_removed.empty()) {
-            editor->deleteRange(m_removedRange);
-            editor->colorize();
+            editor->m_lines.deleteRange(m_removedRange);
+            editor->m_lines.colorize();
         }
 
         if (!m_added.empty()) {
             auto start = m_addedRange.m_start;
-            editor->insertTextAt(start, m_added.c_str());
-            editor->colorize();
+            editor->m_lines.insertTextAt(start, m_added.c_str());
+            editor->m_lines.colorize();
         }
 
-        editor->m_state = m_after;
-        editor->ensureCursorVisible();
+        editor->m_lines.m_state = m_after;
+        editor->m_lines.ensureCursorVisible();
     }
 
     void TextEditor::UndoAction::undo(TextEditor *editor) {
@@ -858,8 +977,8 @@ namespace hex::ui {
     }
 
     void TextEditor::UndoAction::redo(TextEditor *editor) {
-        for (auto & m_record : m_records)
-            m_record.redo(editor);
+        for (i32 i = 0; i < (i32) m_records.size(); i++)
+            m_records.at(i).redo(editor);
     }
 
 }
