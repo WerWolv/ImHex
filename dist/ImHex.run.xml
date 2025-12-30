@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ImHex" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" WORKING_DIR="file://$CMakeCurrentBuildDir$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="ImHex" TARGET_NAME="imhex_all" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="ImHex" RUN_TARGET_NAME="main">
+  <configuration default="false" name="ImHex" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" WORKING_DIR="file://$CMakeCurrentBuildDir$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="ImHex" TARGET_NAME="imhex_all" CONFIG_NAME="Debug-MinGW" RUN_TARGET_PROJECT_NAME="ImHex" RUN_TARGET_NAME="main">
     <envs>
       <env name="NO_DEBUG_BANNER" value="1" />
     </envs>

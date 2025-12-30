@@ -1,26 +1,79 @@
 #pragma once
 #include <pl/core/token.hpp>
 #include <pl/core/preprocessor.hpp>
-#include <pl/pattern_language.hpp>
 #include <pl/helpers/safe_iterator.hpp>
 #include <ui/text_editor.hpp>
 #include <hex/helpers/types.hpp>
-#include <hex/helpers/logger.hpp>
-
 
 namespace hex::plugin::builtin {
     class ViewPatternEditor;
     class TextHighlighter  {
     public:
-        class Interval;
+        /// Intervals are the sets finite contiguous non-negative integer that
+        /// are described by their endpoints. The sets must have the following
+        /// properties:
+        /// 1. Any two elements of the set can either have an empty intersection or
+        /// 2. their intersection is equal to one of the two sets (i.e. one is
+        /// a subset of the other).
+        /// An interval is defined to be smaller than another if:
+        /// 1. The interval lies entirely to the left of the other interval or
+        /// 2. The interval is a proper subset of the other interval.
+        /// Two intervals are equal if they have identical start and end values.
+        /// This ordering is used for things like code blocks or the token
+        /// ranges that are defined by the blocks.
+
+        class TokenInterval {
+        public:
+            friend class TextHighlighter;
+            TokenInterval() : m_start(0), m_end(0) {}
+            TokenInterval(i32 start, i32 end) : m_start(start), m_end(end) {
+                if (m_start > m_end)
+                    std::swap(m_start,m_end);
+            }
+            bool operator<(const TokenInterval &other) const {
+                return other.m_end > m_end;
+            }
+            bool operator>(const TokenInterval &other) const {
+                return m_end > other.m_end;
+            }
+            bool operator==(const TokenInterval &other) const {
+                return m_start == other.m_start && m_end == other.m_end;
+            }
+            bool operator!=(const TokenInterval &other) const {
+                return m_start != other.m_start || m_end != other.m_end;
+            }
+            bool operator<=(const TokenInterval &other) const {
+                return other.m_end >= m_end;
+            }
+            bool operator>=(const TokenInterval &other) const {
+                return m_end >= other.m_end;
+            }
+            bool contains(const TokenInterval &other) const {
+                return other.m_start >= m_start && other.m_end <= m_end;
+            }
+            bool contains(i32 value) const {
+                return value >= m_start && value <= m_end;
+            }
+            bool contiguous(const TokenInterval &other) const {
+                auto highEndDiff = m_start - other.m_end;
+                auto lowEndDiff = other.m_start - m_end;
+                return  highEndDiff == 0 || highEndDiff == 1 || lowEndDiff == 0 || lowEndDiff == 1;
+            }
+        private:
+            i32 m_start;
+            i32 m_end;
+        };
+
+        using Coordinates           = ui::TextEditor::Coordinates;
+        using TokenInterval         = TextHighlighter::TokenInterval;
         using Token                 = pl::core::Token;
         using ASTNode               = pl::core::ast::ASTNode;
         using CompileError          = pl::core::err::CompileError;
         using Identifier            = Token::Identifier;
         using IdentifierType        = Identifier::IdentifierType;
-        using UnorderedBlocks       = std::map<std::string,Interval>;
-        using OrderedBlocks         = std::map<Interval,std::string>;
-        using Scopes                = std::set<Interval>;
+        using UnorderedBlocks       = std::map<std::string,TokenInterval>;
+        using OrderedBlocks         = std::map<TokenInterval,std::string>;
+        using Scopes                = std::set<TokenInterval>;
         using Location              = pl::core::Location;
         using VectorString          = std::vector<std::string>;
         using TokenIter             = pl::hlp::SafeIterator<std::vector<Token>::const_iterator>;
@@ -36,6 +89,7 @@ namespace hex::plugin::builtin {
         using TokenSequence         = std::vector<Token>;
         using TokenIdVector         = std::vector<i32>;
         using Instances             = std::map<std::string,std::vector<i32>>;
+        using CodeFoldBlocks        = ui::TextEditor::CodeFoldBlocks;
 
         struct ParentDefinition;
         struct Definition {
@@ -83,6 +137,7 @@ namespace hex::plugin::builtin {
         using Variables   = std::map<std::string,std::vector<Definition>>;
         /// to define UDT and function variables
         using VariableMap = std::map<std::string,Variables>;
+        inline static const Coordinates Invalid = Coordinates(0x80000000, 0x80000000);
     private:
 
         VectorString m_lines;
@@ -123,42 +178,19 @@ namespace hex::plugin::builtin {
         VariableScopes m_UDTBlocks;
         VariableScopes m_functionBlocks;
         Scopes m_globalBlocks;
+        CodeFoldBlocks m_foldEndPoints;
         Inheritances m_inheritances;
         const static IdentifierTypeColor m_identifierTypeColor;
         const static TokenTypeColor m_tokenTypeColor;
 
     public:
-
-        /// Intervals are the sets finite contiguous non-negative integer that
-        /// are described by their endpoints. The sets must have the following
-        /// properties:
-        /// 1. Any two elements of the set can either have an empty intersection or
-        /// 2. their intersection is equal to one of the two sets (i.e. one is
-        /// a subset of the other).
-        /// An interval is defined to be smaller than another if:
-        /// 1. The interval lies entirely to the left of the other interval or
-        /// 2. The interval is a proper subset of the other interval.
-        /// Two intervals are equal if they have identical start and end values.
-        /// This ordering is used for things like code blocks or the token
-        /// ranges that are defined by the blocks.
-        class Interval {
-        public:
-            i32 start;
-            i32 end;
-            Interval() : start(0), end(0) {}
-            Interval(i32 start, i32 end);
-            bool operator<(const Interval &other) const;
-            bool operator>(const Interval &other) const;
-            bool operator==(const Interval &other) const;
-            bool operator!=(const Interval &other) const;
-            bool operator<=(const Interval &other) const;
-            bool operator>=(const Interval &other) const;
-            bool contains(const Interval &other) const;
-            bool contains(i32 value) const ;
-            bool contiguous(const Interval &other) const;
-        };
         constexpr static u32 Normal = 0;
         constexpr static u32 Not    = 1;
+
+        //std::atomic<bool> m_needsToUpdateColors = true;
+        //std::atomic<bool> m_wasInterrupted = false;
+        //std::atomic<bool> m_interrupt = false;
+        //std::atomic<bool> m_completed = false;
 
         pl::PatternLanguage *getPatternLanguage();
         void updateRequiredInputs();
@@ -199,9 +231,11 @@ namespace hex::plugin::builtin {
          * @brief Renders compile errors in real time
          */
         void renderErrors();
+
         /// A token range is the set of token indices of a definition. The namespace token
         /// ranges are obtained first because they are needed to obtain unique identifiers.
         void getTokenRanges(IdentifierType identifierTypeToSearch);
+        std::vector<TokenInterval> searchRangeForBlocks(TokenInterval interval);
         /// The global scope is the complement of the union of all the function and UDT token ranges
         void getGlobalTokenRanges();
         /// If the current token is a function or UDT, creates a map entry from the name to the token range. These are ordered alphabetically by name.
@@ -253,7 +287,7 @@ namespace hex::plugin::builtin {
         /// If context is empty search for the variable, if it isnt use the variable map.
         bool findOrContains(std::string &context, UnorderedBlocks tokenRange, VariableMap variableMap);
         /// Search for instances inside some block
-        void setBlockInstancesColor(const std::string &name, const Definition &definition, const Interval &block);
+        void setBlockInstancesColor(const std::string &name, const Definition &definition, const TokenInterval &block);
         /// Convenience functions.
         void skipAttribute();
         void skipArray(i32 maxSkipCount, bool forward = true);

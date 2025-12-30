@@ -11,61 +11,21 @@
 #include <toasts/toast_notification.hpp>
 
 
-
 namespace hex::plugin::builtin {
 
     using namespace pl::core;
-    using Identifier     = Token::Identifier;
-    using Keyword        = Token::Keyword;
-    using Separator      = Token::Separator;
-    using Operator       = Token::Operator;
-    using Comment        = Token::Comment;
-    using DocComment     = Token::DocComment;
-    using Literal        = Token::Literal;
-    using ValueType      = Token::ValueType;
-    using RequiredInputs = TextHighlighter::RequiredInputs;
-    using Interval       = TextHighlighter::Interval;
-
-    Interval::Interval(i32 start, i32 end) : start(start), end(end) {
-        if (start > end)
-            throw std::invalid_argument("Interval start must be less than or equal to end");
-    }
-
-    bool Interval::operator<(const Interval &other) const {
-        return other.end > end;
-    }
-
-    bool Interval::operator>(const Interval &other) const {
-        return end > other.end;
-    }
-
-    bool Interval::operator==(const Interval &other) const {
-        return start == other.start && end == other.end;
-    }
-
-    bool Interval::operator!=(const Interval &other) const {
-        return start != other.start || end != other.end;
-    }
-
-    bool Interval::operator<=(const Interval &other) const {
-        return other.end >= end;
-    }
-
-    bool Interval::operator>=(const Interval &other) const {
-        return end >= other.end;
-    }
-
-    bool Interval::contains(const Interval &other) const {
-        return other.start >= start && other.end <= end;
-    }
-
-    bool Interval::contains(i32 value) const {
-        return value >= start && value <= end;
-    }
-
-    bool Interval::contiguous(const Interval &other) const {
-        return ((start - other.end) == 1 || (other.start - end) == 1);
-    }
+    using Identifier    = Token::Identifier;
+    using Keyword       = Token::Keyword;
+    using Directive     = Token::Directive;
+    using Separator     = Token::Separator;
+    using Operator      = Token::Operator;
+    using Comment       = Token::Comment;
+    using DocComment    = Token::DocComment;
+    using Literal       = Token::Literal;
+    using ValueType     = Token::ValueType;
+    using TokenInterval = TextHighlighter::TokenInterval;
+    using CodeFoldBlocks = TextHighlighter::CodeFoldBlocks;
+    using Coordinates    = TextHighlighter::Coordinates;
 
     void TextHighlighter::next(i32 count) {
         if (m_viewPatternEditor->wasInterrupted()) {
@@ -84,7 +44,7 @@ namespace hex::plugin::builtin {
     }
 
     pl::PatternLanguage *TextHighlighter::getPatternLanguage() {
-       return m_viewPatternEditor->getPatternLanguage()->get();
+        return m_viewPatternEditor->getPatternLanguage()->get();
     }
 
     void TextHighlighter::RequiredInputs::setTypes() {
@@ -147,7 +107,7 @@ namespace hex::plugin::builtin {
         m_requiredInputs.setRequiredInputs();
     }
 
-    RequiredInputs& TextHighlighter::getRequiredInputs() {
+    TextHighlighter::RequiredInputs& TextHighlighter::getRequiredInputs() {
         return m_requiredInputs;
     }
 
@@ -405,12 +365,46 @@ namespace hex::plugin::builtin {
         return true;
     }
 
+    std::vector<TokenInterval> TextHighlighter::searchRangeForBlocks(TokenInterval interval) {
+        m_curr = m_startToken + interval.m_start;
+        std::vector<TokenInterval> result;
+
+        u32 nestedLevel = 0;
+        std::vector<i32> tokenStack;
+        while (m_curr != m_startToken + interval.m_end) {
+
+            if (sequence(tkn::Separator::LeftBrace)) {
+                auto tokenId = getTokenId(m_curr[-1].location);
+                tokenStack.push_back(tokenId);
+                nestedLevel++;
+            } else if (sequence(tkn::Separator::RightBrace)) {
+                nestedLevel--;
+
+                if (tokenStack.empty())
+                    return result;
+                TokenInterval range(tokenStack.back(), getTokenId(m_curr[-1].location));
+                tokenStack.pop_back();
+
+                result.push_back(range);
+
+                if (nestedLevel == 0) {
+                    skipAttribute();
+                    break;
+                }
+
+            } else if (peek(tkn::Separator::EndOfProgram))
+                return result;
+            else
+                next();
+        }
+        return result;
+    }
+
 // Finds the token range of a function, namespace or UDT
     bool TextHighlighter::getTokenRange(std::vector<Token> keywords, UnorderedBlocks &tokenRange,
                                         OrderedBlocks &tokenRangeInv, bool fullName, VariableScopes *blocks) {
 
         bool addArgumentBlock = !fullName;
-        std::vector<i32> tokenStack;
         if (getTokenId(m_curr->location) < 1)
             return false;
         std::string name;
@@ -454,53 +448,27 @@ namespace hex::plugin::builtin {
             result = result && !peek(keyword);
         if (result)
             return false;
-        u32 nestedLevel = 0;
-        next();
-        auto endToken = TokenIter(m_requiredInputs.fullTokens.begin() + tokenCount, m_requiredInputs.fullTokens.end());
-        while (endToken > m_curr) {
+        std::vector<TokenInterval> blocksFound = searchRangeForBlocks(TokenInterval(index1, tokenCount-1));
+        if (blocks != nullptr)
+            for (auto range: blocksFound)
+                blocks->operator[](name).insert(range);
+        //if (peek(tkn::Separator::EndOfProgram),-1)
+           // return false;
 
-            if (sequence(tkn::Separator::LeftBrace)) {
-                auto tokenId = getTokenId(m_curr[-1].location);
-                tokenStack.push_back(tokenId);
-                nestedLevel++;
-            } else if (sequence(tkn::Separator::RightBrace)) {
-                nestedLevel--;
-
-                if (tokenStack.empty())
-                    return false;
-                Interval range(tokenStack.back(), getTokenId(m_curr[-1].location));
-                tokenStack.pop_back();
-
-                if (nestedLevel == 0) {
-                    range.end -= 1;
-                    if (blocks != nullptr)
-                        blocks->operator[](name).insert(range);
-                    skipAttribute();
-                    break;
-                }
-                if (blocks != nullptr)
-                    blocks->operator[](name).insert(range);
-            } else if (sequence(tkn::Separator::EndOfProgram))
-                return false;
-            else
-                next();
-        }
-        if (m_curr > endToken || endToken == m_curr)
-            return false;
         i32 index2 = getTokenId(m_curr->location);
 
         if (index2 > index1 && index2 < tokenCount) {
             if (fullName) {
-                tokenRangeInv[Interval(index1, index2)] = name;
+                tokenRangeInv[TokenInterval(index1, index2)] = name;
             } else {
-                tokenRange[name] = Interval(index1, index2);
+                tokenRange[name] = TokenInterval(index1, index2);
             }
             if (blocks != nullptr) {
                 if (addArgumentBlock) {
-                    auto tokenIndex = blocks->operator[](name).begin()->start;
-                    blocks->operator[](name).insert(Interval(index1, tokenIndex));
+                    auto tokenIndex = blocks->operator[](name).begin()->m_start;
+                    blocks->operator[](name).insert(TokenInterval(index1, tokenIndex));
                 }
-                blocks->operator[](name).insert(Interval(index1, index2));
+                blocks->operator[](name).insert(TokenInterval(index1, index2));
             }
             return true;
         }
@@ -703,7 +671,7 @@ namespace hex::plugin::builtin {
                     variableParentType = currentName;
 
                     if (!nameSpace.empty() && !variableParentType.contains(nameSpace))
-                        variableParentType.insert(0, nameSpace);
+                        variableParentType = nameSpace + variableParentType;
 
                     else if (findNamespace(nameSpace) && !variableParentType.contains(nameSpace))
                         variableParentType = fmt::format("{}::{}", nameSpace, variableParentType);
@@ -735,7 +703,7 @@ namespace hex::plugin::builtin {
             return variableMap.contains(context);
     }
 
-    void TextHighlighter::setBlockInstancesColor(const std::string &name, const Definition &definition, const Interval &block) {
+    void TextHighlighter::setBlockInstancesColor(const std::string &name, const Definition &definition, const TokenInterval &block) {
 
         if (definition.idType == IdentifierType::Unknown)
             return;
@@ -762,7 +730,7 @@ namespace hex::plugin::builtin {
             std::vector<Identifier *> identifiers;
             getFullName(identifierName, identifiers);
         }
-        Interval tokenRange;
+        TokenInterval tokenRange;
         Scopes blocks;
         Scopes::iterator blocksIterBegin, blocksIterEnd;
 
@@ -780,9 +748,10 @@ namespace hex::plugin::builtin {
             blocksIterBegin = m_functionBlocks[name].begin();
             blocksIterEnd = m_functionBlocks[name].end();
             --blocksIterEnd;
+
         } else if (m_globalVariables.contains(identifierName)) {
             definitions = m_globalVariables[identifierName];
-            tokenRange = Interval(0, m_requiredInputs.fullTokens.size());
+            tokenRange = TokenInterval(0, m_requiredInputs.fullTokens.size());
             blocks.insert(tokenRange);
             blocksIterBegin = blocks.begin();
             blocksIterEnd = blocks.end();
@@ -795,7 +764,7 @@ namespace hex::plugin::builtin {
         if (isFunction) {
             for (auto block = blocksIterBegin; block != blocksIterEnd; block++) {
 
-                if (tokenId > block->start && tokenId < block->end) {
+                if (tokenId > block->m_start && tokenId < block->m_end) {
                     blocksIterBegin = block;
                     break;
                 }
@@ -803,7 +772,7 @@ namespace hex::plugin::builtin {
             for (const auto &definition : definitions) {
                 for (auto block = blocksIterBegin; block != blocksIterEnd; block++) {
 
-                    if (definition.tokenIndex > block->start && definition.tokenIndex < block->end) {
+                    if (definition.tokenIndex > block->m_start && definition.tokenIndex < block->m_end) {
                         result = definition;
                         m_curr = curr;
 
@@ -814,7 +783,7 @@ namespace hex::plugin::builtin {
                 }
             }
             auto it = std::ranges::find_if(definitions, [&](const Definition &definition) {
-                return definition.tokenIndex > tokenRange.start && definition.tokenIndex < tokenRange.end;
+                return definition.tokenIndex > tokenRange.m_start && definition.tokenIndex < tokenRange.m_end;
             });
 
             if (it != definitions.end()) {
@@ -828,7 +797,7 @@ namespace hex::plugin::builtin {
         } else {
             for (auto block = blocksIterBegin; block != blocksIterEnd; block++) {
 
-                if (tokenId > block->start && tokenId < block->end) {
+                if (tokenId > block->m_start && tokenId < block->m_end) {
                     blocksIterBegin = block;
                     break;
                 }
@@ -836,7 +805,7 @@ namespace hex::plugin::builtin {
             for (auto block = blocksIterBegin; block != blocksIterEnd; block++) {
                 for (const auto &definition: definitions) {
 
-                    if (definition.tokenIndex > block->start && definition.tokenIndex < block->end) {
+                    if (definition.tokenIndex > block->m_start && definition.tokenIndex < block->m_end) {
                         result = definition;
                         m_curr = curr;
 
@@ -921,7 +890,7 @@ namespace hex::plugin::builtin {
                         if (auto *identifier = std::get_if<Identifier>(&m_requiredInputs.fullTokens.at(instance).value); identifier != nullptr && identifier->getType() == IdentifierType::TemplateArgument) {
                             auto tokenRange = m_UDTTokenRange[result.typeStr];
                             auto tokenIndex = m_firstTokenIdOfLine.at(getLocation(parentDefinition.tokenIndex).line - 1);
-                            i32 argNumber = getArgumentNumber(tokenRange.start, instance);
+                            i32 argNumber = getArgumentNumber(tokenRange.m_start, instance);
                             getTokenIdForArgument(tokenIndex, argNumber, tkn::Operator::BoolLessThan);
                             if (auto *identifier2 = std::get_if<Identifier>(&m_curr->value); identifier2 != nullptr) {
                                 templateName = identifier2->get();
@@ -1118,7 +1087,7 @@ namespace hex::plugin::builtin {
         for (auto [interval, name]: m_namespaceTokenRange) {
             i32 tokenId = optionalTokenId == -1 ? getTokenId(m_curr->location) : optionalTokenId;
 
-            if (tokenId > interval.start && tokenId < interval.end) {
+            if (tokenId > interval.m_start && tokenId < interval.m_end) {
 
                 if (nameSpace.empty())
                     nameSpace = name;
@@ -1319,8 +1288,8 @@ namespace hex::plugin::builtin {
         } else {
             auto curr = m_curr;
             for (const auto &[name, range] : m_UDTTokenRange) {
-                auto startToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.start,m_requiredInputs.fullTokens.begin()+range.end);
-                auto endToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.end,m_requiredInputs.fullTokens.end());
+                auto startToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.m_start,m_requiredInputs.fullTokens.begin()+range.m_end);
+                auto endToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.m_end,m_requiredInputs.fullTokens.end());
 
                 for ( m_curr = startToken; endToken > m_curr; next()) {
                     if (auto *identifier = std::get_if<Identifier>(&m_curr->value); identifier != nullptr) {
@@ -1645,23 +1614,18 @@ namespace hex::plugin::builtin {
             return -1;
         auto line1 = location.line - 1;
         auto tokenCount = m_requiredInputs.fullTokens.size();
-        i32 tokenStart = m_firstTokenIdOfLine.at(line1);
-        i32 tokenEnd = -1;
-        if (line1 == m_firstTokenIdOfLine.size() -1) {
-             tokenEnd = tokenCount - 1;
-        } else {
-            auto line2 = nextLine(line1);
-            tokenEnd = m_firstTokenIdOfLine.at(line2) - 1;
-        }
+        auto lineCount = m_firstTokenIdOfLine.size();
+        if (line1 >= lineCount || tokenCount == 0)
+            return -1;
+        auto line2 = nextLine(line1);
+        i32 tokenStart = m_firstTokenIdOfLine[line1];
+        i32 tokenEnd = tokenCount - 1;
 
-        if (tokenEnd >= (i32) tokenCount)
-            tokenEnd = tokenCount - 1;
-
+        if (line2 < lineCount)
+            tokenEnd = m_firstTokenIdOfLine[line2] - 1;
         if (tokenStart == -1 || tokenEnd == -1 || tokenStart >= (i32) tokenCount)
             return -1;
-
         for (i32 i = tokenStart; i <= tokenEnd; i++) {
-
             if (m_requiredInputs.fullTokens.at(i).location.column >= location.column)
                 return i;
         }
@@ -1681,7 +1645,6 @@ namespace hex::plugin::builtin {
 
         if (token->type == Token::Type::Identifier && (!m_tokenColors.contains(tokenId) || m_tokenColors.at(tokenId) == ui::TextEditor::PaletteIndex::Default || m_tokenColors.at(tokenId) == ui::TextEditor::PaletteIndex::UnkIdentifier))
             m_tokenColors[tokenId]  = m_identifierTypeColor.at(type);
-
     }
 
     void TextHighlighter::setColor(i32 tokenId, const IdentifierType &type) {
@@ -1722,6 +1685,8 @@ namespace hex::plugin::builtin {
                         }
                     }
                 } while (sequence(tkn::Literal::Identifier,tkn::Separator::Dot));
+                if (peek(tkn::Separator::EndOfProgram))
+                    return;
                 next();
                 if (sequence(tkn::Keyword::As, tkn::Literal::Identifier)) {
                     next(-1);
@@ -1733,6 +1698,8 @@ namespace hex::plugin::builtin {
                     }
                 }
             }
+            if (peek(tkn::Separator::EndOfProgram))
+                return;
             if (peek(tkn::Literal::Identifier)) {
                 auto identifier = getValue<Token::Identifier>(0);
                 Token::Identifier::IdentifierType identifierType;
@@ -1867,8 +1834,8 @@ namespace hex::plugin::builtin {
                     definitions = m_ImportedUDTVariables[inheritance];
                 for (const auto &[variableName, variableDefinitions]: definitions) {
                     auto tokenRange = m_UDTTokenRange[name];
-                    u32 tokenIndex = tokenRange.start;
-                    for (auto token = tokenRange.start; token < tokenRange.end; token++) {
+                    u32 tokenIndex = tokenRange.m_start;
+                    for (auto token = tokenRange.m_start; token < tokenRange.m_end; token++) {
 
                         if (auto operatorTkn = std::get_if<Operator>(&m_requiredInputs.fullTokens.at(token).value);
                                 operatorTkn != nullptr && *operatorTkn == Token::Operator::Colon)
@@ -1937,8 +1904,17 @@ namespace hex::plugin::builtin {
 
         if ( col < 0 || col > (i32) m_lines[line].size())
             return false;
+        if (length < 0)
+            return false;
+        if (length > (i32) m_lines[line].size()-col)
+            length -= (i32)( m_lines[line].size()-col);
+        while (m_firstTokenIdOfLine[line] == m_firstTokenIdOfLine[line + 1]) {
+            length -= (i32) m_lines[line].size();
+            line++;
+        }
 
-        if (length < 0 || length > (i32) m_lines[line].size()-col)
+
+        if (length > (i32) m_lines[line].size()-col && m_firstTokenIdOfLine[line + 1] != -1)
             return false;
         return true;
     }
@@ -2006,8 +1982,8 @@ namespace hex::plugin::builtin {
         m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
 
         for (auto range: tokenRangeSet) {
-            auto startToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.start,m_requiredInputs.fullTokens.begin()+range.end);
-            auto endToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.end,m_requiredInputs.fullTokens.end());
+            auto startToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.m_start,m_requiredInputs.fullTokens.begin()+range.m_end);
+            auto endToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.m_end,m_requiredInputs.fullTokens.end());
 
             for ( m_curr = startToken; endToken > m_curr; next()) {
 
@@ -2038,11 +2014,12 @@ namespace hex::plugin::builtin {
         for (const auto &[name, range]: tokenRangeMap) {
             m_curr = m_startToken;
             auto endToken = m_startToken;
-            next(range.start);
+            next(range.m_start);
 
             if (isArgument) {
                 while (!peek(delimiter1)) {
-
+                    if (peek(tkn::Separator::EndOfProgram))
+                        return;
                     if (peek(tkn::Separator::LeftBrace))
                         break;
                     next();
@@ -2052,7 +2029,8 @@ namespace hex::plugin::builtin {
                     continue;
                 endToken = m_curr;
                 while (!peek(delimiter2)) {
-
+                    if (peek(tkn::Separator::EndOfProgram))
+                        return;
                     if (peek(tkn::Separator::LeftBrace))
                         break;
                     next();
@@ -2064,11 +2042,12 @@ namespace hex::plugin::builtin {
                 m_curr = endToken;
                 endToken = temp;
             } else
-                endToken = endToken + range.end;
+                endToken = endToken + range.m_end;
 
             Keyword *keyword;
-            for (keyword = std::get_if<Keyword>(&m_requiredInputs.fullTokens.at(range.start).value); endToken > m_curr; next()) {
-
+            for (keyword = std::get_if<Keyword>(&m_requiredInputs.fullTokens.at(range.m_start).value); endToken > m_curr; next()) {
+                if (peek(tkn::Separator::EndOfProgram))
+                    return;
                 if (peek(tkn::Literal::Identifier)) {
                     auto identifier = getValue<Token::Identifier>(0);
 
@@ -2083,7 +2062,7 @@ namespace hex::plugin::builtin {
                         if (keyword != nullptr && (*keyword == Keyword::Enum)) {
                             typeStr = name;
                         } else if (isArgument) {
-                            typeStr = getArgumentTypeName(range.start, delimiter1);
+                            typeStr = getArgumentTypeName(range.m_start, delimiter1);
                         } else {
                             typeStr = getVariableTypeName();
                             if (typeStr.empty() && keyword != nullptr && *keyword == Keyword::Bitfield)
@@ -2107,7 +2086,7 @@ namespace hex::plugin::builtin {
     void TextHighlighter::loadTypeDefinitions( UnorderedBlocks tokenRangeMap, std::vector<IdentifierType> identifierTypes, Definitions &types) {
         for (const auto &[name, range]: tokenRangeMap) {
 
-            m_curr = m_startToken + range.start+1;
+            m_curr = m_startToken + range.m_start+1;
 
             if (!peek(tkn::Literal::Identifier))
                 continue;
@@ -2168,6 +2147,9 @@ namespace hex::plugin::builtin {
 // the text into lines and creates a lookup table for the
 // first token id of each line.
     void TextHighlighter::loadText() {
+        u32 tokenCount = m_requiredInputs.fullTokens.size();
+        if (tokenCount == 0)
+            return;
 
         if (!m_lines.empty())
             m_lines.clear();
@@ -2184,22 +2166,15 @@ namespace hex::plugin::builtin {
         m_lines.push_back("");
         m_firstTokenIdOfLine.clear();
 
-
         u32 tokenId = 0;
-        u32 tokenCount = m_requiredInputs.fullTokens.size();
-        u32 lineIndex;
-        u32 count;
-
-        if (tokenCount == 0)
-            return;
-        lineIndex = m_requiredInputs.fullTokens.at(tokenId).location.line - 1;
-        count = m_requiredInputs.fullTokens.at(tokenCount - 1).location.line + 1;
+        u32 lineIndex = m_requiredInputs.fullTokens.at(tokenId).location.line - 1;
+        u32 count = m_requiredInputs.fullTokens.at(tokenCount - 1).location.line + 1;
         m_firstTokenIdOfLine.resize(count, -1);
         m_firstTokenIdOfLine.at(lineIndex) = 0;
         tokenId++;
         u32 currentLine = lineIndex;
         while ( currentLine < count) {
-            while (lineIndex  <= currentLine && tokenId <= tokenCount - 1) {
+            while (lineIndex  <= currentLine && tokenId + 1 <= tokenCount) {
                 lineIndex = m_requiredInputs.fullTokens.at(tokenId).location.line - 1;
                 tokenId++;
             }
@@ -2265,29 +2240,29 @@ namespace hex::plugin::builtin {
 // global token ranges are the complement (aka inverse) of the union
 // of the UDT and function token ranges
     void TextHighlighter::invertGlobalTokenRange() {
-        std::set<Interval> ranges;
+        std::set<TokenInterval> ranges;
         auto size = m_globalTokenRange.size();
         auto tokenCount = m_requiredInputs.fullTokens.size();
 
         if (size == 0) {
-            ranges.insert(Interval(0, tokenCount));
+            ranges.insert(TokenInterval(0, tokenCount));
         } else {
             auto it = m_globalTokenRange.begin();
             auto it2 = std::next(it);
-            if (it->start != 0)
-                ranges.insert(Interval(0, it->start));
+            if (it->m_start != 0)
+                ranges.insert(TokenInterval(0, it->m_start - 1));
             while (it2 != m_globalTokenRange.end()) {
 
-                if (it->end < it2->start)
-                    ranges.insert(Interval(it->end, it2->start));
+                if (it->m_end < it2->m_start)
+                    ranges.insert(TokenInterval(it->m_end + 1, it2->m_start - 1));
                 else
-                    ranges.insert(Interval(it->start, it2->end));
+                    ranges.insert(TokenInterval(it->m_start, it2->m_end));
                 it = it2;
                 it2 = std::next(it);
             }
 
-            if (it->end < (i32) (tokenCount-1))
-                ranges.insert(Interval(it->end, tokenCount-1));
+            if (it->m_end < (i32) (tokenCount-1))
+                ranges.insert(TokenInterval(it->m_end + 1, tokenCount-1));
         }
         m_globalTokenRange = ranges;
     }
@@ -2311,8 +2286,11 @@ namespace hex::plugin::builtin {
     void TextHighlighter::getTokenIdForArgument(i32 start, i32 argNumber, Token delimiter) {
         m_curr = m_startToken;
         next(start);
-        while (!peek(delimiter))
+        while (!peek(delimiter)) {
+            if (peek(tkn::Separator::EndOfProgram))
+                return;
             next();
+        }
         next();
         i32 count = 0;
         while (count < argNumber && !peek(tkn::Separator::EndOfProgram)) {
@@ -2332,7 +2310,7 @@ namespace hex::plugin::builtin {
                 for (auto &definition: definitions) {
 
                     if (definition.typeStr == "auto" && (definition.idType == Token::Identifier::IdentifierType::TemplateArgument || definition.idType == Token::Identifier::IdentifierType::FunctionParameter)) {
-                        auto argumentIndex = getArgumentNumber(tokenRange[name].start, definition.tokenIndex);
+                        auto argumentIndex = getArgumentNumber(tokenRange[name].m_start, definition.tokenIndex);
 
                         if (tokenRange == m_UDTTokenRange || !m_attributeFunctionArgumentType.contains(name) ||
                             m_attributeFunctionArgumentType[name].empty()) {
@@ -2409,35 +2387,40 @@ namespace hex::plugin::builtin {
 // Calculates the union of all the UDT and function token ranges
 // and inverts the result.
     void TextHighlighter::getGlobalTokenRanges() {
-        std::set<Interval> ranges;
+        std::set<TokenInterval> ranges;
         for (const auto &[name, range]: m_UDTTokenRange)
             ranges.insert(range);
         for (const auto &[name, range]: m_functionTokenRange)
             ranges.insert(range);
 
-        if (ranges.empty())
-            return;
-
-        auto it = ranges.begin();
-        auto next = std::next(it);
-        while (next != ranges.end()) {
-
-            if (next->start - it->end < 2) {
-                auto &range = const_cast<Interval &>(*it);
-                range.end = next->end;
-                ranges.erase(next);
-                next = std::next(it);
-            } else {
-                it++;
-                next = std::next(it);
+        if (!ranges.empty()) {
+            auto rit = ranges.rbegin();
+            auto rnext = std::next(rit);
+            while (rnext != ranges.rend()) {
+                if (rit->contains(*rnext)) {
+                    ranges.erase(*rnext);
+                    rnext = std::next(rit);
+                } else if (rnext->contiguous(*rit)) {
+                    TokenInterval range = *rnext;
+                    range.m_end = rit->m_end;
+                    ranges.erase(*rnext);
+                    ranges.erase(*rit);
+                    ranges.insert(range);
+                    rit = std::set<TokenInterval>::reverse_iterator(ranges.find(range));
+                    rit--;
+                    rnext = std::next(rit);
+                } else {
+                    rit++;
+                    rnext = std::next(rit);
+                }
             }
         }
         m_globalTokenRange = ranges;
         invertGlobalTokenRange();
         for (auto tokenRange: m_globalTokenRange) {
 
-            if ((u32) tokenRange.end == m_requiredInputs.fullTokens.size()) {
-                tokenRange.end -= 1;
+            if ((u32) tokenRange.m_end == m_requiredInputs.fullTokens.size()) {
+                tokenRange.m_end -= 1;
                 m_globalBlocks.insert(tokenRange);
             }
         }
@@ -2448,8 +2431,8 @@ namespace hex::plugin::builtin {
     void TextHighlighter::fixGlobalVariables() {
         m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
         for (auto range: m_globalTokenRange) {
-            auto startToken = TokenIter(m_requiredInputs.fullTokens.begin() + range.start, m_requiredInputs.fullTokens.begin() + range.end);
-            auto endToken = TokenIter(m_requiredInputs.fullTokens.begin() + range.end, m_requiredInputs.fullTokens.end());
+            auto startToken = TokenIter(m_requiredInputs.fullTokens.begin() + range.m_start, m_requiredInputs.fullTokens.begin() + range.m_end);
+            auto endToken = TokenIter(m_requiredInputs.fullTokens.begin() + range.m_end, m_requiredInputs.fullTokens.end());
 
             for (m_curr = startToken; endToken > m_curr; next()) {
 
@@ -2522,7 +2505,7 @@ namespace hex::plugin::builtin {
                 m_globalTokenRange.clear();
 
             if (m_requiredInputs.fullTokens.size() > 1) {
-                m_globalTokenRange.insert(Interval(0, m_requiredInputs.fullTokens.size() - 1));
+                m_globalTokenRange.insert(TokenInterval(0, m_requiredInputs.fullTokens.size() - 1));
                 getTokenRanges(IdentifierType::NameSpace);
                 getTokenRanges(IdentifierType::UDT);
                 getTokenRanges(IdentifierType::Function);

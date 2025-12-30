@@ -19,9 +19,11 @@
 #include <pl/core/ast/ast_node_variable_decl.hpp>
 #include <pl/core/ast/ast_node_builtin_type.hpp>
 
+
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/magic.hpp>
+#include <hex/helpers/binary_pattern.hpp>
 #include <hex/helpers/default_paths.hpp>
 #include <banners/banner_button.hpp>
 
@@ -1499,6 +1501,7 @@ namespace hex::plugin::builtin {
                 }
             } else if (m_changesWereColored) {
                 m_textHighlighter.get(provider).setRequestedIdentifierColors();
+                m_textEditor.get(provider).getLines().readHiddenLines();
                 m_changesWereColored = false;
             }
 
@@ -1664,6 +1667,7 @@ namespace hex::plugin::builtin {
 
             this->evaluatePattern(code, provider);
             m_textEditor.get(provider).setText(code, true);
+            m_textEditor.get(provider).readHiddenLines();
             m_sourceCode.get(provider) = code;
             if (trackFile) {
                 m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
@@ -1876,6 +1880,7 @@ namespace hex::plugin::builtin {
             m_consoleEditor.get(provider).setReadOnly(true);
             m_consoleEditor.get(provider).setShowCursor(false);
             m_consoleEditor.get(provider).setShowLineNumbers(false);
+            m_consoleEditor.get(provider).getLines().enableCodeFolds(false);
             m_consoleEditor.get(provider).setSourceCodeEditor(&m_textEditor.get(provider));
             std::string sourcecode = pl::api::Source::DefaultSource;
             std::string error = "E: ";
@@ -1892,7 +1897,7 @@ namespace hex::plugin::builtin {
 
         EventProviderChanged::subscribe(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
             if (oldProvider != nullptr) {
-                m_sourceCode.get(oldProvider) = m_textEditor.get(oldProvider).getText();
+                m_sourceCode.get(oldProvider) = m_textEditor.get(oldProvider).getText(true);
                 m_scroll.get(oldProvider) = m_textEditor.get(oldProvider).getScroll();
                 m_cursorPosition.get(oldProvider) = m_textEditor.get(oldProvider).getCursorPosition();
                 m_selection.get(oldProvider) = m_textEditor.get(oldProvider).getSelection();
@@ -1905,7 +1910,7 @@ namespace hex::plugin::builtin {
 
             if (newProvider != nullptr) {
                 m_textEditor.get(newProvider).setText(wolv::util::preprocessText(m_sourceCode.get(newProvider)));
-                m_textEditor.get(newProvider).setCursorPosition(m_cursorPosition.get(newProvider),false);
+                m_textEditor.get(newProvider).setCursorPosition(m_cursorPosition.get(newProvider),false,false);
                 m_textEditor.get(newProvider).setScroll(m_scroll.get(newProvider));
                 m_textEditor.get(newProvider).setSelection(m_selection.get(newProvider));
                 m_textEditor.get(newProvider).setBreakpoints(m_breakpoints.get(newProvider));
@@ -2557,7 +2562,37 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::M + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_matched_bracket", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
-                editor->moveToMatchedBracket(false);
+                editor->moveToMatchedDelimiter(false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD  + Keys::KeyPadAdd + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_expand", [this] {
+            if (m_focusedSubWindowName.contains(TextEditorView))
+                m_textEditor.get(ImHexApi::Provider::get()).codeFoldExpand();
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD  + ALT + Keys::KeyPadAdd + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_expand_recursively", [this] {
+            if (m_focusedSubWindowName.contains(TextEditorView))
+                m_textEditor.get(ImHexApi::Provider::get()).codeFoldExpand(0,true,false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD  + SHIFT + Keys::KeyPadAdd + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_expand_all", [this] {
+            if (m_focusedSubWindowName.contains(TextEditorView))
+                m_textEditor.get(ImHexApi::Provider::get()).codeFoldExpand(0, false, true);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::KeyPadSubtract + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_collapse", [this] {
+            if (m_focusedSubWindowName.contains(TextEditorView))
+                m_textEditor.get(ImHexApi::Provider::get()).codeFoldCollapse();
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + ALT + Keys::KeyPadSubtract + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_collapse_recursively", [this] {
+            if (m_focusedSubWindowName.contains(TextEditorView))
+                m_textEditor.get(ImHexApi::Provider::get()).codeFoldCollapse(0, true, false);
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::KeyPadSubtract + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_collapse_all", [this] {
+            if (m_focusedSubWindowName.contains(TextEditorView))
+                m_textEditor.get(ImHexApi::Provider::get()).codeFoldCollapse(0, false, true);
         });
 
         // Generate pattern code report
@@ -2728,7 +2763,7 @@ namespace hex::plugin::builtin {
             fs::DialogMode::Save, { {"Pattern File", "hexpat"}, {"Pattern Import File", "pat"} },
             [this, provider, trackFile](const auto &path) {
                 wolv::io::File file(path, wolv::io::File::Mode::Create);
-                file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
+                file.writeString(wolv::util::trim(m_textEditor.get(provider).getText(true)));
                 m_patternFileDirty.get(provider) = false;
                 auto loadedPath = m_changeTracker.get(provider).getPath();
                 if ((loadedPath.empty() && loadedPath != path) || (!loadedPath.empty() && !trackFile) || loadedPath == path)
@@ -2751,7 +2786,7 @@ namespace hex::plugin::builtin {
         wolv::io::File file(path, wolv::io::File::Mode::Create);
         if (file.isValid() && trackFile) {
             if (isPatternDirty(provider)) {
-                file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
+                file.writeString(wolv::util::trim(m_textEditor.get(provider).getText(true)));
                 m_patternFileDirty.get(provider) = false;
             }
             return;
