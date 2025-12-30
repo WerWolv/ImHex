@@ -269,12 +269,30 @@ namespace hex::plugin::builtin {
             if (directAccess) {
                 m_loadedIntoMemory = false;
             } else {
-                m_data = m_file.readVectorAtomic(0x00, m_fileSize);
-                if (!m_data.empty()) {
-                    m_changeTracker = wolv::io::ChangeTracker(m_file);
-                    m_changeTracker.startTracking([this]{ this->handleFileChange(); });
-                    m_file.close();
+                if (m_fileSize == 0) {
+                    while (true) {
+                        constexpr static ssize_t ChunkSize = 1_MiB;
+                        auto startSize = m_data.size();
+                        m_data.resize(startSize + ChunkSize);
+                        auto result = m_file.readBuffer(m_data.data() + startSize, ChunkSize);
+                        if (result <= 0) {
+                            break;
+                        } else if (result < ChunkSize) {
+                            m_data.resize(startSize + result);
+                            break;
+                        }
+                    }
+
+                    m_fileSize = m_data.size();
                     m_loadedIntoMemory = true;
+                } else {
+                    m_data = m_file.readVectorAtomic(0x00, m_fileSize);
+                    if (!m_data.empty()) {
+                        m_changeTracker = wolv::io::ChangeTracker(m_file);
+                        m_changeTracker.startTracking([this]{ this->handleFileChange(); });
+                        m_file.close();
+                        m_loadedIntoMemory = true;
+                    }
                 }
             }
         }
