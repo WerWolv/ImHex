@@ -271,8 +271,14 @@ function js_resizeCanvas() {
 
     canvas.top    = document.documentElement.clientTop;
     canvas.left   = document.documentElement.clientLeft;
-    canvas.width  = Math.min(document.documentElement.clientWidth, window.innerWidth || 0) * window.devicePixelRatio;
-    canvas.height = Math.min(document.documentElement.clientHeight, window.innerHeight || 0) * window.devicePixelRatio;
+
+    let width = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    let height = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+
+    canvas.style.width  = width + "px";
+    canvas.style.height = height + "px";
+    canvas.width  = width * window.devicePixelRatio;
+    canvas.height = height * window.devicePixelRatio;
 }
 
 // Prevent some default browser shortcuts from preventing ImHex ones to work
