@@ -248,6 +248,7 @@ jobs:
         run: |
           URL=$(curl https://api.github.com/repos/microsoft/vcpkg/releases/latest | jq -r ".tarball_url")
           VCPKG_ROOT="$(realpath ../vcpkg)"
+          mkdir -p $VCPKG_ROOT
           curl -L $URL -o - | tar -xz --strip 1 -C $VCPKG_ROOT
           $VCPKG_ROOT/bootstrap-vcpkg.bat
           echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
