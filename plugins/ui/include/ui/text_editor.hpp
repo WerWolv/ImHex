@@ -1,5 +1,5 @@
 #pragma once
-#include "imgui_internal.h"
+
 #include <string>
 #include <vector>
 #include <array>
@@ -8,9 +8,17 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
+#include <atomic>
 #include <regex>
 #include <chrono>
+#include <iostream>
+#include <set>
+#include "imgui.h"
+#include "imgui_internal.h"
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/types.hpp>
+#include <pl/core/token.hpp>
+#include <pl/helpers/safe_iterator.hpp>
 #include <pl/core/location.hpp>
 
 namespace hex::ui {
@@ -18,6 +26,8 @@ namespace hex::ui {
 
     class TextEditor {
     public:
+        class Interval;
+        class Lines;
 
         class Range {
         public:
@@ -42,9 +52,8 @@ namespace hex::ui {
                 Coordinates() : m_line(0), m_column(0) {}
                 explicit Coordinates(pl::core::Location location) : m_line(location.line - 1), m_column(location.column - 1) {}
                 Coordinates(i32 lineIndex, i32 column) : m_line(lineIndex), m_column(column) {}
-                Coordinates(TextEditor *editor, i32 lineIndex, i32 column);
-                Coordinates sanitize(TextEditor *editor);
-                bool isValid(TextEditor *editor) const;
+                Coordinates sanitize(Lines &lines);
+                bool isValid(Lines &lines);
                 bool operator==(const Coordinates &o) const;
                 bool operator!=(const Coordinates &o) const;
                 bool operator<(const Coordinates &o) const;
@@ -65,7 +74,8 @@ namespace hex::ui {
                 if (m_start > m_end) { std::swap(m_start, m_end); }}
             Range(Coordinates start, Coordinates end) : m_start(start), m_end(end) {
                 if (m_start > m_end) { std::swap(m_start, m_end); }}
-
+            explicit Range(const Interval &lines) : m_start(Coordinates(lines.m_start, 0)), m_end(Coordinates(lines.m_end, 0)) {
+                if (m_start > m_end) { std::swap(m_start, m_end); }}
 
 
             Coordinates getSelectedLines();
@@ -100,6 +110,36 @@ namespace hex::ui {
         };
 
         using Coordinates = Range::Coordinates;
+
+        class Interval {
+        public:
+            friend class TextEditor;
+            friend class Range;
+            Interval() : m_start(0), m_end(0) {}
+            Interval(i32 start, i32 end) : m_start(start), m_end(end) {
+                if (m_start > m_end) std::swap(m_start, m_end);}
+            Interval(const Interval &other) : m_start(other.m_start), m_end(other.m_end) {}
+            explicit Interval(ImVec2 vec) : m_start((i32)vec.x), m_end((i32)vec.y) {
+                if (m_start > m_end) std::swap(m_start, m_end);}
+
+            Interval &operator=(const Interval &interval);
+            Interval &operator=(Interval &&interval) noexcept;
+            bool operator<(const Interval &other) const { return other.m_end > m_end; }
+            bool operator>(const Interval &other) const { return m_end > other.m_end; }
+            bool operator==(const Interval &other) const { return m_start == other.m_start && m_end == other.m_end; }
+            bool operator!=(const Interval &other) const { return m_start != other.m_start || m_end != other.m_end; }
+            bool operator<=(const Interval &other) const { return other.m_end >= m_end; }
+            bool operator>=(const Interval &other) const { return m_end >= other.m_end; }
+            bool contains_or_equals(const Interval &other) const { return other.m_start >= m_start && other.m_end <= m_end; }
+            bool contains(const Interval &other) const { return (other.m_start >= m_start && other.m_end < m_end) || (other.m_start > m_start && other.m_end <= m_end); }
+            bool contains(i32 value, bool inclusive = true) const;
+            bool contiguous(const Interval &other) const;
+            operator ImVec2() const { return ImVec2((float)m_start, (float)m_end); }
+        private:
+            i32 m_start;
+            i32 m_end;
+        };
+
         class EditorState {
         public:
             friend class TextEditor;
@@ -112,40 +152,42 @@ namespace hex::ui {
         };
 
         class UndoRecord;
-        class UndoAction;
-        using UndoBuffer = std::vector<UndoAction>;
-        using UndoRecords = std::vector<UndoRecord>;
 
         class FindReplaceHandler {
         public:
             FindReplaceHandler();
             using Matches = std::vector<EditorState>;
             Matches &getMatches() { return m_matches; }
-            bool findNext(TextEditor *editor, u64 &byteIndex);
-            u32 findMatch(TextEditor *editor, i32 index);
-            bool replace(TextEditor *editor, bool right);
-            bool replaceAll(TextEditor *editor);
+            bool findNext(Lines *lines, u64 &byteIndex);
+            bool findNext(TextEditor *editor, u64 &byteIndex) { return findNext(&editor->m_lines, byteIndex); };
+            u32 findMatch(Lines *lines, i32 index);
+            u32 findMatch(TextEditor *editor, i32 index) { return findMatch(&editor->m_lines, index); };
+            bool replace(Lines *lines, bool right);
+            bool replace(TextEditor *editor, bool right) { return replace(&editor->m_lines, right); };
+            bool replaceAll(Lines *lines);
+            bool replaceAll(TextEditor *editor) { return replaceAll(&editor->m_lines); };
             std::string &getFindWord() { return m_findWord; }
-
-            void setFindWord(TextEditor *editor, const std::string &findWord);
-
+            void setFindWord(Lines *lines, const std::string &findWord);
+            void setFindWord(TextEditor *editor, const std::string &findWord) { setFindWord(&editor->m_lines, findWord); };
             std::string &getReplaceWord() { return m_replaceWord; }
             void setReplaceWord(const std::string &replaceWord) { m_replaceWord = replaceWord; }
-            void selectFound(TextEditor *editor, i32 found);
-            void findAllMatches(TextEditor *editor, std::string findWord);
-            u32 findPosition(TextEditor *editor, Coordinates pos, bool isNext);
+            void selectFound(Lines *lines, i32 found);
+            void selectFound(TextEditor *editor, i32 found) { selectFound(&editor->m_lines, found); };
+            void findAllMatches(Lines *lines, std::string findWord);
+            void findAllMatches(TextEditor *editor, std::string findWord) { findAllMatches(&editor->m_lines, findWord); };
+            u32 findPosition(Lines *lines, Coordinates pos, bool isNext);
+            u32 findPosition(TextEditor *editor, Coordinates pos, bool isNext) { return findPosition(&editor->m_lines, pos, isNext); };
             bool getMatchCase() const { return m_matchCase; }
-
-            void setMatchCase(TextEditor *editor, bool matchCase);
-
+            void setMatchCase(Lines *lines, bool matchCase);
+            void setMatchCase(TextEditor *editor, bool matchCase) { setMatchCase(&editor->m_lines, matchCase); };
             bool getWholeWord() const { return m_wholeWord; }
-            void setWholeWord(TextEditor *editor, bool wholeWord);
-
+            void setWholeWord(Lines *lines, bool wholeWord);
+            void setWholeWord(TextEditor *editor, bool wholeWord) { setWholeWord(&editor->m_lines, wholeWord); };
             bool getFindRegEx() const { return m_findRegEx; }
-            void setFindRegEx(TextEditor *editor, bool findRegEx);
-
+            void setFindRegEx(Lines *lines, bool findRegEx);
+            void setFindRegEx(TextEditor *editor, bool findRegEx) { setFindRegEx(&editor->m_lines, findRegEx); };
             void resetMatches();
-            UndoRecords m_undoBuffer;
+            std::vector<UndoRecord> m_undoBuffer;
         private:
             std::string m_findWord;
             std::string m_replaceWord;
@@ -162,12 +204,16 @@ namespace hex::ui {
             FunctionVariable, FunctionParameter, UserDefinedType, PlacedVariable, GlobalVariable, NameSpace, TypeDef, UnkIdentifier, DocComment, DocBlockComment, BlockComment, GlobalDocComment, Comment, PreprocIdentifier, Max
         };
 
+        using Token         = pl::core::Token;
+        using TokenIter     = pl::hlp::SafeIterator<std::vector<Token>::const_iterator>;
+        using Location      = pl::core::Location;
         using RegexList     = std::vector<std::pair<std::regex, PaletteIndex>>;
         using Keywords      = std::unordered_set<std::string>;
         using ErrorMarkers  = std::map<Coordinates, std::pair<i32, std::string>>;
         using Breakpoints   = std::unordered_set<u32>;
         using Palette       = std::array<ImU32, (u64) PaletteIndex::Max>;
         using Glyph         = u8;
+        using CodeFoldBlocks = std::map<Coordinates,Coordinates>;
 
         struct Identifier { Coordinates m_location; std::string m_declaration;};
         using Identifiers   = std::unordered_map<std::string, Identifier>;
@@ -217,9 +263,55 @@ namespace hex::ui {
             std::string m_errorText;
         };
 
+
+        class CodeFold : public ActionableBox {
+        public:
+            CodeFold() = default;
+            explicit CodeFold(Lines *lines,  Range keys, const ImRect &startBox, const ImRect &endBox);
+
+            bool trigger() override;
+            void callback() override;
+            bool startHovered();
+            bool endHovered();
+            bool isDetected();
+            bool isOpen();
+            void open();
+            void close();
+            void moveFold(float lineCount, float lineHeight);
+        private:
+            Lines *lines;
+            Range key;
+            CursorChangeBox codeFoldStartCursorBox;
+            ActionableBox codeFoldEndActionBox;
+            CursorChangeBox codeFoldEndCursorBox;
+        };
+
+        class CodeFoldTooltip : public ActionableBox {
+        public:
+            CodeFoldTooltip(Lines *lines,const  Range &key, const ImRect &box) : ActionableBox(box), m_lines(lines),  m_key(key) {}
+
+            bool trigger() override;
+            void callback() override;
+        private:
+            Lines *m_lines;
+            Range m_key;
+            const std::string popupLineNumbers = "##popupLineNumbers";
+            const std::string popupText = "##popupText";
+        };
+
         using ErrorGotoBoxes        = std::map<Coordinates, ErrorGotoBox>;
         using CursorBoxes           = std::map<Coordinates, CursorChangeBox>;
         using ErrorHoverBoxes       = std::map<Coordinates, ErrorHoverBox>;
+        using CodeFoldKeys          = std::set<Range>;
+        using CodeFoldDelimiters    = std::map<Range,std::pair<char,char>>;
+        using CodeFoldKeyMap        = std::map<Coordinates,Coordinates>;
+        using CodeFoldKeyLineMap    = std::multimap<i32,Coordinates>;
+        using CodeFoldState         = std::map<Range,bool>;
+       // using RowsToCodeFoldMap     = std::map<u32,Interval>;
+        using LineIndexToScreen     = std::map<i32,ImVec2>;
+        using MultiLinesToRow       = std::map<i32,i32>;
+        using RowCodeFoldTooltips   = std::map<i32,std::vector<CodeFoldTooltip>>;
+
         enum class TrimMode : u8 { TrimNone = 0, TrimEnd = 1, TrimStart = 2, TrimBoth = 3 };
 
         // A line of text in the pattern editor consists of three strings; the character encoding, the color encoding and the flags.
@@ -229,11 +321,12 @@ namespace hex::ui {
         class LineIterator {
         public:
             friend class hex::ui::TextEditor;
+            friend class hex::ui::TextEditor::Lines;
             LineIterator(const LineIterator &other) : m_charsIter(other.m_charsIter), m_colorsIter(other.m_colorsIter), m_flagsIter(other.m_flagsIter) {}
             LineIterator() = default;
 
             char operator*();
-            LineIterator operator++();
+            LineIterator &operator++();
             LineIterator operator=(const LineIterator &other);
             bool operator!=(const LineIterator &other) const;
             bool operator==(const LineIterator &other) const;
@@ -266,32 +359,36 @@ namespace hex::ui {
             };
 
             union Flags {
-                explicit Flags(char value) : m_value(value) {}
-                explicit Flags(FlagBits bits) : m_bits(bits) {}
+                Flags(char value) : m_value(value) {}
+                Flags(FlagBits bits) : m_bits(bits) {}
                 FlagBits m_bits;
                 char m_value;
             };
 
-            enum class LinePart: u8 { Chars, Utf8, Colors, Flags };
+            enum class LinePart { Chars, Utf8, Colors, Flags };
 
-            Line() : m_lineMaxColumn(-1) {}
-            explicit Line(const char *line) : Line(std::string(line)) {}
+            Line() : m_chars(""), m_colors(""), m_flags(""), m_colorized(false), m_lineMaxColumn(-1) {}
+            explicit Line(const char *line) { Line(std::string(line)); }
             explicit Line(const std::string &line) : m_chars(line), m_colors(std::string(line.size(), 0x00)), m_flags(std::string(line.size(), 0x00)), m_colorized(false), m_lineMaxColumn(maxColumn()) {}
             Line(const Line &line) : m_chars(std::string(line.m_chars)), m_colors(std::string(line.m_colors)), m_flags(std::string(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
             Line(Line &&line) noexcept : m_chars(std::move(line.m_chars)), m_colors(std::move(line.m_colors)), m_flags(std::move(line.m_flags)), m_colorized(line.m_colorized), m_lineMaxColumn(line.m_lineMaxColumn) {}
             Line(std::string chars, std::string colors, std::string flags) : m_chars(std::move(chars)), m_colors(std::move(colors)), m_flags(std::move(flags)), m_colorized(false), m_lineMaxColumn(maxColumn()) {}
 
-            bool operator==(const Line &line) const;
-            bool operator!=(const Line &line) const;
+            bool operator==(const Line &o) const;
+            bool operator!=(const Line &o) const;
             [[nodiscard]] i32 indexColumn(i32 stringIndex) const;
             [[nodiscard]] i32 maxColumn();
             [[nodiscard]] i32 maxColumn() const;
             [[nodiscard]] i32 columnIndex(i32 column) const;
             [[nodiscard]] i32 textSize() const;
             [[nodiscard]] i32 textSize(u32 index) const;
+            ImVec2 intervalToScreen(Interval stringIndices) const;
             i32 lineTextSize(TrimMode trimMode = TrimMode::TrimNone);
             [[nodiscard]] i32 stringTextSize(const std::string &str) const;
             i32 textSizeIndex(float textSize, i32 position);
+            Line trim(TrimMode trimMode = TrimMode::TrimNone);
+            void print(i32 lineIndex, i32 maxLineIndex, std::optional<ImVec2> pos = std::nullopt);
+            u32 skipSpaces(i32 index);
             [[nodiscard]] LineIterator begin() const;
             [[nodiscard]] LineIterator end() const;
             LineIterator begin();
@@ -299,7 +396,6 @@ namespace hex::ui {
             Line &operator=(const Line &line);
             Line &operator=(Line &&line) noexcept;
             [[nodiscard]] u64 size() const;
-            TextEditor::Line trim(TrimMode trimMode);
             [[nodiscard]] char front(LinePart part = LinePart::Chars) const;
             [[nodiscard]] std::string frontUtf8(LinePart part = LinePart::Chars) const;
             void push_back(char c);
@@ -307,9 +403,11 @@ namespace hex::ui {
             [[nodiscard]] std::string substr(u64 start, u64 length = (u64) -1, LinePart part = LinePart::Chars) const;
             Line subLine(u64 start, u64 length = (u64) -1);
             char operator[](u64 index) const;
+            char at(u64 index) const;
             // C++ can't overload functions based on return type, so use any type other
             // than u64 to avoid ambiguity.
             std::string operator[](i64 column) const;
+            std::string at(i64 column) const;
             void setNeedsUpdate(bool needsUpdate);
             void append(const char *text);
             void append(const char text);
@@ -337,7 +435,80 @@ namespace hex::ui {
            i32 m_lineMaxColumn;
         };
 
-        using Lines = std::vector<Line>;
+        class FoldedLine {
+        public:
+            friend class Lines;
+            friend class TextEditor;
+            enum  class FoldType : u8 {
+                NoDelimiters = 0,
+                AddsFirstLine = 1,           // does not imply having open delimiter (ex. import).
+                HasOpenDelimiter = 2,       // implies first line is added.
+                FirstLineNeedsDelimiter = 4,   // implies having open delimiter. Needed when open delimiter is not on first line..
+                AddsLastLine = 8,
+                HasCloseDelimiter = 16,
+                Invalid = 32
+            };
+
+            FoldedLine() = default;
+            explicit FoldedLine(Lines *lines);
+
+            void insertKey(const Range &key);
+            void removeKey(const Range &key);
+            void loadSegments();
+            bool firstLineNeedsDelimiter();
+            bool addsLastLineToFold();
+            bool addsFullFirstLineToFold();
+            Range findDelimiterCoordinates(Range key);
+        private:
+            Line m_foldedLine;
+            Lines *m_lines;
+            Range m_full;
+            i32 m_row;
+            FoldType m_type = FoldType::Invalid;
+            std::string m_brackets;
+            std::vector<Range> m_keys;
+            std::vector<Range> m_keysToRemove;
+            std::vector<i32> m_ellipsisIndices;
+            std::vector<Coordinates> m_foldedSegments;
+            std::vector<Coordinates> m_unfoldedSegments;
+            Coordinates m_cursorPosition;
+            Range m_selection;
+            bool m_built = false;
+        };
+
+        class MatchedDelimiter {
+        public:
+            friend class Lines;
+            friend class TextEditor;
+            MatchedDelimiter() : m_active(false), m_changed(false), m_nearCursor(0, 0), m_matched(0, 0) {}
+            MatchedDelimiter(bool active, bool changed, const Coordinates &nearCursor, const Coordinates &matched) : m_active(active), m_changed(changed), m_nearCursor(nearCursor), m_matched(matched) {}
+
+            bool checkPosition(Lines *lines, Coordinates &from);
+            bool setNearCursor(Lines *lines, const Coordinates &from);
+            bool coordinatesNearDelimiter(Lines *lines, Coordinates &from);
+            i32 detectDirection(Lines *lines, const Coordinates &from);
+            void findMatchingDelimiter(Lines *lines, bool folded = true);
+            Coordinates findMatchingDelimiter(Lines *lines, Coordinates &from, bool folded = true);
+            [[nodiscard]] bool isActive() const { return m_active; }
+            [[nodiscard]] bool hasChanged() const { return m_changed; }
+        private:
+            bool m_active = false;
+            bool m_changed = false;
+            Coordinates m_nearCursor = {};
+            Coordinates m_matched = {};
+        };
+
+        class Segment {
+        public:
+            friend class TextEditor;
+            Segment(Coordinates foldEnd, const Interval &segment) : m_foldEnd(foldEnd), m_segment(segment) {}
+            bool operator==(const Segment &o) const {
+                return m_foldEnd == o.m_foldEnd && m_segment == o.m_segment;
+            }
+        private:
+            Coordinates m_foldEnd;
+            Interval m_segment;
+        };
 
         struct LanguageDefinition {
             typedef std::pair<std::string, PaletteIndex> TokenRegexString;
@@ -393,9 +564,11 @@ namespace hex::ui {
             EditorState m_after;
         };
 
+        using UndoRecords = std::vector<UndoRecord>;
+
         class UndoAction {
         public:
-            UndoAction() = default;
+            UndoAction() {}
             ~UndoAction() {}
             explicit UndoAction(const UndoRecords &records) : m_records(records) {}
             void undo(TextEditor *editor);
@@ -404,94 +577,341 @@ namespace hex::ui {
             UndoRecords m_records;
         };
 
-
-
-        struct MatchedBracket {
-            bool m_active = false;
-            bool m_changed = false;
-            Coordinates m_nearCursor;
-            Coordinates m_matched;
-            static const std::string s_separators;
-            static const std::string s_operators;
-
-            MatchedBracket(const MatchedBracket &other) : m_active(other.m_active), m_changed(other.m_changed),
-                                                          m_nearCursor(other.m_nearCursor),
-                                                          m_matched(other.m_matched) {}
-
-            MatchedBracket() : m_nearCursor(0, 0), m_matched(0, 0) {}
-            MatchedBracket(bool active, bool changed, const Coordinates &nearCursor, const Coordinates &matched)
-                    : m_active(active), m_changed(changed), m_nearCursor(nearCursor), m_matched(matched) {}
-
-            bool checkPosition(TextEditor *editor, const Coordinates &from);
-            bool isNearABracket(TextEditor *editor, const Coordinates &from);
-            i32 detectDirection(TextEditor *editor, const Coordinates &from);
-            void findMatchingBracket(TextEditor *editor);
-            [[nodiscard]] bool isActive() const { return m_active; }
-            [[nodiscard]] bool hasChanged() const { return m_changed; }
+        class HiddenLine {
+        public:
+            friend class Lines;
+            HiddenLine() = default;
+            HiddenLine(i32 lineIndex, const std::string &lineContent) : m_lineIndex(lineIndex), m_line(lineContent) {}
+        private:
+            i32 m_lineIndex;
+            std::string m_line;
         };
 
+        using CodeFolds         = std::map<Range,CodeFold>;
+        using Segments          = std::vector<Segment>;
+        using RowToSegments     = std::map<i32,Segments>;
+        using UndoBuffer        = std::vector<UndoAction>;
+        using RowToFoldedLine   = std::map<i32,FoldedLine>;
 
-    public:
+
+        class Lines {
+        public:
+            friend class TextEditor;
+            Lines() : m_unfoldedLines({}), m_foldedLines({}), m_hiddenLines({}), m_matchedDelimiter(), m_colorizerEnabled(true), m_defines({}) {}
+
+            enum class FoldSymbol { Line, Up, Down, Square };
+
+            Line &at(i32 index);
+            Line &operator[](i32 index);
+            i32 size() const;
+            void colorizeRange();
+            void colorizeInternal();
+            bool isEmpty();
+            void moveToMatchedDelimiter(bool select = false);
+            bool isTrueMatchingDelimiter();
+            void clearErrorMarkers();
+            void clearActionables();
+            bool isEndOfLine(const Coordinates &coordinates);
+            bool isEndOfFile(const Coordinates &coordinates);
+            bool isEndOfLine();
+            bool isStartOfLine() const;
+            bool lineNeedsDelimiter(i32 lineIndex);
+            FindReplaceHandler *getFindReplaceHandler() { return &m_findReplaceHandler; }
+            void clearGotoBoxes() { m_errorGotoBoxes.clear(); }
+            void clearCursorBoxes() { m_cursorBoxes.clear(); }
+            void clearCodeFolds();
+            void addClickableText(std::string text) { m_clickableText.push_back(text); }
+            //void setErrorMarkers(const ErrorMarkers &markers) { m_errorMarkers = markers; }
+            Breakpoints &getBreakpoints() { return m_breakpoints; }
+            void saveCodeFoldStates();
+            void applyCodeFoldStates();
+            float lineIndexToRow(i32 lineNumber);
+            float rowToLineIndex(i32 row);
+            void getRowSegments();
+            void initializeCodeFolds();
+            bool updateCodeFolds();
+            ImRect getBoxForRow(u32 lineNumber);
+            void setFirstRow();
+            i32 lineMaxColumn(i32 lineNumber);
+            Interval indexScreenPosition(i32 lineIndex, Interval stringIndices);
+            bool isMultiLineRow(i32 row);
+            void enableCodeFolds(bool enable) { m_codeFoldsDisabled = !enable; };
+            void moveRight(i32 amount, bool select, bool wordMode);
+            void moveLeft(i32 amount, bool select, bool wordMode);
+            void moveDown(i32 amount, bool select);
+            void moveUp(i32 amount, bool select);
+            void moveHome(bool select);
+            void moveEnd(bool select);
+            std::vector<Range> removeEmbeddedFolds();
+            bool isLastLine(i32 lineIndex);
+            bool isLastLine();
+            Coordinates find(const std::string &text, const Coordinates &start);
+            Coordinates rfind(const std::string &text, const Coordinates &start);
+            void setRowToLineIndexMap();
+            Coordinates lineCoordinates(const Coordinates &coordinates);
+            Coordinates lineCoordinates(i32 lineIndex, i32 column);
+            Range lineCoordinates(const Range &value);
+            friend bool Range::Coordinates::isValid(Lines &lines);
+            friend TextEditor::Coordinates Range::Coordinates::sanitize(Lines &lines);
+            void appendLine(const std::string &value);
+            void readHiddenLines();
+            void writeHiddenLines();
+            void setSelection(const Range &selection);
+            Range getSelection() const;
+            ImVec2 getLineStartScreenPos(float leftMargin, float lineNumber);
+            ImVec2 &getCharAdvance() { return m_charAdvance; }
+            std::vector<Range> getDeactivatedBlocks();
+            std::string getSelectedText();
+            void deleteSelection();
+            inline void setTextChanged(bool value) { m_textChanged = value; }
+            inline bool isTextChanged() { return m_textChanged; }
+            void setLanguageDefinition(const LanguageDefinition &aLanguageDef);
+            const LanguageDefinition &getLanguageDefinition() const { return m_languageDefinition; }
+            TextEditor::PaletteIndex getColorIndexFromFlags(Line::Flags flags);
+            void insertLine(i32 index, const std::string &text);
+            Coordinates lineIndexCoords(i32 lineNumber, i32 stringIndex);
+            void colorize();
+            i32 insertTextAt(Coordinates &where, const std::string &value);
+            float getMaxDisplayedRow();
+            float getGlobalRowMax();
+            ImVec2 foldedCoordsToScreen(Coordinates coordinates);
+            i32 lineCoordsIndex(const Coordinates &coordinates);
+            u32 skipSpaces(const Coordinates &from);
+            void closeCodeFold(const Range &key, bool userTriggered = false);
+            void openCodeFold(const Range &key);
+            void removeKeys();
+            ImVec2 indexCoordsToScreen(Coordinates indexCoords);
+            inline void setImGuiChildIgnored(bool value) { m_ignoreImGuiChild = value; }
+            inline bool isImGuiChildIgnored() const { return m_ignoreImGuiChild; }
+            ImVec2 lineIndexToScreen(i32 lineIndex, Interval stringIndices);
+            void printCodeFold(const Range &key);
+            void resetCursorBlinkTime();
+            void setUnfoldIfNeeded(bool unfoldIfNeeded) {m_unfoldIfNeeded = unfoldIfNeeded;}
+            std::string getRange(const Range &rangeToGet);
+            void setCursorPosition(const Coordinates &position, bool unfoldIfNeeded = true, bool scrollToCursor = true);
+            void setFocusAtCoords(const Coordinates &coords, bool ensureVisible = false);
+            void ensureCursorVisible();
+            std::vector<Coordinates> unfoldedEllipsisCoordinates(Range delimiterCoordinates);
+            Coordinates unfoldedToFoldedCoords(const Coordinates &coords);
+            Coordinates foldedToUnfoldedCoords(const Coordinates &coords);
+            void setScrollY();
+            Coordinates findPreviousWord(const Coordinates &from);
+            Coordinates findNextWord(const Coordinates &from);
+            Line &insertLine(i32 index);
+            void deleteRange(const Range &rangeToDelete);
+            inline void clearBreakpointsChanged() { m_breakPointsChanged = false; }
+            inline bool isBreakpointsChanged() { return m_breakPointsChanged; }
+            Coordinates stringIndexCoords(i32 strIndex, const std::string &input);
+            void refreshSearchResults();
+            inline void setReadOnly(bool value) { m_readOnly = value; }
+            void removeLines(i32 start, i32 end);
+            void removeLine(i32 index);
+            float textDistanceToLineStart(const Coordinates &from);
+            std::string getText(bool addHiddenLines = false);
+            void setCursorPosition();
+            void ensureSelectionNotFolded();
+            bool hasSelection();
+            i32 insertTextAtCursor(const std::string &value);
+            void addUndo(std::vector<UndoRecord> value);
+            void insertText(const std::string &value);
+            void insertText(const char *value);
+            Interval findBlockInRange(Interval interval);
+            std::vector<Interval> searchRangeForBlocks(Interval interval);
+            std::pair<Coordinates ,Coordinates> getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters);
+            void nonDelimitedFolds();
+            std::pair<i32,i32> convertIndexToLineNumbers(Interval interval);
+            std::pair<i32,char> findMatchingDelimiter(i32 from);
+            CodeFoldBlocks foldPointsFromSource();
+            Coordinates findCommentEndCoord(i32 tokenId);
+            std::set<Interval> blocksFromGlobal();
+            void skipAttribute();
+            bool isTokenIdValid(i32 tokenId);
+            bool isLocationValid(Location location);
+            pl::core::Location getLocation(i32 tokenId);
+            i32 getTokenId(pl::core::Location location);
+            void loadFirstTokenIdOfLine();
+            i32 nextLine(i32 line);
+            void setAllCodeFolds();
+            void advanceToNextLine(i32 &lineIndex, i32 &currentTokenId, Location &location);
+            void advanceTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location);
+            void moveToLocationColumn(i32 locationColumn, i32 &currentTokenId, Location &location);
+            void resetToTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location);
+
+            constexpr static u32 Normal = 0;
+            constexpr static u32 Not    = 1;
+            template<typename T> T *getValue(const i32 index);
+            void next(i32 count = 1);
+            bool begin();
+            void partBegin();
+            void reset();
+            void partReset();
+            bool resetIfFailed(const bool value);
+            template<auto S = Normal> bool sequenceImpl();
+            template<auto S = Normal> bool matchOne(const Token &token);
+            template<auto S = Normal> bool sequenceImpl(const auto &... args);
+            template<auto S = Normal> bool sequence(const Token &token, const auto &... args);
+            bool isValid();
+            bool peek(const Token &token, const i32 index = 0);
+
+            friend bool Coordinates::operator==(const Coordinates &o) const;
+            friend bool Coordinates::operator!=(const Coordinates &o) const;
+            friend bool Coordinates::operator<(const Coordinates &o) const;
+            friend bool Coordinates::operator>(const Coordinates &o) const;
+            friend bool Coordinates::operator<=(const Coordinates &o) const;
+            friend bool Coordinates::operator>=(const Coordinates &o) const;
+            friend Coordinates Coordinates::operator+(const Coordinates &o) const;
+            friend Coordinates Coordinates::operator-(const Coordinates &o) const;
+
+        private:
+            std::vector<Line> m_unfoldedLines;
+            RowToFoldedLine m_foldedLines;
+            std::vector<HiddenLine> m_hiddenLines;
+            std::map<i32,FoldSymbol> m_rowToFoldSymbol = {};
+            MatchedDelimiter m_matchedDelimiter = {};
+            bool m_colorizerEnabled = true;
+            std::vector<std::string> m_defines;
+            FindReplaceHandler m_findReplaceHandler;
+            RowToSegments m_rowToSegments = {};
+            EditorState m_state = {};
+            UndoBuffer m_undoBuffer = {};
+            std::vector<i32> m_leadingLineSpaces = {};
+            i32 m_undoIndex = 0;
+            bool m_updateFlags = true;
+            Breakpoints m_breakpoints = {};
+            ErrorMarkers m_errorMarkers = {};
+            ErrorHoverBoxes m_errorHoverBoxes = {};
+            ErrorGotoBoxes m_errorGotoBoxes = {};
+            CursorBoxes m_cursorBoxes = {};
+            CodeFoldKeys m_codeFoldKeys = {};
+            CodeFolds m_codeFolds = {};
+            CodeFoldKeyMap m_codeFoldKeyMap = {};
+            CodeFoldKeyMap m_codeFoldValueMap = {};
+            CodeFoldKeyLineMap m_codeFoldKeyLineMap = {};
+            CodeFoldKeyLineMap m_codeFoldValueLineMap = {};
+            CodeFoldDelimiters m_codeFoldDelimiters = {};
+            Range m_codeFoldHighlighted = {};
+            CodeFoldState m_codeFoldState = {};
+            bool m_codeFoldsDisabled = false;
+            std::map<i32,i32> m_rowToLineIndex = {};
+            std::map<i32,i32> m_lineIndexToRow = {};
+            ImVec2 m_cursorScreenPosition = {};
+            ImVec2 m_lineNumbersStartPos = {};
+            LineIndexToScreen m_lineIndexToScreen = {};
+            MultiLinesToRow m_multiLinesToRow = {};
+            RowCodeFoldTooltips m_rowCodeFoldTooltips = {};
+            Range m_interactiveSelection = {};
+            std::vector<std::string> m_clickableText;
+            float m_topRow = 0.0F;
+            bool m_setTopRow = false;
+            bool m_restoreSavedFolds = true;
+            ImVec2 m_charAdvance = {};
+            float m_leftMargin = 0.0F;
+            float m_topMargin = 0.0F;
+            float m_lineNumberFieldWidth = 0.0F;
+            bool m_textChanged = false;
+            LanguageDefinition m_languageDefinition = {};
+            RegexList m_regexList;
+            float m_numberOfLinesDisplayed = 0;
+            bool m_withinRender = false;
+            bool m_initializedCodeFolds = false;
+            bool m_ignoreImGuiChild = false;
+            std::string m_title;
+            bool m_unfoldIfNeeded = false;
+            bool m_scrollToCursor = false;
+            Coordinates m_focusAtCoords = {};
+            bool m_updateFocus = false;
+            float m_oldTopMargin = 0.0F;
+            float m_scrollYIncrement = 0.0F;
+            bool m_setScrollY = false;
+            bool m_breakPointsChanged = false;
+            bool m_readOnly = false;
+            u64 m_startTime = 0;
+            bool m_codeFoldStateLoaded = false;
+            bool m_saveCodeFoldStateRequested = false;
+            bool m_useSavedFoldStatesRequested = false;
+            bool m_foldsAreInstalled = false;
+            std::vector<Token> m_tokens;
+            TokenIter m_curr;
+            TokenIter m_startToken, m_originalPosition, m_partOriginalPosition;
+            bool m_interrupt = false;
+            std::vector<i32> m_firstTokenIdOfLine;
+            CodeFoldBlocks m_foldPoints;
+            std::set<Interval> m_globalBlocks;
+        };
+
+    private:
 // Rendering
-        ImVec2 underwaves(ImVec2 pos, u32 nChars, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
+        ImVec2 underWavesAt(ImVec2 pos, i32 nChars, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
+        void renderText(const ImVec2 &textEditorSize);
+    public:
+        TextEditor::Coordinates nextCoordinate(TextEditor::Coordinates coordinate);
+        bool testfoldMaps(TextEditor::Range toTest);
         void setTabSize(i32 value);
         float getPageSize() const;
-        bool isEndOfLine(const Coordinates &coordinates) const;
-        bool isEndOfFile(const Coordinates &coordinates) const;
-        bool isEndOfLine() const;
-        bool isStartOfLine() const;
-        void setTopLine();
         void render(const char *title, const ImVec2 &size = ImVec2(), bool border = false);
-
+        float getTopLineNumber();
+        float getMaxLineNumber();
         void setShowCursor(bool value) { m_showCursor = value; }
         void setShowLineNumbers(bool value) { m_showLineNumbers = value; }
         void setShowWhitespaces(bool value) { m_showWhitespaces = value; }
         bool isShowingWhitespaces() const { return m_showWhitespaces; }
         i32 getTabSize() const { return m_tabSize; }
-        ImVec2 &getCharAdvance() { return m_charAdvance; }
-        void clearGotoBoxes() { m_errorGotoBoxes.clear(); }
-        void clearCursorBoxes() { m_cursorBoxes.clear(); }
-        void addClickableText(std::string text) { m_clickableText.emplace_back(std::move(text)); }
-        void setErrorMarkers(const ErrorMarkers &markers) { m_errorMarkers = markers; }
-        Breakpoints &getBreakpoints() { return m_breakpoints; }
-        void setBreakpoints(const Breakpoints &markers) { m_breakpoints = markers; }
+        ImVec2 &getCharAdvance() { return m_lines.getCharAdvance(); }
+        void addClickableText(const std::string &text) {m_lines.addClickableText(text); }
+        void setErrorMarkers(const ErrorMarkers &markers) { m_lines.m_errorMarkers = markers; }
+        Breakpoints &getBreakpoints() { return m_lines.getBreakpoints(); }
+        void setBreakpoints(const Breakpoints &markers) { m_lines.m_breakpoints = markers; }
         void setLongestLineLength(u64 line) { m_longestLineLength = line; }
         u64 getLongestLineLength() const { return m_longestLineLength; }
         void setTopMarginChanged(i32 newMargin);
-        void setFocusAtCoords(const Coordinates &coords, bool ensureVisible = false);
+        ImVec2 coordsToScreen(Coordinates coordinates);
+        bool isBreakpointsChanged() { return m_lines.isBreakpointsChanged(); }
+        void clearBreakpointsChanged() { m_lines.clearBreakpointsChanged(); }
+        float screenPosToRow(const ImVec2 &position) const;
+        float rowToLineIndex(i32 row);
+        float lineIndexToRow(i32 lineNumber);
         void clearErrorMarkers();
-        void clearActionables();
-    private:
-        void ensureCursorVisible();
-        void resetCursorBlinkTime();
-        void renderText(const char *title, const ImVec2 &lineNumbersStartPos, const ImVec2 &textEditorSize);
-        void setFocus();
-        void preRender();
-        void drawSelection(float lineNo);
-        void drawLineNumbers(ImVec2 position, float lineNo, const ImVec2 &contentSize, bool focused, ImDrawList *drawList);
-        void renderCursor(float lineNo, ImDrawList *drawList);
-        void renderGotoButtons(float lineNo);
-        void drawText(Coordinates &lineStart, u64 i, u32 tokenLength, char color);
-        void postRender(const char *title, ImVec2 position, float lineNo);
-        ImVec2 calculateCharAdvance() const;
-        float textDistanceToLineStart(const Coordinates &from);
+        void clearActionables() {return m_lines.clearActionables();}
+        void saveCodeFoldStates();
+        void applyCodeFoldStates();
+        void readHiddenLines() { m_lines.readHiddenLines(); };
+        void writeHiddenLines() { m_lines.writeHiddenLines(); };
+
 // Highlighting
+    private:
+        void preRender();
+        void drawSelection(float row, ImDrawList *drawList);
+        void renderBottomHorizontal(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
+        void renderTopHorizontal(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
+        void renderPointingDown(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
+        void renderPointingUp(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
+        void renderVerticals(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
+        void renderSquare(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
+        void renderMinus(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
+        void renderPlus(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
+        void renderCodeFolds(i32 row, ImDrawList *drawList, i32 color, Lines::FoldSymbol state);
+        void drawLineNumbers(float lineNumber);
+        void drawBreakpoints(float lineIndex, const ImVec2 &contentSize, ImDrawList *drawList, std::string title);
+        void drawCodeFolds(float lineIndex, ImDrawList *drawList);
+        void drawCursor(float lineIndex, const ImVec2 &contentSize, bool focused, ImDrawList *drawList);
+        void drawButtons(float lineNumber);
+        void drawText(Coordinates &lineStart, u32 tokenLength, char color);
+        i64 drawColoredText(i32 lineIndex, const ImVec2 &textEditorSize);
+        void postRender(float lineNumber, std::string textWindowName);
+        ImVec2 calculateCharAdvance() const;
+        void openCodeFoldAt(Coordinates line);
     public:
-        void colorize();
-        void setLanguageDefinition(const LanguageDefinition &aLanguageDef);
         static const Palette &getPalette();
         static void setPalette(const Palette &value);
         static const Palette &getDarkPalette();
         static const Palette &getLightPalette();
         static const Palette &getRetroBluePalette();
-        bool isColorizerEnabled() const { return m_colorizerEnabled; }
-        const LanguageDefinition &getLanguageDefinition() const { return m_languageDefinition; }
         void setNeedsUpdate(i32 line, bool needsUpdate);
         void setColorizedLine(i64 line, const std::string &tokens);
-    private:
-        void colorizeRange();
-        void colorizeInternal();
+
 //Editing
+    private:
+        void enterCharacter(ImWchar character, bool shift);
     public:
         void deleteWordLeft();
         void deleteWordRight();
@@ -505,34 +925,35 @@ namespace hex::ui {
         void paste();
         void doPaste(const char *clipText);
         void deleteChar();
-        void insertText(const std::string &value);
-        void insertText(const char *value);
+        void setReadOnly(bool value) { m_lines.setReadOnly(value); };
         void appendLine(const std::string &value);
         void setOverwrite(bool value) { m_overwrite = value; }
         bool isOverwrite() const { return m_overwrite; }
         void setText(const std::string &text, bool undo = false);
-        std::string getText();
+        void setImGuiChildIgnored(bool value) { m_lines.setImGuiChildIgnored(value); }
         std::vector<std::string> getTextLines() const;
-        std::string getSelectedText();
+        void setLanguageDefinition(const LanguageDefinition &aLanguageDef) { m_lines.setLanguageDefinition(aLanguageDef); }
         std::string getLineText(i32 line);
-        void setTextChanged(bool value) { m_textChanged = value; }
-        bool isTextChanged() { return m_textChanged; }
-        void setReadOnly(bool value) { m_readOnly = value; }
+        void setTextChanged(bool value) { m_lines.setTextChanged(value); }
+        std::string getText(bool addHiddenLines = false) { return m_lines.getText(addHiddenLines); }
+        void addUndo(std::vector<UndoRecord> value) { m_lines.addUndo(value); }
+        bool isTextChanged() { return m_lines.isTextChanged(); }
         void setHandleMouseInputs(bool value) { m_handleMouseInputs = value; }
-        bool isHandleMouseInputsEnabled() const { return m_handleMouseInputs; }
+        bool isHandleMouseInputsEnabled() const { return m_handleKeyboardInputs; }
         void setHandleKeyboardInputs(bool value) { m_handleKeyboardInputs = value; }
         bool isHandleKeyboardInputsEnabled() const { return m_handleKeyboardInputs; }
-    private:
-        std::string getText(const Range &from);
-        void deleteRange(const Range &rangeToDelete);
-        i32 insertTextAt(Coordinates &where, const std::string &value);
-        void removeLine(i32 start, i32 end);
-        void removeLine(i32 index);
-        Line &insertLine(i32 index);
-        void insertLine(i32 index, const std::string &text);
-        void enterCharacter(ImWchar character, bool shift);
-        void deleteSelection();
+        Lines &getLines() { return m_lines; }
+        const Lines &getLines() const { return m_lines; }
 // Navigating
+    private:
+        Coordinates lineCoordinates(const Coordinates &value);
+        Coordinates lineCoordinates(i32 lineIndex, i32 column);
+        Range lineCoordinates(const Range &value);
+        void advance(Coordinates &coordinates);
+        Coordinates findWordStart(const Coordinates &from);
+        Coordinates findWordEnd(const Coordinates &from);
+
+
     public:
         void jumpToLine(i32 line = -1);
         void jumpToCoords(const Coordinates &coords);
@@ -544,133 +965,91 @@ namespace hex::ui {
         void moveBottom(bool select = false);
         void moveHome(bool select = false);
         void moveEnd(bool select = false);
-        void moveToMatchedBracket(bool select = false);
-        void setScrollY();
+        void moveToMatchedDelimiter(bool select = false);
+        void setCursorPosition(const Coordinates &position, bool unfoldIfNeeded = true, bool scrollToCursor = true) {
+            return m_lines.setCursorPosition(position, unfoldIfNeeded, scrollToCursor);
+        };
         void setScroll(ImVec2 scroll);
-        ImVec2 getScroll() const { return m_scroll; }
-        Coordinates getCursorPosition()  { return setCoordinates(m_state.m_cursorPosition); }
-        void setCursorPosition(const Coordinates &position, bool scrollToCursor = true);
-        void setCursorPosition();
-    private:
-        Coordinates setCoordinates(const Coordinates &value);
-        Coordinates setCoordinates(i32 line, i32 column);
-        Range setCoordinates(const Range &value);
-        void advance(Coordinates &coordinates) const;
-        Coordinates findWordStart(const Coordinates &from);
-        Coordinates findWordEnd(const Coordinates &from);
-        Coordinates findPreviousWord(const Coordinates &from);
-        Coordinates findNextWord(const Coordinates &from);
-        u32 skipSpaces(const Coordinates &from);
+        ImVec2 getScroll() const {return m_scroll;}
+        Coordinates getCursorPosition() { return m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition); }
+
 //Support
+    private:
+        void handleKeyboardInputs();
+        void handleMouseInputs();
     public:
         void setSelection(const Range &selection);
         Range getSelection() const;
         void selectWordUnderCursor();
         void selectAll();
-        bool hasSelection() const;
-        void refreshSearchResults();
-        i32 getTotalLines() const { return (i32) m_lines.size(); }
-        FindReplaceHandler *getFindReplaceHandler() { return &m_findReplaceHandler; }
+        bool hasSelection() { return m_lines.hasSelection(); }
+        std::string getSelectedText() { return m_lines.getSelectedText(); }
+        u32 getfirstNonWhite(u32 lineIndex);
+        i32 getTotalLines() const;
+        FindReplaceHandler *getFindReplaceHandler() { return m_lines.getFindReplaceHandler(); }
         void setSourceCodeEditor(TextEditor *editor) { m_sourceCodeEditor = editor; }
-        void clearBreakpointsChanged() { m_breakPointsChanged = false; }
-        bool isBreakpointsChanged() { return m_breakPointsChanged; }
-        void setImGuiChildIgnored(bool value) { m_ignoreImGuiChild = value; }
-        bool isImGuiChildIgnored() const { return m_ignoreImGuiChild; }
         bool raiseContextMenu() { return m_raiseContextMenu; }
         void clearRaiseContextMenu() { m_raiseContextMenu = false; }
         TextEditor *getSourceCodeEditor();
-        bool isEmpty() const;
-        void addUndo(UndoRecords &value);
-    private:
-        TextEditor::PaletteIndex getColorIndexFromFlags(Line::Flags flags);
-        void handleKeyboardInputs();
-        void handleMouseInputs();
+        void codeFoldExpand(i32 level=1, bool recursive=false, bool all=false);
+        void codeFoldCollapse(i32 level=1, bool recursive=false, bool all=false);
+        i32 getCodeFoldLevel(i32 line) const;
+        void resetFoldedSelections();
+        void computeLPSArray(const std::string &pattern, std::vector<i32> & lps);
+        std::vector<i32> KMPSearch(const std::string& text, const std::string& pattern);
+        bool isEmpty();
+
 // utf8
+    private:
+        Coordinates screenPosCoordinates(const ImVec2 &position);
+        i32 lineIndexColumn(i32 lineNumber, i32 stringIndex);
     public:
         static i32 imTextCharToUtf8(char *buffer, i32 buf_size, u32 c);
         static void imTextCharToUtf8(std::string &buffer, u32 c);
         static i32 utf8CharLength(uint8_t c);
         static i32 stringCharacterCount(const std::string &str);
-        static TextEditor::Coordinates stringIndexToCoordinates(i32 strIndex, const std::string &input);
-        i32 lineMaxColumn(i32 lineIndex);
-    private:
-
-        Coordinates screenPosToCoordinates(const ImVec2 &position);
-        Coordinates lineCoordsToIndexCoords(const Coordinates &coordinates) const;
-        i32 lineCoordinatesToIndex(const Coordinates &coordinates) const;
-        Coordinates getCharacterCoordinates(i32 line, i32 index);
-        i32 lineIndexColumn(i32 lineIndex, i32 stringIndex);
-        u64 getLineByteCount(i32 line) const;
-
-    public:
-        FindReplaceHandler m_findReplaceHandler;
+        Coordinates lineCoordsToIndexCoords(const Coordinates &coordinates);
     private:
         float m_lineSpacing = 1.0F;
-        Lines m_lines;
-        EditorState m_state;
-        UndoBuffer m_undoBuffer;
-        i32 m_undoIndex = 0;
-        bool m_scrollToBottom = false;
-        float m_topMargin = 0.0F;
+        Lines m_lines = {};
         float m_newTopMargin = 0.0F;
-        float m_oldTopMargin = 0.0F;
         bool m_topMarginChanged = false;
-
         i32 m_tabSize = 4;
         bool m_overwrite = false;
-        bool m_readOnly = false;
-        bool m_withinRender = false;
-        bool m_scrollToCursor = false;
-        bool m_scrollToTop = false;
-        bool m_textChanged = false;
-        bool m_colorizerEnabled = true;
-        float m_lineNumberFieldWidth = 0.0F;
+        u64 m_longestDrawnLineLength = 0;
+        float m_topLineNumber = 0.0F;
+        bool m_showWhitespaces = true;
         u64 m_longestLineLength = 0;
-        float m_leftMargin = 10.0;
-        float m_topLine = 0.0F;
-        bool m_setTopLine = false;
-        bool m_breakPointsChanged = false;
         bool m_handleKeyboardInputs = true;
         bool m_handleMouseInputs = true;
-        bool m_ignoreImGuiChild = false;
-        bool m_showWhitespaces = true;
+        bool m_drawMatchedBracket = false;
 
-        MatchedBracket m_matchedBracket;
-        Palette m_palette = {};
-        LanguageDefinition m_languageDefinition;
-        RegexList m_regexList;
-        bool m_updateFlags = true;
-        Breakpoints m_breakpoints;
-        ErrorMarkers m_errorMarkers;
-        ErrorHoverBoxes m_errorHoverBoxes;
-        ErrorGotoBoxes m_errorGotoBoxes;
-        CursorBoxes m_cursorBoxes;
-        ImVec2 m_charAdvance;
-        Range m_interactiveSelection;
-        u64 m_startTime = 0;
-        std::vector<std::string> m_defines;
         TextEditor *m_sourceCodeEditor = nullptr;
         float m_shiftedScrollY = 0;
-        ImVec2 m_scroll=ImVec2(0, 0);
-        float m_scrollYIncrement = 0.0F;
         bool m_setScroll = false;
-        bool m_setScrollY = false;
-        float m_numberOfLinesDisplayed = 0;
+        ImVec2 m_scroll = {};
+        float m_scrollOffset = 0;
+        float m_maxScroll =0;
+        bool m_scrollFromLines = false;
+        bool m_newMouseWheel = false;
         float m_lastClick = -1.0F;
         bool m_showCursor = true;
         bool m_showLineNumbers = true;
         bool m_raiseContextMenu = false;
-        Coordinates m_focusAtCoords;
-        bool m_updateFocus = false;
 
-        std::vector<std::string> m_clickableText;
 
         constexpr static char inComment = 7;
+        inline static Palette m_palette = {};
+        inline static Line Ellipsis = Line({'.','.','.'},{(i32)TextEditor::PaletteIndex::Operator,(i32)TextEditor::PaletteIndex::Operator,(i32)TextEditor::PaletteIndex::Operator},{0,0,0});
         inline static const Line m_emptyLine = Line();
+        inline static const std::string s_delimiters = "()[]{}<>";
+        inline static const std::string s_separators = "()[]{}";
+        inline static const std::string s_operators = "<>";
         inline static const Coordinates Invalid = Coordinates(0x80000000, 0x80000000);
-        static const i32 s_cursorBlinkInterval;
-        static const i32 s_cursorBlinkOnTime;
-        static ImVec2 s_cursorScreenPosition;
+        inline static const Interval NotValid = Interval(0x80000000, 0x80000000);
+        inline static const Range NoCodeFoldSelected = Range(Invalid, Invalid);
+        inline static const i32 s_cursorBlinkInterval = 1200;
+        inline static const i32 s_cursorBlinkOnTime = 800;
     };
 
     bool tokenizeCStyleString(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end);
