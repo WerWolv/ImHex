@@ -276,7 +276,7 @@ namespace hex::plugin::builtin {
             } else {
                 if (m_fileSize == 0) {
                     while (true) {
-                        constexpr static ssize_t ChunkSize = 1_MiB;
+                        constexpr static i64 ChunkSize = 1_MiB;
                         auto startSize = m_data.size();
                         m_data.resize(startSize + ChunkSize);
                         auto result = m_file.readBuffer(m_data.data() + startSize, ChunkSize);
