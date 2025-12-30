@@ -254,7 +254,7 @@ jobs:
           vcpkg install
 
       - name: ⬇️ Install CMake and Ninja
-        uses: lukka/get-cmake@latest
+        run: winget install -e --id Kitware.CMake Ninja-build.Ninja
 
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v4
