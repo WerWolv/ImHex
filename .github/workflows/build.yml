@@ -247,9 +247,10 @@ jobs:
       - name: 📦 Install latest vcpkg release
         shell: bash
         run: |
-          URL=$(curl https://api.github.com/repos/microsoft/vcpkg/releases/latest | jq -r ".tarball_url")
+          LATEST_TAG=$(curl https://api.github.com/repos/microsoft/vcpkg/releases/latest | jq -r ".tag_name")
           VCPKG_ROOT="$(realpath ../vcpkg)"
           mkdir -p $VCPKG_ROOT
+          git clone --depth 1 --branch $LATEST_TAG https://github.com/microsoft/vcpkg $VCPKG_ROOT
           curl -L $URL -o - | tar -xz --strip 1 -C $VCPKG_ROOT
           $VCPKG_ROOT/bootstrap-vcpkg.bat
           echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
