@@ -249,7 +249,7 @@ jobs:
         run: |
           LATEST_TAG=$(curl https://api.github.com/repos/microsoft/vcpkg/releases/latest | jq -r ".tag_name")
           VCPKG_ROOT="$(realpath ../vcpkg)"
-          git clone --depth 1 --branch $LATEST_TAG https://github.com/microsoft/vcpkg $VCPKG_ROOT
+          git clone --filter=tree:0 --branch $LATEST_TAG https://github.com/microsoft/vcpkg $VCPKG_ROOT
           $VCPKG_ROOT/bootstrap-vcpkg.bat
           echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
           echo "Installed vcpkg at $VCPKG_ROOT"
