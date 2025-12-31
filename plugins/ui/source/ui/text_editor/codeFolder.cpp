@@ -379,7 +379,8 @@ namespace hex::ui {
                             return m_foldPoints;
                         }
                         next(-1);
-                        if (const auto *identifier = const_cast<Token::Identifier *>(getValue<Token::Identifier>(0)); identifier == nullptr || identifier->getType() != Token::Identifier::IdentifierType::UDT) {
+                        auto column = m_curr[0].location.column - 1;
+                        if (line.m_colors[column] != (char) PaletteIndex::UserDefinedType) {
                             next(2);
                             if (peek(tkn::Separator::EndOfProgram, -1)) {
                                 return m_foldPoints;
