@@ -20,188 +20,188 @@ env:
 jobs:
 
   # Windows MINGW build
-  # win_mingw:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - architecture_name: "x86_64"
-  #           msystem: "mingw64"
-  #           runner_os: "windows-2025"
-  #         - architecture_name: "arm64"
-  #           msystem: "clangarm64"
-  #           runner_os: "windows-11-arm"
+  win_mingw:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture_name: "x86_64"
+            msystem: "mingw64"
+            runner_os: "windows-2025"
+          - architecture_name: "arm64"
+            msystem: "clangarm64"
+            runner_os: "windows-11-arm"
 
-  #   runs-on: ${{ matrix.runner_os }}
-  #   name: 🪟 Windows MSYS2 ${{ matrix.architecture_name }}
+    runs-on: ${{ matrix.runner_os }}
+    name: 🪟 Windows MSYS2 ${{ matrix.architecture_name }}
 
-  #   defaults:
-  #     run:
-  #       shell: msys2 {0}
+    defaults:
+      run:
+        shell: msys2 {0}
 
-  #   env:
-  #     CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+    env:
+      CCACHE_DIR:      "${{ github.workspace }}/.ccache"
 
-  #   permissions:
-  #     id-token: write
-  #     attestations: write
+    permissions:
+      id-token: write
+      attestations: write
 
-  #   steps:
-  #   - name: 🧰 Checkout
-  #     uses: actions/checkout@v4
-  #     with:
-  #       submodules: recursive
+    steps:
+    - name: 🧰 Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-  #   - name: 📜 Setup ccache
-  #     uses:  hendrikmuhs/ccache-action@main
-  #     id:    cache-ccache
-  #     with:
-  #       key: ${{ runner.os }}-mingw-ccache-${{ github.run_id }}
-  #       restore-keys: ${{ runner.os }}-mingw-ccache
-  #       max-size: 1G
+    - name: 📜 Setup ccache
+      uses:  hendrikmuhs/ccache-action@main
+      id:    cache-ccache
+      with:
+        key: ${{ runner.os }}-mingw-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-mingw-ccache
+        max-size: 1G
 
-  #   - name: 🟦 Install msys2
-  #     uses: msys2/setup-msys2@v2
-  #     with:
-  #       msystem: ${{ matrix.msystem }}
+    - name: 🟦 Install msys2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.msystem }}
 
-  #   - name: ⬇️ Install dependencies
-  #     run: |
-  #       set -x
-  #       dist/get_deps_msys2.sh
+    - name: ⬇️ Install dependencies
+      run: |
+        set -x
+        dist/get_deps_msys2.sh
 
-  #   - name: ⬇️ Install .NET
-  #     uses: actions/setup-dotnet@v4
-  #     with:
-  #       dotnet-version: '8.0.100'
+    - name: ⬇️ Install .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.100'
 
-  #   - name: 📜 Set version variable
-  #     run: |
-  #       echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+    - name: 📜 Set version variable
+      run: |
+        echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
-  #   # Windows cmake build
-  #   - name: 🛠️ Configure CMake
-  #     run: |
-  #       set -x
-  #       mkdir -p build
-  #       cd build
+    # Windows cmake build
+    - name: 🛠️ Configure CMake
+      run: |
+        set -x
+        mkdir -p build
+        cd build
 
-  #       cmake -G "Ninja"                                                          \
-  #         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                \
-  #         -DCMAKE_INSTALL_PREFIX="$PWD/install"                                   \
-  #         -DIMHEX_GENERATE_PACKAGE=ON                                             \
-  #         -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                                   \
-  #         -DIMHEX_PATTERNS_PULL_MASTER=ON                                         \
-  #         -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                \
-  #         -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                               \
-  #         -DUSE_SYSTEM_CAPSTONE=ON                                                \
-  #         -DUSE_SYSTEM_MD4C=ON                                                    \
-  #         -DIMHEX_GENERATE_PDBS=ON                                                \
-  #         -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                                       \
-  #         -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                \
-  #         -DCPACK_WIX_ROOT="$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools"   \
-  #         ..
+        cmake -G "Ninja"                                                          \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"                                   \
+          -DIMHEX_GENERATE_PACKAGE=ON                                             \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                                   \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON                                         \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                               \
+          -DUSE_SYSTEM_CAPSTONE=ON                                                \
+          -DUSE_SYSTEM_MD4C=ON                                                    \
+          -DIMHEX_GENERATE_PDBS=ON                                                \
+          -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                                       \
+          -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                \
+          -DCPACK_WIX_ROOT="$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools"   \
+          ..
 
-  #   - name: 🛠️ Build
-  #     run: |
-  #       cd build
-  #       ninja install
+    - name: 🛠️ Build
+      run: |
+        cd build
+        ninja install
 
-  #   - name: 🕯️ Install WiX Toolkit
-  #     run: |
-  #       "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
-  #       "$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
+    - name: 🕯️ Install WiX Toolkit
+      run: |
+        "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
+        "$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
 
-  #   - name: 🪲 Create PDBs for MSI
-  #     run: |
-  #       cd build
+    - name: 🪲 Create PDBs for MSI
+      run: |
+        cd build
         
-  #       mkdir cv2pdb
-  #       cd cv2pdb
-  #       wget https://github.com/rainers/cv2pdb/releases/download/v0.52/cv2pdb-0.52.zip
-  #       unzip cv2pdb-0.52.zip
-  #       cd ..
+        mkdir cv2pdb
+        cd cv2pdb
+        wget https://github.com/rainers/cv2pdb/releases/download/v0.52/cv2pdb-0.52.zip
+        unzip cv2pdb-0.52.zip
+        cd ..
         
-  #       cv2pdb/cv2pdb.exe imhex.exe
-  #       cv2pdb/cv2pdb.exe imhex-gui.exe
-  #       cv2pdb/cv2pdb.exe libimhex.dll
+        cv2pdb/cv2pdb.exe imhex.exe
+        cv2pdb/cv2pdb.exe imhex-gui.exe
+        cv2pdb/cv2pdb.exe libimhex.dll
         
-  #       for plugin in plugins/*.hexplug; do
-  #         cv2pdb/cv2pdb.exe $plugin
-  #       done
+        for plugin in plugins/*.hexplug; do
+          cv2pdb/cv2pdb.exe $plugin
+        done
         
-  #       rm -rf cv2pdb
+        rm -rf cv2pdb
 
-  #   - name: 📦 Bundle MSI
-  #     run: |
-  #       cd build
-  #       cpack
-  #       mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-${{ matrix.architecture_name }}.msi
+    - name: 📦 Bundle MSI
+      run: |
+        cd build
+        cpack
+        mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-${{ matrix.architecture_name }}.msi
 
-  #       echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
+        echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
-  #   - name: 🪲 Create PDBs for ZIP
-  #     run: |
-  #       cd build/install
+    - name: 🪲 Create PDBs for ZIP
+      run: |
+        cd build/install
 
-  #       mkdir cv2pdb
-  #       cd cv2pdb
-  #       wget https://github.com/rainers/cv2pdb/releases/download/v0.52/cv2pdb-0.52.zip
-  #       unzip cv2pdb-0.52.zip
-  #       cd ..
+        mkdir cv2pdb
+        cd cv2pdb
+        wget https://github.com/rainers/cv2pdb/releases/download/v0.52/cv2pdb-0.52.zip
+        unzip cv2pdb-0.52.zip
+        cd ..
         
-  #       cv2pdb/cv2pdb.exe imhex.exe
-  #       cv2pdb/cv2pdb.exe imhex-gui.exe
-  #       cv2pdb/cv2pdb.exe libimhex.dll
+        cv2pdb/cv2pdb.exe imhex.exe
+        cv2pdb/cv2pdb.exe imhex-gui.exe
+        cv2pdb/cv2pdb.exe libimhex.dll
         
-  #       for plugin in plugins/*.hexplug; do
-  #         cv2pdb/cv2pdb.exe $plugin
-  #       done
+        for plugin in plugins/*.hexplug; do
+          cv2pdb/cv2pdb.exe $plugin
+        done
         
-  #       rm -rf cv2pdb
+        rm -rf cv2pdb
 
-  #   - name: 🗝️ Generate build provenance attestations
-  #     uses: actions/attest-build-provenance@v2
-  #     if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
-  #     with:
-  #       subject-path: |
-  #         imhex-*.msi
+    - name: 🗝️ Generate build provenance attestations
+      uses: actions/attest-build-provenance@v2
+      if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+      with:
+        subject-path: |
+          imhex-*.msi
 
-  #   - name: ⬆️ Upload Windows Installer
-  #     uses: actions/upload-artifact@v4
-  #     id: upload-installer
-  #     with:
-  #       if-no-files-found: error
-  #       name: Windows Installer ${{ matrix.architecture_name }}
-  #       path: |
-  #         imhex-*.msi
+    - name: ⬆️ Upload Windows Installer
+      uses: actions/upload-artifact@v4
+      id: upload-installer
+      with:
+        if-no-files-found: error
+        name: Windows Installer ${{ matrix.architecture_name }}
+        path: |
+          imhex-*.msi
 
-  #   - name: ⬆️ Upload Portable ZIP
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       if-no-files-found: error
-  #       name: Windows Portable ${{ matrix.architecture_name }}
-  #       path: |
-  #         build/install/*
+    - name: ⬆️ Upload Portable ZIP
+      uses: actions/upload-artifact@v4
+      with:
+        if-no-files-found: error
+        name: Windows Portable ${{ matrix.architecture_name }}
+        path: |
+          build/install/*
 
-  #   - name: ⬇️ Download Mesa3D for NoGPU version
-  #     if: ${{ matrix.architecture_name == 'x86_64' }}
-  #     shell: bash
-  #     run: |
-  #       set -x
-  #       echo "NoGPU version Powered by Mesa 3D : https://fdossena.com/?p=mesa%2Findex.frag" > build/install/MESA.md
-  #       curl --connect-timeout 30 --retry 5 --retry-delay 0 --retry-max-time 30 https://downloads.fdossena.com/geth.php?r=mesa64-latest -L -o mesa.7z
-  #       7z e mesa.7z
-  #       mv opengl32.dll build/install
+    - name: ⬇️ Download Mesa3D for NoGPU version
+      if: ${{ matrix.architecture_name == 'x86_64' }}
+      shell: bash
+      run: |
+        set -x
+        echo "NoGPU version Powered by Mesa 3D : https://fdossena.com/?p=mesa%2Findex.frag" > build/install/MESA.md
+        curl --connect-timeout 30 --retry 5 --retry-delay 0 --retry-max-time 30 https://downloads.fdossena.com/geth.php?r=mesa64-latest -L -o mesa.7z
+        7z e mesa.7z
+        mv opengl32.dll build/install
 
-  #   - name: ⬆️ Upload NoGPU Portable ZIP
-  #     if: ${{ matrix.architecture_name == 'x86_64' }}
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       if-no-files-found: error
-  #       name: Windows Portable NoGPU ${{ matrix.architecture_name }}
-  #       path: |
-  #         build/install/*
+    - name: ⬆️ Upload NoGPU Portable ZIP
+      if: ${{ matrix.architecture_name == 'x86_64' }}
+      uses: actions/upload-artifact@v4
+      with:
+        if-no-files-found: error
+        name: Windows Portable NoGPU ${{ matrix.architecture_name }}
+        path: |
+          build/install/*
 
   win_msvc:
     strategy:
@@ -316,1007 +316,1007 @@ jobs:
           path: |
             imhex-*.msi
 
-  # win-plugin-template-test:
-  #   runs-on: windows-2022
-  #   name: 🧪 Plugin Template Test
+  win-plugin-template-test:
+    runs-on: windows-2022
+    name: 🧪 Plugin Template Test
 
-  #   defaults:
-  #     run:
-  #       shell: msys2 {0}
+    defaults:
+      run:
+        shell: msys2 {0}
 
-  #   needs: win_mingw
+    needs: win_mingw
 
-  #   env:
-  #     IMHEX_SDK_PATH: "${{ github.workspace }}/out/sdk"
+    env:
+      IMHEX_SDK_PATH: "${{ github.workspace }}/out/sdk"
 
-  #   steps:
-  #     - name: 🧰 Checkout ImHex
-  #       uses: actions/checkout@v4
-  #       with:
-  #         path: imhex
+    steps:
+      - name: 🧰 Checkout ImHex
+        uses: actions/checkout@v4
+        with:
+          path: imhex
 
-  #     - name: 🟦 Install msys2
-  #       uses: msys2/setup-msys2@v2
-  #       with:
-  #         msystem: mingw64
+      - name: 🟦 Install msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
 
-  #     - name: ⬇️ Install dependencies
-  #       run: |
-  #         set -x
-  #         imhex/dist/get_deps_msys2.sh
+      - name: ⬇️ Install dependencies
+        run: |
+          set -x
+          imhex/dist/get_deps_msys2.sh
 
-  #     - name: 🧰 Checkout ImHex-Plugin-Template
-  #       uses: actions/checkout@v4
-  #       with:
-  #         repository: WerWolv/ImHex-Plugin-Template
-  #         submodules: recursive
-  #         path: template
+      - name: 🧰 Checkout ImHex-Plugin-Template
+        uses: actions/checkout@v4
+        with:
+          repository: WerWolv/ImHex-Plugin-Template
+          submodules: recursive
+          path: template
 
-  #     - name: ⬇️ Download artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: Windows Portable x86_64
-  #         path: out
+      - name: ⬇️ Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Windows Portable x86_64
+          path: out
 
-  #     - name: 🛠️ Build
-  #       run: |
-  #         set -x
-  #         cd template
-  #         mkdir -p build
-  #         cd build
+      - name: 🛠️ Build
+        run: |
+          set -x
+          cd template
+          mkdir -p build
+          cd build
   
-  #         cmake -G "Ninja"                                          \
-  #         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
-  #         -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
-  #         -DUSE_SYSTEM_CAPSTONE=ON                                  \
-  #         -DUSE_SYSTEM_MD4C=ON                                      \
-  #         ..
+          cmake -G "Ninja"                                          \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
+          -DUSE_SYSTEM_CAPSTONE=ON                                  \
+          -DUSE_SYSTEM_MD4C=ON                                      \
+          ..
           
-  #         ninja
+          ninja
 
-  #     - name: 🧪 Test if plugin can be loaded
-  #       run: |
-  #         export WORKSPACE=$(echo "${{ github.workspace }}" | tr '\\' '/')
-  #         ${WORKSPACE}/out/imhex.exe --validate-plugin ${WORKSPACE}/template/build/example_plugin.hexplug
+      - name: 🧪 Test if plugin can be loaded
+        run: |
+          export WORKSPACE=$(echo "${{ github.workspace }}" | tr '\\' '/')
+          ${WORKSPACE}/out/imhex.exe --validate-plugin ${WORKSPACE}/template/build/example_plugin.hexplug
 
   # MacOS build
-  # macos-x86:
-  #   runs-on: macos-15-intel
+  macos-x86:
+    runs-on: macos-15-intel
 
-  #   permissions:
-  #     id-token: write
-  #     attestations: write
+    permissions:
+      id-token: write
+      attestations: write
 
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - file_suffix: "-NoGPU"
-  #           name_suffix: "NoGPU"
-  #           custom_glfw: true
-  #         - file_suffix: ""
-  #           name_suffix: ""
-  #           custom_glfw: false
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - file_suffix: "-NoGPU"
+            name_suffix: "NoGPU"
+            custom_glfw: true
+          - file_suffix: ""
+            name_suffix: ""
+            custom_glfw: false
 
-  #   name: 🍎 macOS 15 x86_64 ${{ matrix.name_suffix }}
+    name: 🍎 macOS 15 x86_64 ${{ matrix.name_suffix }}
 
-  #   steps:
-  #   - name: 🧰 Checkout
-  #     uses: actions/checkout@v4
-  #     with:
-  #       submodules: recursive
+    steps:
+    - name: 🧰 Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-  #   - name: 📜 Set version variable
-  #     run: |
-  #       echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+    - name: 📜 Set version variable
+      run: |
+        echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
-  #   - name: 📜 Setup ccache
-  #     uses: hendrikmuhs/ccache-action@v1
-  #     with:
-  #       key: ${{ runner.os }}${{ matrix.file_suffix }}-ccache-${{ github.run_id }}
-  #       restore-keys: ${{ runner.os }}${{ matrix.file_suffix }}-ccache
-  #       max-size: 1G
+    - name: 📜 Setup ccache
+      uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: ${{ runner.os }}${{ matrix.file_suffix }}-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}${{ matrix.file_suffix }}-ccache
+        max-size: 1G
 
-  #   - name: Set Xcode version
-  #     run: sudo xcode-select -s /Library/Developer/CommandLineTools
+    - name: Set Xcode version
+      run: sudo xcode-select -s /Library/Developer/CommandLineTools
 
-  #   - name: ⬇️ Install dependencies
-  #     env:
-  #       # Make brew not display useless errors
-  #       HOMEBREW_TESTS: 1
-  #     run: |
-  #       brew reinstall python --quiet || true
-  #       brew link --overwrite --quiet python 2>/dev/null || true
-  #       brew bundle --quiet --file dist/macOS/Brewfile || true
-  #       rm -rf /usr/local/Cellar/capstone
+    - name: ⬇️ Install dependencies
+      env:
+        # Make brew not display useless errors
+        HOMEBREW_TESTS: 1
+      run: |
+        brew reinstall python --quiet || true
+        brew link --overwrite --quiet python 2>/dev/null || true
+        brew bundle --quiet --file dist/macOS/Brewfile || true
+        rm -rf /usr/local/Cellar/capstone
 
-  #   - name: ⬇️ Install classic glfw
-  #     if: ${{! matrix.custom_glfw }}
-  #     run: |
-  #       brew install --quiet glfw || true
+    - name: ⬇️ Install classic glfw
+      if: ${{! matrix.custom_glfw }}
+      run: |
+        brew install --quiet glfw || true
 
-  #   - name: ⬇️ Install .NET
-  #     uses: actions/setup-dotnet@v4
-  #     with:
-  #       dotnet-version: '8.0.100'
+    - name: ⬇️ Install .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.100'
 
-  #   - name: 🧰 Checkout glfw
-  #     if: ${{ matrix.custom_glfw }}
-  #     uses: actions/checkout@v4
-  #     with:
-  #       repository: glfw/glfw
-  #       path: glfw
+    - name: 🧰 Checkout glfw
+      if: ${{ matrix.custom_glfw }}
+      uses: actions/checkout@v4
+      with:
+        repository: glfw/glfw
+        path: glfw
 
-  #   # GLFW custom build (to allow software rendering)
-  #   - name: ⬇️ Patch and install custom glfw
-  #     if: ${{ matrix.custom_glfw }}
-  #     run: |
-  #       set -x
-  #       cd glfw
-  #       git apply ../dist/macOS/0001-glfw-SW.patch
+    # GLFW custom build (to allow software rendering)
+    - name: ⬇️ Patch and install custom glfw
+      if: ${{ matrix.custom_glfw }}
+      run: |
+        set -x
+        cd glfw
+        git apply ../dist/macOS/0001-glfw-SW.patch
 
-  #       mkdir build
-  #       cd build
+        mkdir build
+        cd build
 
-  #       cmake -G "Ninja"                                \
-  #         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}      \
-  #         -DBUILD_SHARED_LIBS=ON                        \
-  #         -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
-  #         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
-  #         -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache         \
-  #         -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache       \
-  #       ..
-  #       ninja install
+        cmake -G "Ninja"                                \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}      \
+          -DBUILD_SHARED_LIBS=ON                        \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
+          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache         \
+          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache       \
+        ..
+        ninja install
 
-  #   # MacOS cmake build
-  #   - name: 🛠️ Configure CMake
-  #     run: |
-  #       set -x
-  #       mkdir -p build
-  #       cd build
-  #       CC=$(brew --prefix llvm)/bin/clang                                                          \
-  #       CXX=$(brew --prefix llvm)/bin/clang++                                                       \
-  #       OBJC=$(brew --prefix llvm)/bin/clang                                                        \
-  #       OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
-  #       PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
-  #       cmake -G "Ninja"                                                                            \
-  #         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
-  #         -DIMHEX_GENERATE_PACKAGE=ON                                                               \
-  #         -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib" \
-  #         -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
-  #         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
-  #         -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
-  #         -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache                                                   \
-  #         -DCMAKE_INSTALL_PREFIX="./install"                                                        \
-  #         -DIMHEX_PATTERNS_PULL_MASTER=ON                                                           \
-  #         -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                  \
-  #         -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                 \
-  #         ..
+    # MacOS cmake build
+    - name: 🛠️ Configure CMake
+      run: |
+        set -x
+        mkdir -p build
+        cd build
+        CC=$(brew --prefix llvm)/bin/clang                                                          \
+        CXX=$(brew --prefix llvm)/bin/clang++                                                       \
+        OBJC=$(brew --prefix llvm)/bin/clang                                                        \
+        OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
+        PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
+        cmake -G "Ninja"                                                                            \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
+          -DIMHEX_GENERATE_PACKAGE=ON                                                               \
+          -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib" \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
+          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
+          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache                                                   \
+          -DCMAKE_INSTALL_PREFIX="./install"                                                        \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON                                                           \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                  \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                 \
+          ..
 
-  #   - name: 🛠️ Build
-  #     run: cd build && ninja install
+    - name: 🛠️ Build
+      run: cd build && ninja install
 
-  #   - name: ✒️ Fix Signature
-  #     run: |
-  #       set -x
-  #       cd build/install
-  #       codesign --remove-signature ImHex.app
-  #       codesign --force --deep --sign - ImHex.app
+    - name: ✒️ Fix Signature
+      run: |
+        set -x
+        cd build/install
+        codesign --remove-signature ImHex.app
+        codesign --force --deep --sign - ImHex.app
 
-  #   - name: 📁 Fix permissions
-  #     run: |
-  #       set -x
-  #       cd build/install
-  #       chmod -R 755 ImHex.app/
+    - name: 📁 Fix permissions
+      run: |
+        set -x
+        cd build/install
+        chmod -R 755 ImHex.app/
 
-  #   - name: 🔫 Kill XProtect
-  #     run: |
-  #       # See https://github.com/actions/runner-images/issues/7522
-  #       echo Killing XProtect...; sudo pkill -9 XProtect >/dev/null || true;
-  #       echo Waiting for XProtect process...; while pgrep XProtect; do sleep 3; done;
+    - name: 🔫 Kill XProtect
+      run: |
+        # See https://github.com/actions/runner-images/issues/7522
+        echo Killing XProtect...; sudo pkill -9 XProtect >/dev/null || true;
+        echo Waiting for XProtect process...; while pgrep XProtect; do sleep 3; done;
 
-  #   - name: 📦 Create DMG
-  #     run: |
-  #       brew install graphicsmagick imagemagick
-  #       git clone https://github.com/sindresorhus/create-dmg
-  #       cd create-dmg
-  #       npm i && npm -g i
-  #       cd ../build/install
-  #       for i in $(seq 1 10); do
-  #         create-dmg ImHex.app || true
-  #         if ls -d *.dmg 1>/dev/null 2>/dev/null; then
-  #           break;
-  #         fi
-  #       done
-  #       mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-x86_64.dmg
+    - name: 📦 Create DMG
+      run: |
+        brew install graphicsmagick imagemagick
+        git clone https://github.com/sindresorhus/create-dmg
+        cd create-dmg
+        npm i && npm -g i
+        cd ../build/install
+        for i in $(seq 1 10); do
+          create-dmg ImHex.app || true
+          if ls -d *.dmg 1>/dev/null 2>/dev/null; then
+            break;
+          fi
+        done
+        mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-x86_64.dmg
 
-  #   - name: 🗝️ Generate build provenance attestations
-  #     uses: actions/attest-build-provenance@v2
-  #     if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
-  #     with:
-  #       subject-path: |
-  #         ./*.dmg
+    - name: 🗝️ Generate build provenance attestations
+      uses: actions/attest-build-provenance@v2
+      if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+      with:
+        subject-path: |
+          ./*.dmg
 
-  #   - name: ⬆️ Upload DMG
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       if-no-files-found: error
-  #       name: macOS DMG ${{ matrix.name_suffix }} x86_64
-  #       path: ./*.dmg
+    - name: ⬆️ Upload DMG
+      uses: actions/upload-artifact@v4
+      with:
+        if-no-files-found: error
+        name: macOS DMG ${{ matrix.name_suffix }} x86_64
+        path: ./*.dmg
 
-  # macos-arm64:
-  #   runs-on: ubuntu-24.04
-  #   name: 🍎 macOS 15 arm64
+  macos-arm64:
+    runs-on: ubuntu-24.04
+    name: 🍎 macOS 15 arm64
 
-  #   outputs:
-  #     IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
+    outputs:
+      IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
 
-  #   steps:
-  #   - name: 🧰 Checkout
-  #     uses: actions/checkout@v4
-  #     with:
-  #       submodules: recursive
+    steps:
+    - name: 🧰 Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-  #   - name: 📁 Restore docker /cache
-  #     uses: actions/cache@v4
-  #     with:
-  #       path: cache
-  #       key: macos-arm64-cache-${{ github.run_id }}
-  #       restore-keys: macos-arm64-cache
+    - name: 📁 Restore docker /cache
+      uses: actions/cache@v4
+      with:
+        path: cache
+        key: macos-arm64-cache-${{ github.run_id }}
+        restore-keys: macos-arm64-cache
 
-  #   - name: 🐳 Inject /cache into docker
-  #     uses: reproducible-containers/buildkit-cache-dance@v2
-  #     with:
-  #       cache-source: cache
-  #       cache-target: /cache
+    - name: 🐳 Inject /cache into docker
+      uses: reproducible-containers/buildkit-cache-dance@v2
+      with:
+        cache-source: cache
+        cache-target: /cache
 
-  #   - name: 🛠️ Build using docker
-  #     id: build
-  #     run: |
-  #       echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_OUTPUT
-  #       docker buildx build . -f dist/macOS/arm64.Dockerfile --progress=plain --build-arg 'JOBS=4' --build-arg "BUILD_TYPE=$(BUILD_TYPE)" --build-context imhex=$(pwd) --output out
-  #       cp resources/dist/macos/Entitlements.plist out/Entitlements.plist
+    - name: 🛠️ Build using docker
+      id: build
+      run: |
+        echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_OUTPUT
+        docker buildx build . -f dist/macOS/arm64.Dockerfile --progress=plain --build-arg 'JOBS=4' --build-arg "BUILD_TYPE=$(BUILD_TYPE)" --build-context imhex=$(pwd) --output out
+        cp resources/dist/macos/Entitlements.plist out/Entitlements.plist
 
-  #   - name: ⬆️ Upload artifacts
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: macos_arm64_intermediate
-  #       path: out/
+    - name: ⬆️ Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos_arm64_intermediate
+        path: out/
 
-  #     # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
-  #   - name: 🗑️ Delete old cache
-  #     continue-on-error: true
-  #     env:
-  #       GH_TOKEN: ${{ github.token }}
-  #     run: |
-  #         gh extension install actions/gh-actions-cache
-  #         gh cache delete "macos-arm64-cache" --confirm || true
+      # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
+    - name: 🗑️ Delete old cache
+      continue-on-error: true
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+          gh extension install actions/gh-actions-cache
+          gh cache delete "macos-arm64-cache" --confirm || true
 
-  # macos-arm64-package:
-  #   runs-on: macos-15-intel
-  #   name: 🍎 macOS 15 arm64 Packaging
-  #   needs: macos-arm64
+  macos-arm64-package:
+    runs-on: macos-15-intel
+    name: 🍎 macOS 15 arm64 Packaging
+    needs: macos-arm64
 
-  #   env:
-  #     IMHEX_VERSION: ${{ needs.macos-arm64.outputs.IMHEX_VERSION }}
+    env:
+      IMHEX_VERSION: ${{ needs.macos-arm64.outputs.IMHEX_VERSION }}
 
-  #   permissions:
-  #     id-token: write
-  #     attestations: write
+    permissions:
+      id-token: write
+      attestations: write
 
-  #   steps:
-  #     - name: ⬇️ Download artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: macos_arm64_intermediate
-  #         path: out
+    steps:
+      - name: ⬇️ Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: macos_arm64_intermediate
+          path: out
 
-  #     - name: 🗑️ Delete artifact
-  #       uses: geekyeggo/delete-artifact@v5
-  #       with:
-  #         name: macos_arm64_intermediate
+      - name: 🗑️ Delete artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: macos_arm64_intermediate
 
-  #     - name: ✒️ Fix Signature
-  #       run: |
-  #         set -x
-  #         cd out
-  #         codesign --remove-signature ImHex.app
-  #         codesign --force --deep --entitlements Entitlements.plist --sign - ImHex.app
+      - name: ✒️ Fix Signature
+        run: |
+          set -x
+          cd out
+          codesign --remove-signature ImHex.app
+          codesign --force --deep --entitlements Entitlements.plist --sign - ImHex.app
 
-  #     - name: 📁 Fix permissions
-  #       run: |
-  #         set -x
-  #         cd out
-  #         chmod -R 755 ImHex.app/
+      - name: 📁 Fix permissions
+        run: |
+          set -x
+          cd out
+          chmod -R 755 ImHex.app/
 
-  #     - name: 🔫 Kill XProtect
-  #       run: |
-  #         # See https://github.com/actions/runner-images/issues/7522
-  #         echo Killing XProtect...; sudo pkill -9 XProtect >/dev/null || true;
-  #         echo Waiting for XProtect process...; while pgrep XProtect; do sleep 3; done;
+      - name: 🔫 Kill XProtect
+        run: |
+          # See https://github.com/actions/runner-images/issues/7522
+          echo Killing XProtect...; sudo pkill -9 XProtect >/dev/null || true;
+          echo Waiting for XProtect process...; while pgrep XProtect; do sleep 3; done;
 
-  #     - name: 📦 Create DMG
-  #       run: |
-  #         brew install graphicsmagick imagemagick
-  #         git clone https://github.com/sindresorhus/create-dmg
-  #         cd create-dmg
-  #         npm i && npm -g i
-  #         cd ../out
-  #         for i in $(seq 1 10); do
-  #           create-dmg ImHex.app || true
-  #           if ls -d *.dmg 1>/dev/null 2>/dev/null; then
-  #             break;
-  #           fi
-  #         done
-  #         mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-arm64.dmg
+      - name: 📦 Create DMG
+        run: |
+          brew install graphicsmagick imagemagick
+          git clone https://github.com/sindresorhus/create-dmg
+          cd create-dmg
+          npm i && npm -g i
+          cd ../out
+          for i in $(seq 1 10); do
+            create-dmg ImHex.app || true
+            if ls -d *.dmg 1>/dev/null 2>/dev/null; then
+              break;
+            fi
+          done
+          mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-arm64.dmg
 
-  #     - name: 🗝️ Generate build provenance attestations
-  #       uses: actions/attest-build-provenance@v2
-  #       if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
-  #       with:
-  #         subject-path: |
-  #           ./*.dmg
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            ./*.dmg
 
-  #     - name: ⬆️ Upload DMG
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         if-no-files-found: error
-  #         name: macOS DMG arm64
-  #         path: ./*.dmg
+      - name: ⬆️ Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: macOS DMG arm64
+          path: ./*.dmg
 
   # Ubuntu build
-  # ubuntu:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - name: "Ubuntu"
-  #           release_num: "24.04"
-  #           image: "ubuntu:24.04"
-  #         - name: "Ubuntu"
-  #           release_num: "25.10"
-  #           image: "ubuntu:25.10"
-  #         - name: "Debian"
-  #           release_num: "13"
-  #           image: "debian:13"
-
-  #   name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
-  #   runs-on: ubuntu-24.04
-
-  #   container:
-  #     image: "${{ matrix.image }}"
-  #     options: --privileged
-
-  #   permissions:
-  #     id-token: write
-  #     attestations: write
-
-  #   steps:
-  #     - name: ⬇️ Install setup dependencies
-  #       run: apt update && apt install -y git curl
-
-  #     - name: 🧰 Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         submodules: recursive
-
-  #     - name: 📜 Setup ccache
-  #       uses: hendrikmuhs/ccache-action@v1
-  #       with:
-  #         key: ${{ matrix.image }}-ccache-${{ github.run_id }}
-  #         restore-keys: ${{ matrix.image }}-ccache
-  #         max-size: 1G
-
-  #     - name: ⬇️ Install dependencies
-  #       run: |
-  #         apt update
-  #         bash dist/get_deps_debian.sh
-
-  #     - name: ⬇️ Install .NET
-  #       uses: actions/setup-dotnet@v4
-  #       with:
-  #         dotnet-version: '8.0.100'
-
-  #     # Ubuntu cmake build
-  #     - name: 🛠️ Configure CMake
-  #       shell: bash
-  #       run: |
-  #         set -x
-  #         git config --global --add safe.directory '*'
-  #         mkdir -p build
-  #         cd build
-  #         CC=gcc-14 CXX=g++-14 cmake -G "Ninja"                       \
-  #           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
-  #           -DCMAKE_INSTALL_PREFIX="/usr"                             \
-  #           -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
-  #           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                      \
-  #           -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
-  #           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
-  #           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
-  #           -DIMHEX_ENABLE_LTO=ON                                     \
-  #           -DIMHEX_USE_GTK_FILE_PICKER=ON                            \
-  #           -DDOTNET_EXECUTABLE="dotnet"                              \
-  #           ..
-
-  #     - name: 🛠️ Build
-  #       run: cd build && DESTDIR=DebDir ninja install
-
-  #     - name: 📜 Set version variable
-  #       run: |
-  #         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
-
-  #     - name: 📦 Bundle DEB
-  #       run: |
-  #         cp -r build/DEBIAN build/DebDir
-  #         dpkg-deb -Zzstd --build build/DebDir
-  #         mv build/DebDir.deb imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.deb
-
-  #     - name: 🗝️ Generate build provenance attestations
-  #       uses: actions/attest-build-provenance@v2
-  #       if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
-  #       with:
-  #         subject-path: |
-  #           ./*.deb
-
-  #     - name: ⬆️ Upload DEB
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         if-no-files-found: error
-  #         name: ${{ matrix.name }} ${{ matrix.release_num }} DEB x86_64
-  #         path: '*.deb'
-
-  # # AppImage build
-  # appimage:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - architecture: "x86_64"
-  #           architecture_package: "amd64"
-  #           architecture_appimage_builder: "x86_64"
-  #           image: ubuntu-24.04
-  #         - architecture: "arm64"
-  #           architecture_package: "arm64"
-  #           architecture_appimage_builder: "aarch64"
-  #           image: ubuntu-24.04-arm
-
-  #   runs-on: ${{ matrix.image }}
-  #   name: ⬇️ AppImage ${{ matrix.architecture }}
-
-  #   permissions:
-  #     id-token: write
-  #     attestations: write
-
-  #   steps:
-  #     - name: 🧰 Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         submodules: recursive
-
-  #     - name: 📁 Restore docker /cache
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: cache
-  #         key: appimage-ccache-${{ matrix.architecture }}-${{ github.run_id }}
-  #         restore-keys: appimage-ccache-${{ matrix.architecture }}
-
-  #     - name: 🐳 Inject /cache into docker
-  #       uses: reproducible-containers/buildkit-cache-dance@v2
-  #       with:
-  #         cache-source: cache
-  #         cache-target: /cache
-
-  #     - name: 🛠️ Build using docker
-  #       run: |
-  #         docker buildx build . -f dist/AppImage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
-  #         --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" \
-  #         --build-arg "ARCHITECTURE_PACKAGE=${{ matrix.architecture_package }}" --build-arg "ARCHITECTURE_FILE_NAME=${{ matrix.architecture }}" --build-arg "ARCHITECTURE_APPIMAGE_BUILDER=${{ matrix.architecture_appimage_builder }}" \
-  #         --output out
-
-  #     - name: 🗝️ Generate build provenance attestations
-  #       uses: actions/attest-build-provenance@v2
-  #       if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
-  #       with:
-  #         subject-path: |
-  #           out/*.AppImage
-  #           out/*.AppImage.zsync
-
-  #     - name: ⬆️ Upload AppImage
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         if-no-files-found: error
-  #         name: Linux AppImage ${{ matrix.architecture }}
-  #         path: 'out/*.AppImage'
-
-  #     - name: ⬆️ Upload AppImage zsync
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         if-no-files-found: error
-  #         name: Linux AppImage zsync ${{ matrix.architecture }}
-  #         path: 'out/*.AppImage.zsync'
-
-  # # ArchLinux build
-  # archlinux-build:
-  #   name: 🐧 ArchLinux x86_64
-  #   runs-on: ubuntu-24.04
-
-  #   container:
-  #     image: archlinux:base-devel
-
-  #   permissions:
-  #     id-token: write
-  #     attestations: write
-
-  #   steps:
-  #     - name: ⬇️ Update all packages
-  #       run: |
-  #         pacman -Syyu --noconfirm
-
-  #     - name: ⬇️ Install setup dependencies
-  #       run: |
-  #         pacman -Syu git ccache --noconfirm
-
-  #     - name: 🧰 Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         submodules: recursive
-
-  #     - name: ⬇️ Install ImHex dependencies
-  #       run: |
-  #         dist/get_deps_archlinux.sh --noconfirm
-
-  #     - name: ⬇️ Install .NET
-  #       uses: actions/setup-dotnet@v4
-  #       with:
-  #         dotnet-version: '8.0.100'
-
-  #     - name: 📜 Setup ccache
-  #       uses: hendrikmuhs/ccache-action@v1
-  #       with:
-  #         key: archlinux-ccache-${{ github.run_id }}
-  #         restore-keys: archlinux-ccache
-  #         max-size: 1G
-
-  #     # ArchLinux cmake build
-  #     - name: 🛠️ Configure CMake
-  #       run: |
-  #         set -x
-  #         mkdir -p build
-  #         cd build
-  #         CC=gcc CXX=g++ cmake -G "Ninja"               \
-  #         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}      \
-  #         -DCMAKE_INSTALL_PREFIX="/usr"                 \
-  #         -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
-  #         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
-  #         -DUSE_SYSTEM_FMT=ON                           \
-  #         -DUSE_SYSTEM_YARA=ON                          \
-  #         -DUSE_SYSTEM_NLOHMANN_JSON=ON                 \
-  #         -DUSE_SYSTEM_CAPSTONE=OFF                     \
-  #         -DUSE_SYSTEM_MD4C=ON                          \
-  #         -DIMHEX_PATTERNS_PULL_MASTER=ON               \
-  #         -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
-  #         -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
-  #         -DIMHEX_ENABLE_LTO=ON                         \
-  #         -DIMHEX_USE_GTK_FILE_PICKER=ON                \
-  #         ..
-
-  #     - name: 🛠️ Build
-  #       run: cd build && DESTDIR=installDir ninja install
-
-  #     - name: 📜 Set version variable
-  #       run: |
-  #         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
-
-  #     - name: ✒️ Prepare PKGBUILD
-  #       run: |
-  #         cp dist/Arch/PKGBUILD build
-  #         sed -i 's/%version%/${{ env.IMHEX_VERSION }}/g' build/PKGBUILD
-
-  #   # makepkg doesn't want to run as root, so I had to chmod 777 all over
-  #     - name: 📦 Package ArchLinux .pkg.tar.zst
-  #       run: |
-  #         set -x
-  #         cd build
-
-  #         # the name is a small trick to make makepkg recognize it as the source
-  #         # else, it would try to download the file from the release
-  #         tar -cvf imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst -C installDir .
-
-  #         chmod -R 777 .
-
-  #         sudo -u nobody makepkg
-
-  #         # Replace the old file
-  #         rm imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
-  #         rm *imhex-bin-debug* # rm debug package which is created for some reason
-  #         mv *.pkg.tar.zst imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
-
-  #     - name: 🗝️ Generate build provenance attestations
-  #       uses: actions/attest-build-provenance@v2
-  #       if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
-  #       with:
-  #         subject-path: |
-  #           build/imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
-
-  #     - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         if-no-files-found: error
-  #         name: ArchLinux .pkg.tar.zst x86_64
-  #         path: |
-  #           build/imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
-
-  # # RPM distro builds
-  # rpm-build:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - name: Fedora
-  #           release_num: rawhide
-  #           mock_config: fedora-rawhide
-  #         - name: Fedora
-  #           release_num: 43
-  #           mock_config: fedora-43
-  #         - name: Fedora
-  #           release_num: 42
-  #           mock_config: fedora-42
-  #         - name: Fedora
-  #           release_num: 41
-  #           mock_config: fedora-41
-  #         - name: RHEL-AlmaLinux
-  #           release_num: 9
-  #           mock_config: "alma+epel-9"
-
-  #   name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
-  #   runs-on: ubuntu-24.04
-
-  #   container:
-  #     image: "almalinux:10"
-  #     options: --privileged --pid=host --security-opt apparmor=unconfined
-
-  #   permissions:
-  #     id-token: write
-  #     attestations: write
-
-  #   steps:
-  #     # This, together with the `--pid=host --security-opt apparmor=unconfined` docker options is required to allow
-  #     # mock to work inside a Docker container running on Ubuntu again.
-  #     # GitHub seems to have enabled AppArmor on their Ubuntu CI runners which limits Docker in ways that cause
-  #     # programs inside it to fail.
-  #     # Without this, mock will throw the unhelpful error message 'Insufficient Rights'
-  #     # This step uses nsenter to execute commands on the host that disable AppArmor entirely.
-  #     - name: 🛡️ Disable AppArmor on Host
-  #       run: |
-  #         nsenter -t 1 -m -u -n -i sudo systemctl disable --now apparmor.service
-  #         nsenter -t 1 -m -u -n -i sudo aa-teardown || true
-  #         nsenter -t 1 -m -u -n -i sudo sysctl --write kernel.apparmor_restrict_unprivileged_unconfined=0
-  #         nsenter -t 1 -m -u -n -i sudo sysctl --write kernel.apparmor_restrict_unprivileged_userns=0
-
-  #     - name: ⬇️ Install git-core and EPEL repo
-  #       run: dnf install git-core epel-release -y
-
-  #     - name: 🧰 Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         path: ImHex
-  #         submodules: recursive
-
-  #     - name: 📜 Setup DNF Cache
-  #       if: false # Disabled for now since it fills up the cache very quickly
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: /var/cache/dnf
-  #         key: dnf-ccache-${{ matrix.mock_config }}-${{ github.run_id }}
-  #         restore-keys: dnf-ccache-${{ matrix.mock_config }}
-
-  #     - name: ⬇️ Update all packages and install dependencies
-  #       run: |
-  #         set -x
-  #         dnf upgrade -y
-  #         dnf install -y \
-  #         mock \
-  #         ccache
-
-  #     - name: ⬇️ Install .NET
-  #       uses: actions/setup-dotnet@v4
-  #       with:
-  #         dotnet-version: '8.0.100'
-
-  #     - name: 📜 Setup ccache
-  #       uses: hendrikmuhs/ccache-action@v1
-  #       with:
-  #         key: ${{ matrix.mock_config }}-rpm-${{ github.run_id }}
-  #         restore-keys: ${{ matrix.mock_config }}-rpm
-  #         max-size: 1G
-
-  #     - name: 📜 Set version variable
-  #       run: |
-  #         echo "IMHEX_VERSION=`cat ImHex/VERSION`" >> $GITHUB_ENV
-
-  #     - name: 🗜️ Create tarball from sources with dependencies
-  #       run: tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz ImHex
-
-  #     - name: ✒️ Modify spec file
-  #       run: |
-  #         sed -i \
-  #         -e 's/Version:        VERSION$/Version:        ${{ env.IMHEX_VERSION }}/g'  \
-  #         -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'                     \
-  #         -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\'         \
-  #         -e '/BuildRequires:  cmake/a BuildRequires:  git-core'                      \
-  #         -e '/%files/a %{_datadir}/imhex/'                                           \
-  #         $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
-
-  #     - name: 📜 Fix ccache on EL9
-  #       if: matrix.mock_config == 'alma+epel-9'
-  #       run: sed -i '/\. \/opt\/rh\/gcc-toolset-14\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
-
-  #     - name: 🟩 Copy spec file to build root
-  #       run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
-
-  #     # Fedora cmake build (in imhex.spec)
-  #     - name: 📦 Build RPM
-  #       run: |
-  #         mock -r ${{ matrix.mock_config }}-x86_64               \
-  #           --define 'debug_package %{nil}'                      \
-  #           --enable-network -N -v                               \
-  #           --enable-plugin=ccache                               \
-  #           --plugin-option=ccache:compress=True                 \
-  #           --plugin-option=ccache:max_cache_size=200M           \
-  #           --plugin-option=ccache:dir=$GITHUB_WORKSPACE/.ccache \
-  #           --spec $GITHUB_WORKSPACE/imhex.spec                  \
-  #           --sources $GITHUB_WORKSPACE                          \
-  #           --resultdir $GITHUB_WORKSPACE/results
-
-  #     - name: 🟩 Move and rename finished RPM
-  #       run: |
-  #         mv $GITHUB_WORKSPACE/results/imhex-${{ env.IMHEX_VERSION }}-0.*.x86_64.rpm \
-  #         $GITHUB_WORKSPACE/imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
-
-  #     - name: 🗝️ Generate build provenance attestations
-  #       uses: actions/attest-build-provenance@v2
-  #       if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
-  #       with:
-  #         subject-path: |
-  #           imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
-
-  #     - name: ⬆️ Upload RPM
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         if-no-files-found: error
-  #         name: ${{ matrix.name }} ${{ matrix.release_num }} RPM x86_64
-  #         path: |
-  #           imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
-
-  # snap-build:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - architecture: "x86_64"
-  #           image: ubuntu-24.04
-  #         - architecture: "arm64"
-  #           image: ubuntu-24.04-arm
-  #   name: 🐧 Snap ${{ matrix.architecture }}
-  #   runs-on: ${{ matrix.image }}
-
-  #   permissions:
-  #     id-token: write
-  #     attestations: write
-  #   steps:
-  #     - name: ⬇️ Install setup dependencies
-  #       run: |
-  #         sudo apt update && sudo apt install -y git curl snapd ccache
+  ubuntu:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "Ubuntu"
+            release_num: "24.04"
+            image: "ubuntu:24.04"
+          - name: "Ubuntu"
+            release_num: "25.10"
+            image: "ubuntu:25.10"
+          - name: "Debian"
+            release_num: "13"
+            image: "debian:13"
+
+    name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
+    runs-on: ubuntu-24.04
+
+    container:
+      image: "${{ matrix.image }}"
+      options: --privileged
+
+    permissions:
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: ⬇️ Install setup dependencies
+        run: apt update && apt install -y git curl
+
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ${{ matrix.image }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ matrix.image }}-ccache
+          max-size: 1G
+
+      - name: ⬇️ Install dependencies
+        run: |
+          apt update
+          bash dist/get_deps_debian.sh
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.100'
+
+      # Ubuntu cmake build
+      - name: 🛠️ Configure CMake
+        shell: bash
+        run: |
+          set -x
+          git config --global --add safe.directory '*'
+          mkdir -p build
+          cd build
+          CC=gcc-14 CXX=g++-14 cmake -G "Ninja"                       \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                  \
+            -DCMAKE_INSTALL_PREFIX="/usr"                             \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                      \
+            -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
+            -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
+            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
+            -DIMHEX_ENABLE_LTO=ON                                     \
+            -DIMHEX_USE_GTK_FILE_PICKER=ON                            \
+            -DDOTNET_EXECUTABLE="dotnet"                              \
+            ..
+
+      - name: 🛠️ Build
+        run: cd build && DESTDIR=DebDir ninja install
+
+      - name: 📜 Set version variable
+        run: |
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+
+      - name: 📦 Bundle DEB
+        run: |
+          cp -r build/DEBIAN build/DebDir
+          dpkg-deb -Zzstd --build build/DebDir
+          mv build/DebDir.deb imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.deb
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            ./*.deb
+
+      - name: ⬆️ Upload DEB
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: ${{ matrix.name }} ${{ matrix.release_num }} DEB x86_64
+          path: '*.deb'
+
+  # AppImage build
+  appimage:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: "x86_64"
+            architecture_package: "amd64"
+            architecture_appimage_builder: "x86_64"
+            image: ubuntu-24.04
+          - architecture: "arm64"
+            architecture_package: "arm64"
+            architecture_appimage_builder: "aarch64"
+            image: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.image }}
+    name: ⬇️ AppImage ${{ matrix.architecture }}
+
+    permissions:
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 📁 Restore docker /cache
+        uses: actions/cache@v4
+        with:
+          path: cache
+          key: appimage-ccache-${{ matrix.architecture }}-${{ github.run_id }}
+          restore-keys: appimage-ccache-${{ matrix.architecture }}
+
+      - name: 🐳 Inject /cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v2
+        with:
+          cache-source: cache
+          cache-target: /cache
+
+      - name: 🛠️ Build using docker
+        run: |
+          docker buildx build . -f dist/AppImage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
+          --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" \
+          --build-arg "ARCHITECTURE_PACKAGE=${{ matrix.architecture_package }}" --build-arg "ARCHITECTURE_FILE_NAME=${{ matrix.architecture }}" --build-arg "ARCHITECTURE_APPIMAGE_BUILDER=${{ matrix.architecture_appimage_builder }}" \
+          --output out
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            out/*.AppImage
+            out/*.AppImage.zsync
+
+      - name: ⬆️ Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: Linux AppImage ${{ matrix.architecture }}
+          path: 'out/*.AppImage'
+
+      - name: ⬆️ Upload AppImage zsync
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: Linux AppImage zsync ${{ matrix.architecture }}
+          path: 'out/*.AppImage.zsync'
+
+  # ArchLinux build
+  archlinux-build:
+    name: 🐧 ArchLinux x86_64
+    runs-on: ubuntu-24.04
+
+    container:
+      image: archlinux:base-devel
+
+    permissions:
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: ⬇️ Update all packages
+        run: |
+          pacman -Syyu --noconfirm
+
+      - name: ⬇️ Install setup dependencies
+        run: |
+          pacman -Syu git ccache --noconfirm
+
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: ⬇️ Install ImHex dependencies
+        run: |
+          dist/get_deps_archlinux.sh --noconfirm
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.100'
+
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: archlinux-ccache-${{ github.run_id }}
+          restore-keys: archlinux-ccache
+          max-size: 1G
+
+      # ArchLinux cmake build
+      - name: 🛠️ Configure CMake
+        run: |
+          set -x
+          mkdir -p build
+          cd build
+          CC=gcc CXX=g++ cmake -G "Ninja"               \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}      \
+          -DCMAKE_INSTALL_PREFIX="/usr"                 \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
+          -DUSE_SYSTEM_FMT=ON                           \
+          -DUSE_SYSTEM_YARA=ON                          \
+          -DUSE_SYSTEM_NLOHMANN_JSON=ON                 \
+          -DUSE_SYSTEM_CAPSTONE=OFF                     \
+          -DUSE_SYSTEM_MD4C=ON                          \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON               \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
+          -DIMHEX_ENABLE_LTO=ON                         \
+          -DIMHEX_USE_GTK_FILE_PICKER=ON                \
+          ..
+
+      - name: 🛠️ Build
+        run: cd build && DESTDIR=installDir ninja install
+
+      - name: 📜 Set version variable
+        run: |
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+
+      - name: ✒️ Prepare PKGBUILD
+        run: |
+          cp dist/Arch/PKGBUILD build
+          sed -i 's/%version%/${{ env.IMHEX_VERSION }}/g' build/PKGBUILD
+
+    # makepkg doesn't want to run as root, so I had to chmod 777 all over
+      - name: 📦 Package ArchLinux .pkg.tar.zst
+        run: |
+          set -x
+          cd build
+
+          # the name is a small trick to make makepkg recognize it as the source
+          # else, it would try to download the file from the release
+          tar -cvf imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst -C installDir .
+
+          chmod -R 777 .
+
+          sudo -u nobody makepkg
+
+          # Replace the old file
+          rm imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
+          rm *imhex-bin-debug* # rm debug package which is created for some reason
+          mv *.pkg.tar.zst imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            build/imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
+
+      - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: ArchLinux .pkg.tar.zst x86_64
+          path: |
+            build/imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
+
+  # RPM distro builds
+  rpm-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Fedora
+            release_num: rawhide
+            mock_config: fedora-rawhide
+          - name: Fedora
+            release_num: 43
+            mock_config: fedora-43
+          - name: Fedora
+            release_num: 42
+            mock_config: fedora-42
+          - name: Fedora
+            release_num: 41
+            mock_config: fedora-41
+          - name: RHEL-AlmaLinux
+            release_num: 9
+            mock_config: "alma+epel-9"
+
+    name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
+    runs-on: ubuntu-24.04
+
+    container:
+      image: "almalinux:10"
+      options: --privileged --pid=host --security-opt apparmor=unconfined
+
+    permissions:
+      id-token: write
+      attestations: write
+
+    steps:
+      # This, together with the `--pid=host --security-opt apparmor=unconfined` docker options is required to allow
+      # mock to work inside a Docker container running on Ubuntu again.
+      # GitHub seems to have enabled AppArmor on their Ubuntu CI runners which limits Docker in ways that cause
+      # programs inside it to fail.
+      # Without this, mock will throw the unhelpful error message 'Insufficient Rights'
+      # This step uses nsenter to execute commands on the host that disable AppArmor entirely.
+      - name: 🛡️ Disable AppArmor on Host
+        run: |
+          nsenter -t 1 -m -u -n -i sudo systemctl disable --now apparmor.service
+          nsenter -t 1 -m -u -n -i sudo aa-teardown || true
+          nsenter -t 1 -m -u -n -i sudo sysctl --write kernel.apparmor_restrict_unprivileged_unconfined=0
+          nsenter -t 1 -m -u -n -i sudo sysctl --write kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: ⬇️ Install git-core and EPEL repo
+        run: dnf install git-core epel-release -y
+
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ImHex
+          submodules: recursive
+
+      - name: 📜 Setup DNF Cache
+        if: false # Disabled for now since it fills up the cache very quickly
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/dnf
+          key: dnf-ccache-${{ matrix.mock_config }}-${{ github.run_id }}
+          restore-keys: dnf-ccache-${{ matrix.mock_config }}
+
+      - name: ⬇️ Update all packages and install dependencies
+        run: |
+          set -x
+          dnf upgrade -y
+          dnf install -y \
+          mock \
+          ccache
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.100'
+
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ${{ matrix.mock_config }}-rpm-${{ github.run_id }}
+          restore-keys: ${{ matrix.mock_config }}-rpm
+          max-size: 1G
+
+      - name: 📜 Set version variable
+        run: |
+          echo "IMHEX_VERSION=`cat ImHex/VERSION`" >> $GITHUB_ENV
+
+      - name: 🗜️ Create tarball from sources with dependencies
+        run: tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz ImHex
+
+      - name: ✒️ Modify spec file
+        run: |
+          sed -i \
+          -e 's/Version:        VERSION$/Version:        ${{ env.IMHEX_VERSION }}/g'  \
+          -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'                     \
+          -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\'         \
+          -e '/BuildRequires:  cmake/a BuildRequires:  git-core'                      \
+          -e '/%files/a %{_datadir}/imhex/'                                           \
+          $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+
+      - name: 📜 Fix ccache on EL9
+        if: matrix.mock_config == 'alma+epel-9'
+        run: sed -i '/\. \/opt\/rh\/gcc-toolset-14\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+
+      - name: 🟩 Copy spec file to build root
+        run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
+
+      # Fedora cmake build (in imhex.spec)
+      - name: 📦 Build RPM
+        run: |
+          mock -r ${{ matrix.mock_config }}-x86_64               \
+            --define 'debug_package %{nil}'                      \
+            --enable-network -N -v                               \
+            --enable-plugin=ccache                               \
+            --plugin-option=ccache:compress=True                 \
+            --plugin-option=ccache:max_cache_size=200M           \
+            --plugin-option=ccache:dir=$GITHUB_WORKSPACE/.ccache \
+            --spec $GITHUB_WORKSPACE/imhex.spec                  \
+            --sources $GITHUB_WORKSPACE                          \
+            --resultdir $GITHUB_WORKSPACE/results
+
+      - name: 🟩 Move and rename finished RPM
+        run: |
+          mv $GITHUB_WORKSPACE/results/imhex-${{ env.IMHEX_VERSION }}-0.*.x86_64.rpm \
+          $GITHUB_WORKSPACE/imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
+
+      - name: ⬆️ Upload RPM
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: ${{ matrix.name }} ${{ matrix.release_num }} RPM x86_64
+          path: |
+            imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
+
+  snap-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: "x86_64"
+            image: ubuntu-24.04
+          - architecture: "arm64"
+            image: ubuntu-24.04-arm
+    name: 🐧 Snap ${{ matrix.architecture }}
+    runs-on: ${{ matrix.image }}
+
+    permissions:
+      id-token: write
+      attestations: write
+    steps:
+      - name: ⬇️ Install setup dependencies
+        run: |
+          sudo apt update && sudo apt install -y git curl snapd ccache
           
-  #         for i in $(seq 1 5); do
-  #           if sudo snap install snapcraft --classic; then
-  #             break;
-  #           fi
-  #           echo "Retrying snap install..."
-  #           sleep 10
-  #         done
+          for i in $(seq 1 5); do
+            if sudo snap install snapcraft --classic; then
+              break;
+            fi
+            echo "Retrying snap install..."
+            sleep 10
+          done
 
-  #     - name: 🧰 Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         submodules: recursive
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-  #     - name: 📜 Set version variable
-  #       run: |
-  #         export IMHEX_VERSION=$(cat VERSION)
-  #         echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
+      - name: 📜 Set version variable
+        run: |
+          export IMHEX_VERSION=$(cat VERSION)
+          echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
           
-  #         if [[ "$IMHEX_VERSION" == *.WIP ]]; then
-  #             echo "IMHEX_VERSION_STRING=$IMHEX_VERSION-${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
-  #         else
-  #             echo "IMHEX_VERSION_STRING=$IMHEX_VERSION" >> $GITHUB_ENV
-  #         fi
-  #         echo "CCACHE=ccache" >> $GITHUB_ENV
+          if [[ "$IMHEX_VERSION" == *.WIP ]]; then
+              echo "IMHEX_VERSION_STRING=$IMHEX_VERSION-${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+          else
+              echo "IMHEX_VERSION_STRING=$IMHEX_VERSION" >> $GITHUB_ENV
+          fi
+          echo "CCACHE=ccache" >> $GITHUB_ENV
 
-  #     - name: 📜 Move snap directory to root
-  #       run: |
-  #         mkdir -p ./snap
-  #         envsubst '${IMHEX_VERSION_STRING},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
+      - name: 📜 Move snap directory to root
+        run: |
+          mkdir -p ./snap
+          envsubst '${IMHEX_VERSION_STRING},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
 
-  #     - name: 📜 Setup ccache
-  #       uses: hendrikmuhs/ccache-action@v1
-  #       with:
-  #         key: ${{ matrix.architecture }}-snap-${{ github.run_id }}
-  #         restore-keys: ${{ matrix.architecture }}-snap
-  #         max-size: 1G
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ${{ matrix.architecture }}-snap-${{ github.run_id }}
+          restore-keys: ${{ matrix.architecture }}-snap
+          max-size: 1G
 
-  #     - name: 🛠️ Build
-  #       run: |
-  #         sudo snapcraft --destructive-mode
+      - name: 🛠️ Build
+        run: |
+          sudo snapcraft --destructive-mode
 
-  #     - name: 🟩 Rename Snap
-  #       run: |
-  #         mv *.snap imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.snap
+      - name: 🟩 Rename Snap
+        run: |
+          mv *.snap imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.snap
 
-  #     - name: 🗝️ Generate build provenance attestations
-  #       uses: actions/attest-build-provenance@v2
-  #       if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
-  #       with:
-  #         subject-path: |
-  #           *.snap
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            *.snap
 
-  #     - name: ⬆️ Upload Snap
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         if-no-files-found: error
-  #         name: Snap ${{ matrix.architecture }}
-  #         path: |
-  #           *.snap
+      - name: ⬆️ Upload Snap
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: Snap ${{ matrix.architecture }}
+          path: |
+            *.snap
 
-  # flatpak-build:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - architecture: "x86_64"
-  #           flatpak_arch: "x86_64"
-  #           image: ubuntu-24.04
-  #         - architecture: "arm64"
-  #           flatpak_arch: "aarch64"
-  #           image: ubuntu-24.04-arm
-  #   name: 🐧 Flatpak ${{ matrix.architecture }}
-  #   runs-on: ${{ matrix.image }}
+  flatpak-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: "x86_64"
+            flatpak_arch: "x86_64"
+            image: ubuntu-24.04
+          - architecture: "arm64"
+            flatpak_arch: "aarch64"
+            image: ubuntu-24.04-arm
+    name: 🐧 Flatpak ${{ matrix.architecture }}
+    runs-on: ${{ matrix.image }}
 
-  #   permissions:
-  #     id-token: write
-  #     attestations: write
+    permissions:
+      id-token: write
+      attestations: write
 
-  #   steps:
-  #     - name: ⬇️ Install setup dependencies
-  #       run: |
-  #         sudo apt update && sudo apt install -y git curl flatpak-builder
-  #         sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-  #         sudo flatpak remote-modify --enable flathub
-  #         sudo flatpak install --noninteractive --system flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08
+    steps:
+      - name: ⬇️ Install setup dependencies
+        run: |
+          sudo apt update && sudo apt install -y git curl flatpak-builder
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak remote-modify --enable flathub
+          sudo flatpak install --noninteractive --system flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08
 
-  #     - name: 🧰 Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         submodules: recursive
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-  #     - name: 📜 Set version variable
-  #       run: |
-  #         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+      - name: 📜 Set version variable
+        run: |
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
-  #     - name: 🛠️ Build
-  #       uses: flatpak/flatpak-github-actions/flatpak-builder@v6
-  #       with:
-  #         bundle: imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
-  #         manifest-path: dist/flatpak/net.werwolv.ImHex.yaml
-  #         cache-key: flatpak-builder-${{ matrix.architecture }}
-  #         arch: ${{ matrix.flatpak_arch }}
-  #         upload-artifact: false
+      - name: 🛠️ Build
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
+          manifest-path: dist/flatpak/net.werwolv.ImHex.yaml
+          cache-key: flatpak-builder-${{ matrix.architecture }}
+          arch: ${{ matrix.flatpak_arch }}
+          upload-artifact: false
 
 
-  #     - name: 🗝️ Generate build provenance attestations
-  #       uses: actions/attest-build-provenance@v2
-  #       if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
-  #       with:
-  #         subject-path: |
-  #           imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
 
-  #     - name: ⬆️ Upload Flatpak
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         if-no-files-found: error
-  #         name: Flatpak ${{ matrix.architecture }}
-  #         path: |
-  #           imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
+      - name: ⬆️ Upload Flatpak
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: Flatpak ${{ matrix.architecture }}
+          path: |
+            imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
 
-  # webassembly-build:
-  #   runs-on: ubuntu-24.04
-  #   name: 🌍 Web
-  #   permissions:
-  #     pages: write
-  #     id-token: write
-  #     actions: write
-  #   steps:
-  #     - name: 🧰 Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         submodules: recursive
+  webassembly-build:
+    runs-on: ubuntu-24.04
+    name: 🌍 Web
+    permissions:
+      pages: write
+      id-token: write
+      actions: write
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-  #     - name: 📁 Restore docker /cache
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: cache
-  #         key: webassembly-ccache-${{ github.run_id }}
-  #         restore-keys: webassembly-ccache
+      - name: 📁 Restore docker /cache
+        uses: actions/cache@v4
+        with:
+          path: cache
+          key: webassembly-ccache-${{ github.run_id }}
+          restore-keys: webassembly-ccache
 
-  #     - name: 🐳 Inject /cache into docker
-  #       uses: reproducible-containers/buildkit-cache-dance@v2
-  #       with:
-  #         cache-source: cache
-  #         cache-target: /cache
+      - name: 🐳 Inject /cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v2
+        with:
+          cache-source: cache
+          cache-target: /cache
 
-  #     - name: 🛠️ Build using docker
-  #       run: |
-  #         mkdir -p out/nightly
-  #         docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out/nightly --target raw
+      - name: 🛠️ Build using docker
+        run: |
+          mkdir -p out/nightly
+          docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out/nightly --target raw
 
-  #     - name: ⬇️ Download Release
-  #       if: ${{ github.event.repository.fork == false }}
-  #       uses: robinraju/release-downloader@v1
-  #       with:
-  #         latest: true
-  #         fileName: 'imhex-*-Web.zip'
+      - name: ⬇️ Download Release
+        if: ${{ github.event.repository.fork == false }}
+        uses: robinraju/release-downloader@v1
+        with:
+          latest: true
+          fileName: 'imhex-*-Web.zip'
 
-  #     - name: 🔨 Fix permissions
-  #       if: ${{ github.event.repository.fork == false }}
-  #       run: |
-  #         unzip imhex-*-Web.zip -d out
-  #         chmod -c -R +rX "out/"
+      - name: 🔨 Fix permissions
+        if: ${{ github.event.repository.fork == false }}
+        run: |
+          unzip imhex-*-Web.zip -d out
+          chmod -c -R +rX "out/"
 
-  #     - name: ⬆️ Upload artifacts
-  #       uses: actions/upload-pages-artifact@v3
-  #       with:
-  #         path: out/
+      - name: ⬆️ Upload artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: out/
 
-  #     - name: 🔨 Copy necessary files
-  #       run: |
-  #         cp dist/web/serve.py out/nightly/start_imhex_web.py
+      - name: 🔨 Copy necessary files
+        run: |
+          cp dist/web/serve.py out/nightly/start_imhex_web.py
 
-  #     - name: ⬆️ Upload package
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         if-no-files-found: error
-  #         name: ImHex Web
-  #         path: out/nightly/*
+      - name: ⬆️ Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: ImHex Web
+          path: out/nightly/*
 
-  #       # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
-  #     - name: 🗑️ Delete old cache
-  #       continue-on-error: true
-  #       env:
-  #         GH_TOKEN: ${{ github.token }}
-  #       run: |
-  #         gh extension install actions/gh-actions-cache || true
-  #         gh actions-cache delete "build-web-cache" --confirm || true
+        # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
+      - name: 🗑️ Delete old cache
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install actions/gh-actions-cache || true
+          gh actions-cache delete "build-web-cache" --confirm || true
 
-  # webassembly-deploy:
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
-  #   permissions:
-  #     pages: write
-  #     id-token: write
-  #     actions: write
-  #   name: 📃 Deploy to GitHub Pages
-  #   runs-on: ubuntu-24.04
+  webassembly-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+      actions: write
+    name: 📃 Deploy to GitHub Pages
+    runs-on: ubuntu-24.04
 
-  #   if: ${{ github.ref == 'refs/heads/master' && github.event.repository.fork == false }}
-  #   needs: webassembly-build
+    if: ${{ github.ref == 'refs/heads/master' && github.event.repository.fork == false }}
+    needs: webassembly-build
 
-  #   steps:
-  #     - name: 🌍 Deploy WebAssembly Build to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v4
+    steps:
+      - name: 🌍 Deploy WebAssembly Build to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
-  #     - name: 🗑️ Delete artifact
-  #       uses: geekyeggo/delete-artifact@v5
-  #       with:
-  #         name: github-pages
+      - name: 🗑️ Delete artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: github-pages
