@@ -956,20 +956,8 @@ jobs:
       matrix:
         include:
           - name: Fedora
-            release_num: rawhide
-            mock_config: fedora-rawhide
-          - name: Fedora
             release_num: 43
             mock_config: fedora-43
-          - name: Fedora
-            release_num: 42
-            mock_config: fedora-42
-          - name: Fedora
-            release_num: 41
-            mock_config: fedora-41
-          - name: RHEL-AlmaLinux
-            release_num: 9
-            mock_config: "alma+epel-9"
 
     name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
     runs-on: ubuntu-24.04
