@@ -1,0 +1,29 @@
+# See https://github.com/cli/cli/issues/9125
+name: Download cache key
+
+on:
+  workflow_dispatch:
+    inputs:
+      cache_key:
+        description: 'Cache key'
+        required: true
+        type: string
+
+jobs:
+  cache-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ./cache-folder
+          key: ${{ github.event.inputs.cache_key }}
+
+      - name: Upload cached folder as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-artifact
+          path: ./cache-folder
