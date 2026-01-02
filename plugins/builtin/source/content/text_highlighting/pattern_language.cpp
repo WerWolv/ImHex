@@ -1575,7 +1575,9 @@ namespace hex::plugin::builtin {
 
     void TextHighlighter::setRequestedIdentifierColors() {
         auto topLine = 0;
-        auto bottomLine = m_lines.size();
+        while (m_firstTokenIdOfLine.at(topLine) == -1)
+            topLine++;
+        auto bottomLine = previousLine(m_firstTokenIdOfLine.size());
         for (u32 line = topLine; line < bottomLine; line = nextLine(line)) {
             if (m_lines[line].empty())
                 continue;
