@@ -1831,7 +1831,7 @@ namespace hex::plugin::builtin {
         auto topLine = 0;
         while (m_firstTokenIdOfLine.at(topLine) == -1)
             topLine++;
-        auto bottomLine = m_lines.size();
+        auto bottomLine = previousLine(m_firstTokenIdOfLine.size());
         for (u32 line = topLine; line < bottomLine; line = nextLine(line)) {
             if (m_lines[line].empty())
                 continue;
