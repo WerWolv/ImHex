@@ -1074,7 +1074,7 @@ namespace hex::ui {
                         // Check if the targetRowNumber is outside the current visible range
                         if (ImS64(targetRowNumber) < currentTopRow) {
                             // If target is above the current view, scroll just enough to bring it into view at the top
-                            m_scrollPosition = targetRowNumber + m_visibleRowCount * m_jumpPivot - 3;
+                            m_scrollPosition = targetRowNumber + ImS64(m_visibleRowCount * m_jumpPivot - 3);
                         } else if (ImS64(targetRowNumber) > currentBottomRow) {
                             // If target is below the current view, scroll just enough to bring it into view at the bottom
                             m_scrollPosition = targetRowNumber - 3;
