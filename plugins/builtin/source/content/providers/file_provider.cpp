@@ -24,6 +24,8 @@
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
+#elif defined(OS_MACOS) || defined(OS_LINUX)
+    #include <sys/xattr.h>
 #endif
 
 namespace hex::plugin::builtin {
@@ -154,6 +156,26 @@ namespace hex::plugin::builtin {
             result.emplace_back("hex.builtin.provider.file.access"_lang,        accessTime);
             result.emplace_back("hex.builtin.provider.file.modification"_lang,  modificationTime);
         }
+
+        #if defined(OS_MACOS) || defined(OS_LINUX)
+
+            {
+                auto xattrSize = listxattr(m_path.c_str(), nullptr, 0, 0);
+                if (xattrSize > 0) {
+                    std::string xattrList(xattrSize, 0x00);
+                    listxattr(m_path.c_str(), xattrList.data(), xattrSize, 0);
+
+                    std::string formattedXattrs;
+                    for (const auto &xattr : wolv::util::splitString(xattrList, std::string(1, 0x00))) {
+                        if (!xattr.empty())
+                            formattedXattrs += fmt::format("- {}\n", xattr);
+                    }
+
+                    result.emplace_back("hex.builtin.provider.file.xatts"_lang,  formattedXattrs);
+                }
+            }
+
+        #endif
 
         return result;
     }

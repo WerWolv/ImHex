@@ -460,6 +460,7 @@
     "hex.builtin.provider.file.too_large.allow_write": "Allow write access",
     "hex.builtin.provider.file.reload_changes": "File has been modified by an external source. Do you want to reload it?",
     "hex.builtin.provider.file.reload_changes.reload": "Reload",
+    "hex.builtin.provider.file.xatts": "Attributes (xatts)",
     "hex.builtin.provider.gdb": "GDB Server Data",
     "hex.builtin.provider.gdb.ip": "IP Address",
     "hex.builtin.provider.gdb.name": "GDB Server <{0}:{1}>",
