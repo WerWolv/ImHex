@@ -159,11 +159,19 @@ namespace hex::plugin::builtin {
 
         #if defined(OS_MACOS) || defined(OS_LINUX)
 
+            constexpr static auto getxattrs = [](const char *path, char *list, size_t size) -> ssize_t {
+                #if defined(OS_LINUX)
+                    return ::listxattr(path, list, size);
+                #elif defined(OS_MACOS)
+                    return ::listxattr(path, list, size, 0);
+                #endif
+            };
+
             {
-                auto xattrSize = listxattr(m_path.c_str(), nullptr, 0, 0);
+                auto xattrSize = getxattrs(m_path.c_str(), nullptr, 0);
                 if (xattrSize > 0) {
                     std::string xattrList(xattrSize, 0x00);
-                    listxattr(m_path.c_str(), xattrList.data(), xattrSize, 0);
+                    getxattrs(m_path.c_str(), xattrList.data(), xattrSize);
 
                     std::string formattedXattrs;
                     for (const auto &xattr : wolv::util::splitString(xattrList, std::string(1, 0x00))) {
