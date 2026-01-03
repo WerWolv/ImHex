@@ -324,6 +324,8 @@ namespace hex::plugin::builtin {
 
         // Initialize the text editor with some basic help text
         m_textEditor.setOnCreateCallback([this](auto *provider, ui::TextEditor &editor) {
+            if (ImHexApi::Provider::getProviders().size() > 1)
+                return;
             if (m_sourceCode.isSynced() && !m_sourceCode.get(provider).empty())
                 return;
 
