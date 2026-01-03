@@ -2762,7 +2762,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawHelpText() {
-        ImGuiExt::TextFormattedWrapped("This is the Pattern Editor view, where you can write and edit pattern matching code to analyze the loaded data. For more information on how to write pattern code, please refer to the official documentation and the check out the existing patterns included with ImHex.");
+        ImGuiExt::TextFormattedWrapped("This is the Pattern Editor view which is used to write and edit pattern matching code to analyze the loaded data. For more information on how to write pattern code, please refer to the official documentation and check out the existing patterns included with ImHex.");
         ImGui::NewLine();
         ImGuiExt::TextFormattedWrapped("This view works in close conjunction with the Hex Editor view and the Pattern Data view. When you finished writing your code, click on the Play button at the bottom of the view or press {} to evaluate the pattern.",
             ShortcutManager::getShortcutByName({ "hex.builtin.menu.edit","hex.builtin.view.pattern_editor.menu.edit.run_pattern" }).toString()
