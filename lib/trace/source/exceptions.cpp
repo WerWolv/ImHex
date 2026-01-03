@@ -30,22 +30,6 @@ namespace hex::trace {
 
 }
 
-#if defined(HEX_WRAP_CXA_THROW)
-
-    extern "C" {
-
-        [[noreturn]] void __real___cxa_throw(void* thrownException, std::type_info* type, void (*destructor)(void*));
-        [[noreturn]] void __wrap___cxa_throw(void* thrownException, std::type_info* type, void (*destructor)(void*)) {
-            if (hex::trace::s_threadExceptionCaptureEnabled)
-                hex::trace::s_lastExceptionStackTrace = hex::trace::getStackTrace();
-
-            __real___cxa_throw(thrownException, type, destructor);
-        }
-
-    }
-
-#endif
-
 #if defined(HEX_WRAP_GLIBCXX_ASSERT_FAIL)
 
 extern "C" {
