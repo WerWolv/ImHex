@@ -46,10 +46,13 @@ namespace hex::plugin::builtin {
 
         void inspectorReadFunction(u64 offset, u8 *buffer, size_t size);
 
+        void preprocessBytes(std::span<u8> data);
+
         // draw functions
         void drawEndianSetting();
         void drawRadixSetting();
         void drawInvertSetting();
+        void drawReverseSetting();
         void drawInspectorRows();
         void drawInspectorRow(InspectorCacheEntry& entry);
 
@@ -61,6 +64,7 @@ namespace hex::plugin::builtin {
         std::endian m_endian = std::endian::native;
         ContentRegistry::DataInspector::NumberDisplayStyle m_numberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle::Decimal;
         bool m_invert = false;
+        bool m_reverse = false;
 
         ui::VisualizerDrawer m_visualizerDrawer;
         u64 m_startAddress  = 0;

@@ -77,6 +77,27 @@ namespace hex::plugin::builtin {
         });
     }
 
+    static u8 reverseBits(u8 byte) {
+        byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;
+        byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;
+        byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;
+        return byte;
+    }
+
+    void ViewDataInspector::preprocessBytes(std::span<u8> data) {
+        // Handle invert setting
+        if (m_invert) {
+            for (auto &byte : data)
+                byte ^= 0xFF;
+        }
+
+        // Handle reverse setting
+        if (m_reverse) {
+            for (auto &byte : data)
+                byte = reverseBits(byte);
+        }
+    }
+
     void ViewDataInspector::updateInspectorRowsTask() {
         m_workData.clear();
 
@@ -92,11 +113,7 @@ namespace hex::plugin::builtin {
             std::vector<u8> buffer(m_validBytes > entry.maxSize ? entry.maxSize : m_validBytes);
             m_selectedProvider->read(m_startAddress, buffer.data(), buffer.size());
 
-            // Handle invert setting
-            if (m_invert) {
-                for (auto &byte : buffer)
-                    byte ^= 0xFF;
-            }
+            preprocessBytes(buffer);
 
             // Insert processed data into the inspector list
             m_workData.emplace_back(
@@ -118,11 +135,7 @@ namespace hex::plugin::builtin {
     void ViewDataInspector::inspectorReadFunction(u64 offset, u8 *buffer, size_t size) {
         m_selectedProvider->read(offset, buffer, size);
 
-        // Handle invert setting
-        if (m_invert) {
-            for (auto &byte : std::span(buffer, size))
-                byte ^= 0xFF;
-        }
+        preprocessBytes({ buffer, size });
     }
 
     void ViewDataInspector::executeInspectors() {
@@ -354,8 +367,12 @@ namespace hex::plugin::builtin {
                 // Draw radix setting
                 this->drawRadixSetting();
 
-                // Draw invert setting
+                // Draw invert and reverse setting
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x / 2 - ImGui::GetStyle().ItemSpacing.x / 2);
                 this->drawInvertSetting();
+                ImGui::SameLine();
+                this->drawReverseSetting();
+                ImGui::PopItemWidth();
             }
             ImGui::PopItemWidth();
         }
@@ -489,8 +506,7 @@ namespace hex::plugin::builtin {
             // Draw editing widget and capture edited value
             auto bytes = (*entry.editingFunction)(m_editingValue, m_endian, {});
             if (bytes.has_value()) {
-                if (m_invert)
-                    std::ranges::transform(*bytes, bytes->begin(), [](auto byte) { return byte ^ 0xFF; });
+                preprocessBytes(*bytes);
 
                 // Write those bytes to the selected provider at the current address
                 m_selectedProvider->write(m_startAddress, bytes->data(), bytes->size());
@@ -569,6 +585,21 @@ namespace hex::plugin::builtin {
             m_shouldInvalidate = true;
 
             m_invert = selection == 1;
+        }
+    }
+
+    void ViewDataInspector::drawReverseSetting() {
+        int selection = m_reverse ? 1 : 0;
+
+        std::array options = {
+            fmt::format("{}:  {}", "hex.builtin.view.data_inspector.reverse"_lang, "hex.ui.common.no"_lang),
+            fmt::format("{}:  {}", "hex.builtin.view.data_inspector.reverse"_lang, "hex.ui.common.yes"_lang)
+        };
+
+        if (ImGui::SliderInt("##reverse", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
+            m_shouldInvalidate = true;
+
+            m_reverse = selection == 1;
         }
     }
 
