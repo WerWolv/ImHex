@@ -988,6 +988,12 @@ namespace hex {
             nid.dwInfoFlags = NIIF_INFO;
 
             Shell_NotifyIcon(NIM_ADD, &nid);
+
+            Sleep(100);
+
+            Shell_NotifyIcon(NIM_DELETE, &nid);
+            CloseWindow(hwnd);
+            DestroyWindow(hwnd);
         #elif defined(OS_MACOS)
             toastMessageMacos(title.c_str(), message.c_str());
         #elif defined(OS_LINUX)
