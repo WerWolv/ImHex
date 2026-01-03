@@ -79,9 +79,6 @@ endif()
 
 if (IMHEX_TRACE_EXCEPTIONS)
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        target_link_options(tracing ${LIBIMHEX_LIBRARY_TYPE_PUBLIC} "-Wl,--wrap=__cxa_throw")
-        target_compile_definitions(tracing ${LIBIMHEX_LIBRARY_TYPE_PRIVATE} HEX_WRAP_CXA_THROW)
-
         target_link_options(tracing ${LIBIMHEX_LIBRARY_TYPE_PUBLIC} "-Wl,--wrap=_ZSt21__glibcxx_assert_failPKciS0_S0_")
         target_compile_definitions(tracing ${LIBIMHEX_LIBRARY_TYPE_PRIVATE} HEX_WRAP_GLIBCXX_ASSERT_FAIL)
     elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
