@@ -538,6 +538,11 @@ namespace hex {
                 s_mainWindowHandle = window;
             }
 
+            static bool s_mainWindowFocused = false;
+            void setMainWindowFocusState(bool focused) {
+                s_mainWindowFocused = focused;
+            }
+
 
             static float s_globalScale = 1.0;
             void setGlobalScale(float scale) {
@@ -706,6 +711,10 @@ namespace hex {
 
         GLFWwindow* getMainWindowHandle() {
             return impl::s_mainWindowHandle;
+        }
+
+        bool isMainWindowFocused() {
+            return impl::s_mainWindowFocused;
         }
 
         bool isBorderlessWindowModeEnabled() {

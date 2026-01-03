@@ -1166,7 +1166,10 @@ namespace hex {
         glfwSetCursorPosCallback(m_window, unlockFrameRate);
         glfwSetMouseButtonCallback(m_window, unlockFrameRate);
         glfwSetScrollCallback(m_window, unlockFrameRate);
-        glfwSetWindowFocusCallback(m_window, unlockFrameRate);
+        glfwSetWindowFocusCallback(m_window, [](GLFWwindow *window, int focused) {
+            unlockFrameRate(window);
+            ImHexApi::System::impl::setMainWindowFocusState(focused);
+        });
 
         glfwSetWindowMaximizeCallback(m_window, [](GLFWwindow *window, int) {
             glfwShowWindow(window);

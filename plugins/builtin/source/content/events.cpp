@@ -432,7 +432,8 @@ namespace hex::plugin::builtin {
             if (!taskFinishedNotificationEnabled)
                 return;
 
-            if (!glfwGetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FOCUSED) && !task.isBackgroundTask())
+
+            if (!ImHexApi::System::isMainWindowFocused() && !task.isBackgroundTask())
                 hex::showToastMessage("ImHex", fmt::format("hex.builtin.os_toast_message.task_finished"_lang, Lang(task.getUnlocalizedName())));
         });
 
