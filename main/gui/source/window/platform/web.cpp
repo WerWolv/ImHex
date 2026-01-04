@@ -147,6 +147,7 @@ namespace hex {
             prevWidth  = width;
             prevHeight = height;
             this->resize(width, height);
+            resizeCanvas();
         }
     }
 
@@ -167,7 +168,7 @@ namespace hex {
             ImHexApi::System::impl::setNativeScale(currScaleFactor);
 
             ThemeManager::reapplyCurrentTheme();
-            ImGui::GetStyle().ScaleAllSizes(currScaleFactor);
+            ImGui::GetStyle().ScaleAllSizes(currScaleFactor / prevScaleFactor);
         }
 
         prevScaleFactor = currScaleFactor;

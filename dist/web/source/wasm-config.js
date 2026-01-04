@@ -271,11 +271,11 @@ window.addEventListener('resize', js_resizeCanvas, false);
 function js_resizeCanvas() {
     let canvas = document.getElementById('canvas');
 
-    canvas.top    = document.documentElement.clientTop;
-    canvas.left   = document.documentElement.clientLeft;
+    canvas.top    = canvas.parentElement.clientTop;
+    canvas.left   = canvas.parentElement.clientLeft;
 
-    let width = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    let height = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    let width = Math.min(canvas.parentElement.clientWidth, window.innerWidth || 0);
+    let height = Math.min(canvas.parentElement.clientHeight, window.innerHeight || 0);
 
     canvas.style.width  = width + "px";
     canvas.style.height = height + "px";
