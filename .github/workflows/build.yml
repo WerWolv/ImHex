@@ -417,7 +417,10 @@ jobs:
       run: |
         wget https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6-15-Sequoia.pkg
         sudo installer -pkg MacPorts-2.11.6-15-Sequoia.pkg -target /
+        
         export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+        echo "PATH=/opt/local/bin:/opt/local/sbin:$PATH" >> $GITHUB_ENV
+        
         echo "universal_target  10.15" | sudo tee -a /opt/local/etc/macports/macports.conf
         echo "macos_deployment_target  10.15" | sudo tee -a /opt/local/etc/macports/macports.conf
         echo "macosx_sdk_version  10.15" | sudo tee -a /opt/local/etc/macports/macports.conf
