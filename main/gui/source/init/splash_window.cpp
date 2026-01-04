@@ -513,7 +513,7 @@ namespace hex::init {
             if (meanScale <= 0.0F)
                 meanScale = 1.0F;
 
-            #if !defined(OS_LINUX)
+            #if !defined(OS_LINUX) && !defined(OS_WEB)
                 meanScale /= hex::ImHexApi::System::getBackingScaleFactor();
             #endif
 
