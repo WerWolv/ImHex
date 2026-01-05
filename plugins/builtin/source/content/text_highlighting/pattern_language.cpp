@@ -1858,13 +1858,12 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void TextHighlighter::recurseInheritances(std::string name, size_t depth) {
-        if (depth > m_inheritances.size())
-            return;
-        if (m_inheritances.contains(name)) {
-            for (const auto &inheritance: m_inheritances[name]) {
-                recurseInheritances(inheritance, depth + 1);
-
+    void TextHighlighter::recurseInheritances(std::string name) {
+        if (auto iterator = m_inheritances.find(name); iterator != m_inheritances.end()) {
+            auto inheritances = std::move(iterator->second);
+            m_inheritances.erase(iterator);
+            for (auto inheritance: inheritances) {
+                recurseInheritances(inheritance);
                 auto definitions = m_UDTVariables[inheritance];
                 if (definitions.empty())
                     definitions = m_ImportedUDTVariables[inheritance];
@@ -1887,8 +1886,8 @@ namespace hex::plugin::builtin {
     }
 
     void TextHighlighter::appendInheritances() {
-        for (const auto &[name, inheritances]: m_inheritances)
-            recurseInheritances(name);
+        for (auto iterator = m_inheritances.begin(); iterator != m_inheritances.end(); iterator = m_inheritances.begin())
+            recurseInheritances(iterator->first);
     }
 
 // Get the string of the argument type. This works on function arguments and non-type template arguments.
