@@ -53,7 +53,7 @@ jobs:
         submodules: recursive
 
     - name: 📜 Setup ccache
-      uses:  hendrikmuhs/ccache-action@main
+      uses:  hendrikmuhs/ccache-action@v1
       id:    cache-ccache
       with:
         key: ${{ runner.os }}-mingw-ccache-${{ github.run_id }}
@@ -237,7 +237,7 @@ jobs:
           arch: ${{ matrix.vs_arch }}
 
       - name: 📜 Setup ccache
-        uses:  hendrikmuhs/ccache-action@main
+        uses:  hendrikmuhs/ccache-action@v1
         id:    cache-ccache
         with:
           key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache-${{ github.run_id }}
