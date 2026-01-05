@@ -1303,11 +1303,14 @@ jobs:
     needs: webassembly-build
 
     steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+
       - name: 🌍 Deploy WebAssembly Build to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: 🗑️ Delete artifact
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: github-pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/delete-artifact.sh github-pages
