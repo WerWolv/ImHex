@@ -2,11 +2,7 @@ find_path(LIBMAGIC_INCLUDE_DIR magic.h)
 
 find_library(LIBMAGIC_LIBRARY NAMES magic)
 
-if (LIBMAGIC_INCLUDE_DIR AND LIBMAGIC_LIBRARY)
-    set(LIBMAGIC_FOUND TRUE)
-endif (LIBMAGIC_INCLUDE_DIR AND LIBMAGIC_LIBRARY)
-
-find_package_handle_standard_args("libmagic" DEFAULT_MSG
+find_package_handle_standard_args(Magic DEFAULT_MSG
         LIBMAGIC_LIBRARY
         LIBMAGIC_INCLUDE_DIR
 )
@@ -14,5 +10,5 @@ find_package_handle_standard_args("libmagic" DEFAULT_MSG
 mark_as_advanced(
         LIBMAGIC_INCLUDE_DIR
         LIBMAGIC_LIBRARY
-        LIBMAGIC_FOUND
+        Magic_FOUND
 )
