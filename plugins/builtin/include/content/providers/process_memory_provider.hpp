@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
             };
         }
 
-        [[nodiscard]] bool open() override;
+        [[nodiscard]] OpenResult open() override;
         void close() override;
 
         bool drawLoadInterface() override;
@@ -86,6 +86,7 @@ namespace hex::plugin::builtin {
         struct Process {
             u32 id;
             std::string name;
+            std::string commandLine;
             ImGuiExt::Texture icon;
         };
 

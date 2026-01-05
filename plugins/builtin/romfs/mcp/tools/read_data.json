@@ -1,0 +1,37 @@
+{
+    "name": "read_data",
+    "title": "Read Binary Data",
+    "description": "Reads data from the currently selected data source at the specified address and length. The data is returned as a base64-encoded string. The maximum size that can be read at once is 16MiB, if more data is requested, the call will only return the first 16MiB.",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "address": {
+                "type": "number",
+                "description": "Address to read from in the selected data source"
+            },
+            "size": {
+                "type": "number",
+                "description": "Number of bytes to read from the selected data source"
+            }
+        },
+        "required": ["address", "size"]
+    },
+    "outputSchema": {
+        "type": "object",
+        "properties": {
+            "handle": {
+                "type": "number",
+                "description": "Handle of the data source the data was read from"
+            },
+            "data": {
+                "type": "string",
+                "description": "Base64-encoded string of the read data"
+            },
+            "data_size": {
+                "type": "number",
+                "description": "Number of bytes that were actually read"
+            }
+        },
+        "required": ["handle", "data"]
+    }
+}

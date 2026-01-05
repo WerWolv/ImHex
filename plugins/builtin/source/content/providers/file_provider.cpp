@@ -24,6 +24,8 @@
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
+#elif defined(OS_MACOS) || defined(OS_LINUX)
+    #include <sys/xattr.h>
 #endif
 
 namespace hex::plugin::builtin {
@@ -70,13 +72,16 @@ namespace hex::plugin::builtin {
 
         if (m_loadedIntoMemory)
             std::memcpy(m_data.data() + offset, buffer, size);
-        else
+        else {
+            this->createBackupIfNeeded(m_file.getPath());
             m_file.writeBufferAtomic(offset, static_cast<const u8*>(buffer), size);
+        }
     }
 
     void FileProvider::save() {
         if (m_loadedIntoMemory) {
             m_ignoreNextChangeEvent = true;
+            this->createBackupIfNeeded(m_file.getPath());
             m_file.open();
             m_file.writeVectorAtomic(0x00, m_data);
             m_file.setSize(m_data.size());
@@ -113,8 +118,10 @@ namespace hex::plugin::builtin {
     void FileProvider::resizeRaw(u64 newSize) {
         if (m_loadedIntoMemory)
             m_data.resize(newSize);
-        else
+        else {
+            this->createBackupIfNeeded(m_file.getPath());
             m_file.setSize(newSize);
+        }
 
         m_fileSize = newSize;
     }
@@ -150,6 +157,34 @@ namespace hex::plugin::builtin {
             result.emplace_back("hex.builtin.provider.file.modification"_lang,  modificationTime);
         }
 
+        #if defined(OS_MACOS) || defined(OS_LINUX)
+
+            constexpr static auto getxattrs = [](const char *path, char *list, size_t size) -> ssize_t {
+                #if defined(OS_LINUX)
+                    return ::listxattr(path, list, size);
+                #elif defined(OS_MACOS)
+                    return ::listxattr(path, list, size, 0);
+                #endif
+            };
+
+            {
+                auto xattrSize = getxattrs(m_path.c_str(), nullptr, 0);
+                if (xattrSize > 0) {
+                    std::string xattrList(xattrSize, 0x00);
+                    getxattrs(m_path.c_str(), xattrList.data(), xattrSize);
+
+                    std::string formattedXattrs;
+                    for (const auto &xattr : wolv::util::splitString(xattrList, std::string(1, 0x00))) {
+                        if (!xattr.empty())
+                            formattedXattrs += fmt::format("- {}\n", xattr);
+                    }
+
+                    result.emplace_back("hex.builtin.provider.file.xatts"_lang,  formattedXattrs);
+                }
+            }
+
+        #endif
+
         return result;
     }
 
@@ -182,9 +217,9 @@ namespace hex::plugin::builtin {
         MenuEntry loadMenuItem;
 
         if (m_loadedIntoMemory)
-            loadMenuItem = { "hex.builtin.provider.file.menu.direct_access"_lang, ICON_VS_ARROW_SWAP, [this] { this->convertToDirectAccess(); } };
+            loadMenuItem = { .name="hex.builtin.provider.file.menu.direct_access"_lang, .icon=ICON_VS_ARROW_SWAP, .callback=[this] { this->convertToDirectAccess(); } };
         else
-            loadMenuItem = { "hex.builtin.provider.file.menu.into_memory"_lang, ICON_VS_ARROW_SWAP, [this] { this->convertToMemoryFile(); } };
+            loadMenuItem = { .name="hex.builtin.provider.file.menu.into_memory"_lang, .icon=ICON_VS_ARROW_SWAP, .callback=[this] { this->convertToMemoryFile(); } };
 
         return {
             { "hex.builtin.provider.file.menu.open_folder"_lang, ICON_VS_FOLDER_OPENED, [this] { fs::openFolderWithSelectionExternal(m_path); } },
@@ -198,24 +233,23 @@ namespace hex::plugin::builtin {
         m_path.make_preferred();
     }
 
-    bool FileProvider::open() {
-        const size_t maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
+    prv::Provider::OpenResult FileProvider::open() {
+        const auto maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
 
         size_t fileSize = 0x00;
         {
             wolv::io::File file(m_path, wolv::io::File::Mode::Read);
             if (!file.isValid()) {
-                this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
-                return false;
+                return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
             }
 
             fileSize = file.getSize();
         }
 
         const bool directAccess = fileSize >= maxMemoryFileSize;
-        const bool result = open(directAccess);
+        const auto result = open(directAccess);
 
-        if (result && directAccess) {
+        if (result.isSuccess() && directAccess) {
             m_writable = false;
 
             ui::BannerButton::open(ICON_VS_WARNING, "hex.builtin.provider.file.too_large", ImColor(135, 116, 66), "hex.builtin.provider.file.too_large.allow_write", [this]{
@@ -227,9 +261,12 @@ namespace hex::plugin::builtin {
         return result;
     }
 
-    bool FileProvider::open(bool directAccess) {
+    prv::Provider::OpenResult FileProvider::open(bool directAccess) {
         m_readable = true;
         m_writable = true;
+
+        if (wolv::io::fs::isDirectory(m_path))
+            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.is_directory"_lang, m_path.string()));
 
         wolv::io::File file(m_path, wolv::io::File::Mode::Write);
         if (!file.isValid()) {
@@ -238,8 +275,7 @@ namespace hex::plugin::builtin {
             file = wolv::io::File(m_path, wolv::io::File::Mode::Read);
             if (!file.isValid()) {
                 m_readable = false;
-                this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
-                return false;
+                return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
             }
 
             ui::ToastInfo::open("hex.builtin.popup.error.read_only"_lang);
@@ -258,8 +294,7 @@ namespace hex::plugin::builtin {
             });
 
             if (alreadyOpenedFileProvider != s_openedFiles.end()) {
-                ImHexApi::Provider::setCurrentProvider(*alreadyOpenedFileProvider);
-                return false;
+                return OpenResult::redirect(*alreadyOpenedFileProvider);
             } else {
                 s_openedFiles.insert(this);
             }
@@ -269,19 +304,38 @@ namespace hex::plugin::builtin {
             if (directAccess) {
                 m_loadedIntoMemory = false;
             } else {
-                m_data = m_file.readVectorAtomic(0x00, m_fileSize);
-                if (!m_data.empty()) {
-                    m_changeTracker = wolv::io::ChangeTracker(m_file);
-                    m_changeTracker.startTracking([this]{ this->handleFileChange(); });
-                    m_file.close();
+                if (m_fileSize == 0) {
+                    while (true) {
+                        constexpr static i64 ChunkSize = 1_MiB;
+                        auto startSize = m_data.size();
+                        m_data.resize(startSize + ChunkSize);
+                        auto result = m_file.readBuffer(m_data.data() + startSize, ChunkSize);
+                        if (result <= 0) {
+                            m_data.resize(startSize);
+                            break;
+                        } else if (result < ChunkSize) {
+                            m_data.resize(startSize + result);
+                            break;
+                        }
+                    }
+
+                    m_fileSize = m_data.size();
                     m_loadedIntoMemory = true;
+                } else {
+                    m_data = m_file.readVectorAtomic(0x00, m_fileSize);
+                    if (!m_data.empty()) {
+                        m_changeTracker = wolv::io::ChangeTracker(m_file);
+                        m_changeTracker.startTracking([this]{ this->handleFileChange(); });
+                        m_file.close();
+                        m_loadedIntoMemory = true;
+                    }
                 }
             }
         }
 
         m_changeEventAcknowledgementPending = false;
 
-        return true;
+        return {};
     }
 
 
@@ -313,10 +367,6 @@ namespace hex::plugin::builtin {
             if (!wolv::io::fs::exists(fullPath))
                 fullPath = path;
 
-            if (!wolv::io::fs::exists(fullPath)) {
-                this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(ENOENT)));
-            }
-
             path = std::move(fullPath);
         }
 
@@ -344,7 +394,7 @@ namespace hex::plugin::builtin {
         address -= this->getBaseAddress();
 
         if (address < this->getActualSize())
-            return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
+            return { Region { .address=this->getBaseAddress() + address, .size=this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
     }

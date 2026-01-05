@@ -11,9 +11,9 @@ namespace hex::prv {
         clearCache();
     }
 
-    bool CachedProvider::open() {
+    Provider::OpenResult CachedProvider::open() {
         clearCache();
-        return true;
+        return {};
     }
 
     void CachedProvider::close() {
@@ -49,7 +49,7 @@ namespace hex::prv {
 
             {
                 std::unique_lock lock(m_cacheMutex);
-                m_cache[cacheSlot] = Block{blockIndex, std::move(blockData), false};
+                m_cache[cacheSlot] = Block{.index=blockIndex, .data=std::move(blockData), .dirty=false};
                 std::copy_n(m_cache[cacheSlot]->data.begin() + blockOffset, toRead, out);
             }
 
@@ -76,7 +76,7 @@ namespace hex::prv {
                 if (!slot || slot->index != blockIndex) {
                     std::vector<uint8_t> blockData(m_cacheBlockSize);
                     readFromSource(blockIndex * m_cacheBlockSize, blockData.data(), m_cacheBlockSize);
-                    slot = Block { blockIndex, std::move(blockData), false };
+                    slot = Block { .index=blockIndex, .data=std::move(blockData), .dirty=false };
                 }
 
                 std::copy_n(in, toWrite, slot->data.begin() + blockOffset);

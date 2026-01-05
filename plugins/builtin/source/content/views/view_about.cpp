@@ -159,18 +159,20 @@ namespace hex::plugin::builtin {
             ImGui::EndChild();
 
             struct DonationPage {
-                DonationPage(const std::fs::path &path, std::string link) :
+                DonationPage(std::string name, const std::fs::path &path, std::string link) :
+                    name(std::move(name)),
                     texture(ImGuiExt::Texture::fromImage(romfs::get(path).span<std::byte>(), ImGuiExt::Texture::Filter::Linear)),
                     link(std::move(link)) { }
 
+                std::string name;
                 AutoReset<ImGuiExt::Texture> texture;
                 std::string link;
             };
 
             static std::array DonationPages = {
-                DonationPage("assets/common/donation/paypal.png", "https://werwolv.net/donate"),
-                DonationPage("assets/common/donation/github.png", "https://github.com/sponsors/WerWolv"),
-                DonationPage("assets/common/donation/patreon.png", "https://patreon.com/werwolv")
+                DonationPage("GitHub Sponsors", "assets/common/donation/github.png", "https://github.com/sponsors/WerWolv"),
+                DonationPage("Ko-Fi", "assets/common/donation/ko-fi.png", "https://ko-fi.com/werwolv"),
+                DonationPage("PayPal", "assets/common/donation/paypal.png", "https://werwolv.net/donate")
             };
 
             if (ImGui::BeginTable("DonationLinks", 5, ImGuiTableFlags_SizingStretchSame)) {
@@ -183,7 +185,7 @@ namespace hex::plugin::builtin {
                     const auto size = (page.texture->getSize() * 1_scaled) / 1.5F;
                     const auto startPos = ImGui::GetCursorScreenPos();
                     ImGui::Image(*page.texture, size);
-
+                    ImGui::SetItemTooltip("%s (%s)", page.name.c_str(), page.link.c_str());
                     if (ImGui::IsItemHovered()) {
                         ImGui::GetForegroundDrawList()->AddShadowCircle(startPos + size / 2, size.x / 2, ImGui::GetColorU32(ImGuiCol_Button), 100.0F, ImVec2(), ImDrawFlags_ShadowCutOutShapeBackground);
                     }
@@ -294,21 +296,21 @@ namespace hex::plugin::builtin {
         };
 
         constexpr static std::array Contributors = {
-            Contributor { "iTrooz", "A huge amount of help maintaining ImHex and the CI", "https://github.com/iTrooz", true },
-            Contributor { "jumanji144", "A ton of help with the Pattern Language, API and usage stats", "https://github.com/jumanji144", true },
-            Contributor { "AxCut", "A ton of great pattern language improvements and help with the issue tracker", "https://github.com/paxcut", true },
-            Contributor { "Mary", "Porting ImHex to macOS originally", "https://github.com/marysaka", false },
-            Contributor { "Roblabla", "Adding the MSI Windows installer", "https://github.com/roblabla", false },
-            Contributor { "jam1garner", "Adding support for Rust plugins", "https://github.com/jam1garner", false },
-            Contributor { "All other amazing contributors", "Being part of the community, opening issues, PRs and donating", "https://github.com/WerWolv/ImHex/graphs/contributors", false }
+            Contributor { .name="iTrooz", .description="A huge amount of help maintaining ImHex and the CI", .link="https://github.com/iTrooz", .mainContributor=true },
+            Contributor { .name="jumanji144", .description="A ton of help with the Pattern Language, API and usage stats", .link="https://github.com/jumanji144", .mainContributor=true },
+            Contributor { .name="AxCut", .description="A ton of great pattern language improvements and help with the issue tracker", .link="https://github.com/paxcut", .mainContributor=true },
+            Contributor { .name="Mary", .description="Porting ImHex to macOS originally", .link="https://github.com/marysaka", .mainContributor=false },
+            Contributor { .name="Roblabla", .description="Adding the MSI Windows installer", .link="https://github.com/roblabla", .mainContributor=false },
+            Contributor { .name="jam1garner", .description="Adding support for Rust plugins", .link="https://github.com/jam1garner", .mainContributor=false },
+            Contributor { .name="All other amazing contributors", .description="Being part of the community, opening issues, PRs and donating", .link="https://github.com/WerWolv/ImHex/graphs/contributors", .mainContributor=false }
         };
 
         constexpr static std::array Testers = {
-            Contributor { "Nemoumbra", "Breaking my code literal seconds after I push it", "https://github.com/Nemoumbra", true },
-            Contributor { "Berylskid", "", "https://github.com/Berylskid", false },
-            Contributor { "Jan Polak", "", "https://github.com/polak-jan", false },
-            Contributor { "Ken-Kaneki", "", "https://github.com/loneicewolf", false },
-            Contributor { "Everybody who has reported issues", "Helping me find bugs and improve the software", "https://github.com/WerWolv/ImHex/issues", false }
+            Contributor { .name="Nemoumbra", .description="Breaking my code literal seconds after I push it", .link="https://github.com/Nemoumbra", .mainContributor=true },
+            Contributor { .name="Berylskid", .description="", .link="https://github.com/Berylskid", .mainContributor=false },
+            Contributor { .name="Jan Polak", .description="", .link="https://github.com/polak-jan", .mainContributor=false },
+            Contributor { .name="Ken-Kaneki", .description="", .link="https://github.com/loneicewolf", .mainContributor=false },
+            Contributor { .name="Everybody who has reported issues", .description="Helping me find bugs and improve the software", .link="https://github.com/WerWolv/ImHex/issues", .mainContributor=false }
 
         };
 
@@ -330,52 +332,52 @@ namespace hex::plugin::builtin {
         };
 
         constexpr static std::array ImGuiLibraries = {
-            ExternalResource { "ImGui", "ocornut", "https://github.com/ocornut/imgui" },
-            ExternalResource { "ImPlot", "epezent", "https://github.com/epezent/implot" },
-            ExternalResource { "ImPlot3D", "brenocq", "https://github.com/brenocq/implot3d" },
-            ExternalResource { "imnodes", "Nelarius", "https://github.com/Nelarius/imnodes" },
-            ExternalResource { "ImGuiColorTextEdit", "BalazsJako", "https://github.com/BalazsJako/ImGuiColorTextEdit" },
+            ExternalResource { .name="ImGui", .author="ocornut", .link="https://github.com/ocornut/imgui" },
+            ExternalResource { .name="ImPlot", .author="epezent", .link="https://github.com/epezent/implot" },
+            ExternalResource { .name="ImPlot3D", .author="brenocq", .link="https://github.com/brenocq/implot3d" },
+            ExternalResource { .name="imnodes", .author="Nelarius", .link="https://github.com/Nelarius/imnodes" },
+            ExternalResource { .name="ImGuiColorTextEdit", .author="BalazsJako", .link="https://github.com/BalazsJako/ImGuiColorTextEdit" },
         };
 
         constexpr static std::array ExternalLibraries = {
-            ExternalResource { "PatternLanguage", "WerWolv", "https://github.com/WerWolv/PatternLanguage" },
-            ExternalResource { "libwolv", "WerWolv", "https://github.com/WerWolv/libwolv" },
-            ExternalResource { "libromfs", "WerWolv", "https://github.com/WerWolv/libromfs" },
+            ExternalResource { .name="PatternLanguage", .author="WerWolv", .link="https://github.com/WerWolv/PatternLanguage" },
+            ExternalResource { .name="libwolv", .author="WerWolv", .link="https://github.com/WerWolv/libwolv" },
+            ExternalResource { .name="libromfs", .author="WerWolv", .link="https://github.com/WerWolv/libromfs" },
         };
 
         constexpr static std::array ThirdPartyLibraries = {
-            ExternalResource { "json", "nlohmann", "https://github.com/nlohmann/json" },
-            ExternalResource { "fmt", "fmtlib", "https://github.com/fmtlib/fmt" },
-            ExternalResource { "nativefiledialog-extended", "btzy", "https://github.com/btzy/nativefiledialog-extended" },
-            ExternalResource { "xdgpp", "danyspin97", "https://sr.ht/~danyspin97/xdgpp" },
-            ExternalResource { "capstone", "aquynh", "https://github.com/aquynh/capstone" },
-            ExternalResource { "microtar", "rxi", "https://github.com/rxi/microtar" },
-            ExternalResource { "yara", "VirusTotal", "https://github.com/VirusTotal/yara" },
-            ExternalResource { "edlib", "Martinsos", "https://github.com/Martinsos/edlib" },
-            ExternalResource { "HashLibPlus", "ron4fun", "https://github.com/ron4fun/HashLibPlus" },
-            ExternalResource { "miniaudio", "mackron", "https://github.com/mackron/miniaudio" },
-            ExternalResource { "freetype", "freetype", "https://gitlab.freedesktop.org/freetype/freetype" },
-            ExternalResource { "mbedTLS", "ARMmbed", "https://github.com/ARMmbed/mbedtls" },
-            ExternalResource { "curl", "curl", "https://github.com/curl/curl" },
-            ExternalResource { "file", "file", "https://github.com/file/file" },
-            ExternalResource { "glfw", "glfw", "https://github.com/glfw/glfw" },
-            ExternalResource { "llvm", "LLVM Maintainers", "https://github.com/llvm/llvm-project" },
-            ExternalResource { "Boost.Regex", "John Maddock", "https://github.com/boostorg/regex" },
-            ExternalResource { "md4c", "mity", "https://github.com/mity/md4c" },
-            ExternalResource { "lunasvg", "sammycage", "https://github.com/sammycage/lunasvg" },
-            ExternalResource { "zlib", "madler", "https://github.com/madler/zlib" },
-            ExternalResource { "bzip2", "federicomenaquintero", "https://gitlab.com/federicomenaquintero/bzip2" },
-            ExternalResource { "liblzma", "tukaani", "https://github.com/tukaani-project/xz" },
-            ExternalResource { "zstd", "Facebook", "https://github.com/facebook/zstd" },
-            ExternalResource { "libssh2", "libssh2 Maintainers", "https://github.com/libssh2/libssh2" },
+            ExternalResource { .name="json", .author="nlohmann", .link="https://github.com/nlohmann/json" },
+            ExternalResource { .name="fmt", .author="fmtlib", .link="https://github.com/fmtlib/fmt" },
+            ExternalResource { .name="nativefiledialog-extended", .author="btzy", .link="https://github.com/btzy/nativefiledialog-extended" },
+            ExternalResource { .name="xdgpp", .author="danyspin97", .link="https://sr.ht/~danyspin97/xdgpp" },
+            ExternalResource { .name="capstone", .author="aquynh", .link="https://github.com/aquynh/capstone" },
+            ExternalResource { .name="microtar", .author="rxi", .link="https://github.com/rxi/microtar" },
+            ExternalResource { .name="yara", .author="VirusTotal", .link="https://github.com/VirusTotal/yara" },
+            ExternalResource { .name="edlib", .author="Martinsos", .link="https://github.com/Martinsos/edlib" },
+            ExternalResource { .name="HashLibPlus", .author="ron4fun", .link="https://github.com/ron4fun/HashLibPlus" },
+            ExternalResource { .name="miniaudio", .author="mackron", .link="https://github.com/mackron/miniaudio" },
+            ExternalResource { .name="freetype", .author="freetype", .link="https://gitlab.freedesktop.org/freetype/freetype" },
+            ExternalResource { .name="mbedTLS", .author="ARMmbed", .link="https://github.com/ARMmbed/mbedtls" },
+            ExternalResource { .name="curl", .author="curl", .link="https://github.com/curl/curl" },
+            ExternalResource { .name="file", .author="file", .link="https://github.com/file/file" },
+            ExternalResource { .name="glfw", .author="glfw", .link="https://github.com/glfw/glfw" },
+            ExternalResource { .name="llvm", .author="LLVM Maintainers", .link="https://github.com/llvm/llvm-project" },
+            ExternalResource { .name="Boost.Regex", .author="John Maddock", .link="https://github.com/boostorg/regex" },
+            ExternalResource { .name="md4c", .author="mity", .link="https://github.com/mity/md4c" },
+            ExternalResource { .name="lunasvg", .author="sammycage", .link="https://github.com/sammycage/lunasvg" },
+            ExternalResource { .name="zlib", .author="madler", .link="https://github.com/madler/zlib" },
+            ExternalResource { .name="bzip2", .author="federicomenaquintero", .link="https://gitlab.com/federicomenaquintero/bzip2" },
+            ExternalResource { .name="liblzma", .author="tukaani", .link="https://github.com/tukaani-project/xz" },
+            ExternalResource { .name="zstd", .author="Facebook", .link="https://github.com/facebook/zstd" },
+            ExternalResource { .name="libssh2", .author="libssh2 Maintainers", .link="https://github.com/libssh2/libssh2" },
         };
 
         constexpr static std::array ThirdPartyResources {
-            ExternalResource { "VSCode Icons", "Microsoft", "https://github.com/microsoft/vscode-codicons" },
-            ExternalResource { "Blender Icons", "Blender Maintainers", "https://github.com/blender/blender" },
-            ExternalResource { "Tabler Icons", "codecalm", "https://github.com/tabler/tabler-icons" },
-            ExternalResource { "JetBrains Mono", "JetBrains", "https://github.com/JetBrains/JetBrainsMono" },
-            ExternalResource { "Unifont", "GNU", "https://unifoundry.com/unifont" },
+            ExternalResource { .name="VSCode Icons", .author="Microsoft", .link="https://github.com/microsoft/vscode-codicons" },
+            ExternalResource { .name="Blender Icons", .author="Blender Maintainers", .link="https://github.com/blender/blender" },
+            ExternalResource { .name="Tabler Icons", .author="codecalm", .link="https://github.com/tabler/tabler-icons" },
+            ExternalResource { .name="JetBrains Mono", .author="JetBrains", .link="https://github.com/JetBrains/JetBrainsMono" },
+            ExternalResource { .name="Unifont", .author="GNU", .link="https://unifoundry.com/unifont" },
         };
 
         constexpr static auto drawTable = [](const char *category, const auto &libraries) {
@@ -810,14 +812,14 @@ namespace hex::plugin::builtin {
         };
 
         constexpr std::array Tabs = {
-            Tab { "ImHex",                                      &ViewAbout::drawAboutMainPage       },
-            Tab { "hex.builtin.view.help.about.contributor",    &ViewAbout::drawContributorPage     },
-            Tab { "hex.builtin.view.help.about.libs",           &ViewAbout::drawLibraryCreditsPage  },
-            Tab { "hex.builtin.view.help.about.plugins",        &ViewAbout::drawLoadedPlugins       },
-            Tab { "hex.builtin.view.help.about.paths",          &ViewAbout::drawPathsPage           },
-            Tab { "hex.builtin.view.help.about.release_notes",  &ViewAbout::drawReleaseNotesPage    },
-            Tab { "hex.builtin.view.help.about.commits",        &ViewAbout::drawCommitHistoryPage   },
-            Tab { "hex.builtin.view.help.about.license",        &ViewAbout::drawLicensePage         },
+            Tab { .unlocalizedName="ImHex",                                      .function=&ViewAbout::drawAboutMainPage       },
+            Tab { .unlocalizedName="hex.builtin.view.help.about.contributor",    .function=&ViewAbout::drawContributorPage     },
+            Tab { .unlocalizedName="hex.builtin.view.help.about.libs",           .function=&ViewAbout::drawLibraryCreditsPage  },
+            Tab { .unlocalizedName="hex.builtin.view.help.about.plugins",        .function=&ViewAbout::drawLoadedPlugins       },
+            Tab { .unlocalizedName="hex.builtin.view.help.about.paths",          .function=&ViewAbout::drawPathsPage           },
+            Tab { .unlocalizedName="hex.builtin.view.help.about.release_notes",  .function=&ViewAbout::drawReleaseNotesPage    },
+            Tab { .unlocalizedName="hex.builtin.view.help.about.commits",        .function=&ViewAbout::drawCommitHistoryPage   },
+            Tab { .unlocalizedName="hex.builtin.view.help.about.license",        .function=&ViewAbout::drawLicensePage         },
         };
 
         // Allow the window to be closed by pressing ESC

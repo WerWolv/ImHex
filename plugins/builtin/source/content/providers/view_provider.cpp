@@ -48,9 +48,9 @@ namespace hex::plugin::builtin {
         m_provider->save();
     }
 
-    [[nodiscard]] bool ViewProvider::open() {
+    [[nodiscard]] prv::Provider::OpenResult ViewProvider::open() {
         if (m_provider == this)
-            return false;
+            return OpenResult::failure("hex.builtin.provider.view.error.no_provider"_lang);
 
         EventProviderClosing::subscribe(this, [this](const prv::Provider *provider, bool*) {
             if (m_provider == provider) {
@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        return true;
+        return {};
     }
     void ViewProvider::close() {
         EventProviderClosing::unsubscribe(this);
@@ -182,14 +182,14 @@ namespace hex::plugin::builtin {
         address -= this->getBaseAddress();
 
         if (address < this->getActualSize())
-            return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
+            return { Region { .address=this->getBaseAddress() + address, .size=this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
     }
 
     std::vector<prv::IProviderMenuItems::MenuEntry> ViewProvider::getMenuEntries() {
         return {
-            MenuEntry { Lang("hex.builtin.provider.rename"), ICON_VS_TAG, [this] { this->renameFile(); } }
+            MenuEntry { .name=Lang("hex.builtin.provider.rename"), .icon=ICON_VS_TAG, .callback=[this] { this->renameFile(); } }
         };
     }
 

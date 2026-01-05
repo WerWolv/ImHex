@@ -1,4 +1,6 @@
+#include <iostream>
 #include <content/command_line_interface.hpp>
+#include <hex/mcp/client.hpp>
 
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
@@ -350,7 +352,7 @@ namespace hex::plugin::builtin {
     }
 
     void handleHexdumpCommand(const std::vector<std::string> &args) {
-        if (args.size() < 1 || args.size() > 3) {
+        if (args.empty() || args.size() > 3) {
             log::println("usage: imhex --hexdump <file> <offset> <size>");
             std::exit(EXIT_FAILURE);
         }
@@ -358,10 +360,10 @@ namespace hex::plugin::builtin {
         std::fs::path filePath = reinterpret_cast<const char8_t*>(args[0].data());
 
         FileProvider provider;
-
         provider.setPath(filePath);
-        if (!provider.open()) {
-            log::println("Failed to open file '{}'", args[0]);
+        auto result = provider.open();
+        if (result.isFailure()) {
+            log::println("Failed to open file '{}': {}", args[0], result.getErrorMessage());
             std::exit(EXIT_FAILURE);
         }
 
@@ -397,7 +399,7 @@ namespace hex::plugin::builtin {
         if (std::fgets(input.data(), input.size() - 1, stdin) == nullptr)
             std::exit(EXIT_FAILURE);
 
-        input = input.c_str();
+        input = input.c_str(); // Stop at first null byte
         input = wolv::util::trim(input);
 
         if (input == ConfirmationString) {
@@ -528,6 +530,14 @@ namespace hex::plugin::builtin {
         }
 
         ContentRegistry::Views::setFullScreenView<ViewFullScreenFileInfo>(path);
+    }
+
+    void handleMCPCommand(const std::vector<std::string> &) {
+        mcp::Client client;
+
+        auto result = client.run(std::cin, std::cout);
+        fmt::print(stderr, "MCP Client disconnected!\n");
+        std::exit(result);
     }
 
 

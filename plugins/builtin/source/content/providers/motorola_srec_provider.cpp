@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
             };
 
             try {
-                enum class RecordType {
+                enum class RecordType: u8 {
                     Header          = 0x00,
                     Data16          = 0x01,
                     Data24          = 0x02,
@@ -147,7 +147,6 @@ namespace hex::plugin::builtin {
                             break;
                         case RecordType::Header:
                         case RecordType::Reserved:
-                            break;
                         case RecordType::Count16:
                         case RecordType::Count24:
                             break;
@@ -170,21 +169,19 @@ namespace hex::plugin::builtin {
 
     }
 
-    bool MotorolaSRECProvider::open() {
+    prv::Provider::OpenResult MotorolaSRECProvider::open() {
         auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
-            return false;
+            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
         }
 
         auto data = motorola_srec::parseMotorolaSREC(file.readString());
         if (!data.has_value()) {
-            this->setErrorMessage(data.error());
-            return false;
+            return OpenResult::failure(data.error());
         }
         processMemoryRegions(data);
 
-        return true;
+        return {};
     }
 
     void MotorolaSRECProvider::close() {

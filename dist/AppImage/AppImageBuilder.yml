@@ -15,8 +15,8 @@ AppDir:
     - "{{ARCHITECTURE_PACKAGE}}"
     allow_unauthenticated: true
     sources:
-    - sourceline: 'deb [arch=amd64] http://us.archive.ubuntu.com/ubuntu/ noble main restricted universe multiverse'
-    - sourceline: 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ noble main restricted universe multiverse'
+    - sourceline: 'deb [arch=amd64] https://us.archive.ubuntu.com/ubuntu/ noble main restricted universe multiverse'
+    - sourceline: 'deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports/ noble main restricted universe multiverse'
     include:
     - libgdk-pixbuf2.0-0
     - libgdk-pixbuf2.0-common

@@ -13,7 +13,7 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
         [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
-            return ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+            return ImGuiWindowFlags_NoNavInputs;
         }
 
         bool shouldDefaultFocus() const override { return true; }

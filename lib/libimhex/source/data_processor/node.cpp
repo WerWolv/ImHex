@@ -151,8 +151,8 @@ namespace hex::dp {
         m_overlay->getData() = data;
     }
 
-    [[noreturn]] void Node::throwNodeError(const std::string &message) {
-        throw NodeError { this, message };
+    [[noreturn]] void Node::throwNodeError(const std::string &msg) {
+        throw NodeError(this, msg);
     }
 
     void Node::setAttributes(std::vector<Attribute> attributes) {

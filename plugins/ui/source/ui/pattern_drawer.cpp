@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <ui/pattern_drawer.hpp>
 
 #include <pl/core/lexer.hpp>
@@ -206,7 +207,7 @@ namespace hex::ui {
 
         filterString = wolv::util::trim(filterString);
         if (filterString.empty())
-            return std::nullopt;
+            return std::nullopt; //NOLINT: optimise for empty string
         else if (filterString.starts_with("===")) {
             result.operation = std::strong_ordering::equal;
             result.inverted = false;
@@ -320,10 +321,9 @@ namespace hex::ui {
                         m_filteredPatterns.push_back(pattern);
                     } else {
                         auto patternValue = pattern->getValue();
-                        if (!m_filter->inverted && (patternValue <=> *m_filter->value) == m_filter->operation) {
-                            if (!m_filter->typeMatch || (m_filter->value->index() == patternValue.index()))
-                                m_filteredPatterns.push_back(pattern);
-                        } else if (m_filter->inverted && (patternValue <=> *m_filter->value) != m_filter->operation) {
+                        auto operation = patternValue <=> *m_filter->value;
+                        bool isOperationOk = operation == m_filter->operation;
+                        if ((!m_filter->inverted && isOperationOk) || (m_filter->inverted && !isOperationOk)) {
                             if (!m_filter->typeMatch || (m_filter->value->index() == patternValue.index()))
                                 m_filteredPatterns.push_back(pattern);
                         }
@@ -480,7 +480,7 @@ namespace hex::ui {
             pattern = pattern->getParent();
         }
 
-        std::reverse(result.begin(), result.end());
+        std::ranges::reverse(result);
 
         return result;
     }
@@ -699,7 +699,7 @@ namespace hex::ui {
         }
 
         int id = 1;
-        pattern.forEachEntry(0, pattern.getEntryCount(), [&] (u64, const auto &field) {
+        pattern.forEachEntrySorted(0, pattern.getEntryCount(), [&] (u64, const auto &field) {
             ImGui::PushID(id);
             this->draw(*field);
             ImGui::PopID();
@@ -895,7 +895,7 @@ namespace hex::ui {
         }
 
         int id = 1;
-        pattern.forEachEntry(0, pattern.getEntryCount(), [&](u64, const auto &member){
+        pattern.forEachEntrySorted(0, pattern.getEntryCount(), [&](u64, const auto &member){
             ImGui::PushID(id);
             this->draw(*member);
             ImGui::PopID();
@@ -940,7 +940,7 @@ namespace hex::ui {
         }
 
         int id = 1;
-        pattern.forEachEntry(0, pattern.getEntryCount(), [&](u64, const auto &member) {
+        pattern.forEachEntrySorted(0, pattern.getEntryCount(), [&](u64, const auto &member) {
             ImGui::PushID(id);
             this->draw(*member);
             ImGui::PopID();
@@ -1142,7 +1142,7 @@ namespace hex::ui {
             }
 
             int id = 1;
-            iterable.forEachEntry(i, endIndex, [&](u64, const auto &entry){
+            iterable.forEachEntrySorted(i, endIndex, [&](u64, const auto &entry){
                 ImGui::PushID(id);
                 this->draw(*entry);
                 ImGui::PopID();
@@ -1201,7 +1201,7 @@ namespace hex::ui {
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.var_name"_lang,  ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.color"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.start"_lang,     ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("start"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.end"_lang,       ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("end"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.end"_lang,       ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("end"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.size"_lang,      ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.type"_lang,      ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("type"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.value"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("value"));
@@ -1221,7 +1221,7 @@ namespace hex::ui {
         if (!m_favoritesUpdateTask.isRunning()) {
             sortedPatterns = patterns;
 
-            std::stable_sort(sortedPatterns.begin(), sortedPatterns.end(), [this, &sortSpecs](const std::shared_ptr<pl::ptrn::Pattern> &left, const std::shared_ptr<pl::ptrn::Pattern> &right) -> bool {
+            std::ranges::stable_sort(sortedPatterns, [this, &sortSpecs](const std::shared_ptr<pl::ptrn::Pattern> &left, const std::shared_ptr<pl::ptrn::Pattern> &right) -> bool {
                 return this->sortPatterns(sortSpecs, left.get(), right.get());
             });
 
@@ -1247,7 +1247,7 @@ namespace hex::ui {
             if (dynamic_cast<pl::ptrn::PatternString*>(pattern.get()) || dynamic_cast<pl::ptrn::PatternWideString*>(pattern.get()))
                 return;
 
-            iterable->forEachEntry(0, iterable->getEntryCount(), [&](u64, const auto &entry) {
+            iterable->forEachEntrySorted(0, iterable->getEntryCount(), [&](u64, const auto &entry) {
                 traversePatternTree(entry, patternPath, callback);
             });
         }
@@ -1365,7 +1365,7 @@ namespace hex::ui {
             for (const auto &formatter : m_formatters) {
                 const auto name = [&]{
                     auto formatterName = formatter->getName();
-                    std::transform(formatterName.begin(), formatterName.end(), formatterName.begin(), [](char c){ return char(std::toupper(c)); });
+                    std::ranges::transform(formatterName, formatterName.begin(), [](char c){ return char(std::toupper(c)); });
 
                     return formatterName;
                 }();

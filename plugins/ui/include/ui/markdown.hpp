@@ -19,7 +19,12 @@ namespace hex::ui {
     class Markdown {
     public:
         Markdown() = default;
-        Markdown(const std::string &text);
+        Markdown(std::string text);
+        Markdown(const Markdown &) = delete;
+        Markdown(Markdown &&other) = default;
+
+        Markdown &operator=(const Markdown &) = delete;
+        Markdown &operator=(Markdown &&other) = default;
 
         void draw();
         void reset();
@@ -35,7 +40,7 @@ namespace hex::ui {
     private:
         std::string m_text;
         bool m_initialized = false;
-        MD_RENDERER m_mdRenderer;
+        MD_RENDERER m_mdRenderer = {};
         bool m_firstLine = true;
         u32 m_elementId = 1;
         std::string m_currentLink;

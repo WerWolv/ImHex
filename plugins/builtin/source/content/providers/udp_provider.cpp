@@ -7,13 +7,13 @@
 
 namespace hex::plugin::builtin {
 
-    bool UDPProvider::open() {
+    prv::Provider::OpenResult UDPProvider::open() {
         m_udpServer = UDPServer(m_port, [this](std::span<const u8> data) {
             this->receive(data);
         });
         m_udpServer.start();
 
-        return true;
+        return {};
     }
 
     void UDPProvider::close() {

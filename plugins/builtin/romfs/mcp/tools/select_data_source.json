@@ -1,0 +1,25 @@
+{
+    "name": "select_data_source",
+    "title": "Select a Data Source given its handle",
+    "description": "Selects one of the currently open data sources by its handle so that it can be used in subsequent operations. When running other tools that operate on a data source, this selected data source will be used. The returned handle is the one that was selected. If it failed to select the data source, the old handle is returned. That usually means that that handle doesn't exist (because it hasn't been opened yet or because it was closed already)",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "handle": {
+                "type": "number",
+                "description": "Handle of the data source to select"
+            }
+        },
+        "required": ["handle"]
+    },
+    "outputSchema": {
+        "type": "object",
+        "properties": {
+            "selected_handle": {
+                "type": "number",
+                "description": "Handle of the selected data source"
+            }
+        },
+        "required": ["selected_handle"]
+    }
+}

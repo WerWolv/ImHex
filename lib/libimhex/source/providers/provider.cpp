@@ -7,12 +7,14 @@
 #include <cmath>
 #include <cstring>
 #include <optional>
+#include <hex/api/content_registry/settings.hpp>
 
 #include <hex/helpers/magic.hpp>
 #include <wolv/io/file.hpp>
 #include <wolv/literals.hpp>
 
 #include <nlohmann/json.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::prv {
 
@@ -24,6 +26,28 @@ namespace hex::prv {
 
     }
 
+    IProviderDataBackupable::IProviderDataBackupable(Provider* provider) : m_provider(provider) {
+        m_shouldCreateBackups = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.file_backup.enable", true);
+        m_maxSize = ContentRegistry::Settings::read<u32>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.file_backup.max_size", 1_MiB);
+        m_backupExtension = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.file_backup.extension", ".bak");
+    }
+
+    void IProviderDataBackupable::createBackupIfNeeded(const std::fs::path &inputFilePath) {
+        if (!m_shouldCreateBackups || m_backupCreated)
+            return;
+
+        if (m_provider->getActualSize() > m_maxSize)
+            return;
+
+        const std::fs::path backupFilePath = wolv::util::toUTF8String(inputFilePath) + m_backupExtension;
+        if (wolv::io::fs::copyFile(inputFilePath, backupFilePath, std::fs::copy_options::overwrite_existing)) {
+            if (wolv::io::fs::exists(backupFilePath)) {
+                m_backupCreated = true;
+                log::info("Created backup of provider data at '{}'", backupFilePath.string());
+            }
+        }
+    }
+
 
     Provider::Provider() : m_undoRedoStack(this), m_id(s_idCounter++) {
 
@@ -33,7 +57,7 @@ namespace hex::prv {
         m_overlays.clear();
 
         if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value() && selection->provider == this)
-            EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion { { 0x00, 0x00 }, nullptr });
+            EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion { { .address=0x00, .size=0x00 }, nullptr });
     }
 
     void Provider::read(u64 offset, void *buffer, size_t size, bool overlays) {
@@ -265,19 +289,19 @@ namespace hex::prv {
         u64 absoluteAddress = address - this->getBaseAddress();
 
         if (absoluteAddress < this->getActualSize())
-            return { Region { this->getBaseAddress() + absoluteAddress, this->getActualSize() - absoluteAddress }, true };
+            return { Region { .address=this->getBaseAddress() + absoluteAddress, .size=this->getActualSize() - absoluteAddress }, true };
 
 
         bool insideValidRegion = false;
 
         std::optional<u64> nextRegionAddress;
         for (const auto &overlay : m_overlays) {
-            Region overlayRegion = { overlay->getAddress(), overlay->getSize() };
+            Region overlayRegion = { .address=overlay->getAddress(), .size=overlay->getSize() };
             if (!nextRegionAddress.has_value() || overlay->getAddress() < nextRegionAddress) {
                 nextRegionAddress = overlayRegion.getStartAddress();
             }
 
-            if (Region { address, 1 }.overlaps(overlayRegion)) {
+            if (Region { .address=address, .size=1 }.overlaps(overlayRegion)) {
                 insideValidRegion = true;
             }
         }
@@ -285,7 +309,7 @@ namespace hex::prv {
         if (!nextRegionAddress.has_value())
             return { Region::Invalid(), false };
         else
-            return { Region { address, *nextRegionAddress - address }, insideValidRegion };
+            return { Region { .address=address, .size=*nextRegionAddress - address }, insideValidRegion };
     }
 
 

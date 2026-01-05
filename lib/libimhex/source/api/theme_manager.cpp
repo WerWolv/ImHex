@@ -31,7 +31,7 @@ namespace hex {
     void ThemeManager::addThemeHandler(const std::string &name, const ColorMap &colorMap, const std::function<ImColor(u32)> &getFunction, const std::function<void(u32, ImColor)> &setFunction) {
         std::unique_lock lock(s_themeMutex);
 
-        (*s_themeHandlers)[name] = { colorMap, getFunction, setFunction };
+        (*s_themeHandlers)[name] = { .colorMap=colorMap, .getFunction=getFunction, .setFunction=setFunction };
     }
 
     void ThemeManager::addStyleHandler(const std::string &name, const StyleMap &styleMap) {

@@ -60,7 +60,7 @@ public:
     using GetSizeFunction = u64(*)();
     using GetNameFunction = std::string(*)();
 
-    bool open() override { return true; }
+    OpenResult open() override { return {}; }
     void close() override { }
 
     [[nodiscard]] bool isAvailable() const override { return true; }

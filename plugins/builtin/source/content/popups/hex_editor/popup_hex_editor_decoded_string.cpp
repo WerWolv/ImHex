@@ -8,8 +8,6 @@
 
 #include <popups/popup_file_chooser.hpp>
 
-#include <ui/text_editor.hpp>
-
 namespace hex::plugin::builtin {
 
     PopupDecodedString::PopupDecodedString(std::string decodedString) : m_decodedString(std::move(decodedString)) {

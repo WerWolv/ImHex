@@ -4,7 +4,7 @@ Section: editors
 Priority: optional
 Architecture: amd64
 License: GNU GPL-2
-Depends: libfontconfig1, libglfw3 | libglfw3-wayland, libmagic1, libmbedtls14, libfreetype6, libopengl0, libdbus-1-3, xdg-desktop-portal, libssh2-1, md4c
+Depends: libfontconfig1, libglfw3 | libglfw3-wayland, libmagic1, libmbedtls14, libfreetype6, libopengl0, libdbus-1-3, xdg-desktop-portal, libssh2-1, libmd4c0
 Maintainer: WerWolv <hey@werwolv.net>
 Description: ImHex Hex Editor
  A Hex Editor for Reverse Engineers, Programmers and

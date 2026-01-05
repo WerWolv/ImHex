@@ -1,5 +1,9 @@
 name: Build
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -49,7 +53,7 @@ jobs:
         submodules: recursive
 
     - name: 📜 Setup ccache
-      uses:  hendrikmuhs/ccache-action@main
+      uses:  hendrikmuhs/ccache-action@v1
       id:    cache-ccache
       with:
         key: ${{ runner.os }}-mingw-ccache-${{ github.run_id }}
@@ -95,7 +99,6 @@ jobs:
           -DIMHEX_GENERATE_PDBS=ON                                                \
           -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                                       \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                \
-          -DCPACK_WIX_VERSION="4"                                                 \
           -DCPACK_WIX_ROOT="$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools"   \
           ..
 
@@ -234,7 +237,7 @@ jobs:
           arch: ${{ matrix.vs_arch }}
 
       - name: 📜 Setup ccache
-        uses:  hendrikmuhs/ccache-action@main
+        uses:  hendrikmuhs/ccache-action@v1
         id:    cache-ccache
         with:
           key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache-${{ github.run_id }}
@@ -248,6 +251,7 @@ jobs:
       - name: ⬇️ Install dependencies
         run: |
           cp dist/vcpkg.json vcpkg.json
+          vcpkg install
 
       - name: ⬇️ Install CMake and Ninja
         uses: lukka/get-cmake@latest
@@ -280,7 +284,6 @@ jobs:
             -DIMHEX_COMMIT_HASH_LONG="$env:GITHUB_SHA"                                `
             -DIMHEX_COMMIT_BRANCH="$($env:GITHUB_REF -replace '.*/', '')"             `
             -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"                  `
-            -DCPACK_WIX_VERSION="4"                                                   `
             -DCPACK_WIX_ROOT="$($env:USERPROFILE -replace '\\','/')/.dotnet/tools"    `
             .
 
@@ -500,7 +503,6 @@ jobs:
       run: |
         set -x
         cd build/install
-        mv imhex.app ImHex.app
         codesign --remove-signature ImHex.app
         codesign --force --deep --sign - ImHex.app
 
@@ -621,7 +623,6 @@ jobs:
         run: |
           set -x
           cd out
-          mv imhex.app ImHex.app
           codesign --remove-signature ImHex.app
           codesign --force --deep --entitlements Entitlements.plist --sign - ImHex.app
 
@@ -672,14 +673,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - release_num: "24.04"
-          - release_num: "25.04"
+          - name: "Ubuntu"
+            release_num: "24.04"
+            image: "ubuntu:24.04"
+          - name: "Ubuntu"
+            release_num: "25.10"
+            image: "ubuntu:25.10"
+          - name: "Debian"
+            release_num: "13"
+            image: "debian:13"
 
-    name: 🐧 Ubuntu ${{ matrix.release_num }}
+    name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
     runs-on: ubuntu-24.04
 
     container:
-      image: "ubuntu:${{ matrix.release_num }}"
+      image: "${{ matrix.image }}"
       options: --privileged
 
     permissions:
@@ -698,8 +706,8 @@ jobs:
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1
         with:
-          key: Ubuntu-${{ matrix.release_num }}-ccache-${{ github.run_id }}
-          restore-keys: Ubuntu-${{ matrix.release_num }}-ccache
+          key: ${{ matrix.image }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ matrix.image }}-ccache
           max-size: 1G
 
       - name: ⬇️ Install dependencies
@@ -744,7 +752,7 @@ jobs:
         run: |
           cp -r build/DEBIAN build/DebDir
           dpkg-deb -Zzstd --build build/DebDir
-          mv build/DebDir.deb imhex-${{ env.IMHEX_VERSION }}-Ubuntu-${{ matrix.release_num }}-x86_64.deb
+          mv build/DebDir.deb imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.deb
 
       - name: 🗝️ Generate build provenance attestations
         uses: actions/attest-build-provenance@v2
@@ -757,7 +765,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: Ubuntu ${{ matrix.release_num }} DEB x86_64
+          name: ${{ matrix.name }} ${{ matrix.release_num }} DEB x86_64
           path: '*.deb'
 
   # AppImage build
@@ -832,7 +840,7 @@ jobs:
 
   # ArchLinux build
   archlinux-build:
-    name: 🐧 ArchLinux
+    name: 🐧 ArchLinux x86_64
     runs-on: ubuntu-24.04
 
     container:
@@ -948,22 +956,10 @@ jobs:
       matrix:
         include:
           - name: Fedora
-            release_num: rawhide
-            mock_config: fedora-rawhide
-          - name: Fedora
             release_num: 43
             mock_config: fedora-43
-          - name: Fedora
-            release_num: 42
-            mock_config: fedora-42
-          - name: Fedora
-            release_num: 41
-            mock_config: fedora-41
-          - name: RHEL-AlmaLinux
-            release_num: 9
-            mock_config: "alma+epel-9"
 
-    name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }}
+    name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
     runs-on: ubuntu-24.04
 
     container:

@@ -7,6 +7,8 @@
 #include <map>
 #include <string>
 
+#include <hex/mcp/server.hpp>
+
 EXPORT_MODULE namespace hex {
 
     /* Network Communication Interface Registry. Allows adding new communication interface endpoints */
@@ -19,6 +21,21 @@ EXPORT_MODULE namespace hex {
         }
 
         void registerNetworkEndpoint(const std::string &endpoint, const impl::NetworkCallback &callback);
+
+    }
+
+    namespace ContentRegistry::MCP {
+
+        namespace impl {
+            mcp::Server& getMcpServerInstance();
+
+            void setEnabled(bool enabled);
+        }
+
+        bool isEnabled();
+        bool isConnected();
+
+        void registerTool(std::string_view capabilities, std::function<nlohmann::json(const nlohmann::json &params)> function);
 
     }
 

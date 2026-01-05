@@ -17,11 +17,13 @@
 
 #include <fmt/chrono.h>
 #include <nlohmann/json.hpp>
+#include <romfs/romfs.hpp>
+#include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::builtin {
 
-    static bool s_networkInterfaceServiceEnabled = false;
-    static int s_autoBackupTime = 0;
+    static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.network_interface"> s_networkInterfaceServiceEnabled = false;
+    static ContentRegistry::Settings::SettingsVariable<int, "hex.builtin.setting.general", "hex.builtin.setting.general.backups.auto_backup_time"> s_autoBackupTime = 0;
 
     namespace {
 
@@ -73,7 +75,7 @@ namespace hex::plugin::builtin {
             auto now = std::chrono::steady_clock::now();
             static std::chrono::time_point<std::chrono::steady_clock> lastBackupTime = now;
 
-            if (s_autoBackupTime > 0 && (now - lastBackupTime) > std::chrono::seconds(s_autoBackupTime)) {
+            if (s_autoBackupTime > 0 && (now - lastBackupTime) > std::chrono::seconds(s_autoBackupTime * 30)) {
                 lastBackupTime = now;
 
                 if (ImHexApi::Provider::isValid() && s_dataDirty) {
@@ -103,19 +105,26 @@ namespace hex::plugin::builtin {
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
+        void handleMCPServer() {
+            if (!ContentRegistry::MCP::isEnabled()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                ContentRegistry::MCP::impl::getMcpServerInstance().disconnect();
+                return;
+            }
+
+            ContentRegistry::MCP::impl::getMcpServerInstance().listen();
+        }
+
     }
 
     void registerBackgroundServices() {
-        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", [](const ContentRegistry::Settings::SettingsValue &value) {
-            s_networkInterfaceServiceEnabled = value.get<bool>(false);
-        });
-
-        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.auto_backup_time", [](const ContentRegistry::Settings::SettingsValue &value) {
-            s_autoBackupTime = value.get<int>(0) * 30;
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.mcp_server", [](const ContentRegistry::Settings::SettingsValue &value) {
+            ContentRegistry::MCP::impl::setEnabled(value.get<bool>(false));
         });
 
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface", handleNetworkInterfaceService);
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup", handleAutoBackup);
+        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.mcp", handleMCPServer);
 
         EventProviderDirtied::subscribe([](prv::Provider *) {
             s_dataDirty = true;

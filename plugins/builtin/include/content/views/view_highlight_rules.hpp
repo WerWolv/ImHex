@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
         }
 
         ImGuiWindowFlags getWindowFlags() const override {
-            return View::Floating::getWindowFlags() | ImGuiWindowFlags_NoResize;
+            return ImGuiWindowFlags_NoResize;
         }
 
     private:

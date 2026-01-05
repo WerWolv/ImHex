@@ -2,7 +2,7 @@ FROM emscripten/emsdk:4.0.21 AS build
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493
-ARG UNIQUEKEY 1
+ARG UNIQUEKEY=1
 
 RUN apt update
 RUN apt install -y git ccache autoconf automake libtool pkg-config ninja-build
@@ -12,13 +12,13 @@ RUN <<EOF
 # Note: we are a patch on the libmagic port
 set -xe
 
-git clone https://github.com/microsoft/vcpkg /vcpkg
-git -C /vcpkg pull
+git clone --depth 1 https://github.com/microsoft/vcpkg /vcpkg
 /vcpkg/bootstrap-vcpkg.sh
 sed -i 's/vcpkg_install_make(${EXTRA_ARGS})/vcpkg_install_make(${EXTRA_ARGS} SUBPATH src)/g' /vcpkg/ports/libmagic/portfile.cmake
 EOF
 
-# Patch vcpkg build instructions to add -pthread
+# Patch vcpkg build instructions to add -pthread flag
+# Even dependencies must be built with -pthread to be able to use USE_PTHREADS=1
 RUN <<EOF
 set -xe
 
@@ -50,6 +50,7 @@ ENV CCACHE_DIR=/cache/ccache
 
 RUN mkdir /build
 WORKDIR /build
+ARG BUILD_TYPE=Release
 RUN --mount=type=cache,target=/cache \
     --mount=type=bind,source=.,target=/imhex <<EOF
 
@@ -70,7 +71,7 @@ ccache -zs
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     -DLIBROMFS_COMPRESS_RESOURCES=OFF                                                                   \
     -DIMHEX_ENABLE_PLUGIN_TESTS=OFF                                                                     \
-    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
 
 ninja -j $JOBS
 
@@ -106,3 +107,4 @@ COPY --from=build [             \
 
 FROM nginx
 COPY --from=raw . /usr/share/nginx/html
+RUN chmod -R 755 /usr/share/nginx/html

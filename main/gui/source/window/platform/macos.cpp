@@ -47,6 +47,7 @@ namespace hex {
         }
 
         enumerateFontsMacos();
+        macosSetupDockMenu();
     }
 
     void Window::setupNativeWindow() {

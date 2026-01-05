@@ -15,15 +15,15 @@
 
 #include <hex/helpers/scaling.hpp>
 #include <hex/helpers/utils.hpp>
+#include <utility>
 
 #include <md4c.h>
 
 namespace hex::ui {
 
-    Markdown::Markdown(const std::string &text) : m_text(text) {
-        m_mdRenderer = MD_RENDERER();
+    Markdown::Markdown(std::string text) : m_text(std::move(text)) {
         m_initialized = true;
-        m_mdRenderer.flags = MD_DIALECT_GITHUB | MD_FLAG_TABLES | MD_FLAG_TASKLISTS;
+        m_mdRenderer.flags = MD_DIALECT_GITHUB;
         m_mdRenderer.enter_block = [](MD_BLOCKTYPE type, void *detail, void *userdata) -> int {
             auto &self = *static_cast<Markdown*>(userdata);
 
@@ -60,11 +60,7 @@ namespace hex::ui {
                     self.m_tableVisibleStack.emplace_back(open);
                     break;
                 }
-                case MD_BLOCK_TD: {
-                    if (self.inTable())
-                        ImGui::TableNextColumn();
-                    break;
-                }
+                case MD_BLOCK_TD:
                 case MD_BLOCK_TH: {
                     if (self.inTable())
                         ImGui::TableNextColumn();
@@ -129,11 +125,6 @@ namespace hex::ui {
                     fonts::Default().pop();
                     break;
                 case MD_BLOCK_CODE:
-                    if (self.inTable()) {
-                        ImGui::EndTable();
-                        self.m_tableVisibleStack.pop_back();
-                    }
-                    break;
                 case MD_BLOCK_TABLE:
                     if (self.inTable()) {
                         ImGui::EndTable();
@@ -250,7 +241,7 @@ namespace hex::ui {
 
                             return wolv::container::Lazy<ImGuiExt::Texture>([data = std::move(data)]() -> ImGuiExt::Texture {
                                 if (data.empty())
-                                    return ImGuiExt::Texture();
+                                    return {};
 
                                 auto texture = ImGuiExt::Texture::fromImage(data.data(), data.size(), ImGuiExt::Texture::Filter::Linear);
                                 if (!texture.isValid()) {

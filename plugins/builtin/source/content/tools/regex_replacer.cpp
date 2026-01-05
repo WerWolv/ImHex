@@ -1,5 +1,6 @@
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/scaling.hpp>
+#include <hex/helpers/logger.hpp>
 #include <hex/api/localization_manager.hpp>
 
 #include <boost/regex.hpp>
@@ -26,7 +27,9 @@ namespace hex::plugin::builtin {
             try {
                 const auto regex = boost::regex(regexPattern);
                 outputString = boost::regex_replace(inputString, regex, replacePattern);
-            } catch (boost::regex_error &) { }
+            } catch (const boost::regex_error &e) {
+                log::warn("Invalid regex pattern in Regex Replacer tool: {}", e.what());
+            }
         }
 
         ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.output"_lang, outputString, ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);

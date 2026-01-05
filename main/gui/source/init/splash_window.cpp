@@ -40,9 +40,9 @@ namespace hex::init {
 
     WindowSplash::WindowSplash() : m_window(nullptr) {
         RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
-            std::lock_guard guard(m_progressMutex);
+            std::scoped_lock guard(m_progressMutex);
 
-            m_tasks.push_back(Task{ name, function, async, false });
+            m_tasks.push_back(Task{ .name=name, .callback=function, .async=async, .running=false });
             m_totalTaskCount += 1;
             m_progress = float(m_completedTaskCount) / float(m_totalTaskCount);
         });
@@ -210,14 +210,14 @@ namespace hex::init {
                 // Save an iterator to the current task name
                 decltype(m_currTaskNames)::iterator taskNameIter;
                 {
-                    std::lock_guard guard(m_progressMutex);
+                    std::scoped_lock guard(m_progressMutex);
                     m_currTaskNames.push_back(task.name + "...");
                     taskNameIter = std::prev(m_currTaskNames.end());
                 }
 
                 // When the task finished, increment the progress bar
                 ON_SCOPE_EXIT {
-                    std::lock_guard guard(m_progressMutex);
+                    std::scoped_lock guard(m_progressMutex);
                     m_completedTaskCount += 1;
                     m_progress = float(m_completedTaskCount) / float(m_totalTaskCount);
                 };
@@ -239,7 +239,7 @@ namespace hex::init {
 
                 // Erase the task name from the list of running tasks
                 {
-                    std::lock_guard guard(m_progressMutex);
+                    std::scoped_lock guard(m_progressMutex);
                     m_currTaskNames.erase(taskNameIter);
                 }
             } catch (const std::exception &e) {
@@ -272,11 +272,11 @@ namespace hex::init {
             // Check every 10ms if all tasks have run
             while (true) {
                 // Loop over all registered init tasks
-                for (auto it = m_tasks.begin(); it != m_tasks.end(); ++it) {
+                for (auto & m_task : m_tasks) {
                     // Construct a new task callback
-                    if (!it->running) {
-                        this->createTask(*it);
-                        it->running = true;
+                    if (!m_task.running) {
+                        this->createTask(m_task);
+                        m_task.running = true;
                     }
                 }
 
@@ -396,7 +396,7 @@ namespace hex::init {
 
         // Draw the task progress bar
         {
-            std::lock_guard guard(m_progressMutex);
+            std::scoped_lock guard(m_progressMutex);
 
             const auto progressBackgroundStart = ImVec2(99, 357);
             const auto progressBackgroundSize = ImVec2(442, 30);
@@ -513,10 +513,6 @@ namespace hex::init {
             if (meanScale <= 0.0F)
                 meanScale = 1.0F;
 
-            #if defined(OS_WEB)
-                meanScale = 1.0F;
-            #endif
-
             #if !defined(OS_LINUX)
                 meanScale /= hex::ImHexApi::System::getBackingScaleFactor();
             #endif
@@ -589,8 +585,8 @@ namespace hex::init {
         for (auto &highlight : m_highlights) {
             u32 newPos = lastPos + lastCount + (rng() % 35);
             u32 newCount = (rng() % 7) + 3;
-            highlight.start.x = float(newPos % 13);
-            highlight.start.y = float(newPos / 13);
+            highlight.start.x = newPos % 13;
+            highlight.start.y = int(newPos / 13);
             highlight.count = newCount;
 
             highlight.color = getHighlightColor(index);

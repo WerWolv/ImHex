@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <content/text_highlighting/pattern_language.hpp>
 #include <pl/core/ast/ast_node_type_decl.hpp>
 #include <pl/core/ast/ast_node_enum.hpp>
@@ -14,14 +15,246 @@
 namespace hex::plugin::builtin {
 
     using namespace pl::core;
-    using Identifier = Token::Identifier;
-    using Keyword = Token::Keyword;
-    using Separator = Token::Separator;
-    using Operator = Token::Operator;
-    using Comment = Token::Comment;
-    using DocComment = Token::DocComment;
-    using Literal = Token::Literal;
-    using ValueType = Token::ValueType;
+    using Identifier     = Token::Identifier;
+    using Keyword        = Token::Keyword;
+    using Separator      = Token::Separator;
+    using Operator       = Token::Operator;
+    using Comment        = Token::Comment;
+    using DocComment     = Token::DocComment;
+    using Literal        = Token::Literal;
+    using ValueType      = Token::ValueType;
+    using RequiredInputs = TextHighlighter::RequiredInputs;
+    using Interval       = TextHighlighter::Interval;
+
+    Interval::Interval(i32 start, i32 end) : start(start), end(end) {
+        if (start > end)
+            throw std::invalid_argument("Interval start must be less than or equal to end");
+    }
+
+    bool Interval::operator<(const Interval &other) const {
+        return other.end > end;
+    }
+
+    bool Interval::operator>(const Interval &other) const {
+        return end > other.end;
+    }
+
+    bool Interval::operator==(const Interval &other) const {
+        return start == other.start && end == other.end;
+    }
+
+    bool Interval::operator!=(const Interval &other) const {
+        return start != other.start || end != other.end;
+    }
+
+    bool Interval::operator<=(const Interval &other) const {
+        return other.end >= end;
+    }
+
+    bool Interval::operator>=(const Interval &other) const {
+        return end >= other.end;
+    }
+
+    bool Interval::contains(const Interval &other) const {
+        return other.start >= start && other.end <= end;
+    }
+
+    bool Interval::contains(i32 value) const {
+        return value >= start && value <= end;
+    }
+
+    bool Interval::contiguous(const Interval &other) const {
+        return ((start - other.end) == 1 || (other.start - end) == 1);
+    }
+
+    void TextHighlighter::next(i32 count) {
+        if (m_viewPatternEditor->wasInterrupted()) {
+            m_viewPatternEditor->resetInterrupt();
+            throw std::out_of_range("Highlights were deliberately interrupted");
+        }
+        if (count == 0)
+            return;
+        i32 id = getTokenId(m_curr->location);
+        i32 maxChange;
+        if (count > 0)
+            maxChange = std::min(count,static_cast<i32>(m_requiredInputs.fullTokens.size() - id));
+        else
+            maxChange = -std::min(-count,id);
+        m_curr += maxChange;
+    }
+
+    pl::PatternLanguage *TextHighlighter::getPatternLanguage() {
+       return m_viewPatternEditor->getPatternLanguage()->get();
+    }
+
+    void TextHighlighter::RequiredInputs::setTypes() {
+        auto &types = m_textHighlighter->getPatternLanguage()->getInternals().parser.get()->getTypes();
+        std::ranges::copy(types.begin(), types.end(), std::inserter(definedTypes, definedTypes.begin()));
+    }
+
+    void TextHighlighter::RequiredInputs::setNamespaces() {
+        auto &namespaces = m_textHighlighter->getPatternLanguage()->getInternals().preprocessor.get()->getNamespaces();
+        usedNamespaces.resize(namespaces.size());
+        std::ranges::copy(namespaces, usedNamespaces.begin());
+    }
+
+    void TextHighlighter::RequiredInputs::setImports() {
+        auto *preprocessor = m_textHighlighter->getPatternLanguage()->getInternals().preprocessor.get();
+        std::ranges::copy(preprocessor->getParsedImports().begin(), preprocessor->getParsedImports().end(), std::inserter(parsedImports, parsedImports.begin()));
+        m_textHighlighter->clearVariables();
+        for (auto &[name, tokens]: parsedImports) {
+            importedHeaders[name] = tokens[0].location.source->content;
+            if (importedHeaders[name].empty() || importedHeaders[name] == "\n")
+                continue;
+            fullTokens = tokens;
+            editedText = importedHeaders[name];
+            m_textHighlighter->loadText();
+            m_textHighlighter->processSource();
+        }
+    }
+
+    void TextHighlighter::RequiredInputs::setText() {
+        ui::TextEditor *editor = m_textHighlighter->m_viewPatternEditor->getTextEditor();
+        if (editor == nullptr)
+            return;
+        fullTokens.clear();
+        auto &result = m_textHighlighter->getPatternLanguage()->getInternals().preprocessor.get()->getResult();
+        std::ranges::copy(result.begin(),result.end(),std::back_inserter(fullTokens));
+        editedText = editor->getText();
+        m_textHighlighter->loadText();;
+
+        linesOfColors.clear();
+        for (auto &line : m_textHighlighter->m_lines)
+            linesOfColors.push_back(std::string(line.size(), ' '));
+    }
+
+    void TextHighlighter::RequiredInputs::setCompileErrors() {
+        auto errors = m_textHighlighter->getPatternLanguage()->getCompileErrors();
+        compileErrors.resize(errors.size());
+        std::ranges::copy(errors, compileErrors.begin());
+    }
+
+    void TextHighlighter::RequiredInputs::setRequiredInputs() {
+        setTypes();
+        setNamespaces();
+        setImports();
+        setText();
+        setCompileErrors();
+    }
+
+    void TextHighlighter::updateRequiredInputs() {
+        m_requiredInputs.m_textHighlighter = this;
+        m_requiredInputs.setRequiredInputs();
+    }
+
+    RequiredInputs& TextHighlighter::getRequiredInputs() {
+        return m_requiredInputs;
+    }
+
+    ViewPatternEditor* TextHighlighter::getViewPatternEditor() {
+        return m_viewPatternEditor;
+    }
+
+    template<typename T>
+    T *TextHighlighter::getValue(const i32 index) {
+        return const_cast<T*>(std::get_if<T>(&m_curr[index].value));
+    }
+
+
+    void TextHighlighter::setViewPatternEditor(ViewPatternEditor *viewPatternEditor) {
+        m_viewPatternEditor = viewPatternEditor;
+    }
+
+    bool TextHighlighter::begin() {
+        m_originalPosition = m_curr;
+
+        return true;
+    }
+
+    void TextHighlighter::partBegin() {
+        m_partOriginalPosition = m_curr;
+    }
+
+    void TextHighlighter::reset() {
+        m_curr = m_originalPosition;
+    }
+
+    void TextHighlighter::partReset() {
+        m_curr = m_partOriginalPosition;
+    }
+
+    bool TextHighlighter::resetIfFailed(const bool value) {
+        if (!value) reset();
+
+        return value;
+    }
+
+    template<auto S>
+    bool TextHighlighter::sequenceImpl() {
+        if constexpr (S == Normal)
+            return true;
+        else if constexpr (S == Not)
+            return false;
+        else
+            std::unreachable();
+    }
+
+    template<auto S>
+    bool TextHighlighter::matchOne(const Token &token) {
+        if constexpr (S == Normal) {
+            if (!peek(token)) {
+                partReset();
+                return false;
+            }
+
+            next();
+            return true;
+        } else if constexpr (S == Not) {
+            if (!peek(token))
+                return true;
+
+            next();
+            partReset();
+            return false;
+        } else
+            std::unreachable();
+    }
+
+    template<auto S>
+    bool TextHighlighter::sequenceImpl(const auto &... args) {
+        return (matchOne<S>(args) && ...);
+    }
+
+    template<auto S>
+    bool TextHighlighter::sequence(const Token &token, const auto &... args) {
+        partBegin();
+        return sequenceImpl<S>(token, args...);
+    }
+
+    bool TextHighlighter::isValid() {
+        Token token;
+        try {
+            token = m_curr[0];
+        }
+        catch (const std::out_of_range &e) {
+            auto t = e.what();
+            if (t == nullptr)
+                return false;
+            return false;
+        }
+        if (!isLocationValid(token.location))
+            return false;
+        return true;
+    }
+
+    bool TextHighlighter::peek(const Token &token, const i32 index) {
+        if (!isValid())
+            return false;
+        i32 id = getTokenId(m_curr->location);
+        if (id+index < 0 || id+index >= (i32)m_requiredInputs.fullTokens.size())
+            return false;
+        return m_curr[index].type == token.type && m_curr[index] == token.value;
+    }
 
     bool TextHighlighter::getIdentifierName(std::string &identifierName, Identifier *identifier) {
         auto keyword = getValue<Keyword>(0);
@@ -46,6 +279,9 @@ namespace hex::plugin::builtin {
         return false;
     }
 
+    TextHighlighter::TextHighlighter()  {}
+    TextHighlighter::~TextHighlighter()  {}
+
 // Returns a chain of identifiers like a.b.c or a::b::c
     bool TextHighlighter::getFullName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool preserveCurr) {
         Identifier *identifier = nullptr;
@@ -59,7 +295,7 @@ namespace hex::plugin::builtin {
 
     bool TextHighlighter::forwardIdentifierName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool preserveCurr ) {
         auto curr = m_curr;
-        Identifier *identifier = getValue<Identifier>(0);
+        auto *identifier = getValue<Identifier>(0);
         std::string current;
 
         if (identifier != nullptr) {
@@ -125,32 +361,32 @@ namespace hex::plugin::builtin {
             }
         }
         bool found = true;
-        for (auto name : vectorString) {
-            found = found || std::ranges::find(m_nameSpaces, name) != m_nameSpaces.end();
+        for (const auto &name : vectorString) {
+            found = found || std::ranges::find(m_requiredInputs.usedNamespaces, name) != m_requiredInputs.usedNamespaces.end();
         }
         if (found) {
             if (!shortName.empty())
-                identifierName = identifierName + "::" + shortName;
+                identifierName = fmt::format("{}::{}", identifierName, shortName);
             return true;
         }
 
         if (useDefinitions) {
             if (m_functionDefinitions.contains(identifierName) || m_UDTDefinitions.contains(identifierName)) {
                 if (!shortName.empty())
-                    identifierName = identifierName + "::" + shortName;
+                    identifierName = fmt::format("{}::{}", identifierName, shortName);
                 return true;
             }
             std::string nameSpace;
-            for (auto [name, definition]: m_UDTDefinitions) {
+            for (const auto &[name, definition]: m_UDTDefinitions) {
                 findNamespace(nameSpace, definition.tokenIndex);
 
                 if (!nameSpace.empty() && !identifierName.contains(nameSpace)) {
-                    qualifiedName = nameSpace + "::" + identifierName;
+                    qualifiedName = fmt::format("{}::{}", nameSpace, identifierName);
 
                     if (name == qualifiedName) {
                         identifierName = qualifiedName;
                         if (!shortName.empty())
-                            identifierName = identifierName + "::" + shortName;
+                            identifierName = fmt::format("{}::{}", identifierName, shortName);
                         return true;
                     }
                 }
@@ -158,7 +394,7 @@ namespace hex::plugin::builtin {
                 if (name == identifierName) {
                     identifierName = name;
                     if (!shortName.empty())
-                        identifierName = identifierName + "::" + shortName;
+                        identifierName = fmt::format("{}::{}", identifierName, shortName);
                     return true;
                 }
             }
@@ -170,10 +406,8 @@ namespace hex::plugin::builtin {
     }
 
 // Finds the token range of a function, namespace or UDT
-    bool TextHighlighter::getTokenRange(std::vector<Token> keywords,
-                                                           TextHighlighter::UnorderedBlocks &tokenRange,
-                                                           TextHighlighter::OrderedBlocks &tokenRangeInv,
-                                                           bool fullName, VariableScopes *blocks) {
+    bool TextHighlighter::getTokenRange(std::vector<Token> keywords, UnorderedBlocks &tokenRange,
+                                        OrderedBlocks &tokenRangeInv, bool fullName, VariableScopes *blocks) {
 
         bool addArgumentBlock = !fullName;
         std::vector<i32> tokenStack;
@@ -191,10 +425,10 @@ namespace hex::plugin::builtin {
             std::string nameSpace;
             findNamespace(nameSpace, getTokenId(m_curr->location));
             if (!nameSpace.empty())
-                name = nameSpace + "::" + name;
+                name = fmt::format("{}::{}", nameSpace, name);
         }
 
-        i32 tokenCount = m_tokens.size();
+        i32 tokenCount = m_requiredInputs.fullTokens.size();
         auto saveCurr = m_curr - 1;
         skipTemplate(200);
         next();
@@ -216,13 +450,13 @@ namespace hex::plugin::builtin {
             next(-1);
         i32 index1 = getTokenId(m_curr->location);
         bool result = true;
-        for (auto keyword: keywords)
+        for (const auto &keyword: keywords)
             result = result && !peek(keyword);
         if (result)
             return false;
         u32 nestedLevel = 0;
         next();
-        auto endToken = TokenIter(m_tokens.begin() + tokenCount, m_tokens.end());
+        auto endToken = TokenIter(m_requiredInputs.fullTokens.begin() + tokenCount, m_requiredInputs.fullTokens.end());
         while (endToken > m_curr) {
 
             if (sequence(tkn::Separator::LeftBrace)) {
@@ -251,6 +485,8 @@ namespace hex::plugin::builtin {
             else
                 next();
         }
+        if (m_curr > endToken || endToken == m_curr)
+            return false;
         i32 index2 = getTokenId(m_curr->location);
 
         if (index2 > index1 && index2 < tokenCount) {
@@ -272,22 +508,22 @@ namespace hex::plugin::builtin {
     }
 
 // Searches through tokens and loads all the ranges of one kind. First namespaces are searched.
-    void TextHighlighter::getAllTokenRanges(IdentifierType identifierTypeToSearch) {
+    void TextHighlighter::getTokenRanges(IdentifierType identifierTypeToSearch) {
 
-        if (m_tokens.empty())
+        if (m_requiredInputs.fullTokens.size() == 1)
             return;
 
         Identifier *identifier;
         IdentifierType identifierType;
-        m_startToken = TokenIter(m_tokens.begin(), m_tokens.end());
-        auto endToken = TokenIter(m_tokens.end(), m_tokens.end());
+        m_startToken = TokenIter(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
+        auto endToken = TokenIter(m_requiredInputs.fullTokens.end(), m_requiredInputs.fullTokens.end());
         for (m_curr = m_startToken; endToken > m_curr; next()) {
             auto curr = m_curr;
 
             if (peek(tkn::Literal::Identifier)) {
                 if (identifier = getValue<Identifier>(0); identifier != nullptr) {
                     identifierType = identifier->getType();
-                    std::string name = identifier->get();
+                    auto& name = identifier->get();
 
                     if (identifierType == identifierTypeToSearch) {
                         switch (identifierType) {
@@ -296,8 +532,8 @@ namespace hex::plugin::builtin {
                                     getTokenRange({tkn::Keyword::Function}, m_functionTokenRange, m_namespaceTokenRange, false, &m_functionBlocks);
                                 break;
                             case IdentifierType::NameSpace:
-                                if (std::ranges::find(m_nameSpaces, name) == m_nameSpaces.end())
-                                    m_nameSpaces.push_back(name);
+                                if (std::ranges::find(m_requiredInputs.usedNamespaces, name) == m_requiredInputs.usedNamespaces.end())
+                                    m_requiredInputs.usedNamespaces.push_back(name);
                                 getTokenRange({tkn::Keyword::Namespace}, m_functionTokenRange, m_namespaceTokenRange, true, nullptr);
                                 break;
                             case IdentifierType::UDT:
@@ -326,7 +562,7 @@ namespace hex::plugin::builtin {
         if (!isValid())
             return;
         i32 tokenId = getTokenId(m_curr->location);
-        auto tokenCount = m_tokens.size();
+        auto tokenCount = m_requiredInputs.fullTokens.size();
 
         if (tokenId == -1 || tokenId >= (i32) tokenCount-1)
             return;
@@ -367,8 +603,7 @@ namespace hex::plugin::builtin {
             }
         }
         m_curr = curr;
-        return;
-    }
+   }
 
     void TextHighlighter::skipTemplate(i32 maxSkipCount, bool forward) {
         Token delimiters[2];
@@ -458,7 +693,7 @@ namespace hex::plugin::builtin {
             } else if (separator == "::") {
                 next();
 
-                if (std::ranges::find(m_nameSpaces, currentName) != m_nameSpaces.end()) {
+                if (std::ranges::find(m_requiredInputs.usedNamespaces, currentName) != m_requiredInputs.usedNamespaces.end()) {
                     nameSpace += currentName + "::";
 
                     variableParentType = vectorString[index];
@@ -468,10 +703,10 @@ namespace hex::plugin::builtin {
                     variableParentType = currentName;
 
                     if (!nameSpace.empty() && !variableParentType.contains(nameSpace))
-                        variableParentType = nameSpace + variableParentType;
+                        variableParentType.insert(0, nameSpace);
 
                     else if (findNamespace(nameSpace) && !variableParentType.contains(nameSpace))
-                        variableParentType = nameSpace + "::" + variableParentType;
+                        variableParentType = fmt::format("{}::{}", nameSpace, variableParentType);
 
                     currentName = vectorString[index];
 
@@ -507,7 +742,7 @@ namespace hex::plugin::builtin {
         for (auto instance: m_instances[name]) {
 
             if (block.contains(instance)) {
-                if (auto identifier = std::get_if<Identifier>(&m_tokens[instance].value);
+                if (auto identifier = std::get_if<Identifier>(&m_requiredInputs.fullTokens.at(instance).value);
                     identifier != nullptr && identifier->getType() == IdentifierType::Unknown)
                     setIdentifierColor(instance, definition.idType);
             }
@@ -523,7 +758,7 @@ namespace hex::plugin::builtin {
         result.idType = IdentifierType::Unknown;
         std::string identifierName = optionalIdentifierName;
 
-        if (optionalIdentifierName == "") {
+        if (optionalIdentifierName.empty()) {
             std::vector<Identifier *> identifiers;
             getFullName(identifierName, identifiers);
         }
@@ -545,10 +780,9 @@ namespace hex::plugin::builtin {
             blocksIterBegin = m_functionBlocks[name].begin();
             blocksIterEnd = m_functionBlocks[name].end();
             --blocksIterEnd;
-
         } else if (m_globalVariables.contains(identifierName)) {
             definitions = m_globalVariables[identifierName];
-            tokenRange = Interval(0, m_tokens.size());
+            tokenRange = Interval(0, m_requiredInputs.fullTokens.size());
             blocks.insert(tokenRange);
             blocksIterBegin = blocks.begin();
             blocksIterEnd = blocks.end();
@@ -566,7 +800,7 @@ namespace hex::plugin::builtin {
                     break;
                 }
             }
-            for (auto definition : definitions) {
+            for (const auto &definition : definitions) {
                 for (auto block = blocksIterBegin; block != blocksIterEnd; block++) {
 
                     if (definition.tokenIndex > block->start && definition.tokenIndex < block->end) {
@@ -579,7 +813,7 @@ namespace hex::plugin::builtin {
                     }
                 }
             }
-            auto it = std::find_if(definitions.begin(), definitions.end(), [&](const Definition &definition) {
+            auto it = std::ranges::find_if(definitions, [&](const Definition &definition) {
                 return definition.tokenIndex > tokenRange.start && definition.tokenIndex < tokenRange.end;
             });
 
@@ -600,7 +834,7 @@ namespace hex::plugin::builtin {
                 }
             }
             for (auto block = blocksIterBegin; block != blocksIterEnd; block++) {
-                for (auto definition: definitions) {
+                for (const auto &definition: definitions) {
 
                     if (definition.tokenIndex > block->start && definition.tokenIndex < block->end) {
                         result = definition;
@@ -622,7 +856,7 @@ namespace hex::plugin::builtin {
     bool TextHighlighter::colorOperatorDotChain() {
         std::vector<Identifier *> identifiers;
         std::string variableName;
-        auto tokenCount = m_tokens.size();
+        auto tokenCount = m_requiredInputs.fullTokens.size();
 
         if (!getQualifiedName(variableName, identifiers, true))
             return false;
@@ -632,12 +866,12 @@ namespace hex::plugin::builtin {
 
 
         u32 currentLine = m_curr->location.line - 1;
-        u32 startingLineTokenIndex = m_firstTokenIdOfLine[currentLine];
+        u32 startingLineTokenIndex = m_firstTokenIdOfLine.at(currentLine);
 
         if (startingLineTokenIndex == 0xFFFFFFFFu || startingLineTokenIndex > tokenCount)
             return false;
 
-        if (auto *keyword = std::get_if<Keyword>(&m_tokens[startingLineTokenIndex].value);
+        if (auto *keyword = std::get_if<Keyword>(&m_requiredInputs.fullTokens.at(startingLineTokenIndex).value);
                 keyword != nullptr && *keyword == Keyword::Import) {
             while (index < vectorString.size()) {
                 auto tokenIndex = getTokenId(m_curr->location);
@@ -681,12 +915,12 @@ namespace hex::plugin::builtin {
                     next();
                 } else if (auto udtVars = m_UDTVariables[result.typeStr];udtVars.contains(vectorString[index-1])) {
                     auto saveCurr = m_curr;
-                    std::string templateName = "";
+                    std::string templateName;
                     auto instances = m_instances[variableParentType];
                     for (auto instance : instances) {
-                        if (auto *identifier = std::get_if<Identifier>(&m_tokens[instance].value); identifier != nullptr && identifier->getType() == IdentifierType::TemplateArgument) {
+                        if (auto *identifier = std::get_if<Identifier>(&m_requiredInputs.fullTokens.at(instance).value); identifier != nullptr && identifier->getType() == IdentifierType::TemplateArgument) {
                             auto tokenRange = m_UDTTokenRange[result.typeStr];
-                            auto tokenIndex = m_firstTokenIdOfLine[getLocation(parentDefinition.tokenIndex).line - 1];
+                            auto tokenIndex = m_firstTokenIdOfLine.at(getLocation(parentDefinition.tokenIndex).line - 1);
                             i32 argNumber = getArgumentNumber(tokenRange.start, instance);
                             getTokenIdForArgument(tokenIndex, argNumber, tkn::Operator::BoolLessThan);
                             if (auto *identifier2 = std::get_if<Identifier>(&m_curr->value); identifier2 != nullptr) {
@@ -704,12 +938,12 @@ namespace hex::plugin::builtin {
                         next();
                     } else{
                         if (m_typeDefMap.contains(variableParentType)) {
-                            std::string typeName = "";
+                            std::string typeName;
                             instances = m_instances[variableParentType];
                             for (auto instance: instances) {
-                                if (auto *identifier = std::get_if<Identifier>(&m_tokens[instance].value);
+                                if (auto *identifier = std::get_if<Identifier>(&m_requiredInputs.fullTokens.at(instance).value);
                                         identifier != nullptr && identifier->getType() == IdentifierType::Typedef) {
-                                    if (auto *identifier2 = std::get_if<Identifier>(&m_tokens[instance + 2].value);
+                                    if (auto *identifier2 = std::get_if<Identifier>(&m_requiredInputs.fullTokens.at(instance + 2).value);
                                             identifier2 != nullptr) {
                                         typeName = identifier2->get();
                                         break;
@@ -740,12 +974,40 @@ namespace hex::plugin::builtin {
     }
 
     bool TextHighlighter::colorSeparatorScopeChain() {
+        if (!colorRealSeparatorScopeChain())
+            return colorImplicitSeparatorScopeChain();
+        return true;
+    }
+
+    bool TextHighlighter::colorImplicitSeparatorScopeChain() {
+        auto identifier = getValue<Identifier>(0);
+        if (identifier == nullptr)
+            return false;
+        std::string identifierName = identifier->get();
+        std::string nameSpace;
+        if (!findNamespace(nameSpace))
+            return false;
+        std::string qualifiedName = fmt::format("{}::{}", nameSpace, identifierName);
+        if (m_UDTDefinitions.contains(qualifiedName)) {
+            setIdentifierColor(-1, IdentifierType::UDT);
+            return true;
+        } else if (m_functionDefinitions.contains(qualifiedName)) {
+            setIdentifierColor(-1, IdentifierType::Function);
+            return true;
+        } else
+            return false;
+
+    }
+
+    bool TextHighlighter::colorRealSeparatorScopeChain() {
         std::vector<Identifier *> identifiers;
         std::string identifierName;
 
-        if (!getQualifiedName(identifierName, identifiers, true))
+        if (!getQualifiedName(identifierName, identifiers, true)) {
             return false;
-        auto tokenCount = m_tokens.size();
+        }
+
+        auto tokenCount = m_requiredInputs.fullTokens.size();
         auto vectorString = wolv::util::splitString(identifierName, "::");
         auto vectorStringCount = vectorString.size();
         if (identifiers.size() != vectorStringCount)
@@ -757,21 +1019,21 @@ namespace hex::plugin::builtin {
             auto name = vectorString[i];
             auto identifier = identifiers[i];
 
-            if (std::ranges::find(m_nameSpaces, name) != m_nameSpaces.end()) {
+            if (std::ranges::find(m_requiredInputs.usedNamespaces, name) != m_requiredInputs.usedNamespaces.end()) {
                 setIdentifierColor(-1, IdentifierType::NameSpace);
                 nameSpace += name + "::";
             } else if (m_UDTDefinitions.contains(nameSpace+name)) {
-                 name = nameSpace + name;
+                name.insert(0, nameSpace);
                 auto udtDefinition = m_UDTDefinitions[name];
                 auto definitionIndex = udtDefinition.tokenIndex-1;
-                if (auto *keyword = std::get_if<Keyword>(&m_tokens[definitionIndex].value); keyword != nullptr) {
+                if (auto *keyword = std::get_if<Keyword>(&m_requiredInputs.fullTokens.at(definitionIndex).value); keyword != nullptr) {
                     setIdentifierColor(-1, IdentifierType::UDT);
                     if (*keyword == Keyword::Enum) {
                         next();
                         if (!sequence(tkn::Operator::ScopeResolution) || vectorStringCount != i+2 ||
                             !m_UDTVariables.contains(name))
                             return false;
-                        auto variableName = vectorString[i+1];
+                        const auto& variableName = vectorString[i+1];
                         if (!m_UDTVariables[name].contains(variableName))
                             return false;
                         auto variableDefinition = m_UDTVariables[name][variableName][0];
@@ -800,7 +1062,7 @@ namespace hex::plugin::builtin {
         }
         m_curr = curr;
 
-        if (std::ranges::find(m_nameSpaces, identifierName) != m_nameSpaces.end()) {
+        if (std::ranges::find(m_requiredInputs.usedNamespaces, identifierName) != m_requiredInputs.usedNamespaces.end()) {
             setIdentifierColor(-1, IdentifierType::NameSpace);
             return true;
         }
@@ -839,7 +1101,7 @@ namespace hex::plugin::builtin {
     bool TextHighlighter::findScope(std::string &name, const UnorderedBlocks &map, i32 optionalTokenId) {
         auto tokenId = optionalTokenId ==-1 ? getTokenId(m_curr->location) : optionalTokenId;
 
-        for (auto [scopeName, range]: map) {
+        for (const auto &[scopeName, range]: map) {
 
             if (range.contains(tokenId)) {
                 name = scopeName;
@@ -858,26 +1120,24 @@ namespace hex::plugin::builtin {
 
             if (tokenId > interval.start && tokenId < interval.end) {
 
-                if (nameSpace == "")
+                if (nameSpace.empty())
                     nameSpace = name;
                 else
-                    nameSpace = name + "::" + nameSpace;
+                    nameSpace = fmt::format("{}::{}", name,  nameSpace);
             }
         }
 
-        if (nameSpace != "")
-            return true;
-        return false;
+        return !nameSpace.empty();
     }
 
-//The context is the name of the function or UDT that the variable is in.
+//The context is the name of the function or UDT that the variable is in aka its parent.
     std::string TextHighlighter::findIdentifierTypeStr(const std::string &identifierName, std::string context) {
         Definition result;
         findIdentifierDefinition(result, identifierName, context);
         return result.typeStr;
     }
 
-    //The context is the name of the function or UDT that the variable is in.
+
      TextHighlighter::IdentifierType TextHighlighter::findIdentifierType(const std::string &identifierName, std::string context) {
         Definition result;
         findIdentifierDefinition(result, identifierName, context);
@@ -888,9 +1148,6 @@ namespace hex::plugin::builtin {
     void TextHighlighter::linkAttribute() {
         auto curr = m_curr;
         bool qualifiedAttribute = false;
-        using Types = std::map<std::string, pl::hlp::safe_shared_ptr<pl::core::ast::ASTNodeTypeDecl>>;
-        auto parser = patternLanguage->get()->getInternals().parser.get();
-        Types types = parser->getTypes();
 
         while (sequence(tkn::Literal::Identifier, tkn::Operator::ScopeResolution))
             qualifiedAttribute = true;
@@ -913,24 +1170,29 @@ namespace hex::plugin::builtin {
 
         if (sequence(tkn::Separator::LeftParenthesis, tkn::Literal::String)) {
             functionName = getValue<Literal>(-1)->toString(false);
-
-            if (!functionName.contains("::")) {
-                std::string namespaceName;
-
-                if (findNamespace(namespaceName))
-                    functionName = namespaceName + "::" + functionName;
-            } else {
-
-                auto vectorString = wolv::util::splitString(functionName, "::");
-                vectorString.pop_back();
-                for (auto nameSpace: vectorString) {
-
-                    if (std::ranges::find(m_nameSpaces, nameSpace) == m_nameSpaces.end())
-                        m_nameSpaces.push_back(nameSpace);
-                }
-            }
+        } else if (sequence(tkn::Separator::LeftParenthesis, tkn::Literal::Identifier)) {
+            next(-1);
+            std::vector<Identifier *> identifiers;
+            if (!getFullName(functionName, identifiers, false))
+                functionName = getValue<Identifier>(0)->get();
         } else
             return;
+
+        if (!functionName.contains("::")) {
+            std::string namespaceName;
+
+            if (findNamespace(namespaceName))
+                functionName = fmt::format("{}::{}", namespaceName, functionName);
+        } else {
+
+            auto vectorString = wolv::util::splitString(functionName, "::");
+            vectorString.pop_back();
+            for (const auto &nameSpace: vectorString) {
+
+                if (std::ranges::find(m_requiredInputs.usedNamespaces, nameSpace) == m_requiredInputs.usedNamespaces.end())
+                    m_requiredInputs.usedNamespaces.push_back(nameSpace);
+            }
+        }
 
         u32 line = m_curr->location.line;
         i32 tokenIndex;
@@ -940,7 +1202,7 @@ namespace hex::plugin::builtin {
             if (line = previousLine(line); line > m_firstTokenIdOfLine.size()-1)
                 return;
 
-            if (tokenIndex = m_firstTokenIdOfLine[line]; !isTokenIdValid(tokenIndex))
+            if (tokenIndex = m_firstTokenIdOfLine.at(line); !isTokenIdValid(tokenIndex))
                 return;
 
             m_curr = m_startToken;
@@ -967,9 +1229,9 @@ namespace hex::plugin::builtin {
                 std::string namespaceName;
 
                 if (findNamespace(namespaceName))
-                    UDTName = namespaceName + "::" + UDTName;
+                    UDTName = fmt::format("{}::{}", namespaceName, UDTName);
             }
-            if (types.contains(UDTName))
+            if (m_requiredInputs.definedTypes.contains(UDTName))
                 m_attributeFunctionArgumentType[functionName] = UDTName;
 
         } else if (sequence(tkn::ValueType::Any)) {
@@ -1004,7 +1266,7 @@ namespace hex::plugin::builtin {
         identifiers.erase(identifiers.begin());
 
         while (currentName == "Parent" && !nameParts.empty()) {
-            for (auto parentType: parentTypes)
+            for (const auto &parentType: parentTypes)
                 findParentTypes(grandpaTypes, parentType);
 
             currentName = nameParts[0];
@@ -1040,9 +1302,9 @@ namespace hex::plugin::builtin {
 
         bool found = false;
         if (!isFunction) {
-            for (auto [name, variables]: m_UDTVariables) {
-                for (auto [variableName, definitions]: variables) {
-                    for (auto definition: definitions) {
+            for (const auto &[name, variables]: m_UDTVariables) {
+                for (const auto &[variableName, definitions]: variables) {
+                    for (const auto &definition: definitions) {
 
                         if (definition.typeStr == UDTName) {
 
@@ -1056,9 +1318,9 @@ namespace hex::plugin::builtin {
             }
         } else {
             auto curr = m_curr;
-            for (auto [name, range] : m_UDTTokenRange) {
-                auto startToken = TokenIter(m_tokens.begin()+range.start,m_tokens.begin()+range.end);
-                auto endToken = TokenIter(m_tokens.begin()+range.end,m_tokens.end());
+            for (const auto &[name, range] : m_UDTTokenRange) {
+                auto startToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.start,m_requiredInputs.fullTokens.begin()+range.end);
+                auto endToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.end,m_requiredInputs.fullTokens.end());
 
                 for ( m_curr = startToken; endToken > m_curr; next()) {
                     if (auto *identifier = std::get_if<Identifier>(&m_curr->value); identifier != nullptr) {
@@ -1091,7 +1353,7 @@ namespace hex::plugin::builtin {
 
         if (m_UDTVariables.contains(UDTName) && m_UDTVariables[UDTName].contains(currentName)) {
             auto definitions = m_UDTVariables[UDTName][currentName];
-            for (auto definition: definitions) {
+            for (const auto &definition: definitions) {
                 UDTName = definition.typeStr;
 
                 if (count == 1) {
@@ -1153,7 +1415,7 @@ namespace hex::plugin::builtin {
             return std::nullopt;
         }
 
-        for (auto parentType: parentTypes) {
+        for (const auto &parentType: parentTypes) {
             m_curr = curr;
             while (peek(tkn::Keyword::Parent))
                 next(2);
@@ -1174,20 +1436,6 @@ namespace hex::plugin::builtin {
         m_curr = curr;
         return result;
     }
-
-    const TextHighlighter::TokenTypeColor TextHighlighter::m_tokenTypeColor = {
-            {Token::Type::Keyword,      ui::TextEditor::PaletteIndex::Keyword},
-            {Token::Type::ValueType,    ui::TextEditor::PaletteIndex::BuiltInType},
-            {Token::Type::Operator,     ui::TextEditor::PaletteIndex::Operator},
-            {Token::Type::Separator,    ui::TextEditor::PaletteIndex::Separator},
-            {Token::Type::String,       ui::TextEditor::PaletteIndex::StringLiteral},
-            {Token::Type::Directive,    ui::TextEditor::PaletteIndex::Directive},
-            {Token::Type::Comment,      ui::TextEditor::PaletteIndex::Comment},
-            {Token::Type::Integer,      ui::TextEditor::PaletteIndex::NumericLiteral},
-            {Token::Type::Identifier,   ui::TextEditor::PaletteIndex::Identifier},
-            {Token::Type::DocComment,   ui::TextEditor::PaletteIndex::DocComment}
-
-    };
 
     const TextHighlighter::IdentifierTypeColor TextHighlighter::m_identifierTypeColor = {
             {Identifier::IdentifierType::Macro,                  ui::TextEditor::PaletteIndex::PreprocIdentifier},
@@ -1211,19 +1459,6 @@ namespace hex::plugin::builtin {
             {Identifier::IdentifierType::GlobalVariable,         ui::TextEditor::PaletteIndex::GlobalVariable},
     };
 
-// Second paletteIndex called from processLineTokens to process literals
-    ui::TextEditor::PaletteIndex TextHighlighter::getPaletteIndex(Literal *literal) {
-
-        if (literal->isFloatingPoint() || literal->isSigned() || literal->isUnsigned())
-            return ui::TextEditor::PaletteIndex::NumericLiteral;
-
-        else if (literal->isCharacter() || literal->isBoolean()) return ui::TextEditor::PaletteIndex::CharLiteral;
-
-        else if (literal->isString()) return ui::TextEditor::PaletteIndex::StringLiteral;
-
-        else return ui::TextEditor::PaletteIndex::Default;
-    }
-
 // Render the compilation errors using squiggly lines
     void TextHighlighter::renderErrors() {
         const auto processMessage = [](const auto &message) {
@@ -1241,13 +1476,13 @@ namespace hex::plugin::builtin {
         };
         ui::TextEditor::ErrorMarkers errorMarkers;
 
-        if (!m_compileErrors.empty()) {
-            for (const auto &error: m_compileErrors) {
+        if (!m_requiredInputs.compileErrors.empty()) {
+            for (const auto &error: m_requiredInputs.compileErrors) {
 
                 if (isLocationValid(error.getLocation())) {
                     auto key = ui::TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
 
-                    if (!errorMarkers.contains(key) || errorMarkers[key].first < error.getLocation().length)
+                    if (!errorMarkers.contains(key) || errorMarkers[key].first < (i32) error.getLocation().length)
                         errorMarkers[key] = std::make_pair(error.getLocation().length, processMessage(error.getMessage()));
                 }
             }
@@ -1263,101 +1498,130 @@ namespace hex::plugin::builtin {
 // od every instance of the variable name in the code.
     void TextHighlighter::setInitialColors() {
 
-        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_tokens.begin(), m_tokens.end());
-        auto endToken = TokenIter(m_tokens.end(), m_tokens.end());
+        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
+        auto endToken = TokenIter(m_requiredInputs.fullTokens.end(), m_requiredInputs.fullTokens.end());
         for (m_curr = m_startToken; endToken > m_curr; next()) {
 
-                if (peek(tkn::Literal::Identifier)) {
+            if (peek(tkn::Separator::EndOfProgram))
+                return;
 
-                    if (auto identifier = getValue<Identifier>(0); identifier != nullptr) {
 
-                        if (auto identifierType = identifier->getType(); identifierType != IdentifierType::Unknown && identifierType != IdentifierType::MemberUnknown &&
-                                                                         identifierType != IdentifierType::FunctionUnknown && identifierType != IdentifierType::ScopeResolutionUnknown) {
+            if (auto identifier = getValue<Identifier>(0); identifier != nullptr) {
 
-                            setIdentifierColor(-1, identifierType);
-                        }
-                    }
-            } else if (peek(tkn::Separator::EndOfProgram))
-            return;
+                if (auto identifierType = identifier->getType(); identifierType != IdentifierType::Unknown && identifierType != IdentifierType::MemberUnknown &&identifierType != IdentifierType::FunctionUnknown && identifierType != IdentifierType::ScopeResolutionUnknown)
+                    setIdentifierColor(-1, identifierType);
+            }
         }
     }
 
     void TextHighlighter::loadInstances() {
         std::map<std::string, std::vector<i32>> instances;
-        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_tokens.begin(), m_tokens.end());
-        auto endToken = TokenIter(m_tokens.end(), m_tokens.end());
+        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
+        auto endToken = TokenIter(m_requiredInputs.fullTokens.end(), m_requiredInputs.fullTokens.end());
         for (m_curr = m_startToken; endToken > m_curr; next()) {
 
-                if (peek(tkn::Literal::Identifier)) {
-                    std::string name;
+            if (peek(tkn::Literal::Identifier)) {
+                std::string name;
 
-                    if (auto identifier = getValue<Identifier>(0); identifier != nullptr) {
+                if (auto identifier = getValue<Identifier>(0); identifier != nullptr) {
 
-                        if (auto identifierType = identifier->getType(); identifierType != IdentifierType::Unknown && identifierType != IdentifierType::MemberUnknown &&
+                    if (auto identifierType = identifier->getType(); identifierType != IdentifierType::Unknown && identifierType != IdentifierType::MemberUnknown &&
                                                                          identifierType != IdentifierType::FunctionUnknown && identifierType != IdentifierType::ScopeResolutionUnknown) {
-                            name = identifier->get();
+                        name = identifier->get();
 
-                            if (identifierType == IdentifierType::Typedef) {
-                                auto curr = m_curr;
-                                next();
-                                std::string typeName = "";
-                                if (sequence(tkn::Operator::Assign, tkn::Literal::Identifier)) {
-                                    auto identifier2 = getValue<Identifier>(-1);
+                        if (identifierType == IdentifierType::Typedef) {
+                            auto curr = m_curr;
+                            //std::string typeName = "";
+                            skipTemplate(200, true);
+                            next();
+                            if (sequence(tkn::Operator::Assign, tkn::Literal::Identifier)) {
+                                next(-1);
+                                i32 fullNameTokenId = getTokenId(m_curr->location);
+                                std::vector<Identifier *> identifiers;
+                                std::string typeName;
+                                if (!getFullName(typeName, identifiers, false)) {
+                                    auto identifier2 = getValue<Identifier>(0);
                                     if (identifier2 != nullptr) {
                                         typeName = identifier2->get();
-                                        if (!m_typeDefMap.contains(name) && !typeName.empty()) {
-                                            m_typeDefMap[name] = typeName;
-                                            m_typeDefInvMap[typeName] = name;
-                                        }
+                                    }
+                                } else {
+                                    auto count = std::count(typeName.begin(), typeName.end(), ':') >> 1;
+                                    for (auto i = 0; i < count; i++) {
+                                        setIdentifierColor(fullNameTokenId, IdentifierType::NameSpace);
+                                        fullNameTokenId += 2;
                                     }
                                 }
-
-                                m_curr = curr;
-                            }
-                        } else {
-                            name = identifier->get();
-                            auto curr = m_curr;
-                            auto tokenIndex = getTokenId(m_curr->location);
-                            skipArray(200, true);
-                            next();
-                            bool chainStarted = false;
-                            while (sequence(tkn::Operator::ScopeResolution, tkn::Literal::Identifier)) {
-
-                                if (identifier = getValue<Identifier>(-1); identifier != nullptr)
-                                    name += "::" + identifier->get();
-
-                                if (!chainStarted) {
-                                    chainStarted = true;
-                                    m_scopeChains.insert(tokenIndex);
+                                setIdentifierColor(fullNameTokenId, IdentifierType::UDT);
+                                if (!m_typeDefMap.contains(name) && !typeName.empty()) {
+                                    m_typeDefMap[name] = typeName;
+                                    m_typeDefInvMap[typeName] = name;
                                 }
-                                curr = m_curr;
-                            }
-                            while (sequence(tkn::Separator::Dot, tkn::Literal::Identifier)) {
-
-                                if (identifier = getValue<Identifier>(-1); identifier != nullptr)
-                                    name += "." + identifier->get();
-
-                                if (!chainStarted) {
-                                    chainStarted = true;
-                                    m_memberChains.insert(tokenIndex);
+                                auto start = m_curr;
+                                skipTemplate(200, true);
+                                auto end = m_curr;
+                                for (m_curr = start; end > m_curr; next()) {
+                                    if (auto identifier2 = getValue<Identifier>(0); identifier2 != nullptr) {
+                                        auto tokenId = getTokenId(m_curr->location);
+                                        setIdentifierColor(tokenId, IdentifierType::TemplateArgument);
+                                    }
                                 }
-                                skipArray(200, true);
-                                curr = m_curr;
                             }
                             m_curr = curr;
                         }
+                    } else {
+                        name = identifier->get();
+                        auto curr = m_curr;
+                        auto tokenIndex = getTokenId(m_curr->location);
+                        skipArray(200, true);
+                        next();
+                        bool chainStarted = false;
+                        while (sequence(tkn::Operator::ScopeResolution, tkn::Literal::Identifier)) {
+
+                            if (identifier = getValue<Identifier>(-1); identifier != nullptr)
+                                name += "::" + identifier->get();
+                            std::string nameSpace;
+                            if (!chainStarted) {
+                                chainStarted = true;
+                                m_scopeChains.insert(tokenIndex);
+                            } else if (findNamespace(nameSpace) && !nameSpace.empty()) {
+                                m_scopeChains.insert(tokenIndex);
+                            }
+
+
+                            curr = m_curr;
+                        }
+                        while (sequence(tkn::Separator::Dot, tkn::Literal::Identifier)) {
+
+                            if (identifier = getValue<Identifier>(-1); identifier != nullptr)
+                                name += "." + identifier->get();
+
+                            if (!chainStarted) {
+                                chainStarted = true;
+                                m_memberChains.insert(tokenIndex);
+                            }
+                            skipArray(200, true);
+                            curr = m_curr;
+                        }
+                        if (peek(tkn::Literal::Identifier)) {
+                            std::string nameScape;
+                            if (findNamespace(nameScape) && !nameScape.empty() && std::ranges::find(m_UDTs,(nameScape + "::" + name)) != m_UDTs.end()) {
+                                m_scopeChains.insert(tokenIndex);
+                            }
+                        }
+                        m_curr = curr;
                     }
-                    auto id = getTokenId(m_curr->location);
+                }
+                auto id = getTokenId(m_curr->location);
 
-                    if (instances.contains(name)) {
-                        auto &nameInstances = instances[name];
+                if (instances.contains(name)) {
+                    auto &nameInstances = instances[name];
 
-                        if (std::ranges::find(nameInstances, id) == nameInstances.end())
-                            nameInstances.push_back(id);
-                    } else
-                        instances[name].push_back(id);
-                } else if (peek(tkn::Separator::EndOfProgram))
-                    break;
+                    if (std::ranges::find(nameInstances, id) == nameInstances.end())
+                        nameInstances.push_back(id);
+                } else
+                    instances[name].push_back(id);
+            } else if (peek(tkn::Separator::EndOfProgram))
+                break;
         }
         m_instances = std::move(instances);
     }
@@ -1365,21 +1629,30 @@ namespace hex::plugin::builtin {
 // Get the location of a given token index
     pl::core::Location TextHighlighter::getLocation(i32 tokenId) {
 
-        if (tokenId >= (i32) m_tokens.size())
+        if (tokenId >= (i32) m_requiredInputs.fullTokens.size())
             return Location::Empty();
-        return m_tokens[tokenId].location;
+        return m_requiredInputs.fullTokens.at(tokenId).location;
     }
 
 // Get the token index for a given location.
     i32 TextHighlighter::getTokenId(pl::core::Location location) {
 
+        if (location == m_requiredInputs.fullTokens.at(0).location)
+            return 0;
+        if (location == m_requiredInputs.fullTokens.back().location)
+            return (i32) m_requiredInputs.fullTokens.size() - 1;
         if (!isLocationValid(location))
             return -1;
         auto line1 = location.line - 1;
-        auto line2 = nextLine(line1);
-        auto tokenCount = m_tokens.size();
-        i32 tokenStart = m_firstTokenIdOfLine[line1];
-        i32 tokenEnd = m_firstTokenIdOfLine[line2] - 1;
+        auto tokenCount = m_requiredInputs.fullTokens.size();
+        i32 tokenStart = m_firstTokenIdOfLine.at(line1);
+        i32 tokenEnd = -1;
+        if (line1 == m_firstTokenIdOfLine.size() -1) {
+             tokenEnd = tokenCount - 1;
+        } else {
+            auto line2 = nextLine(line1);
+            tokenEnd = m_firstTokenIdOfLine.at(line2) - 1;
+        }
 
         if (tokenEnd >= (i32) tokenCount)
             tokenEnd = tokenCount - 1;
@@ -1389,65 +1662,34 @@ namespace hex::plugin::builtin {
 
         for (i32 i = tokenStart; i <= tokenEnd; i++) {
 
-            if (m_tokens[i].location.column >= location.column)
+            if (m_requiredInputs.fullTokens.at(i).location.column >= location.column)
                 return i;
         }
         return -1;
     }
 
     void TextHighlighter::setIdentifierColor(i32 tokenId, const IdentifierType &type) {
-        Token *token;
+        const Token *constToken;
 
-        if (tokenId == -1)
-            token = const_cast<Token *>(&m_curr[0]);
-        else
-            token = const_cast<Token *>(&m_tokens[tokenId]);
+        if (tokenId == -1) {
+            constToken = &m_curr[0];
+            tokenId = getTokenId(m_curr->location);
+        } else
+            constToken = &m_requiredInputs.fullTokens.at(tokenId);
 
-        if (token->type == Token::Type::Identifier && (!m_tokenColors.contains(token) || m_tokenColors.at(token) == ui::TextEditor::PaletteIndex::Default || m_tokenColors.at(token) == ui::TextEditor::PaletteIndex::UnkIdentifier))
-            m_tokenColors[token]  = m_identifierTypeColor.at(type);
-        else if (!m_tokenColors.contains(token))
-            m_tokenColors[token] = m_tokenTypeColor.at(token->type);
+        auto token = const_cast<Token *>(constToken);
+
+        if (token->type == Token::Type::Identifier && (!m_tokenColors.contains(tokenId) || m_tokenColors.at(tokenId) == ui::TextEditor::PaletteIndex::Default || m_tokenColors.at(tokenId) == ui::TextEditor::PaletteIndex::UnkIdentifier))
+            m_tokenColors[tokenId]  = m_identifierTypeColor.at(type);
+
     }
 
     void TextHighlighter::setColor(i32 tokenId, const IdentifierType &type) {
-        Token *token;
 
         if (tokenId == -1)
-            token = const_cast<Token *>(&m_curr[0]);
-        else
-            token = const_cast<Token *>(&m_tokens[tokenId]);
+            tokenId = getTokenId(m_curr->location);
 
-        if (token->type == Token::Type::Integer) {
-            auto literal = getValue<Literal>(0);
-
-            if (literal != nullptr && !m_tokenColors.contains(token))
-                m_tokenColors[token] = getPaletteIndex(literal);
-
-
-        } else if (token->type == Token::Type::DocComment) {
-            auto docComment = getValue<DocComment>(0);
-
-            if (docComment != nullptr && !m_tokenColors.contains(token)) {
-
-                if (docComment->singleLine)
-                    m_tokenColors[token] = ui::TextEditor::PaletteIndex::DocComment;
-                else if (docComment->global)
-                    m_tokenColors[token] = ui::TextEditor::PaletteIndex::GlobalDocComment;
-                else
-                    m_tokenColors[token] = ui::TextEditor::PaletteIndex::DocBlockComment;
-            }
-        } else if (token->type == Token::Type::Comment) {
-            auto comment = getValue<Token::Comment>(0);
-
-            if (comment != nullptr && !m_tokenColors.contains(token)) {
-
-                if (comment->singleLine)
-                    m_tokenColors[token] = ui::TextEditor::PaletteIndex::Comment;
-                else
-                    m_tokenColors[token] = ui::TextEditor::PaletteIndex::BlockComment;
-            }
-        } else
-            setIdentifierColor(tokenId, type);
+        setIdentifierColor(tokenId, type);
     }
 
     void TextHighlighter::colorRemainingIdentifierTokens() {
@@ -1456,8 +1698,8 @@ namespace hex::plugin::builtin {
             taggedIdentifiers.push_back(index);
         }
         m_taggedIdentifiers.clear();
-        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_tokens.begin(), m_tokens.end());
-        auto endToken = TokenIter(m_tokens.end(), m_tokens.end());
+        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
+        auto endToken = TokenIter(m_requiredInputs.fullTokens.end(), m_requiredInputs.fullTokens.end());
         m_curr = m_startToken;
 
         while (endToken > m_curr) {
@@ -1470,15 +1712,13 @@ namespace hex::plugin::builtin {
                 taggedIdentifiers.pop_back();
             }
 
-            Token *token = const_cast<Token *>(&m_curr[0]);
-
             if (sequence(tkn::Keyword::Import, tkn::Literal::Identifier)) {
                 next(-1);
                 do {
                     if (auto identifier = const_cast<Identifier *>(getValue<Token::Identifier>(0)); identifier != nullptr) {
                         setIdentifierColor(-1, IdentifierType::NameSpace);
-                        if (std::ranges::find(m_nameSpaces, identifier->get()) == m_nameSpaces.end()) {
-                            m_nameSpaces.push_back(identifier->get());
+                        if (std::ranges::find(m_requiredInputs.usedNamespaces, identifier->get()) == m_requiredInputs.usedNamespaces.end()) {
+                            m_requiredInputs.usedNamespaces.push_back(identifier->get());
                         }
                     }
                 } while (sequence(tkn::Literal::Identifier,tkn::Separator::Dot));
@@ -1487,8 +1727,8 @@ namespace hex::plugin::builtin {
                     next(-1);
                     if (auto identifier = const_cast<Identifier *>(getValue<Token::Identifier>(0)); identifier != nullptr) {
                         setIdentifierColor(-1, IdentifierType::NameSpace);
-                        if (std::ranges::find(m_nameSpaces, identifier->get()) == m_nameSpaces.end()) {
-                            m_nameSpaces.push_back(identifier->get());
+                        if (std::ranges::find(m_requiredInputs.usedNamespaces, identifier->get()) == m_requiredInputs.usedNamespaces.end()) {
+                            m_requiredInputs.usedNamespaces.push_back(identifier->get());
                         }
                     }
                 }
@@ -1503,12 +1743,12 @@ namespace hex::plugin::builtin {
                 identifierType = identifier->getType();
                 std::string variableName = identifier->get();
 
-                if (m_tokenColors.contains(token) && (m_tokenColors.at(token) != ui::TextEditor::PaletteIndex::Default && identifierType != IdentifierType::Unknown)) {
+                if (m_tokenColors.contains(tokenId) && (m_tokenColors.at(tokenId) != ui::TextEditor::PaletteIndex::Default && identifierType != IdentifierType::Unknown)) {
                     next();
                     continue;
                 }
                 Definition definition;
-
+                std::string nameSpace;
                 if (peek(tkn::Keyword::Parent, -2)) {
                     auto save = m_curr;
                     next(-2);
@@ -1527,13 +1767,15 @@ namespace hex::plugin::builtin {
                     m_curr = save;
                     next();
                     continue;
-                } else if (peek(tkn::Operator::ScopeResolution, 1)) {
-                    if (std::ranges::find(m_nameSpaces, variableName) != m_nameSpaces.end()) {
+                }
+                if (peek(tkn::Operator::ScopeResolution, 1)) {
+                    if (std::ranges::find(m_requiredInputs.usedNamespaces, variableName) != m_requiredInputs.usedNamespaces.end()) {
                         setIdentifierColor(-1, IdentifierType::NameSpace);
                         next();
                         continue;
                     }
-                } else if (peek(tkn::Operator::ScopeResolution, -1)) {
+                }
+                if (peek(tkn::Operator::ScopeResolution, -1)) {
                     auto save = m_curr;
                     next(-2);
                     if (auto parentIdentifier = const_cast<Identifier *>(getValue<Token::Identifier>(0)); parentIdentifier != nullptr) {
@@ -1547,43 +1789,57 @@ namespace hex::plugin::builtin {
                     m_curr = save;
                     next();
                     continue;
-                } else if (findIdentifierDefinition(definition)) {
+                }
+                if (findIdentifierDefinition(definition)) {
                     identifierType = definition.idType;
                     setIdentifierColor(-1, identifierType);
                     next();
                     continue;
-                } else if (std::ranges::find(m_UDTs, variableName) != m_UDTs.end()) {
+                }
+                if (findNamespace(nameSpace,tokenId)) {
+                    auto fullName = nameSpace + "::" + variableName;
+                    auto typeName = findIdentifierType(fullName, "");
+                    if (typeName != IdentifierType::Unknown) {
+                        setIdentifierColor(-1, typeName);
+                        next();
+                        continue;
+                    }
+                }
+                if (std::ranges::find(m_UDTs, variableName) != m_UDTs.end()) {
                     if (m_typeDefMap.contains(variableName))
                         setIdentifierColor(-1, IdentifierType::Typedef);
                     else
                         setIdentifierColor(-1, IdentifierType::UDT);
                     next();
                     continue;
-                } else if (peek(tkn::Keyword::From, -1)) {
+                }
+                if (peek(tkn::Keyword::From, -1)) {
                     setIdentifierColor(-1, IdentifierType::GlobalVariable);
                     next();
                     continue;
-                } else {
-                    setIdentifierColor(-1, IdentifierType::Unknown);
-                    next();
-                    continue;
                 }
+                setIdentifierColor(-1, IdentifierType::Unknown);
+                next();
             }
             next();
         }
     }
 
     void TextHighlighter::setRequestedIdentifierColors() {
+        if (m_tokenColors.empty() || m_firstTokenIdOfLine.empty() || m_requiredInputs.fullTokens.size() < 2)
+            return;
         auto topLine = 0;
-        auto bottomLine = m_lines.size();
+        while (m_firstTokenIdOfLine.at(topLine) == -1)
+            topLine++;
+        auto bottomLine = previousLine(m_firstTokenIdOfLine.size());
         for (u32 line = topLine; line < bottomLine; line = nextLine(line)) {
             if (m_lines[line].empty())
                 continue;
-            std::string lineOfColors = std::string(m_lines[line].size(), 0);
-            for (auto tokenIndex = m_firstTokenIdOfLine[line]; tokenIndex < m_firstTokenIdOfLine[nextLine(line)]; tokenIndex++) {
-                Token *token = const_cast<Token *>(&m_tokens[tokenIndex]);
-                if (m_tokenColors.contains(token) && token->type == Token::Type::Identifier) {
-                    u8 color = (u8) m_tokenColors.at(token);
+            std::string &lineOfColors = m_requiredInputs.linesOfColors[line];//std::string(m_lines[line].size(), 0);
+            for (auto tokenIndex = m_firstTokenIdOfLine.at(line); tokenIndex < m_firstTokenIdOfLine.at(nextLine(line)); tokenIndex++) {
+                Token *token = const_cast<Token *>(&m_requiredInputs.fullTokens.at(tokenIndex));
+                if (m_tokenColors.contains(tokenIndex) && token->type == Token::Type::Identifier) {
+                    u8 color = (u8) m_tokenColors.at(tokenIndex);
                     u32 tokenLength = token->location.length;
                     u32 tokenOffset = token->location.column - 1;
                     if (token->location.line != line + 1)
@@ -1606,17 +1862,18 @@ namespace hex::plugin::builtin {
         if (depth > m_inheritances.size())
             return;
         if (m_inheritances.contains(name)) {
-            for (auto inheritance: m_inheritances[name]) {
+            for (const auto &inheritance: m_inheritances[name]) {
                 recurseInheritances(inheritance, depth + 1);
+
                 auto definitions = m_UDTVariables[inheritance];
                 if (definitions.empty())
                     definitions = m_ImportedUDTVariables[inheritance];
-                for (auto [variableName, variableDefinitions]: definitions) {
+                for (const auto &[variableName, variableDefinitions]: definitions) {
                     auto tokenRange = m_UDTTokenRange[name];
                     u32 tokenIndex = tokenRange.start;
                     for (auto token = tokenRange.start; token < tokenRange.end; token++) {
 
-                        if (auto operatorTkn = std::get_if<Operator>(&m_tokens.at(token).value);
+                        if (auto operatorTkn = std::get_if<Operator>(&m_requiredInputs.fullTokens.at(token).value);
                                 operatorTkn != nullptr && *operatorTkn == Token::Operator::Colon)
                             tokenIndex = token + 1;
                     }
@@ -1630,7 +1887,7 @@ namespace hex::plugin::builtin {
     }
 
     void TextHighlighter::appendInheritances() {
-        for (auto [name, inheritances]: m_inheritances)
+        for (const auto &[name, inheritances]: m_inheritances)
             recurseInheritances(name);
     }
 
@@ -1661,7 +1918,7 @@ namespace hex::plugin::builtin {
     }
 
     bool TextHighlighter::isTokenIdValid(i32 tokenId) {
-        return tokenId >= 0 && tokenId < (i32) m_tokens.size();
+        return tokenId >= 0 && tokenId < (i32) m_requiredInputs.fullTokens.size();
     }
 
     bool TextHighlighter::isLocationValid(hex::plugin::builtin::TextHighlighter::Location location) {
@@ -1721,20 +1978,17 @@ namespace hex::plugin::builtin {
             std::string nameSpace;
             while (peek(tkn::Operator::ScopeResolution)) {
                 next(-1);
-                nameSpace = getValue<Token::Identifier>(0)->get() + "::" + nameSpace;
+                nameSpace.insert(0, "::");
+                nameSpace.insert(0, getValue<Token::Identifier>(0)->get());
                 next(-1);
             }
             typeStr = nameSpace + typeStr;
-            using Types = std::map<std::string, pl::hlp::safe_shared_ptr<pl::core::ast::ASTNodeTypeDecl>>;
-            auto parser = patternLanguage->get()->getInternals().parser.get();
-            Types types = parser->getTypes();
-
-            if (types.contains(typeStr)) {
+            if (m_requiredInputs.definedTypes.contains(typeStr)) {
                 m_curr = curr;
                 return typeStr;
             }
             std::vector<std::string> candidates;
-            for (auto name: m_UDTs) {
+            for (const auto &name: m_UDTs) {
                 auto vectorString = wolv::util::splitString(name, "::");
 
                 if (typeStr == vectorString.back())
@@ -1752,11 +2006,11 @@ namespace hex::plugin::builtin {
 
 // Definitions of global variables and placed variables.
     void TextHighlighter::loadGlobalDefinitions(Scopes tokenRangeSet, std::vector<IdentifierType> identifierTypes, Variables &variables) {
-        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_tokens.begin(), m_tokens.end());
+        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
 
         for (auto range: tokenRangeSet) {
-            auto startToken = TokenIter(m_tokens.begin()+range.start,m_tokens.begin()+range.end);
-            auto endToken = TokenIter(m_tokens.begin()+range.end,m_tokens.end());
+            auto startToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.start,m_requiredInputs.fullTokens.begin()+range.end);
+            auto endToken = TokenIter(m_requiredInputs.fullTokens.begin()+range.end,m_requiredInputs.fullTokens.end());
 
             for ( m_curr = startToken; endToken > m_curr; next()) {
 
@@ -1784,7 +2038,7 @@ namespace hex::plugin::builtin {
     void TextHighlighter::loadVariableDefinitions(UnorderedBlocks tokenRangeMap, Token delimiter1, Token delimiter2,
                                                                      std::vector<IdentifierType> identifierTypes,
                                                                      bool isArgument, VariableMap &variableMap) {
-        for (auto [name, range]: tokenRangeMap) {
+        for (const auto &[name, range]: tokenRangeMap) {
             m_curr = m_startToken;
             auto endToken = m_startToken;
             next(range.start);
@@ -1816,7 +2070,7 @@ namespace hex::plugin::builtin {
                 endToken = endToken + range.end;
 
             Keyword *keyword;
-            for (keyword = std::get_if<Keyword>(&m_tokens[range.start].value); endToken > m_curr; next()) {
+            for (keyword = std::get_if<Keyword>(&m_requiredInputs.fullTokens.at(range.start).value); endToken > m_curr; next()) {
 
                 if (peek(tkn::Literal::Identifier)) {
                     auto identifier = getValue<Token::Identifier>(0);
@@ -1854,7 +2108,7 @@ namespace hex::plugin::builtin {
 
 // Definitions of user defined types and functions.
     void TextHighlighter::loadTypeDefinitions( UnorderedBlocks tokenRangeMap, std::vector<IdentifierType> identifierTypes, Definitions &types) {
-        for (auto [name, range]: tokenRangeMap) {
+        for (const auto &[name, range]: tokenRangeMap) {
 
             m_curr = m_startToken + range.start+1;
 
@@ -1889,29 +2143,22 @@ namespace hex::plugin::builtin {
         using IdentifierType::UDT;
         using IdentifierType::Function;
 
-        if (!m_UDTDefinitions.empty())
-            m_UDTDefinitions.clear();
+        m_UDTDefinitions.clear();
         loadTypeDefinitions(m_UDTTokenRange, {UDT}, m_UDTDefinitions);
 
-        if (!m_globalVariables.empty())
-            m_globalVariables.clear();
+        m_globalVariables.clear();
         loadGlobalDefinitions(m_globalTokenRange, {GlobalVariable, PlacedVariable}, m_globalVariables);
 
-        if (!m_UDTVariables.empty())
-            m_UDTVariables.clear();
-        loadVariableDefinitions(m_UDTTokenRange, tkn::Operator::BoolLessThan, tkn::Operator::BoolGreaterThan,
-                                {TemplateArgument}, true, m_UDTVariables);
+        m_UDTVariables.clear();
+        loadVariableDefinitions(m_UDTTokenRange, tkn::Operator::BoolLessThan, tkn::Operator::BoolGreaterThan, {TemplateArgument}, true, m_UDTVariables);
 
-        loadVariableDefinitions(m_UDTTokenRange, tkn::Operator::BoolLessThan, tkn::Operator::BoolGreaterThan,
-                                {LocalVariable, PatternVariable, CalculatedPointer}, false, m_UDTVariables);
+        loadVariableDefinitions(m_UDTTokenRange, tkn::Operator::BoolLessThan, tkn::Operator::BoolGreaterThan, {LocalVariable, PatternVariable, CalculatedPointer}, false, m_UDTVariables);
         appendInheritances();
 
-        if (!m_functionDefinitions.empty())
-            m_functionDefinitions.clear();
+        m_functionDefinitions.clear();
         loadTypeDefinitions(m_functionTokenRange, {Function}, m_functionDefinitions);
 
-        if (!m_functionVariables.empty())
-            m_functionVariables.clear();
+        m_functionVariables.clear();
         loadVariableDefinitions(m_functionTokenRange, tkn::Separator::LeftParenthesis, tkn::Separator::RightParenthesis,
                                 {FunctionParameter}, true, m_functionVariables);
 
@@ -1928,58 +2175,92 @@ namespace hex::plugin::builtin {
         if (!m_lines.empty())
             m_lines.clear();
 
-        if (m_text.empty()) {
+        if (m_requiredInputs.editedText.empty()) {
             ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
             if (editor != nullptr)
-                m_text = editor->getText();
+                m_requiredInputs.editedText = editor->getText();
             else
                 log::warn("Text editor not found, provider is null");
         }
 
-        m_lines = wolv::util::splitString(m_text, "\n");
+        m_lines = wolv::util::splitString(m_requiredInputs.editedText, "\n");
         m_lines.push_back("");
         m_firstTokenIdOfLine.clear();
-        m_firstTokenIdOfLine.resize(m_lines.size(), -1);
 
-        i32 tokenId = 0;
-        i32 tokenCount = m_tokens.size();
-        i32 index;
 
-        if (tokenCount > 0) {
-            index = m_tokens[0].location.line - 1;
-            m_firstTokenIdOfLine[index] = 0;
-        }
-        i32 count = m_lines.size();
-        for (i32 currentLine = 0; currentLine < count; currentLine++) {
-            for (index = m_tokens[tokenId].location.line - 1; index <= currentLine && tokenId + 1 < tokenCount; tokenId++) {
-                index = m_tokens[tokenId + 1].location.line - 1;
+        u32 tokenId = 0;
+        u32 tokenCount = m_requiredInputs.fullTokens.size();
+        u32 lineIndex;
+        u32 count;
+
+        if (tokenCount == 0)
+            return;
+        lineIndex = m_requiredInputs.fullTokens.at(tokenId).location.line - 1;
+        count = m_requiredInputs.fullTokens.at(tokenCount - 1).location.line + 1;
+        m_firstTokenIdOfLine.resize(count, -1);
+        m_firstTokenIdOfLine.at(lineIndex) = 0;
+        tokenId++;
+        u32 currentLine = lineIndex;
+        while ( currentLine < count) {
+            while (lineIndex  <= currentLine && tokenId <= tokenCount - 1) {
+                lineIndex = m_requiredInputs.fullTokens.at(tokenId).location.line - 1;
+                tokenId++;
             }
-
-            if (index > currentLine) {
-                m_firstTokenIdOfLine[index] = tokenId;
+            if (tokenId > tokenCount - 1)
+                break;
+            if (tokenId > 0)
+                tokenId--;
+            if ((m_requiredInputs.fullTokens.at(tokenId).type == pl::core::Token::Type::DocComment || m_requiredInputs.fullTokens.at(tokenId).type == pl::core::Token::Type::Comment)) {
+                auto *comment = std::get_if<pl::core::Token::Comment>(&(m_requiredInputs.fullTokens.at(tokenId).value));
+                auto *docComment = std::get_if<pl::core::Token::DocComment>(&(m_requiredInputs.fullTokens.at(tokenId).value));
+                if ((comment != nullptr && !comment->singleLine) || (docComment != nullptr && !docComment->singleLine)) {
+                    auto commentTokenId = tokenId;
+                    auto commentStartLine = m_requiredInputs.fullTokens.at(tokenId).location.line - 1;
+                    std::string value = m_requiredInputs.fullTokens.at(tokenId).getFormattedValue();
+                    auto commentEndLine = commentStartLine + std::count(value.begin(), value.end(), '\n');
+                    m_firstTokenIdOfLine.at(commentStartLine) = commentTokenId;
+                    for (u32 i =  commentStartLine + 1; i <= commentEndLine; i++) {
+                        m_firstTokenIdOfLine.at(i) = -1;
+                    }
+                    lineIndex = commentEndLine;
+                    tokenId++;
+                } else {
+                    m_firstTokenIdOfLine.at(lineIndex) = tokenId;
+                    tokenId++;
+                }
+            } else {
+                m_firstTokenIdOfLine.at(lineIndex) = tokenId;
+                tokenId++;
             }
+            currentLine = lineIndex;
         }
 
-        if (m_firstTokenIdOfLine.back() != tokenCount)
-            m_firstTokenIdOfLine.push_back(tokenCount);
+        if (m_firstTokenIdOfLine.back() != (i32) tokenCount - 1)
+            m_firstTokenIdOfLine.push_back(tokenCount - 1);
     }
 
 // Some tokens span many lines and some lines have no tokens. This
-// function helps to find the next line number in the inner loop.
+// function helps to find the next line number in loops over tokens.
     u32 TextHighlighter::nextLine(u32 line) {
-        auto currentTokenId = m_firstTokenIdOfLine[line];
+        if (line >= m_firstTokenIdOfLine.size())
+            return line;
+        auto currentTokenId = m_firstTokenIdOfLine.at(line);
         u32 i = 1;
-        while (line + i < m_lines.size() &&
-               (m_firstTokenIdOfLine[line + i] == currentTokenId || m_firstTokenIdOfLine[line + i] == (i32) 0xFFFFFFFF))
+        while (line + i < m_firstTokenIdOfLine.size() &&
+               (m_firstTokenIdOfLine.at(line + i) == currentTokenId || m_firstTokenIdOfLine.at(line + i) == (i32) 0xFFFFFFFF))
             i++;
         return i + line;
     }
 
     u32 TextHighlighter::previousLine(u32 line) {
-        auto currentTokenId = m_firstTokenIdOfLine[line];
+        if (line == 0)
+            return 0;
+        if (line >= m_firstTokenIdOfLine.size())
+            return line - 1;
+        auto currentTokenId = m_firstTokenIdOfLine.at(line);
         u32 i = 1;
-        while (line - i < m_lines.size() &&
-               (m_firstTokenIdOfLine[line - i] == currentTokenId || m_firstTokenIdOfLine[line - i] == (i32) 0xFFFFFFFF))
+        while (i <= line && line < m_firstTokenIdOfLine.size() &&
+               (m_firstTokenIdOfLine.at(line - i) == currentTokenId || m_firstTokenIdOfLine.at(line - i) == (i32) 0xFFFFFFFF))
             i++;
         return line - i;
     }
@@ -1989,7 +2270,7 @@ namespace hex::plugin::builtin {
     void TextHighlighter::invertGlobalTokenRange() {
         std::set<Interval> ranges;
         auto size = m_globalTokenRange.size();
-        auto tokenCount = m_tokens.size();
+        auto tokenCount = m_requiredInputs.fullTokens.size();
 
         if (size == 0) {
             ranges.insert(Interval(0, tokenCount));
@@ -2132,9 +2413,9 @@ namespace hex::plugin::builtin {
 // and inverts the result.
     void TextHighlighter::getGlobalTokenRanges() {
         std::set<Interval> ranges;
-        for (auto [name, range]: m_UDTTokenRange)
+        for (const auto &[name, range]: m_UDTTokenRange)
             ranges.insert(range);
-        for (auto [name, range]: m_functionTokenRange)
+        for (const auto &[name, range]: m_functionTokenRange)
             ranges.insert(range);
 
         if (ranges.empty())
@@ -2145,7 +2426,7 @@ namespace hex::plugin::builtin {
         while (next != ranges.end()) {
 
             if (next->start - it->end < 2) {
-                Interval &range = const_cast<Interval &>(*it);
+                auto &range = const_cast<Interval &>(*it);
                 range.end = next->end;
                 ranges.erase(next);
                 next = std::next(it);
@@ -2158,7 +2439,7 @@ namespace hex::plugin::builtin {
         invertGlobalTokenRange();
         for (auto tokenRange: m_globalTokenRange) {
 
-            if ((u32) tokenRange.end == m_tokens.size()) {
+            if ((u32) tokenRange.end == m_requiredInputs.fullTokens.size()) {
                 tokenRange.end -= 1;
                 m_globalBlocks.insert(tokenRange);
             }
@@ -2168,10 +2449,10 @@ namespace hex::plugin::builtin {
 // Parser labels global variables that are not placed as
 // function variables.
     void TextHighlighter::fixGlobalVariables() {
-        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_tokens.begin(), m_tokens.end());
+        m_startToken = m_originalPosition = m_partOriginalPosition = TokenIter(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
         for (auto range: m_globalTokenRange) {
-            auto startToken = TokenIter(m_tokens.begin() + range.start, m_tokens.begin() + range.end);
-            auto endToken = TokenIter(m_tokens.begin() + range.end, m_tokens.end());
+            auto startToken = TokenIter(m_requiredInputs.fullTokens.begin() + range.start, m_requiredInputs.fullTokens.begin() + range.end);
+            auto endToken = TokenIter(m_requiredInputs.fullTokens.begin() + range.end, m_requiredInputs.fullTokens.end());
 
             for (m_curr = startToken; endToken > m_curr; next()) {
 
@@ -2197,143 +2478,75 @@ namespace hex::plugin::builtin {
     }
 
     void TextHighlighter::clearVariables() {
-        if (!m_inheritances.empty())
-            m_inheritances.clear();
-
-        if (!m_globalTokenRange.empty())
-            m_globalTokenRange.clear();
-
-        if (!m_namespaceTokenRange.empty())
-            m_namespaceTokenRange.clear();
-
-        if (!m_UDTDefinitions.empty())
-            m_UDTDefinitions.clear();
-
-        if (!m_UDTBlocks.empty())
-            m_UDTBlocks.clear();
-
-        if (!m_UDTTokenRange.empty())
-            m_UDTTokenRange.clear();
-
-        if (!m_functionDefinitions.empty())
-            m_functionDefinitions.clear();
-
-        if (!m_functionBlocks.empty())
-            m_functionBlocks.clear();
-
-        if (!m_functionTokenRange.empty())
-            m_functionTokenRange.clear();
-
-        if (!m_functionVariables.empty())
-            m_functionVariables.clear();
-
-        if (!m_attributeFunctionArgumentType.empty())
-            m_attributeFunctionArgumentType.clear();
-
-        if (!m_memberChains.empty())
-            m_memberChains.clear();
-
-        if (!m_scopeChains.empty())
-            m_scopeChains.clear();
+        m_inheritances.clear();
+        m_globalTokenRange.clear();
+        m_namespaceTokenRange.clear();
+        m_UDTDefinitions.clear();
+        m_UDTBlocks.clear();
+        m_UDTTokenRange.clear();
+        m_functionDefinitions.clear();
+        m_functionBlocks.clear();
+        m_functionTokenRange.clear();
+        m_functionVariables.clear();
+        m_attributeFunctionArgumentType.clear();
+        m_memberChains.clear();
+        m_scopeChains.clear();
+        m_tokenColors.clear();
     }
     void TextHighlighter::processSource() {
+        m_UDTVariables.clear();
+        m_UDTTokenRange.clear();
+        getTokenRanges(IdentifierType::UDT);
+        loadVariableDefinitions(m_UDTTokenRange, tkn::Operator::BoolLessThan, tkn::Operator::BoolGreaterThan,
+                                {IdentifierType::TemplateArgument}, true, m_UDTVariables);
 
-        getAllTokenRanges(IdentifierType::NameSpace);
-        getAllTokenRanges(IdentifierType::UDT);
-        getDefinitions();
+        loadVariableDefinitions(m_UDTTokenRange, tkn::Operator::BoolLessThan, tkn::Operator::BoolGreaterThan,
+                                {IdentifierType::LocalVariable, IdentifierType::PatternVariable, IdentifierType::CalculatedPointer}, false, m_UDTVariables);
         m_ImportedUDTVariables.insert(m_UDTVariables.begin(), m_UDTVariables.end());
-
-        clearVariables();
     }
 
 
 // Only update if needed. Must wait for the parser to finish first.
     void TextHighlighter::highlightSourceCode() {
-        m_wasInterrupted = false;
+        m_viewPatternEditor->resetInterrupt();
         ON_SCOPE_EXIT {
-            if (!m_tokenColors.empty())
-                m_tokenColors.clear();
-            m_runningColorizers--;
-            if (m_wasInterrupted) {
-                m_needsToUpdateColors = true;
-                m_viewPatternEditor->setChangesWereParsed(true);
-            } else {
-                m_needsToUpdateColors = false;
-                m_viewPatternEditor->setChangesWereParsed(false);
-            }
+            m_viewPatternEditor->incrementRunningHighlighters(-1);
+            m_viewPatternEditor->setChangesWereColored(!m_viewPatternEditor->wasInterrupted());
         };
         try {
-            m_runningColorizers++;
-            auto preprocessor = patternLanguage->get()->getInternals().preprocessor.get();
-            auto parser = patternLanguage->get()->getInternals().parser.get();
-            using Types = std::map<std::string, pl::hlp::safe_shared_ptr<pl::core::ast::ASTNodeTypeDecl>>;
-            Types types = parser->getTypes();
-
+            m_viewPatternEditor->incrementRunningHighlighters(1);
+            clearVariables();
             if (!m_UDTs.empty())
                 m_UDTs.clear();
-            for (auto &[name, type]: types)
+            for (auto &[name, type]: m_requiredInputs.definedTypes)
                 m_UDTs.push_back(name);
-
-            // Namespaces from included files.
-            m_nameSpaces.clear();
-            m_nameSpaces = preprocessor->getNamespaces();
-            clearVariables();
-
-            m_parsedImports = preprocessor->getParsedImports();
-            for (auto &[name, tokens]: m_parsedImports) {
-                m_tokens = tokens;
-                m_text = tokens[0].location.source->content;
-                if (m_text.empty() || m_text == "\n")
-                    return;
-                loadText();
-                processSource();
-                if (!m_tokenColors.empty())
-                    m_tokenColors.clear();
-            }
-
-            m_tokens = preprocessor->getResult();
-            if (m_tokens.empty())
-                return;
 
             if (!m_globalTokenRange.empty())
                 m_globalTokenRange.clear();
-            m_globalTokenRange.insert(Interval(0, m_tokens.size()-1));
 
+            if (m_requiredInputs.fullTokens.size() > 1) {
+                m_globalTokenRange.insert(Interval(0, m_requiredInputs.fullTokens.size() - 1));
+                getTokenRanges(IdentifierType::NameSpace);
+                getTokenRanges(IdentifierType::UDT);
+                getTokenRanges(IdentifierType::Function);
+                getGlobalTokenRanges();
+                fixGlobalVariables();
+                setInitialColors();
+                loadInstances();
+                getTokenRanges(IdentifierType::Attribute);
+                getDefinitions();
+                fixAutos();
+                fixChains();
+                colorRemainingIdentifierTokens();
+            }
             ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
-            if (editor != nullptr)
-                m_text = editor->getText();
-            else
-                log::warn("Text editor not found, provider is null");
-
-            if (m_text.empty() || m_text == "\n")
-                return;
-            loadText();
-
-            getAllTokenRanges(IdentifierType::NameSpace);
-            getAllTokenRanges(IdentifierType::UDT);
-            getAllTokenRanges(IdentifierType::Function);
-            getGlobalTokenRanges();
-            fixGlobalVariables();
-            setInitialColors();
-            loadInstances();
-            getAllTokenRanges(IdentifierType::Attribute);
-            getDefinitions();
-            fixAutos();
-            fixChains();
-
-            m_excludedLocations = preprocessor->getExcludedLocations();
-
-            colorRemainingIdentifierTokens();
-            setRequestedIdentifierColors();
-
-            editor = m_viewPatternEditor->getTextEditor();
             if (editor != nullptr)
                 editor->clearErrorMarkers();
             else
                 log::warn("Text editor not found, provider is null");
-            m_compileErrors = patternLanguage->get()->getCompileErrors();
+            m_requiredInputs.compileErrors = getPatternLanguage()->getCompileErrors();
 
-            if (!m_compileErrors.empty())
+            if (!m_requiredInputs.compileErrors.empty())
                 renderErrors();
             else {
                 editor = m_viewPatternEditor->getTextEditor();
@@ -2344,9 +2557,10 @@ namespace hex::plugin::builtin {
             }
         } catch (const std::out_of_range &e) {
             log::debug("TextHighlighter::highlightSourceCode: Out of range error: {}", e.what());
-            m_wasInterrupted = true;
+            m_viewPatternEditor->setWasInterrupted(true);
             return;
         }
-        return;
+
+                return;
     }
 }

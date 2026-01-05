@@ -11,7 +11,7 @@
 
 namespace hex::plugin::remote {
 
-    bool SSHProvider::open() {
+    prv::Provider::OpenResult SSHProvider::open() {
         if (!m_sftpClient.isConnected()) {
             try {
                 if (m_authMethod == AuthMethod::Password) {
@@ -22,8 +22,7 @@ namespace hex::plugin::remote {
                     m_sftpClient = std::move(client);
                 }
             } catch (const std::exception& e) {
-                setErrorMessage(e.what());
-                return false;
+                return OpenResult::failure(e.what());
             }
         }
 
@@ -33,15 +32,20 @@ namespace hex::plugin::remote {
             else
                 m_remoteFile = m_sftpClient.openFileSFTP(m_remoteFilePath, SSHClient::OpenMode::ReadWrite);
         } catch (const std::exception& e) {
-            setErrorMessage(e.what());
-            return false;
+            return OpenResult::failure(e.what());
         }
 
-        return m_remoteFile->isOpen();
+        if (!m_remoteFile->isOpen()) {
+            return OpenResult::failure("hex.plugin.remote.ssh_provider.error.open_failed"_lang);
+        }
+
+        return {};
     }
 
     void SSHProvider::close() {
-        m_remoteFile->close();
+        if (m_remoteFile != nullptr)
+            m_remoteFile->close();
+
         m_sftpClient.disconnect();
         m_remoteFilePath.clear();
     }

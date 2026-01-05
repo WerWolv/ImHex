@@ -9,7 +9,7 @@
 
 namespace hex::plugin::builtin {
 
-    void drawFileTools() {
+    static void drawFileTools() {
         if (ImGui::BeginTabBar("file_tools_tabs")) {
             if (ImGui::BeginTabItem("hex.builtin.tools.file_tools.shredder"_lang)) {
                 drawFileToolShredder();

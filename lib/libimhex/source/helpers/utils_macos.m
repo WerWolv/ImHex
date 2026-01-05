@@ -1,5 +1,8 @@
 #if defined(OS_MACOS)
 
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
     #include <CoreFoundation/CFBundle.h>
     #include <ApplicationServices/ApplicationServices.h>
     #include <Foundation/NSUserDefaults.h>
@@ -69,6 +72,49 @@
         if (borderlessWindowMode) {
             cocoaWindow.titlebarAppearsTransparent = YES;
             cocoaWindow.styleMask |= NSWindowStyleMaskFullSizeContentView;
+
+            // Setup liquid glass background effect
+            {
+                NSView* glfwContentView = [cocoaWindow contentView];
+
+                NSOpenGLContext* context = [NSOpenGLContext currentContext];
+                if (!context) {
+                    glfwMakeContextCurrent(window);
+                    context = [NSOpenGLContext currentContext];
+                }
+
+                GLint opaque = 0;
+                [context setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
+                [context update];
+
+                NSView* containerView = [[NSView alloc] initWithFrame:[glfwContentView frame]];
+                containerView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+                [containerView setWantsLayer:YES];
+
+                Class glassEffectClass = NSClassFromString(@"NSGlassEffectView");
+                NSView* effectView = nil;
+                if (glassEffectClass) {
+                    // Use the new liquid glass effect
+                    effectView = [[glassEffectClass alloc] initWithFrame:[containerView bounds]];
+                } else {
+                    // Fall back to NSVisualEffectView for older systems
+                    NSVisualEffectView* visualEffectView = [[NSVisualEffectView alloc] initWithFrame:[containerView bounds]];
+                    visualEffectView.material = NSVisualEffectMaterialHUDWindow;
+                    visualEffectView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+                    visualEffectView.state = NSVisualEffectStateActive;
+                    effectView = visualEffectView;
+                }
+
+                effectView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+
+                [containerView addSubview:effectView];
+
+                [glfwContentView removeFromSuperview];
+                glfwContentView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+                [containerView addSubview:glfwContentView];
+
+                [cocoaWindow setContentView:containerView];
+            }
 
             [cocoaWindow setOpaque:NO];
             [cocoaWindow setHasShadow:YES];
@@ -370,6 +416,21 @@
         return [bundlePath.pathExtension.lowercaseString isEqualToString:@"app"];
     }
 
+    @interface NotificationDelegate : NSObject <UNUserNotificationCenterDelegate>
+    @end
+
+    @implementation NotificationDelegate
+
+    - (void)userNotificationCenter:(UNUserNotificationCenter *)center
+           willPresentNotification:(UNNotification *)notification
+             withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
+        completionHandler(UNNotificationPresentationOptionBanner |
+                          UNNotificationPresentationOptionSound |
+                          UNNotificationPresentationOptionList);
+    }
+
+    @end
+
     void toastMessageMacos(const char *title, const char *message) {
         @autoreleasepool {
             // Only show notification if we're inside a bundle
@@ -407,5 +468,6 @@
         }
     }
 
+    #pragma clang diagnostic pop
 
 #endif

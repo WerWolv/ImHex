@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
 
         void setPath(const std::fs::path &path);
 
-        [[nodiscard]] bool open() override;
+        [[nodiscard]] OpenResult open() override;
         void close() override;
 
         [[nodiscard]] std::string getName() const override;

@@ -7,6 +7,9 @@
 #include <ranges>
 
 #include <jthread.hpp>
+#include <hex/helpers/debugging.hpp>
+#include <hex/trace/exceptions.hpp>
+#include <utility>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -52,6 +55,7 @@ namespace hex {
         std::list<std::function<void()>> s_deferredCalls;
         std::unordered_map<SourceLocationWrapper, std::function<void()>> s_onceDeferredCalls;
         std::list<std::function<void()>> s_tasksFinishedCallbacks;
+        std::list<std::function<void(Task&)>> s_taskCompletionCallbacks;
 
         std::mutex s_queueMutex;
         std::condition_variable s_jobCondVar;
@@ -64,8 +68,8 @@ namespace hex {
     }
 
 
-    Task::Task(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function)
-    : m_unlocalizedName(unlocalizedName),
+    Task::Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function)
+    : m_unlocalizedName(std::move(unlocalizedName)),
       m_maxValue(maxValue),
       m_function(std::move(function)),
       m_background(background), m_blocking(blocking) { }
@@ -310,6 +314,8 @@ namespace hex {
                     }
 
                     try {
+                        trace::enableExceptionCaptureForCurrentThread();
+
                         // Set the thread name to the name of the task
                         TaskManager::setCurrentThreadName(Lang(task->m_unlocalizedName));
 
@@ -317,20 +323,33 @@ namespace hex {
                         task->m_function(*task);
 
                         log::debug("Task '{}' finished", task->m_unlocalizedName.get());
+
+                        {
+                            std::scoped_lock lock(s_tasksFinishedMutex);
+
+                            for (const auto &callback : s_taskCompletionCallbacks)
+                                callback(*task);
+                        }
                     } catch (const Task::TaskInterruptor &) {
                         // Handle the task being interrupted by user request
                         task->interruption();
                     } catch (const std::exception &e) {
                         log::error("Exception in task '{}': {}", task->m_unlocalizedName.get(), e.what());
 
+                        dbg::printStackTrace(trace::getStackTrace());
+
                         // Handle the task throwing an uncaught exception
                         task->exception(e.what());
                     } catch (...) {
                         log::error("Exception in task '{}'", task->m_unlocalizedName.get());
 
+                        dbg::printStackTrace(trace::getStackTrace());
+
                         // Handle the task throwing an uncaught exception of unknown type
                         task->exception("Unknown Exception");
                     }
+
+                    trace::disableExceptionCaptureForCurrentThread();
 
                     s_currentTask = nullptr;
                     task->finish();
@@ -361,6 +380,7 @@ namespace hex {
         s_deferredCalls.clear();
         s_onceDeferredCalls.clear();
         s_tasksFinishedCallbacks.clear();
+        s_taskCompletionCallbacks.clear();
     }
 
     TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task&)> function) {
@@ -569,5 +589,13 @@ namespace hex {
         return s_mainThreadId == std::this_thread::get_id();
     }
 
+    void TaskManager::addTaskCompletionCallback(const std::function<void(Task &)> &function) {
+        std::scoped_lock lock(s_tasksFinishedMutex);
 
+        for (const auto &task : s_tasks) {
+            task->interrupt();
+        }
+
+        s_taskCompletionCallbacks.push_back(function);
+    }
 }

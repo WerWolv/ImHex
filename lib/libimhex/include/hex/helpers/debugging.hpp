@@ -14,6 +14,10 @@
         static_assert(false, "Debug variables are only intended for use during development.");
 #endif
 
+namespace hex::trace {
+    struct StackTraceResult;
+}
+
 namespace hex::dbg {
 
     namespace impl {
@@ -46,5 +50,7 @@ namespace hex::dbg {
 
     bool debugModeEnabled();
     void setDebugModeEnabled(bool enabled);
+
+    void printStackTrace(const trace::StackTraceResult &stackTrace);
 
 }

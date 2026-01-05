@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/api/content_registry/data_processor.hpp>
@@ -8,6 +9,7 @@
 #include <hex/data_processor/node.hpp>
 #include <hex/helpers/utils.hpp>
 
+#include <numeric>
 #include <wolv/utils/core.hpp>
 
 #include <content/helpers/diagrams.hpp>
@@ -174,7 +176,7 @@ namespace hex::plugin::builtin {
             const auto &inputB = this->getBufferOnInput(1);
 
             auto output = inputA;
-            std::copy(inputB.begin(), inputB.end(), std::back_inserter(output));
+            std::ranges::copy(inputB, std::back_inserter(output));
 
             this->setBufferOnOutput(2, output);
         }
@@ -212,7 +214,7 @@ namespace hex::plugin::builtin {
             output.resize(buffer.size() * count);
 
             for (u32 i = 0; i < count; i++)
-                std::copy(buffer.begin(), buffer.end(), output.begin() + buffer.size() * i);
+                std::ranges::copy(buffer, output.begin() + buffer.size() * i);
 
             this->setBufferOnOutput(2, output);
         }
@@ -233,7 +235,7 @@ namespace hex::plugin::builtin {
             if (address + patch.size() > buffer.size())
                 buffer.resize(address + patch.size());
 
-            std::copy(patch.begin(), patch.end(), buffer.begin() + address);
+            std::ranges::copy(patch, buffer.begin() + address);
 
             this->setBufferOnOutput(3, buffer);
         }
@@ -382,11 +384,11 @@ namespace hex::plugin::builtin {
             if (ImPlot::BeginPlot("##distribution", viewSize, ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect)) {
                 ImPlot::SetupAxes("Address", "Count", ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
-                ImPlot::SetupAxesLimits(0, 256, 1, double(*std::max_element(m_counts.begin(), m_counts.end())) * 1.1F, ImGuiCond_Always);
+                ImPlot::SetupAxesLimits(0, 256, 1, double(*std::ranges::max_element(m_counts)) * 1.1F, ImGuiCond_Always);
 
                 static auto x = [] {
                     std::array<ImU64, 256> result { 0 };
-                    std::iota(result.begin(), result.end(), 0);
+                    std::iota(result.begin(), result.end(), 0); // NOLINT: std::ranges::iota not available on some platforms
                     return result;
                 }();
 
@@ -463,7 +465,7 @@ namespace hex::plugin::builtin {
 
         void process() override {
             auto data = this->getBufferOnInput(0);
-            std::reverse(data.begin(), data.end());
+            std::ranges::reverse(data);
             this->setBufferOnOutput(1, data);
         }
 

@@ -8,6 +8,6 @@
     </method>
   </configuration>
   <configuration default="false" name="CMake Debug" type="CMakeListConfigurationType" factoryName="CMakeListConfigurationFactory">
-      <method v="2" />
+    <method v="2" />
   </configuration>
 </component>

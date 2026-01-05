@@ -23,12 +23,12 @@ namespace hex::ui {
 
         switch (*type) {
             case RegionType::EntireData:
-                *region = { provider->getBaseAddress(), provider->getActualSize() };
+                *region = { .address=provider->getBaseAddress(), .size=provider->getActualSize() };
                 break;
             case RegionType::Selection:
                 *region = ImHexApi::HexEditor::getSelection().value_or(
                     ImHexApi::HexEditor::ProviderRegion {
-                        { 0, 1 },
+                        { .address=0, .size=1 },
                         provider }
                         ).getRegion();
                 break;
@@ -59,7 +59,7 @@ namespace hex::ui {
                     ImGuiExt::InputHexadecimal("##end", &end);
                     ImGui::PopItemWidth();
 
-                    *region = { start, (end - start) + 1 };
+                    *region = { .address=start, .size=(end - start) + 1 };
 
                     ImGui::EndPopup();
                 }
@@ -67,6 +67,39 @@ namespace hex::ui {
         }
 
         ImGui::EndGroup();
+    }
+
+    bool endiannessSlider(std::endian &endian) {
+        int selection = [&] {
+            switch (endian) {
+                default:
+                case std::endian::little:
+                    return 0;
+                case std::endian::big:
+                    return 1;
+            }
+        }();
+
+        std::array options = {
+            fmt::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.little"_lang),
+            fmt::format("{}:  {}", "hex.ui.common.endian"_lang, "hex.ui.common.big"_lang)
+        };
+
+        if (ImGui::SliderInt("##endian", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
+            switch (selection) {
+                default:
+                case 0:
+                    endian = std::endian::little;
+                    break;
+                case 1:
+                    endian = std::endian::big;
+                    break;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
 }

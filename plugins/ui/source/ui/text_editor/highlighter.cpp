@@ -1,7 +1,7 @@
+#include <algorithm>
 #include <ui/text_editor.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
-#include <algorithm>
 
 namespace hex::ui {
     extern TextEditor::Palette s_paletteBase;
@@ -15,17 +15,17 @@ namespace hex::ui {
         return first1 == last1 && first2 == last2;
     }
 
-    void TextEditor::setNeedsUpdate(u32 line, bool needsUpdate) {
-        if (line < m_lines.size())
+    void TextEditor::setNeedsUpdate(i32 line, bool needsUpdate) {
+        if (line < (i32) m_lines.size())
             m_lines[line].setNeedsUpdate(needsUpdate);
     }
 
-    void TextEditor::setColorizedLine(u64 line, const std::string &tokens) {
-        if (line < m_lines.size()) {
+    void TextEditor::setColorizedLine(i64 line, const std::string &tokens) {
+        if (line < (i64)m_lines.size()) {
             auto &lineTokens = m_lines[line].m_colors;
             if (lineTokens.size() != tokens.size()) {
                 lineTokens.resize(tokens.size());
-                std::fill(lineTokens.begin(), lineTokens.end(), 0x00);
+                std::ranges::fill(lineTokens, 0x00);
             }
             bool needsUpdate = false;
             for (u64 i = 0; i < tokens.size(); ++i) {
@@ -94,18 +94,18 @@ namespace hex::ui {
 
                             // todo : almost all language definitions use lower case to specify keywords, so shouldn't this use ::tolower ?
                             if (!m_languageDefinition.m_caseSensitive)
-                                std::transform(id.begin(), id.end(), id.begin(), ::toupper);
-                            else if (m_languageDefinition.m_keywords.count(id) != 0)
+                                std::ranges::transform(id, id.begin(), ::toupper);
+                            else if (m_languageDefinition.m_keywords.contains(id))
                                 token_color = PaletteIndex::Keyword;
-                            else if (m_languageDefinition.m_identifiers.count(id) != 0)
+                            else if (m_languageDefinition.m_identifiers.contains(id))
                                 token_color = PaletteIndex::BuiltInType;
                             else if (id == "$")
                                 token_color = PaletteIndex::GlobalVariable;
                         }
                     } else {
-                        if ((token_color == PaletteIndex::Identifier || flags.m_bits.preprocessor) && !flags.m_bits.deactivated && !(flags.m_value & Line::inComment)) {
+                        if ((token_color == PaletteIndex::Identifier || flags.m_bits.preprocessor) && !flags.m_bits.deactivated && !(flags.m_value & inComment)) {
                             id.assign(token_begin, token_end);
-                            if (m_languageDefinition.m_preprocIdentifiers.count(id) != 0) {
+                            if (m_languageDefinition.m_preprocIdentifiers.contains(id)) {
                                 token_color = PaletteIndex::Directive;
                                 token_begin -= 1;
                                 token_length = token_end - token_begin;
@@ -115,7 +115,7 @@ namespace hex::ui {
                                 token_length = token_end - token_begin;
                             }
                         }
-                        if (flags.m_bits.matchedBracket) {
+                        if (flags.m_bits.matchedDelimiter) {
                             token_color = PaletteIndex::WarningText;
                             token_length = token_end - token_begin;
                         } else if (flags.m_bits.preprocessor && !flags.m_bits.deactivated) {
@@ -125,7 +125,7 @@ namespace hex::ui {
                                 token_color = PaletteIndex::PreprocessorDeactivated;
                                 token_begin -= 1;
                                 token_offset -= 1;
-                            } else if (id.assign(token_begin, token_end);flags.m_value & Line::inComment && m_languageDefinition.m_preprocIdentifiers.count(id) != 0) {
+                            } else if (id.assign(token_begin, token_end);flags.m_value & inComment && m_languageDefinition.m_preprocIdentifiers.contains(id)) {
                                 token_color = getColorIndexFromFlags(flags);
                                 token_begin -= 1;
                                 token_offset -= 1;
@@ -148,12 +148,12 @@ namespace hex::ui {
                         if (token_offset + token_length >= line.m_colors.size()) {
                             auto colors = line.m_colors;
                             line.m_colors.resize(token_offset + token_length, static_cast<char>(PaletteIndex::Default));
-                            std::copy(colors.begin(), colors.end(), line.m_colors.begin());
+                            std::ranges::copy(colors, line.m_colors.begin());
                         }
                         try {
                             line.m_colors.replace(token_offset, token_length, token_length, static_cast<char>(token_color));
                         } catch (const std::exception &e) {
-                            std::cerr << "Error replacing color: " << e.what() << std::endl;
+                            fmt::print(stderr, "Error replacing color: {}\n", e.what());
                             return;
                         }
                     }
@@ -180,11 +180,10 @@ namespace hex::ui {
             auto currentLine = endLine;
             auto commentLength = 0;
             auto matchedBracket = false;
-            std::string brackets = "()[]{}<>";
 
             std::vector<bool> ifDefs;
             ifDefs.push_back(true);
-            m_defines.push_back("__IMHEX__");
+            m_defines.emplace_back("__IMHEX__");
             for (currentLine = 0; currentLine < endLine; currentLine++) {
                 auto &line = m_lines[currentLine];
                 auto lineLength = line.size();
@@ -202,13 +201,18 @@ namespace hex::ui {
 
                 auto setGlyphFlags = [&](i32 index) {
                     Line::Flags flags(0);
-                    flags.m_bits.comment = withinComment;
-                    flags.m_bits.blockComment = withinBlockComment;
-                    flags.m_bits.docComment = withinDocComment;
-                    flags.m_bits.globalDocComment = withinGlobalDocComment;
-                    flags.m_bits.blockDocComment = withinBlockDocComment;
+                    if (withinComment)
+                        flags.m_value = (i32) Line::Comments::Line;
+                    else if (withinDocComment)
+                        flags.m_value = (i32) Line::Comments::Doc;
+                    else if (withinBlockComment)
+                        flags.m_value = (i32) Line::Comments::Block;
+                    else if (withinGlobalDocComment)
+                        flags.m_value = (i32) Line::Comments::Global;
+                    else if (withinBlockDocComment)
+                        flags.m_value = (i32) Line::Comments::BlockDoc;
                     flags.m_bits.deactivated = withinNotDef;
-                    flags.m_bits.matchedBracket = matchedBracket;
+                    flags.m_bits.matchedDelimiter = matchedBracket;
                     if (m_lines[currentLine].m_flags[index] != flags.m_value) {
                         m_lines[currentLine].m_colorized = false;
                         m_lines[currentLine].m_flags[index] = flags.m_value;
@@ -227,12 +231,31 @@ namespace hex::ui {
                         if (m_matchedBracket.m_nearCursor == getCharacterCoordinates(currentLine, currentIndex) || m_matchedBracket.m_matched == getCharacterCoordinates(currentLine, currentIndex))
                             matchedBracket = true;
                     } else if (MatchedBracket::s_operators.contains(c) && m_matchedBracket.isActive()) {
-                        if (m_matchedBracket.m_nearCursor == setCoordinates(currentLine, currentIndex) || m_matchedBracket.m_matched == setCoordinates(currentLine, currentIndex)) {
-                            if ((c == '<' && (line.m_colors[currentIndex - 1] == static_cast<char>(PaletteIndex::UserDefinedType))) ||
-                                (c == '>' && (m_matchedBracket.m_matched.m_column > 0) && (line.m_colors[lineCoordinatesToIndex(m_matchedBracket.m_matched) - 1] == static_cast<char>(PaletteIndex::UserDefinedType) ||
-                                 ((m_matchedBracket.m_nearCursor.m_column > 0) && (line.m_colors[lineCoordinatesToIndex(m_matchedBracket.m_nearCursor) - 1] == static_cast<char>(PaletteIndex::UserDefinedType)))))) {
-                                matchedBracket = true;
+                        Coordinates current = setCoordinates(currentLine,currentIndex);
+                        auto udt = static_cast<char>(PaletteIndex::UserDefinedType);
+                        Coordinates cursor = Invalid;
+                        //if (m_matchedBracket.m_nearCursor == setCoordinates(currentLine, currentIndex) || m_matchedBracket.m_matched == setCoordinates(currentLine, currentIndex)) {
+                        if ((c == '<' && m_matchedBracket.m_nearCursor == current) ||  (c == '>' && m_matchedBracket.m_matched == current))
+                            cursor = m_matchedBracket.m_nearCursor;
+                        else if ((c == '>' && m_matchedBracket.m_nearCursor == current) ||  (c == '<' && m_matchedBracket.m_matched == current))
+                            cursor = m_matchedBracket.m_matched;
+
+                        if (cursor != Invalid) {
+                            if (cursor.m_column == 0 && cursor.m_line > 0) {
+                                cursor.m_line--;
+                                cursor.m_column = m_lines[cursor.m_line].m_colors.size() - 1;
+                            } else if (cursor.m_column > 0) {
+                                cursor.m_column--;
                             }
+                            while (std::isblank(m_lines[cursor.m_line].m_colors[cursor.m_column]) && (cursor.m_line != 0 || cursor.m_column != 0)) {
+                                if (cursor.m_column == 0 && cursor.m_line > 0) {
+                                    cursor.m_line--;
+                                    cursor.m_column = m_lines[cursor.m_line].m_colors.size() - 1;
+                                } else
+                                    cursor.m_column--;
+                            }
+                            if (m_lines[cursor.m_line].m_colors[cursor.m_column] == udt && (cursor.m_line != 0 || cursor.m_column != 0))
+                                matchedBracket = true;
                         }
                     }
 
@@ -240,7 +263,7 @@ namespace hex::ui {
                     if (c != m_languageDefinition.m_preprocChar && !isspace(c))
                         firstChar = false;
 
-                    bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= (i64) currentIndex));
+                    bool isComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= (i64) currentIndex));
 
                     if (withinString) {
                         setGlyphFlags(currentIndex);
@@ -250,7 +273,7 @@ namespace hex::ui {
                         } else if (c == '\"')
                             withinString = false;
                     } else {
-                        if (firstChar && c == m_languageDefinition.m_preprocChar && !inComment && !withinComment && !withinDocComment && !withinString) {
+                        if (firstChar && c == m_languageDefinition.m_preprocChar && !isComment && !withinComment && !withinDocComment && !withinString) {
                             withinPreproc = true;
                             std::string directive;
                             auto start = currentIndex + 1;
@@ -271,21 +294,23 @@ namespace hex::ui {
                                     identifier += line[start];
                                     start++;
                                 }
+                                auto definesBegin = m_defines.begin();
+                                auto definesEnd = m_defines.end();
                                 if (directive == "define") {
-                                    if (identifier.size() > 0 && !withinNotDef && std::find(m_defines.begin(), m_defines.end(), identifier) == m_defines.end())
+                                    if (!identifier.empty() && !withinNotDef && std::find(definesBegin, definesEnd, identifier) == definesEnd)
                                         m_defines.push_back(identifier);
                                 } else if (directive == "undef") {
-                                    if (identifier.size() > 0 && !withinNotDef)
-                                        m_defines.erase(std::remove(m_defines.begin(), m_defines.end(), identifier), m_defines.end());
+                                    if (!identifier.empty() && !withinNotDef)
+                                        m_defines.erase(std::remove(definesBegin, definesEnd, identifier), definesEnd);
                                 } else if (directive == "ifdef") {
                                     if (!withinNotDef) {
-                                        bool isConditionMet = std::find(m_defines.begin(), m_defines.end(), identifier) != m_defines.end();
+                                        bool isConditionMet = std::find(definesBegin, definesEnd, identifier) != definesEnd;
                                         ifDefs.push_back(isConditionMet);
                                     } else
                                         ifDefs.push_back(false);
                                 } else if (directive == "ifndef") {
                                     if (!withinNotDef) {
-                                        bool isConditionMet = std::find(m_defines.begin(), m_defines.end(), identifier) == m_defines.end();
+                                        bool isConditionMet = std::find(definesBegin, definesEnd, identifier) == definesEnd;
                                         ifDefs.push_back(isConditionMet);
                                     } else
                                         ifDefs.push_back(false);
@@ -293,7 +318,7 @@ namespace hex::ui {
                             }
                         }
 
-                        if (c == '\"' && !withinPreproc && !inComment && !withinComment && !withinDocComment) {
+                        if (c == '\"' && !withinPreproc && !isComment && !withinComment && !withinDocComment) {
                             withinString = true;
                             setGlyphFlags(currentIndex);
                         } else {
@@ -307,12 +332,12 @@ namespace hex::ui {
                                 return !a.empty() && currentIndex + 1 >= a.size() && equals(a.begin(), a.end(), b.begin() + (currentIndex + 1 - a.size()), b.begin() + (currentIndex + 1), pred);
                             };
 
-                            if (!inComment && !withinComment && !withinDocComment && !withinPreproc && !withinString) {
+                            if (!isComment && !withinComment && !withinDocComment && !withinPreproc && !withinString) {
                                 if (compareForth(m_languageDefinition.m_docComment, line.m_chars)) {
-                                    withinDocComment = !inComment;
+                                    withinDocComment = !isComment;
                                     commentLength = 3;
                                 } else if (compareForth(m_languageDefinition.m_singleLineComment, line.m_chars)) {
-                                    withinComment = !inComment;
+                                    withinComment = !isComment;
                                     commentLength = 2;
                                 } else {
                                     bool isGlobalDocComment = compareForth(m_languageDefinition.m_globalDocComment, line.m_chars);
@@ -338,7 +363,7 @@ namespace hex::ui {
                                         }
                                     }
                                 }
-                                inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= (i64) currentIndex));
+                                isComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= (i64) currentIndex));
                             }
                             setGlyphFlags(currentIndex);
 
@@ -381,7 +406,7 @@ namespace hex::ui {
         m_regexList.clear();
 
         for (auto &r: m_languageDefinition.m_tokenRegexStrings)
-            m_regexList.push_back(std::make_pair(std::regex(r.first, std::regex_constants::optimize), r.second));
+            m_regexList.emplace_back(std::regex(r.first, std::regex_constants::optimize), r.second);
 
         colorize();
     }
@@ -623,16 +648,16 @@ namespace hex::ui {
                 langDef.m_identifiers.insert(std::make_pair(std::string(k), id));
             }
 
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::StringLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\!\\%\\^\\&\\*\\-\\+\\=\\~\\|\\<\\>\\?\\/]", PaletteIndex::Operator));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\[\\]\\{\\}\\(\\)\\;\\,\\.]", PaletteIndex::Separator));
+            langDef.m_tokenRegexStrings.emplace_back("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive);
+            langDef.m_tokenRegexStrings.emplace_back(R"(L?\"(\\.|[^\"])*\")", PaletteIndex::StringLiteral);
+            langDef.m_tokenRegexStrings.emplace_back(R"(\'\\?[^\']\')", PaletteIndex::CharLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\!\%\^\&\*\-\+\=\~\|\<\>\?\/])", PaletteIndex::Operator);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\[\]\{\}\(\)\;\,\.])", PaletteIndex::Separator);
             langDef.m_commentStart = "/*";
             langDef.m_commentEnd = "*/";
             langDef.m_singleLineComment = "//";
@@ -674,16 +699,16 @@ namespace hex::ui {
                 langDef.m_identifiers.insert(std::make_pair(std::string(k), id));
             }
 
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::StringLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\!\\%\\^\\&\\*\\-\\+\\=\\~\\|\\<\\>\\?\\/]", PaletteIndex::Operator));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\[\\]\\{\\}\\(\\)\\;\\,\\.]", PaletteIndex::Separator));
+            langDef.m_tokenRegexStrings.emplace_back("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive);
+            langDef.m_tokenRegexStrings.emplace_back(R"(L?\"(\\.|[^\"])*\")", PaletteIndex::StringLiteral);
+            langDef.m_tokenRegexStrings.emplace_back(R"(\'\\?[^\']\')", PaletteIndex::CharLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\!\%\^\&\*\-\+\=\~\|\<\>\?\/])", PaletteIndex::Operator);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\[\]\{\}\(\)\;\,\.])", PaletteIndex::Separator);
             langDef.m_commentStart = "/*";
             langDef.m_commentEnd = "*/";
             langDef.m_singleLineComment = "//";
@@ -818,16 +843,16 @@ namespace hex::ui {
                 langDef.m_identifiers.insert(std::make_pair(std::string(k), id));
             }
 
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::StringLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\!\\%\\^\\&\\*\\-\\+\\=\\~\\|\\<\\>\\?\\/]", PaletteIndex::Operator));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\[\\]\\{\\}\\(\\)\\;\\,\\.]", PaletteIndex::Separator));
+            langDef.m_tokenRegexStrings.emplace_back("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive);
+            langDef.m_tokenRegexStrings.emplace_back(R"(L?\"(\\.|[^\"])*\")", PaletteIndex::StringLiteral);
+            langDef.m_tokenRegexStrings.emplace_back(R"(\'\\?[^\']\')", PaletteIndex::CharLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\!\%\^\&\*\-\+\=\~\|\<\>\?\/])", PaletteIndex::Operator);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\[\]\{\}\(\)\;\,\.])", PaletteIndex::Separator);
 
             langDef.m_commentStart = "/*";
             langDef.m_commentEnd = "*/";
@@ -871,16 +896,16 @@ namespace hex::ui {
                 langDef.m_identifiers.insert(std::make_pair(std::string(k), id));
             }
 
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::StringLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\!\\%\\^\\&\\*\\-\\+\\=\\~\\|\\<\\>\\?\\/]", PaletteIndex::Operator));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\[\\]\\{\\}\\(\\)\\;\\,\\.]", PaletteIndex::Separator));
+            langDef.m_tokenRegexStrings.emplace_back("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive);
+            langDef.m_tokenRegexStrings.emplace_back(R"(L?\"(\\.|[^\"])*\")", PaletteIndex::StringLiteral);
+            langDef.m_tokenRegexStrings.emplace_back(R"(\'\\?[^\']\')", PaletteIndex::CharLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?",PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\!\%\^\&\*\-\+\=\~\|\<\>\?\/])", PaletteIndex::Operator);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\[\]\{\}\(\)\;\,\.])", PaletteIndex::Separator);
 
             langDef.m_commentStart = "/*";
             langDef.m_commentEnd = "*/";
@@ -935,16 +960,16 @@ namespace hex::ui {
                 langDef.m_identifiers.insert(std::make_pair(std::string(k), id));
             }
 
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Directive));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::StringLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\!\\%\\^\\&\\*\\-\\+\\=\\~\\|\\<\\>\\?\\/]", PaletteIndex::Operator));
-            langDef.m_tokenRegexStrings.push_back(std::make_pair("[\\[\\]\\{\\}\\(\\)\\;\\,\\.]", PaletteIndex::Separator));
+            langDef.m_tokenRegexStrings.emplace_back(R"([ \t]*#[ \t]*[a-zA-Z_]+)", PaletteIndex::Directive);
+            langDef.m_tokenRegexStrings.emplace_back(R"(L?\"(\\.|[^\"])*\")", PaletteIndex::StringLiteral);
+            langDef.m_tokenRegexStrings.emplace_back(R"(\'\\?[^\']\')", PaletteIndex::CharLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::NumericLiteral);
+            langDef.m_tokenRegexStrings.emplace_back("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\!\%\^\&\*\-\+\=\~\|\<\>\?\/])", PaletteIndex::Operator);
+            langDef.m_tokenRegexStrings.emplace_back(R"([\[\]\{\}\(\)\;\,\.])", PaletteIndex::Separator);
 
             langDef.m_commentStart = "--[[";
             langDef.m_commentEnd = "]]";
@@ -975,10 +1000,11 @@ namespace hex::ui {
                 }
 
                 // handle escape character for "
-                if (*p == '\\' && p + 1 < in_end && p[1] == '\\')
-                    p++;
-                else if (*p == '\\' && p + 1 < in_end && p[1] == '"')
-                    p++;
+                if (*p == '\\' && p + 1 < in_end) {
+                    if (p[1] == '\\' || p[1] == '"') {
+                        p++;
+                    }
+                }
 
                 p++;
             }
@@ -1143,9 +1169,9 @@ namespace hex::ui {
                 out_begin = in_begin;
                 out_end = in_begin + 1;
                 return true;
+            default:
+                return false;
         }
-
-        return false;
     }
 
     bool tokenizeCStyleSeparator(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end) {
@@ -1164,8 +1190,8 @@ namespace hex::ui {
                 out_begin = in_begin;
                 out_end = in_begin + 1;
                 return true;
+            default:
+                return false;
         }
-
-        return false;
     }
 }

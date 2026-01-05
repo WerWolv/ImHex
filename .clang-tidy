@@ -1,69 +1,97 @@
-# Generated from CLion Inspection settings
----
-Checks: '-*,
-mpi-*,
-bugprone-*,
--bugprone-signal-handler,
--bugprone-narrowing-conversions,
--bugprone-redundant-branch-condition,
--bugprone-exception-escape,
--bugprone-shared-ptr-array-mismatch,
--bugprone-implicit-widening-of-multiplication-result,
--bugprone-signed-char-misuse,
--bugprone-unhandled-exception-at-new,
--bugprone-infinite-loop,
--bugprone-easily-swappable-parameters,
-cert-err52-cpp,
-cert-err60-cpp,
-cert-err34-c,
-cert-str34-c,
-cert-dcl21-cpp,
-cert-msc50-cpp,
-cert-msc51-cpp,
-cert-dcl58-cpp,
-cert-flp30-c,
-cppcoreguidelines-avoid-const-or-ref-data-members,
-cppcoreguidelines-pro-type-member-init,
-cppcoreguidelines-slicing,
-cppcoreguidelines-interfaces-global-init,
-cppcoreguidelines-pro-type-static-cast-downcast,
-cppcoreguidelines-narrowing-conversions,
-google-default-arguments,
-google-runtime-operator,
-google-explicit-constructor,
-hicpp-multiway-paths-covered,
-hicpp-exception-baseclass,
-misc-*,
--misc-definitions-in-headers,
--misc-unused-parameters,
--misc-unused-alias-decls,
--misc-use-anonymous-namespace,
--misc-misleading-identifier,
--misc-confusable-identifiers,
--misc-misleading-bidirectional,
--misc-static-assert,
--misc-no-recursion,
--misc-const-correctness,
-modernize-*,
--modernize-use-trailing-return-type,
-openmp-use-default-none,
-performance-*,
--performance-no-int-to-ptr,
-portability-*,
--portability-restrict-system-includes,
-readability-*,
--readability-redundant-preprocessor,
--readability-named-parameter,
--readability-function-size,
--readability-use-anyofallof,
--readability-identifier-length,
--readability-magic-numbers,
--readability-braces-around-statements,
--readability-suspicious-call-argument,
--readability-isolate-declaration,
--readability-else-after-return,
--readability-redundant-access-specifiers,
--readability-function-cognitive-complexity,
--readability-identifier-naming,
-*-include-cleaner,
--readability-qualified-auto'
+# All rules should have a comment associated
+# Directives that do not have any effect (e.g. disabling a rule that is not enabled) can be done to add an explanation comment. 
+# Or at least an empty comment # to show they were put here explicitely,
+# and not as part of the historical CLion-generated rules
+# Note: `- -X` means disable X
+# CLI usage: go to the build directory and run: `run-clang-tidy -allow-no-checks -source-filter ".*/lib/.*" -fix -j`
+
+Checks:
+- -*
+- mpi-*
+- bugprone-*
+- -bugprone-signal-handler
+- -bugprone-narrowing-conversions
+- -bugprone-redundant-branch-condition
+- -bugprone-exception-escape
+- -bugprone-shared-ptr-array-mismatch
+- -bugprone-implicit-widening-of-multiplication-result
+- -bugprone-signed-char-misuse
+- -bugprone-unhandled-exception-at-new
+- -bugprone-infinite-loop
+- -bugprone-easily-swappable-parameters
+- -bugprone-float-loop-counter #
+- -bugprone-unchecked-string-to-number-conversion # Unfortunately no alternative
+- -bugprone-branch-clone # Mostly warns about one-line duplicates
+- cert-err52-cpp
+- cert-err60-cpp
+- cert-str34-c
+- cert-dcl21-cpp
+- cert-msc50-cpp
+- cert-msc51-cpp
+- cert-dcl58-cpp
+- cppcoreguidelines-avoid-const-or-ref-data-members
+- cppcoreguidelines-pro-type-member-init # We want to use default member initializers
+- cppcoreguidelines-slicing
+- cppcoreguidelines-interfaces-global-init
+- -cppcoreguidelines-pro-type-static-cast-downcast # dynamic_cast has a runtime overhead
+- -cppcoreguidelines-narrowing-conversions #
+- google-runtime-operator
+- google-explicit-constructor
+- -google-default-arguments # Provider and ViewProvider read() is a good example of why this is useful
+- hicpp-multiway-paths-covered
+- hicpp-exception-baseclass
+- misc-*
+- -misc-definitions-in-headers
+- -misc-unused-parameters
+- -misc-unused-alias-decls
+- -misc-use-anonymous-namespace
+- -misc-misleading-identifier
+- -misc-confusable-identifiers
+- -misc-misleading-bidirectional
+- -misc-static-assert
+- -misc-no-recursion
+- -misc-const-correctness
+- -misc-use-internal-linkage # False positives if header where function is defined is not included
+- -misc-include-cleaner # Allow indirect includes
+- -misc-non-private-member-variables-in-classes #
+- modernize-*
+- -modernize-use-trailing-return-type
+- -modernize-use-std-print # We want to use fmt::print instead
+- -modernize-use-integer-sign-comparison # Too much occurrences to change
+- openmp-use-default-none
+- performance-*
+- -performance-no-int-to-ptr
+- portability-*
+- -portability-restrict-system-includes
+- readability-*
+- -readability-redundant-preprocessor
+- -readability-named-parameter
+- -readability-function-size
+- -readability-use-anyofallof
+- -readability-identifier-length
+- -readability-magic-numbers
+- -readability-braces-around-statements
+- -readability-suspicious-call-argument
+- -readability-isolate-declaration
+- -readability-else-after-return
+- -readability-redundant-access-specifiers
+- -readability-function-cognitive-complexity
+- -readability-identifier-naming
+- -readability-qualified-auto
+- -readability-use-std-min-max # Less readable imo
+- -readability-math-missing-parentheses # Basic math
+- -readability-implicit-bool-conversion # Not much of a problem ?
+- -readability-convert-member-functions-to-static #
+- -readability-use-concise-preprocessor-directives # We do not use #ifdef
+- -readability-uppercase-literal-suffix # Not important enough
+- -readability-redundant-string-cstr # Sometimes used to stop at first null byte
+- -readability-static-accessed-through-instance #
+- -readability-ambiguous-smartptr-reset-call # Fix is hard to read
+
+# Will fix later
+- -modernize-avoid-c-arrays
+- -readability-make-member-function-const # idk + lots of occurences
+- -readability-misleading-indentation # We need to handle cases with #if defined()
+- -bugprone-unchecked-optional-access
+- -performance-unnecessary-value-param # idk
+- -readability-avoid-nested-conditional-operator

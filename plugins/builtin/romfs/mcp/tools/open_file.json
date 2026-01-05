@@ -1,0 +1,47 @@
+{
+    "name": "open_file",
+    "title": "Open File",
+    "description": "Opens a file from the filesystem, given the file path in ImHex. This is the first step that always needs to be done first before any of the other tools can be used. A file stays open until it's closed by the user.",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "file_path": {
+                "type": "string",
+                "description": "Path of the file to open"
+            }
+        },
+        "required": ["file_path"]
+    },
+    "outputSchema": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "description": "Name of the data source"
+            },
+            "type": {
+                "type": "string",
+                "description": "Internal type of the data source"
+            },
+            "size": {
+                "type": "number",
+                "description": "Size of the data source in bytes"
+            },
+            "is_writable": {
+                "type": "boolean",
+                "description": "Whether the data source is writable"
+            },
+            "handle": {
+                "type": "number",
+                "description": "Handle of the data source to reference it in other tools"
+            }
+        },
+        "required": [
+            "name",
+            "type",
+            "size",
+            "is_writable",
+            "handle"
+        ]
+    }
+}

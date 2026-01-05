@@ -120,6 +120,7 @@ modules:
       - -DUSE_SYSTEM_FMT=ON
       - -DUSE_SYSTEM_YARA=ON
       - -DIMHEX_OFFLINE_BUILD=ON
+      - -DIMHEX_BUNDLE_PLUGIN_SDK=OFF
       - -DCMAKE_INSTALL_LIBDIR=lib
       - -DCMAKE_INSTALL_RPATH='$ORIGIN/../lib:$ORIGIN/../lib64'
     sources:

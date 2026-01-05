@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
             const auto &path = file->path;
 
             auto currSegment = wolv::io::fs::toNormalizedPathString(*std::next(path.begin(), level));
-            if (std::distance(path.begin(), path.end()) == ptrdiff_t(level + 1)) {
+            if (std::distance(path.begin(), path.end()) == i32(level + 1)) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
@@ -213,7 +213,7 @@ namespace hex::plugin::builtin {
             bool patternsValid = false;
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                patternsValid = runtime.arePatternsValid();
+                patternsValid = runtime.getCreatedPatternCount() > 0 && runtime.arePatternsValid();
             }
 
             if (ImGui::BeginTabBar("##SectionSelector")) {
@@ -304,7 +304,7 @@ namespace hex::plugin::builtin {
                                 try {
                                     const auto attribute = pattern->getAttributeArguments(SimplifiedEditorAttribute);
 
-                                    const auto name = attribute.size() >= 1 ? attribute[0].toString() : pattern->getDisplayName();
+                                    const auto name = !attribute.empty() ? attribute[0].toString() : pattern->getDisplayName();
                                     const auto description = attribute.size() >= 2 ? attribute[1].toString() : pattern->getComment();
 
                                     const auto widgetPos = 200_scaled;

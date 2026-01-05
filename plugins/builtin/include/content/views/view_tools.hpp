@@ -7,7 +7,7 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewTools : public View::Window {
+    class ViewTools : public View::Scrolling {
     public:
         ViewTools();
         ~ViewTools() override = default;

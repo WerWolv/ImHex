@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
@@ -81,11 +82,7 @@ namespace hex::plugin::builtin {
                         return "%d FPS";
                 }();
 
-                if (ImGui::SliderInt(name.data(), &m_value, 14, 201, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
-                    return true;
-                }
-
-                return false;
+                return ImGui::SliderInt(name.data(), &m_value, 14, 201, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
             }
 
             void load(const nlohmann::json &data) override {
@@ -129,7 +126,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGuiExt::DimmedIconButton(ICON_VS_NEW_FOLDER, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     fs::openFileBrowser(fs::DialogMode::Folder, {}, [&](const std::fs::path &path) {
-                        if (std::find(m_paths.begin(), m_paths.end(), path) == m_paths.end()) {
+                        if (std::ranges::find(m_paths, path) == m_paths.end()) {
                             m_paths.emplace_back(path);
                             ImHexApi::System::setAdditionalFolderPaths(m_paths);
 
@@ -170,7 +167,8 @@ namespace hex::plugin::builtin {
             nlohmann::json store() override {
                 std::vector<std::string> pathStrings;
 
-                for (const auto &path : m_paths) {
+                pathStrings.reserve(m_paths.size());
+for (const auto &path : m_paths) {
                     pathStrings.push_back(wolv::io::fs::toNormalizedPathString(path));
                 }
 
@@ -211,7 +209,7 @@ namespace hex::plugin::builtin {
                 return m_value;
             }
 
-            float getValue() const {
+            [[nodiscard]] float getValue() const {
                 return m_value;
             }
 
@@ -227,16 +225,12 @@ namespace hex::plugin::builtin {
                     if (value == 0)
                         return "hex.ui.common.off"_lang;
                     else if (value < 60)
-                        return fmt::format("hex.builtin.setting.general.auto_backup_time.format.simple"_lang, value);
+                        return fmt::format("hex.builtin.setting.general.backups.auto_backup_time.format.simple"_lang, value);
                     else
-                        return fmt::format("hex.builtin.setting.general.auto_backup_time.format.extended"_lang, value / 60, value % 60);
+                        return fmt::format("hex.builtin.setting.general.backups.auto_backup_time.format.extended"_lang, value / 60, value % 60);
                 }();
 
-                if (ImGui::SliderInt(name.data(), &m_value, 0, (30 * 60) / 30, format.c_str(), ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput)) {
-                    return true;
-                }
-
-                return false;
+                return ImGui::SliderInt(name.data(), &m_value, 0, (30 * 60) / 30, format.c_str(), ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput);
             }
 
             void load(const nlohmann::json &data) override {
@@ -756,26 +750,46 @@ namespace hex::plugin::builtin {
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
-            ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "", "hex.builtin.setting.general.auto_backup_time");
             ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "", "hex.builtin.setting.general.max_mem_file_size", 512_MiB, 0_bytes, 32_GiB, 1_MiB)
                 .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc");
             ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.pattern_data_max_filter_items", 128, 32, 1024);
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
+            auto suggestPatterns = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.suggest_patterns", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_apply_patterns", false).setEnabledCallback([=] {
+                return static_cast<Widgets::Checkbox&>(suggestPatterns.getWidget()).isChecked();
+            });
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
+
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.mcp_server", false)
+                .setTooltip("hex.builtin.setting.general.mcp_server.desc");
 
             #if !defined(OS_WEB)
                 ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact");
                 ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true);
             #endif
+
+
+            ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.auto_backup_time");
+            ContentRegistry::Settings::add<Widgets::Spacer>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.spacer");
+
+            auto fileBackupEnabledWidget = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.file_backup.enable", true);
+            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.file_backup.max_size", 512_MiB, 0_bytes, 32_GiB, 1_MiB)
+                .setEnabledCallback([=] {
+                    return static_cast<Widgets::Checkbox&>(fileBackupEnabledWidget.getWidget()).isChecked();
+                });
+            ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.file_backup.extension", ".bak")
+                .setEnabledCallback([=] {
+                    return static_cast<Widgets::Checkbox&>(fileBackupEnabledWidget.getWidget()).isChecked();
+                });
         }
 
         /* Interface */
         {
             auto themeNames = ThemeManager::getThemeNames();
             std::vector<nlohmann::json> themeJsons = { };
+            themeJsons.reserve(themeNames.size());
             for (const auto &themeName : themeNames)
                 themeJsons.emplace_back(themeName);
 
@@ -877,6 +891,8 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.randomize_window_title", false);
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.restore_window_pos", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.show_task_finish_notification", true)
+                .setTooltip("hex.builtin.setting.interface.show_task_finish_notification.desc");
 
             ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.highlight_color", ImColor(0x80, 0x80, 0xC0, 0x60));
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.sync_scrolling", false);
@@ -1041,7 +1057,8 @@ namespace hex::plugin::builtin {
         auto folderPathStrings = ContentRegistry::Settings::read<std::vector<std::string>>("hex.builtin.setting.folders", "hex.builtin.setting.folders", { });
 
         std::vector<std::fs::path> paths;
-        for (const auto &pathString : folderPathStrings) {
+        paths.reserve(folderPathStrings.size());
+for (const auto &pathString : folderPathStrings) {
             paths.emplace_back(pathString);
         }
 

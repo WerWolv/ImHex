@@ -20,6 +20,7 @@
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
+#include "imgui_internal.h"
 
 namespace hex::plugin::builtin {
 
@@ -40,12 +41,12 @@ namespace hex::plugin::builtin {
                 *id = bookmarkId;
 
             auto bookmark = ImHexApi::Bookmarks::Entry {
-                region,
-                name,
-                std::move(comment),
-                color,
-                true,
-                bookmarkId
+                .region=region,
+                .name=name,
+                .comment=std::move(comment),
+                .color=color,
+                .locked=true,
+                .id=bookmarkId
             };
 
             m_bookmarks->emplace_back(std::move(bookmark), true, ui::Markdown(bookmark.comment));
@@ -72,7 +73,7 @@ namespace hex::plugin::builtin {
                 if (!bookmark.highlightVisible)
                     continue;
 
-                if (Region { address, size }.isWithin(bookmark.entry.region)) {
+                if (Region { .address=address, .size=size }.isWithin(bookmark.entry.region)) {
                     color = blendColors(color, bookmark.entry.color);
                 }
             }
@@ -90,7 +91,7 @@ namespace hex::plugin::builtin {
                     continue;
 
                 // Make sure the bookmark overlaps the currently hovered address
-                if (!Region { address, size }.isWithin(bookmark.region))
+                if (!Region { .address=address, .size=size }.isWithin(bookmark.region))
                     continue;
 
                 // Draw tooltip
@@ -389,14 +390,13 @@ namespace hex::plugin::builtin {
                         auto provider = ImHexApi::Provider::get();
                         TaskManager::doLater([region, provider, name]{
                             auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
-                            if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                            if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider.get()); viewProvider != nullptr) {
                                 viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
                                 viewProvider->setName(fmt::format("'{}' View", name));
 
-                                if (viewProvider->open()) {
-                                    EventProviderOpened::post(viewProvider);
-                                    AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
-                                }
+                                ImHexApi::Provider::openProvider(newProvider);
+
+                                AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
                             }
                         });
                     }
@@ -564,7 +564,7 @@ namespace hex::plugin::builtin {
 
             m_bookmarks.get(provider).push_back({
                 {
-                    .region     = { region["address"], region["size"] },
+                    .region     = { .address=region["address"], .size=region["size"] },
                     .name       = bookmark["name"],
                     .comment    = bookmark["comment"],
                     .color      = bookmark["color"],
@@ -626,7 +626,9 @@ namespace hex::plugin::builtin {
             fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&, this](const std::fs::path &path) {
                 try {
                     this->importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString()));
-                } catch (...) { }
+                } catch (const std::exception &e) {
+                    log::warn("Failed to import bookmarks: {}", e.what());
+                }
             });
         }, ImHexApi::Provider::isValid);
 

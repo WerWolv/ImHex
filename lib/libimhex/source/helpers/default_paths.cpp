@@ -1,10 +1,10 @@
+#include <algorithm>
 #include <hex/helpers/default_paths.hpp>
 
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/project_file_manager.hpp>
 
 #include <ranges>
-#include <algorithm>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -39,7 +39,7 @@ namespace hex::paths {
             paths.push_back(xdg::DataHomeDir());
 
             auto dataDirs = xdg::DataDirs();
-            std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
+            std::ranges::copy(dataDirs, std::back_inserter(paths));
 
         #endif
 
@@ -97,11 +97,18 @@ namespace hex::paths {
     }
 
     static std::vector<std::fs::path> getPluginPaths() {
+        // If running from an AppImage, only allow loaded plugins from inside it
+        #if defined(OS_LINUX)
+        if(const char* appdir = std::getenv("APPDIR")) { // check for AppImage environment
+            return {std::string(appdir) + "/usr/lib/imhex"};
+        }
+        #endif
+
         std::vector<std::fs::path> paths = getDataPaths(true);
 
         // Add the system plugin directory to the path if one was provided at compile time
         #if defined(OS_LINUX) && defined(SYSTEM_PLUGINS_LOCATION)
-            paths.push_back(SYSTEM_PLUGINS_LOCATION);
+            paths.emplace_back(SYSTEM_PLUGINS_LOCATION);
         #endif
 
         return paths;

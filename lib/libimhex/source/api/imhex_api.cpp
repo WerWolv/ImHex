@@ -47,6 +47,10 @@
 
 #if defined(OS_WEB)
     #include <emscripten.h>
+#elif defined(OS_MACOS)
+    extern "C" {
+        void macosRegisterFont(const unsigned char *data, size_t size);
+    }
 #endif
 
 namespace hex {
@@ -257,7 +261,7 @@ namespace hex {
         }
 
         void setSelection(u64 address, size_t size, prv::Provider *provider) {
-            setSelection({ { address, size }, provider == nullptr ? Provider::get() : provider });
+            setSelection({ { .address=address, .size=size }, provider == nullptr ? Provider::get() : provider });
         }
 
         void addVirtualFile(const std::string &path, std::vector<u8> data, Region region) {
@@ -281,7 +285,7 @@ namespace hex {
         }
 
         u64 add(u64 address, size_t size, const std::string &name, const std::string &comment, u32 color) {
-            return add(Region { address, size }, name, comment, color);
+            return add(Region { .address=address, .size=size }, name, comment, color);
         }
 
         void remove(u64 id) {
@@ -294,8 +298,8 @@ namespace hex {
     namespace ImHexApi::Provider {
 
         static i64 s_currentProvider = -1;
-        static AutoReset<std::vector<std::unique_ptr<prv::Provider>>> s_providers;
-        static AutoReset<std::map<prv::Provider*, std::unique_ptr<prv::Provider>>> s_providersToRemove;
+        static AutoReset<std::vector<std::shared_ptr<prv::Provider>>> s_providers;
+        static AutoReset<std::map<prv::Provider*, std::shared_ptr<prv::Provider>>> s_providersToRemove;
 
         namespace impl {
 
@@ -382,7 +386,7 @@ namespace hex {
             });
         }
 
-        void add(std::unique_ptr<prv::Provider> &&provider, bool skipLoadInterface, bool select) {
+        void add(std::shared_ptr<prv::Provider> &&provider, bool skipLoadInterface, bool select) {
             std::scoped_lock lock(impl::s_providerMutex);
 
             if (TaskManager::getRunningTaskCount() > 0)
@@ -391,7 +395,7 @@ namespace hex {
             if (skipLoadInterface)
                 provider->skipLoadInterface();
 
-            EventProviderCreated::post(provider.get());
+            EventProviderCreated::post(provider);
             s_providers->emplace_back(std::move(provider));
 
             if (select || s_providers->size() == 1)
@@ -491,11 +495,15 @@ namespace hex {
             });
         }
 
-        prv::Provider* createProvider(const UnlocalizedString &unlocalizedName, bool skipLoadInterface, bool select) {
-            prv::Provider* result = nullptr;
+        std::shared_ptr<prv::Provider> createProvider(const UnlocalizedString &unlocalizedName, bool skipLoadInterface, bool select) {
+            std::shared_ptr<prv::Provider> result = nullptr;
             RequestCreateProvider::post(unlocalizedName, skipLoadInterface, select, &result);
 
             return result;
+        }
+
+        void openProvider(std::shared_ptr<prv::Provider> provider) {
+            RequestOpenProvider::post(provider);
         }
 
     }
@@ -528,6 +536,11 @@ namespace hex {
             static GLFWwindow *s_mainWindowHandle;
             void setMainWindowHandle(GLFWwindow *window) {
                 s_mainWindowHandle = window;
+            }
+
+            static bool s_mainWindowFocused = false;
+            void setMainWindowFocusState(bool focused) {
+                s_mainWindowFocused = focused;
             }
 
 
@@ -673,7 +686,7 @@ namespace hex {
                     return std::midpoint(xScale, yScale);
                 }
             #elif defined(OS_WEB)
-                return 1.0F;
+                return MAIN_THREAD_EM_ASM_INT({ return window.devicePixelRatio; });
             #else
                 return 1.0F;
             #endif
@@ -698,6 +711,10 @@ namespace hex {
 
         GLFWwindow* getMainWindowHandle() {
             return impl::s_mainWindowHandle;
+        }
+
+        bool isMainWindowFocused() {
+            return impl::s_mainWindowFocused;
         }
 
         bool isBorderlessWindowModeEnabled() {
@@ -896,7 +913,7 @@ namespace hex {
                 }
             }
 
-            return { { name, version } };
+            return { { .name=name, .version=version } };
         }
 
         const SemanticVersion& getImHexVersion() {
@@ -1201,6 +1218,10 @@ namespace hex {
                 offset,
                 fontSizeMultiplier
             );
+
+            #if defined(OS_MACOS)
+                macosRegisterFont(data.data(), data.size_bytes());
+            #endif
         }
 
         void registerFont(const Font& font) {
@@ -1212,7 +1233,7 @@ namespace hex {
             
             if (it == impl::s_fontDefinitions->end()) {
                 const auto defaultFont = ImGui::GetDefaultFont();
-                return { defaultFont, defaultFont, defaultFont };
+                return { .regular=defaultFont, .bold=defaultFont, .italic=defaultFont };
             } else
                 return it->second;
         }

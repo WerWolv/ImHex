@@ -25,8 +25,6 @@
 #include <hex/ui/banner.hpp>
 
 #include <cmath>
-#include <chrono>
-#include <csignal>
 #include <numbers>
 
 #include <romfs/romfs.hpp>
@@ -112,7 +110,7 @@ namespace hex {
 
         LayoutManager::registerLoadCallback([this](std::string_view line) {
             int width = 0, height = 0;
-            sscanf(line.data(), "MainWindowSize=%d,%d", &width, &height);
+            sscanf(std::string(line).data(), "MainWindowSize=%d,%d", &width, &height);
 
             if (width > 0 && height > 0) {
                 TaskManager::doLater([width, height, this]{
@@ -663,7 +661,7 @@ namespace hex {
 
             const auto windowPos = ImHexApi::System::getMainWindowPosition();
             float startY = windowPos.y + ImGui::GetTextLineHeight() + ((ImGui::GetTextLineHeight() + (ImGui::GetStyle().FramePadding.y * 2.0F)) * (onWelcomeScreen ? 1 : 2));
-            const auto height = ImGui::GetTextLineHeightWithSpacing() * 1.5f;
+            const auto height = ImGui::GetTextLineHeightWithSpacing() * 1.5F;
 
             // Offset banner based on the size of the title bar. On macOS, it's slightly taller
             #if defined(OS_MACOS)
@@ -956,13 +954,13 @@ namespace hex {
             GLuint quadVAO, quadVBO;
             float quadVertices[] = {
                 // positions   // texCoords
-                -1.0f,  1.0f,  0.0f, 1.0f,
-                -1.0f, -1.0f,  0.0f, 0.0f,
-                 1.0f, -1.0f,  1.0f, 0.0f,
+                -1.0F,  1.0F,  0.0F, 1.0F,
+                -1.0F, -1.0F,  0.0F, 0.0F,
+                 1.0F, -1.0F,  1.0F, 0.0F,
 
-                -1.0f,  1.0f,  0.0f, 1.0f,
-                 1.0f, -1.0f,  1.0f, 0.0f,
-                 1.0f,  1.0f,  1.0f, 1.0f
+                -1.0F,  1.0F,  0.0F, 1.0F,
+                 1.0F, -1.0F,  1.0F, 0.0F,
+                 1.0F,  1.0F,  1.0F, 1.0F
             };
 
             glGenVertexArrays(1, &quadVAO);
@@ -971,7 +969,7 @@ namespace hex {
             glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
             glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
             glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
             glEnableVertexAttribArray(1);
             glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
             glBindVertexArray(0);
@@ -1013,7 +1011,7 @@ namespace hex {
 
             try {
                 log::error("GLFW Error [0x{:05X}] : {}", error, desc);
-            } catch (const std::system_error &) {
+            } catch (const std::system_error &) { //NOLINT(bugprone-empty-catch): we can't log it
                 // Catch and ignore system error that might be thrown when too many errors are being logged to a file
             }
         });
@@ -1168,7 +1166,10 @@ namespace hex {
         glfwSetCursorPosCallback(m_window, unlockFrameRate);
         glfwSetMouseButtonCallback(m_window, unlockFrameRate);
         glfwSetScrollCallback(m_window, unlockFrameRate);
-        glfwSetWindowFocusCallback(m_window, unlockFrameRate);
+        glfwSetWindowFocusCallback(m_window, [](GLFWwindow *window, int focused) {
+            unlockFrameRate(window);
+            ImHexApi::System::impl::setMainWindowFocusState(focused);
+        });
 
         glfwSetWindowMaximizeCallback(m_window, [](GLFWwindow *window, int) {
             glfwShowWindow(window);

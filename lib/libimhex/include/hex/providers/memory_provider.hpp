@@ -27,7 +27,7 @@ namespace hex::prv {
         [[nodiscard]] bool isSavable()          const override { return m_name.empty(); }
         [[nodiscard]] bool isSavableAsRecent()  const override { return false;          }
 
-        [[nodiscard]] bool open() override;
+        [[nodiscard]] OpenResult open() override;
         void close() override { }
 
         void readRaw(u64 offset, void *buffer, size_t size) override;

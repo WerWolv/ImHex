@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <hex.hpp>
 
 #include <hex/api/workspace_manager.hpp>
@@ -51,7 +52,7 @@ namespace hex::plugin::builtin {
 
         std::string s_tipOfTheDay;
 
-        bool s_simplifiedWelcomeScreen = false;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen"> s_simplifiedWelcomeScreen = false;
 
         class PopupRestoreBackup : public Popup<PopupRestoreBackup> {
         private:
@@ -162,7 +163,7 @@ namespace hex::plugin::builtin {
 
         bool isAnyViewOpen() {
             const auto &views = ContentRegistry::Views::impl::getEntries();
-            return std::any_of(views.begin(), views.end(),
+            return std::ranges::any_of(views,
                 [](const auto &entry) {
                     return entry.second->getWindowOpenState();
                 });
@@ -254,7 +255,7 @@ namespace hex::plugin::builtin {
                     if (colTile.has_value() && nextSegment != *colTile) {
                         segments.pop_back();
                     } else {
-                        colTile = { i32(rng() % u32(tileCount.x)), i32(rng() % u32(tileCount.x)) };
+                        colTile = { .x=i32(rng() % u32(tileCount.x)), .y=i32(rng() % u32(tileCount.x)) };
                     }
                 } else {
                     overCounter -= 1;
@@ -346,10 +347,10 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.start"_lang, nullptr, ImVec2(), ImGuiChildFlags_AutoResizeX)) {
                             if (ImGuiExt::IconHyperlink(ICON_VS_NEW_FILE, "hex.builtin.welcome.start.create_file"_lang)) {
                                 auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
-                                if (newProvider != nullptr && !newProvider->open())
-                                    hex::ImHexApi::Provider::remove(newProvider);
+                                if (newProvider != nullptr && newProvider->open().isFailure())
+                                    hex::ImHexApi::Provider::remove(newProvider.get());
                                 else
-                                    EventProviderOpened::post(newProvider);
+                                    EventProviderOpened::post(newProvider.get());
                             }
                             if (ImGuiExt::IconHyperlink(ICON_VS_GO_TO_FILE, "hex.builtin.welcome.start.open_file"_lang))
                                 RequestOpenWindow::post("Open File");
@@ -650,9 +651,7 @@ namespace hex::plugin::builtin {
                 }
             }
         });
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", [](const ContentRegistry::Settings::SettingsValue &value) {
-            s_simplifiedWelcomeScreen = value.get<bool>(false);
-        });
+
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", [](const ContentRegistry::Settings::SettingsValue &value) {
             auto language = value.get<std::string>("en-US");
             if (language != LocalizationManager::getSelectedLanguageId())
@@ -747,7 +746,7 @@ namespace hex::plugin::builtin {
                 auto backupFilePathOld = path / BackupFileName;
                 backupFilePathOld.replace_extension(".hexproj.old");
 
-                bool autoBackupsEnabled = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.auto_backup_time", 0) > 0;
+                bool autoBackupsEnabled = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.auto_backup_time", 0) > 0;
                 auto autoBackups = recent::PopupAutoBackups::getAutoBackups();
                 bool hasAutoBackups = autoBackupsEnabled && !autoBackups.empty();
 
@@ -819,7 +818,7 @@ namespace hex::plugin::builtin {
             std::mt19937 random(daysSinceEpoch.count());
 
             auto chosenCategory = tipsCategories[random()%tipsCategories.size()].at("tips");
-            auto chosenTip = chosenCategory[random()%chosenCategory.size()];
+            const auto& chosenTip = chosenCategory[random()%chosenCategory.size()];
             s_tipOfTheDay = chosenTip.get<std::string>();
 
             bool showTipOfTheDay = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", false);

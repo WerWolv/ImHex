@@ -10,9 +10,13 @@
 
 #include <array>
 
-#include <nethost.h>
-#include <coreclr_delegates.h>
-#include <hostfxr.h>
+#if __has_include(<nethost.h>)
+    #include <nethost.h>
+    #include <coreclr_delegates.h>
+    #include <hostfxr.h>
+#else
+    #error "nethost.h not found! This can happen when the .NET SDK was updated after the cmake project was created. Please regenerate the build files."
+#endif
 
 #include <imgui.h>
 #include <hex/api/plugin_manager.hpp>

@@ -264,8 +264,7 @@ namespace hex {
             }
         }
 
-        if (json.empty())
-            return;
+        if (json.empty()) return;
 
         #if defined(OS_WEB)
             auto data = json.dump();

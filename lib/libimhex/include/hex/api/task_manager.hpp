@@ -10,6 +10,7 @@
 #include <condition_variable>
 #include <source_location>
 #include <thread>
+#include <hex/trace/exceptions.hpp>
 
 EXPORT_MODULE namespace hex {
 
@@ -22,7 +23,7 @@ EXPORT_MODULE namespace hex {
     class Task {
     public:
         Task() = default;
-        Task(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function);
+        Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function);
 
         Task(const Task&) = delete;
         Task(Task &&other) noexcept;
@@ -94,7 +95,16 @@ EXPORT_MODULE namespace hex {
         std::atomic_flag m_hadException;
         std::string m_exceptionMessage;
 
-        struct TaskInterruptor { virtual ~TaskInterruptor() = default; };
+        struct TaskInterruptor: public std::exception {
+            TaskInterruptor() {
+                trace::disableExceptionCaptureForCurrentThread();
+            }
+            virtual ~TaskInterruptor() = default;
+
+            [[nodiscard]] const char* what() const noexcept override {
+                return "Task Interrupted";
+            }
+        };
 
         friend class TaskHolder;
         friend class TaskManager;
@@ -241,6 +251,8 @@ EXPORT_MODULE namespace hex {
 
         static const std::list<std::shared_ptr<Task>>& getRunningTasks();
         static void runDeferredCalls();
+
+        static void addTaskCompletionCallback(const std::function<void(Task&)>& function);
 
     private:
         static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function);

@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
             u16 address = 0x0000;
             std::vector<u8> data;
 
-            enum class RecordType {
+            enum class RecordType: u8 {
                 Data                    = 0x00,
                 EndOfFile               = 0x01,
                 ExtendedSegmentAddress  = 0x02,
@@ -165,11 +165,11 @@ namespace hex::plugin::builtin {
     void IntelHexProvider::setBaseAddress(u64 address) {
         auto oldBase = this->getBaseAddress();
 
-        auto regions = m_data.overlapping({ oldBase, oldBase + this->getActualSize() });
+        auto regions = m_data.overlapping({ .start=oldBase, .end=oldBase + this->getActualSize() });
 
         decltype(m_data) newIntervals;
         for (auto &[interval, data] : regions) {
-            newIntervals.insert({ interval.start - oldBase + address, interval.end - oldBase + address }, *data);
+            newIntervals.insert({ .start=interval.start - oldBase + address, .end=interval.end - oldBase + address }, *data);
         }
         m_data = newIntervals;
 
@@ -177,7 +177,7 @@ namespace hex::plugin::builtin {
     }
 
     void IntelHexProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        auto intervals = m_data.overlapping({ offset, (offset + size) - 1 });
+        auto intervals = m_data.overlapping({ .start=offset, .end=(offset + size) - 1 });
 
         std::memset(buffer, 0x00, size);
         auto bytes = static_cast<u8*>(buffer);
@@ -222,7 +222,7 @@ namespace hex::plugin::builtin {
             blockSize += bytes.size();
             prevAddrEnd = endAddress;
 
-            m_data.emplace({ address, endAddress }, std::move(bytes));
+            m_data.emplace({ .start=address, .end=endAddress }, std::move(bytes));
             if (endAddress > maxAddress)
                 maxAddress = endAddress;
         }
@@ -245,21 +245,19 @@ namespace hex::plugin::builtin {
         });
     }
 
-    bool IntelHexProvider::open() {
+    prv::Provider::OpenResult IntelHexProvider::open() {
         auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            this->setErrorMessage(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
-            return false;
+            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
         }
 
         auto data = intel_hex::parseIntelHex(file.readString());
         if (!data.has_value()) {
-            this->setErrorMessage(data.error());
-            return false;
+            return OpenResult::failure(data.error());
         }
         processMemoryRegions(data);
 
-        return true;
+        return {};
     }
 
     void IntelHexProvider::close() {
@@ -307,18 +305,18 @@ namespace hex::plugin::builtin {
     }
 
     std::pair<Region, bool> IntelHexProvider::getRegionValidity(u64 address) const {
-        auto intervals = m_data.overlapping({ address, address });
+        auto intervals = m_data.overlapping({ .start=address, .end=address });
         if (intervals.empty()) {
             return { Region(address, 1), false };
         }
 
-        decltype(m_data)::Interval closestInterval = { 0, 0 };
+        decltype(m_data)::Interval closestInterval = { .start=0, .end=0 };
         for (const auto &[interval, data] : intervals) {
             if (interval.start <= closestInterval.end)
                 closestInterval = interval;
         }
 
-        return { Region { closestInterval.start, (closestInterval.end - closestInterval.start) + 1}, Provider::getRegionValidity(address).second };
+        return { Region { .address=closestInterval.start, .size=(closestInterval.end - closestInterval.start) + 1}, Provider::getRegionValidity(address).second };
     }
 
     bool IntelHexProvider::memoryRegionFilter(const std::string& search, const MemoryRegion& memoryRegion) {
@@ -350,7 +348,7 @@ namespace hex::plugin::builtin {
             ImGui::TableHeadersRow();
 
             for (const auto &memoryRegion : filtered) {
-                ImGui::PushID(&memoryRegion);
+                ImGui::PushID((const void*) &memoryRegion);
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();

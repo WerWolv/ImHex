@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
                     m_foundPattern = pattern;
 
                     constexpr static auto DataDescriptionFunction = "get_data_description";
-                    if (runtime.executeFile(pattern.patternFilePath)) {
+                    if (runtime.executeFile(pattern.patternFilePath) == 0) {
                         const auto &evaluator = runtime.getInternals().evaluator;
                         const auto &functions = evaluator->getCustomFunctions();
                         if (const auto function = functions.find(DataDescriptionFunction); function != functions.end()) {
@@ -117,7 +117,7 @@ namespace hex::plugin::builtin {
 
                 // Retry analysis with only the first 100 KiB
                 if (region.getSize() != 100_kiB) {
-                    process(task, provider, { region.getStartAddress(), 100_kiB });
+                    process(task, provider, { .address=region.getStartAddress(), .size=100_kiB });
                 }
             }
         }

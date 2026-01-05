@@ -3,7 +3,6 @@
 
 #include <content/views/view_hex_editor.hpp>
 #include <hex/api/localization_manager.hpp>
-#include <ui/text_editor.hpp>
 #include <string>
 
 namespace hex::plugin::builtin {
@@ -21,6 +20,5 @@ namespace hex::plugin::builtin {
 
     private:
         std::string m_decodedString;
-        ui::TextEditor m_editor;
     };
 }

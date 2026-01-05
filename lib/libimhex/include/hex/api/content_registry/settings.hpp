@@ -52,7 +52,7 @@ EXPORT_MODULE namespace hex {
                         return *this;
                     }
 
-                    Interface& setTooltip(const std::string &tooltip) {
+                    Interface& setTooltip(const UnlocalizedString &tooltip) {
                         m_tooltip = tooltip;
 
                         return *this;
@@ -239,6 +239,14 @@ EXPORT_MODULE namespace hex {
                 nlohmann::json store() override { return {}; }
             };
 
+            class Spacer : public Widget {
+            public:
+                bool draw(const std::string &name) override;
+
+                void load(const nlohmann::json &) override {}
+                nlohmann::json store() override { return {}; }
+            };
+
         }
 
         namespace impl {
@@ -290,8 +298,8 @@ EXPORT_MODULE namespace hex {
         public:
             SettingsValue(nlohmann::json value) : m_value(std::move(value)) {}
 
-            template<typename T>
-            T get(std::common_type_t<T> defaultValue) const {
+            template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
+            [[nodiscard]] T get(T defaultValue) const {
                 try {
                     auto result = m_value;
                     if (result.is_number() && std::same_as<T, bool>)
@@ -308,8 +316,8 @@ EXPORT_MODULE namespace hex {
             nlohmann::json m_value;
         };
 
-        template<typename T>
-        [[nodiscard]] T read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const std::common_type_t<T> &defaultValue) {
+        template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
+        [[nodiscard]] T read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, T defaultValue) {
             auto setting = impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue);
 
             try {
@@ -326,8 +334,8 @@ EXPORT_MODULE namespace hex {
             }
         }
 
-        template<typename T>
-        void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const std::common_type_t<T> &value) {
+        template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
+        void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, T value) {
             impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
             impl::runOnChangeHandlers(unlocalizedCategory, unlocalizedName, value);
 
@@ -336,9 +344,74 @@ EXPORT_MODULE namespace hex {
 
         using OnChangeCallback = std::function<void(const SettingsValue &)>;
         u64 onChange(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const OnChangeCallback &callback);
+        void removeOnChangeHandler(u64 id);
 
         using OnSaveCallback = std::function<void()>;
         u64 onSave(const OnSaveCallback &callback);
+
+        template<typename T, wolv::type::StaticString UnlocalizedCategory, wolv::type::StaticString UnlocalizedName>
+        requires (!(std::is_reference_v<T> || std::is_const_v<T>))
+        class SettingsVariable {
+        public:
+            explicit(false) SettingsVariable(T defaultValue) : m_defaultValue(std::move(defaultValue)) { }
+
+            SettingsVariable(const SettingsVariable&) = delete;
+            SettingsVariable& operator=(const SettingsVariable&) = delete;
+
+            SettingsVariable(SettingsVariable&&) = delete;
+            SettingsVariable& operator=(SettingsVariable&&) = delete;
+
+            ~SettingsVariable() {
+                if (m_onChangeId > 0)
+                    removeOnChangeHandler(m_onChangeId);
+            }
+
+            [[nodiscard]] T get() const {
+                registerChangeHandler();
+                if (!m_value.has_value()) {
+                    m_value = read<T>(
+                        UnlocalizedCategory.value.data(),
+                        UnlocalizedName.value.data(),
+                        m_defaultValue
+                    );
+                }
+
+                return m_value.value_or(m_defaultValue);
+            }
+
+            void set(T value) {
+                registerChangeHandler();
+                write<T>(
+                    UnlocalizedCategory.value.data(),
+                    UnlocalizedName.value.data(),
+                    std::move(value)
+                );
+            }
+
+            explicit(false) operator T() const {
+                return get();
+            }
+
+            SettingsVariable& operator=(T value) {
+                set(std::move(value));
+                return *this;
+            }
+
+        private:
+            void registerChangeHandler() const {
+                if (m_onChangeId > 0)
+                    return;
+
+                m_onChangeId = onChange(UnlocalizedCategory.value.data(), UnlocalizedName.value.data(), [this](const SettingsValue &value) {
+                    m_value = value.get<T>(m_defaultValue);
+                });
+            }
+
+        private:
+            mutable std::optional<T> m_value;
+            T m_defaultValue;
+            mutable u64 m_onChangeId = 0;
+        };
 
     }
 

@@ -68,6 +68,7 @@ EXPORT_MODULE namespace hex {
 
             constexpr static auto SeparatorValue = "$SEPARATOR$";
             constexpr static auto SubMenuValue = "$SUBMENU$";
+            constexpr static auto TaskBarMenuValue = "$TASKBAR$";
 
             const std::multimap<u32, MainMenuItem>& getMainMenuItems();
 
@@ -199,6 +200,19 @@ EXPORT_MODULE namespace hex {
          */
         void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, View *view = nullptr);
 
+        /**
+         * @brief Adds a new main menu entry
+         * @param unlocalizedMainMenuNames The unlocalized names of the main menu entries
+         * @param priority The priority of the entry. Lower values are displayed first
+         * @param function The function to call when the entry is clicked
+         * @param enabledCallback The function to call to determine if the entry is enabled
+         */
+        void addTaskBarMenuItem(
+            std::vector<UnlocalizedString> unlocalizedMainMenuNames,
+            u32 priority,
+            const impl::MenuCallback &function,
+            const impl::EnabledCallback& enabledCallback
+        );
 
         /**
          * @brief Adds a new welcome screen entry
@@ -220,10 +234,10 @@ EXPORT_MODULE namespace hex {
 
         /**
          * @brief Adds a menu item to the toolbar
-         * @param unlocalizedName Unlocalized name of the menu item
+         * @param unlocalizedNames Unlocalized name of the menu item
          * @param color Color of the toolbar icon
          */
-        void addMenuItemToToolbar(const UnlocalizedString &unlocalizedName, ImGuiCustomCol color);
+        void addMenuItemToToolbar(const std::vector<UnlocalizedString> &unlocalizedNames, ImGuiCustomCol color);
 
         /**
          * @brief Reconstructs the toolbar items list after they have been modified

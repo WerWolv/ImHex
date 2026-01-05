@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
 
         if (response.valid() && response.wait_for(0s) != std::future_status::timeout) {
             const auto result = response.get();
-            const auto data = result.getData();
+            const auto& data = result.getData();
 
             if (const auto status = result.getStatusCode(); status != 0)
                 responseText = "Status: " + std::to_string(result.getStatusCode()) + "\n\n" + data;

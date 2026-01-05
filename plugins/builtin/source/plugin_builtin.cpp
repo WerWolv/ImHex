@@ -1,5 +1,6 @@
-#include <hex/plugin.hpp>
+#include <plugin_builtin.hpp>
 
+#include <hex/plugin.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/logger.hpp>
@@ -15,53 +16,6 @@
 
 using namespace hex;
 
-namespace hex::plugin::builtin {
-
-    void registerEventHandlers();
-    void registerDataVisualizers();
-    void registerMiniMapVisualizers();
-    void registerDataInspectorEntries();
-    void registerToolEntries();
-    void registerPatternLanguageFunctions();
-    void registerPatternLanguageTypes();
-    void registerPatternLanguagePragmas();
-    void registerPatternLanguageVisualizers();
-    void registerCommandPaletteCommands();
-    void registerSettings();
-    void loadSettings();
-    void registerDataProcessorNodes();
-    void registerProviders();
-    void registerDataFormatters();
-    void registerMainMenuEntries();
-    void createWelcomeScreen();
-    void registerViews();
-    void registerThemeHandlers();
-    void registerStyleHandlers();
-    void registerThemes();
-    void registerBackgroundServices();
-    void registerNetworkEndpoints();
-    void registerFileHandlers();
-    void registerProjectHandlers();
-    void registerAchievements();
-    void registerReportGenerators();
-    void registerTutorials();
-    void registerDataInformationSections();
-    void loadWorkspaces();
-
-    void addWindowDecoration();
-    void addFooterItems();
-    void addTitleBarButtons();
-    void addToolbarItems();
-    void addGlobalUIItems();
-    void addInitTasks();
-
-    void handleBorderlessWindowMode();
-    void setupOutOfBoxExperience();
-
-    void extractBundledFiles();
-
-}
-
 IMHEX_PLUGIN_SUBCOMMANDS() {
     { "help",            "h", "Print help about this command",                hex::plugin::builtin::handleHelpCommand             },
     { "version",         "",  "Print ImHex version",                          hex::plugin::builtin::handleVersionCommand          },
@@ -73,8 +27,8 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "open",            "o", "Open files passed as argument. [default]",     hex::plugin::builtin::handleOpenCommand             },
     { "new",             "n", "Create a new empty file",                      hex::plugin::builtin::handleNewCommand              },
 
-    { "select",          "s",  "Select a range of bytes in the Hex Editor",    hex::plugin::builtin::handleSelectCommand           },
-    { "pattern",         "p",  "Sets the loaded pattern",                      hex::plugin::builtin::handlePatternCommand          },
+    { "select",          "s",  "Select a range of bytes in the Hex Editor",   hex::plugin::builtin::handleSelectCommand           },
+    { "pattern",         "p",  "Sets the loaded pattern",                     hex::plugin::builtin::handlePatternCommand          },
     { "calc",            "",  "Evaluate a mathematical expression",           hex::plugin::builtin::handleCalcCommand             },
     { "hash",            "",  "Calculate the hash of a file",                 hex::plugin::builtin::handleHashCommand             },
     { "encode",          "",  "Encode a string",                              hex::plugin::builtin::handleEncodeCommand           },
@@ -88,6 +42,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "validate-plugin", "",  "Validates that a plugin can be loaded",        hex::plugin::builtin::handleValidatePluginCommand   },
     { "save-editor",     "",  "Opens a pattern file for save file editing",   hex::plugin::builtin::handleSaveEditorCommand       },
     { "file-info",       "i", "Displays information about a file",            hex::plugin::builtin::handleFileInfoCommand         },
+    { "mcp",             "",  "Starts a MCP Server for AI to interact with",  hex::plugin::builtin::handleMCPCommand              },
 };
 
 IMHEX_PLUGIN_SETUP_BUILTIN("Built-in", "WerWolv", "Default ImHex functionality") {
@@ -139,6 +94,7 @@ IMHEX_PLUGIN_SETUP_BUILTIN("Built-in", "WerWolv", "Default ImHex functionality")
     registerStyleHandlers();
     registerBackgroundServices();
     registerNetworkEndpoints();
+    registerMCPTools();
     registerFileHandlers();
     registerProjectHandlers();
     registerCommandForwarders();

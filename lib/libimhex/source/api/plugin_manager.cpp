@@ -85,7 +85,7 @@ namespace hex {
     }
 
     Plugin::Plugin(const std::string &name, const hex::PluginFunctions &functions) :
-        m_handle(0), m_path(name), m_addedManually(true), m_functions(functions) { }
+         m_path(name), m_addedManually(true), m_functions(functions) { }
 
 
     Plugin::Plugin(Plugin &&other) noexcept {

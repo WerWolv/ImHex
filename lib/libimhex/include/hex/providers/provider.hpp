@@ -72,12 +72,86 @@ namespace hex::prv {
         [[nodiscard]] virtual std::vector<Description> getDataDescription() const = 0;
     };
 
+    class IProviderDataBackupable {
+    public:
+        explicit IProviderDataBackupable(Provider *provider);
+        virtual ~IProviderDataBackupable() = default;
+
+        void createBackupIfNeeded(const std::fs::path &inputFilePath);
+    private:
+        Provider *m_provider = nullptr;
+        bool m_backupCreated = false;
+
+        bool m_shouldCreateBackups = true;
+        u64 m_maxSize;
+        std::string m_backupExtension;
+    };
+
     /**
      * @brief Represent the data source for a tab in the UI
      */
     class Provider {
     public:
         constexpr static u64 MaxPageSize = 0xFFFF'FFFF'FFFF'FFFF;
+
+        class OpenResult {
+        public:
+            OpenResult() : m_result(std::monostate{}) {}
+
+            [[nodiscard]] static OpenResult failure(std::string errorMessage) {
+                OpenResult result;
+                result.m_result = std::move(errorMessage);
+                return result;
+            }
+
+            [[nodiscard]] static OpenResult warning(std::string warningMessage) {
+                OpenResult result;
+                result.m_result = std::move(warningMessage);
+                result.m_warning = true;
+                return result;
+            }
+
+            [[nodiscard]] static OpenResult redirect(Provider *provider) {
+                OpenResult result;
+                result.m_result = provider;
+                return result;
+            }
+
+            [[nodiscard]] bool isSuccess() const {
+                return std::holds_alternative<std::monostate>(m_result);
+            }
+
+            [[nodiscard]] bool isFailure() const {
+                return std::holds_alternative<std::string>(m_result) && !m_warning;
+            }
+
+            [[nodiscard]] bool isWarning() const {
+                return std::holds_alternative<std::string>(m_result) && m_warning;
+            }
+
+            [[nodiscard]] bool isRedirecting() const {
+                return std::holds_alternative<Provider*>(m_result);
+            }
+
+            [[nodiscard]] Provider* getRedirectProvider() const {
+                if (std::holds_alternative<Provider*>(m_result)) {
+                    return std::get<Provider*>(m_result);
+                }
+                return nullptr;
+            }
+
+            [[nodiscard]] std::string_view getErrorMessage() const {
+                if (std::holds_alternative<std::string>(m_result)) {
+                    return std::get<std::string>(m_result);
+                }
+
+                return "";
+            }
+
+        private:
+            std::variant<std::monostate, std::string, Provider*> m_result;
+            bool m_warning = false;
+        };
 
         Provider();
         virtual ~Provider();
@@ -94,7 +168,7 @@ namespace hex::prv {
          * @note This is not related to the EventProviderOpened event
          * @return true if the provider was opened successfully, else false
          */
-        [[nodiscard]] virtual bool open() = 0;
+        [[nodiscard]] virtual OpenResult open() = 0;
 
         /**
          * @brief Closes this provider
@@ -262,9 +336,6 @@ namespace hex::prv {
         void skipLoadInterface() { m_skipLoadInterface = true; }
         [[nodiscard]] bool shouldSkipLoadInterface() const { return m_skipLoadInterface; }
 
-        void setErrorMessage(const std::string &errorMessage) { m_errorMessage = errorMessage; }
-        [[nodiscard]] const std::string& getErrorMessage() const { return m_errorMessage; }
-
         template<std::derived_from<undo::Operation> T>
         bool addUndoableOperation(auto && ... args) {
             return m_undoRedoStack.add<T>(std::forward<decltype(args)...>(args)...);
@@ -295,8 +366,6 @@ namespace hex::prv {
          * for example when loading a project or loading a provider from the "recent" lsit
          */
         bool m_skipLoadInterface = false;
-
-        std::string m_errorMessage = "Unspecified error";
 
         u64 m_pageSize = MaxPageSize;
     };

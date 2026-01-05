@@ -1,10 +1,29 @@
 #include <ui/text_editor.hpp>
 #include <hex/helpers/scaling.hpp>
+#include <wolv/utils/string.hpp>
+#include <fonts/fonts.hpp>
 #include <algorithm>
 
 namespace hex::ui {
 
-    i32 TextEditor::Line::getColumnIndex(i32 column) const {
+    TextEditor::Line TextEditor::Line::trim(TrimMode trimMode) {
+        if (m_chars.empty())
+            return m_emptyLine;
+        std::string trimmed = wolv::util::trim(m_chars);
+        auto idx = m_chars.find(trimmed);
+        if (idx == std::string::npos)
+            return m_emptyLine;
+        if (trimMode == TrimMode::TrimNone)
+            return *this;
+        else if (trimMode == TrimMode::TrimEnd)
+            return subLine(0, idx + trimmed.size());
+        else if (trimMode == TrimMode::TrimStart)
+            return subLine(idx, size() - idx);
+        else
+            return subLine(idx, trimmed.size());
+    }
+
+    i32 TextEditor::Line::columnIndex(i32 column) const {
 
         i32 idx = 0;
         for (i32 col = 0;  idx < (i32) size() && col < column; ++col)
@@ -13,7 +32,20 @@ namespace hex::ui {
         return idx;
     }
 
-    i32 TextEditor::Line::getCharColumn(i32 stringIndex) const {
+    i32 TextEditor::Line::maxColumn() {
+        if (m_lineMaxColumn > 0)
+            return m_lineMaxColumn;
+        m_lineMaxColumn = indexColumn((i32) size());
+        return m_lineMaxColumn;
+    }
+
+    i32 TextEditor::Line::maxColumn() const {
+        if (m_lineMaxColumn > 0)
+            return m_lineMaxColumn;
+        return indexColumn((i32) size());
+    }
+
+    i32 TextEditor::Line::indexColumn(i32 stringIndex) const {
         i32 limit = std::max(0, std::min(stringIndex, (i32) size()));
 
         i32 col = 0;
@@ -23,13 +55,44 @@ namespace hex::ui {
         return col;
     }
 
-    i32 TextEditor::Line::getStringTextSize(const std::string &str) const {
+    i32 TextEditor::Line::stringTextSize(const std::string &str) const {
+         i32 result = 0;
+        if (str.empty())
+            return 0;
+        if (ImGui::GetFont() == nullptr) {
+            fonts::CodeEditor().push();
+            result =  ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, str.c_str(), nullptr, nullptr).x;
+            fonts::CodeEditor().pop();
+            return result;
+        }
         return ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, str.c_str(), nullptr, nullptr).x;
     }
 
-    i32 TextEditor::Line::getLineTextSize()  {
-        m_lineTextSize = getStringTextSize(m_chars);
-        return m_lineTextSize;
+    i32 TextEditor::Line::textSize(u32 index) const {
+        if (m_chars.empty())
+            return 0;
+        return stringTextSize(m_chars.substr(0, index));
+    }
+
+    i32 TextEditor::Line::textSize() const {
+        if (m_chars.empty())
+            return 0;
+        return stringTextSize(m_chars);
+    }
+
+    i32 TextEditor::Line::lineTextSize(TrimMode trimMode) {
+        auto trimmedLine = trim(trimMode);
+        return trimmedLine.textSize();
+    }
+
+    i32 TextEditor::Line::textSizeIndex(float textSize, i32 position) {
+        i32 result = textSize /  ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
+        auto currentSize = stringTextSize(m_chars.substr(position, result));
+        while (currentSize < textSize && (u32)(position + result) < size()) {
+            result += TextEditor::utf8CharLength(m_chars[position + result]);
+            currentSize = stringTextSize(m_chars.substr(position, result));
+        }
+        return result;
     }
 
     // https://en.wikipedia.org/wiki/UTF-8
@@ -48,7 +111,7 @@ namespace hex::ui {
         return 1;
     }
 
-    i32 TextEditor::getStringCharacterCount(const std::string &str) {
+    i32 TextEditor::stringCharacterCount(const std::string &str) {
         if (str.empty())
             return 0;
         i32 count = 0;
@@ -57,18 +120,18 @@ namespace hex::ui {
         return count;
     }
 
-    i32 TextEditor::getLineCharColumn(i32 lineIndex, i32 stringIndex) {
+    i32 TextEditor::lineIndexColumn(i32 lineIndex, i32 stringIndex) {
         if (lineIndex >= (i64) m_lines.size() || lineIndex < 0)
             return 0;
         Line &line = m_lines[lineIndex];
-        return line.getCharColumn(stringIndex);
+        return line.indexColumn(stringIndex);
     }
 
-    i32 TextEditor::getLineMaxCharColumn(i32 lineIndex) {
+    i32 TextEditor::lineMaxColumn(i32 lineIndex) {
         if (lineIndex >= (i64) m_lines.size() || lineIndex < 0)
             return 0;
-        Line &line = m_lines[lineIndex];
-        return line.getCharColumn(line.size());
+
+        return m_lines[lineIndex].maxColumn();
     }
 
     // "Borrowed" from ImGui source
@@ -133,7 +196,7 @@ namespace hex::ui {
         auto result = getCharacterCoordinates(lineNo, count - increase);
         result = setCoordinates(result);
         if (result == Invalid)
-            return Coordinates(0, 0);
+            return {0, 0};
         return result;
     }
 
@@ -142,7 +205,7 @@ namespace hex::ui {
             return Invalid;
 
         const auto &line = m_lines[coordinates.m_line];
-        return Coordinates(coordinates.m_line,line.getColumnIndex(coordinates.m_column));
+        return {coordinates.m_line,line.columnIndex(coordinates.m_column)};
     }
 
     i32 TextEditor::lineCoordinatesToIndex(const Coordinates &coordinates) const {
@@ -150,14 +213,14 @@ namespace hex::ui {
             return -1;
 
         const auto &line = m_lines[coordinates.m_line];
-        return line.getColumnIndex(coordinates.m_column);
+        return line.columnIndex(coordinates.m_column);
     }
 
     TextEditor::Coordinates TextEditor::getCharacterCoordinates(i32 lineIndex, i32 strIndex) {
         if (lineIndex < 0 || lineIndex >= (i32) m_lines.size())
-            return Coordinates(0, 0);
+            return {0, 0};
         auto &line = m_lines[lineIndex];
-        return setCoordinates(lineIndex, line.getCharColumn(strIndex));
+        return setCoordinates(lineIndex, line.indexColumn(strIndex));
     }
 
     u64 TextEditor::getLineByteCount(i32 lineIndex) const {
@@ -170,13 +233,13 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::stringIndexToCoordinates(i32 strIndex, const std::string &input) {
         if (strIndex < 0 || strIndex > (i32) input.size())
-            return TextEditor::Coordinates(0, 0);
+            return {0, 0};
         std::string str = input.substr(0, strIndex);
-        auto line = std::count(str.begin(), str.end(), '\n');
+        i32 line = std::count(str.begin(), str.end(), '\n');
         auto index = str.find_last_of('\n');
         str = str.substr(index + 1);
-        auto col = TextEditor::getStringCharacterCount(str);
+        i32 col = TextEditor::stringCharacterCount(str);
 
-        return TextEditor::Coordinates(line, col);
+        return {line, col};
     }
 }

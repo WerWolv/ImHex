@@ -126,12 +126,18 @@ int launchExecutable() {
     // Wait for the child process to exit
    ::WaitForSingleObject(pi.hProcess, INFINITE);
 
-    // Clean up
-   ::CloseHandle(pi.hProcess);
-   ::CloseHandle(pi.hThread);
-   ::CloseHandle(hChildStdoutRead);
+    // Get the exit code of the child process
+    DWORD exitCode = 0;
+    if (!::GetExitCodeProcess(pi.hProcess, &exitCode)) {
+        exitCode = EXIT_FAILURE;
+    }
 
-    return EXIT_SUCCESS;
+    // Clean up
+    ::CloseHandle(pi.hProcess);
+    ::CloseHandle(pi.hThread);
+    ::CloseHandle(hChildStdoutRead);
+
+    return static_cast<int>(exitCode);
 }
 
 int main() {

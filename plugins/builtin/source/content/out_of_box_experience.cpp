@@ -37,9 +37,9 @@ namespace hex::plugin::builtin {
 
         class Blend {
         public:
-            Blend(float start, float end) : m_time(0), m_start(start), m_end(end) {}
+            Blend(float start, float end) :  m_start(start), m_end(end) {}
 
-            [[nodiscard]] operator float() {
+            [[nodiscard]] operator float() { // NOLINT: This class is a used as a float
                 m_time += ImGui::GetIO().DeltaTime;
 
                 float t = m_time;
@@ -56,7 +56,7 @@ namespace hex::plugin::builtin {
             }
 
         private:
-            float m_time;
+            float m_time = 0;
             float m_start, m_end;
         };
 
@@ -472,7 +472,7 @@ namespace hex::plugin::builtin {
         EventFirstLaunch::subscribe([] {
             ImHexApi::System::setWindowResizable(false);
 
-            const auto imageTheme = ThemeManager::getImageTheme();
+            auto &imageTheme = ThemeManager::getImageTheme();
             s_imhexBanner    = ImGuiExt::Texture::fromSVG(romfs::get(fmt::format("assets/{}/banner.svg", imageTheme)).span<std::byte>(), 0, 0, ImGuiExt::Texture::Filter::Linear);
             s_compassTexture = ImGuiExt::Texture::fromImage(romfs::get("assets/common/compass.png").span<std::byte>(), ImGuiExt::Texture::Filter::Linear);
             s_globeTexture   = ImGuiExt::Texture::fromImage(romfs::get("assets/common/globe.png").span<std::byte>(), ImGuiExt::Texture::Filter::Linear);

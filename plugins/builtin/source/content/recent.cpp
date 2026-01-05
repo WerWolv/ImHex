@@ -116,7 +116,7 @@ namespace hex::plugin::builtin::recent {
         return ImGuiWindowFlags_AlwaysAutoResize;
     }
 
-    void saveCurrentProjectAsRecent() {
+    static void saveCurrentProjectAsRecent() {
         if (!ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
             return;
         }
@@ -279,18 +279,11 @@ namespace hex::plugin::builtin::recent {
             return;
         }
 
-        auto *provider = ImHexApi::Provider::createProvider(recentEntry.type, true);
+        auto provider = ImHexApi::Provider::createProvider(recentEntry.type, true);
         if (provider != nullptr) {
             provider->loadSettings(recentEntry.data);
 
-            TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
-                if (!provider->open() || !provider->isAvailable()) {
-                    ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
-                } else {
-                    TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
-                }
-            });
+            ImHexApi::Provider::openProvider(provider);
 
             updateRecentEntries();
         }

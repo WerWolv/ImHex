@@ -1,10 +1,12 @@
 #if defined(OS_WINDOWS) || defined(OS_MACOS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
 
+#include <algorithm>
 #include <content/providers/process_memory_provider.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
+    #include <winternl.h>
     #include <psapi.h>
     #include <shellapi.h>
 #elif defined(OS_MACOS)
@@ -30,24 +32,92 @@
 #include <wolv/io/fs.hpp>
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
+#include <wolv/literals.hpp>
 
 namespace hex::plugin::builtin {
 
-    bool ProcessMemoryProvider::open() {
+    using namespace wolv::literals;
+
+#if defined(OS_WINDOWS)
+
+    using NtQueryInformationProcessFunc = NTSTATUS (NTAPI*)(
+        HANDLE ProcessHandle,
+        PROCESSINFOCLASS ProcessInformationClass,
+        PVOID ProcessInformation,
+        ULONG ProcessInformationLength,
+        PULONG ReturnLength
+    );
+
+    std::string getProcessCommandLine(HANDLE processHandle) {
+        // Get NtQueryInformationProcess function
+        HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+        if (!ntdll) return "";
+
+        auto funcNtQueryInformationProcess = (NtQueryInformationProcessFunc)
+            (void*)GetProcAddress(ntdll, "NtQueryInformationProcess");
+        if (!funcNtQueryInformationProcess) return "";
+
+        // Query for PROCESS_BASIC_INFORMATION to get PEB address
+        PROCESS_BASIC_INFORMATION pbi = {};
+        ULONG len = 0;
+        NTSTATUS status = funcNtQueryInformationProcess(
+            processHandle,
+            ProcessBasicInformation,
+            &pbi,
+            sizeof(pbi),
+            &len
+        );
+
+        if (status != 0 || !pbi.PebBaseAddress) return "";
+
+        // Read PEB to get ProcessParameters address
+        PEB peb = {};
+        SIZE_T bytesRead = 0;
+        if (!ReadProcessMemory(processHandle, pbi.PebBaseAddress, &peb, sizeof(peb), &bytesRead))
+            return "";
+
+        // Read RTL_USER_PROCESS_PARAMETERS
+        RTL_USER_PROCESS_PARAMETERS params = {};
+        if (!ReadProcessMemory(processHandle, peb.ProcessParameters, &params, sizeof(params), &bytesRead))
+            return "";
+
+        // Read the command line string
+        std::vector<wchar_t> cmdLine(params.CommandLine.Length / sizeof(wchar_t) + 1, 0);
+        if (!ReadProcessMemory(processHandle, params.CommandLine.Buffer, cmdLine.data(),
+                              params.CommandLine.Length, &bytesRead))
+            return "";
+
+        // Convert wide string to narrow string
+        int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, cmdLine.data(), -1, nullptr, 0, nullptr, nullptr);
+        if (sizeNeeded <= 0) return "";
+
+        std::string result(sizeNeeded, 0);
+        WideCharToMultiByte(CP_UTF8, 0, cmdLine.data(), -1, &result[0], sizeNeeded, nullptr, nullptr);
+
+        // Remove trailing null terminator
+        if (!result.empty() && result.back() == '\0')
+            result.pop_back();
+
+        return result;
+    }
+
+#endif
+
+    prv::Provider::OpenResult ProcessMemoryProvider::open() {
         if (m_selectedProcess == nullptr)
-            return false;
+            return OpenResult::failure("hex.builtin.provider.process_memory.error.no_process_selected"_lang);
 
         #if defined(OS_WINDOWS)
             m_processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, m_selectedProcess->id);
             if (m_processHandle == nullptr)
-                return false;
+                return OpenResult::failure("hex.builtin.provider.process_memory.error.open_process"_lang);
         #else
             m_processId = pid_t(m_selectedProcess->id);
         #endif
 
         this->reloadProcessModules();
 
-        return true;
+        return {};
     }
 
     void ProcessMemoryProvider::close() {
@@ -117,7 +187,7 @@ namespace hex::plugin::builtin {
 
     std::pair<Region, bool> ProcessMemoryProvider::getRegionValidity(u64 address) const {
         for (const auto &memoryRegion : m_memoryRegions) {
-            if (memoryRegion.region.overlaps({ address, 1LLU }))
+            if (memoryRegion.region.overlaps({ .address=address, .size=1LLU }))
                 return { memoryRegion.region, true };
         }
 
@@ -125,7 +195,7 @@ namespace hex::plugin::builtin {
         for (const auto &memoryRegion : m_memoryRegions) {
 
             if (address < memoryRegion.region.getStartAddress())
-                return { Region { lastRegion.getEndAddress() + 1LLU, memoryRegion.region.getStartAddress() - lastRegion.getEndAddress() }, false };
+                return { Region { .address=lastRegion.getEndAddress(), .size=memoryRegion.region.getStartAddress() - lastRegion.getEndAddress() }, false };
 
             lastRegion = memoryRegion.region;
         }
@@ -202,7 +272,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    m_processes.push_back({ u32(processId), processName, std::move(texture) });
+                    m_processes.push_back({ u32(processId), processName, getProcessCommandLine(processHandle), std::move(texture) });
                 }
             #elif defined(OS_MACOS)
                 std::array<pid_t, 2048> pids;
@@ -213,7 +283,7 @@ namespace hex::plugin::builtin {
                     const auto result = proc_pidinfo(pids[i], PROC_PIDTBSDINFO, 0,
                                          &proc, PROC_PIDTBSDINFO_SIZE);
                     if (result == PROC_PIDTBSDINFO_SIZE) {
-                        m_processes.emplace_back(pids[i], proc.pbi_name, ImGuiExt::Texture());
+                        m_processes.emplace_back(pids[i], proc.pbi_name, proc.pbi_comm, ImGuiExt::Texture());
                     }
                 }
             #elif defined(OS_LINUX)
@@ -228,13 +298,40 @@ namespace hex::plugin::builtin {
                         continue; // not a PID
                     }
 
-                    wolv::io::File file(path /"cmdline", wolv::io::File::Mode::Read);
+                    // Parse status file
+                    wolv::io::File file(path / "status", wolv::io::File::Mode::Read);
+                    std::map<std::string, std::string> statusInfo;
+                    if (file.isValid()) {
+                        const auto statusContent = file.readString(1_MiB);
+                        for (const auto &line : wolv::util::splitString(statusContent, "\n")) {
+                            const auto delimiterPos = line.find(':');
+                            if (delimiterPos != std::string::npos) {
+                                const auto key = line.substr(0, delimiterPos);
+                                const auto value = line.substr(delimiterPos + 1);
+                                statusInfo[key] = wolv::util::trim(value);
+                            }
+                        }
+                    }
+
+                    // Skip kernel threads
+                    if (statusInfo.contains("Kthread") && statusInfo["Kthread"] == "1")
+                        continue;
+
+                    // Parse process name
+                    std::string processName;
+                    if (statusInfo.contains("Name")) {
+                        processName = statusInfo["Name"];
+                    }
+
+                    wolv::io::File cmdlineFile(path / "cmdline", wolv::io::File::Mode::Read);
                     if (!file.isValid())
                         continue;
 
-                    std::string processName = file.readString(0xF'FFFF);
+                    auto commandLine = cmdlineFile.readString(1_MiB);
+                    if (processName.empty())
+                        processName = commandLine;
 
-                    m_processes.emplace_back(processId, processName, ImGuiExt::Texture());
+                    m_processes.emplace_back(processId, processName, commandLine, ImGuiExt::Texture());
                 }
             #endif
         }
@@ -265,7 +362,11 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     auto height = ImGui::GetTextLineHeight();
-                    ImGui::Image(process->icon, { height, height });
+                    if (process->icon.isValid()) {
+                        ImGui::Image(process->icon, { height, height });
+                    } else {
+                        ImGui::Dummy({ height, height });
+                    }
 
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{}", process->id);
@@ -273,6 +374,15 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     if (ImGui::Selectable(process->name.c_str(), m_selectedProcess != nullptr && process->id == m_selectedProcess->id, ImGuiSelectableFlags_SpanAllColumns))
                         m_selectedProcess = process;
+
+                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary | ImGuiHoveredFlags_DelayNormal)) {
+                        if (ImGui::BeginTooltip()) {
+                            ImGui::PushTextWrapPos(200_scaled);
+                            ImGui::TextWrapped("%s", process->commandLine.c_str());
+                            ImGui::PopTextWrapPos();
+                            ImGui::EndTooltip();
+                        }
+                    }
 
                     ImGui::PopID();
                 }
@@ -309,7 +419,7 @@ namespace hex::plugin::builtin {
             ImGui::TableHeadersRow();
 
             for (const auto &memoryRegion : filtered) {
-                ImGui::PushID(&memoryRegion);
+                ImGui::PushID((const void*) &memoryRegion);
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -451,7 +561,7 @@ namespace hex::plugin::builtin {
                 if (split.size() > 5)
                     name = wolv::util::trim(wolv::util::combineStrings(std::vector(split.begin() + 5, split.end()), " "));
 
-                m_memoryRegions.insert({ { start, end - start }, name });
+                m_memoryRegions.insert({ { .address=start, .size=end - start }, name });
             }
         #endif
     }
@@ -459,7 +569,7 @@ namespace hex::plugin::builtin {
 
     std::variant<std::string, i128> ProcessMemoryProvider::queryInformation(const std::string &category, const std::string &argument) {
         auto findRegionByName = [this](const std::string &name) {
-            return std::find_if(m_memoryRegions.begin(), m_memoryRegions.end(),
+            return std::ranges::find_if(m_memoryRegions,
                 [name](const auto &region) {
                     return region.name == name;
                 });

@@ -14,7 +14,6 @@
 
 #include <map>
 #include <string>
-#include <hex/api/tutorial_manager.hpp>
 
 namespace hex {
 
@@ -27,7 +26,7 @@ namespace hex {
          * @brief Draws the view
          * @note Do not override this method. Override drawContent() instead
          */
-        virtual void draw() = 0;
+        virtual void draw(ImGuiWindowFlags extraFlags = ImGuiWindowFlags_None) = 0;
 
         /**
          * @brief Draws the content of the view
@@ -126,6 +125,7 @@ namespace hex {
         class Window;
         class Special;
         class Floating;
+        class Scrolling;
         class Modal;
         class FullScreen;
 
@@ -153,16 +153,10 @@ namespace hex {
          */
         virtual void drawHelpText() = 0;
 
-        void draw() final {
-            if (this->shouldDraw()) {
-                ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-                const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
-                if (ImGui::Begin(title.c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
-                    TutorialManager::setLastItemInteractiveHelpPopup([this]{ this->drawHelpText(); });
-                    this->drawContent();
-                }
-                ImGui::End();
-            }
+        void draw(ImGuiWindowFlags extraFlags = ImGuiWindowFlags_None) override;
+
+        virtual bool allowScroll() const {
+            return false;
         }
     };
 
@@ -174,12 +168,7 @@ namespace hex {
     public:
         explicit Special(UnlocalizedString unlocalizedName) : View(std::move(unlocalizedName), "") {}
 
-        void draw() final {
-            if (this->shouldDraw()) {
-                ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-                this->drawContent();
-            }
-        }
+        void draw(ImGuiWindowFlags extraFlags = ImGuiWindowFlags_None) final;
     };
 
     /**
@@ -189,7 +178,24 @@ namespace hex {
     public:
         explicit Floating(UnlocalizedString unlocalizedName, const char *icon) : Window(std::move(unlocalizedName), icon) {}
 
-        [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override { return ImGuiWindowFlags_NoDocking; }
+        void draw(ImGuiWindowFlags extraFlags = ImGuiWindowFlags_None) final;
+
+        [[nodiscard]] bool shouldStoreWindowState() const override { return false; }
+    };
+
+    /**
+     * @brief A view that draws all its content at once without any scrolling being done by the window itself
+     */
+    class View::Scrolling : public View::Window {
+    public:
+        explicit Scrolling(UnlocalizedString unlocalizedName, const char *icon) : Window(std::move(unlocalizedName), icon) {}
+
+        void draw(ImGuiWindowFlags extraFlags = ImGuiWindowFlags_None) final;
+
+        bool allowScroll() const final {
+            return true;
+        }
+
         [[nodiscard]] bool shouldStoreWindowState() const override { return false; }
     };
 
@@ -200,24 +206,7 @@ namespace hex {
     public:
         explicit Modal(UnlocalizedString unlocalizedName, const char *icon) : View(std::move(unlocalizedName), icon) {}
 
-        void draw() final {
-            if (this->shouldDraw()) {
-                if (this->getWindowOpenState())
-                    ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str());
-
-                ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-                ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-                const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
-                if (ImGui::BeginPopupModal(title.c_str(), this->hasCloseButton() ? &this->getWindowOpenState() : nullptr, ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
-                    this->drawContent();
-
-                    ImGui::EndPopup();
-                }
-
-                if (ImGui::IsKeyPressed(ImGuiKey_Escape))
-                    this->getWindowOpenState() = false;
-            }
-        }
+        void draw(ImGuiWindowFlags extraFlags = ImGuiWindowFlags_None) final;
 
         [[nodiscard]] virtual bool hasCloseButton() const { return true; }
         [[nodiscard]] bool shouldStoreWindowState() const override { return false; }
@@ -227,10 +216,7 @@ namespace hex {
     public:
         explicit FullScreen() : View("FullScreen", "") {}
 
-        void draw() final {
-            this->drawContent();
-            this->drawAlwaysVisibleContent();
-        }
+        void draw(ImGuiWindowFlags extraFlags = ImGuiWindowFlags_None) final;
     };
 
 }

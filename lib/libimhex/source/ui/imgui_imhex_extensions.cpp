@@ -17,6 +17,7 @@
 #include <set>
 #include <string>
 #include <algorithm>
+#include <numbers>
 
 #include <hex/api/imhex_api/system.hpp>
 
@@ -1218,6 +1219,21 @@ namespace ImGuiExt {
         return res;
     }
 
+    bool DimmedArrowButton(const char *id, ImGuiDir dir, ImVec2 size) {
+        PushStyleColor(ImGuiCol_ButtonHovered, GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
+        PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
+        PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
+        PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.5 * hex::ImHexApi::System::getGlobalScale());
+
+        bool res = ArrowButtonEx(id, dir, size);
+
+        PopStyleColor(4);
+        PopStyleVar(1);
+
+        return res;
+    }
+
     bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size, ImVec2 iconOffset) {
         bool pushed = false;
         bool toggled = false;
@@ -1355,9 +1371,9 @@ namespace ImGuiExt {
     bool VSliderAngle(const char* label, const ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags) {
         if (format == nullptr)
             format = "%.0f deg";
-        float v_deg = (*v_rad) * 360.0F / (2 * IM_PI);
+        float v_deg = (*v_rad) * 360.0F / (2 * std::numbers::pi_v<float>);
         bool value_changed = ImGui::VSliderFloat(label, size, &v_deg, v_degrees_min, v_degrees_max, format, flags);
-        *v_rad = v_deg * (2 * IM_PI) / 360.0F;
+        *v_rad = v_deg * (2 * std::numbers::pi_v<float>) / 360.0F;
         return value_changed;
     }
 
@@ -1501,9 +1517,9 @@ namespace ImGuiExt {
 
     bool IsDarkBackground(const ImColor& bgColor) {
         // Extract RGB components in 0–255 range
-        int r = static_cast<int>(bgColor.Value.x * 255.0f);
-        int g = static_cast<int>(bgColor.Value.y * 255.0f);
-        int b = static_cast<int>(bgColor.Value.z * 255.0f);
+        int r = static_cast<int>(bgColor.Value.x * 255.0F);
+        int g = static_cast<int>(bgColor.Value.y * 255.0F);
+        int b = static_cast<int>(bgColor.Value.z * 255.0F);
 
         // Compute brightness using perceived luminance
         int brightness = (r * 299 + g * 587 + b * 114) / 1000;

@@ -12,6 +12,8 @@
 
 #include <HashFactory.h>
 
+#include <ui/widgets.hpp>
+
 namespace hex::plugin::hashes {
 
     namespace {
@@ -471,12 +473,21 @@ namespace hex::plugin::hashes {
 
                 u64 sum = hash.m_initialValue;
 
-                u8 progress = 0;
-                for (u8 byte : reader) {
-                    sum += (byte << (8 * progress));
-                    progress += 1;
+                {
+                    u64 partialSum = 0x00;
+                    u8 progress = 0;
+                    for (u8 byte : reader) {
+                        partialSum += (byte << (8 * progress));
 
-                    progress = progress % hash.m_inputSize;
+                        progress += 1;
+                        if (progress == hash.m_inputSize) {
+                            sum += hex::changeEndianness(partialSum, hash.m_inputSize, hash.m_endian);
+                            partialSum = 0x00;
+                            progress = 0;
+                        }
+                    }
+
+                    sum += hex::changeEndianness(partialSum, hash.m_inputSize, hash.m_endian);
                 }
 
                 u64 foldedSum = sum;
@@ -492,6 +503,8 @@ namespace hex::plugin::hashes {
                     }
                 }
 
+                foldedSum = hex::changeEndianness(foldedSum, hash.m_outputSize, hash.m_endian);
+
                 std::memcpy(result.data(), &foldedSum, hash.m_outputSize);
 
                 return { result.begin(), result.begin() + hash.m_outputSize };
@@ -502,6 +515,11 @@ namespace hex::plugin::hashes {
             ImGuiExt::InputHexadecimal("hex.hashes.hash.common.iv"_lang, &m_initialValue);
             ImGui::SliderInt("hex.hashes.hash.common.input_size"_lang, &m_inputSize, 1, 8, "%d", ImGuiSliderFlags_AlwaysClamp);
             ImGui::SliderInt("hex.hashes.hash.common.output_size"_lang, &m_outputSize, 1, 8, "%d", ImGuiSliderFlags_AlwaysClamp);
+
+            ImGui::BeginDisabled(m_inputSize == 1);
+            ui::endiannessSlider(m_endian);
+            ImGui::EndDisabled();
+
             ImGui::Checkbox("hex.hashes.hash.sum.fold"_lang, &m_foldOutput);
         }
 
@@ -510,6 +528,7 @@ namespace hex::plugin::hashes {
 
             result["iv"] = m_initialValue;
             result["size"] = m_outputSize;
+            result["endian"] = m_endian == std::endian::little ? 0 : 1;
 
             return result;
         }
@@ -518,6 +537,7 @@ namespace hex::plugin::hashes {
             try {
                 m_initialValue = data.at("iv").get<int>();
                 m_outputSize = data.at("size").get<int>();
+                m_endian = data.at("endian").get<int>() == 0 ? std::endian::little : std::endian::big;
             } catch (std::exception&) { }
         }
 
@@ -526,6 +546,7 @@ namespace hex::plugin::hashes {
         int m_inputSize = 1;
         int m_outputSize = 1;
         bool m_foldOutput = false;
+        std::endian m_endian = std::endian::little;
     };
 
     class HashSnefru : public ContentRegistry::Hashes::Hash {

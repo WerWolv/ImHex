@@ -83,6 +83,9 @@ namespace hex::fonts::loader {
 
         config.MergeMode = true;
         for (auto &extraFont : ImHexApi::Fonts::impl::getMergeFonts()) {
+            config.OversampleH = 2;
+            config.OversampleV = 1;
+            config.RasterizerDensity = 2;
             config.GlyphOffset = { extraFont.offset.x, -extraFont.offset.y };
             config.SizePixels = settings.getFontSize() * extraFont.fontSizeMultiplier.value_or(1) / ImHexApi::System::getNativeScale();
             atlas->AddFontFromMemoryTTF(const_cast<u8 *>(extraFont.fontData.data()), extraFont.fontData.size(), 0.0F, &config);

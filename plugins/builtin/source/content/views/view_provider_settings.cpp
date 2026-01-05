@@ -11,8 +11,8 @@
 namespace hex::plugin::builtin {
 
     ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name", ICON_VS_SETTINGS) {
-        EventProviderCreated::subscribe(this, [this](const hex::prv::Provider *provider) {
-            if (dynamic_cast<const prv::IProviderLoadInterface*>(provider) != nullptr && !provider->shouldSkipLoadInterface())
+        EventProviderCreated::subscribe(this, [this](std::shared_ptr<prv::Provider> provider) {
+            if (dynamic_cast<const prv::IProviderLoadInterface*>(provider.get()) != nullptr && !provider->shouldSkipLoadInterface())
                 this->getWindowOpenState() = true;
         });
 
@@ -43,7 +43,8 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(!settingsValid);
             if (ImGui::Button("hex.ui.common.open"_lang)) {
-                if (provider->open()) {
+                auto result = provider->open();
+                if (result.isSuccess()) {
                     EventProviderOpened::post(provider);
 
                     this->getWindowOpenState() = false;
@@ -52,7 +53,7 @@ namespace hex::plugin::builtin {
                 else {
                     this->getWindowOpenState() = false;
                     ImGui::CloseCurrentPopup();
-                    auto errorMessage = provider->getErrorMessage();
+                    auto errorMessage = result.getErrorMessage();
                     if (errorMessage.empty()) {
                         ui::ToastError::open("hex.builtin.view.provider_settings.load_error"_lang);
                     } else {

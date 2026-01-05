@@ -8,7 +8,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewTools::ViewTools() : View::Window("hex.builtin.view.tools.name", ICON_VS_TOOLS) {
+    ViewTools::ViewTools() : View::Scrolling("hex.builtin.view.tools.name", ICON_VS_TOOLS) {
         m_dragStartIterator = ContentRegistry::Tools::impl::getEntries().end();
 
         LayoutManager::registerLoadCallback([this](std::string_view line) {

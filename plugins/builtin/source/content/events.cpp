@@ -40,30 +40,27 @@
 namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {
-        if (path.extension() == ".hexproj") {
-            if (!ProjectFile::load(path)) {
-                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
-            }
+        TaskManager::doLater([path] {
+            if (path.extension() == ".hexproj") {
+                if (!ProjectFile::load(path)) {
+                    ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                }
 
-            return;
-        }
-
-        auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
-        if (auto *fileProvider = dynamic_cast<FileProvider*>(provider); fileProvider != nullptr) {
-            fileProvider->setPath(path);
-            if (!provider->open() || !provider->isAvailable()) {
-                ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                 return;
             }
 
-            EventProviderOpened::post(fileProvider);
-            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
-            ImHexApi::Provider::setCurrentProvider(provider);
+            auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
+            if (auto *fileProvider = dynamic_cast<FileProvider*>(provider.get()); fileProvider != nullptr) {
+                fileProvider->setPath(path);
 
-            glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
-            glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
-        }
+                ImHexApi::Provider::openProvider(provider);
+
+                AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
+
+                glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
+                glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
+            }
+        });
     }
 
     void registerEventHandlers() {
@@ -180,11 +177,8 @@ namespace hex::plugin::builtin {
 
         RequestOpenWindow::subscribe([](const std::string &name) {
             if (name == "Create File") {
-                auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
-                if (newProvider != nullptr && !newProvider->open())
-                    hex::ImHexApi::Provider::remove(newProvider);
-                else
-                    EventProviderOpened::post(newProvider);
+                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+                ImHexApi::Provider::openProvider(newProvider);
             } else if (name == "Open File") {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
                     if (path.extension() == ".hexproj") {
@@ -195,23 +189,25 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    auto newProvider = static_cast<FileProvider*>(
-                        ImHexApi::Provider::createProvider("hex.builtin.provider.file", true)
-                    );
+                    auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
+                    auto newProvider = static_cast<FileProvider*>(provider.get());
 
                     if (newProvider == nullptr)
                         return;
 
                     newProvider->setPath(path);
-                    if (!newProvider->open()) {
-                        hex::ImHexApi::Provider::remove(newProvider);
-                    } else {
-                        EventProviderOpened::post(newProvider);
-                        AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
-                    }
+                    ImHexApi::Provider::openProvider(provider);
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
                 }, {}, true);
             } else if (name == "Open Project") {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
+                    [](const auto &path) {
+                        if (!ProjectFile::load(path)) {
+                            ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                        }
+                    });
+            } else if (name == "Open Folder") {
+                fs::openFileBrowser(fs::DialogMode::Folder, {  },
                     [](const auto &path) {
                         if (!ProjectFile::load(path)) {
                             ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
@@ -225,34 +221,20 @@ namespace hex::plugin::builtin {
         });
 
         // Handles the provider initialization, and calls EventProviderOpened if successful
-        EventProviderCreated::subscribe([](hex::prv::Provider *provider) {
+        EventProviderCreated::subscribe([](std::shared_ptr<prv::Provider> provider) {
             if (provider->shouldSkipLoadInterface())
                 return;
 
-            if (auto *filePickerProvider = dynamic_cast<prv::IProviderFilePicker*>(provider); filePickerProvider != nullptr) {
+            if (auto *filePickerProvider = dynamic_cast<prv::IProviderFilePicker*>(provider.get()); filePickerProvider != nullptr) {
                 if (!filePickerProvider->handleFilePicker()) {
-                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider.get()); });
                     return;
                 }
 
-                TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
-                    if (!provider->open()) {
-                        ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                        TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
-                    } else {
-                        TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
-                    }
-                });
+                ImHexApi::Provider::openProvider(provider);
             }
-            else if (dynamic_cast<prv::IProviderLoadInterface*>(provider) == nullptr) {
-                TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
-                    if (!provider->open() || !provider->isAvailable()) {
-                        ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                        TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
-                    } else {
-                        TaskManager::doLater([provider]{ EventProviderOpened::post(provider); });
-                    }
-                });
+            else if (dynamic_cast<prv::IProviderLoadInterface*>(provider.get()) == nullptr) {
+                ImHexApi::Provider::openProvider(provider);
             }
         });
 
@@ -283,11 +265,11 @@ namespace hex::plugin::builtin {
         });
 
         EventImHexStartupFinished::subscribe([] {
-            const auto currVersion = ImHexApi::System::getImHexVersion();
+            const auto& currVersion = ImHexApi::System::getImHexVersion();
             const auto prevLaunchVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
 
             const auto forceOobe = getEnvironmentVariable("IMHEX_FORCE_OOBE");
-            if (prevLaunchVersion == "" || (forceOobe.has_value() && *forceOobe != "0")) {
+            if (prevLaunchVersion.empty() || (forceOobe.has_value() && *forceOobe != "0")) {
                 EventFirstLaunch::post();
                 return;
             }
@@ -418,12 +400,41 @@ namespace hex::plugin::builtin {
             });
         });
 
+        RequestOpenProvider::subscribe([](std::shared_ptr<prv::Provider> provider) {
+            TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
+                auto result = provider->open();
+                if (result.isFailure()) {
+                    ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, result.getErrorMessage()));
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider.get()); });
+                } else if (result.isRedirecting()) {
+                    TaskManager::doLater([result, provider] {
+                        ImHexApi::Provider::remove(provider.get());
+                        ImHexApi::Provider::setCurrentProvider(result.getRedirectProvider());
+                    });
+                } else {
+                    if (result.isWarning())
+                        ui::ToastWarning::open(std::string(result.getErrorMessage()));
+                    TaskManager::doLater([provider]{ EventProviderOpened::post(provider.get()); });
+                }
+            });
+        });
+
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){
             #if defined(NFD_PORTAL)
                 ui::PopupError::open(fmt::format("hex.builtin.popup.error.file_dialog.portal"_lang, errMsg));
             #else
                 ui::PopupError::open(fmt::format("hex.builtin.popup.error.file_dialog.common"_lang, errMsg));
             #endif
+        });
+
+        static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.show_task_finish_notification"> taskFinishedNotificationEnabled = false;
+        TaskManager::addTaskCompletionCallback([](Task &task) {
+            if (!taskFinishedNotificationEnabled)
+                return;
+
+
+            if (!ImHexApi::System::isMainWindowFocused() && !task.isBackgroundTask())
+                hex::showToastMessage("ImHex", fmt::format("hex.builtin.os_toast_message.task_finished"_lang, Lang(task.getUnlocalizedName())));
         });
 
     }

@@ -16,12 +16,12 @@
 
 namespace hex::plugin::builtin {
 
-    bool MemoryFileProvider::open() {
+    prv::Provider::OpenResult MemoryFileProvider::open() {
         if (m_data.empty()) {
             m_data.resize(1);
         }
 
-        return true;
+        return {};
     }
 
     void MemoryFileProvider::readRaw(u64 offset, void *buffer, size_t size) {
@@ -51,16 +51,16 @@ namespace hex::plugin::builtin {
 
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
 
-            if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider); fileProvider != nullptr) {
+            if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider.get()); fileProvider != nullptr) {
                 fileProvider->setPath(path);
 
-                if (!fileProvider->open()) {
-                    ImHexApi::Provider::remove(newProvider);
+                if (fileProvider->open().isFailure()) {
+                    ImHexApi::Provider::remove(newProvider.get());
                 } else {
                     MovePerProviderData::post(this, fileProvider);
 
                     fileProvider->markDirty(false);
-                    EventProviderOpened::post(newProvider);
+                    EventProviderOpened::post(newProvider.get());
                     ImHexApi::Provider::remove(this, true);
                 }
             }
@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
 
     std::vector<MemoryFileProvider::MenuEntry> MemoryFileProvider::getMenuEntries() {
         return {
-            MenuEntry { Lang("hex.builtin.provider.mem_file.rename"), ICON_VS_TAG, [this] { this->renameFile(); } }
+            MenuEntry { .name=Lang("hex.builtin.provider.mem_file.rename"), .icon=ICON_VS_TAG, .callback=[this] { this->renameFile(); } }
         };
     }
 
@@ -88,7 +88,7 @@ namespace hex::plugin::builtin {
         address -= this->getBaseAddress();
 
         if (address < this->getActualSize())
-            return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
+            return { Region { .address=this->getBaseAddress() + address, .size=this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
     }

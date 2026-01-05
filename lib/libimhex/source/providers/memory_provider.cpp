@@ -4,12 +4,12 @@
 
 namespace hex::prv {
 
-    bool MemoryProvider::open() {
+    Provider::OpenResult MemoryProvider::open() {
         if (m_data.empty()) {
             m_data.resize(1);
         }
 
-        return true;
+        return {};
     }
 
     void MemoryProvider::readRaw(u64 offset, void *buffer, size_t size) {

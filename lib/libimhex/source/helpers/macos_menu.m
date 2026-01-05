@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
+#import <objc/runtime.h>
 
 struct KeyEquivalent {
     bool valid;
@@ -61,7 +62,120 @@ void macosEndMainMenuBar(void) {
     s_constructingMenu = false;
 }
 
-bool macosBeginMenu(const char* label, bool enabled) {
+
+static NSMutableArray* g_RegisteredIconFontDescriptors = nil;
+void macosRegisterFont(const unsigned char* fontBytes, size_t fontLength) {
+    if (!fontBytes || fontLength == 0 || fontLength > 100 * 1024 * 1024) { // Max 100MB sanity check
+        NSLog(@"Invalid font data: bytes=%p, length=%zu", fontBytes, fontLength);
+        return;
+    }
+
+    // Initialize array on first use
+    if (!g_RegisteredIconFontDescriptors) {
+        g_RegisteredIconFontDescriptors = [[NSMutableArray alloc] init];
+    }
+
+    // Create NSData - this will copy the bytes
+    NSData *fontData = [NSData dataWithBytes:fontBytes length:fontLength];
+    if (!fontData) {
+        NSLog(@"Failed to create NSData from font bytes");
+        return;
+    }
+
+    CFErrorRef error = NULL;
+    CFArrayRef descriptors = CTFontManagerCreateFontDescriptorsFromData((__bridge CFDataRef)fontData);
+
+    if (descriptors && CFArrayGetCount(descriptors) > 0) {
+        // Register all descriptors from this font file
+        CTFontManagerRegisterFontDescriptors(descriptors, kCTFontManagerScopeProcess, true, NULL);
+        if (true) {
+            // Store each descriptor for later use
+            for (CFIndex i = 0; i < CFArrayGetCount(descriptors); i++) {
+                CTFontDescriptorRef descriptor = (CTFontDescriptorRef)CFArrayGetValueAtIndex(descriptors, i);
+                [g_RegisteredIconFontDescriptors addObject:(__bridge id)descriptor];
+
+                // Log the font name for debugging
+                CTFontRef font = CTFontCreateWithFontDescriptor(descriptor, 16.0, NULL);
+                if (font) {
+                    CFRelease(font);
+                }
+            }
+        } else {
+            NSLog(@"Failed to register font descriptors");
+        }
+
+        CFRelease(descriptors);
+    } else {
+        NSLog(@"Failed to create font descriptors from data (length: %zu)", fontLength);
+        if (error) {
+            NSLog(@"Error: %@", (__bridge NSError *)error);
+            CFRelease(error);
+        }
+    }
+}
+
+static NSImage* imageFromIconFont(NSString* character,
+                           CGFloat size,
+                           NSColor* color) {
+
+    if (!character || [character length] == 0) {
+        return nil;
+    }
+
+    if (!g_RegisteredIconFontDescriptors || [g_RegisteredIconFontDescriptors count] == 0) {
+        NSLog(@"No icon fonts registered");
+        return nil;
+    }
+
+    NSFont *font = nil;
+    unichar unicode = [character characterAtIndex:0];
+
+    for (id descriptorObj in g_RegisteredIconFontDescriptors) {
+        CTFontDescriptorRef descriptor = (__bridge CTFontDescriptorRef)descriptorObj;
+        CTFontRef ctFont = CTFontCreateWithFontDescriptor(descriptor, size, NULL);
+
+        if (ctFont) {
+            CGGlyph glyph;
+            UniChar unichar = unicode;
+            if (CTFontGetGlyphsForCharacters(ctFont, &unichar, &glyph, 1)) {
+                font = (__bridge NSFont *)ctFont;
+                break;
+            }
+            CFRelease(ctFont);
+        }
+    }
+
+    if (!font) {
+        NSLog(@"No font found with glyph for character U+%04X (string: '%@', length: %lu)",
+              unicode, character, (unsigned long)[character length]);
+        return nil;
+    }
+
+    NSDictionary *attributes = @{
+        NSFontAttributeName: font,
+        NSForegroundColorAttributeName: color
+    };
+    NSAttributedString *attrString = [[NSAttributedString alloc]
+                                      initWithString:character
+                                      attributes:attributes];
+
+    NSSize stringSize = [attrString size];
+
+    NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(size, size)];
+
+    [image lockFocus];
+
+    NSPoint drawPoint = NSMakePoint((size - stringSize.width) / 2.0,
+                                    (size - stringSize.height) / 2.0);
+    [attrString drawAtPoint:drawPoint];
+
+    [image unlockFocus];
+    [image setTemplate:YES];
+
+    return image;
+}
+
+bool macosBeginMenu(const char* label, const char *icon, bool enabled) {
     NSString* title = [NSString stringWithUTF8String:label];
 
     // Search for menu item with the given name
@@ -78,6 +192,17 @@ bool macosBeginMenu(const char* label, bool enabled) {
         NSMenuItem* menuItem = [[NSMenuItem alloc] init];
         menuItem.title = title;
         [menuItem setSubmenu:newMenu];
+
+        // Hide menus starting with '$' (used for special menus)
+        if (label[0] == '$') {
+            [menuItem setHidden:YES];
+        }
+
+        if (icon != NULL) {
+            NSString *iconString = [NSString stringWithUTF8String:icon];
+            NSImage* iconImage = imageFromIconFont(iconString, 16.0, [NSColor blackColor]);
+            [menuItem setImage:iconImage];
+        }
 
         // Add the new menu to the end of the list
         menuIndex = [s_menuStack[s_menuStackSize - 1] numberOfItems];
@@ -104,7 +229,7 @@ void macosEndMenu(void) {
     s_menuStackSize -= 1;
 }
 
-bool macosMenuItem(const char* label, struct KeyEquivalent keyEquivalent, bool selected, bool enabled) {
+bool macosMenuItem(const char* label, const char *icon, struct KeyEquivalent keyEquivalent, bool selected, bool enabled) {
     NSString* title = [NSString stringWithUTF8String:label];
 
     if (s_constructingMenu) {
@@ -112,6 +237,12 @@ bool macosMenuItem(const char* label, struct KeyEquivalent keyEquivalent, bool s
         menuItem.title = title;
         menuItem.action = @selector(OnClick:);
         menuItem.target = s_menuItemHandler;
+
+        if (icon != NULL) {
+            NSString *iconString = [NSString stringWithUTF8String:icon];
+            NSImage* iconImage = imageFromIconFont(iconString, 16.0, [NSColor blackColor]);
+            [menuItem setImage:iconImage];
+        }
 
         [menuItem setTag:s_currTag];
         s_currTag += 1;
@@ -164,8 +295,8 @@ bool macosMenuItem(const char* label, struct KeyEquivalent keyEquivalent, bool s
     return false;
 }
 
-bool macosMenuItemSelect(const char* label, struct KeyEquivalent keyEquivalent, bool* selected, bool enabled) {
-    if (macosMenuItem(label, keyEquivalent, selected != NULL ? *selected : false, enabled)) {
+bool macosMenuItemSelect(const char* label, const char *icon, struct KeyEquivalent keyEquivalent, bool* selected, bool enabled) {
+    if (macosMenuItem(label, icon, keyEquivalent, selected != NULL ? *selected : false, enabled)) {
         if (selected != NULL)
             *selected = !(*selected);
 
@@ -178,5 +309,96 @@ void macosSeparator(void) {
     if (s_constructingMenu) {
         NSMenuItem* separator = [NSMenuItem separatorItem];
         [s_menuStack[s_menuStackSize - 1] addItem:separator];
+    }
+}
+
+@interface NSObject (DockMenuAddition)
+- (NSMenu *)imhexApplicationDockMenu:(NSApplication *)sender;
+@end
+
+@implementation NSObject (DockMenuAddition)
+
+- (NSMenu *)cloneMenu:(NSMenu *)originalMenu {
+    NSMenu *clonedMenu = [[NSMenu alloc] initWithTitle:[originalMenu title]];
+
+    for (NSMenuItem *item in [originalMenu itemArray]) {
+        NSMenuItem *clonedItem = [self cloneMenuItem:item];
+        [clonedMenu addItem:clonedItem];
+    }
+
+    return clonedMenu;
+}
+
+- (NSMenuItem *)cloneMenuItem:(NSMenuItem *)original {
+    if ([original isSeparatorItem]) {
+        return [NSMenuItem separatorItem];
+    }
+
+    // Create new item with same properties
+    NSMenuItem *clone = [[NSMenuItem alloc] initWithTitle:[original title]
+                                                   action:[original action]
+                                            keyEquivalent:[original keyEquivalent]];
+
+    // Copy other properties
+    [clone setTarget:[original target]];
+    [clone setEnabled:[original isEnabled]];
+    [clone setImage:[original image]];
+    [clone setTag:[original tag]];
+    [clone setRepresentedObject:[original representedObject]];
+    [clone setToolTip:[original toolTip]];
+    [clone setState:[original state]];
+
+    // Handle submenus recursively
+    if ([original hasSubmenu]) {
+        NSMenu *clonedSubmenu = [self cloneMenu:[original submenu]];
+        [clone setSubmenu:clonedSubmenu];
+    }
+
+    return clone;
+}
+
+- (NSMenu *)imhexApplicationDockMenu:(NSApplication *)sender {
+    NSMenu *dockMenu = [[NSMenu alloc] init];
+
+    NSInteger menuIndex = [s_menuStack[s_menuStackSize - 1] indexOfItemWithTitle:@"$TASKBAR$"];
+    if (menuIndex == -1) {
+        return dockMenu;
+    }
+    NSMenuItem *fileMenuItem = [s_menuStack[s_menuStackSize - 1] itemAtIndex:menuIndex];
+
+    // Get the File submenu
+    NSMenu *fileSubmenu = [fileMenuItem submenu];
+
+    if (fileSubmenu) {
+        // Clone each item from the File submenu directly into the dock menu
+        for (NSMenuItem *item in [fileSubmenu itemArray]) {
+            NSMenuItem *clonedItem = [self cloneMenuItem:item];
+            [dockMenu addItem:clonedItem];
+        }
+    }
+
+    return dockMenu;
+}
+
+@end
+
+void macosSetupDockMenu(void) {
+    @autoreleasepool {
+        // Get GLFW's delegate class
+        Class delegateClass = objc_getClass("GLFWApplicationDelegate");
+
+        if (delegateClass != nil) {
+            // Get our custom implementation
+            Method customMethod = class_getInstanceMethod([NSObject class],
+                                                         @selector(imhexApplicationDockMenu:));
+
+            // Add the method to GLFW's delegate class
+            class_addMethod(delegateClass,
+                          @selector(applicationDockMenu:),
+                          method_getImplementation(customMethod),
+                          method_getTypeEncoding(customMethod));
+        } else {
+            NSLog(@"ERROR: Could not find GLFWApplicationDelegate class");
+        }
     }
 }

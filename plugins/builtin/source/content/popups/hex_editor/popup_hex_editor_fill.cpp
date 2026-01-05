@@ -13,7 +13,6 @@
 
 #include <fonts/vscode_icons.hpp>
 
-#include <ui/text_editor.hpp>
 #include <wolv/literals.hpp>
 
 using namespace wolv::literals;

@@ -32,6 +32,7 @@
         void macosInstallEventListener();
 
         void toastMessageMacos(const char *title, const char *message);
+        void macosSetupDockMenu(void);
     }
 
 #endif

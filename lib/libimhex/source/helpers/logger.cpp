@@ -12,6 +12,7 @@
 #include <mutex>
 #include <chrono>
 #include <fmt/chrono.h>
+#include <hex/helpers/debugging.hpp>
 
 #if defined(OS_WINDOWS)
     #include <Windows.h>
@@ -117,8 +118,8 @@ namespace hex::log {
 
         void addLogEntry(std::string_view project, std::string_view level, std::string message) {
             s_logEntries->emplace_back(
-                std::move(project),
-                std::move(level),
+                project,
+                level,
                 std::move(message)
             );
         }
@@ -147,14 +148,6 @@ namespace hex::log {
                 "",
                 MaxTagLength - totalLength
             );
-        }
-
-        void assertionHandler(const char* exprString, const char* file, int line) {
-            log::error("Assertion failed: {} at {}:{}", exprString, file, line);
-
-            #if defined (DEBUG)
-                std::abort();
-            #endif
         }
 
         namespace color {

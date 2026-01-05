@@ -75,7 +75,7 @@ namespace hex::fonts {
             }
         }
 
-        s_previewFonts = std::move(s_usedFonts);
+        s_previewFonts = s_usedFonts;
         s_usedFonts->clear();
     }
 
@@ -316,7 +316,7 @@ namespace hex::fonts {
 
 
     ContentRegistry::Settings::Widgets::Widget::Interface& addFontSettingsWidget(UnlocalizedString name) {
-        return ContentRegistry::Settings::add<FontSelector>("hex.fonts.setting.font", "hex.fonts.setting.font.custom_font", std::move(name));
+        return ContentRegistry::Settings::add<FontSelector>("hex.fonts.setting.font", "hex.fonts.setting.font.custom_font", name);
     }
 
 }

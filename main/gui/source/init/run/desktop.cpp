@@ -35,7 +35,7 @@
                     while (true) {
                         const auto result = splashWindow->loop();
                         if (result.has_value()) {
-                            if (result.value() == false) {
+                            if (!result.value()) {
                                 ImHexApi::System::impl::addInitArgument("tasks-failed");
                             }
 

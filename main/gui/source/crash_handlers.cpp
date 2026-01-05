@@ -1,3 +1,5 @@
+#include <crash_handlers.hpp>
+
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
@@ -16,6 +18,7 @@
 #include <csignal>
 #include <exception>
 #include <typeinfo>
+#include <hex/helpers/debugging.hpp>
 #include <hex/helpers/utils.hpp>
 
 #if defined(IMGUI_TEST_ENGINE)
@@ -45,8 +48,11 @@ namespace hex::crash {
 
     // Function that decides what should happen on a crash
     // (either sending a message or saving a crash file, depending on when the crash occurred)
-    using CrashCallback = void (*) (const std::string&);
-    static CrashCallback crashCallback = sendNativeMessage;
+    static CrashCallback s_crashCallback = sendNativeMessage;
+
+    void setCrashCallback(CrashCallback callback) {
+        s_crashCallback = std::move(callback);
+    }
 
     static std::fs::path s_crashBackupPath;
     static void saveCrashFile(const std::string& message) {
@@ -71,23 +77,12 @@ namespace hex::crash {
         log::warn("Could not write crash.json file!");
     }
 
-    static void printStackTrace() {
-        auto stackTraceResult = trace::getStackTrace();
-        log::fatal("Printing stacktrace using implementation '{}'", stackTraceResult.implementationName);
-        for (const auto &stackFrame : stackTraceResult.stackFrames) {
-            if (stackFrame.line == 0)
-                log::fatal("  ({}) | {}", stackFrame.file, stackFrame.function);
-            else
-                log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
-        }
-    }
-
     static void callCrashHandlers(const std::string &msg) {
         // Call the crash callback
-        crashCallback(msg);
+        s_crashCallback(msg);
 
         // Print the stacktrace to the console or log file
-        printStackTrace();
+        dbg::printStackTrace(trace::getStackTrace());
 
         // Flush all streams
         std::fflush(stdout);
@@ -188,6 +183,7 @@ namespace hex::crash {
     // Setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
     void setupCrashHandlers() {
         trace::initialize();
+        trace::setAssertionHandler(dbg::assertionHandler);
 
         // Register signal handlers
         {
@@ -222,7 +218,7 @@ namespace hex::crash {
                 HANDLE_SIGNAL(SIGILL);
                 HANDLE_SIGNAL(SIGABRT);
                 HANDLE_SIGNAL(SIGFPE);
-                HANDLE_SIGNAL(SIGINT);
+                HANDLE_SIGNAL(SIGINT)
 
                 #if defined (SIGBUS)
                     HANDLE_SIGNAL(SIGBUS);
@@ -259,7 +255,7 @@ namespace hex::crash {
 
         // Change the crash callback when ImHex has finished startup
         EventImHexStartupFinished::subscribe([]{
-            crashCallback = saveCrashFile;
+            setCrashCallback(saveCrashFile);
         });
     }
 

@@ -57,6 +57,9 @@ set(LIBIMHEX_SOURCES
         source/ui/toast.cpp
         source/ui/banner.cpp
 
+        source/mcp/client.cpp
+        source/mcp/server.cpp
+
         source/subcommands/subcommands.cpp
 )
 

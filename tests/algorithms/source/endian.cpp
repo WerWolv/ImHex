@@ -15,6 +15,7 @@ TEST_SEQUENCE("64BitFloatEndianSwap") {
     double swappedFloatValue = hex::changeEndianness(floatValue, std::endian::big);
     u64 swappedIntegerValue  = hex::changeEndianness(integerValue, std::endian::big);
 
+    //NOLINTNEXTLINE
     TEST_ASSERT(std::memcmp(&floatValue, &integerValue, 8) == 0 && std::memcmp(&swappedFloatValue, &swappedIntegerValue, 8) == 0);
 
     TEST_SUCCESS();

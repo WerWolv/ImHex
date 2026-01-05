@@ -86,7 +86,7 @@ EXPORT_MODULE namespace hex {
          * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
          * @param select Whether to select the provider after adding it
          */
-        void add(std::unique_ptr<prv::Provider> &&provider, bool skipLoadInterface = false, bool select = true);
+        void add(std::shared_ptr<prv::Provider> &&provider, bool skipLoadInterface = false, bool select = true);
 
         /**
          * @brief Creates a new provider and adds it to the list of providers
@@ -111,11 +111,17 @@ EXPORT_MODULE namespace hex {
          * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
          * @param select Whether to select the provider after adding it
          */
-        prv::Provider* createProvider(
+        std::shared_ptr<prv::Provider> createProvider(
             const UnlocalizedString &unlocalizedName,
             bool skipLoadInterface = false,
             bool select = true
         );
+
+        /**
+         * @brief Opens a provider, making its data available to ImHex and handling any error that may occur
+         * @param provider The provider to open
+         */
+        void openProvider(std::shared_ptr<prv::Provider> provider);
 
     }
 

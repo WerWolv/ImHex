@@ -594,6 +594,12 @@ namespace hex {
                 return false;
             }
 
+            bool Spacer::draw(const std::string& name) {
+                std::ignore = name;
+                ImGui::NewLine();
+
+                return false;
+            }
 
         }
 
@@ -624,22 +630,22 @@ namespace hex {
         void add(Type type, const std::string &command, const UnlocalizedString &unlocalizedDescription, const impl::DisplayCallback &displayCallback, const impl::ExecuteCallback &executeCallback) {
             log::debug("Registered new command palette command: {}", command);
 
-            impl::s_entries->push_back(impl::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
+            impl::s_entries->push_back(impl::Entry { .type=type, .command=command, .unlocalizedDescription=unlocalizedDescription, .displayCallback=displayCallback, .executeCallback=executeCallback });
         }
 
         void addHandler(Type type, const std::string &command, const impl::QueryCallback &queryCallback, const impl::DisplayCallback &displayCallback) {
             log::debug("Registered new command palette command handler: {}", command);
 
-            impl::s_handlers->push_back(impl::Handler { type, command, queryCallback, displayCallback });
+            impl::s_handlers->push_back(impl::Handler { .type=type, .command=command, .queryCallback=queryCallback, .displayCallback=displayCallback });
         }
 
         void setDisplayedContent(const impl::ContentDisplayCallback &displayCallback) {
-            impl::s_displayedContent = impl::ContentDisplay { true, displayCallback };
+            impl::s_displayedContent = impl::ContentDisplay { .showSearchBox=true, .callback=displayCallback };
         }
 
         void openWithContent(const impl::ContentDisplayCallback &displayCallback) {
             RequestOpenCommandPalette::post();
-            impl::s_displayedContent = impl::ContentDisplay { false, displayCallback };
+            impl::s_displayedContent = impl::ContentDisplay { .showSearchBox=false, .callback=displayCallback };
         }
 
     }
@@ -777,12 +783,12 @@ namespace hex {
 
         void addVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, pl::api::FunctionParameterCount parameterCount) {
             log::debug("Registered new pattern visualizer function: {}", name);
-            (*impl::s_visualizers)[name] = impl::Visualizer { parameterCount, function };
+            (*impl::s_visualizers)[name] = impl::Visualizer { .parameterCount=parameterCount, .callback=function };
         }
 
         void addInlineVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, pl::api::FunctionParameterCount parameterCount) {
             log::debug("Registered new inline pattern visualizer function: {}", name);
-            (*impl::s_inlineVisualizers)[name] = impl::Visualizer { parameterCount, function };
+            (*impl::s_inlineVisualizers)[name] = impl::Visualizer { .parameterCount=parameterCount, .callback=function };
         }
 
     }
@@ -848,7 +854,7 @@ namespace hex {
         void add(const UnlocalizedString &unlocalizedName, const char *icon, const impl::Callback &function) {
             log::debug("Registered new tool: {}", unlocalizedName.get());
 
-            impl::s_tools->emplace_back(impl::Entry { unlocalizedName, icon, function });
+            impl::s_tools->emplace_back(impl::Entry { .unlocalizedName=unlocalizedName, .icon=icon, .function=function });
         }
 
     }
@@ -862,6 +868,18 @@ namespace hex {
                 return *s_entries;
             }
 
+        }
+
+        namespace EditWidget {
+            std::optional<std::vector<u8>> TextInput::draw(std::string &value, std::endian endian) {
+                if (ImGui::InputText("##InspectorLineEditing", value,
+                                 ImGuiInputTextFlags_EnterReturnsTrue |
+                                 ImGuiInputTextFlags_AutoSelectAll)) {
+                    return getBytes(value, endian);
+                }
+
+                return std::nullopt;
+            }
         }
 
         void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
@@ -991,7 +1009,7 @@ namespace hex {
                 coloredIcon.color = ImGuiCustomCol_ToolbarGray;
 
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, coloredIcon, shortcut, view, function, enabledCallback, selectedCallback, -1 }
+                priority, impl::MenuItem { .unlocalizedNames=unlocalizedMainMenuNames, .icon=coloredIcon, .shortcut=shortcut, .view=view, .callback=function, .enabledCallback=enabledCallback, .selectedCallback=selectedCallback, .toolbarIndex=-1 }
             });
 
             if (shortcut != Shortcut::None) {
@@ -1015,14 +1033,23 @@ namespace hex {
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, showOnWelcomeScreen ? Shortcut({ ShowOnWelcomeScreen }) : Shortcut::None, view, function, enabledCallback, []{ return false; }, -1 }
+                priority, impl::MenuItem { .unlocalizedNames=unlocalizedMainMenuNames, .icon=icon, .shortcut=showOnWelcomeScreen ? Shortcut({ ShowOnWelcomeScreen }) : Shortcut::None, .view=view, .callback=function, .enabledCallback=enabledCallback, .selectedCallback=[]{ return false; }, .toolbarIndex=-1 }
             });
         }
 
         void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, View *view) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
             impl::s_menuItems->insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, "", Shortcut::None, view, []{}, []{ return true; }, []{ return false; }, -1 }
+                priority, impl::MenuItem { .unlocalizedNames=unlocalizedMainMenuNames, .icon="", .shortcut=Shortcut::None, .view=view, .callback=[]{}, .enabledCallback=[]{ return true; }, .selectedCallback=[]{ return false; }, .toolbarIndex=-1 }
+            });
+        }
+
+        void addTaskBarMenuItem(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
+            log::debug("Added new taskbar menu item to menu {} ", unlocalizedMainMenuNames[0].get());
+
+            unlocalizedMainMenuNames.insert(unlocalizedMainMenuNames.begin(), impl::TaskBarMenuValue);
+            impl::s_menuItems->insert({
+                priority, impl::MenuItem { .unlocalizedNames=unlocalizedMainMenuNames, .icon="", .shortcut=Shortcut::None, .view=nullptr, .callback=function, .enabledCallback=enabledCallback, .selectedCallback=[]{ return false; }, .toolbarIndex=-1 }
             });
         }
 
@@ -1038,13 +1065,13 @@ namespace hex {
             impl::s_toolbarItems->push_back(function);
         }
 
-        void addMenuItemToToolbar(const UnlocalizedString& unlocalizedName, ImGuiCustomCol color) {
+        void addMenuItemToToolbar(const std::vector<UnlocalizedString>& unlocalizedNames, ImGuiCustomCol color) {
             const auto maxIndex = std::ranges::max_element(impl::getMenuItems(), [](const auto &a, const auto &b) {
                 return a.second.toolbarIndex < b.second.toolbarIndex;
             })->second.toolbarIndex;
 
             for (auto &[priority, menuItem] : *impl::s_menuItems) {
-                if (menuItem.unlocalizedNames.back() == unlocalizedName) {
+                if (menuItem.unlocalizedNames == unlocalizedNames) {
                     menuItem.toolbarIndex = maxIndex + 1;
                     menuItem.icon.color = color;
                     updateToolbarItems();
@@ -1096,18 +1123,18 @@ namespace hex {
 
     }
 
-    namespace ContentRegistry::Provider {
+    
 
-        namespace impl {
+        namespace ContentRegistry::Provider::impl {
 
             void add(const std::string &typeName, ProviderCreationFunction creationFunction) {
-                (void)RequestCreateProvider::subscribe([expectedName = typeName, creationFunction](const std::string &name, bool skipLoadInterface, bool selectProvider, prv::Provider **provider) {
+                (void)RequestCreateProvider::subscribe([expectedName = typeName, creationFunction](const std::string &name, bool skipLoadInterface, bool selectProvider, std::shared_ptr<prv::Provider> *provider) {
                     if (name != expectedName) return;
 
                     auto newProvider = creationFunction();
 
                     if (provider != nullptr) {
-                        *provider = newProvider.get();
+                        *provider = newProvider;
                         ImHexApi::Provider::add(std::move(newProvider), skipLoadInterface, selectProvider);
                     }
                 });
@@ -1127,7 +1154,7 @@ namespace hex {
         }
 
 
-    }
+    
 
     namespace ContentRegistry::DataFormatter {
 
@@ -1283,39 +1310,34 @@ namespace hex {
 
     }
 
-    namespace ContentRegistry::Diffing {
 
-        namespace impl {
+    namespace ContentRegistry::Diffing::impl {
 
-            static AutoReset<std::vector<std::unique_ptr<Algorithm>>> s_algorithms;
-            const std::vector<std::unique_ptr<Algorithm>>& getAlgorithms() {
-                return *s_algorithms;
-            }
+        static AutoReset<std::vector<std::unique_ptr<Algorithm>>> s_algorithms;
+        const std::vector<std::unique_ptr<Algorithm>>& getAlgorithms() {
+            return *s_algorithms;
+        }
 
-            void addAlgorithm(std::unique_ptr<Algorithm> &&hash) {
-                s_algorithms->emplace_back(std::move(hash));
-            }
-
+        void addAlgorithm(std::unique_ptr<Algorithm> &&hash) {
+            s_algorithms->emplace_back(std::move(hash));
         }
 
     }
 
-    namespace ContentRegistry::Hashes {
 
-        namespace impl {
+    namespace ContentRegistry::Hashes::impl {
 
-            static AutoReset<std::vector<std::unique_ptr<Hash>>> s_hashes;
-            const std::vector<std::unique_ptr<Hash>>& getHashes() {
-                return *s_hashes;
-            }
+        static AutoReset<std::vector<std::unique_ptr<Hash>>> s_hashes;
+        const std::vector<std::unique_ptr<Hash>>& getHashes() {
+            return *s_hashes;
+        }
 
-            void add(std::unique_ptr<Hash> &&hash) {
-                s_hashes->emplace_back(std::move(hash));
-            }
-
+        void add(std::unique_ptr<Hash> &&hash) {
+            s_hashes->emplace_back(std::move(hash));
         }
 
     }
+
 
     namespace ContentRegistry::BackgroundServices {
 
@@ -1323,7 +1345,7 @@ namespace hex {
 
             class Service {
             public:
-                Service(const UnlocalizedString &unlocalizedName, std::jthread thread) : m_unlocalizedName(std::move(unlocalizedName)), m_thread(std::move(thread)) { }
+                Service(UnlocalizedString unlocalizedName, std::jthread thread) : m_unlocalizedName(std::move(unlocalizedName)), m_thread(std::move(thread)) { }
                 Service(const Service&) = delete;
                 Service(Service &&) = default;
                 ~Service() {
@@ -1391,6 +1413,40 @@ namespace hex {
             log::debug("Registered new network endpoint: {}", endpoint);
 
             impl::s_endpoints->insert({ endpoint, callback });
+        }
+
+    }
+
+    namespace ContentRegistry::MCP {
+
+        namespace impl {
+
+            mcp::Server& getMcpServerInstance() {
+                static AutoReset<std::unique_ptr<mcp::Server>> server;
+
+                if (*server == nullptr)
+                    server = std::make_unique<mcp::Server>();
+
+                return **server;
+            }
+
+            static bool s_mcpEnabled = false;
+            void setEnabled(bool enabled) {
+                s_mcpEnabled = enabled;
+            }
+
+        }
+
+        bool isEnabled() {
+            return impl::s_mcpEnabled;
+        }
+
+        bool isConnected() {
+            return impl::getMcpServerInstance().isConnected();
+        }
+
+        void registerTool(std::string_view capabilities, std::function<nlohmann::json(const nlohmann::json &params)> function) {
+            impl::getMcpServerInstance().addPrimitive("tools", capabilities, function);
         }
 
     }
@@ -1488,22 +1544,19 @@ namespace hex {
         }
 
     }
+    
 
-    namespace ContentRegistry::Disassemblers {
+    namespace ContentRegistry::Disassemblers::impl {
 
-        namespace impl {
+        static AutoReset<std::map<std::string, impl::CreatorFunction>> s_architectures;
 
-            static AutoReset<std::map<std::string, impl::CreatorFunction>> s_architectures;
+        void addArchitectureCreator(impl::CreatorFunction function) {
+            const auto arch = function();
+            (*s_architectures)[arch->getName()] = std::move(function);
+        }
 
-            void addArchitectureCreator(impl::CreatorFunction function) {
-                const auto arch = function();
-                (*s_architectures)[arch->getName()] = std::move(function);
-            }
-
-            const std::map<std::string, impl::CreatorFunction>& getArchitectures() {
-                return *s_architectures;
-            }
-
+        const std::map<std::string, impl::CreatorFunction>& getArchitectures() {
+            return *s_architectures;
         }
 
     }

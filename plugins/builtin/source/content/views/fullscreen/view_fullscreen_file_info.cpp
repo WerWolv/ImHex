@@ -15,8 +15,9 @@ namespace hex::plugin::builtin {
 
     ViewFullScreenFileInfo::ViewFullScreenFileInfo(std::fs::path filePath) : m_filePath(std::move(filePath)) {
         this->m_provider.setPath(m_filePath);
-        if (!this->m_provider.open()) {
+        if (this->m_provider.open().isFailure()) {
             ui::ToastError::open("hex.builtin.view.fullscreen.file_info.error.file_not_readable"_lang);
+            return;
         }
 
         m_analysisTask = TaskManager::createBlockingTask("hex.builtin.view.fullscreen.file_info.analyzing", TaskManager::NoProgress, [this](Task &task) {
@@ -33,7 +34,7 @@ namespace hex::plugin::builtin {
                 ContentRegistry::PatternLanguage::configureRuntime(runtime, &m_provider);
 
                 constexpr static auto DataDescriptionFunction = "get_data_description";
-                if (runtime.executeFile(m_foundPatterns.front().patternFilePath)) {
+                if (runtime.executeFile(m_foundPatterns.front().patternFilePath) == 0) {
                     const auto &evaluator = runtime.getInternals().evaluator;
                     const auto &functions = evaluator->getCustomFunctions();
                     if (const auto function = functions.find(DataDescriptionFunction); function != functions.end()) {
