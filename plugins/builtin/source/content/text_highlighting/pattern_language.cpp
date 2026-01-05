@@ -1858,10 +1858,13 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void TextHighlighter::recurseInheritances(std::string name) {
+    void TextHighlighter::recurseInheritances(std::string name, size_t depth) {
+        if (depth > m_inheritances.size())
+            return;
         if (m_inheritances.contains(name)) {
             for (const auto &inheritance: m_inheritances[name]) {
-                recurseInheritances(inheritance);
+                recurseInheritances(inheritance, depth + 1);
+
                 auto definitions = m_UDTVariables[inheritance];
                 if (definitions.empty())
                     definitions = m_ImportedUDTVariables[inheritance];

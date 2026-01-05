@@ -218,7 +218,7 @@ namespace hex::plugin::builtin {
         std::string getVariableTypeName();
         /// Append the variable definitions of the parent to the child
         void appendInheritances();
-        void recurseInheritances(std::string name);
+        void recurseInheritances(std::string name, size_t depth = 0);
         ///Loads a map of identifiers to their token id instances
         void loadInstances();
         /// Replace auto with the actual type for template arguments and function parameters
