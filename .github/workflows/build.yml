@@ -1250,12 +1250,11 @@ jobs:
           mkdir -p out/nightly
           docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out/nightly --target raw
 
-      - name: ⬇️ Download Release
+      - name: ⬇️ Download Release artifact
         if: ${{ github.event.repository.fork == false }}
-        uses: robinraju/release-downloader@v1
-        with:
-          latest: true
-          fileName: 'imhex-*-Web.zip'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh --repo $GITHUB_REPOSITORY release download --pattern "imhex-*-Web.zip"
 
       - name: 🔨 Fix permissions
         if: ${{ github.event.repository.fork == false }}
