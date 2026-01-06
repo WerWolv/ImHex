@@ -82,43 +82,6 @@ jobs:
           git fetch --tags --recurse-submodules=no
           git log nightly..origin/master --oneline --no-merges --pretty=format:'* %s' >> changelog.md
 
-      - name: ⬆️ Upload Unsigned x86_64 Windows Installer
-        if: false
-        uses: actions/upload-artifact@v4
-        id: upload-installer-x86_64
-        with:
-          if-no-files-found: error
-          name: Windows Installer ${{ matrix.architecture_name }}
-          path: |
-            imhex-*-x86_64.msi
-
-      - name: ⬆️ Upload Unsigned ARM64 Windows Installer
-        if: false
-        uses: actions/upload-artifact@v4
-        id: upload-installer-arm64
-        with:
-          if-no-files-found: error
-          name: Windows Installer ${{ matrix.architecture_name }}
-          path: |
-            imhex-*-arm64.msi
-
-      - name: 🗑️ Delete unsigned installers
-        if: false
-        run: |
-          rm imhex-*.msi
-
-      - name: 🗝️ Sign Installer
-        if: false
-        uses: signpath/github-action-submit-signing-request@v1
-        with:
-          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-          organization-id: 'f605a0e8-86cd-411c-bb6f-e05025afcc33'
-          project-slug: 'ImHex'
-          signing-policy-slug: 'release-signing'
-          github-artifact-id: '${{ steps.upload-installer.outputs.artifact-id }}'
-          wait-for-completion: true
-          output-artifact-directory: '.'
-
       - name: 📦 Update Pre-Release
         if: ${{ steps.check_commits.outputs.should_run == 'true' }}
         run: |
