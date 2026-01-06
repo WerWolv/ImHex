@@ -1222,9 +1222,6 @@ jobs:
   webassembly-build:
     runs-on: ubuntu-24.04
     name: 🌍 Web
-    permissions:
-      id-token: write
-      actions: write
     steps:
       - name: 🧰 Checkout
         uses: actions/checkout@v4
