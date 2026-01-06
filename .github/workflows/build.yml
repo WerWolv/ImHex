@@ -1223,7 +1223,6 @@ jobs:
     runs-on: ubuntu-24.04
     name: 🌍 Web
     permissions:
-      pages: write
       id-token: write
       actions: write
     steps:
