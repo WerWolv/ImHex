@@ -20,7 +20,6 @@ namespace hex::plugin::builtin {
             for (const auto &romfsPath : romfs::list(extractFolder)) {
                 for (const auto &imhexPath : paths::getDataPaths(false)) {
                     const auto path = imhexPath / std::fs::relative(romfsPath, extractFolder);
-                    log::info("Extracting {} to {}", romfsPath.string(), path.string());
                     if (!alwaysExtract && wolv::io::fs::exists(path))
                         continue;
 
@@ -31,8 +30,10 @@ namespace hex::plugin::builtin {
                     auto data = romfs::get(romfsPath).span<u8>();
                     file.writeBuffer(data.data(), data.size());
 
-                    if (file.getSize() == data.size())
+                    if (file.getSize() == data.size()) {
+                        log::info("Extracting {} to {}", romfsPath.string(), path.string());
                         break;
+                    }
                 }
 
             }

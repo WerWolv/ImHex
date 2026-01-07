@@ -146,7 +146,7 @@ namespace hex {
     }
 
     void LayoutManager::lockLayout(bool locked) {
-        log::info("Layout {}", locked ? "locked" : "unlocked");
+        log::debug("Layout {}", locked ? "locked" : "unlocked");
         s_layoutLocked = locked;
     }
 
