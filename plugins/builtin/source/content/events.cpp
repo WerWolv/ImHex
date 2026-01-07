@@ -428,7 +428,7 @@ namespace hex::plugin::builtin {
         });
 
         static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.show_task_finish_notification"> taskFinishedNotificationEnabled = false;
-        TaskManager::addTaskCompletionCallback([](Task &task) {
+        TaskManager::addTaskCompletionCallback([]([[maybe_unused]] Task &task) {
             if (!taskFinishedNotificationEnabled)
                 return;
 
