@@ -432,9 +432,10 @@ namespace hex::plugin::builtin {
             if (!taskFinishedNotificationEnabled)
                 return;
 
-
-            if (!ImHexApi::System::isMainWindowFocused() && !task.isBackgroundTask())
-                hex::showToastMessage("ImHex", fmt::format("hex.builtin.os_toast_message.task_finished"_lang, Lang(task.getUnlocalizedName())));
+            #if !defined(OS_WEB)
+                if (!ImHexApi::System::isMainWindowFocused() && !task.isBackgroundTask())
+                    hex::showToastMessage("ImHex", fmt::format("hex.builtin.os_toast_message.task_finished"_lang, Lang(task.getUnlocalizedName())));
+            #endif
         });
 
     }
