@@ -195,7 +195,7 @@ jobs:
         with:
           path: ImHex
 
-      - name: ⬇️ Download artifacts
+      - name: ⬇️ Download artifact
         run: |
           tagname=${GITHUB_REF#refs/tags/}
           version=${tagname#v}
