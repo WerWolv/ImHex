@@ -106,7 +106,9 @@ var notWorkingTimer = setTimeout(() => {
 }, 5000);
 
 var Module = {
-    preRun:  [],
+    preRun:  () => {
+        ENV.IMHEX_SKIP_SPLASH_SCREEN = "1";
+    },
     postRun: function() {
         // Patch the emscripten GLFW module to send mouse and touch events in the right order
         // For ImGui interactions to correctly work with touch input, MousePos events need
