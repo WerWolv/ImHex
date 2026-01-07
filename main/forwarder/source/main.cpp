@@ -189,9 +189,8 @@ int launchExecutable() {
     ::CloseHandle(pi.hProcess);
     ::CloseHandle(pi.hThread);
 
-    // Wait for I/O threads to finish
-    if (stdinThread.joinable()) stdinThread.join();
-    if (stdoutThread.joinable()) stdoutThread.join();
+    stdinThread.detach();
+    stdoutThread.detach();
 
     return static_cast<int>(exitCode);
 }
