@@ -126,3 +126,7 @@ jobs:
         with:
           snap: imhex-${{ env.IMHEX_VERSION }}-arm64.snap
           release: edge
+
+      - name: 🌍 Update ImHex Landing Website
+        if: ${{ steps.check_commits.outputs.should_run == 'true' }}
+        uses: WerWolv/ImHexWebsite/.github/workflows/build.yaml@master
