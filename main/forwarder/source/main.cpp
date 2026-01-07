@@ -94,6 +94,12 @@ int launchExecutable() {
     // Ensure the read handle to stdout is not inherited
     ::SetHandleInformation(hChildStdoutRead, HANDLE_FLAG_INHERIT, 0);
 
+    // Create a job object to ensure the child process is terminated when this process exits
+    auto hJob = ::CreateJobObjectW(nullptr, nullptr);
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION info {};
+    info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+    ::SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &info, sizeof(info));
+
     // Set up the STARTUPINFO structure for the child process
     STARTUPINFOW si;
     ::ZeroMemory(&si, sizeof(STARTUPINFOW));
@@ -113,7 +119,7 @@ int launchExecutable() {
         nullptr,                // Process security attributes
         nullptr,                // Thread security attributes
         TRUE,                   // Inherit handles
-        0,                      // Creation flags
+        CREATE_SUSPENDED,       // Creation flags
         nullptr,                // Environment
         nullptr,                // Current directory
         &si,                    // STARTUPINFO
@@ -125,6 +131,20 @@ int launchExecutable() {
         ::CloseHandle(hChildStdoutWrite);
         return EXIT_FAILURE;
     }
+
+    if (::AssignProcessToJobObject(hJob, pi.hProcess)) {
+        if (::ResumeThread(pi.hThread) == -1) {
+            ::TerminateProcess(pi.hProcess, EXIT_FAILURE);
+            ::CloseHandle(hChildStdinRead);
+            ::CloseHandle(hChildStdinWrite);
+            ::CloseHandle(hChildStdoutRead);
+            ::CloseHandle(hChildStdoutWrite);
+            ::CloseHandle(pi.hProcess);
+            ::CloseHandle(pi.hThread);
+            return EXIT_FAILURE;
+        }
+    }
+
 
     // Close handles that the child inherited
     ::CloseHandle(hChildStdinRead);
