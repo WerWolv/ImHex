@@ -28,6 +28,7 @@
 
 #include <fmt/format.h>
 #include <array>
+#include <thread>
 
 void setupConsoleWindow() {
     // Get the handle of the console window
@@ -66,7 +67,10 @@ int launchExecutable() {
     auto executableFullPath = executablePath->parent_path() / "imhex-gui.exe";
 
     // Handles for the pipes
-    HANDLE hChildStdoutRead, hChildStdoutWrite;
+    HANDLE hChildStdinRead = nullptr;
+    HANDLE hChildStdinWrite = nullptr;
+    HANDLE hChildStdoutRead = nullptr;
+    HANDLE hChildStdoutWrite = nullptr;
 
     // Security attributes to allow the pipes to be inherited
     SECURITY_ATTRIBUTES saAttr;
@@ -74,17 +78,30 @@ int launchExecutable() {
     saAttr.lpSecurityDescriptor = nullptr;
     saAttr.bInheritHandle = TRUE;
 
-    // Create pipes for stdout redirection
-    if (!::CreatePipe(&hChildStdoutRead, &hChildStdoutWrite, &saAttr, 0)) {
+    // Create pipes for stdin redirection
+    if (!::CreatePipe(&hChildStdinRead, &hChildStdinWrite, &saAttr, 0)) {
         return EXIT_FAILURE;
     }
+    // Ensure the write handle to stdin is not inherited
+    ::SetHandleInformation(hChildStdinWrite, HANDLE_FLAG_INHERIT, 0);
+
+    // Create pipes for stdout redirection
+    if (!::CreatePipe(&hChildStdoutRead, &hChildStdoutWrite, &saAttr, 0)) {
+        ::CloseHandle(hChildStdinRead);
+        ::CloseHandle(hChildStdinWrite);
+        return EXIT_FAILURE;
+    }
+    // Ensure the read handle to stdout is not inherited
+    ::SetHandleInformation(hChildStdoutRead, HANDLE_FLAG_INHERIT, 0);
 
     // Set up the STARTUPINFO structure for the child process
-    STARTUPINFO si;
-    ::ZeroMemory(&si, sizeof(STARTUPINFO));
-    si.cb = sizeof(STARTUPINFO);
-    si.hStdOutput = hChildStdoutWrite; // Redirect stdout to the parent process
-    si.dwFlags |= STARTF_USESTDHANDLES; // Enable redirection of stdin, stdout, stderr
+    STARTUPINFOW si;
+    ::ZeroMemory(&si, sizeof(STARTUPINFOW));
+    si.cb = sizeof(STARTUPINFOW);
+    si.hStdInput = hChildStdinRead;
+    si.hStdOutput = hChildStdoutWrite;
+    si.hStdError = hChildStdoutWrite;  // Also redirect stderr to stdout
+    si.dwFlags = STARTF_USESTDHANDLES;
 
     PROCESS_INFORMATION pi;
     ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
@@ -102,29 +119,45 @@ int launchExecutable() {
         &si,                    // STARTUPINFO
         &pi                     // PROCESS_INFORMATION
     )) {
+        ::CloseHandle(hChildStdinRead);
+        ::CloseHandle(hChildStdinWrite);
+        ::CloseHandle(hChildStdoutRead);
+        ::CloseHandle(hChildStdoutWrite);
         return EXIT_FAILURE;
     }
 
-    // Close unnecessary pipe handles in the parent process
+    // Close handles that the child inherited
+    ::CloseHandle(hChildStdinRead);
     ::CloseHandle(hChildStdoutWrite);
 
-    // Read the child process's stdout and stderr and redirect them to the parent's stdout
-    DWORD bytesRead;
-    std::array<char, 4096> buffer;
+    // Get parent's stdin and stdout handles
+    HANDLE hParentStdin = ::GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE hParentStdout = ::GetStdHandle(STD_OUTPUT_HANDLE);
 
-    while (true) {
-        // Read from stdout
-        if (::ReadFile(hChildStdoutRead, buffer.data(), buffer.size(), &bytesRead, nullptr)) {
-            // Write to the parent's stdout
-            if (bytesRead > 0)
-                ::WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), buffer.data(), bytesRead, &bytesRead, nullptr);
-        } else {
-            break;
+    // Thread to forward parent stdin -> child stdin
+    auto stdinThread = std::thread([hParentStdin, hChildStdinWrite]() {
+        DWORD bytesRead, bytesWritten;
+        std::array<char, 4096> buffer;
+
+        while (::ReadFile(hParentStdin, buffer.data(), buffer.size(), &bytesRead, nullptr) && bytesRead > 0) {
+            ::WriteFile(hChildStdinWrite, buffer.data(), bytesRead, &bytesWritten, nullptr);
         }
-    }
+        ::CloseHandle(hChildStdinWrite);
+    });
+
+    // Thread to forward child stdout -> parent stdout
+    auto stdoutThread = std::thread([hChildStdoutRead, hParentStdout]() {
+        DWORD bytesRead, bytesWritten;
+        std::array<char, 4096> buffer;
+
+        while (::ReadFile(hChildStdoutRead, buffer.data(), buffer.size(), &bytesRead, nullptr) && bytesRead > 0) {
+            ::WriteFile(hParentStdout, buffer.data(), bytesRead, &bytesWritten, nullptr);
+        }
+        ::CloseHandle(hChildStdoutRead);
+    });
 
     // Wait for the child process to exit
-   ::WaitForSingleObject(pi.hProcess, INFINITE);
+    ::WaitForSingleObject(pi.hProcess, INFINITE);
 
     // Get the exit code of the child process
     DWORD exitCode = 0;
@@ -132,10 +165,13 @@ int launchExecutable() {
         exitCode = EXIT_FAILURE;
     }
 
-    // Clean up
+    // Clean up process handles
     ::CloseHandle(pi.hProcess);
     ::CloseHandle(pi.hThread);
-    ::CloseHandle(hChildStdoutRead);
+
+    // Wait for I/O threads to finish
+    if (stdinThread.joinable()) stdinThread.join();
+    if (stdoutThread.joinable()) stdoutThread.join();
 
     return static_cast<int>(exitCode);
 }
