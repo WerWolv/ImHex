@@ -241,17 +241,51 @@ namespace hex::plugin::builtin {
         }
 
         ContentRegistry::UserInterface::addFooterItem([] {
-            if (ContentRegistry::MCP::isConnected()) {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight));
-            } else {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
-            }
-
             if (ContentRegistry::MCP::isEnabled()) {
+                const bool connected = ContentRegistry::MCP::isConnected();
+                if (connected) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight));
+                } else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
+                }
                 ImGui::TextUnformatted(ICON_VS_MCP);
-            }
 
-            ImGui::PopStyleColor();
+                ImGui::PopStyleColor();
+
+                if (ImGui::IsItemHovered()) {
+                    if (ImGui::BeginTooltip()) {
+                        if (connected) {
+                            auto &clientInfo = ContentRegistry::MCP::impl::getMcpServerInstance()->getClientInfo();
+                            ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight), "hex.builtin.footer.mcp.connected_to"_lang, clientInfo.name);
+                            ImGui::Separator();
+                            if (ImGui::BeginTable("##connection_info", 2, ImGuiTableFlags_RowBg)) {
+                                ImGui::TableSetupColumn("##property", ImGuiTableColumnFlags_WidthStretch);
+                                ImGui::TableSetupColumn("##value", ImGuiTableColumnFlags_WidthStretch);
+
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormatted("hex.builtin.footer.mcp.client_version"_lang);
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormatted("{}", clientInfo.version);
+
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormatted("hex.builtin.footer.mcp.protocol_version"_lang);
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormatted("{}", clientInfo.protocolVersion);
+
+                                ImGui::EndTable();
+                            }
+                        } else {
+                            ImGui::PushTextWrapPos(200_scaled);
+                            ImGuiExt::TextFormattedWrapped("hex.builtin.footer.mcp.not_connected"_lang);
+                            ImGui::PopTextWrapPos();
+                        }
+
+                        ImGui::EndTooltip();
+                    }
+                }
+            }
         });
 
         if (dbg::debugModeEnabled()) {

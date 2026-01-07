@@ -1255,5 +1255,9 @@
     "hex.builtin.welcome.update.desc": "ImHex {0} just released!",
     "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
     "hex.builtin.welcome.update.title": "New Update available!",
-    "hex.builtin.welcome.quick_settings.simplified": "Simplified"
+    "hex.builtin.welcome.quick_settings.simplified": "Simplified",
+    "hex.builtin.footer.mcp.connected_to": "Connected to '{0}'",
+    "hex.builtin.footer.mcp.client_version": "Client Version",
+    "hex.builtin.footer.mcp.protocol_version": "Protocol Version",
+    "hex.builtin.footer.mcp.not_connected": "MCP Server enabled but no AI Client is connected.\n\nMake sure your AI Client settings are correct!"
 }

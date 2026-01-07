@@ -6,6 +6,7 @@
 #include <hex/helpers/logger.hpp>
 #include <nlohmann/json.hpp>
 #include <utility>
+#include <hex/api/task_manager.hpp>
 #include <wolv/net/socket_client.hpp>
 #include <hex/api/imhex_api/system.hpp>
 
@@ -119,12 +120,13 @@ namespace hex::mcp {
         m_server.accept([this](auto, const std::vector<u8> &data) -> std::vector<u8> {
             std::string request(data.begin(), data.end());
 
+            TaskManager::setCurrentThreadName("MCP Server");
             log::debug("MCP ----> {}", request);
 
             JsonRpc rpc(request);
             auto response = rpc.execute([this](const std::string &method, const nlohmann::json &params) -> nlohmann::json {
                 if (method == "initialize") {
-                    return handleInitialize();
+                    return handleInitialize(params);
                 } else if (method.starts_with("notifications/")) {
                     handleNotifications(method.substr(14), params);
                     return {};
@@ -166,6 +168,7 @@ namespace hex::mcp {
         }, [this](auto) {
             log::info("MCP client disconnected");
             m_connected = false;
+            m_clientInfo = {};
         }, true);
     }
 
@@ -188,9 +191,28 @@ namespace hex::mcp {
     }
 
 
-    nlohmann::json Server::handleInitialize() {
+    nlohmann::json Server::handleInitialize(const nlohmann::json &params) {
         constexpr static auto ServerName = "ImHex";
         constexpr static auto ProtocolVersion = "2025-06-18";
+
+        m_clientInfo = {};
+
+        if (params.contains("protocolVersion")) {
+            auto clientProtocolVersion = params["protocolVersion"].get<std::string>();
+            m_clientInfo.protocolVersion = clientProtocolVersion;
+        } else {
+            throw JsonRpc::InvalidParametersException();
+        }
+
+        if (params.contains("clientInfo")) {
+            const auto &clientInfo = params["clientInfo"];
+            m_clientInfo.name = clientInfo.value("name", "???");
+            m_clientInfo.version = clientInfo.value("version", "???");
+
+            log::info("MCP client connected: {} v{} (protocol {})", m_clientInfo.name, m_clientInfo.version, m_clientInfo.protocolVersion);
+        } else {
+            log::info("MCP client connected: Unknown client info");
+        }
 
         return {
             { "protocolVersion", ProtocolVersion },
