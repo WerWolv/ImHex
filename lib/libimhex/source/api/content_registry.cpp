@@ -1421,13 +1421,13 @@ namespace hex {
 
         namespace impl {
 
-            mcp::Server& getMcpServerInstance() {
-                static AutoReset<std::unique_ptr<mcp::Server>> server;
+            std::unique_ptr<mcp::Server>& getMcpServerInstance() {
+                static std::unique_ptr<mcp::Server> server;
 
-                if (*server == nullptr)
+                if (server == nullptr)
                     server = std::make_unique<mcp::Server>();
 
-                return **server;
+                return server;
             }
 
             static bool s_mcpEnabled = false;
@@ -1442,11 +1442,11 @@ namespace hex {
         }
 
         bool isConnected() {
-            return impl::getMcpServerInstance().isConnected();
+            return impl::getMcpServerInstance()->isConnected();
         }
 
         void registerTool(std::string_view capabilities, std::function<nlohmann::json(const nlohmann::json &params)> function) {
-            impl::getMcpServerInstance().addPrimitive("tools", capabilities, function);
+            impl::getMcpServerInstance()->addPrimitive("tools", capabilities, function);
         }
 
     }
