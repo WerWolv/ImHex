@@ -130,8 +130,12 @@ jobs:
   website_update:
     name: 🌍 Update ImHex Landing Website
     needs: nightly-release
-    uses: WerWolv/ImHexWebsite/.github/workflows/build.yaml@master
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+    runs-on: ubuntu-24.04
+    steps:
+     - name: ✉️ Dispatch Landing page update
+       if: ${{ env.DISPATCH_TOKEN != '' && (github.event_name == 'repository_dispatch' ) }}
+       uses: peter-evans/repository-dispatch@v4
+       with:
+         token: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+         repository: WerWolv/ImHexWebsite
+         event-type: update_page
