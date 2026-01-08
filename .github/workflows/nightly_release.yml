@@ -131,3 +131,6 @@ jobs:
     name: 🌍 Update ImHex Landing Website
     needs: nightly-release
     uses: WerWolv/ImHexWebsite/.github/workflows/build.yaml@master
+    permissions:
+      pages: write
+      id-token: write
