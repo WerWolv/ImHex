@@ -132,5 +132,6 @@ jobs:
     needs: nightly-release
     uses: WerWolv/ImHexWebsite/.github/workflows/build.yaml@master
     permissions:
+      contents: read
       pages: write
       id-token: write
