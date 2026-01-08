@@ -281,8 +281,6 @@ function js_resizeCanvas() {
 
     canvas.style.width  = width + "px";
     canvas.style.height = height + "px";
-    canvas.width  = width * window.devicePixelRatio;
-    canvas.height = height * window.devicePixelRatio;
 }
 
 // Prevent some default browser shortcuts from preventing ImHex ones to work
