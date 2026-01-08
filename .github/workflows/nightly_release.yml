@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
      - name: ✉️ Dispatch Landing page update
-       if: ${{ env.DISPATCH_TOKEN != '' && (github.event_name == 'repository_dispatch' ) }}
+       if: ${{ env.WEBSITE_DISPATCH_TOKEN != '' }}
        uses: peter-evans/repository-dispatch@v4
        with:
          token: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
