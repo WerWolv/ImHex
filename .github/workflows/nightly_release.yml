@@ -131,6 +131,8 @@ jobs:
     name: 🌍 Update ImHex Landing Website
     needs: nightly-release
     runs-on: ubuntu-24.04
+    env:
+      WEBSITE_DISPATCH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
     steps:
      - name: ✉️ Dispatch Landing page update
        if: ${{ env.WEBSITE_DISPATCH_TOKEN != '' }}
