@@ -564,7 +564,7 @@ jobs:
 
   macos-arm64-package:
     runs-on: macos-15-intel
-    name: 🍎 macOS 15 arm64 Packaging
+    name: 🍎 macOS 11 arm64 Packaging
     needs: macos-arm64
 
     env:
