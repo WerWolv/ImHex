@@ -37,13 +37,14 @@ jobs:
         run: |
           project_version=`cat ImHex/VERSION`          
           echo "IMHEX_VERSION=$project_version" >> $GITHUB_ENV
-
+      
+      # TODO: Replace by Github CLI when github.com/cli/cli/pull/12435 is closed
       - name: ⬇️ Download artifacts from latest workflow
         uses: dawidd6/action-download-artifact@v6
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: build.yml
-          branch: ${{ github.event.release.target_commitish }}
+          branch: master
           workflow_conclusion: success
           skip_unpack: true
 
