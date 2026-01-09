@@ -1201,7 +1201,8 @@ static EM_BOOL ImGui_ImplGlfw_OnCanvasSizeChange(int event_type, const Emscripte
     ImGui_ImplGlfw_Data* bd = (ImGui_ImplGlfw_Data*)user_data;
     double canvas_width, canvas_height;
     emscripten_get_element_css_size(bd->CanvasSelector, &canvas_width, &canvas_height);
-    glfwSetWindowSize(bd->Window, (int)canvas_width, (int)canvas_height);
+    double scale = emscripten_get_device_pixel_ratio();
+    glfwSetWindowSize(bd->Window, (int)canvas_width * scale, (int)canvas_height * scale);
     return true;
 }
 
@@ -1210,7 +1211,8 @@ static EM_BOOL ImGui_ImplEmscripten_FullscreenChangeCallback(int event_type, con
     ImGui_ImplGlfw_Data* bd = (ImGui_ImplGlfw_Data*)user_data;
     double canvas_width, canvas_height;
     emscripten_get_element_css_size(bd->CanvasSelector, &canvas_width, &canvas_height);
-    glfwSetWindowSize(bd->Window, (int)canvas_width, (int)canvas_height);
+    double scale = emscripten_get_device_pixel_ratio();
+    glfwSetWindowSize(bd->Window, (int)canvas_width * scale, (int)canvas_height * scale);
     return true;
 }
 

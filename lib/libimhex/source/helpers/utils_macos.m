@@ -424,9 +424,15 @@
     - (void)userNotificationCenter:(UNUserNotificationCenter *)center
            willPresentNotification:(UNNotification *)notification
              withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
-        completionHandler(UNNotificationPresentationOptionBanner |
-                          UNNotificationPresentationOptionSound |
-                          UNNotificationPresentationOptionList);
+        if (@available(macOS 11.0, *)) {
+            completionHandler(UNNotificationPresentationOptionBanner |
+                              UNNotificationPresentationOptionSound |
+                              UNNotificationPresentationOptionList);
+        } else {
+            // For macOS 10.15 and earlier
+            completionHandler(UNNotificationPresentationOptionAlert |
+                              UNNotificationPresentationOptionSound);
+        }
     }
 
     @end

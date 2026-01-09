@@ -168,7 +168,6 @@ namespace hex {
             ImHexApi::System::impl::setNativeScale(currScaleFactor);
 
             ThemeManager::reapplyCurrentTheme();
-            ImGui::GetStyle().ScaleAllSizes(currScaleFactor / prevScaleFactor);
         }
 
         prevScaleFactor = currScaleFactor;

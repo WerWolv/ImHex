@@ -251,7 +251,6 @@ jobs:
       - name: ⬇️ Install dependencies
         run: |
           cp dist/vcpkg.json vcpkg.json
-          vcpkg install
 
       - name: ⬇️ Install CMake and Ninja
         uses: lukka/get-cmake@latest
@@ -390,18 +389,7 @@ jobs:
       id-token: write
       attestations: write
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - file_suffix: "-NoGPU"
-            name_suffix: "NoGPU"
-            custom_glfw: true
-          - file_suffix: ""
-            name_suffix: ""
-            custom_glfw: false
-
-    name: 🍎 macOS 15 x86_64 ${{ matrix.name_suffix }}
+    name: 🍎 macOS 10.15 x86_64
 
     steps:
     - name: 🧰 Checkout
@@ -416,60 +404,39 @@ jobs:
     - name: 📜 Setup ccache
       uses: hendrikmuhs/ccache-action@v1
       with:
-        key: ${{ runner.os }}${{ matrix.file_suffix }}-ccache-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}${{ matrix.file_suffix }}-ccache
+        key: ${{ runner.os }}-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-ccache
         max-size: 1G
 
     - name: Set Xcode version
-      run: sudo xcode-select -s /Library/Developer/CommandLineTools
+      run: |
+        sudo xcode-select --install || true
+        sudo xcode-select -s /Library/Developer/CommandLineTools
+
+    - name: 📦 Install MacPorts
+      run: |
+        wget https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6-15-Sequoia.pkg
+        sudo installer -pkg MacPorts-2.11.6-15-Sequoia.pkg -target /
+        export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+        echo "PATH=/opt/local/bin:/opt/local/sbin:$PATH" >> $GITHUB_ENV
+        echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> $GITHUB_ENV
+        echo "universal_target  10.15" | sudo tee -a /opt/local/etc/macports/macports.conf
+        echo "macos_deployment_target  10.15" | sudo tee -a /opt/local/etc/macports/macports.conf
+        echo "macosx_sdk_version  10.15" | sudo tee -a /opt/local/etc/macports/macports.conf
+        sudo port selfupdate
 
     - name: ⬇️ Install dependencies
       env:
         # Make brew not display useless errors
         HOMEBREW_TESTS: 1
       run: |
-        brew reinstall python --quiet || true
-        brew link --overwrite --quiet python 2>/dev/null || true
-        brew bundle --quiet --file dist/macOS/Brewfile || true
-        rm -rf /usr/local/Cellar/capstone
-
-    - name: ⬇️ Install classic glfw
-      if: ${{! matrix.custom_glfw }}
-      run: |
-        brew install --quiet glfw || true
+        brew install llvm automake
+        sudo -E port install mbedtls3 nlohmann-json ccache freetype libmagic pkgconfig curl glfw ninja zlib xz bzip2 zstd libssh2 md4c
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.100'
-
-    - name: 🧰 Checkout glfw
-      if: ${{ matrix.custom_glfw }}
-      uses: actions/checkout@v4
-      with:
-        repository: glfw/glfw
-        path: glfw
-
-    # GLFW custom build (to allow software rendering)
-    - name: ⬇️ Patch and install custom glfw
-      if: ${{ matrix.custom_glfw }}
-      run: |
-        set -x
-        cd glfw
-        git apply ../dist/macOS/0001-glfw-SW.patch
-
-        mkdir build
-        cd build
-
-        cmake -G "Ninja"                                \
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}      \
-          -DBUILD_SHARED_LIBS=ON                        \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
-          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache         \
-          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache       \
-        ..
-        ninja install
 
     # MacOS cmake build
     - name: 🛠️ Configure CMake
@@ -481,8 +448,8 @@ jobs:
         CXX=$(brew --prefix llvm)/bin/clang++                                                       \
         OBJC=$(brew --prefix llvm)/bin/clang                                                        \
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
-        PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15                                                       \
           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
           -DIMHEX_GENERATE_PACKAGE=ON                                                               \
           -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib" \
@@ -531,7 +498,7 @@ jobs:
             break;
           fi
         done
-        mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-x86_64.dmg
+        mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS-x86_64.dmg
 
     - name: 🗝️ Generate build provenance attestations
       uses: actions/attest-build-provenance@v2
@@ -544,12 +511,12 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: macOS DMG ${{ matrix.name_suffix }} x86_64
+        name: macOS DMG x86_64
         path: ./*.dmg
 
   macos-arm64:
     runs-on: ubuntu-24.04
-    name: 🍎 macOS 15 arm64
+    name: 🍎 macOS 11 arm64
 
     outputs:
       IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}

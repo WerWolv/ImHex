@@ -166,7 +166,7 @@ var Module = {
             if (status == 1) {
                 GLFW.active.buttons |= (1 << eventButton);
                 try {
-                    event.target.setCapture();
+                    event.target.setPointerCapture(event.pointerId);
                 } catch (e) {}
             } else {
                 GLFW.active.buttons &= ~(1 << eventButton);

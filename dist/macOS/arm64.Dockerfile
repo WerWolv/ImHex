@@ -1,7 +1,7 @@
 # This base image is also known as "crosscompile". See arm64.crosscompile.Dockerfile
-FROM ghcr.io/werwolv/macos-crosscompile:4c4af2d1a6a102fab93cc9cd660280c2ec9d72af as build
+FROM ghcr.io/werwolv/macos-crosscompile:6d89b20ac5ebedb6f680f94637591c94cb36f40b as build
 
-ENV MACOSX_DEPLOYMENT_TARGET 13.0
+ENV MACOSX_DEPLOYMENT_TARGET 11.0
 
 # -- DOWNLOADING STUFF
 
@@ -132,6 +132,7 @@ if [ "$CUSTOM_GLFW" ]; then
     mkdir build
     cd build
     CC=o64-clang CXX=o64-clang++ cmake -G "Ninja"       \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0            \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
           -DBUILD_SHARED_LIBS=ON                        \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
@@ -168,6 +169,7 @@ RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/
         -DIMHEX_STRICT_WARNINGS=OFF \
         -DIMHEX_PATTERNS_PULL_MASTER=ON \
         -DCMAKE_INSTALL_PREFIX=/mnt/ImHex/build/install \
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0            \
         -B build
 ## Build ImHex
 RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/_deps <<EOF
