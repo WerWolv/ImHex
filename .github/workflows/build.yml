@@ -389,7 +389,7 @@ jobs:
       id-token: write
       attestations: write
 
-    name: 🍎 macOS 15 x86_64
+    name: 🍎 macOS 10.15 x86_64
 
     steps:
     - name: 🧰 Checkout
@@ -516,7 +516,7 @@ jobs:
 
   macos-arm64:
     runs-on: ubuntu-24.04
-    name: 🍎 macOS 15 arm64
+    name: 🍎 macOS 11 arm64
 
     outputs:
       IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
