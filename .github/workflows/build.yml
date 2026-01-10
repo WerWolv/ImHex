@@ -1277,9 +1277,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: .github/scripts/delete-artifact.sh github-pages
 
-  docker-image-deploy:
+  webassembly-docker-image-deploy:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
+    needs: webassembly-build
+    name: 🐋 Deploy to ghcr.io
     permissions:
       contents: read
       packages: write
