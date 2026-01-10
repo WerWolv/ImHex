@@ -483,7 +483,7 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     // IMHEX PATCH BEGIN
-#if !defined(__EMSCRIPTEN__)
+#if !defined(IMGUI_IMPL_OPENGL_ES3)
     if (useFontShaders) {
         glBlendFuncSeparate(GL_SRC1_COLOR, GL_ONE_MINUS_SRC1_COLOR,GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     } else {
