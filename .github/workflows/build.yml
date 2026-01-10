@@ -1252,7 +1252,7 @@ jobs:
 
   webassembly-deploy:
     environment:
-      name: github-pages
+      name: ImHex Web
       url: ${{ steps.deployment.outputs.page_url }}
     permissions:
       pages: write
@@ -1275,7 +1275,8 @@ jobs:
       - name: 🗑️ Delete artifact
         env:
           GH_TOKEN: ${{ github.token }}
-        run: .github/scripts/delete-artifact.sh github-pages
+        run: |
+          .github/scripts/delete-artifact.sh "ImHex Web"
 
   webassembly-docker-image-deploy:
     runs-on: ubuntu-latest
