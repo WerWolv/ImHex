@@ -1210,11 +1210,11 @@ jobs:
 
       - name: 🔨 Copy necessary files
         run: |
+          mkdir -p out/nightly
           cp dist/web/serve.py out/nightly/start_imhex_web.py
 
       - name: 🛠️ Build using docker
         run: |
-          mkdir -p out/nightly
           docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out/nightly --target raw
 
       - name: ⬇️ Download Release artifact
