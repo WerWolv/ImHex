@@ -1208,6 +1208,10 @@ jobs:
           cache-source: cache
           cache-target: /cache
 
+      - name: 🔨 Copy necessary files
+        run: |
+          cp dist/web/serve.py out/nightly/start_imhex_web.py
+
       - name: 🛠️ Build using docker
         run: |
           mkdir -p out/nightly
@@ -1229,10 +1233,6 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: out/
-
-      - name: 🔨 Copy necessary files
-        run: |
-          cp dist/web/serve.py out/nightly/start_imhex_web.py
 
       - name: ⬆️ Upload package
         uses: actions/upload-artifact@v4
@@ -1276,7 +1276,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          .github/scripts/delete-artifact.sh "ImHex Web"
+          .github/scripts/delete-artifact.sh "github-pages"
 
   webassembly-docker-image-deploy:
     runs-on: ubuntu-latest

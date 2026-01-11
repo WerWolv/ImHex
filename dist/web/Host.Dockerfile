@@ -6,4 +6,4 @@ COPY ./out/ .
 
 EXPOSE 9090
 
-CMD [ "python", "/imhex/serve.py" ]
+CMD [ "python", "/imhex/start_imhex_web.py" ]
