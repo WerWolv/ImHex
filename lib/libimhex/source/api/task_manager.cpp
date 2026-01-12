@@ -369,7 +369,10 @@ namespace hex {
             thread.request_stop();
 
         // Wake up all the idle worker threads so they can exit
-        s_jobCondVar.notify_all();
+        {
+            std::unique_lock lock(s_queueMutex);
+            s_jobCondVar.notify_all();
+        }
 
         // Wait for all worker threads to exit
         s_workers.clear();
