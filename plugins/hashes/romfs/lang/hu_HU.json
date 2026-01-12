@@ -1,7 +1,7 @@
 ﻿{
     "hex.hashes.achievement.misc.create_hash.name": "Hashbajnok",
     "hex.hashes.achievement.misc.create_hash.desc": "Hozz létre egy új hash függvényt a Hash lapon, válaszd ki a típust, adj neki nevet, és kattints a mellette lévő Plusz gombra.",
-    "hex.hashes.view.hashes.function": "Hash-függvények",
+    "hex.hashes.view.hashes.function": "Hash-függvény",
     "hex.hashes.view.hashes.hash": "Hash",
     "hex.hashes.view.hashes.hover_info": "Vidd az egeret egy kijelölés fölé a hex szerkesztőben és tartsd lenyomva a SHIFT billentyűt az adott terület hash értékeinek megtekintéséhez.",
     "hex.hashes.view.hashes.name": "Hash-ek",
@@ -21,10 +21,13 @@
     "hex.hashes.hash.common.salt": "Só",
     "hex.hashes.hash.common.standard": "Standard",
     "hex.hashes.hash.common.standard.custom": "Saját",
-    "hex.hashes.hash.common.personalization": "Személre szabás",
-    "hex.hashes.hash.common.refl_in": "Reflect In",
-    "hex.hashes.hash.common.refl_out": "Reflect Out",
-    "hex.hashes.hash.common.xor_out": "XVAGY ki",
+    "hex.hashes.hash.common.personalization": "Személyre szabás",
+    "hex.hashes.hash.common.refl_in": "Bemenet megfordítása",
+    "hex.hashes.hash.common.refl_out": "Kimenet megfordítása",
+    "hex.hashes.hash.common.xor_out": "XOR ki",
     "hex.hashes.hash.sum": "Összeg",
-    "hex.hashes.hash.sum.fold": "Eredmény összehajtása"
+    "hex.hashes.hash.sum.fold": "Eredmény összecsukása",
+    "hex.hashes.view.hashes.add": "Hash hozzáadása",
+    "hex.hashes.view.hashes.table_add": "(Kattints duplán egy új Hash hozzáadásához...)",
+    "hex.hashes.view.hashes.hash_name": "Hash neve"
 }

@@ -1,1 +1,12 @@
-{}
+{
+    "hex.plugin.remote.ssh_provider.ssh_access": "Fájl elérése nyers SSH-val",
+    "hex.plugin.remote.ssh_provider.error.open_failed": "Nem sikerült megnyitni a távoli fájlt",
+    "hex.plugin.remote.ssh_provider": "Távoli SSH fájl",
+    "hex.plugin.remote.ssh_provider.host": "Helyi gép",
+    "hex.plugin.remote.ssh_provider.port": "Port",
+    "hex.plugin.remote.ssh_provider.username": "Felhasználónév",
+    "hex.plugin.remote.ssh_provider.password": "Jelszó",
+    "hex.plugin.remote.ssh_provider.key_file": "Privát kulcs helye",
+    "hex.plugin.remote.ssh_provider.passphrase": "Jelkulcs",
+    "hex.plugin.remote.ssh_provider.connect": "Kapcsolódás"
+}

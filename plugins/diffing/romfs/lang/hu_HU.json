@@ -1,16 +1,23 @@
 ﻿{
     "hex.diffing.algorithm.simple.name": "Egyszerű bájtonkénti algoritmus",
-    "hex.diffing.algorithm.simple.description": "Naív O(n) bájtonkénti algoritmus.\nCsak az adat végén tud azonosítani módosításokat, hozzáadásokat és törléseket",
+    "hex.diffing.algorithm.simple.description": "Naív O(n) bájtonkénti összehasonlítás.\nCsak az adat végén tud azonosítani módosításokat / hozzáadásokat és törléseket",
     "hex.diffing.algorithm.myers.name": "Myers bit-vektor algoritmusa",
     "hex.diffing.algorithm.myers.description": "Okos O(N*M) különbségkereső algoritmus. Képes módosítások, beszúrások és törlések azonosítására bárhol az adatokban",
     "hex.diffing.algorithm.myers.settings.window_size": "Ablak méret",
     "hex.diffing.view.diff.name": "Különbségkeresés",
     "hex.diffing.view.diff.added": "Hozzáadva",
     "hex.diffing.view.diff.modified": "Módosítva",
-    "hex.diffing.view.diff.provider_a": "A forrás",
-    "hex.diffing.view.diff.provider_b": "B forrás",
-    "hex.diffing.view.diff.removed": "Tötölve",
+    "hex.diffing.view.diff.provider_a": "(A) forrás",
+    "hex.diffing.view.diff.provider_b": "(B) forrás",
+    "hex.diffing.view.diff.removed": "Törölve",
     "hex.diffing.view.diff.algorithm": "Különbségkereső algoritmus",
     "hex.diffing.view.diff.settings": "Nincs elérhető beállítás",
-    "hex.diffing.view.diff.settings.no_settings": "Nincs elérhető beállítás"
+    "hex.diffing.view.diff.settings.no_settings": "Nincs elérhető beállítás",
+    "hex.diffing.view.diff.menu.file.jumping": "Ugrás a különbségek között",
+    "hex.diffing.view.diff.jumping.beginning_reached": "Nincs több különbség a fájl elejéig",
+    "hex.diffing.view.diff.changes": "Változtatva",
+    "hex.diffing.view.diff.task.diffing": "Különbségek keresése...",
+    "hex.diffing.view.diff.menu.file.jumping.prev_diff": "Ugrás az előző különbséghez",
+    "hex.diffing.view.diff.menu.file.jumping.next_diff": "Ugrás a következő különbségre",
+    "hex.diffing.view.diff.jumping.end_reached": "Nincs több különbség a fájl végéig"
 }
