@@ -286,13 +286,11 @@ namespace ImGuiExt {
     }
 
     void Texture::reset() {
-        #if !defined(OS_WEB)
-            if (glDeleteTextures == nullptr)
-                return;
-        #endif
-
         if (m_textureId != 0) {
-            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+            #if !defined(OS_WEB)
+                if (glDeleteTextures != nullptr)
+                    glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+            #endif
             m_textureId = 0;
         }
     }
