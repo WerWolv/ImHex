@@ -1,5 +1,7 @@
 ﻿{
     "hex.script_loader.menu.run_script": "Script futtatása...",
     "hex.script_loader.menu.loading": "Betöltés...",
-    "hex.script_loader.menu.no_scripts": "Nem található script"
+    "hex.script_loader.menu.no_scripts": "Nem található script",
+    "hex.script_loader.task.updating": "Scriptek frissítése...",
+    "hex.script_loader.task.running": "Script futtatása..."
 }
