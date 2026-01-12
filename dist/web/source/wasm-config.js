@@ -269,19 +269,17 @@ if (urlParams.has("lang")) {
     Module["arguments"].push(urlParams.get("save-editor"));
 }
 
-window.addEventListener('resize', js_resizeCanvas, false);
 function js_resizeCanvas() {
     let canvas = document.getElementById('canvas');
 
     canvas.top    = canvas.parentElement.clientTop;
     canvas.left   = canvas.parentElement.clientLeft;
 
-    let width = Math.min(canvas.parentElement.clientWidth, window.innerWidth || 0);
-    let height = Math.min(canvas.parentElement.clientHeight, window.innerHeight || 0);
-
-    canvas.style.width  = width + "px";
-    canvas.style.height = height + "px";
+    canvas.style.width  = "100%";
+    canvas.style.height = "100%";
 }
+let resizeObserver = new ResizeObserver(js_resizeCanvas);
+resizeObserver.observe(document.getElementById("canvas"))
 
 // Prevent some default browser shortcuts from preventing ImHex ones to work
 document.addEventListener('keydown', e => {
