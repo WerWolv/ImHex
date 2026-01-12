@@ -135,20 +135,7 @@ namespace hex {
     }
 
     void Window::beginNativeWindowFrame() {
-        static i32 prevWidth = 0;
-        static i32 prevHeight = 0;
 
-        auto width = canvas_get_width();
-        auto height = canvas_get_height();
-
-        if (prevWidth != width || prevHeight != height) {
-            // Size has changed
-
-            prevWidth  = width;
-            prevHeight = height;
-            this->resize(width, height);
-            resizeCanvas();
-        }
     }
 
     void Window::endNativeWindowFrame() {
@@ -161,6 +148,7 @@ namespace hex {
                 return 1.0;
             }
         });
+
         if (prevScaleFactor != 0 && prevScaleFactor != currScaleFactor) {
             EventDPIChanged::post(prevScaleFactor, currScaleFactor);
             resizeCanvas();
@@ -168,6 +156,21 @@ namespace hex {
             ImHexApi::System::impl::setNativeScale(currScaleFactor);
 
             ThemeManager::reapplyCurrentTheme();
+        }
+
+                static i32 prevWidth = 0;
+        static i32 prevHeight = 0;
+
+        auto width = canvas_get_width();
+        auto height = canvas_get_height();
+
+        if (prevWidth != width || prevHeight != height) {
+            // Size has changed
+
+            prevWidth  = width;
+            prevHeight = height;
+            this->resize(width, height);
+            resizeCanvas();
         }
 
         prevScaleFactor = currScaleFactor;
