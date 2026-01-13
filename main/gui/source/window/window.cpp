@@ -952,7 +952,7 @@ namespace hex {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
             GLuint quadVAO, quadVBO;
-            float quadVertices[] = {
+            constexpr static std::array QuadVertices = {
                 // positions   // texCoords
                 -1.0F,  1.0F,  0.0F, 1.0F,
                 -1.0F, -1.0F,  0.0F, 0.0F,
@@ -967,11 +967,11 @@ namespace hex {
             glGenBuffers(1, &quadVBO);
             glBindVertexArray(quadVAO);
             glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(QuadVertices), QuadVertices.data(), GL_STATIC_DRAW);
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
             glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
             glBindVertexArray(0);
 
             m_postProcessingShader.bind();
@@ -1040,9 +1040,28 @@ namespace hex {
             }
         }
 
+        float maxWindowCreationWidth = monitorWidth / 1_scaled;
+        float maxWindowCreationHeight = monitorHeight / 1_scaled;
+
+        // Wayland auto-maximizes windows that take up 80% or more of the monitor size
+        // Limit the size to take up slightly less than that at max
+        if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
+            const static auto SizeMultiplier = sqrt(0.79);
+            maxWindowCreationWidth  *= SizeMultiplier;
+            maxWindowCreationHeight *= SizeMultiplier;
+        }
+
+        maxWindowCreationWidth -= 50_scaled;
+        maxWindowCreationHeight -= 50_scaled;
+
         // Create window
         m_windowTitle = "ImHex";
-        m_window      = glfwCreateWindow(std::min(1280_scaled, monitorWidth - 50_scaled), std::min(720_scaled, monitorHeight - 50_scaled), m_windowTitle.c_str(), nullptr, nullptr);
+        m_window = glfwCreateWindow(
+            std::min(1280_scaled, maxWindowCreationWidth),
+            std::min(720_scaled, maxWindowCreationHeight),
+            m_windowTitle.c_str(),
+            nullptr, nullptr
+        );
 
         ImHexApi::System::impl::setMainWindowHandle(m_window);
 
@@ -1116,7 +1135,7 @@ namespace hex {
             win->m_waitEventsBlocked = true;
         };
 
-        static const auto isMainWindow = [](GLFWwindow *window) {
+        static const auto isMainWindow = [](const GLFWwindow *window) {
             return window == ImHexApi::System::getMainWindowHandle();
         };
 
