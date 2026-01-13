@@ -1046,7 +1046,7 @@ namespace hex {
         // Wayland auto-maximizes windows that take up 80% or more of the monitor size
         // Limit the size to take up slightly less than that at max
         // glfwGetPlatform() is only available since GLFW 3.4
-        #if GLFW_VERSION_MAJOR >= 3 || (GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4)
+        #if GLFW_VERSION_MAJOR > 4 || (GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4)
             if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
                 const static auto SizeMultiplier = sqrt(0.79);
                 maxWindowCreationWidth  *= SizeMultiplier;
