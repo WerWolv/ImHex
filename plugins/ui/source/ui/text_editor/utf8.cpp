@@ -7,7 +7,8 @@
 namespace hex::ui {
 
 
-    using Coordinates = TextEditor::Coordinates;
+    using Coordinates   = TextEditor::Coordinates;
+    using Segments      = TextEditor::Segments;
 
     TextEditor::Line TextEditor::Line::trim(TrimMode trimMode) {
         if (m_chars.empty())
@@ -59,12 +60,11 @@ namespace hex::ui {
     }
 
     i32 TextEditor::Line::stringTextSize(const std::string &str) const {
-         i32 result = 0;
         if (str.empty())
             return 0;
         if (ImGui::GetFont() == nullptr) {
             fonts::CodeEditor().push();
-            result =  ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, str.c_str(), nullptr, nullptr).x;
+            i32 result =  ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, str.c_str(), nullptr, nullptr).x;
             fonts::CodeEditor().pop();
             return result;
         }
@@ -184,15 +184,13 @@ namespace hex::ui {
         auto lineSize = m_lines.size();
         if (position.y > m_lines.getLineStartScreenPos(0, lineIndexToRow(lineSize - 1)).y + m_lines.m_charAdvance.y)
             return m_lines.lineCoordinates( -1, -1);
-        //if (position.y > m_lines.m_lineIndexToScreen[lineSize - 1].y + m_charAdvance.y)
-         //   return m_lines.lineCoordinates( -1, -1);
 
         auto local = position - m_lines.m_cursorScreenPosition;
         auto row = screenPosToRow(position);
 
         Coordinates result = lineCoordinates(0,0);
         i32 lineIndex= rowToLineIndex((i32) std::floor(row));
-        if (lineIndex < 0 || lineIndex >= (i32) m_lines.size())
+        if (lineIndex < 0 || lineIndex >= m_lines.size())
             return Invalid;
         result.m_line = lineIndex;
         if (m_lines.m_codeFoldKeyLineMap.contains(lineIndex) || m_lines.m_codeFoldValueLineMap.contains(lineIndex)) {
@@ -204,7 +202,6 @@ namespace hex::ui {
 
 
         auto &line = m_lines[result.m_line].m_chars;
-        //local.x -= (m_leftMargin - 5_scaled);
         i32 count = 0;
         u64 length;
         i32 increase;
@@ -218,7 +215,7 @@ namespace hex::ui {
         result = m_lines.lineIndexCoords(lineIndex + 1, count - increase);
         result = m_lines.foldedToUnfoldedCoords(result);
         if (result == Invalid)
-            return Coordinates(0, 0);
+            return {0, 0};
         return result;
     }
 
@@ -239,13 +236,13 @@ namespace hex::ui {
     }
 
     Coordinates TextEditor::Lines::lineIndexCoords(i32 lineNumber, i32 stringIndex) {
-        if (lineNumber < 1 || lineNumber > (i32) size())
+        if (lineNumber < 1 || lineNumber > size())
             return lineCoordinates( 0, 0);
         auto &line = operator[](lineNumber - 1);
         return lineCoordinates(lineNumber - 1, line.indexColumn(stringIndex));
     }
 
-    std::vector<Coordinates> TextEditor::Lines::unfoldedEllipsisCoordinates(Range delimiterCoordinates) {
+    Segments TextEditor::Lines::unfoldedEllipsisCoordinates(Range delimiterCoordinates) {
 
         auto lineStart = m_unfoldedLines[delimiterCoordinates.m_start.m_line];
         auto row = lineIndexToRow(delimiterCoordinates.m_start.m_line);
@@ -281,7 +278,7 @@ namespace hex::ui {
 
         auto totalUnfoldedSpan = unfoldedSpan1 + unfoldedSpan2 + unfoldedSpan3;
         if (totalUnfoldedSpan < 2.0f) {
-            std::vector<Coordinates> unfoldedEllipsisCoordinates(2);
+            Segments unfoldedEllipsisCoordinates(2);
             unfoldedEllipsisCoordinates[0] = lineCoordinates( delimiterCoordinates.m_start.m_line, delimiterCoordinates.m_start.m_column + 1);
             unfoldedEllipsisCoordinates[1] = delimiterCoordinates.m_end;
             return unfoldedEllipsisCoordinates;
@@ -289,7 +286,7 @@ namespace hex::ui {
 
         float spanFragment = totalUnfoldedSpan / 2.0f;
 
-        std::vector<Coordinates> unfoldedEllipsisCoordinates(4);
+        Segments unfoldedEllipsisCoordinates(4);
         if (adddsBothEnds) {
             unfoldedEllipsisCoordinates[0] = lineCoordinates(delimiterCoordinates.m_start.m_line, delimiterCoordinates.m_start.m_column + 1);
             unfoldedEllipsisCoordinates[3] = delimiterCoordinates.m_end;
@@ -369,7 +366,7 @@ namespace hex::ui {
         if (foundIndex % 2) {
 
             Range delimiterRange = foldedLine.findDelimiterCoordinates(key);
-            std::vector<Coordinates> unfoldedEllipsisCoordinates = this->unfoldedEllipsisCoordinates(delimiterRange);
+            Segments unfoldedEllipsisCoordinates = this->unfoldedEllipsisCoordinates(delimiterRange);
 
             if (unfoldedEllipsisCoordinates.size() > 2)
                 return unfoldedEllipsisCoordinates[coords.m_column - foldedLine.m_ellipsisIndices[foundIndex / 2]];
@@ -401,9 +398,9 @@ namespace hex::ui {
      Coordinates TextEditor::nextCoordinate(TextEditor::Coordinates coordinate) {
         auto line = m_lines[coordinate.m_line];
         if (line.isEndOfLine(coordinate.m_column))
-            return Coordinates(coordinate.m_line + 1, 0);
+            return {coordinate.m_line + 1, 0};
         else
-            return Coordinates(coordinate.m_line,coordinate.m_column + 1);
+            return {coordinate.m_line,coordinate.m_column + 1};
     }
      bool TextEditor::testfoldMaps(TextEditor::Range toTest) {
         bool result = true;
@@ -454,7 +451,7 @@ namespace hex::ui {
         if (foundIndex % 2) {
             result.m_column = foldedLine.m_ellipsisIndices[foundIndex / 2];
             Range delimiterRange = foldedLine.findDelimiterCoordinates(key);
-            std::vector<Coordinates> unfoldedEllipsisCoordinates = this->unfoldedEllipsisCoordinates(delimiterRange);
+            Segments unfoldedEllipsisCoordinates = this->unfoldedEllipsisCoordinates(delimiterRange);
 
             if (unfoldedEllipsisCoordinates.size() > 2) {
                 if (coords == unfoldedEllipsisCoordinates[0])

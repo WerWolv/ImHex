@@ -142,7 +142,7 @@ namespace hex::plugin::builtin {
         PerProvider<ui::TextEditor::Coordinates>  m_cursorPosition;
         PerProvider<ImVec2> m_scroll;
         PerProvider<ImVec2> m_consoleScroll;
-
+        PerProvider<ui::TextEditor::CodeFoldState> m_codeFoldState;
         PerProvider<ui::TextEditor::Coordinates> m_consoleCursorPosition;
         PerProvider<ui::TextEditor::Range> m_selection;
         PerProvider<ui::TextEditor::Range> m_consoleSelection;
