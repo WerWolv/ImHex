@@ -4,6 +4,7 @@
 #include <pl/helpers/safe_iterator.hpp>
 #include <ui/text_editor.hpp>
 #include <hex/helpers/types.hpp>
+#include <utility>
 
 namespace hex::plugin::builtin {
     class ViewPatternEditor;
@@ -48,13 +49,13 @@ namespace hex::plugin::builtin {
             bool operator>=(const TokenInterval &other) const {
                 return m_end >= other.m_end;
             }
-            bool contains(const TokenInterval &other) const {
+            [[nodiscard]] bool contains(const TokenInterval &other) const {
                 return other.m_start >= m_start && other.m_end <= m_end;
             }
-            bool contains(i32 value) const {
+            [[nodiscard]] bool contains(i32 value) const {
                 return value >= m_start && value <= m_end;
             }
-            bool contiguous(const TokenInterval &other) const {
+            [[nodiscard]] bool contiguous(const TokenInterval &other) const {
                 auto highEndDiff = m_start - other.m_end;
                 auto lowEndDiff = other.m_start - m_end;
                 return  highEndDiff == 0 || highEndDiff == 1 || lowEndDiff == 0 || lowEndDiff == 1;
@@ -75,10 +76,11 @@ namespace hex::plugin::builtin {
         using OrderedBlocks         = std::map<TokenInterval,std::string>;
         using Scopes                = std::set<TokenInterval>;
         using Location              = pl::core::Location;
-        using VectorString          = std::vector<std::string>;
-        using TokenIter             = pl::hlp::SafeIterator<std::vector<Token>::const_iterator>;
+        using StringVector          = std::vector<std::string>;
+        using StringSet             = std::set<std::string>;
+        using SafeTokenIterator     = pl::hlp::SafeIterator<std::vector<Token>::const_iterator>;
         using VariableScopes        = std::map<std::string,Scopes>;
-        using Inheritances          = std::map<std::string,VectorString>;
+        using Inheritances          = std::map<std::string,StringSet>;
         using IdentifierTypeColor   = std::map<Identifier::IdentifierType,ui::TextEditor::PaletteIndex>;
         using TokenTypeColor        = std::map<Token::Type,ui::TextEditor::PaletteIndex>;
         using TokenColor            = std::map<i32, ui::TextEditor::PaletteIndex>;
@@ -88,17 +90,18 @@ namespace hex::plugin::builtin {
         using CompileErrors         = std::vector<CompileError>;
         using TokenSequence         = std::vector<Token>;
         using TokenIdVector         = std::vector<i32>;
+        using TokenIdSet            = std::set<i32>;
         using Instances             = std::map<std::string,std::vector<i32>>;
         using CodeFoldBlocks        = ui::TextEditor::CodeFoldBlocks;
 
         struct ParentDefinition;
         struct Definition {
             Definition()= default;
-            Definition(IdentifierType identifierType, std::string typeStr,i32 tokenId, Location location) : idType(identifierType), typeStr(typeStr), tokenIndex(tokenId),location(location) {}
-            IdentifierType idType;
+            Definition(IdentifierType identifierType, std::string typeStr,i32 tokenId, Location location) : idType(identifierType), typeStr(std::move(typeStr)), tokenIndex(tokenId),location(location) {}
+            IdentifierType idType{};
             std::string typeStr;
-            i32 tokenIndex;
-            Location location;
+            i32 tokenIndex{};
+            Location location{};
         };
 
         struct ParentDefinition {
@@ -114,13 +117,13 @@ namespace hex::plugin::builtin {
         private:
             TextHighlighter *m_textHighlighter;
             Types definedTypes;
-            VectorString usedNamespaces;
+            StringVector usedNamespaces;
             ParsedImports parsedImports;
             Str2StrMap importedHeaders;
             TokenSequence fullTokens;
             std::string editedText;
             CompileErrors compileErrors;
-            VectorString linesOfColors;
+            StringVector linesOfColors;
         public:
             RequiredInputs() : m_textHighlighter(nullptr) {};
             explicit RequiredInputs(TextHighlighter *textHighlighter) : m_textHighlighter(textHighlighter) {}
@@ -140,9 +143,9 @@ namespace hex::plugin::builtin {
         inline static const Coordinates Invalid = Coordinates(0x80000000, 0x80000000);
     private:
 
-        VectorString m_lines;
+        StringVector m_lines;
         TokenIdVector m_firstTokenIdOfLine;
-        ViewPatternEditor *m_viewPatternEditor;
+        ViewPatternEditor *m_viewPatternEditor{};
 
 
         TokenColor m_tokenColors;
@@ -166,14 +169,15 @@ namespace hex::plugin::builtin {
         Str2StrMap m_typeDefMap;
         Str2StrMap m_typeDefInvMap;
 
-        VectorString m_UDTs;
-        std::set<i32> m_taggedIdentifiers;
-        std::set<i32> m_memberChains;
-        std::set<i32> m_scopeChains;
+        StringVector m_UDTs;
+        TokenIdSet m_taggedIdentifiers;
+        TokenIdSet m_memberChains;
+        TokenIdSet m_scopeChains;
+        TokenIdSet m_identifierTokenIds;
         RequiredInputs  m_requiredInputs;
 
-        TokenIter m_curr;
-        TokenIter m_startToken, m_originalPosition, m_partOriginalPosition;
+        SafeTokenIterator m_curr;
+        SafeTokenIterator m_startToken, m_originalPosition, m_partOriginalPosition;
 
         VariableScopes m_UDTBlocks;
         VariableScopes m_functionBlocks;
@@ -187,17 +191,13 @@ namespace hex::plugin::builtin {
         constexpr static u32 Normal = 0;
         constexpr static u32 Not    = 1;
 
-        //std::atomic<bool> m_needsToUpdateColors = true;
-        //std::atomic<bool> m_wasInterrupted = false;
-        //std::atomic<bool> m_interrupt = false;
-        //std::atomic<bool> m_completed = false;
-
         pl::PatternLanguage *getPatternLanguage();
         void updateRequiredInputs();
         RequiredInputs& getRequiredInputs();
         ViewPatternEditor* getViewPatternEditor();
         void setViewPatternEditor(ViewPatternEditor *viewPatternEditor);
 
+        void setTokenIds();
         TextHighlighter();
         ~TextHighlighter();
         explicit TextHighlighter(ViewPatternEditor *viewPatternEditor) : m_viewPatternEditor(viewPatternEditor) {}
@@ -298,8 +298,8 @@ namespace hex::plugin::builtin {
         bool findIdentifierDefinition(Definition &result, const std::string &optionalIdentifierName = "",  std::string optionalName = "", bool optional = false);
         /// To deal with the Parent keyword
         std::optional<Definition> setChildrenTypes();
-        bool findParentTypes(VectorString &parentTypes, const std::string &optionalName="");
-        bool findAllParentTypes(VectorString &parentTypes, std::vector<Identifier *> &identifiers, std::string &optionalFullName);
+        bool findParentTypes(StringVector &parentTypes, const std::string &optionalName="");
+        bool findAllParentTypes(StringVector &parentTypes, std::vector<Identifier *> &identifiers, std::string &optionalFullName);
         bool tryParentType(const std::string &parentType, std::string &variableName, std::optional<Definition> &result, std::vector<Identifier *> &identifiers);
         /// Convenience function
         bool isTokenIdValid(i32 tokenId);
@@ -312,6 +312,8 @@ namespace hex::plugin::builtin {
         pl::core::Location getLocation(i32 tokenId);
         /// Calculate the token index of a source code, line and column numbers
         i32 getTokenId(pl::core::Location location);
+        i32 getTokenId(SafeTokenIterator tokenIterator);
+        i32 getTokenId();
         /// Calculate the function or template argument position from token indices
         i32  getArgumentNumber(i32 start,i32 arg);
         /// Calculate the token index of a function or template argument position
@@ -322,18 +324,18 @@ namespace hex::plugin::builtin {
 
         /// The following functions were copied from the parser and some were modified
 
-        template<typename T> T *getValue(const i32 index);
+        template<typename T> T *getValue(i32 index);
         void next(i32 count = 1);
         bool begin();
         void partBegin();
         void reset();
         void partReset();
-        bool resetIfFailed(const bool value) ;
+        bool resetIfFailed(bool value) ;
         template<auto S = Normal> bool sequenceImpl();
         template<auto S = Normal> bool matchOne(const Token &token);
         template<auto S = Normal> bool sequenceImpl(const auto &... args);
         template<auto S = Normal> bool sequence(const Token &token, const auto &... args);
         bool isValid();
-        bool peek(const Token &token, const i32 index = 0);
+        bool peek(const Token &token, i32 index = 0);
     };
 }
