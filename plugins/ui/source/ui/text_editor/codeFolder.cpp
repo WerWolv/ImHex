@@ -3,21 +3,18 @@
 #include <pl/core/token.hpp>
 #include <wolv/utils/string.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
+#include <pl/core/preprocessor.hpp>
 #include <pl/api.hpp>
 
 namespace hex::ui {
     using namespace pl::core;
-    using Interval = TextEditor::Interval;
-    using Token = pl::core::Token;
-    using Coordinates = TextEditor::Coordinates;
+    using Interval              = TextEditor::Interval;
+    using Token                 = pl::core::Token;
+    using Coordinates           = TextEditor::Coordinates;
+    using RangeFromCoordinates  = TextEditor::RangeFromCoordinates;
+    using CodeFoldState         = TextEditor::CodeFoldState;
 
-/*
-    std::pair<i32, i32> TextEditor::convertIndexToLineNumbers(Interval interval) {
-        if (m_tokens[interval.m_start].location.source->mainSource && m_tokens[interval.m_end].location.source->mainSource)
-            return std::make_pair(m_tokens[interval.m_start].location.line, m_tokens[interval.m_end].location.line);
-        return std::make_pair(0, 0);
-    }
-*/
     void TextEditor::Lines::skipAttribute() {
 
         if (sequence(tkn::Separator::LeftBracket, tkn::Separator::LeftBracket)) {
@@ -26,52 +23,17 @@ namespace hex::ui {
         }
     }
 
-    std::vector<Interval> TextEditor::Lines::searchRangeForBlocks(Interval interval) {
-        m_curr = m_startToken + interval.m_start;
-        std::vector<Interval> result;
-
-        u32 nestedLevel = 0;
-        std::vector<i32> tokenStack;
-        while (m_curr != m_startToken + interval.m_end) {
-
-            if (sequence(tkn::Separator::LeftBrace)) {
-                auto tokenId = getTokenId(m_curr[-1].location);
-                tokenStack.push_back(tokenId);
-                nestedLevel++;
-            } else if (sequence(tkn::Separator::RightBrace)) {
-                nestedLevel--;
-
-                if (tokenStack.empty())
-                    return result;
-                Interval range(tokenStack.back(), getTokenId(m_curr[-1].location));
-                tokenStack.pop_back();
-
-                result.push_back(range);
-
-                if (nestedLevel == 0) {
-                    skipAttribute();
-                    break;
-                }
-
-            } else if (peek(tkn::Separator::EndOfProgram))
-                return result;
-            else
-                next();
-        }
-        return result;
-    }
-
     Interval TextEditor::Lines::findBlockInRange(Interval interval) {
         Interval result = NotValid;
-        auto tokenStart = TokenIter(m_tokens.begin(), m_tokens.end());
+        auto tokenStart = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
 
         bool foundKey = false;
         bool foundComment = false;
         m_curr = tokenStart + interval.m_start;
-        while (interval.m_end >= getTokenId(m_curr->location)) {
+        while (interval.m_end >= getTokenId()) {
             if (peek(tkn::Separator::EndOfProgram))
                 return NotValid;
-            if (result.m_start = getTokenId(m_curr->location); result.m_start < 0)
+            if (result.m_start = getTokenId(); result.m_start < 0)
                 return NotValid;
 
             while (true) {
@@ -115,10 +77,10 @@ namespace hex::ui {
                     break;
             }
             if (foundKey || foundComment) {
-                auto currentId = getTokenId(m_curr->location);
+                auto currentId = getTokenId();
                 if (peek(tkn::Separator::EndOfProgram) || (currentId > 0 && currentId < (i32) m_tokens.size())) {
                     next(-1);
-                    if (result.m_end = getTokenId(m_curr->location); result.m_end < 0)
+                    if (result.m_end = getTokenId(); result.m_end < 0)
                         return NotValid;
 
                     return result;
@@ -133,19 +95,19 @@ namespace hex::ui {
     Coordinates TextEditor::Lines::findCommentEndCoord(i32 tokenId) {
         Coordinates result = Invalid;
         auto save = m_curr;
-        m_curr = TokenIter(m_tokens.begin(), m_tokens.end()) + tokenId;
+        m_curr = SafeTokenIterator(m_tokens.begin(), m_tokens.end()) + tokenId;
         if (peek(tkn::Literal::Comment)) {
             auto comment = getValue<Token::Comment>(0);
             if (comment != nullptr) {
                 auto location = m_curr->location;
                 if (comment->singleLine)
-                    return Coordinates(location.line - 1, location.column + location.length - 2);
+                    return {(i32) (location.line - 1), (i32) (location.column + location.length - 2)};
 
                 std::string commentText = comment->comment;
                 auto vectorString = wolv::util::splitString(commentText, "\n");
                 size_t lineCount = vectorString.size();
                 auto endColumn = (lineCount == 1) ? location.column + location.length - 1 : vectorString.back().length() + 1;
-                return Coordinates(location.line + lineCount - 2, endColumn);
+                return {(i32)(location.line + lineCount - 2), (i32)endColumn};
             }
 
         } else if (peek(tkn::Literal::DocComment)) {
@@ -153,57 +115,24 @@ namespace hex::ui {
             if (docComment != nullptr) {
                 auto location = m_curr->location;
                 if (docComment->singleLine)
-                    return Coordinates(location.line - 1, location.column + location.length - 2);
+                    return {(i32)(location.line - 1), (i32)(location.column + location.length - 2)};
 
                 std::string commentText = docComment->comment;
                 auto vectorString = wolv::util::splitString(commentText, "\n");
                 size_t lineCount = vectorString.size();
                 auto endColumn = (lineCount == 1) ? location.column + location.length - 1 : vectorString.back().length() + 1;
-                return Coordinates(location.line + lineCount - 2, endColumn);
+                return {(i32)(location.line + lineCount - 2), (i32)endColumn};
             }
         }
         m_curr = save;
         return result;
     }
 
-    std::set<Interval> TextEditor::Lines::blocksFromGlobal() {
-        std::set<Interval> result;
-        if (m_globalBlocks.size() == 1)
-            return m_globalBlocks;
-        auto globalsIter = m_globalBlocks.begin();
-        bool absorbPreviousToken = false;
-        while (globalsIter != m_globalBlocks.end()) {
-            if (absorbPreviousToken && globalsIter->m_start > 0) {
-                result.insert(Interval(globalsIter->m_start - 1, globalsIter->m_end));
-                absorbPreviousToken = false;
-            } else if (globalsIter->m_start == globalsIter->m_end) {
-                absorbPreviousToken = true;
-            } else
-                result.insert(*globalsIter);
-            auto nextIter = std::next(globalsIter);
-
-            if (nextIter != m_globalBlocks.end() && absorbPreviousToken) {
-                result.insert(Interval(globalsIter->m_end, nextIter->m_start - 1));
-                absorbPreviousToken = false;
-            } else if (nextIter != m_globalBlocks.end() && globalsIter->m_end + 1 < nextIter->m_start - 1)
-                result.insert(Interval(globalsIter->m_end + 1, nextIter->m_start - 1));
-            else if (nextIter != m_globalBlocks.end() && globalsIter->m_end + 1 == nextIter->m_start - 1)
-                absorbPreviousToken = true;
-            else if (globalsIter->m_end + 1 < (i32) m_tokens.size() - 1)
-                result.insert(Interval(globalsIter->m_end + 1, (i32) m_tokens.size() - 1));
-
-            globalsIter++;
-        }
-        return result;
-    }
-
 //comments imports and includes
     void TextEditor::Lines::nonDelimitedFolds() {
-        //auto allBlocks = blocksFromGlobal();
         auto size = m_tokens.size();
         if (size > 0) {
             Interval block = {0,static_cast<i32>(size-1)};
-        //for (auto block: allBlocks) {
             while (true) {
                 auto interval = findBlockInRange(block);
 
@@ -227,10 +156,10 @@ namespace hex::ui {
         }
     }
 
-    std::pair<Coordinates, Coordinates> TextEditor::Lines::getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters) {
-        std::pair<Coordinates, Coordinates> result = {Invalid, Invalid};
+    RangeFromCoordinates TextEditor::Lines::getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters) {
+        RangeFromCoordinates result = {Invalid, Invalid};
         Coordinates first = Invalid;
-        auto tokenStart = TokenIter(m_tokens.begin(), m_tokens.end());
+        auto tokenStart = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
         m_curr = tokenStart + start;
         Token::Separator openSeparator = Token::Separator::EndOfProgram;
         Token::Separator closeSeparator = Token::Separator::EndOfProgram;
@@ -261,7 +190,7 @@ namespace hex::ui {
             Location location2;
             auto save = m_curr;
             while (peek(tkn::Literal::Comment, -1) || peek(tkn::Literal::DocComment, -1)) {
-                if (getTokenId(m_curr->location) == 0)
+                if (getTokenId() == 0)
                     break;
                 next(-1);
             }
@@ -305,26 +234,43 @@ namespace hex::ui {
     }
 
     void TextEditor::Lines::advanceToNextLine(i32 &lineIndex, i32 &currentTokenId, Location &location) {
-        if (lineIndex = nextLine(lineIndex); lineIndex >= size())
+        i32 tempLineIndex;
+        if (tempLineIndex = nextLine(lineIndex); lineIndex == tempLineIndex) {
+            lineIndex++;
+            currentTokenId = -1;
+            location = Location::Empty();
             return;
+        }
+        lineIndex = tempLineIndex;
         currentTokenId = m_firstTokenIdOfLine[lineIndex];
         m_curr = m_startToken + currentTokenId;
         location = m_curr->location;
     }
 
-    void TextEditor::Lines::advanceTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location) {
+    void TextEditor::Lines::incrementTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location) {
         currentTokenId++;
         m_curr = m_startToken + currentTokenId;
         location = m_curr->location;
         lineIndex = location.line - 1;
     }
 
-    void TextEditor::Lines::moveToLocationColumn(i32 locationColumn, i32 &currentTokenId, Location &location) {
-        location.column = locationColumn;
-        location.length = 1;
-        if (currentTokenId = getTokenId(location); currentTokenId < 0)
+    void TextEditor::Lines::moveToStringIndex(i32 stringIndex, i32 &currentTokenId, Location &location) {
+        auto curr = m_curr;
+        i32 tempTokenId;
+        auto &line = operator[](location.line - 1);
+        while (stringIndex > line.columnIndex(m_curr->location.column) + (i32) m_curr->location.length && m_curr->location.line == location.line)
+            next();
+        if (peek(tkn::Separator::EndOfProgram))
             return;
-        m_curr = m_startToken + currentTokenId;
+
+        if (tempTokenId = getTokenId(); tempTokenId < 0) {
+            m_curr = curr;
+            location = curr->location;
+        } else {
+            location = m_curr->location;
+            currentTokenId = tempTokenId;
+        }
+
     }
 
     void TextEditor::Lines::resetToTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location) {
@@ -333,47 +279,55 @@ namespace hex::ui {
         lineIndex = location.line - 1;
     }
 
+    i32 TextEditor::Lines::findNextDelimiter(bool openOnly) {
+        while (!peek(tkn::Separator::EndOfProgram)) {
+
+            if (peek(tkn::Separator::LeftBrace) || peek(tkn::Separator::LeftBracket) || peek(tkn::Separator::LeftParenthesis) || peek(tkn::Operator::BoolLessThan))
+                return getTokenId();
+            if (!openOnly) {
+                if (peek(tkn::Separator::RightBrace) || peek(tkn::Separator::RightBracket) || peek(tkn::Separator::RightParenthesis) || peek(tkn::Operator::BoolGreaterThan))
+                    return getTokenId();
+            }
+            next();
+        }
+        return getTokenId();
+    }
 
     TextEditor::CodeFoldBlocks TextEditor::Lines::foldPointsFromSource() {
+        auto code = getText();
+        if (code.empty())
+            return m_foldPoints;
+        std::unique_ptr<pl::PatternLanguage> runtime = std::make_unique<pl::PatternLanguage>();
+        ContentRegistry::PatternLanguage::configureRuntime(*runtime, nullptr);
+        std::ignore = runtime->preprocessString(code, pl::api::Source::DefaultSource);
+        m_tokens = runtime->getInternals().preprocessor->getResult();
+        const u32 tokenCount = m_tokens.size();
+        if (tokenCount == 0)
+            return m_foldPoints;
         loadFirstTokenIdOfLine();
         if (m_firstTokenIdOfLine.empty())
             return m_foldPoints;
         m_foldPoints.clear();
         nonDelimitedFolds();
-        std::string blockDelimiters = "{[(<";
+        std::string openDelimiters = "{[(<";
         size_t topLine = 0;
-        i32 bottomLine = size();
-        m_startToken = TokenIter(m_tokens.begin(), m_tokens.end());
+        m_startToken = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
         m_curr = m_startToken;
         auto location = m_curr->location;
         i32 lineIndex = topLine;
         i32 currentTokenId = 0;
-        while (lineIndex < bottomLine) {
-            auto line = operator[](lineIndex);
-            if (line.empty()) {
-                advanceToNextLine(lineIndex, currentTokenId, location);
-                if (lineIndex >= bottomLine) {
-                    return m_foldPoints;
-                }
-                continue;
-            }
+        while (currentTokenId < (i32) tokenCount) {
 
-            if (size_t columnIndex = line.m_chars.find_first_of(blockDelimiters, location.column - 1); columnIndex != std::string::npos) {
-                std::string openDelimiter = std::string(1, line[columnIndex]);
-                moveToLocationColumn(columnIndex + 1, currentTokenId, location);
+            if (currentTokenId = findNextDelimiter(true); !peek(tkn::Separator::EndOfProgram)) {
                 if (currentTokenId < 0) {
                     return m_foldPoints;
                 }
+                auto line = operator[](m_curr->location.line - 1);
+                size_t stringIndex = line.columnIndex(m_curr->location.column);
+                std::string openDelimiter = std::string(1, line[stringIndex - 1]);
+                location = m_curr->location;
 
-                if (m_curr[0].getFormattedType() != "Operator" && m_curr[0].getFormattedType() != "Separator") {
-                    if (currentTokenId >= (i32) m_tokens.size()) {
-                        return m_foldPoints;
-                    }
-                    advanceTokenId(lineIndex, currentTokenId, location);
-                    continue;
-                }
-
-                if (auto idx = blockDelimiters.find(openDelimiter); idx != std::string::npos) {
+                if (auto idx = openDelimiters.find(openDelimiter); idx != std::string::npos) {
                     if (idx == 3) {
                         if (currentTokenId == 0) {
                             return m_foldPoints;
@@ -386,7 +340,7 @@ namespace hex::ui {
                                 return m_foldPoints;
                             }
 
-                            if (currentTokenId = getTokenId(m_curr->location); currentTokenId < 0) {
+                            if (currentTokenId = getTokenId(); currentTokenId < 0) {
                                 return m_foldPoints;
                             }
                             resetToTokenId(lineIndex, currentTokenId, location);
@@ -404,18 +358,15 @@ namespace hex::ui {
                     if (lineBased.first.getLine() != lineBased.second.getLine())
                         m_foldPoints[lineBased.first] = lineBased.second;
 
-                    if (currentTokenId = getTokenId(m_tokens[end.first].location); currentTokenId < 0 || currentTokenId >= (i32) m_tokens.size()) {
+                    if (currentTokenId = getTokenId(m_startToken + end.first); currentTokenId < 0 || currentTokenId >= (i32) m_tokens.size()) {
                         return m_foldPoints;
                     }
-                    advanceTokenId(lineIndex, currentTokenId, location);
+                    incrementTokenId(lineIndex, currentTokenId, location);
                 } else {
                     return m_foldPoints;
                 }
             } else {
-                advanceToNextLine(lineIndex, currentTokenId, location);
-                if (lineIndex >= bottomLine) {
-                    return m_foldPoints;
-                }
+                return m_foldPoints;
             }
         }
         return m_foldPoints;
@@ -425,8 +376,9 @@ namespace hex::ui {
     std::pair<i32, char> TextEditor::Lines::findMatchingDelimiter(i32 from) {
         std::string blockDelimiters = "{}[]()<>";
         std::pair<i32, char> result = std::make_pair(-1, '\0');
-        auto tokenStart = TokenIter(m_tokens.begin(), m_tokens.end());
-        if (from >= (i32) m_tokens.size())
+        auto tokenStart = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
+        const i32 tokenCount = m_tokens.size();
+        if (from >= tokenCount)
             return result;
         m_curr = tokenStart + from;
         Location location = m_curr->location;
@@ -445,44 +397,19 @@ namespace hex::ui {
             return result;
         m_curr = tokenStart + currentTokenId;
         location = m_curr->location;
-        size_t lineIndex = location.line - 1;
-        size_t bottomLine = size();
-        while (lineIndex < bottomLine) {
-            line = operator[](lineIndex);
-            if (line.empty()) {
+        i32 lineIndex = location.line - 1;
+        while (currentTokenId < tokenCount) {
 
-                if (lineIndex = nextLine(lineIndex); lineIndex >= bottomLine)
+            if (currentTokenId = findNextDelimiter(false); !peek(tkn::Separator::EndOfProgram)) {
+                if (currentTokenId < 0) {
                     return result;
-                currentTokenId = m_firstTokenIdOfLine[lineIndex];
-                m_curr = tokenStart + currentTokenId;
-                location = m_curr->location;
-                continue;
-            }
-
-            if (auto columnIndex = line.m_chars.find_first_of(blockDelimiters, location.column - 1); columnIndex != std::string::npos) {
-                std::string currentChar = std::string(1, line[columnIndex]);
-                location.column = columnIndex + 1;
-                location.length = 1;
-
-                if (currentTokenId = getTokenId(location); currentTokenId < 0)
-                    return result;
-                m_curr = tokenStart + currentTokenId;
-                if (m_curr[0].getFormattedType() != "Operator" && m_curr[0].getFormattedType() != "Separator") {
-
-                    if (currentTokenId >= (i32) m_tokens.size())
-                        return result;
-                    currentTokenId++;
-                    m_curr = tokenStart + currentTokenId;
-                    location = m_curr->location;
-                    lineIndex = location.line - 1;
-                    continue;
                 }
+                line = operator[](m_curr->location.line - 1);
+                std::string currentChar = std::string(1, line[(u64)(m_curr->location.column - 1)]);
+                location = m_curr->location;
 
                 if (auto idx = blockDelimiters.find(currentChar); idx != std::string::npos) {
                     if (currentChar == closeDelimiter) {
-
-                        if (currentTokenId = getTokenId(location); currentTokenId < 0)
-                            return result;
                         return std::make_pair(currentTokenId, closeDelimiter[0]);
                     } else {
                         if (idx == 6 || idx == 7) {
@@ -494,11 +421,10 @@ namespace hex::ui {
                                     return result;
                                 }
 
-                                if (currentTokenId = getTokenId(m_curr->location); currentTokenId < 0)
+                                if (currentTokenId = getTokenId(); currentTokenId < 0)
                                     return result;
-                                m_curr = tokenStart + currentTokenId;
-                                location = m_curr->location;
-                                lineIndex = location.line - 1;
+
+                                resetToTokenId(lineIndex, currentTokenId, location);
                                 continue;
                             }
                         }
@@ -512,13 +438,10 @@ namespace hex::ui {
                             if (lineBased.first.getLine() != lineBased.second.getLine())
                                 m_foldPoints[lineBased.first] = lineBased.second;
 
-                            if (currentTokenId = getTokenId(m_tokens[end.first].location); currentTokenId < 0 || currentTokenId >= (i32) m_tokens.size())
+                            if (currentTokenId = getTokenId(tokenStart + end.first); currentTokenId < 0 || currentTokenId >= (i32) m_tokens.size())
                                 return result;
 
-                            currentTokenId++;
-                            m_curr = tokenStart + currentTokenId;
-                            location = m_curr->location;
-                            lineIndex = location.line - 1;
+                            incrementTokenId(lineIndex, currentTokenId, location);
                         } else
                             return result;
                     }
@@ -526,23 +449,19 @@ namespace hex::ui {
                     return result;
                 }
             } else {
-
-                if (lineIndex = nextLine(lineIndex); lineIndex >= bottomLine)
-                    return result;
-                currentTokenId = m_firstTokenIdOfLine[lineIndex];
-                m_curr = tokenStart + currentTokenId;
-                location = m_curr->location;
+                return result;
             }
         }
         return result;
     }
+
     void TextEditor::saveCodeFoldStates() {
         m_lines.saveCodeFoldStates();
     }
 
     void TextEditor::Lines::saveCodeFoldStates() {
         i32 codeFoldIndex = 0;
-        std::vector<i32> closedFoldIncrements;
+        Indices closedFoldIncrements;
         for (auto key: m_codeFoldKeys) {
             if (m_codeFoldState.contains(key) && !m_codeFoldState[key]) {
                 closedFoldIncrements.push_back(codeFoldIndex);
@@ -550,6 +469,10 @@ namespace hex::ui {
             } else
                 codeFoldIndex++;
         }
+        if (!m_hiddenLines.empty())
+            m_hiddenLines.clear();
+        if (closedFoldIncrements.empty())
+            return;
         std::string result = "//+-#:";
         for (u32 i = 0; i < closedFoldIncrements.size(); ++i) {
             result += std::to_string(closedFoldIncrements[i]);
@@ -557,37 +480,49 @@ namespace hex::ui {
                 result += ",";
         }
         auto lineIndex = 0;
-        HiddenLine hiddenLine(lineIndex, result);
-        if (!m_hiddenLines.empty()) {
-            m_hiddenLines[0] = hiddenLine;
-            return;
-        }
-        m_hiddenLines.push_back(hiddenLine);
+        m_hiddenLines.emplace_back(lineIndex, result);
     }
 
     void TextEditor::applyCodeFoldStates() {
         m_lines.applyCodeFoldStates();
     }
 
+    void TextEditor::Lines::setCodeFoldState(CodeFoldState state) {
+        m_codeFoldState = state;
+    }
+
+    CodeFoldState TextEditor::Lines::getCodeFoldState() const {
+        return m_codeFoldState;
+    }
+
     void TextEditor::Lines::applyCodeFoldStates() {
 
         std::string commentLine;
-        for (auto line: m_hiddenLines) {
+        for (const auto& line: m_hiddenLines) {
             if (line.m_line.starts_with("//+-#:")) {
                 commentLine = line.m_line;
                 break;
             }
         }
-        if (commentLine.size() < 6 || !commentLine.starts_with("//+-#:"))
+        if (commentLine.size() < 6 || !commentLine.starts_with("//+-#:")) {
+            for (auto key: m_codeFoldKeys)
+                m_codeFoldState[key] = true;
             return;
+        }
         auto states = commentLine.substr(6);
-        auto stringVector = wolv::util::splitString(states, ",", true);
-        auto count = stringVector.size();
+        i32 count;
+        StringVector stringVector;
+        if (states.empty())
+            count = 0;
+        else {
+            stringVector = wolv::util::splitString(states, ",", true);
+            count = stringVector.size();
+        }
         if (count == 1 && stringVector[0].empty())
             return;
-        std::vector<i32> closedFoldIncrements(count);
+        Indices closedFoldIncrements(count);
         i32 value = 0;
-        for (u32 i = 0; i < count; ++i) {
+        for (i32 i = 0; i < count; ++i) {
             auto stateStr = stringVector[i];
             std::from_chars(stateStr.data(), stateStr.data() + stateStr.size(), value);
             closedFoldIncrements[i] = value;
@@ -607,8 +542,9 @@ namespace hex::ui {
     void TextEditor::Lines::closeCodeFold(const Range &key, bool userTriggered) {
         float topRow;
 
-        if (userTriggered)
+        if (userTriggered) {
             topRow = m_topRow;
+        }
         LineIndexToScreen lineIndexToScreen;
         bool needsDelimiter = lineNeedsDelimiter(key.m_start.m_line);
         auto lineIter = m_lineIndexToScreen.begin();
@@ -712,7 +648,7 @@ namespace hex::ui {
             m_foldedLines[newFoldedLine.m_row] = newFoldedLine;
             currentFoldedLine = m_foldedLines[newFoldedLine.m_row];
         }
-        std::map<i32, FoldedLine> updatedFoldedLines;
+        FoldedLines updatedFoldedLines;
         for (auto &[row, foldedLine] : m_foldedLines) {
             if (row > currentFoldedLine.m_row) {
                 foldedLine.m_row -= (key.m_end.m_line - key.m_start.m_line);
@@ -730,12 +666,13 @@ namespace hex::ui {
                 m_topRow = topRow;
             m_setTopRow = true;
             m_saveCodeFoldStateRequested = true;
+            m_globalRowMaxChanged = true;
         }
         m_foldedLines[currentFoldedLine.m_row].loadSegments();
     }
 
     void TextEditor::Lines::openCodeFold(const Range &key) {
-        for (auto foldedLine : m_foldedLines) {
+        for (const auto& foldedLine : m_foldedLines) {
             for (auto foldKey : foldedLine.second.m_keys) {
                 if (foldKey.contains(key) && foldKey != key) {
                     m_codeFoldState[key] = true;
@@ -778,7 +715,7 @@ namespace hex::ui {
             }
         }
         if (erasedRow != -1) {
-            std::map<i32, FoldedLine> updatedFoldedLines;
+            FoldedLines updatedFoldedLines;
             for (auto &[row, foldedLine] : m_foldedLines) {
                 if (row > erasedRow) {
                     foldedLine.m_row += (key.m_end.m_line - key.m_start.m_line);
@@ -790,6 +727,7 @@ namespace hex::ui {
             m_foldedLines = std::move(updatedFoldedLines);
         }
         m_saveCodeFoldStateRequested = true;
+        m_globalRowMaxChanged = true;
     }
 
     void TextEditor::openCodeFoldAt(Coordinates line) {
@@ -814,7 +752,7 @@ namespace hex::ui {
         }
         if (count == 0)
             return;
-        i32 id = getTokenId(m_curr->location);
+        i32 id = getTokenId();
 
         if (count > 0)
             m_curr += std::min(count,static_cast<i32>(m_tokens.size() - id));
@@ -904,15 +842,13 @@ namespace hex::ui {
                 return false;
             return false;
         }
-        if (!isLocationValid(token.location))
-            return false;
-        return true;
+        return isLocationValid(token.location);
     }
 
     bool TextEditor::Lines::peek(const Token &token, const i32 index) {
         if (!isValid())
             return false;
-        i32 id = getTokenId(m_curr->location);
+        i32 id = getTokenId();
         if (id+index < 0 || id+index >= (i32)m_tokens.size())
             return false;
         return m_curr[index].type == token.type && m_curr[index] == token.value;

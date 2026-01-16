@@ -2,14 +2,13 @@
 #include "fonts/fonts.hpp"
 #include <ui/text_editor.hpp>
 #include <hex/helpers/scaling.hpp>
-#include <hex/helpers/logger.hpp>
 #include <wolv/utils/string.hpp>
 #include <algorithm>
 
 
 namespace hex::ui {
     TextEditor::Palette s_paletteBase = TextEditor::getDarkPalette();
-
+    using Keys = TextEditor::Keys;
 
     inline void TextUnformattedColored(const ImU32 &color, const char *text) {
         ImGui::PushStyleColor(ImGuiCol_Text, color);
@@ -104,7 +103,7 @@ namespace hex::ui {
             }
             return !line.ends_with('{');
         }
-        return m_foldedLines[row].firstLineNeedsDelimiter();
+        return m_foldedLines.at(row).firstLineNeedsDelimiter();
     }
 
     bool TextEditor::FoldedLine::firstLineNeedsDelimiter() {
@@ -172,14 +171,14 @@ namespace hex::ui {
     }
 
     bool TextEditor::Lines::isEndOfLine(const Coordinates &coordinates) {
-        if (coordinates.m_line < (i32) size())
+        if (coordinates.m_line < size())
             return m_unfoldedLines[coordinates.m_line].isEndOfLine(coordinates.m_column);
 
         return true;
     }
 
     bool TextEditor::Lines::isEndOfFile(const Coordinates &coordinates) {
-        if (coordinates.m_line < (i32) size())
+        if (coordinates.m_line < size())
             return isLastLine(coordinates.m_line) && isEndOfLine(coordinates);
 
         return true;
@@ -212,29 +211,35 @@ namespace hex::ui {
     }
 
     float TextEditor::Lines::getGlobalRowMax() {
-        auto maxRow = size() - 1.0f;
-        std::vector<Range> spanningIntervals;
-        if (m_codeFoldKeys.empty())
+        float maxRow = size() - 1.0f;
+        if (m_codeFoldsDisabled || m_foldedLines.empty() || m_codeFoldKeys.empty())
             return std::floor(maxRow);
-        for (auto key1 = m_codeFoldKeys.begin(); key1 != m_codeFoldKeys.end(); ++key1) {
-            auto key2 = std::next(key1);
-            while (key2 != m_codeFoldKeys.end() && (!key2->contains(*key1) || (m_codeFoldState.contains(*key2) && m_codeFoldState[*key2]))) {
-                ++key2;
-            }
-            if (key2 == m_codeFoldKeys.end())
-                spanningIntervals.push_back(*key1);
-        }
 
-        for (auto key: spanningIntervals) {
-            if (m_codeFoldState.contains(key) && !m_codeFoldState[key]) {
-                if ((key.m_end.m_line - key.m_start.m_line - 1) < maxRow) {
-                    maxRow -= ((key.m_end.m_line - key.m_start.m_line));
+        if (m_globalRowMaxChanged) {
+            Keys spanningIntervals;
+
+            for (auto key1 = m_codeFoldKeys.begin(); key1 != m_codeFoldKeys.end(); ++key1) {
+                auto key2 = std::next(key1);
+                while (key2 != m_codeFoldKeys.end() && (!key2->contains(*key1) || (m_codeFoldState.contains(*key2) && m_codeFoldState[*key2]))) {
+                    ++key2;
+                }
+                if (key2 == m_codeFoldKeys.end())
+                    spanningIntervals.push_back(*key1);
+            }
+
+            for (auto key: spanningIntervals) {
+                if (m_codeFoldState.contains(key) && !m_codeFoldState[key]) {
+                    if ((key.m_end.m_line - key.m_start.m_line - 1) < maxRow) {
+                        maxRow -= ((key.m_end.m_line - key.m_start.m_line));
+                    } else
+                        break;
                 } else
-                    break;
-            } else
-                m_codeFoldState[key] = true;
+                    m_codeFoldState[key] = true;
+            }
+            m_cachedGlobalRowMax = std::floor(maxRow);
+            m_globalRowMaxChanged = false;
         }
-        return std::floor(maxRow);
+        return m_cachedGlobalRowMax;
     }
 
     float TextEditor::getMaxLineNumber() {
@@ -245,7 +250,7 @@ namespace hex::ui {
         float currentLineNumber = m_topLineNumber;
         for (auto range: m_lines.m_codeFoldKeys) {
 
-            if (m_lines.m_codeFoldState.contains(range) && m_lines.m_codeFoldState[range] == false) {
+            if (m_lines.m_codeFoldState.contains(range) && !m_lines.m_codeFoldState[range]) {
 
                 if ((range.m_start.m_line - currentLineNumber) < maxLineNumber)
                     maxLineNumber += ((range.m_end.m_line - range.m_start.m_line));
@@ -264,7 +269,7 @@ namespace hex::ui {
 
             if (interval.m_start.m_line > result)
                 break;
-            if (m_lines.m_codeFoldState.contains(interval) && m_lines.m_codeFoldState[interval] == false)
+            if (m_lines.m_codeFoldState.contains(interval) && !m_lines.m_codeFoldState[interval])
                 result += (interval.m_end.m_line- interval.m_start.m_line);
             else
                 m_lines.m_codeFoldState[interval] = true;
@@ -372,12 +377,12 @@ namespace hex::ui {
         auto row = lineIndexToRow(pos.m_line);
 
         if (m_unfoldIfNeeded && m_foldedLines.contains(row) && !m_codeFoldsDisabled) {
-            auto foldedLine = m_foldedLines[row];
+            auto foldedLine = m_foldedLines.at(row);
             auto foldedCoords = unfoldedToFoldedCoords(pos);
             auto keyCount = foldedLine.m_keys.size();
             for (u32 i = 0; i < keyCount; i++) {
                 if (foldedCoords.m_column >= foldedLine.m_ellipsisIndices[i] && foldedCoords.m_column <= foldedLine.m_ellipsisIndices[i] + 3) {
-                    openCodeFold(m_foldedLines[row].m_keys[i]);
+                    openCodeFold(m_foldedLines.at(row).m_keys[i]);
                     break;
                 }
             }
@@ -468,18 +473,18 @@ namespace hex::ui {
     }
 
     float TextEditor::Lines::rowToLineIndex(i32 row) {
-        if (m_codeFoldsDisabled)
+        if (m_codeFoldsDisabled || m_foldedLines.empty() || m_rowToLineIndex.empty())
             return row;
         if (m_rowToLineIndex.contains(row))
-            return m_rowToLineIndex[row];
+            return m_rowToLineIndex.at(row);
         return -1.0f;
     }
 
     float TextEditor::Lines::lineIndexToRow(i32 lineIndex) {
-        if (m_codeFoldsDisabled)
+        if (m_codeFoldsDisabled || m_foldedLines.empty() || m_lineIndexToRow.empty())
             return lineIndex;
         if (m_lineIndexToRow.contains(lineIndex))
-            return m_lineIndexToRow[lineIndex];
+            return m_lineIndexToRow.at(lineIndex);
         return -1.0f;
     }
 
@@ -495,12 +500,12 @@ namespace hex::ui {
        } else {
            auto &rowFoldSymbols = lines->m_rowToFoldSymbol;
            auto row = lines->lineIndexToRow(key.m_end.m_line);
-           if (isOpen() && endHovered()  && rowFoldSymbols.contains(row) && rowFoldSymbols[row] != Lines::FoldSymbol::Square) {
+           if (isOpen() && endHovered()  && rowFoldSymbols.contains(row) && rowFoldSymbols[row] != FoldSymbol::Square) {
                lines->m_codeFoldHighlighted = key;
                codeFoldEndCursorBox.callback();
            }
            row = lines->lineIndexToRow(key.m_start.m_line);
-           if (startHovered() && rowFoldSymbols.contains(row) && rowFoldSymbols[row] != Lines::FoldSymbol::Square) {
+           if (startHovered() && rowFoldSymbols.contains(row) && rowFoldSymbols[row] != FoldSymbol::Square) {
                lines->m_codeFoldHighlighted = key;
                codeFoldStartCursorBox.callback();
            }
@@ -533,9 +538,6 @@ namespace hex::ui {
         m_codeFoldValueLineMap.clear();
         m_codeFolds.clear();
         m_rowToFoldSymbol.clear();
-
-        //m_foldsAreInstalled = !m_codeFoldKeys.empty();
-
 
         for (auto [key, isOpen]: m_codeFoldState){
             auto index = m_codeFoldKeys.find(key);
@@ -593,11 +595,13 @@ namespace hex::ui {
         if (m_useSavedFoldStatesRequested) {
             applyCodeFoldStates();
             m_useSavedFoldStatesRequested = false;
-        } else
+        } else if (m_saveCodeFoldStateRequested) {
             saveCodeFoldStates();
+            m_saveCodeFoldStateRequested = false;
+        }
 
         m_foldedLines.clear();
-        std::vector<Range> closedFolds = removeEmbeddedFolds();
+        Keys closedFolds = removeEmbeddedFolds();
         for (auto closedFold : closedFolds) {
             closeCodeFold(closedFold, false);
             auto row = lineIndexToRow(closedFold.m_start.m_line);
@@ -667,11 +671,11 @@ namespace hex::ui {
 
         bool triggered = false;
         std::map<Range, CodeFold> detectedFolds;
-        for (auto key = m_codeFoldKeys.rbegin(); key != m_codeFoldKeys.rend(); key++) {
-            if (m_codeFolds[*key].trigger())
+        for (auto key : std::ranges::views::reverse(m_codeFoldKeys)) {
+            if (m_codeFolds[key].trigger())
                 triggered = true;
-            if (m_codeFolds[*key].isDetected())
-                detectedFolds.insert({*key, m_codeFolds[*key]});
+            if (m_codeFolds[key].isDetected())
+                detectedFolds.insert({key, m_codeFolds[key]});
         }
         if (detectedFolds.empty()) {
             m_codeFoldHighlighted = NoCodeFoldSelected;
@@ -697,12 +701,12 @@ namespace hex::ui {
         return false;
     }
 
-    std::vector<TextEditor::Range> TextEditor::Lines::removeEmbeddedFolds() {
-        std::vector<Range> closedFolds;
+    Keys TextEditor::Lines::removeEmbeddedFolds() {
+        Keys closedFolds;
         for (auto key : m_codeFoldKeys) {
             if (m_codeFoldState.contains(key) && !m_codeFoldState[key]) {
                 bool replace = false;
-                std::vector<Range> keysToErase;
+                Keys keysToErase;
                 for (auto closedFold : closedFolds) {
                     if (key.contains(closedFold)) {
                         replace = true;
@@ -724,30 +728,30 @@ namespace hex::ui {
     }
 
     void TextEditor::Lines::getRowSegments() {
-        m_rowToSegments.clear();
+        m_rowToFoldSegments.clear();
         m_multiLinesToRow.clear();
         m_rowCodeFoldTooltips.clear();
-        std::vector<Range> closedFolds = removeEmbeddedFolds();
+        Keys closedFolds = removeEmbeddedFolds();
 
         for (auto key : closedFolds) {
             auto row = lineIndexToRow(key.m_start.m_line);
-            if (m_rowToSegments.contains(row))
+            if (m_rowToFoldSegments.contains(row) || !m_foldedLines.contains(row))
                 continue;
             for (i32 i = key.m_start.m_line; i < key.m_end.m_line; i++)
                 m_multiLinesToRow[i] = row;
             auto lineIndex = rowToLineIndex(row);
-            auto foldedLine = m_foldedLines[row];
+            auto foldedLine = m_foldedLines.at(row);
             i32 count = foldedLine.m_keys.size();
             if (count == 0)
                 continue;
             for (i32 i = 0; i < count; i++) {
                 Interval sgm = {foldedLine.m_foldedSegments[2 * i].m_column, foldedLine.m_foldedSegments[2 * i + 1].m_column};
-                m_rowToSegments[row].push_back({foldedLine.m_keys[i].m_start, indexScreenPosition(lineIndex, sgm)});
+                m_rowToFoldSegments[row].push_back({foldedLine.m_keys[i].m_start, indexScreenPosition(lineIndex, sgm)});
                 ImVec2 screenPosEnd = indexCoordsToScreen(lineCoordinates(lineIndex, foldedLine.m_ellipsisIndices[i]));
-                m_rowCodeFoldTooltips[row].push_back(TextEditor::CodeFoldTooltip(this, foldedLine.m_keys[i],ImRect(screenPosEnd, screenPosEnd + ImVec2(Ellipsis.lineTextSize(), m_charAdvance.y))));
+                m_rowCodeFoldTooltips[row].emplace_back(this, foldedLine.m_keys[i],ImRect(screenPosEnd, screenPosEnd + ImVec2(Ellipsis.lineTextSize(), m_charAdvance.y)));
             }
             Interval sgm = {foldedLine.m_foldedSegments[2 * count].m_column, foldedLine.m_foldedSegments[2 * count + 1].m_column};
-            m_rowToSegments[row].push_back({foldedLine.m_keys[count - 1].m_end, indexScreenPosition(lineIndex, sgm)});
+            m_rowToFoldSegments[row].push_back({foldedLine.m_keys[count - 1].m_end, indexScreenPosition(lineIndex, sgm)});
         }
     }
 
@@ -756,14 +760,14 @@ namespace hex::ui {
     }
 
      ImVec2 TextEditor::Line::intervalToScreen(Interval stringIndices) const {
-        return ImVec2(textSize(stringIndices.m_start), textSize(stringIndices.m_end));
+        return {(float) textSize(stringIndices.m_start), (float) textSize(stringIndices.m_end)};
     }
 
     ImVec2 TextEditor::Lines::lineIndexToScreen(i32 lineIndex, Interval stringIndices) {
         auto &line = operator[](lineIndex);
         auto startPos = m_lineIndexToScreen[lineIndex].x;
         auto increments = line.intervalToScreen(stringIndices);
-        return ImVec2(startPos + increments.x, startPos + increments.y);
+        return {startPos + increments.x, startPos + increments.y};
     }
 
     ImVec2 TextEditor::Lines::indexCoordsToScreen(Coordinates indexCoords) {
@@ -776,7 +780,7 @@ namespace hex::ui {
         if (hovered && ImGui::IsMouseClicked(0)) {
             auto codeFoldKeys = m_lines->m_codeFoldKeys;
             auto codeFoldState = m_lines->m_codeFoldState;
-            std::vector<Range> keysToOpen;
+            Keys keysToOpen;
             auto key = codeFoldKeys.begin();
             for (; key != codeFoldKeys.end(); key++) {
                 if (*key == m_key)
@@ -795,8 +799,8 @@ namespace hex::ui {
                     keysToOpen.push_back(*key);
                 key++;
             }
-            for (auto openKey = keysToOpen.rbegin(); openKey != keysToOpen.rend(); openKey++)
-                m_lines->openCodeFold(*openKey);
+            for (auto openKey : std::ranges::views::reverse(keysToOpen))
+                m_lines->openCodeFold(openKey);
 
             return true;
         }
@@ -857,20 +861,18 @@ namespace hex::ui {
         std::pair<char,char> delimiters = {' ',' '};
         if (m_lines->m_codeFoldDelimiters.contains(key))
             delimiters = m_lines->m_codeFoldDelimiters[key];
-        std::string delimiterOpen(1,delimiters.first);
-        std::string delimiterClose(1,delimiters.second);
         Line lineStart = m_lines->m_unfoldedLines[key.m_start.m_line];
         Line lineEnd = m_lines->m_unfoldedLines[key.m_end.m_line];
 
-        bool isIfDef;
+        std::string lineStartFirstNonSpace = lineStart.m_chars.substr(m_lines->m_leadingLineSpaces[key.m_start.m_line], 2);
+        bool isSingleLineComment = lineStartFirstNonSpace == "//";
+
+        bool isIfDef = false;
         if (key.m_start.m_line > 0 && key.m_end.m_line < m_lines->size()) {
             std::string prevLine = m_lines->m_unfoldedLines[key.m_start.m_line - 1].m_chars;
-            if (prevLine.starts_with("#ifdef") || prevLine.starts_with("#ifndef")) {
+            if (prevLine.starts_with("#ifdef") || prevLine.starts_with("#ifndef"))
                 isIfDef = true;
-            } else
-                isIfDef = false;
-        } else
-            isIfDef = false;
+        }
 
         bool appendClosingLine = true;
         Line bracket;
@@ -890,9 +892,9 @@ namespace hex::ui {
                 appendClosingLine = false;
                 m_foldedLine = lineStart.subLine(0, 9);
                 m_type = FoldType::AddsFirstLine;
-            } else if (lineStart.m_chars.starts_with("//")) {
+            } else if (isSingleLineComment) {
                 appendClosingLine = false;
-                m_foldedLine = lineStart.subLine(0, 1);
+                m_foldedLine = lineStart.subLine(m_lines->m_leadingLineSpaces[key.m_start.m_line], 1);
                 m_type = FoldType::AddsFirstLine;
             }else if (isIfDef) {
                 appendClosingLine = false;
@@ -981,12 +983,12 @@ namespace hex::ui {
         std::string delimiters;
         delimiters += delimiterPair.first;
         delimiters += delimiterPair.second;
-        if (delimiters == "" || (delimiters != "{}" && delimiters != "[]" && delimiters != "()"  && delimiters != "<>")) {
+        if (delimiters.empty() || (delimiters != "{}" && delimiters != "[]" && delimiters != "()"  && delimiters != "<>")) {
             auto lineStart = m_lines->m_unfoldedLines[key.m_start.m_line].m_chars;
             if (lineStart.starts_with("import") || lineStart.starts_with("#include")) {
                 auto lineEnd = m_lines->m_unfoldedLines[key.m_end.m_line];
-                auto columnStart = lineStart.find_first_of(" ");
-                return Range(m_lines->lineCoordinates(key.m_start.m_line, columnStart), m_lines->lineCoordinates(key.m_end.m_line, lineEnd.maxColumn()));
+                auto columnStart = lineStart.find(' ');
+                return {m_lines->lineCoordinates(key.m_start.m_line, columnStart), m_lines->lineCoordinates(key.m_end.m_line, lineEnd.maxColumn())};
             }
             return key;
         }
@@ -1003,7 +1005,6 @@ namespace hex::ui {
         while (true) {
             Coordinates nextCoordinates = m_lines->lineCoordinates(openDelimiterCoordinates.m_line, openDelimiterCoordinates.m_column + columnIndex);
             if (openDelimiterCoordinates.m_column < openDelimiterLine.maxColumn() && openDelimiterLine[(u64) nextCoordinates.m_column] == delimiters[0]) {
-                //auto saveNearCursor = m_editor->m_lines.m_matchedDelimiter.m_nearCursor;
                 if (m_lines->m_matchedDelimiter.coordinatesNearDelimiter(m_lines, nextCoordinates)) {
                     auto result = m_lines->m_matchedDelimiter.findMatchingDelimiter(m_lines, nextCoordinates, false);
                     if (result.m_line == key.m_end.m_line) {
@@ -1020,7 +1021,7 @@ namespace hex::ui {
         }
         if (!found)
             closeDelimiterCoordinates = m_lines->rfind(delimiters.substr(1,1), m_lines->lineCoordinates(key.m_end.m_line, -1));
-        return Range(openDelimiterCoordinates, closeDelimiterCoordinates);
+        return {openDelimiterCoordinates, closeDelimiterCoordinates};
     }
 
     void TextEditor::FoldedLine::loadSegments() {
@@ -1078,8 +1079,8 @@ namespace hex::ui {
 
     void TextEditor::Lines::removeKeys() {
         for (auto &[row,foldedLine] : m_foldedLines) {
-            for (auto i = foldedLine.m_keysToRemove.rbegin(); i != foldedLine.m_keysToRemove.rend(); i++) {
-                openCodeFold(*i);
+            for (auto i : std::ranges::views::reverse(foldedLine.m_keysToRemove)) {
+                openCodeFold(i);
             }
             foldedLine.m_keysToRemove.clear();
             if (foldedLine.m_keys.empty()) {
@@ -1160,10 +1161,6 @@ namespace hex::ui {
                 m_lines.setRowToLineIndexMap();
                 m_lines.getRowSegments();
             }
-            if (m_lines.m_saveCodeFoldStateRequested) {
-                saveCodeFoldStates();
-                m_lines.m_saveCodeFoldStateRequested = false;
-            }
 
             bool focused = ImGui::IsWindowFocused();
             while (std::floor(row) <= maxDisplayedRow) {
@@ -1179,7 +1176,7 @@ namespace hex::ui {
                 }
 
                 lineIndex = rowToLineIndex((i32) row);
-                if (lineIndex >= (i32) m_lines.size() || lineIndex < 0)
+                if (lineIndex >= m_lines.size() || lineIndex < 0)
                     break;
 
                 if (m_showLineNumbers) {
@@ -1212,7 +1209,7 @@ namespace hex::ui {
             m_topLineNumber = 1;
             lineIndex = 0;
             if (m_lines.m_unfoldedLines.empty())
-                m_lines.m_unfoldedLines.push_back(Line());
+                m_lines.m_unfoldedLines.emplace_back();
             m_lines.m_state.m_cursorPosition = lineCoordinates( 0, 0);
             if (m_showLineNumbers) {
                 if (!m_lines.m_ignoreImGuiChild)
@@ -1224,10 +1221,6 @@ namespace hex::ui {
             if (m_showCursor)
                 drawCursor(0,textEditorSize, true, drawList);
             ImGui::Dummy(m_lines.m_charAdvance);
-
-            //auto lineStart = m_lines.lineCoordinates(lineIndex, 0);
-            //drawText(lineStart, 0, 0);
-            //m_lines.m_rowToLineIndex.clear();
         }
 
         if (m_lines.m_scrollToCursor)
@@ -1238,9 +1231,6 @@ namespace hex::ui {
 
     i64 TextEditor::drawColoredText(i32 lineIndex, const ImVec2 &textEditorSize) {
         auto line = m_lines[lineIndex];
-        //if (line.m_chars.starts_with("//+-#:") && lineIndex == (i32) m_lines.size() - 1) {
-        //    return 0;
-        //}
 
         if (line.empty()) {
             ImGui::Dummy(m_lines.m_charAdvance);
@@ -1306,13 +1296,10 @@ namespace hex::ui {
     }
 
     bool TextEditor::Lines::isMultiLineRow(i32 row) {
-        return (m_foldedLines.contains(row) &&  m_foldedLines[row].m_keys.size() > 0);
+        return (m_foldedLines.contains(row) &&  !m_foldedLines.at(row).m_keys.empty());
     }
 
     void TextEditor::preRender() {
-        //static ImVec2 previous = {0,0};
-        //static bool update = true;
-        //if (update) {
         m_lines.m_charAdvance = calculateCharAdvance();
         m_lines.m_leftMargin = m_lines.m_charAdvance.x;
         for (i32 i = 0; i < (i32) PaletteIndex::Max; ++i) {
@@ -1321,12 +1308,6 @@ namespace hex::ui {
             m_palette[i] = ImGui::ColorConvertFloat4ToU32(color);
         }
         m_lines.m_numberOfLinesDisplayed = getPageSize();
-        //if (previous == m_lines.m_charAdvance) {
-          //  update = false;
-       // } else {
-        //    update = true;
-        //    previous = m_lines.m_charAdvance;
-       // }
     }
 
     void TextEditor::drawSelection(float lineIndex, ImDrawList *drawList) {
@@ -1334,8 +1315,8 @@ namespace hex::ui {
         auto lineStartScreenPos = m_lines.getLineStartScreenPos(0,row);
         Range lineCoords;
         if (m_lines.isMultiLineRow(row)) {
-            lineCoords.m_start = m_lines.lineCoordinates(m_lines.m_foldedLines[row].m_full.m_start.m_line, 0);
-            lineCoords.m_end = m_lines.lineCoordinates(m_lines.m_foldedLines[row].m_full.m_end.m_line, -1);
+            lineCoords.m_start = m_lines.lineCoordinates(m_lines.m_foldedLines.at(row).m_full.m_start.m_line, 0);
+            lineCoords.m_end = m_lines.lineCoordinates(m_lines.m_foldedLines.at(row).m_full.m_end.m_line, -1);
         } else {
             lineCoords = Range(m_lines.lineCoordinates(lineIndex, 0), m_lines.lineCoordinates(lineIndex, -1));
         }
@@ -1367,13 +1348,13 @@ namespace hex::ui {
         auto start = lineStartScreenPos;
         ImVec2 end = lineStartScreenPos + ImVec2(m_lines.m_lineNumberFieldWidth + contentSize.x, m_lines.m_charAdvance.y);
         auto center = lineNumberStartScreenPos + ImVec2(m_lines.m_lineNumberFieldWidth - 2 * m_lines.m_charAdvance.x + 1_scaled, 0);
-        if (m_lines.m_rowToSegments.contains(row)) {
+        if (m_lines.m_rowToFoldSegments.contains(row)) {
             bool circlesDrawn = false;
-            for (auto segments : m_lines.m_rowToSegments[row]) {
-                if (segments.m_foldEnd.m_line != lineIndex && m_lines.m_breakpoints.count(segments.m_foldEnd.m_line + 1) > 0)
+            for (auto segments : m_lines.m_rowToFoldSegments[row]) {
+                if (segments.m_foldEnd.m_line != lineIndex && m_lines.m_breakpoints.contains(segments.m_foldEnd.m_line + 1))
                     start.x = segments.m_segment.m_start;
-                if (m_lines.m_breakpoints.count(segments.m_foldEnd.m_line + 1) > 0) {
-                    if (segments == m_lines.m_rowToSegments[row].back())
+                if (m_lines.m_breakpoints.contains(segments.m_foldEnd.m_line + 1)) {
+                    if (segments == m_lines.m_rowToFoldSegments[row].back())
                         end.x = lineNumberStartScreenPos.x + contentSize.x + m_lines.m_lineNumberFieldWidth;
                     else
                         end.x = segments.m_segment.m_end;
@@ -1390,7 +1371,7 @@ namespace hex::ui {
                     auto key = Range(segmentStart, keyValue);
                     if (m_lines.m_codeFoldState.contains(key) && !m_lines.m_codeFoldState[key]) {
                         for (i32 i = key.m_start.m_line + 1; i < key.m_end.m_line; i++) {
-                            if (m_lines.m_breakpoints.count(i + 1) > 0) {
+                            if (m_lines.m_breakpoints.contains(i + 1)) {
                                 start.x = segments.m_segment.m_end;
                                 end.x = start.x + Ellipsis.lineTextSize();
                                 drawList->AddRectFilled(start, end, m_palette[(i32) PaletteIndex::Breakpoint]);
@@ -1404,7 +1385,7 @@ namespace hex::ui {
                     }
                 }
             }
-        } else if (m_lines.m_breakpoints.count(lineIndex + 1) > 0) {
+        } else if (m_lines.m_breakpoints.contains(lineIndex + 1)) {
             end = ImVec2(lineNumberStartScreenPos.x + contentSize.x + m_lines.m_lineNumberFieldWidth, lineStartScreenPos.y + m_lines.m_charAdvance.y);
             drawList->AddRectFilled(start, end, m_palette[(i32) PaletteIndex::Breakpoint]);
             drawList->AddCircleFilled(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Breakpoint]);
@@ -1477,8 +1458,8 @@ namespace hex::ui {
                 if (key.contains(lineCoords) && m_lines.m_codeFoldState.contains(key) && !m_lines.m_codeFoldState[key]) {
                     row = m_lines.m_multiLinesToRow[lineIndex + 1];
                     i32 multilineLineIndex = rowToLineIndex(row);
-                    if (m_lines.m_rowToSegments.contains(row) && m_lines.m_rowToSegments[row].size() > 1) {
-                        Segment result = *std::find_if(m_lines.m_rowToSegments[row].begin(), m_lines.m_rowToSegments[row].end(), [&](const Segment &segment) {
+                    if (m_lines.m_rowToFoldSegments.contains(row) && m_lines.m_rowToFoldSegments[row].size() > 1) {
+                        FoldSegment result = *std::find_if(m_lines.m_rowToFoldSegments[row].begin(), m_lines.m_rowToFoldSegments[row].end(), [&](const FoldSegment &segment) {
                             return segment.m_foldEnd == key.m_end;
                         });
                         lineStartScreenPos = ImVec2(result.m_segment.m_start + m_lines.m_unfoldedLines[0].stringTextSize(std::string(m_lines.m_leadingLineSpaces[key.m_end.m_line], ' ')), m_lines.m_lineIndexToScreen[multilineLineIndex].y);
@@ -1523,8 +1504,8 @@ namespace hex::ui {
         if (gotoKey != Invalid) {
             std::string errorLineColumn;
             bool found = false;
-            for (auto text: m_lines.m_clickableText) {
-                if (lineText.find(text) == 0) {
+            for (const auto &text: m_lines.m_clickableText) {
+                if (lineText.starts_with(text)) {
                     errorLineColumn = lineText.substr(text.size());
                     if (!errorLineColumn.empty()) {
                         found = true;
@@ -1534,7 +1515,7 @@ namespace hex::ui {
             }
             if (found) {
                 i32 currLine = 0, currColumn = 0;
-                if (auto idx = errorLineColumn.find(":"); idx != std::string::npos) {
+                if (auto idx = errorLineColumn.find(':'); idx != std::string::npos) {
                     auto errorLine = errorLineColumn.substr(0, idx);
                     if (!errorLine.empty())
                         currLine = std::stoi(errorLine) - 1;
@@ -1684,7 +1665,7 @@ namespace hex::ui {
 
     ImVec2 TextEditor::calculateCharAdvance() const {
         const float fontSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
-        return ImVec2(fontSize, GImGui->FontSize * m_lineSpacing);
+        return {fontSize, GImGui->FontSize * m_lineSpacing};
     }
 
     float TextEditor::Lines::textDistanceToLineStart(const Coordinates &aFrom) {
@@ -1700,7 +1681,6 @@ namespace hex::ui {
             return line.m_lineMaxColumn - distanceToEnd;
         }
         return line.stringTextSize(substr1.c_str());
-        //return ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, substr.c_str(), nullptr, nullptr).x;
     }
 
     void TextEditor::drawCodeFolds(float lineIndex, ImDrawList *drawList) {
@@ -1711,7 +1691,7 @@ namespace hex::ui {
         if (m_lines.m_codeFoldHighlighted != NoCodeFoldSelected) {
             Range key1, key2;
             if (m_lines.m_foldedLines.contains(row)) {
-                auto &foldedLine = m_lines.m_foldedLines[row];
+                auto &foldedLine = m_lines.m_foldedLines.at(row);
                 if (m_lines.m_codeFoldValueMap.contains(foldedLine.m_full.m_start))
                     key1 = Range(m_lines.m_codeFoldValueMap[foldedLine.m_full.m_start], foldedLine.m_full.m_start);
                 else
@@ -1723,40 +1703,40 @@ namespace hex::ui {
 
                 if (m_lines.m_codeFoldHighlighted == key1) {
                     if (m_lines.m_codeFoldState.contains(m_lines.m_codeFoldHighlighted) && !m_lines.m_codeFoldState[m_lines.m_codeFoldHighlighted])
-                        state = Lines::FoldSymbol::Square;
+                        state = FoldSymbol::Square;
                     else {
                         if (codeFoldKeyLine == key1.m_start.m_line)
-                            state = Lines::FoldSymbol::Down;
+                            state = FoldSymbol::Down;
                         else if (codeFoldKeyLine == key1.m_end.m_line)
-                            state = Lines::FoldSymbol::Up;
+                            state = FoldSymbol::Up;
                     }
                 } else if (m_lines.m_codeFoldHighlighted == key2) {
                     if (m_lines.m_codeFoldState.contains(key2) && !m_lines.m_codeFoldState[key2])
-                        state = Lines::FoldSymbol::Square;
+                        state = FoldSymbol::Square;
                     else {
                         if (lineIndexToRow(codeFoldKeyLine) == lineIndexToRow(key2.m_start.m_line))
-                            state = Lines::FoldSymbol::Down;
+                            state = FoldSymbol::Down;
                         else if (codeFoldKeyLine == key2.m_end.m_line)
-                            state = Lines::FoldSymbol::Up;
+                            state = FoldSymbol::Up;
                     }
                 }
             } else if (m_lines.m_codeFoldHighlighted.m_start.m_line == codeFoldKeyLine) {
                 if (m_lines.m_codeFoldState.contains(m_lines.m_codeFoldHighlighted) && m_lines.m_codeFoldState[m_lines.m_codeFoldHighlighted])
-                    state = Lines::FoldSymbol::Down;
+                    state = FoldSymbol::Down;
                 else
-                    state = Lines::FoldSymbol::Square;
+                    state = FoldSymbol::Square;
             } else if (m_lines.m_codeFoldHighlighted.m_end.m_line == codeFoldKeyLine) {
                 if (m_lines.m_codeFoldState.contains(m_lines.m_codeFoldHighlighted) && m_lines.m_codeFoldState[m_lines.m_codeFoldHighlighted])
-                    state = Lines::FoldSymbol::Up;
+                    state = FoldSymbol::Up;
                 else
-                    state = Lines::FoldSymbol::Square;
+                    state = FoldSymbol::Square;
             }
         }
 
         i32 lineColor;
         Interval highlightedRowInterval = Interval(m_lines.lineIndexToRow(m_lines.m_codeFoldHighlighted.m_start.m_line), m_lines.lineIndexToRow(m_lines.m_codeFoldHighlighted.m_end.m_line));
 
-        if (highlightedRowInterval.contains(row) && (state == Lines::FoldSymbol::Line ||
+        if (highlightedRowInterval.contains(row) && (state == FoldSymbol::Line ||
              row == highlightedRowInterval.m_start || row == highlightedRowInterval.m_end))
             lineColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_ScrollbarGrabActive]);
         else
@@ -1783,20 +1763,20 @@ namespace hex::ui {
             ImGui::EndChild();
     }
 
-    void TextEditor::renderCodeFolds(i32 row, ImDrawList *drawList, i32 color, Lines::FoldSymbol state) {
+    void TextEditor::renderCodeFolds(i32 row, ImDrawList *drawList, i32 color, FoldSymbol state) {
         auto boxSize = m_lines.m_charAdvance.x + (((u32)m_lines.m_charAdvance.x % 2) ? 2.0f : 1.0f);
         auto verticalMargin = m_lines.m_charAdvance.y - boxSize;
         auto horizontalMargin = m_lines.m_lineNumberFieldWidth - (boxSize - 1) / 2;
         auto lineStartScreenPos = m_lines.getLineStartScreenPos(horizontalMargin, row);
         auto numberLineStartScreenPos = ImVec2(m_lines.m_lineNumbersStartPos.x + m_lines.m_lineNumberFieldWidth, lineStartScreenPos.y);
 
-        if (state == Lines::FoldSymbol::Square) {
+        if (state == FoldSymbol::Square) {
             renderSquare(numberLineStartScreenPos, drawList, boxSize - 1, verticalMargin, color);
             renderPlus(numberLineStartScreenPos, drawList, boxSize, std::floor(verticalMargin / 2), color);
-        } else if (state == Lines::FoldSymbol::Down) {
+        } else if (state == FoldSymbol::Down) {
             renderPointingDown(numberLineStartScreenPos, drawList, boxSize - 1, verticalMargin, color);
             renderMinus(numberLineStartScreenPos, drawList, boxSize, std::floor(verticalMargin / 4), color);
-        } else if (state == Lines::FoldSymbol::Up) {
+        } else if (state == FoldSymbol::Up) {
             renderPointingUp(numberLineStartScreenPos, drawList, boxSize - 1, verticalMargin, color);
             renderMinus(numberLineStartScreenPos, drawList, boxSize, std::floor(3 * verticalMargin / 4), color);
         } else {
@@ -1897,5 +1877,9 @@ namespace hex::ui {
         ImVec2 p2 = lineStartScreenPos + ImVec2(0, verticalMargin + boxSize);
         drawList->AddLine(p1 + py, p2, color, 1.0f);
         drawList->AddLine(p1 + px + py, p2, color, 1.0f);
+    }
+
+    bool TextEditor::areEqual(const std::pair<Range, CodeFold> &a, const std::pair<Range, CodeFold> &b) {
+        return a.first == b.first && a.second.isOpen() == b.second.isOpen();
     }
 }

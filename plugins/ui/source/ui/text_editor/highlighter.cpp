@@ -5,7 +5,7 @@
 
 namespace hex::ui {
     extern TextEditor::Palette s_paletteBase;
-
+    using Keys = TextEditor::Keys;
 
     template<class InputIt1, class InputIt2, class BinaryPredicate>
     bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, BinaryPredicate p) {
@@ -41,9 +41,9 @@ namespace hex::ui {
         }
     }
 
-    std::vector<TextEditor::Range> TextEditor::Lines::getDeactivatedBlocks() {
+    Keys TextEditor::Lines::getDeactivatedBlocks() {
         colorizeInternal();
-        std::vector<Range> deactivatedBlocks;
+        Keys deactivatedBlocks;
         if (isEmpty())
             return deactivatedBlocks;
         for (i32 i = 0; i < size(); ++i) {
@@ -85,7 +85,6 @@ namespace hex::ui {
         if (isEmpty())
             return;
 
-        std::smatch results;
         std::string id;
         if (m_languageDefinition.m_tokenize == nullptr) {
             m_languageDefinition.m_tokenize = [](strConstIter, strConstIter, strConstIter &, strConstIter &, PaletteIndex &) { return false; };
@@ -214,7 +213,7 @@ namespace hex::ui {
             auto withinString = false;
             auto withinBlockComment = false;
             auto withinNotDef = false;
-            auto currentLine = endLine;
+            i32 currentLine;
             auto commentLength = 0;
             auto matchedBracket = false;
 

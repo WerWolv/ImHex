@@ -3,21 +3,23 @@
 #include <string>
 #include <regex>
 #include <cmath>
+#include <utility>
 #include <wolv/utils/string.hpp>
 #include <popups/popup_question.hpp>
-#include <hex/helpers/logger.hpp>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 
 namespace hex::ui {
+    using StringVector  = TextEditor::StringVector;
+    using Range         = TextEditor::Range;
+    using EditorState  = TextEditor::EditorState;
 
-
-    TextEditor::FindReplaceHandler::FindReplaceHandler() : m_matchCase(false), m_wholeWord(false), m_findRegEx(false) {}
+    TextEditor::FindReplaceHandler::FindReplaceHandler() : m_matchCase(false), m_wholeWord(false), m_findRegEx(false), m_optionsChanged(false) {}
 
     TextEditor::TextEditor() {
         m_lines.m_startTime = ImGui::GetTime() * 1000;
         m_lines.setLanguageDefinition(LanguageDefinition::HLSL());
-        m_lines.m_unfoldedLines.push_back(Line());
+        m_lines.m_unfoldedLines.emplace_back();
         m_lineSpacing = 1.0f;
         m_tabSize = 4;
 
@@ -25,8 +27,7 @@ namespace hex::ui {
         m_lines.m_state.m_selection.m_start = m_lines.m_state.m_selection.m_end = lineCoordinates( 0, 0);
     }
 
-    TextEditor::~TextEditor() {
-    }
+    TextEditor::~TextEditor() = default;
 
     std::string TextEditor::Lines::getRange(const Range &rangeToGet) {
         std::string result;
@@ -38,7 +39,7 @@ namespace hex::ui {
             result = m_unfoldedLines[selection.m_start.m_line].substr(columns.m_line, columns.m_column, Line::LinePart::Utf8);
         } else {
             auto lines = selection.getSelectedLines();
-            std::vector<std::string> lineContents;
+            StringVector lineContents;
             lineContents.push_back(m_unfoldedLines[lines.m_line].substr(columns.m_line, (u64) -1, Line::LinePart::Utf8));
             for (i32 i = lines.m_line + 1; i < lines.m_column; i++) {
                 lineContents.push_back(m_unfoldedLines[i].m_chars);
@@ -70,8 +71,8 @@ namespace hex::ui {
                 firstLine.insert(firstLine.end(), lastLine.begin(), lastLine.end());
                 firstLine.m_colorized = false;
             }
-            if (lines.m_line+1 < lines.m_column)
-                removeLines(lines.m_line+1,lines.m_column);
+            if (lines.m_line + 1 < lines.m_column)
+                removeLines(lines.m_line + 1, lines.m_column);
             else
                 removeLine(lines.m_column);
         }
@@ -88,7 +89,7 @@ namespace hex::ui {
             m_unfoldedLines[0].m_colors = std::string(text.size(), 0);
             m_unfoldedLines[0].m_flags = std::string(text.size(), 0);
         } else {
-            m_unfoldedLines.push_back(Line(text));
+            m_unfoldedLines.emplace_back(text);
             auto line = m_unfoldedLines.back();
             line.m_lineMaxColumn = line.maxColumn();
         }
@@ -97,7 +98,7 @@ namespace hex::ui {
 
     void TextEditor::appendLine(const std::string &value) {
        m_lines.appendLine(value);
-        m_lines.setCursorPosition(m_lines.lineCoordinates((i32) m_lines.size() - 1, 0), false);
+        m_lines.setCursorPosition(m_lines.lineCoordinates(m_lines.size() - 1, 0), false);
         m_lines.m_unfoldedLines.back().m_colorized = false;
         m_lines.ensureCursorVisible();
         m_lines.m_textChanged = true;
@@ -147,7 +148,7 @@ namespace hex::ui {
         line.m_colorized = false;
         for (i32 i = 1; i < lineCount; i++) {
             insertLine(start.m_line + i, stringVector[i]);
-            m_unfoldedLines[start.m_line + i].m_colorized =false;
+            m_unfoldedLines[start.m_line + i].m_colorized = false;
         }
         m_textChanged = true;
         return lineCount;
@@ -166,7 +167,6 @@ namespace hex::ui {
     }
 
     void TextEditor::Lines::removeLines(i32 lineStart, i32 lineEnd) {
-
         ErrorMarkers errorMarkers;
         for (auto &errorMarker : m_errorMarkers) {
             if (errorMarker.first.m_line <= lineStart || errorMarker.first.m_line > lineEnd + 1) {
@@ -192,6 +192,7 @@ namespace hex::ui {
                     breakpoints.insert(breakpoint);
             }
         }
+
         m_breakpoints = std::move(breakpoints);
 
         CodeFoldKeys folds;
@@ -224,14 +225,15 @@ namespace hex::ui {
         }
 
         // use clamp to ensure valid results instead of assert.
-        auto start = std::clamp(lineStart, 0, (i32) size() - 1);
-        auto end = std::clamp(lineEnd, 0, (i32) size());
+        auto start = std::clamp(lineStart, 0, size() - 1);
+        auto end = std::clamp(lineEnd, 0, size());
         if (start > end)
             std::swap(start, end);
 
         m_unfoldedLines.erase(m_unfoldedLines.begin() + lineStart, m_unfoldedLines.begin() + lineEnd + 1);
 
         m_textChanged = true;
+        m_globalRowMaxChanged = true;
     }
 
     void TextEditor::Lines::removeLine(i32 index) {
@@ -239,7 +241,7 @@ namespace hex::ui {
     }
 
     void TextEditor::Lines::insertLine(i32 index, const std::string &text) {
-        if (index < 0 || index > (i32) size())
+        if (index < 0 || index > size())
             return;
         auto &line = insertLine(index);
         line.append(text);
@@ -248,14 +250,15 @@ namespace hex::ui {
     }
 
     TextEditor::Line &TextEditor::Lines::insertLine(i32 index) {
-
+        m_globalRowMaxChanged = true;
         if (isEmpty())
             return *m_unfoldedLines.insert(m_unfoldedLines.begin(), Line());
 
-        if (index == (i32)size())
+        if (index == size())
             return *m_unfoldedLines.insert(m_unfoldedLines.end(), Line());
 
         TextEditor::Line &result = *m_unfoldedLines.insert(m_unfoldedLines.begin() + index, Line());
+
         result.m_colorized = false;
 
         ErrorMarkers errorMarkers;
@@ -309,11 +312,10 @@ namespace hex::ui {
     }
 
     void TextEditor::setText(const std::string &text, bool undo) {
-
         UndoRecord u;
         if (!m_lines.m_readOnly && undo) {
             u.m_before = m_lines.m_state;
-            u.m_removed = m_lines.getText(false);
+            u.m_removed = m_lines.getText();
             u.m_removedRange.m_start = m_lines.lineCoordinates(0, 0);
             u.m_removedRange.m_end = m_lines.lineCoordinates(-1, -1);
             if (u.m_removedRange.m_start == Invalid || u.m_removedRange.m_end == Invalid)
@@ -328,7 +330,7 @@ namespace hex::ui {
             m_lines.m_hiddenLines.clear();
             u64 i = 0;
             while (vectorString[i].starts_with("//+-")) {
-                m_lines.m_hiddenLines.push_back(HiddenLine(i, vectorString[i])), i++;
+                m_lines.m_hiddenLines.emplace_back(i, vectorString[i]), i++;
             }
             vectorString.erase(vectorString.begin(), vectorString.begin() + i);
             lineCount = vectorString.size();
@@ -336,7 +338,7 @@ namespace hex::ui {
             m_lines.m_unfoldedLines.clear();
             m_lines.m_unfoldedLines.resize(lineCount);
 
-            for (auto line: vectorString) {
+            for (const auto &line: vectorString) {
                 auto &unfoldedLine = m_lines.m_unfoldedLines[i];
 
                 unfoldedLine.setLine(line);
@@ -355,31 +357,29 @@ namespace hex::ui {
         m_lines.m_textChanged = true;
         if (!m_lines.m_readOnly && undo) {
             u.m_after = m_lines.m_state;
-            std::vector<UndoRecord> v;
+            UndoRecords v;
             v.push_back(u);
             m_lines.addUndo(v);
         }
-        m_lines.setAllCodeFolds();
-        applyCodeFoldStates();
-        m_lines.m_useSavedFoldStatesRequested = true;
         m_lines.colorize();
     }
 
     void TextEditor::enterCharacter(ImWchar character, bool shift) {
-
         if (m_lines.m_readOnly)
             return;
-        auto row = lineIndexToRow(m_lines.m_state.m_cursorPosition.m_line);
-        if (m_lines.m_foldedLines.contains(row)) {
-            auto foldedLine = m_lines.m_foldedLines[row];
-            auto foldedCoords = m_lines.unfoldedToFoldedCoords(m_lines.m_state.m_cursorPosition);
-            if (foldedLine.m_foldedLine.m_chars[foldedCoords.m_column] == '.') {
-                auto keyCount = foldedLine.m_keys.size();
-                for (u32 i = 0; i < keyCount; i++) {
-                    if (foldedCoords.m_column >= foldedLine.m_ellipsisIndices[i] &&
-                     foldedCoords.m_column <= foldedLine.m_ellipsisIndices[i] + 3) {
-                        m_lines.openCodeFold(m_lines.m_foldedLines[row].m_keys[i]);
-                        return;
+        if (!m_lines.m_codeFoldsDisabled) {
+            auto row = lineIndexToRow(m_lines.m_state.m_cursorPosition.m_line);
+            if (m_lines.m_foldedLines.contains(row)) {
+                auto foldedLine = m_lines.m_foldedLines[row];
+                auto foldedCoords = m_lines.unfoldedToFoldedCoords(m_lines.m_state.m_cursorPosition);
+                if (foldedLine.m_foldedLine.m_chars[foldedCoords.m_column] == '.') {
+                    auto keyCount = foldedLine.m_keys.size();
+                    for (u32 i = 0; i < keyCount; i++) {
+                        if (foldedCoords.m_column >= foldedLine.m_ellipsisIndices[i] &&
+                            foldedCoords.m_column <= foldedLine.m_ellipsisIndices[i] + 3) {
+                            m_lines.openCodeFold(m_lines.m_foldedLines[row].m_keys[i]);
+                            return;
+                        }
                     }
                 }
             }
@@ -454,7 +454,7 @@ namespace hex::ui {
                     u.m_after = m_lines.m_state;
 
                     m_lines.m_state.m_selection = Range(start, end);
-                    std::vector<UndoRecord> v;
+                    UndoRecords v;
                     v.push_back(u);
                     m_lines.addUndo(v);
 
@@ -476,18 +476,15 @@ namespace hex::ui {
         u.m_addedRange.m_start = coord;
 
         if (m_lines.m_unfoldedLines.empty())
-            m_lines.m_unfoldedLines.push_back(Line());
+            m_lines.m_unfoldedLines.emplace_back();
 
         if (character == '\n') {
             m_lines.insertLine(coord.m_line + 1);
             auto &line = m_lines.m_unfoldedLines[coord.m_line];
             auto &newLine = m_lines.m_unfoldedLines[coord.m_line + 1];
+
             if (m_lines.m_languageDefinition.m_autoIndentation)
                 newLine.append(std::string(m_lines.m_leadingLineSpaces[coord.m_line], ' '));
-
-            //if (m_languageDefinition.m_autoIndentation)
-              //  for (u64 it = 0; it < line.size() && isascii(line[it]) && isblank(line[it]); ++it)
-                //    newLine.push_back(line[it]);
 
             const u64 whitespaceSize = newLine.size();
             i32 charStart;
@@ -538,9 +535,9 @@ namespace hex::ui {
             }
             u.m_addedRange.m_end = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
         } else {
-            std::string buf = "";
+            std::string buf;
             imTextCharToUtf8(buf, character);
-            if (buf.size() > 0) {
+            if (!buf.empty()) {
                 auto &line = m_lines.m_unfoldedLines[coord.m_line];
                 auto charIndex = m_lines.lineCoordsIndex(coord);
 
@@ -597,7 +594,7 @@ namespace hex::ui {
         u.m_after = m_lines.m_state;
         m_lines.m_textChanged = true;
 
-        std::vector<UndoRecord> v;
+        UndoRecords v;
         v.push_back(u);
         m_lines.addUndo(v);
         m_lines.colorize();
@@ -659,7 +656,7 @@ namespace hex::ui {
             auto &line = m_lines.m_unfoldedLines[pos.m_line];
 
             if (pos.m_column == line.maxColumn()) {
-                if (pos.m_line == (i32) m_lines.size() - 1)
+                if (pos.m_line == m_lines.size() - 1)
                     return;
 
                 u.m_removed = '\n';
@@ -688,7 +685,7 @@ namespace hex::ui {
         }
 
         u.m_after = m_lines.m_state;
-        std::vector<UndoRecord> v;
+        UndoRecords v;
         v.push_back(u);
         m_lines.addUndo(v);
         m_lines.refreshSearchResults();
@@ -773,7 +770,7 @@ namespace hex::ui {
         }
 
         u.m_after = m_lines.m_state;
-        std::vector<UndoRecord> v;
+        UndoRecords v;
         v.push_back(u);
         m_lines.addUndo(v);
         m_lines.refreshSearchResults();
@@ -786,7 +783,7 @@ namespace hex::ui {
             if (!m_lines.isEmpty()) {
                 std::string str;
                 const auto &line = m_lines.m_unfoldedLines[m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition).m_line];
-                std::copy(line.m_chars.begin(), line.m_chars.end(), std::back_inserter(str));
+                std::ranges::copy(line.m_chars, std::back_inserter(str));
                 ImGui::SetClipboardText(str.c_str());
             }
         }
@@ -798,7 +795,7 @@ namespace hex::ui {
         } else {
             if (!m_lines.hasSelection()) {
                 auto lineIndex = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition).m_line;
-                if (lineIndex < 0 || lineIndex >= (i32) m_lines.size())
+                if (lineIndex < 0 || lineIndex >= m_lines.size())
                     return;
                 setSelection(Range(m_lines.lineCoordinates(lineIndex, 0), m_lines.lineCoordinates(lineIndex + 1, 0)));
             }
@@ -811,7 +808,7 @@ namespace hex::ui {
             m_lines.deleteSelection();
 
             u.m_after = m_lines.m_state;
-            std::vector<UndoRecord> v;
+            UndoRecords v;
             v.push_back(u);
             m_lines.addUndo(v);
         }
@@ -841,7 +838,7 @@ namespace hex::ui {
             m_lines.setCursorPosition(u.m_addedRange.m_end, false);
             setSelection(Range(u.m_addedRange.m_end, u.m_addedRange.m_end));
             u.m_after = m_lines.m_state;
-            std::vector<UndoRecord> v;
+            UndoRecords v;
             v.push_back(u);
             m_lines.addUndo(v);
         }
@@ -855,7 +852,7 @@ namespace hex::ui {
         const char *clipText =  ImGui::GetClipboardText();
         if (clipText != nullptr) {
             auto stringVector = wolv::util::splitString(clipText, "\n", false);
-            if (std::any_of(stringVector.begin(), stringVector.end(), [](const std::string &s) { return s.size() > 1024; })) {
+            if (std::ranges::any_of(stringVector, [](const std::string &s) { return s.size() > 1024; })) {
                 ui::PopupQuestion::open("hex.builtin.view.pattern_editor.warning_paste_large"_lang, [this, clipText]() {
                     this->doPaste(clipText);
                 }, [] {});
@@ -889,25 +886,18 @@ namespace hex::ui {
         m_lines.refreshSearchResults();
     }
 
-    std::string TextEditor::Lines::getText(bool includeHiddenLines) {
+    std::string TextEditor::Lines::getText() {
         auto start = lineCoordinates(0, 0);
         auto size = m_unfoldedLines.size();
         auto line = m_unfoldedLines[size - 1];
         auto end = Coordinates( size - 1, line.m_lineMaxColumn);
         if (start == Invalid || end == Invalid)
             return "";
-        std::string result;
-        if (includeHiddenLines) {
-            for (const auto &hiddenLine: m_hiddenLines) {
-                result += hiddenLine.m_line + "\n";
-            }
-        }
-        result += getRange(Range(start, end));
-        return result;
+        return getRange(Range(start, end));
     }
 
-    std::vector<std::string> TextEditor::getTextLines() const {
-        std::vector<std::string> result;
+    StringVector TextEditor::getTextLines() const {
+        StringVector result;
 
         result.reserve(m_lines.size());
 
@@ -933,11 +923,11 @@ namespace hex::ui {
 
     TextEditor::UndoRecord::UndoRecord(
             std::string added,
-            TextEditor::Range addedRange,
+            Range addedRange,
             std::string removed,
-            TextEditor::Range removedRange,
-            TextEditor::EditorState &before,
-            TextEditor::EditorState &after) : m_added(added), m_addedRange(addedRange), m_removed(removed), m_removedRange(removedRange), m_before(before), m_after(after) {}
+            Range removedRange,
+            EditorState before,
+            EditorState after) : m_added(std::move(added)), m_addedRange(addedRange), m_removed(std::move(removed)), m_removedRange(removedRange), m_before(std::move(before)), m_after(std::move(after)) {}
 
     void TextEditor::UndoRecord::undo(TextEditor *editor) {
         if (!m_added.empty()) {
@@ -972,13 +962,13 @@ namespace hex::ui {
     }
 
     void TextEditor::UndoAction::undo(TextEditor *editor) {
-        for (i32 i = (i32) m_records.size() - 1; i >= 0; i--)
-            m_records.at(i).undo(editor);
+        for (auto &record : std::ranges::reverse_view(m_records))
+            record.undo(editor);
     }
 
     void TextEditor::UndoAction::redo(TextEditor *editor) {
-        for (i32 i = 0; i < (i32) m_records.size(); i++)
-            m_records.at(i).redo(editor);
+        for (auto &record : m_records)
+            record.redo(editor);
     }
 
 }
