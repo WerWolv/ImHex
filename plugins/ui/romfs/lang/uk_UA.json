@@ -122,5 +122,11 @@
     "hex.ui.pattern_drawer.double_click": "Двічі клацніть, щоб побачити більше елементів",
     "hex.ui.pattern_drawer.spec_name": "Відображення назв специфікацій",
     "hex.ui.pattern_drawer.visualizer.unknown": "Невідомий візуалізатор",
-    "hex.ui.diagram.entropy_analysis.entropy_drop": "Значне зниження ентропії"
+    "hex.ui.diagram.entropy_analysis.entropy_drop": "Значне зниження ентропії",
+    "hex.ui.pattern_drawer.context.copy_name": "Копіювати ім'я",
+    "hex.ui.pattern_drawer.context.copy_value": "Копіювати значення",
+    "hex.ui.pattern_drawer.context.copy_address": "Копіювати адресу",
+    "hex.ui.pattern_drawer.context.copy_comment": "Копіювати коментар",
+    "hex.ui.pattern_drawer.context.edit_value": "Редагувати значення",
+    "hex.ui.hex_editor.minimap.value_brightness": "Затінювати клітинки залежно від значення"
 }
