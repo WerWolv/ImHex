@@ -1,7 +1,6 @@
 #include <ui/text_editor.hpp>
 #include <hex/helpers/logger.hpp>
 #include <wolv/utils/string.hpp>
-#include <hex/api/content_registry/pattern_language.hpp>
 #include <pl/api.hpp>
 #include <pl/core/preprocessor.hpp>
 
@@ -17,6 +16,7 @@ namespace hex::ui {
     using Range              = TextEditor::Range;
     using FindReplaceHandler = TextEditor::FindReplaceHandler;
     using CodeFold           = TextEditor::CodeFold;
+    using EditorState        = TextEditor::EditorState;
 
 
     bool Interval::contains(i32 value, bool inclusive) const {
@@ -30,13 +30,11 @@ namespace hex::ui {
         if (gap == 0 || gap == 1)
             return true;
         gap = other.m_start - m_end;
-        if (gap == 0 || gap == 1)
-            return true;
-        return false;
+        return gap == 0 || gap == 1;
     }
 
     bool Coordinates::operator==(const Coordinates &o) const {
-            return m_line == o.m_line && m_column == o.m_column;
+        return m_line == o.m_line && m_column == o.m_column;
     }
 
     bool Coordinates::operator!=(const Coordinates &o) const {
@@ -64,11 +62,11 @@ namespace hex::ui {
     }
 
     Coordinates Coordinates::operator+(const Coordinates &o) const {
-        return Coordinates(m_line + o.m_line, m_column + o.m_column);
+        return {m_line + o.m_line, m_column + o.m_column};
     }
 
     Coordinates Coordinates::operator-(const Coordinates &o) const {
-        return Coordinates(m_line - o.m_line, m_column - o.m_column);
+        return {m_line - o.m_line, m_column - o.m_column};
     }
 
     bool Range::operator==(const Range &o) const {
@@ -79,13 +77,13 @@ namespace hex::ui {
     }
 
     Coordinates Range::getSelectedLines() {
-        return Coordinates(m_start.m_line, m_end.m_line);
+        return {m_start.m_line, m_end.m_line};
     }
 
     Coordinates Range::getSelectedColumns() {
         if (isSingleLine())
-            return Coordinates(m_start.m_column, m_end.m_column - m_start.m_column);
-        return Coordinates(m_start.m_column, m_end.m_column);
+            return {m_start.m_column, m_end.m_column - m_start.m_column};
+        return {m_start.m_column, m_end.m_column};
     }
 
     bool Range::isSingleLine() {
@@ -174,7 +172,7 @@ namespace hex::ui {
         return *this;
     }
 
-    LineIterator LineIterator::operator=(const LineIterator &other) {
+    LineIterator &LineIterator::operator=(const LineIterator &other) {
         m_charsIter = other.m_charsIter;
         m_colorsIter = other.m_colorsIter;
         m_flagsIter = other.m_flagsIter;
@@ -235,14 +233,7 @@ namespace hex::ui {
         return iter;
     }
 
-    Line &Line::operator=(const Line &line) {
-        m_chars = line.m_chars;
-        m_colors = line.m_colors;
-        m_flags = line.m_flags;
-        m_colorized = line.m_colorized;
-        m_lineMaxColumn = line.m_lineMaxColumn;
-        return *this;
-    }
+    Line &Line::operator=(const Line &line) = default;
 
     Line &Line::operator=(Line &&line) noexcept {
         m_chars = std::move(line.m_chars);
@@ -536,24 +527,18 @@ namespace hex::ui {
         return !m_colorized;
     }
 
-    Interval &Interval::operator=(const Interval &interval) {
+    Interval &Interval::operator=(const Interval &interval) = default;
+
+    Interval &Interval::operator=(Interval &&interval) noexcept {
         m_start = interval.m_start;
         m_end = interval.m_end;
         return *this;
     }
 
-    Interval &Interval::operator=(Interval &&interval) noexcept {
-        m_start = std::move(interval.m_start);
-        m_end = std::move(interval.m_end);
-        return *this;
-    }
-
     bool TextEditor::ActionableBox::trigger() {
         auto mousePos = ImGui::GetMousePos();
-        if (mousePos.x <= m_box.Min.x || mousePos.x >= m_box.Max.x ||
-            mousePos.y < m_box.Min.y || mousePos.y > m_box.Max.y)
-            return false;
-        return true;
+        return !(mousePos.x <= m_box.Min.x || mousePos.x >= m_box.Max.x ||
+            mousePos.y < m_box.Min.y || mousePos.y > m_box.Max.y);
     }
 
     void TextEditor::ActionableBox::shiftBoxVertically(float lineCount, float lineHeight) {
@@ -639,7 +624,7 @@ namespace hex::ui {
         if (m_readOnly)
             return;
 
-        m_undoBuffer.resize((u64) (m_undoIndex + 1));
+        m_undoBuffer.resize(m_undoIndex + 1);
         m_undoBuffer.back() = UndoAction(value);
         m_undoIndex++;
     }
@@ -806,9 +791,7 @@ namespace hex::ui {
         auto matchedCoords = m_matchedDelimiter.m_matched;
         Line::Flags nearFlag(m_unfoldedLines[nearCoords.m_line].m_flags[nearCoords.m_column]);
         Line::Flags matchedFlag(m_unfoldedLines[matchedCoords.m_line].m_flags[matchedCoords.m_column]);
-        if (nearFlag.m_bits.matchedDelimiter && matchedFlag.m_bits.matchedDelimiter)
-            return true;
-        return false;
+        return nearFlag.m_bits.matchedDelimiter && matchedFlag.m_bits.matchedDelimiter;
     }
 
     // the index here is array index so zero based
@@ -1084,7 +1067,7 @@ namespace hex::ui {
         }
         if (textLoc == std::string::npos)
             return false;
-        TextEditor::EditorState state;
+        EditorState state;
         state.m_selection = Range(lines->stringIndexCoords(textLoc, textSrc), lines->stringIndexCoords(textLoc + matchBytes, textSrc));
         state.m_cursorPosition = state.m_selection.m_end;
         if (!m_matches.empty() && state == m_matches.back())
@@ -1122,7 +1105,7 @@ namespace hex::ui {
             lines->ensureCursorVisible();
             return;
         }
-        TextEditor::EditorState state = m_matches.back();
+        EditorState state = m_matches.back();
 
         while (state.m_cursorPosition < startingPos) {
             if (!findNext(lines, byteIndex)) {
@@ -1138,8 +1121,7 @@ namespace hex::ui {
 
         lines->m_state = saveState;
         lines->ensureCursorVisible();
-        return;
-    }
+   }
 
 
     bool FindReplaceHandler::replace(Lines *lines, bool right) {
@@ -1179,7 +1161,7 @@ namespace hex::ui {
             ImGui::SetKeyboardFocusHere(0);
 
             u.m_after = state;
-            m_undoBuffer.push_back(u);
+            m_undoBuffer.emplace_back(std::move(u));
             lines->m_textChanged = true;
 
             return true;
@@ -1225,7 +1207,7 @@ namespace hex::ui {
         return false;
     }
 
-    bool CodeFold::isOpen() {
+    bool CodeFold::isOpen() const {
         return lines->m_codeFoldState[key];
     }
 
@@ -1251,11 +1233,11 @@ namespace hex::ui {
         if (index < 0)
             index += size();
         auto row = lineIndexToRow(index);
-        if (row < 0 || row >= getGlobalRowMax())
+        if (row < 0 || row > getGlobalRowMax())
             throw std::out_of_range("Line index out of range");
         if (!m_foldedLines.contains(row) || m_foldedLines.at(row).m_full.m_start.m_line != index)
             return m_unfoldedLines.at(index);
-        return const_cast<Line &>(m_foldedLines.at(row).m_foldedLine);
+        return m_foldedLines.at(row).m_foldedLine;
     }
 
      Line &Lines::operator[](i32 index)  {
@@ -1266,13 +1248,14 @@ namespace hex::ui {
         if (index < 0)
             index += size();
          i32 row = lineIndexToRow(index);
-         if (getGlobalRowMax() != 0)
-             row = std::clamp(row,0, (i32)(getGlobalRowMax()-1));
+         i32 globalRowMax = getGlobalRowMax();
+         if (globalRowMax > 0)
+             row = std::clamp(row,0, globalRowMax);
          else
              row = 0;
          if (!m_foldedLines.contains(row) || m_foldedLines[row].m_full.m_start.m_line != index)
              return m_unfoldedLines.at(index);
-         return const_cast<Line &>(m_foldedLines[row].m_foldedLine);
+         return m_foldedLines[row].m_foldedLine;
     }
 
     i32 Lines::size() const {
@@ -1292,17 +1275,10 @@ namespace hex::ui {
     }
 
       i32 TextEditor::getTotalLines() const {
-        return (i32) m_lines.size();
+        return m_lines.size();
     }
 
-    using CodeFoldBlocks = TextEditor::CodeFoldBlocks;
-    //static std::chrono::steady_clock::time_point currentTime1;
     void TextEditor::Lines::setAllCodeFolds() {
-        //std::chrono::steady_clock::time_point beforeLoop;
-        //std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-        //std::chrono::duration<double, std::milli> time_span = now - currentTime1;
-        //auto lastCharInputTime = time_span.count();
-        //log::debug("Before loading 1st id of line : {} ms", lastCharInputTime);
         CodeFoldBlocks intervals = foldPointsFromSource();
         m_codeFoldKeys.clear();
         m_codeFolds.clear();
@@ -1341,13 +1317,9 @@ namespace hex::ui {
             m_codeFoldKeyLineMap.insert(std::make_pair(interval.m_start.m_line,interval.m_start));
             m_codeFoldValueLineMap.insert(std::make_pair(interval.m_end.m_line,interval.m_end));
         }
-        //currentTime1 = std::chrono::steady_clock::now();
-        //time_span = currentTime1 - now;
-        //lastCharInputTime = time_span.count();
-       // log::debug("After loading 1st id of line : {} ms", lastCharInputTime);
     }
 
-    void TextEditor::Lines::readHiddenLines() {
+    void TextEditor::Lines::removeHiddenLinesFromPattern() {
         m_hiddenLines.clear();
         i32 lineIndex = 0;
         const auto totalLines = (i32)m_unfoldedLines.size();
@@ -1359,7 +1331,7 @@ namespace hex::ui {
             auto lines = wolv::util::splitString(hiddenLinesText, "\n");
             for (i32 i = 0; i < lineIndex; i++) {
                 HiddenLine hiddenLine(i, m_unfoldedLines[i].m_chars);
-                m_hiddenLines.push_back(hiddenLine);
+                m_hiddenLines.emplace_back(std::move(hiddenLine));
                 m_useSavedFoldStatesRequested = true;
             }
             deleteSelection();
@@ -1367,7 +1339,7 @@ namespace hex::ui {
         setAllCodeFolds();
     }
 
-    void TextEditor::Lines::writeHiddenLines() {
+    void TextEditor::Lines::addHiddenLinesToPattern() {
         if (m_hiddenLines.empty())
             return;
         for (const auto &hiddenLine : m_hiddenLines) {
@@ -1388,7 +1360,7 @@ namespace hex::ui {
 
     void TextEditor::codeFoldCollapse(i32 level, bool recursive, bool all) {
 
-        for (auto [key, codeFold]: m_lines.m_codeFolds) {
+        for (const auto& [key, codeFold]: m_lines.m_codeFolds) {
             if (key.containsLine(m_lines.m_state.m_cursorPosition.m_line) || all) {
                 if (getCodeFoldLevel(key.m_start.m_line) >= level || level == 0) {
                     if (m_lines.m_codeFoldState.contains(key) && m_lines.m_codeFoldState[key]) {
@@ -1412,7 +1384,7 @@ namespace hex::ui {
     }
 
     void TextEditor::codeFoldExpand(i32 level, bool recursive, bool all) {
-        for (auto [key, codeFold]: m_lines.m_codeFolds) {
+        for (const auto& [key, codeFold]: m_lines.m_codeFolds) {
             if (key.containsLine(m_lines.m_state.m_cursorPosition.m_line) || all) {
                 if (getCodeFoldLevel(key.m_start.m_line) >= level || level == 0) {
                     if (m_lines.m_codeFoldState.contains(key) && !m_lines.m_codeFoldState[key]) {
@@ -1448,42 +1420,11 @@ namespace hex::ui {
         }
         if (source == nullptr)
             return false;
-        i32 line = location.line - 1;
-        i32 col = location.column - 1;
-        i32 length = location.length;
-
-        if ( line < 0 || line >= (i32) size())
-            return false;
-
-        if ( col < 0 || col > (i32) operator[](line).size())
-            return false;
-        if (length < 0)
-            return false;
-        if (length > (i32) operator[](line).size()-col)
-            length -= (i32)( operator[](line).size()-col);
-        while (line + 1 < size() && m_firstTokenIdOfLine[line] == m_firstTokenIdOfLine[line + 1]) {
-            length -= (i32) operator[](line).size();
-            line++;
-        }
-
-
-        if (length > (i32) operator[](line).size()-col && m_firstTokenIdOfLine[line + 1] != -1)
-            return false;
-        return true;
+        return location > m_tokens.front().location && location < m_tokens.back().location;
     }
 
     void TextEditor::Lines::loadFirstTokenIdOfLine() {
-        auto code = getText();
-        if (code.empty())
-            return;
-        std::unique_ptr<pl::PatternLanguage> runtime = std::make_unique<pl::PatternLanguage>();
-        ContentRegistry::PatternLanguage::configureRuntime(*runtime, nullptr);
-        std::ignore = runtime->preprocessString(code, pl::api::Source::DefaultSource);
-        m_tokens = runtime->getInternals().preprocessor->getResult();
         const u32 tokenCount = m_tokens.size();
-        if (tokenCount == 0)
-            return;
-
         m_firstTokenIdOfLine.clear();
         u32 tokenId = 0;
         u32 lineIndex = m_tokens.at(tokenId).location.line - 1;
@@ -1512,7 +1453,6 @@ namespace hex::ui {
                     auto commentStartLine = m_tokens.at(tokenId).location.line - 1;
                     std::string value = m_tokens.at(tokenId).getFormattedValue();
                     auto commentEndLine = commentStartLine + std::count(value.begin(), value.end(), '\n');
-                    //m_firstTokenIdOfLine.at(commentStartLine) = commentTokenId;
                     for (u32 i = commentStartLine; i <= commentEndLine; i++) {
                         m_firstTokenIdOfLine.at(i) = commentTokenId;
                     }
@@ -1525,43 +1465,8 @@ namespace hex::ui {
             currentLine = lineIndex;
         }
 
-        //    if (lineIndex > currentLine) {
-        //        m_firstTokenIdOfLine[lineIndex] = tokenId;
-         //   }
-       // }
-
         if (tokenCount > 0 && (u32) m_firstTokenIdOfLine.back() != tokenCount - 1)
             m_firstTokenIdOfLine.push_back(tokenCount - 1);
-/*
-        i32 lastTokenIdRestored;
-        bool lastTokenIdChanged;
-        i32 savedLineIndex;
-        lineIndex = 0;
-        while (lineIndex < (i32) size()) {
-            if (m_firstTokenIdOfLine[lineIndex] == -1 && (operator[](lineIndex).empty() || operator[](lineIndex).m_chars.find_first_not_of(" ") == std::string::npos || operator[](lineIndex).m_chars.starts_with("#"))) {
-                if (lastTokenIdChanged)
-                    savedLineIndex = lineIndex;
-                lastTokenIdChanged = false;
-                lineIndex++;
-            } else if (m_firstTokenIdOfLine[lineIndex] != -1 && !operator[](lineIndex).empty() && operator[](lineIndex).m_chars.find_first_not_of(" ") != std::string::npos  && !operator[](lineIndex).m_chars.starts_with("#")) {
-                tokenId = m_firstTokenIdOfLine[lineIndex];
-                if (tokenId != lastTokenIdRestored)
-                    lastTokenIdChanged = true;
-                lineIndex++;
-            } else if (m_firstTokenIdOfLine[lineIndex] == -1 && !operator[](lineIndex).empty() && operator[](lineIndex).m_chars.find_first_not_of(" ") != std::string::npos  && !operator[](lineIndex).m_chars.starts_with("#")) {
-                m_firstTokenIdOfLine[lineIndex] = tokenId;
-                if (!lastTokenIdChanged) {
-                    for (i32 i = savedLineIndex; i < lineIndex; i++)
-                        m_firstTokenIdOfLine[i] = tokenId;
-                }
-                if (tokenId != lastTokenIdRestored) {
-                    lastTokenIdRestored = tokenId;
-                    lastTokenIdChanged = true;
-                }
-                lineIndex++;
-            } else
-                lineIndex ++;
-        }*/
 
     }
 
@@ -1572,6 +1477,25 @@ namespace hex::ui {
         return m_tokens[tokenId].location;
     }
 
+    i32 TextEditor::Lines::getTokenId(hex::ui::TextEditor::SafeTokenIterator tokenIterator) {
+            auto start = m_tokens.data();
+            auto m_start = &tokenIterator.front();
+            auto m_end = &tokenIterator.back();
+            if (m_start < start || start > m_end) {
+                throw std::out_of_range("iterator out of range");
+            }
+            return m_start - start;
+    }
+
+    i32 TextEditor::Lines::getTokenId() {
+        auto start = m_tokens.data();
+        auto m_start = &m_curr.front();
+        auto m_end = &m_curr.back();
+        if (m_start < start || start > m_end) {
+            throw std::out_of_range("iterator out of range");
+        }
+        return m_start - start;
+    }
 
 // Get the token index for a given location.
     i32 TextEditor::Lines::getTokenId(pl::core::Location location) {
@@ -1597,9 +1521,9 @@ namespace hex::ui {
             return -1;
 
         for (i32 i = tokenStart; i <= tokenEnd; i++) {
-            auto length = m_tokens[i].location.length;
-            if (m_tokens[i].location.column + length + (length == 0) > location.column)
-                return i;
+            auto location2 = m_tokens[i].location;
+            if (location2.column <= location.column && location2.column + location2.length >= location.column)
+                return i + 1;
         }
         return -1;
     }

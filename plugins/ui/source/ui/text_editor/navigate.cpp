@@ -32,7 +32,7 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::Lines::rfind( const std::string &text, const Coordinates &from) {
         Coordinates result = Invalid;
-        if (text.empty() || isEmpty() || from.m_line >= (i32) size() || from.m_line < 0)
+        if (text.empty() || isEmpty() || from.m_line >= size() || from.m_line < 0)
             return result;
         for (i32 i = from.m_line; i >= 0; --i) {
             auto &line = m_unfoldedLines[i];
@@ -48,9 +48,9 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::Lines::find(const std::string &text, const Coordinates &from) {
         Coordinates result = Invalid;
-        if (text.empty() || isEmpty() || from.m_line >= (i32) size() || from.m_line < 0)
+        if (text.empty() || isEmpty() || from.m_line >= size() || from.m_line < 0)
             return result;
-        for (i32 i = from.m_line; i < (i32) size(); ++i) {
+        for (i32 i = from.m_line; i < size(); ++i) {
             auto &line = m_unfoldedLines[i];
             auto index = line.m_chars.find(text, (i == from.m_line) ? from.m_column : 0);
             if (index != std::string::npos) {
@@ -429,7 +429,6 @@ namespace hex::ui {
             m_setScroll = false;
             ImGui::SetScrollX(scroll.x);
             ImGui::SetScrollY(scroll.y);
-            //m_updateFocus = true;
         }
     }
 
@@ -461,9 +460,7 @@ namespace hex::ui {
         if (std::abs(m_line) > maxLine)
             return false;
         auto maxColumn = lines.lineMaxColumn(m_line);
-        if (std::abs(m_column) > maxColumn)
-            return false;
-        return true;
+        return std::abs(m_column) > maxColumn;
     }
 
     TextEditor::Coordinates TextEditor::Coordinates::sanitize(Lines &lines) {
@@ -492,7 +489,7 @@ namespace hex::ui {
 
     TextEditor::Range::Coordinates TextEditor::Lines::lineCoordinates(i32 lineIndex, i32 column)  {
         if (isEmpty())
-            return Coordinates( 0, 0);
+            return {0, 0};
         Coordinates result(lineIndex, column);
 
         return result.sanitize(*this);
@@ -516,11 +513,11 @@ namespace hex::ui {
         auto start = lineCoordinates(value.m_start);
         auto end = lineCoordinates(value.m_end);
         if (start == Invalid || end == Invalid)
-            return Range(Invalid, Invalid);
+            return {Invalid, Invalid};
         if (start > end) {
             std::swap(start, end);
         }
-        return Range(start, end);
+        return {start, end};
     }
 
     void TextEditor::advance(Coordinates &coordinates) {
@@ -542,7 +539,7 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::findWordStart(const Coordinates &from) {
         Coordinates at = m_lines.lineCoordinates(from);
-        if (at.m_line >= (i32) m_lines.size())
+        if (at.m_line >= m_lines.size())
             return at;
 
         auto &line = m_lines.m_unfoldedLines[at.m_line];
@@ -564,7 +561,7 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::findWordEnd(const Coordinates &from) {
         Coordinates at = m_lines.lineCoordinates(from);
-        if (at.m_line >= (i32) m_lines.size())
+        if (at.m_line >= m_lines.size())
             return at;
 
         auto &line = m_lines.m_unfoldedLines[at.m_line];
@@ -587,7 +584,7 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::Lines::findNextWord(const Coordinates &from) {
         Coordinates at = unfoldedToFoldedCoords(from);
-        if (at.m_line >= (i32) size())
+        if (at.m_line >= size())
             return from;
 
         auto &line = operator[](at.m_line);
@@ -608,7 +605,7 @@ namespace hex::ui {
 
     TextEditor::Coordinates TextEditor::Lines::findPreviousWord(const Coordinates &from) {
         Coordinates at = unfoldedToFoldedCoords(from);
-        if (at.m_line >= (i32) size())
+        if (at.m_line >= size())
             return from;
 
         auto &line = operator[](at.m_line);
@@ -628,13 +625,9 @@ namespace hex::ui {
         return foldedToUnfoldedCoords(lineIndexCoords(at.m_line + 1, charIndex));
     }
 
-    u32 TextEditor::Line::skipSpaces(i32 index) {
-        auto charIndex = index;
-        u32 s = 0;
-        while (charIndex < (i32) m_chars.size() && m_chars[charIndex] == ' ' && m_colors[charIndex] == 0x00) {
-            ++s;
-            ++charIndex;
-        }
+    u32 TextEditor::Line::skipSpaces(i32 charIndex) {
+        u32 s;
+        for (s = 0; charIndex < (i32) m_chars.size() && m_chars[charIndex] == ' ' && m_flags[charIndex] == 0x00; ++s, ++charIndex);
         return s;
     }
 
@@ -793,7 +786,7 @@ namespace hex::ui {
         result = start;
         auto lineIndex = start.m_line;
         auto row = lines->lineIndexToRow(lineIndex);
-        auto maxLineIndex = (i32) lines->size() - 1;
+        auto maxLineIndex = lines->size() - 1;
         auto charIndex = lines->lineCoordsIndex(start);
         std::string line;
         std::string colors;
@@ -888,8 +881,8 @@ namespace hex::ui {
                 else
                     i = 0;
             }
-            if ((i32) (direction * i) >= (i32) ((line.size() - 1) * (1 + direction) / 2)) {
-                if (lines->rowToLineIndex(row) == (i64) maxLineIndex * (1 + direction) / 2) {
+            if ((direction * i) >= (i32) ((line.size() - 1) * (1 + direction) / 2)) {
+                if (lines->rowToLineIndex(row) == (i64) maxLineIndex * ((1 + direction) >> 1)) {
                     if (m_active) {
                         m_active = false;
                         m_changed = true;
