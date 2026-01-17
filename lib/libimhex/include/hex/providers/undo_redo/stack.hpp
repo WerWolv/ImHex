@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace hex::prv {
@@ -39,6 +40,8 @@ namespace hex::prv::undo {
         }
 
         bool add(std::unique_ptr<Operation> &&operation);
+
+        static std::recursive_mutex& getMutex();
 
         const std::vector<std::unique_ptr<Operation>> &getAppliedOperations() const {
             return m_undoStack;

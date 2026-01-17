@@ -19,6 +19,7 @@ namespace hex::plugin::builtin {
         u64 m_selectedPatch = 0x00;
         PerProvider<u32> m_numOperations;
         PerProvider<u32> m_savedOperations;
+        PerProvider<std::set<u64>> m_modifiedAddresses;
     };
 
 }

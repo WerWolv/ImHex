@@ -49,6 +49,8 @@ namespace hex::plugin::builtin {
         });
 
         ImHexApi::HexEditor::addForegroundHighlightingProvider([this](u64 offset, const u8* buffer, size_t, bool) -> std::optional<color_t> {
+            std::lock_guard lock(prv::undo::Stack::getMutex());
+
             std::ignore = buffer;
 
             if (!ImHexApi::Provider::isValid())
@@ -60,29 +62,8 @@ namespace hex::plugin::builtin {
 
             offset -= provider->getBaseAddress();
 
-            const auto &undoStack = provider->getUndoStack();
-            const auto stackSize = undoStack.getAppliedOperations().size();
-            const auto savedStackSize = m_savedOperations.get(provider);
-
-            if (stackSize == savedStackSize) {
-                // Do nothing
-            } else if (stackSize > savedStackSize) {
-                for (const auto &operation : undoStack.getAppliedOperations() | std::views::drop(savedStackSize)) {
-                    if (!operation->shouldHighlight())
-                        continue;
-
-                    if (operation->getRegion().overlaps(Region { .address=offset, .size=1}))
-                        return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
-                }
-            } else {
-                for (const auto &operation : undoStack.getUndoneOperations() | std::views::reverse | std::views::take(savedStackSize - stackSize)) {
-                    if (!operation->shouldHighlight())
-                        continue;
-
-                    if (operation->getRegion().overlaps(Region { .address=offset, .size=1}))
-                        return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
-                }
-            }
+            if (m_modifiedAddresses->contains(offset))
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
 
             return std::nullopt;
         });
@@ -114,6 +95,35 @@ namespace hex::plugin::builtin {
 
             provider->getUndoStack().add<undo::OperationRemove>(offset, size);
         });
+
+        EventDataChanged::subscribe(this, [this](prv::Provider *provider) {
+            std::lock_guard lock(prv::undo::Stack::getMutex());
+
+            const auto &undoStack = provider->getUndoStack();
+            const auto stackSize = undoStack.getAppliedOperations().size();
+            const auto savedStackSize = m_savedOperations.get(provider);
+
+            m_modifiedAddresses->clear();
+            if (stackSize == savedStackSize) {
+                // Do nothing
+            } else if (stackSize > savedStackSize) {
+                for (const auto &operation : undoStack.getAppliedOperations() | std::views::drop(savedStackSize)) {
+                    if (!operation->shouldHighlight())
+                        continue;
+
+                    auto region = operation->getRegion();
+                    m_modifiedAddresses->insert_range(std::views::iota(region.getStartAddress(), region.getEndAddress() + 1));
+                }
+            } else {
+                for (const auto &operation : undoStack.getUndoneOperations() | std::views::reverse | std::views::take(savedStackSize - stackSize)) {
+                    if (!operation->shouldHighlight())
+                        continue;
+
+                    auto region = operation->getRegion();
+                    m_modifiedAddresses->insert_range(std::views::iota(region.getStartAddress(), region.getEndAddress() + 1));
+                }
+            }
+        });
     }
 
     ViewPatches::~ViewPatches() {
@@ -138,37 +148,53 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableHeadersRow();
 
-                const auto &undoRedoStack = provider->getUndoStack();
-                std::vector<prv::undo::Operation*> operations;
-                for (const auto &operation : undoRedoStack.getUndoneOperations())
-                    operations.push_back(operation.get());
-                for (const auto &operation : undoRedoStack.getAppliedOperations() | std::views::reverse)
-                    operations.push_back(operation.get());
+                std::lock_guard lock(prv::undo::Stack::getMutex());
 
-                u32 index = 0;
+                const auto &undoRedoStack = provider->getUndoStack();
+                const auto &undoneOps = undoRedoStack.getUndoneOperations();
+                const auto &appliedOps = undoRedoStack.getAppliedOperations();
+
+                const u32 totalSize = undoneOps.size() + appliedOps.size();
 
                 ImGuiListClipper clipper;
+                clipper.Begin(totalSize);
 
-                clipper.Begin(operations.size());
                 while (clipper.Step()) {
-                    auto iter = operations.begin();
-                    for (auto i = 0; i < clipper.DisplayStart; i++)
-                        ++iter;
+                    auto undoneOperationsCount = undoneOps.size();
+                    for (u64 i = clipper.DisplayStart; i < u64(clipper.DisplayEnd); i++) {
+                        prv::undo::Operation* operation;
 
-                    auto undoneOperationsCount = undoRedoStack.getUndoneOperations().size();
-                    for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        const auto &operation = *iter;
+                        if (i < undoneOps.size()) {
+                            // Element from undone operations
+                            operation = undoneOps[i].get();
+                        } else {
+                            // Element from applied operations (reversed)
+                            u32 appliedIndex = appliedOps.size() - 1 - (i - undoneOps.size());
+                            operation = appliedOps[appliedIndex].get();
+                        }
 
                         const auto [address, size] = operation->getRegion();
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        ImGui::BeginDisabled(size_t(i) < undoneOperationsCount);
-
-                        if (ImGui::Selectable(fmt::format("{} {}", index == undoneOperationsCount ? ICON_VS_ARROW_SMALL_RIGHT : "  ", index).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                            ImHexApi::HexEditor::setSelection(address, size);
+                        bool isUndone = size_t(i) < undoneOperationsCount;
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(isUndone ? ImGuiCol_TextDisabled : ImGuiCol_Text));
+                        if (ImGui::Selectable(fmt::format("{} {}", i == undoneOperationsCount ? ICON_VS_ARROW_SMALL_RIGHT : "  ", i).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                            if (ImGui::GetIO().KeyShift) {
+                                if (isUndone) {
+                                    const u32 count = undoneOperationsCount - u32(i);
+                                    provider->getUndoStack().redo(count);
+                                } else {
+                                    const u32 count = u32(i) - undoneOperationsCount;
+                                    provider->getUndoStack().undo(count);
+                                }
+                            } else {
+                                ImHexApi::HexEditor::setSelection(address, size);
+                            }
                         }
+                        ImGui::PopStyleColor();
+
                         if (ImGui::IsItemHovered()) {
                             const auto content = operation->formatContent();
                             if (!content.empty()) {
@@ -196,11 +222,6 @@ namespace hex::plugin::builtin {
 
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("{}", operation->format());
-                        index += 1;
-
-                        ++iter;
-
-                        ImGui::EndDisabled();
                     }
                 }
 
