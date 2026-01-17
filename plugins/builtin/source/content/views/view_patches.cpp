@@ -112,7 +112,9 @@ namespace hex::plugin::builtin {
                         continue;
 
                     auto region = operation->getRegion();
-                    m_modifiedAddresses->insert_range(std::views::iota(region.getStartAddress(), region.getEndAddress() + 1));
+                    for (u64 addr = region.getStartAddress(); addr <= region.getEndAddress(); addr++) {
+                        m_modifiedAddresses->insert(addr);
+                    }
                 }
             } else {
                 for (const auto &operation : undoStack.getUndoneOperations() | std::views::reverse | std::views::take(savedStackSize - stackSize)) {
@@ -120,7 +122,9 @@ namespace hex::plugin::builtin {
                         continue;
 
                     auto region = operation->getRegion();
-                    m_modifiedAddresses->insert_range(std::views::iota(region.getStartAddress(), region.getEndAddress() + 1));
+                    for (u64 addr = region.getStartAddress(); addr <= region.getEndAddress(); addr++) {
+                        m_modifiedAddresses->insert(addr);
+                    }
                 }
             }
         });
