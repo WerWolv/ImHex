@@ -28,6 +28,7 @@
         <Property Id="REINSTALLMODE" Value="amus"/>
 
         <WixVariable Id="WixUILicenseRtf" Value="$(var.CPACK_WIX_LICENSE_RTF)"/>
+        <WixVariable Id="WixUILicenseAcceptCheckboxText" Value="I acknowledge the terms of the GPL v2 license" />
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALL_ROOT"/>
 
         <?ifdef CPACK_WIX_PRODUCT_ICON?>
@@ -45,7 +46,7 @@
 
         <FeatureRef Id="ProductFeature" />
 
-        <ui:WixUI Id="WixUI_InstallDir" />
+        <ui:WixUI Id="WixUI_InstallDirImHex" />
 
         <?include "properties.wxi"?>
         <?include "product_fragment.wxi"?>

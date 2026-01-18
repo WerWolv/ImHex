@@ -211,6 +211,8 @@ macro(configurePackingResources)
             set(CPACK_WIX_TEMPLATE "${PROJECT_SOURCE_DIR}/resources/dist/windows/WIX.template.in")
             set(CPACK_WIX_EXTENSIONS "WixToolset.UI.wixext")
 
+            file(GLOB_RECURSE CPACK_WIX_EXTRA_SOURCES "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix/*.wxs")
+
             set(CPACK_PACKAGE_INSTALL_DIRECTORY "ImHex")
             set_property(INSTALL "$<TARGET_FILE_NAME:main>"
                     PROPERTY CPACK_START_MENU_SHORTCUTS "ImHex"

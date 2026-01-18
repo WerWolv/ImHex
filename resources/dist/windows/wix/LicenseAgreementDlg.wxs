@@ -1,0 +1,30 @@
+<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
+
+<?include "cpack_variables.wxi"?>
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <Fragment>
+        <UI>
+            <Dialog Id="LicenseAgreementDlgImHex" Width="370" Height="270" Title="!(loc.LicenseAgreementDlg_Title)">
+                <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.LicenseAgreementDlgBannerBitmap)" />
+                <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="373" Height="0" />
+                <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
+                <Control Id="Description" Type="Text" X="25" Y="23" Width="340" Height="15" Transparent="yes" NoPrefix="yes" Text="ImHex's Source Code is available for free under the GPLv2 license." />
+                <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Source Code License" />
+                <Control Id="Print" Type="PushButton" X="112" Y="243" Width="56" Height="17" Text="!(loc.WixUIPrint)">
+                    <Publish Event="MsiPrint" Value="1" />
+                </Control>
+                <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)" />
+                <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Acknowledge">
+                    <Publish Event="SpawnWaitDialog" Value="WaitForCostingDlg" Condition="!(wix.WixUICostingPopupOptOut) OR CostingComplete = 1" />
+                </Control>
+                <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+                    <Publish Event="SpawnDialog" Value="CancelDlg" />
+                </Control>
+                <Control Id="LicenseText" Type="ScrollableText" X="20" Y="60" Width="330" Height="164" Sunken="yes" TabSkip="no">
+                    <Text SourceFile="!(wix.WixUILicenseRtf=$(var.CPACK_WIX_LICENSE_RTF))" />
+                </Control>
+            </Dialog>
+        </UI>
+    </Fragment>
+</Wix>

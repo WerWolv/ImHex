@@ -1,0 +1,34 @@
+<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
+
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <Fragment>
+        <UI>
+            <Dialog Id="BrowseDlgImHex" Width="370" Height="270" Title="!(loc.BrowseDlg_Title)">
+                <Control Id="PathEdit" Type="PathEdit" X="25" Y="202" Width="320" Height="18" Property="_BrowseProperty" Indirect="yes" />
+                <Control Id="OK" Type="PushButton" X="240" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUIOK)" />
+                <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+                    <Publish Event="Reset" Value="0" />
+                    <Publish Event="EndDialog" Value="Return" />
+                </Control>
+                <Control Id="ComboLabel" Type="Text" X="25" Y="58" Width="44" Height="10" TabSkip="no" Text="!(loc.BrowseDlgComboLabel)" />
+                <Control Id="DirectoryCombo" Type="DirectoryCombo" X="70" Y="55" Width="220" Height="80" Property="_BrowseProperty" Indirect="yes" Fixed="yes" Remote="yes">
+                    <Subscribe Event="IgnoreChange" Attribute="IgnoreChange" />
+                </Control>
+                <Control Id="WixUI_Bmp_Up" Type="PushButton" X="298" Y="55" Width="19" Height="19" ToolTip="!(loc.BrowseDlgWixUI_Bmp_UpTooltip)" Icon="yes" FixedSize="yes" IconSize="16" Text="!(loc.BrowseDlgWixUI_Bmp_Up)">
+                    <Publish Event="DirectoryListUp" Value="0" />
+                </Control>
+                <Control Id="NewFolder" Type="PushButton" X="325" Y="55" Width="19" Height="19" ToolTip="!(loc.BrowseDlgNewFolderTooltip)" Icon="yes" FixedSize="yes" IconSize="16" Text="!(loc.BrowseDlgNewFolder)">
+                    <Publish Event="DirectoryListNew" Value="0" />
+                </Control>
+                <Control Id="DirectoryList" Type="DirectoryList" X="25" Y="83" Width="320" Height="98" Property="_BrowseProperty" Sunken="yes" Indirect="yes" TabSkip="no" />
+                <Control Id="PathLabel" Type="Text" X="25" Y="190" Width="320" Height="10" TabSkip="no" Text="!(loc.BrowseDlgPathLabel)" />
+                <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.BrowseDlgBannerBitmap)" />
+                <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="373" Height="0" />
+                <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
+                <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.BrowseDlgDescription)" />
+                <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.BrowseDlgTitle)" />
+            </Dialog>
+        </UI>
+    </Fragment>
+</Wix>
