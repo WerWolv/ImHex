@@ -63,19 +63,28 @@ namespace hex::ui {
             }
         } else if (std::holds_alternative<i128>(value)) {
             if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                wolv::math_eval::MathEvaluator<i128> mathEvaluator;
+                if (pattern.getWriteFormatterFunction().empty()) {
+                    wolv::math_eval::MathEvaluator<i128> mathEvaluator;
 
-                if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
-                    pattern.setValue(result.value());
+                    if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
+                        pattern.setValue(result.value());
+                } else {
+                    pattern.setValue(valueString);
+                }
 
                 m_onEditCallback();
             }
         } else if (std::holds_alternative<u128>(value)) {
             if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                wolv::math_eval::MathEvaluator<u128> mathEvaluator;
+                if (pattern.getWriteFormatterFunction().empty()) {
+                    wolv::math_eval::MathEvaluator<u128> mathEvaluator;
 
-                if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
-                    pattern.setValue(result.value());
+                    if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
+                        pattern.setValue(result.value());
+                } else {
+                    pattern.setValue(valueString);
+                }
+
 
                 m_onEditCallback();
             }
@@ -129,10 +138,14 @@ namespace hex::ui {
     void PatternValueEditor::visit(pl::ptrn::PatternFloat& pattern) {
         auto value = pattern.toString();
         if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            wolv::math_eval::MathEvaluator<long double> mathEvaluator;
+            if (pattern.getWriteFormatterFunction().empty()) {
+                wolv::math_eval::MathEvaluator<long double> mathEvaluator;
 
-            if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                pattern.setValue(double(result.value()));
+                if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                    pattern.setValue(double(result.value()));
+            } else {
+                pattern.setValue(value);
+            }
 
             m_onEditCallback();
         }
@@ -149,10 +162,14 @@ namespace hex::ui {
     void PatternValueEditor::visit(pl::ptrn::PatternSigned& pattern) {
         auto value = pattern.getFormattedValue();
         if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            wolv::math_eval::MathEvaluator<i128> mathEvaluator;
+            if (pattern.getWriteFormatterFunction().empty()) {
+                wolv::math_eval::MathEvaluator<i128> mathEvaluator;
 
-            if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                pattern.setValue(result.value());
+                if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                    pattern.setValue(result.value());
+            } else {
+                pattern.setValue(value);
+            }
 
             m_onEditCallback();
         }
@@ -185,10 +202,14 @@ namespace hex::ui {
     void PatternValueEditor::visit(pl::ptrn::PatternUnsigned& pattern) {
         auto value = pattern.toString();
         if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            wolv::math_eval::MathEvaluator<u128> mathEvaluator;
+            if (pattern.getWriteFormatterFunction().empty()) {
+                wolv::math_eval::MathEvaluator<u128> mathEvaluator;
 
-            if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                pattern.setValue(result.value());
+                if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                    pattern.setValue(result.value());
+            } else {
+                pattern.setValue(value);
+            }
 
             m_onEditCallback();
         }
