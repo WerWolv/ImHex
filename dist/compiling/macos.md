@@ -20,3 +20,5 @@ cmake -G "Ninja"                          \
   ..
 ninja install
 ```
+
+If your MacOS installation doesn't have graphic acceleration, you can check the [MacOS NoGPU guide](./macos_nogpu.md)
