@@ -22,3 +22,53 @@ CMakeUserPresets.json
 Brewfile.lock.json
 
 vcpkg.json
+
+.fake
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Logs e temporários
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+.*.swp
+
+# Builds e executáveis
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+*.a
+*.lib
+*.pdb
+
+# IDE e editores
+*.sublime-*
+.metals/
+.bloop/
+.bsp/
+
+# Sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.AppleDouble
+.LSOverride
+._*

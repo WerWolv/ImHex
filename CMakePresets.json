@@ -56,7 +56,7 @@
         "VCPKG_MANIFEST_DIR": "${sourceDir}/dist"
       }
     },
-  {
+    {
       "name": "vs2022-x86",
       "displayName": "Visual Studio 2022 x86",
       "generator": "Ninja",
@@ -68,7 +68,19 @@
       "environment": {
           "VSCMD_ARG_TGT_ARCH": "x86"
       }
-  }
+    },
+    {
+      "name": "windows-default",
+      "displayName": "Windows (Padrão)",
+      "description": "Build padrão para Windows sem vcpkg",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/windows",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "IMHEX_USE_DEFAULT_BUILD_SETTINGS": "ON",
+        "IMHEX_OFFLINE_BUILD": "OFF"
+      }
+    }
   ],
   "buildPresets": [
     {
@@ -76,6 +88,12 @@
         "description": "x86_64 build",
         "configurePreset": "x86_64",
         "targets": [ "imhex_all" ]
+    },
+    {
+        "name": "windows-default",
+        "description": "Build padrão para Windows",
+        "configurePreset": "windows-default",
+        "configuration": "Release"
     }
   ],
   "testPresets": [

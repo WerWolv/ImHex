@@ -360,6 +360,30 @@ Information on how to install ImHex can be found in the [Install](/INSTALL.md) g
 
 ## Compiling
 
+### 🚀 Quick Build (NEW!)
+
+**Automated Scripts:**
+
+Windows (PowerShell):
+```powershell
+.\build.ps1           # Automatic build with optimal settings
+.\build.ps1 -Clean    # Clean build from scratch
+```
+
+Linux/macOS:
+```bash
+chmod +x build.sh && ./build.sh     # Automatic build
+./build.sh --clean                  # Clean build from scratch
+```
+
+### 📚 Detailed Build Guides
+
+- 📘 **[BUILD.md](BUILD.md)** - Complete build guide with troubleshooting
+- 🚀 **[QUICK_START.md](QUICK_START.md)** - Step-by-step from zero to running
+- 🔧 **[docs/building_imhex_with_mcp.md](docs/building_imhex_with_mcp.md)** - MCP-specific instructions
+
+### ⚙️ Requirements
+
 To compile ImHex on any platform, GCC (or Clang) is required with a version that supports C++23 or higher. 
 Windows and Linux releases are being built using latest available GCC.
 MacOS releases are being built using latest available LLVM Clang.
