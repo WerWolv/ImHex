@@ -30,7 +30,9 @@ namespace hex::ui {
             if (ImGui::IsItemHovered()) {
                 ImGui::SetNextWindowSize(ImVec2(400_scaled, 0));
                 if (ImGui::BeginTooltip()) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, getColor().Value);
                     ImGuiExt::TextFormattedWrapped("{}", message);
+                    ImGui::PopStyleColor();
                     ImGui::EndTooltip();
                 }
             }
