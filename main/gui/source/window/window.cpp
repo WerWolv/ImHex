@@ -728,13 +728,13 @@ namespace hex {
                 view->trackViewState();
 
                 // Skip views that shouldn't be processed currently
-                if (!view->shouldProcess())
+                if (!view->shouldProcess() || !view->getWindowOpenState())
                     continue;
 
                 const auto openViewCount = std::ranges::count_if(ContentRegistry::Views::impl::getEntries(), [](const auto &entry) {
                     const auto &[unlocalizedName, openView] = entry;
 
-                    return openView->hasViewMenuItemEntry() && openView->shouldProcess();
+                    return openView->hasViewMenuItemEntry() && openView->shouldDraw();
                 });
 
                 ImGuiWindowClass windowClass = {};
@@ -757,6 +757,19 @@ namespace hex {
 
                 // Draw view
                 view->draw();
+
+                // Handle view shortcuts
+                for (const auto &key : m_pressedKeys) {
+                    ShortcutManager::process(
+                        view.get(),
+                        io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl,
+                        io.KeyAlt,
+                        io.KeyShift,
+                        io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper,
+                        view.get() == View::getLastFocusedView(),
+                        key
+                    );
+                }
 
                 // If the window was just opened, it wasn't found above, so try to find it again
                 if (window == nullptr)
@@ -793,10 +806,6 @@ namespace hex {
 
                         // Pass on currently pressed keys to the shortcut handler
                         if (!windowIsPopup) {
-                            for (const auto &key : m_pressedKeys) {
-                                ShortcutManager::process(view.get(), io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl, io.KeyAlt, io.KeyShift, io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper, focused, key);
-                            }
-
                             ImGui::End();
                         }
                     } else if (view->didWindowJustClose()) {
@@ -808,7 +817,13 @@ namespace hex {
 
         // Handle global shortcuts
         for (const auto &key : m_pressedKeys) {
-            ShortcutManager::processGlobals(io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl, io.KeyAlt, io.KeyShift, io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper, key);
+            ShortcutManager::processGlobals(
+                io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl,
+                io.KeyAlt,
+                io.KeyShift,
+                io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeySuper,
+                key
+            );
         }
 
         m_pressedKeys.clear();

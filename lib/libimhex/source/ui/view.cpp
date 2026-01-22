@@ -22,7 +22,7 @@ namespace hex {
     }
 
     bool View::shouldProcess() const {
-        return this->shouldDraw() && this->getWindowOpenState();
+        return true;
     }
 
     bool View::hasViewMenuItemEntry() const {

@@ -316,28 +316,40 @@ namespace hex {
             pressedShortcut += s_macOSMode ? CTRLCMD : SUPER;
         if (focused)
             pressedShortcut += CurrentView;
+        if (!ImHexApi::Provider::isValid()) {
+            pressedShortcut += CurrentView;
+            pressedShortcut += ShowOnWelcomeScreen;
+        }
 
         pressedShortcut += scanCodeToKey(keyCode);
 
         return pressedShortcut;
     }
 
-    static bool processShortcut(Shortcut shortcut, const std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
+    static auto findShortcut(const Shortcut &shortcut, const std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts, bool condition, auto ... extraOption) {
+        auto modifiedShortcut = shortcut;
+        ((modifiedShortcut += extraOption), ...);
+        if (condition) {
+            return shortcuts.find(modifiedShortcut);
+        } else {
+            auto it = shortcuts.find(shortcut);
+            if (it == shortcuts.end())
+                return shortcuts.find(modifiedShortcut);
+        }
+
+        return shortcuts.end();
+    }
+
+    static bool processShortcut(const Shortcut &shortcut, const std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
         if (s_paused)
             return true;
 
         if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
             return true;
 
-        auto it = shortcuts.end();
-        if (ImGui::GetIO().WantTextInput) {
-            it = shortcuts.find(shortcut + AllowWhileTyping);
-        } else {
-            it = shortcuts.find(shortcut);
-            if (it == shortcuts.end())
-                it = shortcuts.find(shortcut + AllowWhileTyping);
-        }
-
+        auto it = findShortcut(shortcut, shortcuts, ImGui::GetIO().WantTextInput, AllowWhileTyping);
+        if (it == shortcuts.end())
+            it = findShortcut(shortcut, shortcuts, ImGui::GetIO().WantTextInput, AllowWhileTyping, ShowOnWelcomeScreen);
         if (it != shortcuts.end()) {
             const auto &[foundShortcut, entry] = *it;
 

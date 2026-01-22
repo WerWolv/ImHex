@@ -373,7 +373,7 @@ for (const auto &path : m_paths) {
                 if (const auto &shortcut = ShortcutManager::getPreviousShortcut(); shortcut.has_value()) {
                     auto keys = m_shortcut.getKeys();
                     std::erase_if(keys, [](Key key) {
-                        return key != AllowWhileTyping && key != CurrentView;
+                        return key != AllowWhileTyping && key != CurrentView && key != ShowOnWelcomeScreen;
                     });
 
                     for (const auto &key : shortcut->getKeys()) {
