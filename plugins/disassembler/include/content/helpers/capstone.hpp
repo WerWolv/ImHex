@@ -12,6 +12,10 @@
 #define CAPSTONE_SYSTEMZ_COMPAT_HEADER
 #include <capstone/capstone.h>
 
+#if CS_API_MAJOR <= 4
+    #error "Capstone 4 and older is not supported."
+#endif
+
 namespace hex::plugin::disasm {
 
     // Make sure these are in the same order as in capstone.h
