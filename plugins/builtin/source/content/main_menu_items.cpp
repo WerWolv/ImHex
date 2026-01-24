@@ -670,29 +670,31 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 2600);
 
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.check_for_update" }, ICON_VS_SYNC, 2700, Shortcut::None, [] {
-            TaskManager::createBackgroundTask("Checking for updates", [] {
-                auto versionString = ImHexApi::System::checkForUpdate();
-                if (!versionString.has_value()) {
-                    ui::ToastInfo::open("hex.builtin.popup.no_update_available"_lang);
-                    return;
-                }
+        #if defined(IMHEX_ENABLE_UPDATER)
+            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.check_for_update" }, ICON_VS_SYNC, 2700, Shortcut::None, [] {
+                TaskManager::createBackgroundTask("Checking for updates", [] {
+                    auto versionString = ImHexApi::System::checkForUpdate();
+                    if (!versionString.has_value()) {
+                        ui::ToastInfo::open("hex.builtin.popup.no_update_available"_lang);
+                        return;
+                    }
 
-                ui::PopupQuestion::open(fmt::format(fmt::runtime("hex.builtin.popup.update_available"_lang.get()), versionString.value()), [] {
-                    ImHexApi::System::updateImHex(ImHexApi::System::isNightlyBuild() ? ImHexApi::System::UpdateType::Nightly : ImHexApi::System::UpdateType::Stable);
-                }, [] { });
+                    ui::PopupQuestion::open(fmt::format(fmt::runtime("hex.builtin.popup.update_available"_lang.get()), versionString.value()), [] {
+                        ImHexApi::System::updateImHex(ImHexApi::System::isNightlyBuild() ? ImHexApi::System::UpdateType::Nightly : ImHexApi::System::UpdateType::Stable);
+                    }, [] { });
+                });
             });
-        });
 
-        if (ImHexApi::System::isNightlyBuild()) {
-            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_stable" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {
-                ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
-            });
-        } else {
-            ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_nightly" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {
-                ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Nightly);
-            });
-        }
+            if (ImHexApi::System::isNightlyBuild()) {
+                ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_stable" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {
+                    ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
+                });
+            } else {
+                ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.menu.extras.switch_to_nightly" }, ICON_VS_ROCKET, 2750, Shortcut::None, [] {
+                    ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Nightly);
+                });
+            }
+        #endif
     }
 
     static void createHelpMenu() {
