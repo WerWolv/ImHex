@@ -903,6 +903,7 @@
     "hex.builtin.view.hex_editor.menu.edit.paste.popup.button.selection": "Paste only over selection",
     "hex.builtin.view.hex_editor.menu.edit.paste_all": "Paste all",
     "hex.builtin.view.hex_editor.menu.edit.paste_all_string": "Paste all as string",
+     "hex.builtin.view.hex_editor.menu.edit.paste_all_decoded_base64_string": "Paste all as decoded base64 string",
     "hex.builtin.view.hex_editor.menu.edit.remove": "Remove...",
     "hex.builtin.view.hex_editor.menu.edit.resize": "Resize...",
     "hex.builtin.view.hex_editor.menu.edit.select_all": "Select all",
