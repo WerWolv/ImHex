@@ -632,6 +632,11 @@ namespace hex {
                 s_frameRateUnlockRequested = false;
             }
 
+            static bool s_readOnlyMode = false;
+            void setReadOnlyMode(bool enabled) {
+                s_readOnlyMode = enabled;
+            }
+
         }
 
         bool isMainInstance() {
@@ -1107,6 +1112,10 @@ namespace hex {
 
         void setPostProcessingShader(const std::string &vertexShader, const std::string &fragmentShader) {
             RequestSetPostProcessingShader::post(vertexShader, fragmentShader);
+        }
+
+        bool isReadOnlyMode() {
+            return impl::s_readOnlyMode;
         }
 
 
