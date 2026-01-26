@@ -14,7 +14,7 @@ jobs:
     name: 🌃 Update Nightly Release
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ImHex
           fetch-depth: 0
@@ -40,7 +40,7 @@ jobs:
       
       # TODO: Replace by Github CLI when github.com/cli/cli/pull/12435 is closed
       - name: ⬇️ Download artifacts from latest workflow
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v12
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: build.yml
