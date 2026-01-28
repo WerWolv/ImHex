@@ -459,6 +459,9 @@ namespace hex::plugin::builtin {
 
             auto defaultEditorSize = ImGui::GetContentRegionAvail();
             defaultEditorSize.y *= 0.66F;
+            //if (getLastFocusedView() == this) {
+            //    m_textEditor.get(provider).setFocus(false);
+            //}
 
             fonts::CodeEditor().push();
             ImGui::SetNextWindowSizeConstraints(
@@ -1296,11 +1299,11 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginChild("##debugger", size, true)) {
             auto &evaluator = runtime.getInternals().evaluator;
-            m_breakpoints = m_textEditor.get(provider).getBreakpoints();
-            evaluator->setBreakpoints(m_breakpoints);
+            ui::TextEditor::Breakpoints  breakpoints = m_textEditor.get(provider).getBreakpoints();
+            evaluator->setBreakpoints(breakpoints);
 
-            m_breakpoints = evaluator->getBreakpoints();
-            m_textEditor.get(provider).setBreakpoints(m_breakpoints);
+            breakpoints = evaluator->getBreakpoints();
+            m_textEditor.get(provider).setBreakpoints(breakpoints);
 
             if (*m_breakpointHit) {
                 auto displayValue = [&](const auto &parent, size_t index) {
@@ -1438,12 +1441,12 @@ namespace hex::plugin::builtin {
 
         {
             if (m_textEditor.get(provider).isBreakpointsChanged()) {
-                m_breakpoints = m_textEditor.get(provider).getBreakpoints();
+                ui::TextEditor::Breakpoints breakpoints = m_textEditor.get(provider).getBreakpoints();
                 m_textEditor.get(provider).clearBreakpointsChanged();
                 const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
                 auto &evaluator = runtime.getInternals().evaluator;
                 if (evaluator) {
-                    evaluator->setBreakpoints(m_breakpoints);
+                    evaluator->setBreakpoints(breakpoints);
                 }
             }
 
@@ -1669,7 +1672,7 @@ namespace hex::plugin::builtin {
             this->evaluatePattern(code, provider);
             m_textEditor.get(provider).setText(code, true);
             m_textEditor.get(provider).removeHiddenLinesFromPattern();
-            m_sourceCode.get(provider) = code;
+            m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
             if (trackFile) {
                 m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
                 m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
@@ -1732,7 +1735,7 @@ namespace hex::plugin::builtin {
 
         m_consoleEditor.get(provider).clearActionables();
         m_console.get(provider).clear();
-        m_consoleLongestLineLength.get(provider) = 0;
+        m_consoleEditor.get(provider).setLongestLineLength(0);
         m_consoleNeedsUpdate = true;
 
         m_consoleEditor.get(provider).setText("");
@@ -1805,8 +1808,7 @@ namespace hex::plugin::builtin {
                             default: break;
                         }
                     }
-                    if (m_consoleLongestLineLength.get(provider) < line.size()) {
-                       m_consoleLongestLineLength.get(provider) = line.size();
+                    if (m_consoleEditor.get(provider).getLongestLineLength() < line.size()) {
                         m_consoleEditor.get(provider).setLongestLineLength(line.size());
                     }
                     m_console.get(provider).emplace_back(line);
@@ -1876,6 +1878,11 @@ namespace hex::plugin::builtin {
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
             m_textEditor.get(provider).setLanguageDefinition(PatternLanguage());
             m_textEditor.get(provider).setShowWhitespaces(false);
+            m_textEditor.get(provider).setCursorPosition(ui::TextEditor::Coordinates(0, 0),false,false);
+            //if (getLastFocusedView() == this) {
+            //    m_textEditor.get(provider).setFocus(true);
+            //}
+
 
             m_consoleEditor.get(provider).setLanguageDefinition(ConsoleLog());
             m_consoleEditor.get(provider).setShowWhitespaces(false);
@@ -1894,39 +1901,26 @@ namespace hex::plugin::builtin {
             m_envVarEntries.get(provider).emplace_back(0, "", i128(0), EnvVarType::Integer);
 
             m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
-            m_cursorPosition.get(provider) =  ui::TextEditor::Coordinates(0, 0);
         });
 
         EventProviderChanged::subscribe(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
             if (oldProvider != nullptr) {
                 m_sourceCode.get(oldProvider) = m_textEditor.get(oldProvider).getText();
                 m_scroll.get(oldProvider) = m_textEditor.get(oldProvider).getScroll();
-                m_cursorPosition.get(oldProvider) = m_textEditor.get(oldProvider).getCursorPosition();
-                m_selection.get(oldProvider) = m_textEditor.get(oldProvider).getSelection();
-                m_breakpoints.get(oldProvider) = m_textEditor.get(oldProvider).getBreakpoints();
-                m_codeFoldState.get(oldProvider) = m_textEditor.get(oldProvider).getLines().getCodeFoldState();
-                m_consoleCursorPosition.get(oldProvider) = m_consoleEditor.get(oldProvider).getCursorPosition();
-                m_consoleSelection.get(oldProvider) = m_consoleEditor.get(oldProvider).getSelection();
-                m_consoleLongestLineLength.get(oldProvider) = m_consoleEditor.get(oldProvider).getLongestLineLength();
                 m_consoleScroll.get(oldProvider) = m_consoleEditor.get(oldProvider).getScroll();
             }
 
             if (newProvider != nullptr) {
                 m_textEditor.get(newProvider).setText(wolv::util::preprocessText(m_sourceCode.get(newProvider)));
-                m_textEditor.get(newProvider).setCursorPosition(m_cursorPosition.get(newProvider),false,false);
                 m_textEditor.get(newProvider).setScroll(m_scroll.get(newProvider));
-                m_textEditor.get(newProvider).setSelection(m_selection.get(newProvider));
-                m_textEditor.get(newProvider).setBreakpoints(m_breakpoints.get(newProvider));
-                m_textEditor.get(newProvider).getLines().setCodeFoldState(m_codeFoldState.get(newProvider));
                 m_textEditor.get(newProvider).setTextChanged(false);
                 m_hasUnevaluatedChanges.get(newProvider) = true;
                 m_consoleEditor.get(newProvider).setText(wolv::util::combineStrings(m_console.get(newProvider), "\n"));
-                m_consoleEditor.get(newProvider).setCursorPosition(m_consoleCursorPosition.get(newProvider));
-                m_consoleEditor.get(newProvider).setLongestLineLength(m_consoleLongestLineLength.get(newProvider));
-                m_consoleEditor.get(newProvider).setSelection(m_consoleSelection.get(newProvider));
                 m_consoleEditor.get(newProvider).setScroll(m_consoleScroll.get(newProvider));
-
             }
+            //if (getLastFocusedView() == this) {
+            //    m_textEditor.get(newProvider).setFocus(false);
+            //}
 
         });
 
@@ -2157,16 +2151,16 @@ namespace hex::plugin::builtin {
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             auto &evaluator = runtime.getInternals().evaluator;
-            m_breakpoints = m_textEditor.get(ImHexApi::Provider::get()).getBreakpoints();
-            evaluator->setBreakpoints(m_breakpoints);
+            ui::TextEditor::Breakpoints breakpoints = m_textEditor.get(ImHexApi::Provider::get()).getBreakpoints();
+            evaluator->setBreakpoints(breakpoints);
 
-            if (m_breakpoints->contains(line))
+            if (breakpoints.contains(line))
                 evaluator->removeBreakpoint(line);
             else
                 evaluator->addBreakpoint(line);
 
-            m_breakpoints = evaluator->getBreakpoints();
-            m_textEditor.get(ImHexApi::Provider::get()).setBreakpoints(m_breakpoints);
+            breakpoints = evaluator->getBreakpoints();
+            m_textEditor.get(ImHexApi::Provider::get()).setBreakpoints(breakpoints);
         },  [] { return ImHexApi::Provider::isValid(); },
         this);
 
@@ -2363,24 +2357,17 @@ namespace hex::plugin::builtin {
             .required = false,
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 const auto sourceCode = wolv::util::preprocessText(tar.readString(basePath));
-
-                m_sourceCode.get(provider) = sourceCode;
-
-                if (provider == ImHexApi::Provider::get()) {
-                    m_textEditor.get(provider).setText(sourceCode);
-                    m_textEditor.get(provider).removeHiddenLinesFromPattern();
-                }
+                m_textEditor.get(provider).setText(sourceCode);
+                m_textEditor.get(provider).removeHiddenLinesFromPattern();
+                m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
 
                 m_hasUnevaluatedChanges.get(provider) = true;
                 return true;
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                if (provider == ImHexApi::Provider::get()) {
-                    m_textEditor.get(provider).addHiddenLinesToPattern();
-                    m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
-                }
+                m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
 
-                const auto &sourceCode = m_sourceCode.get(provider);
+                auto sourceCode = m_textEditor.get(provider).getText(true);
 
                 tar.writeString(basePath, wolv::util::trim(sourceCode));
                 return true;
@@ -2772,8 +2759,7 @@ namespace hex::plugin::builtin {
             fs::DialogMode::Save, { {"Pattern File", "hexpat"}, {"Pattern Import File", "pat"} },
             [this, provider, trackFile](const auto &path) {
                 wolv::io::File file(path, wolv::io::File::Mode::Create);
-                m_textEditor.get(provider).addHiddenLinesToPattern();
-                file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
+                file.writeString(wolv::util::trim(m_textEditor.get(provider).getText(true)));
                 m_patternFileDirty.get(provider) = false;
                 auto loadedPath = m_changeTracker.get(provider).getPath();
                 if ((loadedPath.empty() && loadedPath != path) || (!loadedPath.empty() && !trackFile) || loadedPath == path)
@@ -2796,8 +2782,7 @@ namespace hex::plugin::builtin {
         wolv::io::File file(path, wolv::io::File::Mode::Create);
         if (file.isValid() && trackFile) {
             if (isPatternDirty(provider)) {
-                m_textEditor.get(provider).addHiddenLinesToPattern();
-                file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
+                file.writeString(wolv::util::trim(m_textEditor.get(provider).getText(true)));
                 m_patternFileDirty.get(provider) = false;
             }
             return;
