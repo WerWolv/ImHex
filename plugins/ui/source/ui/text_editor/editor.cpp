@@ -327,14 +327,8 @@ namespace hex::ui {
             m_lines.m_unfoldedLines.resize(1);
             m_lines.m_unfoldedLines[0].clear();
         } else {
-            m_lines.m_hiddenLines.clear();
-            u64 i = 0;
-            while (vectorString[i].starts_with("//+-")) {
-                m_lines.m_hiddenLines.emplace_back(i, vectorString[i]), i++;
-            }
-            vectorString.erase(vectorString.begin(), vectorString.begin() + i);
             lineCount = vectorString.size();
-            i = 0;
+            u64 i = 0;
             m_lines.m_unfoldedLines.clear();
             m_lines.m_unfoldedLines.resize(lineCount);
 
@@ -886,14 +880,21 @@ namespace hex::ui {
         m_lines.refreshSearchResults();
     }
 
-    std::string TextEditor::Lines::getText() {
+    std::string TextEditor::Lines::getText(bool includeHiddenLines) {
         auto start = lineCoordinates(0, 0);
         auto size = m_unfoldedLines.size();
         auto line = m_unfoldedLines[size - 1];
         auto end = Coordinates( size - 1, line.m_lineMaxColumn);
         if (start == Invalid || end == Invalid)
             return "";
-        return getRange(Range(start, end));
+        std::string result;
+        if (includeHiddenLines) {
+            for (const auto &hiddenLine: m_hiddenLines) {
+                result += hiddenLine.m_line + "\n";
+            }
+        }
+        result += getRange(Range(start, end));
+        return result;
     }
 
     StringVector TextEditor::getTextLines() const {

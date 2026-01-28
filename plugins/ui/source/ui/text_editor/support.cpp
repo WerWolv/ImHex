@@ -1320,15 +1320,13 @@ namespace hex::ui {
     }
 
     void TextEditor::Lines::removeHiddenLinesFromPattern() {
-        m_hiddenLines.clear();
         i32 lineIndex = 0;
         const auto totalLines = (i32)m_unfoldedLines.size();
         while (lineIndex < totalLines && m_unfoldedLines[lineIndex].m_chars.starts_with("//+-"))
             lineIndex++;
         if (lineIndex > 0) {
+            m_hiddenLines.clear();
             setSelection(Range(lineCoordinates(0, 0), lineCoordinates(lineIndex, 0)));
-            auto hiddenLinesText = getSelectedText();
-            auto lines = wolv::util::splitString(hiddenLinesText, "\n");
             for (i32 i = 0; i < lineIndex; i++) {
                 HiddenLine hiddenLine(i, m_unfoldedLines[i].m_chars);
                 m_hiddenLines.emplace_back(std::move(hiddenLine));
@@ -1336,7 +1334,6 @@ namespace hex::ui {
             }
             deleteSelection();
         }
-        setAllCodeFolds();
     }
 
     void TextEditor::Lines::addHiddenLinesToPattern() {
@@ -1348,6 +1345,8 @@ namespace hex::ui {
                 lineIndex = size() + hiddenLine.m_lineIndex;
             else
                 lineIndex = hiddenLine.m_lineIndex;
+            if (m_unfoldedLines[lineIndex].m_chars.starts_with("//+-"))
+                m_unfoldedLines.erase(m_unfoldedLines.begin() + lineIndex);
             insertLine(lineIndex, hiddenLine.m_line);
         }
     }
