@@ -432,6 +432,10 @@ namespace hex::ui {
         }
     }
 
+    void TextEditor::setFocus(bool scrollToCursor) {
+        m_lines.setFocusAtCoords(m_lines.m_state.m_cursorPosition, scrollToCursor);
+    }
+
     void TextEditor::Lines::setFocusAtCoords(const Coordinates &coords, bool scrollToCursor) {
         m_focusAtCoords = coords;
         m_state.m_cursorPosition = coords;
@@ -460,7 +464,7 @@ namespace hex::ui {
         if (std::abs(m_line) > maxLine)
             return false;
         auto maxColumn = lines.lineMaxColumn(m_line);
-        return std::abs(m_column) > maxColumn;
+        return std::abs(m_column) <= maxColumn;
     }
 
     TextEditor::Coordinates TextEditor::Coordinates::sanitize(Lines &lines) {

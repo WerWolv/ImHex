@@ -1025,6 +1025,8 @@ namespace hex::ui {
     }
 
     void TextEditor::FoldedLine::loadSegments() {
+        if (m_keys.empty())
+            return;
         m_foldedSegments.clear();
         m_unfoldedSegments.clear();
         i32 keyCount = (i32)m_keys.size();
