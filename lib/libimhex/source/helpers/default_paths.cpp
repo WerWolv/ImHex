@@ -5,6 +5,7 @@
 #include <hex/api/project_file_manager.hpp>
 
 #include <ranges>
+#include <set>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -17,6 +18,13 @@ namespace hex::paths {
 
     std::vector<std::fs::path> getDataPaths(bool includeSystemFolders) {
         std::vector<std::fs::path> paths;
+        std::set<std::fs::path> uniquePaths;
+
+        const auto emplaceUniquePath = [&](const std::fs::path &path) {
+            auto duplicate = uniquePaths.insert(path);
+            if (duplicate.second)
+                paths.emplace_back(path);
+        };
 
         #if defined(OS_WINDOWS)
 
@@ -25,21 +33,21 @@ namespace hex::paths {
             if (!ImHexApi::System::isPortableVersion()) {
                 PWSTR wAppDataPath = nullptr;
                 if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &wAppDataPath))) {
-                    paths.emplace_back(wAppDataPath);
+                    emplaceUniquePath(wAppDataPath);
                     CoTaskMemFree(wAppDataPath);
                 }
             }
 
         #elif defined(OS_MACOS)
 
-            paths.push_back(wolv::io::fs::getApplicationSupportDirectoryPath() / "imhex");
+            emplaceUniquePath(wolv::io::fs::getApplicationSupportDirectoryPath() / "imhex");
 
         #elif defined(OS_LINUX) || defined(OS_WEB)
 
-            paths.push_back(xdg::DataHomeDir());
+            emplaceYUniquePath(xdg::DataHomeDir());
 
             auto dataDirs = xdg::DataDirs();
-            std::ranges::copy(dataDirs, std::back_inserter(paths));
+            std::ranges::for_each(dataDirs, [&](auto &path) { emplaceUniquePath(path); });
 
         #endif
 
@@ -47,18 +55,21 @@ namespace hex::paths {
 
             if (includeSystemFolders) {
                 if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value()) {
-                    paths.push_back(executablePath->parent_path());
+                    emplaceUniquePath(executablePath->parent_path());
                 }
             }
 
         #else
 
-            for (auto &path : paths)
+            uniquePaths.clear();
+            std::ranges::for_each(paths, [&](auto &path) {
                 path = path / "imhex";
+                uniquePaths.insert(path);
+            });
 
             if (ImHexApi::System::isPortableVersion() || includeSystemFolders) {
                 if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value())
-                    paths.push_back(executablePath->parent_path());
+                    emplaceUniquePath(executablePath->parent_path());
             }
 
         #endif
@@ -66,11 +77,11 @@ namespace hex::paths {
 
         // Add additional data directories to the path
         auto additionalDirs = ImHexApi::System::getAdditionalFolderPaths();
-        std::ranges::copy(additionalDirs, std::back_inserter(paths));
+        std::ranges::for_each(additionalDirs, [&](auto &path) { emplaceUniquePath(path); });
 
         // Add the project file directory to the path, if one is loaded
         if (ProjectFile::hasPath()) {
-            paths.push_back(ProjectFile::getPath().parent_path());
+            emplaceUniquePath(ProjectFile::getPath().parent_path());
         }
 
         return paths;
