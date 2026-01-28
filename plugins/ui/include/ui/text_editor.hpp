@@ -716,7 +716,7 @@ namespace hex::ui {
             void removeLines(i32 start, i32 end);
             void removeLine(i32 index);
             float textDistanceToLineStart(const Coordinates &from);
-            std::string getText();
+            std::string getText(bool addHiddenLines = false);
             void setCursorPosition();
             void ensureSelectionNotFolded();
             bool hasSelection();
@@ -747,6 +747,7 @@ namespace hex::ui {
             void moveToStringIndex(i32 stringIndex, i32 &currentTokenId, Location &location);
             void resetToTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location);
             i32 findNextDelimiter(bool openOnly);
+            void resetCodeFoldStates();
 
             constexpr static u32 Normal = 0;
             constexpr static u32 Not    = 1;
@@ -947,7 +948,7 @@ namespace hex::ui {
         void setLanguageDefinition(const LanguageDefinition &aLanguageDef) { m_lines.setLanguageDefinition(aLanguageDef); }
         std::string getLineText(i32 line);
         void setTextChanged(bool value) { m_lines.setTextChanged(value); }
-        std::string getText() { return m_lines.getText(); }
+        std::string getText(bool addHiddenLines = false) { return m_lines.getText(addHiddenLines); }
         void addUndo(UndoRecords value) { m_lines.addUndo(value); }
         bool isTextChanged() { return m_lines.isTextChanged(); }
         void setHandleMouseInputs(bool value) { m_handleMouseInputs = value; }
@@ -984,6 +985,7 @@ namespace hex::ui {
         void setScroll(ImVec2 scroll);
         ImVec2 getScroll() const {return m_scroll;}
         Coordinates getCursorPosition() { return m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition); }
+        void setFocus(bool scrollTOCursor);
 
 //Support
     private:
