@@ -47,7 +47,8 @@ namespace hex::paths {
             emplaceUniquePath(xdg::DataHomeDir());
 
             auto dataDirs = xdg::DataDirs();
-            std::ranges::for_each(dataDirs, [&](auto &path) { emplaceUniquePath(path); });
+            for (const auto &path : dataDirs)
+                emplaceUniquePath(path);
 
         #endif
 
@@ -62,10 +63,10 @@ namespace hex::paths {
         #else
 
             uniquePaths.clear();
-            std::ranges::for_each(paths, [&](auto &path) {
+            for (auto &path : paths) {
                 path = path / "imhex";
                 uniquePaths.insert(path);
-            });
+            }
 
             if (ImHexApi::System::isPortableVersion() || includeSystemFolders) {
                 if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value())
@@ -77,7 +78,8 @@ namespace hex::paths {
 
         // Add additional data directories to the path
         auto additionalDirs = ImHexApi::System::getAdditionalFolderPaths();
-        std::ranges::for_each(additionalDirs, [&](auto &path) { emplaceUniquePath(path); });
+        for (const auto &path : additionalDirs)
+            emplaceUniquePath(path);
 
         // Add the project file directory to the path, if one is loaded
         if (ProjectFile::hasPath()) {
