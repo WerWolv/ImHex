@@ -469,10 +469,10 @@ namespace hex::ui {
             } else
                 codeFoldIndex++;
         }
-        if (!m_hiddenLines.empty())
-            m_hiddenLines.clear();
         if (closedFoldIncrements.empty())
             return;
+        if (!m_hiddenLines.empty())
+            m_hiddenLines.clear();
         std::string result = "//+-#:";
         for (u32 i = 0; i < closedFoldIncrements.size(); ++i) {
             result += std::to_string(closedFoldIncrements[i]);
@@ -489,10 +489,17 @@ namespace hex::ui {
 
     void TextEditor::Lines::setCodeFoldState(CodeFoldState state) {
         m_codeFoldState = state;
+        saveCodeFoldStates();
     }
 
     CodeFoldState TextEditor::Lines::getCodeFoldState() const {
         return m_codeFoldState;
+    }
+
+    void TextEditor::Lines::resetCodeFoldStates() {
+        m_codeFoldState.clear();
+        for (auto key: m_codeFoldKeys)
+            m_codeFoldState[key] = true;
     }
 
     void TextEditor::Lines::applyCodeFoldStates() {
@@ -505,8 +512,7 @@ namespace hex::ui {
             }
         }
         if (commentLine.size() < 6 || !commentLine.starts_with("//+-#:")) {
-            for (auto key: m_codeFoldKeys)
-                m_codeFoldState[key] = true;
+            resetCodeFoldStates();
             return;
         }
         auto states = commentLine.substr(6);
@@ -527,7 +533,7 @@ namespace hex::ui {
             std::from_chars(stateStr.data(), stateStr.data() + stateStr.size(), value);
             closedFoldIncrements[i] = value;
         }
-        m_codeFoldState.clear();
+        resetCodeFoldStates();
         auto codeFoldKeyIter = m_codeFoldKeys.begin();
         i32 closeFold = 0;
         for (auto closedFoldIncrement: closedFoldIncrements) {
