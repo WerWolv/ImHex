@@ -44,7 +44,7 @@ namespace hex::paths {
 
         #elif defined(OS_LINUX) || defined(OS_WEB)
 
-            emplaceYUniquePath(xdg::DataHomeDir());
+            emplaceUniquePath(xdg::DataHomeDir());
 
             auto dataDirs = xdg::DataDirs();
             std::ranges::for_each(dataDirs, [&](auto &path) { emplaceUniquePath(path); });
