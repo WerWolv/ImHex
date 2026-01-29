@@ -255,7 +255,7 @@ namespace hex::plugin::builtin {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.patterns",
                                                       "hex.builtin.achievement.patterns.data_inspector.name");
             } catch (const pl::core::err::EvaluatorError::Exception &) {
-                auto displayFunction = createPatternErrorDisplayFunction();
+                auto displayFunction = createPatternErrorDisplayFunction(path);
 
                 // Insert the inspector containing the error message into the list
                 m_workData.emplace_back(
