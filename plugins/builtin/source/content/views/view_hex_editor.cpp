@@ -319,7 +319,53 @@ namespace hex::plugin::builtin {
         ImGui::SetClipboardText(result.c_str());
     }
 
-    static void pasteBytes(const Region &selection, bool selectionCheck, bool asPlainText) {
+    bool isValidBase64(const std::string &input) {
+        if (input.empty() || input.size() % 4 != 0)
+        {
+            log::info("Empty base64 string or check the padding: {}", input );
+            return false;
+        }
+        for (char c : input) {
+            if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' || c == '/' || c == '=' || c == '\n' || c == '\r'))
+            {   
+              log::info("Invalid Base64 string: {}", input);
+              return false;
+            }   
+        }
+        return true;
+    }
+
+    std::vector<u8> decodeBase64(const std::string &input) {
+
+        if(!isValidBase64(input)){
+            return {};
+        }
+
+        static constexpr char sDecodingTable[] ="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        std::vector<u8> output;
+        int val = 0, valb = -8;
+
+        for (char c : input) {
+            if (c == '=' || c == '\n' || c == '\r') 
+                 break; 
+
+            const char *p = std::strchr(sDecodingTable, c);
+
+            if (!p) 
+                continue;
+            
+            val = (val << 6) + (p - sDecodingTable);
+            valb += 6;
+            if (valb >= 0) {
+                output.push_back(u8((val >> valb) & 0xFF));
+                valb -= 8;
+            }
+        }
+       
+       return output;
+    }
+
+    static void pasteBytes(const Region &selection, bool selectionCheck, bool asPlainText, bool asBase64=false) {
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
             return;
@@ -329,7 +375,10 @@ namespace hex::plugin::builtin {
             return;
 
         std::vector<u8> buffer;
-        if (asPlainText) {
+         if(asBase64){
+           buffer = decodeBase64(clipboard);
+        }
+        else if (asPlainText) {
             // Directly reinterpret clipboard as an array of bytes
             std::string cp = clipboard;
             buffer = std::vector<u8>(cp.begin(), cp.end());
@@ -1010,6 +1059,20 @@ namespace hex::plugin::builtin {
                                                 [] {
                                                     pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get())), false, true);
                                                 },
+                                                ImHexApi::HexEditor::isSelectionValid,
+                                                this);
+
+                                                     /* Paste... > Paste all as decoded base64 string */
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_as", "hex.builtin.view.hex_editor.menu.edit.paste_all_decoded_base64_string" }, ICON_VS_BLANK, 1520,
+                                                Shortcut::None,
+                                                [] {
+                                                        pasteBytes(
+                                                            ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())),
+                                                            false,
+                                                            false,   
+                                                            true     
+                                                        );
+                                                    },
                                                 ImHexApi::HexEditor::isSelectionValid,
                                                 this);
 

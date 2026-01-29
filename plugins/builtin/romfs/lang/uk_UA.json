@@ -821,6 +821,7 @@
     "hex.builtin.view.hex_editor.menu.edit.paste.popup.button.selection": "Вставити тільки над виділеним фрагментом",
     "hex.builtin.view.hex_editor.menu.edit.paste_all": "Вставити все",
     "hex.builtin.view.hex_editor.menu.edit.paste_all_string": "Вставити все як рядок",
+    "hex.builtin.view.hex_editor.menu.edit.paste_all_decoded_base64_string": "Вставити все як декодований рядок base64",
     "hex.builtin.view.hex_editor.menu.edit.remove": "Видалити...",
     "hex.builtin.view.hex_editor.menu.edit.set_base": "Встановити початкову адресу...",
     "hex.builtin.view.hex_editor.menu.edit.set_page_size": "Встановити кількість рядків...",
