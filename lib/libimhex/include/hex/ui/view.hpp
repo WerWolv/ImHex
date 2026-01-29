@@ -195,8 +195,6 @@ namespace hex {
         bool allowScroll() const final {
             return true;
         }
-
-        [[nodiscard]] bool shouldStoreWindowState() const override { return false; }
     };
 
     /**
