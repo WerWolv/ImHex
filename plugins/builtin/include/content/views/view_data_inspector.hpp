@@ -56,7 +56,7 @@ namespace hex::plugin::builtin {
         void drawInspectorRows();
         void drawInspectorRow(InspectorCacheEntry& entry);
 
-        ContentRegistry::DataInspector::impl::DisplayFunction createPatternErrorDisplayFunction();
+        ContentRegistry::DataInspector::impl::DisplayFunction createPatternErrorDisplayFunction(const std::fs::path &path);
 
     private:
         bool m_shouldInvalidate = true;

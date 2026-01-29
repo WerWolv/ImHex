@@ -781,6 +781,7 @@
     "hex.builtin.view.data_inspector.custom_row.title": "Adding custom rows",
     "hex.builtin.view.data_inspector.custom_row.hint": "It's possible to define custom data inspector rows by placing pattern language scripts in the <ImHex>/scripts/inspectors folder.\n\nCheck the documentation for more information.",
     "hex.builtin.view.data_inspector.toggle_endianness": "Toggle Endianness",
+    "hex.builtin.view.data_inspector.open_pattern": "Open Source File",
     "hex.builtin.view.data_processor.continuous_evaluation": "Continuous Evaluation",
     "hex.builtin.view.data_processor.help_text": "Right click to add a new node",
     "hex.builtin.view.data_processor.menu.file.load_processor": "Load data processor...",
