@@ -797,7 +797,6 @@
     "hex.builtin.view.find.context.replace": "Replace",
     "hex.builtin.view.find.context.replace.ascii": "ASCII",
     "hex.builtin.view.find.context.replace.hex": "Hex",
-    "hex.builtin.view.find.constants": "Constants",
     "hex.builtin.view.find.demangled": "Demangled",
     "hex.builtin.view.find.name": "Find",
     "hex.builtin.view.replace.name": "Replace",
