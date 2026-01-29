@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
 
     void ViewProviderSettings::drawContent() {
         auto provider = hex::ImHexApi::Provider::get();
-            if (auto *loadInterfaceProvider = dynamic_cast<prv::IProviderLoadInterface*>(provider); loadInterfaceProvider != nullptr) {
+        if (auto *loadInterfaceProvider = dynamic_cast<prv::IProviderLoadInterface*>(provider); loadInterfaceProvider != nullptr) {
             bool settingsValid = loadInterfaceProvider->drawLoadInterface();
 
             ImGui::NewLine();
