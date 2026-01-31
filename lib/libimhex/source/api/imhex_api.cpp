@@ -970,7 +970,7 @@ namespace hex {
         }
 
         std::optional<std::string> checkForUpdate() {
-            #if defined(OS_WEB)
+            #if defined(OS_WEB) || !defined(IMHEX_ENABLE_UPDATER)
                 return std::nullopt;
             #else
                 if (ImHexApi::System::isNightlyBuild()) {
@@ -1043,7 +1043,9 @@ namespace hex {
         }
 
         bool updateImHex(UpdateType updateType) {
-            #if defined(OS_WEB)
+            #if !defined(IMHEX_ENABLE_UPDATER)
+                return false;
+            #elif defined(OS_WEB)
                 switch (updateType) {
                     case UpdateType::Stable:
                         EM_ASM({ window.location.href = window.location.origin; });
