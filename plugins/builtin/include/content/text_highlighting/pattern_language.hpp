@@ -27,39 +27,16 @@ namespace hex::plugin::builtin {
         public:
             friend class TextHighlighter;
             TokenInterval() : m_start(0), m_end(0) {}
-            TokenInterval(i32 start, i32 end) : m_start(start), m_end(end) {
-                if (m_start > m_end)
-                    std::swap(m_start,m_end);
-            }
-            bool operator<(const TokenInterval &other) const {
-                return other.m_end > m_end;
-            }
-            bool operator>(const TokenInterval &other) const {
-                return m_end > other.m_end;
-            }
-            bool operator==(const TokenInterval &other) const {
-                return m_start == other.m_start && m_end == other.m_end;
-            }
-            bool operator!=(const TokenInterval &other) const {
-                return m_start != other.m_start || m_end != other.m_end;
-            }
-            bool operator<=(const TokenInterval &other) const {
-                return other.m_end >= m_end;
-            }
-            bool operator>=(const TokenInterval &other) const {
-                return m_end >= other.m_end;
-            }
-            [[nodiscard]] bool contains(const TokenInterval &other) const {
-                return other.m_start >= m_start && other.m_end <= m_end;
-            }
-            [[nodiscard]] bool contains(i32 value) const {
-                return value >= m_start && value <= m_end;
-            }
-            [[nodiscard]] bool contiguous(const TokenInterval &other) const {
-                auto highEndDiff = m_start - other.m_end;
-                auto lowEndDiff = other.m_start - m_end;
-                return  highEndDiff == 0 || highEndDiff == 1 || lowEndDiff == 0 || lowEndDiff == 1;
-            }
+            TokenInterval(i32 start, i32 end);
+            bool operator<(const TokenInterval &other) const;
+            bool operator>(const TokenInterval &other) const;
+            bool operator==(const TokenInterval &other) const;
+            bool operator!=(const TokenInterval &other) const;
+            bool operator<=(const TokenInterval &other) const;
+            bool operator>=(const TokenInterval &other) const;
+            [[nodiscard]] bool contains(const TokenInterval &other) const;
+            [[nodiscard]] bool contains(i32 value) const;
+            [[nodiscard]] bool contiguous(const TokenInterval &other) const;
         private:
             i32 m_start;
             i32 m_end;
@@ -231,7 +208,6 @@ namespace hex::plugin::builtin {
          * @brief Renders compile errors in real time
          */
         void renderErrors();
-
         /// A token range is the set of token indices of a definition. The namespace token
         /// ranges are obtained first because they are needed to obtain unique identifiers.
         void getTokenRanges(IdentifierType identifierTypeToSearch);
@@ -330,7 +306,7 @@ namespace hex::plugin::builtin {
         void partBegin();
         void reset();
         void partReset();
-        bool resetIfFailed(bool value) ;
+        bool resetIfFailed(bool value);
         template<auto S = Normal> bool sequenceImpl();
         template<auto S = Normal> bool matchOne(const Token &token);
         template<auto S = Normal> bool sequenceImpl(const auto &... args);
