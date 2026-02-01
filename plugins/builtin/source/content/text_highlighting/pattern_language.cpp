@@ -10,22 +10,65 @@
 #include <toasts/toast_notification.hpp>
 
 
+
 namespace hex::plugin::builtin {
 
     using namespace pl::core;
-    using Identifier    = Token::Identifier;
-    using Keyword       = Token::Keyword;
-    using Directive     = Token::Directive;
-    using Separator     = Token::Separator;
-    using Operator      = Token::Operator;
-    using Comment       = Token::Comment;
-    using DocComment    = Token::DocComment;
-    using Literal       = Token::Literal;
-    using ValueType     = Token::ValueType;
-    using TokenInterval = TextHighlighter::TokenInterval;
-    using CodeFoldBlocks = TextHighlighter::CodeFoldBlocks;
     using Coordinates    = TextHighlighter::Coordinates;
-    using StringSet      = TextHighlighter::StringSet;
+    using Directive      = Token::Directive;
+    using Identifier     = Token::Identifier;
+    using Keyword        = Token::Keyword;
+    using Separator      = Token::Separator;
+    using Operator       = Token::Operator;
+    using Comment        = Token::Comment;
+    using DocComment     = Token::DocComment;
+    using Literal        = Token::Literal;
+    using ValueType      = Token::ValueType;
+    using RequiredInputs = TextHighlighter::RequiredInputs;
+    using TokenInterval  = TextHighlighter::TokenInterval;
+
+    TokenInterval::TokenInterval(i32 start, i32 end) : m_start(start), m_end(end) {
+        if (m_start > m_end)
+            std::swap(m_start,m_end);
+    }
+
+    bool TokenInterval::operator<(const TokenInterval &other) const {
+        return other.m_end > m_end;
+    }
+
+    bool TokenInterval::operator>(const TokenInterval &other) const {
+        return m_end > other.m_end;
+    }
+
+    bool TokenInterval::operator==(const TokenInterval &other) const {
+        return m_start == other.m_start && m_end == other.m_end;
+    }
+
+    bool TokenInterval::operator!=(const TokenInterval &other) const {
+        return m_start != other.m_start || m_end != other.m_end;
+    }
+
+    bool TokenInterval::operator<=(const TokenInterval &other) const {
+        return other.m_end >= m_end;
+    }
+
+    bool TokenInterval::operator>=(const TokenInterval &other) const {
+        return m_end >= other.m_end;
+    }
+
+    [[nodiscard]] bool TokenInterval::contains(const TokenInterval &other) const {
+        return other.m_start >= m_start && other.m_end <= m_end;
+    }
+
+    [[nodiscard]] bool TokenInterval::contains(i32 value) const {
+        return value >= m_start && value <= m_end;
+    }
+
+    [[nodiscard]] bool TokenInterval::contiguous(const TokenInterval &other) const {
+        auto highEndDiff = m_start - other.m_end;
+        auto lowEndDiff = other.m_start - m_end;
+        return highEndDiff == 0 || highEndDiff == 1 || lowEndDiff == 0 || lowEndDiff == 1;
+    }
 
     void TextHighlighter::next(i32 count) {
         if (m_viewPatternEditor->wasInterrupted()) {
@@ -107,7 +150,7 @@ namespace hex::plugin::builtin {
         m_requiredInputs.setRequiredInputs();
     }
 
-    TextHighlighter::RequiredInputs& TextHighlighter::getRequiredInputs() {
+    RequiredInputs& TextHighlighter::getRequiredInputs() {
         return m_requiredInputs;
     }
 
@@ -450,9 +493,6 @@ namespace hex::plugin::builtin {
         if (blocks != nullptr)
             for (auto range: blocksFound)
                 blocks->operator[](name).insert(range);
-        //if (peek(tkn::Separator::EndOfProgram),-1)
-           // return false;
-
         i32 index2 = getTokenId();
 
         if (index2 > index1 && index2 < tokenCount) {
@@ -740,7 +780,6 @@ namespace hex::plugin::builtin {
             blocksIterBegin = m_functionBlocks[name].begin();
             blocksIterEnd = m_functionBlocks[name].end();
             --blocksIterEnd;
-
         } else if (m_globalVariables.contains(identifierName)) {
             definitions = m_globalVariables[identifierName];
             tokenRange = TokenInterval(0, m_requiredInputs.fullTokens.size());
@@ -795,16 +834,15 @@ namespace hex::plugin::builtin {
                 }
             }
             for (auto block = blocksIterBegin; block != blocksIterEnd; block++) {
-                for (const auto &definition: definitions) {
-
-                    if (definition.tokenIndex > block->m_start && definition.tokenIndex < block->m_end) {
-                        result = definition;
-                        m_curr = curr;
-
-                        if (setInstances)
-                            setBlockInstancesColor(identifierName, definition, *block);
-                        return true;
-                    }
+                auto it = std::ranges::find_if(definitions, [&](const Definition &d) {
+                    return d.tokenIndex > block->m_start && d.tokenIndex < block->m_end;
+                });
+                if (it != definitions.end()) {
+                    result = *it;
+                    m_curr = curr;
+                    if (setInstances)
+                        setBlockInstancesColor(identifierName, *it, *block);
+                    return true;
                 }
             }
         }
@@ -1033,16 +1071,16 @@ namespace hex::plugin::builtin {
         if (index < (i32) tokenCount - 1 && index > 2) {
             auto nextToken = m_curr[1];
             auto *separator = std::get_if<Token::Separator>(&nextToken.value);
-            auto *operatortk = std::get_if<Token::Operator>(&nextToken.value);
+            auto *operatorToken = std::get_if<Token::Operator>(&nextToken.value);
 
             if ((separator != nullptr && *separator == Separator::Semicolon) ||
-                (operatortk != nullptr && *operatortk == Operator::BoolLessThan)) {
+                (operatorToken != nullptr && *operatorToken == Operator::BoolLessThan)) {
                 auto previousToken = m_curr[-1];
-                auto prevprevToken = m_curr[-2];
-                operatortk = std::get_if<Operator>(&previousToken.value);
-                auto *identifier2 = std::get_if<Identifier>(&prevprevToken.value);
+                auto previousPreviousToken = m_curr[-2];
+                operatorToken = std::get_if<Operator>(&previousToken.value);
+                auto *identifier2 = std::get_if<Identifier>(&previousPreviousToken.value);
 
-                if (operatortk != nullptr && identifier2 != nullptr && *operatortk == Operator::ScopeResolution) {
+                if (operatorToken != nullptr && identifier2 != nullptr && *operatorToken == Operator::ScopeResolution) {
 
                     if (identifier2->getType() == IdentifierType::UDT) {
                         setIdentifierColor(-1, IdentifierType::LocalVariable);
@@ -1568,7 +1606,7 @@ namespace hex::plugin::builtin {
                     }
                     if (peek(tkn::Literal::Identifier)) {
                         std::string nameScape;
-                        if (findNamespace(nameScape) && !nameScape.empty() && std::ranges::find(m_UDTs, (nameScape + "::" + name)) != m_UDTs.end()) {
+                        if (findNamespace(nameScape) && !nameScape.empty() && std::ranges::find(m_UDTs, (nameScape.append( "::" + name))) != m_UDTs.end()) {
                             m_scopeChains.insert(tokenIndex);
                         }
                     }
@@ -1597,7 +1635,7 @@ namespace hex::plugin::builtin {
     }
 
     i32 TextHighlighter::getTokenId(SafeTokenIterator tokenIterator) {
-        auto start = &m_requiredInputs.fullTokens[0];
+        auto start = m_requiredInputs.fullTokens.data();
         auto m_start = &tokenIterator.front();
         auto m_end = &tokenIterator.back();
         if (m_start < start || start > m_end) {
@@ -1607,7 +1645,7 @@ namespace hex::plugin::builtin {
     }
 
     i32 TextHighlighter::getTokenId() {
-        auto start = &m_requiredInputs.fullTokens[0];
+        auto start = m_requiredInputs.fullTokens.data();
         auto m_start = &m_curr.front();
         auto m_end = &m_curr.back();
         if (m_start < start || start > m_end) {
@@ -1636,8 +1674,10 @@ namespace hex::plugin::builtin {
 
         if (line2 < lineCount)
             tokenEnd = m_firstTokenIdOfLine[line2] - 1;
+
         if (tokenStart == -1 || tokenEnd == -1 || tokenStart >= (i32) tokenCount)
             return -1;
+
         for (i32 i = tokenStart; i <= tokenEnd; i++) {
             auto location2 = m_requiredInputs.fullTokens[i].location;
             if (location2.column <= location.column && location2.column + location2.length >= location.column)
@@ -1659,6 +1699,7 @@ namespace hex::plugin::builtin {
 
         if (token->type == Token::Type::Identifier && (!m_tokenColors.contains(tokenId) || m_tokenColors.at(tokenId) == ui::TextEditor::PaletteIndex::Default || m_tokenColors.at(tokenId) == ui::TextEditor::PaletteIndex::UnkIdentifier))
             m_tokenColors[tokenId]  = m_identifierTypeColor.at(type);
+
     }
 
     void TextHighlighter::setColor(i32 tokenId, const IdentifierType &type) {
@@ -1676,6 +1717,7 @@ namespace hex::plugin::builtin {
         }
         m_taggedIdentifiers.clear();
         m_startToken = m_originalPosition = m_partOriginalPosition = SafeTokenIterator(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
+
         m_curr = m_startToken;
         for (auto tokenId : m_identifierTokenIds) {
             m_curr = m_startToken + tokenId;
@@ -1899,6 +1941,7 @@ namespace hex::plugin::builtin {
 
         if ( col < 0 || col > (i32) m_lines[line].size())
             return false;
+
         if (length < 0)
             return false;
         if (length > (i32) m_lines[line].size()-col)
@@ -1907,8 +1950,6 @@ namespace hex::plugin::builtin {
             length -= (i32) m_lines[line].size();
             line++;
         }
-
-
         return !(length > (i32) m_lines[line].size()-col && m_firstTokenIdOfLine[line + 1] != -1);
     }
 
@@ -2158,6 +2199,7 @@ namespace hex::plugin::builtin {
         m_lines = wolv::util::splitString(m_requiredInputs.editedText, "\n");
         m_lines.emplace_back("");
         m_firstTokenIdOfLine.clear();
+
 
         u32 tokenId = 0;
         u32 lineIndex = m_requiredInputs.fullTokens.at(tokenId).location.line - 1;
