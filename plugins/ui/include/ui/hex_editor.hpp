@@ -399,6 +399,10 @@ namespace hex::ui {
             return m_mode;
         }
 
+        [[nodiscard]] const std::string& getWindowName() const {
+            return m_windowName;
+        }
+
     private:
         prv::Provider *m_provider = nullptr;
 
@@ -464,6 +468,7 @@ namespace hex::ui {
 
         Mode m_mode = Mode::Overwrite;
         float m_cursorBlinkTimer = -0.3F;
+        std::string m_windowName;
     };
 
 }

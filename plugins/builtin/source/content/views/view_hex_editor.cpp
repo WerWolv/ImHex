@@ -275,7 +275,8 @@ namespace hex::plugin::builtin {
         m_hexEditor.setProvider(ImHexApi::Provider::get());
 
         m_hexEditor.draw();
-
+        if (auto windowName = m_hexEditor.getWindowName(); !windowName.empty())
+            addChildIdentifier(windowName);
         this->drawPopup();
     }
 

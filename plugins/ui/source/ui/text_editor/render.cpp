@@ -140,6 +140,7 @@ namespace hex::ui {
         if (!m_ignoreImGuiChild)
             ImGui::BeginChild(title, textEditorSize, childFlags, windowFlags);
         auto window = ImGui::GetCurrentWindow();
+        m_windowName = window->Name;
         window->ScrollbarSizes = ImVec2(scrollBarSize * scroll_x, scrollBarSize * scroll_y);
         ImGui::GetCurrentWindowRead()->ScrollbarSizes = ImVec2(scrollBarSize * scroll_y, scrollBarSize * scroll_x);
         if (scroll_y) {

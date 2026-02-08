@@ -5,7 +5,7 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/tutorial_manager.hpp>
 
-#include <hex/providers/provider.hpp>
+#include <imgui_internal.h>
 
 #include <imgui.h>
 
@@ -117,6 +117,10 @@ namespace hex {
         return s_lastFocusedView;
     }
 
+    void View::Window::addChildIdentifier(const std::string &childIdentifier) {
+        m_focusRestoringChildren.insert(childIdentifier);
+    }
+
 
     void View::Window::draw(ImGuiWindowFlags extraFlags) {
         if (this->shouldDraw()) {
@@ -125,6 +129,22 @@ namespace hex {
 
             ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
             const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
+
+            const ImGuiContext& g = *ImGui::GetCurrentContext();
+            if (g.NavWindow != nullptr && !m_focusRestoringChildren.empty()) {
+                std::string focusedName =  g.NavWindow->Name;
+                if (std::ranges::any_of(m_focusRestoringChildren, [&focusedName](const std::string& childIdentifier) { return focusedName == childIdentifier;}))
+                    m_focusedSubWindowName = focusedName;
+
+                if (s_lastFocusedView == this && !ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
+                    std::string activeName = g.ActiveIdWindow ? g.ActiveIdWindow->Name : "NULL";
+                    if ((activeName == "NULL"  && (focusedName == "##MainMenuBar" || focusedName.starts_with("ImHexDockSpace") || m_focusedSubWindowName.starts_with(focusedName)))) {
+                        auto window = ImGui::FindWindowByName(m_focusedSubWindowName.c_str());
+                        ImGui::FocusWindow(window, ImGuiFocusRequestFlags_None);
+                    }
+                }
+            }
+
             if (ImGui::Begin(title.c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | extraFlags | this->getWindowFlags())) {
                 TutorialManager::setLastItemInteractiveHelpPopup([this]{ this->drawHelpText(); });
                 this->drawContent();

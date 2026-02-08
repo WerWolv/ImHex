@@ -461,6 +461,7 @@ namespace hex::ui {
         void setFocusAtCoords(const Coordinates &coords, bool ensureVisible = false);
         void clearErrorMarkers();
         void clearActionables();
+        const std::string& getWindowName() const {return m_windowName; }
     private:
         void ensureCursorVisible();
         void resetCursorBlinkTime();
@@ -649,6 +650,7 @@ namespace hex::ui {
         Range m_interactiveSelection;
         u64 m_startTime = 0;
         std::vector<std::string> m_defines;
+        std::string m_windowName;
         TextEditor *m_sourceCodeEditor = nullptr;
         float m_shiftedScrollY = 0;
         ImVec2 m_scroll=ImVec2(0, 0);
