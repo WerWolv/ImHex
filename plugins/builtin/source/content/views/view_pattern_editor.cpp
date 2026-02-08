@@ -1457,7 +1457,9 @@ namespace hex::plugin::builtin {
 
             if (m_hasUnevaluatedChanges.get(provider) && m_runningEvaluators == 0 && m_runningParsers == 0 &&
                 (std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
-
+                    m_changesWereParsed = false;
+                    m_changesWereColored = false;
+                    m_allStepsCompleted = false;
                     auto code = m_textEditor.get(provider).getText();
                     EventPatternEditorChanged::post(code);
                     TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code = std::move(code), provider](auto &){
@@ -1473,35 +1475,15 @@ namespace hex::plugin::builtin {
                 this->evaluatePattern(m_textEditor.get(provider).getText(), provider);
             }
 
-            TaskHolder coloringTaskHolder;
-            if (m_changesWereParsed || m_wasInterrupted || m_hasUnevaluatedChanges.get(provider)) {
-                if (coloringTaskHolder.isRunning())
-                    interrupt();
-                if (m_wasInterrupted)
-                    resetInterrupt();
-
-                m_changesWereParsed = false;
-                if(!m_hasUnevaluatedChanges.get(provider)) {
-                    m_hasUncoloredChanges.get(provider) = true;
-                    m_changesWereColored = false;
-                } else
-                    m_hasUncoloredChanges.get(provider) = false;
-            }
-
-
-            if (m_hasUncoloredChanges.get(provider) && (m_runningHighlighters + m_runningEvaluators == 0)) {
-
-                try {
-                    m_textHighlighter.get(provider).setViewPatternEditor(this);
-                    m_textHighlighter.get(provider).updateRequiredInputs();
-                    coloringTaskHolder = TaskManager::createBackgroundTask("HighlightSourceCode", [this,provider](auto &) { m_textHighlighter.get(provider).highlightSourceCode(); });
-                    m_hasUncoloredChanges.get(provider) = false;
-                } catch (const std::out_of_range&) {
-                    interrupt();
-                }
-            } else if (m_changesWereColored) {
+            if (m_runningHighlighters > 0 && !m_changesWereParsed)
+                interrupt();
+            else if (m_runningHighlighters == 0 && m_changesWereParsed && !m_changesWereColored && !m_allStepsCompleted) {
+                m_textHighlighter.get(provider).setViewPatternEditor(this);
+                m_textHighlighter.get(provider).updateRequiredInputs();
+                TaskManager::createBackgroundTask("HighlightSourceCode", [this,provider](auto &) { m_textHighlighter.get(provider).highlightSourceCode(); });
+            } else if (m_changesWereColored && !m_allStepsCompleted) {
                 m_textHighlighter.get(provider).setRequestedIdentifierColors();
-                m_changesWereColored = false;
+                m_allStepsCompleted = true;
             }
 
             if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
@@ -1713,6 +1695,8 @@ namespace hex::plugin::builtin {
         }
 
         m_changesWereParsed = true;
+        m_changesWereColored = false;
+        m_allStepsCompleted = false;
         m_runningParsers -= 1;
     }
 
