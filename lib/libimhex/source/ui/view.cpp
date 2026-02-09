@@ -117,10 +117,6 @@ namespace hex {
         return s_lastFocusedView;
     }
 
-    void View::Window::addChildIdentifier(const std::string &childIdentifier) {
-        m_focusRestoringChildren.insert(childIdentifier);
-    }
-
 
     void View::Window::draw(ImGuiWindowFlags extraFlags) {
         if (this->shouldDraw()) {
@@ -131,17 +127,33 @@ namespace hex {
             const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
 
             const ImGuiContext& g = *ImGui::GetCurrentContext();
-            if (g.NavWindow != nullptr && !m_focusRestoringChildren.empty()) {
-                std::string focusedName =  g.NavWindow->Name;
-                if (std::ranges::any_of(m_focusRestoringChildren, [&focusedName](const std::string& childIdentifier) { return focusedName == childIdentifier;}))
-                    m_focusedSubWindowName = focusedName;
-
-                if (s_lastFocusedView == this && !ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
-                    std::string activeName = g.ActiveIdWindow ? g.ActiveIdWindow->Name : "NULL";
-                    if ((activeName == "NULL"  && (focusedName == "##MainMenuBar" || focusedName.starts_with("ImHexDockSpace") || m_focusedSubWindowName.starts_with(focusedName)))) {
-                        auto window = ImGui::FindWindowByName(m_focusedSubWindowName.c_str());
-                        ImGui::FocusWindow(window, ImGuiFocusRequestFlags_None);
-                    }
+            bool foundTopFocused = false;
+            std::string topFocusedWindowName;
+            if (g.NavWindow != nullptr) {
+                topFocusedWindowName = g.NavWindow->Name;
+                foundTopFocused = true;
+            }
+            for (auto window : g.WindowsFocusOrder | std::views::reverse) {
+                if (window == nullptr || !window->WasActive)
+                    continue;
+                std::string windowName = window->Name;
+                if (!foundTopFocused) {
+                    topFocusedWindowName = windowName;
+                    foundTopFocused = true;
+                }
+                if (!windowName.contains("###hex.builtin.view."))
+                    continue;
+                auto focusedChild = window->NavLastChildNavWindow;
+                if (focusedChild != nullptr)
+                    m_focusedSubWindowName.assign(focusedChild->Name);
+                break;
+            }
+            bool isParentFocused = m_focusedSubWindowName.starts_with(topFocusedWindowName);
+            if (s_lastFocusedView == this && !ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
+                std::string activeName = g.ActiveIdWindow ? g.ActiveIdWindow->Name : "NULL";
+                if ((activeName == "NULL"  && (topFocusedWindowName == "##MainMenuBar" || topFocusedWindowName.starts_with("ImHexDockSpace") || isParentFocused))) {
+                    auto window = ImGui::FindWindowByName(m_focusedSubWindowName.c_str());
+                    ImGui::FocusWindow(window, ImGuiFocusRequestFlags_None);
                 }
             }
 

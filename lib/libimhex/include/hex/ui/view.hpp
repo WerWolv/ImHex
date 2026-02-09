@@ -145,7 +145,6 @@ namespace hex {
      * @brief A view that draws a regular window. This should be the default for most views
      */
     class View::Window : public View {
-        std::set<std::string> m_focusRestoringChildren;
         std::string m_focusedSubWindowName;
     public:
         explicit Window(UnlocalizedString unlocalizedName, const char *icon) : View(std::move(unlocalizedName), icon) {}
@@ -157,7 +156,6 @@ namespace hex {
 
         void draw(ImGuiWindowFlags extraFlags = ImGuiWindowFlags_None) override;
 
-        void addChildIdentifier(const std::string &childIdentifier);
         virtual bool allowScroll() const {
             return false;
         }

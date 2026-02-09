@@ -479,8 +479,6 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginChild("##pattern_editor_resizer", defaultEditorSize, ImGuiChildFlags_ResizeY)) {
                 m_textEditor.get(provider).render("##pattern_editor", ImGui::GetContentRegionAvail(), false);
                 m_textEditorHoverBox = ImGui::GetCurrentWindow()->Rect();
-                if (auto windowName = m_textEditor.get(provider).getWindowName(); !windowName.empty())
-                    addChildIdentifier(windowName);
             }
             ImGui::EndChild();
             ImGui::PopStyleVar(2);
@@ -1110,8 +1108,7 @@ namespace hex::plugin::builtin {
         fonts::CodeEditor().push();
         m_consoleEditor.get(provider).render("##console", size, true);
         fonts::CodeEditor().pop();
-        if (auto windowName = m_consoleEditor.get(provider).getWindowName(); !windowName.empty())
-            addChildIdentifier(windowName);
+
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
 

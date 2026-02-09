@@ -638,7 +638,7 @@ namespace hex::ui {
         ON_SCOPE_EXIT { ImGui::PopID(); };
         if (ImGui::BeginChild("Hex View", size, ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             this->drawScrollbar(CharacterSize);
-            m_windowName = ImGui::GetCurrentWindow()->Name;
+
             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
             if (ImGui::BeginTable("##hex", byteColumnCount, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, size)) {
                 View::discardNavigationRequests();
