@@ -111,8 +111,7 @@ jobs:
       shell: bash
       run: |
         "C:/Program Files/dotnet/dotnet.exe" tool install --global wix@6.0.2
-        export PATH="$PATH:$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools"
-        wix extension add -g WixToolset.UI.wixext@6.0.2
+        "$USERPROFILE/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext@6.0.2
 
     - name: 🪲 Create PDBs for MSI
       run: |
