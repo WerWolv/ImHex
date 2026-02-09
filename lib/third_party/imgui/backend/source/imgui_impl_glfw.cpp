@@ -759,6 +759,9 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     bd->IsWayland = ImGui_ImplGlfw_IsWayland();
     ImGui_ImplGlfw_ContextMap_Add(window, bd->Context);
 
+    if (bd->IsWayland)
+        io.ConfigDpiScaleFonts = true;
+
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
 #if GLFW_VERSION_COMBINED < 3300
     platform_io.Platform_SetClipboardTextFn = [](ImGuiContext*, const char* text) { glfwSetClipboardString(ImGui_ImplGlfw_GetBackendData()->Window, text); };
