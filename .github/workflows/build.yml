@@ -109,7 +109,7 @@ jobs:
 
     - name: 🕯️ Install WiX Toolkit
       run: |
-        "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
+        "C:/Program Files/dotnet/dotnet.exe" tool install --global wix@6.0.2
         "$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
 
     - name: 🪲 Create PDBs for MSI
@@ -293,7 +293,7 @@ jobs:
 
       - name: 🕯️ Install WiX Toolkit
         run: |
-          & "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
+          & "C:/Program Files/dotnet/dotnet.exe" tool install --global wix@6.0.2
           & "$($env:USERPROFILE -replace '\\','/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
 
       - name: 📦 Bundle MSI

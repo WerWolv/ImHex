@@ -1301,7 +1301,6 @@ namespace hex {
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.ConfigDragClickToInputText = true;
-        io.ConfigDpiScaleFonts = true;
 
         if (glfwGetPrimaryMonitor() != nullptr) {
             if (ImHexApi::System::isMultiWindowModeEnabled()) {
