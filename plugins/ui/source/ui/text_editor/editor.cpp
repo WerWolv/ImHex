@@ -259,7 +259,6 @@ namespace hex::ui {
             if (u.m_addedRange.m_start == Invalid || u.m_addedRange.m_end == Invalid)
                 return;
         }
-        m_textChanged = true;
         m_scrollToTop = true;
         if (!m_readOnly && undo) {
             u.m_after = m_state;

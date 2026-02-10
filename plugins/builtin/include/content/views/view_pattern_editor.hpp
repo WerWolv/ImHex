@@ -56,9 +56,8 @@ namespace hex::plugin::builtin {
         enum class DangerousFunctionPerms : u8 { Ask, Allow, Deny };
 
         void drawHelpText() override;
-        void setWasInterrupted(bool wasInterrupted) { m_wasInterrupted = wasInterrupted; }
-        bool wasInterrupted() const { return m_wasInterrupted;}
-        void resetInterrupt() { m_wasInterrupted = false; m_interrupt = false;}
+        bool interrupted() const { return m_interrupt;}
+        void resetInterrupt() { m_interrupt = false;}
         void interrupt() { m_interrupt = true; }
 
     private:
@@ -112,10 +111,9 @@ namespace hex::plugin::builtin {
         std::atomic<u32> m_runningHighlighters = 0;
 
         PerProvider<bool> m_hasUnevaluatedChanges;
-        std::atomic<bool> m_changesWereParsed;
-        PerProvider<bool> m_hasUncoloredChanges;
-        std::atomic<bool> m_changesWereColored;
-        std::atomic<bool> m_wasInterrupted;
+        std::atomic<bool> m_changesWereParsed = false;
+        std::atomic<bool> m_changesWereColored = false;
+        std::atomic<bool> m_allStepsCompleted = false;
         std::atomic<bool> m_interrupt;
 
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
