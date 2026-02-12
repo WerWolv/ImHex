@@ -67,17 +67,20 @@ namespace hex::init {
             log::debug("OpenGL Renderer: '{}'", glRendererString);
             log::debug("OpenGL Version String: '{}'", glVersionString);
             log::debug("OpenGL Shading Language Version: '{}'", glShadingLanguageVersion);
-            log::debug("GLFW Backend: '{}'", [] {
-                switch (glfwGetPlatform()) {
-                    case GLFW_PLATFORM_WIN32:       return "Win32";
-                    case GLFW_PLATFORM_COCOA:       return "Cocoa";
-                    case GLFW_PLATFORM_X11:         return "X11";
-                    case GLFW_PLATFORM_WAYLAND:     return "Wayland";
-                    case GLFW_PLATFORM_NULL:        return "null";
-                    case GLFW_PLATFORM_UNAVAILABLE: return "Unavailable";
-                    default: return "Unknown";
-                }
-            }());
+
+            #if defined(GLFW_ANY_PLATFORM)
+                log::debug("GLFW Backend: '{}'", [] {
+                    switch (glfwGetPlatform()) {
+                        case GLFW_PLATFORM_WIN32:       return "Win32";
+                        case GLFW_PLATFORM_COCOA:       return "Cocoa";
+                        case GLFW_PLATFORM_X11:         return "X11";
+                        case GLFW_PLATFORM_WAYLAND:     return "Wayland";
+                        case GLFW_PLATFORM_NULL:        return "null";
+                        case GLFW_PLATFORM_UNAVAILABLE: return "Unavailable";
+                        default: return "Unknown";
+                    }
+                }());
+            #endif
 
             ImHexApi::System::impl::setGPUVendor(glVendorString);
             ImHexApi::System::impl::setGLRenderer(glRendererString);
