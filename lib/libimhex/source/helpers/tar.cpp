@@ -7,6 +7,8 @@
 
 #include <microtar.h>
 
+#include "wolv/utils/string.hpp"
+
 namespace hex {
 
     using namespace hex::literals;
@@ -22,13 +24,13 @@ namespace hex {
 
         m_ctx = std::make_unique<mtar_t>();
 
-        auto shortPath = wolv::io::fs::toShortPath(path);
+        auto shortPath = wolv::io::fs::toNormalizedPathString(wolv::io::fs::toShortPath(path));
         if (mode == Tar::Mode::Read)
-            tarError = mtar_open(m_ctx.get(), shortPath.string().c_str(), "r");
+            tarError = mtar_open(m_ctx.get(), shortPath.c_str(), "r");
         else if (mode == Tar::Mode::Write)
-            tarError = mtar_open(m_ctx.get(), shortPath.string().c_str(), "a");
+            tarError = mtar_open(m_ctx.get(), shortPath.c_str(), "a");
         else if (mode == Tar::Mode::Create)
-            tarError = mtar_open(m_ctx.get(), shortPath.string().c_str(), "w");
+            tarError = mtar_open(m_ctx.get(), shortPath.c_str(), "w");
         else
             tarError = MTAR_EFAILURE;
 
