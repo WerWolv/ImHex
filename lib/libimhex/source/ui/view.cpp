@@ -120,43 +120,73 @@ namespace hex {
 
     void View::Window::draw(ImGuiWindowFlags extraFlags) {
         if (this->shouldDraw()) {
-            if (!allowScroll())
-                extraFlags |= ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
-
-            ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
             const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
 
             const ImGuiContext& g = *ImGui::GetCurrentContext();
             bool foundTopFocused = false;
-            std::string topFocusedWindowName;
+            ImGuiWindow *imguiFocusedWindow = nullptr;
+            ImGuiWindow *focusedSubWindow = nullptr;
+
             if (g.NavWindow != nullptr) {
-                topFocusedWindowName = g.NavWindow->Name;
+                imguiFocusedWindow = g.NavWindow;
                 foundTopFocused = true;
             }
-            for (auto window : g.WindowsFocusOrder | std::views::reverse) {
-                if (window == nullptr || !window->WasActive)
+            for (auto focusedWindow: g.WindowsFocusOrder | std::views::reverse) {
+                if (focusedWindow == nullptr || !focusedWindow->WasActive)
                     continue;
-                std::string windowName = window->Name;
+                std::string focusedWindowName = focusedWindow->Name;
                 if (!foundTopFocused) {
-                    topFocusedWindowName = windowName;
+                    imguiFocusedWindow = focusedWindow;
                     foundTopFocused = true;
                 }
-                if (!windowName.contains("###hex.builtin.view."))
+                if (imguiFocusedWindow == nullptr || !focusedWindowName.contains("###hex.builtin.view."))
                     continue;
-                auto focusedChild = window->NavLastChildNavWindow;
-                if (focusedChild != nullptr)
-                    m_focusedSubWindowName.assign(focusedChild->Name);
+                if (auto focusedChild = focusedWindow->NavLastChildNavWindow; focusedChild != nullptr)
+                    focusedSubWindow = focusedChild;
+                else if (focusedWindow == focusedWindow->RootWindow)
+                    focusedSubWindow = focusedWindow;
+
                 break;
             }
-            bool isParentFocused = m_focusedSubWindowName.starts_with(topFocusedWindowName);
-            if (s_lastFocusedView == this && !ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
-                std::string activeName = g.ActiveIdWindow ? g.ActiveIdWindow->Name : "NULL";
-                if ((activeName == "NULL"  && (topFocusedWindowName == "##MainMenuBar" || topFocusedWindowName.starts_with("ImHexDockSpace") || isParentFocused))) {
-                    auto window = ImGui::FindWindowByName(m_focusedSubWindowName.c_str());
-                    ImGui::FocusWindow(window, ImGuiFocusRequestFlags_None);
+
+            std::string imguiFocusedWindowName = "NULL";
+            if (imguiFocusedWindow != nullptr)
+                imguiFocusedWindowName.assign(imguiFocusedWindow->Name);
+
+            std::string focusedSubWindowName;
+            if (focusedSubWindow != nullptr || m_focusedSubWindow != nullptr) {
+                focusedSubWindowName = focusedSubWindow != nullptr ? focusedSubWindow->Name : m_focusedSubWindow->Name;
+                if (focusedSubWindow != nullptr && m_focusedSubWindow != nullptr) {
+                    std::string_view windowName = m_focusedSubWindow->Name;
+                    auto stringsVector = wolv::util::splitString(focusedSubWindowName, "/");
+                    if (stringsVector.back().contains("resize") || (focusedSubWindow == focusedSubWindow->RootWindow && windowName.starts_with(focusedSubWindowName)))
+                        focusedSubWindowName = windowName;
+                    else
+                        m_focusedSubWindow = focusedSubWindow;
+                } else if (focusedSubWindow != nullptr)
+                    m_focusedSubWindow = focusedSubWindow;
+
+                bool windowAlreadyFocused = focusedSubWindowName == imguiFocusedWindowName;
+                bool titleFocused = focusedSubWindowName.starts_with(title);
+
+                if (titleFocused && !windowAlreadyFocused) {
+
+                    bool windowMayNeedFocus = focusedSubWindowName.starts_with(imguiFocusedWindowName);
+                    std::string activeName = g.ActiveIdWindow ? g.ActiveIdWindow->Name : "NULL";
+
+                    if ((activeName == "NULL" || windowMayNeedFocus) && (imguiFocusedWindowName == "##MainMenuBar" || imguiFocusedWindowName.starts_with("ImHexDockSpace") || imguiFocusedWindowName.contains("###hex.builtin.view."))) {
+                        if (m_focusedSubWindow == m_focusedSubWindow->RootWindow)
+                            ImGui::FocusWindow(m_focusedSubWindow, ImGuiFocusRequestFlags_RestoreFocusedChild);
+                        else
+                            ImGui::FocusWindow(m_focusedSubWindow, ImGuiFocusRequestFlags_None);
+                    }
                 }
             }
 
+            if (!allowScroll())
+                extraFlags |= ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+
+            ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
             if (ImGui::Begin(title.c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | extraFlags | this->getWindowFlags())) {
                 TutorialManager::setLastItemInteractiveHelpPopup([this]{ this->drawHelpText(); });
                 this->drawContent();
