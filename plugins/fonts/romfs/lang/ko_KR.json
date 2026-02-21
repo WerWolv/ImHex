@@ -7,5 +7,14 @@
     "hex.fonts.setting.font.font_path": "글꼴",
     "hex.fonts.setting.font.font_size": "글꼴 크기",
     "hex.fonts.setting.font.glyphs": "글리프",
-    "hex.fonts.setting.font.load_all_unicode_chars": "모든 유니코드 문자 불러오기"
+    "hex.fonts.setting.font.load_all_unicode_chars": "모든 유니코드 문자 불러오기",
+    "hex.fonts.setting.font.button.bold": "B",
+    "hex.fonts.setting.font.button.italic": "I",
+    "hex.fonts.setting.font.custom_font_info": "사용자 정의 글꼴에 대해서만 사용 가능한 설정입니다.",
+    "hex.fonts.font.default": "일반 UI 글꼴",
+    "hex.fonts.font.hex_editor": "헥스 에디터 글꼴",
+    "hex.fonts.font.code_editor": "코드 에디터 글꼴",
+    "hex.fonts.setting.font.antialias_none": "없음",
+    "hex.fonts.setting.font.antialias_grayscale": "회색조",
+    "hex.fonts.setting.font.antialias_subpixel": "서브픽셀"
 }
